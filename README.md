@@ -18,7 +18,7 @@ If you use mapbox-gl via bindings (react, vue, etc), you may need to wait a litt
 
 ### Roadmap
 
-This project's initial plans are outlined in the [roadmap](ROADMAP.md) document. The primary goal is consistency and backwards-compatability with previous releases, and continued bug-fixes and maintenance going forward.
+This project's initial plans are outlined in the [Roadmap](https://github.com/maplibre/maplibre-gl-js/projects/2) project. The primary goal is consistency and backwards-compatability with previous releases and continued bug-fixes and maintenance going forward.
 
 ### Getting Involved
 
