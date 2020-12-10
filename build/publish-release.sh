@@ -8,6 +8,11 @@
 # 3. Commit the new package.json on your host with the updated version
 # 4. Verify: new version is up at https://www.npmjs.com/package/maplibre-gl
 
+echo "Heads up: this script assumes you only have /one/ NPM registry setup, which is true for most devs."
+echo "If you /do/ have more than just registry.npmjs.org in ~/.npmrc, it may not"
+echo "try to npm publish with the correct (authorized) npm authToken, and publish will fail to auth"
+echo
+
 export NPM_TOKEN=$(cat ~/.npmrc | grep -o '_authToken=.*' | sed 's/_authToken=//g')
 cd `dirname ${BASH_SOURCE[0]}`
 
@@ -23,6 +28,8 @@ docker run -it \
   -v "$(pwd)"/../.git:/src/.git \
   --env NPM_TOKEN \
   maplibre-gl/publish-release
+
+set +x
 
 cd ..
 PACKAGE_VERSION=`node -pe "require('./package.json').version"`
