@@ -39,7 +39,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
-    "flow-remove-types": "^2.139.0",
     "@mapbox/gazetteer": "^4.0.4",
     "@mapbox/mapbox-gl-rtl-text": "^0.2.1",
     "@mapbox/mvt-fixtures": "^3.6.0",
@@ -67,6 +66,7 @@
     "eslint-plugin-react": "^7.12.4",
     "esm": "~3.0.84",
     "flow-bin": "^0.100.0",
+    "flow-remove-types": "^2.139.0",
     "gl": "^4.5.3",
     "glob": "^7.1.4",
     "is-builtin-module": "^3.0.0",
