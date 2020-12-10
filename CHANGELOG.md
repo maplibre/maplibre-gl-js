@@ -2,7 +2,7 @@
 
 ### 🐞 Bug fixes
 
-- Fix a bug where mapbox-gl-js is no longer free software
+- Fix a bug where mapbox-gl-js is no longer licensed as open source, but we owe immeasurable gratitude to Mapbox for releasing all their initial code to the community under BSD-3 license.```
 
 ## mapbox-gl-js 1.13.0
 
