@@ -1,4 +1,4 @@
-Hi, and thanks in advance for contributing to Mapbox GL. Here's how we work. Please follow these conventions when submitting an issue or pull request.
+Hi, and thanks in advance for contributing to MapLibre GL. Here's how we work. Please follow these conventions when submitting an issue or pull request.
 
 ## Preparing your Development Environment
 
@@ -20,12 +20,12 @@ brew install yarn
 
 Clone the repository
 ```bash
-git clone git@github.com:mapbox/mapbox-gl-js.git
+git clone git@github.com:maplibre/maplibre-gl-js.git
 ```
 
 Install node module dependencies
 ```bash
-cd mapbox-gl-js &&
+cd maplibre-gl-js &&
 yarn install
 ```
 
@@ -45,12 +45,12 @@ curl -o- -L https://yarnpkg.com/install.sh | bash
 
 Clone the repository
 ```bash
-git clone git@github.com:mapbox/mapbox-gl-js.git
+git clone git@github.com:maplibre/maplibre-gl-js.git
 ```
 
 Install node module dependencies
 ```bash
-cd mapbox-gl-js &&
+cd maplibre-gl-js &&
 yarn install
 ```
 
@@ -60,13 +60,13 @@ Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^10
 
 Clone the repository
 ```bash
-git clone git@github.com:mapbox/mapbox-gl-js.git
+git clone git@github.com:maplibre/maplibre-gl-js.git
 ```
 
 
 Install node module dependencies
 ```bash
-cd mapbox-gl-js
+cd maplibre-gl-js
 yarn install
 ```
 
@@ -137,9 +137,9 @@ The conventions for module exports are:
 
 Here is a recommended way to get setup:
 1. Fork this project
-2. Clone your new fork, `git clone git@github.com:GithubUser/mapbox-gl-js.git`
-3. `cd mapbox-gl-js`
-4. Add the Mapbox repository as an upstream repository: `git remote add upstream git@github.com:mapbox/mapbox-gl-js.git`
+2. Clone your new fork, `git clone git@github.com:GithubUser/maplibre-gl-js.git`
+3. `cd maplibre-gl-js`
+4. Add the MapLibre repository as an upstream repository: `git remote add upstream git@github.com:maplibre/maplibre-gl-js.git`
 5. Create a new branch `git checkout -b your-branch` for your contribution
 6. Write code, open a PR from your branch when you're ready
 7. If you need to rebase your fork's PR branch onto main to resolve conflicts: `git fetch upstream`, `git rebase upstream/main` and force push to Github `git push --force origin your-branch`
@@ -160,10 +160,6 @@ How to add your changelog?
 - Any changelog entry should be descriptive and concise; it should explain the change to a reader without context
 - Any changelog entry should be added to the pull request in the following format: `<changelog>Changelog description</changelog>`
 - Any change that does not require a changelog should be labelled `skip changelog`
-
-## Documentation Conventions
-
-See [`README.md`](https://github.com/mapbox/mapbox-gl-js-docs/blob/publisher-production/README.md) from [`mapbox-gl-js-docs`](https://github.com/mapbox/mapbox-gl-js-docs/).
 
 ### Github Issue Labels
 
