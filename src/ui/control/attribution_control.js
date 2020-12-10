@@ -2,7 +2,6 @@
 
 import DOM from '../../util/dom';
 import {bindAll} from '../../util/util';
-import config from '../../util/config';
 
 import type Map from '../map';
 
@@ -30,7 +29,6 @@ class AttributionControl {
     _container: HTMLElement;
     _innerContainer: HTMLElement;
     _compactButton: HTMLButtonElement;
-    _editLink: ?HTMLAnchorElement;
     _attribHTML: string;
     styleId: string;
     styleOwner: string;
@@ -40,7 +38,6 @@ class AttributionControl {
 
         bindAll([
             '_toggleAttribution',
-            '_updateEditLink',
             '_updateData',
             '_updateCompact'
         ], this);
@@ -66,11 +63,9 @@ class AttributionControl {
         }
 
         this._updateAttributions();
-        this._updateEditLink();
 
         this._map.on('styledata', this._updateData);
         this._map.on('sourcedata', this._updateData);
-        this._map.on('moveend', this._updateEditLink);
 
         if (compact === undefined) {
             this._map.on('resize', this._updateCompact);
@@ -85,7 +80,6 @@ class AttributionControl {
 
         this._map.off('styledata', this._updateData);
         this._map.off('sourcedata', this._updateData);
-        this._map.off('moveend', this._updateEditLink);
         this._map.off('resize', this._updateCompact);
 
         this._map = (undefined: any);
@@ -108,35 +102,9 @@ class AttributionControl {
         }
     }
 
-    _updateEditLink() {
-        let editLink = this._editLink;
-        if (!editLink) {
-            editLink = this._editLink = (this._container.querySelector('.mapbox-improve-map'): any);
-        }
-
-        const params = [
-            {key: 'owner', value: this.styleOwner},
-            {key: 'id', value: this.styleId},
-            {key: 'access_token', value: this._map._requestManager._customAccessToken || config.ACCESS_TOKEN}
-        ];
-
-        if (editLink) {
-            const paramString = params.reduce((acc, next, i) => {
-                if (next.value) {
-                    acc += `${next.key}=${next.value}${i < params.length - 1 ? '&' : ''}`;
-                }
-                return acc;
-            }, `?`);
-            editLink.href = `${config.FEEDBACK_URL}/${paramString}${this._map._hash ? this._map._hash.getHashString(true) : ''}`;
-            editLink.rel = 'noopener nofollow';
-            this._setElementTitle(editLink, 'MapFeedback');
-        }
-    }
-
     _updateData(e: any) {
         if (e && (e.sourceDataType === 'metadata' || e.sourceDataType === 'visibility' || e.dataType === 'style')) {
             this._updateAttributions();
-            this._updateEditLink();
         }
     }
 
@@ -195,8 +163,6 @@ class AttributionControl {
         } else {
             this._container.classList.add('mapboxgl-attrib-empty');
         }
-        // remove old DOM node from _editLink
-        this._editLink = null;
     }
 
     _updateCompact() {

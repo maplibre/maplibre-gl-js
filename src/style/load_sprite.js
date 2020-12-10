@@ -6,7 +6,7 @@ import browser from '../util/browser';
 import {RGBAImage} from '../util/image';
 
 import type {StyleImage} from './style_image';
-import type {RequestManager} from '../util/mapbox';
+import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 

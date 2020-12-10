@@ -8,7 +8,7 @@ import {asyncAll} from '../util/util';
 import {AlphaImage} from '../util/image';
 
 import type {StyleGlyph} from '../style/style_glyph';
-import type {RequestManager} from '../util/mapbox';
+import type RequestManager from '../util/request_manager';
 import type {Callback} from '../types/callback';
 
 type Entry = {

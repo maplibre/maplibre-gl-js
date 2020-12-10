@@ -82,23 +82,6 @@ const exported = {
     clearPrewarmedResources,
 
     /**
-     * Gets and sets the map's [access token](https://www.mapbox.com/help/define-access-token/).
-     *
-     * @var {string} accessToken
-     * @returns {string} The currently set access token.
-     * @example
-     * mapboxgl.accessToken = myAccessToken;
-     * @see [Display a map](https://www.mapbox.com/mapbox-gl-js/examples/)
-     */
-    get accessToken(): ?string {
-        return config.ACCESS_TOKEN;
-    },
-
-    set accessToken(token: string) {
-        config.ACCESS_TOKEN = token;
-    },
-
-    /**
      * Gets and sets the map's default API URL for requesting tiles, styles, sprites, and glyphs
      *
      * @var {string} baseApiUrl
