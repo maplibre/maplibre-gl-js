@@ -26,7 +26,7 @@ If you depend on a free software alternative to `mapbox-gl-js`, please consider 
 
 ### Thank you Mapbox 🙏🏽
 
-We'd like to acknowledge the amazing work Mapbox has contributed to open source. The open source community is sad to part ways with them, but we simultaneously feel grateful for everything they already contributed. `mapbox-gl-js` 1.x is an open source achievment which now lives on as `mapslibre-gl`. We're proud to develop on the shoulders of giants, thank you Mapbox 🙇🏽‍♀️
+We'd like to acknowledge the amazing work Mapbox has contributed to open source. The open source community is sad to part ways with them, but we simultaneously feel grateful for everything they already contributed. `mapbox-gl-js` 1.x is an open source achievment which now lives on as `maplibre-gl`. We're proud to develop on the shoulders of giants, thank you Mapbox 🙇🏽‍♀️
 
 ## License
 
