@@ -9,6 +9,7 @@ Until we have CI going, anyone with the necessary permissions on npmjs should be
 5. Publish the new version to npm
 6. Update your package.json and git tags on the host machine even though the thing executes in docker 🧙🏿‍♂️. **You should commit the new package.json and push**.
 7. Print the URL to the new release
+
 ### Without docker (not recommended)
 
 Until we draft more formal docs, get CI going, and develop our own
