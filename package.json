@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "1.13.0-rc.0",
+  "version": "1.13.0-rc.1",
   "main": "dist/mapbox-gl.js",
   "style": "dist/mapbox-gl.css",
   "license": "BSD-3-Clause",
@@ -151,7 +151,7 @@
     "test-suite-clean": "find test/integration/{render,query, expressions}-tests -mindepth 2 -type d -exec test -e \"{}/actual.png\" \\; -not \\( -exec test -e \"{}/style.json\" \\; \\) -print | xargs -t rm -r",
     "test-unit": "build/run-tap --reporter classic --no-coverage test/unit",
     "test-build__disabled": "build/run-tap --no-coverage test/build/**/*.test.js",
-    "test-build": "echo 'maplibre-gl-js/package.json/scripts/test-build has been disabled temporarily, see https://github.com/maplibre/maplibre-gl-js/pull/17#issuecomment-742437033' 1>&2",
+    "test-build": "echo 'WARNING: maplibre-gl-js/package.json/scripts/test-build has been disabled temporarily, see https://github.com/maplibre/maplibre-gl-js/pull/17#issuecomment-742437033' 1>&2",
     "test-browser": "build/run-tap --reporter spec --no-coverage test/browser/**/*.test.js",
     "test-render": "node --max-old-space-size=2048 test/render.test.js",
     "test-query-node": "node test/query.test.js",
