@@ -16,6 +16,10 @@ If you depend on mapbox-gl directly, simply replace `mapbox-gl` with `maplibre-g
 
 If you use mapbox-gl via bindings (react, vue, etc), you may need to wait a little longer as we develop an easy migration path for each binding. Contributions welcome!
 
+### Roadmap
+
+This project's initial plans are outlined in the [Roadmap](https://github.com/maplibre/maplibre-gl-js/projects/2) project. The primary goal is consistency and backwards-compatability with previous releases and continued bug-fixes and maintenance going forward.
+
 ### Getting Involved
 
 Join the #maplibre slack channel at OSMUS: get an invite at https://osmus-slack.herokuapp.com/
