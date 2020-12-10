@@ -13,8 +13,11 @@ echo "If you /do/ have more than just registry.npmjs.org in ~/.npmrc, it may not
 echo "try to npm publish with the correct (authorized) npm authToken, and publish will fail to auth"
 echo
 
-export NPM_TOKEN=$(cat ~/.npmrc | grep -o '_authToken=.*' | sed 's/_authToken=//g')
 cd `dirname ${BASH_SOURCE[0]}`
+
+export NPM_TOKEN=$(cat ~/.npmrc | grep -o '_authToken=.*' | sed 's/_authToken=//g')
+export GIT_AUTHOR_NAME=$(git config user.name)
+export GIT_AUTHOR_EMAIL=$(git config user.email)
 
 set -ex
 
@@ -27,6 +30,8 @@ docker run -it \
   -v "$(pwd)"/../package.json:/src/package.json \
   -v "$(pwd)"/../.git:/src/.git \
   --env NPM_TOKEN \
+  --env GIT_USER_NAME \
+  --env GIT_USER_EMAIL \
   maplibre-gl/publish-release
 
 set +x
