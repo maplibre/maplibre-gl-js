@@ -15,16 +15,18 @@ echo
 
 cd `dirname ${BASH_SOURCE[0]}`
 
-export NPM_TOKEN=$(cat ~/.npmrc | grep -o '_authToken=.*' | sed 's/_authToken=//g')
-export GIT_AUTHOR_NAME=$(git config user.name)
-export GIT_AUTHOR_EMAIL=$(git config user.email)
-
 set -ex
 
 docker build \
-  -t maplibre-gl/publish-release \
-  -f ./publish-release.dockerfile \
+  -t maplibre-gl-js \
+  -f ./maplibre-gl-js.dockerfile \
   ..
+
+set +x
+export NPM_TOKEN=$(cat ~/.npmrc | grep -o '_authToken=.*' | sed 's/_authToken=//g')
+export GIT_AUTHOR_NAME=$(git config user.name)
+export GIT_AUTHOR_EMAIL=$(git config user.email)
+set -x
 
 docker run -it \
   -v "$(pwd)"/../package.json:/src/package.json \
@@ -32,7 +34,8 @@ docker run -it \
   --env NPM_TOKEN \
   --env GIT_USER_NAME \
   --env GIT_USER_EMAIL \
-  maplibre-gl/publish-release
+  maplibre-gl-js \
+  yarn publish
 
 set +x
 
