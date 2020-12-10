@@ -1,4 +1,9 @@
-## 1.13.0
+## maplibre-gl-js 1.13.0
+
+### 🐞 Bug fixes
+
+- Fix a bug where mapbox-gl-js is no longer free software
+## mapbox-gl-js 1.13.0
 
 ### ✨ Features and improvements
 
