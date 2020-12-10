@@ -13,5 +13,13 @@ cd `dirname ${BASH_SOURCE[0]}`
 
 set -ex
 
-docker build -t maplibre-gl/publish-release -f ./publish-release.dockerfile ..
-docker run -it -v "$(pwd)"/../package.json:/src/package.json --env NPM_TOKEN maplibre-gl/publish-release
+docker build \
+  -t maplibre-gl/publish-release \
+  -f ./publish-release.dockerfile \
+  ..
+
+docker run -it \
+  -v "$(pwd)"/../package.json:/src/package.json \
+  -v "$(pwd)"/../.git:/src/.git \
+  --env NPM_TOKEN \
+  maplibre-gl/publish-release
