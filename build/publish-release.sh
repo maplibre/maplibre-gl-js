@@ -35,7 +35,7 @@ cd ..
 PACKAGE_VERSION=`node -pe "require('./package.json').version"`
 echo
 echo
-echo "maplibre-gl@${PACKAGE_VERSION} published to NPM!"
+echo "SUCCESS: maplibre-gl@${PACKAGE_VERSION} published to NPM!"
 echo
 echo "1. package.json was updated with the new version number you entered, please commit and push this"
 echo "2. Check https://www.npmjs.com/package/maplibre-gl/v/${PACKAGE_VERSION} to verify your release"
