@@ -4625,20 +4625,6 @@ flow-bin@^0.100.0:
   resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.100.0.tgz#729902726658cfa0a81425d6401f9625cf9f5534"
   integrity sha512-jcethhgrslBJukH7Z7883ohFFpzLrdsOEwHxvn5NwuTWbNaE71GAl55/PEBRJwYpDvYkRlqgcNkANTv0x5XjqA==
 
-flow-parser@^0.139.0:
-  version "0.139.0"
-  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.139.0.tgz#c046779114487175f2b1e8aa639bf977d4c7dd9f"
-  integrity sha512-yEh5wJIi/BG7JZvWAWxTdfZ1uoh/W3oefJOuvUDosKFIE5H7ad8Eu6k9ba1yr83Lxn5vY6kZMG1IaiiiA/5scg==
-
-flow-remove-types@^2.139.0:
-  version "2.139.0"
-  resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-2.139.0.tgz#f4230d9a32e62febf0cbf18a50af6f1475e1ba80"
-  integrity sha512-6LOYfPMjytR2CpEpdsBBD0hsRLORQprTXfLPDOJ8uATmeu3cwdkzGcroaZjBkp3Wp7ahiFlD6qE6nmf64CIFbQ==
-  dependencies:
-    flow-parser "^0.139.0"
-    pirates "^3.0.2"
-    vlq "^0.2.1"
-
 flush-write-stream@^1.0.2:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/flush-write-stream/-/flush-write-stream-1.1.1.tgz#8dd7d873a1babc207d94ead0c2e0e44276ebf2e8"
