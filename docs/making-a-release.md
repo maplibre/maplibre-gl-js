@@ -1,3 +1,17 @@
+# Making a release with docker (recommended)
+
+Until we have CI going, anyone with the necessary permissions on npmjs should be able to make a release, using the simple repeatable docker-based `./build/publish-release.sh` script.
+
+1. Run `./build/publish-release.sh`
+2. It will prompt you for a new version number, just increment the rc.X number for now
+3. It will build a number of asset types, and test maplibre-gl
+4. It will diff the tarball with the previous release of maplibre-gl on npm and ask you to confirm (makes it easy to spot build errors, etc), **note you may need to type y or n and press enter** at this phase to continue 🤷‍♂️
+5. Publish the new version to npm
+6. Update your package.json and git tags on the host machine even though the thing executes in docker 🧙🏿‍♂️. **You should commit the new package.json and push**.
+7. Print the URL to the new release
+
+### Without docker (not recommended)
+
 Until we draft more formal docs, get CI going, and develop our own
 release process suited to our needs, here are the steps Seth
 is following to make the `v1.13.0-rc` releases from his local machine:
