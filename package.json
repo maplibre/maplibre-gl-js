@@ -1,13 +1,13 @@
 {
-  "name": "mapbox-gl",
-  "description": "A WebGL interactive maps library",
-  "version": "1.13.0",
+  "name": "maplibre-gl",
+  "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
+  "version": "1.13.0-rc.0",
   "main": "dist/mapbox-gl.js",
   "style": "dist/mapbox-gl.css",
-  "license": "SEE LICENSE IN LICENSE.txt",
+  "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
-    "url": "git://github.com/mapbox/mapbox-gl-js.git"
+    "url": "git://github.com/maplibre/maplibre-gl-js.git"
   },
   "engines": {
     "node": ">=6.4.0"
