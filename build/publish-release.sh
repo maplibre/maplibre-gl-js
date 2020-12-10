@@ -23,3 +23,11 @@ docker run -it \
   -v "$(pwd)"/../.git:/src/.git \
   --env NPM_TOKEN \
   maplibre-gl/publish-release
+
+echo
+echo
+echo "New version of maplibre-gl published to NPM!"
+echo
+echo "1. package.json has been updated with the new version number you entered, please commit and push this"
+echo "2. please check https://www.npmjs.com/package/maplibre-gl to verify your new version is up!"
+echo
