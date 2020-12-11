@@ -26,6 +26,8 @@ import WorkerPool from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {clearTileCache} from './util/tile_request_cache';
 import {PerformanceUtils} from './util/performance';
+import type {RequestParameters, ResponseCallback} from './util/ajax';
+import type {Cancelable} from './types/cancelable';
 
 const exported = {
     version,
@@ -96,6 +98,26 @@ const exported = {
 
     set accessToken(token: string) {
         config.ACCESS_TOKEN = token;
+    },
+
+    /**
+     * Sets a custom load tile function that will be called when the using a source that starts with custom://
+     * The function to be used will recieve the request parameters and should call the callback with the resulting request
+     * For example a pbf vector tile non compresse represented as ArrayBuffer:
+     * ```
+     * loadTilesFunction = (params, callback) => {
+     *      const myArrayBufferOfTheTile = getTheTileByUsingTheRequest(params);
+     *      callback(null, myArrayBufferOfTheTile, null, null);
+     *      return { cancel: () => { } };
+     * };
+     * loadTilesFunctionThatFails = (params, callback) => {
+     *      callback(new Error(someErrorMessage));
+     *      return { cancel: () => { } };
+     * };
+     * ```
+     */
+    set loadTilesFunction(loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
+        config.LOAD_TILES_FUNCTION = loadFn;
     },
 
     /**
