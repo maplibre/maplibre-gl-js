@@ -14,6 +14,8 @@ If you depend on mapbox-gl directly, simply replace `mapbox-gl` with `maplibre-g
   }
 ```
 
+Want an example? [Try out MapLibre GL on CodePen](https://codepen.io/snickell/pen/dypOWzj)
+
 If you use mapbox-gl via bindings (react, vue, etc), you may need to wait a little longer as we develop an easy migration path for each binding. Contributions welcome!
 
 ### Roadmap
