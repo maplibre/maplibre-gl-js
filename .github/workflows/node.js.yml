@@ -34,4 +34,4 @@ jobs:
         node-version: ${{ matrix.node_version }}
         architecture: ${{ matrix.architecture }}
     - run: yarn install --frozen-lockfile
-    - run: yarn test
+    - run: yarn test-ci
