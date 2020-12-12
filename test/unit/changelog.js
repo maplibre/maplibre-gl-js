@@ -6,7 +6,7 @@ import {version} from '../../package.json';
 test('changelog', (t) => {
     const changelog = fs.readFileSync(path.join(__dirname, '../../CHANGELOG.md'), 'utf8');
     t.test('latest version is in changelog', (t) => {
-        if (version.indexOf('-dev') <= 0) {
+        if (version.indexOf('-dev') <= 0 && version.indexOf('-rc') <= 0) {
             const versionString = `## ${version}\n`;
             t.ok(changelog.indexOf(versionString) >= 0);
         }
