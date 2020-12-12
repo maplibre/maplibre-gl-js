@@ -4,9 +4,9 @@ name: Node.js CI
 
 on:
   push:
-    branches: []  # main -- disabled until a runner with GPU is available
+    branches: [ foobar ]  # main -- disabled until a runner with GPU is available
   pull_request:
-    branches: []  # main -- disabled until a runner with GPU is available
+    branches: [ foobar ]  # main -- disabled until a runner with GPU is available
 
 jobs:
   build:
