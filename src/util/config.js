@@ -7,7 +7,7 @@ type Config = {|
   REQUIRE_ACCESS_TOKEN: boolean,
   ACCESS_TOKEN: ?string,
   MAX_PARALLEL_IMAGE_REQUESTS: number,
-  LOAD_TILES_FUNCTION: Function
+  LOAD_TILES_FUNCTION_MAP: object,
 |};
 
 const config: Config = {
@@ -26,7 +26,7 @@ const config: Config = {
     REQUIRE_ACCESS_TOKEN: true,
     ACCESS_TOKEN: null,
     MAX_PARALLEL_IMAGE_REQUESTS: 16,
-    LOAD_TILES_FUNCTION: () => {}
+    LOAD_TILES_FUNCTION_MAP: {}
 };
 
 export default config;

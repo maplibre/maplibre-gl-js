@@ -101,26 +101,6 @@ const exported = {
     },
 
     /**
-     * Sets a custom load tile function that will be called when the using a source that starts with custom://
-     * The function to be used will recieve the request parameters and should call the callback with the resulting request
-     * For example a pbf vector tile non compresse represented as ArrayBuffer:
-     * ```
-     * loadTilesFunction = (params, callback) => {
-     *      const myArrayBufferOfTheTile = getTheTileByUsingTheRequest(params);
-     *      callback(null, myArrayBufferOfTheTile, null, null);
-     *      return { cancel: () => { } };
-     * };
-     * loadTilesFunctionThatFails = (params, callback) => {
-     *      callback(new Error(someErrorMessage));
-     *      return { cancel: () => { } };
-     * };
-     * ```
-     */
-    set loadTilesFunction(loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
-        config.LOAD_TILES_FUNCTION = loadFn;
-    },
-
-    /**
      * Gets and sets the map's default API URL for requesting tiles, styles, sprites, and glyphs
      *
      * @var {string} baseApiUrl
@@ -192,7 +172,32 @@ const exported = {
         clearTileCache(callback);
     },
 
-    workerUrl: ''
+    workerUrl: '',
+
+    /**
+     * Sets a custom load tile function that will be called when the using a source that starts with a custom url.
+     * The example below will be triggered for custom:// urls.
+     * The function to be used will recieve the request parameters and should call the callback with the resulting request,
+     * For example a pbf vector tile non compressed represented as ArrayBuffer:
+     * ```
+     * addCustomTilesFunction('custom', (params, callback) => {
+     *      const myArrayBufferOfTheTile = getTheTileByUsingTheRequest(params);
+     *      callback(null, myArrayBufferOfTheTile, null, null);
+     *      return { cancel: () => { } };
+     * });
+     * // the following is an example of a way to return an error when trying to load a tile
+     * addCustomTilesFunction('custom', (params, callback) => {
+     *      callback(new Error(someErrorMessage));
+     *      return { cancel: () => { } };
+     * });
+     * ```
+     */
+    addCustomTilesFunction(customUrl: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
+        config.LOAD_TILES_FUNCTION_MAP[customUrl] = loadFn;
+    },
+    removeCustomTilesFunction(customUrl: string) {
+        delete config.LOAD_TILES_FUNCTION_MAP[customUrl];
+    }
 };
 
 //This gets automatically stripped out in production builds.
