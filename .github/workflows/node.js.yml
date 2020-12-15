@@ -4,23 +4,23 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ foobar ]  # main -- disabled until a runner with GPU is available
+    branches: [ main ]
   pull_request:
-    branches: [ foobar ]  # main -- disabled until a runner with GPU is available
+    branches: [ main ]
 
 jobs:
   build:
 
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
-          # - macos-latest
+          - macos-latest
+          # TODO re-enable when we get windows working
           # - windows-latest
         node_version:
           - 10
-          - 12
-          - 14
         architecture:
           - x64
 
@@ -34,4 +34,10 @@ jobs:
         node-version: ${{ matrix.node_version }}
         architecture: ${{ matrix.architecture }}
     - run: yarn install --frozen-lockfile
-    - run: yarn test
+    - if: ${{ runner.os == 'Windows' }}
+      run: npm config set script-shell bash.EXE
+    # see: https://github.com/stackgl/headless-gl#how-can-headless-gl-be-used-on-a-headless-linux-machine
+    - if: ${{ runner.os == 'Linux' }}
+      run: xvfb-run -s "-ac -screen 0 1280x1024x24" yarn test
+    - if: ${{ runner.os != 'Linux' }}
+      run: yarn test
