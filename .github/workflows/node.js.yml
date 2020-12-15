@@ -17,16 +17,12 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
+          # TODO re-enable when we get windows working
+          # - windows-latest
         node_version:
           - 10
         architecture:
           - x64
-        # TODO windows not working yet
-        include:
-          - node_version: 10
-            os: windows-latest
-            architecture: x64
-            experimental: true
 
     name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
