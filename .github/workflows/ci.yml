@@ -77,6 +77,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: ./test/release
+          name: test-releast
 
   check-size:
     runs-on: ubuntu-latest
@@ -138,9 +139,11 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: ./test/integration/query-tests
+          name: querytests
       - uses: actions/upload-artifact@v2
         with:
           path: ./test/integration/query-tests/index.html
+          name: querytests.html
 
   test-expressions:
     runs-on: ubuntu-latest
