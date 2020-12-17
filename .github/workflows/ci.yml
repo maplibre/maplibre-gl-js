@@ -21,7 +21,7 @@ jobs:
         architecture:
           - x64
 
-    name: ${{ matrix.os }} node ${{ matrix.node_version }} ${{ matrix.architecture }}
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
