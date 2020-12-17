@@ -1,6 +1,6 @@
 # This workflow will install node dependencies, build the source code and run the test target
 
-name: Node.js CI
+name: CI
 
 on:
   push:
