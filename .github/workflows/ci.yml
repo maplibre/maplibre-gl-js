@@ -1,0 +1,211 @@
+# This workflow will install node dependencies, build the source code and run the test target
+
+name: Node.js CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint_build_test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+        node_version:
+          - 10
+        architecture:
+          - x64
+
+    name: ${{ matrix.os }} node ${{ matrix.node_version }} ${{ matrix.architecture }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: ${{ matrix.node_version }}
+          architecture: ${{ matrix.architecture }}
+      - run: yarn install --frozen-lockfile
+
+      - run: yarn run lint
+      - run: yarn run build-dev
+      - run: yarn test-unit
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 10 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 10
+          architecture: x64
+      - run: yarn install --frozen-lockfile
+      - run: yarn run lint
+      - run: yarn run lint-docs
+      - run: yarn run lint-css
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 10 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 10
+          architecture: x64
+      - run: yarn install --frozen-lockfile
+      - run: yarn run build-prod-min
+      - run: yarn run build-prod
+      - run: yarn run build-csp
+      - run: yarn run build-dev
+      - run: yarn run build-css
+      - run: yarn run build-style-spec
+      - run: yarn run build-flow-types
+      - run: yarn run test-build
+      - run: find dist
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: ./dist
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./test/release
+
+  check-size:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 10 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 10
+          architecture: x64
+      - run: yarn install --frozen-lockfile
+      - uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: ./dist
+      - run: find dist
+      - name: Check bundle size
+        run: |
+          node build/check-bundle-size.js "dist/mapbox-gl.js" "JS"
+          node build/check-bundle-size.js "dist/mapbox-gl.css" "CSS"
+
+  collect-stats:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 10 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 10
+          architecture: x64
+      - run: yarn install --frozen-lockfile
+      - uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: ./dist
+      - run: find dist
+      - name: Collect performance stats
+        run: node bench/gl-stats.js
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Performance stats
+          path: ./data.json.gz
+
+  test-flow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 10 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 10
+          architecture: x64
+      - run: yarn install --frozen-lockfile
+      - run: yarn run test-flow
+
+  test-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 10 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 10
+          architecture: x64
+      - run: yarn install --frozen-lockfile
+      # see: https://github.com/stackgl/headless-gl#how-can-headless-gl-be-used-on-a-headless-linux-machine
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" yarn run test-unit
+
+  test-query:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 10 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 10
+          architecture: x64
+      - run: yarn install --frozen-lockfile
+      - run: yarn run test-query
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./test/integration/query-tests
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./test/integration/query-tests/index.html
+
+  test-expressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 10 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 10
+          architecture: x64
+      - run: yarn install --frozen-lockfile
+      - run: yarn run test-expressions
+
+  # TODO: need a new data provider for these to run
+  # test-render:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  # - name: Use Node.js 10 x64
+  #   uses: actions/setup-node@v2-beta
+  #   with:
+  #     node-version: 10
+  #     architecture: x64
+  # - run: yarn install --frozen-lockfile
+  #     - run: yarn run test-render
+  #     - uses: actions/upload-artifact@v2
+  #       with:
+  #         path: test/integration/render-tests/index.html
+  # test-browser:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - *checkout
+  #     - *node
+  #     - *yarn
+  #     - run: yarn run build-dev
+  #     - run: yarn run build-token
+  #     - name: Test Chrome
+  #       environment:
+  #         SELENIUM_BROWSER: chrome
+  #         TAP_COLORS: 1
+  #       run: yarn run test-browser
+  #     - name: Test Firefox
+  #       environment:
+  #         SELENIUM_BROWSER: firefox
+  #         TAP_COLORS: 1
+  #       runt: yarn run test-browser

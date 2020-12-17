@@ -90,8 +90,8 @@ jobs:
       - save_cache:
           key: v3-yarn-{{ checksum "yarn.lock" }}
           paths:
-            - '~/.yarn'
-            - 'node_modules'
+            - "~/.yarn"
+            - "node_modules"
       - persist_to_workspace:
           root: .
           paths:
@@ -112,7 +112,7 @@ jobs:
       - save_cache:
           key: v2-lint-{{ .Branch }}-{{ .Revision }}
           paths:
-            - '.eslintcache'
+            - ".eslintcache"
 
   build:
     <<: *defaults
@@ -228,4 +228,3 @@ jobs:
       - attach_workspace:
           at: .
       - run: yarn run test-expressions
- 
