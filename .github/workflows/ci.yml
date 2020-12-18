@@ -176,16 +176,16 @@ jobs:
           node-version: 10
           architecture: x64
       - run: yarn install --frozen-lockfile
+      - run: yarn run build-dev
       - run: yarn global add chromedriver
       - run: yarn global add geckodriver
-      - run: yarn run build-dev
       - name: Test Chrome
-        environment:
+        env:
           SELENIUM_BROWSER: chrome
           TAP_COLORS: 1
         run: xvfb-run -s "-ac -screen 0 1280x1024x24" yarn run test-browser
       - name: Test Firefox
-        environment:
+        env:
           SELENIUM_BROWSER: firefox
           TAP_COLORS: 1
         run: xvfb-run -s "-ac -screen 0 1280x1024x24" yarn run test-browser
