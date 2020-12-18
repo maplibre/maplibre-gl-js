@@ -80,7 +80,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: ./test/release
-          name: test-releast
+          name: test-release
 
   # TODO: update check-bundle.size.js
   # check-size:
