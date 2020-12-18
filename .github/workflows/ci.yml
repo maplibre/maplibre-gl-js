@@ -23,6 +23,7 @@ jobs:
 
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
@@ -38,6 +39,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 10 x64
@@ -52,6 +54,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 10 x64
@@ -103,6 +106,7 @@ jobs:
 
   test-flow:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 10 x64
@@ -115,6 +119,7 @@ jobs:
 
   test-unit:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 10 x64
@@ -128,6 +133,7 @@ jobs:
 
   test-query:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 10 x64
@@ -148,6 +154,7 @@ jobs:
 
   test-expressions:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 10 x64
@@ -158,7 +165,32 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn run test-expressions
 
-  # TODO this is timing-out
+  test-browser:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 10 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 10
+          architecture: x64
+      - run: yarn install --frozen-lockfile
+      - run: yarn global add chromedriver
+      - run: yarn global add geckodriver
+      - run: yarn run build-dev
+      - name: Test Chrome
+        environment:
+          SELENIUM_BROWSER: chrome
+          TAP_COLORS: 1
+        run: xvfb-run -s "-ac -screen 0 1280x1024x24" yarn run test-browser
+      - name: Test Firefox
+        environment:
+          SELENIUM_BROWSER: firefox
+          TAP_COLORS: 1
+        run: xvfb-run -s "-ac -screen 0 1280x1024x24" yarn run test-browser
+
+  # TODO this is timing-out, also need a data provider for this to run
   # collect-stats:
   #   runs-on: ubuntu-latest
   #   needs: [build]
@@ -196,21 +228,3 @@ jobs:
   #     - uses: actions/upload-artifact@v2
   #       with:
   #         path: test/integration/render-tests/index.html
-  # test-browser:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - *checkout
-  #     - *node
-  #     - *yarn
-  #     - run: yarn run build-dev
-  #     - run: yarn run build-token
-  #     - name: Test Chrome
-  #       environment:
-  #         SELENIUM_BROWSER: chrome
-  #         TAP_COLORS: 1
-  #       run: yarn run test-browser
-  #     - name: Test Firefox
-  #       environment:
-  #         SELENIUM_BROWSER: firefox
-  #         TAP_COLORS: 1
-  #       runt: yarn run test-browser
