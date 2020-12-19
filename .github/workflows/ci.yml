@@ -93,7 +93,6 @@ jobs:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           build-script: run-s build-css build-prod-min build-csp
           pattern: "./dist/*.{js,css}"
-          use-check: true
 
   test-flow:
     runs-on: ubuntu-latest
@@ -158,6 +157,8 @@ jobs:
 
   test-browser:
     timeout-minutes: 20
+    # These are a bit flaky and occasionally time out
+    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
