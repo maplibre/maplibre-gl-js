@@ -89,7 +89,7 @@ jobs:
       - uses: preactjs/compressed-size-action@v2
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          build-script: yarn run build-prod-min
+          build-script: build-prod-min
 
   test-flow:
     runs-on: ubuntu-latest
