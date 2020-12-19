@@ -84,13 +84,14 @@ jobs:
 
   check-size:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v2
       - uses: preactjs/compressed-size-action@v2
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          build-script: run-s build-prod-min build-csp
+          build-script: run-s build-css build-prod-min build-csp
           pattern: "./dist/*.{js,css}"
           use-check: true
 
