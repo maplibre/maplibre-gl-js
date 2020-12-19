@@ -82,27 +82,16 @@ jobs:
           path: ./test/release
           name: test-release
 
-  # TODO: update check-bundle.size.js
-  # check-size:
-  #   runs-on: ubuntu-latest
-  #   needs: [build]
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Use Node.js 10 x64
-  #       uses: actions/setup-node@v2-beta
-  #       with:
-  #         node-version: 10
-  #         architecture: x64
-  #     - run: yarn install --frozen-lockfile
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: dist
-  #         path: ./dist
-  #     - run: find dist
-  #     - name: Check bundle size
-  #       run: |
-  #         node build/check-bundle-size.js "dist/mapbox-gl.js" "JS"
-  #         node build/check-bundle-size.js "dist/mapbox-gl.css" "CSS"
+  check-size:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_type == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: preactjs/compressed-size-action@v2
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          install-script: yarn install --frozen-lockfile
+          build-script: yarn run build-prod-min
 
   test-flow:
     runs-on: ubuntu-latest
