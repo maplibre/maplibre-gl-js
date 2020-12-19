@@ -8,3 +8,27 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
+
+# this is some example text to change the bundle size
+# to test #42 bundle size reporting
+
+# this is some example text to change the bundle size
+# to test #42 bundle size reporting
+
+# this is some example text to change the bundle size
+# to test #42 bundle size reporting
+
+# this is some example text to change the bundle size
+# to test #42 bundle size reporting
+
+# this is some example text to change the bundle size
+# to test #42 bundle size reporting
+
+# this is some example text to change the bundle size
+# to test #42 bundle size reporting
+
+# this is some example text to change the bundle size
+# to test #42 bundle size reporting
+
+# this is some example text to change the bundle size
+# to test #42 bundle size reporting
