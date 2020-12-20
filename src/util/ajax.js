@@ -241,7 +241,18 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
     // - Safari exposes window.AbortController, but it doesn't work actually abort any requests in
     //   some versions (see https://bugs.webkit.org/show_bug.cgi?id=174980#c2)
     // - Requests for resources with the file:// URI scheme don't work with the Fetch API either. In
-    //   this case we unconditionally use XHR on the current thread since referrers don't matter.
+    //   this case we unconditionally use XHR on the current thread since referrers don't matter.   
+    if (!(/^https?:|^file:/.test(requestParameters.url))){
+        let p = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
+        if (isWorker() && self.worker && self.worker.actor) {
+            return self.worker.actor.send('getResource', requestParameters, callback);
+        }
+        if (!isWorker()) {
+            let f = (config.REGISTERED_PROTOCOLS[p] === void 0) ? makeFetchRequest : config.REGISTERED_PROTOCOLS[p];
+            return f(requestParameters, callback);
+        }
+    }
+    
     if (!isFileURL(requestParameters.url)) {
         if (window.fetch && window.Request && window.AbortController && window.Request.prototype.hasOwnProperty('signal')) {
             return makeFetchRequest(requestParameters, callback);
