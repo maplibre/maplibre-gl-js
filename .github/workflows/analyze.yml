@@ -46,6 +46,8 @@ jobs:
       - name: Dump bundle size report
         run: echo -n "${{ steps.comment.outputs.body }}"
 
+      # Attempt to post a comment with the bundle size report on the PR
+      # Or update the comment on subsequent changes
       - name: Find Comment
         uses: peter-evans/find-comment@v1
         continue-on-error: true
