@@ -1,0 +1,45 @@
+# After a build completes, this workflow analyzes the artifacts and reports back in a comment
+
+name: Analyze
+
+on:
+  - push
+  - pull_request
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
+
+  check-size:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: ${{ matrix.node_version }}
+          architecture: ${{ matrix.architecture }}
+      - run: yarn install --frozen-lockfile
+      - name: Download base artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
+          workflow: ci.yml
+          # commit: ${{ github.base_ref }}
+          commit: ad69b284366a95bfac5e3b7e58552bfd45dbded5
+          name: dist
+          path: before
+      - name: Download branch artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
+          workflow: ci.yml
+          # commit: ${{ github.event.pull_request.head.sha }}
+          commit: 4f96bb064198617a6b57340e8c45d39b091a51fd
+          name: dist
+          path: after
+      - run: yarn source-map-explorer before/mapbox-gl.js --gzip --json before.json
+      - run: yarn source-map-explorer after/mapbox-gl.js --gzip --json after.json
+      - run: node build/check-bundle-size.js
+        id: comment

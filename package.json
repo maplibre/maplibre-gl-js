@@ -106,6 +106,7 @@
     "selenium-webdriver": "^4.0.0-alpha.5",
     "shuffle-seed": "^1.1.6",
     "sinon": "^7.3.2",
+    "source-map-explorer": "^2.5.1",
     "st": "^1.2.2",
     "stylelint": "^9.10.1",
     "stylelint-config-standard": "^18.2.0",
