@@ -4,17 +4,19 @@ name: Analyze
 
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["Build"]
     types:
       - completed
 
 jobs:
   check-size:
     runs-on: ubuntu-latest
+    continue-on-error: true
     if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
+      - uses: hmarr/debug-action@v1.0.0
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2-beta
         with:
@@ -28,23 +30,30 @@ jobs:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: dist
           path: after
-          repo: maplibre/maplibre-gl-js
+          repo: msbarry/maplibre-gl-js-fork
       - name: Download base artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: "${{ secrets.GITHUB_TOKEN }}"
-          workflow: ci.yml
-          commit: ${{ github.base_ref }}
+          workflow: build.yml
+          commit: ${{ github.event.workflow_run.pull_requests[0].base.sha }}
           name: dist
           path: before
-          repo: maplibre/maplibre-gl-js
+          repo: msbarry/maplibre-gl-js-fork
       - run: yarn source-map-explorer before/mapbox-gl.js --gzip --json before.json
       - run: yarn source-map-explorer after/mapbox-gl.js --gzip --json after.json
       - name: Build bundle size report
-        run: echo ::set-output name=body::$(node build/check-bundle-size.js)
-        id: comment
+        run: node build/check-bundle-size.js > comment-body.txt
       - name: Dump bundle size report
-        run: echo -n "${{ steps.comment.outputs.body }}"
+        run: cat comment-body.txt
+
+      - id: get-comment-body
+        run: |
+          body=$(cat comment-body.txt)
+          body="${body//'%'/'%25'}"
+          body="${body//$'\n'/'%0A'}"
+          body="${body//$'\r'/'%0D'}"
+          echo ::set-output name=body::$body
 
       # Attempt to post a comment with the bundle size report on the PR
       # Or update the comment on subsequent changes
@@ -53,7 +62,7 @@ jobs:
         continue-on-error: true
         id: fc
         with:
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: ${{ github.event.workflow_run.pull_requests[0].number }}
           comment-author: "github-actions[bot]"
           body-includes: Bundle size report
 
@@ -62,8 +71,8 @@ jobs:
         if: ${{ steps.fc.outputs.comment-id == 0 }}
         uses: peter-evans/create-or-update-comment@v1
         with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.comment.outputs.body }}
+          issue-number: ${{ github.event.workflow_run.pull_requests[0].number }}
+          body: ${{ steps.get-comment-body.outputs.body }}
 
       - name: Update comment
         continue-on-error: true
@@ -71,4 +80,5 @@ jobs:
         uses: peter-evans/create-or-update-comment@v1
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
-          body: ${{ steps.comment.outputs.body }}
+          body: ${{ steps.get-comment-body.outputs.body }}
+          edit-mode: replace

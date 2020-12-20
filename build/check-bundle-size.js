@@ -63,7 +63,7 @@ console.log(`
 if (diffs.length) {
     console.log(`
 | Filename | Before | After | Change |
-| :--- | :---: | :---: |
+| :--- | :---: | :---: | :---: |
 ${diffs.map(diff => '| ' + diff.slice(1).join(' | ') + ' |').join('\n')}
 `);
 } else {
