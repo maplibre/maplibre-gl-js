@@ -44,5 +44,27 @@ jobs:
           repo: maplibre/maplibre-gl-js
       - run: yarn source-map-explorer before/mapbox-gl.js --gzip --json before.json
       - run: yarn source-map-explorer after/mapbox-gl.js --gzip --json after.json
-      - run: node build/check-bundle-size.js
+      - run: echo ::set-output name=body::$(node build/check-bundle-size.js)
         id: comment
+
+      - name: Find Comment
+        uses: peter-evans/find-comment@v1
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: Bundle size report
+
+      - name: Create comment
+        if: ${{ steps.fc.outputs.comment-id == 0 }}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.comment.outputs.body }}
+
+      - name: Update comment
+        if: ${{ steps.fc.outputs.comment-id != 0 }}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          body: ${{ steps.comment.outputs.body }}

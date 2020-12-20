@@ -22,11 +22,7 @@ const beforecss = fileSize('./before/mapbox-gl.css');
 const afterjs = fileSize('./after/mapbox-gl.js');
 const aftercss = fileSize('./after/mapbox-gl.css');
 
-const total = afterjs.size + aftercss.size;
-const gzipped = afterjs.gzipped + aftercss.gzipped;
-const megabit = Math.pow(2, 12);
-const downloadTime3G = (total / (3 * megabit)).toFixed(0);
-const downloadTime4G = (total / (10 * megabit)).toFixed(0);
+console.log('Bundle size report:');
 console.log(`**Size Change:** ${prettyBytes(afterjs.gzipped + aftercss.gzipped - (beforejs.gzipped + beforecss.gzipped))}`);
 console.log(`**Total Size:** ${prettyBytes(afterjs.gzipped + aftercss.gzipped)}`);
 console.log(`
@@ -60,7 +56,7 @@ Object.keys(Object.assign({}, before, after)).forEach(filename => {
     }
 });
 
-diffs.sort((a, b) => a[0] - b[0]);
+diffs.sort((a, b) => b[0] - a[0]);
 
 console.log(`
 <details><summary>ℹ️ <strong>View Details</strong></summary>`);
