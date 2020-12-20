@@ -248,8 +248,8 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
         }
         if (!isWorker()) {
             const p = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
-            let f = (config.REGISTERED_PROTOCOLS[p] === void 0) ? makeFetchRequest : config.REGISTERED_PROTOCOLS[p];
-            return f(requestParameters, callback);
+            const f = config.REGISTERED_PROTOCOLS[p];
+            return ((f === void 0) ? makeFetchRequest : f)(requestParameters, callback);
         }
     }
     
