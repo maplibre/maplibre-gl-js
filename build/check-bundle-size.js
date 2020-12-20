@@ -51,7 +51,7 @@ const diffs = [];
 Object.keys(Object.assign({}, before, after)).forEach(filename => {
     const beforeSize = before[filename] || 0;
     const afterSize = after[filename] || 0;
-    if (afterSize >= (beforeSize + 1)) {
+    if (Math.abs(afterSize - beforeSize) > 0) {
         diffs.push([
             afterSize - beforeSize, // for sorting
             filename.replace(/^[\./]+/, ''), // omit ../
