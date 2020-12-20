@@ -47,7 +47,7 @@ jobs:
       - run: echo ::set-output name=body::$(node build/check-bundle-size.js)
         id: comment
       - name: bundle size report
-        run: echo "${{ steps.comment.outputs.body }}""
+        run: echo "${{ steps.comment.outputs.body }}"
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
