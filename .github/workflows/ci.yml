@@ -1,4 +1,4 @@
-# This workflow will install node dependencies, build the source code and run the test target
+# This workflow will install node dependencies, build the source code and run tests
 
 name: CI
 
