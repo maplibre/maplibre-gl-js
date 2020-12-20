@@ -252,7 +252,6 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
             return ((f === void 0) ? makeFetchRequest : f)(requestParameters, callback);
         }
     }
-    
     if (!isFileURL(requestParameters.url)) {
         if (window.fetch && window.Request && window.AbortController && window.Request.prototype.hasOwnProperty('signal')) {
             return makeFetchRequest(requestParameters, callback);
