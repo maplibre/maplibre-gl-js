@@ -31,6 +31,7 @@ jobs:
           commit: 4f96bb064198617a6b57340e8c45d39b091a51fd
           name: dist
           path: after
+          repo: maplibre/maplibre-gl-js
       - name: Download base artifact
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -40,6 +41,7 @@ jobs:
           commit: ad69b284366a95bfac5e3b7e58552bfd45dbded5
           name: dist
           path: before
+          repo: maplibre/maplibre-gl-js
       - run: yarn source-map-explorer before/mapbox-gl.js --gzip --json before.json
       - run: yarn source-map-explorer after/mapbox-gl.js --gzip --json after.json
       - run: node build/check-bundle-size.js
