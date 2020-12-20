@@ -180,23 +180,34 @@ const exported = {
      * The function to be used will recieve the request parameters and should call the callback with the resulting request,
      * For example a pbf vector tile non compressed represented as ArrayBuffer:
      * ```
-     * addCustomTilesFunction('custom', (params, callback) => {
-     *      const myArrayBufferOfTheTile = getTheTileByUsingTheRequest(params);
-     *      callback(null, myArrayBufferOfTheTile, null, null);
-     *      return { cancel: () => { } };
-     * });
+        maplibre.addProtocol("custom", (params, callback) => {
+            fetch(`https://${params.url.split("://")[1]}`)
+                .then(t => {
+                    if (t.status == 200) {
+                        t.arrayBuffer().then(arr => {
+                            callback(null, arr, null, null);
+                        });
+                    } else {
+                        callback(new Error(`Tile fetch error: ${t.statusText}`));
+                    }
+                })
+                .catch(e => {
+                    callback(new Error(e));
+                });
+            return { cancel: () => { } };
+        });
      * // the following is an example of a way to return an error when trying to load a tile
-     * addCustomTilesFunction('custom', (params, callback) => {
+     * addProtocol('custom', (params, callback) => {
      *      callback(new Error(someErrorMessage));
      *      return { cancel: () => { } };
      * });
      * ```
      */
-    addCustomTilesFunction(customUrl: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
-        config.LOAD_TILES_FUNCTION_MAP[customUrl] = loadFn;
+    addProtocol(customUrl: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
+        config.REGISTERED_PROTOCOLS[customUrl] = loadFn;
     },
-    removeCustomTilesFunction(customUrl: string) {
-        delete config.LOAD_TILES_FUNCTION_MAP[customUrl];
+    removeProtocol(customUrl: string) {
+        delete config.REGISTERED_PROTOCOLS[customUrl];
     }
 };
 

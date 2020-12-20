@@ -1,0 +1,9 @@
+# see: https://docs.github.com/en/free-pro-team@latest/github/using-git/configuring-git-to-handle-line-endings#per-repository-settings
+
+# Set the default behavior to use LF line endings
+* text eol=lf
+
+# Denote all files that are truly binary and should not be modified.
+*.png binary
+*.mvt binary
+*.pbf binary
