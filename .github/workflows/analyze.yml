@@ -16,11 +16,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js 10 x64
         uses: actions/setup-node@v2-beta
         with:
-          node-version: ${{ matrix.node_version }}
-          architecture: ${{ matrix.architecture }}
+          node-version: 10
+          architecture: x64
       - run: yarn install --frozen-lockfile
       - name: Download branch artifact
         uses: dawidd6/action-download-artifact@v2
@@ -46,38 +46,8 @@ jobs:
       - name: Dump bundle size report
         run: cat comment-body.txt
 
-      - id: get-comment-body
-        run: |
-          body=$(cat comment-body.txt)
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo ::set-output name=body::$body
-
-      # Attempt to post a comment with the bundle size report on the PR
-      # Or update the comment on subsequent changes
-      - name: Find Comment
-        uses: peter-evans/find-comment@v1
-        continue-on-error: true
-        id: fc
+      - uses: marocchino/sticky-pull-request-comment@v2
         with:
-          issue-number: ${{ github.event.workflow_run.pull_requests[0].number }}
-          comment-author: "github-actions[bot]"
-          body-includes: Bundle size report
-
-      - name: Create comment
-        continue-on-error: true
-        if: ${{ steps.fc.outputs.comment-id == 0 }}
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          issue-number: ${{ github.event.workflow_run.pull_requests[0].number }}
-          body: ${{ steps.get-comment-body.outputs.body }}
-
-      - name: Update comment
-        continue-on-error: true
-        if: ${{ steps.fc.outputs.comment-id != 0 }}
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          body: ${{ steps.get-comment-body.outputs.body }}
-          edit-mode: replace
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          append: false
+          path: comment-body.txt
