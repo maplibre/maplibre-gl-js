@@ -46,9 +46,9 @@ jobs:
       - name: Dump bundle size report
         run: cat comment-body.txt
 
-      - uses: marocchino/sticky-pull-request-comment@master
+      - uses: marocchino/sticky-pull-request-comment@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          append: false
           path: comment-body.txt
           header: bundle-size-report
+          number: ${{ github.event.workflow_run.pull_requests[0].number }}
