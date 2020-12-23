@@ -4,6 +4,8 @@ This guide traces through what happens in the code when you load a new tile.
 
 ## Event Loop
 
+![Event Loop Sequence Diagram](diagram.svg)
+
 - [src/geo/transform](../src/geo/transform.js) holds the current viewport details (pitch, zoom, bearing, bounds, etc.). Two places in the code update transform directly:
   - [src/ui/camera](../src/ui/camera.js) (parent class of [src/ui/map](../src/ui/map)) in response to explicit calls to [map#panTo](../src/ui/map.js), [map#setCenter](../src/ui/map.js)
   - [src/ui/handler_manager](../src/ui/handler_manager.js) in response to DOM events. It forwards those events to interaction processors that live in [src/ui/handlers](../src/ui/handlers), which accumulate a merged HandlerResult that kick off a render frame loop, decreasing the inertia and nudging map.transform by that amount on each frame from [\_updateMapTransform()](../src/ui/handler_manager.js#L412). That loop continues in the inertia decreases to 0.
