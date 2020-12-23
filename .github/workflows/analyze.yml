@@ -51,3 +51,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           append: false
           path: comment-body.txt
+          header: bundle-size-report
