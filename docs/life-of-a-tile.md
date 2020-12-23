@@ -4,7 +4,7 @@ This guide traces through what happens in the code when you load a new tile.
 
 ## Event Loop
 
-![Event Loop Sequence Diagram](diagram.svg)
+![Event Loop Sequence Diagram](eventloop.svg)
 
 - [src/geo/transform](../src/geo/transform.js) holds the current viewport details (pitch, zoom, bearing, bounds, etc.). Two places in the code update transform directly:
   - [src/ui/camera](../src/ui/camera.js) (parent class of [src/ui/map](../src/ui/map)) in response to explicit calls to [map#panTo](../src/ui/map.js), [map#setCenter](../src/ui/map.js)
