@@ -60,6 +60,7 @@ jobs:
 
       - uses: marocchino/sticky-pull-request-comment@v2
         with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           path: comment-body.txt
           header: bundle-size-report
           number: ${{ steps.build_info.outputs.pr_number }}
