@@ -15,6 +15,9 @@ jobs:
     if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 20
     steps:
+      # report status back to pull request
+      - uses: haya14busa/action-workflow_run-status@v1
+      - uses: hmarr/debug-action@v1.0.0
       - uses: actions/checkout@v2
       - name: Use Node.js 10 x64
         uses: actions/setup-node@v2-beta
