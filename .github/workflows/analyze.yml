@@ -27,7 +27,6 @@ jobs:
       - name: Download branch artifact
         uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: "${{ secrets.GITHUB_TOKEN }}"
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: dist
           path: after
@@ -35,23 +34,20 @@ jobs:
       - name: Download branch build info
         uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: "${{ secrets.GITHUB_TOKEN }}"
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: build-info
           path: build-info
           repo: maplibre/maplibre-gl-js
-      - name: Get PR number
-        id: pr_number
-        run: echo "::set-output name=pr_number::$(cat build-info/pull_request_number)"
-      - name: Get Base SHA
-        id: base_sha
-        run: echo "::set-output name=base_sha::$(cat build-info/base_sha)"
+      - name: Get build info
+        id: build_info
+        run: |
+          echo "::set-output name=pr_number::$(cat build-info/pull_request_number)"
+          echo "::set-output name=base_sha::$(cat build-info/base_sha)"
       - name: Download base artifact
         uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: "${{ secrets.GITHUB_TOKEN }}"
           workflow: build.yml
-          commit: ${{ steps.base_sha.outputs.base_sha }}
+          commit: ${{ steps.build_info.outputs.base_sha }}
           name: dist
           path: before
           repo: maplibre/maplibre-gl-js
@@ -64,7 +60,6 @@ jobs:
 
       - uses: marocchino/sticky-pull-request-comment@v2
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           path: comment-body.txt
           header: bundle-size-report
-          number: ${{ github.event.workflow_run.pull_requests[0].number }}
+          number: ${{ steps.build_info.outputs.pr_number }}
