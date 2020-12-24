@@ -31,7 +31,7 @@ console.log(`
 | Output file | Before | After | Change |
 | :--- | :---: | :---: | :---: |
 | mapbox-gl.js | ${prettyBytes(beforejs.gzipped)} | ${prettyBytes(afterjs.gzipped)} | ${prettyBytes(afterjs.gzipped - beforejs.gzipped, { signed: true })} |
-| mapbox-gl.css | ${prettyBytes(beforejs.gzipped)} | ${prettyBytes(aftercss.gzipped)} | ${prettyBytes(aftercss.gzipped - beforecss.gzipped, { signed: true })} |`);
+| mapbox-gl.css | ${prettyBytes(beforecss.gzipped)} | ${prettyBytes(aftercss.gzipped)} | ${prettyBytes(aftercss.gzipped - beforecss.gzipped, { signed: true })} |`);
 
 const before = {};
 beforeSourcemap.results.forEach(result => {
