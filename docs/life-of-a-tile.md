@@ -1,6 +1,6 @@
 # Life of a Tile
 
-This guide traces through what happens in the code when you load a new tile.
+This guide traces through what happens when you load a new tile.
 
 ## Event Loop
 
