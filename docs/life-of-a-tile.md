@@ -4,7 +4,7 @@ This guide traces through what happens when you load a new tile.
 
 ## Event Loop
 
-![Event Loop Sequence Diagram](event-loop.planetuml.svg)
+![Event Loop Sequence Diagram](event-loop.plantuml.svg)
 
 - [src/geo/transform](../src/geo/transform.js) holds the current viewport details (pitch, zoom, bearing, bounds, etc.). Two places in the code update transform directly:
   - [src/ui/camera](../src/ui/camera.js) (parent class of [src/ui/map](../src/ui/map)) in response to explicit calls to [map#panTo](../src/ui/map.js), [map#setCenter](../src/ui/map.js)
@@ -13,7 +13,7 @@ This guide traces through what happens when you load a new tile.
 
 ## Loading a tile
 
-![Fetch Tile Sequence Diagram](fetch-tile.planetuml.svg)
+![Fetch Tile Sequence Diagram](fetch-tile.plantuml.svg)
 
 [map#\_render()](../src/ui/map.js#L2439) works in 2 different modes based on the value of `map._sourcesDirty`. When `map._sourcesDirty === true`, it starts by asking each source if it needs to load any new data:
 
@@ -52,7 +52,7 @@ This guide traces through what happens when you load a new tile.
 
 ## Rendering a frame
 
-![Render Frame Sequence Diagram](fetchrender-frame.planetuml.svg)
+![Render Frame Sequence Diagram](fetchrender-frame.plantuml.svg)
 
 When `map._sourcesDirty === false`, [map#\_render()](../src/ui/map.js#L2439) just renders a new frame entirely within the main UI thread:
 
