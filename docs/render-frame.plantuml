@@ -1,9 +1,4 @@
 @startuml
-<style>
-sequenceDiagram {
-}
-</style>
-
 participant map
 participant style
 participant painter

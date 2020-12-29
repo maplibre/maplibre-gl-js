@@ -1,9 +1,4 @@
 @startuml
-<style>
-sequenceDiagram {
-}
-</style>
-
 participant DOM
 participant handler_manager
 participant handler

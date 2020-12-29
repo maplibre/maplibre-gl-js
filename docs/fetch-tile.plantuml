@@ -1,9 +1,4 @@
 @startuml
-<style>
-sequenceDiagram {
-}
-</style>
-
 participant map
 participant source_cache
 participant source
