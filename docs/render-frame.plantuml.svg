@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="93px" preserveAspectRatio="none" style="width:164px;height:93px;background:#000000;" version="1.1" viewBox="0 0 164 93" width="164px" zoomAndPan="magnify"><defs/><g><rect fill="#33FF02" height="21.4883" style="stroke: #33FF02; stroke-width: 1.0;" width="158" x="5" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="156" x="6" y="20">[From string (line 2) ]</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="10" y="40.4883"/><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="74" x="5" y="56.9766">@startuml</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="57" x="5" y="73.4648">&lt;style&gt;</text><text fill="#FF0000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="94" x="10" y="89.9531">Syntax Error?</text><!--
+@startuml
+<style>
+sequenceDiagram {
+}
+</style>
+
+participant map
+participant style
+participant painter
+participant layer
+participant source_cache
+participant GPU
+
+map->>style: update(transform)
+style->>layer: recalculate()
+layer->>layer: recompute\npaint\nproperties
+map->source_cache: update(transform)
+source_cache->source_cache: fetch new tiles
+map->painter: render(style)
+painter->source_cache: prepare(context)
+loop for each tile
+source_cache->GPU: upload vertices
+source_cache->GPU: upload image textures
+end
+loop pass=offscreen, opaque, translucent, debug
+painter->layer: renderLayer(pass)
+loop for each tile
+layer->GPU: load program
+layer->GPU: drawElements()
+end
+end
+map->map: triggerRepaint()
+@enduml
+
+PlantUML version 1.2019.06(Fri May 24 13:10:25 EDT 2019)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Java Version: 1.8.0_162-b12
+Operating System: Mac OS X
+OS Version: 10.15.7
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

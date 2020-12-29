@@ -1,0 +1,33 @@
+@startuml
+<style>
+sequenceDiagram {
+}
+</style>
+
+participant map
+participant style
+participant painter
+participant layer
+participant source_cache
+participant GPU
+
+map->>style: update(transform)
+style->>layer: recalculate()
+layer->>layer: recompute\npaint\nproperties
+map->source_cache: update(transform)
+source_cache->source_cache: fetch new tiles
+map->painter: render(style)
+painter->source_cache: prepare(context)
+loop for each tile
+source_cache->GPU: upload vertices
+source_cache->GPU: upload image textures
+end
+loop pass=offscreen, opaque, translucent, debug
+painter->layer: renderLayer(pass)
+loop for each tile
+layer->GPU: load program
+layer->GPU: drawElements()
+end
+end
+map->map: triggerRepaint()
+@enduml

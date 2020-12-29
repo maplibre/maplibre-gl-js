@@ -4,7 +4,7 @@ This guide traces through what happens when you load a new tile.
 
 ## Event Loop
 
-![Event Loop Sequence Diagram](eventloop.svg)
+![Event Loop Sequence Diagram](event-loop.planetuml.svg)
 
 - [src/geo/transform](../src/geo/transform.js) holds the current viewport details (pitch, zoom, bearing, bounds, etc.). Two places in the code update transform directly:
   - [src/ui/camera](../src/ui/camera.js) (parent class of [src/ui/map](../src/ui/map)) in response to explicit calls to [map#panTo](../src/ui/map.js), [map#setCenter](../src/ui/map.js)
@@ -12,6 +12,8 @@ This guide traces through what happens when you load a new tile.
 - Both camera and handler_manager are responsible for firing `move`, `zoom`, `movestart`, `moveend`, ... events on the map after they update transform. Each of these events (along with style changes and data load events) triggers a call to [map#\_render()](../src/ui/map.js#L2439) which renders a single frame of the map.
 
 ## Loading a tile
+
+![Fetch Tile Sequence Diagram](fetch-tile.planetuml.svg)
 
 [map#\_render()](../src/ui/map.js#L2439) works in 2 different modes based on the value of `map._sourcesDirty`. When `map._sourcesDirty === true`, it starts by asking each source if it needs to load any new data:
 
@@ -49,6 +51,8 @@ This guide traces through what happens when you load a new tile.
   - Fire a `data {dataType: 'source'}` event on the source, which bubbles up to [SourceCache](../src/source/source_cache.js), [Style](../src/style/style.js), and [Map](../src/ui/map.js), which translates it to a `sourcedata` event and also calls [Map#\_update()](../src/ui/map.js#L2402) which calls [Map#triggerRepaint()](../src/ui/map.js#L2624) then [Map#\_render()](../src/ui/map.js#L2439) which renders a new frame just like when user interaction triggers transform change.
 
 ## Rendering a frame
+
+![Render Frame Sequence Diagram](fetchrender-frame.planetuml.svg)
 
 When `map._sourcesDirty === false`, [map#\_render()](../src/ui/map.js#L2439) just renders a new frame entirely within the main UI thread:
 

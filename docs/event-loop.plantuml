@@ -1,0 +1,25 @@
+@startuml
+<style>
+sequenceDiagram {
+}
+</style>
+
+participant DOM
+participant handler_manager
+participant handler
+participant camera
+participant transform
+participant map
+
+map->>camera: panTo, setCenter
+camera->>transform: update
+camera->>map: fire move event
+map->>map: _render()
+
+DOM->>handler_manager: DOM events
+handler_manager->>handler: forward event
+handler->>handler_manager: HandlerResult
+handler_manager->>transform: update
+handler_manager->>map: fire move event
+map->>map: _render()
+@enduml

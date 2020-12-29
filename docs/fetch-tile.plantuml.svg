@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="93px" preserveAspectRatio="none" style="width:164px;height:93px;background:#000000;" version="1.1" viewBox="0 0 164 93" width="164px" zoomAndPan="magnify"><defs/><g><rect fill="#33FF02" height="21.4883" style="stroke: #33FF02; stroke-width: 1.0;" width="158" x="5" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="156" x="6" y="20">[From string (line 2) ]</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="10" y="40.4883"/><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="74" x="5" y="56.9766">@startuml</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="57" x="5" y="73.4648">&lt;style&gt;</text><text fill="#FF0000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="94" x="10" y="89.9531">Syntax Error?</text><!--
+@startuml
+<style>
+sequenceDiagram {
+}
+</style>
+
+participant map
+participant source_cache
+participant source
+participant ajax
+participant "glyph/image\nmanager"
+box worker
+participant worker
+participant worker_source
+participant worker_tile
+participant bucket
+participant worker_ajax
+end box
+
+map->source_cache: update(transform)
+source_cache->source_cache: compute\ncovering\ntiles
+loop for each missing tile
+source_cache->source: loadTile(tile, callback)
+alt raster_tile_source
+source->ajax: getImage
+else image_source
+source->ajax: getImage\n(once)
+else raster_dem_tile_source
+source->ajax: getImage()
+source->worker: loadDEMTile()
+worker->worker: add 1px buffer
+worker- ->source: DEMData
+else vector_tile_source/geojson_source
+source->worker: loadTile()
+worker->worker_source: loadVectorTile()
+alt vector_tile_source
+worker_source->worker_ajax: getArrayBuffer()
+worker_source->worker_source: decode pbf
+worker_source->worker_source: parse vector tile
+else geojson_source
+worker_source->worker_ajax: getJSON()
+worker_source->worker_source: geojson-vt parse
+worker_source->worker_source: getTile()
+end
+worker_source->worker_tile: parse()
+loop for each "layer family"
+worker_tile->worker_tile: calculate layout\nproperties
+worker_tile->worker_tile: createBucket
+worker_tile->bucket: populate()
+bucket->bucket: compute triangles\nneeded by GPU\nfor each feature we\nhave data for
+worker_tile->"glyph/image\nmanager": getGlyphs
+"glyph/image\nmanager"->ajax: Fetch font PBFs
+"glyph/image\nmanager"->"glyph/image\nmanager": render TinySDF glyphs
+worker_tile->"glyph/image\nmanager": getImages
+"glyph/image\nmanager"->ajax: Fetch icon images
+"glyph/image\nmanager"- ->worker_tile: hlyph/Image dependencies
+worker_tile->worker_tile: maybePrepare()
+worker_tile->worker_tile: create GlyphAtlas
+worker_tile->worker_tile: create ImageAtlas
+worker_tile->bucket: addFeatures
+worker_tile->bucket: performSymbolLayout
+bucket->bucket: place characters
+bucket->bucket: compute collision\nboxes
+bucket->bucket: compute triangles\nneeded by GPU
+end
+worker_tile- ->source: callback(bucket, featureIndex, collision boxes, GlyphAtlas, ImageAtlas)
+source- ->source: Tile#loadVectorData()\ndecode response
+end
+source- ->source_cache: Tile
+source_cache- ->source_cache: _backfillDEM()\ncopy 1px buffer\nfrom neigboring tiles
+source->source: fire('data', {dataType: 'source'})
+source->source_cache:
+source_cache->map:
+map->map: fire('sourcedata')
+map->map: _update
+map->map: triggerRepaint()
+map->map: _render()
+map->map: render new frame
+@enduml
+
+PlantUML version 1.2019.06(Fri May 24 13:10:25 EDT 2019)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Java Version: 1.8.0_162-b12
+Operating System: Mac OS X
+OS Version: 10.15.7
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>
