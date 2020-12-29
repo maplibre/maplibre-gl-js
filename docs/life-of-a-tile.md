@@ -52,7 +52,7 @@ This guide traces through what happens when you load a new tile.
 
 ## Rendering a frame
 
-![Render Frame Sequence Diagram](fetchrender-frame.plantuml.svg)
+![Render Frame Sequence Diagram](render-frame.plantuml.svg)
 
 When `map._sourcesDirty === false`, [map#\_render()](../src/ui/map.js#L2439) just renders a new frame entirely within the main UI thread:
 
