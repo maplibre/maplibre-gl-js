@@ -43,7 +43,7 @@ worker_tile->worker_tile: createBucket
 worker_tile->bucket: populate()
 bucket->bucket: compute triangles\nneeded by GPU\nfor each feature we\nhave data for
 worker_tile->"glyph/image\nmanager": getGlyphs
-"glyph/image\nmanager"->ajax: Fetch font\bPBFs
+"glyph/image\nmanager"->ajax: Fetch font\nPBFs
 "glyph/image\nmanager"->"glyph/image\nmanager": TinySDF
 worker_tile->"glyph/image\nmanager": getImages
 "glyph/image\nmanager"->ajax: Fetch icon\nimages
