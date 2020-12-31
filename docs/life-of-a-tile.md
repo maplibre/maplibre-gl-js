@@ -6,7 +6,7 @@ This guide traces through what happens when you load a new tile. At a high level
 - [Tile loading](#tile-loading) asynchronously fetches tiles, images, fonts, etc. needed by the current state of the map
 - [Render loop](#render-loop) renders the current state of the map to the screen
 
-Ideally the event loop and render frame run at 60 frames per second, and all of the heavy work of tile loading happens inside a web worker.
+Ideally the event loop and render frame run at 60 frames per second, and all of the heavy work of tile loading happens asynchronously inside a web worker.
 
 ## Event Loop
 
