@@ -30,25 +30,25 @@ Ideally the event loop and render frame run at 60 frames per second, and all of 
     - :gear: [RasterDEMTileWorkerSource#loadTile](../src/source/raster_dem_tile_worker_source.js#L25) loads raw rgb data into a [DEMData](../src/data/dem_data.js) instance. This copies edge pixels out to a 1px border to avoid edge artifacts and passes that back to the main thread.
   - [VectorTileSource#loadTile](../src/source/vector_tile_source.js#L184) sends a `loadTile` or `reloadTile` message to a worker:
     - :gear: [Worker#loadTile](../src/source/worker.js#L99) handles the message and passes it to [VectorTileWorkerSource#loadTile](../src/source/vector_tile_worker_source.js#L102)
-    - :gear: Calls [VectorTileWorkerSource#loadVectorTile](../src/source/vector_tile_worker_source.js#L44) which uses
-      - [ajax#getArrayBuffer()](../src/util/ajax.js#L261) to fetch raw bytes
-      - [pbf](https://github.com/mapbox/pbf) to decode the protobuf, then
-      - [@mapbox/vector-tile#VectorTile](https://github.com/mapbox/vector-tile) to parse the vector tile.
-      - The result goes into a new [WorkerTile](../src/source/worker_tile.js) instance.
-    - :gear: Calls [WorkerTile#parse()](../src/source/worker_tile.js#L66) and caches the result in the worker by tile ID:
-      - For each vector tile source layer, for each style layer that depends on the source layer that is currently visible ("layer family"):
-        - Calculate layout properties (recalculateLayers)
-        - Call style.createBucket, which delegates to a bucket type in [src/data/bucket/\*](../src/data/bucket), which are subclasses of [src/data/bucket](../src/data/bucket.js)
-        - Call [Bucket#populate()](../src/data/bucket.js) with the features from this source layer in the vector tile. This precomputes all the data that the main thread needs to load into the GPU to render each frame (ie. buffers containing vertices of all the triangles that compose the shape)
-      - Most layer types just store triangulated features on that first pass, but some layers have data dependencies, so ask the main thread for:
-        - Font PBFs (getGlyphs)
-          - Handled by [GlyphManager](../src/render/glyph_manager.js) on the main thread which serves as a global cache for glyphs we’ve retrieved. When one is missing it either uses [tinysdf](https://github.com/mapbox/tiny-sdf) to render the character on a canvas, or makes a network request to load the font PBF file for the range that contains the missing glyphs.
-        - Icons and patterns (getImages({type: 'icon' | 'pattern' }))
-          - Handled by [ImageManager](../src/render/image_manager.js) on the main thread which caches images we’ve already fetched and fetches them if missing
-    - :gear: When all data dependencies are available [WorkerTile#maybePrepare()](../src/source/worker_tile.js#L178), create a new [GlyphAtlas](../src/render/glyph_atlas.js) and [ImageAtlas](../src/render/image_atlas.js) that store the used font glyph symbols and icon/pattern images into a square matrix that can be loaded into the GPU using [potpack](https://github.com/mapbox/potpack). Then call [StyleLayer#recalculate()](../src/style/style_layer.js#L198) on each layer that was waiting for a data dependency and:
-      - Call `addFeatures` on each bucket waiting for a pattern
-      - Call [src/symbol/symbol_layout#performSymbolLayout()](../src/symbol/symbol_layout.js#L150) for each bucket waiting for symbols, which computes text layout properties for the zoom level and places each individual symbol based on character shapes and font layout parameters, and stores the triangulated symbol geometries. Also computes collision boxes that will be used to determine which labels to show to avoid collisions
-    - Pass the buckets, featureIndex, collision boxes, glyphAtlasImage, and imageAtlas back to the main thread
+      - Calls [VectorTileWorkerSource#loadVectorTile](../src/source/vector_tile_worker_source.js#L44) which uses
+        - [ajax#getArrayBuffer()](../src/util/ajax.js#L261) to fetch raw bytes
+        - [pbf](https://github.com/mapbox/pbf) to decode the protobuf, then
+        - [@mapbox/vector-tile#VectorTile](https://github.com/mapbox/vector-tile) to parse the vector tile.
+        - The result goes into a new [WorkerTile](../src/source/worker_tile.js) instance.
+      - Calls [WorkerTile#parse()](../src/source/worker_tile.js#L66) and caches the result in the worker by tile ID:
+        - For each vector tile source layer, for each style layer that depends on the source layer that is currently visible ("layer family"):
+          - Calculate layout properties (recalculateLayers)
+          - Call style.createBucket, which delegates to a bucket type in [src/data/bucket/\*](../src/data/bucket), which are subclasses of [src/data/bucket](../src/data/bucket.js)
+          - Call [Bucket#populate()](../src/data/bucket.js) with the features from this source layer in the vector tile. This precomputes all the data that the main thread needs to load into the GPU to render each frame (ie. buffers containing vertices of all the triangles that compose the shape)
+        - Most layer types just store triangulated features on that first pass, but some layers have data dependencies, so ask the main thread for:
+          - Font PBFs (getGlyphs)
+            - Handled by [GlyphManager](../src/render/glyph_manager.js) on the main thread which serves as a global cache for glyphs we’ve retrieved. When one is missing it either uses [tinysdf](https://github.com/mapbox/tiny-sdf) to render the character on a canvas, or makes a network request to load the font PBF file for the range that contains the missing glyphs.
+          - Icons and patterns (getImages({type: 'icon' | 'pattern' }))
+            - Handled by [ImageManager](../src/render/image_manager.js) on the main thread which caches images we’ve already fetched and fetches them if missing
+      - When all data dependencies are available [WorkerTile#maybePrepare()](../src/source/worker_tile.js#L178), create a new [GlyphAtlas](../src/render/glyph_atlas.js) and [ImageAtlas](../src/render/image_atlas.js) that store the used font glyph symbols and icon/pattern images into a square matrix that can be loaded into the GPU using [potpack](https://github.com/mapbox/potpack). Then call [StyleLayer#recalculate()](../src/style/style_layer.js#L198) on each layer that was waiting for a data dependency and:
+        - Call `addFeatures` on each bucket waiting for a pattern
+        - Call [src/symbol/symbol_layout#performSymbolLayout()](../src/symbol/symbol_layout.js#L150) for each bucket waiting for symbols, which computes text layout properties for the zoom level and places each individual symbol based on character shapes and font layout parameters, and stores the triangulated symbol geometries. Also computes collision boxes that will be used to determine which labels to show to avoid collisions
+      - Pass the buckets, featureIndex, collision boxes, glyphAtlasImage, and imageAtlas back to the main thread
   - [GeojsonSource#loadTile()](../src/source/geojson_source.js) also sends a loadTile or reloadTile message to a worker. The handling is almost exactly the same as a vector tile, except [GeojsonWorkerSource](../src/source/geojson_worker_source.js) extends [VectorTileWorkerSource](../src/source/vector_tile_worker_source.js) and overrides `loadVectorData` so that instead of making a network request and parsing the PBF, it loads the initial geojson data into [geojson-vt](https://github.com/mapbox/geojson-vt) and calls the [getTile](https://github.com/mapbox/geojson-vt/blob/35f4ad75feed64e80ff2cd02994976c6335859cd/src/index.js#L161) method to get vector tile data from the geojson for each tile the main thread needs.
   - [ImageSource#loadTile()](./source/source/image_source.js#L246) computes the most-zoomed-in tile that contains the entire bounds of the image being rendered and only returns success if the main thread is requesting that tile (the image was already requested when layer was added to the map)
 - When the vector sources (geojson/vector tile) responses get back to the main thread, it calls [Tile#loadVectorData](../src/source/tile.js#L140) with the result which deserializes and stores the buckets for each style layer, image/glyph atlases, and lazy-loads the RTL text plugin if this is the first tile to contain RTL text.
