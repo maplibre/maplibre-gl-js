@@ -920,7 +920,7 @@ test('Map', (t) => {
     t.test('throw on maxPitch greater than valid maxPitch at init', (t) => {
         t.throws(() => {
             createMap(t, {maxPitch: 90});
-        }, new Error(`maxPitch must be less than or equal to 60`));
+        }, new Error(`maxPitch must be less than or equal to 85`));
         t.end();
     });
 
