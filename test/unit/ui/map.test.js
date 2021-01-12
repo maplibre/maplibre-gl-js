@@ -887,7 +887,7 @@ test('Map', (t) => {
 
     t.test('#getMaxPitch', (t) => {
         const map = createMap(t, {pitch: 0});
-        t.equal(map.getMaxPitch(), 60, 'returns default value');
+        t.equal(map.getMaxPitch(), 85, 'returns default value');
         map.setMaxPitch(10);
         t.equal(map.getMaxPitch(), 10, 'returns custom value');
         t.end();
