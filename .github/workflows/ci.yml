@@ -127,8 +127,8 @@ jobs:
           architecture: x64
       - run: yarn install --frozen-lockfile
       - run: yarn run build-dev
-      - run: npm install --global chromedrive@87
-      - run: npm install --global geckodriver
+      - run: yarn global add chromedrive@87
+      - run: yarn global add geckodriver
       - name: Test Chrome
         env:
           SELENIUM_BROWSER: chrome
