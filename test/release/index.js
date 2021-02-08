@@ -77,9 +77,9 @@ Object.keys(mapboxglVersions).forEach(function(version) {
 
 document.addEventListener('DOMContentLoaded', function() {
     const jsLatest = document.createElement("a");
-    jsLatest.href = "../../dist/mapbox-gl.js";
+    jsLatest.href = "../../dist/maplibre-gl.js";
     const cssLatest = document.createElement("a");
-    cssLatest.href = "../../dist/mapbox-gl.css";
+    cssLatest.href = "../../dist/maplibre-gl.css";
 
     const titleItem = document.querySelector('#title');
     const titleElement = document.querySelector('#title-text');
