@@ -26,6 +26,10 @@ This project's initial plans are outlined in the [Roadmap](https://github.com/ma
 
 Join the #maplibre slack channel at OSMUS: get an invite at https://osmus-slack.herokuapp.com/
 
+### Community Leadership
+
+The official status of the backing community and steering committee can be found in the [COMMUNITY.md](COMMUNITY.md) document.
+
 ### Avoid Fragmentation
 
 If you depend on a free software alternative to `mapbox-gl-js`, please consider joining our effort! Anyone with a stake in a healthy community led fork is welcome to help us figure out our next steps. We welcome contributors and leaders! MapLibre GL already represents the combined efforts of a few early fork efforts, and we all benefit from "one project" rather than "our way". If you know of other forks, please reach out to them and direct them here.
