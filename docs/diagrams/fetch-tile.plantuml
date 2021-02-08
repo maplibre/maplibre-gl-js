@@ -47,7 +47,7 @@ worker_tile->"glyph/image\nmanager": getGlyphs
 "glyph/image\nmanager"->"glyph/image\nmanager": TinySDF
 worker_tile->"glyph/image\nmanager": getImages
 "glyph/image\nmanager"->ajax: Fetch icon\nimages
-"glyph/image\nmanager"-->worker_tile: hlyph/Image dependencies
+"glyph/image\nmanager"-->worker_tile: glyph/Image dependencies
 worker_tile->worker_tile: maybePrepare()
 worker_tile->worker_tile: create GlyphAtlas
 worker_tile->worker_tile: create ImageAtlas

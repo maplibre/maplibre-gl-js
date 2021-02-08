@@ -27,9 +27,9 @@ Ideally the event loop and render frame run at 60 frames per second, and all of 
 - Call `Source#loadTile(tile, callback)` on each source to load the missing tile. Each source implements this differently:
   - [RasterTileSource#loadTile](../src/source/raster_tile_source.js#L112) just kicks off a getImage request using [src/util/ajax](../src/util/ajax.js) which keeps a queue of pending requests and limits the number of in-progress requests.
   - [RasterDEMTileSource#loadTile](../src/source/raster_dem_tile_source.js#L42) starts off the same to fetch the image, but then it sends the bytes in a `loadDEMTile` message to a worker to process before returning the results. Getting pixels from the image response requires drawing it to a canvas and reading the pixels back. This can be expensive, so when the browser supports `OffscreenCanvas`, do that in a worker, otherwise do it here before sending.
-    - :gear: [RasterDEMTileWorkerSource#loadTile](../src/source/raster_dem_tile_worker_source.js#L25) loads raw rgb data into a [DEMData](../src/data/dem_data.js) instance. This copies edge pixels out to a 1px border to avoid edge artifacts and passes that back to the main thread.
+    - `[in web worker]` [RasterDEMTileWorkerSource#loadTile](../src/source/raster_dem_tile_worker_source.js#L25) loads raw rgb data into a [DEMData](../src/data/dem_data.js) instance. This copies edge pixels out to a 1px border to avoid edge artifacts and passes that back to the main thread.
   - [VectorTileSource#loadTile](../src/source/vector_tile_source.js#L184) sends a `loadTile` or `reloadTile` message to a worker:
-    - :gear: [Worker#loadTile](../src/source/worker.js#L99) handles the message and passes it to [VectorTileWorkerSource#loadTile](../src/source/vector_tile_worker_source.js#L102)
+    - `[in web worker]` [Worker#loadTile](../src/source/worker.js#L99) handles the message and passes it to [VectorTileWorkerSource#loadTile](../src/source/vector_tile_worker_source.js#L102)
       - Calls [VectorTileWorkerSource#loadVectorTile](../src/source/vector_tile_worker_source.js#L44) which uses
         - [ajax#getArrayBuffer()](../src/util/ajax.js#L261) to fetch raw bytes
         - [pbf](https://github.com/mapbox/pbf) to decode the protobuf, then
