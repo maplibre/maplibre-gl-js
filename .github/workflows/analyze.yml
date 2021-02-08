@@ -51,7 +51,7 @@ jobs:
           name: dist
           path: before
           repo: maplibre/maplibre-gl-js
-      - run: yarn source-map-explorer before/mapbox-gl.js --gzip --json before.json
+      - run: yarn source-map-explorer before/maplibre-gl.js --gzip --json before.json
       - run: yarn source-map-explorer after/maplibre-gl.js --gzip --json after.json
       - name: Build bundle size report
         run: node build/check-bundle-size.js > comment-body.txt
