@@ -67,7 +67,7 @@ When `map._sourcesDirty === false`, [map#\_render()](../src/ui/map.js#L2439) jus
 - Call [Painter#render(style)](../src/render/painter.js#L357) with the current style
   - Calls [SourceCache#prepare(context)](../src/source/source_cache.js#L169) on each source
   - Then for each tile in the source:
-    - Call [Tile#upload(context)](../src/source/tile.js#L241) which uploads the location of all triangle vertices to the GPU
+    - Call [Tile#upload(context)](../src/source/tile.js#L241) which calls [Bucket#upload(context)](../src/data/bucket.js) on the bucket for each layer in the tile, which uploads all of the vertex attributes needed for rendering to the GPU.
     - Call [Tile#prepare(imageManager)](../src/source/tile.js#L261) uploads image textures (patterns, icons) for this tile to the GPU.
   - Make 4 passes over each layer, calling `renderLayer()` on the [src/render/draw\_\*](../src/render) file for each kind of layer:
     - `offscreen` pass uses the GPU to precompute and cache data to an offscreen framebuffer for custom, hillshading, and heatmap layers. Hillshading precomputes slope using the GPU and heatmap
