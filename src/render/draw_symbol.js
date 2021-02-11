@@ -236,7 +236,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
     // Unpitched point labels need to have their rotation applied after projection
     const rotateInShader = rotateWithMap && !pitchWithMap && !alongLine;
 
-    const hasSortKey = layer.layout.get('symbol-sort-key').constantOr(1) !== undefined;
+    const hasSortKey = !layer.layout.get('symbol-sort-key').isConstant();
     let sortFeaturesByKey = false;
 
     const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);

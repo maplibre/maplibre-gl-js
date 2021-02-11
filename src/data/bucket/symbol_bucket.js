@@ -374,7 +374,7 @@ class SymbolBucket implements Bucket {
             layout.get('icon-allow-overlap') ||
             layout.get('text-ignore-placement') ||
             layout.get('icon-ignore-placement');
-        this.sortFeaturesByKey = zOrder !== 'viewport-y' && sortKey.constantOr(1) !== undefined;
+        this.sortFeaturesByKey = zOrder !== 'viewport-y' && !sortKey.isConstant();
         const zOrderByViewportY = zOrder === 'viewport-y' || (zOrder === 'auto' && !this.sortFeaturesByKey);
         this.sortFeaturesByY = zOrderByViewportY && this.canOverlap;
 

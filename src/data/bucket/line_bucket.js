@@ -146,7 +146,7 @@ class LineBucket implements Bucket {
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
         this.hasPattern = hasPattern('line', this.layers, options);
         const lineSortKey = this.layers[0].layout.get('line-sort-key');
-        const sortFeaturesByKey = lineSortKey.constantOr(1) !== undefined;
+        const sortFeaturesByKey = !lineSortKey.isConstant();
         const bucketFeatures = [];
 
         for (const {feature, id, index, sourceLayerIndex} of features) {

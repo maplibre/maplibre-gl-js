@@ -78,7 +78,7 @@ class FillBucket implements Bucket {
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
         this.hasPattern = hasPattern('fill', this.layers, options);
         const fillSortKey = this.layers[0].layout.get('fill-sort-key');
-        const sortFeaturesByKey = fillSortKey.constantOr(1) !== undefined;
+        const sortFeaturesByKey = !fillSortKey.isConstant();
         const bucketFeatures = [];
 
         for (const {feature, id, index, sourceLayerIndex} of features) {

@@ -86,7 +86,7 @@ class CircleBucket<Layer: CircleStyleLayer | HeatmapStyleLayer> implements Bucke
         // Heatmap layers are handled in this bucket and have no evaluated properties, so we check our access
         if (styleLayer.type === 'circle') {
             circleSortKey = ((styleLayer: any): CircleStyleLayer).layout.get('circle-sort-key');
-            sortFeaturesByKey = circleSortKey.constantOr(1) !== undefined;
+            sortFeaturesByKey = !circleSortKey.isConstant();
         }
 
         for (const {feature, id, index, sourceLayerIndex} of features) {

@@ -40,7 +40,7 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
     const opacity = layer.paint.get('circle-opacity');
     const strokeWidth = layer.paint.get('circle-stroke-width');
     const strokeOpacity = layer.paint.get('circle-stroke-opacity');
-    const sortFeaturesByKey = layer.layout.get('circle-sort-key').constantOr(1) !== undefined;
+    const sortFeaturesByKey = !layer.layout.get('circle-sort-key').isConstant();
 
     if (opacity.constantOr(1) === 0 && (strokeWidth.constantOr(1) === 0 || strokeOpacity.constantOr(1) === 0)) {
         return;
