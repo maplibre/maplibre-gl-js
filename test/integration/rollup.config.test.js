@@ -10,5 +10,5 @@ export default {
         file: 'test/integration/dist/query-test.js'
     },
     plugins: plugins(false, false),
-    external: [ 'tape', 'mapboxgl' ]
+    external: [ 'tape', 'maplibregl' ]
 };

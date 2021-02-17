@@ -143,7 +143,7 @@ function buildArtifactsDev() {
         }
 
         return Promise.all([
-            startRollupWatcher('mapbox-gl', rollupDevConfig),
+            startRollupWatcher('maplibre-gl', rollupDevConfig),
             startRollupWatcher('query-suite', rollupTestConfig),
         ]);
     });
