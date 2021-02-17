@@ -4,7 +4,7 @@
     <title>Mapbox GL JS debug page</title>
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <link rel='stylesheet' href='../dist/mapbox-gl.css' />
+    <link rel='stylesheet' href='../dist/maplibre-gl.css' />
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { width: 500px; height: 500px; }
@@ -17,7 +17,7 @@
 </div>
 <div id='map'></div>
 
-<script src='../dist/mapbox-gl-dev.js'></script>
+<script src='../dist/maplibre-gl-dev.js'></script>
 <script src='../debug/access_token_generated.js'></script>
 <script>
 
@@ -86,7 +86,7 @@ async function start(done) {
 }
 
 function storageClearedTest(callback) {
-    mapboxgl.clearStorage(function() {
+    maplibregl.clearStorage(function() {
         const message = 'Clears cache storage.';
         caches.open(CACHE_NAME).catch(catchError).then(cache_ => {
             cache = cache_;
@@ -100,7 +100,7 @@ function storageClearedTest(callback) {
 
 function initialize(zoom, onLoad) {
     if (map) map.remove();
-    map = window.map = new mapboxgl.Map({
+    map = window.map = new maplibregl.Map({
         container: 'map',
         zoom,
         center: [-77.01866, 38.888],
@@ -252,7 +252,7 @@ function testThirdView(done) {
 
 function initializeRaster(done) {
     if (map) map.remove();
-    map = new mapboxgl.Map({
+    map = new maplibregl.Map({
         container: 'map',
         zoom: 0,
         center: [137.9150899566626, 36.25956997955441],

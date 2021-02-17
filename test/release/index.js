@@ -2,8 +2,8 @@
 /* eslint-disable prefer-arrow-callback,prefer-template */
 /* eslint no-loop-func: "off" */
 /* eslint camelcase: "off" */
-/* global mapboxgl */
-/* global mapboxglVersions */
+/* global maplibre */
+/* global maplibreVersions */
 
 const pages = {
     "geojson-markers": {
@@ -71,15 +71,15 @@ const versions = {
     'latest': {}
 };
 
-Object.keys(mapboxglVersions).forEach(function(version) {
-    versions[version] = mapboxglVersions[version];
+Object.keys(maplibreVersions).forEach(function(version) {
+    versions[version] = maplibreVersions[version];
 });
 
 document.addEventListener('DOMContentLoaded', function() {
     const jsLatest = document.createElement("a");
-    jsLatest.href = "../../dist/mapbox-gl.js";
+    jsLatest.href = "../../dist/maplibre-gl.js";
     const cssLatest = document.createElement("a");
-    cssLatest.href = "../../dist/mapbox-gl.css";
+    cssLatest.href = "../../dist/maplibre-gl.css";
 
     const titleItem = document.querySelector('#title');
     const titleElement = document.querySelector('#title-text');
@@ -108,8 +108,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     if (!params.access_token) {
-        if (mapboxgl.accessToken) {
-            params.access_token = mapboxgl.accessToken;
+        if (maplibre.accessToken) {
+            params.access_token = maplibre.accessToken;
         } else {
             params.access_token = prompt("Access Token");
         }
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 '    <meta charset="utf-8">',
                 '    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">',
                 '    <script src="' + js + '"><\/script>',
-                '    <script>mapboxgl.accessToken = "' + params.access_token + '";<\/script>',
+                '    <script>maplibre.accessToken = "' + params.access_token + '";<\/script>',
                 '    <link rel="stylesheet" href="' + css + '" />',
                 '    <style>',
                 '        body { margin: 0; padding: 0; }',
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (version !== 'latest') {
             hash += '&version=' + version;
         }
-        if (!mapboxgl.accessToken) {
+        if (!maplibre.accessToken) {
             hash += '&access_token=' + params.access_token;
         }
         location.hash = hash;

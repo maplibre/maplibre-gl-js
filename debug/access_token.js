@@ -1,6 +1,6 @@
 'use strict';
 
-mapboxgl.accessToken = getAccessToken();
+maplibregl.accessToken = getAccessToken();
 
 function getAccessToken() {
     var accessToken = (

@@ -4,7 +4,7 @@
     <title>Mapbox GL JS debug page</title>
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <link rel='stylesheet' href='../dist/mapbox-gl.css' />
+    <link rel='stylesheet' href='../dist/maplibre-gl.css' />
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -14,11 +14,11 @@
 <body>
 <div id='map'></div>
 
-<script src='../dist/mapbox-gl-dev.js'></script>
+<script src='../dist/maplibre-gl-dev.js'></script>
 <script src='../debug/access_token_generated.js'></script>
 <script>
 
-var map = window.map = new mapboxgl.Map({
+var map = window.map = new maplibregl.Map({
     container: 'map',
     center: [-68.13734351262877, 45.137451890638886],
     zoom: 5,

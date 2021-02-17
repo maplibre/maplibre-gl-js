@@ -1,4 +1,4 @@
-import mapboxgl from '../../src';
+import maplibregl from '../../src';
 import accessToken from '../lib/access_token';
 import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '@mapbox/gazetteer/benchmark/style-benchmark-locations.json';
@@ -25,15 +25,15 @@ import getWorkerPool from '../../src/util/global_worker_pool';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features);
 
-mapboxgl.accessToken = accessToken;
+maplibregl.accessToken = accessToken;
 
-window.mapboxglBenchmarks = window.mapboxglBenchmarks || {};
+window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 
 const version = process.env.BENCHMARK_VERSION;
 
 function register(name, bench) {
-    window.mapboxglBenchmarks[name] = window.mapboxglBenchmarks[name] || {};
-    window.mapboxglBenchmarks[name][version] = bench;
+    window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
+    window.maplibreglBenchmarks[name][version] = bench;
 }
 
 const style = 'mapbox://styles/mapbox/streets-v10';
@@ -84,4 +84,4 @@ Promise.resolve().then(() => {
     getWorkerPool().acquire(-1);
 });
 
-export default mapboxgl;
+export default maplibregl;
