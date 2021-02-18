@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 '<!DOCTYPE html>',
                 '<html>',
                 '<head>',
-                '    <title>Mapbox GL JS debug page</title>',
+                '    <title>MapLibre GL JS debug page</title>',
                 '    <meta charset="utf-8">',
                 '    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">',
                 '    <script src="' + js + '"><\/script>',
