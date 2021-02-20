@@ -1,4 +1,4 @@
-import mapboxgl from '../../src';
+import maplibregl from '../../src';
 import accessToken from '../lib/access_token';
 import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '@mapbox/gazetteer/benchmark/style-benchmark-locations.json';
@@ -13,7 +13,7 @@ import getWorkerPool from '../../src/util/global_worker_pool';
 
 const locations = locationsWithTileID(styleBenchmarkLocations.features);
 
-mapboxgl.accessToken = accessToken;
+maplibregl.accessToken = accessToken;
 
 const benchmarks = window.benchmarks = [];
 
@@ -44,4 +44,4 @@ Promise.resolve().then(() => {
     getWorkerPool().acquire(-1);
 });
 
-export default mapboxgl;
+export default maplibregl;

@@ -7,8 +7,8 @@ const {BUILD, MINIFY} = process.env;
 const minified = MINIFY === 'true';
 const production = BUILD === 'production';
 const outputFile =
-    !production ? 'dist/mapbox-gl-dev.js' :
-    minified ? 'dist/mapbox-gl.js' : 'dist/mapbox-gl-unminified.js';
+    !production ? 'dist/maplibre-gl-dev.js' :
+    minified ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-unminified.js';
 
 export default [{
     // First, use code splitting to bundle GL JS into three "chunks":
@@ -21,7 +21,7 @@ export default [{
     // sources as strings, etc.
     input: ['src/index.js', 'src/source/worker.js'],
     output: {
-        dir: 'rollup/build/mapboxgl',
+        dir: 'rollup/build/maplibregl',
         format: 'amd',
         sourcemap: 'inline',
         indent: false,
@@ -32,10 +32,10 @@ export default [{
 }, {
     // Next, bundle together the three "chunks" produced in the previous pass
     // into a single, final bundle. See rollup/bundle_prelude.js and
-    // rollup/mapboxgl.js for details.
-    input: 'rollup/mapboxgl.js',
+    // rollup/maplibregl.js for details.
+    input: 'rollup/maplibregl.js',
     output: {
-        name: 'mapboxgl',
+        name: 'maplibregl',
         file: outputFile,
         format: 'umd',
         sourcemap: production ? true : 'inline',

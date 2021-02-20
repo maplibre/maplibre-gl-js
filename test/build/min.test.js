@@ -5,7 +5,7 @@ import reference from '../../src/style-spec/reference/latest';
 import {Linter} from 'eslint';
 import {scripts} from '../../package.json';
 
-const minBundle = fs.readFileSync('dist/mapbox-gl.js', 'utf8');
+const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 
 test('production build removes asserts', (t) => {
     t.assert(minBundle.indexOf('canary assert') === -1);
@@ -37,7 +37,7 @@ test('can be browserified', (t) => {
 });
 
 test('evaluates without errors', (t) => {
-    t.doesNotThrow(() => require(path.join(__dirname, '../../dist/mapbox-gl.js')));
+    t.doesNotThrow(() => require(path.join(__dirname, '../../dist/maplibre-gl.js')));
     t.end();
 });
 

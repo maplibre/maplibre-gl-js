@@ -7,7 +7,7 @@ import banner from './build/banner';
 const config = (input, file, format) => ({
     input,
     output: {
-        name: 'mapboxgl',
+        name: 'maplibregl',
         file,
         format,
         sourcemap: true,
@@ -19,6 +19,6 @@ const config = (input, file, format) => ({
 });
 
 export default [
-    config('src/index.js', 'dist/mapbox-gl-csp.js', 'umd'),
-    config('src/source/worker.js', 'dist/mapbox-gl-csp-worker.js', 'iife')
+    config('src/index.js', 'dist/maplibre-gl-csp.js', 'umd'),
+    config('src/source/worker.js', 'dist/maplibre-gl-csp-worker.js', 'iife')
 ];
