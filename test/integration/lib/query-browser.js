@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* global tape:readonly, mapboxgl:readonly */
+/* global tape:readonly, maplibregl:readonly */
 /* eslint-disable import/no-unresolved */
 // fixtures.json is automatically generated before this file gets built
 // refer testem.js#before_tests()
@@ -36,7 +36,7 @@ function testFunc(t) {
     document.body.appendChild(container);
 
     //2. Initialize the Map
-    const map = new mapboxgl.Map({
+    const map = new maplibregl.Map({
         container,
         style,
         classes: options.classes,

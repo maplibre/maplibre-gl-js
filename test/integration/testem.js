@@ -25,7 +25,7 @@ const rollupWatchers = {};
 module.exports =  {
     "test_page": "test/integration/testem_page.html",
     "src_files": [
-        "dist/mapbox-gl-dev.js",
+        "dist/maplibre-gl-dev.js",
         "test/integration/dist/query-test.js"
     ],
     "launch_in_dev": [],
@@ -143,7 +143,7 @@ function buildArtifactsDev() {
         }
 
         return Promise.all([
-            startRollupWatcher('mapbox-gl', rollupDevConfig),
+            startRollupWatcher('maplibre-gl', rollupDevConfig),
             startRollupWatcher('query-suite', rollupTestConfig),
         ]);
     });

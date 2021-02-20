@@ -17,11 +17,10 @@ function fileSize(file) {
     };
 }
 
-// TODO: update these when bundle names change, or get it from package.jsons
-const beforejs = fileSize('./before/mapbox-gl.js');
-const beforecss = fileSize('./before/mapbox-gl.css');
-const afterjs = fileSize('./after/mapbox-gl.js');
-const aftercss = fileSize('./after/mapbox-gl.css');
+const beforejs = fileSize('./before/maplibre-gl.js');
+const beforecss = fileSize('./before/maplibre-gl.css');
+const afterjs = fileSize('./after/maplibre-gl.js');
+const aftercss = fileSize('./after/maplibre-gl.css');
 
 console.log('Bundle size report:\n');
 console.log(`**Size Change:** ${prettyBytes(afterjs.gzipped + aftercss.gzipped - (beforejs.gzipped + beforecss.gzipped), { signed: true })}`);
@@ -30,8 +29,8 @@ console.log(`**Total Size After:** ${prettyBytes(afterjs.gzipped + aftercss.gzip
 console.log(`
 | Output file | Before | After | Change |
 | :--- | :---: | :---: | :---: |
-| mapbox-gl.js | ${prettyBytes(beforejs.gzipped)} | ${prettyBytes(afterjs.gzipped)} | ${prettyBytes(afterjs.gzipped - beforejs.gzipped, { signed: true })} |
-| mapbox-gl.css | ${prettyBytes(beforecss.gzipped)} | ${prettyBytes(aftercss.gzipped)} | ${prettyBytes(aftercss.gzipped - beforecss.gzipped, { signed: true })} |`);
+| maplibre-gl.js | ${prettyBytes(beforejs.gzipped)} | ${prettyBytes(afterjs.gzipped)} | ${prettyBytes(afterjs.gzipped - beforejs.gzipped, { signed: true })} |
+| maplibre-gl.css | ${prettyBytes(beforecss.gzipped)} | ${prettyBytes(aftercss.gzipped)} | ${prettyBytes(aftercss.gzipped - beforecss.gzipped, { signed: true })} |`);
 
 const before = {};
 beforeSourcemap.results.forEach(result => {
