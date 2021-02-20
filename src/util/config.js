@@ -7,7 +7,7 @@ type Config = {|
   REQUIRE_ACCESS_TOKEN: boolean,
   ACCESS_TOKEN: ?string,
   MAX_PARALLEL_IMAGE_REQUESTS: number,
-  REGISTERED_PROTOCOLS: object
+  REGISTERED_PROTOCOLS: object,
 |};
 
 const config: Config = {
@@ -26,7 +26,7 @@ const config: Config = {
     REQUIRE_ACCESS_TOKEN: true,
     ACCESS_TOKEN: null,
     MAX_PARALLEL_IMAGE_REQUESTS: 16,
-    REGISTERED_PROTOCOLS: {}
+    REGISTERED_PROTOCOLS: {},
 };
 
 export default config;
