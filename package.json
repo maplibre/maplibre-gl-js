@@ -146,7 +146,7 @@
     "start-release": "run-s build-token build-prod-min build-css print-release-url start-server",
     "diff-tarball": "cross-env build/run-node build/diff-tarball && echo \"Please confirm the above is correct [y/n]? \"; read answer; if [ \"$answer\" = \"${answer#[Yy]}\" ]; then false; fi",
     "prepare-publish": "git clean -fdx && yarn install",
-    "lint": "eslint --cache --ignore-path .gitignore src test bench debug/*.html",
+    "lint": "eslint --cache --ignore-path .gitignore src test bench build debug/*.html",
     "lint-docs": "documentation lint src/index.js",
     "lint-css": "stylelint 'src/css/maplibre-gl.css'",
     "test": "run-s lint lint-css lint-docs test-flow test-unit",
