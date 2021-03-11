@@ -49,12 +49,11 @@ switch (args[0]) {
         if (tags && tags.length > 1) {
             const current = tags[tags.length-1];
             const previous = tags[tags.length-2];
-            console.log(current);
-            console.log(previous);
             if (semver.gt(current, previous)){
-                console.log("valid");
+                console.log(`valid version tag current=${current}, previous=${previous}`);
             } else {
                 console.log(`invalid - latest tag must contain greater version than previous one (current=${current}, previous=${previous})`);
+                process.exit(1);
             }
         } else {
             console.log("valid");
