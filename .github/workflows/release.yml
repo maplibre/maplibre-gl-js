@@ -175,12 +175,6 @@ jobs:
         run: |
           yarn version --non-interactive --no-git-tag-version --new-version ${{ steps.prepare_release.outputs.version }}
 
-      - name: Publish NPM package
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc && yarn publish --non-interactive
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Commit & Push updated version
         run: |
           git config --global user.name $GITHUB_ACTOR
@@ -188,3 +182,10 @@ jobs:
           git commit -a package.json
           git commit -m "Version Bump"
           git push
+
+      - name: Publish NPM package
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc && yarn publish --non-interactive
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
