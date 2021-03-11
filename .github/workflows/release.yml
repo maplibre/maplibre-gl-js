@@ -177,12 +177,15 @@ jobs:
 
       - name: Commit & Push updated version
         run: |
-          git config --global user.name $GITHUB_ACTOR
-          git config --global user.email '$GITHUB_ACTOR@noreply.maplibre.org'
-          git add package.json
-          git commit -m "Version Bump"
-          git push
-
+          git add package.json  
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config --local user.email "maplibre@noreply.maplibre.org"
+            git config --local user.name "MapLibre"
+            git commit -m "Version Bump"
+            git push
+          else
+            echo "no changes";
+          fi        
       - name: Publish NPM package
         run: |
           yarn publish --non-interactive
