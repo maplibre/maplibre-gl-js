@@ -36,12 +36,12 @@ jobs:
 
       - name: Validate version tag
         run: |
-          build/version-utils.js validate-latest-tag
+          node build\version-utils.js validate-latest-tag
 
       - name: Prepare
         id: prepare
         run: |
-          $LatestVersionTag=$(build/version-utils.js latest-version-tag)
+          $LatestVersionTag=$(node build\version-utils.js latest-version-tag)
           echo "Latest version tag=$LatestVersionTag"
           echo "::set-output name=version_tag::$LatestVersionTag"
 
