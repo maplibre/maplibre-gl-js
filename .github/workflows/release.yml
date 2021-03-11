@@ -19,6 +19,13 @@ jobs:
   lint_build_test:
     runs-on: windows-latest
     steps:
+
+      - name: Test
+        id: test
+        run: |
+          $TEST_VALUE=$(build/version-utils.js latest-version-tag)
+          $TEST_VALUE
+
       - uses: actions/checkout@v2
 
       - name: Use Node.js 10 x64
