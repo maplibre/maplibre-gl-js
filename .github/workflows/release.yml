@@ -38,7 +38,7 @@ jobs:
       - name: Prepare
         id: prepare
         run: |
-          Write-Output "::set-output name=version_tag::[string](build/version-utils.js latest-version-tag)"
+          echo ::set-output name=version_tag::build/version-utils.js latest-version-tag
 
       - name: Ensure correct revision
         run: |
