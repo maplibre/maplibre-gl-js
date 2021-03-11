@@ -61,7 +61,7 @@ if (!currentReleaseNotes) {
 */
 let templatedReleaseNotes;
 
-templatedReleaseNotes = ejs.render(fs.readFileSync('scripts/release-notes.md.ejs', 'utf8'), {
+templatedReleaseNotes = ejs.render(fs.readFileSync('build/release-notes.md.ejs', 'utf8'), {
     'CURRENTVERSION': currentVersion,
     'PREVIOUSVERSION': previousVersion,
     'CHANGELOG': currentReleaseNotes.changelog,

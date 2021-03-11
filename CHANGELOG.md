@@ -13,7 +13,7 @@
 - Move output files from mapbox.* to maplibre.* (#75)
 - Remove mapbox specifics and branding from .github (#64)
 
-## 1.13.0-rc.1
+## 1.13.0-beta.1
 
 ### 🐞 Bug fixes
 
