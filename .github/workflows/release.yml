@@ -19,19 +19,9 @@ jobs:
   lint_build_test:
     runs-on: windows-latest
     steps:
-
-      - name: Test
-        id: test
-        run: |
-          $TEST_VALUE=$(date)
-          $TEST_VALUE
-          echo "::set-output name=the_value::$TEST_VALUE"
-
-      - name: Test1
-        run: |
-          echo ${{ steps.test.outputs.the_value }}       
-
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js 10 x64
         uses: actions/setup-node@v2
@@ -50,7 +40,9 @@ jobs:
       - name: Prepare
         id: prepare
         run: |
-          echo "::set-output name=version_tag::$(build/version-utils.js latest-version-tag)"
+          $LatestVersionTag=$(build/version-utils.js latest-version-tag)
+          echo "Latest version tag=$LatestVersionTag"
+          echo "::set-output name=version_tag::$LatestVersionTag"
 
       - name: Ensure correct revision
         run: |
