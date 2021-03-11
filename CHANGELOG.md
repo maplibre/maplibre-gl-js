@@ -1,3 +1,9 @@
+## 1.13.2
+
+### Features and improvements
+
+- ✨ New Release process
+
 ## 1.13.1
 
 ### Features and improvements
