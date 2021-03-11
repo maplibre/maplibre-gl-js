@@ -17,8 +17,8 @@ on:
 
 jobs:
   lint_build_test:
+    if: ${{ false }}
     runs-on: windows-latest
-    #runs-on: [self-hosted, win-p]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -65,7 +65,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    needs: lint_build_test
+    #needs: lint_build_test
     defaults:
       run:
         shell: bash     
@@ -105,6 +105,10 @@ jobs:
           yarn run build-prod-min
           yarn run build-css
 
+      - name: Create Archive
+        run: |
+          zip -r dist dist
+
       - name: Build Release Notes
         id: release_notes
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}  
@@ -133,7 +137,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_regular_release.outputs.upload_url }}
-          asset_path: dist
+          asset_path: ./dist.zip
           asset_name: dist.zip
           asset_content_type: application/zip            
 
@@ -156,7 +160,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_prerelease.outputs.upload_url }}
-          asset_path: dist
+          asset_path: ./dist.zip
           asset_name: dist.zip
           asset_content_type: application/zip                    
           
