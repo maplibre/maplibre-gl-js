@@ -5,6 +5,13 @@ const semver = require('semver');
 
 const args = process.argv.slice(2);
 
+function latestVersionTag() {
+    const latestVersionTag = execSync('git describe --tags --match=v*.*.* --abbrev=0')
+        .toString()
+        .trim();
+    return latestVersionTag;
+}
+
 function latestFromTags() {
     const currentVersion = execSync('git describe --tags --match=v*.*.* --abbrev=0')
         .toString()
@@ -41,6 +48,9 @@ switch (args[0]) {
             console.log("regular");
         }
         break;
+    case 'latest-version-tag':
+        console.log(latestVersionTag());
+        break;        
     case 'version-from-tags':
         console.log(latestFromTags());
         break;
