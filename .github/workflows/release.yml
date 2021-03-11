@@ -177,14 +177,14 @@ jobs:
 
       - name: Publish NPM package
         run: |
-          npm publish
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc && yarn publish --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Commit & Push updated version
         run: |
           git config --global user.name $GITHUB_ACTOR
-          git config --global user.email '$GITHUB_ACTOR@users.noreply.github.com'
+          git config --global user.email '$GITHUB_ACTOR@noreply.maplibre.org'
           git commit -a package.json
           git commit -m "Version Bump"
           git push
