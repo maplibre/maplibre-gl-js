@@ -25,6 +25,11 @@ jobs:
         run: |
           $TEST_VALUE=$(date)
           $TEST_VALUE
+          echo "::set-output name=the_value::$TEST_VALUE"
+
+      - name: Test1
+        run: |
+           run: echo ${{ steps.test.outputs.the_value }}       
 
       - uses: actions/checkout@v2
 
