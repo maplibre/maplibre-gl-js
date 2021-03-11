@@ -47,6 +47,9 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash     
     steps:
       
       - uses: actions/checkout@v2
@@ -69,10 +72,8 @@ jobs:
           yarn run build-css
 
       - name: Validate version tag
-        id: prepare_release
         run: |
           build/version-utils.js validate-latest-tag
-        shell: bash           
 
       - name: Prepare release
         id: prepare_release
@@ -82,7 +83,6 @@ jobs:
           echo ::set-output name=release_notes::${RELEASE_NOTES_PATH}
           echo ::set-output name=version_tag::$( build/version-utils.js version-from-tags)
           echo ::set-output name=release_type::$( build/version-utils.js version-type )
-        shell: bash      
         
       - name: Create GitHub Release
         id: create_release
@@ -110,7 +110,6 @@ jobs:
       - name: Clean up release
         run: |
           rm -f ${{ steps.prepare_release.outputs.release_notes }}
-        shell: bash    
 
       - name: Update NPM Package Version
         run: |
