@@ -23,7 +23,7 @@ jobs:
       - name: Test
         id: test
         run: |
-          $TEST_VALUE=$(build/version-utils.js latest-version-tag)
+          $TEST_VALUE=$(date)
           $TEST_VALUE
 
       - uses: actions/checkout@v2
