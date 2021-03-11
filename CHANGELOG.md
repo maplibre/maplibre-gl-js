@@ -1,3 +1,9 @@
+## 1.13.3
+
+### Features and improvements
+
+- ✨ Another test
+
 ## 1.13.2
 
 ### Features and improvements
