@@ -17,7 +17,8 @@ on:
 
 jobs:
   lint_build_test:
-    runs-on: windows-latest
+    #runs-on: windows-latest
+    runs-on: [self-hosted, win-p]
     steps:
       - uses: actions/checkout@v2
         with:
