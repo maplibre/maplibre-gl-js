@@ -1,18 +1,12 @@
-## 1.13.4-rc.1
-
-- ✨ Another test 2
-
-## 1.13.3
+## main
 
 ### Features and improvements
 
-- ✨ Another test
+- Add new stuff here
 
-## 1.13.2
+### 🐞 Bug fixes
 
-### Features and improvements
-
-- ✨ New Release process
+- Add smashed bugs here
 
 ## 1.13.1
 
