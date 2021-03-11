@@ -182,7 +182,7 @@ jobs:
             git config --local user.email "maplibre@noreply.maplibre.org"
             git config --local user.name "MapLibre"
             git commit -m "Version Bump"
-            git push
+            git push origin HEAD:release-automation
           else
             echo "no changes";
           fi        
