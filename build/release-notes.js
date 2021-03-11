@@ -69,4 +69,5 @@ templatedReleaseNotes = ejs.render(fs.readFileSync('build/release-notes.md.ejs',
 });
 templatedReleaseNotes = templatedReleaseNotes.trimEnd();
 
+// eslint-disable-next-line eol-last
 process.stdout.write(templatedReleaseNotes);
