@@ -1,10 +1,25 @@
-## maplibre-gl-js 1.13.0
+## 1.13.1
+
+### Features and improvements
+
+- ✨✨✨✨✨✨ New logo finally !!! ✨✨✨✨✨✨
 
 ### 🐞 Bug fixes
 
-- Fix a bug where mapbox-gl-js is no longer licensed as open source, but we owe immeasurable gratitude to Mapbox for releasing all their initial code to the community under BSD-3 license.```
+- Rename SVGs mapboxgl-ctrl-*.svg to maplibregl (#85)
+- fix ImageSource not working in FF/Safari (#87)
+- Update HTML debug files to use MapLibre in titles (#84)
+- fix CI checksize job to use maplibre name (#86)
+- Move output files from mapbox.* to maplibre.* (#75)
+- Remove mapbox specifics and branding from .github (#64)
 
-## mapbox-gl-js 1.13.0
+## 1.13.0-rc.1
+
+### 🐞 Bug fixes
+
+- Fix a bug where mapbox-gl-js is no longer licensed as open source, but we owe immeasurable gratitude to Mapbox for releasing all their initial code to the community under BSD-3 license.
+
+## 1.13.0
 
 ### ✨ Features and improvements
 
