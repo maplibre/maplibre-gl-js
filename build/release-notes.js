@@ -21,7 +21,7 @@ let gitTags = execSync('git tag --list v*.*.*')
         tag = tag.replace('v', '').trim();
         return semver.clean(tag);
     });
-let previousVersion = semver.maxSatisfying(gitTags, "<" + currentVersion, { includePrerelease: true });
+let previousVersion = semver.maxSatisfying(gitTags, "<" + currentVersion, { includePrerelease: false });
 
 /*
   Parse the raw changelog text and split it into individual releases.
