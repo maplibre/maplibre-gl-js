@@ -22,7 +22,7 @@ npmContent('petr-maplibre-gl').then(function(last_version_files) {
         });
 
         if (diff_new.length > 0 || diff_last.length > 0) {
-            console.log('\x1b[36m%s\x1b[31m', 'Number of files in tarball will change!');
+            console.log('\x1b[31m%s\x1b[0m', 'Number of files in tarball will change!');
         }
     });
 });
