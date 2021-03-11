@@ -5,7 +5,7 @@ npmContent('maplibre-gl').then(function(last_version_files) {
     packlist({ path: '.' }).then(function(new_version_files) {
         new_version_files = new_version_files.map(file => file.replace(/\/\/+/g, '/'));
         let diff_new = new_version_files.filter(x => !last_version_files.includes(x));
-        
+
         // excludes folder names which caused this script
         // to fail with message: xx files are about to be deleted in the new tarball
         // i.e. src/ui was reported but src/ui/anchor.js, src/ui/camera.js, etc are included indeed

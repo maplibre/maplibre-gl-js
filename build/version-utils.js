@@ -40,7 +40,7 @@ function listTags() {
 switch (args[0]) {
     case 'list-version-tags':
         console.log(listTags().join("\n"));
-        break;        
+        break;
     case 'version-type':
         if (semver.prerelease(latestFromTags())) {
             console.log("prerelease");
@@ -50,7 +50,7 @@ switch (args[0]) {
         break;
     case 'latest-version-tag':
         console.log(latestVersionTag());
-        break;        
+        break;
     case 'version-from-tags':
         console.log(latestFromTags());
         break;
@@ -59,11 +59,11 @@ switch (args[0]) {
         if (tags && tags.length > 1) {
             const current = tags[0];
             const previous = tags[1];
-            if (semver.gt(current, previous)){
+            if (semver.gt(current, previous)) {
                 console.log(`valid version tag current=${current}, previous=${previous}`);
             } else {
                 console.log(`invalid - latest tag must contain greater version than previous one (current=${current}, previous=${previous})`);
-                process.exit(1);
+                process.exit(1); // eslint-disable-line no-process-exit
             }
         } else {
             console.log("valid");
