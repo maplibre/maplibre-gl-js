@@ -31,6 +31,19 @@ jobs:
       - name: Install
         run: yarn install --frozen-lockfile
 
+      - name: Validate version tag
+        run: |
+          build/version-utils.js validate-latest-tag
+
+      - name: Prepare
+        id: prepare
+        run: |
+          echo ::set-output name=version_tag::$( build/version-utils.js latest-version-tag)
+
+      - name: Ensure correct revision
+        run: |
+          git checkout tags/${{ steps.prepare.outputs.version_tag }}         
+
       - name: Lint
         run: |
           yarn run lint
@@ -66,11 +79,6 @@ jobs:
       - name: Install
         run: yarn install --frozen-lockfile
 
-      - name: Build
-        run: |
-          yarn run build-prod-min
-          yarn run build-css
-
       - name: Validate version tag
         run: |
           build/version-utils.js validate-latest-tag
@@ -78,26 +86,42 @@ jobs:
       - name: Prepare release
         id: prepare_release
         run: |
+          echo ::set-output name=version_tag::$( build/version-utils.js latest-version-tag)
+          echo ::set-output name=version::$( build/version-utils.js version-from-tags)
+          echo ::set-output name=release_type::$( build/version-utils.js version-type )        
+
+      - name: Ensure correct revision
+        run: |
+          git checkout tags/${{ steps.prepare_release.outputs.version_tag }} 
+
+      - name: Build
+        run: |
+          yarn run build-prod-min
+          yarn run build-css
+
+      - name: Build Release Notes
+        id: release_notes
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}  
+        run: |
           RELEASE_NOTES_PATH="${PWD}/release_notes.txt"
-          ./build/release-notes.js > ${RELEASE_NOTES_PATH}
+          ./build/release-notes.js > ${RELEASE_NOTES_PATH}                 
           echo ::set-output name=release_notes::${RELEASE_NOTES_PATH}
-          echo ::set-output name=version_tag::$( build/version-utils.js version-from-tags)
-          echo ::set-output name=release_type::$( build/version-utils.js version-type )
-        
-      - name: Create GitHub Release
-        id: create_release
+
+      - name: Create GitHub Release (regular)
+        id: create_regular_release
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }} 
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.prepare_release.outputs.version_tag }}
           release_name: ${{steps.prepare_release.outputs.version_tag }}
-          body_path: ${{ steps.prepare_release.outputs.release_notes }}
+          body_path: ${{ steps.release_notes.outputs.release_notes }}
           draft: false
-          prerelease: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}     
-          
-      - name: Upload GitHub Release Assets
-        id: upload-gh-release-asset 
+          prerelease: false 
+
+      - name: Upload GitHub Release Assets (regular)
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }} 
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -105,18 +129,41 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: dist
           asset_name: dist.zip
-          asset_content_type: application/zip           
+          asset_content_type: application/zip            
 
-      - name: Clean up release
+      - name: Create GitHub Release (prerelease)
+        id: create_prerelease
+        if: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.prepare_release.outputs.version_tag }}
+          release_name: ${{steps.prepare_release.outputs.version_tag }}
+          draft: false
+          prerelease: true    
+
+      - name: Upload GitHub Release Assets (prerelease)
+        uses: actions/upload-release-asset@v1
+        if: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_prerelease.outputs.upload_url }}
+          asset_path: dist
+          asset_name: dist.zip
+          asset_content_type: application/zip                    
+          
+      - name: Clean up
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         run: |
           rm -f ${{ steps.prepare_release.outputs.release_notes }}
 
       - name: Update NPM Package Version
         run: |
-          yarn version --new-version ${{ steps.prepare_release.outputs.version_tag }}
+          yarn version --new-version ${{ steps.prepare_release.outputs.version }}
 
       - name: Publish NPM package
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }} 
         run: |
           npm publish
         env:

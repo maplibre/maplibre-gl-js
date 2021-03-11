@@ -47,8 +47,8 @@ switch (args[0]) {
     case 'validate-latest-tag':
         const tags = listTags();
         if (tags && tags.length > 1) {
-            const current = tags[tags.length-1];
-            const previous = tags[tags.length-2];
+            const current = tags[0];
+            const previous = tags[1];
             if (semver.gt(current, previous)){
                 console.log(`valid version tag current=${current}, previous=${previous}`);
             } else {
