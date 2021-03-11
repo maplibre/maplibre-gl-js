@@ -36,6 +36,7 @@ let previousVersion = semver.maxSatisfying(gitTags, "<" + currentVersion);
 const regex = /^## (\d+\.\d+\.\d+).*?\n(.+?)(?=\n^## \d+\.\d+\.\d+.*?\n)/gms;
 
 let releaseNotes = [];
+// eslint-disable-next-line no-cond-assign
 while (match = regex.exec(changelog)) {
     releaseNotes.push({
         'version': match[1],
@@ -52,7 +53,7 @@ const currentReleaseNotes = _.find(releaseNotes, { version: bestReleaseNotesForC
 
 if (!currentReleaseNotes) {
     console.error('Could not find a release section satisfying %s in %s — did you forget to rename the "main" section to %s?', currentVersion, changelogPath, currentVersion.split("-")[0]);
-    process.exit(1);
+    process.exit(1); // eslint-disable-line no-process-exit
 }
 
 /*
