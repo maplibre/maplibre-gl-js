@@ -71,4 +71,5 @@ switch (args[0]) {
         break;
     default:
         console.log('Unknown command.');
+        break;
 }
