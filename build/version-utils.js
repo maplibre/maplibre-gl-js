@@ -16,7 +16,7 @@ function latestFromTags() {
     const currentVersion = execSync('git describe --tags --match=v*.*.* --abbrev=0')
         .toString()
         .trim()
-        .replace('v', '');
+        .replace(/^v/, '');
     return currentVersion;
 }
 
@@ -25,10 +25,10 @@ function listTags() {
         .toString()
         .split('\n')
         .filter(function(tag) {
-            return tag && /v*.*.*/.test('tag')
+            return tag && /v\d+.\d+.\d+/.test(tag)
         })
         .map(function (tag) {
-            tag = tag.replace('v', '').trim();
+            tag = tag.replace(/^v/, '').trim();
             return semver.clean(tag);
         })
         .filter(function(cleanTag) {
