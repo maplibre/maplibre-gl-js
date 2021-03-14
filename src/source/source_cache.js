@@ -891,11 +891,12 @@ class SourceCache extends Evented {
 
     /**
      * Resets the value of a particular state key for a feature
+     * @returns {boolean} true if any changes were made; false otherwise
      * @private
      */
-    removeFeatureState(sourceLayer?: string, featureId?: number | string, key?: string) {
+    removeFeatureState(sourceLayer?: string, featureId?: number | string, key?: string): boolean {
         sourceLayer = sourceLayer || '_geojsonTileLayer';
-        this._state.removeFeatureState(sourceLayer, featureId, key);
+        return this._state.removeFeatureState(sourceLayer, featureId, key);
     }
 
     /**

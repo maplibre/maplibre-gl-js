@@ -487,7 +487,7 @@ class Style extends Evented {
      * @returns {boolean} true if any changes were made; false otherwise
      * @private
      */
-    setState(nextState: StyleSpecification) {
+    setState(nextState: StyleSpecification): boolean {
         this._checkLoaded();
 
         if (emitValidationErrors(this, validateStyle(nextState))) return false;
@@ -559,7 +559,10 @@ class Style extends Evented {
         return this.imageManager.listImages();
     }
 
-    addSource(id: string, source: SourceSpecification, options: StyleSetterOptions = {}) {
+    /**
+    * @returns {boolean} true if any changes were made; false otherwise
+    */
+    addSource(id: string, source: SourceSpecification, options: StyleSetterOptions = {}): boolean {
         this._checkLoaded();
 
         if (this.sourceCaches[id] !== undefined) {
@@ -572,7 +575,7 @@ class Style extends Evented {
 
         const builtIns = ['vector', 'raster', 'geojson', 'video', 'image'];
         const shouldValidate = builtIns.indexOf(source.type) >= 0;
-        if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
+        if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return false;
 
         if (this.map && this.map._collectResourceTiming) (source: any).collectResourceTiming = true;
         const sourceCache = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
@@ -585,15 +588,16 @@ class Style extends Evented {
 
         sourceCache.onAdd(this.map);
         this._changed = true;
+        return true;
     }
 
     /**
      * Remove a source from this stylesheet, given its id.
      * @param {string} id id of the source to remove
      * @throws {Error} if no source is found with the given ID
-     * @returns {Map} The {@link Map} object.
+     * @returns {boolean} true if any changes were made; false otherwise
      */
-    removeSource(id: string) {
+    removeSource(id: string): boolean {
         this._checkLoaded();
 
         if (this.sourceCaches[id] === undefined) {
@@ -601,7 +605,8 @@ class Style extends Evented {
         }
         for (const layerId in this._layers) {
             if (this._layers[layerId].source === id) {
-                return this.fire(new ErrorEvent(new Error(`Source "${id}" cannot be removed while layer "${layerId}" is using it.`)));
+                this.fire(new ErrorEvent(new Error(`Source "${id}" cannot be removed while layer "${layerId}" is using it.`)));
+                return false;
             }
         }
 
@@ -614,6 +619,7 @@ class Style extends Evented {
 
         if (sourceCache.onRemove) sourceCache.onRemove(this.map);
         this._changed = true;
+        return true;
     }
 
     /**
@@ -647,22 +653,22 @@ class Style extends Evented {
      * @param {Object | CustomLayerInterface} layerObject The style layer to add.
      * @param {string} [before] ID of an existing layer to insert before
      * @param {Object} options Style setter options.
-     * @returns {Map} The {@link Map} object.
+     * @returns {boolean} true if any changes were made; false otherwise
      */
-    addLayer(layerObject: LayerSpecification | CustomLayerInterface, before?: string, options: StyleSetterOptions = {}) {
+    addLayer(layerObject: LayerSpecification | CustomLayerInterface, before?: string, options: StyleSetterOptions = {}): boolean {
         this._checkLoaded();
 
         const id = layerObject.id;
 
         if (this.getLayer(id)) {
             this.fire(new ErrorEvent(new Error(`Layer with id "${id}" already exists on this map`)));
-            return;
+            return false;
         }
 
         let layer;
         if (layerObject.type === 'custom') {
 
-            if (emitValidationErrors(this, validateCustomStyleLayer(layerObject))) return;
+            if (emitValidationErrors(this, validateCustomStyleLayer(layerObject))) return false;
 
             layer = createStyleLayer(layerObject);
 
@@ -675,7 +681,7 @@ class Style extends Evented {
 
             // this layer is not in the style.layers array, so we pass an impossible array index
             if (this._validate(validateStyle.layer,
-                `layers.${id}`, layerObject, {arrayIndex: -1}, options)) return;
+                `layers.${id}`, layerObject, {arrayIndex: -1}, options)) return false;
 
             layer = createStyleLayer(layerObject);
             this._validateLayer(layer);
@@ -687,7 +693,7 @@ class Style extends Evented {
         const index = before ? this._order.indexOf(before) : this._order.length;
         if (before && index === -1) {
             this.fire(new ErrorEvent(new Error(`Layer with id "${before}" does not exist on this map.`)));
-            return;
+            return false;
         }
 
         this._order.splice(index, 0, id);
@@ -717,6 +723,7 @@ class Style extends Evented {
         if (layer.onAdd) {
             layer.onAdd(this.map);
         }
+        return true;
     }
 
     /**
@@ -724,19 +731,20 @@ class Style extends Evented {
      * ID `before`, or appended if `before` is omitted.
      * @param {string} id  ID of the layer to move
      * @param {string} [before] ID of an existing layer to insert before
+     * @returns {boolean} true if any changes were made; false otherwise
      */
-    moveLayer(id: string, before?: string) {
+    moveLayer(id: string, before?: string): boolean {
         this._checkLoaded();
         this._changed = true;
 
         const layer = this._layers[id];
         if (!layer) {
             this.fire(new ErrorEvent(new Error(`The layer '${id}' does not exist in the map's style and cannot be moved.`)));
-            return;
+            return false;
         }
 
         if (id === before) {
-            return;
+            return false;
         }
 
         const index = this._order.indexOf(id);
@@ -745,11 +753,12 @@ class Style extends Evented {
         const newIndex = before ? this._order.indexOf(before) : this._order.length;
         if (before && newIndex === -1) {
             this.fire(new ErrorEvent(new Error(`Layer with id "${before}" does not exist on this map.`)));
-            return;
+            return false;
         }
         this._order.splice(newIndex, 0, id);
 
         this._layerOrderChanged = true;
+        return true;
     }
 
     /**
@@ -758,15 +767,16 @@ class Style extends Evented {
      * If no such layer exists, an `error` event is fired.
      *
      * @param {string} id id of the layer to remove
+     * @returns {boolean} true if any changes were made; false otherwise
      * @fires error
      */
-    removeLayer(id: string) {
+    removeLayer(id: string): boolean {
         this._checkLoaded();
 
         const layer = this._layers[id];
         if (!layer) {
             this.fire(new ErrorEvent(new Error(`The layer '${id}' does not exist in the map's style and cannot be removed.`)));
-            return;
+            return false;
         }
 
         layer.setEventedParent(null);
@@ -785,6 +795,7 @@ class Style extends Evented {
         if (layer.onRemove) {
             layer.onRemove(this.map);
         }
+        return true;
     }
 
     /**
@@ -807,16 +818,19 @@ class Style extends Evented {
         return id in this._layers;
     }
 
-    setLayerZoomRange(layerId: string, minzoom: ?number, maxzoom: ?number) {
+    /**
+     * @returns {boolean} true if any changes were made; false otherwise
+     */
+    setLayerZoomRange(layerId: string, minzoom: ?number, maxzoom: ?number): boolean {
         this._checkLoaded();
 
         const layer = this.getLayer(layerId);
         if (!layer) {
             this.fire(new ErrorEvent(new Error(`The layer '${layerId}' does not exist in the map's style and cannot have zoom extent.`)));
-            return;
+            return false;
         }
 
-        if (layer.minzoom === minzoom && layer.maxzoom === maxzoom) return;
+        if (layer.minzoom === minzoom && layer.maxzoom === maxzoom) return false;
 
         if (minzoom != null) {
             layer.minzoom = minzoom;
@@ -825,33 +839,38 @@ class Style extends Evented {
             layer.maxzoom = maxzoom;
         }
         this._updateLayer(layer);
+        return true;
     }
 
-    setFilter(layerId: string, filter: ?FilterSpecification,  options: StyleSetterOptions = {}) {
+    /**
+     * @returns {boolean} true if any changes were made; false otherwise
+     */
+    setFilter(layerId: string, filter: ?FilterSpecification,  options: StyleSetterOptions = {}): boolean {
         this._checkLoaded();
 
         const layer = this.getLayer(layerId);
         if (!layer) {
             this.fire(new ErrorEvent(new Error(`The layer '${layerId}' does not exist in the map's style and cannot be filtered.`)));
-            return;
+            return false;
         }
 
         if (deepEqual(layer.filter, filter)) {
-            return;
+            return false;
         }
 
         if (filter === null || filter === undefined) {
             layer.filter = undefined;
             this._updateLayer(layer);
-            return;
+            return true;
         }
 
         if (this._validate(validateStyle.filter, `layers.${layer.id}.filter`, filter, null, options)) {
-            return;
+            return false;
         }
 
         layer.filter = clone(filter);
         this._updateLayer(layer);
+        return true;
     }
 
     /**
@@ -863,19 +882,23 @@ class Style extends Evented {
         return clone(this.getLayer(layer).filter);
     }
 
-    setLayoutProperty(layerId: string, name: string, value: any,  options: StyleSetterOptions = {}) {
+    /**
+     * @returns {boolean} true if any changes were made; false otherwise
+     */
+    setLayoutProperty(layerId: string, name: string, value: any,  options: StyleSetterOptions = {}): boolean {
         this._checkLoaded();
 
         const layer = this.getLayer(layerId);
         if (!layer) {
             this.fire(new ErrorEvent(new Error(`The layer '${layerId}' does not exist in the map's style and cannot be styled.`)));
-            return;
+            return false;
         }
 
-        if (deepEqual(layer.getLayoutProperty(name), value)) return;
+        if (deepEqual(layer.getLayoutProperty(name), value)) return false;
 
         layer.setLayoutProperty(name, value, options);
         this._updateLayer(layer);
+        return true;
     }
 
     /**
@@ -894,16 +917,19 @@ class Style extends Evented {
         return layer.getLayoutProperty(name);
     }
 
-    setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}) {
+    /**
+     * @returns {boolean} true if any changes were made; false otherwise
+     */
+    setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}): boolean {
         this._checkLoaded();
 
         const layer = this.getLayer(layerId);
         if (!layer) {
             this.fire(new ErrorEvent(new Error(`The layer '${layerId}' does not exist in the map's style and cannot be styled.`)));
-            return;
+            return false;
         }
 
-        if (deepEqual(layer.getPaintProperty(name), value)) return;
+        if (deepEqual(layer.getPaintProperty(name), value)) return false;
 
         const requiresRelayout = layer.setPaintProperty(name, value, options);
         if (requiresRelayout) {
@@ -912,13 +938,17 @@ class Style extends Evented {
 
         this._changed = true;
         this._updatedPaintProps[layerId] = true;
+        return true;
     }
 
     getPaintProperty(layer: string, name: string) {
         return this.getLayer(layer).getPaintProperty(name);
     }
 
-    setFeatureState(target: { source: string; sourceLayer?: string; id: string | number; }, state: Object) {
+    /**
+     * @returns {boolean} true if any changes were made; false otherwise
+     */
+    setFeatureState(target: { source: string; sourceLayer?: string; id: string | number; }, state: Object): boolean {
         this._checkLoaded();
         const sourceId = target.source;
         const sourceLayer = target.sourceLayer;
@@ -926,32 +956,39 @@ class Style extends Evented {
 
         if (sourceCache === undefined) {
             this.fire(new ErrorEvent(new Error(`The source '${sourceId}' does not exist in the map's style.`)));
-            return;
+            return false;
         }
         const sourceType = sourceCache.getSource().type;
         if (sourceType === 'geojson' && sourceLayer) {
             this.fire(new ErrorEvent(new Error(`GeoJSON sources cannot have a sourceLayer parameter.`)));
-            return;
+            return false;
         }
         if (sourceType === 'vector' && !sourceLayer) {
             this.fire(new ErrorEvent(new Error(`The sourceLayer parameter must be provided for vector source types.`)));
-            return;
+            return false;
         }
         if (target.id === undefined) {
             this.fire(new ErrorEvent(new Error(`The feature id parameter must be provided.`)));
+            return false;
         }
 
+        if (deepEqual(sourceCache.getFeatureState(sourceLayer, target.id), state)) return false;
+
         sourceCache.setFeatureState(sourceLayer, target.id, state);
+        return true;
     }
 
-    removeFeatureState(target: { source: string; sourceLayer?: string; id?: string | number; }, key?: string) {
+    /**
+     * @returns {boolean} true if any changes were made; false otherwise
+     */
+    removeFeatureState(target: { source: string; sourceLayer?: string; id?: string | number; }, key?: string): boolean {
         this._checkLoaded();
         const sourceId = target.source;
         const sourceCache = this.sourceCaches[sourceId];
 
         if (sourceCache === undefined) {
             this.fire(new ErrorEvent(new Error(`The source '${sourceId}' does not exist in the map's style.`)));
-            return;
+            return false;
         }
 
         const sourceType = sourceCache.getSource().type;
@@ -959,15 +996,15 @@ class Style extends Evented {
 
         if (sourceType === 'vector' && !sourceLayer) {
             this.fire(new ErrorEvent(new Error(`The sourceLayer parameter must be provided for vector source types.`)));
-            return;
+            return false;
         }
 
         if (key && (typeof target.id !== 'string' && typeof target.id !== 'number')) {
             this.fire(new ErrorEvent(new Error(`A feature id is required to remove its specific state property.`)));
-            return;
+            return false;
         }
 
-        sourceCache.removeFeatureState(sourceLayer, target.id, key);
+        return sourceCache.removeFeatureState(sourceLayer, target.id, key);
     }
 
     getFeatureState(target: { source: string; sourceLayer?: string; id: string | number; }) {
@@ -1179,7 +1216,10 @@ class Style extends Evented {
         return this.light.getLight();
     }
 
-    setLight(lightOptions: LightSpecification, options: StyleSetterOptions = {}) {
+    /**
+     * @returns {boolean} true if any changes were made; false otherwise
+     */
+    setLight(lightOptions: LightSpecification, options: StyleSetterOptions = {}): boolean {
         this._checkLoaded();
 
         const light = this.light.getLight();
@@ -1190,7 +1230,7 @@ class Style extends Evented {
                 break;
             }
         }
-        if (!_update) return;
+        if (!_update) return false;
 
         const parameters = {
             now: browser.now(),
@@ -1202,6 +1242,7 @@ class Style extends Evented {
 
         this.light.setLight(lightOptions, options);
         this.light.updateTransitions(parameters);
+        return true;
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: { validate?: boolean } = {}) {
