@@ -710,9 +710,11 @@ class Camera extends Evented {
         this.stop();
 
         const tr = this.transform;
-        let zoomChanged = false,
+        let centerChanged = false,
+            zoomChanged = false,
             bearingChanged = false,
-            pitchChanged = false;
+            pitchChanged = false,
+            paddingChanged = false;
 
         if ('zoom' in options && tr.zoom !== +options.zoom) {
             zoomChanged = true;
@@ -720,7 +722,11 @@ class Camera extends Evented {
         }
 
         if (options.center !== undefined) {
-            tr.center = LngLat.convert(options.center);
+            const lngLatCenter = LngLat.convert(options.center);
+            if (tr.center.lng !== lngLatCenter.lng || tr.center.lat !== lngLatCenter.lat) {
+                centerChanged = true;
+                tr.center = lngLatCenter;
+            }
         }
 
         if ('bearing' in options && tr.bearing !== +options.bearing) {
@@ -734,7 +740,13 @@ class Camera extends Evented {
         }
 
         if (options.padding != null && !tr.isPaddingEqual(options.padding)) {
+            paddingChanged = true;
             tr.padding = options.padding;
+        }
+
+        const changed = centerChanged || zoomChanged || bearingChanged || pitchChanged || paddingChanged;
+        if (!changed) {
+            return this;
         }
 
         this.fire(new Event('movestart', eventData))
