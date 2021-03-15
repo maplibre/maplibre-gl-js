@@ -24,16 +24,13 @@ function listTags() {
     let gitTags = execSync('git log --no-walk --tags --pretty=format:%S')
         .toString()
         .split('\n')
-        .filter(function(tag) {
-            return tag && /v\d+.\d+.\d+/.test(tag)
-        })
-        .map(function (tag) {
-            tag = tag.replace(/^v/, '').trim();
-            return semver.clean(tag);
-        })
-        .filter(function(cleanTag) {
-            return cleanTag
-        });
+        .reduce((filtered, tag) => {
+            const parsed = semver.valid(tag.replace(/^v/, ''));
+            if (parsed) {
+                filtered.push(parsed);
+            }
+            return filtered;
+        }, []);
     return gitTags;
 }
 
