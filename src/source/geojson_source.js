@@ -2,7 +2,7 @@
 
 import {Event, ErrorEvent, Evented} from '../util/evented';
 
-import {extend} from '../util/util';
+import {clone, extend} from '../util/util';
 import EXTENT from '../data/extent';
 import {ResourceType} from '../util/ajax';
 import browser from '../util/browser';
@@ -181,7 +181,7 @@ class GeoJSONSource extends Evented implements Source {
      * @returns {GeoJSONSource} this
      */
     setData(data: GeoJSON | string) {
-        this._data = data;
+        this._data = clone(data);
         this.fire(new Event('dataloading', {dataType: 'source'}));
         this._updateWorkerData((err) => {
             if (err) {
