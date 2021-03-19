@@ -283,6 +283,12 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
             } catch (e) {
                 return callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
             }
+        } else if (typeof params.data === 'object') {
+            try {
+                return callback(null, params.data);
+            } catch (e) {
+                return callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
+            }
         } else {
             return callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
         }
