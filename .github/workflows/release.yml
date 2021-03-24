@@ -10,10 +10,10 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - v* 
-    paths-ignore:      
-      - ".github/**"      
-      - "**/*.md"    
+      - v*
+    paths-ignore:
+      - ".github/**"
+      - "**/*.md"
 
 jobs:
   lint_build_test:
@@ -47,7 +47,7 @@ jobs:
 
       - name: Ensure correct revision
         run: |
-          git checkout tags/${{ steps.prepare.outputs.version_tag }}         
+          git checkout tags/${{ steps.prepare.outputs.version_tag }}
 
       - name: Lint
         run: |
@@ -60,8 +60,8 @@ jobs:
           yarn run test-flow
           yarn run test-unit
           yarn run test-render
-          yarn run test-query    
-          yarn run test-expressions      
+          yarn run test-query
+          yarn run test-expressions
 
   release:
     name: Release
@@ -69,9 +69,9 @@ jobs:
     needs: lint_build_test
     defaults:
       run:
-        shell: bash     
+        shell: bash
     steps:
-      
+
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -95,11 +95,11 @@ jobs:
         run: |
           echo ::set-output name=version_tag::$( build/version-utils.js latest-version-tag)
           echo ::set-output name=version::$( build/version-utils.js version-from-tags)
-          echo ::set-output name=release_type::$( build/version-utils.js version-type )        
+          echo ::set-output name=release_type::$( build/version-utils.js version-type )
 
       - name: Ensure correct revision
         run: |
-          git checkout tags/${{ steps.prepare_release.outputs.version_tag }} 
+          git checkout tags/${{ steps.prepare_release.outputs.version_tag }}
 
       - name: Build
         run: |
@@ -112,15 +112,15 @@ jobs:
 
       - name: Build Release Notes
         id: release_notes
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}  
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         run: |
           RELEASE_NOTES_PATH="${PWD}/release_notes.txt"
-          ./build/release-notes.js > ${RELEASE_NOTES_PATH}                 
+          ./build/release-notes.js > ${RELEASE_NOTES_PATH}
           echo ::set-output name=release_notes::${RELEASE_NOTES_PATH}
 
       - name: Create GitHub Release (regular)
         id: create_regular_release
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }} 
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -129,10 +129,10 @@ jobs:
           release_name: ${{steps.prepare_release.outputs.version_tag }}
           body_path: ${{ steps.release_notes.outputs.release_notes }}
           draft: false
-          prerelease: false 
+          prerelease: false
 
       - name: Upload GitHub Release Assets (regular)
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }} 
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -140,7 +140,7 @@ jobs:
           upload_url: ${{ steps.create_regular_release.outputs.upload_url }}
           asset_path: ./dist.zip
           asset_name: dist.zip
-          asset_content_type: application/zip            
+          asset_content_type: application/zip
 
       - name: Create GitHub Release (prerelease)
         id: create_prerelease
@@ -152,7 +152,7 @@ jobs:
           tag_name: ${{ steps.prepare_release.outputs.version_tag }}
           release_name: ${{steps.prepare_release.outputs.version_tag }}
           draft: false
-          prerelease: true    
+          prerelease: true
 
       - name: Upload GitHub Release Assets (prerelease)
         uses: actions/upload-release-asset@v1
@@ -163,8 +163,8 @@ jobs:
           upload_url: ${{ steps.create_prerelease.outputs.upload_url }}
           asset_path: ./dist.zip
           asset_name: dist.zip
-          asset_content_type: application/zip                    
-          
+          asset_content_type: application/zip
+
       - name: Clean up
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         run: |
@@ -176,7 +176,7 @@ jobs:
 
       - name: Commit & Push updated version
         run: |
-          git add package.json  
+          git add package.json
           if [[ -n "$(git status --porcelain)" ]]; then
             git config --local user.email "maplibre@noreply.maplibre.org"
             git config --local user.name "MapLibre"
@@ -184,10 +184,9 @@ jobs:
             git push origin HEAD:main
           else
             echo "no changes";
-          fi        
+          fi
       - name: Publish NPM package
         run: |
           yarn publish --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
