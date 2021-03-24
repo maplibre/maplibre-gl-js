@@ -41,7 +41,7 @@ jobs:
       - name: Prepare
         id: prepare
         run: |
-          LatestVersionTag=$(node build\version-utils.js latest-version-tag)
+          $LatestVersionTag=$(node build\version-utils.js latest-version-tag)
           echo "Latest version tag=$LatestVersionTag"
           echo "::set-output name=version_tag::$LatestVersionTag"
 
