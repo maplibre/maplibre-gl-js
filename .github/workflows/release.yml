@@ -24,10 +24,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use Node.js 10 x64
+      - name: Use Node.js 12 x64
         uses: actions/setup-node@v2
         with:
-          node-version: 10
+          node-version: 12
           architecture: x64
           registry-url: 'https://registry.npmjs.org'
 
@@ -76,10 +76,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use Node.js 10 x64
+      - name: Use Node.js 12 x64
         uses: actions/setup-node@v2
         with:
-          node-version: 10
+          node-version: 12
           architecture: x64
           registry-url: 'https://registry.npmjs.org'
 

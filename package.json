@@ -10,7 +10,7 @@
     "url": "git://github.com/maplibre/maplibre-gl-js.git"
   },
   "engines": {
-    "node": ">=6.4.0"
+    "node": ">=12.13.0"
   },
   "dependencies": {
     "@mapbox/geojson-rewind": "^0.5.0",
