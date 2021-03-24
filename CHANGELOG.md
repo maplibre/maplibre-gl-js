@@ -6,13 +6,13 @@
 
 ### 🐞 Bug fixes
 
-- Add smashed bugs here
+- Add fixed bugs here
 
-## 1.13.1
+## 1.14.0
 
 ### Features and improvements
 
-- ✨✨✨✨✨✨ New logo finally !!! ✨✨✨✨✨✨
+- New logo
 
 ### 🐞 Bug fixes
 
@@ -22,11 +22,6 @@
 - fix CI checksize job to use maplibre name (#86)
 - Move output files from mapbox.* to maplibre.* (#75)
 - Remove mapbox specifics and branding from .github (#64)
-
-## 1.13.1-beta.1
-
-### 🐞 Bug fixes
-
 - Fix a bug where mapbox-gl-js is no longer licensed as open source, but we owe immeasurable gratitude to Mapbox for releasing all their initial code to the community under BSD-3 license.
 
 ## 1.13.0
