@@ -129,6 +129,8 @@ jobs:
       - run: yarn run build-dev
       - run: yarn global add chromedriver@87
       - run: yarn global add geckodriver
+      # Make sure ChromeDriver version matches currently installed one
+      - uses: nanasess/setup-chromedriver@v1.0.1
       - name: Test Chrome
         env:
           SELENIUM_BROWSER: chrome
