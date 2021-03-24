@@ -174,17 +174,6 @@ jobs:
         run: |
           yarn version --non-interactive --no-git-tag-version --new-version ${{ steps.prepare_release.outputs.version }}
 
-      - name: Commit & Push updated version
-        run: |
-          git add package.json
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config --local user.email "maplibre@noreply.maplibre.org"
-            git config --local user.name "MapLibre"
-            git commit -m "Version Bump"
-            git push origin HEAD:main
-          else
-            echo "no changes";
-          fi
       - name: Publish NPM package
         run: |
           yarn publish --non-interactive
