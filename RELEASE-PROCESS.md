@@ -21,10 +21,10 @@ Pushing a tag triggers the publishing workflow, but it can also be triggered man
 The workflow searches for the most recent version tag matching [semantic version rules](https://classic.yarnpkg.com/en/docs/dependency-versions#toc-semantic-versioning),
 and must be prefixed with a `v`
 
-There can be regular versions such as `v1.14.0`, and pre-releases, e.g. `v1.14.0-rc.1`.
+There can be release versions such as `v1.14.0`, and release candidates, e.g. `v1.14.0-rc.1`.
 
-In case of regular version the action parses `CHANGELOG.md` and creates release notes based on current and last version.
-Release notes are not generated for pre-release versions. In case of pre-release versions the github release is marked as pre-release accordingly.
+In case of release version the action parses `CHANGELOG.md` and creates release notes based on current and last version.
+Release candidate versions do not generate release notes.
 
 The changelog should be updated on every PR - there is a placeholder at the top of the document - and heading should be renamed to the same version which is going to be set in the version tag during release.
 
