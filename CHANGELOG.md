@@ -12,6 +12,7 @@
 
 ### Features and improvements
 
+- Rebranded to MapLibre
 - New logo
 
 ### 🐞 Bug fixes

@@ -1,8 +1,8 @@
+![MapLibre logo](MapLibre.png)
+
 # MapLibre GL
 
 **MapLibre GL** is a community led fork derived from [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) prior to their switch to a non-OSS license.
-
-[<img width="200" alt="MapLibre" src="https://user-images.githubusercontent.com/223277/101580282-7534f700-397e-11eb-8b58-687f52e2a8cf.png">](http://maplibre.org)
 
 ### Migrating from mapbox-gl
 
@@ -10,7 +10,7 @@ If you depend on mapbox-gl directly, simply replace `mapbox-gl` with `maplibre-g
 ```diff
   "dependencies": {
 -    "mapbox-gl": "^1.13.0"
-+    "maplibre-gl": ">=1.13.0-rc.1"
++    "maplibre-gl": ">=1.14.0"
   }
 ```
 
