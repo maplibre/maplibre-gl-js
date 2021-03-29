@@ -1,9 +1,3 @@
-# To trigger the workflow, tag sources and push
-# git tag -a v1.13.1 -m "version 1.13.1"
-# to tag old revision:
-# git tag -a v1.13.0-beta.1 2112766 -m "version 1.13.0-beta.1"
-# git tag -a v1.13.0 f87090b -m "version 1.13.0"
-# git push --tags
 name: Release
 
 on:
