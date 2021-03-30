@@ -19,7 +19,7 @@ class LayerPlacement {
 
     constructor(styleLayer: SymbolStyleLayer) {
         this._sortAcrossTiles = styleLayer.layout.get('symbol-z-order') !== 'viewport-y' &&
-            styleLayer.layout.get('symbol-sort-key').constantOr(1) !== undefined;
+            !styleLayer.layout.get('symbol-sort-key').isConstant();
 
         this._currentTileIndex = 0;
         this._currentPartIndex = 0;

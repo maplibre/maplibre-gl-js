@@ -78,6 +78,7 @@ class FillBucket implements Bucket {
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
         this.hasPattern = hasPattern('fill', this.layers, options);
         const fillSortKey = this.layers[0].layout.get('fill-sort-key');
+        const sortFeaturesByKey = !fillSortKey.isConstant();
         const bucketFeatures = [];
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
@@ -86,7 +87,7 @@ class FillBucket implements Bucket {
 
             if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
 
-            const sortKey = fillSortKey ?
+            const sortKey = sortFeaturesByKey ?
                 fillSortKey.evaluate(evaluationFeature, {}, canonical, options.availableImages) :
                 undefined;
 
@@ -104,7 +105,7 @@ class FillBucket implements Bucket {
             bucketFeatures.push(bucketFeature);
         }
 
-        if (fillSortKey) {
+        if (sortFeaturesByKey) {
             bucketFeatures.sort((a, b) => {
                 // a.sortKey is always a number when in use
                 return ((a.sortKey: any): number) - ((b.sortKey: any): number);
