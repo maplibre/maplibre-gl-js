@@ -2,11 +2,12 @@
 
 ### Features and improvements
 
-- Add new stuff here
+- *...Add new stuff here...*
+- Improve performance of layers with constant `*-sort-key` (#78)
 
 ### 🐞 Bug fixes
 
-- Add fixed bugs here
+- *...Add fixed bugs here...*
 
 ## 1.14.0
 
