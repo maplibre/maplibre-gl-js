@@ -12,6 +12,7 @@
   "engines": {
     "node": ">=6.4.0"
   },
+  "types": "src/index.d.ts",
   "dependencies": {
     "@mapbox/geojson-rewind": "^0.5.0",
     "@mapbox/geojson-types": "^1.0.2",
