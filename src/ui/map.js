@@ -1230,8 +1230,6 @@ class Map extends Camera {
      * // Query all rendered features from a single layer
      * var features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
      * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/queryrenderedfeatures/)
-     * @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/using-box-queryrenderedfeatures/)
-     * @see [Filter features within map view](https://maplibre.org/maplibre-gl-js-docs/example/filter-features-within-map-view/)
      */
     queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike], options?: Object) {
         // The first parameter can be omitted entirely, making this effectively an overloaded method
@@ -1302,7 +1300,6 @@ class Map extends Camera {
      *   sourceLayer: 'your-source-layer'
      * });
      *
-     * @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js-docs/example/query-similar-features/)
      */
     querySourceFeatures(sourceId: string, parameters: ?{sourceLayer: ?string, filter: ?Array<any>, validate?: boolean}) {
         return this.style.querySourceFeatures(sourceId, parameters);
@@ -1333,7 +1330,6 @@ class Map extends Camera {
      * @example
      * map.setStyle("mapbox://styles/mapbox/streets-v11");
      *
-     * @see [Change a map's style](https://maplibre.org/maplibre-gl-js-docs/example/setstyle/)
      */
     setStyle(style: StyleSpecification | string | null, options?: {diff?: boolean} & StyleOptions) {
         options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
@@ -1474,9 +1470,7 @@ class Map extends Camera {
      *     }
      *   }
      * });
-     * @see Vector source: [Show and hide layers](https://maplibre.org/maplibre-gl-js-docs/example/toggle-layers/)
      * @see GeoJSON source: [Add live realtime data](https://maplibre.org/maplibre-gl-js-docs/example/live-geojson/)
-     * @see Raster DEM source: [Add hillshading](https://maplibre.org/maplibre-gl-js-docs/example/hillshade/)
      */
     addSource(id: string, source: SourceSpecification) {
         this._lazyInitEmptyStyle();
@@ -1993,8 +1987,6 @@ class Map extends Camera {
      * // remove the filter for the 'bike-docks' style layer
      * map.setFilter('bike-docks', null);
      *
-     * @see [Filter features within map view](https://maplibre.org/maplibre-gl-js-docs/example/filter-features-within-map-view/)
-     * @see [Highlight features containing similar data](https://maplibre.org/maplibre-gl-js-docs/example/query-similar-features/)
      * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js-docs/example/timeline-animation/)
      * @see Tutorial: [Show changes over time](https://docs.mapbox.com/help/tutorials/show-changes-over-time/)
      */
@@ -2026,7 +2018,6 @@ class Map extends Camera {
      * @example
      * map.setPaintProperty('my-layer', 'fill-color', '#faafee');
      * @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js-docs/example/color-switcher/)
-     * @see [Adjust a layer's opacity](https://maplibre.org/maplibre-gl-js-docs/example/adjust-layer-opacity/)
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
     setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}) {
@@ -2056,7 +2047,6 @@ class Map extends Camera {
      * @returns {Map} `this`
      * @example
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
-     * @see [Show and hide layers](https://maplibre.org/maplibre-gl-js-docs/example/toggle-layers/)
      */
     setLayoutProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}) {
         this.style.setLayoutProperty(layerId, name, value, options);
@@ -2083,7 +2073,6 @@ class Map extends Camera {
      * @returns {Map} `this`
      * @example
      * var layerVisibility = map.getLayoutProperty('my-layer', 'visibility');
-     * @see [Show and hide layers](https://maplibre.org/maplibre-gl-js-docs/example/toggle-layers/)
      */
     setLight(light: LightSpecification, options: StyleSetterOptions = {}) {
         this._lazyInitEmptyStyle();
@@ -2249,7 +2238,6 @@ class Map extends Camera {
      *
      * @returns {HTMLElement} The container of the map's `<canvas>`.
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
-     * @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/using-box-queryrenderedfeatures/)
      */
     getCanvasContainer() {
         return this._canvasContainer;

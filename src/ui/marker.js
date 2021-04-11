@@ -313,7 +313,6 @@ export default class Marker extends Evented {
     *   .addTo(map);
     * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
     * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
-    * @see [Add a marker using a place name](https://maplibre.org/maplibre-gl-js-docs/example/marker-from-geocode/)
     */
     setLngLat(lnglat: LngLatLike) {
         this._lngLat = LngLat.convert(lnglat);

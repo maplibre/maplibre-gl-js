@@ -28,7 +28,6 @@ export const earthRadius = 6371008.8;
  * ll.lng; // = -123.9749
  * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/mouse-position/)
  * @see [Display a popup](https://maplibre.org/maplibre-gl-js-docs/example/popup/)
- * @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/using-box-queryrenderedfeatures/)
  * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js-docs/example/timeline-animation/)
  */
 class LngLat {

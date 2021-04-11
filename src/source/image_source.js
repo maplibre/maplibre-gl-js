@@ -62,7 +62,6 @@ type Coordinates = [[number, number], [number, number], [number, number], [numbe
  * })
  *
  * map.removeSource('some id');  // remove
- * @see [Add an image](https://maplibre.org/maplibre-gl-js-docs/example/image-on-a-map/)
  */
 class ImageSource extends Evented implements Source {
     type: string;

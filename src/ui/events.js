@@ -314,7 +314,6 @@ export type MapEvent =
      * map.on('mousedown', 'poi-label', function() {
      *   console.log('A mousedown event has occurred on a visible portion of the poi-label layer.');
      * });
-     * @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/using-box-queryrenderedfeatures/)
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
     | 'mousedown'
@@ -344,7 +343,6 @@ export type MapEvent =
      * map.on('mouseup', 'poi-label', function() {
      *   console.log('A mouseup event has occurred on a visible portion of the poi-label layer.');
      * });
-     * @see [Highlight features within a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/using-box-queryrenderedfeatures/)
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
     | 'mouseup'
@@ -688,7 +686,6 @@ export type MapEvent =
      *   console.log('A move event occurred.');
      * });
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js-docs/example/cluster-html/)
-     * @see [Filter features within map view](https://maplibre.org/maplibre-gl-js-docs/example/filter-features-within-map-view/)
      */
     | 'move'
 
@@ -708,8 +705,6 @@ export type MapEvent =
      * map.on('moveend', function() {
      *   console.log('A moveend event occurred.');
      * });
-     * @see [Play map locations as a slideshow](https://maplibre.org/maplibre-gl-js-docs/example/playback-locations/)
-     * @see [Filter features within map view](https://maplibre.org/maplibre-gl-js-docs/example/filter-features-within-map-view/)
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js-docs/example/cluster-html/)
      */
     | 'moveend'
@@ -804,7 +799,6 @@ export type MapEvent =
      * map.on('zoom', function() {
      *   console.log('A zoom event occurred.');
      * });
-     * @see [Update a choropleth layer by zoom level](https://maplibre.org/maplibre-gl-js-docs/example/updating-choropleth/)
      */
     | 'zoom'
 
