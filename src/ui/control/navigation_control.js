@@ -30,8 +30,8 @@ const defaultOptions: Options = {
  * @example
  * var nav = new mapboxgl.NavigationControl();
  * map.addControl(nav, 'top-left');
- * @see [Display map navigation controls](https://www.mapbox.com/mapbox-gl-js/example/navigation/)
- * @see [Add a third party vector tile source](https://www.mapbox.com/mapbox-gl-js/example/third-party/)
+ * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js-docs/example/navigation/)
+ * @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/third-party/)
  */
 class NavigationControl {
     _map: Map;
