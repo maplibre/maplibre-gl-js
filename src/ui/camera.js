@@ -51,10 +51,10 @@ import type {PaddingOptions} from '../geo/edge_insets';
  *   bearing: -60,
  *   zoom: 10
  * });
- * @see [Set pitch and bearing](https://docs.mapbox.com/mapbox-gl-js/example/set-perspective/)
- * @see [Jump to a series of locations](https://docs.mapbox.com/mapbox-gl-js/example/jump-to/)
- * @see [Fly to a location](https://docs.mapbox.com/mapbox-gl-js/example/flyto/)
- * @see [Display buildings in 3D](https://docs.mapbox.com/mapbox-gl-js/example/3d-buildings/)
+ * @see [Set pitch and bearing](https://maplibre.org/maplibre-gl-js-docs/example/set-perspective/)
+ * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js-docs/example/jump-to/)
+ * @see [Fly to a location](https://maplibre.org/maplibre-gl-js-docs/example/flyto/)
+ * @see [Display buildings in 3D](https://maplibre.org/maplibre-gl-js-docs/example/3d-buildings/)
  */
 export type CameraOptions = {
     center?: LngLatLike,
@@ -108,8 +108,8 @@ export type AnimationOptions = {
  * map.fitBounds(bbox, {
  *   padding: 20
  * });
- * @see [Fit to the bounds of a LineString](https://docs.mapbox.com/mapbox-gl-js/example/zoomto-linestring/)
- * @see [Fit a map to a bounding box](https://docs.mapbox.com/mapbox-gl-js/example/fitbounds/)
+ * @see [Fit to the bounds of a LineString](https://maplibre.org/maplibre-gl-js-docs/example/zoomto-linestring/)
+ * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/fitbounds/)
  */
 
 class Camera extends Evented {
@@ -184,7 +184,7 @@ class Camera extends Evented {
      * @fires movestart
      * @fires moveend
      * @returns {Map} `this`
-     * @see [Navigate the map with game-like controls](https://www.mapbox.com/mapbox-gl-js/example/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
      */
     panBy(offset: PointLike, options?: AnimationOptions, eventData?: Object) {
         offset = Point.convert(offset).mult(-1);
@@ -206,7 +206,7 @@ class Camera extends Evented {
      * @example
      * // Specify that the panTo animation should last 5000 milliseconds.
      * map.panTo([-74, 38], {duration: 5000});
-     * @see [Update a feature in realtime](https://docs.mapbox.com/mapbox-gl-js/example/live-update-feature/)
+     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js-docs/example/live-update-feature/)
      */
     panTo(lnglat: LngLatLike, options?: AnimationOptions, eventData?: Object) {
         return this.easeTo(extend({
@@ -325,7 +325,7 @@ class Camera extends Evented {
      *
      * @memberof Map#
      * @returns The map's current bearing.
-     * @see [Navigate the map with game-like controls](https://www.mapbox.com/mapbox-gl-js/example/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
      */
     getBearing(): number { return this.transform.bearing; }
 
@@ -612,7 +612,7 @@ class Camera extends Evented {
      * map.fitBounds(bbox, {
      *   padding: {top: 10, bottom:25, left: 15, right: 5}
      * });
-     * @see [Fit a map to a bounding box](https://www.mapbox.com/mapbox-gl-js/example/fitbounds/)
+     * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/fitbounds/)
      */
     fitBounds(bounds: LngLatBoundsLike, options?: AnimationOptions & CameraOptions, eventData?: Object) {
         return this._fitInternal(
@@ -703,8 +703,8 @@ class Camera extends Evented {
      *   pitch: 45,
      *   bearing: 90
      * });
-     * @see [Jump to a series of locations](https://docs.mapbox.com/mapbox-gl-js/example/jump-to/)
-     * @see [Update a feature in realtime](https://docs.mapbox.com/mapbox-gl-js/example/live-update-feature/)
+     * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js-docs/example/jump-to/)
+     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js-docs/example/live-update-feature/)
      */
     jumpTo(options: CameraOptions, eventData?: Object) {
         this.stop();
@@ -785,7 +785,7 @@ class Camera extends Evented {
      * @fires zoomend
      * @fires pitchend
      * @returns {Map} `this`
-     * @see [Navigate the map with game-like controls](https://www.mapbox.com/mapbox-gl-js/example/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
      */
     easeTo(options: CameraOptions & AnimationOptions & {easeId?: string}, eventData?: Object) {
         this._stop(false, options.easeId);
@@ -993,9 +993,9 @@ class Camera extends Evented {
      *     return t;
      *   }
      * });
-     * @see [Fly to a location](https://www.mapbox.com/mapbox-gl-js/example/flyto/)
-     * @see [Slowly fly to a location](https://www.mapbox.com/mapbox-gl-js/example/flyto-options/)
-     * @see [Fly to a location based on scroll position](https://www.mapbox.com/mapbox-gl-js/example/scroll-fly-to/)
+     * @see [Fly to a location](https://maplibre.org/maplibre-gl-js-docs/example/flyto/)
+     * @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js-docs/example/flyto-options/)
+     * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js-docs/example/scroll-fly-to/)
      */
     flyTo(options: Object, eventData?: Object) {
         // Fall through to jumpTo if user has set prefers-reduced-motion

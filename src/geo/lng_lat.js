@@ -26,10 +26,9 @@ export const earthRadius = 6371008.8;
  * @example
  * var ll = new mapboxgl.LngLat(-123.9749, 40.7736);
  * ll.lng; // = -123.9749
- * @see [Get coordinates of the mouse pointer](https://www.mapbox.com/mapbox-gl-js/example/mouse-position/)
- * @see [Display a popup](https://www.mapbox.com/mapbox-gl-js/example/popup/)
- * @see [Highlight features within a bounding box](https://www.mapbox.com/mapbox-gl-js/example/using-box-queryrenderedfeatures/)
- * @see [Create a timeline animation](https://www.mapbox.com/mapbox-gl-js/example/timeline-animation/)
+ * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/mouse-position/)
+ * @see [Display a popup](https://maplibre.org/maplibre-gl-js-docs/example/popup/)
+ * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js-docs/example/timeline-animation/)
  */
 class LngLat {
     lng: number;

@@ -3,6 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Update example links to https://maplibre.org/maplibre-gl-js-docs/ (#131)
 - Improve performance of layers with constant `*-sort-key` (#78)
 
 ### 🐞 Bug fixes

@@ -88,7 +88,7 @@ const exported = {
      * @returns {string} The currently set access token.
      * @example
      * mapboxgl.accessToken = myAccessToken;
-     * @see [Display a map](https://www.mapbox.com/mapbox-gl-js/examples/)
+     * @see [Display a map](https://maplibre.org/maplibre-gl-js-docs/examples/)
      */
     get accessToken(): ?string {
         return config.ACCESS_TOKEN;
@@ -197,7 +197,7 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
  * if (!mapboxgl.supported()) {
  *   alert('Your browser does not support Mapbox GL');
  * }
- * @see [Check for browser support](https://www.mapbox.com/mapbox-gl-js/example/check-for-support/)
+ * @see [Check for browser support](https://maplibre.org/maplibre-gl-js-docs/example/check-for-support/)
  */
 
 /**
@@ -211,7 +211,7 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
  *    rtl text will then be rendered only after the plugin finishes loading.
  * @example
  * mapboxgl.setRTLTextPlugin('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.0/mapbox-gl-rtl-text.js');
- * @see [Add support for right-to-left scripts](https://www.mapbox.com/mapbox-gl-js/example/mapbox-gl-rtl-text/)
+ * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js-docs/example/mapbox-gl-rtl-text/)
  */
 
 /**
