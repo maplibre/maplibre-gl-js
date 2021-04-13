@@ -3,6 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Bring in typescript definitions file (#24) 
 - Improve performance of layers with constant `*-sort-key` (#78)
 
 ### 🐞 Bug fixes
