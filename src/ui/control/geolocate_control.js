@@ -92,7 +92,7 @@ let noTimeout = false;
  *     },
  *     trackUserLocation: true
  * }));
- * @see [Locate the user](https://www.mapbox.com/mapbox-gl-js/example/locate-user/)
+ * @see [Locate the user](https://maplibre.org/maplibre-gl-js-docs/example/locate-user/)
  */
 class GeolocateControl extends Evented {
     _map: Map;
