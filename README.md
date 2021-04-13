@@ -12,7 +12,9 @@ If you depend on mapbox-gl directly, simply replace `mapbox-gl` with `maplibre-g
   }
 ```
 
-Want an example? [Try out MapLibre GL on CodePen](https://codepen.io/klokan/pen/WNoZRyx)
+And replace ```mapboxgl``` with ```maplibregl``` in your JavaScript code.
+
+Want an example? [Try out MapLibre GL on CodePen](https://codepen.io/klokan/pen/WNoZRyx) and have a look at ones in the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js-docs/example/).
 
 If you use mapbox-gl via bindings (react, vue, etc), you may need to wait a little longer as we develop an easy migration path for each binding. Contributions welcome!
 
