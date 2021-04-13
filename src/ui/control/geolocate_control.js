@@ -86,7 +86,7 @@ let noTimeout = false;
  * @param {Object} [options.showUserLocation=true] By default a dot will be shown on the map at the user's location. Set to `false` to disable.
  *
  * @example
- * map.addControl(new mapboxgl.GeolocateControl({
+ * map.addControl(new maplibregl.GeolocateControl({
  *     positionOptions: {
  *         enableHighAccuracy: true
  *     },
@@ -436,7 +436,7 @@ class GeolocateControl extends Evented {
     * @returns {boolean} Returns `false` if called before control was added to a map, otherwise returns `true`.
     * @example
     * // Initialize the geolocate control.
-    * var geolocate = new mapboxgl.GeolocateControl({
+    * var geolocate = new maplibregl.GeolocateControl({
     *  positionOptions: {
     *    enableHighAccuracy: true
     *  },
@@ -592,7 +592,7 @@ export default GeolocateControl;
  * @property {Position} data The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
  * @example
  * // Initialize the geolocate control.
- * var geolocate = new mapboxgl.GeolocateControl({
+ * var geolocate = new maplibregl.GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -617,7 +617,7 @@ export default GeolocateControl;
  * @property {PositionError} data The returned [PositionError](https://developer.mozilla.org/en-US/docs/Web/API/PositionError) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
  * @example
  * // Initialize the geolocate control.
- * var geolocate = new mapboxgl.GeolocateControl({
+ * var geolocate = new maplibregl.GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -642,7 +642,7 @@ export default GeolocateControl;
  * @property {Position} data The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
  * @example
  * // Initialize the geolocate control.
- * var geolocate = new mapboxgl.GeolocateControl({
+ * var geolocate = new maplibregl.GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -666,7 +666,7 @@ export default GeolocateControl;
  * @instance
  * @example
  * // Initialize the geolocate control.
- * var geolocate = new mapboxgl.GeolocateControl({
+ * var geolocate = new maplibregl.GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -690,7 +690,7 @@ export default GeolocateControl;
  * @instance
  * @example
  * // Initialize the geolocate control.
- * var geolocate = new mapboxgl.GeolocateControl({
+ * var geolocate = new maplibregl.GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },

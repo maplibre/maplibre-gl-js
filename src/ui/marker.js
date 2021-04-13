@@ -42,12 +42,12 @@ type Options = {
  * @param {string} [options.pitchAlignment='auto'] `map` aligns the `Marker` to the plane of the map. `viewport` aligns the `Marker` to the plane of the viewport. `auto` automatically matches the value of `rotationAlignment`.
  * @param {string} [options.rotationAlignment='auto'] `map` aligns the `Marker`'s rotation relative to the map, maintaining a bearing as the map rotates. `viewport` aligns the `Marker`'s rotation relative to the viewport, agnostic to map rotations. `auto` is equivalent to `viewport`.
  * @example
- * var marker = new mapboxgl.Marker()
+ * var marker = new maplibregl.Marker()
  *   .setLngLat([30.5, 50.5])
  *   .addTo(map);
  * @example
  * // Set options
- * var marker = new mapboxgl.Marker({
+ * var marker = new maplibregl.Marker({
  *     color: "#FFFFFF",
  *     draggable: true
  *   }).setLngLat([30.5, 50.5])
@@ -237,7 +237,7 @@ export default class Marker extends Evented {
      * @param {Map} map The Mapbox GL JS map to add the marker to.
      * @returns {Marker} `this`
      * @example
-     * var marker = new mapboxgl.Marker()
+     * var marker = new maplibregl.Marker()
      *   .setLngLat([30.5, 50.5])
      *   .addTo(map); // add the marker to the map
      */
@@ -261,7 +261,7 @@ export default class Marker extends Evented {
     /**
      * Removes the marker from a map
      * @example
-     * var marker = new mapboxgl.Marker().addTo(map);
+     * var marker = new maplibregl.Marker().addTo(map);
      * marker.remove();
      * @returns {Marker} `this`
      */
@@ -308,7 +308,7 @@ export default class Marker extends Evented {
     * @returns {Marker} `this`
     * @example
     * // Create a new marker, set the longitude and latitude, and add it to the map
-    * new mapboxgl.Marker()
+    * new maplibregl.Marker()
     *   .setLngLat([-65.017, -16.457])
     *   .addTo(map);
     * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
@@ -336,9 +336,9 @@ export default class Marker extends Evented {
      * set on this {@link Marker} instance is unset.
      * @returns {Marker} `this`
      * @example
-     * var marker = new mapboxgl.Marker()
+     * var marker = new maplibregl.Marker()
      *  .setLngLat([0, 0])
-     *  .setPopup(new mapboxgl.Popup().setHTML("<h1>Hello World!</h1>")) // add popup
+     *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>")) // add popup
      *  .addTo(map);
      * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js-docs/example/set-popup/)
      */
@@ -407,9 +407,9 @@ export default class Marker extends Evented {
      * Returns the {@link Popup} instance that is bound to the {@link Marker}.
      * @returns {Popup} popup
      * @example
-     * var marker = new mapboxgl.Marker()
+     * var marker = new maplibregl.Marker()
      *  .setLngLat([0, 0])
-     *  .setPopup(new mapboxgl.Popup().setHTML("<h1>Hello World!</h1>"))
+     *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>"))
      *  .addTo(map);
      *
      * console.log(marker.getPopup()); // return the popup instance
@@ -422,9 +422,9 @@ export default class Marker extends Evented {
      * Opens or closes the {@link Popup} instance that is bound to the {@link Marker}, depending on the current state of the {@link Popup}.
      * @returns {Marker} `this`
      * @example
-     * var marker = new mapboxgl.Marker()
+     * var marker = new maplibregl.Marker()
      *  .setLngLat([0, 0])
-     *  .setPopup(new mapboxgl.Popup().setHTML("<h1>Hello World!</h1>"))
+     *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>"))
      *  .addTo(map);
      *
      * marker.togglePopup(); // toggle popup open or closed
