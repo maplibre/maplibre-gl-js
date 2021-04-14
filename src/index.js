@@ -49,7 +49,7 @@ const exported = {
     config,
     /**
      * Initializes resources like WebWorkers that can be shared across maps to lower load
-     * times in some situations. `mapboxgl.workerUrl` and `mapboxgl.workerCount`, if being
+     * times in some situations. `maplibregl.workerUrl` and `maplibregl.workerCount`, if being
      * used, must be set before `prewarm()` is called to have an effect.
      *
      * By default, the lifecycle of these resources is managed automatically, and they are
@@ -57,7 +57,7 @@ const exported = {
      * resources will be created ahead of time, and will not be cleared when the last Map
      * is removed from the page. This allows them to be re-used by new Map instances that
      * are created later. They can be manually cleared by calling
-     * `mapboxgl.clearPrewarmedResources()`. This is only necessary if your web page remains
+     * `maplibregl.clearPrewarmedResources()`. This is only necessary if your web page remains
      * active but stops using maps altogether.
      *
      * This is primarily useful when using GL-JS maps in a single page app, wherein a user
@@ -66,18 +66,18 @@ const exported = {
      *
      * @function prewarm
      * @example
-     * mapboxgl.prewarm()
+     * maplibregl.prewarm()
      */
     prewarm,
     /**
-     * Clears up resources that have previously been created by `mapboxgl.prewarm()`.
+     * Clears up resources that have previously been created by `maplibregl.prewarm()`.
      * Note that this is typically not necessary. You should only call this function
      * if you expect the user of your app to not return to a Map view at any point
      * in your application.
      *
      * @function clearPrewarmedResources
      * @example
-     * mapboxgl.clearPrewarmedResources()
+     * maplibregl.clearPrewarmedResources()
      */
     clearPrewarmedResources,
 
@@ -87,7 +87,7 @@ const exported = {
      * @var {string} accessToken
      * @returns {string} The currently set access token.
      * @example
-     * mapboxgl.accessToken = myAccessToken;
+     * maplibregl.accessToken = myAccessToken;
      * @see [Display a map](https://maplibre.org/maplibre-gl-js-docs/examples/)
      */
     get accessToken(): ?string {
@@ -104,7 +104,7 @@ const exported = {
      * @var {string} baseApiUrl
      * @returns {string} The current base API URL.
      * @example
-     * mapboxgl.baseApiUrl = 'https://api.mapbox.com';
+     * maplibregl.baseApiUrl = 'https://api.mapbox.com';
      */
     get baseApiUrl(): ?string {
         return config.API_URL;
@@ -122,7 +122,7 @@ const exported = {
      * @var {string} workerCount
      * @returns {number} Number of workers currently configured.
      * @example
-     * mapboxgl.workerCount = 2;
+     * maplibregl.workerCount = 2;
      */
     get workerCount(): number {
         return WorkerPool.workerCount;
@@ -139,7 +139,7 @@ const exported = {
      * @var {string} maxParallelImageRequests
      * @returns {number} Number of parallel requests currently configured.
      * @example
-     * mapboxgl.maxParallelImageRequests = 10;
+     * maplibregl.maxParallelImageRequests = 10;
      */
     get maxParallelImageRequests(): number {
         return config.MAX_PARALLEL_IMAGE_REQUESTS;
@@ -164,7 +164,7 @@ const exported = {
      * @function clearStorage
      * @param {Function} callback Called with an error argument if there is an error.
      * @example
-     * mapboxgl.clearStorage();
+     * maplibregl.clearStorage();
      */
     clearStorage(callback?: (err: ?Error) => void) {
         clearTileCache(callback);
@@ -194,7 +194,7 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
  * @return {boolean}
  * @example
  * // Show an alert if the browser does not support Mapbox GL
- * if (!mapboxgl.supported()) {
+ * if (!maplibregl.supported()) {
  *   alert('Your browser does not support Mapbox GL');
  * }
  * @see [Check for browser support](https://maplibre.org/maplibre-gl-js-docs/example/check-for-support/)
@@ -210,7 +210,7 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
  * @param {boolean} lazy If set to `true`, mapboxgl will defer loading the plugin until rtl text is encountered,
  *    rtl text will then be rendered only after the plugin finishes loading.
  * @example
- * mapboxgl.setRTLTextPlugin('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.0/mapbox-gl-rtl-text.js');
+ * maplibregl.setRTLTextPlugin('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.0/mapbox-gl-rtl-text.js');
  * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js-docs/example/mapbox-gl-rtl-text/)
  */
 
@@ -221,7 +221,7 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
   *
   * @function getRTLTextPluginStatus
   * @example
-  * const pluginStatus = mapboxgl.getRTLTextPluginStatus();
+  * const pluginStatus = maplibregl.getRTLTextPluginStatus();
   */
 
 export default exported;

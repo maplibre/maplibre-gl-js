@@ -19,7 +19,7 @@ type Options = {
  * @param {HTMLElement} [options.container] `container` is the [compatible DOM element](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullScreen#Compatible_elements) which should be made full screen. By default, the map container element will be made full screen.
  *
  * @example
- * map.addControl(new mapboxgl.FullscreenControl({container: document.querySelector('body')}));
+ * map.addControl(new maplibregl.FullscreenControl({container: document.querySelector('body')}));
  * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js-docs/example/fullscreen/)
  */
 

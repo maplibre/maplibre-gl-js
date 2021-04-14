@@ -43,7 +43,7 @@ import type {PaddingOptions} from '../geo/edge_insets';
  * @property {PaddingOptions} padding Dimensions in pixels applied on each side of the viewport for shifting the vanishing point.
  * @example
  * // set the map's initial perspective with CameraOptions
- * var map = new mapboxgl.Map({
+ * var map = new maplibregl.Map({
  *   container: 'map',
  *   style: 'mapbox://styles/mapbox/streets-v11',
  *   center: [-73.5804, 45.53483],

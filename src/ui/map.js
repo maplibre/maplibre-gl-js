@@ -246,7 +246,7 @@ const defaultOptions = {
  * @param {string} [options.accessToken=null] If specified, map will use this token instead of the one defined in mapboxgl.accessToken.
  * @param {Object} [options.locale=null] A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
  * @example
- * var map = new mapboxgl.Map({
+ * var map = new maplibregl.Map({
  *   container: 'map',
  *   center: [-122.420679, 37.772537],
  *   zoom: 13,
@@ -504,7 +504,7 @@ class Map extends Camera {
      * @returns {Map} `this`
      * @example
      * // Add zoom and rotation controls to the map.
-     * map.addControl(new mapboxgl.NavigationControl());
+     * map.addControl(new maplibregl.NavigationControl());
      * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js-docs/example/navigation/)
      */
     addControl(control: IControl, position?: ControlPosition) {
@@ -538,7 +538,7 @@ class Map extends Camera {
      * @returns {Map} `this`
      * @example
      * // Define a new navigation control.
-     * var navigation = new mapboxgl.NavigationControl();
+     * var navigation = new maplibregl.NavigationControl();
      * // Add zoom and rotation controls to the map.
      * map.addControl(navigation);
      * // Remove zoom and rotation controls from the map.
@@ -562,7 +562,7 @@ class Map extends Camera {
      * @returns {boolean} True if map contains control.
      * @example
      * // Define a new navigation control.
-     * var navigation = new mapboxgl.NavigationControl();
+     * var navigation = new maplibregl.NavigationControl();
      * // Add zoom and rotation controls to the map.
      * map.addControl(navigation);
      * // Check that the navigation control exists on the map.
@@ -1035,7 +1035,7 @@ class Map extends Camera {
      * // Set an event listener that will fire
      * // when a feature on the countries layer of the map is clicked
      * map.on('click', 'countries', function(e) {
-     *   new mapboxgl.Popup()
+     *   new maplibregl.Popup()
      *     .setLngLat(e.lngLat)
      *     .setHTML(`Country name: ${e.features[0].properties.name}`)
      *     .addTo(map);
@@ -2849,7 +2849,7 @@ function removeNode(node) {
  *
  * @typedef {Object} Point
  * @example
- * var point = new mapboxgl.Point(-77, 38);
+ * var point = new maplibregl.Point(-77, 38);
  */
 
 /**
@@ -2857,6 +2857,6 @@ function removeNode(node) {
  *
  * @typedef {(Point | Array<number>)} PointLike
  * @example
- * var p1 = new mapboxgl.Point(-77, 38); // a PointLike which is a Point
+ * var p1 = new maplibregl.Point(-77, 38); // a PointLike which is a Point
  * var p2 = [-77, 38]; // a PointLike which is an array of two numbers
  */

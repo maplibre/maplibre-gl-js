@@ -3,6 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Replace mapboxgl with maplibregl in JSDocs inline examples (#134)
 - Bring in typescript definitions file (#24) 
 - Update example links to https://maplibre.org/maplibre-gl-js-docs/ (#131)
 - Improve performance of layers with constant `*-sort-key` (#78)
