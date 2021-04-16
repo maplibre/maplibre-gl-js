@@ -1,6 +1,6 @@
 ## Publish to NPM
 
-To publish this library to NPM, create a tag and push it to GitHub. A workflow will do all the necessary steps:
+To publish this library to NPM, create a tag and push it to GitHub. Make sure that the version in ```package.json``` matches the version you define in the tag. A workflow will do all the necessary steps:
 
 ```bash
 git checkout main
