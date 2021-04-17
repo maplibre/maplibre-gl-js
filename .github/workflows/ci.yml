@@ -128,10 +128,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn run build-dev
       - run: /usr/bin/google-chrome --version
-      - run: sudo apt update
-      - run: sudo apt upgrade google-chrome-stable -y
-      - run: /usr/bin/google-chrome --version
-      - run: yarn global add chromedriver
+      - run: DETECT_CHROMEDRIVER_VERSION=true yarn global add chromedriver
       - run: yarn global add geckodriver
       - name: Test Chrome
         env:
