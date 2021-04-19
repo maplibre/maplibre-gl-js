@@ -3,6 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Publish the MapLibre style spec in NPM (#140)
 - Replace mapboxgl with maplibregl in JSDocs inline examples (#134)
 - Bring in typescript definitions file (#24) 
 - Update example links to https://maplibre.org/maplibre-gl-js-docs/ (#131)
