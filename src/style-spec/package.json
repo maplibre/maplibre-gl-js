@@ -4,6 +4,9 @@
   "version": "13.18.0-dev",
   "author": "MapLibre",
   "keywords": [
+    "mapbox",
+    "mapbox-gl",
+    "mapbox-gl-js",
     "maplibre",
     "maplibre-gl",
     "maplibre-gl-js"
