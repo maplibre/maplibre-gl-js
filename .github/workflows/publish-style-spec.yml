@@ -33,22 +33,10 @@ jobs:
           yarn install
           yarn run prepublish
       
-      - name: Get version
-        id: get_version
+      - name: Check version and publish
         run: |
           cd src/style-spec
-          echo ::set-output name=version::$(node -p "require('./package').version")
-      
-      - name: Abort if dev in version
-        if: contains(steps.get_version.outputs.version, 'dev')
-        run: |
-          echo "Aborting. Version contains dev."
-          echo ${{ steps.get_version.outputs.version }}
-          exit 1
-
-      - name: Publish NPM package
-        run: |
-          cd src/style-spec
-          yarn publish --non-interactive
+          node -e "if(require('./package').version.includes('dev')) { process.exit(1) }"
+          npm publish --dry-run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
