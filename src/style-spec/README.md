@@ -7,13 +7,13 @@ This directory contains code and reference files that define the MapLibre GL sty
 The MapLibre GL style specification and utilities are published as a seperate npm
 package so that they can be installed without the bulk of GL JS.
 
-    npm install @mapbox/mapbox-gl-style-spec
+    npm install @maplibre/maplibre-gl-style-spec
 
 ## CLI Tools
 
 If you install this package globally, you will have access to several CLI tools.
 
-    npm install @mapbox/mapbox-gl-style-spec --global
+    npm install @maplibre/maplibre-gl-style-spec --global
 
 
 ### `gl-style-composite`
