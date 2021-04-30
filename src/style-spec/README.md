@@ -21,7 +21,7 @@ If you install this package globally, you will have access to several CLI tools.
 $ gl-style-composite style.json
 ```
 
-Will take a non-composited style and produce a [composite style](https://www.mapbox.com/blog/better-label-placement-in-mapbox-studio/).
+Will take a non-composited style and produce a composite style.
 
 ### `gl-style-migrate`
 
