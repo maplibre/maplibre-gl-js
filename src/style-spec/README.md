@@ -1,10 +1,10 @@
-# Mapbox GL style specification & utilities
+# MapLibre GL style specification & utilities
 
-This directory contains code and reference files that define the Mapbox GL style specification and provides some utilities for working with Mapbox styles.
+This directory contains code and reference files that define the MapLibre GL style specification and provides some utilities for working with MapLibre styles.
 
 ## npm package
 
-The Mapbox GL style specification and utilities are published as a seperate npm
+The MapLibre GL style specification and utilities are published as a seperate npm
 package so that they can be installed without the bulk of GL JS.
 
     npm install @mapbox/mapbox-gl-style-spec
