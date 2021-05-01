@@ -302,7 +302,7 @@ function diffLayers(before, after, commands) {
  * Diff two stylesheet
  *
  * Creates semanticly aware diffs that can easily be applied at runtime.
- * Operations produced by the diff closely resemble the mapbox-gl-js API. Any
+ * Operations produced by the diff closely resemble the maplibre-gl-js API. Any
  * error creating the diff will fall back to the 'setStyle' operation.
  *
  * Example diff:

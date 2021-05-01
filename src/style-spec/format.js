@@ -33,7 +33,7 @@ function sortKeysBy(obj, reference) {
  * @returns {string} stringified formatted JSON
  * @example
  * var fs = require('fs');
- * var format = require('mapbox-gl-style-spec').format;
+ * var format = require('maplibre-gl-style-spec').format;
  * var style = fs.readFileSync('./source.json', 'utf8');
  * fs.writeFileSync('./dest.json', format(style));
  * fs.writeFileSync('./dest.min.json', format(style, 0));
