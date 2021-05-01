@@ -3,6 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Publish @maplibre/maplibre-gl-style-spec v13.17.0 on NPM (#149)
 - Migrate style spec files from mapbox to maplibre (#147)
 - Publish the MapLibre style spec in NPM (#140)
 - Replace mapboxgl with maplibregl in JSDocs inline examples (#134)
