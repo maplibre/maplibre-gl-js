@@ -3,6 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Migrate style spec files from mapbox to maplibre (#147)
 - Publish the MapLibre style spec in NPM (#140)
 - Replace mapboxgl with maplibregl in JSDocs inline examples (#134)
 - Bring in typescript definitions file (#24) 

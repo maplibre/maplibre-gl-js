@@ -12,7 +12,7 @@ export default declassStyle;
  * @param {Array<string>} classes An array of paint classes to apply, in order.
  *
  * @example
- * var declass = require('mapbox-gl-style-spec/lib/declass')
+ * var declass = require('maplibre-gl-style-spec/lib/declass')
  * var baseStyle = { ... style with a 'paint.night' property in some layers ... }
  * var nightStyle = declass(baseStyle, ['night'])
  * // nightStyle now has each layer's `paint.night` properties merged in to the

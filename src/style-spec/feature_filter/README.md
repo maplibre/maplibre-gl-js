@@ -1,6 +1,6 @@
 ## Filter
 
-Filter expressions are used to target specific data in a layer. This library implements the semantics specified by the [Mapbox GL JS spec](https://www.mapbox.com/mapbox-gl-style-spec/#filter).
+Filter expressions are used to target specific data in a layer. This library implements the semantics specified by the [MapLibre GL JS spec](https://maplibre.org/maplibre-gl-js-docs/style-spec/).
 
 ### API
 
@@ -14,14 +14,14 @@ passes its test.
 
 | parameter | type  | description      |
 | --------- | ----- | ---------------- |
-| `filter`  | Array | mapbox gl filter |
+| `filter`  | Array | maplibre gl filter |
 
 **Returns** `Function`, filter-evaluating function
 
 ### Usage
 
 ``` javascript
-var ff = require('@mapbox/mapbox-gl-style-spec').featureFilter;
+var ff = require('@maplibre/maplibre-gl-style-spec').featureFilter;
 
 // will match a feature with class of street_limited,
 // AND an admin_level less than or equal to 3,

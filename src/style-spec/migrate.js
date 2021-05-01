@@ -11,7 +11,7 @@ import migrateToExpressions from './migrate/expressions';
  * @returns {Object} a migrated style
  * @example
  * var fs = require('fs');
- * var migrate = require('mapbox-gl-style-spec').migrate;
+ * var migrate = require('maplibre-gl-style-spec').migrate;
  * var style = fs.readFileSync('./style.json', 'utf8');
  * fs.writeFileSync('./style.json', JSON.stringify(migrate(style)));
  */

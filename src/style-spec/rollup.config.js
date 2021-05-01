@@ -20,7 +20,7 @@ const ROOT_DIR = __dirname;
 const config = [{
     input: `${__dirname}/style-spec.js`,
     output: {
-        name: 'mapboxGlStyleSpecification',
+        name: 'maplibreGlStyleSpecification',
         file: `${__dirname}/dist/${esm ? 'index.es.js' : 'index.js'}`,
         format: esm ? 'esm' : 'umd',
         sourcemap: true
@@ -30,7 +30,7 @@ const config = [{
             name: 'dep-checker',
             resolveId(source, importer) {
                 // Some users reference modules within style-spec package directly, instead of the bundle
-                // This means that files within the style-spec package should NOT import files from the parent mapbox-gl-js tree.
+                // This means that files within the style-spec package should NOT import files from the parent maplibre-gl-js tree.
                 // This check will cause the build to fail on CI allowing these issues to be caught.
                 if (importer && !importer.includes('node_modules')) {
                     const resolvedPath = path.join(importer, source);
