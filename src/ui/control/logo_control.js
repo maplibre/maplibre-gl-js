@@ -30,7 +30,7 @@ class LogoControl {
         const anchor = DOM.create('a', 'mapboxgl-ctrl-logo');
         anchor.target = "_blank";
         anchor.rel = "noopener nofollow";
-        anchor.href = "https://www.mapbox.com/";
+        anchor.href = "https://maplibre.org/";
         anchor.setAttribute("aria-label", this._map._getUIString('LogoControl.Title'));
         anchor.setAttribute("rel", "noopener nofollow");
         this._container.appendChild(anchor);
