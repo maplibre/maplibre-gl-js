@@ -3,6 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Replace link to mapbox on LogoControl by link to maplibre (#151)
 - Migrate style spec files from mapbox to maplibre (#147)
 - Publish the MapLibre style spec in NPM (#140)
 - Replace mapboxgl with maplibregl in JSDocs inline examples (#134)
