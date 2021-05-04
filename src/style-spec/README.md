@@ -56,4 +56,3 @@ $ gl-style-validate style.json
 Will validate the given style JSON and print errors to stdout. Provide a
 `--json` flag to get JSON output.
 
-To validate that a style can be uploaded to the Mapbox Styles API, use the `--mapbox-api-supported` flag.
