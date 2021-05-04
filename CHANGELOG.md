@@ -3,7 +3,8 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
-- Publish @maplibre/maplibre-gl-style-spec v13.17.0 on NPM (#149)
+- Publish @maplibre/maplibre-gl-style-spec v14.0.0 on NPM (#149)
+- Replace link to mapbox on LogoControl by link to maplibre (#151)
 - Migrate style spec files from mapbox to maplibre (#147)
 - Publish the MapLibre style spec in NPM (#140)
 - Replace mapboxgl with maplibregl in JSDocs inline examples (#134)
