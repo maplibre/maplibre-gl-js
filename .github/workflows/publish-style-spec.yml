@@ -37,6 +37,6 @@ jobs:
         run: |
           cd src/style-spec
           node -e "if(require('./package').version.includes('dev')) { process.exit(1) }"
-          npm publish
+          npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
