@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             iframeDoc.write([
                 '<!DOCTYPE html>',
-                '<html>',
+                '<html lang="en">',
                 '<head>',
                 '    <title>MapLibre GL JS debug page</title>',
                 '    <meta charset="utf-8">',
