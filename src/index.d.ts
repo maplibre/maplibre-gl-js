@@ -296,6 +296,8 @@ declare namespace mapboxgl {
 
         setStyle(style: mapboxgl.Style | string, options?: { diff?: boolean; localIdeographFontFamily?: string }): this;
 
+        setTransformRequest(transformRequest: RequestTransformFunction): void;
+
         getStyle(): mapboxgl.Style;
 
         isStyleLoaded(): boolean;
