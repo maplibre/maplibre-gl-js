@@ -288,6 +288,29 @@ test('Map', (t) => {
         t.end();
     });
 
+    t.test('#setTransformRequest', (t) => {
+        t.test('returns self', (t) => {
+            t.stub(Map.prototype, '_detectMissingCSS');
+            const transformRequest = () => { };
+            const map = new Map({container: window.document.createElement('div')});
+            t.equal(map.setTransformRequest(transformRequest), map);
+            t.equal(map._requestManager._transformRequestFn, transformRequest);
+            t.end();
+        });
+
+        t.test('can be called more than once', (t) => {
+            const map = createMap(t);
+
+            const transformRequest = () => { };
+            map.setTransformRequest(transformRequest);
+            map.setTransformRequest(transformRequest);
+
+            t.end();
+        });
+
+        t.end();
+    });
+
     t.test('#is_Loaded', (t) => {
 
         t.test('Map#isSourceLoaded', (t) => {
