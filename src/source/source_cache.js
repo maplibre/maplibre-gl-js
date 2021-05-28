@@ -252,8 +252,9 @@ class SourceCache extends Evented {
     _tileLoaded(tile: Tile, id: string, previousState: TileState, err: ?Error) {
         if (err) {
             tile.state = 'errored';
-            if ((err: any).status !== 404) this._source.fire(new ErrorEvent(err, {tile}));
-            // continue to try loading parent/children tiles if a tile doesn't exist (404)
+            const status = (err: any).status;
+            if (status !== 404 && status !== 204) this._source.fire(new ErrorEvent(err, {tile}));
+            // continue to try loading parent/children tiles if a tile doesn't exist(404) or has no content (204)
             else this.update(this.transform);
             return;
         }
