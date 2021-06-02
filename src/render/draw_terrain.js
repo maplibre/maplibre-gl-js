@@ -10,6 +10,32 @@ import CullFaceMode from '../gl/cull_face_mode';
 import pos3DAttributes from '../data/pos3d_attributes';
 import Texture from './texture';
 import Color from '../style-spec/util/color';
+import ColorMode from '../gl/color_mode';
+import browser from '../util/browser';
+
+function drawTerrainCoords(painter, sourceCache: TerrainSourceCache) {
+   const tiles = Object.values(sourceCache._tiles).filter(t => t.unprojectTileID && t.coordsTexture);
+   if (!tiles.length) return;
+
+   const context = painter.context;
+   const gl = context.gl;
+   const colorMode = ColorMode.unblended;
+   const program = painter.useProgram('terrain');
+
+   // draw tile-coords into framebuffer
+   context.bindFramebuffer.set(sourceCache.getCoordsFramebuffer(painter.context).framebuffer);
+   context.viewport.set([0, 0, painter.width / browser.devicePixelRatio, painter.height / browser.devicePixelRatio]);
+
+   for (const tile of tiles) {
+      context.activeTexture.set(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tile.coordsTexture.texture);
+      const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D);
+      const posMatrix = painter.transform.calculatePosMatrix(tile.unprojectTileID.toUnwrapped());
+      program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW,
+          terrainUniformValues(posMatrix), "terrain", tile.vertexBuffer, tile.indexBuffer, tile.segments);
+      tile.unprojectTileID = null;
+   }
+}
 
 function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache) {
     const tiles = Object.values(sourceCache._tiles).filter(t => t.needsRedraw);
@@ -48,6 +74,10 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache) {
          tile.vertexBuffer = context.createVertexBuffer(tile.mesh.vertexArray, pos3DAttributes.members);
          tile.segments = SegmentVector.simpleSegment(0, 0, tile.mesh.vertexArray.length, tile.mesh.indexArray.length);
       }
+      if (!tile.coordsTexture) {
+         tile.coordsTexture = new Texture(context, tile.coords, context.gl.RGBA, {premultiply: false});
+         tile.coordsTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
+      }
       // empty framebuffer
       context.bindFramebuffer.set(tile.fbo.framebuffer);
       context.clear({ color: Color.transparent });
@@ -57,5 +87,6 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache) {
 
 export {
    prepareTerrain,
-   drawTerrain
+   drawTerrain,
+   drawTerrainCoords
 };

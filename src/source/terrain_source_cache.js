@@ -8,6 +8,8 @@ import EXTENT from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
 import Style from '../style/style';
+import Texture from '../render/texture';
+import {RGBAImage} from '../util/image';
 
 class TerrainSourceCache extends Evented {
 
@@ -16,7 +18,9 @@ class TerrainSourceCache extends Evented {
         this._sourceCache = null;
         this._source = null;
         this._tiles = [];
+        this._coordsIndex = {};
         this._loadQueue = [];
+        this._coordsFramebuffer = null;
         this.minzoom = 5;
         this.maxzoom = 14;
         this.tileSize = 512;
@@ -38,6 +42,7 @@ class TerrainSourceCache extends Evented {
         let idealTileIDs = this.getRenderableTileIDs(transform).filter(id => !this._tiles[id.key]);
         for (const tileID of idealTileIDs) {
             let tile = this._tiles[tileID.key] = this._createEmptyTile(tileID);
+            this._coordsIndex[tile._coordsIndex] = tile;
             if (this._source && this._source.loaded()) {
                 this._source.loadTile(tile, () => this._tileLoaded(tile));
             } else {
@@ -72,7 +77,10 @@ class TerrainSourceCache extends Evented {
 
     /**
      * get the Elevation for given coordinate
-     * FIXME-3D: make linear interpolation
+     * FIXME-3D:
+     *   - make linear interpolation
+     *   - handle negative coordinates
+     *   - interploate below ZL 14
      * @param {OverscaledTileID} tileID
      * @param {number} x between 0 .. EXTENT
      * @param {number} y between 0 .. EXTENT
@@ -83,6 +91,21 @@ class TerrainSourceCache extends Evented {
         return tile && tile.dem && x > 0 && y > 0 //FIXME-3D handle negative coordinates
            ? tile.dem.get(Math.floor(x / EXTENT * tile.dem.dim), Math.floor(y / EXTENT * tile.dem.dim))
            : 0;
+    }
+
+    /**
+     * store all tile-coords in a framebuffer for unprojecting pixel coordinates
+     * FIXME-3D resize texture on window-resize
+     */
+    getCoordsFramebuffer(context: Context) {
+        if (! this.fbo) {
+            context.activeTexture.set(context.gl.TEXTURE0);
+            let texture = new Texture(context, { width: 2024, height: 2024, data: null }, context.gl.RGBA, {premultiply: false});
+            texture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
+            this.fbo = context.createFramebuffer(2024, 2024, false);
+            this.fbo.colorAttachment.set(texture.texture);
+        }
+        return this.fbo;
     }
 
     /**
@@ -111,6 +134,21 @@ class TerrainSourceCache extends Evented {
         [[1, 1, 0], [0, 0, 0], [0, 1, 0], [1, 0, 0]].forEach(xy => vertexArray.emplaceBack(...xy.map(c => c * EXTENT)));
         [[1, 0, 3], [0, 1, 2]].forEach(xyz => indexArray.emplaceBack(...xyz))
         tile.mesh = { indexArray: indexArray, vertexArray: vertexArray };
+        // create coords texture, needed to grab coordianates from canvas
+        // encode coords coordinate into 4 bytes:
+        //   - 13 bits for coordsIndex (0 .. 8191) (= number of loaded terraintile)
+        //   - 9 bits for y (0 .. 511)
+        //   - 9 bits for x (0 .. 511)
+        //   - 1 bit for always true in alpha channel, because webgl do not render for opacity 0
+        tile._coordsIndex = Object.keys(this._coordsIndex).length + 1; // create unique coords index
+        const data = new Uint8Array(this.tileSize * this.tileSize * 4);
+        for (let x=0, i=0; x<this.tileSize; x++) for (let y=0; y<this.tileSize; y++, i+=4) {
+           data[i + 3] = ((x & 127) << 1) | 1;
+           data[i + 2] = (y << 2) | (x >> 7);
+           data[i + 1] = ((tile._coordsIndex & 31) << 3) | (y >> 6);
+           data[i + 0] = tile._coordsIndex >> 5;
+        }
+        tile.coords = new RGBAImage({width: this.tileSize, height: this.tileSize}, new Uint8Array(data.buffer));
         return tile;
     }
 

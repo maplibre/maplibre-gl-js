@@ -10,6 +10,8 @@ import EXTENT from '../data/extent';
 import {vec4, mat4, mat2, vec2} from 'gl-matrix';
 import {Aabb, Frustum} from '../util/primitives.js';
 import EdgeInsets from './edge_insets';
+import Texture from '../render/texture';
+import browser from '../util/browser';
 
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
@@ -472,6 +474,22 @@ class Transform {
     }
 
     /**
+     * Given a location, return the screen point that corresponds to it
+     * @param {LngLat} lnglat location
+     * @returns {Point} screen point
+     * @private
+     */
+    locationPoint3D(lnglat: LngLat) {
+        const merc = this.locationCoordinate(lnglat);
+        const tileSize = this.terrainSourceCache.tileSize, worldSize = (1 << this.tileZoom) * tileSize;
+        const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
+        const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
+        const tileID = new OverscaledTileID(this.tileZoom, 1, this.tileZoom, tileX, tileY);
+        const elevation = this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize);
+        return this.coordinatePoint(this.locationCoordinate(lnglat), elevation);
+    }
+
+    /**
      * Given a point on screen, return its lnglat
      * @param {Point} p screen point
      * @returns {LngLat} lnglat location
@@ -479,6 +497,16 @@ class Transform {
      */
     pointLocation(p: Point) {
         return this.coordinateLocation(this.pointCoordinate(p));
+    }
+
+    /**
+     * Given a point on screen, return its lnglat
+     * @param {Point} p screen point
+     * @returns {LngLat} lnglat location
+     * @private
+     */
+    pointLocation3D(p: Point) {
+        return this.coordinateLocation(this.pointCoordinate3D(p));
     }
 
     /**
@@ -530,14 +558,37 @@ class Transform {
             interpolate(y0, y1, t) / this.worldSize);
     }
 
+    // FIXME-3D! mouseout events may contains coordinates outside the coords-framebuffer
+    pointCoordinate3D(p: Point) {
+        const rgba = new Uint8Array(4);
+        const painter = this.terrainSourceCache._style.map.painter, context = painter.context, gl = context.gl;
+        // grab coordinate pixel from coordinates framebuffer
+        context.bindFramebuffer.set(this.terrainSourceCache.getCoordsFramebuffer(context).framebuffer);
+        gl.readPixels(p.x, painter.height / browser.devicePixelRatio - p.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+        context.bindFramebuffer.set(null);
+        // decode coordinates (encoding see terrain-source-cache)
+        let y = (rgba[3] >> 1) | ((rgba[2] & 3) << 7);
+        let x = (rgba[2] >> 2) | ((rgba[1] & 7) << 6);
+        let i = (rgba[1] >> 3) | (rgba[0] << 5);
+        let tile = this.terrainSourceCache._coordsIndex[i];
+        if (!tile) return this.pointCoordinate(p); // FIXME! remove this hack
+        let worldSize = (1 << tile.tileID.canonical.z) * tile.tileSize;
+        return new MercatorCoordinate(
+            (tile.tileID.canonical.x * tile.tileSize + x) / worldSize,
+            (tile.tileID.canonical.y * tile.tileSize + y) / worldSize,
+            this.terrainSourceCache.getElevation(tile.tileID, x, y)
+        );
+    }
+
     /**
      * Given a coordinate, return the screen point that corresponds to it
      * @param {Coordinate} coord
      * @returns {Point} screen point
+     * @returns {number} elevation, default 0
      * @private
      */
-    coordinatePoint(coord: MercatorCoordinate) {
-        const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1];
+    coordinatePoint(coord: MercatorCoordinate, elevation: number=0) {
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1];
         vec4.transformMat4(p, p, this.pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
     }

@@ -36,7 +36,7 @@ import raster from './draw_raster';
 import background from './draw_background';
 import debug, {drawDebugPadding} from './draw_debug';
 import custom from './draw_custom';
-import {prepareTerrain, drawTerrain} from './draw_terrain';
+import {prepareTerrain, drawTerrain, drawTerrainCoords} from './draw_terrain';
 
 const draw = {
     symbol,
@@ -338,6 +338,7 @@ class Painter {
             const y = tileID.canonical.y - (tile.tileID.canonical.y << dz);
             let size = dz ? tile.fbo.width / (dz * 2) : tile.fbo.width;
             tile.needsRedraw = true;
+            tile.unprojectTileID = tileID;
             this.context.bindFramebuffer.set(tile.fbo.framebuffer);
             this.context.viewport.set([size * x, size * y, size, size]);
             return tile.tileID.posMatrix;
@@ -491,6 +492,7 @@ class Painter {
         }
 
         drawTerrain(this, this.style.terrainSourceCache);
+        drawTerrainCoords(this, this.style.terrainSourceCache);
 
         if (this.options.showTileBoundaries) {
             //Use source with highest maxzoom

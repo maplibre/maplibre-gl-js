@@ -93,15 +93,15 @@ class Aabb {
         // Each frustum plane together with 3 major axes define the separating axes
 
         const aabbPoints = [
-         [this.min[0], this.min[1], this.min[2], 1],
-         [this.max[0], this.min[1], this.min[2], 1],
-         [this.max[0], this.max[1], this.min[2], 1],
-         [this.min[0], this.max[1], this.min[2], 1],
-         [this.min[0], this.min[1], this.max[2], 1],
-         [this.max[0], this.min[1], this.max[2], 1],
-         [this.max[0], this.max[1], this.max[2], 1],
-         [this.min[0], this.max[1], this.max[2], 1]
-     ];
+            [this.min[0], this.min[1], this.min[2], 1],
+            [this.max[0], this.min[1], this.min[2], 1],
+            [this.max[0], this.max[1], this.min[2], 1],
+            [this.min[0], this.max[1], this.min[2], 1],
+            [this.min[0], this.min[1], this.max[2], 1],
+            [this.max[0], this.min[1], this.max[2], 1],
+            [this.max[0], this.max[1], this.max[2], 1],
+            [this.min[0], this.max[1], this.max[2], 1]
+        ];
 
         let fullyInside = true;
 
