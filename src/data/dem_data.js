@@ -19,15 +19,15 @@ export default class DEMData {
     data: Uint32Array;
     stride: number;
     dim: number;
-    encoding: "mapbox" | "terrarium";
+    encoding: "mapbox" | "terrarium" | "mtk";
 
     // RGBAImage data has uniform 1px padding on all sides: square tile edge size defines stride
     // and dim is calculated as stride - 2.
-    constructor(uid: string, data: RGBAImage, encoding: "mapbox" | "terrarium") {
+    constructor(uid: string, data: RGBAImage, encoding: "mapbox" | "terrarium" | "mtk") {
         this.uid = uid;
         if (data.height !== data.width) throw new RangeError('DEM tiles must be square');
-        if (encoding && encoding !== "mapbox" && encoding !== "terrarium") return warnOnce(
-            `"${encoding}" is not a valid encoding type. Valid types include "mapbox" and "terrarium".`
+        if (encoding && encoding !== "mapbox" && encoding !== "terrarium" && encoding !== "mtk") return warnOnce(
+            `"${encoding}" is not a valid encoding type. Valid types include "mapbox", "mtk" and "terrarium".`
         );
         this.stride = data.height;
         const dim = this.dim = data.height - 2;
@@ -57,12 +57,22 @@ export default class DEMData {
     get(x: number, y: number) {
         const pixels = new Uint8Array(this.data.buffer);
         const index = this._idx(x, y) * 4;
-        const unpack = this.encoding === "terrarium" ? this._unpackTerrarium : this._unpackMapbox;
+        let unpack = this._unpackMapbox;
+        if (this.encoding === "terrarium") unpack = this._unpackTerrarium;
+        if (this.encoding === "mtk") unpack = this._unpackMTK;
         return unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
     }
 
+    // when using MTK encoding the hillshading looks ugly, so still use mapbox encoding
+    getHillshadingUnpackVector() {
+        if (this.encoding === "terrarium") return [256.0, 1.0, 1.0 / 256.0, 32768.0];
+        return [6553.6, 25.6, 0.1, 10000.0];
+    }
+
     getUnpackVector() {
-        return this.encoding === "terrarium" ? [256.0, 1.0, 1.0 / 256.0, 32768.0] : [6553.6, 25.6, 0.1, 10000.0];
+        if (this.encoding === "terrarium") return [256.0, 1.0, 1.0 / 256.0, 32768.0];
+        if (this.encoding === "mtk") return [6553.6, 25.6, 0.03, 10000.0];
+        return [6553.6, 25.6, 0.1, 10000.0];
     }
 
     _idx(x: number, y: number) {
@@ -74,6 +84,10 @@ export default class DEMData {
         // unpacking formula for mapbox.terrain-rgb:
         // https://www.mapbox.com/help/access-elevation-data/#mapbox-terrain-rgb
         return ((r * 256 * 256 + g * 256.0 + b) / 10.0 - 10000.0);
+    }
+
+    _unpackMTK(r: number, g: number, b: number) {
+        return ((r * 256 * 256 + g * 256.0 + b) * 0.03 - 10000.0);
     }
 
     _unpackTerrarium(r: number, g: number, b: number) {

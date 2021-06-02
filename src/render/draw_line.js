@@ -67,10 +67,11 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade) :
-            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade) :
-            gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length) :
-            lineUniformValues(painter, tile, layer);
+        const posMatrix = painter.prepareFramebuffer(tile.tileID, "line");
+        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, posMatrix) :
+            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, posMatrix) :
+            gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length, posMatrix) :
+            lineUniformValues(painter, tile, layer, posMatrix);
 
         if (image) {
             context.activeTexture.set(gl.TEXTURE0);
@@ -119,6 +120,7 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
             layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 
+        painter.finishFramebuffer(tile.tileID, "line");
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
     }

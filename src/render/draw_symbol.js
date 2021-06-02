@@ -12,7 +12,7 @@ const identityMat4 = mat4.identity(new Float32Array(16));
 import StencilMode from '../gl/stencil_mode';
 import DepthMode from '../gl/depth_mode';
 import CullFaceMode from '../gl/cull_face_mode';
-import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
+import {addDynamicAttributes, addElevation} from '../data/bucket/symbol_bucket';
 
 import {getAnchorAlignment, WritingMode} from '../symbol/shaping';
 import ONE_EM from '../symbol/one_em';
@@ -59,6 +59,8 @@ function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: SymbolSt
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
     const variablePlacement = layer.layout.get('text-variable-anchor');
+
+    updateElevation(coords, painter, layer, sourceCache);
 
     //Compute variable-offsets before painting since icons and text data positioning
     //depend on each other in this case.
@@ -109,6 +111,35 @@ function calculateVariableRenderShift(anchor, width, height, textOffset, textBox
         (shiftX / textBoxScale + variableOffset[0]) * renderTextSize,
         (shiftY / textBoxScale + variableOffset[1]) * renderTextSize
     );
+}
+
+function updateElevation(coords, painter, layer, sourceCache) {
+    for (const coord of coords) {
+        const tile = sourceCache.getTile(coord);
+        // FIXME-3D! normally the calculation of elevation has to be done only once,
+        // but there is a race-condition if vector tiles loads faster than terrain-tiles
+        // so recalculte elevation every rendering. Suprisingly it seems there is no
+        // performance issue.
+        // if (tile.hasElevation) continue;
+        const bucket: SymbolBucket = (tile.getBucket(layer): any);
+        for (const type of ['text', 'icon']) {
+            const placedSymbols = bucket && bucket[type] && bucket[type].placedSymbolArray;
+            if (placedSymbols) {
+                const elevationVertexArray = bucket[type].elevationVertexArray;
+                elevationVertexArray.clear();
+                for (let s = 0; s < placedSymbols.length; s++) {
+                    const symbol: any = placedSymbols.get(s);
+                    const elevation = painter.style.terrainSourceCache.getElevation(coord, symbol.anchorX, symbol.anchorY);
+                    for (let g = 0; g < symbol.numGlyphs; g++) {
+                        addElevation(elevationVertexArray, elevation);
+                    }
+                }
+                if (bucket[type].elevationVertexBuffer)
+                    bucket[type].elevationVertexBuffer.updateData(elevationVertexArray);
+            }
+        }
+        tile.hasElevation = true;
+    }
 }
 
 function updateVariableAnchors(coords, painter, layer, sourceCache, rotationAlignment, pitchAlignment, variableOffsets) {
@@ -296,7 +327,8 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
             bucket.hasIconData();
 
         if (alongLine) {
-            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright);
+            const getElevation = (x: number, y: number) => painter.style.terrainSourceCache.getElevation(coord, x, y);
+            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, getElevation);
         }
 
         const matrix = painter.translatePosMatrix(coord.posMatrix, tile, translate, translateAnchor),
@@ -388,5 +420,5 @@ function drawSymbolElements(buffers, segments, layer, painter, program, depthMod
         uniformValues, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
         painter.transform.zoom, buffers.programConfigurations.get(layer.id),
-        buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);
+        buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer, buffers.elevationVertexBuffer);
 }

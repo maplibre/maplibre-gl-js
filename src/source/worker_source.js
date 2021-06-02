@@ -8,7 +8,6 @@ import type {OverscaledTileID} from './tile_id';
 import type {Bucket} from '../data/bucket';
 import type FeatureIndex from '../data/feature_index';
 import type {CollisionBoxArray} from '../data/array_types';
-import type DEMData from '../data/dem_data';
 import type {StyleGlyph} from '../style/style_glyph';
 import type {StyleImage} from '../style/style_image';
 import type {PromoteIdSpecification} from '../style-spec/types';
@@ -36,7 +35,7 @@ export type WorkerTileParameters = TileParameters & {
 export type WorkerDEMTileParameters = TileParameters & {
     coord: { z: number, x: number, y: number, w: number },
     rawImageData: RGBAImage | ImageBitmap,
-    encoding: "mapbox" | "terrarium"
+    encoding: "mapbox" | "terrarium" | "mtk"
 };
 
 export type WorkerTileResult = {
@@ -54,7 +53,7 @@ export type WorkerTileResult = {
 };
 
 export type WorkerTileCallback = (error: ?Error, result: ?WorkerTileResult) => void;
-export type WorkerDEMTileCallback = (err: ?Error, result: ?DEMData) => void;
+export type WorkerDEMTileCallback = (err: ?Error, result: ?any) => void;
 
 /**
  * May be implemented by custom source types to provide code that can be run on

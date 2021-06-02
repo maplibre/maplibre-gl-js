@@ -41,6 +41,7 @@ class Transform {
     pixelMatrixInverse: Float64Array;
     glCoordMatrix: Float32Array;
     labelPlaneMatrix: Float32Array;
+    terrainSourceCache: any;
     _fov: number;
     _pitch: number;
     _zoom: number;
@@ -95,6 +96,7 @@ class Transform {
         clone._pitch = this._pitch;
         clone._unmodified = this._unmodified;
         clone._edgeInsets = this._edgeInsets.clone();
+        clone.terrainSourceCache = this.terrainSourceCache;
         clone._calcMatrices();
         return clone;
     }

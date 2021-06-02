@@ -36,6 +36,7 @@ import raster from './draw_raster';
 import background from './draw_background';
 import debug, {drawDebugPadding} from './draw_debug';
 import custom from './draw_custom';
+import {prepareTerrain, drawTerrain} from './draw_terrain';
 
 const draw = {
     symbol,
@@ -323,6 +324,33 @@ class Painter {
         return [{[minTileZ]: StencilMode.disabled}, coords];
     }
 
+    // start drawing into the framebuffer, which is drawn on terrain-mesh
+    prepareFramebuffer(tileID: OverscaledTileID, layerType: string) {
+        // dz is the tileSize difference of the layer-source and the 512px terrain-source
+        // so if dz > 0 the frameport's viewbuffer is located to the currect subtile
+        let z = Math.floor(this.transform.zoom), dz = tileID.canonical.z - z;
+        const tile = dz >= 0
+            ? this.style.terrainSourceCache.getTileByCanonical(tileID.scaledTo(z).canonical)
+            : this.style.terrainSourceCache.getTileByCanonical(tileID);
+        if (dz < 0) dz = 0; // draw in parent tile
+        if (tile) {
+            const x = tileID.canonical.x - (tile.tileID.canonical.x << dz);
+            const y = tileID.canonical.y - (tile.tileID.canonical.y << dz);
+            let size = dz ? tile.fbo.width / (dz * 2) : tile.fbo.width;
+            tile.needsRedraw = true;
+            this.context.bindFramebuffer.set(tile.fbo.framebuffer);
+            this.context.viewport.set([size * x, size * y, size, size]);
+            return tile.tileID.posMatrix;
+        }
+        return null;
+    }
+
+    // draw onto the screen
+    finishFramebuffer(tileID: OverscaledTileID, note: string) {
+        this.context.bindFramebuffer.set(null);
+        this.context.viewport.set([0, 0, this.width, this.height]);
+    }
+
     colorModeForRenderPass(): $ReadOnly<ColorMode> {
         const gl = this.context.gl;
         if (this._showOverdrawInspector) {
@@ -388,6 +416,7 @@ class Painter {
         }
 
         this.opaquePassCutoff = Infinity;
+        this.opaquePassCutoff = 0; // FIXME-3D! disbaled for Terrain3D, but with this setting heatmap no longer work
         for (let i = 0; i < layerIds.length; i++) {
             const layerId = layerIds[i];
             if (this.style._layers[layerId].is3D()) {
@@ -395,6 +424,8 @@ class Painter {
                 break;
             }
         }
+
+        prepareTerrain(this, this.style.terrainSourceCache);
 
         // Offscreen pass ===============================================
         // We first do all rendering that requires rendering to a separate
@@ -443,6 +474,13 @@ class Painter {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
 
+            // symbols are renderd directly onto the screen
+            // so draw the current terrain-framebuffer below the symbols
+            if (layer.type == 'symbol') {
+               drawTerrain(this, this.style.terrainSourceCache);
+               prepareTerrain(this, this.style.terrainSourceCache);
+            }
+
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
             // separate clipping masks
@@ -451,6 +489,8 @@ class Painter {
             this._renderTileClippingMasks(layer, coordsAscending[layer.source]);
             this.renderLayer(this, sourceCache, layer, coords);
         }
+
+        drawTerrain(this, this.style.terrainSourceCache);
 
         if (this.options.showTileBoundaries) {
             //Use source with highest maxzoom

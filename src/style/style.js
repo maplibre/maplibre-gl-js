@@ -23,6 +23,7 @@ import {
 } from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import SourceCache from '../source/source_cache';
+import TerrainSourceCache from '../source/terrain_source_cache';
 import GeoJSONSource from '../source/geojson_source';
 import styleSpec from '../style-spec/reference/latest';
 import getWorkerPool from '../util/global_worker_pool';
@@ -117,6 +118,7 @@ class Style extends Evented {
     _serializedLayers: {[_: string]: Object};
     _order: Array<string>;
     sourceCaches: {[_: string]: SourceCache};
+    terrainSourceCaches: TerrainSourceCache;
     zoomHistory: ZoomHistory;
     _loaded: boolean;
     _rtlTextPluginCallback: Function;
@@ -154,9 +156,14 @@ class Style extends Evented {
         this._serializedLayers = {};
         this._order  = [];
         this.sourceCaches = {};
+        this.terrainSourceCache = new TerrainSourceCache(this);
         this.zoomHistory = new ZoomHistory();
         this._loaded = false;
         this._availableImages = [];
+
+        // make elevtaion accessible from map.transform
+        // FIXME-3D! refactor this hack
+        map.transform.terrainSourceCache = this.terrainSourceCache;
 
         this._resetUpdates();
 
@@ -576,6 +583,8 @@ class Style extends Evented {
 
         if (this.map && this.map._collectResourceTiming) (source: any).collectResourceTiming = true;
         const sourceCache = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
+        // FIXME-3D: is is may be ugly. Should we use map.setTerrain like mapbox does it?
+        if (source.useForTerrain) this.terrainSourceCache.setSourceCache(sourceCache);
         sourceCache.style = this;
         sourceCache.setEventedParent(this, () => ({
             isSourceLoaded: this.loaded(),
@@ -1252,6 +1261,7 @@ class Style extends Evented {
         for (const id in this.sourceCaches) {
             this.sourceCaches[id].update(transform);
         }
+        this.terrainSourceCache.update(transform);
     }
 
     _generateCollisionBoxes() {

@@ -12,6 +12,10 @@ export const dynamicLayoutAttributes = createLayout([
     {name: 'a_projected_pos', components: 3, type: 'Float32'}
 ], 4);
 
+export const elevationAttributes = createLayout([
+   {name: 'a_ele', components: 1, type: 'Float32'}
+], 4);
+
 export const placementOpacityAttributes = createLayout([
     {name: 'a_fade_opacity', components: 1, type: 'Uint32'}
 ], 4);
