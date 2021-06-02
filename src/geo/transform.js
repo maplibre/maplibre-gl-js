@@ -346,8 +346,10 @@ class Transform {
 
         const newRootTile = (wrap: number): any => {
             return {
-                // All tiles are on zero elevation plane => z difference is zero
-                aabb: new Aabb([wrap * numTiles, 0, 0], [(wrap + 1) * numTiles, numTiles, 0]),
+                // FIXME-3D! -5 .. 5 is enough for rendering front elevation tiles, dont know why
+                // but with this simple hack, there a rendered to many tiles outside the viewport,
+                // which is a performance issue
+                aabb: new Aabb([wrap * numTiles, 0, -5], [(wrap + 1) * numTiles, numTiles, 5]),
                 zoom: 0,
                 x: 0,
                 y: 0,
