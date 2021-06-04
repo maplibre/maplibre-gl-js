@@ -1,10 +1,39 @@
-## maplibre-gl-js 1.13.0
+## main
+
+### Features and improvements
+
+- *...Add new stuff here...*
+- Publish @maplibre/maplibre-gl-style-spec v14.0.0 on NPM (#149)
+- Replace link to mapbox on LogoControl by link to maplibre (#151)
+- Migrate style spec files from mapbox to maplibre (#147)
+- Publish the MapLibre style spec in NPM (#140)
+- Replace mapboxgl with maplibregl in JSDocs inline examples (#134)
+- Bring in typescript definitions file (#24) 
+- Update example links to https://maplibre.org/maplibre-gl-js-docs/ (#131)
+- Improve performance of layers with constant `*-sort-key` (#78)
 
 ### 🐞 Bug fixes
 
-- Fix a bug where mapbox-gl-js is no longer licensed as open source, but we owe immeasurable gratitude to Mapbox for releasing all their initial code to the community under BSD-3 license.```
+- *...Add fixed bugs here...*
 
-## mapbox-gl-js 1.13.0
+## 1.14.0
+
+### Features and improvements
+
+- Rebranded to MapLibre
+- New logo
+
+### 🐞 Bug fixes
+
+- Rename SVGs mapboxgl-ctrl-*.svg to maplibregl (#85)
+- fix ImageSource not working in FF/Safari (#87)
+- Update HTML debug files to use MapLibre in titles (#84)
+- fix CI checksize job to use maplibre name (#86)
+- Move output files from mapbox.* to maplibre.* (#75)
+- Remove mapbox specifics and branding from .github (#64)
+- Fix a bug where mapbox-gl-js is no longer licensed as open source, but we owe immeasurable gratitude to Mapbox for releasing all their initial code to the community under BSD-3 license.
+
+## 1.13.0
 
 ### ✨ Features and improvements
 

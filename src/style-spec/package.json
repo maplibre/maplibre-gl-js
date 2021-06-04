@@ -1,12 +1,15 @@
 {
-  "name": "@mapbox/mapbox-gl-style-spec",
-  "description": "a specification for mapbox gl styles",
-  "version": "13.18.0-dev",
-  "author": "Mapbox",
+  "name": "@maplibre/maplibre-gl-style-spec",
+  "description": "a specification for maplibre gl styles",
+  "version": "14.1.0-dev",
+  "author": "MapLibre",
   "keywords": [
     "mapbox",
     "mapbox-gl",
-    "mapbox-gl-js"
+    "mapbox-gl-js",
+    "maplibre",
+    "maplibre-gl",
+    "maplibre-gl-js"
   ],
   "license": "ISC",
   "main": "./dist/index.js",
@@ -19,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:mapbox/mapbox-gl-js.git"
+    "url": "git@github.com:maplibre/maplibre-gl-js.git"
   },
   "bin": {
     "gl-style-migrate": "bin/gl-style-migrate",

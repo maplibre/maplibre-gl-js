@@ -69,7 +69,7 @@ const filterSpec = {
  * passes its test.
  *
  * @private
- * @param {Array} filter mapbox gl filter
+ * @param {Array} filter maplibre gl filter
  * @returns {Function} filter-evaluating function
  */
 function createFilter(filter: any): FeatureFilter {

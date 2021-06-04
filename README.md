@@ -2,19 +2,23 @@
 
 **MapLibre GL** is a community led fork derived from [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) prior to their switch to a non-OSS license.
 
-[<img width="200" alt="MapLibre" src="https://user-images.githubusercontent.com/223277/101580282-7534f700-397e-11eb-8b58-687f52e2a8cf.png">](http://maplibre.org)
-
 ### Migrating from mapbox-gl
 
 If you depend on mapbox-gl directly, simply replace `mapbox-gl` with `maplibre-gl` in `package.json`:
 ```diff
   "dependencies": {
 -    "mapbox-gl": "^1.13.0"
-+    "maplibre-gl": ">=1.13.0-rc.1"
++    "maplibre-gl": ">=1.14.0"
   }
 ```
 
-Want an example? [Try out MapLibre GL on CodePen](https://codepen.io/snickell/pen/dypOWzj)
+And replace ```mapboxgl``` with ```maplibregl``` in your JavaScript code:
+```diff
+-    var map = new mapboxgl.Map({
++    var map = new maplibregl.Map({
+```
+
+Want an example? [Try out MapLibre GL on CodePen](https://codepen.io/klokan/pen/WNoZRyx) and have a look at ones in the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js-docs/example/).
 
 If you use mapbox-gl via bindings (react, vue, etc), you may need to wait a little longer as we develop an easy migration path for each binding. Contributions welcome!
 

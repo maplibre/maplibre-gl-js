@@ -146,6 +146,7 @@ class LineBucket implements Bucket {
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
         this.hasPattern = hasPattern('line', this.layers, options);
         const lineSortKey = this.layers[0].layout.get('line-sort-key');
+        const sortFeaturesByKey = !lineSortKey.isConstant();
         const bucketFeatures = [];
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
@@ -154,7 +155,7 @@ class LineBucket implements Bucket {
 
             if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
 
-            const sortKey = lineSortKey ?
+            const sortKey = sortFeaturesByKey ?
                 lineSortKey.evaluate(evaluationFeature, {}, canonical) :
                 undefined;
 
@@ -172,7 +173,7 @@ class LineBucket implements Bucket {
             bucketFeatures.push(bucketFeature);
         }
 
-        if (lineSortKey) {
+        if (sortFeaturesByKey) {
             bucketFeatures.sort((a, b) => {
                 // a.sortKey is always a number when in use
                 return ((a.sortKey: any): number) - ((b.sortKey: any): number);

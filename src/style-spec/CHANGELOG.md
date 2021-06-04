@@ -1,3 +1,9 @@
+## 14.0.0
+
+### Breaking changes
+
+* Remove the `--mapbox-api-supported` option of the `gl-style-validate` utility.
+
 ## 13.17.0
 
 ### ✨ Features and improvements

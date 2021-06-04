@@ -78,7 +78,6 @@ import convertFunction from './function/convert';
 import {eachSource, eachLayer, eachProperty} from './visit';
 
 import validate from './validate_style';
-import validateMapboxApiSupported from './validate_mapbox_api_supported';
 
 const expression = {
     StyleExpression,
@@ -116,7 +115,6 @@ export {
     Color,
     styleFunction as function,
     validate,
-    validateMapboxApiSupported,
     visit
 };
 

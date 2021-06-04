@@ -1,19 +1,19 @@
-# Mapbox GL style specification & utilities
+# MapLibre GL style specification & utilities
 
-This directory contains code and reference files that define the Mapbox GL style specification and provides some utilities for working with Mapbox styles.
+This directory contains code and reference files that define the MapLibre GL style specification and provides some utilities for working with MapLibre styles.
 
 ## npm package
 
-The Mapbox GL style specification and utilities are published as a seperate npm
+The MapLibre GL style specification and utilities are published as a seperate npm
 package so that they can be installed without the bulk of GL JS.
 
-    npm install @mapbox/mapbox-gl-style-spec
+    npm install @maplibre/maplibre-gl-style-spec
 
 ## CLI Tools
 
 If you install this package globally, you will have access to several CLI tools.
 
-    npm install @mapbox/mapbox-gl-style-spec --global
+    npm install @maplibre/maplibre-gl-style-spec --global
 
 
 ### `gl-style-composite`
@@ -21,7 +21,7 @@ If you install this package globally, you will have access to several CLI tools.
 $ gl-style-composite style.json
 ```
 
-Will take a non-composited style and produce a [composite style](https://www.mapbox.com/blog/better-label-placement-in-mapbox-studio/).
+Will take a non-composited style and produce a composite style.
 
 ### `gl-style-migrate`
 
@@ -56,4 +56,3 @@ $ gl-style-validate style.json
 Will validate the given style JSON and print errors to stdout. Provide a
 `--json` flag to get JSON output.
 
-To validate that a style can be uploaded to the Mapbox Styles API, use the `--mapbox-api-supported` flag.
