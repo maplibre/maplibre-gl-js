@@ -485,7 +485,7 @@ class Transform {
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
         const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
         const tileID = new OverscaledTileID(this.tileZoom, 1, this.tileZoom, tileX, tileY);
-        const elevation = this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize);
+        const elevation = this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize, tileSize);
         return this.coordinatePoint(this.locationCoordinate(lnglat), elevation);
     }
 
@@ -576,7 +576,7 @@ class Transform {
         return new MercatorCoordinate(
             (tile.tileID.canonical.x * tile.tileSize + x) / worldSize,
             (tile.tileID.canonical.y * tile.tileSize + y) / worldSize,
-            this.terrainSourceCache.getElevation(tile.tileID, x, y)
+            this.terrainSourceCache.getElevation(tile.tileID, x, y, tile.tileSize)
         );
     }
 

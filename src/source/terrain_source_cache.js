@@ -84,12 +84,13 @@ class TerrainSourceCache extends Evented {
      * @param {OverscaledTileID} tileID
      * @param {number} x between 0 .. EXTENT
      * @param {number} y between 0 .. EXTENT
+     * @param {number} extent optional, default 8192
      */
-    getElevation(tileID: OverscaledTileID, x: number, y: number): number {
+    getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number=EXTENT): number {
         let dz = tileID.overscaledZ > this.maxzoom ? tileID.overscaledZ - this.maxzoom : 0;
         let tile = this.getTileByCanonical(tileID.scaledTo(tileID.overscaledZ - dz).canonical);
         return tile && tile.dem && x > 0 && y > 0 //FIXME-3D handle negative coordinates
-           ? tile.dem.get(Math.floor(x / EXTENT * tile.dem.dim), Math.floor(y / EXTENT * tile.dem.dim))
+           ? tile.dem.get(Math.floor(x / extent * tile.dem.dim), Math.floor(y / extent * tile.dem.dim))
            : 0;
     }
 
