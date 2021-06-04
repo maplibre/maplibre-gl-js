@@ -128,7 +128,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn run build-dev
       - run: DETECT_CHROMEDRIVER_VERSION=true yarn global add chromedriver
-      - run: yarn global add geckodriver
+      - run: yarn global add geckodriver@^1.22.3
       - name: Test Chrome
         env:
           SELENIUM_BROWSER: chrome
