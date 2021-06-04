@@ -417,7 +417,6 @@ class Painter {
         }
 
         this.opaquePassCutoff = Infinity;
-        this.opaquePassCutoff = 0; // FIXME-3D! disbaled for Terrain3D, but with this setting heatmap no longer work
         for (let i = 0; i < layerIds.length; i++) {
             const layerId = layerIds[i];
             if (this.style._layers[layerId].is3D()) {
@@ -479,7 +478,7 @@ class Painter {
             // so draw the current terrain-framebuffer below the symbols
             if (layer.type == 'symbol') {
                drawTerrain(this, this.style.terrainSourceCache);
-               prepareTerrain(this, this.style.terrainSourceCache);
+               prepareTerrain(this, this.style.terrainSourceCache, 0);
             }
 
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
