@@ -248,7 +248,7 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
         }
         if (!isWorker()) {
             const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
-            const action = config.REGISTERED_PROTOCOLS[protocol] ?? makeFetchRequest;
+            const action = config.REGISTERED_PROTOCOLS[protocol] || makeFetchRequest;
             return action(requestParameters, callback);
         }
     }
