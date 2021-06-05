@@ -194,6 +194,10 @@ export class RequestManager {
         urlObject.params.push(`access_token=${accessToken}`);
         return formatUrl(urlObject);
     }
+
+    setTransformRequest(transformRequest: RequestTransformFunction) {
+        this._transformRequestFn = transformRequest;
+    }
 }
 
 function isMapboxURL(url: string) {

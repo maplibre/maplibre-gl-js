@@ -335,6 +335,8 @@ declare namespace maplibregl {
 
         setStyle(style: maplibregl.Style | string, options?: { diff?: boolean; localIdeographFontFamily?: string }): this;
 
+        setTransformRequest(transformRequest: RequestTransformFunction): void;
+
         getStyle(): maplibregl.Style;
 
         isStyleLoaded(): boolean;

@@ -1343,6 +1343,22 @@ class Map extends Camera {
         }
     }
 
+    /**
+     *  Updates the requestManager's transform request with a new function
+     *
+     *  @param transformRequest A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
+     *    Expected to return an object with a `url` property and optionally `headers` and `credentials` properties
+     *
+     *  @returns {Map} `this`
+     *
+     *  @example
+     *  map.setTransformRequest((url: string, resourceType: string) => {});
+     */
+    setTransformRequest(transformRequest: RequestTransformFunction) {
+        this._requestManager.setTransformRequest(transformRequest);
+        return this;
+    }
+
     _getUIString(key: string) {
         const str = this._locale[key];
         if (str == null) {
