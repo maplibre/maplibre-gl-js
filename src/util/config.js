@@ -7,7 +7,7 @@ type Config = {|
   REQUIRE_ACCESS_TOKEN: boolean,
   ACCESS_TOKEN: ?string,
   MAX_PARALLEL_IMAGE_REQUESTS: number,
-  REGISTERED_PROTOCOLS: object,
+  REGISTERED_PROTOCOLS: { [string]: any },
 |};
 
 const config: Config = {
