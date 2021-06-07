@@ -215,7 +215,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
         callback(new Error(xhr.statusText));
     };
     xhr.onload = () => {
-        if (((xhr.status >= 200 && xhr.status < 300 && xhr.status != 204) || xhr.status === 0) && xhr.response !== null) {
+        if (((xhr.status >= 200 && xhr.status < 300 && xhr.status !== 204) || xhr.status === 0) && xhr.response !== null) {
             let data: mixed = xhr.response;
             if (requestParameters.type === 'json') {
                 // We're manually parsing JSON here to get better error messages.
