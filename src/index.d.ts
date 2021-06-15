@@ -1,4 +1,4 @@
-// Type definitions for MapLibre GL JS 1.14.0-rc.1
+// Type definitions for MapLibre GL JS 1.14.0
 // Project: https://github.com/maplibre/maplibre-gl-js
 // Definitions by: Dominik Bruderer <https://github.com/dobrud>
 //                 Patrick Reames <https://github.com/patrickr>
@@ -15,10 +15,10 @@
 
 /// <reference types="geojson" />
 
-export = mapboxgl;
-export as namespace mapboxgl;
+export = maplibregl;
+export as namespace maplibregl;
 
-declare namespace mapboxgl {
+declare namespace maplibregl {
     let accessToken: string;
     let version: string;
     let baseApiUrl: string;
@@ -42,13 +42,13 @@ declare namespace mapboxgl {
      * Tiles may still be cached by the browser in some cases.
      */
     export function clearStorage(callback?: (err?: Error) => void): void;
-
+    
     export function setRTLTextPlugin(pluginURL: string, callback: (error: Error) => void, deferred?: boolean): void;
     export function getRTLTextPluginStatus(): PluginStatus;
 
     /**
      * Initializes resources like WebWorkers that can be shared across maps to lower load
-     * times in some situations. `mapboxgl.workerUrl` and `mapboxgl.workerCount`, if being
+     * times in some situations. `maplibregl.workerUrl` and `maplibregl.workerCount`, if being
      * used, must be set before `prewarm()` is called to have an effect.
      *
      * By default, the lifecycle of these resources is managed automatically, and they are
@@ -56,7 +56,7 @@ declare namespace mapboxgl {
      * resources will be created ahead of time, and will not be cleared when the last Map
      * is removed from the page. This allows them to be re-used by new Map instances that
      * are created later. They can be manually cleared by calling
-     * `mapboxgl.clearPrewarmedResources()`. This is only necessary if your web page remains
+     * `maplibregl.clearPrewarmedResources()`. This is only necessary if your web page remains
      * active but stops using maps altogether.
      *
      * This is primarily useful when using GL-JS maps in a single page app, wherein a user
@@ -66,7 +66,7 @@ declare namespace mapboxgl {
     export function prewarm(): void;
 
     /**
-     * Clears up resources that have previously been created by `mapboxgl.prewarm()`.
+     * Clears up resources that have previously been created by `maplibregl.prewarm()`.
      * Note that this is typically not necessary. You should only call this function
      * if you expect the user of your app to not return to a Map view at any point
      * in your application.
@@ -239,9 +239,9 @@ declare namespace mapboxgl {
 
         setRenderWorldCopies(renderWorldCopies?: boolean): this;
 
-        project(lnglat: LngLatLike): mapboxgl.Point;
+        project(lnglat: LngLatLike): maplibregl.Point;
 
-        unproject(point: PointLike): mapboxgl.LngLat;
+        unproject(point: PointLike): maplibregl.LngLat;
 
         isMoving(): boolean;
 
@@ -294,11 +294,11 @@ declare namespace mapboxgl {
             } & FilterOptions,
         ): MapboxGeoJSONFeature[];
 
-        setStyle(style: mapboxgl.Style | string, options?: { diff?: boolean; localIdeographFontFamily?: string }): this;
+        setStyle(style: maplibregl.Style | string, options?: { diff?: boolean; localIdeographFontFamily?: string }): this;
 
         setTransformRequest(transformRequest: RequestTransformFunction): void;
 
-        getStyle(): mapboxgl.Style;
+        getStyle(): maplibregl.Style;
 
         isStyleLoaded(): boolean;
 
@@ -331,13 +331,13 @@ declare namespace mapboxgl {
 
         listImages(): string[];
 
-        addLayer(layer: mapboxgl.AnyLayer, before?: string): this;
+        addLayer(layer: maplibregl.AnyLayer, before?: string): this;
 
         moveLayer(id: string, beforeId?: string): this;
 
         removeLayer(id: string): this;
 
-        getLayer(id: string): mapboxgl.AnyLayer;
+        getLayer(id: string): maplibregl.AnyLayer;
 
         setFilter(layer: string, filter?: any[] | boolean | null, options?: FilterOptions | null): this;
 
@@ -353,18 +353,18 @@ declare namespace mapboxgl {
 
         getLayoutProperty(layer: string, name: string): any;
 
-        setLight(options: mapboxgl.Light, lightOptions?: any): this;
+        setLight(options: maplibregl.Light, lightOptions?: any): this;
 
-        getLight(): mapboxgl.Light;
+        getLight(): maplibregl.Light;
 
         setFeatureState(
-            feature: FeatureIdentifier | mapboxgl.MapboxGeoJSONFeature,
+            feature: FeatureIdentifier | maplibregl.MapboxGeoJSONFeature,
             state: { [key: string]: any },
         ): void;
 
-        getFeatureState(feature: FeatureIdentifier | mapboxgl.MapboxGeoJSONFeature): { [key: string]: any };
+        getFeatureState(feature: FeatureIdentifier | maplibregl.MapboxGeoJSONFeature): { [key: string]: any };
 
-        removeFeatureState(target: FeatureIdentifier | mapboxgl.MapboxGeoJSONFeature, key?: string): void;
+        removeFeatureState(target: FeatureIdentifier | maplibregl.MapboxGeoJSONFeature, key?: string): void;
 
         getContainer(): HTMLElement;
 
@@ -395,27 +395,27 @@ declare namespace mapboxgl {
 
         repaint: boolean;
 
-        getCenter(): mapboxgl.LngLat;
+        getCenter(): maplibregl.LngLat;
 
-        setCenter(center: LngLatLike, eventData?: mapboxgl.EventData): this;
+        setCenter(center: LngLatLike, eventData?: maplibregl.EventData): this;
 
-        panBy(offset: PointLike, options?: mapboxgl.AnimationOptions, eventData?: mapboxgl.EventData): this;
+        panBy(offset: PointLike, options?: maplibregl.AnimationOptions, eventData?: maplibregl.EventData): this;
 
-        panTo(lnglat: LngLatLike, options?: mapboxgl.AnimationOptions, eventdata?: mapboxgl.EventData): this;
+        panTo(lnglat: LngLatLike, options?: maplibregl.AnimationOptions, eventdata?: maplibregl.EventData): this;
 
         getZoom(): number;
 
-        setZoom(zoom: number, eventData?: mapboxgl.EventData): this;
+        setZoom(zoom: number, eventData?: maplibregl.EventData): this;
 
-        zoomTo(zoom: number, options?: mapboxgl.AnimationOptions, eventData?: mapboxgl.EventData): this;
+        zoomTo(zoom: number, options?: maplibregl.AnimationOptions, eventData?: maplibregl.EventData): this;
 
-        zoomIn(options?: mapboxgl.AnimationOptions, eventData?: mapboxgl.EventData): this;
+        zoomIn(options?: maplibregl.AnimationOptions, eventData?: maplibregl.EventData): this;
 
-        zoomOut(options?: mapboxgl.AnimationOptions, eventData?: mapboxgl.EventData): this;
+        zoomOut(options?: maplibregl.AnimationOptions, eventData?: maplibregl.EventData): this;
 
         getBearing(): number;
 
-        setBearing(bearing: number, eventData?: mapboxgl.EventData): this;
+        setBearing(bearing: number, eventData?: maplibregl.EventData): this;
 
         /**
          * Returns the current padding applied around the map viewport.
@@ -442,13 +442,13 @@ declare namespace mapboxgl {
          */
         setPadding(padding: PaddingOptions, eventData?: EventData): this;
 
-        rotateTo(bearing: number, options?: mapboxgl.AnimationOptions, eventData?: EventData): this;
+        rotateTo(bearing: number, options?: maplibregl.AnimationOptions, eventData?: EventData): this;
 
-        resetNorth(options?: mapboxgl.AnimationOptions, eventData?: mapboxgl.EventData): this;
+        resetNorth(options?: maplibregl.AnimationOptions, eventData?: maplibregl.EventData): this;
 
-        resetNorthPitch(options?: mapboxgl.AnimationOptions | null, eventData?: mapboxgl.EventData | null): this;
+        resetNorthPitch(options?: maplibregl.AnimationOptions | null, eventData?: maplibregl.EventData | null): this;
 
-        snapToNorth(options?: mapboxgl.AnimationOptions, eventData?: mapboxgl.EventData): this;
+        snapToNorth(options?: maplibregl.AnimationOptions, eventData?: maplibregl.EventData): this;
 
         getPitch(): number;
 
@@ -456,7 +456,7 @@ declare namespace mapboxgl {
 
         cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CameraForBoundsResult | undefined;
 
-        fitBounds(bounds: LngLatBoundsLike, options?: mapboxgl.FitBoundsOptions, eventData?: mapboxgl.EventData): this;
+        fitBounds(bounds: LngLatBoundsLike, options?: maplibregl.FitBoundsOptions, eventData?: maplibregl.EventData): this;
 
         fitScreenCoordinates(
             p0: PointLike,
@@ -466,11 +466,11 @@ declare namespace mapboxgl {
             eventData?: EventData,
         ): this;
 
-        jumpTo(options: mapboxgl.CameraOptions, eventData?: mapboxgl.EventData): this;
+        jumpTo(options: maplibregl.CameraOptions, eventData?: maplibregl.EventData): this;
 
-        easeTo(options: mapboxgl.EaseToOptions, eventData?: mapboxgl.EventData): this;
+        easeTo(options: maplibregl.EaseToOptions, eventData?: maplibregl.EventData): this;
 
-        flyTo(options: mapboxgl.FlyToOptions, eventData?: mapboxgl.EventData): this;
+        flyTo(options: maplibregl.FlyToOptions, eventData?: maplibregl.EventData): this;
 
         isEasing(): boolean;
 
@@ -689,7 +689,7 @@ declare namespace mapboxgl {
         scrollZoom?: boolean;
 
         /** stylesheet location */
-        style?: mapboxgl.Style | string;
+        style?: maplibregl.Style | string;
 
         /** If  true, the map will automatically resize when the browser window resizes */
         trackResize?: boolean;
@@ -720,7 +720,7 @@ declare namespace mapboxgl {
         maxTileCacheSize?: number;
 
         /**
-         * If specified, map will use this token instead of the one defined in mapboxgl.accessToken.
+         * If specified, map will use this token instead of the one defined in maplibregl.accessToken.
          *
          * @default null
          */
@@ -760,6 +760,10 @@ declare namespace mapboxgl {
 
     export type TransformRequestFunction = (url: string, resourceType: ResourceType) => RequestParameters;
 
+    export type ResponseCallback<T> = (error?: Error, data?: T, cacheControl?: string, expires?: string) => void;
+
+    export type Cancelable = { cancel: () => void };
+
     export interface PaddingOptions {
         top: number;
         bottom: number;
@@ -777,7 +781,7 @@ declare namespace mapboxgl {
      * BoxZoomHandler
      */
     export class BoxZoomHandler {
-        constructor(map: mapboxgl.Map);
+        constructor(map: maplibregl.Map);
 
         isEnabled(): boolean;
 
@@ -792,7 +796,7 @@ declare namespace mapboxgl {
      * ScrollZoomHandler
      */
     export class ScrollZoomHandler {
-        constructor(map: mapboxgl.Map);
+        constructor(map: maplibregl.Map);
 
         isEnabled(): boolean;
 
@@ -809,7 +813,7 @@ declare namespace mapboxgl {
      * DragPenHandler
      */
     export class DragPanHandler {
-        constructor(map: mapboxgl.Map);
+        constructor(map: maplibregl.Map);
 
         isEnabled(): boolean;
 
@@ -824,7 +828,7 @@ declare namespace mapboxgl {
      * DragRotateHandler
      */
     export class DragRotateHandler {
-        constructor(map: mapboxgl.Map, options?: { bearingSnap?: number; pitchWithRotate?: boolean });
+        constructor(map: maplibregl.Map, options?: { bearingSnap?: number; pitchWithRotate?: boolean });
 
         isEnabled(): boolean;
 
@@ -839,7 +843,7 @@ declare namespace mapboxgl {
      * KeyboardHandler
      */
     export class KeyboardHandler {
-        constructor(map: mapboxgl.Map);
+        constructor(map: maplibregl.Map);
 
         isEnabled(): boolean;
 
@@ -879,7 +883,7 @@ declare namespace mapboxgl {
      * DoubleClickZoomHandler
      */
     export class DoubleClickZoomHandler {
-        constructor(map: mapboxgl.Map);
+        constructor(map: maplibregl.Map);
 
         isEnabled(): boolean;
 
@@ -892,7 +896,7 @@ declare namespace mapboxgl {
      * TouchZoomRotateHandler
      */
     export class TouchZoomRotateHandler {
-        constructor(map: mapboxgl.Map);
+        constructor(map: maplibregl.Map);
 
         isEnabled(): boolean;
 
@@ -906,7 +910,7 @@ declare namespace mapboxgl {
     }
 
     export class TouchPitchHandler {
-        constructor(map: mapboxgl.Map);
+        constructor(map: maplibregl.Map);
 
         enable(): void;
 
@@ -996,15 +1000,15 @@ declare namespace mapboxgl {
      * Popup
      */
     export class Popup extends Evented {
-        constructor(options?: mapboxgl.PopupOptions);
+        constructor(options?: maplibregl.PopupOptions);
 
-        addTo(map: mapboxgl.Map): this;
+        addTo(map: maplibregl.Map): this;
 
         isOpen(): boolean;
 
         remove(): this;
 
-        getLngLat(): mapboxgl.LngLat;
+        getLngLat(): maplibregl.LngLat;
 
         /**
          * Sets the geographical location of the popup's anchor, and moves the popup to it. Replaces trackPointer() behavior.
@@ -1038,7 +1042,7 @@ declare namespace mapboxgl {
          * @param {string} className Non-empty string with CSS class name to add to popup container
          *
          * @example
-         * let popup = new mapboxgl.Popup()
+         * let popup = new maplibregl.Popup()
          * popup.addClassName('some-class')
          */
         addClassName(className: string): void;
@@ -1049,7 +1053,7 @@ declare namespace mapboxgl {
          * @param {string} className Non-empty string with CSS class name to remove from popup container
          *
          * @example
-         * let popup = new mapboxgl.Popup()
+         * let popup = new maplibregl.Popup()
          * popup.removeClassName('some-class')
          */
         removeClassName(className: string): void;
@@ -1070,7 +1074,7 @@ declare namespace mapboxgl {
          * @returns {boolean} if the class was removed return false, if class was added, then return true
          *
          * @example
-         * let popup = new mapboxgl.Popup()
+         * let popup = new maplibregl.Popup()
          * popup.toggleClassName('toggleClass')
          */
         toggleClassName(className: string): boolean;
@@ -1189,7 +1193,7 @@ declare namespace mapboxgl {
     export class GeoJSONSource implements GeoJSONSourceRaw {
         type: 'geojson';
 
-        constructor(options?: mapboxgl.GeoJSONSourceOptions);
+        constructor(options?: maplibregl.GeoJSONSourceOptions);
 
         setData(data: GeoJSON.Feature<GeoJSON.Geometry> | GeoJSON.FeatureCollection<GeoJSON.Geometry> | String): this;
 
@@ -1251,7 +1255,7 @@ declare namespace mapboxgl {
     export class VideoSource implements VideoSourceRaw {
         type: 'video';
 
-        constructor(options?: mapboxgl.VideoSourceOptions);
+        constructor(options?: maplibregl.VideoSourceOptions);
 
         getVideo(): HTMLVideoElement;
 
@@ -1274,7 +1278,7 @@ declare namespace mapboxgl {
     export class ImageSource implements ImageSourceRaw {
         type: 'image';
 
-        constructor(options?: mapboxgl.ImageSourceOptions);
+        constructor(options?: maplibregl.ImageSourceOptions);
 
         updateImage(options: ImageSourceOptions): this;
 
@@ -1364,7 +1368,7 @@ declare namespace mapboxgl {
         constructor(lng: number, lat: number);
 
         /** Return a new LngLat object whose longitude is wrapped to the range (-180, 180). */
-        wrap(): mapboxgl.LngLat;
+        wrap(): maplibregl.LngLat;
 
         /** Return a LngLat as an array */
         toArray(): number[];
@@ -1378,7 +1382,7 @@ declare namespace mapboxgl {
 
         toBounds(radius: number): LngLatBounds;
 
-        static convert(input: LngLatLike): mapboxgl.LngLat;
+        static convert(input: LngLatLike): maplibregl.LngLat;
     }
 
     /**
@@ -1399,22 +1403,22 @@ declare namespace mapboxgl {
         contains(lnglat: LngLatLike): boolean;
 
         /** Extend the bounds to include a given LngLat or LngLatBounds. */
-        extend(obj: mapboxgl.LngLatLike | mapboxgl.LngLatBoundsLike): this;
+        extend(obj: maplibregl.LngLatLike | maplibregl.LngLatBoundsLike): this;
 
         /** Get the point equidistant from this box's corners */
-        getCenter(): mapboxgl.LngLat;
+        getCenter(): maplibregl.LngLat;
 
         /** Get southwest corner */
-        getSouthWest(): mapboxgl.LngLat;
+        getSouthWest(): maplibregl.LngLat;
 
         /** Get northeast corner */
-        getNorthEast(): mapboxgl.LngLat;
+        getNorthEast(): maplibregl.LngLat;
 
         /** Get northwest corner */
-        getNorthWest(): mapboxgl.LngLat;
+        getNorthWest(): maplibregl.LngLat;
 
         /** Get southeast corner */
-        getSouthEast(): mapboxgl.LngLat;
+        getSouthEast(): maplibregl.LngLat;
 
         /** Get west edge longitude */
         getWest(): number;
@@ -1438,7 +1442,7 @@ declare namespace mapboxgl {
         isEmpty(): boolean;
 
         /** Convert an array to a LngLatBounds object, or return an existing LngLatBounds object unchanged. */
-        static convert(input: LngLatBoundsLike): mapboxgl.LngLatBounds;
+        static convert(input: LngLatBoundsLike): maplibregl.LngLatBounds;
     }
 
     /**
@@ -1531,9 +1535,9 @@ declare namespace mapboxgl {
      * Marker
      */
     export class Marker extends Evented {
-        constructor(options?: mapboxgl.MarkerOptions);
+        constructor(options?: maplibregl.MarkerOptions);
 
-        constructor(element?: HTMLElement, options?: mapboxgl.MarkerOptions);
+        constructor(element?: HTMLElement, options?: maplibregl.MarkerOptions);
 
         addTo(map: Map): this;
 
@@ -1825,10 +1829,10 @@ declare namespace mapboxgl {
         delayEndEvents?: number;
     }
 
-    export interface FitBoundsOptions extends mapboxgl.FlyToOptions {
+    export interface FitBoundsOptions extends maplibregl.FlyToOptions {
         linear?: boolean;
-        padding?: number | mapboxgl.PaddingOptions;
-        offset?: mapboxgl.PointLike;
+        padding?: number | maplibregl.PaddingOptions;
+        offset?: maplibregl.PointLike;
         maxZoom?: number;
         maxDuration?: number;
     }
@@ -2040,7 +2044,7 @@ declare namespace mapboxgl {
          * @param map The Map this custom layer was just added to.
          * @param gl The gl context for the map.
          */
-        onRemove?(map: mapboxgl.Map, gl: WebGLRenderingContext): void;
+        onRemove?(map: maplibregl.Map, gl: WebGLRenderingContext): void;
 
         /**
          * Optional method called when the layer has been added to the Map with Map#addLayer.
@@ -2048,7 +2052,7 @@ declare namespace mapboxgl {
          * @param map The Map this custom layer was just added to.
          * @param gl The gl context for the map.
          */
-        onAdd?(map: mapboxgl.Map, gl: WebGLRenderingContext): void;
+        onAdd?(map: maplibregl.Map, gl: WebGLRenderingContext): void;
 
         /**
          * Optional method called during a render frame to allow a layer to prepare resources
