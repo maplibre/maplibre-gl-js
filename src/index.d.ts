@@ -1,4 +1,4 @@
-// Type definitions for MapLibre GL JS 1.14.0-rc.1
+// Type definitions for MapLibre GL JS 1.14.0
 // Project: https://github.com/maplibre/maplibre-gl-js
 // Definitions by: Dominik Bruderer <https://github.com/dobrud>
 //                 Patrick Reames <https://github.com/patrickr>
