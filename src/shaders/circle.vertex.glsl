@@ -6,6 +6,7 @@ uniform lowp float u_device_pixel_ratio;
 uniform highp float u_camera_to_center_distance;
 
 attribute vec2 a_pos;
+attribute float a_ele;
 
 varying vec3 v_data;
 
@@ -44,9 +45,9 @@ void main(void) {
             corner_position += extrude * (radius + stroke_width) * u_extrude_scale * (projected_center.w / u_camera_to_center_distance);
         }
 
-        gl_Position = u_matrix * vec4(corner_position, 0, 1);
+        gl_Position = u_matrix * vec4(corner_position, a_ele, 1);
     } else {
-        gl_Position = u_matrix * vec4(circle_center, 0, 1);
+        gl_Position = u_matrix * vec4(circle_center, a_ele, 1);
 
         if (u_scale_with_map) {
             gl_Position.xy += extrude * (radius + stroke_width) * u_extrude_scale * u_camera_to_center_distance;

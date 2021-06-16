@@ -1117,6 +1117,7 @@ export {
     StructArrayLayout3i6 as Pos3DArray,
     StructArrayLayout4i8 as RasterBoundsArray,
     StructArrayLayout2i4 as CircleLayoutArray,
+    StructArrayLayout1f4 as CircleElevationArray,
     StructArrayLayout2i4 as FillLayoutArray,
     StructArrayLayout2i4i12 as FillExtrusionLayoutArray,
     StructArrayLayout2i4 as HeatmapLayoutArray,
