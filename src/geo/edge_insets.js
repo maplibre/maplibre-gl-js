@@ -81,10 +81,10 @@ class EdgeInsets {
     }
 
     /**
-     * Returns the current sdtate as json, useful when you want to have a
+     * Returns the current state as json, useful when you want to have a
      * read-only representation of the inset.
      *
-     * @returns {PaddingOptions} sdtate as json
+     * @returns {PaddingOptions} state as json
      * @memberof EdgeInsets
      */
     toJSON(): PaddingOptions {
