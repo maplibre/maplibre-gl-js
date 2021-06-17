@@ -37,10 +37,10 @@ class EdgeInsets {
     /**
      * Interpolates the inset in-place.
      * This maintains the current inset value for any inset not present in `target`.
-     *
-     * @param {PaddingOptions} target
-     * @param {number} t
-     * @returns {EdgeInsets}
+     * @param {PaddingOptions | EdgeInsets} start interpolation start
+     * @param {PaddingOptions} target interpolation target
+     * @param {number} t interpolation step/weight
+     * @returns {EdgeInsets} the insets
      * @memberof EdgeInsets
      */
     interpolate(start: PaddingOptions | EdgeInsets, target: PaddingOptions, t: number): EdgeInsets {
@@ -56,9 +56,9 @@ class EdgeInsets {
      * Utility method that computes the new apprent center or vanishing point after applying insets.
      * This is in pixels and with the top left being (0.0) and +y being downwards.
      *
-     * @param {number} width
-     * @param {number} height
-     * @returns {Point}
+     * @param {number} width the width
+     * @param {number} height the height
+     * @returns {Point} the point
      * @memberof EdgeInsets
      */
     getCenter(width: number, height: number): Point {
@@ -81,10 +81,10 @@ class EdgeInsets {
     }
 
     /**
-     * Returns the current sdtate as json, useful when you want to have a
+     * Returns the current state as json, useful when you want to have a
      * read-only representation of the inset.
      *
-     * @returns {PaddingOptions}
+     * @returns {PaddingOptions} state as json
      * @memberof EdgeInsets
      */
     toJSON(): PaddingOptions {
