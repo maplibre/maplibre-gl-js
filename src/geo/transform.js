@@ -233,8 +233,8 @@ class Transform {
     /**
      * Returns if the padding params match
      *
-     * @param {PaddingOptions} padding
-     * @returns {boolean}
+     * @param {PaddingOptions} padding the padding to check against
+     * @returns {boolean} true if they are equal, false otherwise
      * @memberof Transform
      */
     isPaddingEqual(padding: PaddingOptions): boolean {
@@ -244,8 +244,9 @@ class Transform {
     /**
      * Helper method to upadte edge-insets inplace
      *
-     * @param {PaddingOptions} target
-     * @param {number} t
+     * @param {PaddingOptions} start the starting padding
+     * @param {PaddingOptions} target the target padding
+     * @param {number} t the step/weight
      * @memberof Transform
      */
     interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number) {
