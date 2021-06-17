@@ -242,6 +242,16 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
     //   some versions (see https://bugs.webkit.org/show_bug.cgi?id=174980#c2)
     // - Requests for resources with the file:// URI scheme don't work with the Fetch API either. In
     //   this case we unconditionally use XHR on the current thread since referrers don't matter.
+    if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
+        if (isWorker() && self.worker && self.worker.actor) {
+            return self.worker.actor.send('getResource', requestParameters, callback);
+        }
+        if (!isWorker()) {
+            const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
+            const action = config.REGISTERED_PROTOCOLS[protocol] || makeFetchRequest;
+            return action(requestParameters, callback);
+        }
+    }
     if (!isFileURL(requestParameters.url)) {
         if (window.fetch && window.Request && window.AbortController && window.Request.prototype.hasOwnProperty('signal')) {
             return makeFetchRequest(requestParameters, callback);

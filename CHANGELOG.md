@@ -3,6 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Added custom protocol support to allow overriding ajax calls ((#29)[https://github.com/maplibre/maplibre-gl-js/issues/29])
 - Added setTransformRequest to map (#159)
 - Publish @maplibre/maplibre-gl-style-spec v14.0.0 on NPM (#149)
 - Replace link to mapbox on LogoControl by link to maplibre (#151)
