@@ -81,7 +81,6 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
 
             if (data) {
                 tile.dem = data.dem;
-                tile.mesh = data.mesh;
                 tile.needsHillshadePrepare = true;
                 tile.state = 'loaded';
                 callback(null);

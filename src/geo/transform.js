@@ -480,11 +480,12 @@ class Transform {
      * @private
      */
     locationPoint3D(lnglat: LngLat) {
-        const merc = this.locationCoordinate(lnglat);
-        const tileSize = this.terrainSourceCache.tileSize, worldSize = (1 << this.tileZoom) * tileSize;
+        const merc = this.locationCoordinate(lnglat), tsc = this.terrainSourceCache;
+        const tileZ = tsc.maxzoom < this.tileZoom ? tsc.maxzoom : this.tileZoom;
+        const tileSize = tsc.tileSize, worldSize = (1 << tileZ) * tileSize;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
         const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
-        const tileID = new OverscaledTileID(this.tileZoom, 1, this.tileZoom, tileX, tileY);
+        const tileID = new OverscaledTileID(this.tileZoom, 0, tileZ, tileX, tileY);
         const elevation = this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize, tileSize);
         return this.coordinatePoint(this.locationCoordinate(lnglat), elevation);
     }
@@ -567,16 +568,17 @@ class Transform {
         gl.readPixels(p.x, painter.height / browser.devicePixelRatio - p.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
         context.bindFramebuffer.set(null);
         // decode coordinates (encoding see terrain-source-cache)
-        let y = (rgba[3] >> 1) | ((rgba[2] & 3) << 7);
-        let x = (rgba[2] >> 2) | ((rgba[1] & 7) << 6);
-        let i = (rgba[1] >> 3) | (rgba[0] << 5);
-        let tile = this.terrainSourceCache._coordsIndex[i];
+        const y = (rgba[3] >> 1) | ((rgba[2] & 3) << 7);
+        const x = (rgba[2] >> 2) | ((rgba[1] & 7) << 6);
+        const i = (rgba[1] >> 3) | (rgba[0] << 5);
+        const tile = this.terrainSourceCache._coordsIndex[i];
         if (!tile) return this.pointCoordinate(p); // FIXME! remove this hack
-        let worldSize = (1 << tile.tileID.canonical.z) * tile.tileSize;
+        const tileSize = this.terrainSourceCache.tileSize;
+        const worldSize = (1 << tile.tileID.canonical.z) * tileSize;
         return new MercatorCoordinate(
-            (tile.tileID.canonical.x * tile.tileSize + x) / worldSize,
-            (tile.tileID.canonical.y * tile.tileSize + y) / worldSize,
-            this.terrainSourceCache.getElevation(tile.tileID, x, y, tile.tileSize)
+            (tile.tileID.canonical.x * tileSize + x) / worldSize,
+            (tile.tileID.canonical.y * tileSize + y) / worldSize,
+            this.terrainSourceCache.getElevation(tile.tileID, x, y, tileSize)
         );
     }
 

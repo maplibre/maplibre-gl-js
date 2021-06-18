@@ -37,6 +37,7 @@ import background from './draw_background';
 import debug, {drawDebugPadding} from './draw_debug';
 import custom from './draw_custom';
 import {prepareTerrain, drawTerrain, drawTerrainCoords} from './draw_terrain';
+import {OverscaledTileID} from '../source/tile_id';
 
 const draw = {
     symbol,
@@ -54,7 +55,6 @@ const draw = {
 
 import type Transform from '../geo/transform';
 import type Tile from '../source/tile';
-import type {OverscaledTileID} from '../source/tile_id';
 import type Style from '../style/style';
 import type StyleLayer from '../style/style_layer';
 import type {CrossFaded} from '../style/properties';
@@ -328,15 +328,17 @@ class Painter {
     prepareFramebuffer(tileID: OverscaledTileID, layerType: string) {
         // dz is the tileSize difference of the layer-source and the 512px terrain-source
         // so if dz > 0 the frameport's viewbuffer is located to the currect subtile
-        let z = Math.floor(this.transform.zoom), dz = tileID.canonical.z - z;
-        const tile = dz >= 0
-            ? this.style.terrainSourceCache.getTileByCanonical(tileID.scaledTo(z).canonical)
-            : this.style.terrainSourceCache.getTileByCanonical(tileID);
-        if (dz < 0) dz = 0; // draw in parent tile
+        const z = Math.floor(this.transform.zoom);
+        const canonical = tileID.canonical.z > this.style.terrainSourceCache.maxzoom
+            ? tileID.scaledTo(this.style.terrainSourceCache.maxzoom).canonical
+            : tileID.canonical;
+        const id = new OverscaledTileID(z, tileID.wrap, canonical.z, canonical.x, canonical.y).key;
+        const tile = this.style.terrainSourceCache.getTileByID(id);
         if (tile) {
+            const dz = tileID.canonical.z - canonical.z;
             const x = tileID.canonical.x - (tile.tileID.canonical.x << dz);
             const y = tileID.canonical.y - (tile.tileID.canonical.y << dz);
-            let size = dz ? tile.fbo.width / (dz * 2) : tile.fbo.width;
+            const size = tile.fbo.width / (1 << dz);
             tile.needsRedraw = true;
             tile.unprojectTileID = tileID;
             this.context.bindFramebuffer.set(tile.fbo.framebuffer);
@@ -470,16 +472,18 @@ class Painter {
         // Draw all other layers bottom-to-top.
         this.renderPass = 'translucent';
 
+        let prevLayerType = "";
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
 
             // symbols are renderd directly onto the screen
             // so draw the current terrain-framebuffer below the symbols
-            if (layer.type == 'symbol') {
+            if (layer.type == 'symbol' && prevLayerType != "symbol") {
                drawTerrain(this, this.style.terrainSourceCache);
                prepareTerrain(this, this.style.terrainSourceCache, 0);
             }
+            prevLayerType = layer.type;
 
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render

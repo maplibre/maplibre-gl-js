@@ -12,6 +12,8 @@ import Texture from './texture';
 import Color from '../style-spec/util/color';
 import ColorMode from '../gl/color_mode';
 import browser from '../util/browser';
+import {Pos3DArray, TriangleIndexArray} from '../data/array_types';
+import EXTENT from '../data/extent';
 
 function drawTerrainCoords(painter, sourceCache: TerrainSourceCache) {
    const tiles = Object.values(sourceCache._tiles).filter(t => t.unprojectTileID && t.coordsTexture);
@@ -59,21 +61,30 @@ function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache) {
 
 function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, depth: number=1) {
    const context = painter.context;
-   for (const tileID of sourceCache.getRenderableTileIDs(painter.transform)) {
-      const tile = sourceCache.getTileByID(tileID);
+   for (const tileID of sourceCache.getRenderableTileIds(painter.transform)) {
+      const tile = sourceCache.getTileByID(tileID.key);
       if (!tile.fbo) {
-         // FIXME! adjust size for overzooming
+         const tileSize = tile.tileSize * 2;
          context.activeTexture.set(context.gl.TEXTURE0);
-         tile.texture = new Texture(context, {width: 1024, height: 1024, data: null}, context.gl.RGBA);
+         tile.texture = new Texture(context, {width: tileSize, height: tileSize, data: null}, context.gl.RGBA);
          tile.texture.bind(context.gl.LINEAR, context.gl.CLAMP_TO_EDGE);
-         tile.fbo = context.createFramebuffer(1024, 1024, true);
+         tile.fbo = context.createFramebuffer(tileSize, tileSize, true);
          tile.fbo.colorAttachment.set(tile.texture.texture);
-         tile.fbo.depthAttachment.set(context.createRenderbuffer(context.gl.DEPTH_COMPONENT16, 1024, 1024));
+         tile.fbo.depthAttachment.set(context.createRenderbuffer(context.gl.DEPTH_COMPONENT16, tileSize, tileSize));
       }
       if (!tile.segments) {
-         tile.indexBuffer = context.createIndexBuffer(tile.mesh.indexArray);
-         tile.vertexBuffer = context.createVertexBuffer(tile.mesh.vertexArray, pos3DAttributes.members);
-         tile.segments = SegmentVector.simpleSegment(0, 0, tile.mesh.vertexArray.length, tile.mesh.indexArray.length);
+         const vertexArray = new Pos3DArray(), indexArray = new TriangleIndexArray();
+         // create regular terrain-mesh. (e.g. 32 * 32 * 2 flat triangles)
+         const meshSize = sourceCache.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
+         for (let y=0; y<=meshSize; y++) for (let x=0; x<=meshSize; x++)
+            vertexArray.emplaceBack(x * delta, y * delta, Math.floor(sourceCache.getElevation(tileID, x, y, meshSize)));
+         for (let y=0; y<=meshSize2; y+=meshSize) for (let x=0; x<meshSize; x++) {
+            indexArray.emplaceBack(y + x + 1, y + x, y + meshSize + x + 1);
+            indexArray.emplaceBack(y + x, y + x + meshSize, y + meshSize + x + 1);
+         }
+         tile.indexBuffer = context.createIndexBuffer(indexArray);
+         tile.vertexBuffer = context.createVertexBuffer(vertexArray, pos3DAttributes.members);
+         tile.segments = SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length);
       }
       if (!tile.coordsTexture) {
          tile.coordsTexture = new Texture(context, tile.coords, context.gl.RGBA, {premultiply: false});

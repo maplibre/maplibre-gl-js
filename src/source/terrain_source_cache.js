@@ -3,13 +3,14 @@
 import type {Source} from './source';
 import {OverscaledTileID} from './tile_id';
 import Tile from './tile';
-import {Pos3DArray, TriangleIndexArray} from '../data/array_types';
 import EXTENT from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
 import Style from '../style/style';
 import Texture from '../render/texture';
 import {RGBAImage} from '../util/image';
+import { extent } from 'd3';
+import DEMData from '../data/dem_data';
 
 class TerrainSourceCache extends Evented {
 
@@ -24,6 +25,7 @@ class TerrainSourceCache extends Evented {
         this.minzoom = 5;
         this.maxzoom = 14;
         this.tileSize = 512;
+        this.meshSize = 32;
     }
 
     setSourceCache(sourceCache: Source) {
@@ -39,7 +41,7 @@ class TerrainSourceCache extends Evented {
      * @private
      */
     update(transform: Transform, context: Context) {
-        let idealTileIDs = this.getRenderableTileIDs(transform).filter(id => !this._tiles[id.key]);
+        let idealTileIDs = this.getRenderableTileIds(transform).filter(id => !this._tiles[id.key]);
         for (const tileID of idealTileIDs) {
             let tile = this._tiles[tileID.key] = this._createEmptyTile(tileID);
             this._coordsIndex[tile._coordsIndex] = tile;
@@ -51,28 +53,25 @@ class TerrainSourceCache extends Evented {
         }
     }
 
-    getRenderableTileIDs(transform: Transform) {
-        return transform.coveringTiles({ tileSize: 512, minzoom: this.minzoom, maxzoom: this.maxzoom });
+    getRenderableTileIds(transform: Transform) {
+        return transform.coveringTiles({
+            tileSize: this.tileSize,
+            minzoom: this._source ? this._source.minzoom : this.minzoom,
+            maxzoom: 14,
+            reparseOverscaled: true
+        });
     }
 
-    /**
-     * get terrain tile by the x/y/z coordinate.
-     * FIXME-3D! may speedup with separate lookup-table
-     * @private
-     */
-    getTileByCanonical(tileID: CanonicalTileID): Tile {
-        for (let key in this._tiles)
-            if (tileID.equals(this._tiles[key].tileID.canonical))
-                return this._tiles[key];
-        return null;
+    getRenderableIds() {
+       return Object.values(this._tiles).map(t => t.tileID.key);
     }
 
     /**
      * get terrain tile by the TileID key
      * @private
      */
-    getTileByID(tileID: OverscaledTileID): Tile {
-        return this._tiles[tileID.key];
+    getTileByID(id: string): Tile {
+        return this._tiles[id];
     }
 
     /**
@@ -87,9 +86,8 @@ class TerrainSourceCache extends Evented {
      * @param {number} extent optional, default 8192
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number=EXTENT): number {
-        let dz = tileID.overscaledZ > this.maxzoom ? tileID.overscaledZ - this.maxzoom : 0;
-        let tile = this.getTileByCanonical(tileID.scaledTo(tileID.overscaledZ - dz).canonical);
-        return tile && tile.dem && x > 0 && y > 0 //FIXME-3D handle negative coordinates
+        let tile = this.getTileByID(tileID.key);
+        return tile && tile.dem && x >= 0 && y >= 0 && x <= extent && y <= extent //FIXME-3D handle negative coordinates
            ? tile.dem.get(Math.floor(x / extent * tile.dem.dim), Math.floor(y / extent * tile.dem.dim))
            : 0;
     }
@@ -116,7 +114,14 @@ class TerrainSourceCache extends Evented {
      * @param {Tile} tile
      */
     _tileLoaded(tile: Tile) {
-        if (tile.state == "loaded") tile.segments = null;
+        if (tile.state == "loaded") {
+            if (this._sourceCache) this._sourceCache._backfillDEM.call(this, tile);
+            // rerender tile incl. neighboring tiles
+            tile.segments = null;
+            Object.keys(tile.neighboringTiles)
+               .map(id => this.getTileByID(id))
+               .forEach(tile => { if (tile) tile.segments = null });
+        }
         for (let s in this._style.sourceCaches) {
            for (let key in this._style.sourceCaches[s]._tiles) {
               let t = this._style.sourceCaches[s]._tiles[key];
@@ -129,12 +134,6 @@ class TerrainSourceCache extends Evented {
         tileID.posMatrix = mat4.create();
         mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
         let tile = new Tile(tileID, this.tileSize * tileID.overscaleFactor());
-        const vertexArray = new Pos3DArray(), indexArray = new TriangleIndexArray();
-        // create an empty terrain-mesh. (e.g. 2 flat triangles)
-        // FIXME-3D: get elevation from parent/children or surrounding tiles
-        [[1, 1, 0], [0, 0, 0], [0, 1, 0], [1, 0, 0]].forEach(xy => vertexArray.emplaceBack(...xy.map(c => c * EXTENT)));
-        [[1, 0, 3], [0, 1, 2]].forEach(xyz => indexArray.emplaceBack(...xyz))
-        tile.mesh = { indexArray: indexArray, vertexArray: vertexArray };
         // create coords texture, needed to grab coordianates from canvas
         // encode coords coordinate into 4 bytes:
         //   - 13 bits for coordsIndex (0 .. 8191) (= number of loaded terraintile)

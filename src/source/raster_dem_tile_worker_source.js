@@ -31,7 +31,7 @@ class RasterDEMTileWorkerSource {
         const dem = new DEMData(uid, imagePixels, encoding);
         this.loaded = this.loaded || {};
         this.loaded[uid] = dem;
-        callback(null, { dem: dem, mesh: this.createTerrainMesh(dem) });
+        callback(null, { dem: dem, mesh: null });
     }
 
     getImageData(imgBitmap: ImageBitmap): RGBAImage {
@@ -52,7 +52,7 @@ class RasterDEMTileWorkerSource {
         return new RGBAImage({width: imgData.width, height: imgData.height}, imgData.data);
     }
 
-    createTerrainMesh(dem) {
+    createTerrainMesh(dem, resolution) {
         // load terrain from dem data
         const dim = dem.dim, dim1 = dim + 1; // add right/bottom overlap
         const terrain = new Array(dim1 * dim1);
@@ -60,9 +60,10 @@ class RasterDEMTileWorkerSource {
             for (let x=0; x<dim+1; x++)
                 terrain[y * (dim+1) + x] = dem.get(x, y);
         // create mesh
-        const mesh = new Martini(dim+1).createTile(terrain).getMesh(10);
+        const mesh = new Martini(dim+1).createTile(terrain).getMesh(resolution);
         const vertexArray = new Pos3DArray();
         const indexArray = new TriangleIndexArray();
+      //   console.log(mesh.vertices.length);
         vertexArray.reserve(mesh.vertices.length / 2);
         for (let i=0; i<mesh.vertices.length; i+=2) {
             let x = mesh.vertices[i], y = mesh.vertices[i+1], z = terrain[y * dim1 + x];
