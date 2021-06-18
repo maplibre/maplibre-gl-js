@@ -17,6 +17,7 @@
 ### 🐞 Bug fixes
 
 - *...Add fixed bugs here...*
+- Prevented attribution button from submiting form (#178)
 
 ## 1.14.0
 
