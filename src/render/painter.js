@@ -332,10 +332,10 @@ class Painter {
         const canonical = tileID.canonical.z > this.style.terrainSourceCache.maxzoom
             ? tileID.scaledTo(this.style.terrainSourceCache.maxzoom).canonical
             : tileID.canonical;
-        const id = new OverscaledTileID(z, tileID.wrap, canonical.z, canonical.x, canonical.y).key;
-        const tile = this.style.terrainSourceCache.getTileByID(id);
+        const id = new OverscaledTileID(canonical.z > z ? canonical.z : z, tileID.wrap, canonical.z, canonical.x, canonical.y);
+        const tile = this.style.terrainSourceCache.getTileByID(id.scaledTo(z).key);
         if (tile) {
-            const dz = tileID.canonical.z - canonical.z;
+            const dz = tileID.canonical.z - (z < canonical.z ? z : canonical.z);
             const x = tileID.canonical.x - (tile.tileID.canonical.x << dz);
             const y = tileID.canonical.y - (tile.tileID.canonical.y << dz);
             const size = tile.fbo.width / (1 << dz);
@@ -495,7 +495,12 @@ class Painter {
         }
 
         drawTerrain(this, this.style.terrainSourceCache);
-        drawTerrainCoords(this, this.style.terrainSourceCache);
+
+        // redraw coords every 100ms for performance
+        if (this._drawTerrainCoordsTimeout) clearTimeout(this._drawTerrainCoordsTimeout);
+        this._drawTerrainCoordsTimeout = setTimeout(() => {
+            drawTerrainCoords(this, this.style.terrainSourceCache);
+        }, 100);
 
         if (this.options.showTileBoundaries) {
             //Use source with highest maxzoom

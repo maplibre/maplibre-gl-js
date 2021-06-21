@@ -16,7 +16,7 @@ import {Pos3DArray, TriangleIndexArray} from '../data/array_types';
 import EXTENT from '../data/extent';
 
 function drawTerrainCoords(painter, sourceCache: TerrainSourceCache) {
-   const tiles = Object.values(sourceCache._tiles).filter(t => t.unprojectTileID && t.coordsTexture);
+   const tiles = Object.values(sourceCache._tiles).filter(t => t.unprojectTileID && t.coordsTexture && t.segments);
    if (!tiles.length) return;
 
    const context = painter.context;
