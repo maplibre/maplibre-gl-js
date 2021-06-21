@@ -1229,10 +1229,8 @@ declare namespace maplibregl {
         type: 'geojson';
     }
 
-    export class GeoJSONSource implements GeoJSONSourceRaw {
+    export interface GeoJSONSource extends GeoJSONSourceRaw {
         type: 'geojson';
-
-        constructor(options?: maplibregl.GeoJSONSourceOptions);
 
         setData(data: GeoJSON.Feature<GeoJSON.Geometry> | GeoJSON.FeatureCollection<GeoJSON.Geometry> | String): this;
 
