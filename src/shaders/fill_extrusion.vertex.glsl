@@ -7,6 +7,7 @@ uniform lowp float u_opacity;
 
 attribute vec2 a_pos;
 attribute vec4 a_normal_ed;
+attribute float a_ele;
 
 varying vec4 v_color;
 
@@ -22,8 +23,8 @@ void main() {
 
     vec3 normal = a_normal_ed.xyz;
 
-    base = max(0.0, base);
-    height = max(0.0, height);
+    base = max(0.0, a_ele + base - 10.0); // minus 10 to avoid floating buildings because centroid is used for elevation
+    height = max(0.0, a_ele + height);
 
     float t = mod(normal.x, 2.0);
 
