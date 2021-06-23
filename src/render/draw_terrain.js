@@ -78,9 +78,9 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, depth
          const meshSize = sourceCache.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
          for (let y=0; y<=meshSize; y++) for (let x=0; x<=meshSize; x++)
             vertexArray.emplaceBack(x * delta, y * delta, Math.floor(sourceCache.getElevation(tileID, x, y, meshSize)));
-         for (let y=0; y<=meshSize2; y+=meshSize) for (let x=0; x<meshSize; x++) {
-            indexArray.emplaceBack(y + x + 1, y + x, y + meshSize + x + 1);
-            indexArray.emplaceBack(y + x, y + x + meshSize, y + meshSize + x + 1);
+         for (let y=0; y<meshSize2; y+=meshSize+1) for (let x=0; x<meshSize; x++) {
+            indexArray.emplaceBack(x+y, meshSize+x+y+1, meshSize+x+y+2);
+            indexArray.emplaceBack(x+y, meshSize+x+y+2, x+y+1);
          }
          tile.indexBuffer = context.createIndexBuffer(indexArray);
          tile.vertexBuffer = context.createVertexBuffer(vertexArray, pos3DAttributes.members);
