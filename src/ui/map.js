@@ -2287,9 +2287,9 @@ class Map extends Camera {
         const computedColor = window.getComputedStyle(this._missingCSSCanary).getPropertyValue('background-color');
         if (computedColor !== 'rgb(250, 128, 114)') {
             warnOnce('This page appears to be missing CSS declarations for ' +
-                'Mapbox GL JS, which may cause the map to display incorrectly. ' +
-                'Please ensure your page includes mapbox-gl.css, as described ' +
-                'in https://www.mapbox.com/mapbox-gl-js/api/.');
+                'MapLibre GL JS, which may cause the map to display incorrectly. ' +
+                'Please ensure your page includes maplibre-gl.css, as described ' +
+                'in https://maplibre.org/maplibre-gl-js-docs/api/.');
         }
     }
 

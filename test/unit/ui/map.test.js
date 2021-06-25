@@ -2060,7 +2060,7 @@ test('Map', (t) => {
         const stub = t.stub(console, 'warn');
 
         const styleSheet = new window.CSSStyleSheet();
-        styleSheet.insertRule('.mapboxgl-canary { background-color: rgb(250, 128, 114); }', 0);
+        styleSheet.insertRule('.maplibregl-canary { background-color: rgb(250, 128, 114); }', 0);
         window.document.styleSheets[0] = styleSheet;
         window.document.styleSheets.length = 1;
 
