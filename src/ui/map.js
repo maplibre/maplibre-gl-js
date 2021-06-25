@@ -2295,18 +2295,18 @@ class Map extends Camera {
 
     _setupContainer() {
         const container = this._container;
-        container.classList.add('mapboxgl-map');
+        container.classList.add('maplibregl-map');
 
-        const missingCSSCanary = this._missingCSSCanary = DOM.create('div', 'mapboxgl-canary', container);
+        const missingCSSCanary = this._missingCSSCanary = DOM.create('div', 'maplibregl-canary', container);
         missingCSSCanary.style.visibility = 'hidden';
         this._detectMissingCSS();
 
-        const canvasContainer = this._canvasContainer = DOM.create('div', 'mapboxgl-canvas-container', container);
+        const canvasContainer = this._canvasContainer = DOM.create('div', 'maplibregl-canvas-container', container);
         if (this._interactive) {
-            canvasContainer.classList.add('mapboxgl-interactive');
+            canvasContainer.classList.add('maplibregl-interactive');
         }
 
-        this._canvas = DOM.create('canvas', 'mapboxgl-canvas', canvasContainer);
+        this._canvas = DOM.create('canvas', 'maplibregl-canvas', canvasContainer);
         this._canvas.addEventListener('webglcontextlost', this._contextLost, false);
         this._canvas.addEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.setAttribute('tabindex', '0');
@@ -2316,10 +2316,10 @@ class Map extends Camera {
         const dimensions = this._containerDimensions();
         this._resizeCanvas(dimensions[0], dimensions[1]);
 
-        const controlContainer = this._controlContainer = DOM.create('div', 'mapboxgl-control-container', container);
+        const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
         const positions = this._controlPositions = {};
         ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach((positionName) => {
-            positions[positionName] = DOM.create('div', `mapboxgl-ctrl-${positionName}`, controlContainer);
+            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName}`, controlContainer);
         });
 
         this._container.addEventListener('scroll', this._onMapScroll, false);
@@ -2608,7 +2608,7 @@ class Map extends Camera {
         removeNode(this._canvasContainer);
         removeNode(this._controlContainer);
         removeNode(this._missingCSSCanary);
-        this._container.classList.remove('mapboxgl-map');
+        this._container.classList.remove('maplibregl-map');
 
         PerformanceUtils.clearMetrics();
 
@@ -2779,7 +2779,7 @@ function removeNode(node) {
  *
  * Controls must implement `onAdd` and `onRemove`, and must own an
  * element, which is often a `div` element. To use Mapbox GL JS's
- * default control styling, add the `mapboxgl-ctrl` class to your control's
+ * default control styling, add the `maplibregl-ctrl` class to your control's
  * node.
  *
  * @interface IControl
@@ -2789,7 +2789,7 @@ function removeNode(node) {
  *     onAdd(map) {
  *         this._map = map;
  *         this._container = document.createElement('div');
- *         this._container.className = 'mapboxgl-ctrl';
+ *         this._container.className = 'maplibregl-ctrl';
  *         this._container.textContent = 'Hello, world';
  *         return this._container;
  *     }
@@ -2806,7 +2806,7 @@ function removeNode(node) {
  * HelloWorldControl.prototype.onAdd = function(map) {
  *     this._map = map;
  *     this._container = document.createElement('div');
- *     this._container.className = 'mapboxgl-ctrl';
+ *     this._container.className = 'maplibregl-ctrl';
  *     this._container.textContent = 'Hello, world';
  *     return this._container;
  * };
