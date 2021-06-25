@@ -16,15 +16,13 @@ uniform highp float u_pitch;
 uniform bool u_rotate_symbol;
 uniform highp float u_aspect_ratio;
 uniform float u_fade_change;
-
 uniform mat4 u_matrix;
 uniform mat4 u_label_plane_matrix;
 uniform mat4 u_coord_matrix;
-
 uniform bool u_is_text;
 uniform bool u_pitch_with_map;
-
 uniform vec2 u_texsize;
+uniform highp sampler2D u_coords;
 
 varying vec2 v_tex;
 varying float v_fade_opacity;
@@ -92,5 +90,6 @@ void main() {
     v_tex = a_tex / u_texsize;
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
     float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
-    v_fade_opacity = max(0.0, min(1.0, fade_opacity[0] + fade_change));
+    float visibility = calculate_visibility(u_coords, projectedPoint, a_pos);
+    v_fade_opacity = max(0.0, min(visibility, fade_opacity[0] + fade_change));
 }

@@ -29,7 +29,8 @@ export type SymbolIconUniformsType = {|
     'u_is_text': Uniform1i,
     'u_pitch_with_map': Uniform1i,
     'u_texsize': Uniform2f,
-    'u_texture': Uniform1i
+    'u_texture': Uniform1i,
+    'u_coords': Uniform1i
 |};
 
 export type SymbolSDFUniformsType = {|
@@ -51,7 +52,8 @@ export type SymbolSDFUniformsType = {|
     'u_texture': Uniform1i,
     'u_gamma_scale': Uniform1f,
     'u_device_pixel_ratio': Uniform1f,
-    'u_is_halo': Uniform1i
+    'u_is_halo': Uniform1i,
+    'u_coords': Uniform1i
 |};
 
 export type symbolTextAndIconUniformsType = {|
@@ -75,7 +77,8 @@ export type symbolTextAndIconUniformsType = {|
     'u_texture_icon': Uniform1i,
     'u_gamma_scale': Uniform1f,
     'u_device_pixel_ratio': Uniform1f,
-    'u_is_halo': Uniform1i
+    'u_is_halo': Uniform1i,
+    'u_coords': Uniform1i
 |};
 
 const symbolIconUniforms = (context: Context, locations: UniformLocations): SymbolIconUniformsType => ({
@@ -94,7 +97,8 @@ const symbolIconUniforms = (context: Context, locations: UniformLocations): Symb
     'u_is_text': new Uniform1i(context, locations.u_is_text),
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
-    'u_texture': new Uniform1i(context, locations.u_texture)
+    'u_texture': new Uniform1i(context, locations.u_texture),
+    'u_coords': new Uniform1i(context, locations.u_coords)
 });
 
 const symbolSDFUniforms = (context: Context, locations: UniformLocations): SymbolSDFUniformsType => ({
@@ -116,7 +120,8 @@ const symbolSDFUniforms = (context: Context, locations: UniformLocations): Symbo
     'u_texture': new Uniform1i(context, locations.u_texture),
     'u_gamma_scale': new Uniform1f(context, locations.u_gamma_scale),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_is_halo': new Uniform1i(context, locations.u_is_halo)
+    'u_is_halo': new Uniform1i(context, locations.u_is_halo),
+    'u_coords': new Uniform1i(context, locations.u_coords)
 });
 
 const symbolTextAndIconUniforms = (context: Context, locations: UniformLocations): symbolTextAndIconUniformsType => ({
@@ -140,7 +145,8 @@ const symbolTextAndIconUniforms = (context: Context, locations: UniformLocations
     'u_texture_icon': new Uniform1i(context, locations.u_texture_icon),
     'u_gamma_scale': new Uniform1f(context, locations.u_gamma_scale),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_is_halo': new Uniform1i(context, locations.u_is_halo)
+    'u_is_halo': new Uniform1i(context, locations.u_is_halo),
+    'u_coords': new Uniform1i(context, locations.u_coords)
 });
 
 const symbolIconUniformValues = (
@@ -173,7 +179,8 @@ const symbolIconUniformValues = (
         'u_is_text': +isText,
         'u_pitch_with_map': +pitchWithMap,
         'u_texsize': texSize,
-        'u_texture': 0
+        'u_texture': 0,
+        'u_coords': 2
     };
 };
 

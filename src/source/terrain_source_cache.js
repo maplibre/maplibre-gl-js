@@ -9,8 +9,7 @@ import {Evented} from '../util/evented';
 import Style from '../style/style';
 import Texture from '../render/texture';
 import {RGBAImage} from '../util/image';
-import { extent } from 'd3';
-import DEMData from '../data/dem_data';
+import browser from '../util/browser';
 
 class TerrainSourceCache extends Evented {
 
@@ -25,7 +24,7 @@ class TerrainSourceCache extends Evented {
         this.minzoom = 5;
         this.maxzoom = 14;
         this.tileSize = 512;
-        this.meshSize = 32;
+        this.meshSize = 64;
     }
 
     setSourceCache(sourceCache: Source) {
@@ -96,13 +95,20 @@ class TerrainSourceCache extends Evented {
      * store all tile-coords in a framebuffer for unprojecting pixel coordinates
      * FIXME-3D resize texture on window-resize
      */
-    getCoordsFramebuffer(context: Context) {
+    getCoordsFramebuffer(painter: Painter) {
+        const width = painter.width / browser.devicePixelRatio;
+        const height = painter.height  / browser.devicePixelRatio;
+        if (this.fbo && (this.fbo.width != width || this.fbo.height != height)) {
+            this.fbo.destroy();
+            delete this.fbo;
+        }
         if (! this.fbo) {
-            context.activeTexture.set(context.gl.TEXTURE0);
-            let texture = new Texture(context, { width: 2024, height: 2024, data: null }, context.gl.RGBA, {premultiply: false});
-            texture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
-            this.fbo = context.createFramebuffer(2024, 2024, false);
+            painter.context.activeTexture.set(painter.context.gl.TEXTURE0);
+            let texture = new Texture(painter.context, { width: width, height: height, data: null }, painter.context.gl.RGBA, {premultiply: false});
+            texture.bind(painter.context.gl.NEAREST, painter.context.gl.CLAMP_TO_EDGE);
+            this.fbo = painter.context.createFramebuffer(width, height, true);
             this.fbo.colorAttachment.set(texture.texture);
+            this.fbo.depthAttachment.set(painter.context.createRenderbuffer(painter.context.gl.DEPTH_COMPONENT16, width, height));
         }
         return this.fbo;
     }

@@ -340,7 +340,6 @@ class Painter {
             const y = tileID.canonical.y - (tile.tileID.canonical.y << dz);
             const size = tile.fbo.width / (1 << dz);
             tile.needsRedraw = true;
-            tile.unprojectTileID = tileID;
             this.context.bindFramebuffer.set(tile.fbo.framebuffer);
             this.context.viewport.set([size * x, size * y, size, size]);
             return tile.tileID.posMatrix;
@@ -428,6 +427,7 @@ class Painter {
         }
 
         prepareTerrain(this, this.style.terrainSourceCache);
+        drawTerrainCoords(this, this.style.terrainSourceCache);
 
         // Offscreen pass ===============================================
         // We first do all rendering that requires rendering to a separate
@@ -495,12 +495,6 @@ class Painter {
         }
 
         drawTerrain(this, this.style.terrainSourceCache);
-
-        // redraw coords every 100ms for performance
-        if (this._drawTerrainCoordsTimeout) clearTimeout(this._drawTerrainCoordsTimeout);
-        this._drawTerrainCoordsTimeout = setTimeout(() => {
-            drawTerrainCoords(this, this.style.terrainSourceCache);
-        }, 100);
 
         if (this.options.showTileBoundaries) {
             //Use source with highest maxzoom

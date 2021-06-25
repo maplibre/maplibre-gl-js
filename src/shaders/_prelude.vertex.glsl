@@ -71,3 +71,28 @@ vec2 get_pattern_pos(const vec2 pixel_coord_upper, const vec2 pixel_coord_lower,
     vec2 offset = mod(mod(mod(pixel_coord_upper, pattern_size) * 256.0, pattern_size) * 256.0 + pixel_coord_lower, pattern_size);
     return (tile_units_to_pixels * pos + offset) / pattern_size;
 }
+
+float hasBit(float value, int pos) {
+    return floor(mod(floor(value / pow(2.0, float(pos))), 2.0));
+}
+
+// unpack a RGBA value from the the coords framebuffer into a vec2 in the range from 0 .. 8191
+vec2 unpackCoord(vec4 rgba) {
+    float r = floor(rgba.x * 255.0);
+    float g = floor(rgba.y * 255.0);
+    float b = floor(rgba.z * 255.0);
+    float a = floor(rgba.w * 255.0);
+    float x = hasBit(b, 2) * 1.0 + hasBit(b, 3) * 2.0  + hasBit(b, 4) * 4.0 + hasBit(b, 5) * 8.0 + hasBit(b, 6) * 16.0 + hasBit(b, 7) * 32.0 + hasBit(g, 0) * 64.0 + hasBit(g, 1) * 128.0 + hasBit(g, 2) * 258.0;
+    float y = hasBit(a, 1) * 1.0 + hasBit(a, 2) * 2.0  + hasBit(a, 3) * 4.0 + hasBit(a, 4) * 8.0 + hasBit(a, 5) * 16.0 + hasBit(a, 6) * 32.0 + hasBit(a, 7) * 64.0 + hasBit(b, 0) * 128.0 + hasBit(b, 1) * 258.0;
+    return vec2(x, y) / 511.0 * 8191.0;
+}
+
+// unpack a coord RGBA to vec2
+float calculate_visibility(sampler2D u_coords, vec4 pos, vec2 tilePos) {
+    vec3 frag = pos.xyz / pos.w;
+    vec2 coord = unpackCoord(texture2D(u_coords, frag.xy * 0.5 + 0.5));
+    vec2 delta = tilePos - coord;
+    float distance = sqrt(delta.x * delta.x + delta.y * delta.y);
+    if (distance < 100.0) return 1.0;
+    return 0.2;
+}

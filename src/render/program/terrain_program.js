@@ -14,7 +14,7 @@ export type TerrainUniformsType = {|
 
 const terrainUniforms = (context: Context, locations: UniformLocations): TerrainRasterUniformsType => ({
    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-   'u_texture': new Uniform1i(context, locations.u_image0)
+   'u_texture': new Uniform1i(context, locations.u_texture)
 });
 
 const terrainUniformValues = (matrix: Float32Array): UniformValues<TerrainRasterUniformsType> => ({

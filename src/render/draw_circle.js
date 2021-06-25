@@ -113,6 +113,9 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
         segmentsRenderStates.sort((a, b) => a.sortKey - b.sortKey);
     }
 
+    context.activeTexture.set(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, painter.style.terrainSourceCache.getCoordsFramebuffer(painter).colorAttachment.get());
+
     for (const segmentsState of segmentsRenderStates) {
         const {programConfiguration, program, layoutVertexBuffer, elevationVertexBuffer, indexBuffer, uniformValues} = segmentsState.state;
         const segments = segmentsState.segments;
