@@ -68,7 +68,7 @@
     "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-jsdoc": "^17.1.2",
     "eslint-plugin-react": "^7.12.4",
-    "esm": "~3.0.84",
+    "esm": "^3.2.25",
     "flow-bin": "^0.100.0",
     "gl": "^4.5.3",
     "glob": "^7.1.4",
