@@ -126,11 +126,13 @@ class Painter {
     emptyTexture: Texture;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
+    coordsBuffer: Object;
 
     constructor(gl: WebGLRenderingContext, transform: Transform) {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
+        this.coordsBuffer = { matrix: new Float64Array(16), renderTime: 0 };
 
         this.setup();
 
@@ -427,7 +429,14 @@ class Painter {
         }
 
         prepareTerrain(this, this.style.terrainSourceCache);
-        drawTerrainCoords(this, this.style.terrainSourceCache);
+
+        // update coords-framebuffer only on camera movement
+        const newTiles = this.style.terrainSourceCache.tilesForTime(this.coordsBuffer.renderTime);
+        if (!mat4.equals(this.coordsBuffer.matrix, this.transform.projMatrix) || newTiles.length) {
+            mat4.copy(this.coordsBuffer.matrix, this.transform.projMatrix);
+            this.coordsBuffer.renderTime = Date.now();
+            drawTerrainCoords(this, this.style.terrainSourceCache);
+        }
 
         // Offscreen pass ===============================================
         // We first do all rendering that requires rendering to a separate

@@ -114,12 +114,21 @@ class TerrainSourceCache extends Evented {
     }
 
     /**
+     * get a list of tiles, loaded after a spezific time
+     * @param {Date} time
+     */
+    tilesForTime(time=Date.now()) {
+        return Object.values(this._tiles).filter(t => t.loadTime >= time);
+    }
+
+    /**
      * after a tile is loaded:
      *  - recreate terrain-mesh webgl segments
-     *  - recalculate elevation of all symbols of all tiles
+     *  - recalculate elevation of all symbols/circles/buildings of all tiles
      * @param {Tile} tile
      */
     _tileLoaded(tile: Tile) {
+        tile.loadTime = Date.now();
         if (tile.state == "loaded") {
             if (this._sourceCache) this._sourceCache._backfillDEM.call(this, tile);
             // rerender tile incl. neighboring tiles
