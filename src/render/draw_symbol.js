@@ -116,12 +116,8 @@ function calculateVariableRenderShift(anchor, width, height, textOffset, textBox
 function updateElevation(coords, painter, layer, sourceCache) {
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
-        // FIXME-3D! normally the calculation of elevation has to be done only once,
-        // but there is a race-condition if vector tiles loads faster than terrain-tiles
-        // so recalculte elevation every rendering. Suprisingly it seems there is no
-        // performance issue.
-        // if (tile.hasElevation) continue;
         const bucket: SymbolBucket = (tile.getBucket(layer): any);
+        if (!bucket || tile.state != "loaded" || tile.elevation[layer.id]) continue;
         for (const type of ['text', 'icon']) {
             const placedSymbols = bucket && bucket[type] && bucket[type].placedSymbolArray;
             if (placedSymbols) {
@@ -138,7 +134,7 @@ function updateElevation(coords, painter, layer, sourceCache) {
                     bucket[type].elevationVertexBuffer.updateData(elevationVertexArray);
             }
         }
-        tile.hasElevation = true;
+        tile.elevation[layer.id] = true;
     }
 }
 

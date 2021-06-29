@@ -128,10 +128,11 @@ class TerrainSourceCache extends Evented {
                .map(id => this.getTileByID(id))
                .forEach(tile => { if (tile) tile.segments = null });
         }
+        // mark all tiles to refetch elevation-data
+        // FIXME! only mark necessary tiles
         for (let s in this._style.sourceCaches) {
            for (let key in this._style.sourceCaches[s]._tiles) {
-              let t = this._style.sourceCaches[s]._tiles[key];
-              if (t && t.hasSymbolBuckets) t.hasElevation = false;
+              this._style.sourceCaches[s]._tiles[key].elevation = {};
            }
         }
     }

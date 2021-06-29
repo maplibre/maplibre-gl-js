@@ -76,7 +76,7 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, depth
       }
       if (!tile.segments) {
          const vertexArray = new Pos3DArray(), indexArray = new TriangleIndexArray();
-         // create regular terrain-mesh. (e.g. 32 * 32 * 2 flat triangles)
+         // create regular terrain-mesh.
          const meshSize = sourceCache.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
          for (let y=0; y<=meshSize; y++) for (let x=0; x<=meshSize; x++)
             vertexArray.emplaceBack(x * delta, y * delta, Math.floor(sourceCache.getElevation(tileID, x, y, meshSize)));
