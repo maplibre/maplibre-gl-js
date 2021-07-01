@@ -16,7 +16,7 @@ function createMap(clickTolerance, dragPan) {
 const buttons = 1;
 
 test('DragPanHandler fires dragstart, drag, and dragend events at appropriate times in response to a mouse-triggered drag', (t) => {
-    const map = createMap(t);
+    const map = createMap();
 
     const dragstart = t.spy();
     const drag      = t.spy();
@@ -49,7 +49,7 @@ test('DragPanHandler fires dragstart, drag, and dragend events at appropriate ti
 });
 
 test('DragPanHandler captures mousemove events during a mouse-triggered drag (receives them even if they occur outside the map)', (t) => {
-    const map = createMap(t);
+    const map = createMap();
 
     const dragstart = t.spy();
     const drag      = t.spy();
@@ -82,7 +82,7 @@ test('DragPanHandler captures mousemove events during a mouse-triggered drag (re
 });
 
 test('DragPanHandler fires dragstart, drag, and dragend events at appropriate times in response to a touch-triggered drag', (t) => {
-    const map = createMap(t);
+    const map = createMap();
     const target = map.getCanvas();
 
     const dragstart = t.spy();
@@ -116,7 +116,7 @@ test('DragPanHandler fires dragstart, drag, and dragend events at appropriate ti
 });
 
 test('DragPanHandler prevents mousemove events from firing during a drag (#1555)', (t) => {
-    const map = createMap(t);
+    const map = createMap();
 
     const mousemove = t.spy();
     map.on('mousemove', mousemove);
@@ -137,7 +137,7 @@ test('DragPanHandler prevents mousemove events from firing during a drag (#1555)
 });
 
 test('DragPanHandler ends a mouse-triggered drag if the window blurs', (t) => {
-    const map = createMap(t);
+    const map = createMap();
 
     const dragend = t.spy();
     map.on('dragend', dragend);
@@ -156,7 +156,7 @@ test('DragPanHandler ends a mouse-triggered drag if the window blurs', (t) => {
 });
 
 test('DragPanHandler ends a touch-triggered drag if the window blurs', (t) => {
-    const map = createMap(t);
+    const map = createMap();
     const target = map.getCanvas();
 
     const dragend = t.spy();
@@ -176,7 +176,7 @@ test('DragPanHandler ends a touch-triggered drag if the window blurs', (t) => {
 });
 
 test('DragPanHandler requests a new render frame after each mousemove event', (t) => {
-    const map = createMap(t);
+    const map = createMap();
     const requestFrame = t.spy(map.handlers, '_requestFrame');
 
     simulate.mousedown(map.getCanvas());
@@ -196,7 +196,7 @@ test('DragPanHandler requests a new render frame after each mousemove event', (t
 
 test('DragPanHandler can interleave with another handler', (t) => {
     // https://github.com/mapbox/mapbox-gl-js/issues/6106
-    const map = createMap(t);
+    const map = createMap();
 
     const dragstart = t.spy();
     const drag      = t.spy();
@@ -243,7 +243,7 @@ test('DragPanHandler can interleave with another handler', (t) => {
 
 ['ctrl', 'shift'].forEach((modifier) => {
     test(`DragPanHandler does not begin a drag if the ${modifier} key is down on mousedown`, (t) => {
-        const map = createMap(t);
+        const map = createMap();
         t.ok(map.dragRotate.isEnabled());
 
         const dragstart = t.spy();
@@ -277,7 +277,7 @@ test('DragPanHandler can interleave with another handler', (t) => {
     });
 
     test(`DragPanHandler still ends a drag if the ${modifier} key is down on mouseup`, (t) => {
-        const map = createMap(t);
+        const map = createMap();
         t.ok(map.dragRotate.isEnabled());
 
         const dragstart = t.spy();
@@ -312,7 +312,7 @@ test('DragPanHandler can interleave with another handler', (t) => {
 });
 
 test('DragPanHandler does not begin a drag on right button mousedown', (t) => {
-    const map = createMap(t);
+    const map = createMap();
     map.dragRotate.disable();
 
     const dragstart = t.spy();
@@ -346,7 +346,7 @@ test('DragPanHandler does not begin a drag on right button mousedown', (t) => {
 });
 
 test('DragPanHandler does not end a drag on right button mouseup', (t) => {
-    const map = createMap(t);
+    const map = createMap();
     map.dragRotate.disable();
 
     const dragstart = t.spy();
@@ -398,7 +398,7 @@ test('DragPanHandler does not end a drag on right button mouseup', (t) => {
 });
 
 test('DragPanHandler does not begin a drag if preventDefault is called on the mousedown event', (t) => {
-    const map = createMap(t);
+    const map = createMap();
 
     map.on('mousedown', e => e.preventDefault());
 
@@ -428,7 +428,7 @@ test('DragPanHandler does not begin a drag if preventDefault is called on the mo
 });
 
 test('DragPanHandler does not begin a drag if preventDefault is called on the touchstart event', (t) => {
-    const map = createMap(t);
+    const map = createMap();
     const target = map.getCanvas();
 
     map.on('touchstart', e => e.preventDefault());
@@ -459,7 +459,7 @@ test('DragPanHandler does not begin a drag if preventDefault is called on the to
 });
 
 test('DragPanHandler does not begin a drag if preventDefault is called on the touchstart event (delegated)', (t) => {
-    const map = createMap(t);
+    const map = createMap();
     const target = map.getCanvas();
 
     t.stub(map, 'getLayer')

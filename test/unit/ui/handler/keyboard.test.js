@@ -12,7 +12,7 @@ function createMap(options) {
 }
 
 test('KeyboardHandler responds to keydown events', (t) => {
-    const map = createMap(t);
+    const map = createMap();
     const h = map.keyboard;
     t.spy(h, 'keydown');
 
@@ -23,7 +23,7 @@ test('KeyboardHandler responds to keydown events', (t) => {
 });
 
 test('KeyboardHandler pans map in response to arrow keys', (t) => {
-    const map = createMap(t, {zoom: 10, center: [0, 0]});
+    const map = createMap({zoom: 10, center: [0, 0]});
     t.spy(map, 'easeTo');
 
     simulate.keydown(map.getCanvas(), {keyCode: 32, key: " "});
@@ -57,7 +57,7 @@ test('KeyboardHandler pans map in response to arrow keys', (t) => {
 });
 
 test('KeyboardHandler pans map in response to arrow keys when disableRotation has been called', (t) => {
-    const map = createMap(t, {zoom: 10, center: [0, 0]});
+    const map = createMap({zoom: 10, center: [0, 0]});
     t.spy(map, 'easeTo');
     map.keyboard.disableRotation();
 
@@ -92,7 +92,7 @@ test('KeyboardHandler pans map in response to arrow keys when disableRotation ha
 });
 
 test('KeyboardHandler rotates map in response to Shift+left/right arrow keys', async (t) => {
-    const map = createMap(t, {zoom: 10, center: [0, 0], bearing: 0});
+    const map = createMap({zoom: 10, center: [0, 0], bearing: 0});
     t.spy(map, 'easeTo');
 
     simulate.keydown(map.getCanvas(), {keyCode: 32, key: " "});
@@ -115,7 +115,7 @@ test('KeyboardHandler rotates map in response to Shift+left/right arrow keys', a
 });
 
 test('KeyboardHandler does not rotate map in response to Shift+left/right arrow keys when disableRotation has been called', async (t) => {
-    const map = createMap(t, {zoom: 10, center: [0, 0], bearing: 0});
+    const map = createMap({zoom: 10, center: [0, 0], bearing: 0});
     t.spy(map, 'easeTo');
     map.keyboard.disableRotation();
 
@@ -139,7 +139,7 @@ test('KeyboardHandler does not rotate map in response to Shift+left/right arrow 
 });
 
 test('KeyboardHandler pitches map in response to Shift+up/down arrow keys', async (t) => {
-    const map = createMap(t, {zoom: 10, center: [0, 0], pitch: 30});
+    const map = createMap({zoom: 10, center: [0, 0], pitch: 30});
     t.spy(map, 'easeTo');
 
     simulate.keydown(map.getCanvas(), {keyCode: 32, key: " "});
@@ -162,7 +162,7 @@ test('KeyboardHandler pitches map in response to Shift+up/down arrow keys', asyn
 });
 
 test('KeyboardHandler does not pitch map in response to Shift+up/down arrow keys when disableRotation has been called', async (t) => {
-    const map = createMap(t, {zoom: 10, center: [0, 0], pitch: 30});
+    const map = createMap({zoom: 10, center: [0, 0], pitch: 30});
     t.spy(map, 'easeTo');
     map.keyboard.disableRotation();
 
@@ -186,7 +186,7 @@ test('KeyboardHandler does not pitch map in response to Shift+up/down arrow keys
 });
 
 test('KeyboardHandler zooms map in response to -/+ keys', (t) => {
-    const map = createMap(t, {zoom: 10, center: [0, 0]});
+    const map = createMap({zoom: 10, center: [0, 0]});
     t.spy(map, 'easeTo');
 
     simulate.keydown(map.getCanvas(), {keyCode: 187, key: "Equal"});
@@ -212,7 +212,7 @@ test('KeyboardHandler zooms map in response to -/+ keys', (t) => {
 });
 
 test('KeyboardHandler zooms map in response to -/+ keys when disableRotation has been called', (t) => {
-    const map = createMap(t, {zoom: 10, center: [0, 0]});
+    const map = createMap({zoom: 10, center: [0, 0]});
     t.spy(map, 'easeTo');
     map.keyboard.disableRotation();
 

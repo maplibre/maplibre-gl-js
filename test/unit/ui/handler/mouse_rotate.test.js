@@ -11,7 +11,7 @@ function createMap(options) {
 }
 
 test('MouseRotateHandler#isActive', (t) => {
-    const map = createMap(t);
+    const map = createMap();
     const mouseRotate = map.handlers._handlersById.mouseRotate;
 
     // Prevent inertial rotation.
@@ -35,7 +35,7 @@ test('MouseRotateHandler#isActive', (t) => {
 });
 
 test('MouseRotateHandler#isActive #4622 regression test', (t) => {
-    const map = createMap(t);
+    const map = createMap();
     const mouseRotate = map.handlers._handlersById.mouseRotate;
 
     // Prevent inertial rotation.
