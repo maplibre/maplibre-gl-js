@@ -6,7 +6,7 @@ import DOM from '../../../../src/util/dom';
 import simulate from '../../../util/simulate_interaction';
 import browser from '../../../../src/util/browser';
 
-function createMap(t, options) {
+function createMap(options) {
     return new Map(extend({container: DOM.create('div', '', window.document.body)}, options));
 }
 
