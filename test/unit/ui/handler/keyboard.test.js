@@ -5,7 +5,7 @@ import window from '../../../../src/util/window';
 import simulate from '../../../util/simulate_interaction';
 import {extend} from '../../../../src/util/util';
 
-function createMap(options) {
+function createMap(t, options) {
     return new Map(extend({
         container: DOM.create('div', '', window.document.body),
     }, options));
