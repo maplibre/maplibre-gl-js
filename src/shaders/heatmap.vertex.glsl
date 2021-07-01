@@ -1,3 +1,4 @@
+export default `
 
 uniform mat4 u_matrix;
 uniform float u_extrude_scale;
@@ -52,3 +53,4 @@ void main(void) {
 
     gl_Position = u_matrix * pos;
 }
+`;

@@ -1,3 +1,4 @@
+export default `
 uniform mat4 u_matrix;
 uniform vec2 u_dimension;
 
@@ -13,3 +14,4 @@ void main() {
     float scale = (u_dimension.x - 2.0) / u_dimension.x;
     v_pos = (a_texture_pos / 8192.0) * scale + epsilon;
 }
+`;

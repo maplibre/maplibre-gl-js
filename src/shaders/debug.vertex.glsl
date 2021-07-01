@@ -1,3 +1,4 @@
+export default `
 attribute vec2 a_pos;
 varying vec2 v_uv;
 
@@ -10,3 +11,4 @@ void main() {
     v_uv = a_pos / 8192.0;
     gl_Position = u_matrix * vec4(a_pos * u_overlay_scale, 0, 1);
 }
+`;

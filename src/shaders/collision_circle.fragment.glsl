@@ -1,3 +1,4 @@
+export default `
 varying float v_radius;
 varying vec2 v_extrude;
 varying float v_perspective_ratio;
@@ -15,3 +16,4 @@ void main() {
 
     gl_FragColor = color * alpha * opacity_t;
 }
+`;

@@ -1,3 +1,4 @@
+export default `
 #define SDF_PX 8.0
 
 #define SDF 1.0
@@ -66,3 +67,4 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
+`;

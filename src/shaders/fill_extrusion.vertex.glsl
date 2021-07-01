@@ -1,3 +1,4 @@
+export default `
 uniform mat4 u_matrix;
 uniform vec3 u_lightcolor;
 uniform lowp vec3 u_lightpos;
@@ -64,3 +65,4 @@ void main() {
     v_color.b += clamp(color.b * directional * u_lightcolor.b, mix(0.0, 0.3, 1.0 - u_lightcolor.b), 1.0);
     v_color *= u_opacity;
 }
+`;

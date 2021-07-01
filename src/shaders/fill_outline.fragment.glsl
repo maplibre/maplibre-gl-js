@@ -1,3 +1,4 @@
+export default `
 varying vec2 v_pos;
 
 #pragma mapbox: define highp vec4 outline_color
@@ -15,3 +16,4 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
+`;

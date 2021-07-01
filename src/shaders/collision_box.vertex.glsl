@@ -1,3 +1,4 @@
+export default `
 attribute vec2 a_pos;
 attribute vec2 a_anchor_pos;
 attribute vec2 a_extrude;
@@ -25,3 +26,4 @@ void main() {
     v_placed = a_placed.x;
     v_notUsed = a_placed.y;
 }
+`;

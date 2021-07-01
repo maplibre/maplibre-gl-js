@@ -1,3 +1,4 @@
+export default `
 varying vec3 v_data;
 
 #pragma mapbox: define highp vec4 color
@@ -37,3 +38,4 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
+`;

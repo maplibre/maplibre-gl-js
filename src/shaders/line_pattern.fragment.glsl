@@ -1,3 +1,4 @@
+export default `
 uniform lowp float u_device_pixel_ratio;
 uniform vec2 u_texsize;
 uniform float u_fade;
@@ -72,3 +73,4 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
+`;

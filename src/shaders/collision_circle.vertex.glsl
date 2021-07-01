@@ -1,3 +1,4 @@
+export default `
 attribute vec2 a_pos;
 attribute float a_radius;
 attribute vec2 a_flags;
@@ -57,3 +58,4 @@ void main() {
 
     gl_Position = vec4(clipPos.xyz / clipPos.w, 1.0) + vec4(quadVertexExtent * padding_factor / u_viewport_size * 2.0, 0.0, 0.0);
 }
+`;

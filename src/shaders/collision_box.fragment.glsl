@@ -1,3 +1,4 @@
+export default `
 
 varying float v_placed;
 varying float v_notUsed;
@@ -19,3 +20,4 @@ void main() {
         gl_FragColor *= .1;
     }
 }
+`;

@@ -1,3 +1,4 @@
+export default `
 uniform highp float u_intensity;
 
 varying vec2 v_extrude;
@@ -20,3 +21,4 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
+`;

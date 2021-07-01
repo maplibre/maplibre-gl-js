@@ -1,3 +1,4 @@
+export default `
 uniform mat4 u_matrix;
 uniform vec2 u_pixel_coord_upper;
 uniform vec2 u_pixel_coord_lower;
@@ -77,3 +78,4 @@ void main() {
     v_lighting.rgb += clamp(directional * u_lightcolor, mix(vec3(0.0), vec3(0.3), 1.0 - u_lightcolor), vec3(1.0));
     v_lighting *= u_opacity;
 }
+`;
