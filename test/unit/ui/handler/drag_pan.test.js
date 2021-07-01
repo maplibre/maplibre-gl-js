@@ -5,7 +5,6 @@ import DOM from '../../../../src/util/dom';
 import simulate from '../../../util/simulate_interaction';
 
 function createMap(t, clickTolerance, dragPan) {
-    t.stub(Map.prototype, '_detectMissingCSS');
     return new Map({
         container: DOM.create('div', '', window.document.body),
         clickTolerance: clickTolerance || 0,

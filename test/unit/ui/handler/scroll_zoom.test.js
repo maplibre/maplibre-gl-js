@@ -8,7 +8,6 @@ import {equalWithPrecision} from '../../../util';
 import sinon from 'sinon';
 
 function createMap(t) {
-    t.stub(Map.prototype, '_detectMissingCSS');
     return new Map({
         container: DOM.create('div', '', window.document.body),
         style: {
