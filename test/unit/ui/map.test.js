@@ -131,7 +131,6 @@ test('Map', (t) => {
     });
 
     t.test('emits load event after a style is set', (t) => {
-        t.stub(Map.prototype, '_detectMissingCSS');
         const map = new Map({container: window.document.createElement('div')});
 
         map.on('load', fail);
@@ -148,7 +147,6 @@ test('Map', (t) => {
 
     t.test('#setStyle', (t) => {
         t.test('returns self', (t) => {
-            t.stub(Map.prototype, '_detectMissingCSS');
             const map = new Map({container: window.document.createElement('div')});
             t.equal(map.setStyle({
                 version: 8,
@@ -227,7 +225,6 @@ test('Map', (t) => {
         });
 
         t.test('style transform overrides unmodified map transform', (t) => {
-            t.stub(Map.prototype, '_detectMissingCSS');
             const map = new Map({container: window.document.createElement('div')});
             map.transform.lngRange = [-120, 140];
             map.transform.latRange = [-60, 80];
@@ -245,7 +242,6 @@ test('Map', (t) => {
         });
 
         t.test('style transform does not override map transform modified via options', (t) => {
-            t.stub(Map.prototype, '_detectMissingCSS');
             const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]});
             t.notOk(map.transform.unmodified, 'map transform is modified by options');
             map.setStyle(createStyle());
@@ -259,7 +255,6 @@ test('Map', (t) => {
         });
 
         t.test('style transform does not override map transform modified via setters', (t) => {
-            t.stub(Map.prototype, '_detectMissingCSS');
             const map = new Map({container: window.document.createElement('div')});
             t.ok(map.transform.unmodified);
             map.setZoom(10);
@@ -290,7 +285,6 @@ test('Map', (t) => {
 
     t.test('#setTransformRequest', (t) => {
         t.test('returns self', (t) => {
-            t.stub(Map.prototype, '_detectMissingCSS');
             const transformRequest = () => { };
             const map = new Map({container: window.document.createElement('div')});
             t.equal(map.setTransformRequest(transformRequest), map);
@@ -2060,7 +2054,6 @@ test('Map', (t) => {
         const stub = t.stub(console, 'warn');
 
         const styleSheet = new window.CSSStyleSheet();
-        styleSheet.insertRule('.mapboxgl-canary { background-color: rgb(250, 128, 114); }', 0);
         window.document.styleSheets[0] = styleSheet;
         window.document.styleSheets.length = 1;
 

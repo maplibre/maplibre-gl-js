@@ -6,7 +6,6 @@ import simulate from '../../../util/simulate_interaction';
 import {extend} from '../../../../src/util/util';
 
 function createMap(t, options) {
-    t.stub(Map.prototype, '_detectMissingCSS');
     return new Map(extend({
         container: DOM.create('div', '', window.document.body),
     }, options));
