@@ -76,11 +76,11 @@ test('Map', (t) => {
     t.test('initial bounds options in constructor options', (t) => {
         const bounds = [[-133, 16], [-68, 50]];
 
-        const map = (fitBoundsOptions, skipCSSStub) => {
+        const map = (fitBoundsOptions) => {
             const container = window.document.createElement('div');
             Object.defineProperty(container, 'offsetWidth', {value: 512});
             Object.defineProperty(container, 'offsetHeight', {value: 512});
-            return createMap(t, {skipCSSStub, container, bounds, fitBoundsOptions});
+            return createMap(t, {container, bounds, fitBoundsOptions});
         };
 
         const unpadded = map(undefined, false);
@@ -623,7 +623,7 @@ test('Map', (t) => {
             [ 70.31249999999977, 57.32652122521695 ] ]));
 
         t.test('rotated bounds', (t) => {
-            const map = createMap(t, {zoom: 1, bearing: 45, skipCSSStub: true});
+            const map = createMap(t, {zoom: 1, bearing: 45});
             t.deepEqual(
                 toFixed([[-49.718445552178764, -44.44541580601936], [49.7184455522, 44.445415806019355]]),
                 toFixed(map.getBounds().toArray())
