@@ -2050,28 +2050,6 @@ test('Map', (t) => {
         t.end();
     });
 
-    t.test('should not warn when CSS is present', (t) => {
-        const stub = t.stub(console, 'warn');
-
-        const styleSheet = new window.CSSStyleSheet();
-        window.document.styleSheets[0] = styleSheet;
-        window.document.styleSheets.length = 1;
-
-        new Map({container: window.document.createElement('div')});
-
-        t.notok(stub.calledOnce);
-        t.end();
-    });
-
-    t.test('should warn when CSS is missing', (t) => {
-        const stub = t.stub(console, 'warn');
-        new Map({container: window.document.createElement('div')});
-
-        t.ok(stub.calledOnce);
-
-        t.end();
-    });
-
     t.test('continues camera animation on resize', (t) => {
         const map = createMap(t),
             container = map.getContainer();
