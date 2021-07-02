@@ -7,8 +7,7 @@ import simulate from '../../../util/simulate_interaction';
 import {equalWithPrecision} from '../../../util';
 import sinon from 'sinon';
 
-function createMap(t) {
-    t.stub(Map.prototype, '_detectMissingCSS');
+function createMap() {
     return new Map({
         container: DOM.create('div', '', window.document.body),
         style: {

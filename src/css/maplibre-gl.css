@@ -16,10 +16,6 @@
     height: 100%;
 }
 
-.maplibregl-canary {
-    background-color: salmon;
-}
-
 .maplibregl-canvas-container.maplibregl-interactive,
 .maplibregl-ctrl-group button.maplibregl-ctrl-compass {
     cursor: -webkit-grab;

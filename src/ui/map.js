@@ -270,7 +270,6 @@ class Map extends Camera {
     handlers: HandlerManager;
 
     _container: HTMLElement;
-    _missingCSSCanary: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
@@ -2283,25 +2282,11 @@ class Map extends Camera {
         return [width, height];
     }
 
-    _detectMissingCSS(): void {
-        const computedColor = window.getComputedStyle(this._missingCSSCanary).getPropertyValue('background-color');
-        if (computedColor !== 'rgb(250, 128, 114)') {
-            warnOnce('This page appears to be missing CSS declarations for ' +
-                'MapLibre GL JS, which may cause the map to display incorrectly. ' +
-                'Please ensure your page includes maplibre-gl.css, as described ' +
-                'in https://maplibre.org/maplibre-gl-js-docs/api/.');
-        }
-    }
-
     _setupContainer() {
         const container = this._container;
         container.classList.add('maplibregl-map');
 
-        const missingCSSCanary = this._missingCSSCanary = DOM.create('div', 'maplibregl-canary', container);
-        missingCSSCanary.style.visibility = 'hidden';
-        this._detectMissingCSS();
-
-        const canvasContainer = this._canvasContainer = DOM.create('div', 'maplibregl-canvas-container', container);
+        const canvasContainer = this._canvasContainer = DOM.create('div', 'mapboxgl-canvas-container', container);
         if (this._interactive) {
             canvasContainer.classList.add('maplibregl-interactive');
         }
@@ -2607,7 +2592,6 @@ class Map extends Camera {
         if (extension) extension.loseContext();
         removeNode(this._canvasContainer);
         removeNode(this._controlContainer);
-        removeNode(this._missingCSSCanary);
         this._container.classList.remove('maplibregl-map');
 
         PerformanceUtils.clearMetrics();
