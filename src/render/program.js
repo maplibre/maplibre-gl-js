@@ -1,6 +1,6 @@
 // @flow
 
-import {prelude} from '../shaders/shaders.js';
+import {prelude} from '../shaders/shaders';
 import assert from 'assert';
 import ProgramConfiguration from '../data/program_configuration';
 import VertexArrayObject from './vertex_array_object';
