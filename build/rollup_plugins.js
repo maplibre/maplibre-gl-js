@@ -63,7 +63,9 @@ function glsl(include, minify) {
 
             // barebones GLSL minification
             if (minify) {
-                code = code.trim() // strip whitespace at the start/end
+                code = code.replace(/export default `/g, '') // strip export wrapper (start) required for es6 module creation
+                    .replace(/`;/g, '') // strip export wrapper (end) required for es6 module creation
+                    .trim() // strip whitespace at the start/end
                     .replace(/\s*\/\/[^\n]*\n/g, '\n') // strip double-slash comments
                     .replace(/\n+/g, '\n') // collapse multi line breaks
                     .replace(/\n\s+/g, '\n') // strip identation
