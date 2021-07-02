@@ -21,10 +21,12 @@ class TerrainSourceCache extends Evented {
         this._coordsIndex = {};
         this._loadQueue = [];
         this._coordsFramebuffer = null;
+        this._rerender = true;
         this.minzoom = 5;
         this.maxzoom = 14;
         this.tileSize = 512;
-        this.meshSize = 64;
+        this.meshSize = 32;
+        style.on("data", () => this._rerender = true);
     }
 
     setSourceCache(sourceCache: Source) {
@@ -165,6 +167,7 @@ class TerrainSourceCache extends Evented {
            data[i + 0] = tile._coordsIndex >> 5;
         }
         tile.coords = new RGBAImage({width: this.tileSize, height: this.tileSize}, new Uint8Array(data.buffer));
+        tile.textures = [];
         return tile;
     }
 

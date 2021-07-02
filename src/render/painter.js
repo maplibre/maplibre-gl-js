@@ -36,7 +36,7 @@ import raster from './draw_raster';
 import background from './draw_background';
 import debug, {drawDebugPadding} from './draw_debug';
 import custom from './draw_custom';
-import {prepareTerrain, drawTerrain, drawTerrainCoords} from './draw_terrain';
+import {clearTerrain, prepareTerrain, drawTerrain, drawTerrainCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 
 const draw = {
@@ -341,7 +341,6 @@ class Painter {
             const x = tileID.canonical.x - (tile.tileID.canonical.x << dz);
             const y = tileID.canonical.y - (tile.tileID.canonical.y << dz);
             const size = tile.fbo.width / (1 << dz);
-            tile.needsRedraw = true;
             this.context.bindFramebuffer.set(tile.fbo.framebuffer);
             this.context.viewport.set([size * x, size * y, size, size]);
             return tile.tileID.posMatrix;
@@ -427,7 +426,10 @@ class Painter {
                 break;
             }
         }
+        // disable opaque rendering until terrain is disable
+        this.opaquePassCutoff = 0;
 
+        this.batch = 0;
         prepareTerrain(this, this.style.terrainSourceCache);
 
         // update coords-framebuffer only on camera movement
@@ -466,44 +468,67 @@ class Painter {
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
-        this.renderPass = 'opaque';
+        if (this.opaquePassCutoff > 0) {
+            this.renderPass = 'opaque';
 
-        for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
-            const layer = this.style._layers[layerIds[this.currentLayer]];
-            const sourceCache = sourceCaches[layer.source];
-            const coords = coordsAscending[layer.source];
+            for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
+                const layer = this.style._layers[layerIds[this.currentLayer]];
+                const sourceCache = sourceCaches[layer.source];
+                const coords = coordsAscending[layer.source];
 
-            this._renderTileClippingMasks(layer, coords);
-            this.renderLayer(this, sourceCache, layer, coords);
+                this._renderTileClippingMasks(layer, coords);
+                this.renderLayer(this, sourceCache, layer, coords);
+            }
         }
 
         // Translucent pass ===============================================
         // Draw all other layers bottom-to-top.
         this.renderPass = 'translucent';
-
-        let prevLayerType = "";
+        let prevType = null;
+        const rerender = this.style.terrainSourceCache._rerender || this.style._modified;
+        let renderToTexture = { background: true, fill: true, line: true, raster: true };
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
-
-            // symbols are renderd directly onto the screen
-            // so draw the current terrain-framebuffer below the symbols
-            if (layer.type == 'symbol' && prevLayerType != "symbol") {
-               drawTerrain(this, this.style.terrainSourceCache);
-               prepareTerrain(this, this.style.terrainSourceCache, 0);
-            }
-            prevLayerType = layer.type;
+            const type = layer.type;
 
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
             // separate clipping masks
-            const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
+            let coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
+
+            // render background, fill, line & raster layer into texture
+            if (renderToTexture[type]) {
+                if (prevType == 'hillshade') drawTerrain(this, this.style.terrainSourceCache);
+                if (prevType && !renderToTexture[prevType]) {
+                    this.batch++;
+                    prepareTerrain(this, this.style.terrainSourceCache);
+                    if (rerender) clearTerrain(this, this.style.terrainSourceCache);
+                }
+                prevType = type;
+                if (!rerender) continue;
+
+            // render hillshading-texture to separate mesh-texture
+            // FIXME-3D! render hillshading-texture direct to screen for performance
+            } else if (type == 'hillshade') {
+                if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
+                this.batch++;
+                prepareTerrain(this, this.style.terrainSourceCache);
+                clearTerrain(this, this.style.terrainSourceCache);
+                prevType = type;
+
+            // render all other layers direct to screen
+            } else {
+                if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
+                prevType = type;
+            }
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source]);
             this.renderLayer(this, sourceCache, layer, coords);
         }
 
-        drawTerrain(this, this.style.terrainSourceCache);
+        if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
+        this.style.terrainSourceCache._rerender = false;
 
         if (this.options.showTileBoundaries) {
             //Use source with highest maxzoom
