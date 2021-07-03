@@ -266,12 +266,12 @@ test('GeolocateControl watching map updates recenter on location with dot', (t) 
 
         t.deepEqual(lngLatAsFixed(map.getCenter(), 4), {lat: 10, lng: 20}, 'map centered on location after 1st update');
         t.ok(geolocate._userLocationDotMarker._map, 'userLocation dot marker on map');
-        t.false(geolocate._userLocationDotMarker._element.classList.contains('mapboxgl-user-location-dot-stale'), 'userLocation does not have stale class');
+        t.false(geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale'), 'userLocation does not have stale class');
         map.once('moveend', () => {
             t.deepEqual(lngLatAsFixed(map.getCenter(), 4), {lat: 40, lng: 50}, 'map centered on location after 2nd update');
             geolocate.once('error', () => {
                 t.ok(geolocate._userLocationDotMarker._map, 'userLocation dot  marker on map');
-                t.ok(geolocate._userLocationDotMarker._element.classList.contains('mapboxgl-user-location-dot-stale'), 'userLocation has stale class');
+                t.ok(geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale'), 'userLocation has stale class');
                 t.end();
             });
             geolocation.changeError({code: 2, message: 'position unavaliable'});

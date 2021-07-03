@@ -11,7 +11,7 @@ import {createFilter} from 'rollup-pluginutils';
 import strip from '@rollup/plugin-strip';
 
 // Common set of plugins/transformations shared across different rollup
-// builds (main mapboxgl bundle, style-spec package, benchmarks bundle)
+// builds (main maplibre bundle, style-spec package, benchmarks bundle)
 
 export const plugins = (minified, production) => [
     flow(),

@@ -3,6 +3,16 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+
+### 🐞 Bug fixes
+
+- *...Add fixed bugs here...*
+
+## 1.15.0
+
+### Features and improvements
+
+- ** Breaking Change: ** Rename css classes ((#83)[https://github.com/maplibre/maplibre-gl-js/issues/83])
 - Added custom protocol support to allow overriding ajax calls ((#29)[https://github.com/maplibre/maplibre-gl-js/issues/29])
 - Added setTransformRequest to map (#159)
 - Publish @maplibre/maplibre-gl-style-spec v14.0.0 on NPM (#149)
@@ -16,7 +26,6 @@
 
 ### 🐞 Bug fixes
 
-- *...Add fixed bugs here...*
 - Prevented attribution button from submiting form (#178)
 
 ## 1.14.0

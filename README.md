@@ -12,10 +12,13 @@ If you depend on mapbox-gl directly, simply replace `mapbox-gl` with `maplibre-g
   }
 ```
 
-And replace ```mapboxgl``` with ```maplibregl``` in your JavaScript code:
+And replace ```mapboxgl``` with ```maplibregl``` in your JavaScript/HTML/CSS code:
 ```diff
 -    var map = new mapboxgl.Map({
 +    var map = new maplibregl.Map({
+
+-    <button class="mapboxgl-ctrl">
++    <button class="maplibregl-ctrl">
 ```
 
 Want an example? [Try out MapLibre GL on CodePen](https://codepen.io/klokan/pen/WNoZRyx) and have a look at ones in the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js-docs/example/).

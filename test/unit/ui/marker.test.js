@@ -76,7 +76,7 @@ test('Marker#addTo adds the marker element to the canvas container', (t) => {
         .setLngLat([-77.01866, 38.888])
         .addTo(map);
 
-    t.equal(map.getCanvasContainer().querySelectorAll('.mapboxgl-marker').length, 1);
+    t.equal(map.getCanvasContainer().querySelectorAll('.maplibregl-marker').length, 1);
 
     map.remove();
     t.end();
@@ -220,7 +220,7 @@ test('Marker anchor defaults to center', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.ok(marker.getElement().classList.contains('mapboxgl-marker-anchor-center'));
+    t.ok(marker.getElement().classList.contains('maplibregl-marker-anchor-center'));
     t.match(marker.getElement().style.transform, /translate\(-50%,-50%\)/);
 
     map.remove();
@@ -233,7 +233,7 @@ test('Marker anchors as specified by the anchor option', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.ok(marker.getElement().classList.contains('mapboxgl-marker-anchor-top'));
+    t.ok(marker.getElement().classList.contains('maplibregl-marker-anchor-top'));
     t.match(marker.getElement().style.transform, /translate\(-50%,0\)/);
 
     map.remove();
@@ -296,35 +296,35 @@ test('Popup anchors around default Marker', (t) => {
     Object.defineProperty(marker.getPopup()._container, 'offsetHeight', {value: 100});
 
     // marker should default to above since it has enough space
-    t.ok(marker.getPopup()._container.classList.contains('mapboxgl-popup-anchor-bottom'), 'popup anchors above marker');
+    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom'), 'popup anchors above marker');
 
     // move marker to the top forcing the popup to below
     marker.setLngLat(map.unproject([mapHeight / 2, markerTop]));
-    t.ok(marker.getPopup()._container.classList.contains('mapboxgl-popup-anchor-top'), 'popup anchors below marker');
+    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top'), 'popup anchors below marker');
 
     // move marker to the right forcing the popup to the left
     marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight / 2]));
-    t.ok(marker.getPopup()._container.classList.contains('mapboxgl-popup-anchor-right'), 'popup anchors left of marker');
+    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-right'), 'popup anchors left of marker');
 
     // move marker to the left forcing the popup to the right
     marker.setLngLat(map.unproject([markerRight, mapHeight / 2]));
-    t.ok(marker.getPopup()._container.classList.contains('mapboxgl-popup-anchor-left'), 'popup anchors right of marker');
+    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-left'), 'popup anchors right of marker');
 
     // move marker to the top left forcing the popup to the bottom right
     marker.setLngLat(map.unproject([markerRight, markerTop]));
-    t.ok(marker.getPopup()._container.classList.contains('mapboxgl-popup-anchor-top-left'), 'popup anchors bottom right of marker');
+    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-left'), 'popup anchors bottom right of marker');
 
     // move marker to the top right forcing the popup to the bottom left
     marker.setLngLat(map.unproject([mapHeight - markerRight, markerTop]));
-    t.ok(marker.getPopup()._container.classList.contains('mapboxgl-popup-anchor-top-right'), 'popup anchors bottom left of marker');
+    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-right'), 'popup anchors bottom left of marker');
 
     // move marker to the bottom left forcing the popup to the top right
     marker.setLngLat(map.unproject([markerRight, mapHeight]));
-    t.ok(marker.getPopup()._container.classList.contains('mapboxgl-popup-anchor-bottom-left'), 'popup anchors top right of marker');
+    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-left'), 'popup anchors top right of marker');
 
     // move marker to the bottom right forcing the popup to the top left
     marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight]));
-    t.ok(marker.getPopup()._container.classList.contains('mapboxgl-popup-anchor-bottom-right'), 'popup anchors top left of marker');
+    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right'), 'popup anchors top left of marker');
 
     t.end();
 });
