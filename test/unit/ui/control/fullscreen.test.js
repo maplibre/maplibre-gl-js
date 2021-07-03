@@ -10,7 +10,7 @@ test('FullscreenControl appears when fullscreen is enabled', (t) => {
     const fullscreen = new FullscreenControl();
     map.addControl(fullscreen);
 
-    t.equal(map.getContainer().querySelectorAll('.mapboxgl-ctrl-fullscreen').length, 1);
+    t.equal(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen').length, 1);
     t.end();
 });
 
@@ -23,7 +23,7 @@ test('FullscreenControl does not appear when fullscreen is not enabled', (t) => 
     const fullscreen = new FullscreenControl();
     map.addControl(fullscreen);
 
-    t.equal(map.getContainer().querySelectorAll('.mapboxgl-ctrl-fullscreen').length, 0);
+    t.equal(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen').length, 0);
     t.equal(consoleWarn.getCall(0).args[0], 'This device does not support fullscreen mode.');
     t.end();
 });
