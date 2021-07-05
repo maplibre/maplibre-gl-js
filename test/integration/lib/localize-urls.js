@@ -1,9 +1,16 @@
 /* eslint-disable import/no-commonjs */
-const path = require('path');
-const fs = require('fs');
-const colors = require('chalk');
 
-module.exports = function localizeURLs(style, port) {
+import path from 'path';
+import fs from 'fs';
+import colors from 'chalk';
+
+import {fileURLToPath} from 'url';
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+import {createRequire} from 'module';
+const require = createRequire(import.meta.url);
+
+export default function localizeURLs(style, port) {
     localizeStyleURLs(style, port);
     if (style.metadata && style.metadata.test && style.metadata.test.operations) {
         style.metadata.test.operations.forEach((op) => {
@@ -42,7 +49,7 @@ module.exports = function localizeURLs(style, port) {
             }
         });
     }
-};
+}
 
 function localizeURL(url, port) {
     return url.replace(/^local:\/\//, `http://localhost:${port}/`);

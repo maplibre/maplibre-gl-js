@@ -1,4 +1,3 @@
-export default `
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define lowp float opacity
 
@@ -12,4 +11,3 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
-`;

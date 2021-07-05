@@ -1,5 +1,5 @@
-const octokit = require('@octokit/rest')();
-const fs = require('fs');
+import octokit from '@octokit/rest';
+import fs from 'fs';
 
 const list = {};
 

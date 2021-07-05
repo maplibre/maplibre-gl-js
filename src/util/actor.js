@@ -1,12 +1,12 @@
 // @flow
 
-import {bindAll, isWorker, isSafari} from './util';
-import window from './window';
-import {serialize, deserialize} from './web_worker_transfer';
-import ThrottledInvoker from './throttled_invoker';
+import {bindAll, isWorker, isSafari} from './util.js';
+import window from './window.js';
+import {serialize, deserialize} from './web_worker_transfer.js';
+import ThrottledInvoker from './throttled_invoker.js';
 
-import type {Transferable} from '../types/transferable';
-import type {Cancelable} from '../types/cancelable';
+import type {Transferable} from '../types/transferable.js';
+import type {Cancelable} from '../types/cancelable.js';
 
 /**
  * An implementation of the [Actor design pattern](http://en.wikipedia.org/wiki/Actor_model)

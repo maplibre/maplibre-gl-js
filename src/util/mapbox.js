@@ -13,19 +13,18 @@
 * and the Mapbox Terms of Service are available at https://www.mapbox.com/tos/
 ******************************************************************************/
 
-import config from './config';
-
-import browser from './browser';
-import window from './window';
-import webpSupported from './webp_supported';
-import {createSkuToken, SKU_ID} from './sku_token';
+import config from './config.js';
+import browser from './browser.js';
+import window from './window.js';
+import webpSupported from './webp_supported.js';
+import {createSkuToken, SKU_ID} from './sku_token.js';
 import {version as sdkVersion} from '../../package.json';
-import {uuid, validateUuid, storageAvailable, b64DecodeUnicode, b64EncodeUnicode, warnOnce, extend} from './util';
-import {postData, ResourceType} from './ajax';
+import {uuid, validateUuid, storageAvailable, b64DecodeUnicode, b64EncodeUnicode, warnOnce, extend} from './util.js';
+import {postData, ResourceType} from './ajax.js';
 
-import type {RequestParameters} from './ajax';
-import type {Cancelable} from '../types/cancelable';
-import type {TileJSON} from '../types/tilejson';
+import type {RequestParameters} from './ajax.js';
+import type {Cancelable} from '../types/cancelable.js';
+import type {TileJSON} from '../types/tilejson.js';
 
 type ResourceTypeEnum = $Keys<typeof ResourceType>;
 export type RequestTransformFunction = (url: string, resourceType?: ResourceTypeEnum) => RequestParameters;

@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import {PNG} from 'pngjs';
-import harness from './harness';
+import harness from './harness.js';
 import pixelmatch from 'pixelmatch';
 import * as glob from 'glob';
 

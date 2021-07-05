@@ -1,4 +1,3 @@
-export default `
 uniform lowp float u_device_pixel_ratio;
 
 varying vec2 v_width2;
@@ -29,4 +28,3 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
-`;

@@ -1,4 +1,3 @@
-export default `
 uniform mat4 u_matrix;
 uniform bool u_scale_with_map;
 uniform bool u_pitch_with_map;
@@ -63,4 +62,3 @@ void main(void) {
 
     v_data = vec3(extrude.x, extrude.y, antialiasblur);
 }
-`;

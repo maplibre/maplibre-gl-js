@@ -1,28 +1,26 @@
 // @flow
 
-import {create as createSource} from './source';
+import {create as createSource} from './source.js';
 
-import Tile from './tile';
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import TileCache from './tile_cache';
-import MercatorCoordinate from '../geo/mercator_coordinate';
-import {keysDifference, values} from '../util/util';
-import EXTENT from '../data/extent';
-import Context from '../gl/context';
+import Tile from './tile.js';
+import {Event, ErrorEvent, Evented} from '../util/evented.js';
+import TileCache from './tile_cache.js';
+import MercatorCoordinate from '../geo/mercator_coordinate.js';
+import {keysDifference, values} from '../util/util.js';
+import EXTENT from '../data/extent.js';
+import Context from '../gl/context.js';
 import Point from '@mapbox/point-geometry';
-import browser from '../util/browser';
-import {OverscaledTileID} from './tile_id';
+import browser from '../util/browser.js';
+import {OverscaledTileID} from './tile_id.js';
 import assert from 'assert';
-import SourceFeatureState from './source_state';
+import SourceFeatureState from './source_state.js';
 
-import type {Source} from './source';
-import type Map from '../ui/map';
-import type Style from '../style/style';
-import type Dispatcher from '../util/dispatcher';
-import type Transform from '../geo/transform';
-import type {TileState} from './tile';
-import type {Callback} from '../types/callback';
-import type {SourceSpecification} from '../style-spec/types';
+import type {Source} from './source.js';
+import type Map from '../ui/map.js';
+import type Style from '../style/style.js';
+import type Transform from '../geo/transform.js';
+import type {TileState} from './tile.js';
+import type {Callback} from '../types/callback.js';
 
 /**
  * `SourceCache` is responsible for

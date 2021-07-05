@@ -1,4 +1,3 @@
-export default `
 uniform float u_fade_t;
 uniform float u_opacity;
 uniform sampler2D u_image0;
@@ -51,4 +50,3 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
-`;

@@ -1,4 +1,3 @@
-export default `
 uniform mat4 u_matrix;
 uniform vec2 u_world;
 attribute vec2 a_pos;
@@ -10,4 +9,3 @@ void main() {
     v_pos.x = a_pos.x;
     v_pos.y = 1.0 - a_pos.y;
 }
-`;

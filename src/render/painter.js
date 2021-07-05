@@ -1,41 +1,41 @@
 // @flow
 
-import browser from '../util/browser';
-import window from '../util/window';
+import browser from '../util/browser.js';
+import window from '../util/window.js';
 
 import {mat4} from 'gl-matrix';
-import SourceCache from '../source/source_cache';
-import EXTENT from '../data/extent';
-import pixelsToTileUnits from '../source/pixels_to_tile_units';
-import SegmentVector from '../data/segment';
-import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types';
-import {values} from '../util/util';
-import rasterBoundsAttributes from '../data/raster_bounds_attributes';
-import posAttributes from '../data/pos_attributes';
-import ProgramConfiguration from '../data/program_configuration';
-import CrossTileSymbolIndex from '../symbol/cross_tile_symbol_index';
-import shaders from '../shaders/shaders';
-import Program from './program';
-import {programUniforms} from './program/program_uniforms';
-import Context from '../gl/context';
-import DepthMode from '../gl/depth_mode';
-import StencilMode from '../gl/stencil_mode';
-import ColorMode from '../gl/color_mode';
-import CullFaceMode from '../gl/cull_face_mode';
-import Texture from './texture';
-import {clippingMaskUniformValues} from './program/clipping_mask_program';
-import Color from '../style-spec/util/color';
-import symbol from './draw_symbol';
-import circle from './draw_circle';
-import heatmap from './draw_heatmap';
-import line from './draw_line';
-import fill from './draw_fill';
-import fillExtrusion from './draw_fill_extrusion';
-import hillshade from './draw_hillshade';
-import raster from './draw_raster';
-import background from './draw_background';
-import debug, {drawDebugPadding} from './draw_debug';
-import custom from './draw_custom';
+import SourceCache from '../source/source_cache.js';
+import EXTENT from '../data/extent.js';
+import pixelsToTileUnits from '../source/pixels_to_tile_units.js';
+import SegmentVector from '../data/segment.js';
+import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.js';
+import {values} from '../util/util.js';
+import rasterBoundsAttributes from '../data/raster_bounds_attributes.js';
+import posAttributes from '../data/pos_attributes.js';
+import ProgramConfiguration from '../data/program_configuration.js';
+import CrossTileSymbolIndex from '../symbol/cross_tile_symbol_index.js';
+import shaders from '../shaders/shaders.js';
+import Program from './program.js';
+import {programUniforms} from './program/program_uniforms.js';
+import Context from '../gl/context.js';
+import DepthMode from '../gl/depth_mode.js';
+import StencilMode from '../gl/stencil_mode.js';
+import ColorMode from '../gl/color_mode.js';
+import CullFaceMode from '../gl/cull_face_mode.js';
+import Texture from './texture.js';
+import {clippingMaskUniformValues} from './program/clipping_mask_program.js';
+import Color from '../style-spec/util/color.js';
+import symbol from './draw_symbol.js';
+import circle from './draw_circle.js';
+import heatmap from './draw_heatmap.js';
+import line from './draw_line.js';
+import fill from './draw_fill.js';
+import fillExtrusion from './draw_fill_extrusion.js';
+import hillshade from './draw_hillshade.js';
+import raster from './draw_raster.js';
+import background from './draw_background.js';
+import debug, {drawDebugPadding} from './draw_debug.js';
+import custom from './draw_custom.js';
 
 const draw = {
     symbol,

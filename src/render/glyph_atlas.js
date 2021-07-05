@@ -1,10 +1,10 @@
 // @flow
 
-import {AlphaImage} from '../util/image';
-import {register} from '../util/web_worker_transfer';
+import {AlphaImage} from '../util/image.js';
+import {register} from '../util/web_worker_transfer.js';
 import potpack from 'potpack';
 
-import type {GlyphMetrics, StyleGlyph} from '../style/style_glyph';
+import type {GlyphMetrics, StyleGlyph} from '../style/style_glyph.js';
 
 const padding = 1;
 

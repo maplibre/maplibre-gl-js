@@ -1,11 +1,15 @@
 // @flow
 
-import {test} from '../../util/test';
+import {test} from '../../util/test.js';
 import fs from 'fs';
 import path from 'path';
-import window from '../../../src/util/window';
-import {RequestManager} from '../../../src/util/mapbox';
-import loadGlyphRange from '../../../src/style/load_glyph_range';
+import window from '../../../src/util/window.js';
+import {RequestManager} from '../../../src/util/mapbox.js';
+import loadGlyphRange from '../../../src/style/load_glyph_range.js';
+
+import {fileURLToPath} from 'url';
+// $FlowFixMe
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 test('loadGlyphRange', (t) => {
     window.useFakeXMLHttpRequest();
@@ -46,6 +50,7 @@ test('loadGlyphRange', (t) => {
 
     t.equal(request.url, 'https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
     request.setStatus(200);
+    // $FlowFixMe
     request.response = fs.readFileSync(path.join(__dirname, '../../fixtures/0-255.pbf'));
     request.onload();
 

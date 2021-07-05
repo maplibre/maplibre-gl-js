@@ -1,16 +1,15 @@
 /* eslint-disable no-global-assign */
 /* eslint-disable import/no-commonjs */
 /* eslint-disable flowtype/require-valid-file-annotation */
-require = require("esm")(module);
-const {generateFixtureJson, getAllFixtureGlobs} = require('./lib/generate-fixture-json');
-const createServer = require('./lib/server');
-const buildTape = require('../../build/test/build-tape');
+const {generateFixtureJson, getAllFixtureGlobs} = require('../lib/generate-fixture-json.js');
+const createServer = require('../lib/server.js');
+const buildTape = require('../../../build/test/build-tape.js');
 const runAll = require('npm-run-all');
 const chokidar = require('chokidar');
 const rollup = require('rollup');
 const notifier = require('node-notifier');
-const rollupDevConfig = require('../../rollup.config').default;
-const rollupTestConfig = require('./rollup.config.test').default;
+const rollupDevConfig = require('../../../rollup.config.js').default;
+const rollupTestConfig = require('../rollup.config.test.js').default;
 
 const rootFixturePath = 'test/integration/';
 const suitePath = 'query-tests';
@@ -23,7 +22,7 @@ let fixtureWatcher;
 const rollupWatchers = {};
 
 module.exports =  {
-    "test_page": "test/integration/testem_page.html",
+    "test_page": "test/integration/testem/testem_page.html",
     "src_files": [
         "dist/maplibre-gl-dev.js",
         "test/integration/dist/query-test.js"

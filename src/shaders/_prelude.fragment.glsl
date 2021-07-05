@@ -1,4 +1,3 @@
-export default `
 #ifdef GL_ES
 precision mediump float;
 #else
@@ -16,4 +15,3 @@ precision mediump float;
 #endif
 
 #endif
-`;

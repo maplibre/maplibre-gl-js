@@ -1,8 +1,8 @@
 // @flow
 
-import WebWorker from './web_worker';
-import type {WorkerInterface} from './web_worker';
-import browser from './browser';
+import WebWorker from './web_worker.js';
+import type {WorkerInterface} from './web_worker.js';
+import browser from './browser.js';
 
 export const PRELOAD_POOL_ID = 'mapboxgl_preloaded_worker_pool';
 

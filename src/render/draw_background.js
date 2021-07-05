@@ -1,16 +1,16 @@
 // @flow
 
-import StencilMode from '../gl/stencil_mode';
-import DepthMode from '../gl/depth_mode';
-import CullFaceMode from '../gl/cull_face_mode';
+import StencilMode from '../gl/stencil_mode.js';
+import DepthMode from '../gl/depth_mode.js';
+import CullFaceMode from '../gl/cull_face_mode.js';
 import {
     backgroundUniformValues,
     backgroundPatternUniformValues
-} from './program/background_program';
+} from './program/background_program.js';
 
-import type Painter from './painter';
-import type SourceCache from '../source/source_cache';
-import type BackgroundStyleLayer from '../style/style_layer/background_style_layer';
+import type Painter from './painter.js';
+import type SourceCache from '../source/source_cache.js';
+import type BackgroundStyleLayer from '../style/style_layer/background_style_layer.js';
 
 export default drawBackground;
 

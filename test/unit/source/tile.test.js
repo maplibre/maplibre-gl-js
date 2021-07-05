@@ -1,15 +1,18 @@
-import {test} from '../../util/test';
-import {createSymbolBucket} from '../../util/create_symbol_layer';
-import Tile from '../../../src/source/tile';
-import GeoJSONWrapper from '../../../src/source/geojson_wrapper';
-import {OverscaledTileID} from '../../../src/source/tile_id';
+import {test} from '../../util/test.js';
+import {createSymbolBucket} from '../../util/create_symbol_layer.js';
+import Tile from '../../../src/source/tile.js';
+import GeoJSONWrapper from '../../../src/source/geojson_wrapper.js';
+import {OverscaledTileID} from '../../../src/source/tile_id.js';
 import fs from 'fs';
 import path from 'path';
 import vtpbf from 'vt-pbf';
-import FeatureIndex from '../../../src/data/feature_index';
-import {CollisionBoxArray} from '../../../src/data/array_types';
-import {extend} from '../../../src/util/util';
-import {serialize, deserialize} from '../../../src/util/web_worker_transfer';
+import FeatureIndex from '../../../src/data/feature_index.js';
+import {CollisionBoxArray} from '../../../src/data/array_types.js';
+import {extend} from '../../../src/util/util.js';
+import {serialize, deserialize} from '../../../src/util/web_worker_transfer.js';
+
+import {fileURLToPath} from 'url';
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 test('querySourceFeatures', (t) => {
     const features = [{

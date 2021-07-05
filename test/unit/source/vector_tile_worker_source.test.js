@@ -2,10 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import {test} from '../../util/test';
-import VectorTileWorkerSource from '../../../src/source/vector_tile_worker_source';
-import StyleLayerIndex from '../../../src/style/style_layer_index';
-import perf from '../../../src/util/performance';
+import {test} from '../../util/test.js';
+import VectorTileWorkerSource from '../../../src/source/vector_tile_worker_source.js';
+import StyleLayerIndex from '../../../src/style/style_layer_index.js';
+import perf from '../../../src/util/performance.js';
+
+import {fileURLToPath} from 'url';
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 const actor = {send: () => {}};
 

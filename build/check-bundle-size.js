@@ -2,9 +2,10 @@
 
 /* eslint-disable */
 
-const fs = require("fs");
-const zlib = require("zlib");
-const prettyBytes = require("pretty-bytes");
+import prettyBytes from 'pretty-bytes';
+import fs from 'fs';
+import zlib from 'zlib';
+
 const beforeSourcemap = JSON.parse(fs.readFileSync('./before.json').toString());
 const afterSourcemap = JSON.parse(fs.readFileSync('./after.json').toString());
 

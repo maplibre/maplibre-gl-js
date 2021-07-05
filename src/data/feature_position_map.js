@@ -1,7 +1,7 @@
 // @flow
 
 import murmur3 from 'murmurhash-js';
-import {register} from '../util/web_worker_transfer';
+import {register} from '../util/web_worker_transfer.js';
 import assert from 'assert';
 
 type SerializedFeaturePositionMap = {

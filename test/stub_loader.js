@@ -6,6 +6,9 @@ const pirates = require('pirates');
 
 process.env["ESM_OPTIONS"] = '{ "cache": "node_modules/.cache/esm-stubbed"}';
 
+import {fileURLToPath} from 'url';
+const __filename = fileURLToPath(import.meta.url);
+
 pirates.addHook((code, filename) => {
     assert(filename.endsWith('/ajax.js'));
     return fs.readFileSync(`${__dirname}/ajax_stubs.js`, 'utf-8');

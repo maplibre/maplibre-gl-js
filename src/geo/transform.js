@@ -1,18 +1,18 @@
 // @flow
 
-import LngLat from './lng_lat';
-import LngLatBounds from './lng_lat_bounds';
-import MercatorCoordinate, {mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from './mercator_coordinate';
+import LngLat from './lng_lat.js';
+import LngLatBounds from './lng_lat_bounds.js';
+import MercatorCoordinate, {mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from './mercator_coordinate.js';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp} from '../util/util';
-import {number as interpolate} from '../style-spec/util/interpolate';
-import EXTENT from '../data/extent';
+import {wrap, clamp} from '../util/util.js';
+import {number as interpolate} from '../style-spec/util/interpolate.js';
+import EXTENT from '../data/extent.js';
 import {vec4, mat4, mat2, vec2} from 'gl-matrix';
 import {Aabb, Frustum} from '../util/primitives.js';
-import EdgeInsets from './edge_insets';
+import EdgeInsets from './edge_insets.js';
 
-import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
-import type {PaddingOptions} from './edge_insets';
+import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id.js';
+import type {PaddingOptions} from './edge_insets.js';
 
 /**
  * A single transform, generally used for a single tile to be

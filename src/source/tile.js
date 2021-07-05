@@ -1,36 +1,35 @@
 // @flow
-
-import {uniqueId, parseCacheControl} from '../util/util';
-import {deserialize as deserializeBucket} from '../data/bucket';
-import FeatureIndex from '../data/feature_index';
-import GeoJSONFeature from '../util/vectortile_to_geojson';
-import featureFilter from '../style-spec/feature_filter';
-import SymbolBucket from '../data/bucket/symbol_bucket';
-import {CollisionBoxArray} from '../data/array_types';
-import Texture from '../render/texture';
-import browser from '../util/browser';
-import toEvaluationFeature from '../data/evaluation_feature';
-import EvaluationParameters from '../style/evaluation_parameters';
-import SourceFeatureState from '../source/source_state';
-import {lazyLoadRTLTextPlugin} from './rtl_text_plugin';
+import {uniqueId, parseCacheControl} from '../util/util.js';
+import {deserialize as deserializeBucket} from '../data/bucket.js';
+import FeatureIndex from '../data/feature_index.js';
+import GeoJSONFeature from '../util/vectortile_to_geojson.js';
+import featureFilter from '../style-spec/feature_filter/index.js';
+import SymbolBucket from '../data/bucket/symbol_bucket.js';
+import {CollisionBoxArray} from '../data/array_types.js';
+import Texture from '../render/texture.js';
+import browser from '../util/browser.js';
+import toEvaluationFeature from '../data/evaluation_feature.js';
+import EvaluationParameters from '../style/evaluation_parameters.js';
+import SourceFeatureState from '../source/source_state.js';
+import {lazyLoadRTLTextPlugin} from './rtl_text_plugin.js';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
-import type {Bucket} from '../data/bucket';
-import type StyleLayer from '../style/style_layer';
-import type {WorkerTileResult} from './worker_source';
-import type Actor from '../util/actor';
-import type DEMData from '../data/dem_data';
-import type {AlphaImage} from '../util/image';
-import type ImageAtlas from '../render/image_atlas';
-import type ImageManager from '../render/image_manager';
-import type Context from '../gl/context';
-import type {OverscaledTileID} from './tile_id';
-import type Framebuffer from '../gl/framebuffer';
-import type Transform from '../geo/transform';
-import type {LayerFeatureStates} from './source_state';
-import type {Cancelable} from '../types/cancelable';
-import type {FilterSpecification} from '../style-spec/types';
+import type {Bucket} from '../data/bucket.js';
+import type StyleLayer from '../style/style_layer.js';
+import type {WorkerTileResult} from './worker_source.js';
+import type Actor from '../util/actor.js';
+import type DEMData from '../data/dem_data.js';
+import type {AlphaImage} from '../util/image.js';
+import type ImageAtlas from '../render/image_atlas.js';
+import type ImageManager from '../render/image_manager.js';
+import type Context from '../gl/context.js';
+import type {OverscaledTileID} from './tile_id.js';
+import type Framebuffer from '../gl/framebuffer.js';
+import type Transform from '../geo/transform.js';
+import type {LayerFeatureStates} from './source_state.js';
+import type {Cancelable} from '../types/cancelable.js';
+import type {FilterSpecification} from '../style-spec/types.js';
 
 export type TileState =
     | 'loading'   // Tile data is in the process of loading.

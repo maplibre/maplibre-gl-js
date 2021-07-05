@@ -1,4 +1,3 @@
-export default `
 const float PI = 3.141592653589793;
 
 attribute vec4 a_pos_offset;
@@ -93,4 +92,3 @@ void main() {
     float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
     v_fade_opacity = max(0.0, min(1.0, fade_opacity[0] + fade_change));
 }
-`;

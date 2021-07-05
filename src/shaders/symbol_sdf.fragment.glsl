@@ -1,4 +1,3 @@
-export default `
 #define SDF_PX 8.0
 
 uniform bool u_is_halo;
@@ -51,4 +50,3 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
-`;

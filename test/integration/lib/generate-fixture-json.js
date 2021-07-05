@@ -1,13 +1,7 @@
-/* eslint-disable import/no-commonjs */
-const path = require('path');
-const fs = require('fs');
-const glob = require('glob');
-const localizeURLs = require('./localize-urls');
-
-const OUTPUT_FILE = 'fixtures.json';
-
-exports.generateFixtureJson = generateFixtureJson;
-exports.getAllFixtureGlobs = getAllFixtureGlobs;
+import path from 'path';
+import fs from 'fs';
+import glob from 'glob';
+import localizeURLs from './localize-urls.js';
 
 /**
  * Analyzes the contents of the specified `path.join(rootDirectory, suiteDirectory)`, and inlines
@@ -18,7 +12,7 @@ exports.getAllFixtureGlobs = getAllFixtureGlobs;
  * @param {string} suiteDirectory
  * @param {boolean} includeImages
  */
-function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 'test/integration/dist', includeImages = false) {
+export function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 'test/integration/dist', includeImages = false) {
     const globs = getAllFixtureGlobs(rootDirectory, suiteDirectory);
     const jsonPaths = globs[0];
     const imagePaths = globs[1];
@@ -28,9 +22,6 @@ function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 't
     if (includeImages) {
         allPaths = allPaths.concat(glob.sync(imagePaths));
     }
-
-    //A Set that stores test names that are malformed so they can be removed later
-    const malformedTests = {};
 
     for (const fixturePath of allPaths) {
         const testName = path.dirname(fixturePath);
@@ -47,13 +38,13 @@ function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 't
 
                 allFiles[fixturePath] = json;
             } else if (extension === '.png') {
-                allFiles[fixturePath] = pngToBase64Str(fixturePath);
+                allFiles[fixturePath] = true;
             } else {
                 throw new Error(`${extension} is incompatible , file path ${fixturePath}`);
             }
         } catch (e) {
             console.log(`Error parsing file: ${fixturePath}`);
-            malformedTests[testName] = true;
+            allFiles[fixturePath] = {PARSE_ERROR: true, message: e.message};
         }
     }
 
@@ -61,10 +52,7 @@ function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 't
     const result = {};
     for (const fullPath in allFiles) {
         const testName = path.dirname(fullPath).replace(rootDirectory, '');
-        //Skip if test is malformed
-        if (malformedTests[testName]) { continue; }
-
-        //Lazily initaialize an object to store each file wihin a particular testName
+        //Lazily initialize an object to store each file wihin a particular testName
         if (result[testName] == null) {
             result[testName] = {};
         }
@@ -74,7 +62,8 @@ function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 't
     }
 
     const outputStr = JSON.stringify(result, null, 4);
-    const outputPath = path.join(outputDirectory, OUTPUT_FILE);
+    const outputFile = `${suiteDirectory.split('-')[0]}-fixtures.json`;
+    const outputPath = path.join(outputDirectory, outputFile);
 
     return new Promise((resolve, reject) => {
         fs.writeFile(outputPath, outputStr, {encoding: 'utf8'}, (err) => {
@@ -85,7 +74,7 @@ function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 't
     });
 }
 
-function getAllFixtureGlobs(rootDirectory, suiteDirectory) {
+export function getAllFixtureGlobs(rootDirectory, suiteDirectory) {
     const basePath = path.join(rootDirectory, suiteDirectory);
     const jsonPaths = path.join(basePath, '/**/*.json');
     const imagePaths = path.join(basePath, '/**/*.png');
@@ -95,10 +84,6 @@ function getAllFixtureGlobs(rootDirectory, suiteDirectory) {
 
 function parseJsonFromFile(filePath) {
     return JSON.parse(fs.readFileSync(filePath, {encoding: 'utf8'}));
-}
-
-function pngToBase64Str(filePath) {
-    return fs.readFileSync(filePath).toString('base64');
 }
 
 function processStyle(testName, style) {

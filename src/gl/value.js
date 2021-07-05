@@ -1,8 +1,8 @@
 // @flow
 
-import Color from '../style-spec/util/color';
+import Color from '../style-spec/util/color.js';
 
-import type Context from './context';
+import type Context from './context.js';
 import type {
     BlendFuncType,
     BlendEquationType,
@@ -16,7 +16,7 @@ import type {
     ViewportType,
     CullFaceModeType,
     FrontFaceType,
-} from './types';
+} from './types.js';
 
 export interface Value<T> {
     current: T;
