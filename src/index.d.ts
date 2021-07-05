@@ -73,14 +73,14 @@ declare namespace maplibregl {
      *      return { cancel: () => { } };
      * });
      */
-    export function addProtocol(customProtocol: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable);
+    export function addProtocol(customProtocol: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable): void;
     /**
      * Removes a previusly added protocol
      * @param {string} customProtocol - the custom protocol to remove registration for
      * @example
      * maplibregl.removeProtocol('custom');
      */
-    export function removeProtocol(customProtocol: string);
+    export function removeProtocol(customProtocol: string): void;
 
     export function setRTLTextPlugin(pluginURL: string, callback: (error: Error) => void, deferred?: boolean): void;
     export function getRTLTextPluginStatus(): PluginStatus;
