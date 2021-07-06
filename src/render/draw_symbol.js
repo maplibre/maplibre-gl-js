@@ -335,44 +335,22 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, stencilMode, colo
         const hasIcons = (layer.paint.get('icon-opacity').constantOr(1) !== 0) && bucket.icon && bucket.icon.segments.get().length;
         const hasText = (layer.paint.get('text-opacity').constantOr(1) !== 0) && bucket.text && bucket.text.segments.get().length;
 
-        if (hasSortKey && bucket.canOverlap) {
-            sortFeaturesByKey = true;
-            if (hasIcons) {
-                const state = getSymbolsState(painter, coord, tile, bucket, layer, false);
-                const oldSegments = bucket.icon.segments.get();
-                for (const segment of oldSegments) {
+        for (const isText of [false, true]) {
+            if ((isText && !hasText) || (!isText && !hasIcons))
+                continue;
+            const state = getSymbolsState(painter, coord, tile, bucket, layer, isText);
+            const segments = isText ? bucket.text.segments : bucket.icon.segments;
+            if (hasSortKey && bucket.canOverlap) {
+                sortFeaturesByKey = true;
+                for (const segment of segments.get()) {
                     tileRenderState.push({
                         segments: new SegmentVector([segment]),
                         sortKey: ((segment.sortKey: any): number),
                         state
                     });
                 }
-            }
-            if (hasText) {
-                const state = getSymbolsState(painter, coord, tile, bucket, layer, true);
-                const oldSegments = bucket.text.segments.get();
-                for (const segment of oldSegments) {
-                    tileRenderState.push({
-                        segments: new SegmentVector([segment]),
-                        sortKey: ((segment.sortKey: any): number),
-                        state
-                    });
-                }
-            }
-        } else {
-            if (hasIcons) {
-                tileRenderState.push({
-                    segments: bucket.icon.segments,
-                    sortKey: 0,
-                    state: getSymbolsState(painter, coord, tile, bucket, layer, false)
-                });
-            }
-            if (hasText) {
-                tileRenderState.push({
-                    segments: bucket.text.segments,
-                    sortKey: 0,
-                    state: getSymbolsState(painter, coord, tile, bucket, layer, true)
-                });
+            } else {
+                tileRenderState.push({segments, sortKey: 0, state});
             }
         }
     }
