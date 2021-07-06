@@ -203,7 +203,7 @@ function getSymbolProgramName(isSDF: boolean, isText: boolean, bucket: SymbolBuc
     }
 }
 
-function symbolsState(painter, coord, tile, bucket, layer, isText) {
+function getSymbolsState(painter, coord, tile, bucket, layer, isText) {
 
     const context = painter.context;
     const gl = context.gl;
@@ -338,7 +338,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, stencilMode, colo
         if (hasSortKey && bucket.canOverlap) {
             sortFeaturesByKey = true;
             if (hasIcons) {
-                const state = symbolsState(painter, coord, tile, bucket, layer, false);
+                const state = getSymbolsState(painter, coord, tile, bucket, layer, false);
                 const oldSegments = bucket.icon.segments.get();
                 for (const segment of oldSegments) {
                     tileRenderState.push({
@@ -349,7 +349,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, stencilMode, colo
                 }
             }
             if (hasText) {
-                const state = symbolsState(painter, coord, tile, bucket, layer, true);
+                const state = getSymbolsState(painter, coord, tile, bucket, layer, true);
                 const oldSegments = bucket.text.segments.get();
                 for (const segment of oldSegments) {
                     tileRenderState.push({
@@ -364,14 +364,14 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, stencilMode, colo
                 tileRenderState.push({
                     segments: bucket.icon.segments,
                     sortKey: 0,
-                    state: symbolsState(painter, coord, tile, bucket, layer, false)
+                    state: getSymbolsState(painter, coord, tile, bucket, layer, false)
                 });
             }
             if (hasText) {
                 tileRenderState.push({
                     segments: bucket.text.segments,
                     sortKey: 0,
-                    state: symbolsState(painter, coord, tile, bucket, layer, true)
+                    state: getSymbolsState(painter, coord, tile, bucket, layer, true)
                 });
             }
         }
