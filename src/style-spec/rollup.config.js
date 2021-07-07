@@ -1,10 +1,10 @@
 import path from 'path';
-import replace from 'rollup-plugin-replace';
+import replace from '@rollup/plugin-replace';
 import buble from 'rollup-plugin-buble';
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
-import json from 'rollup-plugin-json';
+import json from '@rollup/plugin-json';
 import {flow} from '../../build/rollup_plugins';
 
 // Build es modules?

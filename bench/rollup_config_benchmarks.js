@@ -1,10 +1,10 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import replace from 'rollup-plugin-replace';
+import replace from '@rollup/plugin-replace';
 import {plugins} from '../build/rollup_plugins';
 import buble from 'rollup-plugin-buble';
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 
 let styles = ['mapbox://styles/mapbox/streets-v10'];
 
