@@ -1,9 +1,9 @@
-import {test} from '../../util/test';
+import {test} from '../../util/test.js';
 import Point from '@mapbox/point-geometry';
-import Transform from '../../../src/geo/transform';
-import LngLat from '../../../src/geo/lng_lat';
-import {OverscaledTileID, CanonicalTileID} from '../../../src/source/tile_id';
-import {fixedLngLat, fixedCoord} from '../../util/fixed';
+import Transform from '../../../src/geo/transform.js';
+import LngLat from '../../../src/geo/lng_lat.js';
+import {OverscaledTileID, CanonicalTileID} from '../../../src/source/tile_id.js';
+import {fixedLngLat, fixedCoord} from '../../util/fixed.js';
 
 test('transform', (t) => {
 

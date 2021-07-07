@@ -1,4 +1,3 @@
-export default `
 uniform sampler2D u_image;
 uniform sampler2D u_color_ramp;
 uniform float u_opacity;
@@ -13,4 +12,3 @@ void main() {
     gl_FragColor = vec4(0.0);
 #endif
 }
-`;

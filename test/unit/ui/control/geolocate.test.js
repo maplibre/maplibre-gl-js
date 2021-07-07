@@ -1,17 +1,23 @@
-import {test} from '../../../util/test';
-import window from '../../../../src/util/window';
-import {createMap} from '../../../util';
-import GeolocateControl from '../../../../src/ui/control/geolocate_control';
+import {test} from '../../../util/test.js';
+import window from '../../../../src/util/window.js';
+import {createMap} from '../../../util/index.js';
+import GeolocateControl from '../../../../src/ui/control/geolocate_control.js';
 
-// window and navigator globals need to be set for mock-geolocation
-global.window = {};
-global.navigator = {};
-const geolocation = require('mock-geolocation'); // eslint-disable-line import/no-commonjs
-geolocation.use();
 
-// assign the mock geolocation to window
-global.window.navigator = global.navigator;
-window.navigator.geolocation = global.window.navigator.geolocation;
+let geolocation;
+
+test('geolocation mock loads properly', async (t) => {
+    // set window and navigator globals for mock-geolocation
+    global.window = {};
+    global.navigator = {};
+    geolocation = await import('mock-geolocation');
+    geolocation.use();
+
+    global.window.navigator = global.navigator;
+    window.navigator.geolocation = global.window.navigator.geolocation;
+
+    t.end();
+});
 
 // convert the coordinates of a LngLat object to a fixed number of digits
 function lngLatAsFixed(lngLat, digits) {
@@ -274,7 +280,7 @@ test('GeolocateControl watching map updates recenter on location with dot', (t) 
                 t.ok(geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale'), 'userLocation has stale class');
                 t.end();
             });
-            geolocation.changeError({code: 2, message: 'position unavaliable'});
+            geolocation.changeError({code: 2, message: 'position unavailable'});
         });
         geolocation.change({latitude: 40, longitude: 50, accuracy: 60});
     });

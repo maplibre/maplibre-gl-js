@@ -1,13 +1,10 @@
-
 import flowRemoveTypes from '@mapbox/flow-remove-types';
-import buble from 'rollup-plugin-buble';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import unassert from 'rollup-plugin-unassert';
 import json from '@rollup/plugin-json';
 import {terser} from 'rollup-plugin-terser';
-import minifyStyleSpec from './rollup_plugin_minify_style_spec';
-import {createFilter} from 'rollup-pluginutils';
+import minifyStyleSpec from './rollup_plugin_minify_style_spec.js';
+import {createFilter} from '@rollup/pluginutils';
 import strip from '@rollup/plugin-strip';
 
 // Common set of plugins/transformations shared across different rollup
@@ -22,14 +19,12 @@ export const plugins = (minified, production) => [
         functions: ['PerformanceUtils.*', 'Debug.*']
     }) : false,
     glsl('./src/shaders/*.glsl', production),
-    buble({transforms: {dangerousForOf: true}, objectAssign: "Object.assign"}),
     minified ? terser({
         compress: {
             pure_getters: true,
             passes: 3
         }
     }) : false,
-    production ? unassert() : false,
     resolve({
         browser: true,
         preferBuiltins: false
@@ -63,14 +58,12 @@ function glsl(include, minify) {
 
             // barebones GLSL minification
             if (minify) {
-                code = code.replace(/export default `/g, '') // strip export wrapper (start) required for es6 module creation
-                    .replace(/`;/g, '') // strip export wrapper (end) required for es6 module creation
-                    .trim() // strip whitespace at the start/end
+                code = code.trim() // strip whitespace at the start/end
                     .replace(/\s*\/\/[^\n]*\n/g, '\n') // strip double-slash comments
                     .replace(/\n+/g, '\n') // collapse multi line breaks
                     .replace(/\n\s+/g, '\n') // strip identation
                     .replace(/\s?([+-\/*=,])\s?/g, '$1') // strip whitespace around operators
-                    .replace(/([;\(\),\{\}])\n(?=[^#])/g, '$1'); // strip more line breaks
+                    .replace(/([;,\{\}])\n(?=[^#])/g, '$1'); // strip more line breaks
             }
 
             return {

@@ -1,11 +1,14 @@
-import {test} from '../../util/test';
+import {test} from '../../util/test.js';
 import fs from 'fs';
 import path from 'path';
-import * as shaping from '../../../src/symbol/shaping';
-import Formatted, {FormattedSection} from '../../../src/style-spec/expression/types/formatted';
-import ResolvedImage from '../../../src/style-spec/expression/types/resolved_image';
-import {ImagePosition} from '../../../src/render/image_atlas';
+import * as shaping from '../../../src/symbol/shaping.js';
+import Formatted, {FormattedSection} from '../../../src/style-spec/expression/types/formatted.js';
+import ResolvedImage from '../../../src/style-spec/expression/types/resolved_image.js';
+import {ImagePosition} from '../../../src/render/image_atlas.js';
 const WritingMode = shaping.WritingMode;
+
+import {fileURLToPath} from 'url';
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 let UPDATE = false;
 if (typeof process !== 'undefined' && process.env !== undefined) {
@@ -57,7 +60,7 @@ test('shaping', (t) => {
     // Line break.
     shaped = shaping.shapeText(Formatted.fromString('abcde abcde'), glyphs, glyphPositions, images, fontStack, 4 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
     if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-linebreak.json'), JSON.stringify(shaped, null, 2));
-    t.deepEqual(shaped, require('../../expected/text-shaping-linebreak.json'));
+    t.deepEqual(shaped, JSON.parse(fs.readFileSync(path.join(__dirname, '../../expected/text-shaping-linebreak.json'))));
 
     const expectedNewLine = JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-newline.json')));
 

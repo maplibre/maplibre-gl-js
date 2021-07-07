@@ -1,4 +1,3 @@
-export default `
 const float PI = 3.141592653589793;
 
 attribute vec4 a_pos_offset;
@@ -114,4 +113,3 @@ void main() {
     v_data0 = a_tex / u_texsize;
     v_data1 = vec3(gamma_scale, size, interpolated_fade_opacity);
 }
-`;

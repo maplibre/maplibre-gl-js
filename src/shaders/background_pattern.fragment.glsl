@@ -1,4 +1,3 @@
-export default `
 uniform vec2 u_pattern_tl_a;
 uniform vec2 u_pattern_br_a;
 uniform vec2 u_pattern_tl_b;
@@ -27,4 +26,3 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
-`;

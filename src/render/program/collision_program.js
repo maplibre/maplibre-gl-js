@@ -4,13 +4,13 @@ import {
     Uniform1f,
     Uniform2f,
     UniformMatrix4f
-} from '../uniform_binding';
-import pixelsToTileUnits from '../../source/pixels_to_tile_units';
+} from '../uniform_binding.js';
+import pixelsToTileUnits from '../../source/pixels_to_tile_units.js';
 
-import type Context from '../../gl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type Transform from '../../geo/transform';
-import type Tile from '../../source/tile';
+import type Context from '../../gl/context.js';
+import type {UniformValues, UniformLocations} from '../uniform_binding.js';
+import type Transform from '../../geo/transform.js';
+import type Tile from '../../source/tile.js';
 
 export type CollisionUniformsType = {|
     'u_matrix': UniformMatrix4f,

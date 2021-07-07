@@ -1,10 +1,10 @@
-import {test} from '../../util/test';
-import Camera from '../../../src/ui/camera';
-import Transform from '../../../src/geo/transform';
-import TaskQueue from '../../../src/util/task_queue';
-import browser from '../../../src/util/browser';
-import {fixedLngLat, fixedNum} from '../../util/fixed';
-import {equalWithPrecision} from '../../util';
+import {test} from '../../util/test.js';
+import Camera from '../../../src/ui/camera.js';
+import Transform from '../../../src/geo/transform.js';
+import TaskQueue from '../../../src/util/task_queue.js';
+import browser from '../../../src/util/browser.js';
+import {fixedLngLat, fixedNum} from '../../util/fixed.js';
+import {equalWithPrecision} from '../../util/index.js';
 
 test('camera', (t) => {
     function attachSimulateFrame(camera) {

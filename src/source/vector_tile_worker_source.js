@@ -1,23 +1,24 @@
 // @flow
 
-import {getArrayBuffer} from '../util/ajax';
+import {getArrayBuffer} from '../util/ajax.js';
 
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import WorkerTile from './worker_tile';
-import {extend} from '../util/util';
-import {RequestPerformance} from '../util/performance';
+import WorkerTile from './worker_tile.js';
+import {extend} from '../util/util.js';
+import {RequestPerformance} from '../util/performance.js';
 
 import type {
     WorkerSource,
     WorkerTileParameters,
     WorkerTileCallback,
     TileParameters
-} from '../source/worker_source';
+} from '../source/worker_source.js';
 
-import type Actor from '../util/actor';
-import type StyleLayerIndex from '../style/style_layer_index';
-import type {Callback} from '../types/callback';
+import type Actor from '../util/actor.js';
+import type StyleLayerIndex from '../style/style_layer_index.js';
+import type {Callback} from '../types/callback.js';
+
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTile;

@@ -1,7 +1,7 @@
 // @flow strict
 
-import window from './window';
-import type {Cancelable} from '../types/cancelable';
+import window from './window.js';
+import type {Cancelable} from '../types/cancelable.js';
 
 const now = window.performance && window.performance.now ?
     window.performance.now.bind(window.performance) :

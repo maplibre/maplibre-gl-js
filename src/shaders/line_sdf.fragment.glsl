@@ -1,4 +1,3 @@
-export default `
 
 uniform lowp float u_device_pixel_ratio;
 uniform sampler2D u_image;
@@ -44,4 +43,3 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
-`;

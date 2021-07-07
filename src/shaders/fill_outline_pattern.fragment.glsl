@@ -1,4 +1,3 @@
-export default `
 
 uniform vec2 u_texsize;
 uniform sampler2D u_image;
@@ -42,4 +41,3 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
-`;

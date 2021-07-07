@@ -1,27 +1,23 @@
 import path from 'path';
 import replace from '@rollup/plugin-replace';
-import buble from 'rollup-plugin-buble';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
 import json from '@rollup/plugin-json';
-import {flow} from '../../build/rollup_plugins';
+import {flow} from '../../build/rollup_plugins.js';
 
 // Build es modules?
 const esm = 'esm' in process.env;
 
-const transforms = {
-    dangerousForOf: true,
-    modules: esm ? false : undefined
-};
-
-const ROOT_DIR = __dirname;
+import {fileURLToPath} from 'url';
+// $FlowFixMe
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 const config = [{
     input: `${__dirname}/style-spec.js`,
     output: {
         name: 'maplibreGlStyleSpecification',
-        file: `${__dirname}/dist/${esm ? 'index.es.js' : 'index.js'}`,
+        file: `${__dirname}/dist/${esm ? 'index.es.js' : 'index.cjs'}`,
         format: esm ? 'esm' : 'umd',
         sourcemap: true
     },
@@ -34,7 +30,7 @@ const config = [{
                 // This check will cause the build to fail on CI allowing these issues to be caught.
                 if (importer && !importer.includes('node_modules')) {
                     const resolvedPath = path.join(importer, source);
-                    const fromRoot = path.relative(ROOT_DIR, resolvedPath);
+                    const fromRoot = path.relative(__dirname, resolvedPath);
                     if (fromRoot.length > 2 && fromRoot.slice(0, 2) === '..') {
                         throw new Error(`Module ${importer} imports ${source} from outside the style-spec package root directory.`);
                     }
@@ -53,7 +49,6 @@ const config = [{
         }),
         flow(),
         json(),
-        buble({transforms, objectAssign: "Object.assign"}),
         unassert(),
         resolve({
             browser: true,

@@ -1,18 +1,18 @@
 // @flow
 
-import {clamp} from '../util/util';
+import {clamp} from '../util/util.js';
 
-import ImageSource from '../source/image_source';
-import browser from '../util/browser';
-import StencilMode from '../gl/stencil_mode';
-import DepthMode from '../gl/depth_mode';
-import CullFaceMode from '../gl/cull_face_mode';
-import {rasterUniformValues} from './program/raster_program';
+import ImageSource from '../source/image_source.js';
+import browser from '../util/browser.js';
+import StencilMode from '../gl/stencil_mode.js';
+import DepthMode from '../gl/depth_mode.js';
+import CullFaceMode from '../gl/cull_face_mode.js';
+import {rasterUniformValues} from './program/raster_program.js';
 
-import type Painter from './painter';
-import type SourceCache from '../source/source_cache';
-import type RasterStyleLayer from '../style/style_layer/raster_style_layer';
-import type {OverscaledTileID} from '../source/tile_id';
+import type Painter from './painter.js';
+import type SourceCache from '../source/source_cache.js';
+import type RasterStyleLayer from '../style/style_layer/raster_style_layer.js';
+import type {OverscaledTileID} from '../source/tile_id.js';
 
 export default drawRaster;
 

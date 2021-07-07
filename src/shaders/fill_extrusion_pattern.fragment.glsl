@@ -1,4 +1,3 @@
-export default `
 uniform vec2 u_texsize;
 uniform float u_fade;
 
@@ -44,4 +43,3 @@ void main() {
     gl_FragColor = vec4(1.0);
 #endif
 }
-`;

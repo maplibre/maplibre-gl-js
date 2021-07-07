@@ -1,12 +1,11 @@
 // @flow
 
 import {getTileBBox} from '@mapbox/whoots-js';
-import EXTENT from '../data/extent';
+import EXTENT from '../data/extent.js';
 import Point from '@mapbox/point-geometry';
-import MercatorCoordinate from '../geo/mercator_coordinate';
-
+import MercatorCoordinate from '../geo/mercator_coordinate.js';
 import assert from 'assert';
-import {register} from '../util/web_worker_transfer';
+import {register} from '../util/web_worker_transfer.js';
 
 export class CanonicalTileID {
     z: number;

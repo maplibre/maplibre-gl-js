@@ -1,4 +1,3 @@
-export default `
 uniform mat4 u_matrix;
 uniform vec2 u_world;
 uniform vec2 u_pixel_coord_upper;
@@ -43,4 +42,3 @@ void main() {
 
     v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world;
 }
-`;

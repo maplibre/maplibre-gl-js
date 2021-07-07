@@ -2,42 +2,42 @@
 
 import assert from 'assert';
 
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import StyleLayer from './style_layer';
-import createStyleLayer from './create_style_layer';
-import loadSprite from './load_sprite';
-import ImageManager from '../render/image_manager';
-import GlyphManager from '../render/glyph_manager';
-import Light from './light';
-import LineAtlas from '../render/line_atlas';
-import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
-import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
-import {isMapboxURL} from '../util/mapbox';
-import browser from '../util/browser';
-import Dispatcher from '../util/dispatcher';
-import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
+import {Event, ErrorEvent, Evented} from '../util/evented.js';
+import StyleLayer from './style_layer.js';
+import createStyleLayer from './create_style_layer.js';
+import loadSprite from './load_sprite.js';
+import ImageManager from '../render/image_manager.js';
+import GlyphManager from '../render/glyph_manager.js';
+import Light from './light.js';
+import LineAtlas from '../render/line_atlas.js';
+import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util.js';
+import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax.js';
+import {isMapboxURL} from '../util/mapbox.js';
+import browser from '../util/browser.js';
+import Dispatcher from '../util/dispatcher.js';
+import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style.js';
 import {
     getType as getSourceType,
     setType as setSourceType,
     type SourceClass
-} from '../source/source';
-import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
-import SourceCache from '../source/source_cache';
-import GeoJSONSource from '../source/geojson_source';
-import styleSpec from '../style-spec/reference/latest';
-import getWorkerPool from '../util/global_worker_pool';
-import deref from '../style-spec/deref';
-import emptyStyle from '../style-spec/empty';
-import diffStyles, {operations as diffOperations} from '../style-spec/diff';
+} from '../source/source.js';
+import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features.js';
+import SourceCache from '../source/source_cache.js';
+import GeoJSONSource from '../source/geojson_source.js';
+import styleSpec from '../style-spec/reference/latest.js';
+import getWorkerPool from '../util/global_worker_pool.js';
+import deref from '../style-spec/deref.js';
+import emptyStyle from '../style-spec/empty.js';
+import diffStyles, {operations as diffOperations} from '../style-spec/diff.js';
 import {
     registerForPluginStateChange,
     evented as rtlTextPluginEvented,
     triggerPluginCompletionEvent
-} from '../source/rtl_text_plugin';
-import PauseablePlacement from './pauseable_placement';
-import ZoomHistory from './zoom_history';
-import CrossTileSymbolIndex from '../symbol/cross_tile_symbol_index';
-import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
+} from '../source/rtl_text_plugin.js';
+import PauseablePlacement from './pauseable_placement.js';
+import ZoomHistory from './zoom_history.js';
+import CrossTileSymbolIndex from '../symbol/cross_tile_symbol_index.js';
+import {validateCustomStyleLayer} from './style_layer/custom_style_layer.js';
 
 // We're skipping validation errors with the `source.canvas` identifier in order
 // to continue to allow canvas sources to be added at runtime/updated in

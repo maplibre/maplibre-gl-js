@@ -1,8 +1,8 @@
 // @flow
 
-import type {CollisionBoxArray} from '../data/array_types';
+import type {CollisionBoxArray} from '../data/array_types.js';
 import Point from '@mapbox/point-geometry';
-import type Anchor from './anchor';
+import type Anchor from './anchor.js';
 
 /**
  * A CollisionFeature represents the area of the tile covered by a single label.

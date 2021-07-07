@@ -1,13 +1,10 @@
 /* eslint-disable import/no-commonjs */
-const path = require('path');
-const fs = require('fs');
-const glob = require('glob');
-const localizeURLs = require('./localize-urls');
+import path from 'path';
+import fs from 'fs';
+import glob from 'glob';
+import localizeURLs from './localize-urls.js';
 
 const OUTPUT_FILE = 'fixtures.json';
-
-exports.generateFixtureJson = generateFixtureJson;
-exports.getAllFixtureGlobs = getAllFixtureGlobs;
 
 /**
  * Analyzes the contents of the specified `path.join(rootDirectory, suiteDirectory)`, and inlines
@@ -18,7 +15,7 @@ exports.getAllFixtureGlobs = getAllFixtureGlobs;
  * @param {string} suiteDirectory
  * @param {boolean} includeImages
  */
-function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 'test/integration/dist', includeImages = false) {
+ export default function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 'test/integration/dist', includeImages = false) {
     const globs = getAllFixtureGlobs(rootDirectory, suiteDirectory);
     const jsonPaths = globs[0];
     const imagePaths = globs[1];
@@ -118,3 +115,5 @@ function processStyle(testName, style) {
 
     return clone;
 }
+
+generateFixtureJson('test/integration/', 'query-tests', 'test/integration/dist', false);
