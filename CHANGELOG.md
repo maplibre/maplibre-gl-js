@@ -10,18 +10,10 @@
 
 ## 1.15.1
 
-- Add void return for some method declaration to match TS strict mode (#194)
-- Fix css leftovers (#83)
-
-## 1.15.0
-
-### Features and improvements
-
-- *...Add new stuff here...*
-
 ### 🐞 Bug fixes
 
 - Add void return for some method declaration to match TS strict mode (#194)
+- Fix css leftovers (#83)
 
 ## 1.15.0
 
