@@ -28,4 +28,6 @@ yarn-debug.log
 npm-debug.log
 .idea
 *.iml
+
 bench/benchmarks_view.js
+test/build/style-spec.test.js
