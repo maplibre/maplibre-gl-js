@@ -6,7 +6,14 @@
 
 ### 🐞 Bug fixes
 
+- *...Add new stuff here...*
+
+## 1.15.1
+
+### 🐞 Bug fixes
+
 - Add void return for some method declaration to match TS strict mode (#194)
+- Fix css leftovers (#83)
 
 ## 1.15.0
 

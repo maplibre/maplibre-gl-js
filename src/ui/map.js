@@ -2286,7 +2286,7 @@ class Map extends Camera {
         const container = this._container;
         container.classList.add('maplibregl-map');
 
-        const canvasContainer = this._canvasContainer = DOM.create('div', 'mapboxgl-canvas-container', container);
+        const canvasContainer = this._canvasContainer = DOM.create('div', 'maplibregl-canvas-container', container);
         if (this._interactive) {
             canvasContainer.classList.add('maplibregl-interactive');
         }
