@@ -15,7 +15,6 @@
 
 <div id='map'></div>
 <script src='../dist/maplibre-gl-dev.js'></script>
-<script src='../debug/access_token_generated.js'></script>
 <script>
 var places = {
     "type": "FeatureCollection",
@@ -101,7 +100,7 @@ var style = {
             data: places,
         }
     },
-    sprite: 'mapbox://sprites/mapbox/streets-v11',
+    sprite: 'https://demotiles.maplibre.org/style.json',
     glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
     layers: [{
         id: 'foo',
