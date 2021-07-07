@@ -1,10 +1,6 @@
 /* eslint-disable no-global-assign */
 /* eslint-disable import/no-commonjs */
 /* eslint-disable flowtype/require-valid-file-annotation */
-const runAll = require('npm-run-all');
-const chokidar = require('chokidar');
-const rollup = require('rollup');
-const notifier = require('node-notifier');
 
 module.exports =  {
     "test_page": "test/integration/testem/testem_page.html",

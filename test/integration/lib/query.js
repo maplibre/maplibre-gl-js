@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import * as diff from 'diff';
 import {PNG} from 'pngjs';
-import harness from './harness';
+import harness from './harness.js';
 
 function deepEqual(a, b) {
     if (typeof a !== typeof b)

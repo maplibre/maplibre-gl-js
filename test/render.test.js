@@ -1,7 +1,7 @@
 /* eslint-disable import/unambiguous, import/no-commonjs, no-global-assign */
 
 require('./stub_loader.js');
-require('@mapbox/flow-remove-types/register');
+require('@mapbox/flow-remove-types/register.js');
 const {registerFont} = require('canvas');
 require = require("esm")(module, true);
 

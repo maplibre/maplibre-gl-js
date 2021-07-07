@@ -51,19 +51,19 @@ const draw = {
     custom
 };
 
-import type Transform from '../geo/transform';
-import type Tile from '../source/tile';
-import type {OverscaledTileID} from '../source/tile_id';
-import type Style from '../style/style';
-import type StyleLayer from '../style/style_layer';
-import type {CrossFaded} from '../style/properties';
-import type LineAtlas from './line_atlas';
-import type ImageManager from './image_manager';
-import type GlyphManager from './glyph_manager';
-import type VertexBuffer from '../gl/vertex_buffer';
-import type IndexBuffer from '../gl/index_buffer';
-import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
-import type ResolvedImage from '../style-spec/expression/types/resolved_image';
+import type Transform from '../geo/transform.js';
+import type Tile from '../source/tile.js';
+import type {OverscaledTileID} from '../source/tile_id.js';
+import type Style from '../style/style.js';
+import type StyleLayer from '../style/style_layer.js';
+import type {CrossFaded} from '../style/properties.js';
+import type LineAtlas from './line_atlas.js';
+import type ImageManager from './image_manager.js';
+import type GlyphManager from './glyph_manager.js';
+import type VertexBuffer from '../gl/vertex_buffer.js';
+import type IndexBuffer from '../gl/index_buffer.js';
+import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types.js';
+import type ResolvedImage from '../style-spec/expression/types/resolved_image.js';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 

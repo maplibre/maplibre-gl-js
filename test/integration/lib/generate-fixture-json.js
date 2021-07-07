@@ -15,7 +15,7 @@ const OUTPUT_FILE = 'fixtures.json';
  * @param {string} suiteDirectory
  * @param {boolean} includeImages
  */
- export default function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 'test/integration/dist', includeImages = false) {
+export default function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 'test/integration/dist', includeImages = false) {
     const globs = getAllFixtureGlobs(rootDirectory, suiteDirectory);
     const jsonPaths = globs[0];
     const imagePaths = globs[1];

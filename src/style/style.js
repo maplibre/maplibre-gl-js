@@ -45,15 +45,15 @@ import {validateCustomStyleLayer} from './style_layer/custom_style_layer.js';
 const emitValidationErrors = (evented: Evented, errors: ?$ReadOnlyArray<{message: string, identifier?: string}>) =>
     _emitValidationErrors(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
 
-import type Map from '../ui/map';
-import type Transform from '../geo/transform';
-import type {StyleImage} from './style_image';
-import type {StyleGlyph} from './style_glyph';
-import type {Callback} from '../types/callback';
-import type EvaluationParameters from './evaluation_parameters';
-import type {Placement} from '../symbol/placement';
-import type {Cancelable} from '../types/cancelable';
-import type {RequestParameters, ResponseCallback} from '../util/ajax';
+import type Map from '../ui/map.js';
+import type Transform from '../geo/transform.js';
+import type {StyleImage} from './style_image.js';
+import type {StyleGlyph} from './style_glyph.js';
+import type {Callback} from '../types/callback.js';
+import type EvaluationParameters from './evaluation_parameters.js';
+import type {Placement} from '../symbol/placement.js';
+import type {Cancelable} from '../types/cancelable.js';
+import type {RequestParameters, ResponseCallback} from '../util/ajax.js';
 import type {GeoJSON} from '@mapbox/geojson-types';
 import type {
     LayerSpecification,
@@ -61,10 +61,10 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification
-} from '../style-spec/types';
-import type {CustomLayerInterface} from './style_layer/custom_style_layer';
-import type {Validator} from './validate_style';
-import type {OverscaledTileID} from '../source/tile_id';
+} from '../style-spec/types.js';
+import type {CustomLayerInterface} from './style_layer/custom_style_layer.js';
+import type {Validator} from './validate_style.js';
+import type {OverscaledTileID} from '../source/tile_id.js';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',

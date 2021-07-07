@@ -4,7 +4,7 @@ import StyleLayer from '../style_layer.js';
 
 import CircleBucket from '../../data/bucket/circle_bucket.js';
 import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests.js';
-import {getMaximumPaintValue, translateDistance,translate} from '../query_utils.js';
+import {getMaximumPaintValue, translateDistance, translate} from '../query_utils.js';
 import properties from './circle_style_layer_properties.js';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties.js';
 import {vec4} from 'gl-matrix';

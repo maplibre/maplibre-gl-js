@@ -17,6 +17,6 @@ export default function buildTape() {
                 });
             });
     });
-};
+}
 
 buildTape()

@@ -5,7 +5,6 @@
 // this file also acts as the entrypoint for browserify.
 const tape = require('tape');
 const TapHtmlGenerator = require('./tap_html.js');
-const browserWriteFile = require('./browser_write_file.js');
 
 //Add test filtering ability
 const filter = getQueryVariable('filter') || '.*';

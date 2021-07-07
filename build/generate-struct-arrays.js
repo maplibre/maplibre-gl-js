@@ -13,10 +13,10 @@
 const fs = require('fs');
 
 const ejs = require('ejs');
-const util = require('../src/util/util');
-const {createLayout, viewTypes} = require('../src/util/struct_array');
+const util = require('../src/util/util.js');
+const {createLayout, viewTypes} = require('../src/util/struct_array.js');
 
-import type {ViewType, StructArrayLayout} from '../src/util/struct_array';
+import type {ViewType, StructArrayLayout} from '../src/util/struct_array.js';
 
 const structArrayLayoutJs = ejs.compile(fs.readFileSync('src/util/struct_array_layout.js.ejs', 'utf8'), {strict: true});
 const structArrayJs = ejs.compile(fs.readFileSync('src/util/struct_array.js.ejs', 'utf8'), {strict: true});
@@ -119,18 +119,18 @@ function camelize (str) {
 
 global.camelize = camelize;
 
-const posAttributes = require('../src/data/pos_attributes').default;
-const rasterBoundsAttributes = require('../src/data/raster_bounds_attributes').default;
+const posAttributes = require('../src/data/pos_attributes.js').default;
+const rasterBoundsAttributes = require('../src/data/raster_bounds_attributes.js').default;
 
 createStructArrayType('pos', posAttributes);
 createStructArrayType('raster_bounds', rasterBoundsAttributes);
 
-const circleAttributes = require('../src/data/bucket/circle_attributes').default;
-const fillAttributes = require('../src/data/bucket/fill_attributes').default;
-const fillExtrusionAttributes = require('../src/data/bucket/fill_extrusion_attributes').default;
-const lineAttributes = require('../src/data/bucket/line_attributes').default;
-const lineAttributesExt = require('../src/data/bucket/line_attributes_ext').default;
-const patternAttributes = require('../src/data/bucket/pattern_attributes').default;
+const circleAttributes = require('../src/data/bucket/circle_attributes.js').default;
+const fillAttributes = require('../src/data/bucket/fill_attributes.js').default;
+const fillExtrusionAttributes = require('../src/data/bucket/fill_extrusion_attributes.js').default;
+const lineAttributes = require('../src/data/bucket/line_attributes.js').default;
+const lineAttributesExt = require('../src/data/bucket/line_attributes_ext.js').default;
+const patternAttributes = require('../src/data/bucket/pattern_attributes.js').default;
 
 // layout vertex arrays
 const layoutAttributes = {
@@ -160,7 +160,7 @@ const {
     symbolInstance,
     glyphOffset,
     lineVertex
-} = require('../src/data/bucket/symbol_attributes');
+} = require('../src/data/bucket/symbol_attributes.js');
 
 createStructArrayType(`symbol_layout`, symbolLayoutAttributes);
 createStructArrayType(`symbol_dynamic_layout`, dynamicLayoutAttributes);

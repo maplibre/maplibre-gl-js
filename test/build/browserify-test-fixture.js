@@ -1,2 +1,1 @@
-/* eslint-disable import/unambiguous, import/no-commonjs */
-require('../..');
+require('../..'); /* eslint-disable-line */

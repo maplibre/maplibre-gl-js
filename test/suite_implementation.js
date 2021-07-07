@@ -1,13 +1,13 @@
 import {PNG} from 'pngjs';
-import Map from '../src/ui/map';
-import config from '../src/util/config';
-import window from '../src/util/window';
-import browser from '../src/util/browser';
-import {plugin as rtlTextPlugin} from '../src/source/rtl_text_plugin';
+import Map from '../src/ui/map.js';
+import config from '../src/util/config.js';
+import window from '../src/util/window.js';
+import browser from '../src/util/browser.js';
+import {plugin as rtlTextPlugin} from '../src/source/rtl_text_plugin.js';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import fs from 'fs';
 import path from 'path';
-import customLayerImplementations from './integration/custom_layer_implementations';
+import customLayerImplementations from './integration/custom_layer_implementations.js';
 
 rtlTextPlugin['applyArabicShaping'] = rtlText.applyArabicShaping;
 rtlTextPlugin['processBidirectionalText'] = rtlText.processBidirectionalText;
@@ -87,11 +87,11 @@ module.exports = function(style, options, _callback) { // eslint-disable-line im
             const pixels = new Uint8Array(w * h * 4);
             gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
-            const data = new Buffer(pixels);
+            const data = Buffer.alloc(pixels);
 
             // Flip the scanlines.
             const stride = w * 4;
-            const tmp = new Buffer(stride);
+            const tmp = Buffer.alloc(stride);
             for (let i = 0, j = h - 1; i < j; i++, j--) {
                 const start = i * stride;
                 const end = j * stride;

@@ -11,6 +11,7 @@ import {mat4} from 'gl-matrix';
 const identityMat4 = mat4.identity(new Float32Array(16));
 import StencilMode from '../gl/stencil_mode.js';
 import DepthMode from '../gl/depth_mode.js';
+import CullFaceMode from '../gl/cull_face_mode.js';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket.js';
 import {getAnchorAlignment, WritingMode} from '../symbol/shaping.js';
 import ONE_EM from '../symbol/one_em.js';

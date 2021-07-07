@@ -19,7 +19,6 @@ import type Actor from '../util/actor.js';
 import type StyleLayerIndex from '../style/style_layer_index.js';
 import type {Callback} from '../types/callback.js';
 
-
 export type LoadVectorTileResult = {
     vectorTile: VectorTile;
     rawData: ArrayBuffer;

@@ -3,7 +3,6 @@ import window from '../../../../src/util/window.js';
 import {createMap} from '../../../util/index.js';
 import GeolocateControl from '../../../../src/ui/control/geolocate_control.js';
 
-
 let geolocation;
 
 test('geolocation mock loads properly', async (t) => {

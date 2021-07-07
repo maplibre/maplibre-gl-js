@@ -9,7 +9,6 @@ import type {FilterSpecification} from '../style-spec/types.js';
 import assert from 'assert';
 import {mat4} from 'gl-matrix';
 
-
 /*
  * Returns a matrix that can be used to convert from tile coordinates to viewport pixel coordinates.
  */

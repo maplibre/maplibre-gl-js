@@ -4,13 +4,11 @@ import DepthMode from '../gl/depth_mode.js';
 import StencilMode from '../gl/stencil_mode.js';
 import ColorMode from '../gl/color_mode.js';
 import CullFaceMode from '../gl/cull_face_mode.js';
-import EXTENT from '../data/extent.js';
 import {
     fillExtrusionUniformValues,
     fillExtrusionPatternUniformValues,
 } from './program/fill_extrusion_program.js';
 import {OverscaledTileID} from '../source/tile_id.js';
-
 import type Painter from './painter.js';
 import type SourceCache from '../source/source_cache.js';
 import type FillExtrusionStyleLayer from '../style/style_layer/fill_extrusion_style_layer.js';
