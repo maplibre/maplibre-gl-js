@@ -15,7 +15,6 @@
 <div id='map'></div>
 
 <script src='../dist/maplibre-gl-dev.js'></script>
-<script src='../debug/access_token_generated.js'></script>
 <script>
 
 var map = new maplibregl.Map({
@@ -23,7 +22,7 @@ var map = new maplibregl.Map({
     zoom: 12.5,
     center: [-77.01866, 38.888],
     hash: true,
-    style: 'mapbox://styles/mapbox/streets-v9'
+    style: 'https://demotiles.maplibre.org/style.json'
 });
 
 map.addControl(new maplibregl.NavigationControl());
