@@ -1,6 +1,7 @@
 import flowRemoveTypes from '@mapbox/flow-remove-types';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import unassert from 'rollup-plugin-unassert';
 import json from '@rollup/plugin-json';
 import {terser} from 'rollup-plugin-terser';
 import minifyStyleSpec from './rollup_plugin_minify_style_spec.js';
@@ -18,6 +19,7 @@ export const plugins = (minified, production) => [
         sourceMap: true,
         functions: ['PerformanceUtils.*', 'Debug.*']
     }) : false,
+    production ? unassert() : false,
     glsl('./src/shaders/*.glsl', production),
     minified ? terser({
         compress: {
