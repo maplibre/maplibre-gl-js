@@ -10,9 +10,10 @@
     "url": "git://github.com/maplibre/maplibre-gl-js.git"
   },
   "engines": {
-    "node": ">=6.4.0"
+    "node": ">=14.16.0"
   },
   "types": "src/index.d.ts",
+  "type": "module",
   "dependencies": {
     "@babel/preset-env": "^7.14.7",
     "@mapbox/geojson-rewind": "^0.5.0",
