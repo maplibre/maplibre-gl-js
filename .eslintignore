@@ -1,5 +1,5 @@
-/rollup/build/
-/dist/
+rollup/build/
+dist/*
 *.es.js
 *.js.map
 node_modules
@@ -27,4 +27,5 @@ yarn-error.log
 yarn-debug.log
 npm-debug.log
 .idea
+*.iml
 bench/benchmarks_view.js
