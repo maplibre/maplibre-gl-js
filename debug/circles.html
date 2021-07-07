@@ -15,14 +15,13 @@
 <div id='map'></div>
 
 <script src='../dist/maplibre-gl-dev.js'></script>
-<script src='../debug/access_token_generated.js'></script>
 <script>
 
 var map = window.map = new maplibregl.Map({
     container: 'map',
     zoom: 3,
     center: [-77.01866, 38.888],
-    style: 'mapbox://styles/mapbox/streets-v9',
+    style: 'https://demotiles.maplibre.org/style.json',
     hash: true
 });
 
