@@ -177,6 +177,8 @@ const exported = {
      * The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
      * The function passed will receive the request parameters and should call the callback with the resulting request,
      * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
+     *
+     * @function addProtocol
      * @param {string} customProtocol - the protocol to hook, for example 'custom'
      * @param {Function} loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
@@ -209,6 +211,8 @@ const exported = {
 
     /**
      * Removes a previusly added protocol
+     *
+     * @function removeProtocol
      * @param {string} customProtocol - the custom protocol to remove registration for
      * @example
      * maplibregl.removeProtocol('custom');
