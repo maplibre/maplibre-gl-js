@@ -3,6 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Update development environment to support Node 14 (#190)
 
 ### 🐞 Bug fixes
 
