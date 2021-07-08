@@ -1,6 +1,5 @@
 /rollup/build/
 /dist/
-!/dist/package.json
 *.es.js
 *.js.map
 node_modules
