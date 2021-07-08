@@ -8,10 +8,14 @@ import {
     Properties,
     DataConstantProperty,
     DataDrivenProperty,
-    CrossFadedDataDrivenProperty
+    CrossFadedDataDrivenProperty,
+    CrossFadedProperty,
+    ColorRampProperty
 } from '../properties.js';
 
 import type Color from '../../style-spec/util/color.js';
+
+import type Formatted from '../../style-spec/expression/types/formatted.js';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image.js';
 

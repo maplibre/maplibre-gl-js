@@ -19,6 +19,7 @@ import type Formatted from '../../style-spec/expression/types/formatted.js';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image.js';
 
+
 export type PaintProps = {|
     "heatmap-radius": DataDrivenProperty<number>,
     "heatmap-weight": DataDrivenProperty<number>,

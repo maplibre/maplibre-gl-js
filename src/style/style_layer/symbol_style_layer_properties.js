@@ -21,7 +21,7 @@ import type ResolvedImage from '../../style-spec/expression/types/resolved_image
 
 import {
     ColorType
-} from '../../style-spec/expression/types.js';
+} from '../../style-spec/expression/types';
 
 export type LayoutProps = {|
     "symbol-placement": DataConstantProperty<"point" | "line" | "line-center">,
