@@ -19,8 +19,8 @@
   ],
   "rules": {
     // temporarily disabled due to https://github.com/babel/babel-eslint/issues/485
-    "no-use-before-define": "off",    
-    
+    "no-use-before-define": "off",  
+
     // no-duplicate-imports doesn't play well with Flow
     // https://github.com/babel/eslint-plugin-babel/issues/59
     "no-duplicate-imports": "off",
@@ -57,6 +57,10 @@
     "no-eq-null": "off",
     "no-lonely-if": "off",
     "no-new": "off",
+    "no-restricted-properties": [2, {
+      "object": "Object",
+      "property": "assign"
+    }],
     "no-unused-vars": ["error", {"argsIgnorePattern": "^_$"}],
     "no-warning-comments": "error",
     "object-curly-spacing": ["error", "never"],
