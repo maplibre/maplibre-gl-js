@@ -2,8 +2,10 @@
 
 import type {CollisionBoxArray} from './array_types.js';
 import type Style from '../style/style.js';
+import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer.js';
 import type FeatureIndex from './feature_index.js';
 import type Context from '../gl/context.js';
+import type {FeatureStates} from '../source/source_state.js';
 import type {ImagePosition} from '../render/image_atlas.js';
 import type {CanonicalTileID} from '../source/tile_id.js';
 

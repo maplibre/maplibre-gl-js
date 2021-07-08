@@ -42,17 +42,20 @@ import {mat4} from 'gl-matrix';
 
 import type {CanonicalTileID} from '../../source/tile_id.js';
 import type {
+    Bucket,
     BucketParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.js';
-import type {CollisionBoxArray, CollisionBox} from '../array_types.js';
+import type {CollisionBoxArray, CollisionBox, SymbolInstance} from '../array_types.js';
 import type {StructArray, StructArrayMember} from '../../util/struct_array.js';
 import SymbolStyleLayer from '../../style/style_layer/symbol_style_layer.js';
 import type Context from '../../gl/context.js';
 import type IndexBuffer from '../../gl/index_buffer.js';
 import type VertexBuffer from '../../gl/vertex_buffer.js';
+import type {SymbolQuad} from '../../symbol/quads.js';
 import type {SizeData} from '../../symbol/symbol_size.js';
+import type {FeatureStates} from '../../source/source_state.js';
 import type {ImagePosition} from '../../render/image_atlas.js';
 
 export type SingleCollisionBox = {

@@ -18,9 +18,11 @@ import SourceFeatureState from './source_state.js';
 import type {Source} from './source.js';
 import type Map from '../ui/map.js';
 import type Style from '../style/style.js';
+import type Dispatcher from '../util/dispatcher.js';
 import type Transform from '../geo/transform.js';
 import type {TileState} from './tile.js';
 import type {Callback} from '../types/callback.js';
+import type {SourceSpecification} from '../style-spec/types.js';
 
 /**
  * `SourceCache` is responsible for

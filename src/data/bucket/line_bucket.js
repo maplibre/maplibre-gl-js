@@ -26,11 +26,13 @@ import type {
 } from '../bucket.js';
 import type LineStyleLayer from '../../style/style_layer/line_style_layer.js';
 import type Point from '@mapbox/point-geometry';
+import type {Segment} from '../segment.js';
 import {RGBAImage} from '../../util/image.js';
 import type Context from '../../gl/context.js';
 import type Texture from '../../render/texture.js';
 import type IndexBuffer from '../../gl/index_buffer.js';
 import type VertexBuffer from '../../gl/vertex_buffer.js';
+import type {FeatureStates} from '../../source/source_state.js';
 import type {ImagePosition} from '../../render/image_atlas.js';
 
 // NOTE ON EXTRUDE SCALE:

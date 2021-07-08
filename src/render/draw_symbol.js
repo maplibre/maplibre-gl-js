@@ -29,6 +29,8 @@ import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer.js';
 import type SymbolBucket, {SymbolBuffers} from '../data/bucket/symbol_bucket.js';
 import type Texture from '../render/texture.js';
 import type {OverscaledTileID} from '../source/tile_id.js';
+import type {UniformValues} from './uniform_binding.js';
+import type {SymbolSDFUniformsType} from '../render/program/symbol_program.js';
 import type {CrossTileID, VariableOffset} from '../symbol/placement.js';
 
 export default drawSymbols;

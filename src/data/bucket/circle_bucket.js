@@ -13,13 +13,20 @@ import {register} from '../../util/web_worker_transfer.js';
 import EvaluationParameters from '../../style/evaluation_parameters.js';
 
 import type {CanonicalTileID} from '../../source/tile_id.js';
-import type {BucketFeature} from '../bucket.js';
+import type {
+    Bucket,
+    BucketParameters,
+    BucketFeature,
+    IndexedFeature,
+    PopulateParameters
+} from '../bucket.js';
 import type CircleStyleLayer from '../../style/style_layer/circle_style_layer.js';
 import type HeatmapStyleLayer from '../../style/style_layer/heatmap_style_layer.js';
 import type Context from '../../gl/context.js';
 import type IndexBuffer from '../../gl/index_buffer.js';
 import type VertexBuffer from '../../gl/vertex_buffer.js';
 import type Point from '@mapbox/point-geometry';
+import type {FeatureStates} from '../../source/source_state.js';
 import type {ImagePosition} from '../../render/image_atlas.js';
 
 function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {

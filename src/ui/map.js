@@ -20,7 +20,7 @@ import LngLatBounds from '../geo/lng_lat_bounds.js';
 import Point from '@mapbox/point-geometry';
 import AttributionControl from './control/attribution_control.js';
 import LogoControl from './control/logo_control.js';
-import isSupported from '@mapbox/mapbox-gl-supported';
+import supported from '@mapbox/mapbox-gl-supported';
 import {RGBAImage} from '../util/image.js';
 import {Event, ErrorEvent} from '../util/evented.js';
 import {MapMouseEvent} from './events.js';
@@ -2323,7 +2323,7 @@ class Map extends Camera {
     }
 
     _setupPainter() {
-        const attributes = extend({}, isSupported.webGLContextAttributes, {
+        const attributes = extend({}, supported.webGLContextAttributes, {
             failIfMajorPerformanceCaveat: this._failIfMajorPerformanceCaveat,
             preserveDrawingBuffer: this._preserveDrawingBuffer,
             antialias: this._antialias || false

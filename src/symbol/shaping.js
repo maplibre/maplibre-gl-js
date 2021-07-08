@@ -15,6 +15,7 @@ import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph.js';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf.js';
 import type {ImagePosition} from '../render/image_atlas.js';
 import {IMAGE_PADDING} from '../render/image_atlas.js';
+import type {Rect, GlyphPosition} from '../render/glyph_atlas.js';
 import Formatted, {FormattedSection} from '../style-spec/expression/types/formatted.js';
 
 const WritingMode = {

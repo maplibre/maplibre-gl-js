@@ -13,7 +13,7 @@ import type DepthMode from '../gl/depth_mode.js';
 import type StencilMode from '../gl/stencil_mode.js';
 import type ColorMode from '../gl/color_mode.js';
 import type CullFaceMode from '../gl/cull_face_mode.js';
-import type {UniformValues} from './uniform_binding.js';
+import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding.js';
 import type {BinderUniform} from '../data/program_configuration.js';
 
 export type DrawMode =

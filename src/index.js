@@ -1,7 +1,7 @@
 // @flow
 
 import assert from 'assert';
-import {supported} from '@mapbox/mapbox-gl-supported';
+import supported from '@mapbox/mapbox-gl-supported';
 
 import {version} from '../package.json';
 import Map from './ui/map.js';
@@ -26,6 +26,8 @@ import WorkerPool from './util/worker_pool.js';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool.js';
 import {clearTileCache} from './util/tile_request_cache.js';
 import {PerformanceUtils} from './util/performance.js';
+import type {RequestParameters, ResponseCallback} from './util/ajax.js';
+import type {Cancelable} from './types/cancelable.js';
 
 const exported = {
     version,

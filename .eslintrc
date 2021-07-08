@@ -18,6 +18,9 @@
     "jsdoc"
   ],
   "rules": {
+    // temporarily disabled due to https://github.com/babel/babel-eslint/issues/485
+    "no-use-before-define": "off",    
+    
     // no-duplicate-imports doesn't play well with Flow
     // https://github.com/babel/eslint-plugin-babel/issues/59
     "no-duplicate-imports": "off",
@@ -29,8 +32,6 @@
       "json": "always"
     }],
 
-    // temporarily disabled for easier upgrading of dependencies
-    "no-use-before-define": "off",
     "implicit-arrow-linebreak": "off",
     "arrow-parens": "off",
     "arrow-body-style": "off",
@@ -97,7 +98,6 @@
     {
       "files": ["debug/**", "bench/**", "test/**", "src/style-spec/**"],
       "rules": {
-        "flowtype/require-valid-file-annotation": "off",
         "jsdoc/check-param-names": "off",
         "jsdoc/require-param": "off",
         "jsdoc/require-param-description": "off",

@@ -8,8 +8,8 @@ import {RequestManager} from '../../../src/util/mapbox.js';
 import loadGlyphRange from '../../../src/style/load_glyph_range.js';
 
 import {fileURLToPath} from 'url';
-// $FlowFixMe
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
+// $FlowFixMe https://github.com/facebook/flow/issues/6913
+const __dirname = fileURLToPath(new URL('.', import/*:: ("")*/.meta.url));
 
 test('loadGlyphRange', (t) => {
     window.useFakeXMLHttpRequest();
