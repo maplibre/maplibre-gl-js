@@ -173,3 +173,16 @@ jobs:
           yarn publish --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+
+  dispatch_event_to_docs:
+    name: Dispatch release event to docs
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.DOCS_ACCESS_TOKEN }}
+          repository: maplibre/maplibre-gl-js-docs
+          event-type: release-maplibre-gl-js
+
