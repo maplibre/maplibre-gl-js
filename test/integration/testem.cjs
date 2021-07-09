@@ -16,21 +16,21 @@ let server;
 let fixtureWatcher;
 const rollupWatchers = {};
 
-// Import ES modules inside the CommonJS
+// Import mjs (ES6 modules) inside this cjs 
 let generateFixtureJson, getAllFixtureGlobs, createServer, buildTape, rollupDevConfig, rollupTestConfig;
 async function loadModules() {
-    const generateFixture = await import('../lib/generate-fixture-json.js');
+    const generateFixture = await import('./lib/generate-fixture-json.js');
     generateFixtureJson = generateFixture.generateFixtureJson;
     getAllFixtureGlobs = generateFixture.getAllFixtureGlobs;
 
-    createServer = (await import('../lib/server.js')).default;
-    buildTape = (await import('../../../build/test/build-tape.js')).default;
-    rollupDevConfig = (await import('../../../rollup.config.js')).default;
-    rollupTestConfig = (await import('../rollup.config.test.js')).default;
+    createServer = (await import('./lib/server.js')).default;
+    buildTape = (await import('../../build/test/build-tape.js')).default;
+    rollupDevConfig = (await import('../../rollup.config.js')).default;
+    rollupTestConfig = (await import('./rollup.config.test.js')).default;
 }
 
 module.exports =  {
-    "test_page": "test/integration/testem/testem_page.html",
+    "test_page": "test/integration/testem_page.html",
     "src_files": [
         "dist/maplibre-gl-dev.js",
         "test/integration/dist/query-test.js"
