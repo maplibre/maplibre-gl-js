@@ -8,17 +8,15 @@ import commonjs from 'rollup-plugin-commonjs';
 
 let styles = ['mapbox://styles/mapbox/streets-v10'];
 
-if (process.env.MAPBOX_STYLES) {
-    styles = process.env.MAPBOX_STYLES
+if (process.env.MAPLIBRE_STYLES) {
+    styles = process.env.MAPLIBRE_STYLES
         .split(',')
         .map(style => style.match(/\.json$/) ? require(style) : style);
 }
 
 const replaceConfig = {
     'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION),
-    'process.env.MAPBOX_ACCESS_TOKEN': JSON.stringify(process.env.MAPBOX_ACCESS_TOKEN),
-    'process.env.MapboxAccessToken': JSON.stringify(process.env.MapboxAccessToken),
-    'process.env.MAPBOX_STYLES': JSON.stringify(styles),
+    'process.env.MAPLIBRE_STYLES': JSON.stringify(styles),
     'process.env.NODE_ENV': JSON.stringify('production')
 };
 
