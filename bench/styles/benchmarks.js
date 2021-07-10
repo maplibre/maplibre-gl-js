@@ -17,9 +17,9 @@ const benchmarks = window.benchmarks = [];
 function register(name, Benchmark, locations, location) {
     const versions = [];
 
-    for (const style of process.env.MAPBOX_STYLES) {
+    for (const style of process.env.MAPLIBRE_STYLES) {
         versions.push({
-            name: style.name || style.replace('mapbox://styles/', ''),
+            name: style.name || style,
             bench: new Benchmark(style, locations)
         });
     }
@@ -27,8 +27,8 @@ function register(name, Benchmark, locations, location) {
 }
 
 register('StyleLayerCreate', StyleLayerCreate);
-register('Validate', Validate);
-locations.forEach(location => register('Layout', Layout, location.tileID, location));
+//register('Validate', Validate);
+//locations.forEach(location => register('Layout', Layout, location.tileID, location));
 locations.forEach(location => register('Paint', Paint, [location], location));
 register('QueryPoint', QueryPoint, locations);
 register('QueryBox', QueryBox, locations);

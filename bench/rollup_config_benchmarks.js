@@ -5,17 +5,17 @@ import {plugins} from '../build/rollup_plugins';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 
-let styles = ['mapbox://styles/mapbox/streets-v10'];
+let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
-if (process.env.MAPBOX_STYLES) {
-    styles = process.env.MAPBOX_STYLES
+if (process.env.MAPLIBRE_STYLES) {
+    styles = process.env.MAPLIBRE_STYLES
         .split(',')
         .map(style => style.match(/\.json$/) ? require(style) : style);
 }
 
 const replaceConfig = {
     'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION),
-    'process.env.MAPBOX_STYLES': JSON.stringify(styles),
+    'process.env.MAPLIBRE_STYLES': JSON.stringify(styles),
     'process.env.NODE_ENV': JSON.stringify('production')
 };
 
