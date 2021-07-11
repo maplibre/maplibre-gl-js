@@ -479,7 +479,7 @@ declare namespace maplibregl {
          * // Sets a left padding of 300px, and a top padding of 50px
          * map.setPadding({ left: 300, top: 50 });
          */
-        setPadding(padding: PaddingOptions, eventData?: EventData): this;
+        setPadding(padding: RequireAtLeastOne<PaddingOptions>, eventData?: EventData): this;
 
         rotateTo(bearing: number, options?: maplibregl.AnimationOptions, eventData?: EventData): this;
 
@@ -765,6 +765,8 @@ declare namespace maplibregl {
          */
         accessToken?: string;
     }
+
+    export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
 
     export type ResourceType =
         | 'Unknown'
@@ -1836,7 +1838,7 @@ declare namespace maplibregl {
     }
 
     export interface CameraForBoundsOptions extends CameraOptions {
-        padding?: number | PaddingOptions;
+        padding?: number | RequireAtLeastOne<PaddingOptions>;
         offset?: PointLike;
         maxZoom?: number;
     }
@@ -1864,11 +1866,12 @@ declare namespace maplibregl {
      */
     export interface EaseToOptions extends AnimationOptions, CameraOptions {
         delayEndEvents?: number;
+        padding?: number | RequireAtLeastOne<PaddingOptions>;
     }
 
     export interface FitBoundsOptions extends maplibregl.FlyToOptions {
         linear?: boolean;
-        padding?: number | maplibregl.PaddingOptions;
+        padding?: number | RequireAtLeastOne<PaddingOptions>;
         offset?: maplibregl.PointLike;
         maxZoom?: number;
         maxDuration?: number;
