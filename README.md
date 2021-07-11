@@ -12,7 +12,7 @@ If you depend on mapbox-gl directly, simply replace `mapbox-gl` with `maplibre-g
   }
 ```
 
-And replace ```mapboxgl``` with ```maplibregl``` in your JavaScript/HTML/CSS code:
+And replace ```mapboxgl``` with ```maplibregl``` in your JavaScript and optionannly in your HTML/CSS code:
 ```diff
 -    var map = new mapboxgl.Map({
 +    var map = new maplibregl.Map({

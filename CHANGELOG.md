@@ -7,6 +7,7 @@
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
+- Fix breaking changes introduced in v1.15.0 by adoption dual naming scheme for CSS class names
 
 ## 1.15.1
 
