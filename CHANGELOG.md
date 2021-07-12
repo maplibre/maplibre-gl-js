@@ -8,6 +8,11 @@
 
 - *...Add new stuff here...*
 
+## 1.15.2
+
+### 🐞 Bug fixes
+- Fix breaking changes introduced in v1.15.0 by adoption dual naming scheme for CSS class names
+
 ## 1.15.1
 
 ### 🐞 Bug fixes

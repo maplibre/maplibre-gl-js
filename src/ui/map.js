@@ -2284,14 +2284,14 @@ class Map extends Camera {
 
     _setupContainer() {
         const container = this._container;
-        container.classList.add('maplibregl-map');
+        container.classList.add('maplibregl-map', 'mapboxgl-map');
 
-        const canvasContainer = this._canvasContainer = DOM.create('div', 'maplibregl-canvas-container', container);
+        const canvasContainer = this._canvasContainer = DOM.create('div', 'maplibregl-canvas-container mapboxgl-canvas-container', container);
         if (this._interactive) {
-            canvasContainer.classList.add('maplibregl-interactive');
+            canvasContainer.classList.add('maplibregl-interactive', 'mapboxgl-interactive');
         }
 
-        this._canvas = DOM.create('canvas', 'maplibregl-canvas', canvasContainer);
+        this._canvas = DOM.create('canvas', 'maplibregl-canvas mapboxgl-canvas', canvasContainer);
         this._canvas.addEventListener('webglcontextlost', this._contextLost, false);
         this._canvas.addEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.setAttribute('tabindex', '0');
@@ -2301,10 +2301,10 @@ class Map extends Camera {
         const dimensions = this._containerDimensions();
         this._resizeCanvas(dimensions[0], dimensions[1]);
 
-        const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
+        const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container mapboxgl-control-container', container);
         const positions = this._controlPositions = {};
         ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach((positionName) => {
-            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName}`, controlContainer);
+            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName} mapboxgl-ctrl-${positionName}`, controlContainer);
         });
 
         this._container.addEventListener('scroll', this._onMapScroll, false);
@@ -2592,7 +2592,7 @@ class Map extends Camera {
         if (extension) extension.loseContext();
         removeNode(this._canvasContainer);
         removeNode(this._controlContainer);
-        this._container.classList.remove('maplibregl-map');
+        this._container.classList.remove('maplibregl-map', 'mapboxgl-map');
 
         PerformanceUtils.clearMetrics();
 
