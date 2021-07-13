@@ -17,7 +17,7 @@ jobs:
           - macos-latest
           - windows-latest
         node_version:
-          - 10
+          - 14
         architecture:
           - x64
 
@@ -42,10 +42,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 10 x64
+      - name: Use Node.js 14 x64
         uses: actions/setup-node@v2-beta
         with:
-          node-version: 10
+          node-version: 14
           architecture: x64
       - run: yarn install --frozen-lockfile
       - run: yarn run lint
@@ -57,10 +57,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 10 x64
+      - name: Use Node.js 14 x64
         uses: actions/setup-node@v2-beta
         with:
-          node-version: 10
+          node-version: 14
           architecture: x64
       - run: yarn install --frozen-lockfile
       - run: yarn run test-flow
@@ -70,10 +70,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 10 x64
+      - name: Use Node.js 14 x64
         uses: actions/setup-node@v2-beta
         with:
-          node-version: 10
+          node-version: 14
           architecture: x64
       - run: yarn install --frozen-lockfile
       # see: https://github.com/stackgl/headless-gl#how-can-headless-gl-be-used-on-a-headless-linux-machine
@@ -84,10 +84,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 10 x64
+      - name: Use Node.js 14 x64
         uses: actions/setup-node@v2-beta
         with:
-          node-version: 10
+          node-version: 14
           architecture: x64
       - run: yarn install --frozen-lockfile
       - run: yarn run test-query
@@ -105,10 +105,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 10 x64
+      - name: Use Node.js 14 x64
         uses: actions/setup-node@v2-beta
         with:
-          node-version: 10
+          node-version: 14
           architecture: x64
       - run: yarn install --frozen-lockfile
       - run: yarn run test-expressions
@@ -120,10 +120,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 10 x64
+      - name: Use Node.js 14 x64
         uses: actions/setup-node@v2-beta
         with:
-          node-version: 10
+          node-version: 14
           architecture: x64
       - run: yarn install --frozen-lockfile
       - run: yarn run build-dev
@@ -146,10 +146,10 @@ jobs:
   #   needs: [build]
   #   steps:
   #     - uses: actions/checkout@v2
-  #     - name: Use Node.js 10 x64
+  #     - name: Use Node.js 14 x64
   #       uses: actions/setup-node@v2-beta
   #       with:
-  #         node-version: 10
+  #         node-version: 14
   #         architecture: x64
   #     - run: yarn install --frozen-lockfile
   #     - uses: actions/download-artifact@v2
@@ -166,10 +166,10 @@ jobs:
   # test-render:
   #   runs-on: ubuntu-latest
   #   steps:
-  # - name: Use Node.js 10 x64
+  # - name: Use Node.js 14 x64
   #   uses: actions/setup-node@v2-beta
   #   with:
-  #     node-version: 10
+  #     node-version: 14
   #     architecture: x64
   # - run: yarn install --frozen-lockfile
   #     - run: yarn run test-render
