@@ -93,7 +93,7 @@ class TerrainSourceCache extends Evented {
         const elevation = tile && tile.dem && x >= 0 && y >= 0 && x <= extent && y <= extent //FIXME-3D handle negative coordinates
            ? tile.dem.get(Math.floor(x / extent * tile.dem.dim), Math.floor(y / extent * tile.dem.dim))
            : 0;
-        return elevation * this.exaggeration;
+        return (elevation + 450) * this.exaggeration; // add a global offset of 450m to put the dead-sea into positive values.
     }
 
     /**
