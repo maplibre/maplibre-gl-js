@@ -66,7 +66,7 @@ class CircleBucket<Layer: CircleStyleLayer | HeatmapStyleLayer> implements Bucke
     segments: SegmentVector;
     uploaded: boolean;
 
-    points: any;
+    points: Array<Object>;
 
     constructor(options: BucketParameters<Layer>) {
         this.zoom = options.zoom;

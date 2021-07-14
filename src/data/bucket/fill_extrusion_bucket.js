@@ -75,7 +75,7 @@ class FillExtrusionBucket implements Bucket {
     segments: SegmentVector;
     uploaded: boolean;
     features: Array<BucketFeature>;
-    points: any;
+    points: Array<Object>;
 
     constructor(options: BucketParameters<FillExtrusionStyleLayer>) {
         this.zoom = options.zoom;
@@ -164,7 +164,7 @@ class FillExtrusionBucket implements Bucket {
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
-        const points = [];
+        const point = { x: 0, y: 0, size: 0 };
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             let numVertices = 0;
             for (const ring of polygon) {
@@ -182,7 +182,6 @@ class FillExtrusionBucket implements Bucket {
                 }
 
                 let edgeDistance = 0;
-                let point = { x: 0, y: 0, size: 0 };
 
                 for (let p = 0; p < ring.length; p++) {
                     const p1 = ring[p];
@@ -225,13 +224,6 @@ class FillExtrusionBucket implements Bucket {
                     }
                 }
 
-                // reduce polygon to centroid and set elevation for it
-                points.push({
-                    x: Math.floor(point.x / point.size),
-                    y: Math.floor(point.y / point.size),
-                    size: point.size
-                });
-
             }
 
             if (segment.vertexLength + numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
@@ -252,8 +244,6 @@ class FillExtrusionBucket implements Bucket {
                     continue;
                 }
 
-                let point = { x: 0, y: 0, size: 0 };
-
                 if (ring !== polygon[0]) {
                     holeIndices.push(flattened.length / 2);
                 }
@@ -268,12 +258,6 @@ class FillExtrusionBucket implements Bucket {
                     flattened.push(p.y);
                 }
 
-                // reduce polygon to centroid and set elevation for it
-                points.push({
-                    x: Math.floor(point.x / point.size),
-                    y: Math.floor(point.y / point.size),
-                    size: point.size
-                });
             }
 
             const indices = earcut(flattened, holeIndices);
@@ -291,9 +275,14 @@ class FillExtrusionBucket implements Bucket {
             segment.vertexLength += numVertices;
         }
 
-        let pointSize = points.map(p => p.size).reduce((a, b) => a + b, 0);
-        for (let i=0; i<pointSize; i++) this.elevationVertexArray.emplaceBack(0); // calculated later
-        this.points = this.points.concat(points);
+
+        // remember polygon centroid to calculate elevation later
+        this.points.push({
+            x: Math.floor(point.x / point.size),
+            y: Math.floor(point.y / point.size),
+            size: point.size
+        });
+        for (let i=0; i<point.size; i++) this.elevationVertexArray.emplaceBack(0); // calculated later
 
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }

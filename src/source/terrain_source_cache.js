@@ -25,7 +25,8 @@ class TerrainSourceCache extends Evented {
         this.minzoom = 5;
         this.maxzoom = 14;
         this.tileSize = 512;
-        this.meshSize = 32;
+        this.meshSize = 64;
+        this.exaggeration = 1;
         style.on("data", () => this._rerender = true);
     }
 
@@ -42,6 +43,7 @@ class TerrainSourceCache extends Evented {
      * @private
      */
     update(transform: Transform, context: Context) {
+        transform._calcMatrices();
         let idealTileIDs = this.getRenderableTileIds(transform).filter(id => !this._tiles[id.key]);
         for (const tileID of idealTileIDs) {
             let tile = this._tiles[tileID.key] = this._createEmptyTile(tileID);
@@ -87,10 +89,11 @@ class TerrainSourceCache extends Evented {
      * @param {number} extent optional, default 8192
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number=EXTENT): number {
-        let tile = this.getTileByID(tileID.key);
-        return tile && tile.dem && x >= 0 && y >= 0 && x <= extent && y <= extent //FIXME-3D handle negative coordinates
+        const tile = this.getTileByID(tileID.key);
+        const elevation = tile && tile.dem && x >= 0 && y >= 0 && x <= extent && y <= extent //FIXME-3D handle negative coordinates
            ? tile.dem.get(Math.floor(x / extent * tile.dem.dim), Math.floor(y / extent * tile.dem.dim))
            : 0;
+        return elevation * this.exaggeration;
     }
 
     /**

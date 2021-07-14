@@ -450,6 +450,17 @@ class Transform {
 
     get point(): Point { return this.project(this.center); }
 
+    getElevation(lnglat: LngLat) {
+        const merc = this.locationCoordinate(lnglat), tsc = this.terrainSourceCache;
+        if (!tsc) return 0;
+        const tileZ = tsc.maxzoom < this.tileZoom ? tsc.maxzoom : this.tileZoom;
+        const tileSize = tsc.tileSize, worldSize = (1 << tileZ) * tileSize;
+        const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
+        const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
+        const tileID = new OverscaledTileID(this.tileZoom, 0, tileZ, tileX, tileY);
+        return this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize, tileSize);
+    }
+
     setLocationAtPoint(lnglat: LngLat, point: Point) {
         const a = this.pointCoordinate(point);
         const b = this.pointCoordinate(this.centerPoint);
@@ -480,14 +491,7 @@ class Transform {
      * @private
      */
     locationPoint3D(lnglat: LngLat) {
-        const merc = this.locationCoordinate(lnglat), tsc = this.terrainSourceCache;
-        const tileZ = tsc.maxzoom < this.tileZoom ? tsc.maxzoom : this.tileZoom;
-        const tileSize = tsc.tileSize, worldSize = (1 << tileZ) * tileSize;
-        const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
-        const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
-        const tileID = new OverscaledTileID(this.tileZoom, 0, tileZ, tileX, tileY);
-        const elevation = this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize, tileSize);
-        return this.coordinatePoint(this.locationCoordinate(lnglat), elevation);
+        return this.coordinatePoint(this.locationCoordinate(lnglat), this.getElevation(lnglat));
     }
 
     /**
@@ -735,9 +739,21 @@ class Transform {
     _calcMatrices() {
         if (!this.height) return;
 
+        const elevation = this.getElevation(this._center);
         const halfFov = this._fov / 2;
         const offset = this.centerOffset;
         this.cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this.height;
+
+        let m = mat4.create();
+        mat4.scale(m, m, [this.width / 2, -this.height / 2, 1]);
+        mat4.translate(m, m, [1, -1, 0]);
+        this.labelPlaneMatrix = m;
+
+        m = mat4.create();
+        mat4.scale(m, m, [1, -1, 1]);
+        mat4.translate(m, m, [-1, -1, 0]);
+        mat4.scale(m, m, [2 / this.width, 2 / this.height, 1]);
+        this.glCoordMatrix = m;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
@@ -748,11 +764,12 @@ class Transform {
         const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * this.cameraToCenterDistance / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
         const point = this.point;
         const x = point.x, y = point.y;
+        const metersPerPixel = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
 
         // Calculate z distance of the farthest fragment that should be rendered.
         const furthestDistance = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistance + this.cameraToCenterDistance;
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
-        const farZ = furthestDistance * 1.01;
+        const farZ = (furthestDistance + elevation * metersPerPixel / Math.cos(this._pitch)) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
@@ -764,10 +781,10 @@ class Transform {
         const nearZ = this.height / 50;
 
         // matrix for conversion from location to GL coordinates (-1 .. 1)
-        let m = new Float64Array(16);
+        m = new Float64Array(16);
         mat4.perspective(m, this._fov, this.width / this.height, nearZ, farZ);
 
-        //Apply center of perspective offset
+        // Apply center of perspective offset
         m[8] = -offset.x * 2 / this.width;
         m[9] = offset.y * 2 / this.height;
 
@@ -782,8 +799,13 @@ class Transform {
         this.mercatorMatrix = mat4.scale([], m, [this.worldSize, this.worldSize, this.worldSize]);
 
         // scale vertically to meters per pixel (inverse of ground resolution):
-        mat4.scale(m, m, [1, 1, mercatorZfromAltitude(1, this.center.lat) * this.worldSize, 1]);
+        mat4.scale(m, m, [1, 1, metersPerPixel, 1]);
 
+        // matrix for conversion from location to screen coordinates
+        this.pixelMatrix = mat4.multiply(new Float64Array(16), this.labelPlaneMatrix, m);
+
+        // matrix for conversion from location to GL coordinates (-1 .. 1)
+        mat4.translate(m, m, [0, 0, -elevation]);
         this.projMatrix = m;
         this.invProjMatrix = mat4.invert([], this.projMatrix);
 
@@ -800,20 +822,6 @@ class Transform {
         const alignedM = new Float64Array(m);
         mat4.translate(alignedM, alignedM, [ dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0 ]);
         this.alignedProjMatrix = alignedM;
-
-        m = mat4.create();
-        mat4.scale(m, m, [this.width / 2, -this.height / 2, 1]);
-        mat4.translate(m, m, [1, -1, 0]);
-        this.labelPlaneMatrix = m;
-
-        m = mat4.create();
-        mat4.scale(m, m, [1, -1, 1]);
-        mat4.translate(m, m, [-1, -1, 0]);
-        mat4.scale(m, m, [2 / this.width, 2 / this.height, 1]);
-        this.glCoordMatrix = m;
-
-        // matrix for conversion from location to screen coordinates
-        this.pixelMatrix = mat4.multiply(new Float64Array(16), this.labelPlaneMatrix, this.projMatrix);
 
         // inverse matrix for conversion from screen coordinaes to location
         m = mat4.invert(new Float64Array(16), this.pixelMatrix);
