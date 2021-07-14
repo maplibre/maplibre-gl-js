@@ -206,11 +206,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             iframeDoc.write([
                 '<!DOCTYPE html>',
-                '<html>',
+                '<html lang="en">',
                 '<head>',
                 '    <title>MapLibre GL JS debug page</title>',
                 '    <meta charset="utf-8">',
-                '    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">',
+                '    <meta name="viewport" content="width=device-width, initial-scale=1">',
                 '    <script src="' + js + '"><\/script>',
                 '    <script>maplibre.accessToken = "' + params.access_token + '";<\/script>',
                 '    <link rel="stylesheet" href="' + css + '" />',

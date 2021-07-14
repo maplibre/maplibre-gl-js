@@ -270,7 +270,6 @@ class Map extends Camera {
     handlers: HandlerManager;
 
     _container: HTMLElement;
-    _missingCSSCanary: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
@@ -1343,6 +1342,22 @@ class Map extends Camera {
         }
     }
 
+    /**
+     *  Updates the requestManager's transform request with a new function
+     *
+     *  @param transformRequest A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
+     *    Expected to return an object with a `url` property and optionally `headers` and `credentials` properties
+     *
+     *  @returns {Map} `this`
+     *
+     *  @example
+     *  map.setTransformRequest((url: string, resourceType: string) => {});
+     */
+    setTransformRequest(transformRequest: RequestTransformFunction) {
+        this._requestManager.setTransformRequest(transformRequest);
+        return this;
+    }
+
     _getUIString(key: string) {
         const str = this._locale[key];
         if (str == null) {
@@ -2267,30 +2282,16 @@ class Map extends Camera {
         return [width, height];
     }
 
-    _detectMissingCSS(): void {
-        const computedColor = window.getComputedStyle(this._missingCSSCanary).getPropertyValue('background-color');
-        if (computedColor !== 'rgb(250, 128, 114)') {
-            warnOnce('This page appears to be missing CSS declarations for ' +
-                'Mapbox GL JS, which may cause the map to display incorrectly. ' +
-                'Please ensure your page includes mapbox-gl.css, as described ' +
-                'in https://www.mapbox.com/mapbox-gl-js/api/.');
-        }
-    }
-
     _setupContainer() {
         const container = this._container;
-        container.classList.add('mapboxgl-map');
+        container.classList.add('maplibregl-map', 'mapboxgl-map');
 
-        const missingCSSCanary = this._missingCSSCanary = DOM.create('div', 'mapboxgl-canary', container);
-        missingCSSCanary.style.visibility = 'hidden';
-        this._detectMissingCSS();
-
-        const canvasContainer = this._canvasContainer = DOM.create('div', 'mapboxgl-canvas-container', container);
+        const canvasContainer = this._canvasContainer = DOM.create('div', 'maplibregl-canvas-container mapboxgl-canvas-container', container);
         if (this._interactive) {
-            canvasContainer.classList.add('mapboxgl-interactive');
+            canvasContainer.classList.add('maplibregl-interactive', 'mapboxgl-interactive');
         }
 
-        this._canvas = DOM.create('canvas', 'mapboxgl-canvas', canvasContainer);
+        this._canvas = DOM.create('canvas', 'maplibregl-canvas mapboxgl-canvas', canvasContainer);
         this._canvas.addEventListener('webglcontextlost', this._contextLost, false);
         this._canvas.addEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.setAttribute('tabindex', '0');
@@ -2300,10 +2301,10 @@ class Map extends Camera {
         const dimensions = this._containerDimensions();
         this._resizeCanvas(dimensions[0], dimensions[1]);
 
-        const controlContainer = this._controlContainer = DOM.create('div', 'mapboxgl-control-container', container);
+        const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container mapboxgl-control-container', container);
         const positions = this._controlPositions = {};
         ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach((positionName) => {
-            positions[positionName] = DOM.create('div', `mapboxgl-ctrl-${positionName}`, controlContainer);
+            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName} mapboxgl-ctrl-${positionName}`, controlContainer);
         });
 
         this._container.addEventListener('scroll', this._onMapScroll, false);
@@ -2591,8 +2592,7 @@ class Map extends Camera {
         if (extension) extension.loseContext();
         removeNode(this._canvasContainer);
         removeNode(this._controlContainer);
-        removeNode(this._missingCSSCanary);
-        this._container.classList.remove('mapboxgl-map');
+        this._container.classList.remove('maplibregl-map', 'mapboxgl-map');
 
         PerformanceUtils.clearMetrics();
 
@@ -2763,7 +2763,7 @@ function removeNode(node) {
  *
  * Controls must implement `onAdd` and `onRemove`, and must own an
  * element, which is often a `div` element. To use Mapbox GL JS's
- * default control styling, add the `mapboxgl-ctrl` class to your control's
+ * default control styling, add the `maplibregl-ctrl` class to your control's
  * node.
  *
  * @interface IControl
@@ -2773,7 +2773,7 @@ function removeNode(node) {
  *     onAdd(map) {
  *         this._map = map;
  *         this._container = document.createElement('div');
- *         this._container.className = 'mapboxgl-ctrl';
+ *         this._container.className = 'maplibregl-ctrl';
  *         this._container.textContent = 'Hello, world';
  *         return this._container;
  *     }
@@ -2790,7 +2790,7 @@ function removeNode(node) {
  * HelloWorldControl.prototype.onAdd = function(map) {
  *     this._map = map;
  *     this._container = document.createElement('div');
- *     this._container.className = 'mapboxgl-ctrl';
+ *     this._container.className = 'maplibregl-ctrl';
  *     this._container.textContent = 'Hello, world';
  *     return this._container;
  * };

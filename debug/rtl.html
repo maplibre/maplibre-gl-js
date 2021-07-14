@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>MapLibre GL JS debug page</title>
     <meta charset='utf-8'>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='/dist/maplibre-gl.css' />
     <style>
         body { margin: 0; padding: 0; }
@@ -28,7 +28,6 @@
 </div>
 
 <script src='/dist/maplibre-gl-dev.js'></script>
-<script src='/debug/access_token_generated.js'></script>
 <script>
 // badPluginURL allows us to simulate a NetworkError that we can recover from by retrying plugin loading
 var badPluginURL = 'http://localhost:9966/debug/2762.html';
@@ -37,7 +36,7 @@ var map = window.map = new maplibregl.Map({
     container: 'map',
     zoom: 16.5,
     center: [44.355435, 33.258814],
-    style: 'mapbox://styles/mapbox/streets-v11',
+    style: 'https://demotiles.maplibre.org/style.json',
     hash: true
 });
 

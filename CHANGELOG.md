@@ -3,18 +3,42 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+
+### 🐞 Bug fixes
+
+- *...Add new stuff here...*
+
+## 1.15.2
+
+### 🐞 Bug fixes
+- Fix breaking changes introduced in v1.15.0 by adoption dual naming scheme for CSS class names
+
+## 1.15.1
+
+### 🐞 Bug fixes
+
+- Add void return for some method declaration to match TS strict mode (#194)
+- Fix css leftovers (#83)
+
+## 1.15.0
+
+### Features and improvements
+
+- ** Breaking Change: ** Rename css classes (#83)
+- Added custom protocol support to allow overriding ajax calls (#29)
+- Added setTransformRequest to map (#159)
 - Publish @maplibre/maplibre-gl-style-spec v14.0.0 on NPM (#149)
 - Replace link to mapbox on LogoControl by link to maplibre (#151)
 - Migrate style spec files from mapbox to maplibre (#147)
 - Publish the MapLibre style spec in NPM (#140)
 - Replace mapboxgl with maplibregl in JSDocs inline examples (#134)
-- Bring in typescript definitions file (#24) 
+- Bring in typescript definitions file (#24)
 - Update example links to https://maplibre.org/maplibre-gl-js-docs/ (#131)
 - Improve performance of layers with constant `*-sort-key` (#78)
 
 ### 🐞 Bug fixes
 
-- *...Add fixed bugs here...*
+- Prevented attribution button from submiting form (#178)
 
 ## 1.14.0
 

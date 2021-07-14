@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>MapLibre GL JS debug page</title>
     <meta charset='utf-8'>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body>
@@ -12,7 +12,6 @@
 <script>
 const maplibregl = {};
 </script>
-<script src='../debug/access_token_generated.js'></script>
 <script>
 const js = document.createElement("a");
 js.href = "../dist/maplibre-gl-dev.js";
@@ -20,11 +19,11 @@ const css = document.createElement("a");
 css.href = "../dist/maplibre-gl.css";
 document.querySelector('iframe').src = URL.createObjectURL(new Blob([ `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>MapLibre GL JS debug page</title>
     <meta charset='utf-8'>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='${css.href}' />
     <style>
         body { margin: 0; padding: 0; }
@@ -42,7 +41,7 @@ var map = window.map = new maplibregl.Map({
     container: 'map',
     zoom: 12.5,
     center: [-77.01866, 38.888],
-    style: 'mapbox://styles/mapbox/streets-v10',
+    style: 'https://demotiles.maplibre.org/style.json',
     hash: true
 });
 

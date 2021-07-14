@@ -46,7 +46,7 @@ export default class TouchZoomRotateHandler {
         this._touchZoom.enable(options);
         if (!this._rotationDisabled) this._touchRotate.enable(options);
         this._tapDragZoom.enable();
-        this._el.classList.add('mapboxgl-touch-zoom-rotate');
+        this._el.classList.add('maplibregl-touch-zoom-rotate', 'mapboxgl-touch-zoom-rotate');
     }
 
     /**
@@ -59,7 +59,7 @@ export default class TouchZoomRotateHandler {
         this._touchZoom.disable();
         this._touchRotate.disable();
         this._tapDragZoom.disable();
-        this._el.classList.remove('mapboxgl-touch-zoom-rotate');
+        this._el.classList.remove('maplibregl-touch-zoom-rotate', 'mapboxgl-touch-zoom-rotate');
     }
 
     /**

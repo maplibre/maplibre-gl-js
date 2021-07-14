@@ -53,7 +53,7 @@ export default class DragPanHandler {
         this._inertiaOptions = options || {};
         this._mousePan.enable();
         this._touchPan.enable();
-        this._el.classList.add('mapboxgl-touch-drag-pan');
+        this._el.classList.add('maplibregl-touch-drag-pan', 'mapboxgl-touch-drag-pan');
     }
 
     /**
@@ -65,7 +65,7 @@ export default class DragPanHandler {
     disable() {
         this._mousePan.disable();
         this._touchPan.disable();
-        this._el.classList.remove('mapboxgl-touch-drag-pan');
+        this._el.classList.remove('maplibregl-touch-drag-pan', 'mapboxgl-touch-drag-pan');
     }
 
     /**

@@ -26,6 +26,8 @@ import WorkerPool from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {clearTileCache} from './util/tile_request_cache';
 import {PerformanceUtils} from './util/performance';
+import type {RequestParameters, ResponseCallback} from './util/ajax';
+import type {Cancelable} from './types/cancelable';
 
 const exported = {
     version,
@@ -170,7 +172,52 @@ const exported = {
         clearTileCache(callback);
     },
 
-    workerUrl: ''
+    workerUrl: '',
+
+    /**
+     * Sets a custom load tile function that will be called when using a source that starts with a custom url schema.
+     * The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
+     * The function passed will receive the request parameters and should call the callback with the resulting request,
+     * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
+     * @param {string} customProtocol - the protocol to hook, for example 'custom'
+     * @param {Function} loadFn - the function to use when trying to fetch a tile specified by the customProtocol
+     * @example
+     * // this will fetch a file using the fetch API (this is obviously a non iteresting example...)
+     * maplibre.addProtocol('custom', (params, callback) => {
+            fetch(`https://${params.url.split("://")[1]}`)
+                .then(t => {
+                    if (t.status == 200) {
+                        t.arrayBuffer().then(arr => {
+                            callback(null, arr, null, null);
+                        });
+                    } else {
+                        callback(new Error(`Tile fetch error: ${t.statusText}`));
+                    }
+                })
+                .catch(e => {
+                    callback(new Error(e));
+                });
+            return { cancel: () => { } };
+        });
+     * // the following is an example of a way to return an error when trying to load a tile
+     * maplibre.addProtocol('custom2', (params, callback) => {
+     *      callback(new Error('someErrorMessage'));
+     *      return { cancel: () => { } };
+     * });
+     */
+    addProtocol(customProtocol: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
+        config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
+    },
+
+    /**
+     * Removes a previusly added protocol
+     * @param {string} customProtocol - the custom protocol to remove registration for
+     * @example
+     * maplibregl.removeProtocol('custom');
+     */
+    removeProtocol(customProtocol: string) {
+        delete config.REGISTERED_PROTOCOLS[customProtocol];
+    }
 };
 
 //This gets automatically stripped out in production builds.

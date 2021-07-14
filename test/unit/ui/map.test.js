@@ -76,11 +76,11 @@ test('Map', (t) => {
     t.test('initial bounds options in constructor options', (t) => {
         const bounds = [[-133, 16], [-68, 50]];
 
-        const map = (fitBoundsOptions, skipCSSStub) => {
+        const map = (fitBoundsOptions) => {
             const container = window.document.createElement('div');
             Object.defineProperty(container, 'offsetWidth', {value: 512});
             Object.defineProperty(container, 'offsetHeight', {value: 512});
-            return createMap(t, {skipCSSStub, container, bounds, fitBoundsOptions});
+            return createMap(t, {container, bounds, fitBoundsOptions});
         };
 
         const unpadded = map(undefined, false);
@@ -131,7 +131,6 @@ test('Map', (t) => {
     });
 
     t.test('emits load event after a style is set', (t) => {
-        t.stub(Map.prototype, '_detectMissingCSS');
         const map = new Map({container: window.document.createElement('div')});
 
         map.on('load', fail);
@@ -148,7 +147,6 @@ test('Map', (t) => {
 
     t.test('#setStyle', (t) => {
         t.test('returns self', (t) => {
-            t.stub(Map.prototype, '_detectMissingCSS');
             const map = new Map({container: window.document.createElement('div')});
             t.equal(map.setStyle({
                 version: 8,
@@ -227,7 +225,6 @@ test('Map', (t) => {
         });
 
         t.test('style transform overrides unmodified map transform', (t) => {
-            t.stub(Map.prototype, '_detectMissingCSS');
             const map = new Map({container: window.document.createElement('div')});
             map.transform.lngRange = [-120, 140];
             map.transform.latRange = [-60, 80];
@@ -245,7 +242,6 @@ test('Map', (t) => {
         });
 
         t.test('style transform does not override map transform modified via options', (t) => {
-            t.stub(Map.prototype, '_detectMissingCSS');
             const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]});
             t.notOk(map.transform.unmodified, 'map transform is modified by options');
             map.setStyle(createStyle());
@@ -259,7 +255,6 @@ test('Map', (t) => {
         });
 
         t.test('style transform does not override map transform modified via setters', (t) => {
-            t.stub(Map.prototype, '_detectMissingCSS');
             const map = new Map({container: window.document.createElement('div')});
             t.ok(map.transform.unmodified);
             map.setZoom(10);
@@ -282,6 +277,28 @@ test('Map', (t) => {
             t.spy(style, '_remove');
             map.setStyle(null);
             t.equal(style._remove.callCount, 1);
+            t.end();
+        });
+
+        t.end();
+    });
+
+    t.test('#setTransformRequest', (t) => {
+        t.test('returns self', (t) => {
+            const transformRequest = () => { };
+            const map = new Map({container: window.document.createElement('div')});
+            t.equal(map.setTransformRequest(transformRequest), map);
+            t.equal(map._requestManager._transformRequestFn, transformRequest);
+            t.end();
+        });
+
+        t.test('can be called more than once', (t) => {
+            const map = createMap(t);
+
+            const transformRequest = () => { };
+            map.setTransformRequest(transformRequest);
+            map.setTransformRequest(transformRequest);
+
             t.end();
         });
 
@@ -606,7 +623,7 @@ test('Map', (t) => {
             [ 70.31249999999977, 57.32652122521695 ] ]));
 
         t.test('rotated bounds', (t) => {
-            const map = createMap(t, {zoom: 1, bearing: 45, skipCSSStub: true});
+            const map = createMap(t, {zoom: 1, bearing: 45});
             t.deepEqual(
                 toFixed([[-49.718445552178764, -44.44541580601936], [49.7184455522, 44.445415806019355]]),
                 toFixed(map.getBounds().toArray())
@@ -933,7 +950,7 @@ test('Map', (t) => {
 
     t.test('#remove', (t) => {
         const map = createMap(t);
-        t.equal(map.getContainer().childNodes.length, 3);
+        t.equal(map.getContainer().childNodes.length, 2);
         map.remove();
         t.equal(map.getContainer().childNodes.length, 0);
         t.end();
@@ -2030,29 +2047,6 @@ test('Map', (t) => {
         t.equal(map.isEasing(), true);
 
         map.remove();
-        t.end();
-    });
-
-    t.test('should not warn when CSS is present', (t) => {
-        const stub = t.stub(console, 'warn');
-
-        const styleSheet = new window.CSSStyleSheet();
-        styleSheet.insertRule('.mapboxgl-canary { background-color: rgb(250, 128, 114); }', 0);
-        window.document.styleSheets[0] = styleSheet;
-        window.document.styleSheets.length = 1;
-
-        new Map({container: window.document.createElement('div')});
-
-        t.notok(stub.calledOnce);
-        t.end();
-    });
-
-    t.test('should warn when CSS is missing', (t) => {
-        const stub = t.stub(console, 'warn');
-        new Map({container: window.document.createElement('div')});
-
-        t.ok(stub.calledOnce);
-
         t.end();
     });
 

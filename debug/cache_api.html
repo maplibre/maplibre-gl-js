@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>MapLibre GL JS debug page</title>
     <meta charset='utf-8'>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../dist/maplibre-gl.css' />
     <style>
         body { margin: 0; padding: 0; }
@@ -18,7 +18,6 @@
 <div id='map'></div>
 
 <script src='../dist/maplibre-gl-dev.js'></script>
-<script src='../debug/access_token_generated.js'></script>
 <script>
 
 const CACHE_NAME = 'mapbox-tiles';
@@ -104,7 +103,7 @@ function initialize(zoom, onLoad) {
         container: 'map',
         zoom,
         center: [-77.01866, 38.888],
-        style: 'mapbox://styles/mapbox/streets-v10',
+        style: 'https://demotiles.maplibre.org/style.json',
         interactive: false,
         hash: false
     });
@@ -256,7 +255,7 @@ function initializeRaster(done) {
         container: 'map',
         zoom: 0,
         center: [137.9150899566626, 36.25956997955441],
-        style: 'mapbox://styles/mapbox/satellite-v9'
+        style: 'https://demotiles.maplibre.org/style.json'
     });
     map.on('load', done);
 }

@@ -5,8 +5,7 @@ import Marker from '../../../../src/ui/marker';
 import DOM from '../../../../src/util/dom';
 import simulate from '../../../util/simulate_interaction';
 
-function createMap(t) {
-    t.stub(Map.prototype, '_detectMissingCSS');
+function createMap() {
     return new Map({container: DOM.create('div', '', window.document.body)});
 }
 
@@ -166,7 +165,7 @@ test('TouchZoomRotateHandler starts zoom immediately when rotation disabled', (t
 test('TouchZoomRotateHandler adds css class used for disabling default touch behavior in some browsers', (t) => {
     const map = createMap(t);
 
-    const className = 'mapboxgl-touch-zoom-rotate';
+    const className = 'maplibregl-touch-zoom-rotate';
     t.ok(map.getCanvasContainer().classList.contains(className));
     map.touchZoomRotate.disable();
     t.notOk(map.getCanvasContainer().classList.contains(className));

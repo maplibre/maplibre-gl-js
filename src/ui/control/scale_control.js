@@ -57,7 +57,7 @@ class ScaleControl {
 
     onAdd(map: Map) {
         this._map = map;
-        this._container = DOM.create('div', 'mapboxgl-ctrl mapboxgl-ctrl-scale', map.getContainer());
+        this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-scale mapboxgl-ctrl mapboxgl-ctrl-scale', map.getContainer());
 
         this._map.on('move', this._onMove);
         this._onMove();
