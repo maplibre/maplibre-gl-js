@@ -1,4 +1,4 @@
-import { isValue } from '../values';
+import {isValue} from '../values';
 import type {Type} from '../types';
 import {BooleanType} from '../types';
 import type {Expression} from '../expression';

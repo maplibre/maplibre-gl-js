@@ -1,20 +1,20 @@
-import { StringType, NumberType } from '../types';
+import {StringType, NumberType} from '../types';
 
 import type {Expression} from '../expression';
 import type EvaluationContext from '../evaluation_context';
 import type ParsingContext from '../parsing_context';
 import type {Type} from '../types';
 
-declare var Intl: {
+declare let Intl: {
   NumberFormat: {
     new (...args: any): Intl$NumberFormat
   }
 };
 
 declare class Intl$NumberFormat {
-  constructor(locales?: string | string[], options?: NumberFormatOptions);
-  format(a: number): string;
-  resolvedOptions(): any;
+    constructor(locales?: string | string[], options?: NumberFormatOptions);
+    format(a: number): string;
+    resolvedOptions(): any;
 }
 
 type NumberFormatOptions = {

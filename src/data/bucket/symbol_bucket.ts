@@ -1,8 +1,8 @@
 import {
-  symbolLayoutAttributes,
-  collisionVertexAttributes,
-  collisionBoxLayout,
-  dynamicLayoutAttributes,
+    symbolLayoutAttributes,
+    collisionVertexAttributes,
+    collisionBoxLayout,
+    dynamicLayoutAttributes,
 } from './symbol_attributes';
 
 import {SymbolLayoutArray,

@@ -1,4 +1,4 @@
-import { createExpression } from '../expression';
+import {createExpression} from '../expression';
 import type {GlobalProperties, Feature} from '../expression';
 import type {CanonicalTileID} from '../../source/tile_id';
 

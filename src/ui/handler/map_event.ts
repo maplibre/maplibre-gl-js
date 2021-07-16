@@ -1,4 +1,4 @@
-import { MapMouseEvent, MapTouchEvent, MapWheelEvent } from '../events';
+import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events';
 import type Map from '../map';
 
 export class MapEventHandler {

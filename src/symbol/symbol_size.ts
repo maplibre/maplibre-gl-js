@@ -1,4 +1,4 @@
-import { number as interpolate } from '../style-spec/util/interpolate';
+import {number as interpolate} from '../style-spec/util/interpolate';
 import Interpolate from '../style-spec/expression/definitions/interpolate';
 import {clamp} from '../util/util';
 import EvaluationParameters from '../style/evaluation_parameters';
@@ -76,15 +76,15 @@ function getSizeData(
 
 function evaluateSizeForFeature(sizeData: SizeData,
                                 {
-                                  uSize,
-                                  uSizeT
+                                    uSize,
+                                    uSizeT
                                 }: {
                                   uSize: number,
                                   uSizeT: number
                                 },
                                 {
-                                  lowerSize,
-                                  upperSize
+                                    lowerSize,
+                                    upperSize
                                 }: {
                                   lowerSize: number,
                                   upperSize: number

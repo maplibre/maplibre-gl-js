@@ -12,8 +12,8 @@ import type Transform from '../geo/transform';
 import type StyleLayer from '../style/style_layer';
 
 import type Tile from '../source/tile';
-import type SymbolBucket from '../data/bucket/symbol_bucket';
-import type { CollisionArrays, SingleCollisionBox } from '../data/bucket/symbol_bucket';
+import type SymbolBucket, {CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';
+
 import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance} from '../data/array_types';
 import type FeatureIndex from '../data/feature_index';
 import type {OverscaledTileID} from '../source/tile_id';

@@ -1,4 +1,4 @@
-import { StringType, BooleanType, CollatorType } from '../types';
+import {StringType, BooleanType, CollatorType} from '../types';
 import Collator from '../types/collator';
 
 import type {Expression} from '../expression';

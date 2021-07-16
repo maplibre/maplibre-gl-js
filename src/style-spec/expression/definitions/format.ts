@@ -1,11 +1,11 @@
 import {
-  NumberType,
-  ValueType,
-  FormattedType,
-  array,
-  StringType,
-  ColorType,
-  ResolvedImageType,
+    NumberType,
+    ValueType,
+    FormattedType,
+    array,
+    StringType,
+    ColorType,
+    ResolvedImageType,
 } from '../types';
 import Formatted, {FormattedSection} from '../types/formatted';
 import {toString, typeOf} from '../values';

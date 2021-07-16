@@ -1,4 +1,4 @@
-import { Color } from './values';
+import {Color} from './values';
 import type {FormattedSection} from './types/formatted';
 import type {GlobalProperties, Feature, FeatureState} from './index';
 import type {CanonicalTileID} from '../../source/tile_id';

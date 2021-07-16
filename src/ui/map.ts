@@ -1,4 +1,4 @@
-import { version } from '../../package.json';
+import {version} from '../../package.json';
 import {extend, bindAll, warnOnce, uniqueId} from '../util/util';
 import browser from '../util/browser';
 import window from '../util/window';
@@ -41,8 +41,8 @@ import type ScrollZoomHandler from './handler/scroll_zoom';
 import type BoxZoomHandler from './handler/box_zoom';
 import type {TouchPitchHandler} from './handler/touch_zoom_rotate';
 import type DragRotateHandler from './handler/shim/drag_rotate';
-import type DragPanHandler from './handler/shim/drag_pan';
-import type { DragPanOptions } from './handler/shim/drag_pan';
+import type DragPanHandler, {DragPanOptions} from './handler/shim/drag_pan';
+
 import type KeyboardHandler from './handler/keyboard';
 import type DoubleClickZoomHandler from './handler/shim/dblclick_zoom';
 import type TouchZoomRotateHandler from './handler/shim/touch_zoom_rotate';
@@ -1650,11 +1650,11 @@ class Map extends Camera {
                data: Uint8Array | Uint8ClampedArray
              } | StyleImageInterface,
              {
-               pixelRatio = 1,
-               sdf = false,
-               stretchX,
-               stretchY,
-               content
+                 pixelRatio = 1,
+                 sdf = false,
+                 stretchX,
+                 stretchY,
+                 content
              }: Partial<StyleImageMetadata> = {}) {
         this._lazyInitEmptyStyle();
         const version = 0;

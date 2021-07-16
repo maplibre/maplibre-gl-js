@@ -1,4 +1,4 @@
-import { uniqueId, parseCacheControl } from '../util/util';
+import {uniqueId, parseCacheControl} from '../util/util';
 import {deserialize as deserializeBucket} from '../data/bucket';
 import FeatureIndex from '../data/feature_index';
 import GeoJSONFeature from '../util/vectortile_to_geojson';

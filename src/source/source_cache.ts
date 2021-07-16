@@ -1,4 +1,4 @@
-import { create as createSource } from './source';
+import {create as createSource} from './source';
 
 import Tile from './tile';
 import {Event, ErrorEvent, Evented} from '../util/evented';

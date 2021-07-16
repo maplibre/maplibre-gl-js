@@ -1,4 +1,4 @@
-import { RGBAImage } from './image';
+import {RGBAImage} from './image';
 import {isPowerOfTwo} from './util';
 import assert from 'assert';
 

@@ -1,4 +1,4 @@
-import { pick, extend } from '../util/util';
+import {pick, extend} from '../util/util';
 
 import {getJSON, ResourceType} from '../util/ajax';
 import browser from '../util/browser';

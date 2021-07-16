@@ -1,4 +1,4 @@
-import { AlphaImage } from '../util/image';
+import {AlphaImage} from '../util/image';
 import {register} from '../util/web_worker_transfer';
 import potpack from 'potpack';
 

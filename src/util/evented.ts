@@ -1,4 +1,4 @@
-import { extend } from './util';
+import {extend} from './util';
 
 type Listener = (a: any) => any;
 

@@ -1,4 +1,4 @@
-import { CanonicalTileID } from './tile_id';
+import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {getImage, ResourceType} from '../util/ajax';
 import EXTENT from '../data/extent';

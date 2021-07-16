@@ -1,4 +1,4 @@
-import { Event, Evented } from '../../util/evented';
+import {Event, Evented} from '../../util/evented';
 import DOM from '../../util/dom';
 import window from '../../util/window';
 import {extend, bindAll, warnOnce} from '../../util/util';

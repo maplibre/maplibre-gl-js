@@ -1,4 +1,4 @@
-import { packUint8ToFloat } from '../shaders/encode_attribute';
+import {packUint8ToFloat} from '../shaders/encode_attribute';
 import Color from '../style-spec/util/color';
 import {supportsPropertyExpression} from '../style-spec/util/properties';
 import {register} from '../util/web_worker_transfer';
@@ -8,9 +8,9 @@ import {clamp} from '../util/util';
 import patternAttributes from './bucket/pattern_attributes';
 import EvaluationParameters from '../style/evaluation_parameters';
 import FeaturePositionMap from './feature_position_map';
-import { Uniform, Uniform1f, UniformColor, Uniform4f } from '../render/uniform_binding';
+import {Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/uniform_binding';
 
-import type { UniformLocations } from '../render/uniform_binding';
+import type {UniformLocations} from '../render/uniform_binding';
 
 import type {CanonicalTileID} from '../source/tile_id';
 import type Context from '../gl/context';

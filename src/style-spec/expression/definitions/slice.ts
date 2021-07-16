@@ -1,11 +1,11 @@
 import {
-  ValueType,
-  NumberType,
-  StringType,
-  array,
-  toString,
-  isValidType,
-  isValidNativeType,
+    ValueType,
+    NumberType,
+    StringType,
+    array,
+    toString,
+    isValidType,
+    isValidNativeType,
 } from '../types';
 import RuntimeError from '../runtime_error';
 import {typeOf} from '../values';

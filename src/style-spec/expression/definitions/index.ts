@@ -1,17 +1,17 @@
 import {
-  NumberType,
-  StringType,
-  BooleanType,
-  ColorType,
-  ObjectType,
-  ValueType,
-  ErrorType,
-  CollatorType,
-  array,
-  toString as typeToString,
+    NumberType,
+    StringType,
+    BooleanType,
+    ColorType,
+    ObjectType,
+    ValueType,
+    ErrorType,
+    CollatorType,
+    array,
+    toString as typeToString,
 } from '../types';
 
-import type { Type } from '../types';
+import type {Type} from '../types';
 
 import {typeOf, Color, validateRGBA, toString as valueToString} from '../values';
 import CompoundExpression from '../compound_expression';

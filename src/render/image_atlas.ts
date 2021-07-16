@@ -1,4 +1,4 @@
-import { RGBAImage } from '../util/image';
+import {RGBAImage} from '../util/image';
 import {register} from '../util/web_worker_transfer';
 import potpack from 'potpack';
 
@@ -25,11 +25,11 @@ export class ImagePosition {
     content: [number, number, number, number] | undefined | null;
 
     constructor(paddedRect: Rect, {
-      pixelRatio,
-      version,
-      stretchX,
-      stretchY,
-      content
+        pixelRatio,
+        version,
+        stretchX,
+        stretchY,
+        content
     }: StyleImage) {
         this.paddedRect = paddedRect;
         this.pixelRatio = pixelRatio;

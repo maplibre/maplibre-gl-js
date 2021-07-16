@@ -1,4 +1,4 @@
-import { ColorAttachment, DepthAttachment } from './value';
+import {ColorAttachment, DepthAttachment} from './value';
 import assert from 'assert';
 
 import type Context from './context';

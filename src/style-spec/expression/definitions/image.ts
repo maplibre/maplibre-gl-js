@@ -1,4 +1,4 @@
-import { ResolvedImageType, StringType } from '../types';
+import {ResolvedImageType, StringType} from '../types';
 import ResolvedImage from '../types/resolved_image';
 
 import type {Expression} from '../expression';

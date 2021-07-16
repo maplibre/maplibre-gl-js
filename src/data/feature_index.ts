@@ -97,7 +97,7 @@ class FeatureIndex {
 
     loadVTLayers(): {
       [_: string]: VectorTileLayer
-    } {
+      } {
         if (!this.vtLayers) {
             this.vtLayers = new vt.VectorTile(new Protobuf(this.rawTileData)).layers;
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : ['_geojsonTileLayer']);

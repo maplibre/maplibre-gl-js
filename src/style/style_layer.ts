@@ -1,4 +1,4 @@
-import { endsWith, filterObject } from '../util/util';
+import {endsWith, filterObject} from '../util/util';
 
 import styleSpec from '../style-spec/reference/latest';
 import {
@@ -16,8 +16,8 @@ import type {Bucket} from '../data/bucket';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureFilter} from '../style-spec/feature_filter';
 import type {TransitionParameters, PropertyValue} from './properties';
-import type EvaluationParameters from './evaluation_parameters';
-import type { CrossfadeParameters } from './evaluation_parameters';
+import type EvaluationParameters, {CrossfadeParameters} from './evaluation_parameters';
+
 import type Transform from '../geo/transform';
 import type {
     LayerSpecification,

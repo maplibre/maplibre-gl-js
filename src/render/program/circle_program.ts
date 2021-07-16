@@ -1,4 +1,4 @@
-import { Uniform1i, Uniform1f, Uniform2f, UniformMatrix4f } from '../uniform_binding';
+import {Uniform1i, Uniform1f, Uniform2f, UniformMatrix4f} from '../uniform_binding';
 import pixelsToTileUnits from '../../source/pixels_to_tile_units';
 
 import type Context from '../../gl/context';
@@ -19,12 +19,12 @@ export type CircleUniformsType = {
 };
 
 const circleUniforms = (context: Context, locations: UniformLocations): CircleUniformsType => ({
-  'u_camera_to_center_distance': new Uniform1f(context, locations.u_camera_to_center_distance),
-  'u_scale_with_map': new Uniform1i(context, locations.u_scale_with_map),
-  'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
-  'u_extrude_scale': new Uniform2f(context, locations.u_extrude_scale),
-  'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-  'u_matrix': new UniformMatrix4f(context, locations.u_matrix)
+    'u_camera_to_center_distance': new Uniform1f(context, locations.u_camera_to_center_distance),
+    'u_scale_with_map': new Uniform1i(context, locations.u_scale_with_map),
+    'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
+    'u_extrude_scale': new Uniform2f(context, locations.u_extrude_scale),
+    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
+    'u_matrix': new UniformMatrix4f(context, locations.u_matrix)
 });
 
 const circleUniformValues = (

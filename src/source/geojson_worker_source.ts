@@ -1,4 +1,4 @@
-import { getJSON } from '../util/ajax';
+import {getJSON} from '../util/ajax';
 
 import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';

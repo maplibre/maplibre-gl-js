@@ -1,4 +1,4 @@
-import { isExpressionFilter } from './index';
+import {isExpressionFilter} from './index';
 
 import type {FilterSpecification} from '../types';
 

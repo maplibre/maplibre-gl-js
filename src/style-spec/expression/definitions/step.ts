@@ -1,4 +1,4 @@
-import { NumberType } from '../types';
+import {NumberType} from '../types';
 
 import {findStopLessThanOrEqualTo} from '../stops';
 

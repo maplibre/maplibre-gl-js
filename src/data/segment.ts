@@ -1,4 +1,4 @@
-import { warnOnce } from '../util/util';
+import {warnOnce} from '../util/util';
 
 import {register} from '../util/web_worker_transfer';
 

@@ -1,4 +1,4 @@
-import { LineLayoutArray, LineExtLayoutArray } from '../array_types';
+import {LineLayoutArray, LineExtLayoutArray} from '../array_types';
 
 import {members as layoutAttributes} from './line_attributes';
 import {members as layoutAttributesExt} from './line_attributes_ext';
@@ -540,8 +540,8 @@ class LineBucket implements Bucket {
     }
 
     addHalfVertex({
-      x,
-      y
+        x,
+        y
     }: Point, extrudeX: number, extrudeY: number, round: boolean, up: boolean, dir: number, segment: Segment) {
         const totalDistance = this.lineClips ? this.scaledDistance * (MAX_LINE_DISTANCE - 1) : this.scaledDistance;
         // scale down so that we can store longer distances while sacrificing precision.

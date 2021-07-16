@@ -1,4 +1,4 @@
-import type { TouchZoomHandler, TouchRotateHandler } from '../touch_zoom_rotate';
+import type {TouchZoomHandler, TouchRotateHandler} from '../touch_zoom_rotate';
 import type TapDragZoomHandler from '../tap_drag_zoom';
 
 /**

@@ -1,4 +1,4 @@
-import { clamp } from '../util/util';
+import {clamp} from '../util/util';
 
 import ImageSource from '../source/image_source';
 import browser from '../util/browser';

@@ -1,19 +1,31 @@
 {
   "extends": [
     "mourner",
-    "plugin:flowtype/recommended",
-    "plugin:import/recommended"
+    // "plugin:@typescript-eslint/recommended",
+    "plugin:import/recommended",
+    "plugin:import/typescript"
   ],
-  "parser": "babel-eslint",
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "sourceType": "module"
+    "sourceType": "module",
+    "createDefaultProgram": true
   },
   "plugins": [
-    "flowtype",
+    "@typescript-eslint",
     "import",
     "jsdoc"
   ],
   "rules": {
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/restrict-plus-operands": "off",
+    "@typescript-eslint/restrict-template-expressions": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { "argsIgnorePattern": "^_" }
+    ],
+    // Disable no-undef. It's covered by @typescript-eslint
+    "no-undef": "off",
     // temporarily disabled due to https://github.com/babel/babel-eslint/issues/485
     "no-use-before-define": "off",
 
@@ -33,13 +45,6 @@
 
     "array-bracket-spacing": "off",
     "consistent-return": "off",
-    "flowtype/define-flow-type": 1,
-    "flowtype/require-valid-file-annotation": [
-      2,
-      "always", {
-        "annotationStyle": "line"
-      }
-    ],
     "global-require": "off",
     "import/no-commonjs": "error",
     "key-spacing": "off",
@@ -72,7 +77,7 @@
         "parameters": "off"
       }
     }],
-    "no-multiple-empty-lines": [ "error", { 
+    "no-multiple-empty-lines": [ "error", {
         "max": 1
     }],
     "jsdoc/check-param-names": "warn",
@@ -87,6 +92,7 @@
       "ignorePrivate": true
     }
   },
+  "ignorePatterns": ["build/*.js", "*.json"],
   "overrides": [
     {
       "files": ["debug/**", "bench/**", "test/**", "src/style-spec/**"],

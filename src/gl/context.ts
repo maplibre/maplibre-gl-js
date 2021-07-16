@@ -211,8 +211,8 @@ class Context {
     }
 
     clear({
-      color,
-      depth
+        color,
+        depth
     }: ClearArgs) {
         const gl = this.gl;
         let mask = 0;

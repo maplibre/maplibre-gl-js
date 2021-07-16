@@ -1,4 +1,4 @@
-import { NumberType, toString } from '../types';
+import {NumberType, toString} from '../types';
 
 import {typeOf} from '../values';
 import RuntimeError from '../runtime_error';

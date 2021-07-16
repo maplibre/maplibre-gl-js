@@ -1,4 +1,4 @@
-import type { StylePropertySpecification } from '../style-spec';
+import type {StylePropertySpecification} from '../style-spec';
 
 export function supportsPropertyExpression(spec: StylePropertySpecification): boolean {
     return spec['property-type'] === 'data-driven' || spec['property-type'] === 'cross-faded-data-driven';

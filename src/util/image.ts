@@ -13,8 +13,8 @@ type Point = {
 };
 
 function createImage(image: any, {
-  width,
-  height
+    width,
+    height
 }: Size, channels: number, data?: Uint8Array | Uint8ClampedArray) {
     if (!data) {
         data = new Uint8Array(width * height * channels);
@@ -30,8 +30,8 @@ function createImage(image: any, {
 }
 
 function resizeImage(image: any, {
-  width,
-  height
+    width,
+    height
 }: Size, channels: number) {
     if (width === image.width && height === image.height) {
         return;

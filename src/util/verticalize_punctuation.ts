@@ -1,4 +1,4 @@
-import { charHasRotatedVerticalOrientation } from './script_detection';
+import {charHasRotatedVerticalOrientation} from './script_detection';
 
 export const verticalizedCharacterMap = {
     '!': '︕',

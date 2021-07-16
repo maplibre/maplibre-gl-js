@@ -1,4 +1,4 @@
-import { getVideo, ResourceType } from '../util/ajax';
+import {getVideo, ResourceType} from '../util/ajax';
 
 import ImageSource from './image_source';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';

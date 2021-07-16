@@ -1,4 +1,4 @@
-import { Event } from '../util/evented';
+import {Event} from '../util/evented';
 import DOM from '../util/dom';
 import type Map from './map';
 import HandlerInertia from './handler_inertia';

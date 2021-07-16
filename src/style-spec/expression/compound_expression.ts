@@ -1,4 +1,4 @@
-import { toString } from './types';
+import {toString} from './types';
 
 import ParsingContext from './parsing_context';
 import EvaluationContext from './evaluation_context';

@@ -1,16 +1,16 @@
 // Flow type declarations for Intl cribbed from
 // https://github.com/facebook/flow/issues/1270
 
-declare var Intl: {
+declare let Intl: {
   Collator: {
     new (...args: any): Intl$Collator
   }
 };
 
 declare class Intl$Collator {
-  constructor(locales?: string | string[], options?: CollatorOptions);
-  compare(a: string, b: string): number;
-  resolvedOptions(): any;
+    constructor(locales?: string | string[], options?: CollatorOptions);
+    compare(a: string, b: string): number;
+    resolvedOptions(): any;
 }
 
 type CollatorOptions = {

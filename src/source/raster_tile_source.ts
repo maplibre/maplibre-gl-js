@@ -1,4 +1,4 @@
-import { extend, pick } from '../util/util';
+import {extend, pick} from '../util/util';
 
 import {getImage, ResourceType} from '../util/ajax';
 import {Event, ErrorEvent, Evented} from '../util/evented';

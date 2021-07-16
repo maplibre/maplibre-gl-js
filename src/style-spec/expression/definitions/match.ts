@@ -1,9 +1,9 @@
 import assert from 'assert';
 
 import {typeOf} from '../values';
-import { ValueType } from '../types';
+import {ValueType} from '../types';
 
-import type { Type } from '../types';
+import type {Type} from '../types';
 
 import type {Expression} from '../expression';
 import type ParsingContext from '../parsing_context';

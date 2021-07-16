@@ -1,4 +1,4 @@
-import { eachLayer, eachProperty } from '../visit';
+import {eachLayer, eachProperty} from '../visit';
 import {isExpression} from '../expression';
 import convertFunction, {convertTokenString} from '../function/convert';
 import convertFilter from '../feature_filter/convert';

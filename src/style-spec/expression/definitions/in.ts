@@ -1,12 +1,12 @@
 import {
-  BooleanType,
-  StringType,
-  ValueType,
-  NullType,
-  toString,
-  NumberType,
-  isValidType,
-  isValidNativeType,
+    BooleanType,
+    StringType,
+    ValueType,
+    NullType,
+    toString,
+    NumberType,
+    isValidType,
+    isValidNativeType,
 } from '../types';
 import RuntimeError from '../runtime_error';
 import {typeOf} from '../values';

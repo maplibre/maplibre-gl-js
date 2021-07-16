@@ -1,4 +1,4 @@
-import { Event, ErrorEvent, Evented } from '../util/evented';
+import {Event, ErrorEvent, Evented} from '../util/evented';
 
 import {extend, pick} from '../util/util';
 import loadTileJSON from './load_tilejson';

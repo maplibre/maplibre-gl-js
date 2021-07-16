@@ -1,4 +1,4 @@
-import { getImage, ResourceType } from '../util/ajax';
+import {getImage, ResourceType} from '../util/ajax';
 import {extend} from '../util/util';
 import {Evented} from '../util/evented';
 import browser from '../util/browser';

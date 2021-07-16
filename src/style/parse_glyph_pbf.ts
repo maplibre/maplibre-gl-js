@@ -1,4 +1,4 @@
-import { AlphaImage } from '../util/image';
+import {AlphaImage} from '../util/image';
 
 import Protobuf from 'pbf';
 const border = 3;

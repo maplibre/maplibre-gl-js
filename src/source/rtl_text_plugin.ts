@@ -1,4 +1,4 @@
-import { Event, Evented } from '../util/evented';
+import {Event, Evented} from '../util/evented';
 import {getArrayBuffer} from '../util/ajax';
 import browser from '../util/browser';
 import assert from 'assert';

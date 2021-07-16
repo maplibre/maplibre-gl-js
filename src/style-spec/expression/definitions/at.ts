@@ -1,4 +1,4 @@
-import { array, ValueType, NumberType } from '../types';
+import {array, ValueType, NumberType} from '../types';
 
 import RuntimeError from '../runtime_error';
 

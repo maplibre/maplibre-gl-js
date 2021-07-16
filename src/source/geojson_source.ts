@@ -1,4 +1,4 @@
-import { Event, ErrorEvent, Evented } from '../util/evented';
+import {Event, ErrorEvent, Evented} from '../util/evented';
 
 import {extend} from '../util/util';
 import EXTENT from '../data/extent';

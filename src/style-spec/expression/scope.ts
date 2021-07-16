@@ -1,4 +1,4 @@
-import type { Expression } from './expression';
+import type {Expression} from './expression';
 
 /**
  * Tracks `let` bindings during expression parsing.

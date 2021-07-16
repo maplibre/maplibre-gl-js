@@ -1,4 +1,4 @@
-import { vec3, vec4 } from 'gl-matrix';
+import {vec3, vec4} from 'gl-matrix';
 import assert from 'assert';
 
 class Frustum {

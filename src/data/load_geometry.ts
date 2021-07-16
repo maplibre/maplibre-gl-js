@@ -1,4 +1,4 @@
-import { warnOnce, clamp } from '../util/util';
+import {warnOnce, clamp} from '../util/util';
 
 import EXTENT from './extent';
 

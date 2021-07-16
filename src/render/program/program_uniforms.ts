@@ -1,4 +1,4 @@
-import { fillExtrusionUniforms, fillExtrusionPatternUniforms } from './fill_extrusion_program';
+import {fillExtrusionUniforms, fillExtrusionPatternUniforms} from './fill_extrusion_program';
 import {fillUniforms, fillPatternUniforms, fillOutlineUniforms, fillOutlinePatternUniforms} from './fill_program';
 import {circleUniforms} from './circle_program';
 import {collisionUniforms, collisionCircleUniforms} from './collision_program';

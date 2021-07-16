@@ -1,4 +1,4 @@
-import { TapRecognizer } from './tap_recognizer';
+import {TapRecognizer} from './tap_recognizer';
 import type Point from '@mapbox/point-geometry';
 import type Map from '../map';
 

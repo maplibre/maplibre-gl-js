@@ -1,4 +1,4 @@
-import { TapRecognizer, MAX_TAP_INTERVAL } from './tap_recognizer';
+import {TapRecognizer, MAX_TAP_INTERVAL} from './tap_recognizer';
 import type Point from '@mapbox/point-geometry';
 
 export default class TapDragZoomHandler {

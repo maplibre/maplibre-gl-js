@@ -27,8 +27,6 @@ Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs
 
 ### Roadmap
 
-Migrate to typescript
-
 This project's initial plans are outlined in the [Roadmap](https://github.com/maplibre/maplibre-gl-js/projects/2) project. The primary goal is consistency and backwards-compatability with previous releases and continued bug-fixes and maintenance going forward.
 
 ### Getting Involved

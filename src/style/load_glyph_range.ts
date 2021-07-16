@@ -1,4 +1,4 @@
-import { getArrayBuffer, ResourceType } from '../util/ajax';
+import {getArrayBuffer, ResourceType} from '../util/ajax';
 
 import parseGlyphPBF from './parse_glyph_pbf';
 
