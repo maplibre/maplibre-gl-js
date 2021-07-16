@@ -179,7 +179,7 @@ class StyleLayer extends Evented {
         // No-op; can be overridden by derived classes.
     }
 
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _handleOverridablePaintPropertyUpdate<T, R>(name: string, oldValue: PropertyValue<T, R>, newValue: PropertyValue<T, R>): boolean {
         // No-op; can be overridden by derived classes.
         return false;

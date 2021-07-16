@@ -1,6 +1,5 @@
 
 // Disable Flow annotations here because Flow doesn't support importing GLSL files
-/* eslint-disable flowtype/require-valid-file-annotation */
 
 import preludeFrag from './_prelude.fragment.glsl';
 import preludeVert from './_prelude.vertex.glsl';

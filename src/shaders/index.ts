@@ -4,7 +4,7 @@
 // when Rollup builds the main bundle.
 // See package.json#browser
 
-/* eslint-disable import/unambiguous, import/no-commonjs, flowtype/require-valid-file-annotation, no-global-assign */
+/* eslint-disable import/unambiguous, import/no-commonjs, no-global-assign */
 
 const fs = require('fs');
 

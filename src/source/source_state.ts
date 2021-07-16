@@ -3,7 +3,7 @@ import Tile from './tile';
 import type {FeatureState} from '../style-spec/expression';
 
 export type FeatureStates = {
-  [feature_id: string]: FeatureState
+  [featureId: string]: FeatureState
 };
 export type LayerFeatureStates = {
   [layer: string]: FeatureStates

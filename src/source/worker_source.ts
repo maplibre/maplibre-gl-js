@@ -10,8 +10,6 @@ import type DEMData from '../data/dem_data';
 import type {StyleGlyph} from '../style/style_glyph';
 import type {StyleImage} from '../style/style_image';
 import type {PromoteIdSpecification} from '../style-spec/types';
-import window from '../util/window';
-const {ImageBitmap} = window;
 
 export type TileParameters = {
   source: string,

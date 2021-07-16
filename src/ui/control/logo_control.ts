@@ -63,7 +63,7 @@ class LogoControl {
         const sourceCaches = this._map.style.sourceCaches;
         for (const id in sourceCaches) {
             const source = sourceCaches[id].getSource();
-            if (source.mapbox_logo) {
+            if (source.maplibreLogo) {
                 return true;
             }
         }
