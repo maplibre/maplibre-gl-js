@@ -167,6 +167,7 @@
   },
   "esm": true,
   "scripts": {
+    "build-tsc": "tsc --noEmit -p .",
     "build-dev": "rollup -c --environment BUILD:dev",
     "watch-dev": "rollup -c --environment BUILD:dev --watch",
     "build-prod": "rollup -c --environment BUILD:production",
@@ -188,7 +189,7 @@
     "start-release": "run-s build-prod-min build-css print-release-url start-server",
     "diff-tarball": "cross-env build/run-node build/diff-tarball",
     "prepare-publish": "git clean -fdx && yarn install",
-    "lint": "eslint --cache --ignore-path .gitignore src test bench build debug/*.html",
+    "lint": "eslint src --ext .ts",
     "lint-docs": "documentation lint src/index.js",
     "lint-css": "stylelint 'src/css/maplibre-gl.css'",
     "test": "run-s lint lint-css lint-docs test-flow test-unit",
