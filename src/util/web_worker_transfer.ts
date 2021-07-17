@@ -185,7 +185,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         if (!klass.serialize) {
             for (const key in input) {
                 // any cast due to https://github.com/facebook/flow/issues/5393
-                if (!(input as any).hasOwnProperty(key)) continue;
+                if (!(input as any).hasOwnProperty(key)) continue; // eslint-disable-line no-prototype-builtins
                 if (registry[name].omit.indexOf(key) >= 0) continue;
                 const property = (input as any)[key];
                 properties[key] = registry[name].shallow.indexOf(key) >= 0 ?
