@@ -256,7 +256,7 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
         }
     }
     if (!isFileURL(requestParameters.url)) {
-        if (window.fetch && window.Request && window.AbortController && window.Request.prototype.hasOwnProperty('signal')) {
+        if (window.fetch && window.Request && window.AbortController && Object.prototype.hasOwnProperty.call(window.Request.prototype, 'signal')) {
             return makeFetchRequest(requestParameters, callback);
         }
         if (isWorker() && self.worker && self.worker.actor) {

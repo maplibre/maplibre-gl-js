@@ -117,13 +117,13 @@ function updateSource(sourceId, after, commands, sourcesRemoved) {
 function canUpdateGeoJSON(before, after, sourceId) {
     let prop;
     for (prop in before[sourceId]) {
-        if (!before[sourceId].hasOwnProperty(prop)) continue;
+        if (!Object.prototype.hasOwnProperty.call(before[sourceId], prop)) continue;
         if (prop !== 'data' && !isEqual(before[sourceId][prop], after[sourceId][prop])) {
             return false;
         }
     }
     for (prop in after[sourceId]) {
-        if (!after[sourceId].hasOwnProperty(prop)) continue;
+        if (!Object.prototype.hasOwnProperty.call(after[sourceId], prop)) continue;
         if (prop !== 'data' && !isEqual(before[sourceId][prop], after[sourceId][prop])) {
             return false;
         }
@@ -139,16 +139,16 @@ function diffSources(before, after, commands, sourcesRemoved) {
 
     // look for sources to remove
     for (sourceId in before) {
-        if (!before.hasOwnProperty(sourceId)) continue;
-        if (!after.hasOwnProperty(sourceId)) {
+        if (!Object.prototype.hasOwnProperty.call(before, sourceId)) continue;
+        if (!Object.prototype.hasOwnProperty.call(after, sourceId)) {
             removeSource(sourceId, commands, sourcesRemoved);
         }
     }
 
     // look for sources to add/update
     for (sourceId in after) {
-        if (!after.hasOwnProperty(sourceId)) continue;
-        if (!before.hasOwnProperty(sourceId)) {
+        if (!Object.prototype.hasOwnProperty.call(after, sourceId)) continue;
+        if (!Object.prototype.hasOwnProperty.call(before, sourceId)) {
             addSource(sourceId, after, commands);
         } else if (!isEqual(before[sourceId], after[sourceId])) {
             if (before[sourceId].type === 'geojson' && after[sourceId].type === 'geojson' && canUpdateGeoJSON(before, after, sourceId)) {
@@ -168,13 +168,13 @@ function diffLayerPropertyChanges(before, after, commands, layerId, klass, comma
     let prop;
 
     for (prop in before) {
-        if (!before.hasOwnProperty(prop)) continue;
+        if (!Object.prototype.hasOwnProperty.call(before, prop)) continue;
         if (!isEqual(before[prop], after[prop])) {
             commands.push({command, args: [layerId, prop, after[prop], klass]});
         }
     }
     for (prop in after) {
-        if (!after.hasOwnProperty(prop) || before.hasOwnProperty(prop)) continue;
+        if (!Object.prototype.hasOwnProperty.call(after, prop) || Object.prototype.hasOwnProperty.call(before, prop)) continue;
         if (!isEqual(before[prop], after[prop])) {
             commands.push({command, args: [layerId, prop, after[prop], klass]});
         }
@@ -212,7 +212,7 @@ function diffLayers(before, after, commands) {
     // remove layers
     for (i = 0, d = 0; i < beforeOrder.length; i++) {
         layerId = beforeOrder[i];
-        if (!afterIndex.hasOwnProperty(layerId)) {
+        if (!Object.prototype.hasOwnProperty.call(afterIndex, layerId)) {
             commands.push({command: operations.removeLayer, args: [layerId]});
             tracker.splice(tracker.indexOf(layerId, d), 1);
         } else {
@@ -228,7 +228,7 @@ function diffLayers(before, after, commands) {
 
         if (tracker[tracker.length - 1 - i] === layerId) continue;
 
-        if (beforeIndex.hasOwnProperty(layerId)) {
+        if (Object.prototype.hasOwnProperty.call(beforeIndex, layerId)) {
             // remove the layer before we insert at the correct position
             commands.push({command: operations.removeLayer, args: [layerId]});
             tracker.splice(tracker.lastIndexOf(layerId, tracker.length - d), 1);
@@ -276,7 +276,7 @@ function diffLayers(before, after, commands) {
 
         // handle all other layer props, including paint.*
         for (prop in beforeLayer) {
-            if (!beforeLayer.hasOwnProperty(prop)) continue;
+            if (!Object.prototype.hasOwnProperty.call(beforeLayer, prop)) continue;
             if (prop === 'layout' || prop === 'paint' || prop === 'filter' ||
                 prop === 'metadata' || prop === 'minzoom' || prop === 'maxzoom') continue;
             if (prop.indexOf('paint.') === 0) {
@@ -286,7 +286,7 @@ function diffLayers(before, after, commands) {
             }
         }
         for (prop in afterLayer) {
-            if (!afterLayer.hasOwnProperty(prop) || beforeLayer.hasOwnProperty(prop)) continue;
+            if (!Object.prototype.hasOwnProperty.call(afterLayer, prop) || Object.prototype.hasOwnProperty.call(beforeLayer, prop)) continue;
             if (prop === 'layout' || prop === 'paint' || prop === 'filter' ||
                 prop === 'metadata' || prop === 'minzoom' || prop === 'maxzoom') continue;
             if (prop.indexOf('paint.') === 0) {

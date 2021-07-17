@@ -24,7 +24,7 @@ function restore(): Window {
     const previousWindow = _window;
     if (previousWindow.close) previousWindow.close();
     for (const key in previousWindow) {
-        if (previousWindow.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(previousWindow, key)) {
             delete previousWindow[key];
         }
     }
