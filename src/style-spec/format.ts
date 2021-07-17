@@ -1,5 +1,5 @@
 
-import reference from './reference/latest.js';
+import reference from './reference/latest.ts';
 import stringifyPretty from 'json-stringify-pretty-compact';
 
 function sortKeysBy(obj, reference) {
