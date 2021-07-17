@@ -189,7 +189,7 @@ export class Transitionable<Props extends any> {
     }
 
     setValue<S extends string, T>(name: S, value: PropertyValueSpecification<T> | void) {
-        if (!this._values.hasOwnProperty(name)) {
+        if (!Object.prototype.hasOwnProperty.call(this._values, name)) {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property);
         }
         // Note that we do not _remove_ an own property in the case where a value is being reset
@@ -202,7 +202,7 @@ export class Transitionable<Props extends any> {
     }
 
     setTransition<S extends string>(name: S, value: TransitionSpecification | void) {
-        if (!this._values.hasOwnProperty(name)) {
+        if (!Object.prototype.hasOwnProperty.call(this._values, name)) {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property);
         }
         this._values[name].transition = clone(value) || undefined;

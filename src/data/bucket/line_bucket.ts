@@ -241,7 +241,7 @@ class LineBucket implements Bucket {
     }
 
     lineFeatureClips(feature: BucketFeature): LineClips | undefined | null {
-        if (!!feature.properties && feature.properties.hasOwnProperty('mapbox_clip_start') && feature.properties.hasOwnProperty('mapbox_clip_end')) {
+        if (!!feature.properties && Object.prototype.hasOwnProperty.call(feature.properties, 'mapbox_clip_start') && Object.prototype.hasOwnProperty.call(feature.properties, 'mapbox_clip_end')) {
             const start = +feature.properties['mapbox_clip_start'];
             const end = +feature.properties['mapbox_clip_end'];
             return {start, end};
