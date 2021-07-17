@@ -3,7 +3,6 @@
 *.es.js
 *.js.map
 node_modules
-package-lock.json
 *.sublime-*
 coverage
 flow-coverage
