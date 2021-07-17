@@ -56,6 +56,7 @@ import type {SymbolQuad} from '../../symbol/quads';
 import type {SizeData} from '../../symbol/symbol_size';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
+import type {PossiblyEvaluatedPropertyValue} from '../../style/properties';
 
 export type SingleCollisionBox = {
   x1: number,
@@ -372,7 +373,7 @@ class SymbolBucket implements Bucket {
         this.iconSizeData = getSizeData(this.zoom, unevaluatedLayoutValues['icon-size']);
 
         const layout = this.layers[0].layout;
-        const sortKey = layout.get('symbol-sort-key');
+        const sortKey = layout.get('symbol-sort-key') as PossiblyEvaluatedPropertyValue<any>;
         const zOrder = layout.get('symbol-z-order');
         this.canOverlap =
             layout.get('text-allow-overlap') ||
@@ -419,9 +420,9 @@ class SymbolBucket implements Bucket {
         const layer = this.layers[0];
         const layout = layer.layout;
 
-        const textFont = layout.get('text-font');
-        const textField = layout.get('text-field');
-        const iconImage = layout.get('icon-image');
+        const textFont = layout.get('text-font') as PossiblyEvaluatedPropertyValue<any>;
+        const textField = layout.get('text-field') as PossiblyEvaluatedPropertyValue<any>;
+        const iconImage = layout.get('icon-image') as PossiblyEvaluatedPropertyValue<any>;
         const hasText =
             (textField.value.kind !== 'constant' ||
                 (textField.value.value instanceof Formatted && !textField.value.value.isEmpty()) ||
@@ -432,7 +433,7 @@ class SymbolBucket implements Bucket {
         // the only way to distinguish between null returned from a coalesce statement with no valid images
         // and null returned because icon-image wasn't defined is to check whether or not iconImage.parameters is an empty object
         const hasIcon = iconImage.value.kind !== 'constant' || !!iconImage.value.value || Object.keys(iconImage.parameters).length > 0;
-        const symbolSortKey = layout.get('symbol-sort-key');
+        const symbolSortKey = layout.get('symbol-sort-key') as PossiblyEvaluatedPropertyValue<any>;
 
         this.features = [];
 

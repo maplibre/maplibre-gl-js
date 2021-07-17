@@ -3,8 +3,32 @@ import Point from '@mapbox/point-geometry';
 import window from './window';
 import assert from 'assert';
 
-const DOM = {};
+interface DOMInterface {
+    create(tagName: string, className: string | undefined | null, container?: HTMLElement): HTMLElement;
+    createNS(namespaceURI: string, tagName: string);
+    disableDrag();
+    enableDrag();
+    setTransform(el: HTMLElement, value: string);
+    addEventListener(target: any, type: any, callback: any, options?: {
+        passive?: boolean,
+        capture?: boolean
+      });
+    removeEventListener(target: any, type: any, callback: any, options?: {
+        passive?: boolean,
+        capture?: boolean
+    });
+    suppressClick();
+    mousePos(el: HTMLElement, e: MouseEvent | Touch);
+    touchPos(el: HTMLElement, touches: TouchList);
+    mouseButton(e: MouseEvent);
+    remove(node: HTMLElement);
+}
+
+
+const DOM = {} as DOMInterface;
 export default DOM;
+
+// HM TODO: make this a static helper?
 
 DOM.create = function (tagName: string, className: string | undefined | null, container?: HTMLElement) {
     const el = window.document.createElement(tagName);
@@ -65,8 +89,8 @@ try {
             passiveSupported = true;
         }
     });
-    window.addEventListener("test", options, options);
-    window.removeEventListener("test", options, options);
+    window.addEventListener("test", options as any, options);
+    window.removeEventListener("test", options as any, options);
 } catch (err) {
     passiveSupported = false;
 }
@@ -94,7 +118,7 @@ DOM.removeEventListener = function(target: any, type: any, callback: any, option
 };
 
 // Suppress the next click, but only if it's immediate.
-const suppressClick: MouseEventListener = function (e) {
+const suppressClick: EventListener = function (e) {
     e.preventDefault();
     e.stopPropagation();
     window.removeEventListener('click', suppressClick, true);
@@ -107,7 +131,7 @@ DOM.suppressClick = function() {
     }, 0);
 };
 
-DOM.mousePos = function (el: HTMLElement, e: MouseEvent | window.TouchEvent | Touch) {
+DOM.mousePos = function (el: HTMLElement, e: MouseEvent | Touch) {
     const rect = el.getBoundingClientRect();
     return new Point(
         e.clientX - rect.left - el.clientLeft,

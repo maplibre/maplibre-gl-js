@@ -10,6 +10,17 @@ import offscreenCanvasSupported from './offscreen_canvas_supported';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 
+export interface IResourceType {
+    Unknown: keyof this;
+    Style: keyof this;
+    Source: keyof this;
+    Tile: keyof this;
+    Glyphs: keyof this;
+    SpriteImage: keyof this;
+    SpriteJSON: keyof this;
+    Image: keyof this;
+}
+
 /**
  * The type of a resource.
  * @private
@@ -25,7 +36,7 @@ const ResourceType = {
     SpriteImage: 'SpriteImage',
     SpriteJSON: 'SpriteJSON',
     Image: 'Image'
-};
+} as IResourceType;
 export {ResourceType};
 
 if (typeof Object.freeze == 'function') {
@@ -99,7 +110,7 @@ class AJAXError extends Error {
 // and we will set an empty referrer. Otherwise, we're using the document's URL.
 /* global self */
 export const getReferrer = isWorker() ?
-    () => self.worker && self.worker.referrer :
+    () => (self as any).worker && (self as any).worker.referrer :
     () => (window.location.protocol === 'blob:' ? window.parent : window).location.href;
 
 // Determines whether a URL is a file:// URL. This is obviously the case if it begins
@@ -126,7 +137,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         request.headers.set('Accept', 'application/json');
     }
 
-    const validateOrFetch = (err, cachedResponse, responseIsFresh) => {
+    const validateOrFetch = (err, cachedResponse?, responseIsFresh?) => {
         if (aborted) return;
 
         if (err) {
@@ -148,7 +159,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
 
         const requestTime = Date.now();
 
-        window.fetch(request).then(response => {
+        fetch(request).then(response => {
             if (response.ok) {
                 const cacheableResponse = cacheIgnoringSearch ? response.clone() : null;
                 return finishRequest(response, cacheableResponse, requestTime);
@@ -165,7 +176,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         });
     };
 
-    const finishRequest = (response, cacheableResponse, requestTime) => {
+    const finishRequest = (response, cacheableResponse?, requestTime?) => {
         (
             requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
             requestParameters.type === 'json' ? response.json() :
@@ -246,8 +257,8 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
     // - Requests for resources with the file:// URI scheme don't work with the Fetch API either. In
     //   this case we unconditionally use XHR on the current thread since referrers don't matter.
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
-        if (isWorker() && self.worker && self.worker.actor) {
-            return self.worker.actor.send('getResource', requestParameters, callback);
+        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
+            return (self as any).worker.actor.send('getResource', requestParameters, callback);
         }
         if (!isWorker()) {
             const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
@@ -256,12 +267,12 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
         }
     }
     if (!isFileURL(requestParameters.url)) {
-        if (window.fetch && window.Request && window.AbortController && Object.prototype.hasOwnProperty.call(window.Request.prototype, 'signal')) {
+        if ((window as any).fetch && window.Request && window.AbortController && Object.prototype.hasOwnProperty.call(window.Request.prototype, 'signal')) {
             return makeFetchRequest(requestParameters, callback);
         }
-        if (isWorker() && self.worker && self.worker.actor) {
+        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
             const queueOnMainThread = true;
-            return self.worker.actor.send('getResource', requestParameters, callback, undefined, queueOnMainThread);
+            return (self as any).worker.actor.send('getResource', requestParameters, callback, undefined, queueOnMainThread);
         }
     }
     return makeXMLHttpRequest(requestParameters, callback);
@@ -311,7 +322,8 @@ function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | null, im
 
 function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) {
     const blob: Blob = new window.Blob([new Uint8Array(data)], {type: 'image/png'});
-    window.createImageBitmap(blob).then((imgBitmap) => {
+    // HM TODO: check that this works - removing window shouldn't affect this in theory
+    createImageBitmap(blob).then((imgBitmap) => {
         callback(null, imgBitmap);
     }).catch((e) => {
         callback(new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`));

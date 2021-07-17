@@ -14,7 +14,7 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
     let hasPattern = false;
 
     for (const layer of layers) {
-        const patternProperty = layer.paint.get(`${type}-pattern`);
+        const patternProperty = layer.paint.get(`${type}-pattern`) as any;
         if (!patternProperty.isConstant()) {
             hasPattern = true;
         }

@@ -159,7 +159,7 @@ class GeolocateControl extends Evented {
      * @returns {boolean} Returns `true` if position is outside the map's maxbounds, otherwise returns `false`.
      * @private
      */
-    _isOutOfMapMaxBounds(position: Position) {
+    _isOutOfMapMaxBounds(position: GeolocationPosition) {
         const bounds = this._map.getMaxBounds();
         const coordinates = position.coords;
 
@@ -205,7 +205,7 @@ class GeolocateControl extends Evented {
      * @param {Position} position the Geolocation API Position
      * @private
      */
-    _onSuccess(position: Position) {
+    _onSuccess(position: GeolocationPosition) {
         if (!this._map) {
             // control has since been removed
             return;
@@ -273,7 +273,7 @@ class GeolocateControl extends Evented {
      * @param {Position} position the Geolocation API Position
      * @private
      */
-    _updateCamera(position: Position) {
+    _updateCamera(position: GeolocationPosition) {
         const center = new LngLat(position.coords.longitude, position.coords.latitude);
         const radius = position.coords.accuracy;
         const bearing = this._map.getBearing();
@@ -290,7 +290,7 @@ class GeolocateControl extends Evented {
      * @param {Position} [position] the Geolocation API Position
      * @private
      */
-    _updateMarker(position?: Position | null) {
+    _updateMarker(position?: GeolocationPosition | null) {
         if (position) {
             const center = new LngLat(position.coords.longitude, position.coords.latitude);
             this._accuracyCircleMarker.setLngLat(center).addTo(this._map);
@@ -322,7 +322,7 @@ class GeolocateControl extends Evented {
         }
     }
 
-    _onError(error: PositionError) {
+    _onError(error: GeolocationPositionError) {
         if (!this._map) {
             // control has since been removed
             return;
@@ -372,8 +372,8 @@ class GeolocateControl extends Evented {
 
     _setupUI(supported: boolean) {
         this._container.addEventListener('contextmenu', (e: MouseEvent) => e.preventDefault());
-        this._geolocateButton = DOM.create('button', `maplibregl-ctrl-geolocate mapboxgl-ctrl-geolocate`, this._container);
-        DOM.create('span', `maplibregl-ctrl-icon mapboxgl-ctrl-icon`, this._geolocateButton).setAttribute('aria-hidden', true);
+        this._geolocateButton = DOM.create('button', `maplibregl-ctrl-geolocate mapboxgl-ctrl-geolocate`, this._container) as HTMLButtonElement;
+        DOM.create('span', `maplibregl-ctrl-icon mapboxgl-ctrl-icon`, this._geolocateButton).setAttribute('aria-hidden', "true");
         this._geolocateButton.type = 'button';
 
         if (supported === false) {
@@ -497,17 +497,18 @@ class GeolocateControl extends Evented {
             case 'ACTIVE_LOCK':
                 this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-active', 'mapboxgl-ctrl-geolocate-active');
                 break;
-            case 'ACTIVE_ERROR':
-                this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-waiting', 'mapboxgl-ctrl-geolocate-waiting');
-                this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-active-error', 'mapboxgl-ctrl-geolocate-active-error');
-                break;
-            case 'BACKGROUND':
-                this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background', 'mapboxgl-ctrl-geolocate-background');
-                break;
-            case 'BACKGROUND_ERROR':
-                this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-waiting', 'mapboxgl-ctrl-geolocate-waiting');
-                this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background-error', 'mapboxgl-ctrl-geolocate-background-error');
-                break;
+            // HM TODO: this states can't be reached according to above switch case? and typescript compilation as well...
+            //case 'ACTIVE_ERROR':
+            //    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-waiting', 'mapboxgl-ctrl-geolocate-waiting');
+            //    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-active-error', 'mapboxgl-ctrl-geolocate-active-error');
+            //    break;
+            //case 'BACKGROUND':
+            //    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background', 'mapboxgl-ctrl-geolocate-background');
+            //    break;
+            //case 'BACKGROUND_ERROR':
+            //    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-waiting', 'mapboxgl-ctrl-geolocate-waiting');
+            //    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background-error', 'mapboxgl-ctrl-geolocate-background-error');
+            //    break;
             case 'OFF':
                 break;
             default:

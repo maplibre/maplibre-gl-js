@@ -64,7 +64,7 @@ export class Evented {
      *   extended with `target` and `type` properties.
      * @returns {Object} `this`
      */
-    on(type: any, listener: Listener): this {
+    on(type: string, listener: Listener): this {
         this._listeners = this._listeners || {};
         _addEventListener(type, listener, this._listeners);
 
@@ -78,7 +78,7 @@ export class Evented {
      * @param {Function} listener The listener function to remove.
      * @returns {Object} `this`
      */
-    off(type: any, listener: Listener) {
+    off(type: string, listener: Listener) {
         _removeEventListener(type, listener, this._listeners);
         _removeEventListener(type, listener, this._oneTimeListeners);
 
@@ -94,7 +94,7 @@ export class Evented {
      * @param {Function} listener The function to be called when the event is fired the first time.
      * @returns {Object} `this`
      */
-    once(type: any, listener: Listener) {
+    once(type: string, listener: Listener) {
         this._oneTimeListeners = this._oneTimeListeners || {};
         _addEventListener(type, listener, this._oneTimeListeners);
 

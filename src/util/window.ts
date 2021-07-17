@@ -17,7 +17,7 @@ const {window: _window} = new jsdom.JSDOM('', {
 
 restore();
 
-export default _window;
+export default _window as any as Window;
 
 function restore(): Window {
     // Remove previous window from exported object
@@ -33,7 +33,7 @@ function restore(): Window {
     const {window} = new jsdom.JSDOM('', {
         // Send jsdom console output to the node console object.
         virtualConsole: new jsdom.VirtualConsole().sendTo(console)
-    });
+    }) as any;
 
     // Delete local and session storage from JSDOM and stub them out with a warning log
     // Accessing these properties during extend() produces an error in Node environments
@@ -75,8 +75,8 @@ function restore(): Window {
     window.URL.revokeObjectURL = function () {};
 
     window.fakeWorkerPresence = function() {
-        global.WorkerGlobalScope = function() {};
-        global.self = new global.WorkerGlobalScope();
+        global.WorkerGlobalScope = function() {} as any;
+        global.self = new global.WorkerGlobalScope() as any;
     };
     window.clearFakeWorkerPresence = function() {
         global.WorkerGlobalScope = undefined;

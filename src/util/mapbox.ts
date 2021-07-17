@@ -19,13 +19,13 @@ import webpSupported from './webp_supported';
 import {createSkuToken, SKU_ID} from './sku_token';
 import {version as sdkVersion} from '../../package.json';
 import {uuid, validateUuid, storageAvailable, b64DecodeUnicode, b64EncodeUnicode, warnOnce, extend} from './util';
-import {postData, ResourceType} from './ajax';
+import {postData, IResourceType} from './ajax';
 
 import type {RequestParameters} from './ajax';
 import type {Cancelable} from '../types/cancelable';
 import type {TileJSON} from '../types/tilejson';
 
-type ResourceTypeEnum = keyof typeof ResourceType;
+type ResourceTypeEnum = keyof IResourceType;
 export type RequestTransformFunction = (url: string, resourceType?: ResourceTypeEnum) => RequestParameters;
 
 type UrlObject = {

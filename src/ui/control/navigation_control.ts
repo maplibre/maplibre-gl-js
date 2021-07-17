@@ -1,3 +1,5 @@
+import Point from '@mapbox/point-geometry';
+
 import DOM from '../../util/dom';
 import {extend, bindAll} from '../../util/util';
 import {MouseRotateHandler, MousePitchHandler} from '../handler/mouse';
@@ -53,9 +55,9 @@ class NavigationControl {
                 '_updateZoomButtons'
             ], this);
             this._zoomInButton = this._createButton('maplibregl-ctrl-zoom-in mapboxgl-ctrl-zoom-in', (e) => this._map.zoomIn({}, {originalEvent: e}));
-            DOM.create('span', `maplibregl-ctrl-icon mapboxgl-ctrl-icon`, this._zoomInButton).setAttribute('aria-hidden', true);
+            DOM.create('span', `maplibregl-ctrl-icon mapboxgl-ctrl-icon`, this._zoomInButton).setAttribute('aria-hidden', 'true');
             this._zoomOutButton = this._createButton('maplibregl-ctrl-zoom-out mapboxgl-ctrl-zoom-out', (e) => this._map.zoomOut({}, {originalEvent: e}));
-            DOM.create('span', `maplibregl-ctrl-icon mapboxgl-ctrl-icon`, this._zoomOutButton).setAttribute('aria-hidden', true);
+            DOM.create('span', `maplibregl-ctrl-icon mapboxgl-ctrl-icon`, this._zoomOutButton).setAttribute('aria-hidden', 'true');
         }
         if (this.options.showCompass) {
             bindAll([
@@ -69,7 +71,7 @@ class NavigationControl {
                 }
             });
             this._compassIcon = DOM.create('span', 'maplibregl-ctrl-icon mapboxgl-ctrl-icon', this._compass);
-            this._compassIcon.setAttribute('aria-hidden', true);
+            this._compassIcon.setAttribute('aria-hidden', 'true');
         }
     }
 
@@ -128,8 +130,8 @@ class NavigationControl {
         delete this._map;
     }
 
-    _createButton(className: string, fn: () => unknown) {
-        const a = DOM.create('button', className, this._container);
+    _createButton(className: string, fn: (e?: any) => unknown) {
+        const a = DOM.create('button', className, this._container) as HTMLButtonElement;
         a.type = 'button';
         a.addEventListener('click', fn);
         return a;
@@ -175,10 +177,10 @@ class MouseRotateWrapper {
 
     move(e: MouseEvent, point: Point) {
         const map = this.map;
-        const r = this.mouseRotate.mousemoveWindow(e, point);
+        const r = this.mouseRotate.mousemoveWindow(e, point) as any;
         if (r && r.bearingDelta) map.setBearing(map.getBearing() + r.bearingDelta);
         if (this.mousePitch) {
-            const p = this.mousePitch.mousemoveWindow(e, point);
+            const p = this.mousePitch.mousemoveWindow(e, point) as any;
             if (p && p.pitchDelta) map.setPitch(map.getPitch() + p.pitchDelta);
         }
     }

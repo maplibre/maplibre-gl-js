@@ -19,6 +19,7 @@ export interface Window extends EventTarget, IDBEnvironment {
   readonly origin: string;
   name: string;
   readonly navigator: Navigator;
+  readonly InstallTrigger: any;
   offscreenBuffering: string | boolean;
   onabort: (ev: UIEvent) => boolean | undefined | null;
   onafterprint: (ev: Event) => boolean | undefined | null;

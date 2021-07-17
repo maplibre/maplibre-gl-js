@@ -52,7 +52,9 @@ export type CameraOptions = {
   bearing?: number,
   pitch?: number,
   around?: LngLatLike,
-  padding?: PaddingOptions
+  padding?: PaddingOptions,
+  maxZoom?: number,
+  offset?: PointLike
 };
 
 /**
@@ -609,9 +611,9 @@ class Camera extends Evented {
      * });
      * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/fitbounds/)
      */
-    fitBounds(bounds: LngLatBoundsLike, options?: AnimationOptions & CameraOptions, eventData?: any) {
+    fitBounds(bounds: LngLatBoundsLike, options?: AnimationOptions & CameraOptions & { linear: boolean }, eventData?: any) {
         return this._fitInternal(
-            this.cameraForBounds(bounds, options),
+            this.cameraForBounds(bounds, options) as AnimationOptions & CameraOptions,
             options,
             eventData);
     }
@@ -645,18 +647,18 @@ class Camera extends Evented {
      * });
      * @see Used by {@link BoxZoomHandler}
      */
-    fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: AnimationOptions & CameraOptions, eventData?: any) {
+    fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: AnimationOptions & CameraOptions & { linear: boolean }, eventData?: any) {
         return this._fitInternal(
             this._cameraForBoxAndBearing(
                 this.transform.pointLocation(Point.convert(p0)),
                 this.transform.pointLocation(Point.convert(p1)),
                 bearing,
-                options),
+                options) as CameraOptions & AnimationOptions,
             options,
             eventData);
     }
 
-    _fitInternal(calculatedOptions?: CameraOptions & AnimationOptions, options?: AnimationOptions & CameraOptions, eventData?: any) {
+    _fitInternal(calculatedOptions?: CameraOptions & AnimationOptions, options?: AnimationOptions & CameraOptions & { linear: boolean }, eventData?: any) {
         // cameraForBounds warns + returns undefined if unable to fit:
         if (!calculatedOptions) return this;
 
@@ -783,7 +785,8 @@ class Camera extends Evented {
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
      */
     easeTo(options: CameraOptions & AnimationOptions & {
-      easeId?: string
+      easeId?: string,
+      noMoveStart?: boolean
     }, eventData?: any) {
         this._stop(false, options.easeId);
 
@@ -871,7 +874,7 @@ class Camera extends Evented {
 
         }, (interruptingEaseId?: string) => {
             this._afterEase(eventData, interruptingEaseId);
-        }, options);
+        }, options as any);
 
         return this;
     }
@@ -1245,7 +1248,7 @@ class Camera extends Evented {
 // - another ___start event can't be fired before a ___end event has been fired for the previous one
 function addAssertions(camera: Camera) { //eslint-disable-line
     Debug.run(() => {
-        const inProgress = {};
+        const inProgress = {} as any;
 
         ['drag', 'zoom', 'rotate', 'pitch', 'move'].forEach(name => {
             inProgress[name] = false;

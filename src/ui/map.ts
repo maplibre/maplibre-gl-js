@@ -41,7 +41,7 @@ import type ScrollZoomHandler from './handler/scroll_zoom';
 import type BoxZoomHandler from './handler/box_zoom';
 import type {TouchPitchHandler} from './handler/touch_zoom_rotate';
 import type DragRotateHandler from './handler/shim/drag_rotate';
-import type DragPanHandler, {DragPanOptions} from './handler/shim/drag_pan';
+import DragPanHandler, {DragPanOptions} from './handler/shim/drag_pan';
 
 import type KeyboardHandler from './handler/keyboard';
 import type DoubleClickZoomHandler from './handler/shim/dblclick_zoom';
@@ -56,6 +56,8 @@ import type {
     LightSpecification,
     SourceSpecification
 } from '../style-spec/types';
+import { Listener } from 'selenium-webdriver';
+import { Callback } from '../types/callback';
 
 type ControlPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
@@ -1046,7 +1048,8 @@ class Map extends Camera {
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
-    on(type: MapEvent, layerId: any, listener: any) {
+    on(type: MapEvent, listener: Listener): this;
+    on(type: MapEvent, layerId: any, listener?: Listener): this {
         if (listener === undefined) {
             return super.on(type, layerId);
         }
@@ -1093,8 +1096,8 @@ class Map extends Camera {
      * @param {Function} listener The function to be called when the event is fired.
      * @returns {Map} `this`
      */
-
-    once(type: MapEvent, layerId: any, listener: any) {
+    once(type: MapEvent, listener: Listener): this;
+    once(type: MapEvent, layerId: any, listener?: Listener): this {
 
         if (listener === undefined) {
             return super.once(type, layerId);
@@ -1129,7 +1132,8 @@ class Map extends Camera {
      * @param {Function} listener The function previously installed as a listener.
      * @returns {Map} `this`
      */
-    off(type: MapEvent, layerId: any, listener: any) {
+    off(type: MapEvent, listener: Listener): this;
+    off(type: MapEvent, layerId: any, listener?: Listener): this {
         if (listener === undefined) {
             return super.off(type, layerId);
         }
@@ -1553,9 +1557,9 @@ class Map extends Camera {
      * @private
      * @param {string} name The name of the source type; source definition objects use this name in the `{type: ...}` field.
      * @param {Function} SourceType A {@link Source} constructor.
-     * @param {Function} callback Called when the source type is ready or with an error argument if there is an error.
+     * @param {Callback<void>} callback Called when the source type is ready or with an error argument if there is an error.
      */
-    addSourceType(name: string, SourceType: any, callback: Function) {
+    addSourceType(name: string, SourceType: any, callback: Callback<void>) {
         this._lazyInitEmptyStyle();
         return this.style.addSourceType(name, SourceType, callback);
     }
@@ -1660,14 +1664,14 @@ class Map extends Camera {
         const version = 0;
 
         if (image instanceof HTMLImageElement || (ImageBitmap && image instanceof ImageBitmap)) {
-            const {width, height, data} = browser.getImageData(image);
+            const {width, height, data} = browser.getImageData(image as HTMLImageElement | ImageBitmap);
             this.style.addImage(id, {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, sdf, version});
         } else if (image.width === undefined || image.height === undefined) {
             return this.fire(new ErrorEvent(new Error(
                 'Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, ' +
                 'or object with `width`, `height`, and `data` properties with the same format as `ImageData`')));
         } else {
-            const {width, height, data} = image;
+            const {width, height, data} = image as ImageData;
             const userImage = (image as any as StyleImageInterface);
 
             this.style.addImage(id, {
@@ -1717,7 +1721,9 @@ class Map extends Camera {
             return this.fire(new ErrorEvent(new Error(
                 'The map has no image with that id. If you are adding a new image use `map.addImage(...)` instead.')));
         }
-        const imageData = (image instanceof HTMLImageElement || (ImageBitmap && image instanceof ImageBitmap)) ? browser.getImageData(image) : image;
+        const imageData = (image instanceof HTMLImageElement || (ImageBitmap && image instanceof ImageBitmap)) 
+            ? browser.getImageData(image as HTMLImageElement | ImageBitmap) 
+            : image as ImageData;
         const {width, height, data} = imageData;
 
         if (width === undefined || height === undefined) {
@@ -1780,7 +1786,7 @@ class Map extends Camera {
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
      * @param {string} url The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @param {Function} callback Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
+     * @param {Callback<HTMLImageElement | ImageBitmap>} callback Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
      *
      * @example
      * // Load an image from an external URL.
@@ -1792,7 +1798,7 @@ class Map extends Camera {
      *
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image/)
      */
-    loadImage(url: string, callback: Function) {
+    loadImage(url: string, callback: Callback<HTMLImageElement | ImageBitmap>) {
         getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
     }
 
