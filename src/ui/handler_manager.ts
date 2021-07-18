@@ -403,7 +403,7 @@ class HandlerManager {
     }
 
     _applyChanges() {
-        const combined = {};
+        const combined: {[k: string]: any} = {};
         const combinedEventsInProgress = {};
         const combinedDeactivatedHandlers = {};
 
