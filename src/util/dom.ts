@@ -24,7 +24,6 @@ interface DOMInterface {
     remove(node: HTMLElement);
 }
 
-
 const DOM = {} as DOMInterface;
 export default DOM;
 

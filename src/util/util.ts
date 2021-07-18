@@ -214,9 +214,9 @@ export function uniqueId(): number {
  */
 export function uuid(): string {
     function b(a?): string {
-        return a 
-            ? (a ^ Math.random() * 16 >> a / 4).toString(16)
-            : "10000000-1000-4000-80000000-100000000000".replace(/[018]/g, b);
+        return a ?
+            (a ^ Math.random() * 16 >> a / 4).toString(16) :
+            "10000000-1000-4000-80000000-100000000000".replace(/[018]/g, b);
     }
     return b();
 }

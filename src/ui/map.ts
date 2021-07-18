@@ -56,8 +56,8 @@ import type {
     LightSpecification,
     SourceSpecification
 } from '../style-spec/types';
-import { Listener } from 'selenium-webdriver';
-import { Callback } from '../types/callback';
+import {Listener} from 'selenium-webdriver';
+import {Callback} from '../types/callback';
 
 type ControlPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
@@ -1721,9 +1721,9 @@ class Map extends Camera {
             return this.fire(new ErrorEvent(new Error(
                 'The map has no image with that id. If you are adding a new image use `map.addImage(...)` instead.')));
         }
-        const imageData = (image instanceof HTMLImageElement || (ImageBitmap && image instanceof ImageBitmap)) 
-            ? browser.getImageData(image as HTMLImageElement | ImageBitmap) 
-            : image as ImageData;
+        const imageData = (image instanceof HTMLImageElement || (ImageBitmap && image instanceof ImageBitmap)) ?
+            browser.getImageData(image as HTMLImageElement | ImageBitmap) :
+            image as ImageData;
         const {width, height, data} = imageData;
 
         if (width === undefined || height === undefined) {
