@@ -37,7 +37,7 @@ export default class NumberFormat implements Expression {
                 currency: Expression | null,
                 minFractionDigits: Expression | null,
                 maxFractionDigits: Expression | null) {
-        this.type = StringType as Type;
+        this.type = StringType;
         this.number = number;
         this.locale = locale;
         this.currency = currency;
@@ -49,7 +49,7 @@ export default class NumberFormat implements Expression {
         if (args.length !== 3)
             return context.error(`Expected two arguments.`) as null;
 
-        const number = context.parse(args[1], 1, NumberType as Type);
+        const number = context.parse(args[1], 1, NumberType);
         if (!number) return null;
 
         const options = (args[2] as any);
@@ -58,25 +58,25 @@ export default class NumberFormat implements Expression {
 
         let locale = null;
         if (options['locale']) {
-            locale = context.parse(options['locale'], 1, StringType as Type);
+            locale = context.parse(options['locale'], 1, StringType);
             if (!locale) return null;
         }
 
         let currency = null;
         if (options['currency']) {
-            currency = context.parse(options['currency'], 1, StringType as Type);
+            currency = context.parse(options['currency'], 1, StringType);
             if (!currency) return null;
         }
 
         let minFractionDigits = null;
         if (options['min-fraction-digits']) {
-            minFractionDigits = context.parse(options['min-fraction-digits'], 1, NumberType as Type);
+            minFractionDigits = context.parse(options['min-fraction-digits'], 1, NumberType);
             if (!minFractionDigits) return null;
         }
 
         let maxFractionDigits = null;
         if (options['max-fraction-digits']) {
-            maxFractionDigits = context.parse(options['max-fraction-digits'], 1, NumberType as Type);
+            maxFractionDigits = context.parse(options['max-fraction-digits'], 1, NumberType);
             if (!maxFractionDigits) return null;
         }
 
