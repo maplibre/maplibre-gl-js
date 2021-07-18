@@ -560,7 +560,7 @@ function getDefaultHorizontalShaping(
 ): Shaping | null {
     // We don't care which shaping we get because this is used for collision purposes
     // and all the justifications have the same collision box
-    for (const justification: any in horizontalShaping) {
+    for (const justification in horizontalShaping) {
         return horizontalShaping[justification];
     }
     return null;
@@ -701,7 +701,7 @@ function addSymbol(bucket: SymbolBucket,
         }
     }
 
-    for (const justification: any in shapedTextOrientations.horizontal) {
+    for (const justification in shapedTextOrientations.horizontal) {
         const shaping = shapedTextOrientations.horizontal[justification];
 
         if (!textCollisionFeature) {
