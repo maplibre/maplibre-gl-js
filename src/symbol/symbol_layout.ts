@@ -207,7 +207,7 @@ export function performSymbolLayout(bucket: SymbolBucket,
         const layoutTextSize = sizes.layoutTextSize.evaluate(feature, {}, canonical);
         const layoutIconSize = sizes.layoutIconSize.evaluate(feature, {}, canonical);
 
-        const shapedTextOrientations = {
+        const shapedTextOrientations: {[k: string]: any} = {
             horizontal: {},
             vertical: undefined
         };
