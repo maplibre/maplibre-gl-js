@@ -112,7 +112,7 @@ type MapOptions = {
   bounds?: LngLatBoundsLike,
   fitBoundsOptions?: Object,
   localIdeographFontFamily?: string,
-  style: Object | string,
+  style: StyleSpecification | string,
   pitchWithRotate?: boolean
 };
 
