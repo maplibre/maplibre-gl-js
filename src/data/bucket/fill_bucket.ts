@@ -29,7 +29,7 @@ import type VertexBuffer from '../../gl/vertex_buffer';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
-import { PossiblyEvaluatedPropertyValue } from '../../style/properties';
+import {PossiblyEvaluatedPropertyValue} from '../../style/properties';
 
 class FillBucket implements Bucket {
     index: number;
