@@ -50,7 +50,7 @@ class Coercion implements Expression {
 
         const parsed = [];
         for (let i = 1; i < args.length; i++) {
-            const input = context.parse(args[i], i, ValueType);
+            const input = context.parse(args[i], i, ValueType as Type);
             if (!input) return null;
             parsed.push(input);
         }
