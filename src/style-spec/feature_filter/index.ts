@@ -1,6 +1,7 @@
 import {createExpression} from '../expression';
 import type {GlobalProperties, Feature} from '../expression';
 import type {CanonicalTileID} from '../../source/tile_id';
+import {StylePropertySpecification} from '../style-spec';
 
 type FilterExpression = (
   globalProperties: GlobalProperties,
@@ -87,7 +88,7 @@ function createFilter(filter: any): FeatureFilter {
         filter = convertFilter(filter);
     }
 
-    const compiled = createExpression(filter, filterSpec);
+    const compiled = createExpression(filter, filterSpec as StylePropertySpecification);
     if (compiled.result === 'error') {
         throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
     } else {
