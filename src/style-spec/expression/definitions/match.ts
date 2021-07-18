@@ -32,7 +32,7 @@ class Match implements Expression {
         this.otherwise = otherwise;
     }
 
-    static parse(args: ReadonlyArray<unknown>, context: ParsingContext) {
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length < 5)
             return context.error(`Expected at least 4 arguments, but found only ${args.length - 1}.`);
         if (args.length % 2 !== 1)
