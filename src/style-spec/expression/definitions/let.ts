@@ -25,7 +25,7 @@ class Let implements Expression {
         fn(this.result);
     }
 
-    static parse(args: ReadonlyArray<unknown>, context: ParsingContext) {
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length < 4)
             return context.error(`Expected at least 3 arguments, but found ${args.length - 1} instead.`);
 
