@@ -104,7 +104,15 @@ type MapOptions = {
   maxTileCacheSize?: number,
   transformRequest?: RequestTransformFunction,
   accessToken: string,
-  locale?: any
+  locale?: any,
+  fadeDuration?: number,
+  crossSourceCollisions?: boolean,
+  collectResourceTiming?: boolean,
+  clickTolerance?: number,
+  bounds?: LngLatBoundsLike,
+  fitBoundsOptions?: Object,
+  localIdeographFontFamily?: string,
+  style: Object | string
 };
 
 const defaultMinZoom = -2;
