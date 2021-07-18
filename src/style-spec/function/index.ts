@@ -131,7 +131,7 @@ export function createFunction(parameters, propertySpec) {
     }
 }
 
-function coalesce(a, b, c) {
+function coalesce(a, b, c?) {
     if (a !== undefined) return a;
     if (b !== undefined) return b;
     if (c !== undefined) return c;
