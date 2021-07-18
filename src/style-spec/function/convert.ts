@@ -139,7 +139,7 @@ function convertPropertyFunction(parameters, propertySpec, stops) {
     const get = ['get', parameters.property];
     if (type === 'categorical' && typeof stops[0][0] === 'boolean') {
         assert(parameters.stops.length > 0 && parameters.stops.length <= 2);
-        const expression = ['case'];
+        const expression: any = ['case'];
         for (const stop of stops) {
             expression.push(['==', get, stop[0]], stop[1]);
         }
@@ -243,7 +243,7 @@ function getFunctionType(parameters, propertySpec) {
 
 // "String with {name} token" => ["concat", "String with ", ["get", "name"], " token"]
 export function convertTokenString(s: string) {
-    const result = ['concat'];
+    const result: any = ['concat'];
     const re = /{([^{}]+)}/g;
     let pos = 0;
     for (let match = re.exec(s); match !== null; match = re.exec(s)) {
