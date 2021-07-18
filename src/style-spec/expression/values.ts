@@ -69,21 +69,21 @@ export function isValue(mixed: unknown): boolean {
 
 export function typeOf(value: Value): Type {
     if (value === null) {
-        return NullType;
+        return NullType as Type;
     } else if (typeof value === 'string') {
-        return StringType;
+        return StringType as Type;
     } else if (typeof value === 'boolean') {
-        return BooleanType;
+        return BooleanType as Type;
     } else if (typeof value === 'number') {
-        return NumberType;
+        return NumberType as Type;
     } else if (value instanceof Color) {
-        return ColorType;
+        return ColorType as Type;
     } else if (value instanceof Collator) {
-        return CollatorType;
+        return CollatorType as Type;
     } else if (value instanceof Formatted) {
-        return FormattedType;
+        return FormattedType as Type;
     } else if (value instanceof ResolvedImage) {
-        return ResolvedImageType;
+        return ResolvedImageType as Type;
     } else if (Array.isArray(value)) {
         const length = value.length;
         let itemType: Type | typeof undefined;
@@ -103,7 +103,7 @@ export function typeOf(value: Value): Type {
         return array(itemType || ValueType, length);
     } else {
         assert(typeof value === 'object');
-        return ObjectType;
+        return ObjectType as Type;
     }
 }
 
