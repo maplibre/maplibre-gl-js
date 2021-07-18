@@ -90,7 +90,7 @@ class ParsingContext {
 
         if (Array.isArray(expr)) {
             if (expr.length === 0) {
-                return this.error(`Expected an array with at least one element. If you wanted a literal array, use ["literal", []].`);
+                return this.error(`Expected an array with at least one element. If you wanted a literal array, use ["literal", []].`) as null;
             }
 
             const op = expr[0];
@@ -142,13 +142,13 @@ class ParsingContext {
                 return parsed;
             }
 
-            return this.error(`Unknown expression "${op}". If you wanted a literal array, use ["literal", [...]].`, 0);
+            return this.error(`Unknown expression "${op}". If you wanted a literal array, use ["literal", [...]].`, 0) as null;
         } else if (typeof expr === 'undefined') {
-            return this.error(`'undefined' value invalid. Use null instead.`);
+            return this.error(`'undefined' value invalid. Use null instead.`) as null;
         } else if (typeof expr === 'object') {
-            return this.error(`Bare objects invalid. Use ["literal", {...}] instead.`);
+            return this.error(`Bare objects invalid. Use ["literal", {...}] instead.`) as null;
         } else {
-            return this.error(`Expected an array, but found ${typeof expr} instead.`);
+            return this.error(`Expected an array, but found ${typeof expr} instead.`) as null;
         }
     }
 

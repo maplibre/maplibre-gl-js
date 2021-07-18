@@ -56,7 +56,7 @@ class CompoundExpression implements Expression {
         const op: string = (args[0] as any);
         const definition = CompoundExpression.definitions[op];
         if (!definition) {
-            return context.error(`Unknown expression "${op}". If you wanted a literal array, use ["literal", [...]].`, 0);
+            return context.error(`Unknown expression "${op}". If you wanted a literal array, use ["literal", [...]].`, 0) as null;
         }
 
         // Now check argument types against each signature
