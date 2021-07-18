@@ -45,17 +45,17 @@ export type ArrayType = {
 
 export type NativeType = "number" | "string" | "boolean" | "null" | "array" | "object";
 
-export const NullType = {kind: 'null'};
-export const NumberType = {kind: 'number'};
-export const StringType = {kind: 'string'};
-export const BooleanType = {kind: 'boolean'};
-export const ColorType = {kind: 'color'};
-export const ObjectType = {kind: 'object'};
-export const ValueType = {kind: 'value'};
-export const ErrorType = {kind: 'error'};
-export const CollatorType = {kind: 'collator'};
-export const FormattedType = {kind: 'formatted'};
-export const ResolvedImageType = {kind: 'resolvedImage'};
+export const NullType = {kind: 'null'} as NullTypeT;
+export const NumberType = {kind: 'number'} as NumberTypeT;
+export const StringType = {kind: 'string'} as StringTypeT;
+export const BooleanType = {kind: 'boolean'} as BooleanTypeT;
+export const ColorType = {kind: 'color'} as ColorTypeT;
+export const ObjectType = {kind: 'object'} as ObjectTypeT;
+export const ValueType = {kind: 'value'} as ValueTypeT;
+export const ErrorType = {kind: 'error'} as ErrorTypeT;
+export const CollatorType = {kind: 'collator'} as CollatorTypeT;
+export const FormattedType = {kind: 'formatted'} as FormattedTypeT;
+export const ResolvedImageType = {kind: 'resolvedImage'} as ResolvedImageTypeT;
 
 export function array(itemType: Type, N?: number | null): ArrayType {
     return {
