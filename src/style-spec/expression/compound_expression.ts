@@ -87,7 +87,7 @@ class CompoundExpression implements Expression {
                 const arg = args[i];
                 const expectedType = Array.isArray(params) ?
                     params[i - 1] :
-                    params.type;
+                    (params as Varargs).type;
 
                 const parsed = signatureContext.parse(arg, 1 + parsedArgs.length, expectedType);
                 if (!parsed) {
@@ -110,13 +110,13 @@ class CompoundExpression implements Expression {
             }
 
             for (let i = 0; i < parsedArgs.length; i++) {
-                const expected = Array.isArray(params) ? params[i] : params.type;
+                const expected = Array.isArray(params) ? params[i] : (params as Varargs).type;
                 const arg = parsedArgs[i];
                 signatureContext.concat(i + 1).checkSubtype(expected, arg.type);
             }
 
             if (signatureContext.errors.length === 0) {
-                return new CompoundExpression(op, type, evaluate, parsedArgs);
+                return new CompoundExpression(op, type, evaluate as Evaluate, parsedArgs);
             }
         }
 
@@ -127,7 +127,7 @@ class CompoundExpression implements Expression {
         } else {
             const expected = overloads.length ? overloads : availableOverloads;
             const signatures = expected
-                .map(([params]) => stringifySignature(params))
+                .map(([params]) => stringifySignature(params as Signature))
                 .join(' | ');
 
             const actualTypes = [];
