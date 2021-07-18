@@ -112,7 +112,8 @@ type MapOptions = {
   bounds?: LngLatBoundsLike,
   fitBoundsOptions?: Object,
   localIdeographFontFamily?: string,
-  style: Object | string
+  style: Object | string,
+  pitchWithRotate?: boolean
 };
 
 const defaultMinZoom = -2;
@@ -392,7 +393,7 @@ class Map extends Camera {
         }
 
         const transform = new Transform(options.minZoom, options.maxZoom, options.minPitch, options.maxPitch, options.renderWorldCopies);
-        super(transform, options);
+        super(transform, {bearingSnap: options.bearingSnap});
 
         this._interactive = options.interactive;
         this._maxTileCacheSize = options.maxTileCacheSize;
@@ -453,7 +454,12 @@ class Map extends Camera {
             window.addEventListener('orientationchange', this._onWindowResize, false);
         }
 
-        this.handlers = new HandlerManager(this, options);
+        this.handlers = new HandlerManager(this, {
+            interactive: options.interactive,
+            pitchWithRotate: options.pitchWithRotate,
+            clickTolerance: options.clickTolerance,
+            bearingSnap: options.bearingSnap
+        });
 
         const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
         this._hash = options.hash && (new Hash(hashName)).addTo(this);
