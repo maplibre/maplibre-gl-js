@@ -768,7 +768,7 @@ function addSymbol(bucket: SymbolBucket,
     );
 
     if (feature.sortKey !== undefined) {
-        bucket.addToSortKeyRanges(bucket.symbolInstances.length, feature.sortKey);
+        bucket.addToSortKeyRanges(bucket.symbolInstances.length, feature.sortKey as number);
     }
 
     bucket.symbolInstances.emplaceBack(
