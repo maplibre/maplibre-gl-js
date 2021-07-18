@@ -27,18 +27,18 @@ class Let implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length < 4)
-            return context.error(`Expected at least 3 arguments, but found ${args.length - 1} instead.`);
+            return context.error(`Expected at least 3 arguments, but found ${args.length - 1} instead.`) as null;
 
         const bindings: Array<[string, Expression]> = [];
         for (let i = 1; i < args.length - 1; i += 2) {
             const name = args[i];
 
             if (typeof name !== 'string') {
-                return context.error(`Expected string, but found ${typeof name} instead.`, i);
+                return context.error(`Expected string, but found ${typeof name} instead.`, i) as null;
             }
 
             if (/[^a-zA-Z0-9_]/.test(name)) {
-                return context.error(`Variable names must contain only alphanumeric characters or '_'.`, i);
+                return context.error(`Variable names must contain only alphanumeric characters or '_'.`, i) as null;
             }
 
             const value = context.parse(args[i + 1], i + 1);

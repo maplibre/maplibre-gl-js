@@ -47,14 +47,14 @@ export default class NumberFormat implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length !== 3)
-            return context.error(`Expected two arguments.`);
+            return context.error(`Expected two arguments.`) as null;
 
         const number = context.parse(args[1], 1, NumberType);
         if (!number) return null;
 
         const options = (args[2] as any);
         if (typeof options !== "object" || Array.isArray(options))
-            return context.error(`NumberFormat options argument must be an object.`);
+            return context.error(`NumberFormat options argument must be an object.`) as null;
 
         let locale = null;
         if (options['locale']) {

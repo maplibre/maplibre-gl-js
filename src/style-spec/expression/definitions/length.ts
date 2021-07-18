@@ -19,13 +19,13 @@ class Length implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length !== 2)
-            return context.error(`Expected 1 argument, but found ${args.length - 1} instead.`);
+            return context.error(`Expected 1 argument, but found ${args.length - 1} instead.`) as null;
 
         const input = context.parse(args[1], 1);
         if (!input) return null;
 
         if (input.type.kind !== 'array' && input.type.kind !== 'string' && input.type.kind !== 'value')
-            return context.error(`Expected argument of type string or array, but found ${toString(input.type)} instead.`);
+            return context.error(`Expected argument of type string or array, but found ${toString(input.type)} instead.`) as null;
 
         return new Length(input);
     }

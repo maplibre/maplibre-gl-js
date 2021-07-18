@@ -293,7 +293,7 @@ class Within implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length !== 2)
-            return context.error(`'within' expression requires exactly one argument, but found ${args.length - 1} instead.`);
+            return context.error(`'within' expression requires exactly one argument, but found ${args.length - 1} instead.`) as null;
         if (isValue(args[1])) {
             const geojson = (args[1] as any);
             if (geojson.type === 'FeatureCollection') {
@@ -312,7 +312,7 @@ class Within implements Expression {
                 return new Within(geojson, geojson);
             }
         }
-        return context.error(`'within' expression requires valid geojson object that contains polygon geometry type.`);
+        return context.error(`'within' expression requires valid geojson object that contains polygon geometry type.`) as null;
     }
 
     evaluate(ctx: EvaluationContext) {

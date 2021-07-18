@@ -19,7 +19,7 @@ class Coalesce implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length < 2) {
-            return context.error("Expectected at least one argument.");
+            return context.error("Expectected at least one argument.") as null;
         }
         let outputType: Type = (null as any);
         const expectedType = context.expectedType;

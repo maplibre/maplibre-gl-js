@@ -21,7 +21,7 @@ class At implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length !== 3)
-            return context.error(`Expected 2 arguments, but found ${args.length - 1} instead.`);
+            return context.error(`Expected 2 arguments, but found ${args.length - 1} instead.`) as null;
 
         const index = context.parse(args[1], 1, NumberType);
         const input = context.parse(args[2], 2, array(context.expectedType || ValueType));
