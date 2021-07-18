@@ -35,7 +35,7 @@ export default function(features: Array<SymbolFeature>): Array<SymbolFeature> {
         return i;
     }
 
-    function getKey(text, geom, onRight) {
+    function getKey(text, geom, onRight?) {
         const point = onRight ? geom[0][geom[0].length - 1] : geom[0][0];
         return `${text}:${point.x}:${point.y}`;
     }
