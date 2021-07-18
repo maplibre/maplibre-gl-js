@@ -86,7 +86,7 @@ class Match implements Expression {
             outputs.push(result);
         }
 
-        const input = context.parse(args[1], 1, ValueType as Type);
+        const input = context.parse(args[1], 1, ValueType);
         if (!input) return null;
 
         const otherwise = context.parse(args[args.length - 1], args.length - 1, outputType);

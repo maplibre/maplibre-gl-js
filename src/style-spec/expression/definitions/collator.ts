@@ -13,7 +13,7 @@ export default class CollatorExpression implements Expression {
     locale: Expression | null;
 
     constructor(caseSensitive: Expression, diacriticSensitive: Expression, locale: Expression | null) {
-        this.type = CollatorType as Type;
+        this.type = CollatorType;
         this.locale = locale;
         this.caseSensitive = caseSensitive;
         this.diacriticSensitive = diacriticSensitive;
@@ -28,16 +28,16 @@ export default class CollatorExpression implements Expression {
             return context.error(`Collator options argument must be an object.`) as null;
 
         const caseSensitive = context.parse(
-            options['case-sensitive'] === undefined ? false : options['case-sensitive'], 1, BooleanType as Type);
+            options['case-sensitive'] === undefined ? false : options['case-sensitive'], 1, BooleanType);
         if (!caseSensitive) return null;
 
         const diacriticSensitive = context.parse(
-            options['diacritic-sensitive'] === undefined ? false : options['diacritic-sensitive'], 1, BooleanType as Type);
+            options['diacritic-sensitive'] === undefined ? false : options['diacritic-sensitive'], 1, BooleanType);
         if (!diacriticSensitive) return null;
 
         let locale = null;
         if (options['locale']) {
-            locale = context.parse(options['locale'], 1, StringType as Type);
+            locale = context.parse(options['locale'], 1, StringType);
             if (!locale) return null;
         }
 

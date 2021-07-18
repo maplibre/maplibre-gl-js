@@ -13,7 +13,7 @@ class Length implements Expression {
     input: Expression;
 
     constructor(input: Expression) {
-        this.type = NumberType as Type;
+        this.type = NumberType;
         this.input = input;
     }
 

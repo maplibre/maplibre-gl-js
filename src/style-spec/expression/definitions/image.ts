@@ -11,7 +11,7 @@ export default class ImageExpression implements Expression {
     input: Expression;
 
     constructor(input: Expression) {
-        this.type = ResolvedImageType as Type;
+        this.type = ResolvedImageType;
         this.input = input;
     }
 
@@ -20,7 +20,7 @@ export default class ImageExpression implements Expression {
             return context.error(`Expected two arguments.`) as null;
         }
 
-        const name = context.parse(args[1], 1, StringType as Type);
+        const name = context.parse(args[1], 1, StringType);
         if (!name) return context.error(`No image name provided.`) as null;
 
         return new ImageExpression(name);

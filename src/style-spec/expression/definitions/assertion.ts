@@ -75,7 +75,7 @@ class Assertion implements Expression {
 
         const parsed = [];
         for (; i < args.length; i++) {
-            const input = context.parse(args[i], i, ValueType as Type);
+            const input = context.parse(args[i], i, ValueType);
             if (!input) return null;
             parsed.push(input);
         }

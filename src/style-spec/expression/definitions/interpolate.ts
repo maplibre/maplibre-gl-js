@@ -100,14 +100,14 @@ class Interpolate implements Expression {
             return context.error(`Expected an even number of arguments.`) as null;
         }
 
-        input = context.parse(input, 2, NumberType as Type);
+        input = context.parse(input, 2, NumberType);
         if (!input) return null;
 
         const stops: Stops = [];
 
         let outputType: Type = (null as any);
         if (operator === 'interpolate-hcl' || operator === 'interpolate-lab') {
-            outputType = ColorType as Type;
+            outputType = ColorType;
         } else if (context.expectedType && context.expectedType.kind !== 'value') {
             outputType = context.expectedType;
         }

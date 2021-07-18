@@ -286,7 +286,7 @@ class Within implements Expression {
     geometries: GeoJSONPolygons;
 
     constructor(geojson: GeoJSON, geometries: GeoJSONPolygons) {
-        this.type = BooleanType as Type;
+        this.type = BooleanType;
         this.geojson = geojson;
         this.geometries = geometries;
     }

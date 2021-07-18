@@ -125,99 +125,99 @@ function varargs(type: Type): Varargs {
 
 CompoundExpression.register(expressions, {
     'error': [
-        ErrorType as Type,
-        [StringType as Type],
+        ErrorType,
+        [StringType],
         (ctx, [v]) => { throw new RuntimeError(v.evaluate(ctx)); }
     ],
     'typeof': [
-        StringType as Type,
-        [ValueType as Type],
+        StringType,
+        [ValueType],
         (ctx, [v]) => typeToString(typeOf(v.evaluate(ctx)))
     ],
     'to-rgba': [
-        array(NumberType as Type, 4),
-        [ColorType as Type],
+        array(NumberType, 4),
+        [ColorType],
         (ctx, [v]) => {
             return v.evaluate(ctx).toArray();
         }
     ],
     'rgb': [
-        ColorType as Type,
-        [NumberType as Type, NumberType as Type, NumberType as Type],
+        ColorType,
+        [NumberType, NumberType, NumberType],
         rgba
     ],
     'rgba': [
-        ColorType as Type,
-        [NumberType as Type, NumberType as Type, NumberType as Type, NumberType as Type],
+        ColorType,
+        [NumberType, NumberType, NumberType, NumberType],
         rgba
     ],
     'has': {
-        type: (BooleanType as Type),
+        type: BooleanType,
         overloads: [
             [
-                [StringType as Type],
+                [StringType],
                 (ctx, [key]) => has(key.evaluate(ctx), ctx.properties())
             ], [
-                [StringType as Type, ObjectType as Type],
+                [StringType, ObjectType],
                 (ctx, [key, obj]) => has(key.evaluate(ctx), obj.evaluate(ctx))
             ]
         ]
     },
     'get': {
-        type: (ValueType as Type),
+        type: ValueType,
         overloads: [
             [
-                [StringType as Type],
+                [StringType],
                 (ctx, [key]) => get(key.evaluate(ctx), ctx.properties())
             ], [
-                [StringType as Type, ObjectType as Type],
+                [StringType, ObjectType],
                 (ctx, [key, obj]) => get(key.evaluate(ctx), obj.evaluate(ctx))
             ]
         ]
     },
     'feature-state': [
-        ValueType as Type,
-        [StringType as Type],
+        ValueType,
+        [StringType],
         (ctx, [key]) => get(key.evaluate(ctx), ctx.featureState || {})
     ],
     'properties': [
-        ObjectType as Type,
+        ObjectType,
         [],
         (ctx) => ctx.properties()
     ],
     'geometry-type': [
-        StringType as Type,
+        StringType,
         [],
         (ctx) => ctx.geometryType()
     ],
     'id': [
-        ValueType as Type,
+        ValueType,
         [],
         (ctx) => ctx.id()
     ],
     'zoom': [
-        NumberType as Type,
+        NumberType,
         [],
         (ctx) => ctx.globals.zoom
     ],
     'heatmap-density': [
-        NumberType as Type,
+        NumberType,
         [],
         (ctx) => ctx.globals.heatmapDensity || 0
     ],
     'line-progress': [
-        NumberType as Type,
+        NumberType,
         [],
         (ctx) => ctx.globals.lineProgress || 0
     ],
     'accumulated': [
-        ValueType as Type,
+        ValueType,
         [],
         (ctx) => ctx.globals.accumulated === undefined ? null : ctx.globals.accumulated
     ],
     '+': [
-        NumberType as Type,
-        varargs(NumberType as Type),
+        NumberType,
+        varargs(NumberType),
         (ctx, args) => {
             let result = 0;
             for (const arg of args) {
@@ -227,8 +227,8 @@ CompoundExpression.register(expressions, {
         }
     ],
     '*': [
-        NumberType as Type,
-        varargs(NumberType as Type),
+        NumberType,
+        varargs(NumberType),
         (ctx, args) => {
             let result = 1;
             for (const arg of args) {
@@ -238,115 +238,115 @@ CompoundExpression.register(expressions, {
         }
     ],
     '-': {
-        type: (NumberType as Type),
+        type: NumberType,
         overloads: [
             [
-                [NumberType as Type, NumberType as Type],
+                [NumberType, NumberType],
                 (ctx, [a, b]) => a.evaluate(ctx) - b.evaluate(ctx)
             ], [
-                [NumberType as Type],
+                [NumberType],
                 (ctx, [a]) => -a.evaluate(ctx)
             ]
         ]
     },
     '/': [
-        NumberType as Type,
-        [NumberType as Type, NumberType as Type],
+        NumberType,
+        [NumberType, NumberType],
         (ctx, [a, b]) => a.evaluate(ctx) / b.evaluate(ctx)
     ],
     '%': [
-        NumberType as Type,
-        [NumberType as Type, NumberType as Type],
+        NumberType,
+        [NumberType, NumberType],
         (ctx, [a, b]) => a.evaluate(ctx) % b.evaluate(ctx)
     ],
     'ln2': [
-        NumberType as Type,
+        NumberType,
         [],
         () => Math.LN2
     ],
     'pi': [
-        NumberType as Type,
+        NumberType,
         [],
         () => Math.PI
     ],
     'e': [
-        NumberType as Type,
+        NumberType,
         [],
         () => Math.E
     ],
     '^': [
-        NumberType as Type,
-        [NumberType as Type, NumberType as Type],
+        NumberType,
+        [NumberType, NumberType],
         (ctx, [b, e]) => Math.pow(b.evaluate(ctx), e.evaluate(ctx))
     ],
     'sqrt': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [x]) => Math.sqrt(x.evaluate(ctx))
     ],
     'log10': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.log(n.evaluate(ctx)) / Math.LN10
     ],
     'ln': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.log(n.evaluate(ctx))
     ],
     'log2': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.log(n.evaluate(ctx)) / Math.LN2
     ],
     'sin': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.sin(n.evaluate(ctx))
     ],
     'cos': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.cos(n.evaluate(ctx))
     ],
     'tan': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.tan(n.evaluate(ctx))
     ],
     'asin': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.asin(n.evaluate(ctx))
     ],
     'acos': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.acos(n.evaluate(ctx))
     ],
     'atan': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.atan(n.evaluate(ctx))
     ],
     'min': [
-        NumberType as Type,
-        varargs(NumberType as Type),
+        NumberType,
+        varargs(NumberType),
         (ctx, args) => Math.min(...args.map(arg => arg.evaluate(ctx)))
     ],
     'max': [
-        NumberType as Type,
-        varargs(NumberType as Type),
+        NumberType,
+        varargs(NumberType),
         (ctx, args) => Math.max(...args.map(arg => arg.evaluate(ctx)))
     ],
     'abs': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.abs(n.evaluate(ctx))
     ],
     'round': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => {
             const v = n.evaluate(ctx);
             // Javascript's Math.round() rounds towards +Infinity for halfway
@@ -356,33 +356,33 @@ CompoundExpression.register(expressions, {
         }
     ],
     'floor': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.floor(n.evaluate(ctx))
     ],
     'ceil': [
-        NumberType as Type,
-        [NumberType as Type],
+        NumberType,
+        [NumberType],
         (ctx, [n]) => Math.ceil(n.evaluate(ctx))
     ],
     'filter-==': [
-        BooleanType as Type,
-        [StringType as Type, ValueType as Type],
+        BooleanType,
+        [StringType, ValueType],
         (ctx, [k, v]) => ctx.properties()[(k as any).value] === (v as any).value
     ],
     'filter-id-==': [
-        BooleanType as Type,
-        [ValueType as Type],
+        BooleanType,
+        [ValueType],
         (ctx, [v]) => ctx.id() === (v as any).value
     ],
     'filter-type-==': [
-        BooleanType as Type,
-        [StringType as Type],
+        BooleanType,
+        [StringType],
         (ctx, [v]) => ctx.geometryType() === (v as any).value
     ],
     'filter-<': [
-        BooleanType as Type,
-        [StringType as Type, ValueType as Type],
+        BooleanType,
+        [StringType, ValueType],
         (ctx, [k, v]) => {
             const a = ctx.properties()[(k as any).value];
             const b = (v as any).value;
@@ -390,8 +390,8 @@ CompoundExpression.register(expressions, {
         }
     ],
     'filter-id-<': [
-        BooleanType as Type,
-        [ValueType as Type],
+        BooleanType,
+        [ValueType],
         (ctx, [v]) => {
             const a = ctx.id();
             const b = (v as any).value;
@@ -399,8 +399,8 @@ CompoundExpression.register(expressions, {
         }
     ],
     'filter->': [
-        BooleanType as Type,
-        [StringType as Type, ValueType as Type],
+        BooleanType,
+        [StringType, ValueType],
         (ctx, [k, v]) => {
             const a = ctx.properties()[(k as any).value];
             const b = (v as any).value;
@@ -408,8 +408,8 @@ CompoundExpression.register(expressions, {
         }
     ],
     'filter-id->': [
-        BooleanType as Type,
-        [ValueType as Type],
+        BooleanType,
+        [ValueType],
         (ctx, [v]) => {
             const a = ctx.id();
             const b = (v as any).value;
@@ -417,8 +417,8 @@ CompoundExpression.register(expressions, {
         }
     ],
     'filter-<=': [
-        BooleanType as Type,
-        [StringType as Type, ValueType as Type],
+        BooleanType,
+        [StringType, ValueType],
         (ctx, [k, v]) => {
             const a = ctx.properties()[(k as any).value];
             const b = (v as any).value;
@@ -426,8 +426,8 @@ CompoundExpression.register(expressions, {
         }
     ],
     'filter-id-<=': [
-        BooleanType as Type,
-        [ValueType as Type],
+        BooleanType,
+        [ValueType],
         (ctx, [v]) => {
             const a = ctx.id();
             const b = (v as any).value;
@@ -435,8 +435,8 @@ CompoundExpression.register(expressions, {
         }
     ],
     'filter->=': [
-        BooleanType as Type,
-        [StringType as Type, ValueType as Type],
+        BooleanType,
+        [StringType, ValueType],
         (ctx, [k, v]) => {
             const a = ctx.properties()[(k as any).value];
             const b = (v as any).value;
@@ -444,8 +444,8 @@ CompoundExpression.register(expressions, {
         }
     ],
     'filter-id->=': [
-        BooleanType as Type,
-        [ValueType as Type],
+        BooleanType,
+        [ValueType],
         (ctx, [v]) => {
             const a = ctx.id();
             const b = (v as any).value;
@@ -453,46 +453,46 @@ CompoundExpression.register(expressions, {
         }
     ],
     'filter-has': [
-        BooleanType as Type,
-        [ValueType as Type],
+        BooleanType,
+        [ValueType],
         (ctx, [k]) => (k as any).value in ctx.properties()
     ],
     'filter-has-id': [
-        BooleanType as Type,
+        BooleanType,
         [],
         (ctx) => (ctx.id() !== null && ctx.id() !== undefined)
     ],
     'filter-type-in': [
-        BooleanType as Type,
-        [array(StringType as Type)],
+        BooleanType,
+        [array(StringType)],
         (ctx, [v]) => (v as any).value.indexOf(ctx.geometryType()) >= 0
     ],
     'filter-id-in': [
-        BooleanType as Type,
-        [array(ValueType as Type)],
+        BooleanType,
+        [array(ValueType)],
         (ctx, [v]) => (v as any).value.indexOf(ctx.id()) >= 0
     ],
     'filter-in-small': [
-        BooleanType as Type,
-        [StringType as Type, array(ValueType as Type)],
+        BooleanType,
+        [StringType, array(ValueType)],
         // assumes v is an array literal
         (ctx, [k, v]) => (v as any).value.indexOf(ctx.properties()[(k as any).value]) >= 0
     ],
     'filter-in-large': [
-        BooleanType as Type,
-        [StringType as Type, array(ValueType as Type)],
+        BooleanType,
+        [StringType, array(ValueType)],
         // assumes v is a array literal with values sorted in ascending order and of a single type
         (ctx, [k, v]) => binarySearch(ctx.properties()[(k as any).value], (v as any).value, 0, (v as any).value.length - 1)
     ],
     'all': {
-        type: (BooleanType as Type),
+        type: BooleanType,
         overloads: [
             [
-                [BooleanType as Type, BooleanType as Type],
+                [BooleanType, BooleanType],
                 (ctx, [a, b]) => a.evaluate(ctx) && b.evaluate(ctx)
             ],
             [
-                varargs(BooleanType as Type),
+                varargs(BooleanType),
                 (ctx, args) => {
                     for (const arg of args) {
                         if (!arg.evaluate(ctx))
@@ -504,14 +504,14 @@ CompoundExpression.register(expressions, {
         ]
     },
     'any': {
-        type: (BooleanType as Type),
+        type: BooleanType,
         overloads: [
             [
-                [BooleanType as Type, BooleanType as Type],
+                [BooleanType, BooleanType],
                 (ctx, [a, b]) => a.evaluate(ctx) || b.evaluate(ctx)
             ],
             [
-                varargs(BooleanType as Type),
+                varargs(BooleanType),
                 (ctx, args) => {
                     for (const arg of args) {
                         if (arg.evaluate(ctx))
@@ -523,13 +523,13 @@ CompoundExpression.register(expressions, {
         ]
     },
     '!': [
-        BooleanType as Type,
-        [BooleanType as Type],
+        BooleanType,
+        [BooleanType],
         (ctx, [b]) => !b.evaluate(ctx)
     ],
     'is-supported-script': [
-        BooleanType as Type,
-        [StringType as Type],
+        BooleanType,
+        [StringType],
         // At parse time this will always return true, so we need to exclude this expression with isGlobalPropertyConstant
         (ctx, [s]) => {
             const isSupportedScript = ctx.globals && ctx.globals.isSupportedScript;
@@ -540,23 +540,23 @@ CompoundExpression.register(expressions, {
         }
     ],
     'upcase': [
-        StringType as Type,
-        [StringType as Type],
+        StringType,
+        [StringType],
         (ctx, [s]) => s.evaluate(ctx).toUpperCase()
     ],
     'downcase': [
-        StringType as Type,
-        [StringType as Type],
+        StringType,
+        [StringType],
         (ctx, [s]) => s.evaluate(ctx).toLowerCase()
     ],
     'concat': [
-        StringType as Type,
-        varargs(ValueType as Type),
+        StringType,
+        varargs(ValueType),
         (ctx, args) => args.map(arg => valueToString(arg.evaluate(ctx))).join('')
     ],
     'resolved-locale': [
-        StringType as Type,
-        [CollatorType as Type],
+        StringType,
+        [CollatorType],
         (ctx, [collator]) => collator.evaluate(ctx).resolvedLocale()
     ]
 });

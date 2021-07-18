@@ -22,7 +22,7 @@ class In implements Expression {
     haystack: Expression;
 
     constructor(needle: Expression, haystack: Expression) {
-        this.type = BooleanType as Type;
+        this.type = BooleanType;
         this.needle = needle;
         this.haystack = haystack;
     }
@@ -32,13 +32,13 @@ class In implements Expression {
             return context.error(`Expected 2 arguments, but found ${args.length - 1} instead.`) as null;
         }
 
-        const needle = context.parse(args[1], 1, ValueType as Type);
+        const needle = context.parse(args[1], 1, ValueType);
 
-        const haystack = context.parse(args[2], 2, ValueType as Type);
+        const haystack = context.parse(args[2], 2, ValueType);
 
         if (!needle || !haystack) return null;
 
-        if (!isValidType(needle.type, [BooleanType as Type, StringType as Type, NumberType as Type, NullType as Type, ValueType as Type])) {
+        if (!isValidType(needle.type, [BooleanType, StringType, NumberType, NullType, ValueType])) {
             return context.error(`Expected first argument to be of type boolean, string, number or null, but found ${toString(needle.type)} instead`) as null;
         }
 

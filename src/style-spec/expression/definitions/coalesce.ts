@@ -45,7 +45,7 @@ class Coalesce implements Expression {
             parsedArgs.some(arg => checkSubtype(expectedType, arg.type));
 
         return needsAnnotation ?
-            new Coalesce(ValueType as Type, parsedArgs) :
+            new Coalesce(ValueType, parsedArgs) :
             new Coalesce((outputType as any), parsedArgs);
     }
 

@@ -84,7 +84,7 @@ const valueMemberTypes = [
     ColorType,
     FormattedType,
     ObjectType,
-    array(ValueType as ValueTypeT),
+    array(ValueType),
     ResolvedImageType
 ];
 
@@ -107,7 +107,7 @@ export function checkSubtype(expected: Type, t: Type): string | undefined | null
         return null;
     } else if (expected.kind === 'value') {
         for (const memberType of valueMemberTypes) {
-            if (!checkSubtype(memberType as Type, t)) {
+            if (!checkSubtype(memberType, t)) {
                 return null;
             }
         }

@@ -34,7 +34,7 @@ class Case implements Expression {
 
         const branches = [];
         for (let i = 1; i < args.length - 1; i += 2) {
-            const test = context.parse(args[i], i, BooleanType as Type);
+            const test = context.parse(args[i], i, BooleanType);
             if (!test) return null;
 
             const result = context.parse(args[i + 1], i + 1, outputType);
