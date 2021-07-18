@@ -174,7 +174,7 @@ export function performSymbolLayout(bucket: SymbolBucket,
     const layout = bucket.layers[0].layout;
     const unevaluatedLayoutValues = bucket.layers[0]._unevaluatedLayout._values;
 
-    const sizes = {};
+    const sizes: {[k: string]: any} = {};
 
     if (bucket.textSizeData.kind === 'composite') {
         const {minZoom, maxZoom} = bucket.textSizeData;
@@ -327,7 +327,7 @@ export function performSymbolLayout(bucket: SymbolBucket,
         const shapedText = getDefaultHorizontalShaping(shapedTextOrientations.horizontal) || shapedTextOrientations.vertical;
         bucket.iconsInText = shapedText ? shapedText.iconsInText : false;
         if (shapedText || shapedIcon) {
-            addFeature(bucket, feature, shapedTextOrientations, shapedIcon, imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, canonical);
+            addFeature(bucket, feature, shapedTextOrientations, shapedIcon, imageMap, sizes as Sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, canonical);
         }
     }
 
@@ -608,7 +608,7 @@ function addSymbol(bucket: SymbolBucket,
     let numVerticalGlyphVertices = 0;
     let placedIconSymbolIndex = -1;
     let verticalPlacedIconSymbolIndex = -1;
-    const placedTextSymbolIndices = {};
+    const placedTextSymbolIndices: {[k: string]: any} = {};
     let key = murmur3('');
 
     let textOffset0 = 0;
