@@ -68,7 +68,7 @@ function makeComparison(op: ComparisonOperator, compareBasic, compareWithCollato
         hasUntypedArgument: boolean;
 
         constructor(lhs: Expression, rhs: Expression, collator?: Expression | null) {
-            this.type = BooleanType;
+            this.type = BooleanType as Type;
             this.lhs = lhs;
             this.rhs = rhs;
             this.collator = collator;
@@ -81,12 +81,12 @@ function makeComparison(op: ComparisonOperator, compareBasic, compareWithCollato
 
             const op: ComparisonOperator = (args[0] as any);
 
-            let lhs = context.parse(args[1], 1, ValueType);
+            let lhs = context.parse(args[1], 1, ValueType as Type);
             if (!lhs) return null;
             if (!isComparableType(op, lhs.type)) {
                 return context.concat(1).error(`"${op}" comparisons are not supported for type '${toString(lhs.type)}'.`) as null;
             }
-            let rhs = context.parse(args[2], 2, ValueType);
+            let rhs = context.parse(args[2], 2, ValueType as Type);
             if (!rhs) return null;
             if (!isComparableType(op, rhs.type)) {
                 return context.concat(2).error(`"${op}" comparisons are not supported for type '${toString(rhs.type)}'.`) as null;
@@ -121,7 +121,7 @@ function makeComparison(op: ComparisonOperator, compareBasic, compareWithCollato
                 ) {
                     return context.error(`Cannot use collator to compare non-string types.`) as null;
                 }
-                collator = context.parse(args[3], 3, CollatorType);
+                collator = context.parse(args[3], 3, CollatorType as Type);
                 if (!collator) return null;
             }
 

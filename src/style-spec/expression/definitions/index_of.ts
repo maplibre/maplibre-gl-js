@@ -23,7 +23,7 @@ class IndexOf implements Expression {
     fromIndex: Expression | undefined | null;
 
     constructor(needle: Expression, haystack: Expression, fromIndex?: Expression) {
-        this.type = NumberType;
+        this.type = NumberType as Type;
         this.needle = needle;
         this.haystack = haystack;
         this.fromIndex = fromIndex;
@@ -34,17 +34,17 @@ class IndexOf implements Expression {
             return context.error(`Expected 3 or 4 arguments, but found ${args.length - 1} instead.`) as null;
         }
 
-        const needle = context.parse(args[1], 1, ValueType);
+        const needle = context.parse(args[1], 1, ValueType as Type);
 
-        const haystack = context.parse(args[2], 2, ValueType);
+        const haystack = context.parse(args[2], 2, ValueType as Type);
 
         if (!needle || !haystack) return null;
-        if (!isValidType(needle.type, [BooleanType, StringType, NumberType, NullType, ValueType])) {
+        if (!isValidType(needle.type, [BooleanType as Type, StringType as Type, NumberType as Type, NullType as Type, ValueType as Type])) {
             return context.error(`Expected first argument to be of type boolean, string, number or null, but found ${toString(needle.type)} instead`) as null;
         }
 
         if (args.length === 4) {
-            const fromIndex = context.parse(args[3], 3, NumberType);
+            const fromIndex = context.parse(args[3], 3, NumberType as Type);
             if (!fromIndex) return null;
             return new IndexOf(needle, haystack, fromIndex);
         } else {

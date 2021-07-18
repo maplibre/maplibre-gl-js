@@ -23,8 +23,8 @@ class At implements Expression {
         if (args.length !== 3)
             return context.error(`Expected 2 arguments, but found ${args.length - 1} instead.`) as null;
 
-        const index = context.parse(args[1], 1, NumberType);
-        const input = context.parse(args[2], 2, array(context.expectedType || ValueType));
+        const index = context.parse(args[1], 1, NumberType as Type);
+        const input = context.parse(args[2], 2, array((context.expectedType || ValueType) as Type));
 
         if (!index || !input) return null;
 

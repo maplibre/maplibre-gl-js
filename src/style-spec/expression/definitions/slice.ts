@@ -34,17 +34,17 @@ class Slice implements Expression {
             return context.error(`Expected 3 or 4 arguments, but found ${args.length - 1} instead.`) as null;
         }
 
-        const input = context.parse(args[1], 1, ValueType);
-        const beginIndex = context.parse(args[2], 2, NumberType);
+        const input = context.parse(args[1], 1, ValueType as Type);
+        const beginIndex = context.parse(args[2], 2, NumberType as Type);
 
         if (!input || !beginIndex) return null;
 
-        if (!isValidType(input.type, [array(ValueType), StringType, ValueType])) {
+        if (!isValidType(input.type, [array(ValueType as Type), StringType as Type, ValueType as Type])) {
             return context.error(`Expected first argument to be of type array or string, but found ${toString(input.type)} instead`) as null;
         }
 
         if (args.length === 4) {
-            const endIndex = context.parse(args[3], 3, NumberType);
+            const endIndex = context.parse(args[3], 3, NumberType as Type);
             if (!endIndex) return null;
             return new Slice(input.type, input, beginIndex, endIndex);
         } else {

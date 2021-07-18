@@ -36,7 +36,7 @@ class Step implements Expression {
             return context.error(`Expected an even number of arguments.`) as null;
         }
 
-        const input = context.parse(args[1], 1, NumberType);
+        const input = context.parse(args[1], 1, NumberType as Type);
         if (!input) return null;
 
         const stops: Stops = [];

@@ -29,7 +29,7 @@ export default class FormatExpression implements Expression {
     sections: Array<FormattedSectionExpression>;
 
     constructor(sections: Array<FormattedSectionExpression>) {
-        this.type = FormattedType;
+        this.type = FormattedType as Type;
         this.sections = sections;
     }
 
@@ -53,19 +53,19 @@ export default class FormatExpression implements Expression {
 
                 let scale = null;
                 if (arg['font-scale']) {
-                    scale = context.parse(arg['font-scale'], 1, NumberType);
+                    scale = context.parse(arg['font-scale'], 1, NumberType as Type);
                     if (!scale) return null;
                 }
 
                 let font = null;
                 if (arg['text-font']) {
-                    font = context.parse(arg['text-font'], 1, array(StringType));
+                    font = context.parse(arg['text-font'], 1, array(StringType as Type));
                     if (!font) return null;
                 }
 
                 let textColor = null;
                 if (arg['text-color']) {
-                    textColor = context.parse(arg['text-color'], 1, ColorType);
+                    textColor = context.parse(arg['text-color'], 1, ColorType as Type);
                     if (!textColor) return null;
                 }
 
@@ -74,7 +74,7 @@ export default class FormatExpression implements Expression {
                 lastExpression.font = font;
                 lastExpression.textColor = textColor;
             } else {
-                const content = context.parse(args[i], 1, ValueType);
+                const content = context.parse(args[i], 1, ValueType as Type);
                 if (!content) return null;
 
                 const kind = content.type.kind;
