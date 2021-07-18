@@ -36,7 +36,7 @@ class Assertion implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length < 2)
-            return context.error(`Expected at least one argument.`);
+            return context.error(`Expected at least one argument.`) as null;
 
         let i = 1;
         let type;
@@ -47,7 +47,7 @@ class Assertion implements Expression {
             if (args.length > 2) {
                 const type = args[1];
                 if (typeof type !== 'string' || !(type in types) || type === 'object')
-                    return context.error('The item type argument of "array" must be one of string, number, boolean', 1);
+                    return context.error('The item type argument of "array" must be one of string, number, boolean', 1) as null;
                 itemType = types[type];
                 i++;
             } else {
@@ -61,7 +61,7 @@ class Assertion implements Expression {
                         args[2] < 0 ||
                         args[2] !== Math.floor(args[2]))
                 ) {
-                    return context.error('The length argument to "array" must be a positive integer literal', 2);
+                    return context.error('The length argument to "array" must be a positive integer literal', 2) as null;
                 }
                 N = args[2];
                 i++;

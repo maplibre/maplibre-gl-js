@@ -62,7 +62,7 @@ class Interpolate implements Expression {
         let [operator, interpolation, input, ...rest] = args;
 
         if (!Array.isArray(interpolation) || interpolation.length === 0) {
-            return context.error(`Expected an interpolation type expression.`, 1);
+            return context.error(`Expected an interpolation type expression.`, 1) as null;
         }
 
         if (interpolation[0] === 'linear') {
@@ -70,7 +70,7 @@ class Interpolate implements Expression {
         } else if (interpolation[0] === 'exponential') {
             const base = interpolation[1];
             if (typeof base !== 'number')
-                return context.error(`Exponential interpolation requires a numeric base.`, 1, 1);
+                return context.error(`Exponential interpolation requires a numeric base.`, 1, 1) as null;
             interpolation = {
                 name: 'exponential',
                 base
@@ -81,7 +81,7 @@ class Interpolate implements Expression {
                 controlPoints.length !== 4 ||
                 controlPoints.some(t => typeof t !== 'number' || t < 0 || t > 1)
             ) {
-                return context.error('Cubic bezier interpolation requires four numeric arguments with values between 0 and 1.', 1);
+                return context.error('Cubic bezier interpolation requires four numeric arguments with values between 0 and 1.', 1) as null;
             }
 
             interpolation = {
@@ -89,15 +89,15 @@ class Interpolate implements Expression {
                 controlPoints: (controlPoints as any)
             };
         } else {
-            return context.error(`Unknown interpolation type ${String(interpolation[0])}`, 1, 0);
+            return context.error(`Unknown interpolation type ${String(interpolation[0])}`, 1, 0) as null;
         }
 
         if (args.length - 1 < 4) {
-            return context.error(`Expected at least 4 arguments, but found only ${args.length - 1}.`);
+            return context.error(`Expected at least 4 arguments, but found only ${args.length - 1}.`) as null;
         }
 
         if ((args.length - 1) % 2 !== 0) {
-            return context.error(`Expected an even number of arguments.`);
+            return context.error(`Expected an even number of arguments.`) as null;
         }
 
         input = context.parse(input, 2, NumberType);
@@ -120,11 +120,11 @@ class Interpolate implements Expression {
             const valueKey = i + 4;
 
             if (typeof label !== 'number') {
-                return context.error('Input/output pairs for "interpolate" expressions must be defined using literal numeric values (not computed expressions) for the input values.', labelKey);
+                return context.error('Input/output pairs for "interpolate" expressions must be defined using literal numeric values (not computed expressions) for the input values.', labelKey) as null;
             }
 
             if (stops.length && stops[stops.length - 1][0] >= label) {
-                return context.error('Input/output pairs for "interpolate" expressions must be arranged with input values in strictly ascending order.', labelKey);
+                return context.error('Input/output pairs for "interpolate" expressions must be arranged with input values in strictly ascending order.', labelKey) as null;
             }
 
             const parsed = context.parse(value, valueKey, outputType);
@@ -141,7 +141,7 @@ class Interpolate implements Expression {
                 typeof outputType.N === 'number'
             )
         ) {
-            return context.error(`Type ${toString(outputType)} is not interpolatable.`);
+            return context.error(`Type ${toString(outputType)} is not interpolatable.`) as null;
         }
 
         return new Interpolate(outputType, (operator as any), interpolation, input, stops);

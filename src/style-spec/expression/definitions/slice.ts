@@ -31,7 +31,7 @@ class Slice implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length <= 2 ||  args.length >= 5) {
-            return context.error(`Expected 3 or 4 arguments, but found ${args.length - 1} instead.`);
+            return context.error(`Expected 3 or 4 arguments, but found ${args.length - 1} instead.`) as null;
         }
 
         const input = context.parse(args[1], 1, ValueType);
@@ -40,7 +40,7 @@ class Slice implements Expression {
         if (!input || !beginIndex) return null;
 
         if (!isValidType(input.type, [array(ValueType), StringType, ValueType])) {
-            return context.error(`Expected first argument to be of type array or string, but found ${toString(input.type)} instead`);
+            return context.error(`Expected first argument to be of type array or string, but found ${toString(input.type)} instead`) as null;
         }
 
         if (args.length === 4) {

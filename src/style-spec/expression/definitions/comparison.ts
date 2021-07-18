@@ -77,19 +77,19 @@ function makeComparison(op: ComparisonOperator, compareBasic, compareWithCollato
 
         static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
             if (args.length !== 3 && args.length !== 4)
-                return context.error(`Expected two or three arguments.`);
+                return context.error(`Expected two or three arguments.`) as null;
 
             const op: ComparisonOperator = (args[0] as any);
 
             let lhs = context.parse(args[1], 1, ValueType);
             if (!lhs) return null;
             if (!isComparableType(op, lhs.type)) {
-                return context.concat(1).error(`"${op}" comparisons are not supported for type '${toString(lhs.type)}'.`);
+                return context.concat(1).error(`"${op}" comparisons are not supported for type '${toString(lhs.type)}'.`) as null;
             }
             let rhs = context.parse(args[2], 2, ValueType);
             if (!rhs) return null;
             if (!isComparableType(op, rhs.type)) {
-                return context.concat(2).error(`"${op}" comparisons are not supported for type '${toString(rhs.type)}'.`);
+                return context.concat(2).error(`"${op}" comparisons are not supported for type '${toString(rhs.type)}'.`) as null;
             }
 
             if (
@@ -97,7 +97,7 @@ function makeComparison(op: ComparisonOperator, compareBasic, compareWithCollato
                 lhs.type.kind !== 'value' &&
                 rhs.type.kind !== 'value'
             ) {
-                return context.error(`Cannot compare types '${toString(lhs.type)}' and '${toString(rhs.type)}'.`);
+                return context.error(`Cannot compare types '${toString(lhs.type)}' and '${toString(rhs.type)}'.`) as null;
             }
 
             if (isOrderComparison) {
@@ -119,7 +119,7 @@ function makeComparison(op: ComparisonOperator, compareBasic, compareWithCollato
                     lhs.type.kind !== 'value' &&
                     rhs.type.kind !== 'value'
                 ) {
-                    return context.error(`Cannot use collator to compare non-string types.`);
+                    return context.error(`Cannot use collator to compare non-string types.`) as null;
                 }
                 collator = context.parse(args[3], 3, CollatorType);
                 if (!collator) return null;

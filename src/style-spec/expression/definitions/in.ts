@@ -29,7 +29,7 @@ class In implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length !== 3) {
-            return context.error(`Expected 2 arguments, but found ${args.length - 1} instead.`);
+            return context.error(`Expected 2 arguments, but found ${args.length - 1} instead.`) as null;
         }
 
         const needle = context.parse(args[1], 1, ValueType);
@@ -39,7 +39,7 @@ class In implements Expression {
         if (!needle || !haystack) return null;
 
         if (!isValidType(needle.type, [BooleanType, StringType, NumberType, NullType, ValueType])) {
-            return context.error(`Expected first argument to be of type boolean, string, number or null, but found ${toString(needle.type)} instead`);
+            return context.error(`Expected first argument to be of type boolean, string, number or null, but found ${toString(needle.type)} instead`) as null;
         }
 
         return new In(needle, haystack);

@@ -29,11 +29,11 @@ class Step implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length - 1 < 4) {
-            return context.error(`Expected at least 4 arguments, but found only ${args.length - 1}.`);
+            return context.error(`Expected at least 4 arguments, but found only ${args.length - 1}.`) as null;
         }
 
         if ((args.length - 1) % 2 !== 0) {
-            return context.error(`Expected an even number of arguments.`);
+            return context.error(`Expected an even number of arguments.`) as null;
         }
 
         const input = context.parse(args[1], 1, NumberType);
@@ -54,11 +54,11 @@ class Step implements Expression {
             const valueKey = i + 1;
 
             if (typeof label !== 'number') {
-                return context.error('Input/output pairs for "step" expressions must be defined using literal numeric values (not computed expressions) for the input values.', labelKey);
+                return context.error('Input/output pairs for "step" expressions must be defined using literal numeric values (not computed expressions) for the input values.', labelKey) as null;
             }
 
             if (stops.length && stops[stops.length - 1][0] >= label) {
-                return context.error('Input/output pairs for "step" expressions must be arranged with input values in strictly ascending order.', labelKey);
+                return context.error('Input/output pairs for "step" expressions must be arranged with input values in strictly ascending order.', labelKey) as null;
             }
 
             const parsed = context.parse(value, valueKey, outputType);

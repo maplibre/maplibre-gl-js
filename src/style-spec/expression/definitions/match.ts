@@ -34,9 +34,9 @@ class Match implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length < 5)
-            return context.error(`Expected at least 4 arguments, but found only ${args.length - 1}.`);
+            return context.error(`Expected at least 4 arguments, but found only ${args.length - 1}.`) as null;
         if (args.length % 2 !== 1)
-            return context.error(`Expected an even number of arguments.`);
+            return context.error(`Expected an even number of arguments.`) as null;
 
         let inputType;
         let outputType;
@@ -55,17 +55,17 @@ class Match implements Expression {
 
             const labelContext = context.concat(i);
             if (labels.length === 0) {
-                return labelContext.error('Expected at least one branch label.');
+                return labelContext.error('Expected at least one branch label.') as null;
             }
 
             for (const label of labels) {
                 if (typeof label !== 'number' && typeof label !== 'string') {
-                    return labelContext.error(`Branch labels must be numbers or strings.`);
+                    return labelContext.error(`Branch labels must be numbers or strings.`) as null;
                 } else if (typeof label === 'number' && Math.abs(label) > Number.MAX_SAFE_INTEGER) {
-                    return labelContext.error(`Branch labels must be integers no larger than ${Number.MAX_SAFE_INTEGER}.`);
+                    return labelContext.error(`Branch labels must be integers no larger than ${Number.MAX_SAFE_INTEGER}.`) as null;
 
                 } else if (typeof label === 'number' && Math.floor(label) !== label) {
-                    return labelContext.error(`Numeric branch labels must be integer values.`);
+                    return labelContext.error(`Numeric branch labels must be integer values.`) as null;
 
                 } else if (!inputType) {
                     inputType = typeOf(label);
@@ -74,7 +74,7 @@ class Match implements Expression {
                 }
 
                 if (typeof cases[String(label)] !== 'undefined') {
-                    return labelContext.error('Branch labels must be unique.');
+                    return labelContext.error('Branch labels must be unique.') as null;
                 }
 
                 cases[String(label)] = outputs.length;
