@@ -5,7 +5,7 @@ import Point from '@mapbox/point-geometry';
 import {wrap, clamp} from '../util/util';
 import {number as interpolate} from '../style-spec/util/interpolate';
 import EXTENT from '../data/extent';
-import {vec4, mat4, mat2, vec2} from 'gl-matrix';
+import {vec4, mat4, mat2, vec2, vec3} from 'gl-matrix';
 import {Aabb, Frustum} from "../util/primitives";
 import EdgeInsets from './edge_insets';
 
@@ -27,16 +27,16 @@ class Transform {
     width: number;
     height: number;
     angle: number;
-    rotationMatrix: Float64Array;
+    rotationMatrix: Float32Array;
     zoomFraction: number;
     pixelsToGLUnits: [number, number];
     cameraToCenterDistance: number;
     mercatorMatrix: Array<number>;
-    projMatrix: Float64Array;
-    invProjMatrix: Float64Array;
-    alignedProjMatrix: Float64Array;
-    pixelMatrix: Float64Array;
-    pixelMatrixInverse: Float64Array;
+    projMatrix: Float32Array;
+    invProjMatrix: Float32Array;
+    alignedProjMatrix: Float32Array;
+    pixelMatrix: Float32Array;
+    pixelMatrixInverse: Float32Array;
     glCoordMatrix: Float32Array;
     labelPlaneMatrix: Float32Array;
     _fov: number;
@@ -163,7 +163,7 @@ class Transform {
         this._calcMatrices();
 
         // 2x2 matrix for rotating points
-        this.rotationMatrix = mat2.create();
+        this.rotationMatrix = mat2.create() as Float32Array;
         mat2.rotate(this.rotationMatrix, this.rotationMatrix, this.angle);
     }
 
@@ -540,7 +540,7 @@ class Transform {
      */
     coordinatePoint(coord: MercatorCoordinate) {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1];
-        vec4.transformMat4(p, p, this.pixelMatrix);
+        vec4.transformMat4(p as vec4, p as vec4, this.pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
 
@@ -599,7 +599,7 @@ class Transform {
         const scale = this.worldSize / this.zoomScale(canonical.z);
         const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
 
-        const posMatrix = mat4.identity(new Float64Array(16));
+        const posMatrix = mat4.identity(new Float32Array(16));
         mat4.translate(posMatrix, posMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
         mat4.scale(posMatrix, posMatrix, [scale / EXTENT, scale / EXTENT, 1]);
         mat4.multiply(posMatrix, aligned ? this.alignedProjMatrix : this.projMatrix, posMatrix);
@@ -713,7 +713,7 @@ class Transform {
         const nearZ = this.height / 50;
 
         // matrix for conversion from location to GL coordinates (-1 .. 1)
-        let m = new Float64Array(16);
+        let m = new Float32Array(16);
         mat4.perspective(m, this._fov, this.width / this.height, nearZ, farZ);
 
         //Apply center of perspective offset
@@ -728,13 +728,13 @@ class Transform {
 
         // The mercatorMatrix can be used to transform points from mercator coordinates
         // ([0, 0] nw, [1, 1] se) to GL coordinates.
-        this.mercatorMatrix = mat4.scale([], m, [this.worldSize, this.worldSize, this.worldSize]);
+        this.mercatorMatrix = mat4.scale(new Float32Array(), m, [this.worldSize, this.worldSize, this.worldSize]) as number[];
 
         // scale vertically to meters per pixel (inverse of ground resolution):
         mat4.scale(m, m, [1, 1, mercatorZfromAltitude(1, this.center.lat) * this.worldSize, 1]);
 
         this.projMatrix = m;
-        this.invProjMatrix = mat4.invert([], this.projMatrix);
+        this.invProjMatrix = mat4.invert(new Float32Array(), this.projMatrix) as Float32Array;
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional
@@ -746,26 +746,26 @@ class Transform {
             angleCos = Math.cos(this.angle), angleSin = Math.sin(this.angle),
             dx = x - Math.round(x) + angleCos * xShift + angleSin * yShift,
             dy = y - Math.round(y) + angleCos * yShift + angleSin * xShift;
-        const alignedM = new Float64Array(m);
+        const alignedM = new Float32Array(m);
         mat4.translate(alignedM, alignedM, [ dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0 ]);
         this.alignedProjMatrix = alignedM;
 
-        m = mat4.create();
+        m = mat4.create() as Float32Array;
         mat4.scale(m, m, [this.width / 2, -this.height / 2, 1]);
         mat4.translate(m, m, [1, -1, 0]);
         this.labelPlaneMatrix = m;
 
-        m = mat4.create();
+        m = mat4.create() as Float32Array;
         mat4.scale(m, m, [1, -1, 1]);
         mat4.translate(m, m, [-1, -1, 0]);
         mat4.scale(m, m, [2 / this.width, 2 / this.height, 1]);
         this.glCoordMatrix = m;
 
         // matrix for conversion from location to screen coordinates
-        this.pixelMatrix = mat4.multiply(new Float64Array(16), this.labelPlaneMatrix, this.projMatrix);
+        this.pixelMatrix = mat4.multiply(new Float32Array(16), this.labelPlaneMatrix, this.projMatrix) as Float32Array;
 
         // inverse matrix for conversion from screen coordinaes to location
-        m = mat4.invert(new Float64Array(16), this.pixelMatrix);
+        m = mat4.invert(new Float32Array(16), this.pixelMatrix) as Float32Array;
         if (!m) throw new Error("failed to invert matrix");
         this.pixelMatrixInverse = m;
 
@@ -779,7 +779,7 @@ class Transform {
 
         const coord = this.pointCoordinate(new Point(0, 0));
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1];
-        const topPoint = vec4.transformMat4(p, p, this.pixelMatrix);
+        const topPoint = vec4.transformMat4(p as vec4, p as vec4, this.pixelMatrix);
         return topPoint[3] / this.cameraToCenterDistance;
     }
 
