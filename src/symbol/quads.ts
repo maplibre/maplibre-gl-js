@@ -10,6 +10,7 @@ import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
 import type {Feature} from '../style-spec/expression';
 import type {StyleImage} from '../style/style_image';
 import ONE_EM from './one_em';
+import {Rect} from '../render/glyph_atlas';
 
 /**
  * A textured quad for rendering a single icon or glyph.
@@ -237,7 +238,7 @@ export function getGlyphQuads(
     for (const line of shaping.positionedLines) {
         for (const positionedGlyph of line.positionedGlyphs) {
             if (!positionedGlyph.rect) continue;
-            const textureRect = positionedGlyph.rect || {};
+            const textureRect: Rect = positionedGlyph.rect || {} as Rect;
 
             // The rects have an additional buffer that is not included in their size.
             const glyphPadding = 1.0;
