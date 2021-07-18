@@ -104,7 +104,7 @@ export type AnimationOptions = {
  * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/fitbounds/)
  */
 
-class Camera extends Evented {
+abstract class Camera extends Evented {
     transform: Transform;
     _moving: boolean;
     _zooming: boolean;
@@ -124,8 +124,8 @@ class Camera extends Evented {
     _onEaseEnd: (easeId?: string) => void;
     _easeFrameId: TaskID | undefined | null;
 
-    readonly _requestRenderFrame: (a: () => void) => TaskID;
-    readonly _cancelRenderFrame: (_: TaskID) => void;
+    abstract _requestRenderFrame(a: () => void): TaskID;
+    abstract _cancelRenderFrame(_: TaskID): void;
 
     constructor(transform: Transform, options: {
       bearingSnap: number
