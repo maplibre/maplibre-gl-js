@@ -6,7 +6,7 @@ import pixelsToTileUnits from '../source/pixels_to_tile_units';
 import * as symbolProjection from '../symbol/projection';
 import * as symbolSize from '../symbol/symbol_size';
 import {mat4} from 'gl-matrix';
-const identityMat4 = mat4.identity(new Float32Array(16));
+const identityMat4 = mat4.create();
 import StencilMode from '../gl/stencil_mode';
 import DepthMode from '../gl/depth_mode';
 import CullFaceMode from '../gl/cull_face_mode';

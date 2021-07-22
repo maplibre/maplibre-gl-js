@@ -26,6 +26,7 @@ import type {
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type Map from '../ui/map';
 import type {StyleSetterOptions} from './style';
+import {mat4} from 'gl-matrix';
 
 const TRANSITION_SUFFIX = '-transition';
 
@@ -59,7 +60,7 @@ class StyleLayer extends Evented {
       zoom: number,
       transform: Transform,
       pixelsToTileUnits: number,
-      pixelPosMatrix: Float32Array
+      pixelPosMatrix: mat4 // Float32Array
     ) => boolean | number;
 
     readonly onAdd: ((map: Map) => void) | undefined | null;
