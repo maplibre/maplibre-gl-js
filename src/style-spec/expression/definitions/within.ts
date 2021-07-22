@@ -4,11 +4,10 @@ import {BooleanType} from '../types';
 import type {Expression} from '../expression';
 import type ParsingContext from '../parsing_context';
 import type EvaluationContext from '../evaluation_context';
-import type {GeoJSON, GeoJSONPolygon, GeoJSONMultiPolygon} from '@mapbox/geojson-types';
 import Point from '@mapbox/point-geometry';
 import type {CanonicalTileID} from '../../../source/tile_id';
 
-type GeoJSONPolygons = GeoJSONPolygon | GeoJSONMultiPolygon;
+type GeoJSONPolygons = GeoJSON.Polygon | GeoJSON.MultiPolygon;
 
 // minX, minY, maxX, maxY
 type BBox = [number, number, number, number];
@@ -282,10 +281,10 @@ function linesWithinPolygons(ctx: EvaluationContext, polygonGeometry: GeoJSONPol
 
 class Within implements Expression {
     type: Type;
-    geojson: GeoJSON;
+    geojson: GeoJSON.GeoJSON;
     geometries: GeoJSONPolygons;
 
-    constructor(geojson: GeoJSON, geometries: GeoJSONPolygons) {
+    constructor(geojson: GeoJSON.GeoJSON, geometries: GeoJSONPolygons) {
         this.type = BooleanType;
         this.geojson = geojson;
         this.geometries = geometries;

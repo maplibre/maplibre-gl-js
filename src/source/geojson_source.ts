@@ -11,7 +11,6 @@ import type Dispatcher from '../util/dispatcher';
 import type Tile from './tile';
 import type Actor from '../util/actor';
 import type {Callback} from '../types/callback';
-import type {GeoJSON, GeoJSONFeature} from '@mapbox/geojson-types';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types';
 
 /**
@@ -71,7 +70,7 @@ class GeoJSONSource extends Evented implements Source {
 
     isTileClipped: boolean;
     reparseOverscaled: boolean;
-    _data: GeoJSON | string;
+    _data: GeoJSON.GeoJSON | string;
     _options: any;
     workerOptions: any;
     map: Map;
@@ -181,7 +180,7 @@ class GeoJSONSource extends Evented implements Source {
      * @param {Object|string} data A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
      * @returns {GeoJSONSource} this
      */
-    setData(data: GeoJSON | string) {
+    setData(data: GeoJSON.GeoJSON | string) {
         this._data = data;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         this._updateWorkerData((err) => {
@@ -220,7 +219,7 @@ class GeoJSONSource extends Evented implements Source {
      * @param callback A callback to be called when the features are retrieved (`(error, features) => { ... }`).
      * @returns {GeoJSONSource} this
      */
-    getClusterChildren(clusterId: number, callback: Callback<Array<GeoJSONFeature>>) {
+    getClusterChildren(clusterId: number, callback: Callback<Array<GeoJSON.Feature>>) {
         this.actor.send('geojson.getClusterChildren', {clusterId, source: this.id}, callback);
         return this;
     }
@@ -250,7 +249,7 @@ class GeoJSONSource extends Evented implements Source {
      *   })
      * });
      */
-    getClusterLeaves(clusterId: number, limit: number, offset: number, callback: Callback<Array<GeoJSONFeature>>) {
+    getClusterLeaves(clusterId: number, limit: number, offset: number, callback: Callback<Array<GeoJSON.Feature>>) {
         this.actor.send('geojson.getClusterLeaves', {
             source: this.id,
             clusterId,

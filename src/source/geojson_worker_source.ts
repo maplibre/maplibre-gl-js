@@ -21,7 +21,6 @@ import type StyleLayerIndex from '../style/style_layer_index';
 import type {LoadVectorDataCallback} from './vector_tile_worker_source';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {Callback} from '../types/callback';
-import type {GeoJSONFeature} from '@mapbox/geojson-types';
 
 export type LoadGeoJSONParameters = {
   request?: RequestParameters,
@@ -40,8 +39,8 @@ export interface GeoJSONIndex {
   getTile(z: number, x: number, y: number): any;
   // supercluster methods
   getClusterExpansionZoom(clusterId: number): number;
-  getChildren(clusterId: number): Array<GeoJSONFeature>;
-  getLeaves(clusterId: number, limit: number, offset: number): Array<GeoJSONFeature>;
+  getChildren(clusterId: number): Array<GeoJSON.Feature>;
+  getLeaves(clusterId: number, limit: number, offset: number): Array<GeoJSON.Feature>;
 }
 
 function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataCallback) {
@@ -312,7 +311,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
     getClusterChildren(params: {
       clusterId: number
-    }, callback: Callback<Array<GeoJSONFeature>>) {
+    }, callback: Callback<Array<GeoJSON.Feature>>) {
         try {
             callback(null, this._geoJSONIndex.getChildren(params.clusterId));
         } catch (e) {
@@ -324,7 +323,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
       clusterId: number,
       limit: number,
       offset: number
-    }, callback: Callback<Array<GeoJSONFeature>>) {
+    }, callback: Callback<Array<GeoJSON.Feature>>) {
         try {
             callback(null, this._geoJSONIndex.getLeaves(params.clusterId, params.limit, params.offset));
         } catch (e) {

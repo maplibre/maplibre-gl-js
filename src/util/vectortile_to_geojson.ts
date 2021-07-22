@@ -1,8 +1,6 @@
-import type {GeoJSONGeometry} from '@mapbox/geojson-types';
-
 class Feature {
     type: "Feature";
-    _geometry: GeoJSONGeometry | undefined | null;
+    _geometry: GeoJSON.Geometry | undefined | null;
     properties: {};
     id: number | string | void;
 
@@ -20,7 +18,7 @@ class Feature {
         this.id = id;
     }
 
-    get geometry(): GeoJSONGeometry | undefined | null {
+    get geometry(): GeoJSON.Geometry | undefined | null {
         if (this._geometry === undefined) {
             this._geometry = this._vectorTileFeature.toGeoJSON(
                 (this._vectorTileFeature as any)._x,
@@ -30,7 +28,7 @@ class Feature {
         return this._geometry;
     }
 
-    set geometry(g: GeoJSONGeometry | undefined | null) {
+    set geometry(g: GeoJSON.Geometry | undefined | null) {
         this._geometry = g;
     }
 
@@ -40,7 +38,7 @@ class Feature {
         };
         for (const i in this) {
             if (i === '_geometry' || i === '_vectorTileFeature') continue;
-            json[i] = (this as any)[i];
+            json[i.toString()] = (this as any)[i];
         }
         return json;
     }
