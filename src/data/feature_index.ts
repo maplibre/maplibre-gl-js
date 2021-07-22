@@ -239,7 +239,7 @@ class FeatureIndex {
             if (!styleLayer) continue;
 
             let featureState = {};
-            if (id !== undefined && sourceFeatureState) {
+            if (id && sourceFeatureState) {
                 // `feature-state` expression evaluation requires feature state to be available
                 featureState = sourceFeatureState.getState(styleLayer.sourceLayer || '_geojsonTileLayer', id);
             }
@@ -311,12 +311,14 @@ class FeatureIndex {
         return false;
     }
 
-    getId(feature: VectorTileFeature, sourceLayerId: string): string | number | void {
-        let id = feature.id;
+    // this had void and I changed for boolean, not really sure why either of these would be necessary
+    // as current input types don't seem to have any way to return falsy, maybe to do with our TS?
+    getId(feature: VectorTileFeature, sourceLayerId: string): string | number | boolean {
+        let id: string | number | boolean = feature.id;
         if (this.promoteId) {
             const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];
             id = feature.properties[propName];
-            if (typeof id === 'boolean') id =  Number(id);
+            if (typeof id === 'boolean') id = Number(id);
         }
         return id;
     }
