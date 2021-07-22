@@ -16,6 +16,7 @@ import type {CrossFaded} from '../../style/properties';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type {OverscaledTileID} from '../../source/tile_id';
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
+import {mat4} from 'gl-matrix';
 
 export type BackgroundUniformsType = {
   'u_matrix': UniformMatrix4f,
@@ -68,14 +69,14 @@ const backgroundPatternUniforms = (context: Context, locations: UniformLocations
     'u_tile_units_to_pixels': new Uniform1f(context, locations.u_tile_units_to_pixels)
 });
 
-const backgroundUniformValues = (matrix: Float32Array, opacity: number, color: Color): UniformValues<BackgroundUniformsType> => ({
+const backgroundUniformValues = (matrix: mat4, opacity: number, color: Color): UniformValues<BackgroundUniformsType> => ({
     'u_matrix': matrix,
     'u_opacity': opacity,
     'u_color': color
 });
 
 const backgroundPatternUniformValues = (
-  matrix: Float32Array,
+  matrix: mat4,
   opacity: number,
   painter: Painter,
   image: CrossFaded<ResolvedImage>,

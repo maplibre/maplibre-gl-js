@@ -7,7 +7,7 @@ import {
     UniformMatrix4f
 } from '../uniform_binding';
 
-import {mat3, vec3} from 'gl-matrix';
+import {mat3, mat4, vec3} from 'gl-matrix';
 import {extend} from '../../util/util';
 
 import type Context from '../../gl/context';
@@ -72,14 +72,14 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
 });
 
 const fillExtrusionUniformValues = (
-  matrix: Float32Array,
+  matrix: mat4,
   painter: Painter,
   shouldUseVerticalGradient: boolean,
   opacity: number
 ): UniformValues<FillExtrusionUniformsType> => {
     const light = painter.style.light;
     const _lp = light.properties.get('position');
-    const lightPos = [_lp.x, _lp.y, _lp.z];
+    const lightPos = vec3.fromValues(_lp.x, _lp.y, _lp.z);
     const lightMat = mat3.create();
     if (light.properties.get('anchor') === 'viewport') {
         mat3.fromRotation(lightMat, -painter.transform.angle);
@@ -99,7 +99,7 @@ const fillExtrusionUniformValues = (
 };
 
 const fillExtrusionPatternUniformValues = (
-  matrix: Float32Array,
+  matrix: mat4,
   painter: Painter,
   shouldUseVerticalGradient: boolean,
   opacity: number,

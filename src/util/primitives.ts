@@ -1,4 +1,4 @@
-import {vec3, vec4} from 'gl-matrix';
+import {mat4, vec3, vec4} from 'gl-matrix';
 import assert from 'assert';
 
 class Frustum {
@@ -10,7 +10,7 @@ class Frustum {
         this.planes = planes_;
     }
 
-    static fromInvProjectionMatrix(invProj: Float32Array, worldSize: number, zoom: number): Frustum {
+    static fromInvProjectionMatrix(invProj: mat4, worldSize: number, zoom: number): Frustum {
         const clipSpaceCorners = [
             [-1, 1, -1, 1],
             [ 1, 1, -1, 1],
@@ -26,8 +26,8 @@ class Frustum {
 
         // Transform frustum corner points from clip space to tile space
         const frustumCoords = clipSpaceCorners
-            .map(v => vec4.transformMat4(new Float32Array(), v as vec4, invProj))
-            .map(v => vec4.scale(new Float32Array(), v, 1.0 / v[3] / worldSize * scale));
+            .map(v => vec4.transformMat4(vec4.create(), v as vec4, invProj))
+            .map(v => vec4.scale(vec4.create(), v, 1.0 / v[3] / worldSize * scale));
 
         const frustumPlanePointIndices = [
             [0, 1, 2],  // near
@@ -39,9 +39,9 @@ class Frustum {
         ];
 
         const frustumPlanes = frustumPlanePointIndices.map((p: Array<number>) => {
-            const a = vec3.sub(new Float32Array(), frustumCoords[p[0]] as vec3, frustumCoords[p[1]] as vec3);
-            const b = vec3.sub(new Float32Array(), frustumCoords[p[2]] as vec3, frustumCoords[p[1]] as vec3);
-            const n = vec3.normalize(new Float32Array(), vec3.cross(new Float32Array(), a, b));
+            const a = vec3.sub(vec3.create(), frustumCoords[p[0]] as vec3, frustumCoords[p[1]] as vec3);
+            const b = vec3.sub(vec3.create(), frustumCoords[p[2]] as vec3, frustumCoords[p[1]] as vec3);
+            const n = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), a, b));
             const d = -vec3.dot(n, frustumCoords[p[1]] as vec3);
             return (n as number[]).concat(d);
         });
@@ -58,7 +58,7 @@ class Aabb {
     constructor(min_: vec3, max_: vec3) {
         this.min = min_;
         this.max = max_;
-        this.center = vec3.scale(new Float32Array(), vec3.add(new Float32Array(), this.min, this.max), 0.5);
+        this.center = vec3.scale(vec3.create(), vec3.add(vec3.create(), this.min, this.max), 0.5);
     }
 
     quadrant(index: number): Aabb {

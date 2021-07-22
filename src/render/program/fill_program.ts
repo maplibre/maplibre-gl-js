@@ -13,6 +13,7 @@ import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type Context from '../../gl/context';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type Tile from '../../source/tile';
+import {mat4} from 'gl-matrix';
 
 export type FillUniformsType = {
   'u_matrix': UniformMatrix4f
@@ -76,12 +77,12 @@ const fillOutlinePatternUniforms = (context: Context, locations: UniformLocation
     'u_fade': new Uniform1f(context, locations.u_fade)
 });
 
-const fillUniformValues = (matrix: Float32Array): UniformValues<FillUniformsType> => ({
+const fillUniformValues = (matrix: mat4): UniformValues<FillUniformsType> => ({
     'u_matrix': matrix
 });
 
 const fillPatternUniformValues = (
-  matrix: Float32Array,
+  matrix: mat4,
   painter: Painter,
   crossfade: CrossfadeParameters,
   tile: Tile
@@ -90,13 +91,13 @@ const fillPatternUniformValues = (
     patternUniformValues(crossfade, painter, tile)
 );
 
-const fillOutlineUniformValues = (matrix: Float32Array, drawingBufferSize: [number, number]): UniformValues<FillOutlineUniformsType> => ({
+const fillOutlineUniformValues = (matrix: mat4, drawingBufferSize: [number, number]): UniformValues<FillOutlineUniformsType> => ({
     'u_matrix': matrix,
     'u_world': drawingBufferSize
 });
 
 const fillOutlinePatternUniformValues = (
-  matrix: Float32Array,
+  matrix: mat4,
   painter: Painter,
   crossfade: CrossfadeParameters,
   tile: Tile,

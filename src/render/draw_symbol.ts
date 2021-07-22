@@ -6,7 +6,6 @@ import pixelsToTileUnits from '../source/pixels_to_tile_units';
 import * as symbolProjection from '../symbol/projection';
 import * as symbolSize from '../symbol/symbol_size';
 import {mat4} from 'gl-matrix';
-const identityMat4 = mat4.identity(new Float32Array(16));
 import StencilMode from '../gl/stencil_mode';
 import DepthMode from '../gl/depth_mode';
 import CullFaceMode from '../gl/cull_face_mode';
@@ -49,6 +48,9 @@ type SymbolTileRenderState = {
     hasHalo: boolean
   }
 };
+
+// create() creates an identity matrix https://github.com/toji/gl-matrix/blob/master/src/mat4.js#L13
+const identityMat4 = mat4.create();
 
 function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
   [_ in CrossTileID]: VariableOffset;
