@@ -79,7 +79,7 @@ const fillExtrusionUniformValues = (
 ): UniformValues<FillExtrusionUniformsType> => {
     const light = painter.style.light;
     const _lp = light.properties.get('position');
-    const lightPos: vec3 = [_lp.x, _lp.y, _lp.z];
+    const lightPos = vec3.fromValues(_lp.x, _lp.y, _lp.z);
     const lightMat = mat3.create();
     if (light.properties.get('anchor') === 'viewport') {
         mat3.fromRotation(lightMat, -painter.transform.angle);

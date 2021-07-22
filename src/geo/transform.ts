@@ -510,8 +510,8 @@ class Transform {
         // unproject two points to get a line and then find the point on that
         // line with z=0
 
-        const coord0: vec4 = [p.x, p.y, 0, 1];
-        const coord1: vec4 = [p.x, p.y, 1, 1];
+        const coord0 = vec4.fromValues(p.x, p.y, 0, 1);
+        const coord1 = vec4.fromValues(p.x, p.y, 1, 1);
 
         vec4.transformMat4(coord0, coord0, this.pixelMatrixInverse);
         vec4.transformMat4(coord1, coord1, this.pixelMatrixInverse);
@@ -779,7 +779,7 @@ class Transform {
         if (!this.pixelMatrixInverse) return 1;
 
         const coord = this.pointCoordinate(new Point(0, 0));
-        const p: vec4 = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1];
+        const p = vec4.fromValues(coord.x * this.worldSize, coord.y * this.worldSize, 0, 1);
         const topPoint = vec4.transformMat4(p, p, this.pixelMatrix);
         return topPoint[3] / this.cameraToCenterDistance;
     }
