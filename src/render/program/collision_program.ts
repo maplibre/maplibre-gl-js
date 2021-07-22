@@ -5,6 +5,7 @@ import type Context from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type Transform from '../../geo/transform';
 import type Tile from '../../source/tile';
+import {mat4} from 'gl-matrix';
 
 export type CollisionUniformsType = {
   'u_matrix': UniformMatrix4f,
@@ -36,7 +37,7 @@ const collisionCircleUniforms = (context: Context, locations: UniformLocations):
     'u_viewport_size': new Uniform2f(context, locations.u_viewport_size)
 });
 
-const collisionUniformValues = (matrix: Float32Array, transform: Transform, tile: Tile): UniformValues<CollisionUniformsType> => {
+const collisionUniformValues = (matrix: mat4, transform: Transform, tile: Tile): UniformValues<CollisionUniformsType> => {
     const pixelRatio = pixelsToTileUnits(tile, 1, transform.zoom);
     const scale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
     const overscaleFactor = tile.tileID.overscaleFactor();
@@ -50,7 +51,7 @@ const collisionUniformValues = (matrix: Float32Array, transform: Transform, tile
     };
 };
 
-const collisionCircleUniformValues = (matrix: Float32Array, invMatrix: Float32Array, transform: Transform): UniformValues<CollisionCircleUniformsType> => {
+const collisionCircleUniformValues = (matrix: mat4, invMatrix: mat4, transform: Transform): UniformValues<CollisionCircleUniformsType> => {
     return {
         'u_matrix': matrix,
         'u_inv_matrix': invMatrix,
