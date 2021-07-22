@@ -1,6 +1,7 @@
 import Color from '../style-spec/util/color';
 
 import type Context from '../gl/context';
+import {mat4} from 'gl-matrix';
 
 type $ObjMap<T extends {}, F extends (v: any) => any> = {
   [K in keyof T]: F extends (v: T[K]) => infer R ? R : never;
@@ -110,14 +111,14 @@ class UniformColor extends Uniform<Color> {
     }
 }
 
-const emptyMat4 = new Float32Array(16);
-class UniformMatrix4f extends Uniform<Float32Array> {
+const emptyMat4 = mat4.create();
+class UniformMatrix4f extends Uniform<mat4> {
     constructor(context: Context, location: WebGLUniformLocation) {
         super(context, location);
         this.current = emptyMat4;
     }
 
-    set(v: Float32Array): void {
+    set(v: mat4): void {
         // The vast majority of matrix comparisons that will trip this set
         // happen at i=12 or i=0, so we check those first to avoid lots of
         // unnecessary iteration:

@@ -29,6 +29,7 @@ import type Transform from '../geo/transform';
 import type {LayerFeatureStates} from './source_state';
 import type {Cancelable} from '../types/cancelable';
 import type {FilterSpecification} from '../style-spec/types';
+import {mat4} from 'gl-matrix';
 
 export type TileState = // Tile data is in the process of loading.
 "loading" | // Tile data has been loaded. Tile can be rendered.
@@ -285,7 +286,7 @@ class Tile {
       },
       transform: Transform,
       maxPitchScaleFactor: number,
-      pixelPosMatrix: Float32Array
+      pixelPosMatrix: mat4
     ): {
       [_: string]: Array<{
         featureIndex: number,

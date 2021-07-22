@@ -5,6 +5,7 @@ import MercatorCoordinate from '../geo/mercator_coordinate';
 
 import assert from 'assert';
 import {register} from '../util/web_worker_transfer';
+import {mat4} from 'gl-matrix';
 
 export class CanonicalTileID {
     z: number;
@@ -69,7 +70,7 @@ export class OverscaledTileID {
     wrap: number;
     canonical: CanonicalTileID;
     key: string;
-    posMatrix: Float32Array;
+    posMatrix: mat4;
 
     constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number) {
         assert(overscaledZ >= z);

@@ -604,7 +604,6 @@ class Transform {
         mat4.scale(posMatrix, posMatrix, [scale / EXTENT, scale / EXTENT, 1]);
         mat4.multiply(posMatrix, aligned ? this.alignedProjMatrix : this.projMatrix, posMatrix);
 
-        // cache[posMatrixKey] = new Float32Array(posMatrix);
         cache[posMatrixKey] = mat4.clone(posMatrix);
         return cache[posMatrixKey];
     }

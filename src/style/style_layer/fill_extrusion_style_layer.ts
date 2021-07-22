@@ -5,7 +5,7 @@ import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../uti
 import {translateDistance, translate} from '../query_utils';
 import properties, {PaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
-import {vec4} from 'gl-matrix';
+import {mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 
 import type {FeatureState} from '../../style-spec/expression';
@@ -43,7 +43,7 @@ class FillExtrusionStyleLayer extends StyleLayer {
       zoom: number,
       transform: Transform,
       pixelsToTileUnits: number,
-      pixelPosMatrix: Float32Array
+      pixelPosMatrix: mat4
     ): boolean | number => {
 
         const translatedPolygon = translate(queryGeometry,
@@ -162,7 +162,7 @@ function checkIntersection(projectedBase: Array<Point>, projectedTop: Array<Poin
  * different points can only be done once. This produced a measurable
  * performance improvement.
  */
-function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: number, m: Float32Array) {
+function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: number, m: mat4) {
     const projectedBase = [];
     const projectedTop = [];
 
@@ -211,10 +211,10 @@ function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: nu
     return [projectedBase, projectedTop];
 }
 
-function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: Float32Array, transform: Transform, z: number) {
+function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4, transform: Transform, z: number) {
     const projectedQueryGeometry = [];
     for (const p of queryGeometry) {
-        const v = [p.x, p.y, z, 1];
+        const v: vec4 = [p.x, p.y, z, 1];
         vec4.transformMat4(v, v, pixelPosMatrix);
         projectedQueryGeometry.push(new Point(v[0] / v[3], v[1] / v[3]));
     }
