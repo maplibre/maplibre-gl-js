@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '../symbol/point';
 import clipLine from './clip_line';
 import PathInterpolator from './path_interpolator';
 

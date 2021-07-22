@@ -1,7 +1,7 @@
 import {test} from '../../util/test';
 import CollisionFeature from '../../../src/symbol/collision_feature';
 import Anchor from '../../../src/symbol/anchor';
-import Point from '@mapbox/point-geometry';
+import Point from '../../../src/symbol/point';
 import {CollisionBoxArray} from '../../../src/data/array_types';
 
 test('CollisionFeature', (t) => {

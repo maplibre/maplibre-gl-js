@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '../../symbol/point';
 import {indexTouches} from './handler_util';
 
 export default class TouchPanHandler {

@@ -2,7 +2,7 @@ import {test} from '../../util/test';
 import {default as createFilter, isExpressionFilter} from '../../../src/style-spec/feature_filter';
 
 import convertFilter from '../../../src/style-spec/feature_filter/convert';
-import Point from '@mapbox/point-geometry';
+import Point from '../../../src/symbol/point';
 import MercatorCoordinate from '../../../src/geo/mercator_coordinate';
 import EXTENT from '../../../src/data/extent';
 

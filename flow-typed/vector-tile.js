@@ -1,40 +1,40 @@
-import type Pbf from 'pbf';
-import type Point from '@mapbox/point-geometry';
+// import type Pbf from 'pbf';
+// import type Point from '@mapbox/point-geometry';
 
-declare interface VectorTile {
-    layers: {[_: string]: VectorTileLayer};
-}
+// declare interface VectorTile {
+//     layers: {[_: string]: VectorTileLayer};
+// }
 
-declare interface VectorTileLayer {
-    version?: number;
-    name: string;
-    extent: number;
-    length: number;
-    feature(i: number): VectorTileFeature;
-}
+// declare interface VectorTileLayer {
+//     version?: number;
+//     name: string;
+//     extent: number;
+//     length: number;
+//     feature(i: number): VectorTileFeature;
+// }
 
-declare interface VectorTileFeature {
-    extent: number;
-    type: 1 | 2 | 3;
-    id: number;
-    properties: {[_: string]: string | number | boolean};
+// declare interface VectorTileFeature {
+//     extent: number;
+//     type: 1 | 2 | 3;
+//     id: number;
+//     properties: {[_: string]: string | number | boolean};
 
-    loadGeometry(): Array<Array<Point>>;
-    toGeoJSON(x: number, y: number, z: number): GeoJSON.Feature;
-}
+//     loadGeometry(): Array<Array<Point>>;
+//     toGeoJSON(x: number, y: number, z: number): GeoJSON.Feature;
+// }
 
-declare module "@mapbox/vector-tile" {
-    declare class VectorTileImpl {
-        constructor(pbf: Pbf): VectorTile;
-    }
+// declare module "@mapbox/vector-tile" {
+//     declare class VectorTileImpl {
+//         constructor(pbf: Pbf): VectorTile;
+//     }
 
-    declare class VectorTileFeatureImpl {
-        static types: ['Unknown', 'Point', 'LineString', 'Polygon'];
-        toGeoJSON(x: number, y: number, z: number): GeoJSON.Feature;
-    }
+    // declare class VectorTileFeatureImpl {
+    //     static types: ['Unknown', 'Point', 'LineString', 'Polygon'];
+    //     toGeoJSON(x: number, y: number, z: number): GeoJSON.Feature;
+    // }
 
-    declare module.exports: {
-        VectorTile: typeof VectorTileImpl;
-        VectorTileFeature: typeof VectorTileFeatureImpl;
-    }
-}
+//     declare module.exports: {
+//         VectorTile: typeof VectorTileImpl;
+//         VectorTileFeature: typeof VectorTileFeatureImpl;
+//     }
+// }

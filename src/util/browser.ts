@@ -5,15 +5,15 @@ const now = window.performance && window.performance.now ?
     window.performance.now.bind(window.performance) :
     Date.now.bind(Date);
 
-const raf = window.requestAnimationFrame ||
-    window.mozRequestAnimationFrame ||
-    window.webkitRequestAnimationFrame ||
-    window.msRequestAnimationFrame;
+const raf = window.requestAnimationFrame; // ||
+// window.mozRequestAnimationFrame ||
+// window.webkitRequestAnimationFrame ||
+// window.msRequestAnimationFrame;
 
-const cancel = window.cancelAnimationFrame ||
-    window.mozCancelAnimationFrame ||
-    window.webkitCancelAnimationFrame ||
-    window.msCancelAnimationFrame;
+const cancel = window.cancelAnimationFrame; // ||
+// window.mozCancelAnimationFrame ||
+// window.webkitCancelAnimationFrame ||
+// window.msCancelAnimationFrame;
 
 let linkEl;
 

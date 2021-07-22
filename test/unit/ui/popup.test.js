@@ -3,7 +3,7 @@ import window from '../../../src/util/window';
 import {createMap as globalCreateMap} from '../../util';
 import Popup from '../../../src/ui/popup';
 import LngLat from '../../../src/geo/lng_lat';
-import Point from '@mapbox/point-geometry';
+import Point from '../../../src/symbol/point';
 import simulate from '../../util/simulate_interaction';
 
 const containerWidth = 512;
