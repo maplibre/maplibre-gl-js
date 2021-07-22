@@ -1,4 +1,4 @@
-import type Point from '@mapbox/point-geometry';
+import type Point from '../../symbol/point';
 import type Map from '../map';
 
 export default class ClickZoomHandler {

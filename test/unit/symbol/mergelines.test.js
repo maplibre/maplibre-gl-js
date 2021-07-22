@@ -1,6 +1,6 @@
 import {test} from '../../util/test';
 import mergeLines from '../../../src/symbol/mergelines';
-import Point from '@mapbox/point-geometry';
+import Point from '../../../src/symbol/point';
 
 function makeFeatures(lines) {
     const features = [];

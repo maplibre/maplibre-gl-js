@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import Point from '@mapbox/point-geometry';
+import Point from '../../../src/symbol/point';
 import segment from '../../../src/data/segment';
 import FillBucket from '../../../src/data/bucket/fill_bucket';
 import FillStyleLayer from '../../../src/style/style_layer/fill_style_layer';

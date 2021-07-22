@@ -3,7 +3,7 @@
 import {test} from '../../util/test';
 
 import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, endsWith, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, uuid, validateUuid, nextPowerOfTwo, isPowerOfTwo} from '../../../src/util/util';
-import Point from '@mapbox/point-geometry';
+import Point from '../../../src/symbol/point';
 
 test('util', (t) => {
     t.equal(easeCubicInOut(0), 0, 'easeCubicInOut=0');

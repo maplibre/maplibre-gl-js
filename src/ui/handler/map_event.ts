@@ -1,6 +1,6 @@
 import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events';
 import type Map from '../map';
-
+import type Point from '../../symbol/point';
 export class MapEventHandler {
 
     _mousedownPos: Point;

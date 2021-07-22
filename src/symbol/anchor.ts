@@ -1,10 +1,10 @@
-import Point from '@mapbox/point-geometry';
+import Point from '../symbol/point';
 
 import {register} from '../util/web_worker_transfer';
 
 class Anchor extends Point {
     angle: any;
-    segment: number | void;
+    segment?: number;
 
     constructor(x: number, y: number, angle: number, segment?: number) {
         super(x, y);

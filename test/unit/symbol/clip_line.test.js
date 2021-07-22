@@ -1,5 +1,5 @@
 import {test} from '../../util/test';
-import Point from '@mapbox/point-geometry';
+import Point from '../../../src/symbol/point';
 import clipLine from '../../../src/symbol/clip_line';
 
 test('clipLines', (t) => {

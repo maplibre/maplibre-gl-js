@@ -1,5 +1,5 @@
 import type {CollisionBoxArray} from '../data/array_types';
-import Point from '@mapbox/point-geometry';
+import Point from '../symbol/point';
 import type Anchor from './anchor';
 
 /**

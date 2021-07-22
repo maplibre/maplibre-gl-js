@@ -6,8 +6,7 @@ import {getMaximumPaintValue, translateDistance, translate} from '../query_utils
 import properties, {LayoutPropsPossiblyEvaluated, PaintPropsPossiblyEvaluated} from './circle_style_layer_properties';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
 import {vec4} from 'gl-matrix';
-import Point from '@mapbox/point-geometry';
-
+import Point from '../../symbol/point';
 import type {FeatureState} from '../../style-spec/expression';
 import type Transform from '../../geo/transform';
 import type {Bucket, BucketParameters} from '../../data/bucket';

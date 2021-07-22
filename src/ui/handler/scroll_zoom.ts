@@ -9,7 +9,7 @@ import LngLat from '../../geo/lng_lat';
 
 import type Map from '../map';
 import type HandlerManager from '../handler_manager';
-import type Point from '@mapbox/point-geometry';
+import type Point from '../../symbol/point';
 
 // deltaY value for mouse scroll wheel identification
 const wheelZoomDelta = 4.000244140625;

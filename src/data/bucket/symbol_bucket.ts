@@ -16,7 +16,7 @@ import {SymbolLayoutArray,
     SymbolLineVertexArray
 } from '../array_types';
 
-import Point from '@mapbox/point-geometry';
+import Point from '../../symbol/point';
 import SegmentVector from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray, LineIndexArray} from '../index_array_type';
