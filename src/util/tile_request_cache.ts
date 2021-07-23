@@ -120,7 +120,7 @@ export function cacheGet(request: Request, callback: (error?: any | null, respon
 
 function isFresh(response) {
     if (!response) return false;
-    const expires = new Date(response.headers.get('Expires') || 0);
+    const expires = new Date(response.headers.get('Expires') || 0).valueOf();
     const cacheControl = parseCacheControl(response.headers.get('Cache-Control') || '');
     return expires > Date.now() && !cacheControl['no-cache'];
 }
