@@ -115,7 +115,7 @@ function getPerspectiveRatio(cameraToCenterDistance: number, signedDistanceFromC
     return 0.5 + 0.5 * (cameraToCenterDistance / signedDistanceFromCamera);
 }
 
-function isVisible(anchorPos: vec4, // [number, number, number, number],
+function isVisible(anchorPos: vec4,
                    clippingBuffer: [number, number]) {
     const x = anchorPos[0] / anchorPos[3];
     const y = anchorPos[1] / anchorPos[3];
@@ -158,7 +158,7 @@ function updateLineLabels(bucket: SymbolBucket,
     let useVertical = false;
 
     for (let s = 0; s < placedSymbols.length; s++) {
-        const symbol: any = placedSymbols.get(s);
+        const symbol = placedSymbols.get(s);
 
         // Don't do calculations for vertical glyphs unless the previous symbol was horizontal
         // and we determined that vertical glyphs were necessary.

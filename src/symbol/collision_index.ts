@@ -348,7 +348,7 @@ class CollisionIndex {
     }
 
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number) {
-        const p = [x, y, 0, 1] as vec4;
+        const p = vec4.fromValues(x, y, 0, 1);
         projection.xyTransformMat4(p, p, posMatrix);
         const a = new Point(
             (((p[0] / p[3] + 1) / 2) * this.transform.width) + viewportPadding,
@@ -376,8 +376,8 @@ class CollisionIndex {
     * Use this function to render e.g. collision circles on the screen.
     *   example transformation: clipPos = glCoordMatrix * viewportMatrix * circle_pos
     */
-    getViewportMatrix(): mat4 {
-        const m = mat4.identity(mat4.create());
+    getViewportMatrix() {
+        const m = mat4.create();
         mat4.translate(m, m, [-viewportPadding, -viewportPadding, 0.0]);
         return m;
     }

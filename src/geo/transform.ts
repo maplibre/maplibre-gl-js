@@ -31,7 +31,7 @@ class Transform {
     zoomFraction: number;
     pixelsToGLUnits: [number, number];
     cameraToCenterDistance: number;
-    mercatorMatrix: mat4; // Array<number>;
+    mercatorMatrix: mat4;
     projMatrix: mat4;
     invProjMatrix: mat4;
     alignedProjMatrix: mat4;
@@ -539,8 +539,8 @@ class Transform {
      * @private
      */
     coordinatePoint(coord: MercatorCoordinate) {
-        const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1];
-        vec4.transformMat4(p as vec4, p as vec4, this.pixelMatrix);
+        const p = vec4.fromValues(coord.x * this.worldSize, coord.y * this.worldSize, 0, 1);
+        vec4.transformMat4(p, p, this.pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
 
@@ -608,8 +608,9 @@ class Transform {
         return cache[posMatrixKey];
     }
 
-    customLayerMatrix(): mat4 { // Array<number> {
-        return this.mercatorMatrix.slice();
+    customLayerMatrix(): mat4 {
+        // I assume the previous 'slice' was just to trigger a copy?
+        return mat4.clone(this.mercatorMatrix);
     }
 
     _constrain() {

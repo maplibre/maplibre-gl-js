@@ -60,7 +60,7 @@ class StyleLayer extends Evented {
       zoom: number,
       transform: Transform,
       pixelsToTileUnits: number,
-      pixelPosMatrix: mat4 // Float32Array
+      pixelPosMatrix: mat4
     ) => boolean | number;
 
     readonly onAdd: ((map: Map) => void) | undefined | null;
