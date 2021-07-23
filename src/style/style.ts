@@ -52,7 +52,6 @@ import type EvaluationParameters from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
 import type {Cancelable} from '../types/cancelable';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
-import type {GeoJSON} from '@mapbox/geojson-types';
 import type {
     LayerSpecification,
     FilterSpecification,
@@ -635,7 +634,7 @@ class Style extends Evented {
     * @param {string} id id of the source
     * @param {GeoJSON|string} data GeoJSON source
     */
-    setGeoJSONSourceData(id: string, data: GeoJSON | string) {
+    setGeoJSONSourceData(id: string, data: GeoJSON.GeoJSON | string) {
         this._checkLoaded();
 
         assert(this.sourceCaches[id] !== undefined, 'There is no source with this ID');

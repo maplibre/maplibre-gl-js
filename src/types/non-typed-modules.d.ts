@@ -1,6 +1,5 @@
 import type Pbf from 'pbf';
 import type Point from '@mapbox/point-geometry';
-import type {GeoJSONFeature} from '@mapbox/geojson-types';
 
 declare module "@mapbox/mapbox-gl-supported" {
     type isSupported = {
@@ -151,7 +150,7 @@ declare global {
             [_: string]: string | number | boolean
         };
         loadGeometry(): Array<Array<Point>>;
-        toGeoJSON(x: number, y: number, z: number): GeoJSONFeature;
+        toGeoJSON(x: number, y: number, z: number): GeoJSON.Feature;
     }
 }
 
@@ -163,7 +162,7 @@ declare module "@mapbox/vector-tile" {
 
     class VectorTileFeatureImpl {
         static types: ["Unknown", "Point", "LineString", "Polygon"];
-        toGeoJSON(x: number, y: number, z: number): GeoJSONFeature;
+        toGeoJSON(x: number, y: number, z: number): GeoJSON.Feature;
     }
 
     let __exports: {
