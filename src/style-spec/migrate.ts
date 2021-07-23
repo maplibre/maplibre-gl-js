@@ -24,7 +24,7 @@ export default function(style) {
     }
 
     if (style.version === 8) {
-        migrated = migrateToExpressions(style);
+        migrated = !!migrateToExpressions(style);
         migrated = true;
     }
 
