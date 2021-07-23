@@ -1,7 +1,7 @@
 import browser from '../util/browser';
 import window from '../util/window';
 
-import {mat4} from 'gl-matrix';
+import {mat4, vec3} from 'gl-matrix';
 import SourceCache from '../source/source_cache';
 import EXTENT from '../data/extent';
 import pixelsToTileUnits from '../source/pixels_to_tile_units';
@@ -553,10 +553,10 @@ class Painter {
     /**
      * Transform a matrix to incorporate the *-translate and *-translate-anchor properties into it.
      * @param inViewportPixelUnitsUnits True when the units accepted by the matrix are in viewport pixels instead of tile units.
-     * @returns {Float32Array} matrix
+     * @returns {mat4} matrix
      * @private
      */
-    translatePosMatrix(matrix: Float32Array, tile: Tile, translate: [number, number], translateAnchor: "map" | "viewport", inViewportPixelUnitsUnits?: boolean) {
+    translatePosMatrix(matrix: mat4, tile: Tile, translate: [number, number], translateAnchor: "map" | "viewport", inViewportPixelUnitsUnits?: boolean) {
         if (!translate[0] && !translate[1]) return matrix;
 
         const angle = inViewportPixelUnitsUnits ?
@@ -572,13 +572,13 @@ class Painter {
             ];
         }
 
-        const translation = [
+        const translation = vec3.fromValues(
             inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], this.transform.zoom),
             inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], this.transform.zoom),
             0
-        ];
+        );
 
-        const translatedMatrix = new Float32Array(16);
+        const translatedMatrix = mat4.create();
         mat4.translate(translatedMatrix, matrix, translation);
         return translatedMatrix;
     }

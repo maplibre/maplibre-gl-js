@@ -42,7 +42,7 @@ const heatmapTextureUniforms = (context: Context, locations: UniformLocations): 
     'u_opacity': new Uniform1f(context, locations.u_opacity)
 });
 
-const heatmapUniformValues = (matrix: Float32Array, tile: Tile, zoom: number, intensity: number): UniformValues<HeatmapUniformsType> => ({
+const heatmapUniformValues = (matrix: mat4, tile: Tile, zoom: number, intensity: number): UniformValues<HeatmapUniformsType> => ({
     'u_matrix': matrix,
     'u_extrude_scale': pixelsToTileUnits(tile, 1, zoom),
     'u_intensity': intensity
