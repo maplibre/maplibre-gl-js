@@ -29,7 +29,7 @@ export default function(style) {
     }
 
     if (!migrated) {
-        throw new Error('cannot migrate from', style.version);
+        throw new Error(`Cannot migrate from ${style.version}`);
     }
 
     return style;
