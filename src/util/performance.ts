@@ -10,11 +10,11 @@ export type PerformanceMetrics = {
   percentDroppedFrames: number
 };
 
-export const PerformanceMarkers = {
-    create: 'create',
-    load: 'load',
-    fullLoad: 'fullLoad'
-};
+export enum PerformanceMarkers {
+    create = 'create',
+    load = 'load',
+    fullLoad = 'fullLoad'
+}
 
 let lastFrameTime = null;
 let frameTimes = [];
@@ -23,7 +23,7 @@ const minFramerateTarget = 30;
 const frameTimeTarget = 1000 / minFramerateTarget;
 
 export const PerformanceUtils = {
-    mark(marker: keyof typeof PerformanceMarkers) {
+    mark(marker: PerformanceMarkers) {
         performance.mark(marker);
     },
     frame(timestamp: number) {
