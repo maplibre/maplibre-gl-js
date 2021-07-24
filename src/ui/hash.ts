@@ -12,7 +12,7 @@ import type Map from './map';
  */
 class Hash {
     _map: Map;
-    _updateHash: () => TimeoutID | undefined | null;
+    _updateHash: () => ReturnType<typeof setTimeout> | undefined | null;
     _hashName: string | undefined | null;
 
     constructor(hashName?: string | null) {

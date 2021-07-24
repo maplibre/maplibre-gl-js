@@ -37,8 +37,8 @@ class ScrollZoomHandler {
     _aroundPoint: Point;
     _type: "wheel" | "trackpad" | null;
     _lastValue: number;
-    _timeout: TimeoutID | undefined | null; // used for delayed-handling of a single wheel movement
-    _finishTimeout: TimeoutID | undefined | null; // used to delay final '{move,zoom}end' events
+    _timeout: ReturnType<typeof setTimeout> | undefined | null; // used for delayed-handling of a single wheel movement
+    _finishTimeout: ReturnType<typeof setTimeout> | undefined | null; // used to delay final '{move,zoom}end' events
 
     _lastWheelEvent: any;
     _lastWheelEventTime: number;

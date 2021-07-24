@@ -4,6 +4,7 @@ import {bindAll, warnOnce} from '../../util/util';
 import window from '../../util/window';
 
 import type Map from '../map';
+import { IControl } from './control';
 
 type Options = {
   container?: HTMLElement
@@ -21,18 +22,18 @@ type Options = {
  * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js-docs/example/fullscreen/)
  */
 
-class FullscreenControl {
+class FullscreenControl implements IControl {
     _map: Map;
     _controlContainer: HTMLElement;
     _fullscreen: boolean;
     _fullscreenchange: string;
-    _fullscreenButton: HTMLElement;
+    _fullscreenButton: HTMLButtonElement;
     _container: HTMLElement;
 
     constructor(options: Options) {
         this._fullscreen = false;
         if (options && options.container) {
-            if (options.container instanceof window.HTMLElement) {
+            if (options.container instanceof HTMLElement) {
                 this._container = options.container;
             } else {
                 warnOnce('Full screen control \'container\' must be a DOM element.');
@@ -82,8 +83,8 @@ class FullscreenControl {
     }
 
     _setupUI() {
-        const button = this._fullscreenButton = DOM.create('button', ((`maplibregl-ctrl-fullscreen mapboxgl-ctrl-fullscreen`)), this._controlContainer);
-        DOM.create('span', `maplibregl-ctrl-icon mapboxgl-ctrl-icon`, button).setAttribute('aria-hidden', true);
+        const button = this._fullscreenButton = DOM.create('button', ((`maplibregl-ctrl-fullscreen mapboxgl-ctrl-fullscreen`)), this._controlContainer) as HTMLButtonElement;
+        DOM.create('span', `maplibregl-ctrl-icon mapboxgl-ctrl-icon`, button).setAttribute('aria-hidden', 'true');
         button.type = 'button';
         this._updateTitle();
         this._fullscreenButton.addEventListener('click', this._onClickFullscreen);
@@ -125,11 +126,11 @@ class FullscreenControl {
         if (this._isFullscreen()) {
             if (window.document.exitFullscreen) {
                 (window.document as any).exitFullscreen();
-            } else if (window.document.mozCancelFullScreen) {
+            } else if ((window.document as any).mozCancelFullScreen) {
                 (window.document as any).mozCancelFullScreen();
-            } else if (window.document.msExitFullscreen) {
+            } else if ((window.document as any).msExitFullscreen) {
                 (window.document as any).msExitFullscreen();
-            } else if (window.document.webkitCancelFullScreen) {
+            } else if ((window.document as any).webkitCancelFullScreen) {
                 (window.document as any).webkitCancelFullScreen();
             }
         } else if (this._container.requestFullscreen) {

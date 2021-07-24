@@ -3,6 +3,7 @@ import {bindAll} from '../../util/util';
 import config from '../../util/config';
 
 import type Map from '../map';
+import { ControlPosition, IControl } from './control';
 
 type Options = {
   compact?: boolean,
@@ -22,7 +23,7 @@ type Options = {
  *         compact: true
  *     }));
  */
-class AttributionControl {
+class AttributionControl implements IControl {
     options: Options;
     _map: Map;
     _container: HTMLElement;
@@ -44,7 +45,7 @@ class AttributionControl {
         ], this);
     }
 
-    getDefaultPosition() {
+    getDefaultPosition(): ControlPosition {
         return 'bottom-right';
     }
 
@@ -53,7 +54,7 @@ class AttributionControl {
 
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib');
-        this._compactButton = DOM.create('button', 'maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button', this._container);
+        this._compactButton = DOM.create('button', 'maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button', this._container) as HTMLButtonElement;
         this._compactButton.addEventListener('click', this._toggleAttribution);
         this._compactButton.type = 'button';
         this._setElementTitle(this._compactButton, 'ToggleAttribution');

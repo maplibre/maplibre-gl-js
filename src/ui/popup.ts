@@ -103,7 +103,7 @@ export default class Popup extends Evented {
     options: PopupOptions;
     _content: HTMLElement;
     _container: HTMLElement;
-    _closeButton: HTMLElement;
+    _closeButton: HTMLButtonElement;
     _tip: HTMLElement;
     _lngLat: LngLat;
     _trackPointer: boolean;
@@ -493,7 +493,7 @@ export default class Popup extends Evented {
 
     _createCloseButton() {
         if (this.options.closeButton) {
-            this._closeButton = DOM.create('button', 'maplibregl-popup-close-button mapboxgl-popup-close-button', this._content);
+            this._closeButton = DOM.create('button', 'maplibregl-popup-close-button mapboxgl-popup-close-button', this._content) as HTMLButtonElement;
             this._closeButton.type = 'button';
             this._closeButton.setAttribute('aria-label', 'Close popup');
             this._closeButton.innerHTML = '&#215;';
@@ -581,7 +581,7 @@ export default class Popup extends Evented {
     _focusFirstElement() {
         if (!this.options.focusAfterOpen || !this._container) return;
 
-        const firstFocusable = this._container.querySelector(focusQuerySelector);
+        const firstFocusable = this._container.querySelector(focusQuerySelector) as HTMLElement;
 
         if (firstFocusable) firstFocusable.focus();
     }

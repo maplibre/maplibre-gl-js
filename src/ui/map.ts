@@ -2,7 +2,6 @@ import {version} from '../../package.json';
 import {extend, bindAll, warnOnce, uniqueId} from '../util/util';
 import browser from '../util/browser';
 import window from '../util/window';
-const {HTMLImageElement, HTMLElement, ImageBitmap} = window;
 import DOM from '../util/dom';
 import {getImage, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/mapbox';
@@ -58,15 +57,7 @@ import type {
 } from '../style-spec/types';
 import {Listener} from 'selenium-webdriver';
 import {Callback} from '../types/callback';
-
-type ControlPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
-
-/* eslint-disable no-use-before-define */
-type IControl = {
-  onAdd(map: Map): HTMLElement,
-  onRemove(map: Map): void,
-  readonly getDefaultPosition?: () => ControlPosition
-};
+import { ControlPosition, IControl } from './control/control';
 
 /* eslint-enable no-use-before-define */
 
@@ -372,7 +363,7 @@ class Map extends Camera {
     touchPitch: TouchPitchHandler;
 
     constructor(options: MapOptions) {
-        PerformanceUtils.mark(PerformanceMarkers.create);
+        PerformanceUtils.mark(PerformanceMarkers.create as keyof typeof PerformanceMarkers);
 
         options = extend({}, defaultOptions, options);
 
@@ -2353,7 +2344,7 @@ class Map extends Camera {
             canvasContainer.classList.add('maplibregl-interactive', 'mapboxgl-interactive');
         }
 
-        this._canvas = DOM.create('canvas', 'maplibregl-canvas mapboxgl-canvas', canvasContainer);
+        this._canvas = DOM.create('canvas', 'maplibregl-canvas mapboxgl-canvas', canvasContainer) as HTMLCanvasElement;
         this._canvas.addEventListener('webglcontextlost', this._contextLost, false);
         this._canvas.addEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.setAttribute('tabindex', '0');
@@ -2558,7 +2549,7 @@ class Map extends Camera {
 
         if (this.loaded() && !this._loaded) {
             this._loaded = true;
-            PerformanceUtils.mark(PerformanceMarkers.load);
+            PerformanceUtils.mark(PerformanceMarkers.load as keyof typeof PerformanceMarkers);
             this.fire(new Event('load'));
         }
 
@@ -2614,7 +2605,7 @@ class Map extends Camera {
 
         if (this._loaded && !this._fullyLoaded && !somethingDirty) {
             this._fullyLoaded = true;
-            PerformanceUtils.mark(PerformanceMarkers.fullLoad);
+            PerformanceUtils.mark(PerformanceMarkers.fullLoad as keyof typeof PerformanceMarkers);
         }
 
         return this;

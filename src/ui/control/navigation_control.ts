@@ -6,6 +6,7 @@ import {MouseRotateHandler, MousePitchHandler} from '../handler/mouse';
 import window from '../../util/window';
 
 import type Map from '../map';
+import { IControl } from './control';
 
 type Options = {
   showCompass?: boolean,
@@ -33,7 +34,7 @@ const defaultOptions: Options = {
  * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js-docs/example/navigation/)
  * @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/third-party/)
  */
-class NavigationControl {
+class NavigationControl implements IControl {
     _map: Map;
     options: Options;
     _container: HTMLElement;

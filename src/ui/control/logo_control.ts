@@ -3,6 +3,7 @@ import DOM from '../../util/dom';
 import {bindAll} from '../../util/util';
 
 import type Map from '../map';
+import { ControlPosition, IControl } from './control';
 
 /**
  * A `LogoControl` is a control that adds the watermark.
@@ -11,7 +12,7 @@ import type Map from '../map';
  * @private
 **/
 
-class LogoControl {
+class LogoControl implements IControl {
     _map: Map;
     _container: HTMLElement;
 
@@ -23,7 +24,7 @@ class LogoControl {
     onAdd(map: Map) {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl mapboxgl-ctrl');
-        const anchor = DOM.create('a', 'maplibregl-ctrl-logo mapboxgl-ctrl-logo');
+        const anchor = DOM.create('a', 'maplibregl-ctrl-logo mapboxgl-ctrl-logo') as HTMLAnchorElement;
         anchor.target = "_blank";
         anchor.rel = "noopener nofollow";
         anchor.href = "https://maplibre.org/";
@@ -33,7 +34,7 @@ class LogoControl {
         this._container.style.display = 'none';
 
         this._map.on('sourcedata', this._updateLogo);
-        this._updateLogo();
+        this._updateLogo(undefined);
 
         this._map.on('resize', this._updateCompact);
         this._updateCompact();
@@ -47,7 +48,7 @@ class LogoControl {
         this._map.off('resize', this._updateCompact);
     }
 
-    getDefaultPosition() {
+    getDefaultPosition(): ControlPosition {
         return 'bottom-left';
     }
 

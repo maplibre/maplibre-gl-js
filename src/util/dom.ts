@@ -4,16 +4,16 @@ import window from './window';
 import assert from 'assert';
 
 interface DOMInterface {
-    create(tagName: string, className: string | undefined | null, container?: HTMLElement): HTMLElement;
+    create(tagName: string, className?: string | undefined | null, container?: HTMLElement): HTMLElement;
     createNS(namespaceURI: string, tagName: string);
     disableDrag();
     enableDrag();
     setTransform(el: HTMLElement, value: string);
-    addEventListener(target: any, type: any, callback: any, options?: {
+    addEventListener(target: any, type: any, callback: any, options?: void | {
         passive?: boolean,
         capture?: boolean
       });
-    removeEventListener(target: any, type: any, callback: any, options?: {
+    removeEventListener(target: any, type: any, callback: any, options?: void | {
         passive?: boolean,
         capture?: boolean
     });

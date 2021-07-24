@@ -8,6 +8,7 @@ import Marker from '../marker';
 
 import type Map from '../map';
 import type {AnimationOptions, CameraOptions} from '../camera';
+import { IControl } from './control';
 
 type Options = {
   positionOptions?: PositionOptions,
@@ -92,7 +93,7 @@ let noTimeout = false;
  * }));
  * @see [Locate the user](https://maplibre.org/maplibre-gl-js-docs/example/locate-user/)
  */
-class GeolocateControl extends Evented {
+class GeolocateControl extends Evented implements IControl {
     _map: Map;
     options: Options;
     _container: HTMLElement;
@@ -100,7 +101,7 @@ class GeolocateControl extends Evented {
     _circleElement: HTMLElement;
     _geolocateButton: HTMLButtonElement;
     _geolocationWatchID: number;
-    _timeoutId: TimeoutID | undefined | null;
+    _timeoutId: ReturnType<typeof setTimeout> | undefined | null;
     _watchState: "OFF" | "ACTIVE_LOCK" | "WAITING_ACTIVE" | "ACTIVE_ERROR" | "BACKGROUND" | "BACKGROUND_ERROR";
     _lastKnownPosition: any;
     _userLocationDotMarker: Marker;

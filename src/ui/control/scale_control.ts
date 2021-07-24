@@ -2,6 +2,7 @@ import DOM from '../../util/dom';
 import {extend, bindAll} from '../../util/util';
 
 import type Map from '../map';
+import { ControlPosition, IControl } from './control';
 
 type Unit = "imperial" | "metric" | "nautical";
 
@@ -31,7 +32,7 @@ const defaultOptions: Options = {
  *
  * scale.setUnit('metric');
  */
-class ScaleControl {
+class ScaleControl implements IControl {
     _map: Map;
     _container: HTMLElement;
     options: Options;
@@ -45,7 +46,7 @@ class ScaleControl {
         ], this);
     }
 
-    getDefaultPosition() {
+    getDefaultPosition(): ControlPosition {
         return 'bottom-left';
     }
 
