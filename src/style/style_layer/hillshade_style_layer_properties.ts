@@ -17,6 +17,7 @@ import type Color from '../../style-spec/util/color';
 import type Formatted from '../../style-spec/expression/types/formatted';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
+import { StylePropertySpecification } from '../../style-spec/style-spec';
 
 
 export type PaintProps = {
@@ -28,13 +29,22 @@ export type PaintProps = {
   "hillshade-accent-color": DataConstantProperty<Color>
 };
 
+export type PaintPropsPossiblyEvaluated = {
+  "hillshade-illumination-direction": number,
+  "hillshade-illumination-anchor": "map" | "viewport",
+  "hillshade-exaggeration": number,
+  "hillshade-shadow-color": Color,
+  "hillshade-highlight-color": Color,
+  "hillshade-accent-color": Color
+};
+
 const paint: Properties<PaintProps> = new Properties({
-    "hillshade-illumination-direction": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-illumination-direction"]),
-    "hillshade-illumination-anchor": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-illumination-anchor"]),
-    "hillshade-exaggeration": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-exaggeration"]),
-    "hillshade-shadow-color": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-shadow-color"]),
-    "hillshade-highlight-color": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-highlight-color"]),
-    "hillshade-accent-color": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-accent-color"]),
+    "hillshade-illumination-direction": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-illumination-direction"] as any as StylePropertySpecification),
+    "hillshade-illumination-anchor": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-illumination-anchor"] as any as StylePropertySpecification),
+    "hillshade-exaggeration": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-exaggeration"] as any as StylePropertySpecification),
+    "hillshade-shadow-color": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-shadow-color"] as any as StylePropertySpecification),
+    "hillshade-highlight-color": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-highlight-color"] as any as StylePropertySpecification),
+    "hillshade-accent-color": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-accent-color"] as any as StylePropertySpecification),
 });
 
 // Note: without adding the explicit type annotation, Flow infers weaker types

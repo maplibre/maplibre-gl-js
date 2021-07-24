@@ -21,10 +21,6 @@ import type {
     CompositeExpression
 } from '../style-spec/expression';
 
-type $ObjMap<T extends {}, F extends (v: any) => any> = {
-  [K in keyof T]: F extends (v: T[K]) => infer R ? R : never;
-};
-
 type TimePoint = number;
 
 export type CrossFaded<T> = {
@@ -161,21 +157,13 @@ class TransitionablePropertyValue<T, R> {
 }
 
 /**
- * A helper type: given an object type `Properties` whose values are each of type `Property<T, R>`, it calculates
- * an object type with the same keys and values of type `TransitionablePropertyValue<T, R>`.
- *
- * @private
- */
-type TransitionablePropertyValues<Props extends any> = $ObjMap<Props, <T, R>(p: Property<T, R>) => TransitionablePropertyValue<T, R>>;
-
-/**
  * `Transitionable` stores a map of all (property name, `TransitionablePropertyValue`) pairs for paint properties of a
  * given layer type. It can calculate the `TransitioningPropertyValue`s for all of them at once, producing a
  * `Transitioning` instance for the same set of properties.
  *
  * @private
  */
-export class Transitionable<Props extends any> {
+export class Transitionable<Props> {
     _properties: Properties<Props>;
     _values: TransitionablePropertyValues<Props>;
 
@@ -184,11 +172,11 @@ export class Transitionable<Props extends any> {
         this._values = (Object.create(properties.defaultTransitionablePropertyValues) as any);
     }
 
-    getValue<S extends string, T>(name: S): PropertyValueSpecification<T> | void {
+    getValue<S extends keyof Props, T>(name: S): PropertyValueSpecification<T> | void {
         return clone(this._values[name].value.value);
     }
 
-    setValue<S extends string, T>(name: S, value: PropertyValueSpecification<T> | void) {
+    setValue<S extends keyof Props, T>(name: S, value: PropertyValueSpecification<T> | void) {
         if (!Object.prototype.hasOwnProperty.call(this._values, name)) {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property);
         }
@@ -197,11 +185,11 @@ export class Transitionable<Props extends any> {
         this._values[name].value = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value));
     }
 
-    getTransition<S extends string>(name: S): TransitionSpecification | void {
+    getTransition<S extends keyof Props>(name: S): TransitionSpecification | void {
         return clone(this._values[name].transition);
     }
 
-    setTransition<S extends string>(name: S, value: TransitionSpecification | void) {
+    setTransition<S extends keyof Props>(name: S, value: TransitionSpecification | void) {
         if (!Object.prototype.hasOwnProperty.call(this._values, name)) {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property);
         }
@@ -306,21 +294,13 @@ class TransitioningPropertyValue<T, R> {
 }
 
 /**
- * A helper type: given an object type `Properties` whose values are each of type `Property<T, R>`, it calculates
- * an object type with the same keys and values of type `TransitioningPropertyValue<T, R>`.
- *
- * @private
- */
-type TransitioningPropertyValues<Props extends any> = $ObjMap<Props, <T, R>(p: Property<T, R>) => TransitioningPropertyValue<T, R>>;
-
-/**
  * `Transitioning` stores a map of all (property name, `TransitioningPropertyValue`) pairs for paint properties of a
  * given layer type. It can calculate the possibly-evaluated values for all of them at once, producing a
  * `PossiblyEvaluated` instance for the same set of properties.
  *
  * @private
  */
-export class Transitioning<Props extends any> {
+export class Transitioning<Props> {
     _properties: Properties<Props>;
     _values: TransitioningPropertyValues<Props>;
 
@@ -354,14 +334,6 @@ export class Transitioning<Props extends any> {
 // ------- Layout -------
 
 /**
- * A helper type: given an object type `Properties` whose values are each of type `Property<T, R>`, it calculates
- * an object type with the same keys and values of type `PropertyValue<T, R>`.
- *
- * @private
- */
-type PropertyValues<Props extends any> = $ObjMap<Props, <T, R>(p: Property<T, R>) => PropertyValue<T, R>>;
-
-/**
  * Because layout properties are not transitionable, they have a simpler representation and evaluation chain than
  * paint properties: `PropertyValue`s are possibly evaluated, producing possibly evaluated values, which are then
  * fully evaluated.
@@ -372,7 +344,7 @@ type PropertyValues<Props extends any> = $ObjMap<Props, <T, R>(p: Property<T, R>
  *
  * @private
  */
-export class Layout<Props extends any> {
+export class Layout<Props> {
     _properties: Properties<Props>;
     _values: PropertyValues<Props>;
 
@@ -381,18 +353,18 @@ export class Layout<Props extends any> {
         this._values = (Object.create(properties.defaultPropertyValues) as any);
     }
 
-    getValue<S extends string>(name: S) {
+    getValue<S extends (keyof Props)>(name: S) {
         return clone(this._values[name].value);
     }
 
-    setValue<S extends string>(name: S, value: any) {
-        this._values[name] = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value));
+    setValue<S extends keyof Props>(name: S, value: any) {
+        this._values[name] = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value)) as any;
     }
 
     serialize() {
         const result: any = {};
         for (const property of Object.keys(this._values)) {
-            const value = this.getValue(property);
+            const value = this.getValue(property as keyof PropertyValues<Props>);
             if (value !== undefined) {
                 result[property] = value;
             }
@@ -483,39 +455,20 @@ export class PossiblyEvaluatedPropertyValue<T> {
 }
 
 /**
- * A helper type: given an object type `Properties` whose values are each of type `Property<T, R>`, it calculates
- * an object type with the same keys, and values of type `R`.
- *
- * For properties that don't allow data-driven values, `R` is a scalar type such as `number`, `string`, or `Color`.
- * For data-driven properties, it is `PossiblyEvaluatedPropertyValue`. Critically, the type definitions are set up
- * in a way that allows flow to know which of these two cases applies for any given property name, and if you attempt
- * to use a `PossiblyEvaluatedPropertyValue` as if it was a scalar, or vice versa, you will get a type error. (However,
- * there's at least one case in which flow fails to produce a type error that you should be aware of: in a context such
- * as `layer.paint.get('foo-opacity') === 0`, if `foo-opacity` is data-driven, than the left-hand side is of type
- * `PossiblyEvaluatedPropertyValue<number>`, but flow will not complain about comparing this to a number using `===`.
- * See https://github.com/facebook/flow/issues/2359.)
- *
- * There's also a third, special case possiblity for `R`: for cross-faded properties, it's `?CrossFaded<T>`.
- *
- * @private
- */
-type PossiblyEvaluatedPropertyValues<Props extends any> = $ObjMap<Props, <T, R>(p: Property<T, R>) => R>;
-
-/**
  * `PossiblyEvaluated` stores a map of all (property name, `R`) pairs for paint or layout properties of a
  * given layer type.
  * @private
  */
-export class PossiblyEvaluated<Props extends any> {
+export class PossiblyEvaluated<Props, PossibleEvaluatedProps> {
     _properties: Properties<Props>;
-    _values: PossiblyEvaluatedPropertyValues<Props>;
+    _values: PossibleEvaluatedProps;
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
         this._values = (Object.create(properties.defaultPossiblyEvaluatedValues) as any);
     }
 
-    get<S extends string>(name: S): PossiblyEvaluatedPropertyValues<Props>[S] {
+    get<S extends keyof PossibleEvaluatedProps>(name: S): PossibleEvaluatedProps[S] {
         return this._values[name];
     }
 }
@@ -642,7 +595,7 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, parameters);
         } else if (value.expression.kind === 'constant') {
             const evaluatedValue = value.expression.evaluate(parameters, ((null as any)), {}, canonical, availableImages);
-            const isImageExpression = value.property.specification.type === 'resolvedImage';
+            const isImageExpression = value.property.specification.type as any === 'resolvedImage';
             const constantValue = isImageExpression && typeof evaluatedValue !== 'string' ? evaluatedValue.name : evaluatedValue;
             const constant = this._calculate(constantValue, constantValue, constantValue, parameters);
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: constant}, parameters);
@@ -772,7 +725,7 @@ export class ColorRampProperty implements Property<Color, boolean> {
  *
  * @private
  */
-export class Properties<Props extends any> {
+export class Properties<Props> {
     properties: Props;
     defaultPropertyValues: PropertyValues<Props>;
     defaultTransitionablePropertyValues: TransitionablePropertyValues<Props>;

@@ -130,7 +130,7 @@ export default class FormatExpression implements Expression {
     }
 
     serialize() {
-        const serialized = ["format"];
+        const serialized = ["format"] as (string | {})[];
         for (const section of this.sections) {
             serialized.push(section.content.serialize());
             const options = {};

@@ -6,15 +6,17 @@ import type {
     BucketFeature,
     PopulateParameters
 } from '../bucket';
+import {PossiblyEvaluated} from '../../style/properties';
 
 type PatternStyleLayers = Array<LineStyleLayer> | Array<FillStyleLayer> | Array<FillExtrusionStyleLayer>;
 
+// HM TODO: this is not the right way to do this when it comes to typed code...
 export function hasPattern(type: string, layers: PatternStyleLayers, options: PopulateParameters) {
     const patterns = options.patternDependencies;
     let hasPattern = false;
 
     for (const layer of layers) {
-        const patternProperty = layer.paint.get(`${type}-pattern`) as any;
+        const patternProperty = (layer.paint as PossiblyEvaluated<any, any>).get(`${type}-pattern`);
         if (!patternProperty.isConstant()) {
             hasPattern = true;
         }
@@ -33,7 +35,7 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
 export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, zoom: number, options: PopulateParameters) {
     const patterns = options.patternDependencies;
     for (const layer of layers) {
-        const patternProperty = layer.paint.get(`${type}-pattern`);
+        const patternProperty = (layer.paint  as PossiblyEvaluated<any, any>).get(`${type}-pattern`);
 
         const patternPropertyValue = patternProperty.value;
         if (patternPropertyValue.kind !== "constant") {

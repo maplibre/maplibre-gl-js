@@ -4,7 +4,7 @@ import StyleLayer from '../style_layer';
 import LineBucket from '../../data/bucket/line_bucket';
 import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
-import properties from './line_style_layer_properties';
+import properties, {LayoutPropsPossiblyEvaluated, PaintPropsPossiblyEvaluated} from './line_style_layer_properties';
 import {extend, MAX_SAFE_INTEGER} from '../../util/util';
 import EvaluationParameters from '../evaluation_parameters';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProperty} from '../properties';
@@ -40,14 +40,14 @@ lineFloorwidthProperty.useIntegerZoom = true;
 
 class LineStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<LayoutProps>;
-    layout: PossiblyEvaluated<LayoutProps>;
+    layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>;
 
     gradientVersion: number;
     stepInterpolant: boolean;
 
     _transitionablePaint: Transitionable<PaintProps>;
     _transitioningPaint: Transitioning<PaintProps>;
-    paint: PossiblyEvaluated<PaintProps>;
+    paint: PossiblyEvaluated<PaintProps, PaintPropsPossiblyEvaluated>;
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
@@ -77,7 +77,7 @@ class LineStyleLayer extends StyleLayer {
         return new LineBucket(parameters);
     }
 
-    queryRadius(bucket: Bucket): number {
+    queryRadius = (bucket: Bucket): number => {
         const lineBucket: LineBucket = (bucket as any);
         const width = getLineWidth(
             getMaximumPaintValue('line-width', this, lineBucket),
@@ -86,7 +86,7 @@ class LineStyleLayer extends StyleLayer {
         return width / 2 + Math.abs(offset) + translateDistance(this.paint.get('line-translate'));
     }
 
-    queryIntersectsFeature(
+    queryIntersectsFeature = (
       queryGeometry: Array<Point>,
       feature: VectorTileFeature,
       featureState: FeatureState,
@@ -94,7 +94,7 @@ class LineStyleLayer extends StyleLayer {
       zoom: number,
       transform: Transform,
       pixelsToTileUnits: number
-    ): boolean {
+    ): boolean => {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('line-translate'),
             this.paint.get('line-translate-anchor'),

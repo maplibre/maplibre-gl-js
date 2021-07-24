@@ -47,7 +47,7 @@ import type {
     PopulateParameters
 } from '../bucket';
 import type {CollisionBoxArray, CollisionBox, SymbolInstance} from '../array_types';
-import type {StructArray, StructArrayMember} from '../../util/struct_array';
+import type {StructArray, StructArrayMember, ViewType} from '../../util/struct_array';
 import SymbolStyleLayer from '../../style/style_layer/symbol_style_layer';
 import type Context from '../../gl/context';
 import type IndexBuffer from '../../gl/index_buffer';
@@ -56,7 +56,6 @@ import type {SymbolQuad} from '../../symbol/quads';
 import type {SizeData} from '../../symbol/symbol_size';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
-import type {PossiblyEvaluatedPropertyValue} from '../../style/properties';
 
 export type SingleCollisionBox = {
   x1: number,
@@ -105,7 +104,7 @@ export type SortKeyRange = {
 //     { name: 'a_fade_opacity', components: 1, type: 'Uint32' }
 // ];
 const shaderOpacityAttributes = [
-    {name: 'a_fade_opacity', components: 1, type: 'Uint8', offset: 0}
+    {name: 'a_fade_opacity', components: 1, type: 'Uint8' as ViewType, offset: 0}
 ];
 
 function addVertex(array, anchorX, anchorY, ox, oy, tx, ty, sizeVertex, isSDF: boolean, pixelOffsetX, pixelOffsetY, minFontScaleX, minFontScaleY) {
@@ -373,7 +372,7 @@ class SymbolBucket implements Bucket {
         this.iconSizeData = getSizeData(this.zoom, unevaluatedLayoutValues['icon-size']);
 
         const layout = this.layers[0].layout;
-        const sortKey = layout.get('symbol-sort-key') as PossiblyEvaluatedPropertyValue<any>;
+        const sortKey = layout.get('symbol-sort-key');
         const zOrder = layout.get('symbol-z-order');
         this.canOverlap =
             layout.get('text-allow-overlap') ||
@@ -420,9 +419,9 @@ class SymbolBucket implements Bucket {
         const layer = this.layers[0];
         const layout = layer.layout;
 
-        const textFont = layout.get('text-font') as PossiblyEvaluatedPropertyValue<any>;
-        const textField = layout.get('text-field') as PossiblyEvaluatedPropertyValue<any>;
-        const iconImage = layout.get('icon-image') as PossiblyEvaluatedPropertyValue<any>;
+        const textFont = layout.get('text-font');
+        const textField = layout.get('text-field');
+        const iconImage = layout.get('icon-image');
         const hasText =
             (textField.value.kind !== 'constant' ||
                 (textField.value.value instanceof Formatted && !textField.value.value.isEmpty()) ||
@@ -433,7 +432,7 @@ class SymbolBucket implements Bucket {
         // the only way to distinguish between null returned from a coalesce statement with no valid images
         // and null returned because icon-image wasn't defined is to check whether or not iconImage.parameters is an empty object
         const hasIcon = iconImage.value.kind !== 'constant' || !!iconImage.value.value || Object.keys(iconImage.parameters).length > 0;
-        const symbolSortKey = layout.get('symbol-sort-key') as PossiblyEvaluatedPropertyValue<any>;
+        const symbolSortKey = layout.get('symbol-sort-key');
 
         this.features = [];
 
@@ -630,7 +629,7 @@ class SymbolBucket implements Bucket {
         const indexArray = arrays.indexArray;
         const layoutVertexArray = arrays.layoutVertexArray;
 
-        const segment = arrays.segments.prepareSegment(4 * quads.length, layoutVertexArray, indexArray, this.canOverlap ? feature.sortKey : undefined);
+        const segment = arrays.segments.prepareSegment(4 * quads.length, layoutVertexArray, indexArray, this.canOverlap ? feature.sortKey as number : undefined);
         const glyphOffsetArrayStart = this.glyphOffsetArray.length;
         const vertexStartIndex = segment.vertexLength;
 
@@ -763,7 +762,7 @@ class SymbolBucket implements Bucket {
       verticalIconEndIndex: number
     ): CollisionArrays {
 
-        const collisionArrays = {};
+        const collisionArrays = {} as CollisionArrays;
         for (let k = textStartIndex; k < textEndIndex; k++) {
             const box: CollisionBox = (collisionBoxArray.get(k) as any);
             collisionArrays.textBox = {x1: box.x1, y1: box.y1, x2: box.x2, y2: box.y2, anchorPointX: box.anchorPointX, anchorPointY: box.anchorPointY};

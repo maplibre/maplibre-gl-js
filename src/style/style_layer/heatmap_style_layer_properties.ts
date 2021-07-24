@@ -9,7 +9,8 @@ import {
     DataDrivenProperty,
     CrossFadedDataDrivenProperty,
     CrossFadedProperty,
-    ColorRampProperty
+    ColorRampProperty,
+    PossiblyEvaluatedPropertyValue
 } from '../properties';
 
 import type Color from '../../style-spec/util/color';
@@ -17,6 +18,7 @@ import type Color from '../../style-spec/util/color';
 import type Formatted from '../../style-spec/expression/types/formatted';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
+import { StylePropertySpecification } from '../../style-spec/style-spec';
 
 
 export type PaintProps = {
@@ -27,12 +29,20 @@ export type PaintProps = {
   "heatmap-opacity": DataConstantProperty<number>
 };
 
+export type PaintPropsPossiblyEvaluated = {
+  "heatmap-radius": PossiblyEvaluatedPropertyValue<number>,
+  "heatmap-weight": PossiblyEvaluatedPropertyValue<number>,
+  "heatmap-intensity": number,
+  "heatmap-color": ColorRampProperty,
+  "heatmap-opacity": number
+};
+
 const paint: Properties<PaintProps> = new Properties({
-    "heatmap-radius": new DataDrivenProperty(styleSpec["paint_heatmap"]["heatmap-radius"]),
-    "heatmap-weight": new DataDrivenProperty(styleSpec["paint_heatmap"]["heatmap-weight"]),
-    "heatmap-intensity": new DataConstantProperty(styleSpec["paint_heatmap"]["heatmap-intensity"]),
-    "heatmap-color": new ColorRampProperty(styleSpec["paint_heatmap"]["heatmap-color"]),
-    "heatmap-opacity": new DataConstantProperty(styleSpec["paint_heatmap"]["heatmap-opacity"]),
+    "heatmap-radius": new DataDrivenProperty(styleSpec["paint_heatmap"]["heatmap-radius"] as any as StylePropertySpecification),
+    "heatmap-weight": new DataDrivenProperty(styleSpec["paint_heatmap"]["heatmap-weight"] as any as StylePropertySpecification),
+    "heatmap-intensity": new DataConstantProperty(styleSpec["paint_heatmap"]["heatmap-intensity"] as any as StylePropertySpecification),
+    "heatmap-color": new ColorRampProperty(styleSpec["paint_heatmap"]["heatmap-color"] as any as StylePropertySpecification),
+    "heatmap-opacity": new DataConstantProperty(styleSpec["paint_heatmap"]["heatmap-opacity"] as any as StylePropertySpecification),
 });
 
 // Note: without adding the explicit type annotation, Flow infers weaker types

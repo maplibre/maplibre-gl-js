@@ -2,7 +2,7 @@ import StyleLayer from '../style_layer';
 
 import HeatmapBucket from '../../data/bucket/heatmap_bucket';
 import {RGBAImage} from '../../util/image';
-import properties from './heatmap_style_layer_properties';
+import properties, {PaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties';
 import {renderColorRamp} from '../../util/color_ramp';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 
@@ -19,7 +19,7 @@ class HeatmapStyleLayer extends StyleLayer {
 
     _transitionablePaint: Transitionable<PaintProps>;
     _transitioningPaint: Transitioning<PaintProps>;
-    paint: PossiblyEvaluated<PaintProps>;
+    paint: PossiblyEvaluated<PaintProps, PaintPropsPossiblyEvaluated>;
 
     createBucket(options: any) {
         return new HeatmapBucket(options);
@@ -55,11 +55,11 @@ class HeatmapStyleLayer extends StyleLayer {
         }
     }
 
-    queryRadius(): number {
+    queryRadius = (): number => {
         return 0;
     }
 
-    queryIntersectsFeature(): boolean {
+    queryIntersectsFeature = (): boolean => {
         return false;
     }
 

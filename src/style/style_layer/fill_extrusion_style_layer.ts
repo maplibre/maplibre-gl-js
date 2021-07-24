@@ -3,7 +3,7 @@ import StyleLayer from '../style_layer';
 import FillExtrusionBucket from '../../data/bucket/fill_extrusion_bucket';
 import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests';
 import {translateDistance, translate} from '../query_utils';
-import properties from './fill_extrusion_style_layer_properties';
+import properties, {PaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 import {vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
@@ -17,7 +17,7 @@ import type {LayerSpecification} from '../../style-spec/types';
 class FillExtrusionStyleLayer extends StyleLayer {
     _transitionablePaint: Transitionable<PaintProps>;
     _transitioningPaint: Transitioning<PaintProps>;
-    paint: PossiblyEvaluated<PaintProps>;
+    paint: PossiblyEvaluated<PaintProps, PaintPropsPossiblyEvaluated>;
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
@@ -27,7 +27,7 @@ class FillExtrusionStyleLayer extends StyleLayer {
         return new FillExtrusionBucket(parameters);
     }
 
-    queryRadius(): number {
+    queryRadius = (): number => {
         return translateDistance(this.paint.get('fill-extrusion-translate'));
     }
 
@@ -35,7 +35,7 @@ class FillExtrusionStyleLayer extends StyleLayer {
         return true;
     }
 
-    queryIntersectsFeature(
+    queryIntersectsFeature = (
       queryGeometry: Array<Point>,
       feature: VectorTileFeature,
       featureState: FeatureState,
@@ -44,7 +44,7 @@ class FillExtrusionStyleLayer extends StyleLayer {
       transform: Transform,
       pixelsToTileUnits: number,
       pixelPosMatrix: Float32Array
-    ): boolean | number {
+    ): boolean | number => {
 
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('fill-extrusion-translate'),

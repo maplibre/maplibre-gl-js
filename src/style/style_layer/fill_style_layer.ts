@@ -3,7 +3,7 @@ import StyleLayer from '../style_layer';
 import FillBucket from '../../data/bucket/fill_bucket';
 import {polygonIntersectsMultiPolygon} from '../../util/intersection_tests';
 import {translateDistance, translate} from '../query_utils';
-import properties from './fill_style_layer_properties';
+import properties, {LayoutPropsPossiblyEvaluated, PaintPropsPossiblyEvaluated} from './fill_style_layer_properties';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
 
 import type {FeatureState} from '../../style-spec/expression';
@@ -16,11 +16,11 @@ import type {LayerSpecification} from '../../style-spec/types';
 
 class FillStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<LayoutProps>;
-    layout: PossiblyEvaluated<LayoutProps>;
+    layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>;
 
     _transitionablePaint: Transitionable<PaintProps>;
     _transitioningPaint: Transitioning<PaintProps>;
-    paint: PossiblyEvaluated<PaintProps>;
+    paint: PossiblyEvaluated<PaintProps, PaintPropsPossiblyEvaluated>;
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
@@ -39,11 +39,11 @@ class FillStyleLayer extends StyleLayer {
         return new FillBucket(parameters);
     }
 
-    queryRadius(): number {
+    queryRadius = (): number => {
         return translateDistance(this.paint.get('fill-translate'));
     }
 
-    queryIntersectsFeature(
+    queryIntersectsFeature = (
       queryGeometry: Array<Point>,
       feature: VectorTileFeature,
       featureState: FeatureState,
@@ -51,7 +51,7 @@ class FillStyleLayer extends StyleLayer {
       zoom: number,
       transform: Transform,
       pixelsToTileUnits: number
-    ): boolean {
+    ): boolean => {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('fill-translate'),
             this.paint.get('fill-translate-anchor'),

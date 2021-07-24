@@ -29,7 +29,6 @@ import type VertexBuffer from '../../gl/vertex_buffer';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
-import {PossiblyEvaluatedPropertyValue} from '../../style/properties';
 
 class FillBucket implements Bucket {
     index: number;
@@ -76,7 +75,7 @@ class FillBucket implements Bucket {
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
         this.hasPattern = hasPattern('fill', this.layers, options);
-        const fillSortKey = this.layers[0].layout.get('fill-sort-key') as PossiblyEvaluatedPropertyValue<any>;
+        const fillSortKey = this.layers[0].layout.get('fill-sort-key');
         const sortFeaturesByKey = !fillSortKey.isConstant();
         const bucketFeatures = [];
 

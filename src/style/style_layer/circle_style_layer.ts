@@ -3,7 +3,7 @@ import StyleLayer from '../style_layer';
 import CircleBucket from '../../data/bucket/circle_bucket';
 import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
-import properties from './circle_style_layer_properties';
+import properties, {LayoutPropsPossiblyEvaluated, PaintPropsPossiblyEvaluated} from './circle_style_layer_properties';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
 import {vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
@@ -16,11 +16,11 @@ import type {LayerSpecification} from '../../style-spec/types';
 
 class CircleStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<LayoutProps>;
-    layout: PossiblyEvaluated<LayoutProps>;
+    layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>;
 
     _transitionablePaint: Transitionable<PaintProps>;
     _transitioningPaint: Transitioning<PaintProps>;
-    paint: PossiblyEvaluated<PaintProps>;
+    paint: PossiblyEvaluated<PaintProps, PaintPropsPossiblyEvaluated>;
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
@@ -30,14 +30,14 @@ class CircleStyleLayer extends StyleLayer {
         return new CircleBucket(parameters);
     }
 
-    queryRadius(bucket: Bucket): number {
+    queryRadius = (bucket: Bucket): number => {
         const circleBucket: CircleBucket<CircleStyleLayer> = (bucket as any);
         return getMaximumPaintValue('circle-radius', this, circleBucket) +
             getMaximumPaintValue('circle-stroke-width', this, circleBucket) +
             translateDistance(this.paint.get('circle-translate'));
     }
 
-    queryIntersectsFeature(
+    queryIntersectsFeature = (
       queryGeometry: Array<Point>,
       feature: VectorTileFeature,
       featureState: FeatureState,
@@ -46,7 +46,7 @@ class CircleStyleLayer extends StyleLayer {
       transform: Transform,
       pixelsToTileUnits: number,
       pixelPosMatrix: Float32Array
-    ): boolean {
+    ): boolean => {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('circle-translate'),
             this.paint.get('circle-translate-anchor'),

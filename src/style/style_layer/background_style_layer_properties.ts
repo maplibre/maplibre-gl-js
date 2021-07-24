@@ -9,7 +9,8 @@ import {
     DataDrivenProperty,
     CrossFadedDataDrivenProperty,
     CrossFadedProperty,
-    ColorRampProperty
+    ColorRampProperty,
+    PossiblyEvaluatedPropertyValue
 } from '../properties';
 
 import type Color from '../../style-spec/util/color';
@@ -17,6 +18,7 @@ import type Color from '../../style-spec/util/color';
 import type Formatted from '../../style-spec/expression/types/formatted';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
+import { StylePropertySpecification } from '../../style-spec/style-spec';
 
 
 export type PaintProps = {
@@ -25,10 +27,16 @@ export type PaintProps = {
   "background-opacity": DataConstantProperty<number>
 };
 
+export type PaintPropsPossiblyEvaluated = {
+  "background-color": Color,
+  "background-pattern": PossiblyEvaluatedPropertyValue<ResolvedImage>,
+  "background-opacity": number
+};
+
 const paint: Properties<PaintProps> = new Properties({
-    "background-color": new DataConstantProperty(styleSpec["paint_background"]["background-color"]),
-    "background-pattern": new CrossFadedProperty(styleSpec["paint_background"]["background-pattern"]),
-    "background-opacity": new DataConstantProperty(styleSpec["paint_background"]["background-opacity"]),
+    "background-color": new DataConstantProperty(styleSpec["paint_background"]["background-color"] as any as StylePropertySpecification),
+    "background-pattern": new CrossFadedProperty(styleSpec["paint_background"]["background-pattern"] as any as StylePropertySpecification),
+    "background-opacity": new DataConstantProperty(styleSpec["paint_background"]["background-opacity"] as any as StylePropertySpecification),
 });
 
 // Note: without adding the explicit type annotation, Flow infers weaker types

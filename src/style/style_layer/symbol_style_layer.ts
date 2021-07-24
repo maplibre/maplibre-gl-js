@@ -3,7 +3,7 @@ import StyleLayer from '../style_layer';
 import assert from 'assert';
 import SymbolBucket from '../../data/bucket/symbol_bucket';
 import resolveTokens from '../../util/resolve_tokens';
-import properties from './symbol_style_layer_properties';
+import properties, {LayoutPropsPossiblyEvaluated, PaintPropsPossiblyEvaluated} from './symbol_style_layer_properties';
 
 import {
     Transitionable,
@@ -37,11 +37,11 @@ import Literal from '../../style-spec/expression/definitions/literal';
 
 class SymbolStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<LayoutProps>;
-    layout: PossiblyEvaluated<LayoutProps>;
+    layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>;
 
     _transitionablePaint: Transitionable<PaintProps>;
     _transitioningPaint: Transitioning<PaintProps>;
-    paint: PossiblyEvaluated<PaintProps>;
+    paint: PossiblyEvaluated<PaintProps, PaintPropsPossiblyEvaluated>;
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
@@ -105,11 +105,11 @@ class SymbolStyleLayer extends StyleLayer {
         return new SymbolBucket(parameters);
     }
 
-    queryRadius(): number {
+    queryRadius = (): number => {
         return 0;
     }
 
-    queryIntersectsFeature(): boolean {
+    queryIntersectsFeature= (): boolean => {
         assert(false); // Should take a different path in FeatureIndex
         return false;
     }
@@ -119,13 +119,14 @@ class SymbolStyleLayer extends StyleLayer {
             if (!SymbolStyleLayer.hasPaintOverride(this.layout, overridable)) {
                 continue;
             }
-            const overriden = this.paint.get(overridable);
+            const overriden = this.paint.get(overridable as keyof PaintPropsPossiblyEvaluated) as PossiblyEvaluatedPropertyValue<number>;
             const override = new FormatSectionOverride(overriden);
             const styleExpression = new StyleExpression(override, overriden.property.specification);
             let expression = null;
             if (overriden.value.kind === 'constant' || overriden.value.kind === 'source') {
                 expression = (new ZoomConstantExpression('source', styleExpression) as SourceExpression);
             } else {
+                // HM TODO: this doesn't make sence as the entire codebase doesn't have this member name...???
                 expression = (new ZoomDependentExpression('composite',
                                                           styleExpression,
                                                           overriden.value.zoomStops,
@@ -144,7 +145,7 @@ class SymbolStyleLayer extends StyleLayer {
         return SymbolStyleLayer.hasPaintOverride(this.layout, name);
     }
 
-    static hasPaintOverride(layout: PossiblyEvaluated<LayoutProps>, propertyName: string): boolean {
+    static hasPaintOverride(layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>, propertyName: string): boolean {
         const textField = layout.get('text-field');
         const property = properties.paint.properties[propertyName];
         let hasOverrides = false;

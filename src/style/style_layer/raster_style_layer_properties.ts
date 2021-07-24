@@ -17,6 +17,7 @@ import type Color from '../../style-spec/util/color';
 import type Formatted from '../../style-spec/expression/types/formatted';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
+import { StylePropertySpecification } from '../../style-spec/style-spec';
 
 
 export type PaintProps = {
@@ -30,15 +31,26 @@ export type PaintProps = {
   "raster-fade-duration": DataConstantProperty<number>
 };
 
+export type PaintPropsPossiblyEvaluated = {
+  "raster-opacity": number,
+  "raster-hue-rotate": number,
+  "raster-brightness-min": number,
+  "raster-brightness-max": number,
+  "raster-saturation": number,
+  "raster-contrast": number,
+  "raster-resampling": "linear" | "nearest",
+  "raster-fade-duration": number
+};
+
 const paint: Properties<PaintProps> = new Properties({
-    "raster-opacity": new DataConstantProperty(styleSpec["paint_raster"]["raster-opacity"]),
-    "raster-hue-rotate": new DataConstantProperty(styleSpec["paint_raster"]["raster-hue-rotate"]),
-    "raster-brightness-min": new DataConstantProperty(styleSpec["paint_raster"]["raster-brightness-min"]),
-    "raster-brightness-max": new DataConstantProperty(styleSpec["paint_raster"]["raster-brightness-max"]),
-    "raster-saturation": new DataConstantProperty(styleSpec["paint_raster"]["raster-saturation"]),
-    "raster-contrast": new DataConstantProperty(styleSpec["paint_raster"]["raster-contrast"]),
-    "raster-resampling": new DataConstantProperty(styleSpec["paint_raster"]["raster-resampling"]),
-    "raster-fade-duration": new DataConstantProperty(styleSpec["paint_raster"]["raster-fade-duration"]),
+    "raster-opacity": new DataConstantProperty(styleSpec["paint_raster"]["raster-opacity"] as any as StylePropertySpecification),
+    "raster-hue-rotate": new DataConstantProperty(styleSpec["paint_raster"]["raster-hue-rotate"] as any as StylePropertySpecification),
+    "raster-brightness-min": new DataConstantProperty(styleSpec["paint_raster"]["raster-brightness-min"] as any as StylePropertySpecification),
+    "raster-brightness-max": new DataConstantProperty(styleSpec["paint_raster"]["raster-brightness-max"] as any as StylePropertySpecification),
+    "raster-saturation": new DataConstantProperty(styleSpec["paint_raster"]["raster-saturation"] as any as StylePropertySpecification),
+    "raster-contrast": new DataConstantProperty(styleSpec["paint_raster"]["raster-contrast"] as any as StylePropertySpecification),
+    "raster-resampling": new DataConstantProperty(styleSpec["paint_raster"]["raster-resampling"] as any as StylePropertySpecification),
+    "raster-fade-duration": new DataConstantProperty(styleSpec["paint_raster"]["raster-fade-duration"] as any as StylePropertySpecification),
 });
 
 // Note: without adding the explicit type annotation, Flow infers weaker types

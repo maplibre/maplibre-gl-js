@@ -9,7 +9,8 @@ import {
     DataDrivenProperty,
     CrossFadedDataDrivenProperty,
     CrossFadedProperty,
-    ColorRampProperty
+    ColorRampProperty,
+    PossiblyEvaluatedPropertyValue
 } from '../properties';
 
 import type Color from '../../style-spec/util/color';
@@ -17,6 +18,7 @@ import type Color from '../../style-spec/util/color';
 import type Formatted from '../../style-spec/expression/types/formatted';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
+import { StylePropertySpecification } from '../../style-spec/style-spec';
 
 
 export type PaintProps = {
@@ -30,15 +32,26 @@ export type PaintProps = {
   "fill-extrusion-vertical-gradient": DataConstantProperty<boolean>
 };
 
+export type PaintPropsPossiblyEvaluated = {
+  "fill-extrusion-opacity": number,
+  "fill-extrusion-color": PossiblyEvaluatedPropertyValue<Color>,
+  "fill-extrusion-translate": [number, number],
+  "fill-extrusion-translate-anchor": "map" | "viewport",
+  "fill-extrusion-pattern": PossiblyEvaluatedPropertyValue<ResolvedImage>,
+  "fill-extrusion-height": PossiblyEvaluatedPropertyValue<number>,
+  "fill-extrusion-base": PossiblyEvaluatedPropertyValue<number>,
+  "fill-extrusion-vertical-gradient": boolean
+};
+
 const paint: Properties<PaintProps> = new Properties({
-    "fill-extrusion-opacity": new DataConstantProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-opacity"]),
-    "fill-extrusion-color": new DataDrivenProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-color"]),
-    "fill-extrusion-translate": new DataConstantProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-translate"]),
-    "fill-extrusion-translate-anchor": new DataConstantProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-translate-anchor"]),
-    "fill-extrusion-pattern": new CrossFadedDataDrivenProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-pattern"]),
-    "fill-extrusion-height": new DataDrivenProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-height"]),
-    "fill-extrusion-base": new DataDrivenProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-base"]),
-    "fill-extrusion-vertical-gradient": new DataConstantProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-vertical-gradient"]),
+    "fill-extrusion-opacity": new DataConstantProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-opacity"] as any as StylePropertySpecification),
+    "fill-extrusion-color": new DataDrivenProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-color"] as any as StylePropertySpecification),
+    "fill-extrusion-translate": new DataConstantProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-translate"] as any as StylePropertySpecification),
+    "fill-extrusion-translate-anchor": new DataConstantProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-translate-anchor"] as any as StylePropertySpecification),
+    "fill-extrusion-pattern": new CrossFadedDataDrivenProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-pattern"] as any as StylePropertySpecification),
+    "fill-extrusion-height": new DataDrivenProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-height"] as any as StylePropertySpecification),
+    "fill-extrusion-base": new DataDrivenProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-base"] as any as StylePropertySpecification),
+    "fill-extrusion-vertical-gradient": new DataConstantProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-vertical-gradient"] as any as StylePropertySpecification),
 });
 
 // Note: without adding the explicit type annotation, Flow infers weaker types
