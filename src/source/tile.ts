@@ -29,6 +29,7 @@ import type Transform from '../geo/transform';
 import type {LayerFeatureStates} from './source_state';
 import type {Cancelable} from '../types/cancelable';
 import type {FilterSpecification} from '../style-spec/types';
+import type Point from '../symbol/point';
 import {mat4} from 'gl-matrix';
 
 export type TileState = // Tile data is in the process of loading.

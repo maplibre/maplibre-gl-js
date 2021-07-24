@@ -3,6 +3,7 @@ import DOM from '../../util/dom';
 import {Event} from '../../util/evented';
 
 import type Map from '../map';
+import type Point from '../../symbol/point';
 
 /**
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.

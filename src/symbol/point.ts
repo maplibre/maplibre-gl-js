@@ -321,7 +321,7 @@ class Point {
      * // is equivalent to
      * var point = new Point(0, 1);
      */
-    convert = function (a) {
+    convert(a) {
         if (a instanceof Point) {
             return a;
         }
@@ -329,7 +329,7 @@ class Point {
             return new Point(a[0], a[1]);
         }
         return a;
-    };
+    }
 }
 
 register('Point', Point);
