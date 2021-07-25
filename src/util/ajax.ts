@@ -119,8 +119,8 @@ export const getReferrer = isWorker() ?
 const isFileURL = url => /^file:/.test(url) || (/^file:/.test(getReferrer()) && !/^\w+:/.test(url));
 
 function makeFetchRequest(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    const controller = new window.AbortController();
-    const request = new window.Request(requestParameters.url, {
+    const controller = new AbortController();
+    const request = new Request(requestParameters.url, {
         method: requestParameters.method || 'GET',
         body: requestParameters.body,
         credentials: requestParameters.credentials,
@@ -211,7 +211,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
 }
 
 function makeXMLHttpRequest(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    const xhr: XMLHttpRequest = new window.XMLHttpRequest();
+    const xhr: XMLHttpRequest = new XMLHttpRequest();
 
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
     if (requestParameters.type === 'arrayBuffer') {
@@ -267,7 +267,7 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
         }
     }
     if (!isFileURL(requestParameters.url)) {
-        if ((window as any).fetch && window.Request && window.AbortController && Object.prototype.hasOwnProperty.call(window.Request.prototype, 'signal')) {
+        if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
             return makeFetchRequest(requestParameters, callback);
         }
         if (isWorker() && (self as any).worker && (self as any).worker.actor) {
@@ -302,8 +302,7 @@ function sameOrigin(url) {
 const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=';
 
 function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | null, image?: HTMLImageElement | null) => void, cacheControl?: string | null, expires?: string | null) {
-    const img: HTMLImageElement = new window.Image();
-    const URL = window.URL;
+    const img: HTMLImageElement = new Image();
     img.onload = () => {
         callback(null, img);
         URL.revokeObjectURL(img.src);
@@ -314,14 +313,14 @@ function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | null, im
         window.requestAnimationFrame(() => { img.src = transparentPngUrl; });
     };
     img.onerror = () => callback(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
-    const blob: Blob = new window.Blob([new Uint8Array(data)], {type: 'image/png'});
+    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     (img as any).cacheControl = cacheControl;
     (img as any).expires = expires;
     img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
 }
 
 function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) {
-    const blob: Blob = new window.Blob([new Uint8Array(data)], {type: 'image/png'});
+    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     // HM TODO: check that this works - removing window shouldn't affect this in theory
     createImageBitmap(blob).then((imgBitmap) => {
         callback(null, imgBitmap);

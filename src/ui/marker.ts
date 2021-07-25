@@ -80,7 +80,7 @@ export default class Marker extends Evented {
         super();
         // For backward compatibility -- the constructor used to accept the element as a
         // required first argument, before it was made optional.
-        if (options instanceof window.HTMLElement || legacyOptions) {
+        if (options instanceof HTMLElement || legacyOptions) {
             options = extend({element: options}, legacyOptions);
         }
 
