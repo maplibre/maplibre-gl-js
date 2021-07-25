@@ -1,5 +1,4 @@
 import DOM from '../util/dom';
-import window from '../util/window';
 import LngLat from '../geo/lng_lat';
 import Point from '../symbol/point';
 import smartWrap from '../util/smart_wrap';
@@ -80,7 +79,7 @@ export default class Marker extends Evented {
         super();
         // For backward compatibility -- the constructor used to accept the element as a
         // required first argument, before it was made optional.
-        if (options instanceof window.HTMLElement || legacyOptions) {
+        if (options instanceof HTMLElement || legacyOptions) {
             options = extend({element: options}, legacyOptions);
         }
 

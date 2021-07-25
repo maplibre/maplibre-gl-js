@@ -1,6 +1,3 @@
-import window from '../util/window';
-const {HTMLImageElement, HTMLCanvasElement, HTMLVideoElement, ImageData, ImageBitmap} = window;
-
 import type Context from '../gl/context';
 import type {RGBAImage, AlphaImage} from '../util/image';
 

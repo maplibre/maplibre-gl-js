@@ -106,10 +106,10 @@ class HandlerManager {
     _previousActiveHandlers: {
       [x: string]: Handler
     };
-    _listeners: Array<[HTMLElement, string, void | {
+    _listeners: Array<[Window | Document | HTMLElement, string, {
       passive?: boolean,
       capture?: boolean
-    }]>;
+    } | undefined]>;
 
     constructor(map: Map, options: {
       interactive: boolean,
@@ -332,7 +332,7 @@ class HandlerManager {
         for (const {handlerName, handler, allowed} of this._handlers) {
             if (!handler.isEnabled()) continue;
 
-            let data: HandlerResult | void;
+            let data: HandlerResult;
             if (this._blockedByActive(activeHandlers, allowed, handlerName)) {
                 handler.reset();
 

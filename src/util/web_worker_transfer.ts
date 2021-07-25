@@ -6,8 +6,6 @@ import {StylePropertyFunction, StyleExpression, ZoomDependentExpression, ZoomCon
 import CompoundExpression from '../style-spec/expression/compound_expression';
 import expressions from '../style-spec/expression/definitions';
 import ResolvedImage from '../style-spec/expression/types/resolved_image';
-import window from './window';
-const {ImageData, ImageBitmap} = window;
 
 import type {Transferable} from '../types/transferable';
 
@@ -15,7 +13,7 @@ type SerializedObject = {
   [_: string]: Serialized
 }; // eslint-disable-line
 
-export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | $ArrayBufferView | ImageData | Array<Serialized> | SerializedObject;
+export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ImageData | Array<Serialized> | SerializedObject;
 
 type Registry = {
   [_: string]: {
@@ -134,15 +132,22 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         return input;
     }
 
-    if (isArrayBuffer(input) || isImageBitmap(input)) {
+    if (isArrayBuffer(input)) {
         if (transferables) {
             transferables.push(((input as any as ArrayBuffer)));
         }
-        return input;
+        return input as any as ArrayBuffer;
+    }
+
+    if (isImageBitmap(input)) {
+        if (transferables) {
+            transferables.push(((input as any as ImageBitmap)));
+        }
+        return input as ImageBitmap;
     }
 
     if (ArrayBuffer.isView(input)) {
-        const view: $ArrayBufferView = (input as any);
+        const view = input;
         if (transferables) {
             transferables.push(view.buffer);
         }
