@@ -5,16 +5,6 @@ const now = window.performance && window.performance.now ?
     window.performance.now.bind(window.performance) :
     Date.now.bind(Date);
 
-const raf = window.requestAnimationFrame; // ||
-// window.mozRequestAnimationFrame ||
-// window.webkitRequestAnimationFrame ||
-// window.msRequestAnimationFrame;
-
-const cancel = window.cancelAnimationFrame; // ||
-// window.mozCancelAnimationFrame ||
-// window.webkitCancelAnimationFrame ||
-// window.msCancelAnimationFrame;
-
 let linkEl;
 
 let reducedMotionQuery: MediaQueryList;
@@ -30,8 +20,8 @@ const exported = {
     now,
 
     frame(fn: (paintStartTimestamp: number) => void): Cancelable {
-        const frame = raf(fn);
-        return {cancel: () => cancel(frame)};
+        const frame = requestAnimationFrame(fn);
+        return {cancel: () => cancelAnimationFrame(frame)};
     },
 
     getImageData(img: CanvasImageSource, padding: number = 0): ImageData {

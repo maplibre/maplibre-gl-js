@@ -24,12 +24,12 @@ export default function(style) {
     }
 
     if (style.version === 8) {
-        migrated = migrateToExpressions(style);
+        migrated = !!migrateToExpressions(style);
         migrated = true;
     }
 
     if (!migrated) {
-        throw new Error('cannot migrate from', style.version);
+        throw new Error(`Cannot migrate from ${style.version}`);
     }
 
     return style;

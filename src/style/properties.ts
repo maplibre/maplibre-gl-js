@@ -1,19 +1,19 @@
 import assert from 'assert';
 import {clone, extend, easeCubicInOut} from '../util/util';
 import * as interpolate from '../style-spec/util/interpolate';
-import {normalizePropertyExpression} from '../style-spec/expression';
 import Color from '../style-spec/util/color';
 import {register} from '../util/web_worker_transfer';
 import EvaluationParameters from './evaluation_parameters';
 
-import type {CanonicalTileID} from '../source/tile_id';
-import type {StylePropertySpecification} from '../style-spec/style-spec';
-import type {
+import {CanonicalTileID} from '../source/tile_id';
+import {StylePropertySpecification} from '../style-spec/style-spec';
+import {
     TransitionSpecification,
     PropertyValueSpecification
 } from '../style-spec/types';
 
-import type {
+import {
+    normalizePropertyExpression,
     Feature,
     FeatureState,
     StylePropertyExpression,

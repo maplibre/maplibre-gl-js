@@ -10,7 +10,8 @@ import type {WorkerSource} from '../source/worker_source';
 
 type MessageListener = (
   a: {
-    data: any
+    data: any,
+    target: any
   }
 ) => unknown;
 

@@ -3,7 +3,6 @@ import DOM from '../../util/dom';
 
 import {ease as _ease, bindAll, bezier} from '../../util/util';
 import browser from '../../util/browser';
-import window from '../../util/window';
 import {number as interpolate} from '../../style-spec/util/interpolate';
 import LngLat from '../../geo/lng_lat';
 
@@ -149,9 +148,7 @@ class ScrollZoomHandler {
 
     wheel(e: WheelEvent) {
         if (!this.isEnabled()) return;
-
-        // Remove `any` cast when https://github.com/facebook/flow/issues/4879 is fixed.
-        let value = e.deltaMode === (window.WheelEvent as any).DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
+        let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
         const now = browser.now(),
             timeDelta = now - (this._lastWheelEventTime || 0);
 

@@ -16,7 +16,8 @@ import type {Bucket} from '../data/bucket';
 import type Point from '../symbol/point';
 import type {FeatureFilter} from '../style-spec/feature_filter';
 import type {TransitionParameters, PropertyValue} from './properties';
-import EvaluationParameters, {CrossfadeParameters} from './evaluation_parameters';
+import EvaluationParameters from './evaluation_parameters';
+import type {CrossfadeParameters} from './evaluation_parameters';
 
 import type Transform from '../geo/transform';
 import type {
