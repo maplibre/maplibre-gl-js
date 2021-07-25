@@ -16,11 +16,11 @@ import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
 import Formatted, {FormattedSection} from '../style-spec/expression/types/formatted';
 
-const WritingMode = {
-    horizontal: 1,
-    vertical: 2,
-    horizontalOnly: 3
-};
+enum WritingMode {
+    horizontal = 1,
+    vertical = 2,
+    horizontalOnly = 3
+}
 
 const SHAPING_DEFAULT_OFFSET = -17;
 export {shapeText, shapeIcon, fitIconToText, getAnchorAlignment, WritingMode, SHAPING_DEFAULT_OFFSET};
