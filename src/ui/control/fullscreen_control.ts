@@ -4,7 +4,7 @@ import {bindAll, warnOnce} from '../../util/util';
 import window from '../../util/window';
 
 import type Map from '../map';
-import { IControl } from './control';
+import {IControl} from './control';
 
 type Options = {
   container?: HTMLElement

@@ -8,7 +8,7 @@ import Marker from '../marker';
 
 import type Map from '../map';
 import type {AnimationOptions, CameraOptions} from '../camera';
-import { IControl } from './control';
+import {IControl} from './control';
 
 type Options = {
   positionOptions?: PositionOptions,

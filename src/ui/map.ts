@@ -57,7 +57,7 @@ import type {
 } from '../style-spec/types';
 import {Listener} from 'selenium-webdriver';
 import {Callback} from '../types/callback';
-import { ControlPosition, IControl } from './control/control';
+import {ControlPosition, IControl} from './control/control';
 
 /* eslint-enable no-use-before-define */
 
