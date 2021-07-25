@@ -152,15 +152,6 @@ DOM.touchPos = function (el: HTMLElement, touches: TouchList) {
 
 DOM.mouseButton = function (e: MouseEvent) {
     assert(e.type === 'mousedown' || e.type === 'mouseup');
-    // this issue is a fix for FF 50 on mac, current version is 90
-    // confirm unsupported InstallTrigger does not cause this bug in modern versions
-    // if (typeof window.InstallTrigger !== 'undefined' && e.button === 2 && e.ctrlKey &&
-    //     window.navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
-    //     // Fix for https://github.com/mapbox/mapbox-gl-js/issues/3131:
-    //     // Firefox (detected by InstallTrigger) on Mac determines e.button = 2 when
-    //     // using Control + left click
-    //     return 0;
-    // }
     return e.button;
 };
 
