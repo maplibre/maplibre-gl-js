@@ -8,14 +8,14 @@ import EXTENT from '../data/extent';
 // global type and used in module definitions for those two modules.
 type Feature = {
   type: 1,
-  id: unknown,
+  id: any,
   tags: {
     [_: string]: string | number | boolean
   },
   geometry: Array<[number, number]>
 } | {
   type: 2 | 3,
-  id: unknown,
+  id: any,
   tags: {
     [_: string]: string | number | boolean
   },

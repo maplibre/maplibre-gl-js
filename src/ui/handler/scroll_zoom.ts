@@ -32,7 +32,7 @@ class ScrollZoomHandler {
     _active: boolean;
     _zooming: boolean;
     _aroundCenter: boolean;
-    _around: Point;
+    _around: LngLat;
     _aroundPoint: Point;
     _type: "wheel" | "trackpad" | null;
     _lastValue: number;
@@ -129,7 +129,7 @@ class ScrollZoomHandler {
      * @example
      *  map.scrollZoom.enable({ around: 'center' })
      */
-    enable(options: any) {
+    enable(options?: any) {
         if (this.isEnabled()) return;
         this._enabled = true;
         this._aroundCenter = options && options.around === 'center';

@@ -10,7 +10,8 @@ import {
     CrossFadedDataDrivenProperty,
     CrossFadedProperty,
     ColorRampProperty,
-    PossiblyEvaluatedPropertyValue
+    PossiblyEvaluatedPropertyValue,
+    CrossFaded
 } from '../properties';
 
 import type Color from '../../style-spec/util/color';
@@ -29,7 +30,7 @@ export type PaintProps = {
 
 export type PaintPropsPossiblyEvaluated = {
   "background-color": Color,
-  "background-pattern": PossiblyEvaluatedPropertyValue<ResolvedImage>,
+  "background-pattern": CrossFaded<ResolvedImage>,
   "background-opacity": number
 };
 

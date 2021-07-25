@@ -46,7 +46,7 @@ class Match implements Expression {
         const cases = {};
         const outputs = [];
         for (let i = 2; i < args.length - 1; i += 2) {
-            let labels = args[i];
+            let labels = args[i] as unknown[];
             const value = args[i + 1];
 
             if (!Array.isArray(labels)) {

@@ -10,7 +10,8 @@ import {
     CrossFadedDataDrivenProperty,
     CrossFadedProperty,
     ColorRampProperty,
-    PossiblyEvaluatedPropertyValue
+    PossiblyEvaluatedPropertyValue,
+    CrossFaded
 } from '../properties';
 
 import type Color from '../../style-spec/util/color';
@@ -67,8 +68,8 @@ export type PaintPropsPossiblyEvaluated = {
   "line-gap-width": PossiblyEvaluatedPropertyValue<number>,
   "line-offset": PossiblyEvaluatedPropertyValue<number>,
   "line-blur": PossiblyEvaluatedPropertyValue<number>,
-  "line-dasharray": PossiblyEvaluatedPropertyValue<Array<number>>,
-  "line-pattern": PossiblyEvaluatedPropertyValue<ResolvedImage>,
+  "line-dasharray": CrossFaded<Array<number>>,
+  "line-pattern": PossiblyEvaluatedPropertyValue<CrossFaded<ResolvedImage>>,
   "line-gradient": ColorRampProperty
 };
 

@@ -94,7 +94,7 @@ function _convertFilter(filter: FilterSpecification, expectedTypes: ExpectedType
         const children = (filter as any).slice(1).map(f => _convertFilter(f, expectedTypes));
         return children.length > 1 ? ['all'].concat(children) : [].concat(...children);
     } else if (op === 'none') {
-        return ['!', _convertFilter(['any'].concat(filter.slice(1)), {})];
+        return ['!', _convertFilter(['any'].concat(filter.slice(1) as any), {})];
     } else if (op === 'in') {
         converted = convertInOp(((filter[1] as any)), filter.slice(2));
     } else if (op === '!in') {
@@ -192,7 +192,7 @@ function convertInOp(property: string, values: Array<any>, negate = false) {
         return ['match', get, uniqueValues, !negate, negate];
     }
 
-    return [ negate ? 'all' : 'any' ].concat(
+    return [ negate ? 'all' : 'any' as any].concat(
         values.map(v => [negate ? '!=' : '==', get, v])
     );
 }

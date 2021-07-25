@@ -118,5 +118,5 @@ export {
     visit
 };
 
-validate.parsed = validate;
-validate.latest = validate;
+(validate as any).parsed = validate;
+(validate as any).latest = validate;

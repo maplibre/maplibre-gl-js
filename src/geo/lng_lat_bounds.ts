@@ -24,7 +24,7 @@ class LngLatBounds {
     _sw: LngLat;
 
     // This constructor is too flexible to type. It should not be so flexible.
-    constructor(sw: any, ne: any) {
+    constructor(sw?: any, ne?: any) {
         if (!sw) {
             // noop
         } else if (ne) {
@@ -81,7 +81,7 @@ class LngLatBounds {
 
         } else {
             if (Array.isArray(obj)) {
-                if (obj.length === 4 || obj.every(Array.isArray)) {
+                if (obj.length === 4 || (obj as any[]).every(Array.isArray)) {
                     const lngLatBoundsObj = (obj as any as LngLatBoundsLike);
                     return this.extend(LngLatBounds.convert(lngLatBoundsObj));
                 } else {
@@ -251,7 +251,8 @@ class LngLatBounds {
      * llb;   // = LngLatBounds {_sw: LngLat {lng: -73.9876, lat: 40.7661}, _ne: LngLat {lng: -73.9397, lat: 40.8002}}
      */
     static convert(input: LngLatBoundsLike): LngLatBounds {
-        if (!input || input instanceof LngLatBounds) return input;
+        if (input instanceof LngLatBounds) return input;
+        if (!input) return null;
         return new LngLatBounds(input);
     }
 }

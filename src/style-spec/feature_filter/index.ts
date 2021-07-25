@@ -124,8 +124,8 @@ function convertFilter(filter?: Array<any> | null): unknown {
         op === '<=' ||
         op === '>=' ? convertComparisonOp(filter[1], filter[2], op) :
         op === 'any' ? convertDisjunctionOp(filter.slice(1)) :
-        op === 'all' ? ['all'].concat(filter.slice(1).map(convertFilter)) :
-        op === 'none' ? ['all'].concat(filter.slice(1).map(convertFilter).map(convertNegation)) :
+        op === 'all' ? ['all' as unknown].concat(filter.slice(1).map(convertFilter)) :
+        op === 'none' ? ['all' as unknown].concat(filter.slice(1).map(convertFilter).map(convertNegation)) :
         op === 'in' ? convertInOp(filter[1], filter.slice(2)) :
         op === '!in' ? convertNegation(convertInOp(filter[1], filter.slice(2))) :
         op === 'has' ? convertHasOp(filter[1]) :
@@ -147,7 +147,7 @@ function convertComparisonOp(property: string, value: any, op: string) {
 }
 
 function convertDisjunctionOp(filters: Array<Array<any>>) {
-    return ['any'].concat(filters.map(convertFilter));
+    return ['any' as unknown].concat(filters.map(convertFilter));
 }
 
 function convertInOp(property: string, values: Array<any>) {

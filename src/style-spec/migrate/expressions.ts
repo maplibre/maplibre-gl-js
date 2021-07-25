@@ -3,7 +3,7 @@ import {isExpression} from '../expression';
 import convertFunction, {convertTokenString} from '../function/convert';
 import convertFilter from '../feature_filter/convert';
 
-import type {StyleSpecification} from '../types';
+import type {FilterSpecification, LayerSpecification, StyleSpecification} from '../types';
 
 /**
  * Migrate the given style object in place to use expressions. Specifically,
@@ -13,7 +13,7 @@ import type {StyleSpecification} from '../types';
 export default function(style: StyleSpecification) {
     const converted = [];
 
-    eachLayer(style, (layer) => {
+    eachLayer(style, (layer: LayerSpecification & { filter?: FilterSpecification }) => {
         if (layer.filter) {
             layer.filter = (convertFilter(layer.filter) as any);
         }
@@ -24,7 +24,7 @@ export default function(style: StyleSpecification) {
         if (typeof value === 'object' && !Array.isArray(value)) {
             set(convertFunction(value, reference));
             converted.push(path.join('.'));
-        } else if (reference.tokens && typeof value === 'string') {
+        } else if ((reference as any).tokens && typeof value === 'string') {
             set(convertTokenString(value));
         }
     });

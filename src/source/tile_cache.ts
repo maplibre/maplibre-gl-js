@@ -13,7 +13,7 @@ class TileCache {
     data: {
       [key: string]: Array<{
         value: Tile,
-        timeout: TimeoutID | undefined | null
+        timeout: ReturnType<typeof setTimeout> | undefined | null
       }>
     };
     order: Array<string>;
@@ -72,7 +72,7 @@ class TileCache {
         if (expiryTimeout !== undefined) {
             dataWrapper.timeout = setTimeout(() => {
                 this.remove(tileID, dataWrapper);
-            }, expiryTimeout);
+            }, expiryTimeout as number);
         }
 
         this.data[key].push(dataWrapper);
@@ -158,7 +158,7 @@ class TileCache {
      */
     remove(tileID: OverscaledTileID, value?: {
       value: Tile,
-      timeout: TimeoutID | undefined | null
+      timeout: ReturnType<typeof setTimeout> | undefined | null
     } | null) {
         if (!this.has(tileID)) { return this; }
         const key = tileID.wrapped().key;

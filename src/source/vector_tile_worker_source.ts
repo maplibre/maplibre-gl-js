@@ -121,11 +121,11 @@ class VectorTileWorkerSource implements WorkerSource {
             }
 
             const rawTileData = response.rawData;
-            const cacheControl = {};
+            const cacheControl = {} as {expires: any, cacheControl: any};
             if (response.expires) cacheControl.expires = response.expires;
             if (response.cacheControl) cacheControl.cacheControl = response.cacheControl;
 
-            const resourceTiming = {};
+            const resourceTiming = {} as {resourceTiming: any};
             if (perf) {
                 const resourceTimingData = perf.finish();
                 // it's necessary to eval the result of getEntriesByName() here via parse/stringify
@@ -159,7 +159,7 @@ class VectorTileWorkerSource implements WorkerSource {
             const workerTile = loaded[uid];
             workerTile.showCollisionBoxes = params.showCollisionBoxes;
 
-            const done = (err, data) => {
+            const done = (err?: Error, data?: any) => {
                 const reloadCallback = workerTile.reloadCallback;
                 if (reloadCallback) {
                     delete workerTile.reloadCallback;

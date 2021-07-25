@@ -25,7 +25,7 @@ import {
 import type Painter from './painter';
 import type SourceCache from '../source/source_cache';
 import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
-import type SymbolBucket, {SymbolBuffers} from '../data/bucket/symbol_bucket';
+import SymbolBucket, {SymbolBuffers} from '../data/bucket/symbol_bucket';
 
 import type Texture from '../render/texture';
 import type {OverscaledTileID} from '../source/tile_id';

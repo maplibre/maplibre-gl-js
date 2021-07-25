@@ -108,7 +108,7 @@ class Assertion implements Expression {
 
     serialize(): Array<unknown> {
         const type = this.type;
-        const serialized = [type.kind];
+        const serialized = [type.kind as unknown];
         if (type.kind === 'array') {
             const itemType = type.itemType;
             if (itemType.kind === 'string' ||

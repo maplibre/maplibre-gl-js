@@ -176,7 +176,7 @@ export default function validateFunction(options) {
             return [new ValidationError(options.key, reportValue, message)];
         }
 
-        if (functionType === 'categorical' && type === 'number' && (!isFinite(value) || Math.floor(value) !== value)) {
+        if (functionType === 'categorical' && type === 'number' && (!isFinite(value as number) || Math.floor(value as number) !== value)) {
             return [new ValidationError(options.key, reportValue, `integer expected, found ${value}`)];
         }
 
@@ -186,10 +186,10 @@ export default function validateFunction(options) {
             previousStopDomainValue = value;
         }
 
-        if (functionType === 'categorical' && value in stopDomainValues) {
+        if (functionType === 'categorical' && (value as any) in stopDomainValues) {
             return [new ValidationError(options.key, reportValue, 'stop domain values must be unique')];
         } else {
-            stopDomainValues[value] = true;
+            stopDomainValues[value as any] = true;
         }
 
         return [];

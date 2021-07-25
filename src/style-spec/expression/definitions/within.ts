@@ -4,7 +4,6 @@ import {BooleanType} from '../types';
 import type {Expression} from '../expression';
 import type ParsingContext from '../parsing_context';
 import type EvaluationContext from '../evaluation_context';
-import Point from '../../../symbol/point';
 import type {CanonicalTileID} from '../../../source/tile_id';
 
 type GeoJSONPolygons = GeoJSON.Polygon | GeoJSON.MultiPolygon;
@@ -14,7 +13,7 @@ type BBox = [number, number, number, number];
 
 const EXTENT = 8192;
 
-function updateBBox(bbox: BBox, coord: Point) {
+function updateBBox(bbox: BBox, coord: [number, number]) {
     bbox[0] = Math.min(bbox[0], coord[0]);
     bbox[1] = Math.min(bbox[1], coord[1]);
     bbox[2] = Math.max(bbox[2], coord[0]);
@@ -37,7 +36,7 @@ function boxWithinBox(bbox1: BBox, bbox2: BBox) {
     return true;
 }
 
-function getTileCoordinates(p, canonical: CanonicalTileID) {
+function getTileCoordinates(p, canonical: CanonicalTileID): [number, number] {
     const x = mercatorXfromLng(p[0]);
     const y = mercatorYfromLat(p[1]);
     const tilesAtZoom = Math.pow(2, canonical.z);
@@ -207,7 +206,7 @@ function getTileLines(geometry, lineBBox, polyBBox, canonical) {
     for (const line of geometry) {
         const tileLine = [];
         for (const point of line) {
-            const p = [point.x + shifts[0], point.y + shifts[1]];
+            const p = [point.x + shifts[0], point.y + shifts[1]] as [number, number];
             updateBBox(lineBBox, p);
             tileLine.push(p);
         }

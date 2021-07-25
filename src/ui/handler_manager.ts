@@ -325,8 +325,9 @@ class HandlerManager {
         const mergedHandlerResult: HandlerResult = {needsRenderFrame: false};
         const eventsInProgress = {};
         const activeHandlers = {};
-
-        const mapTouches = e.touches ? this._getMapTouches((e as any as TouchEvent).touches) : undefined;
+        const eventTouches = (e as any as TouchEvent).touches;
+        
+        const mapTouches = eventTouches ? this._getMapTouches(eventTouches) : undefined;
         const points = mapTouches ? DOM.touchPos(this._el, mapTouches) : DOM.mousePos(this._el, ((e as any as MouseEvent)));
 
         for (const {handlerName, handler, allowed} of this._handlers) {

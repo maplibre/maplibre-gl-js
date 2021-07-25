@@ -144,7 +144,7 @@ class Interpolate implements Expression {
             return context.error(`Type ${toString(outputType)} is not interpolatable.`) as null;
         }
 
-        return new Interpolate(outputType, (operator as any), interpolation, input, stops);
+        return new Interpolate(outputType, (operator as any), interpolation as InterpolationType, input as Expression, stops);
     }
 
     evaluate(ctx: EvaluationContext) {
@@ -204,7 +204,7 @@ class Interpolate implements Expression {
                 interpolation = ["exponential", this.interpolation.base];
             }
         } else {
-            interpolation = ["cubic-bezier" ].concat(this.interpolation.controlPoints);
+            interpolation = ["cubic-bezier" as unknown].concat(this.interpolation.controlPoints);
         }
 
         const serialized = [this.operator, interpolation, this.input.serialize()];

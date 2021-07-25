@@ -50,7 +50,7 @@ class EvaluationContext {
     parseColor(input: string): Color | undefined | null {
         let cached = this._parseColorCache[input];
         if (!cached) {
-            cached = this._parseColorCache[input] = Color.parse(input);
+            cached = this._parseColorCache[input] = Color.parse(input) as Color;
         }
         return cached;
     }
