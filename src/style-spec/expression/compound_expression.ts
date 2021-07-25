@@ -49,7 +49,7 @@ class CompoundExpression implements Expression {
     }
 
     serialize(): Array<unknown> {
-        return [this.name].concat(this.args.map(arg => arg.serialize()));
+        return [this.name as unknown].concat(this.args.map(arg => arg.serialize()));
     }
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {

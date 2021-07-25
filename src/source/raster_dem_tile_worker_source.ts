@@ -14,7 +14,7 @@ class RasterDEMTileWorkerSource {
       [_: string]: DEMData
     };
     offscreenCanvas: OffscreenCanvas;
-    offscreenCanvasContext: CanvasRenderingContext2D;
+    offscreenCanvasContext: OffscreenCanvasRenderingContext2D;
 
     constructor() {
         this.loaded = {};

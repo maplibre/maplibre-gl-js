@@ -167,7 +167,7 @@ function makeComparison(op: ComparisonOperator, compareBasic, compareWithCollato
         }
 
         serialize() {
-            const serialized = [op];
+            const serialized = [op as unknown];
             this.eachChild(child => { serialized.push(child.serialize()); });
             return serialized;
         }

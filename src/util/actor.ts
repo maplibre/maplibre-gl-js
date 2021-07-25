@@ -39,10 +39,10 @@ class Actor {
         this.target = target;
         this.parent = parent;
         this.mapId = mapId;
-        this.callbacks = {};
-        this.tasks = {};
+        this.callbacks = {} as { number: any };
+        this.tasks = {} as { number: any };
         this.taskQueue = [];
-        this.cancelCallbacks = {};
+        this.cancelCallbacks = {} as { number: Cancelable };
         bindAll(['receive', 'process'], this);
         this.invoker = new ThrottledInvoker(this.process);
         this.target.addEventListener('message', this.receive, false);
@@ -177,7 +177,7 @@ class Actor {
         } else {
             let completed = false;
             const buffers: Array<Transferable> | undefined | null = isSafari(this.globalScope) ? undefined : [];
-            const done = task.hasCallback ? (err, data) => {
+            const done = task.hasCallback ? (err: Error, data?: any) => {
                 completed = true;
                 delete this.cancelCallbacks[id];
                 this.target.postMessage({

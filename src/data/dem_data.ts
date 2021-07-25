@@ -25,9 +25,10 @@ export default class DEMData {
     constructor(uid: string, data: RGBAImage, encoding: "mapbox" | "terrarium") {
         this.uid = uid;
         if (data.height !== data.width) throw new RangeError('DEM tiles must be square');
-        if (encoding && encoding !== "mapbox" && encoding !== "terrarium") return warnOnce(
-            `"${encoding}" is not a valid encoding type. Valid types include "mapbox" and "terrarium".`
-        );
+        if (encoding && encoding !== "mapbox" && encoding !== "terrarium") {
+            warnOnce(`"${encoding}" is not a valid encoding type. Valid types include "mapbox" and "terrarium".`);
+            return;
+        }
         this.stride = data.height;
         const dim = this.dim = data.height - 2;
         this.data = new Uint32Array(data.data.buffer);

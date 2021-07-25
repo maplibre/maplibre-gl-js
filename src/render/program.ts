@@ -133,7 +133,7 @@ class Program<Us extends UniformBindings> {
          layoutVertexBuffer: VertexBuffer,
          indexBuffer: IndexBuffer,
          segments: SegmentVector,
-         currentProperties: any,
+         currentProperties?: any,
          zoom?: number | null,
          configuration?: ProgramConfiguration | null,
          dynamicLayoutBuffer?: VertexBuffer | null,

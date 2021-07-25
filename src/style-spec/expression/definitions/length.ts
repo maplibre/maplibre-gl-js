@@ -50,7 +50,7 @@ class Length implements Expression {
     }
 
     serialize() {
-        const serialized = ["length"];
+        const serialized = ["length" as unknown];
         this.eachChild(child => { serialized.push(child.serialize()); });
         return serialized;
     }

@@ -311,9 +311,7 @@ class FeatureIndex {
         return false;
     }
 
-    // this had void and I changed for boolean, not really sure why either of these would be necessary
-    // as current input types don't seem to have any way to return falsy, maybe to do with our TS?
-    getId(feature: VectorTileFeature, sourceLayerId: string): string | number | boolean {
+    getId(feature: VectorTileFeature, sourceLayerId: string): string | number | void {
         let id: string | number | boolean = feature.id;
         if (this.promoteId) {
             const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];

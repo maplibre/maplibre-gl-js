@@ -82,7 +82,7 @@ class Coalesce implements Expression {
     }
 
     serialize() {
-        const serialized = ["coalesce"];
+        const serialized = ["coalesce" as unknown];
         this.eachChild(child => { serialized.push(child.serialize()); });
         return serialized;
     }

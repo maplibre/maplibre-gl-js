@@ -29,7 +29,7 @@ export default function validateArray(options) {
     };
 
     if (styleSpec.$version < 7) {
-        arrayElementSpec.function = arraySpec.function;
+        arrayElementSpec['function'] = arraySpec.function;
     }
 
     if (getType(arraySpec.value) === 'object') {

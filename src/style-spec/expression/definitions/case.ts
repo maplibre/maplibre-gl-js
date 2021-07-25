@@ -74,7 +74,7 @@ class Case implements Expression {
     }
 
     serialize() {
-        const serialized = ["case"];
+        const serialized = ["case" as unknown];
         this.eachChild(child => { serialized.push(child.serialize()); });
         return serialized;
     }

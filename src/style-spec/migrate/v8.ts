@@ -39,7 +39,7 @@ export default function(style) {
 
     // Rename properties, reverse coordinates in source and layers
     eachSource(style, (source) => {
-        if (source.type === 'video' && source.url !== undefined) {
+        if (source.type === 'video' && source['url'] !== undefined) {
             renameProperty(source, 'url', 'urls');
         }
         if (source.type === 'video') {

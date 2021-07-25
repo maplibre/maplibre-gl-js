@@ -13,7 +13,7 @@ export default function validateEnum(options) {
             errors.push(new ValidationError(key, value, `expected one of [${valueSpec.values.join(', ')}], ${JSON.stringify(value)} found`));
         }
     } else { // >=v8
-        if (Object.keys(valueSpec.values).indexOf(unbundle(value)) === -1) {
+        if (Object.keys(valueSpec.values).indexOf(unbundle(value) as string) === -1) {
             errors.push(new ValidationError(key, value, `expected one of [${Object.keys(valueSpec.values).join(', ')}], ${JSON.stringify(value)} found`));
         }
     }

@@ -122,7 +122,7 @@ class Coercion implements Expression {
             return new ImageExpression(this.args[0]).serialize();
         }
 
-        const serialized = [`to-${this.type.kind}`];
+        const serialized = [`to-${this.type.kind}` as unknown];
         this.eachChild(child => { serialized.push(child.serialize()); });
         return serialized;
     }

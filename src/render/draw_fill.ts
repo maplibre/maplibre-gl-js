@@ -108,7 +108,7 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
-            const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
+            const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
                 fillOutlinePatternUniformValues(tileMatrix, painter, crossfade, tile, drawingBufferSize) :
                 fillOutlineUniformValues(tileMatrix, drawingBufferSize);

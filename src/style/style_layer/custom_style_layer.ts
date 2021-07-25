@@ -199,7 +199,8 @@ class CustomStyleLayer extends StyleLayer {
 
     recalculate() {}
     updateTransitions() {}
-    hasTransition() {}
+    // HM TODO: is this correct? there was no return value before I changed this...
+    hasTransition() { return false }
 
     serialize() {
         assert(false, "Custom layers cannot be serialized");

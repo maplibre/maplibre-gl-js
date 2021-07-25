@@ -268,11 +268,11 @@ export function getGlyphQuads(
                 [positionedGlyph.x + halfAdvance, positionedGlyph.y] :
                 [0, 0];
 
-            let builtInOffset = alongLine ?
+            let builtInOffset: [number, number] = alongLine ?
                 [0, 0] :
                 [positionedGlyph.x + halfAdvance + textOffset[0], positionedGlyph.y + textOffset[1] - lineOffset];
 
-            let verticalizedLabelOffset = [0, 0];
+            let verticalizedLabelOffset = [0, 0] as [number, number];
             if (rotateVerticalGlyph) {
                 // Vertical POI labels that are rotated 90deg CW and whose glyphs must preserve upright orientation
                 // need to be rotated 90deg CCW. After a quad is rotated, it is translated to the original built-in offset.
