@@ -22,7 +22,7 @@ type Options = {
  * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js-docs/example/fullscreen/)
  */
 
-class FullscreenControl implements IControl {
+class FullscreenControl implements IControl {
     _map: Map;
     _controlContainer: HTMLElement;
     _fullscreen: boolean;
