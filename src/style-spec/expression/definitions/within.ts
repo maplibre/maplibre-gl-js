@@ -4,7 +4,7 @@ import {BooleanType} from '../types';
 import type {Expression} from '../expression';
 import type ParsingContext from '../parsing_context';
 import type EvaluationContext from '../evaluation_context';
-import Point from '@mapbox/point-geometry';
+import Point from '../../../symbol/point';
 import type {CanonicalTileID} from '../../../source/tile_id';
 
 type GeoJSONPolygons = GeoJSON.Polygon | GeoJSON.MultiPolygon;
@@ -225,8 +225,8 @@ function getTileLines(geometry, lineBBox, polyBBox, canonical) {
 }
 
 function pointsWithinPolygons(ctx: EvaluationContext, polygonGeometry: GeoJSONPolygons) {
-    const pointBBox = [Infinity, Infinity, -Infinity, -Infinity];
-    const polyBBox = [Infinity, Infinity, -Infinity, -Infinity];
+    const pointBBox: BBox = [Infinity, Infinity, -Infinity, -Infinity];
+    const polyBBox: BBox = [Infinity, Infinity, -Infinity, -Infinity];
 
     const canonical = ctx.canonicalID();
 
@@ -253,8 +253,8 @@ function pointsWithinPolygons(ctx: EvaluationContext, polygonGeometry: GeoJSONPo
 }
 
 function linesWithinPolygons(ctx: EvaluationContext, polygonGeometry: GeoJSONPolygons) {
-    const lineBBox = [Infinity, Infinity, -Infinity, -Infinity];
-    const polyBBox = [Infinity, Infinity, -Infinity, -Infinity];
+    const lineBBox: BBox = [Infinity, Infinity, -Infinity, -Infinity];
+    const polyBBox: BBox = [Infinity, Infinity, -Infinity, -Infinity];
 
     const canonical = ctx.canonicalID();
 

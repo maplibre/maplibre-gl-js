@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '../../symbol/point';
 import DOM from '../../util/dom';
 
 class TwoTouchHandler {

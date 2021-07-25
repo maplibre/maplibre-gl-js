@@ -1,7 +1,7 @@
 import DOM from '../util/dom';
 import window from '../util/window';
 import LngLat from '../geo/lng_lat';
-import Point from '@mapbox/point-geometry';
+import Point from '../symbol/point';
 import smartWrap from '../util/smart_wrap';
 import {bindAll, extend} from '../util/util';
 import {anchorTranslate, applyAnchorClass} from './anchor';

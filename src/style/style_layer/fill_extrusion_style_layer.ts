@@ -6,7 +6,7 @@ import {translateDistance, translate} from '../query_utils';
 import properties, {PaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 import {vec4} from 'gl-matrix';
-import Point from '@mapbox/point-geometry';
+import Point from '../../symbol/point';
 
 import type {FeatureState} from '../../style-spec/expression';
 import type {BucketParameters} from '../../data/bucket';

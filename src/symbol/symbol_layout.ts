@@ -28,7 +28,7 @@ import type {ImagePosition} from '../render/image_atlas';
 import type {GlyphPosition} from '../render/glyph_atlas';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties';
 
-import Point from '@mapbox/point-geometry';
+import Point from './point';
 import murmur3 from 'murmurhash-js';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
@@ -145,25 +145,27 @@ export function evaluateVariableOffset(anchor: TextAnchor, offset: [number, numb
     return (offset[1] !== INVALID_TEXT_OFFSET) ? fromTextOffset(anchor, offset[0], offset[1]) : fromRadialOffset(anchor, offset[0]);
 }
 
-export function performSymbolLayout(bucket: SymbolBucket,
-                             glyphMap: {
-                               [_: string]: {
-                                 [x: number]: StyleGlyph | undefined | null
-                               }
-                             },
-                             glyphPositions: {
-                               [_: string]: {
-                                 [x: number]: GlyphPosition
-                               }
-                             },
-                             imageMap: {
-                               [_: string]: StyleImage
-                             },
-                             imagePositions: {
-                               [_: string]: ImagePosition
-                             },
-                             showCollisionBoxes: boolean,
-                             canonical: CanonicalTileID) {
+export function performSymbolLayout(
+    bucket: SymbolBucket,
+    glyphMap: {
+        [_: string]: {
+            [x: number]: StyleGlyph | undefined | null
+        }
+    },
+    glyphPositions: {
+        [_: string]: {
+            [x: number]: GlyphPosition
+        }
+    },
+    imageMap: {
+        [_: string]: StyleImage
+    },
+    imagePositions: {
+        [_: string]: ImagePosition
+    },
+    showCollisionBoxes: boolean,
+    canonical: CanonicalTileID
+) {
     bucket.createArrays();
 
     const tileSize = 512 * bucket.overscaling;

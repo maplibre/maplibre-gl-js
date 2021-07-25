@@ -3,7 +3,7 @@ import {number as interpolate} from '../style-spec/util/interpolate';
 import browser from '../util/browser';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
-import Point from '@mapbox/point-geometry';
+import Point from '../symbol/point';
 import {Event, Evented} from '../util/evented';
 import assert from 'assert';
 import {Debug} from '../util/debug';

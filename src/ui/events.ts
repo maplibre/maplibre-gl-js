@@ -1,7 +1,7 @@
 import {Event} from '../util/evented';
 
 import DOM from '../util/dom';
-import Point from '@mapbox/point-geometry';
+import Point from '../symbol/point';
 import {extend} from '../util/util';
 
 import type Map from './map';

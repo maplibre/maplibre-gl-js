@@ -1,6 +1,6 @@
 export default checkMaxAngle;
 
-import type Point from '@mapbox/point-geometry';
+import type Point from '../symbol/point';
 import type Anchor from './anchor';
 
 /**

@@ -1,6 +1,6 @@
 import UnitBezier from '@mapbox/unitbezier';
 
-import Point from '@mapbox/point-geometry';
+import Point from '../symbol/point';
 import window from './window';
 
 import type {Callback} from '../types/callback';

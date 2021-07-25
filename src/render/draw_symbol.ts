@@ -1,4 +1,4 @@
-import Point from '@mapbox/point-geometry';
+import Point from '../symbol/point';
 import drawCollisionDebug from './draw_collision_debug';
 
 import SegmentVector from '../data/segment';

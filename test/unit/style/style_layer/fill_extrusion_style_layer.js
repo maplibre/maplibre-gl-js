@@ -1,6 +1,6 @@
 import {test} from '../../../util/test';
 import {getIntersectionDistance} from '../../../../src/style/style_layer/fill_extrusion_style_layer';
-import Point from '@mapbox/point-geometry';
+import Point from '../../../../src/symbol/point';
 
 test('getIntersectionDistance', (t) => {
     const queryPoint = [new Point(100, 100)];

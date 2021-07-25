@@ -4,6 +4,7 @@ import type CollisionIndex from '../symbol/collision_index';
 import type Transform from '../geo/transform';
 import type {RetainedQueryData} from '../symbol/placement';
 import type {FilterSpecification} from '../style-spec/types';
+import type Point from '../symbol/point';
 import assert from 'assert';
 import {mat4} from 'gl-matrix';
 
