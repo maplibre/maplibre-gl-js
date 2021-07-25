@@ -11,7 +11,7 @@ export type UniformLocations = {
   [_: string]: WebGLUniformLocation
 };
 
-class Uniform<T> {
+abstract class Uniform<T> {
     gl: WebGLRenderingContext;
     location: WebGLUniformLocation | undefined | null;
     current: T;
@@ -21,7 +21,7 @@ class Uniform<T> {
         this.location = location;
     }
 
-    readonly set: (v: T) => void;
+    abstract set(v: T): void;
 }
 
 class Uniform1i extends Uniform<number> {
