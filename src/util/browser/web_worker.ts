@@ -1,4 +1,3 @@
-import window from '../window';
 import mapboxgl from '../../';
 
 import type {WorkerInterface} from '../web_worker';
