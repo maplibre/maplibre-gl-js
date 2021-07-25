@@ -316,7 +316,7 @@ function placeGlyphsAlongLine(symbol, fontSize, flip, keepUpright, posMatrix, la
         placedGlyphs = [singleGlyph];
     }
 
-    for (const glyph: any of placedGlyphs) {
+    for (const glyph of placedGlyphs) {
         addDynamicAttributes(dynamicLayoutVertexArray, glyph.point, glyph.angle);
     }
     return {};

@@ -43,7 +43,7 @@ export interface GeoJSONIndex {
   getLeaves(clusterId: number, limit: number, offset: number): Array<GeoJSON.Feature>;
 }
 
-function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataCallback) {
+function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataCallback): (() => void) | void | undefined | null {
     const canonical = params.tileID.canonical;
 
     if (!this._geoJSONIndex) {
@@ -87,7 +87,6 @@ export type SourceState = // Source empty or data loaded
  * @private
  */
 class GeoJSONWorkerSource extends VectorTileWorkerSource {
-    loadGeoJSON: LoadGeoJSON;
     _state: SourceState;
     _pendingCallback: Callback<{
       resourceTiming?: {
@@ -177,7 +176,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
                 try {
                     if (params.filter) {
-                        const compiled = createExpression(params.filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false});
+                        const compiled = createExpression(params.filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
                         if (compiled.result === 'error')
                             throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
 
@@ -194,7 +193,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
                 this.loaded = {};
 
-                const result = {};
+                const result = {} as { resourceTiming: any };
                 if (perf) {
                     const resourceTimingData = perf.finish();
                     // it's necessary to eval the result of getEntriesByName() here via parse/stringify
@@ -332,7 +331,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 }
 
-function getSuperclusterOptions({superclusterOptions, clusterProperties}) {
+function getSuperclusterOptions({superclusterOptions, clusterProperties}: { superclusterOptions?: any, clusterProperties?: any}) {
     if (!clusterProperties || !superclusterOptions) return superclusterOptions;
 
     const mapExpressions = {};

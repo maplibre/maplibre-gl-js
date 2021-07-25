@@ -58,7 +58,7 @@ class Transform {
       [_: string]: Float32Array
     };
 
-    constructor(minZoom: number | undefined | null, maxZoom: number | undefined | null, minPitch: number | undefined | null, maxPitch: number | undefined | null, renderWorldCopies: boolean | void) {
+    constructor(minZoom: number | undefined | null, maxZoom: number | undefined | null, minPitch: number | undefined | null, maxPitch: number | undefined | null, renderWorldCopies: boolean) {
         this.tileSize = 512; // constant
         this.maxValidLatitude = 85.051129; // constant
 

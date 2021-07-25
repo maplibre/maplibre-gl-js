@@ -30,10 +30,10 @@ const exported = {
         if (!context) {
             throw new Error('failed to create canvas 2d context');
         }
-        canvas.width = img.width;
-        canvas.height = img.height;
-        context.drawImage(img, 0, 0, img.width, img.height);
-        return context.getImageData(-padding, -padding, img.width + 2 * padding, img.height + 2 * padding);
+        canvas.width = img.width as number;
+        canvas.height = img.height as number;
+        context.drawImage(img, 0, 0, img.width as number, img.height as number);
+        return context.getImageData(-padding, -padding, img.width as number + 2 * padding, img.height as number + 2 * padding);
     },
 
     resolveURL(path: string) {

@@ -45,13 +45,13 @@ class SourceCache extends Evented {
     _tiles: {
       [_: string]: Tile
     };
-    _prevLng: number | void;
+    _prevLng: number;
     _cache: TileCache;
     _timers: {
-      [_ in any]: TimeoutID;
+      [_ in any]: ReturnType<typeof setTimeout>;
     };
     _cacheTimers: {
-      [_ in any]: TimeoutID;
+      [_ in any]: ReturnType<typeof setTimeout>;
     };
     _maxTileCacheSize: number | undefined | null;
     _paused: boolean;
@@ -60,7 +60,6 @@ class SourceCache extends Evented {
       [_: string]: boolean
     };
     transform: Transform;
-    _isIdRenderable: (id: string, symbolLayer?: boolean) => boolean;
     used: boolean;
     _state: SourceFeatureState;
     _loadedParentTiles: {

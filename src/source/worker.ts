@@ -81,8 +81,8 @@ export default class Worker {
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin: {
           applyArabicShaping: Function,
-          processBidirectionalText: Function,
-          processStyledBidirectionalText?: Function
+          processBidirectionalText: ((b: string, a: Array<number>) => Array<string>) | undefined | null,
+          processStyledBidirectionalText?: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>) | undefined | null
         }) => {
             if (globalRTLTextPlugin.isParsed()) {
                 throw new Error('RTL text plugin already registered.');
@@ -275,5 +275,5 @@ export default class Worker {
 if (typeof WorkerGlobalScope !== 'undefined' &&
     typeof self !== 'undefined' &&
     self instanceof WorkerGlobalScope) {
-    self.worker = new Worker(self);
+    (self as any).worker = new Worker(self as any);
 }

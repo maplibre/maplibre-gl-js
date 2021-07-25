@@ -26,7 +26,6 @@ import type {
     SourceExpression,
     CompositeExpression
 } from '../style-spec/expression';
-import type {PossiblyEvaluated} from '../style/properties';
 import type {FeatureStates} from '../source/source_state';
 import type {FormattedSection} from '../style-spec/expression/types/formatted';
 
@@ -444,14 +443,14 @@ export default class ProgramConfiguration {
 
         for (const property in layer.paint._values) {
             if (!filterProperties(property)) continue;
-            const value = layer.paint.get(property);
+            const value = (layer.paint as any).get(property);
             if (!(value instanceof PossiblyEvaluatedPropertyValue) || !supportsPropertyExpression(value.property.specification)) {
                 continue;
             }
             const names = paintAttributeNames(property, layer.type);
             const expression = value.value;
             const type = value.property.specification.type;
-            const useIntegerZoom = value.property.useIntegerZoom;
+            const useIntegerZoom = (value.property as any).useIntegerZoom;
             const propType = value.property.specification['property-type'];
             const isCrossFaded = propType === 'cross-faded' || propType === 'cross-faded-data-driven';
 
@@ -464,8 +463,8 @@ export default class ProgramConfiguration {
             } else if (expression.kind === 'source' || isCrossFaded) {
                 const StructArrayLayout = layoutType(property, type, 'source');
                 this.binders[property] = isCrossFaded ?
-                    new CrossFadedCompositeBinder(expression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
-                    new SourceExpressionBinder(expression, names, type, StructArrayLayout);
+                    new CrossFadedCompositeBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
+                    new SourceExpressionBinder(expression as SourceExpression, names, type, StructArrayLayout);
                 keys.push(`/a_${property}`);
 
             } else {
@@ -521,7 +520,7 @@ export default class ProgramConfiguration {
                     if ((binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ||
                          binder instanceof CrossFadedCompositeBinder) && (binder as any).expression.isStateDependent === true) {
                         //AHM: Remove after https://github.com/mapbox/mapbox-gl-js/issues/6255
-                        const value = layer.paint.get(property);
+                        const value = (layer.paint as any).get(property);
                         (binder as any).expression = value.value;
                         (binder as AttributeBinder).updatePaintArray(pos.start, pos.end, feature, featureStates[id], imagePositions);
                         dirty = true;
@@ -593,10 +592,10 @@ export default class ProgramConfiguration {
         return uniforms;
     }
 
-    setUniforms<Properties extends any>(
+    setUniforms(
       context: Context,
       binderUniforms: Array<BinderUniform>,
-      properties: PossiblyEvaluated<Properties>,
+      properties: any,
       globals: GlobalProperties
     ) {
         // Uniform state bindings are owned by the Program, but we set them

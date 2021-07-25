@@ -86,7 +86,7 @@ const ignoredDiffOperations = pick(diffOperations, [
     'setPitch'
 ]);
 
-const empty = emptyStyle();
+const empty = emptyStyle() as StyleSpecification;
 
 export type StyleOptions = {
   validate?: boolean,
@@ -122,7 +122,7 @@ class Style extends Evented {
     };
     zoomHistory: ZoomHistory;
     _loaded: boolean;
-    _rtlTextPluginCallback: Function;
+    _rtlTextPluginCallback: (a: any) => any;
     _changed: boolean;
     _updatedSources: {
       [_: string]: "clear" | "reload"
@@ -680,8 +680,8 @@ class Style extends Evented {
             layer = createStyleLayer(layerObject);
 
         } else {
-            if (typeof layerObject.source === 'object') {
-                this.addSource(id, layerObject.source);
+            if (typeof (layerObject as any).source === 'object') {
+                this.addSource(id, (layerObject as any).source);
                 layerObject = clone(layerObject);
                 layerObject = (extend(layerObject, {source: id}) as any);
             }

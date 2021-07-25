@@ -34,7 +34,7 @@ export type LoadVectorTileResult = {
 export type LoadVectorDataCallback = Callback<LoadVectorTileResult | undefined | null>;
 
 export type AbortVectorData = () => void;
-export type LoadVectorData = (params: WorkerTileParameters, callback: LoadVectorDataCallback) => AbortVectorData | undefined | null;
+export type LoadVectorData = (params: WorkerTileParameters, callback: LoadVectorDataCallback) => AbortVectorData | void | undefined | null;
 
 /**
  * @private
@@ -144,7 +144,7 @@ class VectorTileWorkerSource implements WorkerSource {
 
             this.loaded = this.loaded || {};
             this.loaded[uid] = workerTile;
-        });
+        }) as AbortVectorData;
     }
 
     /**

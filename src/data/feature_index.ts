@@ -123,7 +123,7 @@ class FeatureIndex {
     } {
         this.loadVTLayers();
 
-        const params = args.params || {},
+        const params = args.params || {} as { filter: any, layers: string[], availableImages: string[] },
             pixelsToTileUnits = EXTENT / args.tileSize / args.scale,
             filter = featureFilter(params.filter);
 
@@ -185,7 +185,8 @@ class FeatureIndex {
         result: {
           [_: string]: Array<{
             featureIndex: number,
-            feature: GeoJSONFeature
+            feature: GeoJSONFeature,
+            intersectionZ?: boolean | number
           }>
         },
         bucketIndex: number,

@@ -10,7 +10,7 @@ const identityMat4 = mat4.identity(new Float32Array(16));
 import StencilMode from '../gl/stencil_mode';
 import DepthMode from '../gl/depth_mode';
 import CullFaceMode from '../gl/cull_face_mode';
-import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
+import SymbolBucket, {addDynamicAttributes, SymbolBuffers} from '../data/bucket/symbol_bucket';
 
 import {getAnchorAlignment, WritingMode} from '../symbol/shaping';
 import ONE_EM from '../symbol/one_em';
@@ -25,7 +25,6 @@ import {
 import type Painter from './painter';
 import type SourceCache from '../source/source_cache';
 import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
-import SymbolBucket, {SymbolBuffers} from '../data/bucket/symbol_bucket';
 
 import type Texture from '../render/texture';
 import type {OverscaledTileID} from '../source/tile_id';

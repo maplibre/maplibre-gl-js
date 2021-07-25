@@ -326,7 +326,7 @@ class HandlerManager {
         const eventsInProgress = {};
         const activeHandlers = {};
         const eventTouches = (e as any as TouchEvent).touches;
-        
+
         const mapTouches = eventTouches ? this._getMapTouches(eventTouches) : undefined;
         const points = mapTouches ? DOM.touchPos(this._el, mapTouches) : DOM.mousePos(this._el, ((e as any as MouseEvent)));
 

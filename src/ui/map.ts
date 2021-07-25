@@ -363,7 +363,7 @@ class Map extends Camera {
     touchPitch: TouchPitchHandler;
 
     constructor(options: MapOptions) {
-        PerformanceUtils.mark(PerformanceMarkers.create as keyof typeof PerformanceMarkers);
+        PerformanceUtils.mark(PerformanceMarkers.create);
 
         options = extend({}, defaultOptions, options);
 
@@ -2390,9 +2390,9 @@ class Map extends Camera {
             return;
         }
 
-        this.painter = new Painter(gl, this.transform);
+        this.painter = new Painter(gl as WebGLRenderingContext, this.transform);
 
-        webpSupported.testSupport(gl);
+        webpSupported.testSupport(gl as WebGLRenderingContext);
     }
 
     _contextLost(event: any) {
@@ -2549,7 +2549,7 @@ class Map extends Camera {
 
         if (this.loaded() && !this._loaded) {
             this._loaded = true;
-            PerformanceUtils.mark(PerformanceMarkers.load as keyof typeof PerformanceMarkers);
+            PerformanceUtils.mark(PerformanceMarkers.load);
             this.fire(new Event('load'));
         }
 
@@ -2605,7 +2605,7 @@ class Map extends Camera {
 
         if (this._loaded && !this._fullyLoaded && !somethingDirty) {
             this._fullyLoaded = true;
-            PerformanceUtils.mark(PerformanceMarkers.fullLoad as keyof typeof PerformanceMarkers);
+            PerformanceUtils.mark(PerformanceMarkers.fullLoad);
         }
 
         return this;
