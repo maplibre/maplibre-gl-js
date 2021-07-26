@@ -1,5 +1,5 @@
 import type Context from '../gl/context';
-import type {RGBAImage, AlphaImage} from '../util/image';
+import {RGBAImage, AlphaImage} from '../util/image';
 
 export type TextureFormat = WebGLRenderingContext["RGBA"] | WebGLRenderingContext["ALPHA"];
 export type TextureFilter = WebGLRenderingContext["LINEAR"] | WebGLRenderingContext["LINEAR_MIPMAP_NEAREST"] | WebGLRenderingContext["NEAREST"];
@@ -56,7 +56,7 @@ class Texture {
 
             if (image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof HTMLVideoElement || image instanceof ImageData || (ImageBitmap && image instanceof ImageBitmap)) {
                 gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, gl.UNSIGNED_BYTE, image);
-            } else {
+            } else if (!(image instanceof ImageBitmap)) { // ts doesn't pick up that ImageBitmap should be handled by initial if statement
                 gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, gl.UNSIGNED_BYTE, image.data);
             }
 
@@ -64,7 +64,7 @@ class Texture {
             const {x, y} = position || {x: 0, y: 0};
             if (image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof HTMLVideoElement || image instanceof ImageData || (ImageBitmap && image instanceof ImageBitmap)) {
                 gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, image);
-            } else {
+            } else if (!(image instanceof ImageBitmap)) {
                 gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, image.data);
             }
         }
