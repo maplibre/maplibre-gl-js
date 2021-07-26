@@ -10,6 +10,9 @@ import Style from '../style/style';
 import Texture from '../render/texture';
 import {RGBAImage} from '../util/image';
 import browser from '../util/browser';
+import {PosArray, TriangleIndexArray} from '../data/array_types';
+import posAttributes from '../data/pos_attributes';
+import SegmentVector from '../data/segment';
 
 class TerrainSourceCache extends Evented {
 
@@ -40,10 +43,27 @@ class TerrainSourceCache extends Evented {
     }
 
     /**
+     * Creates a singletop terrain-mesh
      * Removes tiles that are outside the viewport and adds new tiles that are inside the viewport.
      * @private
      */
     update(transform: Transform, context: Context) {
+        if (!this.mesh) {
+            // create a regular mesh which will be used by all terrain-tiles
+            const vertexArray = new PosArray(), indexArray = new TriangleIndexArray();
+            const meshSize = this.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
+            for (let y=0; y<=meshSize; y++) for (let x=0; x<=meshSize; x++)
+                vertexArray.emplaceBack(x * delta, y * delta);
+            for (let y=0; y<meshSize2; y+=meshSize+1) for (let x=0; x<meshSize; x++) {
+                indexArray.emplaceBack(x+y, meshSize+x+y+1, meshSize+x+y+2);
+                indexArray.emplaceBack(x+y, meshSize+x+y+2, x+y+1);
+            }
+            this.mesh = {
+                indexBuffer: map.painter.context.createIndexBuffer(indexArray),
+                vertexBuffer: map.painter.context.createVertexBuffer(vertexArray, posAttributes.members),
+                segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+            };
+        }
         transform._calcMatrices();
         let idealTileIDs = this.getRenderableTileIds(transform);
         let outdated = {};
@@ -149,10 +169,10 @@ class TerrainSourceCache extends Evented {
         if (tile.state == "loaded") {
             if (this._sourceCache) this._sourceCache._backfillDEM.call(this, tile);
             // rerender tile incl. neighboring tiles
-            tile.segments = null;
+            tile.elevationVertexBuffer = null;
             Object.keys(tile.neighboringTiles)
                .map(id => this.getTileByID(id))
-               .forEach(tile => { if (tile) tile.segments = null });
+               .forEach(tile => { if (tile) tile.elevationVertexBuffer = null });
         }
         // mark all tiles to refetch elevation-data
         // FIXME! only mark necessary tiles

@@ -2,18 +2,20 @@
 
 import StencilMode from '../gl/stencil_mode';
 import DepthMode from '../gl/depth_mode';
-import SegmentVector from '../data/segment';
 import {terrainUniformValues} from './program/terrain_program';
 import type Painter from './painter';
 import type TerranSourceCache from '../source/terrain_source_cache';
 import CullFaceMode from '../gl/cull_face_mode';
-import pos3DAttributes from '../data/pos3d_attributes';
 import Texture from './texture';
 import Color from '../style-spec/util/color';
 import ColorMode from '../gl/color_mode';
 import browser from '../util/browser';
-import {Pos3DArray, TriangleIndexArray} from '../data/array_types';
-import EXTENT from '../data/extent';
+import {TerrainElevationArray} from '../data/array_types';
+import {createLayout} from '../util/struct_array';
+
+const elevationAttributes = createLayout([
+   {name: 'a_ele', components: 1, type: 'Float32'}
+], 4);
 
 const FBOs = {};
 
@@ -35,7 +37,9 @@ function drawTerrainCoords(painter, sourceCache: TerrainSourceCache) {
       gl.bindTexture(gl.TEXTURE_2D, tile.coordsTexture.texture);
       const posMatrix = painter.transform.calculatePosMatrix(tileID.toUnwrapped());
       program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW,
-          terrainUniformValues(posMatrix), "terrain", tile.vertexBuffer, tile.indexBuffer, tile.segments);
+          terrainUniformValues(posMatrix), "terrain",
+          sourceCache.mesh.vertexBuffer, sourceCache.mesh.indexBuffer, sourceCache.mesh.segments,
+          null, null, null, tile.elevationVertexBuffer);
    }
    painter.finishFramebuffer();
 }
@@ -53,7 +57,9 @@ function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache) {
         gl.bindTexture(gl.TEXTURE_2D, tile.fbo.colorAttachment.get());
         const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW,
-            terrainUniformValues(posMatrix), "terrain", tile.vertexBuffer, tile.indexBuffer, tile.segments);
+            terrainUniformValues(posMatrix), "terrain",
+            sourceCache.mesh.vertexBuffer, sourceCache.mesh.indexBuffer, sourceCache.mesh.segments,
+            null, null, null, tile.elevationVertexBuffer);
     }
 }
 
@@ -67,19 +73,12 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, depth
          tile.textures[painter.batch] = new Texture(context, {width: tileSize, height: tileSize, data: null}, context.gl.RGBA);
          tile.textures[painter.batch].bind(context.gl.LINEAR, context.gl.CLAMP_TO_EDGE);
       }
-      if (!tile.segments) {
-         const vertexArray = new Pos3DArray(), indexArray = new TriangleIndexArray();
-         // create regular terrain-mesh.
-         const meshSize = sourceCache.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
-         for (let y=0; y<=meshSize; y++) for (let x=0; x<=meshSize; x++)
-            vertexArray.emplaceBack(x * delta, y * delta, Math.floor(sourceCache.getElevation(tileID, x, y, meshSize)));
-         for (let y=0; y<meshSize2; y+=meshSize+1) for (let x=0; x<meshSize; x++) {
-            indexArray.emplaceBack(x+y, meshSize+x+y+1, meshSize+x+y+2);
-            indexArray.emplaceBack(x+y, meshSize+x+y+2, x+y+1);
+      if (!tile.elevationVertexBuffer) {
+         const meshSize = sourceCache.meshSize, vertexArray = new TerrainElevationArray();
+         for (let y=0; y<=meshSize; y++) for (let x=0; x<=meshSize; x++) {
+             vertexArray.emplaceBack(sourceCache.getElevation(tileID, x, y, meshSize));
          }
-         tile.indexBuffer = context.createIndexBuffer(indexArray);
-         tile.vertexBuffer = context.createVertexBuffer(vertexArray, pos3DAttributes.members);
-         tile.segments = SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length);
+         tile.elevationVertexBuffer = context.createVertexBuffer(vertexArray, elevationAttributes.members, true);
       }
       if (!tile.coordsTexture) {
          tile.coordsTexture = new Texture(context, tile.coords, context.gl.RGBA, {premultiply: false});
