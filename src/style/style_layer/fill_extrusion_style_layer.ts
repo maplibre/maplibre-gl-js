@@ -14,6 +14,8 @@ import type {PaintProps} from './fill_extrusion_style_layer_properties';
 import type Transform from '../../geo/transform';
 import type {LayerSpecification} from '../../style-spec/types';
 
+type Point3D = Point & { z: number }
+
 class FillExtrusionStyleLayer extends StyleLayer {
     _transitionablePaint: Transitionable<PaintProps>;
     _transitioningPaint: Transitioning<PaintProps>;
@@ -67,7 +69,7 @@ function dot(a, b) {
     return a.x * b.x + a.y * b.y;
 }
 
-export function getIntersectionDistance(projectedQueryGeometry: Array<Point>, projectedFace: Array<Point>) {
+export function getIntersectionDistance(projectedQueryGeometry: Array<Point3D>, projectedFace: Array<Point3D>) {
 
     if (projectedQueryGeometry.length === 1) {
         // For point queries calculate the z at which the point intersects the face
@@ -130,7 +132,7 @@ export function getIntersectionDistance(projectedQueryGeometry: Array<Point>, pr
     }
 }
 
-function checkIntersection(projectedBase: Array<Point>, projectedTop: Array<Point>, projectedQueryGeometry: Array<Point>) {
+function checkIntersection(projectedBase: Array<Array<Point3D>>, projectedTop: Array<Array<Point3D>>, projectedQueryGeometry: Array<Point3D>) {
     let closestDistance = Infinity;
 
     if (polygonIntersectsMultiPolygon(projectedQueryGeometry, projectedTop)) {
@@ -162,9 +164,9 @@ function checkIntersection(projectedBase: Array<Point>, projectedTop: Array<Poin
  * different points can only be done once. This produced a measurable
  * performance improvement.
  */
-function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: number, m: Float32Array) {
-    const projectedBase = [];
-    const projectedTop = [];
+function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: number, m: Float32Array): [Array<Array<Point3D>>, Array<Array<Point3D>>] {
+    const projectedBase = [] as Array<Array<Point3D>>;
+    const projectedTop = [] as Array<Array<Point3D>>;
 
     const baseXZ = m[8] * zBase;
     const baseYZ = m[9] * zBase;
@@ -176,8 +178,8 @@ function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: nu
     const topWZ = m[11] * zTop;
 
     for (const r of geometry) {
-        const ringBase = [];
-        const ringTop = [];
+        const ringBase = [] as Array<Point3D>;
+        const ringTop = [] as Array<Point3D>;
         for (const p of r) {
             const x = p.x;
             const y = p.y;
@@ -197,11 +199,11 @@ function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: nu
             const topZ = sZ + topZZ;
             const topW = sW + topWZ;
 
-            const b = new Point(baseX / baseW, baseY / baseW);
+            const b = new Point(baseX / baseW, baseY / baseW) as Point3D;
             b.z = baseZ / baseW;
             ringBase.push(b);
 
-            const t = new Point(topX / topW, topY / topW);
+            const t = new Point(topX / topW, topY / topW) as Point3D;
             t.z = topZ / topW;
             ringTop.push(t);
         }

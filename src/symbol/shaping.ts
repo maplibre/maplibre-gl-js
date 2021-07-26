@@ -16,11 +16,17 @@ import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
 import Formatted, {FormattedSection} from '../style-spec/expression/types/formatted';
 
-const WritingMode = {
-    horizontal: 1,
-    vertical: 2,
-    horizontalOnly: 3
+enum WritingMode {
+    horizontal = 1,
+    vertical = 2,
+    horizontalOnly = 3
 };
+
+export class WriteModeMap {
+    "horizontal": WritingMode.horizontal;
+    "vertical": WritingMode.vertical;
+    "horizontalOnly": WritingMode.horizontalOnly;
+}
 
 const SHAPING_DEFAULT_OFFSET = -17;
 export {shapeText, shapeIcon, fitIconToText, getAnchorAlignment, WritingMode, SHAPING_DEFAULT_OFFSET};
@@ -51,7 +57,7 @@ export type Shaping = {
   bottom: number,
   left: number,
   right: number,
-  writingMode: 1 | 2,
+  writingMode: WritingMode.horizontal | WritingMode.vertical,
   text: string,
   iconsInText: boolean,
   verticalizable: boolean
@@ -256,7 +262,7 @@ function shapeText(
   textJustify: TextJustify,
   spacing: number,
   translate: [number, number],
-  writingMode: 1 | 2,
+  writingMode: WritingMode.horizontal | WritingMode.vertical,
   allowVerticalPlacement: boolean,
   symbolPlacement: string,
   layoutTextSize: number,
@@ -609,7 +615,7 @@ function shapeLines(shaping: Shaping,
                     lineHeight: number,
                     textAnchor: SymbolAnchor,
                     textJustify: TextJustify,
-                    writingMode: 1 | 2,
+                    writingMode: WritingMode.horizontal | WritingMode.vertical,
                     spacing: number,
                     allowVerticalPlacement: boolean,
                     layoutTextSizeThisZoom: number) {
