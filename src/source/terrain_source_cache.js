@@ -33,9 +33,10 @@ class TerrainSourceCache extends Evented {
     setSourceCache(sourceCache: Source) {
         this._sourceCache = sourceCache;
         this._source = sourceCache._source;
-        if (! this._source.loaded()) this._source.once("data", () => this._loadQueue.forEach(tile => {
-            this._source.loadTile(tile, () => this._tileLoaded(tile));
-        }));
+        if (! this._source.loaded()) this._source.once("data", () => {
+           this._loadQueue.forEach(tile => this._source.loadTile(tile, () => this._tileLoaded(tile)));
+           this._loadQueue = [];
+        });
     }
 
     /**
@@ -44,8 +45,12 @@ class TerrainSourceCache extends Evented {
      */
     update(transform: Transform, context: Context) {
         transform._calcMatrices();
-        let idealTileIDs = this.getRenderableTileIds(transform).filter(id => !this._tiles[id.key]);
+        let idealTileIDs = this.getRenderableTileIds(transform);
+        let outdated = {};
+        Object.keys(this._tiles).forEach(key => outdated[key] = true);
         for (const tileID of idealTileIDs) {
+            delete(outdated[tileID.key]);
+            if (this._tiles[tileID.key]) continue;
             let tile = this._tiles[tileID.key] = this._createEmptyTile(tileID);
             this._coordsIndex[tile._coordsIndex] = tile;
             if (this._source && this._source.loaded()) {
@@ -54,13 +59,20 @@ class TerrainSourceCache extends Evented {
                 this._loadQueue.push(tile); // remember for loading later
             }
         }
+        for (const key in outdated) {
+           let tile = this._tiles[key];
+           tile.textures.forEach(t => t.destroy());
+           tile.textures = [];
+           tile.coordsTexture && tile.coordsTexture.destroy();
+           tile.coordsTexture = null;
+        }
     }
 
     getRenderableTileIds(transform: Transform) {
         return transform.coveringTiles({
             tileSize: this.tileSize,
             minzoom: this._source ? this._source.minzoom : this.minzoom,
-            maxzoom: 14,
+            maxzoom: this.maxzoom,
             reparseOverscaled: true
         });
     }

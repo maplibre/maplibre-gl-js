@@ -326,18 +326,23 @@ class Painter {
         return [{[minTileZ]: StencilMode.disabled}, coords];
     }
 
-    // start drawing into the framebuffer, which is drawn on terrain-mesh
-    prepareFramebuffer(tileID: OverscaledTileID, layerType: string) {
-        // dz is the tileSize difference of the layer-source and the 512px terrain-source
-        // so if dz > 0 the frameport's viewbuffer is located to the currect subtile
+    getTerrainTile(tileID: OverscaledTileID) {
         const z = Math.floor(this.transform.zoom);
         const canonical = tileID.canonical.z > this.style.terrainSourceCache.maxzoom
             ? tileID.scaledTo(this.style.terrainSourceCache.maxzoom).canonical
             : tileID.canonical;
         const id = new OverscaledTileID(canonical.z > z ? canonical.z : z, tileID.wrap, canonical.z, canonical.x, canonical.y);
-        const tile = this.style.terrainSourceCache.getTileByID(id.scaledTo(z).key);
+        return this.style.terrainSourceCache.getTileByID(id.scaledTo(z).key);
+    }
+
+    // start drawing into the framebuffer, which is drawn on terrain-mesh
+    prepareFramebuffer(tileID: OverscaledTileID, layerType: string) {
+        const tile = this.getTerrainTile(tileID);
         if (tile) {
-            const dz = tileID.canonical.z - (z < canonical.z ? z : canonical.z);
+            const z = Math.floor(this.transform.zoom);
+            // dz is the tileSize difference of the layer-source and the 512px terrain-source
+            // so if dz > 0 the frameport's viewbuffer is located to the currect subtile
+            const dz = tileID.canonical.z - (z < tile.tileID.canonical.z ? z : tile.tileID.canonical.z);
             const x = tileID.canonical.x - (tile.tileID.canonical.x << dz);
             const y = tileID.canonical.y - (tile.tileID.canonical.y << dz);
             const size = tile.fbo.width / (1 << dz);
@@ -496,6 +501,12 @@ class Painter {
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
             // separate clipping masks
             let coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
+
+            // render only tiles which has loaded terrain
+            if (coords) coords = coords.filter(tileID => {
+                const tile = this.getTerrainTile(tileID);
+                return tile && tile.state == "loaded";
+            });
 
             // render background, fill, line & raster layer into texture
             if (renderToTexture[type]) {
