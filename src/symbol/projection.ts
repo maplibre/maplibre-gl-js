@@ -102,7 +102,7 @@ function getGlCoordMatrix(posMatrix: mat4,
 }
 
 function project(point: Point, matrix: mat4) {
-    const pos = [point.x, point.y, 0, 1];
+    const pos = vec4.fromValues(point.x, point.y, 0, 1);
     xyTransformMat4(pos, pos, matrix);
     const w = pos[3];
     return {
@@ -115,7 +115,7 @@ function getPerspectiveRatio(cameraToCenterDistance: number, signedDistanceFromC
     return 0.5 + 0.5 * (cameraToCenterDistance / signedDistanceFromCamera);
 }
 
-function isVisible(anchorPos: [number, number, number, number],
+function isVisible(anchorPos: vec4,
                    clippingBuffer: [number, number]) {
     const x = anchorPos[0] / anchorPos[3];
     const y = anchorPos[1] / anchorPos[3];
@@ -143,7 +143,7 @@ function updateLineLabels(bucket: SymbolBucket,
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
     const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, painter.transform.zoom);
 
-    const clippingBuffer = [256 / painter.width * 2 + 1, 256 / painter.height * 2 + 1];
+    const clippingBuffer: [number, number] = [256 / painter.width * 2 + 1, 256 / painter.height * 2 + 1];
 
     const dynamicLayoutVertexArray = isText ?
         bucket.text.dynamicLayoutVertexArray :
@@ -158,7 +158,7 @@ function updateLineLabels(bucket: SymbolBucket,
     let useVertical = false;
 
     for (let s = 0; s < placedSymbols.length; s++) {
-        const symbol: any = placedSymbols.get(s);
+        const symbol = placedSymbols.get(s);
 
         // Don't do calculations for vertical glyphs unless the previous symbol was horizontal
         // and we determined that vertical glyphs were necessary.
@@ -170,7 +170,7 @@ function updateLineLabels(bucket: SymbolBucket,
         // Awkward... but we're counting on the paired "vertical" symbol coming immediately after its horizontal counterpart
         useVertical = false;
 
-        const anchorPos = [symbol.anchorX, symbol.anchorY, 0, 1];
+        const anchorPos = vec4.fromValues(symbol.anchorX, symbol.anchorY, 0, 1);
         vec4.transformMat4(anchorPos, anchorPos, posMatrix);
 
         // Don't bother calculating the correct point for invisible labels.

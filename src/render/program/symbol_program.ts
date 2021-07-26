@@ -5,6 +5,7 @@ import browser from '../../util/browser';
 import type Context from '../../gl/context';
 import type Painter from '../painter';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
+import {mat4} from 'gl-matrix';
 
 export type SymbolIconUniformsType = {
   'u_is_size_zoom_constant': Uniform1i,
@@ -145,9 +146,9 @@ const symbolIconUniformValues = (
   rotateInShader: boolean,
   pitchWithMap: boolean,
   painter: Painter,
-  matrix: Float32Array,
-  labelPlaneMatrix: Float32Array,
-  glCoordMatrix: Float32Array,
+  matrix: mat4,
+  labelPlaneMatrix: mat4,
+  glCoordMatrix: mat4,
   isText: boolean,
   texSize: [number, number]
 ): UniformValues<SymbolIconUniformsType> => {
@@ -182,9 +183,9 @@ const symbolSDFUniformValues = (
   rotateInShader: boolean,
   pitchWithMap: boolean,
   painter: Painter,
-  matrix: Float32Array,
-  labelPlaneMatrix: Float32Array,
-  glCoordMatrix: Float32Array,
+  matrix: mat4,
+  labelPlaneMatrix: mat4,
+  glCoordMatrix: mat4,
   isText: boolean,
   texSize: [number, number],
   isHalo: boolean
@@ -209,9 +210,9 @@ const symbolTextAndIconUniformValues = (
   rotateInShader: boolean,
   pitchWithMap: boolean,
   painter: Painter,
-  matrix: Float32Array,
-  labelPlaneMatrix: Float32Array,
-  glCoordMatrix: Float32Array,
+  matrix: mat4,
+  labelPlaneMatrix: mat4,
+  glCoordMatrix: mat4,
   texSizeSDF: [number, number],
   texSizeIcon: [number, number]
 ): UniformValues<SymbolIconUniformsType> => {

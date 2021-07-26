@@ -5,7 +5,7 @@ import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
 import properties, {LayoutPropsPossiblyEvaluated, PaintPropsPossiblyEvaluated} from './circle_style_layer_properties';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
-import {vec4} from 'gl-matrix';
+import {mat4, vec4} from 'gl-matrix';
 import Point from '../../symbol/point';
 import type {FeatureState} from '../../style-spec/expression';
 import type Transform from '../../geo/transform';
@@ -44,7 +44,7 @@ class CircleStyleLayer extends StyleLayer {
       zoom: number,
       transform: Transform,
       pixelsToTileUnits: number,
-      pixelPosMatrix: Float32Array
+      pixelPosMatrix: mat4
     ): boolean => {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('circle-translate'),
@@ -68,7 +68,7 @@ class CircleStyleLayer extends StyleLayer {
                 const transformedPoint = alignWithMap ? point : projectPoint(point, pixelPosMatrix);
 
                 let adjustedSize = transformedSize;
-                const projectedCenter = vec4.transformMat4([], [point.x, point.y, 0, 1], pixelPosMatrix);
+                const projectedCenter = vec4.transformMat4(vec4.create(), vec4.fromValues(point.x, point.y, 0, 1), pixelPosMatrix);
                 if (this.paint.get('circle-pitch-scale') === 'viewport' && this.paint.get('circle-pitch-alignment') === 'map') {
                     adjustedSize *= projectedCenter[3] / transform.cameraToCenterDistance;
                 } else if (this.paint.get('circle-pitch-scale') === 'map' && this.paint.get('circle-pitch-alignment') === 'viewport') {
@@ -83,12 +83,12 @@ class CircleStyleLayer extends StyleLayer {
     }
 }
 
-function projectPoint(p: Point, pixelPosMatrix: Float32Array) {
-    const point = vec4.transformMat4([], [p.x, p.y, 0, 1], pixelPosMatrix);
+function projectPoint(p: Point, pixelPosMatrix: mat4) {
+    const point = vec4.transformMat4(vec4.create(), vec4.fromValues(p.x, p.y, 0, 1), pixelPosMatrix);
     return new Point(point[0] / point[3], point[1] / point[3]);
 }
 
-function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: Float32Array) {
+function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4) {
     return queryGeometry.map((p) => {
         return projectPoint(p, pixelPosMatrix);
     });

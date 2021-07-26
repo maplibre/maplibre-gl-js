@@ -289,7 +289,7 @@ export class Placement {
                 this.transform,
                 pixelsToTiles);
 
-            labelToScreenMatrix = mat4.multiply([], this.transform.labelPlaneMatrix, glMatrix);
+            labelToScreenMatrix = mat4.multiply(mat4.create(), this.transform.labelPlaneMatrix, glMatrix);
         }
 
         // As long as this placement lives, we have to hold onto this bucket's

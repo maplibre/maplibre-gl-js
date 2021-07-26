@@ -23,10 +23,11 @@ import type Transform from '../geo/transform';
 import type {FilterSpecification, PromoteIdSpecification} from '../style-spec/types';
 
 import {FeatureIndexArray} from './array_types';
+import {mat4} from 'gl-matrix';
 
 type QueryParameters = {
   scale: number,
-  pixelPosMatrix: Float32Array,
+  pixelPosMatrix: mat4,
   transform: Transform,
   tileSize: number,
   queryGeometry: Array<Point>,
