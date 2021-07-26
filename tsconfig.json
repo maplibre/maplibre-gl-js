@@ -23,7 +23,7 @@
       "WebWorker"
     ],
     "outDir": "lib",
-    "rootDir": "src",
+    "rootDir": "",
   },
   "include": [
     "src/**/*.ts"

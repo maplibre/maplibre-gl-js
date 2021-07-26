@@ -28,6 +28,7 @@ import type {
 } from '../style-spec/expression';
 import type {FeatureStates} from '../source/source_state';
 import type {FormattedSection} from '../style-spec/expression/types/formatted';
+import {StylePropertyTypeType} from '../style-spec/style-spec';
 
 export type BinderUniform = {
   name: string,
@@ -106,10 +107,10 @@ interface UniformBinder {
 
 class ConstantBinder implements UniformBinder {
     value: unknown;
-    type: string;
+    type: StylePropertyTypeType;
     uniformNames: Array<string>;
 
-    constructor(value: unknown, names: Array<string>, type: string) {
+    constructor(value: unknown, names: Array<string>, type: StylePropertyTypeType) {
         this.value = value;
         this.uniformNames = names.map(name => `u_${name}`);
         this.type = type;
@@ -124,7 +125,7 @@ class ConstantBinder implements UniformBinder {
     }
 
     getBinding(context: Context, location: WebGLUniformLocation, _: string): Partial<Uniform<any>> {
-        return (this.type === 'color') ?
+        return (this.type === StylePropertyTypeType.color) ?
             new UniformColor(context, location) :
             new Uniform1f(context, location);
     }
@@ -170,14 +171,14 @@ class CrossFadedConstantBinder implements UniformBinder {
 
 class SourceExpressionBinder implements AttributeBinder {
     expression: SourceExpression;
-    type: string;
+    type: StylePropertyTypeType;
     maxValue: number;
 
     paintVertexArray: StructArray;
     paintVertexAttributes: Array<StructArrayMember>;
     paintVertexBuffer: VertexBuffer | undefined | null;
 
-    constructor(expression: SourceExpression, names: Array<string>, type: string, PaintVertexArray: {
+    constructor(expression: SourceExpression, names: Array<string>, type: StylePropertyTypeType, PaintVertexArray: {
       new (...args: any): StructArray
     }) {
         this.expression = expression;
@@ -186,7 +187,7 @@ class SourceExpressionBinder implements AttributeBinder {
         this.paintVertexAttributes = names.map((name) => ({
             name: `a_${name}`,
             type: 'Float32',
-            components: type === 'color' ? 2 : 1,
+            components: type === StylePropertyTypeType.color ? 2 : 1,
             offset: 0
         }));
         this.paintVertexArray = new PaintVertexArray();
@@ -327,7 +328,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
 
 class CrossFadedCompositeBinder implements AttributeBinder {
     expression: CompositeExpression;
-    type: string;
+    type: StylePropertyTypeType;
     useIntegerZoom: boolean;
     zoom: number;
     layerId: string;
@@ -338,7 +339,7 @@ class CrossFadedCompositeBinder implements AttributeBinder {
     zoomOutPaintVertexBuffer: VertexBuffer | undefined | null;
     paintVertexAttributes: Array<StructArrayMember>;
 
-    constructor(expression: CompositeExpression, type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
+    constructor(expression: CompositeExpression, type: StylePropertyTypeType, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
       new (...args: any): StructArray
     }, layerId: string) {
         this.expression = expression;

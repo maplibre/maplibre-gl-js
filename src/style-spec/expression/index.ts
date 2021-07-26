@@ -18,7 +18,7 @@ import {supportsPropertyExpression, supportsZoomExpression, supportsInterpolatio
 import type {Type, EvaluationKind} from './types';
 import type {Value} from './values';
 import type {Expression} from './expression';
-import type {StylePropertySpecification} from '../style-spec';
+import {StylePropertySpecification, StylePropertyTypeType} from '../style-spec';
 import type {Result} from '../util/result';
 import type {InterpolationType} from './definitions/interpolate';
 import type {PropertyValueSpecification} from '../types';
@@ -451,7 +451,7 @@ function getExpectedType(spec: StylePropertySpecification): Type {
         resolvedImage: ResolvedImageType
     };
 
-    if (spec.type === 'array') {
+    if (spec.type === StylePropertyTypeType.numberArray || spec.type === StylePropertyTypeType.stringArray) {
         return array(types[spec.value] || ValueType, spec.length);
     }
 

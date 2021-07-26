@@ -26,7 +26,8 @@ export default class WorkerPool {
             // client code has had a chance to set it.
             this.workers = [];
             while (this.workers.length < WorkerPool.workerCount) {
-                this.workers.push(new WebWorker());
+                // eslint-disable-next-line new-cap
+                this.workers.push(WebWorker());
             }
         }
 

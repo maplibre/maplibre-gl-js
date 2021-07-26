@@ -33,7 +33,7 @@ class LightPositionProperty implements Property<[number, number, number], LightP
     specification: StylePropertySpecification;
 
     constructor() {
-        this.specification = styleSpec.light.position;
+        this.specification = styleSpec.light.position as any;
     }
 
     possiblyEvaluate(
@@ -60,10 +60,10 @@ type Props = {
 };
 
 const properties: Properties<Props> = new Properties({
-    "anchor": new DataConstantProperty(styleSpec.light.anchor),
+    "anchor": new DataConstantProperty(styleSpec.light.anchor as any),
     "position": new LightPositionProperty(),
-    "color": new DataConstantProperty(styleSpec.light.color),
-    "intensity": new DataConstantProperty(styleSpec.light.intensity),
+    "color": new DataConstantProperty(styleSpec.light.color as any),
+    "intensity": new DataConstantProperty(styleSpec.light.intensity as any),
 });
 
 const TRANSITION_SUFFIX = '-transition';
@@ -74,7 +74,7 @@ const TRANSITION_SUFFIX = '-transition';
 class Light extends Evented {
     _transitionable: Transitionable<Props>;
     _transitioning: Transitioning<Props>;
-    properties: PossiblyEvaluated<Props>;
+    properties: any; // PossiblyEvaluated<Props>;
 
     constructor(lightOptions?: LightSpecification) {
         super();

@@ -9,7 +9,7 @@ import {CanonicalTileID} from '../source/tile_id';
 import {StylePropertySpecification} from '../style-spec/style-spec';
 import {
     TransitionSpecification,
-    PropertyValueSpecification
+    // PropertyValueSpecification
 } from '../style-spec/types';
 
 import {
@@ -95,10 +95,11 @@ export interface Property<T, R> {
  */
 export class PropertyValue<T, R> {
     property: Property<T, R>;
-    value: PropertyValueSpecification<T> | void;
+    value: any; // PropertyValueSpecification<T> | void;
     expression: StylePropertyExpression;
 
-    constructor(property: Property<T, R>, value: PropertyValueSpecification<T> | void) {
+    // constructor(property: Property<T, R>, value: PropertyValueSpecification<T> | void) {
+    constructor(property, value) {
         this.property = property;
         this.value = value;
         this.expression = normalizePropertyExpression(value === undefined ? property.specification.default : value, property.specification);
@@ -165,18 +166,20 @@ class TransitionablePropertyValue<T, R> {
  */
 export class Transitionable<Props> {
     _properties: Properties<Props>;
-    _values: TransitionablePropertyValues<Props>;
+    _values: any // TransitionablePropertyValues<Props>;
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
         this._values = (Object.create(properties.defaultTransitionablePropertyValues) as any);
     }
 
-    getValue<S extends keyof Props, T>(name: S): PropertyValueSpecification<T> | void {
+    // getValue<S extends keyof Props, T>(name: S): PropertyValueSpecification<T> | void {
+    getValue(name) {
         return clone(this._values[name].value.value);
     }
 
-    setValue<S extends keyof Props, T>(name: S, value: PropertyValueSpecification<T> | void) {
+    // setValue<S extends keyof Props, T>(name: S, value: PropertyValueSpecification<T> | void) {
+    setValue(name, value) {
         if (!Object.prototype.hasOwnProperty.call(this._values, name)) {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property);
         }
@@ -185,11 +188,13 @@ export class Transitionable<Props> {
         this._values[name].value = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value));
     }
 
-    getTransition<S extends keyof Props>(name: S): TransitionSpecification | void {
+    // getTransition<S extends keyof Props>(name: S): TransitionSpecification | void {
+    getTransition(name) {
         return clone(this._values[name].transition);
     }
 
-    setTransition<S extends keyof Props>(name: S, value: TransitionSpecification | void) {
+    // setTransition<S extends keyof Props>(name: S, value: TransitionSpecification | void) {
+    setTransition(name, value) {
         if (!Object.prototype.hasOwnProperty.call(this._values, name)) {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property);
         }
@@ -302,7 +307,7 @@ class TransitioningPropertyValue<T, R> {
  */
 export class Transitioning<Props> {
     _properties: Properties<Props>;
-    _values: TransitioningPropertyValues<Props>;
+    _values: any; // TransitioningPropertyValues<Props>;
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
@@ -313,7 +318,8 @@ export class Transitioning<Props> {
       parameters: EvaluationParameters,
       canonical?: CanonicalTileID,
       availableImages?: Array<string>
-    ): PossiblyEvaluated<Props> {
+    ) {
+    // ): PossiblyEvaluated<Props> {
         const result = new PossiblyEvaluated(this._properties); // eslint-disable-line no-use-before-define
         for (const property of Object.keys(this._values)) {
             result._values[property] = this._values[property].possiblyEvaluate(parameters, canonical, availableImages);
@@ -346,14 +352,15 @@ export class Transitioning<Props> {
  */
 export class Layout<Props> {
     _properties: Properties<Props>;
-    _values: PropertyValues<Props>;
+    _values: any; // PropertyValues<Props>;
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
         this._values = (Object.create(properties.defaultPropertyValues) as any);
     }
 
-    getValue<S extends (keyof Props)>(name: S) {
+    // getValue<S extends (keyof Props)>(name: S) {
+    getValue(name) {
         return clone(this._values[name].value);
     }
 
@@ -364,7 +371,8 @@ export class Layout<Props> {
     serialize() {
         const result: any = {};
         for (const property of Object.keys(this._values)) {
-            const value = this.getValue(property as keyof PropertyValues<Props>);
+            const value = this.getValue(property);
+            // const value = this.getValue(property as keyof PropertyValues<Props>);
             if (value !== undefined) {
                 result[property] = value;
             }
@@ -376,7 +384,8 @@ export class Layout<Props> {
       parameters: EvaluationParameters,
       canonical?: CanonicalTileID,
       availableImages?: Array<string>
-    ): PossiblyEvaluated<Props> {
+    // ): PossiblyEvaluated<Props> {
+    ) {
         const result = new PossiblyEvaluated(this._properties); // eslint-disable-line no-use-before-define
         for (const property of Object.keys(this._values)) {
             result._values[property] = this._values[property].possiblyEvaluate(parameters, canonical, availableImages);
@@ -725,12 +734,15 @@ export class ColorRampProperty implements Property<Color, boolean> {
  *
  * @private
  */
+
+// props is an array of keys and string values
+
 export class Properties<Props> {
     properties: Props;
-    defaultPropertyValues: PropertyValues<Props>;
-    defaultTransitionablePropertyValues: TransitionablePropertyValues<Props>;
-    defaultTransitioningPropertyValues: TransitioningPropertyValues<Props>;
-    defaultPossiblyEvaluatedValues: PossiblyEvaluatedPropertyValues<Props>;
+    defaultPropertyValues: any; // PropertyValues<Props>;
+    defaultTransitionablePropertyValues: any; // TransitionablePropertyValues<Props>;
+    defaultTransitioningPropertyValues: any; // TransitioningPropertyValues<Props>;
+    defaultPossiblyEvaluatedValues: any; // PossiblyEvaluatedPropertyValues<Props>;
     overridableProperties: Array<string>;
 
     constructor(properties: Props) {
@@ -739,22 +751,39 @@ export class Properties<Props> {
         this.defaultTransitionablePropertyValues = ({} as any);
         this.defaultTransitioningPropertyValues = ({} as any);
         this.defaultPossiblyEvaluatedValues = ({} as any);
-        this.overridableProperties = ([] as any);
+        this.overridableProperties = [];
 
-        for (const property in properties) {
-            const prop = properties[property];
-            if (prop.specification.overridable) {
-                this.overridableProperties.push(property);
+        Object.entries(properties).forEach(([k, v]) => {
+            if (v.specification.overridable) {
+                this.overridableProperties.push(k);
             }
-            const defaultPropertyValue = this.defaultPropertyValues[property] =
-                new PropertyValue(prop, undefined);
-            const defaultTransitionablePropertyValue = this.defaultTransitionablePropertyValues[property] =
-                new TransitionablePropertyValue(prop);
-            this.defaultTransitioningPropertyValues[property] =
+
+            const defaultPropertyValue = this.defaultPropertyValues[k] =
+                new PropertyValue(v, undefined);
+            const defaultTransitionablePropertyValue = this.defaultTransitionablePropertyValues[k] =
+                new TransitionablePropertyValue(v);
+            this.defaultTransitioningPropertyValues[k] =
                 defaultTransitionablePropertyValue.untransitioned();
-            this.defaultPossiblyEvaluatedValues[property] =
+            this.defaultPossiblyEvaluatedValues[k] =
                 defaultPropertyValue.possiblyEvaluate((({} as any)));
-        }
+        });
+
+        // why don't we just use Object.values?
+        // for (const property in properties) {
+        //     const prop = properties[property];
+        //     // if value has specification.overridable === true
+        //     if (prop.specification.overridable) {
+        //         this.overridableProperties.push(property);
+        //     }
+        //     const defaultPropertyValue = this.defaultPropertyValues[property] =
+        //         new PropertyValue(prop, undefined);
+        //     const defaultTransitionablePropertyValue = this.defaultTransitionablePropertyValues[property] =
+        //         new TransitionablePropertyValue(prop as any);
+        //     this.defaultTransitioningPropertyValues[property] =
+        //         defaultTransitionablePropertyValue.untransitioned();
+        //     this.defaultPossiblyEvaluatedValues[property] =
+        //         defaultPropertyValue.possiblyEvaluate((({} as any)));
+        // }
     }
 }
 

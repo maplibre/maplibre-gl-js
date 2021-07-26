@@ -6,58 +6,126 @@ type ExpressionSpecification = {
   parameters: ExpressionParameters
 };
 
+export enum StylePropertyTypeType {
+    number = "number",
+    string = "string",
+    boolean = "boolean",
+    enum = "enum",
+    color = "color",
+
+    // these are new types because they have different value type
+    stringArray = "stringArray",
+    numberArray = "numberArray",
+}
+
+// temporarily break into types to understand better what is the issue
 export type StylePropertySpecification = {
-  type: "number",
-  'property-type': ExpressionType,
-  expression?: ExpressionSpecification,
-  transition: boolean,
-  default?: number
+    type: StylePropertyTypeType.number,
+    'property-type': ExpressionType,
+    expression?: ExpressionSpecification,
+    transition: boolean,
+    default?: number
 } | {
-  type: "string",
-  'property-type': ExpressionType,
-  expression?: ExpressionSpecification,
-  transition: boolean,
-  default?: string,
-  tokens?: boolean
+    type: StylePropertyTypeType.string,
+    'property-type': ExpressionType,
+    expression?: ExpressionSpecification,
+    transition: boolean,
+    default?: string,
+    tokens?: boolean
 } | {
-  type: "boolean",
-  'property-type': ExpressionType,
-  expression?: ExpressionSpecification,
-  transition: boolean,
-  default?: boolean
+    type: StylePropertyTypeType.boolean,
+    'property-type': ExpressionType,
+    expression?: ExpressionSpecification,
+    transition: boolean,
+    default?: boolean
 } | {
-  type: "enum",
-  'property-type': ExpressionType,
-  expression?: ExpressionSpecification,
-  values: {
-    [_: string]: {}
-  },
-  transition: boolean,
-  default?: string
+    type: StylePropertyTypeType.enum,
+    'property-type': ExpressionType,
+    expression?: ExpressionSpecification,
+    values: {
+      [_: string]: {}
+    },
+    transition: boolean,
+    default?: string
 } | {
-  type: "color",
-  'property-type': ExpressionType,
-  expression?: ExpressionSpecification,
-  transition: boolean,
-  default?: string,
-  overridable: boolean
+    type: StylePropertyTypeType.color,
+    'property-type': ExpressionType,
+    expression?: ExpressionSpecification,
+    transition: boolean,
+    default?: string,
+    overridable: boolean
 } | {
-  type: "array",
-  value: "number",
-  'property-type': ExpressionType,
-  expression?: ExpressionSpecification,
-  length?: number,
-  transition: boolean,
-  default?: Array<number>
+    // use different types to help ts with discriminated union
+    type: StylePropertyTypeType.numberArray,
+    value: "number",
+    'property-type': ExpressionType,
+    expression?: ExpressionSpecification,
+    length?: number,
+    transition: boolean,
+    default?: Array<number>
 } | {
-  type: "array",
-  value: "string",
-  'property-type': ExpressionType,
-  expression?: ExpressionSpecification,
-  length?: number,
-  transition: boolean,
-  default?: Array<string>
+    // use different types to help ts with discriminated union
+    type: StylePropertyTypeType.stringArray,
+    value: "string",
+    'property-type': ExpressionType,
+    expression?: ExpressionSpecification,
+    length?: number,
+    transition: boolean,
+    default?: Array<string>
 };
+
+// export type StylePropertySpecification = {
+//   type: "number",
+//   'property-type': ExpressionType,
+//   expression?: ExpressionSpecification,
+//   transition: boolean,
+//   default?: number
+// } | {
+//   type: "string",
+//   'property-type': ExpressionType,
+//   expression?: ExpressionSpecification,
+//   transition: boolean,
+//   default?: string,
+//   tokens?: boolean
+// } | {
+//   type: "boolean",
+//   'property-type': ExpressionType,
+//   expression?: ExpressionSpecification,
+//   transition: boolean,
+//   default?: boolean
+// } | {
+//   type: "enum",
+//   'property-type': ExpressionType,
+//   expression?: ExpressionSpecification,
+//   values: {
+//     [_: string]: {}
+//   },
+//   transition: boolean,
+//   default?: string
+// } | {
+//   type: "color",
+//   'property-type': ExpressionType,
+//   expression?: ExpressionSpecification,
+//   transition: boolean,
+//   default?: string,
+//   overridable: boolean
+// } | {
+//   type: "array",
+//   value: "number",
+//   'property-type': ExpressionType,
+//   expression?: ExpressionSpecification,
+//   length?: number,
+//   transition: boolean,
+//   default?: Array<number>
+// } | {
+//   type: "array",
+//   value: "string",
+//   'property-type': ExpressionType,
+//   expression?: ExpressionSpecification,
+//   length?: number,
+//   transition: boolean,
+//   default?: Array<string>
+// };
 
 import v8 from './reference/v8.json';
 import latest from './reference/latest';
