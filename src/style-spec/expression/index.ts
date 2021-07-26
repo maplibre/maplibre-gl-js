@@ -296,7 +296,7 @@ export type CompositeExpression = {
 export type StylePropertyExpression = ConstantExpression | SourceExpression | CameraExpression | CompositeExpression;
 
 export function createPropertyExpression(expressionInput: unknown, propertySpec: StylePropertySpecification): Result<StylePropertyExpression, Array<ParsingError>> {
-    let expression = createExpression(expressionInput, propertySpec);
+    const expression = createExpression(expressionInput, propertySpec);
     if (expression.result === 'error') {
         return expression;
     }
@@ -355,14 +355,14 @@ export class StylePropertyFunction<T> {
         extend(this, createFunction(this._parameters, this._specification));
     }
 
-    static deserialize(serialized: {
+    static deserialize<T>(serialized: {
       _parameters: PropertyValueSpecification<T>,
       _specification: StylePropertySpecification
     }) {
         return new StylePropertyFunction(serialized._parameters, serialized._specification) as StylePropertyFunction<T>;
     }
 
-    static serialize(input: StylePropertyFunction<T>) {
+    static serialize<T>(input: StylePropertyFunction<T>) {
         return {
             _parameters: input._parameters,
             _specification: input._specification

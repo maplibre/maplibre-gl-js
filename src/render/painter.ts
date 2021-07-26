@@ -12,7 +12,7 @@ import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import posAttributes from '../data/pos_attributes';
 import ProgramConfiguration from '../data/program_configuration';
 import CrossTileSymbolIndex from '../symbol/cross_tile_symbol_index';
-import * as shaders from '../shaders';
+import * as shaders from '../shaders/shaders';
 import Program from './program';
 import {programUniforms} from './program/program_uniforms';
 import Context from '../gl/context';
@@ -62,6 +62,7 @@ import type VertexBuffer from '../gl/vertex_buffer';
 import type IndexBuffer from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type ResolvedImage from '../style-spec/expression/types/resolved_image';
+import type {RGBAImage} from '../util/image';
 
 export type RenderPass = "offscreen" | "opaque" | "translucent";
 
@@ -217,7 +218,7 @@ class Painter {
             width: 1,
             height: 1,
             data: new Uint8Array([0, 0, 0, 0])
-        }, context.gl.RGBA);
+        } as RGBAImage, context.gl.RGBA);
 
         const gl = this.context.gl;
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);

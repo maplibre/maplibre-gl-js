@@ -19,7 +19,7 @@ function convertFunction(parameters: any, propertySpec: StylePropertySpecificati
     const zoomDependent = zoomAndFeatureDependent || !featureDependent;
 
     stops = stops.map((stop) => {
-        if (!featureDependent && propertySpec.tokens && typeof stop[1] === 'string') {
+        if (!featureDependent && (propertySpec as any).tokens && typeof stop[1] === 'string') {
             return [stop[0], convertTokenString(stop[1])];
         }
         return [stop[0], convertLiteral(stop[1])];

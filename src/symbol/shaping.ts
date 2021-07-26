@@ -20,7 +20,7 @@ enum WritingMode {
     horizontal = 1,
     vertical = 2,
     horizontalOnly = 3
-};
+}
 
 export class WriteModeMap {
     "horizontal": WritingMode.horizontal;

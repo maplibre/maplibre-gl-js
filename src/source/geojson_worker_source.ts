@@ -290,7 +290,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
     removeSource(params: {
       source: string
-    }, callback: Callback<unknown>) {
+    }, callback: WorkerTileCallback) {
         if (this._pendingCallback) {
             // Don't leak callbacks
             this._pendingCallback(null, {abandoned: true});

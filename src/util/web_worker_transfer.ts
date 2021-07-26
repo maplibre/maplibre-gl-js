@@ -203,7 +203,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
             }
         } else {
             // make sure statically serialized object survives transfer of $name property
-            assert(!transferables || properties !== transferables[transferables.length - 1]);
+            assert(!transferables || properties as any !== transferables[transferables.length - 1]);
         }
 
         if (properties.$name) {

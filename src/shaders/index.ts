@@ -6,15 +6,18 @@
 
 /* eslint-disable import/unambiguous, import/no-commonjs, no-global-assign */
 
-const fs = require('fs');
+// HM TODO: this doesn't work, it needs to be added back when starting to understand how the tests work...
+// Also we want to remove esm too...
+//const fs = require('fs');
 
 // enable ES Modules in Node
-require = require("esm")(module);
+//require = require("esm")(module);
 
 // enable requiring GLSL in Node
-require.extensions['.glsl'] = function (module, filename) {
-    const content = fs.readFileSync(filename, 'utf8');
-    module._compile(`module.exports = \`${content}\``, filename);
-};
+//require.extensions['.glsl'] = function (module, filename) {
+//    const content = fs.readFileSync(filename, 'utf8');
+//    module._compile(`module.exports = \`${content}\``, filename);
+//};
 
-module.exports = require("./shaders.js");
+//module.exports = require("./shaders.js");
+export {};

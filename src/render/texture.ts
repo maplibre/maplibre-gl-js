@@ -14,7 +14,6 @@ type EmptyImage = {
 type DataTextureImage = RGBAImage | AlphaImage | EmptyImage;
 export type TextureImage = HTMLImageElement | HTMLCanvasElement | HTMLVideoElement | ImageData | ImageBitmap | DataTextureImage;
 
-
 class Texture {
     context: Context;
     size: [number, number];
