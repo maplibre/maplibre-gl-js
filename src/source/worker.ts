@@ -8,7 +8,7 @@ import assert from 'assert';
 import {plugin as globalRTLTextPlugin} from './rtl_text_plugin';
 import {enforceCacheSizeLimit} from '../util/tile_request_cache';
 
-import type {
+import {
     WorkerSource,
     WorkerTileParameters,
     WorkerDEMTileParameters,
@@ -17,9 +17,9 @@ import type {
     TileParameters
 } from '../source/worker_source';
 
-import type {WorkerGlobalScopeInterface} from '../util/web_worker';
-import type {Callback} from '../types/callback';
-import type {LayerSpecification} from '../style-spec/types';
+import {WorkerGlobalScopeInterface} from '../util/web_worker';
+import {Callback} from '../types/callback';
+import {LayerSpecification} from '../style-spec/types';
 import type {PluginState} from './rtl_text_plugin';
 
 /**
