@@ -295,8 +295,8 @@ export type CompositeExpression = {
 
 export type StylePropertyExpression = ConstantExpression | SourceExpression | CameraExpression | CompositeExpression;
 
-export function createPropertyExpression(expression: unknown, propertySpec: StylePropertySpecification): Result<StylePropertyExpression, Array<ParsingError>> {
-    expression = createExpression(expression, propertySpec);
+export function createPropertyExpression(expressionInput: unknown, propertySpec: StylePropertySpecification): Result<StylePropertyExpression, Array<ParsingError>> {
+    let expression = createExpression(expressionInput, propertySpec);
     if (expression.result === 'error') {
         return expression;
     }

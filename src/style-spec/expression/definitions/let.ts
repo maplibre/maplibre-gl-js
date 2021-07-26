@@ -58,7 +58,7 @@ class Let implements Expression {
     }
 
     serialize() {
-        const serialized = ["let"];
+        const serialized = ["let" as unknown];
         for (const [name, expr] of this.bindings) {
             serialized.push(name, expr.serialize());
         }
