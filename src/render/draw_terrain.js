@@ -15,6 +15,8 @@ import browser from '../util/browser';
 import {Pos3DArray, TriangleIndexArray} from '../data/array_types';
 import EXTENT from '../data/extent';
 
+const FBOs = {};
+
 function drawTerrainCoords(painter, sourceCache: TerrainSourceCache) {
    const context = painter.context;
    const gl = context.gl;
@@ -57,16 +59,13 @@ function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache) {
 
 function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, depth: number=1) {
    const context = painter.context;
+   let fbo = 0;
    for (const tileID of sourceCache.getRenderableTileIds(painter.transform)) {
       const tile = sourceCache.getTileByID(tileID.key);
       const tileSize = tile.tileSize * 2;
       if (!tile.textures[painter.batch]) {
          tile.textures[painter.batch] = new Texture(context, {width: tileSize, height: tileSize, data: null}, context.gl.RGBA);
          tile.textures[painter.batch].bind(context.gl.LINEAR, context.gl.CLAMP_TO_EDGE);
-      }
-      if (!tile.fbo) {
-         tile.fbo = context.createFramebuffer(tileSize, tileSize, true);
-         tile.fbo.depthAttachment.set(context.createRenderbuffer(context.gl.DEPTH_COMPONENT16, tileSize, tileSize));
       }
       if (!tile.segments) {
          const vertexArray = new Pos3DArray(), indexArray = new TriangleIndexArray();
@@ -86,7 +85,13 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, depth
          tile.coordsTexture = new Texture(context, tile.coords, context.gl.RGBA, {premultiply: false});
          tile.coordsTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
       }
-      // set current batch-texture to framebuffer
+      // reuse a framebuffer from the framebuffer-stack and attach active batch-texture
+      if (!FBOs[tileSize]) FBOs[tileSize] = {};
+      if (!FBOs[tileSize][fbo]) {
+         FBOs[tileSize][fbo] = context.createFramebuffer(tileSize, tileSize, true);
+         FBOs[tileSize][fbo].depthAttachment.set(context.createRenderbuffer(context.gl.DEPTH_COMPONENT16, tileSize, tileSize));
+      }
+      tile.fbo = FBOs[tileSize][fbo++];
       tile.fbo.colorAttachment.set(tile.textures[painter.batch].texture);
       context.bindFramebuffer.set(null);
    }
