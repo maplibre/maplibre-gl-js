@@ -13,12 +13,13 @@ type SerializedObject = {
   [_: string]: Serialized
 }; // eslint-disable-line
 
-export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ImageData | Array<Serialized> | SerializedObject;
+export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | Array<Serialized> | SerializedObject;
 
 type Registry = {
   [_: string]: {
     klass: {
-      new (...args: any): any
+      new (...args: any): any,
+      deserialize?: (input: Serialized) => unknown
     },
     omit: ReadonlyArray<string>,
     shallow: ReadonlyArray<string>
@@ -55,8 +56,8 @@ export function register<T extends any>(
     });
     registry[name] = {
         klass,
-        omit: options.omit || [],
-        shallow: options.shallow || []
+        omit: options.omit as ReadonlyArray<string> || [],
+        shallow: options.shallow as ReadonlyArray<string> || []
     };
 }
 
@@ -136,14 +137,14 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         if (transferables) {
             transferables.push(((input as any as ArrayBuffer)));
         }
-        return input as any as ArrayBuffer;
+        return input as Serialized;
     }
 
     if (isImageBitmap(input)) {
         if (transferables) {
             transferables.push(((input as any as ImageBitmap)));
         }
-        return input as ImageBitmap;
+        return input as Serialized;
     }
 
     if (ArrayBuffer.isView(input)) {
@@ -151,7 +152,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         if (transferables) {
             transferables.push(view.buffer);
         }
-        return view;
+        return view as Serialized;
     }
 
     if (input instanceof ImageData) {
@@ -249,7 +250,7 @@ export function deserialize(input: Serialized): unknown {
         }
 
         if (klass.deserialize) {
-            return ((klass.deserialize as typeof deserialize))(input);
+            return klass.deserialize(input);
         }
 
         const result = Object.create(klass.prototype);

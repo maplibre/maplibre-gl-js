@@ -363,7 +363,7 @@ export function getAnchorJustification(anchor: TextAnchor): TextJustify {
 function addFeature(bucket: SymbolBucket,
                     feature: SymbolFeature,
                     shapedTextOrientations: any,
-                    shapedIcon: PositionedIcon | void,
+                    shapedIcon: PositionedIcon,
                     imageMap: {
                       [_: string]: StyleImage
                     },
