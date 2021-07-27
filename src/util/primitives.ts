@@ -2,51 +2,45 @@ import {mat4, vec3, vec4} from 'gl-matrix';
 import assert from 'assert';
 
 class Frustum {
-    points: Array<Array<number>>;
-    planes: Array<Array<number>>;
+    constructor(public points: vec4[], public planes: vec4[]) { }
 
-    constructor(points_: Array<Array<number>>, planes_: Array<Array<number>>) {
-        this.points = points_;
-        this.planes = planes_;
-    }
-
-    static fromInvProjectionMatrix(invProj: mat4, worldSize: number, zoom: number): Frustum {
+    public static fromInvProjectionMatrix(invProj: mat4, worldSize: number, zoom: number): Frustum {
         const clipSpaceCorners = [
-            [-1, 1, -1, 1],
-            [ 1, 1, -1, 1],
-            [ 1, -1, -1, 1],
-            [-1, -1, -1, 1],
-            [-1, 1, 1, 1],
-            [ 1, 1, 1, 1],
-            [ 1, -1, 1, 1],
-            [-1, -1, 1, 1]
+            vec4.fromValues(-1,  1, -1, 1),
+            vec4.fromValues( 1,  1, -1, 1),
+            vec4.fromValues( 1, -1, -1, 1),
+            vec4.fromValues(-1, -1, -1, 1),
+            vec4.fromValues(-1,  1,  1, 1),
+            vec4.fromValues( 1,  1,  1, 1),
+            vec4.fromValues( 1, -1,  1, 1),
+            vec4.fromValues(-1, -1,  1, 1)
         ];
 
         const scale = Math.pow(2, zoom);
 
         // Transform frustum corner points from clip space to tile space
         const frustumCoords = clipSpaceCorners
-            .map(v => vec4.transformMat4(vec4.create(), v as vec4, invProj))
+            .map(v => vec4.transformMat4(vec4.create(), v, invProj))
             .map(v => vec4.scale(vec4.create(), v, 1.0 / v[3] / worldSize * scale));
 
         const frustumPlanePointIndices = [
-            [0, 1, 2],  // near
-            [6, 5, 4],  // far
-            [0, 3, 7],  // left
-            [2, 1, 5],  // right
-            [3, 2, 6],  // bottom
-            [0, 4, 5]   // top
+            vec3.fromValues(0, 1, 2),  // near
+            vec3.fromValues(6, 5, 4),  // far
+            vec3.fromValues(0, 3, 7),  // left
+            vec3.fromValues(2, 1, 5),  // right
+            vec3.fromValues(3, 2, 6),  // bottom
+            vec3.fromValues(0, 4, 5)   // top
         ];
 
-        const frustumPlanes = frustumPlanePointIndices.map((p: Array<number>) => {
+        const frustumPlanes = frustumPlanePointIndices.map((p: vec3) => {
             const a = vec3.sub(vec3.create(), frustumCoords[p[0]] as vec3, frustumCoords[p[1]] as vec3);
             const b = vec3.sub(vec3.create(), frustumCoords[p[2]] as vec3, frustumCoords[p[1]] as vec3);
             const n = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), a, b));
             const d = -vec3.dot(n, frustumCoords[p[1]] as vec3);
-            return (n as number[]).concat(d);
+            return vec4.fromValues(n[0], n[1], n[2], d);
         });
 
-        return new Frustum(frustumCoords as number[][], frustumPlanes);
+        return new Frustum(frustumCoords, frustumPlanes);
     }
 }
 
@@ -93,10 +87,10 @@ class Aabb {
         assert(this.min[2] === 0 && this.max[2] === 0);
 
         const aabbPoints = [
-            [this.min[0], this.min[1], 0.0, 1],
-            [this.max[0], this.min[1], 0.0, 1],
-            [this.max[0], this.max[1], 0.0, 1],
-            [this.min[0], this.max[1], 0.0, 1]
+            vec4.fromValues(this.min[0], this.min[1], 0.0, 1),
+            vec4.fromValues(this.max[0], this.min[1], 0.0, 1),
+            vec4.fromValues(this.max[0], this.max[1], 0.0, 1),
+            vec4.fromValues(this.min[0], this.max[1], 0.0, 1)
         ];
 
         let fullyInside = true;
@@ -106,7 +100,9 @@ class Aabb {
             let pointsInside = 0;
 
             for (let i = 0; i < aabbPoints.length; i++) {
-                pointsInside += Number(vec4.dot(plane as vec4, aabbPoints[i] as vec4) >= 0);
+                if (vec4.dot(plane, aabbPoints[i]) >= 0) {
+                    pointsInside++;
+                }
             }
 
             if (pointsInside === 0)
