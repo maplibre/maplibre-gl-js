@@ -165,7 +165,7 @@ class TransitionablePropertyValue<T, R> {
  */
 export class Transitionable<Props> {
     _properties: Properties<Props>;
-    _values: TransitionablePropertyValues<Props>;
+    _values: { [K in keyof Props]: TransitionablePropertyValue<any, unknown>};
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
@@ -199,12 +199,12 @@ export class Transitionable<Props> {
     serialize() {
         const result: any = {};
         for (const property of Object.keys(this._values)) {
-            const value = this.getValue(property);
+            const value = this.getValue(property as keyof Props);
             if (value !== undefined) {
                 result[property] = value;
             }
 
-            const transition = this.getTransition(property);
+            const transition = this.getTransition(property as keyof Props);
             if (transition !== undefined) {
                 result[`${property}-transition`] = transition;
             }
@@ -302,7 +302,7 @@ class TransitioningPropertyValue<T, R> {
  */
 export class Transitioning<Props> {
     _properties: Properties<Props>;
-    _values: TransitioningPropertyValues<Props>;
+    _values: { [K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>};
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
@@ -313,7 +313,7 @@ export class Transitioning<Props> {
       parameters: EvaluationParameters,
       canonical?: CanonicalTileID,
       availableImages?: Array<string>
-    ): PossiblyEvaluated<Props> {
+    ): PossiblyEvaluated<Props, any> {
         const result = new PossiblyEvaluated(this._properties); // eslint-disable-line no-use-before-define
         for (const property of Object.keys(this._values)) {
             result._values[property] = this._values[property].possiblyEvaluate(parameters, canonical, availableImages);
@@ -346,14 +346,14 @@ export class Transitioning<Props> {
  */
 export class Layout<Props> {
     _properties: Properties<Props>;
-    _values: PropertyValues<Props>;
+    _values: { [K in keyof Props]: PropertyValue<any, PossiblyEvaluatedPropertyValue<any>>};
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
         this._values = (Object.create(properties.defaultPropertyValues) as any);
     }
 
-    getValue<S extends (keyof Props)>(name: S) {
+    getValue<S extends keyof Props>(name: S) {
         return clone(this._values[name].value);
     }
 
@@ -364,7 +364,7 @@ export class Layout<Props> {
     serialize() {
         const result: any = {};
         for (const property of Object.keys(this._values)) {
-            const value = this.getValue(property as keyof PropertyValues<Props>);
+            const value = this.getValue(property as keyof Props);
             if (value !== undefined) {
                 result[property] = value;
             }
@@ -376,7 +376,7 @@ export class Layout<Props> {
       parameters: EvaluationParameters,
       canonical?: CanonicalTileID,
       availableImages?: Array<string>
-    ): PossiblyEvaluated<Props> {
+    ): PossiblyEvaluated<Props, any> {
         const result = new PossiblyEvaluated(this._properties); // eslint-disable-line no-use-before-define
         for (const property of Object.keys(this._values)) {
             result._values[property] = this._values[property].possiblyEvaluate(parameters, canonical, availableImages);
@@ -727,10 +727,10 @@ export class ColorRampProperty implements Property<Color, boolean> {
  */
 export class Properties<Props> {
     properties: Props;
-    defaultPropertyValues: PropertyValues<Props>;
-    defaultTransitionablePropertyValues: TransitionablePropertyValues<Props>;
-    defaultTransitioningPropertyValues: TransitioningPropertyValues<Props>;
-    defaultPossiblyEvaluatedValues: PossiblyEvaluatedPropertyValues<Props>;
+    defaultPropertyValues: {[K in keyof Props]: PropertyValue<unknown, any>};
+    defaultTransitionablePropertyValues: {[K in keyof Props]: TransitionablePropertyValue<unknown, unknown>};
+    defaultTransitioningPropertyValues: {[K in keyof Props]: TransitioningPropertyValue<unknown, unknown>};
+    defaultPossiblyEvaluatedValues: {[K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>};;
     overridableProperties: Array<string>;
 
     constructor(properties: Props) {
@@ -742,7 +742,7 @@ export class Properties<Props> {
         this.overridableProperties = ([] as any);
 
         for (const property in properties) {
-            const prop = properties[property];
+            const prop = properties[property] as any;
             if (prop.specification.overridable) {
                 this.overridableProperties.push(property);
             }

@@ -33,7 +33,7 @@ class LightPositionProperty implements Property<[number, number, number], LightP
     specification: StylePropertySpecification;
 
     constructor() {
-        this.specification = styleSpec.light.position;
+        this.specification = styleSpec.light.position as StylePropertySpecification;
     }
 
     possiblyEvaluate(
@@ -59,11 +59,18 @@ type Props = {
   "intensity": DataConstantProperty<number>
 };
 
+type PropsPossiblyEvaluated = {
+    "anchor": "map" | "viewport",
+    "position": LightPosition,
+    "color": Color,
+    "intensity": number
+};
+
 const properties: Properties<Props> = new Properties({
-    "anchor": new DataConstantProperty(styleSpec.light.anchor),
+    "anchor": new DataConstantProperty(styleSpec.light.anchor as StylePropertySpecification),
     "position": new LightPositionProperty(),
-    "color": new DataConstantProperty(styleSpec.light.color),
-    "intensity": new DataConstantProperty(styleSpec.light.intensity),
+    "color": new DataConstantProperty(styleSpec.light.color as StylePropertySpecification),
+    "intensity": new DataConstantProperty(styleSpec.light.intensity as StylePropertySpecification),
 });
 
 const TRANSITION_SUFFIX = '-transition';
@@ -74,7 +81,7 @@ const TRANSITION_SUFFIX = '-transition';
 class Light extends Evented {
     _transitionable: Transitionable<Props>;
     _transitioning: Transitioning<Props>;
-    properties: PossiblyEvaluated<Props>;
+    properties: PossiblyEvaluated<Props, PropsPossiblyEvaluated>;
 
     constructor(lightOptions?: LightSpecification) {
         super();
@@ -95,9 +102,9 @@ class Light extends Evented {
         for (const name in light) {
             const value = light[name];
             if (endsWith(name, TRANSITION_SUFFIX)) {
-                this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length), value);
+                this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof Props, value);
             } else {
-                this._transitionable.setValue(name, value);
+                this._transitionable.setValue(name as keyof Props, value);
             }
         }
     }
