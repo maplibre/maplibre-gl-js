@@ -14,14 +14,13 @@ import strip from '@rollup/plugin-strip';
 // builds (main maplibre bundle, style-spec package, benchmarks bundle)
 
 export const plugins = (minified, production) => [
-    flow(),
     minifyStyleSpec(),
     json(),
     production ? strip({
         sourceMap: true,
         functions: ['PerformanceUtils.*', 'Debug.*']
     }) : false,
-    glsl('./src/shaders/*.glsl', production),
+    glsl('./rollup/build/tsc/src/shaders/*.glsl', production),
     buble({transforms: {dangerousForOf: true}, objectAssign: "Object.assign"}),
     minified ? terser({
         compress: {
@@ -40,18 +39,6 @@ export const plugins = (minified, production) => [
         ignoreGlobal: true
     })
 ].filter(Boolean);
-
-// Using this instead of rollup-plugin-flow due to
-// https://github.com/leebyron/rollup-plugin-flow/issues/5
-export function flow() {
-    return {
-        name: 'flow-remove-types',
-        transform: (code) => ({
-            code: flowRemoveTypes(code).toString(),
-            map: null
-        })
-    };
-}
 
 // Using this instead of rollup-plugin-string to add minification
 function glsl(include, minify) {

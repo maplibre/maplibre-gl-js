@@ -1,11 +1,11 @@
 /rollup/build/
+/types/
 /dist/
 *.es.js
 *.js.map
 node_modules
 *.sublime-*
 coverage
-flow-coverage
 .DS_Store
 .nyc_output
 *_generated.js
