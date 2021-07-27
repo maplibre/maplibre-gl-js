@@ -64,7 +64,7 @@ class TerrainSourceCache extends Evented {
                 segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
             };
         }
-        transform._calcMatrices();
+        transform.updateElevation();
         let idealTileIDs = this.getRenderableTileIds(transform);
         let outdated = {};
         Object.keys(this._tiles).forEach(key => outdated[key] = true);

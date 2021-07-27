@@ -1118,6 +1118,7 @@ export {
     StructArrayLayout4i8 as RasterBoundsArray,
     StructArrayLayout2i4 as CircleLayoutArray,
     StructArrayLayout1f4 as CircleElevationArray,
+    StructArrayLayout1f4 as TerrainElevationArray,
     StructArrayLayout2i4 as FillLayoutArray,
     StructArrayLayout2i4i12 as FillExtrusionLayoutArray,
     StructArrayLayout1f4 as FillExtrusionElevationArray,

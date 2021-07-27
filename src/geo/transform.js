@@ -54,6 +54,7 @@ class Transform {
     _minPitch: number;
     _maxPitch: number;
     _center: LngLat;
+    _elevation: number;
     _edgeInsets: EdgeInsets;
     _constraining: boolean;
     _posMatrixCache: {[_: string]: Float32Array};
@@ -75,6 +76,7 @@ class Transform {
         this.width = 0;
         this.height = 0;
         this._center = new LngLat(0, 0);
+        this._elevation = 0;
         this.zoom = 0;
         this.angle = 0;
         this._fov = 0.6435011087932844;
@@ -92,6 +94,7 @@ class Transform {
         clone.width = this.width;
         clone.height = this.height;
         clone._center = this._center;
+        clone._elevation = this._elevation;
         clone.zoom = this.zoom;
         clone.angle = this.angle;
         clone._fov = this._fov;
@@ -209,6 +212,15 @@ class Transform {
         if (center.lat === this._center.lat && center.lng === this._center.lng) return;
         this._unmodified = false;
         this._center = center;
+        this._constrain();
+        this._calcMatrices();
+    }
+
+    get elevation(): LngLat { return this._elevation; }
+    set elevation(elevation: number) {
+        if (elevation === this._elevation) return;
+        this._unmodified = false;
+        this._elevation = elevation;
         this._constrain();
         this._calcMatrices();
     }
@@ -352,7 +364,7 @@ class Transform {
                 // FIXME-3D! -5 .. 5 is enough for rendering front elevation tiles, dont know why
                 // but with this simple hack, there a rendered to many tiles outside the viewport,
                 // which is a performance issue
-                aabb: new Aabb([wrap * numTiles, 0, -5], [(wrap + 1) * numTiles, numTiles, 5]),
+                aabb: new Aabb([wrap * numTiles, 0, 0], [(wrap + 1) * numTiles, numTiles, 5]),
                 zoom: 0,
                 x: 0,
                 y: 0,
@@ -450,6 +462,10 @@ class Transform {
     }
 
     get point(): Point { return this.project(this.center); }
+
+    updateElevation() {
+       this.elevation = this.getElevation(this._center);
+    }
 
     getElevation(lnglat: LngLat) {
         const merc = this.locationCoordinate(lnglat), tsc = this.terrainSourceCache;
@@ -596,7 +612,7 @@ class Transform {
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number=0) {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1];
-        vec4.transformMat4(p, p, this.pixelMatrix);
+        vec4.transformMat4(p, p, this.pixelMatrix2);
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
 
@@ -740,7 +756,7 @@ class Transform {
     _calcMatrices() {
         if (!this.height) return;
 
-        const elevation = this.getElevation(this._center);
+        const elevation = this._elevation;
         const halfFov = this._fov / 2;
         const offset = this.centerOffset;
         this.cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this.height;
@@ -809,6 +825,7 @@ class Transform {
         mat4.translate(m, m, [0, 0, -elevation]);
         this.projMatrix = m;
         this.invProjMatrix = mat4.invert([], this.projMatrix);
+        this.pixelMatrix2 = mat4.multiply(new Float64Array(16), this.labelPlaneMatrix, m);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional
