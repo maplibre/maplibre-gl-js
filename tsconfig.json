@@ -10,7 +10,6 @@
     "jsx": "preserve",
     "module": "ES6",
     "moduleResolution": "Node",
-    "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
@@ -22,8 +21,9 @@
       "DOM.Iterable",
       "WebWorker"
     ],
-    "outDir": "lib",
-    "rootDir": "src",
+    "outDir": "rollup/build/tsc",
+    "declarationDir": "types",
+    "declarationMap": true
   },
   "include": [
     "src/**/*.ts"
