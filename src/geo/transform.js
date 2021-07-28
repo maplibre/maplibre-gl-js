@@ -822,9 +822,9 @@ class Transform {
         this.pixelMatrix = mat4.multiply(new Float64Array(16), this.labelPlaneMatrix, m);
 
         // matrix for conversion from location to GL coordinates (-1 .. 1)
-        mat4.translate(m, m, [0, 0, -elevation]);
+        this.invProjMatrix = mat4.invert([], m);
+        mat4.translate(m, m, [0, 0, -elevation]); // elevate camera over terrain
         this.projMatrix = m;
-        this.invProjMatrix = mat4.invert([], this.projMatrix);
         this.pixelMatrix2 = mat4.multiply(new Float64Array(16), this.labelPlaneMatrix, m);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
