@@ -1,5 +1,4 @@
 import {warnOnce, parseCacheControl} from './util';
-import window from './window';
 
 import type Dispatcher from './dispatcher';
 

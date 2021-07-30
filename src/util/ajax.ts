@@ -1,4 +1,3 @@
-import window from './window';
 import {extend, warnOnce, isWorker} from './util';
 import {isMapboxHTTPURL, hasCacheDefeatingSku} from './mapbox';
 import config from './config';

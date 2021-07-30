@@ -1,5 +1,4 @@
 import browser from '../util/browser';
-import window from '../util/window';
 
 import {mat4, vec3} from 'gl-matrix';
 import SourceCache from '../source/source_cache';

@@ -3,7 +3,6 @@ import Point from '../../symbol/point';
 import DOM from '../../util/dom';
 import {extend, bindAll} from '../../util/util';
 import {MouseRotateHandler, MousePitchHandler} from '../handler/mouse';
-import window from '../../util/window';
 
 import type Map from '../map';
 import {IControl} from './control';

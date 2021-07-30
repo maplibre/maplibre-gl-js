@@ -1,4 +1,3 @@
-import window from '../util/window';
 import type {RequestParameters} from '../util/ajax';
 
 const performance = window.performance;

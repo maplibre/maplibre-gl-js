@@ -4,7 +4,6 @@ import {MapMouseEvent} from '../ui/events';
 import DOM from '../util/dom';
 import LngLat from '../geo/lng_lat';
 import Point from '../symbol/point';
-import window from '../util/window';
 import smartWrap from '../util/smart_wrap';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 

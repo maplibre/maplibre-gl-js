@@ -1,7 +1,6 @@
 import UnitBezier from '@mapbox/unitbezier';
 
 import Point from '../symbol/point';
-import window from './window';
 
 import type {Callback} from '../types/callback';
 
@@ -536,4 +535,14 @@ export function b64DecodeUnicode(str: string) {
     return decodeURIComponent(atob(str).split('').map((c) => {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); //eslint-disable-line
     }).join(''));
+}
+
+
+const mapboxHTTPURLRe = /^((https?:)?\/\/)?([^\/]+\.)?mapbox\.c(n|om)(\/|\?|$)/i;
+export function isMapboxHTTPURL(url: string): boolean {
+    return mapboxHTTPURLRe.test(url);
+}
+
+export function hasCacheDefeatingSku(url: string) {
+    return url.indexOf('sku=') > 0 && isMapboxHTTPURL(url);
 }

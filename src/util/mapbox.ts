@@ -14,7 +14,6 @@
 import config from './config';
 
 import browser from './browser';
-import window from './window';
 import webpSupported from './webp_supported';
 import {createSkuToken, SKU_ID} from './sku_token';
 import {version as sdkVersion} from '../../package.json';

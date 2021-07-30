@@ -1,5 +1,4 @@
 import {extend} from './util';
-import window from './window';
 
 /**
  * This is a private namespace for utility functions that will get automatically stripped

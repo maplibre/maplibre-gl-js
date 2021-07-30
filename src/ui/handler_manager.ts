@@ -17,7 +17,6 @@ import DragPanHandler from './handler/shim/drag_pan';
 import DragRotateHandler from './handler/shim/drag_rotate';
 import TouchZoomRotateHandler from './handler/shim/touch_zoom_rotate';
 import {bindAll, extend} from '../util/util';
-import window from '../util/window';
 import Point from '../symbol/point';
 import assert from 'assert';
 

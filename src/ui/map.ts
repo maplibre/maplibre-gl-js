@@ -1,7 +1,6 @@
 import {version} from '../../package.json';
 import {extend, bindAll, warnOnce, uniqueId} from '../util/util';
 import browser from '../util/browser';
-import window from '../util/window';
 import DOM from '../util/dom';
 import {getImage, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/mapbox';

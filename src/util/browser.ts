@@ -1,4 +1,3 @@
-import window from './window';
 import type {Cancelable} from '../types/cancelable';
 
 const now = window.performance && window.performance.now ?
@@ -44,6 +43,7 @@ const exported = {
 
     hardwareConcurrency: window.navigator && window.navigator.hardwareConcurrency || 4,
 
+    // HM TODO: remove this from here...
     get devicePixelRatio() { return window.devicePixelRatio; },
     get prefersReducedMotion(): boolean {
         if (!window.matchMedia) return false;

@@ -1,6 +1,5 @@
 import ImageSource from './image_source';
 
-import window from '../util/window';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import SegmentVector from '../data/segment';
 import Texture from '../render/texture';

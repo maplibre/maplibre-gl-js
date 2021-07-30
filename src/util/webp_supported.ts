@@ -1,5 +1,3 @@
-import window from './window';
-
 const exported = {
     supported: false,
     testSupport

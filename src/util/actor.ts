@@ -1,5 +1,4 @@
 import {bindAll, isWorker, isSafari} from './util';
-import window from './window';
 import {serialize, deserialize} from './web_worker_transfer';
 import ThrottledInvoker from './throttled_invoker';
 

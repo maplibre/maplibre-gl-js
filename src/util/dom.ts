@@ -1,6 +1,5 @@
 import Point from '../symbol/point';
 
-import window from './window';
 import assert from 'assert';
 
 interface DOMInterface {
