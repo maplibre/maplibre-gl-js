@@ -1,5 +1,6 @@
 import {PNG} from 'pngjs';
-import Map from '../rollup/build/tsc/ui/map';
+import request from 'request';
+import maplibregl from '../rollup/build/tsc/index';
 import * as rtl_text_plugin from '../rollup/build/tsc/source/rtl_text_plugin';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import fs from 'fs';
@@ -7,6 +8,13 @@ import path from 'path';
 import customLayerImplementations from './integration/custom_layer_implementations';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+
+const cache = {};
+function cached(data, callback) {
+    setImmediate(() => {
+        callback(null, data);
+    });
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -33,6 +41,10 @@ export default function(style, options, _callback) {
 
     window.devicePixelRatio = options.pixelRatio;
 
+    maplibregl.addProtocol('test', (req, callback) => {
+        handleProtocolRequest(req, callback);
+    })
+
     if (options.addFakeCanvas) {
         const fakeCanvas = createFakeCanvas(window.document, options.addFakeCanvas.id, options.addFakeCanvas.image);
         window.document.body.appendChild(fakeCanvas);
@@ -42,7 +54,7 @@ export default function(style, options, _callback) {
     Object.defineProperty(container, 'clientWidth', {value: options.width});
     Object.defineProperty(container, 'clientHeight', {value: options.height});
 
-    const map = new Map({
+    const map = new maplibregl.Map({
         container,
         style,
         classes: options.classes,
@@ -200,4 +212,46 @@ function updateFakeCanvas(document, id, imagePath) {
     const fakeCanvas = document.getElementById(id);
     const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, './integration', imagePath)));
     fakeCanvas.data = image.data;
+}
+
+function handleProtocolRequest(req, callback) {
+    const getJSON = function({url}, callback) {
+        if (cache[url]) return cached(cache[url], callback);
+        return request(url, (error, response, body) => {
+            if (!error && response.statusCode >= 200 && response.statusCode < 300) {
+                let data;
+                try {
+                    data = JSON.parse(body);
+                } catch (err) {
+                    return callback(err);
+                }
+                cache[url] = data;
+                callback(null, data);
+            } else {
+                callback(error || new Error(response.statusCode));
+            }
+        });
+    };
+    
+    const getArrayBuffer = function({url}, callback) {
+        if (cache[url]) return cached(cache[url], callback);
+        return request({url, encoding: null}, (error, response, body) => {
+            if (!error && response.statusCode >= 200 && response.statusCode < 300) {
+                cache[url] = body;
+                callback(null, body);
+            } else {
+                if (!error) error = {status: +response.statusCode};
+                callback(error);
+            }
+        });
+    };
+
+    req.url = req.url.replace('test', 'http')
+    if (req.url.endsWith('json')) {
+        getJSON(req, callback);
+    } else if (req.url.endsWith('png')) {
+        getArrayBuffer(req, callback);
+    } else {
+        getArrayBuffer(req, callback)
+    }
 }

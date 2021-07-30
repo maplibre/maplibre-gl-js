@@ -1,10 +1,9 @@
 
 import {PNG} from 'pngjs';
 import request from 'request';
-// we're using a require hook to load this file instead of src/util/ajax.js,
-// so we import browser module as if it were in an adjacent file
-import browser from './browser'; // eslint-disable-line import/no-unresolved
 const cache = {};
+
+// HM TODO: remove this file when it is no longer needed.
 
 /**
  * The type of a resource.
@@ -92,17 +91,6 @@ export const getImage = function({url}, callback) {
             callback(error || {status: response.statusCode});
         }
     });
-};
-
-browser.getImageData = function({width, height, data}, padding = 0) {
-    const source = new Uint8Array(data);
-    const dest = new Uint8Array((2 * padding + width) * (2 * padding + height) * 4);
-
-    const offset = (2 * padding + width) * padding + padding;
-    for (let i = 0; i < height; i++) {
-        dest.set(source.slice(i * width * 4, (i + 1) * width * 4), 4 * (offset + (width + 2 * padding) * i));
-    }
-    return {width: width + 2 * padding, height: height + 2 * padding, data: dest};
 };
 
 // Hack: since node doesn't have any good video codec modules, just grab a png with

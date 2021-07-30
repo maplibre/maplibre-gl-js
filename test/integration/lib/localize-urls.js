@@ -50,23 +50,23 @@ export default function localizeURLs(style, port) {
 };
 
 function localizeURL(url, port) {
-    return url.replace(/^local:\/\//, `http://localhost:${port}/`);
+    return url.replace(/^local:\/\//, `test://localhost:${port}/`);
 }
 
 function localizeMapboxSpriteURL(url, port) {
-    return url.replace(/^mapbox:\/\//, `http://localhost:${port}/`);
+    return url.replace(/^mapbox:\/\//, `test://localhost:${port}/`);
 }
 
 function localizeMapboxFontsURL(url, port) {
-    return url.replace(/^mapbox:\/\/fonts/, `http://localhost:${port}/glyphs`);
+    return url.replace(/^mapbox:\/\/fonts/, `test://localhost:${port}/glyphs`);
 }
 
 function localizeMapboxTilesURL(url, port) {
-    return url.replace(/^mapbox:\/\//, `http://localhost:${port}/tiles/`);
+    return url.replace(/^mapbox:\/\//, `test://localhost:${port}/tiles/`);
 }
 
 function localizeMapboxTilesetURL(url, port) {
-    return url.replace(/^mapbox:\/\//, `http://localhost:${port}/tilesets/`);
+    return url.replace(/^mapbox:\/\//, `test://localhost:${port}/tilesets/`);
 }
 
 function localizeSourceURLs(source, port) {
