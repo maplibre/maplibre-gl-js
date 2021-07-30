@@ -1,13 +1,21 @@
 /* eslint-disable no-process-exit */
 
-import path from 'path';
+import path, { dirname } from 'path';
 import fs from 'fs';
 import glob from 'glob';
-import {shuffle} from 'shuffle-seed';
-import {queue} from 'd3';
+import shuffle_seed from 'shuffle-seed';
+import d3 from 'd3';
 import colors from 'chalk';
 import template from 'lodash.template';
 import createServer from './server';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+
+const {queue} = d3;
+const {shuffle} = shuffle_seed;
 
 export default function (directory, implementation, options, run) {
     const q = queue(1);
@@ -19,7 +27,7 @@ export default function (directory, implementation, options, run) {
     let sequence = glob.sync(`**/${options.fixtureFilename || 'style.json'}`, {cwd: directory})
         .map(fixture => {
             const id = path.dirname(fixture);
-            const style = require(path.join(directory, fixture));
+            const style = require(path.join(directory, fixture)); // HM TODO: read file regularly?
 
             server.localizeURLs(style);
 

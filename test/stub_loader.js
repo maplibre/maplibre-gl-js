@@ -1,12 +1,16 @@
+import fs from 'fs';
+import assert from 'assert';
+import pirates from 'pirates';
+import gl from 'gl';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { JSDOM, VirtualConsole } from "jsdom"
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// HM TODO: remove this hook and use `addProtocol` instead.
 // Load our stubbed ajax module for the integration suite implementation
-/* eslint-disable import/unambiguous, import/no-commonjs */
-const fs = require('fs');
-const assert = require('assert');
-const pirates = require('pirates');
-
-process.env["ESM_OPTIONS"] = '{ "cache": "node_modules/.cache/esm-stubbed"}';
-
-pirates.addHook((code, filename) => {
+pirates.addHook((_, filename) => {
     assert(filename.endsWith('/ajax.js'));
     return fs.readFileSync(`${__dirname}/ajax_stubs.js`, 'utf-8');
 }, {
@@ -14,3 +18,76 @@ pirates.addHook((code, filename) => {
     matcher: filename => filename.endsWith('/ajax.js')
 });
 
+// The following is the mocking of what's needed in window and global for the tests to run.
+const { window } = new JSDOM('', {
+    // Send jsdom console output to the node console object.
+    virtualConsole: new VirtualConsole().sendTo(console)
+});
+
+global.ImageData = window.ImageData || function () { return false; };
+global.ImageBitmap = window.ImageBitmap || function () { return false; };
+global.WebGLFramebuffer = window.WebGLFramebuffer || Object;
+global.HTMLCanvasElement = function () {};
+global.HTMLElement = window.HTMLElement;
+global.HTMLImageElement = window.HTMLImageElement;
+global.HTMLVideoElement = window.HTMLVideoElement;
+global.HTMLCanvasElement = window.HTMLCanvasElement;
+global.document = window.document;
+global.window = window;
+
+// Delete local and session storage from JSDOM and stub them out with a warning log
+// Accessing these properties during extend() produces an error in Node environments
+// See https://github.com/mapbox/mapbox-gl-js/pull/7455 for discussion
+delete window.localStorage;
+delete window.sessionStorage;
+window.localStorage = window.sessionStorage = () => console.log('Local and session storage not available in Node. Use a stub implementation if needed for testing.');
+
+window.devicePixelRatio = 1;
+
+global.requestAnimationFrame = function (callback) {
+    return setImmediate(callback, 0);
+};
+global.cancelAnimationFrame = clearImmediate;
+
+// Add webgl context with the supplied GL
+const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
+global.HTMLCanvasElement.prototype.getContext = function (type, attributes) {
+    if (type === 'webgl') {
+        if (!this._webGLContext) {
+            this._webGLContext = gl(this.width, this.height, attributes);
+        }
+        return this._webGLContext;
+    }
+    // Fallback to existing HTMLCanvasElement getContext behaviour
+    return originalGetContext.call(this, type, attributes);
+};
+
+// HM TODO: move this to the relevat test...
+window.useFakeHTMLCanvasGetContext = function () {
+    this.HTMLCanvasElement.prototype.getContext = function () { return '2d'; };
+};
+
+// HM TODO: move this to the relevat test...
+window.useFakeXMLHttpRequest = function () {
+    sinon.xhr.supportsCORS = true;
+    this.server = sinon.fakeServer.create();
+    this.XMLHttpRequest = this.server.xhr;
+};
+
+global.URL.revokeObjectURL = function () { };
+
+window.fakeWorkerPresence = function () {
+    global.WorkerGlobalScope = function () { };
+    global.self = new global.WorkerGlobalScope();
+};
+window.clearFakeWorkerPresence = function () {
+    global.WorkerGlobalScope = undefined;
+    global.self = undefined;
+};
+
+
+window.performance.getEntriesByName = function () { };
+window.performance.mark = function () { };
+window.performance.measure = function () { };
+window.performance.clearMarks = function () { };
+window.performance.clearMeasures = function () { };

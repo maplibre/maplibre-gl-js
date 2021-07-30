@@ -1,19 +1,22 @@
 import {PNG} from 'pngjs';
-import Map from '../src/ui/map';
-import config from '../src/util/config';
-import window from '../src/util/window';
-import browser from '../src/util/browser';
-import {plugin as rtlTextPlugin} from '../src/source/rtl_text_plugin';
+import Map from '../rollup/build/tsc/ui/map';
+import * as rtl_text_plugin from '../rollup/build/tsc/source/rtl_text_plugin';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import fs from 'fs';
 import path from 'path';
 import customLayerImplementations from './integration/custom_layer_implementations';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const { plugin: rtlTextPlugin } = rtl_text_plugin;
 
 rtlTextPlugin['applyArabicShaping'] = rtlText.applyArabicShaping;
 rtlTextPlugin['processBidirectionalText'] = rtlText.processBidirectionalText;
 rtlTextPlugin['processStyledBidirectionalText'] = rtlText.processStyledBidirectionalText;
 
-module.exports = function(style, options, _callback) { // eslint-disable-line import/no-commonjs
+export default function(style, options, _callback) {
     let wasCallbackCalled = false;
 
     const timeout = setTimeout(() => {
@@ -39,9 +42,6 @@ module.exports = function(style, options, _callback) { // eslint-disable-line im
     Object.defineProperty(container, 'clientWidth', {value: options.width});
     Object.defineProperty(container, 'clientHeight', {value: options.height});
 
-    // We are self-hosting test files.
-    config.REQUIRE_ACCESS_TOKEN = false;
-
     const map = new Map({
         container,
         style,
@@ -60,9 +60,10 @@ module.exports = function(style, options, _callback) { // eslint-disable-line im
     map.repaint = true;
 
     let now = 0;
-    browser.now = function() {
-        return now;
-    };
+    //HM TODO: do we need this?
+    //browser.now = function() {
+    //    return now;
+    //};
 
     if (options.debug) map.showTileBoundaries = true;
     if (options.showOverdrawInspector) map.showOverdrawInspector = true;
