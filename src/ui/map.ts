@@ -1,4 +1,3 @@
-import {version} from '../../package.json';
 import {extend, bindAll, warnOnce, uniqueId} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
@@ -2787,17 +2786,6 @@ class Map extends Camera {
     _setCacheLimits(limit: number, checkThreshold: number) {
         setCacheLimits(limit, checkThreshold);
     }
-
-    /**
-     * The version of Mapbox GL JS in use as specified in package.json, CHANGELOG.md, and the GitHub release.
-     *
-     * @name version
-     * @instance
-     * @memberof Map
-     * @var {string} version
-     */
-
-    get version(): string { return version; }
 }
 
 export default Map;

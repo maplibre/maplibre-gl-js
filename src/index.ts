@@ -1,7 +1,6 @@
 import assert from 'assert';
 import supported from '@mapbox/mapbox-gl-supported';
 
-import {version} from '../package.json';
 import Map from './ui/map';
 import NavigationControl from './ui/control/navigation_control';
 import GeolocateControl from './ui/control/geolocate_control';
@@ -28,7 +27,6 @@ import type {RequestParameters, ResponseCallback} from './util/ajax';
 import type {Cancelable} from './types/cancelable';
 
 const exported = {
-    version,
     supported,
     setRTLTextPlugin,
     getRTLTextPluginStatus,

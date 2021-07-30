@@ -32,6 +32,7 @@ global.HTMLElement = window.HTMLElement;
 global.HTMLImageElement = window.HTMLImageElement;
 global.HTMLVideoElement = window.HTMLVideoElement;
 global.HTMLCanvasElement = window.HTMLCanvasElement;
+global.fetch = window.fetch;
 global.document = window.document;
 global.window = window;
 
