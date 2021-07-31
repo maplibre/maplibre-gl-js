@@ -39,4 +39,4 @@ jobs:
           node -e "if(require('./package').version.includes('dev')) { process.exit(1) }"
           npm publish --access=public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
