@@ -1,6 +1,7 @@
 import {PNG} from 'pngjs';
 import request from 'request';
 import maplibregl from '../rollup/build/tsc/index';
+import browser from '../rollup/build/tsc/util/browser';
 import * as rtl_text_plugin from '../rollup/build/tsc/source/rtl_text_plugin';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import fs from 'fs';
@@ -23,6 +24,18 @@ const { plugin: rtlTextPlugin } = rtl_text_plugin;
 rtlTextPlugin['applyArabicShaping'] = rtlText.applyArabicShaping;
 rtlTextPlugin['processBidirectionalText'] = rtlText.processBidirectionalText;
 rtlTextPlugin['processStyledBidirectionalText'] = rtlText.processStyledBidirectionalText;
+
+// replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
+browser.getImageData = function({width, height, data}, padding = 0) {
+    const source = new Uint8Array(data);
+    const dest = new Uint8Array((2 * padding + width) * (2 * padding + height) * 4);
+
+    const offset = (2 * padding + width) * padding + padding;
+    for (let i = 0; i < height; i++) {
+        dest.set(source.slice(i * width * 4, (i + 1) * width * 4), 4 * (offset + (width + 2 * padding) * i));
+    }
+    return {width: width + 2 * padding, height: height + 2 * padding, data: dest};
+};
 
 export default function(style, options, _callback) {
     let wasCallbackCalled = false;

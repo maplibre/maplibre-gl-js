@@ -1,6 +1,8 @@
 import gl from 'gl';
-import { JSDOM, VirtualConsole } from "jsdom"
+import { JSDOM, VirtualConsole } from "jsdom";
+import { PNG } from 'pngjs';
 
+let lastDataFroUrl = null;
 
 // The following is the mocking of what's needed in window and global for the tests to run.
 const { window } = new JSDOM('', {
@@ -11,13 +13,31 @@ const { window } = new JSDOM('', {
 global.ImageData = window.ImageData || function () { return false; };
 global.ImageBitmap = window.ImageBitmap || function () { return false; };
 global.WebGLFramebuffer = window.WebGLFramebuffer || Object;
-global.HTMLCanvasElement = function () {};
+global.HTMLCanvasElement = function () { };
 global.HTMLElement = window.HTMLElement;
 global.HTMLImageElement = window.HTMLImageElement;
 global.HTMLVideoElement = window.HTMLVideoElement;
 global.HTMLCanvasElement = window.HTMLCanvasElement;
 global.OffscreenCanvas = window.OffscreenCanvas;
 global.Image = window.Image;
+// stubbing image load as it is not implemented in jsdom
+Object.defineProperty(global.Image.prototype, 'src', {
+    set(src) {
+        if (lastDataFroUrl) {
+            const reader = new window.FileReader();
+            reader.onload = (_) => {
+                const dataUrl = reader.result;
+                new PNG().parse(dataUrl, (err, png) => {
+                    this.data = png.data;
+                    this.height = png.height;
+                    this.width = png.width;
+                    setTimeout(() => this.onload());
+                });
+            }
+            reader.readAsArrayBuffer(lastDataFroUrl);
+        }
+    }
+});
 global.Blob = window.Blob;
 global.URL = window.URL;
 global.fetch = window.fetch;
@@ -33,7 +53,7 @@ window.localStorage = window.sessionStorage = () => console.log('Local and sessi
 
 window.devicePixelRatio = 1;
 
-global.requestAnimationFrame = function (callback) {
+global.requestAnimationFrame = window.requestAnimationFrame = function (callback) {
     return setImmediate(callback, 0);
 };
 global.cancelAnimationFrame = clearImmediate;
@@ -63,8 +83,13 @@ window.useFakeXMLHttpRequest = function () {
     this.XMLHttpRequest = this.server.xhr;
 };
 
-global.URL.createObjectURL = () => 'blob:';
-global.URL.revokeObjectURL = function () { };
+global.URL.createObjectURL = (blob) => {
+    lastDataFroUrl = blob;
+    return 'blob:';
+}
+global.URL.revokeObjectURL = function () {
+    lastDataFroUrl = null;
+};
 
 window.fakeWorkerPresence = function () {
     global.WorkerGlobalScope = function () { };
@@ -81,16 +106,4 @@ window.performance.mark = function () { };
 window.performance.measure = function () { };
 window.performance.clearMarks = function () { };
 window.performance.clearMeasures = function () { };
-
-// HM TODO: accurate this to context and stuff
-global.getImageData = function({width, height, data}, padding = 0) {
-    const source = new Uint8Array(data);
-    const dest = new Uint8Array((2 * padding + width) * (2 * padding + height) * 4);
-
-    const offset = (2 * padding + width) * padding + padding;
-    for (let i = 0; i < height; i++) {
-        dest.set(source.slice(i * width * 4, (i + 1) * width * 4), 4 * (offset + (width + 2 * padding) * i));
-    }
-    return {width: width + 2 * padding, height: height + 2 * padding, data: dest};
-};
 
