@@ -234,6 +234,7 @@ function handleProtocolRequest(req, callback) {
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 let data;
                 try {
+                    body = body.replace('http', 'test');
                     data = JSON.parse(body);
                 } catch (err) {
                     return callback(err);
@@ -259,11 +260,9 @@ function handleProtocolRequest(req, callback) {
         });
     };
 
-    req.url = req.url.replace('test', 'http')
-    if (req.url.endsWith('json')) {
+    req.url = req.url.replace('test', 'http');
+    if (req.type === 'json') {
         getJSON(req, callback);
-    } else if (req.url.endsWith('png')) {
-        getArrayBuffer(req, callback);
     } else {
         getArrayBuffer(req, callback)
     }
