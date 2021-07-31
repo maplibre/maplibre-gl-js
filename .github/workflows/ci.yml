@@ -90,6 +90,7 @@ jobs:
           node-version: 14
           architecture: x64
       - run: npm ci
+      - run: npm run build-dev
       - run: npm run test-query
       - uses: actions/upload-artifact@v2
         with:
@@ -111,6 +112,7 @@ jobs:
           node-version: 14
           architecture: x64
       - run: npm ci
+      - run: npm run build-dev
       - run: npm run test-expressions
 
   test-browser:
