@@ -19,7 +19,7 @@ test('loadGlyphRange', (t) => {
     const manager = new RequestManager(transform);
 
     let request;
-    window.XMLHttpRequest.onCreate = (req) => { request = req; };
+    XMLHttpRequest.onCreate = (req) => { request = req; };
 
     loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager, (err, result) => {
         t.ifError(err);
