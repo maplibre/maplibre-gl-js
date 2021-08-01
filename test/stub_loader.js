@@ -61,7 +61,7 @@ global.cancelAnimationFrame = clearImmediate;
 // Add webgl context with the supplied GL
 const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
 
-var imitateWebGlGetContext = (type, attributes) => {
+function imitateWebGlGetContext(type, attributes) {
     if (type === 'webgl') {
         if (!this._webGLContext) {
             this._webGLContext = gl(this.width, this.height, attributes);
