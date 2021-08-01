@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import createStyleLayer from '../../../rollup/build/tsc/style/create_style_layer';
 import FillStyleLayer from '../../../rollup/build/tsc/style/style_layer/fill_style_layer';

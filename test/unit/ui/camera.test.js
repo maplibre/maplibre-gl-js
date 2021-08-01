@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import Camera from '../../../rollup/build/tsc/ui/camera';
 import Transform from '../../../rollup/build/tsc/geo/transform';

@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import Light from '../../../rollup/build/tsc/style/light';
 import styleSpec from '../../../rollup/build/tsc/style-spec/reference/latest';

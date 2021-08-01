@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import {createExpression, ZoomConstantExpression} from '../../../rollup/build/tsc/style-spec/expression';
 import EvaluationContext from '../../../rollup/build/tsc/style-spec/expression/evaluation_context';

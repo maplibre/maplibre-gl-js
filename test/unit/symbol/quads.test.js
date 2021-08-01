@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import {getIconQuads} from '../../../rollup/build/tsc/symbol/quads';
 

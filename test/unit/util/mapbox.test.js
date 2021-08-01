@@ -5,7 +5,6 @@ import config from '../../../rollup/build/tsc/util/config';
 import webpSupported from '../../../rollup/build/tsc/util/webp_supported';
 import {uuid} from '../../../rollup/build/tsc/util/util';
 import {SKU_ID} from '../../../rollup/build/tsc/util/sku_token';
-import {version} from '../../../package.json';
 import {equalWithPrecision} from '../../util';
 
 const mapboxTileURLs = [
@@ -629,7 +628,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=key`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'appUserTurnstile');
-                t.equal(reqBody.sdkVersion, version);
                 t.equal(reqBody.skuId, SKU_ID);
                 t.ok(reqBody.userId);
 

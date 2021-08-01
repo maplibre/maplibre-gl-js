@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import WorkerTile from '../../../rollup/build/tsc/source/worker_tile';
 import Wrapper from '../../../rollup/build/tsc/source/geojson_wrapper';

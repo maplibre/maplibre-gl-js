@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import SymbolStyleLayer from '../../../rollup/build/tsc/style/style_layer/symbol_style_layer';
 import FormatSectionOverride from '../../../rollup/build/tsc/style/format_section_override';

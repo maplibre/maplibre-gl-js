@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import Dispatcher from '../../../rollup/build/tsc/util/dispatcher';
 import WebWorker from '../../../rollup/build/tsc/util/web_worker';
