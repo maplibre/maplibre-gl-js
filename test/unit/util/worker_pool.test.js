@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import WorkerPool from '../../../rollup/build/tsc/util/worker_pool';
 

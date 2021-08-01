@@ -1,5 +1,3 @@
-// @flow
-
 import {test} from '../../util/test';
 
 import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, endsWith, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, uuid, validateUuid, nextPowerOfTwo, isPowerOfTwo} from '../../../rollup/build/tsc/util/util';
