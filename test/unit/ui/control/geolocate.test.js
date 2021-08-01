@@ -4,14 +4,7 @@ import {test} from '../../../util/test';
 import {createMap} from '../../../util';
 import GeolocateControl from '../../../../rollup/build/tsc/ui/control/geolocate_control';
 
-// window and navigator globals need to be set for mock-geolocation
-global.window = {};
-global.navigator = {};
 geolocation.use();
-
-// assign the mock geolocation to window
-global.window.navigator = global.navigator;
-window.navigator.geolocation = global.window.navigator.geolocation;
 
 // convert the coordinates of a LngLat object to a fixed number of digits
 function lngLatAsFixed(lngLat, digits) {

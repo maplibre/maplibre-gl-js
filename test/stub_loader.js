@@ -14,13 +14,13 @@ const { window } = new JSDOM('', {
 global.ImageData = window.ImageData || function () { return false; };
 global.ImageBitmap = window.ImageBitmap || function () { return false; };
 global.WebGLFramebuffer = window.WebGLFramebuffer || Object;
-global.HTMLCanvasElement = function () { };
 global.HTMLElement = window.HTMLElement;
 global.HTMLImageElement = window.HTMLImageElement;
 global.HTMLVideoElement = window.HTMLVideoElement;
 global.HTMLCanvasElement = window.HTMLCanvasElement;
 global.OffscreenCanvas = window.OffscreenCanvas;
 global.Image = window.Image;
+global.navigator = window.navigator;
 // stubbing image load as it is not implemented in jsdom
 Object.defineProperty(global.Image.prototype, 'src', {
     set(src) {

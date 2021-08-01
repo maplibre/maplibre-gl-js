@@ -59,7 +59,7 @@ import {ControlPosition, IControl} from './control/control';
 
 /* eslint-enable no-use-before-define */
 
-type MapOptions = {
+export type MapOptions = {
   hash?: boolean | string,
   interactive?: boolean,
   container: HTMLElement | string,
@@ -79,7 +79,7 @@ type MapOptions = {
   maxPitch?: number | null,
   boxZoom?: boolean,
   dragRotate?: boolean,
-  dragPan?: DragPanOptions,
+  dragPan?: DragPanOptions | boolean,
   keyboard?: boolean,
   doubleClickZoom?: boolean,
   touchZoomRotate?: boolean,
@@ -104,6 +104,15 @@ type MapOptions = {
   style: StyleSpecification | string,
   pitchWithRotate?: boolean
 };
+
+// See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
+// HM TODO: This might need to move to  amore general place
+type Complete<T> = {
+    [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
+}
+
+// This type is used inside map since all properties are assigned a default value.
+export type CompleteMapOptions = Complete<MapOptions>;
 
 const defaultMinZoom = -2;
 const defaultMaxZoom = 22;
@@ -152,7 +161,7 @@ const defaultOptions = {
     accessToken: null,
     fadeDuration: 300,
     crossSourceCollisions: true
-};
+} as CompleteMapOptions;
 
 /**
  * The `Map` object represents the map on your page. It exposes methods
@@ -443,12 +452,7 @@ class Map extends Camera {
             window.addEventListener('orientationchange', this._onWindowResize, false);
         }
 
-        this.handlers = new HandlerManager(this, {
-            interactive: options.interactive,
-            pitchWithRotate: options.pitchWithRotate,
-            clickTolerance: options.clickTolerance,
-            bearingSnap: options.bearingSnap
-        });
+        this.handlers = new HandlerManager(this, options as CompleteMapOptions);
 
         const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
         this._hash = options.hash && (new Hash(hashName)).addTo(this);
