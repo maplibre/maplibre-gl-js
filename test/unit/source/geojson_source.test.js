@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import Tile from '../../../rollup/build/tsc/source/tile';
 import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';

@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import parseGlyphPBF from '../../../rollup/build/tsc/style/parse_glyph_pbf';
 import GlyphManager from '../../../rollup/build/tsc/render/glyph_manager';

@@ -1,6 +1,7 @@
 import gl from 'gl';
 import { JSDOM, VirtualConsole } from "jsdom";
 import { PNG } from 'pngjs';
+import sinon from 'sinon';
 
 let lastDataFroUrl = null;
 

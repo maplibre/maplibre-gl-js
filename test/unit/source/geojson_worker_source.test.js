@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import GeoJSONWorkerSource from '../../../rollup/build/tsc/source/geojson_worker_source';
 import StyleLayerIndex from '../../../rollup/build/tsc/style/style_layer_index';
