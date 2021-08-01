@@ -1,6 +1,6 @@
 import {test} from '../../util/test';
-import Point from '../../../src/symbol/point';
-import clipLine from '../../../src/symbol/clip_line';
+import Point from '../../../rollup/build/tsc/symbol/point';
+import clipLine from '../../../rollup/build/tsc/symbol/clip_line';
 
 test('clipLines', (t) => {
 

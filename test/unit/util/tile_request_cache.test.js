@@ -1,6 +1,6 @@
 import {test} from '../../util/test';
-import {cacheGet, cachePut, cacheClose} from '../../../src/util/tile_request_cache';
-import window from '../../../src/util/window';
+import {cacheGet, cachePut, cacheClose} from '../../../rollup/build/tsc/util/tile_request_cache';
+import window from '../../../rollup/build/tsc/util/window';
 import sinon from 'sinon';
 
 test('tile_request_cache', (t) => {

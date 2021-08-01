@@ -3,9 +3,9 @@
 import {test} from '../../util/test';
 import fs from 'fs';
 import path from 'path';
-import window from '../../../src/util/window';
-import {RequestManager} from '../../../src/util/mapbox';
-import loadGlyphRange from '../../../src/style/load_glyph_range';
+import window from '../../../rollup/build/tsc/util/window';
+import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
+import loadGlyphRange from '../../../rollup/build/tsc/style/load_glyph_range';
 
 test('loadGlyphRange', (t) => {
     window.useFakeXMLHttpRequest();

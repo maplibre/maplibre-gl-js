@@ -1,9 +1,9 @@
 import {test} from '../../util/test';
-import CanvasSource from '../../../src/source/canvas_source';
-import Transform from '../../../src/geo/transform';
-import {Event, Evented} from '../../../src/util/evented';
-import {extend} from '../../../src/util/util';
-import window from '../../../src/util/window';
+import CanvasSource from '../../../rollup/build/tsc/source/canvas_source';
+import Transform from '../../../rollup/build/tsc/geo/transform';
+import {Event, Evented} from '../../../rollup/build/tsc/util/evented';
+import {extend} from '../../../rollup/build/tsc/util/util';
+import window from '../../../rollup/build/tsc/util/window';
 
 function createSource(options) {
     window.useFakeHTMLCanvasGetContext();

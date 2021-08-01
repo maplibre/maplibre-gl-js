@@ -3,10 +3,10 @@ import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import Point from '../../../src/symbol/point';
-import segment from '../../../src/data/segment';
-import LineBucket from '../../../src/data/bucket/line_bucket';
-import LineStyleLayer from '../../../src/style/style_layer/line_style_layer';
+import Point from '../../../rollup/build/tsc/symbol/point';
+import segment from '../../../rollup/build/tsc/data/segment';
+import LineBucket from '../../../rollup/build/tsc/data/bucket/line_bucket';
+import LineStyleLayer from '../../../rollup/build/tsc/style/style_layer/line_style_layer';
 
 // Load a line feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'))));

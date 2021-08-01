@@ -1,10 +1,10 @@
 import {test} from '../../util/test';
 import fs from 'fs';
 import path from 'path';
-import * as shaping from '../../../src/symbol/shaping';
-import Formatted, {FormattedSection} from '../../../src/style-spec/expression/types/formatted';
-import ResolvedImage from '../../../src/style-spec/expression/types/resolved_image';
-import {ImagePosition} from '../../../src/render/image_atlas';
+import * as shaping from '../../../rollup/build/tsc/symbol/shaping';
+import Formatted, {FormattedSection} from '../../../rollup/build/tsc/style-spec/expression/types/formatted';
+import ResolvedImage from '../../../rollup/build/tsc/style-spec/expression/types/resolved_image';
+import {ImagePosition} from '../../../rollup/build/tsc/render/image_atlas';
 const WritingMode = shaping.WritingMode;
 
 let UPDATE = false;

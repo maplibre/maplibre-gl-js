@@ -1,10 +1,10 @@
 import {test} from '../../util/test';
-import * as mapbox from '../../../src/util/mapbox';
-import config from '../../../src/util/config';
-import window from '../../../src/util/window';
-import webpSupported from '../../../src/util/webp_supported';
-import {uuid} from '../../../src/util/util';
-import {SKU_ID} from '../../../src/util/sku_token';
+import * as mapbox from '../../../rollup/build/tsc/util/mapbox';
+import config from '../../../rollup/build/tsc/util/config';
+import window from '../../../rollup/build/tsc/util/window';
+import webpSupported from '../../../rollup/build/tsc/util/webp_supported';
+import {uuid} from '../../../rollup/build/tsc/util/util';
+import {SKU_ID} from '../../../rollup/build/tsc/util/sku_token';
 import {version} from '../../../package.json';
 import {equalWithPrecision} from '../../util';
 

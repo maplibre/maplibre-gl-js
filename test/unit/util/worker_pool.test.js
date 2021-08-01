@@ -1,5 +1,5 @@
 import {test} from '../../util/test';
-import WorkerPool from '../../../src/util/worker_pool';
+import WorkerPool from '../../../rollup/build/tsc/util/worker_pool';
 
 test('WorkerPool', (t) => {
     t.test('#acquire', (t) => {

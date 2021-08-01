@@ -5,10 +5,10 @@ import {
     postData,
     getImage,
     resetImageRequestQueue
-} from '../../../src/util/ajax';
-import window from '../../../src/util/window';
-import config from '../../../src/util/config';
-import webpSupported from '../../../src/util/webp_supported';
+} from '../../../rollup/build/tsc/util/ajax';
+import window from '../../../rollup/build/tsc/util/window';
+import config from '../../../rollup/build/tsc/util/config';
+import webpSupported from '../../../rollup/build/tsc/util/webp_supported';
 
 test('ajax', (t) => {
     t.beforeEach(callback => {

@@ -3,9 +3,9 @@ import path from 'path';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import {test} from '../../util/test';
-import VectorTileWorkerSource from '../../../src/source/vector_tile_worker_source';
-import StyleLayerIndex from '../../../src/style/style_layer_index';
-import perf from '../../../src/util/performance';
+import VectorTileWorkerSource from '../../../rollup/build/tsc/source/vector_tile_worker_source';
+import StyleLayerIndex from '../../../rollup/build/tsc/style/style_layer_index';
+import perf from '../../../rollup/build/tsc/util/performance';
 
 const actor = {send: () => {}};
 

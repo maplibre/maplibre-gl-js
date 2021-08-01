@@ -1,7 +1,7 @@
 import {test} from '../../../util/test';
-import window from '../../../../src/util/window';
+import window from '../../../../rollup/build/tsc/util/window';
 import {createMap} from '../../../util';
-import GeolocateControl from '../../../../src/ui/control/geolocate_control';
+import GeolocateControl from '../../../../rollup/build/tsc/ui/control/geolocate_control';
 
 // window and navigator globals need to be set for mock-geolocation
 global.window = {};

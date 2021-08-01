@@ -1,6 +1,6 @@
 import {test} from '../../util/test';
-import Actor from '../../../src/util/actor';
-import WebWorker from '../../../src/util/web_worker';
+import Actor from '../../../rollup/build/tsc/util/actor';
+import WebWorker from '../../../rollup/build/tsc/util/web_worker';
 
 test('Actor', (t) => {
     t.test('forwards resopnses to correct callback', (t) => {

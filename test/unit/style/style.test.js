@@ -1,20 +1,20 @@
 import {test} from '../../util/test';
 import assert from 'assert';
-import Style from '../../../src/style/style';
-import SourceCache from '../../../src/source/source_cache';
-import StyleLayer from '../../../src/style/style_layer';
-import Transform from '../../../src/geo/transform';
-import {extend} from '../../../src/util/util';
-import {RequestManager} from '../../../src/util/mapbox';
-import {Event, Evented} from '../../../src/util/evented';
-import window from '../../../src/util/window';
+import Style from '../../../rollup/build/tsc/style/style';
+import SourceCache from '../../../rollup/build/tsc/source/source_cache';
+import StyleLayer from '../../../rollup/build/tsc/style/style_layer';
+import Transform from '../../../rollup/build/tsc/geo/transform';
+import {extend} from '../../../rollup/build/tsc/util/util';
+import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
+import {Event, Evented} from '../../../rollup/build/tsc/util/evented';
+import window from '../../../rollup/build/tsc/util/window';
 import {
     setRTLTextPlugin,
     clearRTLTextPlugin,
     evented as rtlTextPluginEvented
-} from '../../../src/source/rtl_text_plugin';
-import browser from '../../../src/util/browser';
-import {OverscaledTileID} from '../../../src/source/tile_id';
+} from '../../../rollup/build/tsc/source/rtl_text_plugin';
+import browser from '../../../rollup/build/tsc/util/browser';
+import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
 
 function createStyleJSON(properties) {
     return extend({

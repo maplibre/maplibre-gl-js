@@ -1,6 +1,6 @@
 import {test} from '../../util/test';
-import Worker from '../../../src/source/worker';
-import window from '../../../src/util/window';
+import Worker from '../../../rollup/build/tsc/source/worker';
+import window from '../../../rollup/build/tsc/util/window';
 
 const _self = {
     addEventListener() {}

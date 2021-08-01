@@ -1,5 +1,5 @@
 import {test} from '../util/test';
-import mapboxgl from '../../src';
+import mapboxgl from '../../rollup/build/tsc';
 
 test('mapboxgl', (t) => {
     t.test('version', (t) => {
