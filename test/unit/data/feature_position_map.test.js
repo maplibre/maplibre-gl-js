@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 
 import FeatureMap from '../../../rollup/build/tsc/data/feature_position_map';

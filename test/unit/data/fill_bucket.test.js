@@ -1,3 +1,5 @@
+
+import '../../stub_loader';
 import {test} from '../../util/test';
 import fs from 'fs';
 import path from 'path';
@@ -7,6 +9,9 @@ import Point from '../../../rollup/build/tsc/symbol/point';
 import segment from '../../../rollup/build/tsc/data/segment';
 import FillBucket from '../../../rollup/build/tsc/data/bucket/fill_bucket';
 import FillStyleLayer from '../../../rollup/build/tsc/style/style_layer/fill_style_layer';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load a fill feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'))));
