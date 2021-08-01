@@ -235,7 +235,7 @@ test('Style#loadJSON', (t) => {
         // fake the image request (sinon doesn't allow non-string data for
         // server.respondWith, so we do so manually)
         const requests = [];
-        window.XMLHttpRequest.onCreate = req => { requests.push(req); };
+        XMLHttpRequest.onCreate = req => { requests.push(req); };
         const respond = () => {
             let req = requests.find(req => req.url === 'http://example.com/sprite.png');
             req.setStatus(200);
