@@ -21,6 +21,7 @@ global.HTMLCanvasElement = window.HTMLCanvasElement;
 global.OffscreenCanvas = window.OffscreenCanvas;
 global.Image = window.Image;
 global.navigator = window.navigator;
+global.WheelEvent = window.WheelEvent;
 // stubbing image load as it is not implemented in jsdom
 Object.defineProperty(global.Image.prototype, 'src', {
     set(src) {
