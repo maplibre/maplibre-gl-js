@@ -686,7 +686,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=pk.new.*`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'appUserTurnstile');
-                t.equal(reqBody.sdkVersion, version);
                 t.equal(reqBody.skuId, SKU_ID);
                 t.ok(reqBody.userId);
 
@@ -709,7 +708,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=key`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'appUserTurnstile');
-                t.equal(reqBody.sdkVersion, version);
                 t.equal(reqBody.skuId, SKU_ID);
                 t.ok(reqBody.userId);
                 equalWithPrecision(t, new Date(reqBody.created).valueOf(), tomorrow, 100);
@@ -946,7 +944,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=key`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'map.load');
-                t.equal(reqBody.sdkVersion, version);
                 t.ok(reqBody.userId);
 
                 t.end();
@@ -980,7 +977,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=pk.new.*`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'map.load');
-                t.equal(reqBody.sdkVersion, version);
                 t.ok(reqBody.userId);
 
                 t.end();
@@ -1000,7 +996,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=key`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'map.load');
-                t.equal(reqBody.sdkVersion, version);
                 t.ok(reqBody.userId);
                 equalWithPrecision(t, new Date(reqBody.created).valueOf(), now, 100);
 
