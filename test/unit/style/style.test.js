@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import assert from 'assert';
 import Style from '../../../rollup/build/tsc/style/style';
@@ -7,7 +8,6 @@ import Transform from '../../../rollup/build/tsc/geo/transform';
 import {extend} from '../../../rollup/build/tsc/util/util';
 import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
 import {Event, Evented} from '../../../rollup/build/tsc/util/evented';
-import window from '../../../rollup/build/tsc/util/window';
 import {
     setRTLTextPlugin,
     clearRTLTextPlugin,

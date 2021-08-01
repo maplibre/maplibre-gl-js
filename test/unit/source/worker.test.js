@@ -1,6 +1,6 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import Worker from '../../../rollup/build/tsc/source/worker';
-import window from '../../../rollup/build/tsc/util/window';
 
 const _self = {
     addEventListener() {}

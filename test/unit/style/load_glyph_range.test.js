@@ -1,9 +1,7 @@
-// @flow
-
+import '../../stub_loader';
 import {test} from '../../util/test';
 import fs from 'fs';
 import path from 'path';
-import window from '../../../rollup/build/tsc/util/window';
 import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
 import loadGlyphRange from '../../../rollup/build/tsc/style/load_glyph_range';
 

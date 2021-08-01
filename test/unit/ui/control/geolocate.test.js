@@ -1,12 +1,12 @@
+import '../../../stub_loader';
+import geolocation from 'mock-geolocation';
 import {test} from '../../../util/test';
-import window from '../../../../rollup/build/tsc/util/window';
 import {createMap} from '../../../util';
 import GeolocateControl from '../../../../rollup/build/tsc/ui/control/geolocate_control';
 
 // window and navigator globals need to be set for mock-geolocation
 global.window = {};
 global.navigator = {};
-const geolocation = require('mock-geolocation'); // eslint-disable-line import/no-commonjs
 geolocation.use();
 
 // assign the mock geolocation to window

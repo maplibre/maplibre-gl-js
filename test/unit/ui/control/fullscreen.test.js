@@ -1,5 +1,5 @@
+import '../../../stub_loader';
 import {test} from '../../../util/test';
-import window from '../../../../rollup/build/tsc/util/window';
 import {createMap} from '../../../util';
 import FullscreenControl from '../../../../rollup/build/tsc/ui/control/fullscreen_control';
 

@@ -1,6 +1,6 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import RasterTileSource from '../../../rollup/build/tsc/source/raster_tile_source';
-import window from '../../../rollup/build/tsc/util/window';
 import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
 import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
 

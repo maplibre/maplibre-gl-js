@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import {
     getArrayBuffer,
@@ -6,7 +7,6 @@ import {
     getImage,
     resetImageRequestQueue
 } from '../../../rollup/build/tsc/util/ajax';
-import window from '../../../rollup/build/tsc/util/window';
 import config from '../../../rollup/build/tsc/util/config';
 import webpSupported from '../../../rollup/build/tsc/util/webp_supported';
 

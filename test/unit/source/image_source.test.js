@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import assert from 'assert';
 import ImageSource from '../../../rollup/build/tsc/source/image_source';
@@ -5,7 +6,6 @@ import {Evented} from '../../../rollup/build/tsc/util/evented';
 import Transform from '../../../rollup/build/tsc/geo/transform';
 import {extend} from '../../../rollup/build/tsc/util/util';
 import browser from '../../../rollup/build/tsc/util/browser';
-import window from '../../../rollup/build/tsc/util/window';
 
 function createSource(options) {
     options = extend({

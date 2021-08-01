@@ -1,6 +1,6 @@
+import '../../../stub_loader';
 import {test} from '../../../util/test';
 import browser from '../../../../rollup/build/tsc/util/browser';
-import window from '../../../../rollup/build/tsc/util/window';
 import Map from '../../../../rollup/build/tsc/ui/map';
 import DOM from '../../../../rollup/build/tsc/util/dom';
 import simulate from '../../../util/simulate_interaction';

@@ -1,7 +1,7 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import * as mapbox from '../../../rollup/build/tsc/util/mapbox';
 import config from '../../../rollup/build/tsc/util/config';
-import window from '../../../rollup/build/tsc/util/window';
 import webpSupported from '../../../rollup/build/tsc/util/webp_supported';
 import {uuid} from '../../../rollup/build/tsc/util/util';
 import {SKU_ID} from '../../../rollup/build/tsc/util/sku_token';

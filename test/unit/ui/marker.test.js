@@ -1,5 +1,5 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
-import window from '../../../rollup/build/tsc/util/window';
 import {createMap as globalCreateMap} from '../../util';
 import Marker from '../../../rollup/build/tsc/ui/marker';
 import Popup from '../../../rollup/build/tsc/ui/popup';

@@ -1,6 +1,6 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import {extend} from '../../../rollup/build/tsc/util/util';
-import window from '../../../rollup/build/tsc/util/window';
 import Map from '../../../rollup/build/tsc/ui/map';
 import {createMap} from '../../util';
 import LngLat from '../../../rollup/build/tsc/geo/lng_lat';

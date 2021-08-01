@@ -1,7 +1,7 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import VectorTileSource from '../../../rollup/build/tsc/source/vector_tile_source';
 import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
-import window from '../../../rollup/build/tsc/util/window';
 import {Evented} from '../../../rollup/build/tsc/util/evented';
 import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
 
