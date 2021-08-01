@@ -1,3 +1,4 @@
+import '../../../stub_loader';
 import {test} from '../../../util/test';
 import config from '../../../../rollup/build/tsc/util/config';
 import AttributionControl from '../../../../rollup/build/tsc/ui/control/attribution_control';
