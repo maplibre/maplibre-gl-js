@@ -6,6 +6,9 @@ import {test} from '../../util/test';
 import VectorTileWorkerSource from '../../../rollup/build/tsc/source/vector_tile_worker_source';
 import StyleLayerIndex from '../../../rollup/build/tsc/style/style_layer_index';
 import perf from '../../../rollup/build/tsc/util/performance';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const actor = {send: () => {}};
 

@@ -58,14 +58,15 @@ class StubMap extends Evented {
 
 test('Style', (t) => {
     t.afterEach((callback) => {
-        window.restore();
+        window.clearFakeXMLHttpRequest();
+        window.clearFakeWorkerPresence();
         callback();
     });
 
     t.test('registers plugin state change listener', (t) => {
         clearRTLTextPlugin();
         window.useFakeXMLHttpRequest();
-        window.fakeWorkerPresence();
+        window.useFakeWorkerPresence();
         t.spy(Style, 'registerForPluginStateChange');
         const style = new Style(new StubMap());
         t.spy(style.dispatcher, 'broadcast');
@@ -83,7 +84,7 @@ test('Style', (t) => {
     t.test('loads plugin immediately if already registered', (t) => {
         clearRTLTextPlugin();
         window.useFakeXMLHttpRequest();
-        window.fakeWorkerPresence();
+        window.useFakeWorkerPresence();
         window.URL.createObjectURL = () => 'blob:';
         t.tearDown(() => delete window.URL.createObjectURL);
         window.server.respondWith('/plugin.js', "doesn't matter");
@@ -95,6 +96,7 @@ test('Style', (t) => {
                 t.equals(error.message, 'RTL Text Plugin failed to import scripts from /plugin.js');
                 t.end();
                 window.clearFakeWorkerPresence();
+                window.clearFakeXMLHttpRequest();
                 firstError = false;
             }
         });
@@ -112,7 +114,7 @@ test('Style#loadURL', (t) => {
     });
 
     t.afterEach((callback) => {
-        window.restore();
+        window.clearFakeXMLHttpRequest();
         callback();
     });
 
@@ -184,7 +186,7 @@ test('Style#loadURL', (t) => {
 
 test('Style#loadJSON', (t) => {
     t.afterEach((callback) => {
-        window.restore();
+        window.clearFakeXMLHttpRequest();
         callback();
     });
 
@@ -518,7 +520,7 @@ test('Style#setState', (t) => {
             t.stub(style, 'removeSource').callsFake(() => t.fail('removeSource called'));
             t.stub(style, 'addSource').callsFake(() => t.fail('addSource called'));
             style.setState(initial);
-            window.restore();
+            window.clearFakeXMLHttpRequest();
             t.end();
         });
         window.server.respond();

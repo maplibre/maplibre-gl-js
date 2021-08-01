@@ -5,6 +5,9 @@ import * as shaping from '../../../rollup/build/tsc/symbol/shaping';
 import Formatted, {FormattedSection} from '../../../rollup/build/tsc/style-spec/expression/types/formatted';
 import ResolvedImage from '../../../rollup/build/tsc/style-spec/expression/types/resolved_image';
 import {ImagePosition} from '../../../rollup/build/tsc/render/image_atlas';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const WritingMode = shaping.WritingMode;
 
 let UPDATE = false;

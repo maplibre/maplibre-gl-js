@@ -4,12 +4,15 @@ import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
 import loadGlyphRange from '../../../rollup/build/tsc/style/load_glyph_range';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 test('loadGlyphRange', (t) => {
     window.useFakeXMLHttpRequest();
 
     t.tearDown(() => {
-        window.restore();
+        window.clearFakeXMLHttpRequest();
     });
 
     const transform = t.stub().callsFake((url) => ({url}));

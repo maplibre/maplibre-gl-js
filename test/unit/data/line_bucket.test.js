@@ -7,6 +7,9 @@ import Point from '../../../rollup/build/tsc/symbol/point';
 import segment from '../../../rollup/build/tsc/data/segment';
 import LineBucket from '../../../rollup/build/tsc/data/bucket/line_bucket';
 import LineStyleLayer from '../../../rollup/build/tsc/style/style_layer/line_style_layer';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load a line feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'))));

@@ -26,7 +26,7 @@ test('RasterTileSource', (t) => {
     });
 
     t.afterEach((callback) => {
-        window.restore();
+        window.clearFakeXMLHttpRequest();
         callback();
     });
 

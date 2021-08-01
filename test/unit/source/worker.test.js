@@ -18,7 +18,7 @@ test('load tile', (t) => {
             request: {url: '/error'}// Sinon fake server gives 404 responses by default
         }, (err) => {
             t.ok(err);
-            window.restore();
+            window.clearFakeXMLHttpRequest();
             t.end();
         });
         window.server.respond();

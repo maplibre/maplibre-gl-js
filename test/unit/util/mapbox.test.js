@@ -426,7 +426,7 @@ test("mapbox", (t) => {
         });
 
         t.afterEach((callback) => {
-            window.restore();
+            window.clearFakeXMLHttpRequest();
             callback();
         });
 
@@ -762,7 +762,7 @@ test("mapbox", (t) => {
         });
 
         t.afterEach((callback) => {
-            window.restore();
+            window.clearFakeXMLHttpRequest();
             callback();
         });
 

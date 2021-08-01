@@ -1,4 +1,4 @@
-import window from '../../rollup/build/tsc/util/window';
+import '../stub_loader';
 import Map from '../../rollup/build/tsc/ui/map';
 import {extend} from '../../rollup/build/tsc/util/util';
 

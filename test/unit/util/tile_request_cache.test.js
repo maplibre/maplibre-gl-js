@@ -11,7 +11,7 @@ test('tile_request_cache', (t) => {
     });
 
     t.afterEach(callback => {
-        window.restore();
+        delete window.caches;
         callback();
     });
 

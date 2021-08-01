@@ -3,6 +3,9 @@ import glob from 'glob';
 import fs from 'fs';
 import path from 'path';
 import validate from '../../../rollup/build/tsc/style-spec/validate_style';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const UPDATE = !!process.env.UPDATE;
 

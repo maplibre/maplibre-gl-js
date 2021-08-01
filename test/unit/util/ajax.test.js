@@ -17,7 +17,7 @@ test('ajax', (t) => {
     });
 
     t.afterEach(callback => {
-        window.restore();
+        window.clearFakeXMLHttpRequest();
         callback();
     });
 

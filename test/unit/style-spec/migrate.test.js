@@ -5,6 +5,9 @@ import path from 'path';
 import validate from '../../../rollup/build/tsc/style-spec/validate_style';
 import v8 from '../../../rollup/build/tsc/style-spec/reference/v8';
 import migrate from '../../../rollup/build/tsc/style-spec/migrate';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /* eslint-disable import/namespace */
 import * as spec from '../../../rollup/build/tsc/style-spec/style-spec';

@@ -40,7 +40,7 @@ test('VectorTileSource', (t) => {
     });
 
     t.afterEach((callback) => {
-        window.restore();
+        window.clearFakeXMLHttpRequest();
         callback();
     });
 

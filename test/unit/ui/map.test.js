@@ -27,7 +27,7 @@ test('Map', (t) => {
     });
 
     t.afterEach((callback) => {
-        window.restore();
+        window.clearFakeXMLHttpRequest();
         callback();
     });
 

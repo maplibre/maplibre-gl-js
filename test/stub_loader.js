@@ -60,7 +60,8 @@ global.cancelAnimationFrame = clearImmediate;
 
 // Add webgl context with the supplied GL
 const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
-global.HTMLCanvasElement.prototype.getContext = function (type, attributes) {
+
+var imitateWebGlGetContext = (type, attributes) => {
     if (type === 'webgl') {
         if (!this._webGLContext) {
             this._webGLContext = gl(this.width, this.height, attributes);
@@ -69,12 +70,17 @@ global.HTMLCanvasElement.prototype.getContext = function (type, attributes) {
     }
     // Fallback to existing HTMLCanvasElement getContext behaviour
     return originalGetContext.call(this, type, attributes);
-};
+}
+global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 
 // HM TODO: move this to the relevat test...
 window.useFakeHTMLCanvasGetContext = function () {
-    this.HTMLCanvasElement.prototype.getContext = function () { return '2d'; };
+    this.HTMLCanvasElement.prototype.getContext = () =>  { return '2d'; };
 };
+
+window.clearFakeHTMLCanvasGetContext = () => {
+    global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
+}
 
 // HM TODO: move this to the relevat test...
 window.useFakeXMLHttpRequest = function () {
@@ -82,6 +88,10 @@ window.useFakeXMLHttpRequest = function () {
     this.server = sinon.fakeServer.create();
     this.XMLHttpRequest = this.server.xhr;
 };
+
+window.clearFakeXMLHttpRequest = () => {
+    window.server = null;
+}
 
 global.URL.createObjectURL = (blob) => {
     lastDataFroUrl = blob;
@@ -91,7 +101,7 @@ global.URL.revokeObjectURL = function () {
     lastDataFroUrl = null;
 };
 
-window.fakeWorkerPresence = function () {
+window.useFakeWorkerPresence = function () {
     global.WorkerGlobalScope = function () { };
     global.self = new global.WorkerGlobalScope();
 };
@@ -106,4 +116,3 @@ window.performance.mark = function () { };
 window.performance.measure = function () { };
 window.performance.clearMarks = function () { };
 window.performance.clearMeasures = function () { };
-

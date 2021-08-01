@@ -13,6 +13,9 @@ import Tile from '../../../rollup/build/tsc/source/tile';
 import CrossTileSymbolIndex from '../../../rollup/build/tsc/symbol/cross_tile_symbol_index';
 import FeatureIndex from '../../../rollup/build/tsc/data/feature_index';
 import {createSymbolBucket} from '../../util/create_symbol_layer';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load a point feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'))));
