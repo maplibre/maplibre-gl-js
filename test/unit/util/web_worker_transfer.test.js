@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import {register, serialize, deserialize} from '../../../rollup/build/tsc/util/web_worker_transfer';
 
