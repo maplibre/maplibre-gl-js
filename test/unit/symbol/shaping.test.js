@@ -5,6 +5,7 @@ import path from 'path';
 import * as shaping from '../../../rollup/build/tsc/symbol/shaping';
 import Formatted, {FormattedSection} from '../../../rollup/build/tsc/style-spec/expression/types/formatted';
 import ResolvedImage from '../../../rollup/build/tsc/style-spec/expression/types/resolved_image';
+import expectedJson from '../../expected/text-shaping-linebreak.json';
 import {ImagePosition} from '../../../rollup/build/tsc/render/image_atlas';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -61,7 +62,7 @@ test('shaping', (t) => {
     // Line break.
     shaped = shaping.shapeText(Formatted.fromString('abcde abcde'), glyphs, glyphPositions, images, fontStack, 4 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
     if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-linebreak.json'), JSON.stringify(shaped, null, 2));
-    t.deepEqual(shaped, require('../../expected/text-shaping-linebreak.json'));
+    t.deepEqual(shaped, expectedJson);
 
     const expectedNewLine = JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-newline.json')));
 
