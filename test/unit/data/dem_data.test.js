@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import DEMData from '../../../rollup/build/tsc/data/dem_data';
 import {RGBAImage} from '../../../rollup/build/tsc/util/image';
