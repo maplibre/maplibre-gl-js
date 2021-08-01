@@ -87,11 +87,12 @@ window.clearFakeHTMLCanvasGetContext = () => {
 window.useFakeXMLHttpRequest = function () {
     sinon.xhr.supportsCORS = true;
     this.server = sinon.fakeServer.create();
-    this.XMLHttpRequest = this.server.xhr;
+    global.XMLHttpRequest = this.server.xhr;
 };
 
 window.clearFakeXMLHttpRequest = () => {
     window.server = null;
+    global.XMLHttpRequest = null;
 }
 
 global.URL.createObjectURL = (blob) => {

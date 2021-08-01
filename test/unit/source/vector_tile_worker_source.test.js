@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import fs from 'fs';
 import path from 'path';
 import vt from '@mapbox/vector-tile';
@@ -11,8 +12,8 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const actor = {send: () => {}};
-
 test('VectorTileWorkerSource#abortTile aborts pending request', (t) => {
+    window.useFakeXMLHttpRequest();
     const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
     source.loadTile({
@@ -34,6 +35,7 @@ test('VectorTileWorkerSource#abortTile aborts pending request', (t) => {
     });
 
     t.deepEqual(source.loading, {});
+    window.clearFakeXMLHttpRequest();
     t.end();
 });
 
@@ -289,3 +291,4 @@ test('VectorTileWorkerSource provides resource timing information (fallback meth
         t.end();
     });
 });
+
