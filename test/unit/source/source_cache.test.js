@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import SourceCache from '../../../rollup/build/tsc/source/source_cache';
 import {setType} from '../../../rollup/build/tsc/source/source';

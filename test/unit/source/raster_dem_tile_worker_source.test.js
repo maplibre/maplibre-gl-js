@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import RasterDEMTileWorkerSource from '../../../rollup/build/tsc/source/raster_dem_tile_worker_source';
 import StyleLayerIndex from '../../../rollup/build/tsc/style/style_layer_index';

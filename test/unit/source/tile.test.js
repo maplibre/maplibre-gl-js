@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import {createSymbolBucket} from '../../util/create_symbol_layer';
 import Tile from '../../../rollup/build/tsc/source/tile';
