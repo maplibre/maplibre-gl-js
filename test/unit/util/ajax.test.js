@@ -106,21 +106,10 @@ test('ajax', (t) => {
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
-        // jsdom doesn't call image onload; fake it https://github.com/jsdom/jsdom/issues/1816
-        const jsdomImage = window.Image;
-        window.Image = class {
-            set src(src) {
-                setTimeout(() => {
-                    if (this.onload) this.onload();
-                });
-            }
-        };
-
         function callback(err) {
             if (err) return;
             // last request is only added after we got a response from one of the previous ones
             t.equals(window.server.requests.length, maxRequests + 1);
-            window.Image = jsdomImage;
             t.end();
         }
 
@@ -139,19 +128,10 @@ test('ajax', (t) => {
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
-        // jsdom doesn't call image onload; fake it https://github.com/jsdom/jsdom/issues/1816
-        const jsdomImage = window.Image;
-        window.Image = class {
-            set src(src) {
-                setTimeout(() => this.onload());
-            }
-        };
-
         for (let i = 0; i < maxRequests + 1; i++) {
             getImage({url: ''}, () => t.fail).cancel();
         }
         t.equals(window.server.requests.length, maxRequests + 1);
-        window.Image = jsdomImage;
         t.end();
     });
 
@@ -198,15 +178,6 @@ test('ajax', (t) => {
 
         // mock webp support
         webpSupported.supported = true;
-
-        // jsdom doesn't call image onload; fake it https://github.com/jsdom/jsdom/issues/1816
-        window.Image = class {
-            set src(src) {
-                setTimeout(() => {
-                    if (this.onload) this.onload();
-                });
-            }
-        };
 
         getImage({url: ''}, () => { t.end(); });
 

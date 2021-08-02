@@ -26,26 +26,34 @@ global.WheelEvent = window.WheelEvent;
 // eslint-disable-next-line accessor-pairs
 Object.defineProperty(global.Image.prototype, 'src', {
     set(src) {
-        if (lastDataFromUrl) {
-            if (lastDataFromUrl.size < 10) {
-                // if this is not a valid image load it anyway but don't set the data for later use
-                // this is the case in the unit tests
-                this.onload();
-                return;
-            }
-            const reader = new window.FileReader();
-            reader.onload = (_) => {
-                const dataUrl = reader.result;
-                new PNG().parse(dataUrl, (err, png) => {
-                    if (err) throw new Error("Couldn't parse PNG");
-                    this.data = png.data;
-                    this.height = png.height;
-                    this.width = png.width;
-                    this.onload();
-                });
-            };
-            reader.readAsArrayBuffer(lastDataFromUrl);
+        if (!this.onload) {
+            return;
         }
+        if (src && typeof src === 'string' && !src.startsWith('blob')) {
+            this.onload();
+            return;
+        }
+        if (!lastDataFromUrl) {
+            return;
+        }
+        if (lastDataFromUrl.size < 10) {
+            // if this is not a valid image load it anyway but don't set the data for later use
+            // this is the case in the unit tests
+            this.onload();
+            return;
+        }
+        const reader = new window.FileReader();
+        reader.onload = (_) => {
+            const dataUrl = reader.result;
+            new PNG().parse(dataUrl, (err, png) => {
+                if (err) throw new Error("Couldn't parse PNG");
+                this.data = png.data;
+                this.height = png.height;
+                this.width = png.width;
+                this.onload();
+            });
+        };
+        reader.readAsArrayBuffer(lastDataFromUrl);
     }
 });
 global.Blob = window.Blob;
