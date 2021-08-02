@@ -211,11 +211,12 @@ export function uniqueId(): number {
  * Return a random UUID (v4). Taken from: https://gist.github.com/jed/982883
  * @private
  */
+// HM TODO: replace this with uuid library
 export function uuid(): string {
     function b(a?): string {
         return a ?
             (a ^ Math.random() * 16 >> a / 4).toString(16) :
-            "10000000-1000-4000-80000000-100000000000".replace(/[018]/g, b);
+            "10000000-1000-4000-8000-100000000000".replace(/[018]/g, b);
     }
     return b();
 }
