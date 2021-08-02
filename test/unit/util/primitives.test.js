@@ -133,12 +133,8 @@ test('primitives', (t) => {
                 [-100.0, -100.0, -100.0, 1.0],
             ];
 
-            // Round numbers to mitigate the precision loss
-            // this is just for test so convert to regular non typed Array for test comparison
-            // frustum.points = frustum.points.map(array => array.map(n => Math.round(n * 10) / 10));
-            // frustum.planes = frustum.planes.map(array => array.map(n => Math.round(n * 1000) / 1000));
-            frustum.points = frustum.points.map(array => Array.from(array).map(n => Math.round(n * 10) / 10));
-            frustum.planes = frustum.planes.map(array => Array.from(array).map(n => Math.round(n * 1000) / 1000));
+            frustum.points = frustum.points.map(array => array.map(n => Math.round(n * 10) / 10));
+            frustum.planes = frustum.planes.map(array => array.map(n => Math.round(n * 1000) / 1000));
 
             const expectedFrustumPlanes = [
                 [0, 0, 1.0, 0.1],
