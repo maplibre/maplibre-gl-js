@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import browser from '../../../rollup/build/tsc/util/browser';
 
