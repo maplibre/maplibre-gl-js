@@ -6,6 +6,10 @@ class Frustum {
     constructor(public points: vec4[], public planes: vec4[]) { }
 
     public static fromInvProjectionMatrix(invProj: mat4, worldSize: number, zoom: number): Frustum {
+        const toVec3 = (vec4: vec4): vec3 => {
+            return vec3.fromValues(vec4[0], vec4[1], vec4[2]);
+        }
+
         const clipSpaceCorners = [
             vec4.fromValues(-1, 1, -1, 1),
             vec4.fromValues(1, 1, -1, 1),
@@ -34,10 +38,10 @@ class Frustum {
         ];
 
         const frustumPlanes = frustumPlanePointIndices.map((p: vec3) => {
-            const a = vec3.sub(vec3.create(), frustumCoords[p[0]] as vec3, frustumCoords[p[1]] as vec3);
-            const b = vec3.sub(vec3.create(), frustumCoords[p[2]] as vec3, frustumCoords[p[1]] as vec3);
+            const a = vec3.sub(vec3.create(), toVec3(frustumCoords[p[0]]), toVec3(frustumCoords[p[1]]));
+            const b = vec3.sub(vec3.create(), toVec3(frustumCoords[p[2]]), toVec3(frustumCoords[p[1]]));
             const n = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), a, b));
-            const d = -vec3.dot(n, frustumCoords[p[1]] as vec3);
+            const d = -vec3.dot(n, toVec3(frustumCoords[p[1]]));
             return [n[0], n[1], n[2], d] as any as vec4;
         });
 
