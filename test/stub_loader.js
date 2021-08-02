@@ -1,12 +1,12 @@
 import gl from 'gl';
-import { JSDOM, VirtualConsole } from "jsdom";
-import { PNG } from 'pngjs';
+import {JSDOM, VirtualConsole} from "jsdom";
+import {PNG} from 'pngjs';
 import sinon from 'sinon';
 
-let lastDataFroUrl = null;
+let lastDataFromUrl = null;
 
 // The following is the mocking of what's needed in window and global for the tests to run.
-const { window } = new JSDOM('', {
+const {window} = new JSDOM('', {
     // Send jsdom console output to the node console object.
     virtualConsole: new VirtualConsole().sendTo(console)
 });
@@ -23,20 +23,22 @@ global.Image = window.Image;
 global.navigator = window.navigator;
 global.WheelEvent = window.WheelEvent;
 // stubbing image load as it is not implemented in jsdom
+// eslint-disable-next-line accessor-pairs
 Object.defineProperty(global.Image.prototype, 'src', {
     set(src) {
-        if (lastDataFroUrl) {
+        if (lastDataFromUrl) {
             const reader = new window.FileReader();
             reader.onload = (_) => {
                 const dataUrl = reader.result;
                 new PNG().parse(dataUrl, (err, png) => {
+                    if (err) throw new Error("Couldn't parse PNG");
                     this.data = png.data;
                     this.height = png.height;
                     this.width = png.width;
                     setTimeout(() => this.onload());
                 });
-            }
-            reader.readAsArrayBuffer(lastDataFroUrl);
+            };
+            reader.readAsArrayBuffer(lastDataFromUrl);
         }
     }
 });
@@ -82,7 +84,7 @@ window.useFakeHTMLCanvasGetContext = function () {
 
 window.clearFakeHTMLCanvasGetContext = () => {
     global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
-}
+};
 
 // HM TODO: move this to the relevat test...
 window.useFakeXMLHttpRequest = function () {
@@ -94,14 +96,15 @@ window.useFakeXMLHttpRequest = function () {
 window.clearFakeXMLHttpRequest = () => {
     window.server = null;
     global.XMLHttpRequest = null;
-}
+};
 
 global.URL.createObjectURL = (blob) => {
-    lastDataFroUrl = blob;
+    lastDataFromUrl = blob;
     return 'blob:';
-}
+};
+
 global.URL.revokeObjectURL = function () {
-    lastDataFroUrl = null;
+    lastDataFromUrl = null;
 };
 
 window.useFakeWorkerPresence = function () {
@@ -112,7 +115,6 @@ window.clearFakeWorkerPresence = function () {
     global.WorkerGlobalScope = undefined;
     global.self = undefined;
 };
-
 
 window.performance.getEntriesByName = function () { };
 window.performance.mark = function () { };

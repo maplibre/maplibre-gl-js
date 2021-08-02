@@ -2,7 +2,13 @@ import {mat4, vec3, vec4} from 'gl-matrix';
 import assert from 'assert';
 
 class Frustum {
-    constructor(public points: vec4[], public planes: vec4[]) { }
+    points: vec4[];
+    planes: vec4[];
+
+    constructor(points: vec4[], planes: vec4[]) {
+        this.points = points;
+        this.planes = planes;
+    }
 
     public static fromInvProjectionMatrix(invProj: mat4, worldSize: number, zoom: number): Frustum {
         const clipSpaceCorners = [
@@ -24,15 +30,15 @@ class Frustum {
             .map(v => vec4.scale(vec4.create(), v, 1.0 / v[3] / worldSize * scale));
 
         const frustumPlanePointIndices = [
-            vec3.fromValues(0, 1, 2),  // near
-            vec3.fromValues(6, 5, 4),  // far
-            vec3.fromValues(0, 3, 7),  // left
-            vec3.fromValues(2, 1, 5),  // right
-            vec3.fromValues(3, 2, 6),  // bottom
-            vec3.fromValues(0, 4, 5)   // top
+            [0, 1, 2],  // near
+            [6, 5, 4],  // far
+            [0, 3, 7],  // left
+            [2, 1, 5],  // right
+            [3, 2, 6],  // bottom
+            [0, 4, 5]   // top
         ];
 
-        const frustumPlanes = frustumPlanePointIndices.map((p: vec3) => {
+        const frustumPlanes = frustumPlanePointIndices.map((p: number[]) => {
             const a = vec3.sub(vec3.create(), frustumCoords[p[0]] as vec3, frustumCoords[p[1]] as vec3);
             const b = vec3.sub(vec3.create(), frustumCoords[p[2]] as vec3, frustumCoords[p[1]] as vec3);
             const n = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), a, b));
