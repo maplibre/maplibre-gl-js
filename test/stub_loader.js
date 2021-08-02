@@ -27,6 +27,12 @@ global.WheelEvent = window.WheelEvent;
 Object.defineProperty(global.Image.prototype, 'src', {
     set(src) {
         if (lastDataFromUrl) {
+            if (lastDataFromUrl.size < 10) {
+                // if this is not a valid image load it anyway but don't set the data for later use
+                // this is the case in the unit tests
+                this.onload();
+                return;
+            }
             const reader = new window.FileReader();
             reader.onload = (_) => {
                 const dataUrl = reader.result;
@@ -35,7 +41,7 @@ Object.defineProperty(global.Image.prototype, 'src', {
                     this.data = png.data;
                     this.height = png.height;
                     this.width = png.width;
-                    setTimeout(() => this.onload());
+                    this.onload();
                 });
             };
             reader.readAsArrayBuffer(lastDataFromUrl);

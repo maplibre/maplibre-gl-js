@@ -1,6 +1,5 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import assert from 'assert';
 import Style from '../../../rollup/build/tsc/style/style';
 import SourceCache from '../../../rollup/build/tsc/source/source_cache';
 import StyleLayer from '../../../rollup/build/tsc/style/style_layer';
@@ -85,8 +84,6 @@ test('Style', (t) => {
         clearRTLTextPlugin();
         window.useFakeXMLHttpRequest();
         window.useFakeWorkerPresence();
-        window.URL.createObjectURL = () => 'blob:';
-        t.tearDown(() => delete window.URL.createObjectURL);
         window.server.respondWith('/plugin.js', "doesn't matter");
         let firstError = true;
         setRTLTextPlugin("/plugin.js", (error) => {
@@ -221,16 +218,9 @@ test('Style#loadJSON', (t) => {
         // Stubbing to bypass Web APIs that supported by jsdom:
         // * `URL.createObjectURL` in ajax.getImage (https://github.com/tmpvar/jsdom/issues/1721)
         // * `canvas.getContext('2d')` in browser.getImageData
-        t.stub(window.URL, 'revokeObjectURL');
         t.stub(browser, 'getImageData');
         // stub Image so we can invoke 'onload'
         // https://github.com/jsdom/jsdom/commit/58a7028d0d5b6aacc5b435daee9fd8f9eacbb14c
-        const img = {};
-        t.stub(window, 'Image').returns(img);
-        // stub this manually because sinon does not stub non-existent methods
-        assert(!window.URL.createObjectURL);
-        window.URL.createObjectURL = () => 'blob:';
-        t.tearDown(() => delete window.URL.createObjectURL);
 
         // fake the image request (sinon doesn't allow non-string data for
         // server.respondWith, so we do so manually)
@@ -241,7 +231,6 @@ test('Style#loadJSON', (t) => {
             req.setStatus(200);
             req.response = new ArrayBuffer(8);
             req.onload();
-            img.onload();
 
             req = requests.find(req => req.url === 'http://example.com/sprite.json');
             req.setStatus(200);
