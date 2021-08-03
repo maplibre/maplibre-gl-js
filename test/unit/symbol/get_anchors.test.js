@@ -1,6 +1,6 @@
 import {test} from '../../util/test';
-import Point from '../../../src/symbol/point';
-import {getAnchors, getCenterAnchor} from '../../../src/symbol/get_anchors';
+import Point from '../../../rollup/build/tsc/symbol/point';
+import {getAnchors, getCenterAnchor} from '../../../rollup/build/tsc/symbol/get_anchors';
 
 const TILE_EXTENT = 4096;
 

@@ -1,6 +1,7 @@
 import {Event} from '../util/evented';
 import DOM from '../util/dom';
 import type Map from './map';
+import type {CompleteMapOptions} from './map';
 import HandlerInertia from './handler_inertia';
 import {MapEventHandler, BlockableMapEventHandler} from './handler/map_event';
 import BoxZoomHandler from './handler/box_zoom';
@@ -110,12 +111,7 @@ class HandlerManager {
       capture?: boolean
     } | undefined]>;
 
-    constructor(map: Map, options: {
-      interactive: boolean,
-      pitchWithRotate: boolean,
-      clickTolerance: number,
-      bearingSnap: number
-    }) {
+    constructor(map: Map, options: CompleteMapOptions) {
         this._map = map;
         this._el = this._map.getCanvasContainer();
         this._handlers = [];
@@ -185,11 +181,7 @@ class HandlerManager {
         }
     }
 
-    _addDefaultHandlers(options: {
-      interactive: boolean,
-      pitchWithRotate: boolean,
-      clickTolerance: number
-    }) {
+    _addDefaultHandlers(options: CompleteMapOptions) {
         const map = this._map;
         const el = map.getCanvasContainer();
         this._add('mapEvent', new MapEventHandler(map, options));
@@ -236,8 +228,8 @@ class HandlerManager {
         this._add('blockableMapEvent', new BlockableMapEventHandler(map));
 
         for (const name of ['boxZoom', 'doubleClickZoom', 'tapDragZoom', 'touchPitch', 'dragRotate', 'dragPan', 'touchZoomRotate', 'scrollZoom', 'keyboard']) {
-            if (options.interactive && (options as any)[name]) {
-                (map as any)[name].enable((options as any)[name]);
+            if (options.interactive && options[name]) {
+                map[name].enable(options[name]);
             }
         }
     }

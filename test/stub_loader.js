@@ -1,11 +1,12 @@
 import gl from 'gl';
-import { JSDOM, VirtualConsole } from "jsdom";
-import { PNG } from 'pngjs';
+import {JSDOM, VirtualConsole} from "jsdom";
+import {PNG} from 'pngjs';
+import sinon from 'sinon';
 
-let lastDataFroUrl = null;
+let lastDataFromUrl = null;
 
 // The following is the mocking of what's needed in window and global for the tests to run.
-const { window } = new JSDOM('', {
+const {window} = new JSDOM('', {
     // Send jsdom console output to the node console object.
     virtualConsole: new VirtualConsole().sendTo(console)
 });
@@ -13,29 +14,46 @@ const { window } = new JSDOM('', {
 global.ImageData = window.ImageData || function () { return false; };
 global.ImageBitmap = window.ImageBitmap || function () { return false; };
 global.WebGLFramebuffer = window.WebGLFramebuffer || Object;
-global.HTMLCanvasElement = function () { };
 global.HTMLElement = window.HTMLElement;
 global.HTMLImageElement = window.HTMLImageElement;
 global.HTMLVideoElement = window.HTMLVideoElement;
 global.HTMLCanvasElement = window.HTMLCanvasElement;
 global.OffscreenCanvas = window.OffscreenCanvas;
 global.Image = window.Image;
+global.navigator = window.navigator;
+global.WheelEvent = window.WheelEvent;
 // stubbing image load as it is not implemented in jsdom
+// eslint-disable-next-line accessor-pairs
 Object.defineProperty(global.Image.prototype, 'src', {
     set(src) {
-        if (lastDataFroUrl) {
-            const reader = new window.FileReader();
-            reader.onload = (_) => {
-                const dataUrl = reader.result;
-                new PNG().parse(dataUrl, (err, png) => {
-                    this.data = png.data;
-                    this.height = png.height;
-                    this.width = png.width;
-                    setTimeout(() => this.onload());
-                });
-            }
-            reader.readAsArrayBuffer(lastDataFroUrl);
+        if (!this.onload) {
+            return;
         }
+        if (src && typeof src === 'string' && !src.startsWith('blob')) {
+            this.onload();
+            return;
+        }
+        if (!lastDataFromUrl) {
+            return;
+        }
+        if (lastDataFromUrl.size < 10) {
+            // if this is not a valid image load it anyway but don't set the data for later use
+            // this is the case in the unit tests
+            this.onload();
+            return;
+        }
+        const reader = new window.FileReader();
+        reader.onload = (_) => {
+            const dataUrl = reader.result;
+            new PNG().parse(dataUrl, (err, png) => {
+                if (err) throw new Error("Couldn't parse PNG");
+                this.data = png.data;
+                this.height = png.height;
+                this.width = png.width;
+                this.onload();
+            });
+        };
+        reader.readAsArrayBuffer(lastDataFromUrl);
     }
 });
 global.Blob = window.Blob;
@@ -60,7 +78,8 @@ global.cancelAnimationFrame = clearImmediate;
 
 // Add webgl context with the supplied GL
 const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
-global.HTMLCanvasElement.prototype.getContext = function (type, attributes) {
+
+function imitateWebGlGetContext(type, attributes) {
     if (type === 'webgl') {
         if (!this._webGLContext) {
             this._webGLContext = gl(this.width, this.height, attributes);
@@ -69,29 +88,40 @@ global.HTMLCanvasElement.prototype.getContext = function (type, attributes) {
     }
     // Fallback to existing HTMLCanvasElement getContext behaviour
     return originalGetContext.call(this, type, attributes);
-};
+}
+global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 
 // HM TODO: move this to the relevat test...
 window.useFakeHTMLCanvasGetContext = function () {
-    this.HTMLCanvasElement.prototype.getContext = function () { return '2d'; };
+    this.HTMLCanvasElement.prototype.getContext = () =>  { return '2d'; };
+};
+
+window.clearFakeHTMLCanvasGetContext = () => {
+    global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 };
 
 // HM TODO: move this to the relevat test...
 window.useFakeXMLHttpRequest = function () {
     sinon.xhr.supportsCORS = true;
     this.server = sinon.fakeServer.create();
-    this.XMLHttpRequest = this.server.xhr;
+    global.XMLHttpRequest = this.server.xhr;
+};
+
+window.clearFakeXMLHttpRequest = () => {
+    window.server = null;
+    global.XMLHttpRequest = null;
 };
 
 global.URL.createObjectURL = (blob) => {
-    lastDataFroUrl = blob;
+    lastDataFromUrl = blob;
     return 'blob:';
-}
-global.URL.revokeObjectURL = function () {
-    lastDataFroUrl = null;
 };
 
-window.fakeWorkerPresence = function () {
+global.URL.revokeObjectURL = function () {
+    lastDataFromUrl = null;
+};
+
+window.useFakeWorkerPresence = function () {
     global.WorkerGlobalScope = function () { };
     global.self = new global.WorkerGlobalScope();
 };
@@ -100,10 +130,8 @@ window.clearFakeWorkerPresence = function () {
     global.self = undefined;
 };
 
-
 window.performance.getEntriesByName = function () { };
 window.performance.mark = function () { };
 window.performance.measure = function () { };
 window.performance.clearMarks = function () { };
 window.performance.clearMeasures = function () { };
-

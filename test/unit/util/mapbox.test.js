@@ -1,11 +1,10 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
-import * as mapbox from '../../../src/util/mapbox';
-import config from '../../../src/util/config';
-import window from '../../../src/util/window';
-import webpSupported from '../../../src/util/webp_supported';
-import {uuid} from '../../../src/util/util';
-import {SKU_ID} from '../../../src/util/sku_token';
-import {version} from '../../../package.json';
+import * as mapbox from '../../../rollup/build/tsc/util/mapbox';
+import config from '../../../rollup/build/tsc/util/config';
+import webpSupported from '../../../rollup/build/tsc/util/webp_supported';
+import {uuid} from '../../../rollup/build/tsc/util/util';
+import {SKU_ID} from '../../../rollup/build/tsc/util/sku_token';
 import {equalWithPrecision} from '../../util';
 
 const mapboxTileURLs = [
@@ -426,7 +425,7 @@ test("mapbox", (t) => {
         });
 
         t.afterEach((callback) => {
-            window.restore();
+            window.clearFakeXMLHttpRequest();
             callback();
         });
 
@@ -629,7 +628,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=key`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'appUserTurnstile');
-                t.equal(reqBody.sdkVersion, version);
                 t.equal(reqBody.skuId, SKU_ID);
                 t.ok(reqBody.userId);
 
@@ -688,7 +686,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=pk.new.*`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'appUserTurnstile');
-                t.equal(reqBody.sdkVersion, version);
                 t.equal(reqBody.skuId, SKU_ID);
                 t.ok(reqBody.userId);
 
@@ -711,7 +708,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=key`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'appUserTurnstile');
-                t.equal(reqBody.sdkVersion, version);
                 t.equal(reqBody.skuId, SKU_ID);
                 t.ok(reqBody.userId);
                 equalWithPrecision(t, new Date(reqBody.created).valueOf(), tomorrow, 100);
@@ -762,7 +758,7 @@ test("mapbox", (t) => {
         });
 
         t.afterEach((callback) => {
-            window.restore();
+            window.clearFakeXMLHttpRequest();
             callback();
         });
 
@@ -948,7 +944,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=key`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'map.load');
-                t.equal(reqBody.sdkVersion, version);
                 t.ok(reqBody.userId);
 
                 t.end();
@@ -982,7 +977,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=pk.new.*`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'map.load');
-                t.equal(reqBody.sdkVersion, version);
                 t.ok(reqBody.userId);
 
                 t.end();
@@ -1002,7 +996,6 @@ test("mapbox", (t) => {
                 t.equal(req.url, `${config.EVENTS_URL}?access_token=key`);
                 t.equal(req.method, 'POST');
                 t.equal(reqBody.event, 'map.load');
-                t.equal(reqBody.sdkVersion, version);
                 t.ok(reqBody.userId);
                 equalWithPrecision(t, new Date(reqBody.created).valueOf(), now, 100);
 

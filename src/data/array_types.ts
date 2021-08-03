@@ -19,13 +19,13 @@ class StructArrayLayout2i4 extends StructArray {
         this.int16 = new Int16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number) => {
+    public emplaceBack(v0: number, v1: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1);
     }
 
-    public emplace = (i: number, v0: number, v1: number) => {
+    public emplace(i: number, v0: number, v1: number) {
         const o2 = i * 2;
         this.int16[o2 + 0] = v0;
         this.int16[o2 + 1] = v1;
@@ -51,13 +51,13 @@ class StructArrayLayout4i8 extends StructArray {
         this.int16 = new Int16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number) {
         const o2 = i * 4;
         this.int16[o2 + 0] = v0;
         this.int16[o2 + 1] = v1;
@@ -86,13 +86,13 @@ class StructArrayLayout2i4i12 extends StructArray {
         this.int16 = new Int16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3, v4, v5);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) {
         const o2 = i * 6;
         this.int16[o2 + 0] = v0;
         this.int16[o2 + 1] = v1;
@@ -123,13 +123,13 @@ class StructArrayLayout2i4ub8 extends StructArray {
         this.int16 = new Int16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3, v4, v5);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) {
         const o2 = i * 4;
         const o1 = i * 8;
         this.int16[o2 + 0] = v0;
@@ -160,13 +160,13 @@ class StructArrayLayout2f8 extends StructArray {
         this.float32 = new Float32Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number) => {
+    public emplaceBack(v0: number, v1: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1);
     }
 
-    public emplace = (i: number, v0: number, v1: number) => {
+    public emplace(i: number, v0: number, v1: number) {
         const o4 = i * 2;
         this.float32[o4 + 0] = v0;
         this.float32[o4 + 1] = v1;
@@ -192,13 +192,13 @@ class StructArrayLayout10ui20 extends StructArray {
         this.uint16 = new Uint16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number) {
         const o2 = i * 10;
         this.uint16[o2 + 0] = v0;
         this.uint16[o2 + 1] = v1;
@@ -236,13 +236,13 @@ class StructArrayLayout4i4ui4i24 extends StructArray {
         this.uint16 = new Uint16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number) {
         const o2 = i * 12;
         this.int16[o2 + 0] = v0;
         this.int16[o2 + 1] = v1;
@@ -278,13 +278,13 @@ class StructArrayLayout3f12 extends StructArray {
         this.float32 = new Float32Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number) =>  {
+    public emplaceBack(v0: number, v1: number, v2: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number) =>  {
+    public emplace(i: number, v0: number, v1: number, v2: number) {
         const o4 = i * 3;
         this.float32[o4 + 0] = v0;
         this.float32[o4 + 1] = v1;
@@ -311,13 +311,13 @@ class StructArrayLayout1ul4 extends StructArray {
         this.uint32 = new Uint32Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number) => {
+    public emplaceBack(v0: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0);
     }
 
-    public emplace = (i: number, v0: number) => {
+    public emplace(i: number, v0: number) {
         const o4 = i * 1;
         this.uint32[o4 + 0] = v0;
         return i;
@@ -348,13 +348,13 @@ class StructArrayLayout6i1ul2ui20 extends StructArray {
         this.uint16 = new Uint16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3, v4, v5, v6, v7, v8);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number) {
         const o2 = i * 10;
         const o4 = i * 5;
         this.int16[o2 + 0] = v0;
@@ -390,13 +390,13 @@ class StructArrayLayout2i2i2i12 extends StructArray {
         this.int16 = new Int16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3, v4, v5);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number) {
         const o2 = i * 6;
         this.int16[o2 + 0] = v0;
         this.int16[o2 + 1] = v1;
@@ -430,13 +430,13 @@ class StructArrayLayout2f1f2i16 extends StructArray {
         this.int16 = new Int16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number, v4: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3, v4);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number, v4: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number) {
         const o4 = i * 4;
         const o2 = i * 8;
         this.float32[o4 + 0] = v0;
@@ -467,13 +467,13 @@ class StructArrayLayout2ub2f12 extends StructArray {
         this.float32 = new Float32Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number) {
         const o1 = i * 12;
         const o4 = i * 3;
         this.uint8[o1 + 0] = v0;
@@ -502,13 +502,13 @@ class StructArrayLayout3ui6 extends StructArray {
         this.uint16 = new Uint16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number) {
         const o2 = i * 3;
         this.uint16[o2 + 0] = v0;
         this.uint16[o2 + 1] = v1;
@@ -548,13 +548,13 @@ class StructArrayLayout2i2ui3ul3ui2f3ub1ul1i48 extends StructArray {
         this.float32 = new Float32Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number) {
         const o2 = i * 24;
         const o4 = i * 12;
         const o1 = i * 48;
@@ -606,13 +606,13 @@ class StructArrayLayout8i15ui1ul4f68 extends StructArray {
         this.float32 = new Float32Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number, v17: number, v18: number, v19: number, v20: number, v21: number, v22: number, v23: number, v24: number, v25: number, v26: number, v27: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number, v17: number, v18: number, v19: number, v20: number, v21: number, v22: number, v23: number, v24: number, v25: number, v26: number, v27: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v26, v27);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number, v17: number, v18: number, v19: number, v20: number, v21: number, v22: number, v23: number, v24: number, v25: number, v26: number, v27: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number, v4: number, v5: number, v6: number, v7: number, v8: number, v9: number, v10: number, v11: number, v12: number, v13: number, v14: number, v15: number, v16: number, v17: number, v18: number, v19: number, v20: number, v21: number, v22: number, v23: number, v24: number, v25: number, v26: number, v27: number) {
         const o2 = i * 34;
         const o4 = i * 17;
         this.int16[o2 + 0] = v0;
@@ -665,13 +665,13 @@ class StructArrayLayout1f4 extends StructArray {
         this.float32 = new Float32Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number) => {
+    public emplaceBack(v0: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0);
     }
 
-    public emplace = (i: number, v0: number) => {
+    public emplace(i: number, v0: number) {
         const o4 = i * 1;
         this.float32[o4 + 0] = v0;
         return i;
@@ -696,13 +696,13 @@ class StructArrayLayout3i6 extends StructArray {
         this.int16 = new Int16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number) {
         const o2 = i * 3;
         this.int16[o2 + 0] = v0;
         this.int16[o2 + 1] = v1;
@@ -732,13 +732,13 @@ class StructArrayLayout1ul2ui8 extends StructArray {
         this.uint16 = new Uint16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number) {
         const o4 = i * 2;
         const o2 = i * 4;
         this.uint32[o4 + 0] = v0;
@@ -766,13 +766,13 @@ class StructArrayLayout2ui4 extends StructArray {
         this.uint16 = new Uint16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number) => {
+    public emplaceBack(v0: number, v1: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1);
     }
 
-    public emplace = (i: number, v0: number, v1: number) => {
+    public emplace(i: number, v0: number, v1: number) {
         const o2 = i * 2;
         this.uint16[o2 + 0] = v0;
         this.uint16[o2 + 1] = v1;
@@ -798,13 +798,13 @@ class StructArrayLayout1ui2 extends StructArray {
         this.uint16 = new Uint16Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number) => {
+    public emplaceBack(v0: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0);
     }
 
-    public emplace = (i: number, v0: number) => {
+    public emplace(i: number, v0: number) {
         const o2 = i * 1;
         this.uint16[o2 + 0] = v0;
         return i;
@@ -829,13 +829,13 @@ class StructArrayLayout4f16 extends StructArray {
         this.float32 = new Float32Array(this.arrayBuffer);
     }
 
-    public emplaceBack = (v0: number, v1: number, v2: number, v3: number) => {
+    public emplaceBack(v0: number, v1: number, v2: number, v3: number) {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, v0, v1, v2, v3);
     }
 
-    public emplace = (i: number, v0: number, v1: number, v2: number, v3: number) => {
+    public emplace(i: number, v0: number, v1: number, v2: number, v3: number) {
         const o4 = i * 4;
         this.float32[o4 + 0] = v0;
         this.float32[o4 + 1] = v1;

@@ -1,6 +1,7 @@
+import '../../../stub_loader';
 import {test} from '../../../util/test';
-import {getIntersectionDistance} from '../../../../src/style/style_layer/fill_extrusion_style_layer';
-import Point from '../../../../src/symbol/point';
+import {getIntersectionDistance} from '../../../../rollup/build/tsc/style/style_layer/fill_extrusion_style_layer';
+import Point from '../../../../rollup/build/tsc/symbol/point';
 
 test('getIntersectionDistance', (t) => {
     const queryPoint = [new Point(100, 100)];

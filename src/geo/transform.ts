@@ -510,8 +510,8 @@ class Transform {
         // unproject two points to get a line and then find the point on that
         // line with z=0
 
-        const coord0 = vec4.fromValues(p.x, p.y, 0, 1);
-        const coord1 = vec4.fromValues(p.x, p.y, 1, 1);
+        const coord0 = [p.x, p.y, 0, 1] as any;
+        const coord1 = [p.x, p.y, 1, 1] as any;
 
         vec4.transformMat4(coord0, coord0, this.pixelMatrixInverse);
         vec4.transformMat4(coord1, coord1, this.pixelMatrixInverse);
@@ -539,7 +539,7 @@ class Transform {
      * @private
      */
     coordinatePoint(coord: MercatorCoordinate) {
-        const p = vec4.fromValues(coord.x * this.worldSize, coord.y * this.worldSize, 0, 1);
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1] as any;
         vec4.transformMat4(p, p, this.pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
@@ -714,7 +714,7 @@ class Transform {
         const nearZ = this.height / 50;
 
         // matrix for conversion from location to GL coordinates (-1 .. 1)
-        let m = mat4.create();
+        let m = new Float64Array(16) as any;
         mat4.perspective(m, this._fov, this.width / this.height, nearZ, farZ);
 
         //Apply center of perspective offset
@@ -732,7 +732,6 @@ class Transform {
         this.mercatorMatrix = mat4.scale(mat4.create(), m, vec3.fromValues(this.worldSize, this.worldSize, this.worldSize));
 
         // scale vertically to meters per pixel (inverse of ground resolution):
-        // WARN mat4.scale(m, m, [1, 1, mercatorZfromAltitude(1, this.center.lat) * this.worldSize, 1]); // existing code has extra element in scaling array
         mat4.scale(m, m, vec3.fromValues(1, 1, mercatorZfromAltitude(1, this.center.lat) * this.worldSize));
 
         this.projMatrix = m;
@@ -764,10 +763,10 @@ class Transform {
         this.glCoordMatrix = m;
 
         // matrix for conversion from location to screen coordinates
-        this.pixelMatrix = mat4.multiply(mat4.create(), this.labelPlaneMatrix, this.projMatrix);
+        this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, this.projMatrix);
 
         // inverse matrix for conversion from screen coordinaes to location
-        m = mat4.invert(mat4.create(), this.pixelMatrix);
+        m = mat4.invert(new Float64Array(16) as any, this.pixelMatrix);
         if (!m) throw new Error("failed to invert matrix");
         this.pixelMatrixInverse = m;
 

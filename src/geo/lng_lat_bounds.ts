@@ -252,7 +252,7 @@ class LngLatBounds {
      */
     static convert(input: LngLatBoundsLike): LngLatBounds {
         if (input instanceof LngLatBounds) return input;
-        if (!input) return null;
+        if (!input) return input as null;
         return new LngLatBounds(input);
     }
 }
