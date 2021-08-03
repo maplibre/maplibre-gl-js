@@ -1,7 +1,6 @@
 import {Event} from '../util/evented';
 import DOM from '../util/dom';
-import type Map from './map';
-import type {CompleteMapOptions} from './map';
+import Map, {CompleteMapOptions} from './map';
 import HandlerInertia from './handler_inertia';
 import {MapEventHandler, BlockableMapEventHandler} from './handler/map_event';
 import BoxZoomHandler from './handler/box_zoom';

@@ -538,7 +538,6 @@ export function b64DecodeUnicode(str: string) {
     }).join(''));
 }
 
-
 const mapboxHTTPURLRe = /^((https?:)?\/\/)?([^\/]+\.)?mapbox\.c(n|om)(\/|\?|$)/i;
 export function isMapboxHTTPURL(url: string): boolean {
     return mapboxHTTPURLRe.test(url);
