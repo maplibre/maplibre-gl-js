@@ -51,7 +51,6 @@ jobs:
 
       - name: Test
         run: |
-          npm run test-flow
           npm run test-unit
           npm run test-render
           npm run test-query
