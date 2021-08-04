@@ -24,7 +24,6 @@ jobs:
       - run: npm run build-dev
       - run: npm run build-css
       - run: npm run build-style-spec
-      - run: npm run build-flow-types
       - run: npm run test-build
       - run: find dist
       - run: mkdir build-info
