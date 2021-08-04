@@ -31,6 +31,8 @@ import {register} from '../util/web_worker_transfer';
  * var point = new Point(-77, 38);
  */
 
+export type PointLike = Point | [number, number];
+
 class Point {
     x: number;
     y: number;
@@ -321,14 +323,17 @@ class Point {
      * // is equivalent to
      * var point = new Point(0, 1);
      */
-    static convert = function (a) {
+    static convert(a: PointLike | {x: number, y: number}): Point {
         if (a instanceof Point) {
             return a;
         }
         if (Array.isArray(a)) {
             return new Point(a[0], a[1]);
         }
-        return a;
+        if (typeof a.x === 'number') {
+            return new Point(a.x, a.y);
+        }
+        throw new Error(`Unable to convert to point: ${JSON.stringify(a)}`);
     };
 }
 

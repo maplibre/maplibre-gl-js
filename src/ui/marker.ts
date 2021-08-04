@@ -1,16 +1,15 @@
 import DOM from '../util/dom';
 import LngLat from '../geo/lng_lat';
-import Point from '../symbol/point';
+import Point, {PointLike} from '../symbol/point';
 import smartWrap from '../util/smart_wrap';
 import {bindAll, extend} from '../util/util';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 import type {Anchor} from './anchor';
 import {Event, Evented} from '../util/evented';
 import type Map from './map';
-import type Popup from './popup';
+import Popup, {Offset} from './popup';
 import type {LngLatLike} from "../geo/lng_lat";
 import type {MapMouseEvent, MapTouchEvent} from './events';
-import type {PointLike} from '@mapbox/point-geometry';
 
 type Options = {
   element?: HTMLElement,
@@ -365,7 +364,7 @@ export default class Marker extends Evented {
                     'bottom-right': [-linearOffset, (markerHeight - markerRadius + linearOffset) * -1],
                     'left': [markerRadius, (markerHeight - markerRadius) * -1],
                     'right': [-markerRadius, (markerHeight - markerRadius) * -1]
-                } : this._offset;
+                } as Offset : this._offset;
             }
             this._popup = popup;
             if (this._lngLat) this._popup.setLngLat(this._lngLat);

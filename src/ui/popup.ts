@@ -3,7 +3,7 @@ import {Event, Evented} from '../util/evented';
 import {MapMouseEvent} from '../ui/events';
 import DOM from '../util/dom';
 import LngLat from '../geo/lng_lat';
-import Point from '../symbol/point';
+import Point, {PointLike} from '../symbol/point';
 import smartWrap from '../util/smart_wrap';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 
@@ -11,7 +11,6 @@ import type {Anchor} from './anchor';
 
 import type Map from './map';
 import type {LngLatLike} from '../geo/lng_lat';
-import type {PointLike} from '@mapbox/point-geometry';
 
 const defaultOptions = {
     closeButton: true,
@@ -512,7 +511,7 @@ export default class Popup extends Evented {
         this._update(event.point);
     }
 
-    _update(cursor?: PointLike | null) {
+    _update(cursor?: Point) {
         const hasPosition = this._lngLat || this._trackPointer;
 
         if (!this._map || !hasPosition || !this._content) { return; }

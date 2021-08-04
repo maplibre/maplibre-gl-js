@@ -12,7 +12,7 @@ import HandlerManager from './handler_manager';
 import Camera from './camera';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
-import Point from '../symbol/point';
+import Point, {PointLike} from '../symbol/point';
 import AttributionControl from './control/attribution_control';
 import LogoControl from './control/logo_control';
 import isSupported from '@mapbox/mapbox-gl-supported';
@@ -25,7 +25,6 @@ import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
 
 import {setCacheLimits} from '../util/tile_request_cache';
 
-import type {PointLike} from '@mapbox/point-geometry';
 import type {RequestTransformFunction} from '../util/mapbox';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
@@ -1258,7 +1257,7 @@ class Map extends Camera {
         }
 
         if (options === undefined && geometry !== undefined && !(geometry instanceof Point) && !Array.isArray(geometry)) {
-            options = (geometry as any);
+            options = geometry;
             geometry = undefined;
         }
 
@@ -1267,10 +1266,10 @@ class Map extends Camera {
 
         let queryGeometry;
         if (geometry instanceof Point || typeof geometry[0] === 'number') {
-            queryGeometry = [Point.convert(geometry)];
+            queryGeometry = [Point.convert(geometry as PointLike)];
         } else {
-            const tl = Point.convert(geometry[0]);
-            const br = Point.convert(geometry[1]);
+            const tl = Point.convert(geometry[0] as PointLike);
+            const br = Point.convert(geometry[1] as PointLike);
             queryGeometry = [tl, new Point(br.x, tl.y), br, new Point(tl.x, br.y), tl];
         }
 
