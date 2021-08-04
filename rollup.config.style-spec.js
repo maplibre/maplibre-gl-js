@@ -21,10 +21,10 @@ const transforms = {
 const ROOT_DIR = __dirname;
 
 const config = [{
-    input: '../../rollup/build/tsc/style-spec/style-spec.js',
+    input: 'rollup/build/tsc/style-spec/style-spec.js',
     output: {
         name: 'maplibreGlStyleSpecification',
-        file: `${__dirname}/dist/${esm ? 'index.es.js' : 'index.js'}`,
+        file: `dist/style-spec/${esm ? 'index.es.js' : 'index.js'}`,
         format: esm ? 'esm' : 'umd',
         sourcemap: true
     },
