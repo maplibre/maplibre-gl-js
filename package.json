@@ -174,7 +174,7 @@
     "build-csp": "rollup -c rollup.config.csp.js",
     "build-query-suite": "rollup -c test/integration/rollup.config.test.js",
     "build-css": "postcss -o dist/maplibre-gl.css src/css/maplibre-gl.css",
-    "build-style-spec": "npm run build-tsc && rollup -c rollup.config.style-spec.js --environment esm",
+    "build-style-spec": "npm run build-tsc && rollup -c rollup.config.style-spec.js && rollup -c rollup.config.style-spec.js --environment esm",
     "build-diagrams": "cd docs/diagrams; ls *.plantuml | xargs -I {} puml generate --svg {} -o {}.svg",
     "watch-css": "postcss --watch -o dist/maplibre-gl.css src/css/maplibre-gl.css",
     "build-benchmarks": "BENCHMARK_VERSION=${BENCHMARK_VERSION:-\"$(git rev-parse --abbrev-ref HEAD) $(git rev-parse --short=7 HEAD)\"} rollup -c bench/versions/rollup_config_benchmarks.js",

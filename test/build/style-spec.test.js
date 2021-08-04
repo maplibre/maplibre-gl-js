@@ -1,20 +1,16 @@
+import fs from 'fs';
+import isBuiltin from 'is-builtin-module';
 
-/* eslint-disable import/no-commonjs */
-
-const fs = require('fs');
-const path = require('path');
-const isBuiltin = require('is-builtin-module');
-
-const Linter = require('eslint').Linter;
-const rollup = require('rollup');
+import {Linter} from 'eslint';
+import * as rollup from 'rollup';
 
 import {test} from '../util/test';
-import rollupConfig from '../../src/style-spec/rollup.config';
+import rollupConfig from '../../rollup.config.style-spec';
+import styleSpecPackage from '../../src/style-spec/package.json';
+import * as spec from '../../dist/style-spec/index.es.js';
 
-// some paths
-const styleSpecDirectory = path.join(__dirname, '../../src/style-spec');
-const styleSpecPackage = require('../../src/style-spec/package.json');
-const styleSpecDistBundle = fs.readFileSync(path.join(__dirname, '../../dist/style-spec/index.js'), 'utf-8');
+
+const styleSpecDistBundle = fs.readFileSync('./dist/style-spec/index.js', 'utf-8');
 
 test('@mapbox/mapbox-gl-style-spec npm package', (t) => {
     t.test('build plain ES5 bundle in prepublish', (t) => {
@@ -32,7 +28,7 @@ test('@mapbox/mapbox-gl-style-spec npm package', (t) => {
 
         t.stub(console, 'warn');
         rollup.rollup({
-            input: `${styleSpecDirectory}/style-spec.js`,
+            input: `./rollup/build/tsc/style-spec/style-spec.js`,
             plugins: [{
                 resolveId: (id, importer) => {
                     if (
@@ -55,9 +51,8 @@ test('@mapbox/mapbox-gl-style-spec npm package', (t) => {
     });
 
     t.test('exports components directly, not behind `default` - https://github.com/mapbox/mapbox-gl-js/issues/6601', (t) => {
-        const spec = require('../../dist/style-spec/index.js');
-        t.ok(spec.validate);
         t.notOk(spec.default && spec.default.validate);
+        t.ok(spec.validate);
         t.end();
     });
 
