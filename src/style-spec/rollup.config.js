@@ -1,11 +1,14 @@
-import path from 'path';
+import path, {dirname} from 'path';
 import replace from 'rollup-plugin-replace';
 import buble from 'rollup-plugin-buble';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
 import json from 'rollup-plugin-json';
-import {flow} from '../../build/rollup_plugins';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 
 // Build es modules?
 const esm = 'esm' in process.env;
@@ -18,7 +21,7 @@ const transforms = {
 const ROOT_DIR = __dirname;
 
 const config = [{
-    input: `${__dirname}/style-spec.js`,
+    input: '../../rollup/build/tsc/style-spec/style-spec.js',
     output: {
         name: 'maplibreGlStyleSpecification',
         file: `${__dirname}/dist/${esm ? 'index.es.js' : 'index.js'}`,
@@ -51,7 +54,6 @@ const config = [{
                 '_token_stack:': ''
             }
         }),
-        flow(),
         json(),
         buble({transforms, objectAssign: "Object.assign"}),
         unassert(),
