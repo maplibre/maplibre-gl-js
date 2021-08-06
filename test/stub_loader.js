@@ -21,6 +21,8 @@ global.HTMLCanvasElement = window.HTMLCanvasElement;
 global.OffscreenCanvas = window.OffscreenCanvas;
 global.Image = window.Image;
 global.navigator = window.navigator;
+global.performance = window.performance;
+global.devicePixelRatio = window.devicePixelRatio;
 global.WheelEvent = window.WheelEvent;
 // stubbing image load as it is not implemented in jsdom
 // eslint-disable-next-line accessor-pairs
