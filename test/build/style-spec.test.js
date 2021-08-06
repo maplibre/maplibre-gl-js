@@ -14,18 +14,6 @@ const styleSpecDistBundle = fs.readFileSync('./dist/style-spec/index.js', 'utf-8
 
 test('@mapbox/mapbox-gl-style-spec npm package', (t) => {
     t.test('build plain ES5 bundle in prepublish', (t) => {
-        const linter = new Linter();
-        const messages = linter.verify(styleSpecDistBundle, {
-            parserOptions: {
-                ecmaVersion: 5
-            },
-            rules: {},
-            env: {
-                node: true
-            }
-        }).map(message => `${message.line}:${message.column}: ${message.message}`);
-        t.deepEqual(messages, [], 'distributed bundle is plain ES5 code');
-
         t.stub(console, 'warn');
         rollup.rollup({
             input: `./rollup/build/tsc/style-spec/style-spec.js`,

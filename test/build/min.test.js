@@ -2,7 +2,6 @@ import {test} from '../util/test';
 import fs from 'fs';
 import path, {dirname} from 'path';
 import reference from '../../rollup/build/tsc/style-spec/reference/latest';
-import {Linter} from 'eslint';
 import packageJson from '../../package.json';
 import browserify from 'browserify';
 import { fileURLToPath } from 'url';
@@ -45,26 +44,13 @@ test('evaluates without errors', async (t) => {
         }
     };
     global.Blob = function() {};
+    global.performance = {};
+    global.navigator = {};
     try {
-        let mgl = await import ('../../dist/maplibre-gl.js');
-    } catch {
-        t.fail();
+        await import ('../../dist/maplibre-gl.js');
+    } catch (e) {
+        t.error(e);
     }
-    t.end();
-});
-
-test('distributed in plain ES5 code', (t) => {
-    const linter = new Linter();
-    const messages = linter.verify(minBundle, {
-        parserOptions: {
-            ecmaVersion: 5
-        },
-        rules: {},
-        env: {
-            node: true
-        }
-    });
-    t.deepEqual(messages.map(message => `${message.line}:${message.column}: ${message.message}`), []);
     t.end();
 });
 

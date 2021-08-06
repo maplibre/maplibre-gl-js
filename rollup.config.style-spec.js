@@ -1,6 +1,5 @@
 import path, {dirname} from 'path';
 import replace from '@rollup/plugin-replace';
-import buble from 'rollup-plugin-buble';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
@@ -9,14 +8,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-
-// Build es modules?
 const esm = 'esm' in process.env;
-
-const transforms = {
-    dangerousForOf: true,
-    modules: esm ? false : undefined
-};
 
 const ROOT_DIR = __dirname;
 
@@ -55,7 +47,6 @@ const config = [{
             }
         }),
         json(),
-        buble({transforms, objectAssign: "Object.assign"}),
         unassert(),
         resolve({
             browser: true,
