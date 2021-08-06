@@ -3,7 +3,7 @@ import {bindAll} from '../../util/util';
 import config from '../../util/config';
 
 import type Map from '../map';
-import {ControlPosition, IControl} from './control';
+import type {ControlPosition, IControl} from './control';
 
 type Options = {
   compact?: boolean,

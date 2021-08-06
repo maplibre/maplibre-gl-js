@@ -2,7 +2,7 @@ import DOM from '../../util/dom';
 import {extend, bindAll} from '../../util/util';
 
 import type Map from '../map';
-import {ControlPosition, IControl} from './control';
+import type {ControlPosition, IControl} from './control';
 
 type Unit = "imperial" | "metric" | "nautical";
 

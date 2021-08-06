@@ -3,7 +3,7 @@ import DOM from '../../util/dom';
 import {bindAll} from '../../util/util';
 
 import type Map from '../map';
-import {ControlPosition, IControl} from './control';
+import type {ControlPosition, IControl} from './control';
 
 /**
  * A `LogoControl` is a control that adds the watermark.

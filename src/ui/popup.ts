@@ -338,7 +338,7 @@ export default class Popup extends Evented {
      *   .addTo(map);
      */
     setText(text: string) {
-        return this.setDOMContent(window.document.createTextNode(text));
+        return this.setDOMContent(document.createTextNode(text));
     }
 
     /**
@@ -361,8 +361,8 @@ export default class Popup extends Evented {
      * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js-docs/example/set-popup/)
      */
     setHTML(html: string) {
-        const frag = window.document.createDocumentFragment();
-        const temp = window.document.createElement('body');
+        const frag = document.createDocumentFragment();
+        const temp = document.createElement('body');
         let child;
         temp.innerHTML = html;
         while (true) {
@@ -403,7 +403,7 @@ export default class Popup extends Evented {
      * @returns {Popup} `this`
      * @example
      * // create an element with the popup content
-     * var div = window.document.createElement('div');
+     * var div = document.createElement('div');
      * div.innerHTML = 'Hello, world!';
      * var popup = new maplibregl.Popup()
      *   .setLngLat(e.lngLat)

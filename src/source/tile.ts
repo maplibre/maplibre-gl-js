@@ -54,7 +54,7 @@ class Tile {
     buckets: {
       [_: string]: Bucket
     };
-    latestFeatureIndex: FeatureIndex | undefined | null;
+    latestFeatureIndex: FeatureIndex;
     latestRawTileData: ArrayBuffer | undefined | null;
     imageAtlas: ImageAtlas | undefined | null;
     imageAtlasTexture: Texture;

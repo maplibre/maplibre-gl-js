@@ -1,4 +1,4 @@
-import WebWorker from './web_worker';
+import webWorkerFactory from './web_worker';
 import type {WorkerInterface} from './web_worker';
 import browser from './browser';
 
@@ -26,7 +26,7 @@ export default class WorkerPool {
             // client code has had a chance to set it.
             this.workers = [];
             while (this.workers.length < WorkerPool.workerCount) {
-                this.workers.push(WebWorker());
+                this.workers.push(webWorkerFactory());
             }
         }
 

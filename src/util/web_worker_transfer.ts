@@ -243,7 +243,9 @@ export function deserialize(input: Serialized): unknown {
 
     if (typeof input === 'object') {
         const name = (input as any).$name || 'Object';
-
+        if (!registry[name]) {
+            throw new Error(`can't deserialize unregistered class ${name}`);
+        }
         const {klass} = registry[name];
         if (!klass) {
             throw new Error(`can't deserialize unregistered class ${name}`);

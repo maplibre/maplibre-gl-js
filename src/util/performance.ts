@@ -1,7 +1,5 @@
 import type {RequestParameters} from '../util/ajax';
 
-const performance = window.performance;
-
 export type PerformanceMetrics = {
   loadTime: number,
   fullLoadTime: number,

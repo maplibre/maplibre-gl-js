@@ -5,7 +5,7 @@ import {extend, bindAll} from '../../util/util';
 import {MouseRotateHandler, MousePitchHandler} from '../handler/mouse';
 
 import type Map from '../map';
-import {IControl} from './control';
+import type {IControl} from './control';
 
 type Options = {
   showCompass?: boolean,

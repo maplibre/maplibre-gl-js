@@ -52,9 +52,9 @@ import type {
     LightSpecification,
     SourceSpecification
 } from '../style-spec/types';
-import {Listener} from 'selenium-webdriver';
+import type {Listener} from 'selenium-webdriver';
 import {Callback} from '../types/callback';
-import {ControlPosition, IControl} from './control/control';
+import type {ControlPosition, IControl} from './control/control';
 
 /* eslint-enable no-use-before-define */
 
@@ -413,7 +413,7 @@ class Map extends Camera {
         this._requestManager = new RequestManager(options.transformRequest, options.accessToken);
 
         if (typeof options.container === 'string') {
-            this._container = window.document.getElementById(options.container);
+            this._container = document.getElementById(options.container);
             if (!this._container) {
                 throw new Error(`Container '${options.container}' not found.`);
             }
@@ -446,9 +446,9 @@ class Map extends Camera {
         this.on('zoom', () => this._update(true));
 
         if (typeof window !== 'undefined') {
-            window.addEventListener('online', this._onWindowOnline, false);
-            window.addEventListener('resize', this._onWindowResize, false);
-            window.addEventListener('orientationchange', this._onWindowResize, false);
+            addEventListener('online', this._onWindowOnline, false);
+            addEventListener('resize', this._onWindowResize, false);
+            addEventListener('orientationchange', this._onWindowResize, false);
         }
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
@@ -2637,9 +2637,9 @@ class Map extends Camera {
         delete this.handlers;
         this.setStyle(null);
         if (typeof window !== 'undefined') {
-            window.removeEventListener('resize', this._onWindowResize, false);
-            window.removeEventListener('orientationchange', this._onWindowResize, false);
-            window.removeEventListener('online', this._onWindowOnline, false);
+            removeEventListener('resize', this._onWindowResize, false);
+            removeEventListener('orientationchange', this._onWindowResize, false);
+            removeEventListener('online', this._onWindowOnline, false);
         }
 
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');

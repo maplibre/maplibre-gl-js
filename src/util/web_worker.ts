@@ -1,98 +1,30 @@
-// This file is intended for use in the GL-JS test suite
-// It implements a MessageBus main thread interface for use in Node environments
-// In a browser environment, this file is replaced with ./src/util/browser/web_worker.js
-// when Rollup builds the main bundle.
-// See package.json#browser
-
-import Worker from '../source/worker';
-
+import mapboxgl from '../';
 import type {WorkerSource} from '../source/worker_source';
 
 type MessageListener = (
-  a: {
-    data: any,
-    target: any
-  }
+    a: {
+        data: any,
+        target: any
+    }
 ) => unknown;
-
-// The main thread interface. Provided by Worker in a browser environment,
-// and MessageBus below in a node environment.
 export interface WorkerInterface {
-  addEventListener(type: "message", listener: MessageListener): void;
-  removeEventListener(type: "message", listener: MessageListener): void;
-  postMessage(message: any): void;
-  terminate(): void;
+    addEventListener(type: "message", listener: MessageListener): void;
+    removeEventListener(type: "message", listener: MessageListener): void;
+    postMessage(message: any): void;
+    terminate(): void;
 }
 
 export interface WorkerGlobalScopeInterface {
-  importScripts(...urls: Array<string>): void;
-  registerWorkerSource: (
-    b: string,
-    a: {
-      new (...args: any): WorkerSource
-    }
-  ) => void;
-  registerRTLTextPlugin: (_: any) => void;
-}
-
-class MessageBus implements WorkerInterface, WorkerGlobalScopeInterface {
-    addListeners: Array<MessageListener>;
-    postListeners: Array<MessageListener>;
-    target: MessageBus;
-    registerWorkerSource: any;
-    registerRTLTextPlugin: any;
-
-    constructor(addListeners: Array<MessageListener>, postListeners: Array<MessageListener>) {
-        this.addListeners = addListeners;
-        this.postListeners = postListeners;
-    }
-
-    addEventListener(event: "message", callback: MessageListener) {
-        if (event === 'message') {
-            this.addListeners.push(callback);
+    importScripts(...urls: Array<string>): void;
+    registerWorkerSource: (
+        name: string,
+        WorkerSource: {
+            new(...args: any): WorkerSource
         }
-    }
-
-    removeEventListener(event: "message", callback: MessageListener) {
-        const i = this.addListeners.indexOf(callback);
-        if (i >= 0) {
-            this.addListeners.splice(i, 1);
-        }
-    }
-
-    postMessage(data: any) {
-        setImmediate(() => {
-            try {
-                for (const listener of this.postListeners) {
-                    listener({data, target: this.target});
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        });
-    }
-
-    terminate() {
-        this.addListeners.splice(0, this.addListeners.length);
-        this.postListeners.splice(0, this.postListeners.length);
-    }
-
-    importScripts() {}
+    ) => void;
+    registerRTLTextPlugin: (_: any) => void;
 }
 
-export default function WebWorker(): WorkerInterface {
-    const parentListeners = [],
-        workerListeners = [],
-        parentBus = new MessageBus(workerListeners, parentListeners),
-        workerBus = new MessageBus(parentListeners, workerListeners);
-
-    parentBus.target = workerBus;
-    workerBus.target = parentBus;
-
-    new WebWorker.Worker(workerBus);
-
-    return parentBus;
+export default function (): WorkerInterface {
+    return new Worker(mapboxgl.workerUrl) as any;
 }
-
-// expose to allow stubbing in unit tests
-WebWorker.Worker = Worker;

@@ -112,7 +112,7 @@ class CanvasSource extends ImageSource {
         if (!this.canvas) {
             this.canvas = (this.options.canvas instanceof HTMLCanvasElement) ?
                 this.options.canvas :
-                window.document.getElementById(this.options.canvas) as HTMLCanvasElement;
+                document.getElementById(this.options.canvas) as HTMLCanvasElement;
             // cast to HTMLCanvasElement in else of ternary
             // should we do a safety check and throw if it's not actually HTMLCanvasElement?
         }

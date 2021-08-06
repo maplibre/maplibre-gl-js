@@ -1,7 +1,7 @@
 import type {Cancelable} from '../types/cancelable';
 
-const now = window.performance && window.performance.now ?
-    window.performance.now.bind(window.performance) :
+const now = performance && performance.now ?
+    performance.now.bind(performance) :
     Date.now.bind(Date);
 
 let linkEl;
@@ -36,20 +36,20 @@ const exported = {
     },
 
     resolveURL(path: string) {
-        if (!linkEl) linkEl = window.document.createElement('a');
+        if (!linkEl) linkEl = document.createElement('a');
         linkEl.href = path;
         return linkEl.href;
     },
 
-    hardwareConcurrency: window.navigator && window.navigator.hardwareConcurrency || 4,
+    hardwareConcurrency: navigator && navigator.hardwareConcurrency || 4,
 
     // HM TODO: remove this from here...
-    get devicePixelRatio() { return window.devicePixelRatio; },
+    get devicePixelRatio() { return devicePixelRatio; },
     get prefersReducedMotion(): boolean {
-        if (!window.matchMedia) return false;
+        if (!matchMedia) return false;
         //Lazily initialize media query
         if (reducedMotionQuery == null) {
-            reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+            reducedMotionQuery = matchMedia('(prefers-reduced-motion: reduce)');
         }
         return reducedMotionQuery.matches;
     },

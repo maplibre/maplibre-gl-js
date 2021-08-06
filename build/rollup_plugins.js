@@ -1,9 +1,9 @@
 
-import buble from 'rollup-plugin-buble';
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
+import commonjs from '@rollup/plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
-import json from 'rollup-plugin-json';
+import json from '@rollup/plugin-json';
 import {terser} from 'rollup-plugin-terser';
 import minifyStyleSpec from './rollup_plugin_minify_style_spec';
 import strip from '@rollup/plugin-strip';
@@ -18,7 +18,6 @@ export const plugins = (minified, production) => [
         sourceMap: true,
         functions: ['PerformanceUtils.*', 'Debug.*']
     }) : false,
-    buble({transforms: {dangerousForOf: true}, objectAssign: "Object.assign"}),
     minified ? terser({
         compress: {
             pure_getters: true,
@@ -26,6 +25,14 @@ export const plugins = (minified, production) => [
         }
     }) : false,
     production ? unassert() : false,
+    // https://github.com/zaach/jison/issues/351
+    replace({
+        include: /\/jsonlint-lines-primitives\/lib\/jsonlint.js/,
+        delimiters: ['', ''],
+        values: {
+            '_token_stack:': ''
+        }
+    }),
     resolve({
         browser: true,
         preferBuiltins: false

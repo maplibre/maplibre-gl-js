@@ -10,8 +10,8 @@ let webpCheckComplete = false;
 let webpImgTest;
 let webpImgTestOnloadComplete = false;
 
-if (window.document) {
-    webpImgTest = window.document.createElement('img');
+if (typeof document !== 'undefined') {
+    webpImgTest = document.createElement('img');
     webpImgTest.onload = function() {
         if (glForTesting) testWebpTextureUpload(glForTesting);
         glForTesting = null;

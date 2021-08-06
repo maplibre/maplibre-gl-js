@@ -334,7 +334,7 @@ class Point {
             return new Point(a.x, a.y);
         }
         throw new Error(`Unable to convert to point: ${JSON.stringify(a)}`);
-    };
+    }
 }
 
 register('Point', Point);

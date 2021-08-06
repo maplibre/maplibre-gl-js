@@ -651,7 +651,7 @@ class Painter {
 
     initDebugOverlayCanvas() {
         if (this.debugOverlayCanvas == null) {
-            this.debugOverlayCanvas = window.document.createElement('canvas');
+            this.debugOverlayCanvas = document.createElement('canvas');
             this.debugOverlayCanvas.width = 512;
             this.debugOverlayCanvas.height = 512;
             const gl = this.context.gl;

@@ -20,8 +20,8 @@ export type ResponseOptions = {
 let sharedCache: Promise<Cache> | undefined | null;
 
 function cacheOpen() {
-    if (window.caches && !sharedCache) {
-        sharedCache = window.caches.open(CACHE_NAME);
+    if (caches && !sharedCache) {
+        sharedCache = caches.open(CACHE_NAME);
     }
 }
 
@@ -157,7 +157,7 @@ export function enforceCacheSizeLimit(limit: number) {
 }
 
 export function clearTileCache(callback?: (err?: Error | null) => void) {
-    const promise = window.caches.delete(CACHE_NAME);
+    const promise = caches.delete(CACHE_NAME);
     if (callback) {
         promise.catch(callback).then(() => callback());
     }

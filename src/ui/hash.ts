@@ -34,7 +34,7 @@ class Hash {
      */
     addTo(map: Map) {
         this._map = map;
-        window.addEventListener('hashchange', this._onHashChange, false);
+        addEventListener('hashchange', this._onHashChange, false);
         this._map.on('moveend', this._updateHash);
         return this;
     }
@@ -45,7 +45,7 @@ class Hash {
      * @returns {Popup} `this`
      */
     remove() {
-        window.removeEventListener('hashchange', this._onHashChange, false);
+        removeEventListener('hashchange', this._onHashChange, false);
         this._map.off('moveend', this._updateHash);
         clearTimeout(this._updateHash());
 

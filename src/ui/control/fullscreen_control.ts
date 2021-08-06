@@ -3,7 +3,7 @@ import DOM from '../../util/dom';
 import {bindAll, warnOnce} from '../../util/util';
 
 import type Map from '../map';
-import {IControl} from './control';
+import type {IControl} from './control';
 
 type Options = {
   container?: HTMLElement
@@ -42,13 +42,13 @@ class FullscreenControl implements IControl {
             '_onClickFullscreen',
             '_changeIcon'
         ], this);
-        if ('onfullscreenchange' in window.document) {
+        if ('onfullscreenchange' in document) {
             this._fullscreenchange = 'fullscreenchange';
-        } else if ('onmozfullscreenchange' in window.document) {
+        } else if ('onmozfullscreenchange' in document) {
             this._fullscreenchange = 'mozfullscreenchange';
-        } else if ('onwebkitfullscreenchange' in window.document) {
+        } else if ('onwebkitfullscreenchange' in document) {
             this._fullscreenchange = 'webkitfullscreenchange';
-        } else if ('onmsfullscreenchange' in window.document) {
+        } else if ('onmsfullscreenchange' in document) {
             this._fullscreenchange = 'MSFullscreenChange';
         }
     }
@@ -74,10 +74,10 @@ class FullscreenControl implements IControl {
 
     _checkFullscreenSupport() {
         return !!(
-            window.document.fullscreenEnabled ||
-            (window.document as any).mozFullScreenEnabled ||
-            (window.document as any).msFullscreenEnabled ||
-            (window.document as any).webkitFullscreenEnabled
+            document.fullscreenEnabled ||
+            (document as any).mozFullScreenEnabled ||
+            (document as any).msFullscreenEnabled ||
+            (document as any).webkitFullscreenEnabled
         );
     }
 
