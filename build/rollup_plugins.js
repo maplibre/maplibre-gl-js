@@ -14,6 +14,14 @@ import strip from '@rollup/plugin-strip';
 export const plugins = (minified, production) => [
     minifyStyleSpec(),
     json(),
+    // https://github.com/zaach/jison/issues/351
+    replace({
+        include: /\/jsonlint-lines-primitives\/lib\/jsonlint.js/,
+        delimiters: ['', ''],
+        values: {
+            '_token_stack:': ''
+        }
+    }),
     production ? strip({
         sourceMap: true,
         functions: ['PerformanceUtils.*', 'Debug.*']
@@ -25,14 +33,6 @@ export const plugins = (minified, production) => [
         }
     }) : false,
     production ? unassert() : false,
-    // https://github.com/zaach/jison/issues/351
-    replace({
-        include: /\/jsonlint-lines-primitives\/lib\/jsonlint.js/,
-        delimiters: ['', ''],
-        values: {
-            '_token_stack:': ''
-        }
-    }),
     resolve({
         browser: true,
         preferBuiltins: false
