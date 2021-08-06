@@ -54,32 +54,34 @@ import symbolSDFVert from './symbol_sdf.vertex.glsl';
 import symbolTextAndIconFrag from './symbol_text_and_icon.fragment.glsl';
 import symbolTextAndIconVert from './symbol_text_and_icon.vertex.glsl';
 
-export const prelude = compile(preludeFrag, preludeVert);
-export const background = compile(backgroundFrag, backgroundVert);
-export const backgroundPattern = compile(backgroundPatternFrag, backgroundPatternVert);
-export const circle = compile(circleFrag, circleVert);
-export const clippingMask = compile(clippingMaskFrag, clippingMaskVert);
-export const heatmap = compile(heatmapFrag, heatmapVert);
-export const heatmapTexture = compile(heatmapTextureFrag, heatmapTextureVert);
-export const collisionBox = compile(collisionBoxFrag, collisionBoxVert);
-export const collisionCircle = compile(collisionCircleFrag, collisionCircleVert);
-export const debug = compile(debugFrag, debugVert);
-export const fill = compile(fillFrag, fillVert);
-export const fillOutline = compile(fillOutlineFrag, fillOutlineVert);
-export const fillOutlinePattern = compile(fillOutlinePatternFrag, fillOutlinePatternVert);
-export const fillPattern = compile(fillPatternFrag, fillPatternVert);
-export const fillExtrusion = compile(fillExtrusionFrag, fillExtrusionVert);
-export const fillExtrusionPattern = compile(fillExtrusionPatternFrag, fillExtrusionPatternVert);
-export const hillshadePrepare = compile(hillshadePrepareFrag, hillshadePrepareVert);
-export const hillshade = compile(hillshadeFrag, hillshadeVert);
-export const line = compile(lineFrag, lineVert);
-export const lineGradient = compile(lineGradientFrag, lineGradientVert);
-export const linePattern = compile(linePatternFrag, linePatternVert);
-export const lineSDF = compile(lineSDFFrag, lineSDFVert);
-export const raster = compile(rasterFrag, rasterVert);
-export const symbolIcon = compile(symbolIconFrag, symbolIconVert);
-export const symbolSDF = compile(symbolSDFFrag, symbolSDFVert);
-export const symbolTextAndIcon = compile(symbolTextAndIconFrag, symbolTextAndIconVert);
+export default {
+    prelude: compile(preludeFrag, preludeVert),
+    background: compile(backgroundFrag, backgroundVert),
+    backgroundPattern: compile(backgroundPatternFrag, backgroundPatternVert),
+    circle: compile(circleFrag, circleVert),
+    clippingMask: compile(clippingMaskFrag, clippingMaskVert),
+    heatmap: compile(heatmapFrag, heatmapVert),
+    heatmapTexture: compile(heatmapTextureFrag, heatmapTextureVert),
+    collisionBox: compile(collisionBoxFrag, collisionBoxVert),
+    collisionCircle: compile(collisionCircleFrag, collisionCircleVert),
+    debug: compile(debugFrag, debugVert),
+    fill: compile(fillFrag, fillVert),
+    fillOutline: compile(fillOutlineFrag, fillOutlineVert),
+    fillOutlinePattern: compile(fillOutlinePatternFrag, fillOutlinePatternVert),
+    fillPattern: compile(fillPatternFrag, fillPatternVert),
+    fillExtrusion: compile(fillExtrusionFrag, fillExtrusionVert),
+    fillExtrusionPattern: compile(fillExtrusionPatternFrag, fillExtrusionPatternVert),
+    hillshadePrepare: compile(hillshadePrepareFrag, hillshadePrepareVert),
+    hillshade: compile(hillshadeFrag, hillshadeVert),
+    line: compile(lineFrag, lineVert),
+    lineGradient: compile(lineGradientFrag, lineGradientVert),
+    linePattern: compile(linePatternFrag, linePatternVert),
+    lineSDF: compile(lineSDFFrag, lineSDFVert),
+    raster: compile(rasterFrag, rasterVert),
+    symbolIcon: compile(symbolIconFrag, symbolIconVert),
+    symbolSDF: compile(symbolSDFFrag, symbolSDFVert),
+    symbolTextAndIcon: compile(symbolTextAndIconFrag, symbolTextAndIconVert)
+};
 
 // Expand #pragmas to #ifdefs.
 
@@ -167,7 +169,7 @@ uniform ${precision} ${type} u_${name};
     ${precision} ${type} ${name} = u_${name};
 #endif
 `;
-                } else /* */{
+                } else /* */ {
                     return `
 #ifndef HAS_UNIFORM_u_${name}
     ${precision} ${type} ${name} = unpack_mix_${unpackType}(a_${name}, u_${name}_t);

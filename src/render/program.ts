@@ -1,4 +1,4 @@
-import {prelude} from '../shaders/shaders';
+import shaders from '../shaders/shaders';
 import assert from 'assert';
 import ProgramConfiguration from '../data/program_configuration';
 import VertexArrayObject from './vertex_array_object';
@@ -68,8 +68,8 @@ class Program<Us extends UniformBindings> {
             defines.push('#define OVERDRAW_INSPECTOR;');
         }
 
-        const fragmentSource = defines.concat(prelude.fragmentSource, source.fragmentSource).join('\n');
-        const vertexSource = defines.concat(prelude.vertexSource, source.vertexSource).join('\n');
+        const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');
+        const vertexSource = defines.concat(shaders.prelude.vertexSource, source.vertexSource).join('\n');
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         if (gl.isContextLost()) {
             this.failedToCreate = true;
