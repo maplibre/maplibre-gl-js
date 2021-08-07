@@ -155,9 +155,7 @@
     "typescript": "^4.3.5"
   },
   "browser": {
-    "./src/shaders/index.js": "./src/shaders/shaders.js",
-    "./src/util/window.js": "./src/util/browser/window.js",
-    "./src/util/web_worker.js": "./src/util/browser/web_worker.js"
+    "./rollup/build/tsc/util/web_worker.js": "./build/web_worker_replacement.js"
   },
   "scripts": {
     "build-glsl": "node rollup/copy-glsl-files.js ./rollup/build/tsc/shaders",

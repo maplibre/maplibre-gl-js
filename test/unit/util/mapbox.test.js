@@ -326,14 +326,14 @@ test("mapbox", (t) => {
             });
 
             t.test('.normalizeTileURL inserts @2x on 2x devices', (t) => {
-                window.devicePixelRatio = 2;
+                global.devicePixelRatio = 2;
                 config.API_URL = 'http://path.png';
                 config.REQUIRE_ACCESS_TOKEN = false;
                 t.equal(manager.normalizeTileURL('mapbox://path.png/tile.png'), `http://path.png/v4/tile@2x.png`);
                 t.equal(manager.normalizeTileURL('mapbox://path.png/tile.png32'), `http://path.png/v4/tile@2x.png32`);
                 t.equal(manager.normalizeTileURL('mapbox://path.png/tile.jpg70'), `http://path.png/v4/tile@2x.jpg70`);
                 t.equal(manager.normalizeTileURL('mapbox://path.png/tile.png?access_token=foo'), `http://path.png/v4/tile@2x.png?access_token=foo`);
-                window.devicePixelRatio = 1;
+                global.devicePixelRatio = 1;
                 t.end();
             });
 

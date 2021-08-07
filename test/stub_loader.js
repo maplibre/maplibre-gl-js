@@ -23,6 +23,10 @@ global.Image = window.Image;
 global.navigator = window.navigator;
 global.performance = window.performance;
 global.devicePixelRatio = window.devicePixelRatio;
+global.addEventListener = window.addEventListener;
+global.removeEventListener = window.removeEventListener;
+global.matchMedia = window.matchMedia;
+global.caches = window.caches;
 global.WheelEvent = window.WheelEvent;
 // stubbing image load as it is not implemented in jsdom
 // eslint-disable-next-line accessor-pairs
@@ -137,3 +141,5 @@ window.performance.mark = function () { };
 window.performance.measure = function () { };
 window.performance.clearMarks = function () { };
 window.performance.clearMeasures = function () { };
+
+

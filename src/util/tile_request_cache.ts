@@ -20,7 +20,7 @@ export type ResponseOptions = {
 let sharedCache: Promise<Cache> | undefined | null;
 
 function cacheOpen() {
-    if (caches && !sharedCache) {
+    if (typeof caches !== 'undefined' && !sharedCache) {
         sharedCache = caches.open(CACHE_NAME);
     }
 }

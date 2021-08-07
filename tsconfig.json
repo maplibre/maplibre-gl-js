@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "importHelpers": false,
     "isolatedModules": true,
-    "importsNotUsedAsValues": "preserve",
+    //"importsNotUsedAsValues": "preserve",
     "jsx": "preserve",
     "module": "ES6",
     "moduleResolution": "Node",
