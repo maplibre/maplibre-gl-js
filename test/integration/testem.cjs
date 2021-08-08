@@ -1,16 +1,8 @@
-/* eslint-disable no-global-assign */
-/* eslint-disable import/no-commonjs */
-/* eslint-disable flowtype/require-valid-file-annotation */
-require = require("esm")(module);
-const {generateFixtureJson, getAllFixtureGlobs} = require('./lib/generate-fixture-json');
-const createServer = require('./lib/server');
-const buildTape = require('../../build/test/build-tape');
 const runAll = require('npm-run-all');
 const chokidar = require('chokidar');
 const rollup = require('rollup');
 const notifier = require('node-notifier');
-const rollupDevConfig = require('../../rollup.config').default;
-const rollupTestConfig = require('./rollup.config.test').default;
+let generateFixtureJson, getAllFixtureGlobs, buildTape, rollupDevConfig, rollupTestConfig, createServer
 
 const rootFixturePath = 'test/integration/';
 const suitePath = 'query-tests';
@@ -22,21 +14,31 @@ let server;
 let fixtureWatcher;
 const rollupWatchers = {};
 
-module.exports =  {
-    "test_page": "test/integration/testem_page.html",
-    "src_files": [
+async function loadEs6StyleFiles() {
+    let importGenerate = (await import('./lib/generate-fixture-json.js')).default;
+    generateFixtureJson = importGenerate.generateFixtureJson;
+    getAllFixtureGlobs = importGenerate.getAllFixtureGlobs;
+    buildTape = (await import('../../build/test/build-tape.js')).default;
+    rollupDevConfig = (await import('../../rollup.config.js')).default;
+    rollupTestConfig = (await import('./rollup.config.test.js')).default;
+    createServer = (await import('./lib/server.js')).default;
+}
+
+module.exports = {
+    test_page: "test/integration/testem_page.html",
+    src_files: [
         "dist/maplibre-gl-dev.js",
         "test/integration/dist/query-test.js"
     ],
-    "launch_in_dev": [],
-    "launch_in_ci": [ "Chrome" ],
-    "browser_args": {
-        "Chrome": {
-            "mode": "ci",
-            "args": [ "--headless", "--disable-gpu", "--remote-debugging-port=9222" ]
+    launch_in_dev: [],
+    launch_in_ci: [ "Chrome" ],
+    browser_args: {
+        Chrome: {
+            mode: "ci",
+            args: [ "--headless", "--disable-gpu", "--remote-debugging-port=9222" ]
         }
     },
-    "proxies": {
+    proxies: {
         "/tiles":{
             "target": "http://localhost:2900"
         },
@@ -56,20 +58,21 @@ module.exports =  {
             "target": "http://localhost:2900"
         }
     },
-    "before_tests"(config, data, callback) {
+    before_tests(config, data, callback) {
         if (!beforeHookInvoked) {
-            server = createServer();
-            const buildPromise = config.appMode === 'ci' ? buildArtifactsCi() : buildArtifactsDev();
-            buildPromise.then(() => {
-                server.listen(callback);
-            }).catch((e) => {
-                callback(e);
+            loadEs6StyleFiles().then(() => {
+                server = createServer();
+                const buildPromise = config.appMode === 'ci' ? buildArtifactsCi() : buildArtifactsDev();
+                buildPromise.then(() => {
+                    server.listen(callback);
+                }).catch((e) => {
+                    callback(e);
+                });
+                beforeHookInvoked = true;
             });
-
-            beforeHookInvoked = true;
         }
     },
-    "after_tests"(config, data, callback) {
+    after_tests(config, data, callback) {
         if (config.appMode === 'ci') {
             server.close(callback);
         }
