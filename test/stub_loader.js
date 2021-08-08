@@ -28,11 +28,28 @@ global.removeEventListener = window.removeEventListener;
 global.matchMedia = window.matchMedia;
 global.caches = window.caches;
 global.WheelEvent = window.WheelEvent;
+global.Blob = window.Blob;
+global.URL = window.URL;
+global.fetch = window.fetch;
+global.document = window.document;
+global.window = window;
 // stubbing image load as it is not implemented in jsdom
 // eslint-disable-next-line accessor-pairs
 Object.defineProperty(global.Image.prototype, 'src', {
     set(src) {
         if (!this.onload) {
+            return;
+        }
+        if (src.startsWith('data:image/png')) {
+            let base64 = src.replace(/data:.*;base64,/, '');
+            let buff = Buffer.from(base64, 'base64');
+            new PNG().parse(buff, (err, png) => {
+                if (err) throw new Error("Couldn't parse PNG");
+                this.data = png.data;
+                this.height = png.height;
+                this.width = png.width;
+                this.onload();
+            });
             return;
         }
         if (src && typeof src === 'string' && !src.startsWith('blob')) {
@@ -62,11 +79,7 @@ Object.defineProperty(global.Image.prototype, 'src', {
         reader.readAsArrayBuffer(lastDataFromUrl);
     }
 });
-global.Blob = window.Blob;
-global.URL = window.URL;
-global.fetch = window.fetch;
-global.document = window.document;
-global.window = window;
+
 
 // Delete local and session storage from JSDOM and stub them out with a warning log
 // Accessing these properties during extend() produces an error in Node environments

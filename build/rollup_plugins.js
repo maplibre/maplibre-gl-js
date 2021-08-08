@@ -5,7 +5,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
 import json from '@rollup/plugin-json';
 import {terser} from 'rollup-plugin-terser';
-import minifyStyleSpec from './rollup_plugin_minify_style_spec';
+import minifyStyleSpec from './rollup_plugin_minify_style_spec.js';
 import strip from '@rollup/plugin-strip';
 
 // Common set of plugins/transformations shared across different rollup
