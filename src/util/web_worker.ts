@@ -6,7 +6,7 @@
 
 import MaplibreWorker from '../source/worker';
 
-import type { WorkerSource } from '../source/worker_source';
+import type {WorkerSource} from '../source/worker_source';
 
 type MessageListener = (
     a: {
@@ -64,7 +64,7 @@ class MessageBus implements WorkerInterface, WorkerGlobalScopeInterface {
         setImmediate(() => {
             try {
                 for (const listener of this.postListeners) {
-                    listener({ data, target: this.target });
+                    listener({data, target: this.target});
                 }
             } catch (e) {
                 console.error(e);
