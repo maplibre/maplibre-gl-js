@@ -26,7 +26,13 @@ rtlTextPlugin['processBidirectionalText'] = rtlText.processBidirectionalText;
 rtlTextPlugin['processStyledBidirectionalText'] = rtlText.processStyledBidirectionalText;
 
 // replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
-browser.getImageData = function({width, height, data}, padding = 0) {
+browser.getImageData = function (img, padding = 0) {
+    if (!img.data) {
+        return {width: 1, height: 1, data: new Uint8Array(1)}
+    }
+    let width = img.width;
+    let height = img.height;
+    let data = img.data;
     const source = new Uint8Array(data);
     const dest = new Uint8Array((2 * padding + width) * (2 * padding + height) * 4);
 
@@ -53,10 +59,20 @@ export default function(style, options, _callback) {
     }
 
     window.devicePixelRatio = options.pixelRatio;
-
-    maplibregl.addProtocol('test', (req, callback) => {
-        handleProtocolRequest(req, callback);
-    })
+    window.useFakeXMLHttpRequest();
+    XMLHttpRequest.onCreate = req => {
+        setTimeout(() => {
+            let reqObj = req.url
+            if (req.responseType == 'arraybuffer') {
+                reqObj = { url: req.url, encoding: null }
+            }
+            request(reqObj, (error, response, body) => {
+                req.setStatus(response.statusCode);
+                req.response = body;
+                req.onload();
+            });
+        }, 0);
+    }
 
     if (options.addFakeCanvas) {
         const fakeCanvas = createFakeCanvas(window.document, options.addFakeCanvas.id, options.addFakeCanvas.image);
@@ -227,43 +243,3 @@ function updateFakeCanvas(document, id, imagePath) {
     fakeCanvas.data = image.data;
 }
 
-function handleProtocolRequest(req, callback) {
-    const getJSON = function({url}, callback) {
-        if (cache[url]) return cached(cache[url], callback);
-        return request(url, (error, response, body) => {
-            if (!error && response.statusCode >= 200 && response.statusCode < 300) {
-                let data;
-                try {
-                    body = body.replace('http', 'test');
-                    data = JSON.parse(body);
-                } catch (err) {
-                    return callback(err);
-                }
-                cache[url] = data;
-                callback(null, data);
-            } else {
-                callback(error || new Error(response.statusCode));
-            }
-        });
-    };
-    
-    const getArrayBuffer = function({url}, callback) {
-        if (cache[url]) return cached(cache[url], callback);
-        return request({url, encoding: null}, (error, response, body) => {
-            if (!error && response.statusCode >= 200 && response.statusCode < 300) {
-                cache[url] = body;
-                callback(null, body);
-            } else {
-                if (!error) error = {status: +response.statusCode};
-                callback(error);
-            }
-        });
-    };
-
-    req.url = req.url.replace('test', 'http');
-    if (req.type === 'json') {
-        getJSON(req, callback);
-    } else {
-        getArrayBuffer(req, callback)
-    }
-}
