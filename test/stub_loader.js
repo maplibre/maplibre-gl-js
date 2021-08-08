@@ -41,8 +41,8 @@ Object.defineProperty(global.Image.prototype, 'src', {
             return;
         }
         if (src.startsWith('data:image/png')) {
-            let base64 = src.replace(/data:.*;base64,/, '');
-            let buff = Buffer.from(base64, 'base64');
+            const base64 = src.replace(/data:.*;base64,/, '');
+            const buff = Buffer.from(base64, 'base64');
             new PNG().parse(buff, (err, png) => {
                 if (err) throw new Error("Couldn't parse PNG");
                 this.data = png.data;
@@ -79,7 +79,6 @@ Object.defineProperty(global.Image.prototype, 'src', {
         reader.readAsArrayBuffer(lastDataFromUrl);
     }
 });
-
 
 // Delete local and session storage from JSDOM and stub them out with a warning log
 // Accessing these properties during extend() produces an error in Node environments
@@ -154,5 +153,4 @@ window.performance.mark = function () { };
 window.performance.measure = function () { };
 window.performance.clearMarks = function () { };
 window.performance.clearMeasures = function () { };
-
 

@@ -1,9 +1,9 @@
-import path, { dirname } from 'path';
+import path, {dirname} from 'path';
 import * as diff from 'diff';
 import fs from 'fs';
 import harness from './harness';
 import compactStringify from 'json-stringify-pretty-compact';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

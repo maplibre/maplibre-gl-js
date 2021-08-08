@@ -1,9 +1,8 @@
-import path from 'path';
+import path, {dirname} from 'path';
 import fs from 'fs';
 import colors from 'chalk';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
+import {fileURLToPath} from 'url';
+import {createRequire} from 'module';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -47,7 +46,7 @@ export default function localizeURLs(style, port) {
             }
         });
     }
-};
+}
 
 function localizeURL(url, port) {
     return url.replace(/^local:\/\//, `http://localhost:${port}/`);

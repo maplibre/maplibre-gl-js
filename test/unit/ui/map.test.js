@@ -568,7 +568,7 @@ test('Map', (t) => {
         });
 
         t.test('listen to window resize event', (t) => {
-            let original = global.addEventListener;
+            const original = global.addEventListener;
             global.addEventListener = function(type) {
                 if (type === 'resize') {
                     //restore original function not to mess with other tests

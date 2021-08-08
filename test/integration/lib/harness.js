@@ -1,21 +1,21 @@
 /* eslint-disable no-process-exit */
 
-import path, { dirname } from 'path';
+import path, {dirname} from 'path';
 import fs from 'fs';
 import glob from 'glob';
-import shuffle_seed from 'shuffle-seed';
+import shuffleSeed from 'shuffle-seed';
 import d3 from 'd3';
 import colors from 'chalk';
 import template from 'lodash.template';
 import createServer from './server';
-import { createRequire } from 'module';
-import { fileURLToPath } from 'url';
+import {createRequire} from 'module';
+import {fileURLToPath} from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
 const {queue} = d3;
-const {shuffle} = shuffle_seed;
+const {shuffle} = shuffleSeed;
 
 export default function (directory, implementation, options, run) {
     const q = queue(1);

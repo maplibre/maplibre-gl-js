@@ -1,16 +1,9 @@
-import fs from 'fs';
 import isBuiltin from 'is-builtin-module';
-
-import {Linter} from 'eslint';
 import * as rollup from 'rollup';
-
 import {test} from '../util/test';
 import rollupConfig from '../../rollup.config.style-spec';
 import styleSpecPackage from '../../src/style-spec/package.json';
 import * as spec from '../../dist/style-spec/index.es.js';
-
-
-const styleSpecDistBundle = fs.readFileSync('./dist/style-spec/index.js', 'utf-8');
 
 test('@mapbox/mapbox-gl-style-spec npm package', (t) => {
     t.test('build plain ES5 bundle in prepublish', (t) => {

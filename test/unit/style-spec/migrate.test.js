@@ -1,12 +1,11 @@
 import {test} from '../../util/test';
 import fs from 'fs';
 import glob from 'glob';
-import path from 'path';
+import path, {dirname} from 'path';
 import validate from '../../../rollup/build/tsc/style-spec/validate_style';
 import v8 from '../../../rollup/build/tsc/style-spec/reference/v8';
 import migrate from '../../../rollup/build/tsc/style-spec/migrate';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /* eslint-disable import/namespace */

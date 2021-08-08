@@ -3,7 +3,7 @@ import fs from 'fs';
 import {PNG} from 'pngjs';
 import harness from './harness';
 import pixelmatch from 'pixelmatch';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 import glob from 'glob';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

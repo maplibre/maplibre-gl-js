@@ -4,7 +4,7 @@ import path, {dirname} from 'path';
 import reference from '../../rollup/build/tsc/style-spec/reference/latest';
 import packageJson from '../../package.json';
 import browserify from 'browserify';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
@@ -47,7 +47,7 @@ test('evaluates without errors', async (t) => {
     global.performance = {};
     global.navigator = {};
     try {
-        await import ('../../dist/maplibre-gl.js');
+        await import('../../dist/maplibre-gl.js');
     } catch (e) {
         t.error(e);
     }

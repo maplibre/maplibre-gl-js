@@ -5,14 +5,13 @@ import Tile from '../../../rollup/build/tsc/source/tile';
 import GeoJSONWrapper from '../../../rollup/build/tsc/source/geojson_wrapper';
 import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
 import fs from 'fs';
-import path from 'path';
+import path, {dirname} from 'path';
 import vtpbf from 'vt-pbf';
 import FeatureIndex from '../../../rollup/build/tsc/data/feature_index';
 import {CollisionBoxArray} from '../../../rollup/build/tsc/data/array_types';
 import {extend} from '../../../rollup/build/tsc/util/util';
 import {serialize, deserialize} from '../../../rollup/build/tsc/util/web_worker_transfer';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 test('querySourceFeatures', (t) => {

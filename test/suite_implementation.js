@@ -2,13 +2,12 @@ import {PNG} from 'pngjs';
 import request from 'request';
 import maplibregl from '../rollup/build/tsc/index';
 import browser from '../rollup/build/tsc/util/browser';
-import * as rtl_text_plugin from '../rollup/build/tsc/source/rtl_text_plugin';
+import * as rtlTextPluginModule from '../rollup/build/tsc/source/rtl_text_plugin';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import fs from 'fs';
-import path from 'path';
+import path, {dirname} from 'path';
 import customLayerImplementations from './integration/custom_layer_implementations';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 
 const cache = {};
 function cached(data, callback) {
@@ -19,7 +18,7 @@ function cached(data, callback) {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const { plugin: rtlTextPlugin } = rtl_text_plugin;
+const {plugin: rtlTextPlugin} = rtlTextPluginModule;
 
 rtlTextPlugin['applyArabicShaping'] = rtlText.applyArabicShaping;
 rtlTextPlugin['processBidirectionalText'] = rtlText.processBidirectionalText;
@@ -28,11 +27,11 @@ rtlTextPlugin['processStyledBidirectionalText'] = rtlText.processStyledBidirecti
 // replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
 browser.getImageData = function (img, padding = 0) {
     if (!img.data) {
-        return {width: 1, height: 1, data: new Uint8Array(1)}
+        return {width: 1, height: 1, data: new Uint8Array(1)};
     }
-    let width = img.width;
-    let height = img.height;
-    let data = img.data;
+    const width = img.width;
+    const height = img.height;
+    const data = img.data;
     const source = new Uint8Array(data);
     const dest = new Uint8Array((2 * padding + width) * (2 * padding + height) * 4);
 
@@ -62,9 +61,9 @@ export default function(style, options, _callback) {
     window.useFakeXMLHttpRequest();
     XMLHttpRequest.onCreate = req => {
         setTimeout(() => {
-            let reqObj = req.url
-            if (req.responseType == 'arraybuffer') {
-                reqObj = { url: req.url, encoding: null }
+            let reqObj = req.url;
+            if (req.responseType === 'arraybuffer') {
+                reqObj = {url: req.url, encoding: null};
             }
             request(reqObj, (error, response, body) => {
                 req.setStatus(response.statusCode);
@@ -72,7 +71,7 @@ export default function(style, options, _callback) {
                 req.onload();
             });
         }, 0);
-    }
+    };
 
     if (options.addFakeCanvas) {
         const fakeCanvas = createFakeCanvas(window.document, options.addFakeCanvas.id, options.addFakeCanvas.image);
@@ -225,7 +224,7 @@ export default function(style, options, _callback) {
             applyOperations(map, operations.slice(1), callback);
         }
     }
-};
+}
 
 function createFakeCanvas(document, id, imagePath) {
     const fakeCanvas = document.createElement('canvas');

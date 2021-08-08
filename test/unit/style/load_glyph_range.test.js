@@ -1,11 +1,10 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
 import fs from 'fs';
-import path from 'path';
+import path, {dirname} from 'path';
 import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
 import loadGlyphRange from '../../../rollup/build/tsc/style/load_glyph_range';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 test('loadGlyphRange', (t) => {

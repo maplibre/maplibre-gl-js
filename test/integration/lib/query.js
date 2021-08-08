@@ -1,10 +1,10 @@
-import path, { dirname } from 'path';
+import path, {dirname} from 'path';
 import fs from 'fs';
 import * as diff from 'diff';
 import {PNG} from 'pngjs';
 import harness from './harness';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
+import {fileURLToPath} from 'url';
+import {createRequire} from 'module';
 
 const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));

@@ -6,9 +6,9 @@ import localizeURLs from './localize-urls.js';
 const OUTPUT_FILE = 'fixtures.json';
 
 export default {
-    generateFixtureJson: generateFixtureJson,
-    getAllFixtureGlobs: getAllFixtureGlobs
-}
+    generateFixtureJson,
+    getAllFixtureGlobs
+};
 
 /**
  * Analyzes the contents of the specified `path.join(rootDirectory, suiteDirectory)`, and inlines

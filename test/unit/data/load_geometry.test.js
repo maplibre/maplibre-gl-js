@@ -1,11 +1,10 @@
 import {test} from '../../util/test';
 import fs from 'fs';
-import path from 'path';
+import path, {dirname} from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import loadGeometry from '../../../rollup/build/tsc/data/load_geometry.js';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load a line feature from fixture tile.
