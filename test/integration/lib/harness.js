@@ -1,5 +1,4 @@
 /* eslint-disable no-process-exit */
-
 import path, {dirname} from 'path';
 import fs from 'fs';
 import glob from 'glob';

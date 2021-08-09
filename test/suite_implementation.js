@@ -9,13 +9,6 @@ import path, {dirname} from 'path';
 import customLayerImplementations from './integration/custom_layer_implementations';
 import {fileURLToPath} from 'url';
 
-const cache = {};
-function cached(data, callback) {
-    setImmediate(() => {
-        callback(null, data);
-    });
-}
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
@@ -98,12 +91,6 @@ export default function(style, options, _callback) {
 
     // Configure the map to never stop the render loop
     map.repaint = true;
-
-    let now = 0;
-    //HM TODO: do we need this?
-    //browser.now = function() {
-    //    return now;
-    //};
 
     if (options.debug) map.showTileBoundaries = true;
     if (options.showOverdrawInspector) map.showOverdrawInspector = true;

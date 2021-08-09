@@ -4,7 +4,7 @@ import VectorTileSource from '../../../rollup/build/tsc/source/vector_tile_sourc
 import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
 import {Evented} from '../../../rollup/build/tsc/util/evented';
 import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
-import fixturesSource from '../../fixtures/source';
+import fixturesSource from '../../fixtures/source.json';
 
 const wrapDispatcher = (dispatcher) => {
     return {

@@ -3,6 +3,7 @@ import * as rollup from 'rollup';
 import {test} from '../util/test';
 import rollupConfig from '../../rollup.config.style-spec';
 import styleSpecPackage from '../../src/style-spec/package.json';
+/* eslint-disable import/namespace */
 import * as spec from '../../dist/style-spec/index.es.js';
 
 test('@mapbox/mapbox-gl-style-spec npm package', (t) => {

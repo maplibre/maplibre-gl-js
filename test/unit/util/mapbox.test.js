@@ -496,10 +496,10 @@ test("mapbox", (t) => {
                         this.data[id] = String(val);
                     },
                     getItem (id) {
-                        return this.data.hasOwnProperty(id) ? this.data[id] : undefined;
+                        return Object.prototype.hasOwnProperty.call(this.data, id) ? this.data[id] : undefined;
                     },
                     removeItem (id) {
-                        if (this.hasOwnProperty(id)) delete this[id];
+                        if (Object.prototype.hasOwnProperty.call(this, id)) delete this[id];
                     }
                 };
                 callback();
@@ -829,10 +829,10 @@ test("mapbox", (t) => {
                         this.data[id] = String(val);
                     },
                     getItem (id) {
-                        return this.data.hasOwnProperty(id) ? this.data[id] : undefined;
+                        return Object.prototype.hasOwnProperty.call(this.data, id) ? this.data[id] : undefined;
                     },
                     removeItem (id) {
-                        if (this.hasOwnProperty(id)) delete this[id];
+                        if (Object.prototype.hasOwnProperty.call(this, id)) delete this[id];
                     }
                 };
                 callback();
