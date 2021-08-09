@@ -6,14 +6,12 @@ import type VertexArrayObject from '../render/vertex_array_object';
 import type {StructArray} from '../util/struct_array';
 
 export type Segment = {
-  sortKey: number | void,
+  sortKey?: number,
   vertexOffset: number,
   primitiveOffset: number,
   vertexLength: number,
   primitiveLength: number,
-  vaos: {
-    [_: string]: VertexArrayObject
-  }
+  vaos: {[_: string]: VertexArrayObject}
 };
 
 class SegmentVector {

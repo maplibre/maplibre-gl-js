@@ -11,9 +11,7 @@ import type {Cancelable} from '../types/cancelable';
 export default function(
   baseURL: string,
   requestManager: RequestManager,
-  callback: Callback<{
-    [_: string]: StyleImage
-  }>
+  callback: Callback<{[_: string]: StyleImage}>
 ): Cancelable {
     let json: any, image, error;
     const format = browser.devicePixelRatio > 1 ? '@2x' : '';

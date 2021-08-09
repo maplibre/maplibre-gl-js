@@ -1,9 +1,7 @@
 // The following table comes from <http://www.unicode.org/Public/12.0.0/ucd/Blocks.txt>.
 // Keep it synchronized with <http://www.unicode.org/Public/UCD/latest/ucd/Blocks.txt>.
 
-type UnicodeBlockLookup = {
-  [key: string]: (char: number) => boolean
-};
+type UnicodeBlockLookup = {[key: string]: (char: number) => boolean};
 
 const unicodeBlockLookup: UnicodeBlockLookup = {
     // 'Basic Latin': (char) => char >= 0x0000 && char <= 0x007F,

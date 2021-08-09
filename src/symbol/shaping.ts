@@ -252,9 +252,7 @@ function shapeText(
       [_: number]: GlyphPosition
     }
   },
-  imagePositions: {
-    [_: string]: ImagePosition
-  },
+  imagePositions: {[_: string]: ImagePosition},
   defaultFontStack: string,
   maxWidth: number,
   lineHeight: number,
@@ -374,9 +372,7 @@ function getGlyphAdvance(
       [_: number]: StyleGlyph | undefined | null
     }
   },
-  imagePositions: {
-    [_: string]: ImagePosition
-  },
+  imagePositions: {[_: string]: ImagePosition},
   spacing: number,
   layoutTextSize: number
 ): number {
@@ -400,9 +396,7 @@ function determineAverageLineWidth(logicalInput: TaggedString,
                                        [_: number]: StyleGlyph | undefined | null
                                      }
                                    },
-                                   imagePositions: {
-                                     [_: string]: ImagePosition
-                                   },
+                                   imagePositions: {[_: string]: ImagePosition},
                                    layoutTextSize: number) {
     let totalWidth = 0;
 
@@ -513,9 +507,7 @@ function determineLineBreaks(
       [_: number]: StyleGlyph | undefined | null
     }
   },
-  imagePositions: {
-    [_: string]: ImagePosition
-  },
+  imagePositions: {[_: string]: ImagePosition},
   symbolPlacement: string,
   layoutTextSize: number
 ): Array<number> {
@@ -608,9 +600,7 @@ function shapeLines(shaping: Shaping,
                         [_: number]: GlyphPosition
                       }
                     },
-                    imagePositions: {
-                      [_: string]: ImagePosition
-                    },
+                    imagePositions: {[_: string]: ImagePosition},
                     lines: Array<TaggedString>,
                     lineHeight: number,
                     textAnchor: SymbolAnchor,

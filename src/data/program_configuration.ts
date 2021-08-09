@@ -74,9 +74,7 @@ interface AttributeBinder {
   populatePaintArray(
     length: number,
     feature: Feature,
-    imagePositions: {
-      [_: string]: ImagePosition
-    },
+    imagePositions: {[_: string]: ImagePosition},
     canonical?: CanonicalTileID,
     formattedSection?: FormattedSection
   ): void;
@@ -85,9 +83,7 @@ interface AttributeBinder {
     length: number,
     feature: Feature,
     featureState: FeatureState,
-    imagePositions: {
-      [_: string]: ImagePosition
-    }
+    imagePositions: {[_: string]: ImagePosition}
   ): void;
   upload(a: Context): void;
   destroy(): void;
@@ -192,9 +188,7 @@ class SourceExpressionBinder implements AttributeBinder {
         this.paintVertexArray = new PaintVertexArray();
     }
 
-    populatePaintArray(newLength: number, feature: Feature, imagePositions: {
-      [_: string]: ImagePosition
-    }, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
+    populatePaintArray(newLength: number, feature: Feature, imagePositions: {[_: string]: ImagePosition}, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
         const start = this.paintVertexArray.length;
         const value = this.expression.evaluate(new EvaluationParameters(0), feature, {}, canonical, [], formattedSection);
         this.paintVertexArray.resize(newLength);
@@ -267,9 +261,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
         this.paintVertexArray = new PaintVertexArray();
     }
 
-    populatePaintArray(newLength: number, feature: Feature, imagePositions: {
-      [_: string]: ImagePosition
-    }, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
+    populatePaintArray(newLength: number, feature: Feature, imagePositions: {[_: string]: ImagePosition}, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
         const min = this.expression.evaluate(new EvaluationParameters(this.zoom), feature, {}, canonical, [], formattedSection);
         const max = this.expression.evaluate(new EvaluationParameters(this.zoom + 1), feature, {}, canonical, [], formattedSection);
         const start = this.paintVertexArray.length;
@@ -351,18 +343,14 @@ class CrossFadedCompositeBinder implements AttributeBinder {
         this.zoomOutPaintVertexArray = new PaintVertexArray();
     }
 
-    populatePaintArray(length: number, feature: Feature, imagePositions: {
-      [_: string]: ImagePosition
-    }) {
+    populatePaintArray(length: number, feature: Feature, imagePositions: {[_: string]: ImagePosition}) {
         const start = this.zoomInPaintVertexArray.length;
         this.zoomInPaintVertexArray.resize(length);
         this.zoomOutPaintVertexArray.resize(length);
         this._setPaintValues(start, length, feature.patterns && feature.patterns[this.layerId], imagePositions);
     }
 
-    updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, imagePositions: {
-      [_: string]: ImagePosition
-    }) {
+    updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, imagePositions: {[_: string]: ImagePosition}) {
         this._setPaintValues(start, end, feature.patterns && feature.patterns[this.layerId], imagePositions);
     }
 
@@ -428,9 +416,7 @@ class CrossFadedCompositeBinder implements AttributeBinder {
  * @private
  */
 export default class ProgramConfiguration {
-    binders: {
-      [_: string]: AttributeBinder | UniformBinder
-    };
+    binders: {[_: string]: AttributeBinder | UniformBinder};
     cacheKey: string;
 
     _buffers: Array<VertexBuffer>;
@@ -482,9 +468,7 @@ export default class ProgramConfiguration {
         return binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ? binder.maxValue : 0;
     }
 
-    populatePaintArrays(newLength: number, feature: Feature, imagePositions: {
-      [_: string]: ImagePosition
-    }, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
+    populatePaintArrays(newLength: number, feature: Feature, imagePositions: {[_: string]: ImagePosition}, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedCompositeBinder)
@@ -504,9 +488,7 @@ export default class ProgramConfiguration {
       featureMap: FeaturePositionMap,
       vtLayer: VectorTileLayer,
       layer: TypedStyleLayer,
-      imagePositions: {
-        [_: string]: ImagePosition
-      }
+      imagePositions: {[_: string]: ImagePosition}
     ): boolean {
         let dirty: boolean = false;
         for (const id in featureStates) {
@@ -639,9 +621,7 @@ export default class ProgramConfiguration {
 }
 
 export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
-    programConfigurations: {
-      [_: string]: ProgramConfiguration
-    };
+    programConfigurations: {[_: string]: ProgramConfiguration};
     needsUpload: boolean;
     _featureMap: FeaturePositionMap;
     _bufferOffset: number;
@@ -656,9 +636,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this._bufferOffset = 0;
     }
 
-    populatePaintArrays(length: number, feature: Feature, index: number, imagePositions: {
-      [_: string]: ImagePosition
-    }, canonical: CanonicalTileID, formattedSection?: FormattedSection) {
+    populatePaintArrays(length: number, feature: Feature, index: number, imagePositions: {[_: string]: ImagePosition}, canonical: CanonicalTileID, formattedSection?: FormattedSection) {
         for (const key in this.programConfigurations) {
             this.programConfigurations[key].populatePaintArrays(length, feature, imagePositions, canonical, formattedSection);
         }
@@ -671,9 +649,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = true;
     }
 
-    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayer, layers: ReadonlyArray<TypedStyleLayer>, imagePositions: {
-      [_: string]: ImagePosition
-    }) {
+    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayer, layers: ReadonlyArray<TypedStyleLayer>, imagePositions: {[_: string]: ImagePosition}) {
         for (const layer of layers) {
             this.needsUpload = this.programConfigurations[layer.id].updatePaintArrays(featureStates, this._featureMap, vtLayer, layer, imagePositions) || this.needsUpload;
         }

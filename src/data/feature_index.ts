@@ -53,9 +53,7 @@ class FeatureIndex {
     rawTileData: ArrayBuffer;
     bucketLayerIDs: Array<Array<string>>;
 
-    vtLayers: {
-      [_: string]: VectorTileLayer
-    };
+    vtLayers: {[_: string]: VectorTileLayer};
     sourceLayerCoder: DictionaryCoder;
 
     constructor(tileID: OverscaledTileID, promoteId?: PromoteIdSpecification | null) {
@@ -96,9 +94,7 @@ class FeatureIndex {
         }
     }
 
-    loadVTLayers(): {
-      [_: string]: VectorTileLayer
-      } {
+    loadVTLayers(): {[_: string]: VectorTileLayer} {
         if (!this.vtLayers) {
             this.vtLayers = new vt.VectorTile(new Protobuf(this.rawTileData)).layers;
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : ['_geojsonTileLayer']);
@@ -109,19 +105,10 @@ class FeatureIndex {
     // Finds non-symbol features in this tile at a particular position.
     query(
       args: QueryParameters,
-      styleLayers: {
-        [_: string]: StyleLayer
-      },
-      serializedLayers: {
-        [_: string]: any
-      },
+      styleLayers: {[_: string]: StyleLayer},
+      serializedLayers: {[_: string]: any},
       sourceFeatureState: SourceFeatureState
-    ): {
-      [_: string]: Array<{
-        featureIndex: number,
-        feature: GeoJSONFeature
-      }>
-    } {
+    ): {[_: string]: Array<{featureIndex: number, feature: GeoJSONFeature}>} {
         this.loadVTLayers();
 
         const params = args.params || {} as { filter: any, layers: string[], availableImages: string[] },
@@ -196,12 +183,8 @@ class FeatureIndex {
         filter: FeatureFilter,
         filterLayerIDs: Array<string>,
         availableImages: Array<string>,
-        styleLayers: {
-          [_: string]: StyleLayer
-        },
-        serializedLayers: {
-          [_: string]: any
-        },
+        styleLayers: {[_: string]: StyleLayer},
+        serializedLayers: {[_: string]: any},
         sourceFeatureState?: SourceFeatureState,
         intersectionTest?: (
           feature: VectorTileFeature,
@@ -270,17 +253,13 @@ class FeatureIndex {
     // Given a set of symbol indexes that have already been looked up,
     // return a matching set of GeoJSONFeatures
     lookupSymbolFeatures(symbolFeatureIndexes: Array<number>,
-                         serializedLayers: {
-                           [x: string]: StyleLayer
-                         },
+                         serializedLayers: {[_: string]: StyleLayer},
                          bucketIndex: number,
                          sourceLayerIndex: number,
                          filterSpec: FilterSpecification,
                          filterLayerIDs: Array<string>,
                          availableImages: Array<string>,
-                         styleLayers: {
-                           [_: string]: StyleLayer
-                         }) {
+                         styleLayers: {[_: string]: StyleLayer}) {
         const result = {};
         this.loadVTLayers();
 

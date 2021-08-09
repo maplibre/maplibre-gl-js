@@ -77,13 +77,13 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
         const styleLayer = this.layers[0];
-        const bucketFeatures = [];
+        const bucketFeatures: BucketFeature[] = [];
         let circleSortKey = null;
         let sortFeaturesByKey = false;
 
         // Heatmap layers are handled in this bucket and have no evaluated properties, so we check our access
         if (styleLayer.type === 'circle') {
-            circleSortKey = (styleLayer as any as CircleStyleLayer).layout.get('circle-sort-key');
+            circleSortKey = (styleLayer as CircleStyleLayer).layout.get('circle-sort-key');
             sortFeaturesByKey = !circleSortKey.isConstant();
         }
 
@@ -94,7 +94,6 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
             if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
 
             const sortKey = sortFeaturesByKey ?
-                // $FlowFixMe
                 circleSortKey.evaluate(evaluationFeature, {}, canonical) :
                 undefined;
 
@@ -114,10 +113,7 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
         }
 
         if (sortFeaturesByKey) {
-            bucketFeatures.sort((a, b) => {
-                // a.sortKey is always a number when in use
-                return (a.sortKey as any as number) - (b.sortKey as any as number);
-            });
+            bucketFeatures.sort((a, b) => a.sortKey - b.sortKey);
         }
 
         for (const bucketFeature of bucketFeatures) {
@@ -129,9 +125,7 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {
-      [_: string]: ImagePosition
-    }) {
+    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
     }

@@ -76,7 +76,7 @@ type LineClips = {
 
 type GradientTexture = {
   texture: Texture,
-  gradient: RGBAImage | undefined | null,
+  gradient?: RGBAImage,
   version: number
 };
 
@@ -88,7 +88,7 @@ class LineBucket implements Bucket {
     totalDistance: number;
     maxLineLength: number;
     scaledDistance: number;
-    lineClips: LineClips | undefined | null;
+    lineClips?: LineClips;
 
     e1: number;
     e2: number;
@@ -98,9 +98,7 @@ class LineBucket implements Bucket {
     overscaling: number;
     layers: Array<LineStyleLayer>;
     layerIds: Array<string>;
-    gradients: {
-      [x: string]: GradientTexture
-    };
+    gradients: {[x: string]: GradientTexture};
     stateDependentLayers: Array<any>;
     stateDependentLayerIds: Array<string>;
     patternFeatures: Array<BucketFeature>;
@@ -147,7 +145,7 @@ class LineBucket implements Bucket {
         this.hasPattern = hasPattern('line', this.layers, options);
         const lineSortKey = this.layers[0].layout.get('line-sort-key');
         const sortFeaturesByKey = !lineSortKey.isConstant();
-        const bucketFeatures = [];
+        const bucketFeatures: BucketFeature[] = [];
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
             const needGeometry = this.layers[0]._featureFilter.needGeometry;
@@ -175,8 +173,7 @@ class LineBucket implements Bucket {
 
         if (sortFeaturesByKey) {
             bucketFeatures.sort((a, b) => {
-                // a.sortKey is always a number when in use
-                return (a.sortKey as any as number) - (b.sortKey as any as number);
+                return (a.sortKey) - (b.sortKey);
             });
         }
 
@@ -197,16 +194,12 @@ class LineBucket implements Bucket {
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {
-      [_: string]: ImagePosition
-    }) {
+    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {
-      [_: string]: ImagePosition
-    }) {
+    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions);
         }
@@ -240,7 +233,7 @@ class LineBucket implements Bucket {
         this.segments.destroy();
     }
 
-    lineFeatureClips(feature: BucketFeature): LineClips | undefined | null {
+    lineFeatureClips(feature: BucketFeature): LineClips | undefined {
         if (!!feature.properties && Object.prototype.hasOwnProperty.call(feature.properties, 'mapbox_clip_start') && Object.prototype.hasOwnProperty.call(feature.properties, 'mapbox_clip_end')) {
             const start = +feature.properties['mapbox_clip_start'];
             const end = +feature.properties['mapbox_clip_end'];
@@ -248,9 +241,7 @@ class LineBucket implements Bucket {
         }
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {
-      [_: string]: ImagePosition
-    }) {
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
         const layout = this.layers[0].layout;
         const join = layout.get('line-join').evaluate(feature, {});
         const cap = layout.get('line-cap');

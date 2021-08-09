@@ -1,9 +1,7 @@
 import assert from 'assert';
 
 class DictionaryCoder {
-    _stringToNumber: {
-      [_: string]: number
-    };
+    _stringToNumber: {[_: string]: number};
     _numberToString: Array<string>;
 
     constructor(strings: Array<string>) {

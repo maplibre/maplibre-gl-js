@@ -18,9 +18,7 @@ function getPixelPosMatrix(transform, tileID) {
     return mat4.multiply(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
 }
 
-function queryIncludes3DLayer(layers: Array<string> | undefined | null, styleLayers: {
-  [_: string]: StyleLayer
-}, sourceID: string) {
+function queryIncludes3DLayer(layers: Array<string> | undefined | null, styleLayers: {[_: string]: StyleLayer}, sourceID: string) {
     if (layers) {
         for (const layerID of layers) {
             const layer = styleLayers[layerID];
@@ -39,20 +37,18 @@ function queryIncludes3DLayer(layers: Array<string> | undefined | null, styleLay
     return false;
 }
 
-export function queryRenderedFeatures(sourceCache: SourceCache,
-                            styleLayers: {
-                              [_: string]: StyleLayer
-                            },
-                            serializedLayers: {
-                              [_: string]: any
-                            },
-                            queryGeometry: Array<Point>,
-                            params: {
-                              filter: FilterSpecification,
-                              layers: Array<string>,
-                              availableImages: Array<string>
-                            },
-                            transform: Transform) {
+export function queryRenderedFeatures(
+    sourceCache: SourceCache,
+    styleLayers: {[_: string]: StyleLayer},
+    serializedLayers: {[_: string]: any},
+    queryGeometry: Array<Point>,
+    params: {
+        filter: FilterSpecification,
+        layers: Array<string>,
+        availableImages: Array<string>
+    },
+    transform: Transform
+) {
 
     const has3DLayer = queryIncludes3DLayer(params && params.layers, styleLayers, sourceCache.id);
     const maxPitchScaleFactor = transform.maxPitchScaleFactor();
@@ -94,15 +90,9 @@ export function queryRenderedFeatures(sourceCache: SourceCache,
     return result;
 }
 
-export function queryRenderedSymbols(styleLayers: {
-  [_: string]: StyleLayer
-},
-                            serializedLayers: {
-                              [_: string]: StyleLayer
-                            },
-                            sourceCaches: {
-                              [_: string]: SourceCache
-                            },
+export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
+                            serializedLayers: {[_: string]: StyleLayer},
+                            sourceCaches: {[_: string]: SourceCache},
                             queryGeometry: Array<Point>,
                             params: {
                               filter: FilterSpecification,

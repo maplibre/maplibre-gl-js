@@ -28,12 +28,8 @@ import type {PluginState} from './rtl_text_plugin';
 export default class Worker {
     self: WorkerGlobalScopeInterface;
     actor: Actor;
-    layerIndexes: {
-      [_: string]: StyleLayerIndex
-    };
-    availableImages: {
-      [_: string]: Array<string>
-    };
+    layerIndexes: {[_: string]: StyleLayerIndex};
+    availableImages: {[_: string]: Array<string>};
     workerSourceTypes: {
       [_: string]: {
         new (...args: any): WorkerSource

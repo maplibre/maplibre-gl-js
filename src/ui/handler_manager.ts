@@ -97,14 +97,10 @@ class HandlerManager {
     _frameId: number;
     _inertia: HandlerInertia;
     _bearingSnap: number;
-    _handlersById: {
-      [x: string]: Handler
-    };
+    _handlersById: {[x: string]: Handler};
     _updatingCamera: boolean;
     _changes: Array<[HandlerResult, any, any]>;
-    _previousActiveHandlers: {
-      [x: string]: Handler
-    };
+    _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
       passive?: boolean,
       capture?: boolean
@@ -268,9 +264,7 @@ class HandlerManager {
         return Boolean(isMoving(this._eventsInProgress)) || this.isZooming();
     }
 
-    _blockedByActive(activeHandlers: {
-      [x: string]: Handler
-    }, allowed: Array<string>, myName: string) {
+    _blockedByActive(activeHandlers: {[x: string]: Handler}, allowed: Array<string>, myName: string) {
         for (const name in activeHandlers) {
             if (name === myName) continue;
             if (!allowed || allowed.indexOf(name) < 0) {
@@ -447,9 +441,7 @@ class HandlerManager {
 
     }
 
-    _fireEvents(newEventsInProgress: {
-      [x: string]: any
-    }, deactivatedHandlers: any, allowEndAnimation: boolean) {
+    _fireEvents(newEventsInProgress: {[x: string]: any}, deactivatedHandlers: any, allowEndAnimation: boolean) {
 
         const wasMoving = isMoving(this._eventsInProgress);
         const nowMoving = isMoving(newEventsInProgress);

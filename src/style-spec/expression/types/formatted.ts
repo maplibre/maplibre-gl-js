@@ -55,9 +55,7 @@ export default class Formatted {
                 continue;
             }
             serialized.push(section.text);
-            const options: {
-              [key: string]: unknown
-            } = {};
+            const options: {[key: string]: unknown} = {};
             if (section.fontStack) {
                 options["text-font"] = ["literal", section.fontStack.split(',')];
             }

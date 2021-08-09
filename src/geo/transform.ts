@@ -51,12 +51,8 @@ class Transform {
     _center: LngLat;
     _edgeInsets: EdgeInsets;
     _constraining: boolean;
-    _posMatrixCache: {
-      [_: string]: mat4
-    };
-    _alignedPosMatrixCache: {
-      [_: string]: mat4
-    };
+    _posMatrixCache: {[_: string]: mat4};
+    _alignedPosMatrixCache: {[_: string]: mat4};
 
     constructor(minZoom: number | undefined | null, maxZoom: number | undefined | null, minPitch: number | undefined | null, maxPitch: number | undefined | null, renderWorldCopies: boolean) {
         this.tileSize = 512; // constant

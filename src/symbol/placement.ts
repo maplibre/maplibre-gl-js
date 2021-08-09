@@ -101,9 +101,7 @@ type CollisionGroup = {
 };
 
 class CollisionGroups {
-    collisionGroups: {
-      [groupName: string]: CollisionGroup
-    };
+    collisionGroups: {[groupName: string]: CollisionGroup};
     maxGroupID: number;
     crossSourceCollisions: boolean;
 

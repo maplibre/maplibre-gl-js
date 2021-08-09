@@ -13,9 +13,7 @@ class EvaluationContext {
     availableImages: Array<string> | undefined | null;
     canonical: CanonicalTileID | undefined | null;
 
-    _parseColorCache: {
-      [_: string]: Color | undefined | null
-    };
+    _parseColorCache: {[_: string]: Color | undefined | null};
 
     constructor() {
         this.globals = (null as any);

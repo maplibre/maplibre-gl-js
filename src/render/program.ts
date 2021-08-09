@@ -28,9 +28,7 @@ function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> 
 }
 class Program<Us extends UniformBindings> {
     program: WebGLProgram;
-    attributes: {
-      [_: string]: number
-    };
+    attributes: {[_: string]: number};
     numAttributes: number;
     fixedUniforms: Us;
     binderUniforms: Array<BinderUniform>;

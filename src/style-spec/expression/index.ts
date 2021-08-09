@@ -29,9 +29,7 @@ import type {CanonicalTileID} from '../../source/tile_id';
 export type Feature = {
   readonly type: 1 | 2 | 3 | "Unknown" | "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon" | "MultiPolygon",
   readonly id?: any,
-  readonly properties: {
-    [_: string]: any
-  },
+  readonly properties: {[_: string]: any},
   readonly patterns?: {
     [_: string]: {
       "min": string,
@@ -42,9 +40,7 @@ export type Feature = {
   readonly geometry?: Array<Array<Point>>
 };
 
-export type FeatureState = {
-  [_: string]: any
-};
+export type FeatureState = {[_: string]: any};
 
 export type GlobalProperties = Readonly<{
   zoom: number,
@@ -59,12 +55,8 @@ export class StyleExpression {
 
     _evaluator: EvaluationContext;
     _defaultValue: Value;
-    _warningHistory: {
-      [key: string]: boolean
-    };
-    _enumValues: {
-      [_: string]: any
-    } | undefined | null;
+    _warningHistory: {[key: string]: boolean};
+    _enumValues: {[_: string]: any} | undefined | null;
 
     constructor(expression: Expression, propertySpec?: StylePropertySpecification | null) {
         this.expression = expression;

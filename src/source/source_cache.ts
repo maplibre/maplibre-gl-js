@@ -42,9 +42,7 @@ class SourceCache extends Evented {
     _source: Source;
     _sourceLoaded: boolean;
     _sourceErrored: boolean;
-    _tiles: {
-      [_: string]: Tile
-    };
+    _tiles: {[_: string]: Tile};
     _prevLng: number;
     _cache: TileCache;
     _timers: {
@@ -56,15 +54,11 @@ class SourceCache extends Evented {
     _maxTileCacheSize: number | undefined | null;
     _paused: boolean;
     _shouldReloadOnResume: boolean;
-    _coveredTiles: {
-      [_: string]: boolean
-    };
+    _coveredTiles: {[_: string]: boolean};
     transform: Transform;
     used: boolean;
     _state: SourceFeatureState;
-    _loadedParentTiles: {
-      [_: string]: Tile | undefined | null
-    };
+    _loadedParentTiles: {[_: string]: Tile | undefined | null};
 
     static maxUnderzooming: number;
     static maxOverzooming: number;
@@ -457,9 +451,7 @@ class SourceCache extends Evented {
         this._prevLng = lng;
 
         if (wrapDelta) {
-            const tiles: {
-              [_: string]: Tile
-            } = {};
+            const tiles: {[_: string]: Tile} = {};
             for (const key in this._tiles) {
                 const tile = this._tiles[key];
                 tile.tileID = tile.tileID.unwrapTo(tile.tileID.wrap + wrapDelta);
@@ -526,9 +518,7 @@ class SourceCache extends Evented {
         const retain = this._updateRetainedTiles(idealTileIDs, zoom);
 
         if (isRasterType(this._source.type)) {
-            const parentsForFading: {
-              [_: string]: OverscaledTileID
-            } = {};
+            const parentsForFading: {[_: string]: OverscaledTileID} = {};
             const fadingTiles = {};
             const ids = Object.keys(retain);
             for (const id of ids) {
@@ -589,15 +579,9 @@ class SourceCache extends Evented {
         }
     }
 
-    _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): {
-      [_: string]: OverscaledTileID
-    } {
-        const retain: {
-          [_: string]: OverscaledTileID
-        } = {};
-        const checked: {
-          [_: string]: boolean
-        } = {};
+    _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): {[_: string]: OverscaledTileID} {
+        const retain: {[_: string]: OverscaledTileID} = {};
+        const checked: {[_: string]: boolean} = {};
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
         const maxCoveringZoom = Math.max(zoom + SourceCache.maxUnderzooming,  this._source.minzoom);
 

@@ -71,9 +71,7 @@ class WorkerTile {
         const featureIndex = new FeatureIndex(this.tileID, this.promoteId);
         featureIndex.bucketLayerIDs = [];
 
-        const buckets: {
-          [_: string]: Bucket
-        } = {};
+        const buckets: {[_: string]: Bucket} = {};
 
         const options = {
             featureIndex,
@@ -135,12 +133,8 @@ class WorkerTile {
             [_: number]: StyleGlyph | undefined | null
           }
         } | undefined | null;
-        let iconMap: {
-          [_: string]: StyleImage
-        } | undefined | null;
-        let patternMap: {
-          [_: string]: StyleImage
-        } | undefined | null;
+        let iconMap: {[_: string]: StyleImage} | undefined | null;
+        let patternMap: {[_: string]: StyleImage} | undefined | null;
 
         const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
         if (Object.keys(stacks).length) {

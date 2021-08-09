@@ -77,7 +77,7 @@ class FillBucket implements Bucket {
         this.hasPattern = hasPattern('fill', this.layers, options);
         const fillSortKey = this.layers[0].layout.get('fill-sort-key');
         const sortFeaturesByKey = !fillSortKey.isConstant();
-        const bucketFeatures = [];
+        const bucketFeatures: BucketFeature[] = [];
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
             const needGeometry = this.layers[0]._featureFilter.needGeometry;
@@ -105,8 +105,7 @@ class FillBucket implements Bucket {
 
         if (sortFeaturesByKey) {
             bucketFeatures.sort((a, b) => {
-                // a.sortKey is always a number when in use
-                return (a.sortKey as any as number) - (b.sortKey as any as number);
+                return (a.sortKey) - (b.sortKey);
             });
         }
 

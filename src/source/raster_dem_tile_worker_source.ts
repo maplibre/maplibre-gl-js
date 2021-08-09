@@ -10,9 +10,7 @@ import type {
 
 class RasterDEMTileWorkerSource {
     actor: Actor;
-    loaded: {
-      [_: string]: DEMData
-    };
+    loaded: {[_: string]: DEMData};
     offscreenCanvas: OffscreenCanvas;
     offscreenCanvasContext: OffscreenCanvasRenderingContext2D;
 

@@ -252,14 +252,10 @@ class CrossTileSymbolLayerIndex {
 }
 
 class CrossTileSymbolIndex {
-    layerIndexes: {
-      [layerId: string]: CrossTileSymbolLayerIndex
-    };
+    layerIndexes: {[layerId: string]: CrossTileSymbolLayerIndex};
     crossTileIDs: CrossTileIDs;
     maxBucketInstanceId: number;
-    bucketsInCurrentPlacement: {
-      [_: number]: boolean
-    };
+    bucketsInCurrentPlacement: {[_: number]: boolean};
 
     constructor() {
         this.layerIndexes = {};

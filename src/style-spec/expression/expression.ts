@@ -22,6 +22,4 @@ export type ExpressionRegistration = {
 } & {
   readonly parse: ExpressionParser
 };
-export type ExpressionRegistry = {
-  [_: string]: ExpressionRegistration
-};
+export type ExpressionRegistry = {[_: string]: ExpressionRegistration};
