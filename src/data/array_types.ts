@@ -957,35 +957,6 @@ register('PlacedSymbolArray', PlacedSymbolArray);
 
 class SymbolInstanceStruct extends Struct {
     _structArray: SymbolInstanceArray;
-    // HM TODO: can this be removed?
-    // anchorX: number;
-    // anchorY: number;
-    // rightJustifiedTextSymbolIndex: number;
-    // centerJustifiedTextSymbolIndex: number;
-    // leftJustifiedTextSymbolIndex: number;
-    // verticalPlacedTextSymbolIndex: number;
-    // placedIconSymbolIndex: number;
-    // verticalPlacedIconSymbolIndex: number;
-    // key: number;
-    // textBoxStartIndex: number;
-    // textBoxEndIndex: number;
-    // verticalTextBoxStartIndex: number;
-    // verticalTextBoxEndIndex: number;
-    // iconBoxStartIndex: number;
-    // iconBoxEndIndex: number;
-    // verticalIconBoxStartIndex: number;
-    // verticalIconBoxEndIndex: number;
-    // featureIndex: number;
-    // numHorizontalGlyphVertices: number;
-    // numVerticalGlyphVertices: number;
-    // numIconVertices: number;
-    // numVerticalIconVertices: number;
-    // useRuntimeCollisionCircles: number;
-    // crossTileID: number;
-    // textBoxScale: number;
-    // textOffset0: number;
-    // textOffset1: number;
-    // collisionCircleDiameter: number;
     get anchorX() { return this._structArray.int16[this._pos2 + 0]; }
     get anchorY() { return this._structArray.int16[this._pos2 + 1]; }
     get rightJustifiedTextSymbolIndex() { return this._structArray.int16[this._pos2 + 2]; }
