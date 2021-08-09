@@ -115,9 +115,7 @@ export function asyncAll<Item, Result>(
  * @private
  */
 export function values<T>(
-  obj: {
-    [key: string]: T
-  }
+  obj: {[key: string]: T}
 ): Array<T> {
     const result = [];
     for (const k in obj) {
@@ -134,12 +132,8 @@ export function values<T>(
  * @private
  */
 export function keysDifference<S, T>(
-  obj: {
-    [key: string]: S
-  },
-  other: {
-    [key: string]: T
-  }
+  obj: {[key: string]: S},
+  other: {[key: string]: T}
 ): Array<string> {
     const difference = [];
     for (const i in obj) {
@@ -350,9 +344,7 @@ export function arraysIntersect<T>(a: Array<T>, b: Array<T>): boolean {
  *
  * @private
  */
-const warnOnceHistory: {
-  [key: string]: boolean
-} = {};
+const warnOnceHistory: {[key: string]: boolean} = {};
 
 export function warnOnce(message: string): void {
     if (!warnOnceHistory[message]) {

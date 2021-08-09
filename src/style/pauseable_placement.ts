@@ -67,13 +67,15 @@ class PauseablePlacement {
     _showCollisionBoxes: boolean;
     _inProgressLayer: LayerPlacement | undefined | null;
 
-    constructor(transform: Transform, order: Array<string>,
-                forceFullPlacement: boolean,
-                showCollisionBoxes: boolean,
-                fadeDuration: number,
-                crossSourceCollisions: boolean,
-                prevPlacement?: Placement) {
-
+    constructor(
+        transform: Transform,
+        order: Array<string>,
+        forceFullPlacement: boolean,
+        showCollisionBoxes: boolean,
+        fadeDuration: number,
+        crossSourceCollisions: boolean,
+        prevPlacement?: Placement
+    ) {
         this.placement = new Placement(transform, fadeDuration, crossSourceCollisions, prevPlacement);
         this._currentPlacementIndex = order.length - 1;
         this._forceFullPlacement = forceFullPlacement;
@@ -81,15 +83,15 @@ class PauseablePlacement {
         this._done = false;
     }
 
-    isDone(): boolean {
+    isDone() {
         return this._done;
     }
 
-    continuePlacement(order: Array<string>, layers: {
-      [_: string]: StyleLayer
-    }, layerTiles: {
-      [_: string]: Array<Tile>
-    }) {
+    continuePlacement(
+        order: Array<string>,
+        layers: {[_: string]: StyleLayer},
+        layerTiles: {[_: string]: Array<Tile>}
+    ) {
         const startTime = browser.now();
 
         const shouldPausePlacement = () => {

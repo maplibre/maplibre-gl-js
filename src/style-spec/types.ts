@@ -7,9 +7,7 @@ export type FormattedSpecification = string;
 
 export type ResolvedImageSpecification = string;
 
-export type PromoteIdSpecification = {
-  [_: string]: string
-} | string;
+export type PromoteIdSpecification = {[_: string]: string} | string;
 
 export type FilterSpecification = ["has", string] | ["!has", string] | ["==", string, string | number | boolean] | ["!=", string, string | number | boolean] | [">", string, string | number | boolean] | [">=", string, string | number | boolean] | ["<", string, string | number | boolean] | ["<=", string, string | number | boolean] | Array<string | FilterSpecification>; // Can't type in, !in, all, any, none -- https://github.com/facebook/flow/issues/2443
 
@@ -90,9 +88,7 @@ export type StyleSpecification = {
   "bearing"?: number,
   "pitch"?: number,
   "light"?: LightSpecification,
-  "sources": {
-    [_: string]: SourceSpecification
-  },
+  "sources": {[_: string]: SourceSpecification},
   "sprite"?: string,
   "glyphs"?: string,
   "transition"?: TransitionSpecification,

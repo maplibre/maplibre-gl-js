@@ -52,9 +52,7 @@ class Tile {
     uid: number;
     uses: number;
     tileSize: number;
-    buckets: {
-      [_: string]: Bucket
-    };
+    buckets: {[_: string]: Bucket};
     latestFeatureIndex: FeatureIndex;
     latestRawTileData: ArrayBuffer | undefined | null;
     imageAtlas: ImageAtlas | undefined | null;
@@ -71,9 +69,7 @@ class Tile {
     showCollisionBoxes: boolean;
     placementSource: any;
     actor: Actor | undefined | null;
-    vtLayers: {
-      [_: string]: VectorTileLayer
-    };
+    vtLayers: {[_: string]: VectorTileLayer};
 
     neighboringTiles: any;
     dem: DEMData | undefined | null;
@@ -271,12 +267,8 @@ class Tile {
     // Queries non-symbol features rendered for this tile.
     // Symbol features are queried globally
     queryRenderedFeatures(
-      layers: {
-        [_: string]: StyleLayer
-      },
-      serializedLayers: {
-        [x: string]: any
-      },
+      layers: {[_: string]: StyleLayer},
+      serializedLayers: {[_: string]: any},
       sourceFeatureState: SourceFeatureState,
       queryGeometry: Array<Point>,
       cameraQueryGeometry: Array<Point>,
@@ -289,12 +281,7 @@ class Tile {
       transform: Transform,
       maxPitchScaleFactor: number,
       pixelPosMatrix: mat4
-    ): {
-      [_: string]: Array<{
-        featureIndex: number,
-        feature: GeoJSONFeature
-      }>
-    } {
+    ): {[_: string]: Array<{featureIndex: number, feature: GeoJSONFeature}>} {
         if (!this.latestFeatureIndex || !this.latestFeatureIndex.rawTileData)
             return {};
 

@@ -280,9 +280,7 @@ class Map extends Camera {
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
-    _controlPositions: {
-      [_: string]: HTMLElement
-    };
+    _controlPositions: {[_: string]: HTMLElement};
     _interactive: boolean | undefined | null;
     _showTileBoundaries: boolean | undefined | null;
     _showCollisionBoxes: boolean | undefined | null;

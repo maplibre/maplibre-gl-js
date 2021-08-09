@@ -25,9 +25,7 @@ class CompoundExpression implements Expression {
     _evaluate: Evaluate;
     args: Array<Expression>;
 
-    static definitions: {
-      [_: string]: Definition
-    };
+    static definitions: {[_: string]: Definition};
 
     constructor(name: string, type: Type, evaluate: Evaluate, args: Array<Expression>) {
         this.name = name;
@@ -146,9 +144,7 @@ class CompoundExpression implements Expression {
 
     static register(
         registry: ExpressionRegistry,
-        definitions: {
-          [_: string]: Definition
-        }
+        definitions: {[_: string]: Definition}
     ) {
         assert(!CompoundExpression.definitions);
         CompoundExpression.definitions = definitions;

@@ -110,35 +110,19 @@ class Style extends Evented {
 
     _request: Cancelable | undefined | null;
     _spriteRequest: Cancelable | undefined | null;
-    _layers: {
-      [_: string]: StyleLayer
-    };
-    _serializedLayers: {
-      [_: string]: any
-    };
+    _layers: {[_: string]: StyleLayer};
+    _serializedLayers: {[_: string]: any};
     _order: Array<string>;
-    sourceCaches: {
-      [_: string]: SourceCache
-    };
+    sourceCaches: {[_: string]: SourceCache};
     zoomHistory: ZoomHistory;
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
     _changed: boolean;
-    _updatedSources: {
-      [_: string]: "clear" | "reload"
-    };
-    _updatedLayers: {
-      [_: string]: true
-    };
-    _removedLayers: {
-      [_: string]: StyleLayer
-    };
-    _changedImages: {
-      [_: string]: true
-    };
-    _updatedPaintProps: {
-      [layer: string]: true
-    };
+    _updatedSources: {[_: string]: "clear" | "reload"};
+    _updatedLayers: {[_: string]: true};
+    _removedLayers: {[_: string]: StyleLayer};
+    _changedImages: {[_: string]: true};
+    _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
     _availableImages: Array<string>;
 
@@ -1175,11 +1159,14 @@ class Style extends Evented {
         return this._flattenAndSortRenderedFeatures(sourceResults);
     }
 
-    querySourceFeatures(sourceID: string, params?: {
-      sourceLayer: string | undefined | null,
-      filter: Array<any> | undefined | null,
-      validate?: boolean
-    } | null) {
+    querySourceFeatures(
+        sourceID: string,
+        params?: {
+            sourceLayer: string | undefined | null,
+            filter: Array<any> | undefined | null,
+            validate?: boolean
+        } | null
+    ) {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);
         }
@@ -1369,15 +1356,16 @@ class Style extends Evented {
 
     // Callbacks from web workers
 
-    getImages(mapId: string, params: {
-      icons: Array<string>,
-      source: string,
-      tileID: OverscaledTileID,
-      type: string
-    }, callback: Callback<{
-      [_: string]: StyleImage
-    }>) {
-
+    getImages(
+      mapId: string,
+      params: {
+        icons: Array<string>,
+        source: string,
+        tileID: OverscaledTileID,
+        type: string
+      },
+      callback: Callback<{[_: string]: StyleImage}>
+    ) {
         this.imageManager.getImages(params.icons, callback);
 
         // Apply queued image changes before setting the tile's dependencies so that the tile
@@ -1396,15 +1384,11 @@ class Style extends Evented {
         }
     }
 
-    getGlyphs(mapId: string, params: {
-      stacks: {
-        [_: string]: Array<number>
-      }
-    }, callback: Callback<{
-      [_: string]: {
-        [_: number]: StyleGlyph | undefined | null
-      }
-    }>) {
+    getGlyphs(
+        mapId: string,
+        params: {stacks: {[_: string]: Array<number>}},
+        callback: Callback<{[_: string]: {[_: number]: StyleGlyph | undefined | null}}>
+    ) {
         this.glyphManager.getGlyphs(params.stacks, callback);
     }
 

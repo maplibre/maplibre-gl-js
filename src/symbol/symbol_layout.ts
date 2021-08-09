@@ -157,12 +157,8 @@ export function performSymbolLayout(
             [x: number]: GlyphPosition
         }
     },
-    imageMap: {
-        [_: string]: StyleImage
-    },
-    imagePositions: {
-        [_: string]: ImagePosition
-    },
+    imageMap: {[_: string]: StyleImage},
+    imagePositions: {[_: string]: ImagePosition},
     showCollisionBoxes: boolean,
     canonical: CanonicalTileID
 ) {
@@ -364,9 +360,7 @@ function addFeature(bucket: SymbolBucket,
                     feature: SymbolFeature,
                     shapedTextOrientations: any,
                     shapedIcon: PositionedIcon,
-                    imageMap: {
-                      [_: string]: StyleImage
-                    },
+                    imageMap: {[_: string]: StyleImage},
                     sizes: Sizes,
                     layoutTextSize: number,
                     layoutIconSize: number,
@@ -490,9 +484,7 @@ export {MAX_PACKED_SIZE};
 function addTextVertices(bucket: SymbolBucket,
                          anchor: Point,
                          shapedText: Shaping,
-                         imageMap: {
-                           [_: string]: StyleImage
-                         },
+                         imageMap: {[_: string]: StyleImage},
                          layer: SymbolStyleLayer,
                          textAlongLine: boolean,
                          feature: SymbolFeature,
@@ -503,9 +495,7 @@ function addTextVertices(bucket: SymbolBucket,
                          },
                          writingMode: number,
                          placementTypes: Array<"vertical" | "center" | "left" | "right">,
-                         placedTextSymbolIndices: {
-                           [_: string]: number
-                         },
+                         placedTextSymbolIndices: {[_: string]: number},
                          placedIconIndex: number,
                          sizes: Sizes,
                          canonical: CanonicalTileID) {
@@ -578,9 +568,7 @@ function addSymbol(bucket: SymbolBucket,
                    line: Array<Point>,
                    shapedTextOrientations: any,
                    shapedIcon: PositionedIcon | void,
-                   imageMap: {
-                     [_: string]: StyleImage
-                   },
+                   imageMap: {[_: string]: StyleImage},
                    verticallyShapedIcon: PositionedIcon | void,
                    layer: SymbolStyleLayer,
                    collisionBoxArray: CollisionBoxArray,

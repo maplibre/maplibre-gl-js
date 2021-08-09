@@ -89,9 +89,7 @@ export type SourceState = // Source empty or data loaded
 class GeoJSONWorkerSource extends VectorTileWorkerSource {
     _state: SourceState;
     _pendingCallback: Callback<{
-      resourceTiming?: {
-        [_: string]: Array<PerformanceResourceTiming>
-      },
+      resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>},
       abandoned?: boolean
     }>;
     _pendingLoadDataParams: LoadGeoJSONParameters;
@@ -128,9 +126,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @private
      */
     loadData(params: LoadGeoJSONParameters, callback: Callback<{
-      resourceTiming?: {
-        [_: string]: Array<PerformanceResourceTiming>
-      },
+      resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>},
       abandoned?: boolean
     }>) {
         if (this._pendingCallback) {

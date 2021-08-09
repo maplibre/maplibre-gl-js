@@ -226,9 +226,7 @@ export function getGlyphQuads(
   layer: SymbolStyleLayer,
   alongLine: boolean,
   feature: Feature,
-  imageMap: {
-    [_: string]: StyleImage
-  },
+  imageMap: {[_: string]: StyleImage},
   allowVerticalPlacement: boolean
 ): Array<SymbolQuad> {
 

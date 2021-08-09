@@ -83,9 +83,7 @@ declare module "sinon" {
 
 declare global {
     declare interface VectorTile {
-        layers: {
-            [_: string]: VectorTileLayer
-        };
+        layers: {[_: string]: VectorTileLayer};
     }
 
     declare interface VectorTileLayer {
@@ -100,9 +98,7 @@ declare global {
         extent: number;
         type: 1 | 2 | 3;
         id: number;
-        properties: {
-            [_: string]: string | number | boolean
-        };
+        properties: {[_: string]: string | number | boolean};
         loadGeometry(): Array<Array<Point>>;
         toGeoJSON(x: number, y: number, z: number): GeoJSON.Feature;
     }

@@ -4,9 +4,7 @@ import type Point from '../symbol/point';
 type EvaluationFeature = {
   readonly type: 1 | 2 | 3 | "Unknown" | "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon" | "MultiPolygon",
   readonly id?: any,
-  readonly properties: {
-    [_: string]: any
-  },
+  readonly properties: {[_: string]: any},
   readonly patterns?: {
     [_: string]: {
       "min": string,

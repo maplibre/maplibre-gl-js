@@ -11,9 +11,7 @@ export function deepUnbundle(value: unknown): unknown {
     if (Array.isArray(value)) {
         return value.map(deepUnbundle);
     } else if (value instanceof Object && !(value instanceof Number || value instanceof String || value instanceof Boolean)) {
-        const unbundledValue: {
-          [key: string]: unknown
-        } = {};
+        const unbundledValue: {[key: string]: unknown} = {};
         for (const key in value) {
             unbundledValue[key] = deepUnbundle(value[key]);
         }

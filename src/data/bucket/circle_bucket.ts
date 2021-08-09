@@ -113,10 +113,7 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
         }
 
         if (sortFeaturesByKey) {
-            bucketFeatures.sort((a, b) => {
-                // a.sortKey is always a number when in use
-                return (a.sortKey) - (b.sortKey);
-            });
+            bucketFeatures.sort((a, b) => a.sortKey - b.sortKey);
         }
 
         for (const bucketFeature of bucketFeatures) {
@@ -128,9 +125,7 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {
-      [_: string]: ImagePosition
-    }) {
+    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
     }

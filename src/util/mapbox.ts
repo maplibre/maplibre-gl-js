@@ -337,9 +337,12 @@ class TelemetryEvent {
     * to the values that should be saved. For this reason, the callback should be invoked prior to the call
     * to TelemetryEvent#saveData
     */
-    postEvent(timestamp: number, additionalPayload: {
-      [_: string]: any
-    }, callback: (err?: Error | null) => void, customAccessToken?: string | null) {
+    postEvent(
+        timestamp: number,
+        additionalPayload: {[_: string]: any},
+        callback: (err?: Error | null) => void,
+        customAccessToken?: string | null
+    ) {
         if (!config.EVENTS_URL) return;
         const eventsUrlObject: UrlObject = parseUrl(config.EVENTS_URL);
         eventsUrlObject.params.push(`access_token=${customAccessToken || config.ACCESS_TOKEN || ''}`);

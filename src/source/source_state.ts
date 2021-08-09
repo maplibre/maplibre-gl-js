@@ -2,12 +2,8 @@ import {extend} from '../util/util';
 import Tile from './tile';
 import type {FeatureState} from '../style-spec/expression';
 
-export type FeatureStates = {
-  [featureId: string]: FeatureState
-};
-export type LayerFeatureStates = {
-  [layer: string]: FeatureStates
-};
+export type FeatureStates = {[featureId: string]: FeatureState};
+export type LayerFeatureStates = {[layer: string]: FeatureStates};
 
 /**
  * SourceFeatureState manages the state and pending changes

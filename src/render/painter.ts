@@ -103,9 +103,7 @@ class Painter {
     viewportSegments: SegmentVector;
     quadTriangleIndexBuffer: IndexBuffer;
     tileBorderIndexBuffer: IndexBuffer;
-    _tileClippingMaskIDs: {
-      [_: string]: number
-    };
+    _tileClippingMaskIDs: {[_: string]: number};
     stencilClearMode: StencilMode;
     style: Style;
     options: PainterOptions;
@@ -120,14 +118,10 @@ class Painter {
     nextStencilID: number;
     id: string;
     _showOverdrawInspector: boolean;
-    cache: {
-      [_: string]: Program<any>
-    };
+    cache: {[_: string]: Program<any>};
     crossTileSymbolIndex: CrossTileSymbolIndex;
     symbolFadeChange: number;
-    gpuTimers: {
-      [_: string]: any
-    };
+    gpuTimers: {[_: string]: any};
     emptyTexture: Texture;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
@@ -384,15 +378,9 @@ class Painter {
             }
         }
 
-        const coordsAscending: {
-          [_: string]: Array<OverscaledTileID>
-        } = {};
-        const coordsDescending: {
-          [_: string]: Array<OverscaledTileID>
-        } = {};
-        const coordsDescendingSymbol: {
-          [_: string]: Array<OverscaledTileID>
-        } = {};
+        const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
+        const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
+        const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -536,9 +524,7 @@ class Painter {
         return currentLayerTimers;
     }
 
-    queryGpuTimers(gpuTimers: {
-      [_: string]: any
-    }) {
+    queryGpuTimers(gpuTimers: {[_: string]: any}) {
         const layers = {};
         for (const layerId in gpuTimers) {
             const gpuTimer = gpuTimers[layerId];

@@ -98,9 +98,7 @@ class LineBucket implements Bucket {
     overscaling: number;
     layers: Array<LineStyleLayer>;
     layerIds: Array<string>;
-    gradients: {
-      [x: string]: GradientTexture
-    };
+    gradients: {[x: string]: GradientTexture};
     stateDependentLayers: Array<any>;
     stateDependentLayerIds: Array<string>;
     patternFeatures: Array<BucketFeature>;
@@ -196,16 +194,12 @@ class LineBucket implements Bucket {
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {
-      [_: string]: ImagePosition
-    }) {
+    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {
-      [_: string]: ImagePosition
-    }) {
+    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions);
         }
@@ -247,9 +241,7 @@ class LineBucket implements Bucket {
         }
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {
-      [_: string]: ImagePosition
-    }) {
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
         const layout = this.layers[0].layout;
         const join = layout.get('line-join').evaluate(feature, {});
         const cap = layout.get('line-cap');
