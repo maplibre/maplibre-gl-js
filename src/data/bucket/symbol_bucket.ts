@@ -539,7 +539,7 @@ class SymbolBucket implements Bucket {
         if (this.sortFeaturesByKey) {
             this.features.sort((a, b) => {
                 // a.sortKey is always a number when sortFeaturesByKey is true
-                return (a.sortKey as any as number) - (b.sortKey as any as number);
+                return (a.sortKey as number) - (b.sortKey as number);
             });
         }
     }
@@ -720,7 +720,7 @@ class SymbolBucket implements Bucket {
 
     addDebugCollisionBoxes(startIndex: number, endIndex: number, symbolInstance: SymbolInstance, isText: boolean) {
         for (let b = startIndex; b < endIndex; b++) {
-            const box: CollisionBox = (this.collisionBoxArray.get(b) as any);
+            const box: CollisionBox = this.collisionBoxArray.get(b);
             const x1 = box.x1;
             const y1 = box.y1;
             const x2 = box.x2;
@@ -765,27 +765,27 @@ class SymbolBucket implements Bucket {
 
         const collisionArrays = {} as CollisionArrays;
         for (let k = textStartIndex; k < textEndIndex; k++) {
-            const box: CollisionBox = (collisionBoxArray.get(k) as any);
+            const box: CollisionBox = collisionBoxArray.get(k);
             collisionArrays.textBox = {x1: box.x1, y1: box.y1, x2: box.x2, y2: box.y2, anchorPointX: box.anchorPointX, anchorPointY: box.anchorPointY};
             collisionArrays.textFeatureIndex = box.featureIndex;
             break; // Only one box allowed per instance
         }
         for (let k = verticalTextStartIndex; k < verticalTextEndIndex; k++) {
-            const box: CollisionBox = (collisionBoxArray.get(k) as any);
+            const box: CollisionBox = collisionBoxArray.get(k);
             collisionArrays.verticalTextBox = {x1: box.x1, y1: box.y1, x2: box.x2, y2: box.y2, anchorPointX: box.anchorPointX, anchorPointY: box.anchorPointY};
             collisionArrays.verticalTextFeatureIndex = box.featureIndex;
             break; // Only one box allowed per instance
         }
         for (let k = iconStartIndex; k < iconEndIndex; k++) {
             // An icon can only have one box now, so this indexing is a bit vestigial...
-            const box: CollisionBox = (collisionBoxArray.get(k) as any);
+            const box: CollisionBox = collisionBoxArray.get(k);
             collisionArrays.iconBox = {x1: box.x1, y1: box.y1, x2: box.x2, y2: box.y2, anchorPointX: box.anchorPointX, anchorPointY: box.anchorPointY};
             collisionArrays.iconFeatureIndex = box.featureIndex;
             break; // Only one box allowed per instance
         }
         for (let k = verticalIconStartIndex; k < verticalIconEndIndex; k++) {
             // An icon can only have one box now, so this indexing is a bit vestigial...
-            const box: CollisionBox = (collisionBoxArray.get(k) as any);
+            const box: CollisionBox = collisionBoxArray.get(k);
             collisionArrays.verticalIconBox = {x1: box.x1, y1: box.y1, x2: box.x2, y2: box.y2, anchorPointX: box.anchorPointX, anchorPointY: box.anchorPointY};
             collisionArrays.verticalIconFeatureIndex = box.featureIndex;
             break; // Only one box allowed per instance
