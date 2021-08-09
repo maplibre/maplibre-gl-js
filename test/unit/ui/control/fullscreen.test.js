@@ -35,7 +35,7 @@ test('FullscreenControl makes optional container element full screen', (t) => {
     const fullscreen = new FullscreenControl({container: window.document.querySelector('body')});
     map.addControl(fullscreen);
     const control = map._controls.find((ctrl) => {
-        return Object.hasOwnProperty.call(ctrl, '_fullscreen');
+        return Object.prototype.hasOwnProperty.call(ctrl, '_fullscreen');
     });
     control._onClickFullscreen();
 
