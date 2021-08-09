@@ -530,10 +530,7 @@ class LineBucket implements Bucket {
         }
     }
 
-    addHalfVertex({
-        x,
-        y
-    }: Point, extrudeX: number, extrudeY: number, round: boolean, up: boolean, dir: number, segment: Segment) {
+    addHalfVertex({x, y}: Point, extrudeX: number, extrudeY: number, round: boolean, up: boolean, dir: number, segment: Segment) {
         const totalDistance = this.lineClips ? this.scaledDistance * (MAX_LINE_DISTANCE - 1) : this.scaledDistance;
         // scale down so that we can store longer distances while sacrificing precision.
         const linesofarScaled = totalDistance * LINE_DISTANCE_SCALE;

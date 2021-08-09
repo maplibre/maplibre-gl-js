@@ -1,5 +1,4 @@
 import Point from '../symbol/point';
-
 import loadGeometry from './load_geometry';
 import toEvaluationFeature from './evaluation_feature';
 import EXTENT from './extent';
@@ -16,14 +15,15 @@ import EvaluationParameters from '../style/evaluation_parameters';
 import SourceFeatureState from '../source/source_state';
 import {polygonIntersectsBox} from '../util/intersection_tests';
 import {PossiblyEvaluated} from '../style/properties';
+import {FeatureIndexArray} from './array_types';
+import {mat4} from 'gl-matrix';
 
 import type StyleLayer from '../style/style_layer';
 import type {FeatureFilter} from '../style-spec/feature_filter';
 import type Transform from '../geo/transform';
 import type {FilterSpecification, PromoteIdSpecification} from '../style-spec/types';
+import type {FeatureState} from '../style-spec/expression';
 
-import {FeatureIndexArray} from './array_types';
-import {mat4} from 'gl-matrix';
 
 type QueryParameters = {
   scale: number,
@@ -156,7 +156,7 @@ class FeatureIndex {
                 styleLayers,
                 serializedLayers,
                 sourceFeatureState,
-                (feature: VectorTileFeature, styleLayer: StyleLayer, featureState: any) => { // eslint-disable-line no-loop-func
+                (feature: VectorTileFeature, styleLayer: StyleLayer, featureState: FeatureState) => { // eslint-disable-line no-loop-func
                     if (!featureGeometry) {
                         featureGeometry = loadGeometry(feature);
                     }

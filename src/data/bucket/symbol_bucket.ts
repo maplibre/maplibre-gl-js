@@ -400,9 +400,7 @@ class SymbolBucket implements Bucket {
         this.symbolInstances = new SymbolInstanceArray();
     }
 
-    calculateGlyphDependencies(text: string, stack: {
-      [_: number]: boolean
-    }, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
+    calculateGlyphDependencies(text: string, stack: {[_: number]: boolean}, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
         for (let i = 0; i < text.length; i++) {
             stack[text.charCodeAt(i)] = true;
             if ((textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode) {
@@ -667,7 +665,7 @@ class SymbolBucket implements Bucket {
             writingMode,
             // placedOrientation is null initially; will be updated to horizontal(1)/vertical(2) if placed
             0,
-            ((false as any)),
+            (false as any),
             // The crossTileID is only filled/used on the foreground for dynamic text anchors
             0,
             associatedIconIndex
@@ -705,7 +703,7 @@ class SymbolBucket implements Bucket {
 
         segment.vertexLength += 4;
 
-        const indexArray: LineIndexArray = (arrays.indexArray as any);
+        const indexArray = arrays.indexArray as LineIndexArray;
         indexArray.emplaceBack(index, index + 1);
         indexArray.emplaceBack(index + 1, index + 2);
         indexArray.emplaceBack(index + 2, index + 3);
