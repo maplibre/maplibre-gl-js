@@ -24,7 +24,6 @@ import type Transform from '../geo/transform';
 import type {FilterSpecification, PromoteIdSpecification} from '../style-spec/types';
 import type {FeatureState} from '../style-spec/expression';
 
-
 type QueryParameters = {
   scale: number,
   pixelPosMatrix: mat4,
