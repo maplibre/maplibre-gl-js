@@ -549,7 +549,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
         // `Properties#defaultPossiblyEvaluatedValues`, which serves as the prototype of
         // `PossiblyEvaluated#_values`.
         if (a.value.value === undefined || b.value.value === undefined) {
-            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: (undefined as any)}, a.parameters);
+            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, a.parameters);
         }
 
         const interp: ((a: T, b: T, t: number) => T) | undefined | null = (interpolate as any)[this.specification.type];

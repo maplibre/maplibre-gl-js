@@ -88,8 +88,8 @@ class AttributionControl implements IControl {
         this._map.off('moveend', this._updateEditLink);
         this._map.off('resize', this._updateCompact);
 
-        this._map = (undefined as any);
-        this._attribHTML = (undefined as any);
+        this._map = undefined;
+        this._attribHTML = undefined;
     }
 
     _setElementTitle(element: HTMLElement, title: string) {

@@ -67,7 +67,7 @@ class ScaleControl implements IControl {
     onRemove() {
         DOM.remove(this._container);
         this._map.off('move', this._onMove);
-        this._map = (undefined as any);
+        this._map = undefined;
     }
 
     /**

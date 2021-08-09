@@ -296,10 +296,10 @@ class LineBucket implements Bucket {
         const segment = this.segments.prepareSegment(len * 10, this.layoutVertexArray, this.indexArray);
 
         let currentVertex;
-        let prevVertex = (undefined as any as Point);
-        let nextVertex = (undefined as any as Point);
-        let prevNormal = (undefined as any as Point);
-        let nextNormal = (undefined as any as Point);
+        let prevVertex = undefined as Point;
+        let nextVertex = undefined as Point;
+        let prevNormal = undefined as Point;
+        let nextNormal = undefined as Point;
 
         // the last two vertices added
         this.e1 = this.e2 = -1;
@@ -312,7 +312,7 @@ class LineBucket implements Bucket {
         for (let i = first; i < len; i++) {
 
             nextVertex = i === len - 1 ?
-                (isPolygon ? vertices[first + 1] : (undefined as any)) : // if it's a polygon, treat the last vertex like the first
+                (isPolygon ? vertices[first + 1] : undefined) : // if it's a polygon, treat the last vertex like the first
                 vertices[i + 1]; // just the next vertex
 
             // if two consecutive vertices exist, skip the current one

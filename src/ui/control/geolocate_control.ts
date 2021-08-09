@@ -134,7 +134,7 @@ class GeolocateControl extends Evented implements IControl {
         // clear the geolocation watch if exists
         if (this._geolocationWatchID !== undefined) {
             window.navigator.geolocation.clearWatch(this._geolocationWatchID);
-            this._geolocationWatchID = (undefined as any);
+            this._geolocationWatchID = undefined;
         }
 
         // clear the markers from the map
@@ -147,7 +147,7 @@ class GeolocateControl extends Evented implements IControl {
 
         DOM.remove(this._container);
         this._map.off('zoom', this._onZoom);
-        this._map = (undefined as any);
+        this._map = undefined;
         numberOfWatches = 0;
         noTimeout = false;
     }
@@ -553,7 +553,7 @@ class GeolocateControl extends Evented implements IControl {
     _clearWatch() {
         window.navigator.geolocation.clearWatch(this._geolocationWatchID);
 
-        this._geolocationWatchID = (undefined as any);
+        this._geolocationWatchID = undefined;
         this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-waiting', 'mapboxgl-ctrl-geolocate-waiting');
         this._geolocateButton.setAttribute('aria-pressed', 'false');
 
