@@ -23,6 +23,7 @@ uniform bool u_is_text;
 uniform bool u_pitch_with_map;
 uniform vec2 u_texsize;
 uniform highp sampler2D u_coords;
+uniform lowp float u_ele_exaggeration;
 
 varying vec2 v_tex;
 varying float v_fade_opacity;
@@ -53,7 +54,7 @@ void main() {
         size = u_size;
     }
 
-    vec4 projectedPoint = u_matrix * vec4(a_pos, a_ele, 1);
+    vec4 projectedPoint = u_matrix * vec4(a_pos, a_ele * u_ele_exaggeration, 1);
     highp float camera_to_anchor_distance = projectedPoint.w;
     // See comments in symbol_sdf.vertex
     highp float distance_ratio = u_pitch_with_map ?
@@ -71,7 +72,7 @@ void main() {
     highp float symbol_rotation = 0.0;
     if (u_rotate_symbol) {
         // See comments in symbol_sdf.vertex
-        vec4 offsetProjectedPoint = u_matrix * vec4(a_pos + vec2(1, 0), a_ele, 1);
+        vec4 offsetProjectedPoint = u_matrix * vec4(a_pos + vec2(1, 0), a_ele * u_ele_exaggeration, 1);
 
         vec2 a = projectedPoint.xy / projectedPoint.w;
         vec2 b = offsetProjectedPoint.xy / offsetProjectedPoint.w;
@@ -83,7 +84,7 @@ void main() {
     highp float angle_cos = cos(segment_angle + symbol_rotation);
     mat2 rotation_matrix = mat2(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
-    vec4 projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy, a_ele, 1.0);
+    vec4 projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy, a_ele * u_ele_exaggeration, 1.0);
     float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w; // After draping them to texture, no need for this.
     gl_Position = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * max(a_minFontScale, fontScale) + a_pxoffset / 16.0), z, 1.0);
 

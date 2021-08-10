@@ -78,13 +78,12 @@ float hasBit(float value, int pos) {
 
 // unpack a RGBA value from the the coords framebuffer into a vec2 in the range from 0 .. 8191
 vec2 unpackCoord(vec4 rgba) {
-    float r = floor(rgba.x * 255.0);
-    float g = floor(rgba.y * 255.0);
-    float b = floor(rgba.z * 255.0);
-    float a = floor(rgba.w * 255.0);
-    float x = hasBit(b, 2) * 1.0 + hasBit(b, 3) * 2.0  + hasBit(b, 4) * 4.0 + hasBit(b, 5) * 8.0 + hasBit(b, 6) * 16.0 + hasBit(b, 7) * 32.0 + hasBit(g, 0) * 64.0 + hasBit(g, 1) * 128.0 + hasBit(g, 2) * 258.0;
-    float y = hasBit(a, 1) * 1.0 + hasBit(a, 2) * 2.0  + hasBit(a, 3) * 4.0 + hasBit(a, 4) * 8.0 + hasBit(a, 5) * 16.0 + hasBit(a, 6) * 32.0 + hasBit(a, 7) * 64.0 + hasBit(b, 0) * 128.0 + hasBit(b, 1) * 258.0;
-    return vec2(x, y) / 511.0 * 8191.0;
+    float r = floor(rgba.r * 255.0);
+    float g = floor(rgba.g * 255.0);
+    float b = floor(rgba.b * 255.0);
+    float x = r + hasBit(b, 4) * 256.0 + hasBit(b, 5) * 512.0 + hasBit(b, 6) * 1024.0 + hasBit(b, 7) * 2048.0;
+    float y = g + hasBit(b, 0) * 256.0 + hasBit(b, 1) * 512.0 + hasBit(b, 2) * 1024.0 + hasBit(b, 3) * 2048.0;
+    return vec2(x, y) * 2.0;
 }
 
 // unpack a coord RGBA to vec2

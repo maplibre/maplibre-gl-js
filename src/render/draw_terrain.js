@@ -2,7 +2,7 @@
 
 import StencilMode from '../gl/stencil_mode';
 import DepthMode from '../gl/depth_mode';
-import {terrainUniformValues} from './program/terrain_program';
+import {terrainUniformValues, terrainCoordsUniformValues} from './program/terrain_program';
 import type Painter from './painter';
 import type TerranSourceCache from '../source/terrain_source_cache';
 import CullFaceMode from '../gl/cull_face_mode';
@@ -23,23 +23,27 @@ function drawTerrainCoords(painter, sourceCache: TerrainSourceCache) {
    const context = painter.context;
    const gl = context.gl;
    const colorMode = ColorMode.unblended;
-   const program = painter.useProgram('terrain');
+   const program = painter.useProgram('terrainCoords');
    const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
+   const mesh = sourceCache.getTerrainMesh(context);
+   const coords = sourceCache.getCoordsTexture(context);
 
    // draw tile-coords into framebuffer
    context.bindFramebuffer.set(sourceCache.getCoordsFramebuffer(painter).framebuffer);
    context.viewport.set([0, 0, painter.width  / browser.devicePixelRatio, painter.height / browser.devicePixelRatio]);
    context.clear({ color: Color.transparent, depth: 1 });
 
+   sourceCache.coordsIndex = [];
    for (const tileID of sourceCache.getRenderableTileIds(painter.transform)) {
       const tile = sourceCache.getTileByID(tileID.key);
       context.activeTexture.set(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, tile.coordsTexture.texture);
+      gl.bindTexture(gl.TEXTURE_2D, coords.texture);
       const posMatrix = painter.transform.calculatePosMatrix(tileID.toUnwrapped());
       program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW,
-          terrainUniformValues(posMatrix), "terrain",
-          sourceCache.mesh.vertexBuffer, sourceCache.mesh.indexBuffer, sourceCache.mesh.segments,
+          terrainCoordsUniformValues(painter, posMatrix, 255 - sourceCache.coordsIndex.length), "terrain",
+          mesh.vertexBuffer, mesh.indexBuffer, mesh.segments,
           null, null, null, tile.elevationVertexBuffer);
+      sourceCache.coordsIndex.push(tileID.key);
    }
    painter.finishFramebuffer();
 }
@@ -50,6 +54,7 @@ function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache) {
     const colorMode = painter.colorModeForRenderPass();
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D);
     const program = painter.useProgram('terrain');
+    const mesh = sourceCache.getTerrainMesh(context);
 
     for (const tileID of sourceCache.getRenderableTileIds(painter.transform)) {
         const tile = sourceCache.getTileByID(tileID.key);
@@ -57,8 +62,8 @@ function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache) {
         gl.bindTexture(gl.TEXTURE_2D, tile.fbo.colorAttachment.get());
         const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW,
-            terrainUniformValues(posMatrix), "terrain",
-            sourceCache.mesh.vertexBuffer, sourceCache.mesh.indexBuffer, sourceCache.mesh.segments,
+            terrainUniformValues(painter, posMatrix), "terrain",
+            mesh.vertexBuffer, mesh.indexBuffer, mesh.segments,
             null, null, null, tile.elevationVertexBuffer);
     }
 }
@@ -79,10 +84,6 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, depth
              vertexArray.emplaceBack(sourceCache.getElevation(tileID, x, y, meshSize));
          }
          tile.elevationVertexBuffer = context.createVertexBuffer(vertexArray, elevationAttributes.members, true);
-      }
-      if (!tile.coordsTexture) {
-         tile.coordsTexture = new Texture(context, tile.coords, context.gl.RGBA, {premultiply: false});
-         tile.coordsTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
       }
       // reuse a framebuffer from the framebuffer-stack and attach active batch-texture
       if (!FBOs[tileSize]) FBOs[tileSize] = {};

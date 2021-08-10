@@ -9,6 +9,7 @@ uniform lowp float u_opacity;
 uniform vec3 u_lightcolor;
 uniform lowp vec3 u_lightpos;
 uniform lowp float u_lightintensity;
+uniform lowp float u_ele_exaggeration;
 
 attribute vec2 a_pos;
 attribute vec4 a_normal_ed;
@@ -48,8 +49,8 @@ void main() {
     vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
     vec2 display_size_b = (pattern_br_b - pattern_tl_b) / pixel_ratio_to;
 
-    base = max(0.0, a_ele + base - 10.0);  // minus 10 to avoid floating buildings because centroid is used for elevation
-    height = max(0.0, a_ele + height);
+    base = max(0.0, a_ele * u_ele_exaggeration + base - 10.0);  // minus 10 to avoid floating buildings because centroid is used for elevation
+    height = max(0.0, a_ele * u_ele_exaggeration + height);
 
     float t = mod(normal.x, 2.0);
     float z = t > 0.0 ? height : base;

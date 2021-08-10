@@ -323,7 +323,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
             bucket.hasIconData();
 
         if (alongLine) {
-            const getElevation = (x: number, y: number) => painter.style.terrainSourceCache.getElevation(coord, x, y);
+            const getElevation = (x: number, y: number) => painter.style.terrainSourceCache.getElevationWithExaggeration(coord, x, y);
             symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, getElevation);
         }
 

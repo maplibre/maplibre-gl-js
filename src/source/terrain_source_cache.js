@@ -21,15 +21,15 @@ class TerrainSourceCache extends Evented {
         this._sourceCache = null;
         this._source = null;
         this._tiles = [];
-        this._coordsIndex = {};
         this._loadQueue = [];
         this._coordsFramebuffer = null;
         this._rerender = true;
         this.minzoom = 5;
         this.maxzoom = 14;
         this.tileSize = 512;
-        this.meshSize = 64;
-        this.exaggeration = 1;
+        this.meshSize = 128;
+        this.exaggeration = 1.0;
+        this.coordsIndex = [];
         style.on("data", () => this._rerender = true);
     }
 
@@ -48,22 +48,6 @@ class TerrainSourceCache extends Evented {
      * @private
      */
     update(transform: Transform, context: Context) {
-        if (!this.mesh) {
-            // create a regular mesh which will be used by all terrain-tiles
-            const vertexArray = new PosArray(), indexArray = new TriangleIndexArray();
-            const meshSize = this.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
-            for (let y=0; y<=meshSize; y++) for (let x=0; x<=meshSize; x++)
-                vertexArray.emplaceBack(x * delta, y * delta);
-            for (let y=0; y<meshSize2; y+=meshSize+1) for (let x=0; x<meshSize; x++) {
-                indexArray.emplaceBack(x+y, meshSize+x+y+1, meshSize+x+y+2);
-                indexArray.emplaceBack(x+y, meshSize+x+y+2, x+y+1);
-            }
-            this.mesh = {
-                indexBuffer: map.painter.context.createIndexBuffer(indexArray),
-                vertexBuffer: map.painter.context.createVertexBuffer(vertexArray, posAttributes.members),
-                segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-            };
-        }
         transform.updateElevation();
         let idealTileIDs = this.getRenderableTileIds(transform);
         let outdated = {};
@@ -72,7 +56,6 @@ class TerrainSourceCache extends Evented {
             delete(outdated[tileID.key]);
             if (this._tiles[tileID.key]) continue;
             let tile = this._tiles[tileID.key] = this._createEmptyTile(tileID);
-            this._coordsIndex[tile._coordsIndex] = tile;
             if (this._source && this._source.loaded()) {
                 this._source.loadTile(tile, () => this._tileLoaded(tile));
             } else {
@@ -83,8 +66,6 @@ class TerrainSourceCache extends Evented {
            let tile = this._tiles[key];
            tile.textures.forEach(t => t.destroy());
            tile.textures = [];
-           tile.coordsTexture && tile.coordsTexture.destroy();
-           tile.coordsTexture = null;
         }
     }
 
@@ -98,7 +79,7 @@ class TerrainSourceCache extends Evented {
     }
 
     getRenderableIds() {
-       return Object.values(this._tiles).map(t => t.tileID.key);
+        return Object.values(this._tiles).map(t => t.tileID.key);
     }
 
     /**
@@ -125,7 +106,18 @@ class TerrainSourceCache extends Evented {
         const elevation = tile && tile.dem && x >= 0 && y >= 0 && x <= extent && y <= extent //FIXME-3D handle negative coordinates
            ? tile.dem.get(Math.floor(x / extent * tile.dem.dim), Math.floor(y / extent * tile.dem.dim))
            : 0;
-        return (elevation + 450) * this.exaggeration; // add a global offset of 450m to put the dead-sea into positive values.
+        return (elevation + 450); // add a global offset of 450m to put the dead-sea into positive values.
+    }
+
+    /**
+     * get the Elevation for given coordinate multiplied by exaggeration.
+     * @param {OverscaledTileID} tileID
+     * @param {number} x between 0 .. EXTENT
+     * @param {number} y between 0 .. EXTENT
+     * @param {number} extent optional, default 8192
+     */
+    getElevationWithExaggeration(tileID: OverscaledTileID, x: number, y: number, extent: number=EXTENT): number {
+        return this.getElevation(tileID, x, y, extent) * this.exaggeration;
     }
 
     /**
@@ -158,6 +150,46 @@ class TerrainSourceCache extends Evented {
         return Object.values(this._tiles).filter(t => t.loadTime >= time);
     }
 
+    // create a regular mesh which will be used by all terrain-tiles
+    getTerrainMesh(context: Context) {
+        if (this.mesh) return this.mesh;
+        const vertexArray = new PosArray(), indexArray = new TriangleIndexArray();
+        const meshSize = this.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
+        for (let y=0; y<=meshSize; y++) for (let x=0; x<=meshSize; x++)
+            vertexArray.emplaceBack(x * delta, y * delta);
+        for (let y=0; y<meshSize2; y+=meshSize+1) for (let x=0; x<meshSize; x++) {
+            indexArray.emplaceBack(x+y, meshSize+x+y+1, meshSize+x+y+2);
+            indexArray.emplaceBack(x+y, meshSize+x+y+2, x+y+1);
+        }
+        return this.mesh = {
+            indexBuffer: context.createIndexBuffer(indexArray),
+            vertexBuffer: context.createVertexBuffer(vertexArray, posAttributes.members),
+            segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+        };
+    }
+
+    // create coords texture, needed to grab coordianates from canvas
+    // encode coords coordinate into 4 bytes:
+    //   - 8 lower bits for x
+    //   - 8 lower bits for y
+    //   - 4 higher bits for x
+    //   - 4 higher bits for y
+    //   - 8 bits for coordsIndex (1 .. 256) (= number of terraintile), is later setted in draw_terrain uniform value
+    getCoordsTexture(context: Context) {
+        if (this.coords) return this.coords;
+        const data = new Uint8Array(4096 * 4096 * 4);
+        for (let y=0, i=0; y<4096; y++) for (let x=0; x<4096; x++, i+=4) {
+           data[i + 0] = x & 255;
+           data[i + 1] = y & 255;
+           data[i + 2] = ((x >> 8) << 4) | (y >> 8);
+           data[i + 3] = 0;
+        }
+        let image = new RGBAImage({width: 4096, height: 4096}, new Uint8Array(data.buffer));
+        let texture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
+        texture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
+        return this.coords = texture;
+    }
+
     /**
      * after a tile is loaded:
      *  - recreate terrain-mesh webgl segments
@@ -187,21 +219,6 @@ class TerrainSourceCache extends Evented {
         tileID.posMatrix = mat4.create();
         mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
         let tile = new Tile(tileID, this.tileSize * tileID.overscaleFactor());
-        // create coords texture, needed to grab coordianates from canvas
-        // encode coords coordinate into 4 bytes:
-        //   - 13 bits for coordsIndex (0 .. 8191) (= number of loaded terraintile)
-        //   - 9 bits for y (0 .. 511)
-        //   - 9 bits for x (0 .. 511)
-        //   - 1 bit for always true in alpha channel, because webgl do not render for opacity 0
-        tile._coordsIndex = Object.keys(this._coordsIndex).length + 1; // create unique coords index
-        const data = new Uint8Array(this.tileSize * this.tileSize * 4);
-        for (let x=0, i=0; x<this.tileSize; x++) for (let y=0; y<this.tileSize; y++, i+=4) {
-           data[i + 3] = ((x & 127) << 1) | 1;
-           data[i + 2] = (y << 2) | (x >> 7);
-           data[i + 1] = ((tile._coordsIndex & 31) << 3) | (y >> 6);
-           data[i + 0] = tile._coordsIndex >> 5;
-        }
-        tile.coords = new RGBAImage({width: this.tileSize, height: this.tileSize}, new Uint8Array(data.buffer));
         tile.textures = [];
         return tile;
     }

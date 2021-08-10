@@ -23,7 +23,8 @@ export type CircleUniformsType = {|
     'u_extrude_scale': Uniform2f,
     'u_device_pixel_ratio': Uniform1f,
     'u_matrix': UniformMatrix4f,
-    'u_coords': Uniform1i
+    'u_coords': Uniform1i,
+    'u_ele_exaggeration': Uniform1f
 |};
 
 const circleUniforms = (context: Context, locations: UniformLocations): CircleUniformsType => ({
@@ -33,7 +34,8 @@ const circleUniforms = (context: Context, locations: UniformLocations): CircleUn
     'u_extrude_scale': new Uniform2f(context, locations.u_extrude_scale),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_coords': new Uniform1i(context, locations.u_coords)
+    'u_coords': new Uniform1i(context, locations.u_coords),
+    'u_ele_exaggeration': new Uniform1f(context, locations.u_ele_exaggeration)
 });
 
 const circleUniformValues = (
@@ -65,7 +67,8 @@ const circleUniformValues = (
         'u_pitch_with_map': +(pitchWithMap),
         'u_device_pixel_ratio': browser.devicePixelRatio,
         'u_extrude_scale': extrudeScale,
-        'u_coords': 0
+        'u_coords': 0,
+        'u_ele_exaggeration': painter.style.terrainSourceCache.exaggeration
     };
 };
 

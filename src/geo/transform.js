@@ -348,7 +348,7 @@ class Transform {
         const centerCoord = MercatorCoordinate.fromLngLat(this.center);
         const numTiles = Math.pow(2, z);
         const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-        const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invProjMatrix, this.worldSize, z);
+        const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invProjMatrix2, this.worldSize, z);
 
         // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
         let minZoom = options.minzoom || 0;
@@ -589,17 +589,17 @@ class Transform {
         gl.readPixels(p.x, painter.height / browser.devicePixelRatio - p.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
         context.bindFramebuffer.set(null);
         // decode coordinates (encoding see terrain-source-cache)
-        const y = (rgba[3] >> 1) | ((rgba[2] & 3) << 7);
-        const x = (rgba[2] >> 2) | ((rgba[1] & 7) << 6);
-        const i = (rgba[1] >> 3) | (rgba[0] << 5);
-        const tile = this.terrainSourceCache._coordsIndex[i];
+        const x = rgba[0] + ((rgba[2] >> 4) << 8);
+        const y = rgba[1] + ((rgba[2] & 15) << 8);
+        const tileID = this.terrainSourceCache.coordsIndex[255 - rgba[3]];
+        const tile = tileID && this.terrainSourceCache.getTileByID(tileID);
         if (!tile) return this.pointCoordinate(p); // FIXME! remove this hack
         const tileSize = this.terrainSourceCache.tileSize;
         const worldSize = (1 << tile.tileID.canonical.z) * tileSize;
         return new MercatorCoordinate(
-            (tile.tileID.canonical.x * tileSize + x) / worldSize,
-            (tile.tileID.canonical.y * tileSize + y) / worldSize,
-            this.terrainSourceCache.getElevation(tile.tileID, x, y, tileSize)
+            (tile.tileID.canonical.x * tileSize + x / 8) / worldSize,
+            (tile.tileID.canonical.y * tileSize + y / 8) / worldSize,
+            this.terrainSourceCache.getElevation(tile.tileID, x, y, 4096)
         );
     }
 
@@ -756,7 +756,8 @@ class Transform {
     _calcMatrices() {
         if (!this.height) return;
 
-        const elevation = this._elevation;
+        const exaggeration = this.terrainSourceCache ? this.terrainSourceCache.exaggeration : 1.0;
+        const elevation = this._elevation * exaggeration;
         const halfFov = this._fov / 2;
         const offset = this.centerOffset;
         this.cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this.height;
@@ -826,6 +827,7 @@ class Transform {
         mat4.translate(m, m, [0, 0, -elevation]); // elevate camera over terrain
         this.projMatrix = m;
         this.pixelMatrix2 = mat4.multiply(new Float64Array(16), this.labelPlaneMatrix, m);
+        this.invProjMatrix2 = mat4.invert(new Float64Array(16), m);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional
