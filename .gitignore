@@ -1,6 +1,7 @@
 /rollup/build/
 /types/
 /dist/
+/dist_type/
 *.es.js
 *.js.map
 node_modules
