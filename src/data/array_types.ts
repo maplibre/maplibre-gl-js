@@ -850,16 +850,6 @@ register('StructArrayLayout4f16', StructArrayLayout4f16);
 
 class CollisionBoxStruct extends Struct {
     _structArray: CollisionBoxArray;
-    // anchorPointX: number;
-    // anchorPointY: number;
-    // x1: number;
-    // y1: number;
-    // x2: number;
-    // y2: number;
-    // featureIndex: number;
-    // sourceLayerIndex: number;
-    // bucketIndex: number;
-    // anchorPoint: Point;
     get anchorPointX() { return this._structArray.int16[this._pos2 + 0]; }
     get anchorPointY() { return this._structArray.int16[this._pos2 + 1]; }
     get x1() { return this._structArray.int16[this._pos2 + 2]; }
@@ -895,23 +885,6 @@ register('CollisionBoxArray', CollisionBoxArray);
 
 class PlacedSymbolStruct extends Struct {
     _structArray: PlacedSymbolArray;
-    // anchorX: number;
-    // anchorY: number;
-    // glyphStartIndex: number;
-    // numGlyphs: number;
-    // vertexStartIndex: number;
-    // lineStartIndex: number;
-    // lineLength: number;
-    // segment: number;
-    // lowerSize: number;
-    // upperSize: number;
-    // lineOffsetX: number;
-    // lineOffsetY: number;
-    // writingMode: number;
-    // placedOrientation: number;
-    // hidden: number;
-    // crossTileID: number;
-    // associatedIconIndex: number;
     get anchorX() { return this._structArray.int16[this._pos2 + 0]; }
     get anchorY() { return this._structArray.int16[this._pos2 + 1]; }
     get glyphStartIndex() { return this._structArray.uint16[this._pos2 + 2]; }
@@ -1031,9 +1004,6 @@ register('SymbolLineVertexArray', SymbolLineVertexArray);
 
 class FeatureIndexStruct extends Struct {
     _structArray: FeatureIndexArray;
-    // featureIndex: number;
-    // sourceLayerIndex: number;
-    // bucketIndex: number;
     get featureIndex() { return this._structArray.uint32[this._pos4 + 0]; }
     get sourceLayerIndex() { return this._structArray.uint16[this._pos2 + 2]; }
     get bucketIndex() { return this._structArray.uint16[this._pos2 + 3]; }
