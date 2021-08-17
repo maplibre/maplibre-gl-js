@@ -13,15 +13,15 @@ Ideally the event loop and render frame run at 60 frames per second, and all of 
 ![Event Loop Sequence Diagram](diagrams/event-loop.plantuml.svg)
 
 - [Transform](../src/geo/transform.js) holds the current viewport details (pitch, zoom, bearing, bounds, etc.). Two places in the code update transform directly:
-  - [Camera](../src/ui/camera.js) (parent class of [Map](../src/ui/map)) in response to explicit calls to [Map#panTo](../src/ui/map.js#L211), [Map#setCenter](../src/ui/map.js#L173)
-  - [HandlerManager](../src/ui/handler_manager.js) in response to DOM events. It forwards those events to interaction processors that live in [src/ui/handlers](../src/ui/handlers), which accumulate a merged [HandlerResult](../src/ui/handler_manager.js#L70) that kick off a render frame loop, decreasing the inertia and nudging map.transform by that amount on each frame from [HandlerManager#\_updateMapTransform()](../src/ui/handler_manager.js#L412). That loop continues in the inertia decreases to 0.
-- Both camera and handler_manager are responsible for firing `move`, `zoom`, `movestart`, `moveend`, ... events on the map after they update transform. Each of these events (along with style changes and data load events) triggers a call to [Map#\_render()](../src/ui/map.js#L2439) which renders a single frame of the map.
+  - [Camera](../src/ui/camera.js) (parent class of [Map](../src/ui/map)) in response to explicit calls to [Camera#panTo](../src/ui/camera.js#L211), [Camera#setCenter](../src/ui/camera.js#L173)
+  - [HandlerManager](../src/ui/handler_manager.js) in response to DOM events. It forwards those events to interaction processors that live in [src/ui/handler](../src/ui/handler), which accumulate a merged [HandlerResult](../src/ui/handler_manager.js#L70) that kick off a render frame loop, decreasing the inertia and nudging map.transform by that amount on each frame from [HandlerManager#\_updateMapTransform()](../src/ui/handler_manager.js#L412). That loop continues in the inertia decreases to 0.
+- Both camera and handler_manager are responsible for firing `move`, `zoom`, `movestart`, `moveend`, ... events on the map after they update transform. Each of these events (along with style changes and data load events) triggers a call to [Map#\_render()](../src/ui/map.js#L2428) which renders a single frame of the map.
 
 ## Tile loading
 
 ![Fetch Tile Sequence Diagram](diagrams/fetch-tile.plantuml.svg)
 
-[Map#\_render()](../src/ui/map.js#L2439) works in 2 different modes based on the value of `Map._sourcesDirty`. When `Map._sourcesDirty === true`, it starts by asking each source if it needs to load any new data:
+[Map#\_render()](../src/ui/map.js#L2428) works in 2 different modes based on the value of `Map._sourcesDirty`. When `Map._sourcesDirty === true`, it starts by asking each source if it needs to load any new data:
 
 - Call [SourceCache#update(transform)](../src/source/source_cache.js#L474) on each map data source. This computes the ideal tiles that cover the current viewport and requests missing ones. When a tile is missing, searches child/parent tiles to find the best alternative to show while the ideal tile is loading.
 - Call `Source#loadTile(tile, callback)` on each source to load the missing tile. Each source implements this differently:
@@ -31,7 +31,7 @@ Ideally the event loop and render frame run at 60 frames per second, and all of 
   - [VectorTileSource#loadTile](../src/source/vector_tile_source.js#L184) sends a `loadTile` or `reloadTile` message to a worker:
     - `[in web worker]` [Worker#loadTile](../src/source/worker.js#L99) handles the message and passes it to [VectorTileWorkerSource#loadTile](../src/source/vector_tile_worker_source.js#L102)
       - Calls [VectorTileWorkerSource#loadVectorTile](../src/source/vector_tile_worker_source.js#L44) which uses
-        - [ajax#getArrayBuffer()](../src/util/ajax.js#L261) to fetch raw bytes
+        - [ajax#getArrayBuffer()](../src/util/ajax.js#L271) to fetch raw bytes
         - [pbf](https://github.com/mapbox/pbf) to decode the protobuf, then
         - [@mapbox/vector-tile#VectorTile](https://github.com/mapbox/vector-tile) to parse the vector tile.
         - The result goes into a new [WorkerTile](../src/source/worker_tile.js) instance.
@@ -50,17 +50,17 @@ Ideally the event loop and render frame run at 60 frames per second, and all of 
         - Call [src/symbol/symbol_layout#performSymbolLayout()](../src/symbol/symbol_layout.js#L150) for each bucket waiting for symbols, which computes text layout properties for the zoom level and places each individual symbol based on character shapes and font layout parameters, and stores the triangulated symbol geometries. Also computes collision boxes that will be used to determine which labels to show to avoid collisions
       - Pass the buckets, featureIndex, collision boxes, glyphAtlasImage, and imageAtlas back to the main thread
   - [GeojsonSource#loadTile()](../src/source/geojson_source.js) also sends a loadTile or reloadTile message to a worker. The handling is almost exactly the same as a vector tile, except [GeojsonWorkerSource](../src/source/geojson_worker_source.js) extends [VectorTileWorkerSource](../src/source/vector_tile_worker_source.js) and overrides `loadVectorData` so that instead of making a network request and parsing the PBF, it loads the initial geojson data into [geojson-vt](https://github.com/mapbox/geojson-vt) and calls the [getTile](https://github.com/mapbox/geojson-vt/blob/35f4ad75feed64e80ff2cd02994976c6335859cd/src/index.js#L161) method to get vector tile data from the geojson for each tile the main thread needs.
-  - [ImageSource#loadTile()](./source/source/image_source.js#L246) computes the most-zoomed-in tile that contains the entire bounds of the image being rendered and only returns success if the main thread is requesting that tile (the image was already requested when layer was added to the map)
+  - [ImageSource#loadTile()](../src/source/image_source.js#L245) computes the most-zoomed-in tile that contains the entire bounds of the image being rendered and only returns success if the main thread is requesting that tile (the image was already requested when layer was added to the map)
 - When the vector sources (geojson/vector tile) responses get back to the main thread, it calls [Tile#loadVectorData](../src/source/tile.js#L140) with the result which deserializes and stores the buckets for each style layer, image/glyph atlases, and lazy-loads the RTL text plugin if this is the first tile to contain RTL text.
-- Back up in [SourceCache](../src/source/source/source_cache.js), now that it has the loaded tile:
+- Back up in [SourceCache](../src/source/source_cache.js), now that it has the loaded tile:
   - [SourceCache#\_backfillDEM](../src/source/source_cache.js#L274) copies the edge pixels to and from all neighboring tiles so that there are no rendering artifacts when each tile computes the slope up to the very edge of the tile.
-  - Fire a `data {dataType: 'source'}` event on the source, which bubbles up to [SourceCache](../src/source/source_cache.js), [Style](../src/style/style.js), and [Map](../src/ui/map.js), which translates it to a `sourcedata` event and also calls [Map#\_update()](../src/ui/map.js#L2402) which calls [Map#triggerRepaint()](../src/ui/map.js#L2624) then [Map#\_render()](../src/ui/map.js#L2439) which renders a new frame just like when user interaction triggers transform change.
+  - Fire a `data {dataType: 'source'}` event on the source, which bubbles up to [SourceCache](../src/source/source_cache.js), [Style](../src/style/style.js), and [Map](../src/ui/map.js), which translates it to a `sourcedata` event and also calls [Map#\_update()](../src/ui/map.js#L2391) which calls [Map#triggerRepaint()](../src/ui/map.js#L2612) then [Map#\_render()](../src/ui/map.js#L2428) which renders a new frame just like when user interaction triggers transform change.
 
 ## Render loop
 
 ![Render Frame Sequence Diagram](diagrams/render-frame.plantuml.svg)
 
-When `map._sourcesDirty === false`, [map#\_render()](../src/ui/map.js#L2439) just renders a new frame entirely within the main UI thread:
+When `map._sourcesDirty === false`, [map#\_render()](../src/ui/map.js#L2428) just renders a new frame entirely within the main UI thread:
 
 - Recompute "paint properties" based on the current zoom and current transition status by calling [Style#update()](../src/style/style.js) with the new transform. This calls `recalculate()` on each style layer to compute the new paint properties.
 - Fetch new tiles by calling [SourceCache#update(transform)](../src/source/source_cache.js#L474) (see above)
