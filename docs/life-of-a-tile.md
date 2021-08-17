@@ -13,7 +13,7 @@ Ideally the event loop and render frame run at 60 frames per second, and all of 
 ![Event Loop Sequence Diagram](diagrams/event-loop.plantuml.svg)
 
 - [Transform](../src/geo/transform.js) holds the current viewport details (pitch, zoom, bearing, bounds, etc.). Two places in the code update transform directly:
-  - [Camera](../src/ui/camera.js) (parent class of [Map](../src/ui/map)) in response to explicit calls to [Map#panTo](../src/geo/transform.js#L211), [Map#setCenter](../src/geo/transform.js#L173)
+  - [Camera](../src/ui/camera.js) (parent class of [Map](../src/ui/map)) in response to explicit calls to [Camera#panTo](../src/ui/camera.js#L211), [Camera#setCenter](../src/ui/camera.js#L173)
   - [HandlerManager](../src/ui/handler_manager.js) in response to DOM events. It forwards those events to interaction processors that live in [src/ui/handler](../src/ui/handlers), which accumulate a merged [HandlerResult](../src/ui/handler_manager.js#L70) that kick off a render frame loop, decreasing the inertia and nudging map.transform by that amount on each frame from [HandlerManager#\_updateMapTransform()](../src/ui/handler_manager.js#L412). That loop continues in the inertia decreases to 0.
 - Both camera and handler_manager are responsible for firing `move`, `zoom`, `movestart`, `moveend`, ... events on the map after they update transform. Each of these events (along with style changes and data load events) triggers a call to [Map#\_render()](../src/ui/map.js#L2428) which renders a single frame of the map.
 
