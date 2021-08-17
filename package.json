@@ -148,7 +148,6 @@
     "start-bench": "run-p watch-benchmarks start-server",
     "start-release": "run-s build-prod-min build-css print-release-url start-server",
     "diff-tarball": "cross-env build/run-node build/diff-tarball",
-    "prepare-publish": "git clean -fdx & npm install",
     "lint": "eslint --cache --ignore-path .gitignore src test bench build debug/*.html",
     "lint-docs": "documentation lint src/index.js",
     "lint-css": "stylelint 'src/css/maplibre-gl.css'",
