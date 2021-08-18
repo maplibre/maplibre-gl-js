@@ -17,6 +17,7 @@ import type VertexBuffer from '../gl/vertex_buffer';
 import type IndexBuffer from '../gl/index_buffer';
 import type {UniformValues} from './uniform_binding';
 import type {CircleUniformsType} from './program/circle_program';
+import {addElevation} from '../data/bucket/symbol_bucket';
 
 export default drawCircles;
 
@@ -24,6 +25,7 @@ type TileRenderState = {
     programConfiguration: ProgramConfiguration,
     program: Program<*>,
     layoutVertexBuffer: VertexBuffer,
+    elevationVertexBuffer: VertexBuffer,
     indexBuffer: IndexBuffer,
     uniformValues: UniformValues<CircleUniformsType>
 };
@@ -64,6 +66,18 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
         const bucket: ?CircleBucket<*> = (tile.getBucket(layer): any);
         if (!bucket) continue;
 
+        const elevationVertexArray = bucket.elevationVertexArray
+        const elevationVertexBuffer = bucket.elevationVertexBuffer;
+        if (bucket && tile.state == "loaded" && !tile.elevation[layer.id]) {
+            elevationVertexArray.clear();
+            for (const point of bucket.points) {
+                const elevation = painter.style.terrainSourceCache.getElevation(coord, ...point);
+                addElevation(elevationVertexArray, elevation);
+            }
+            elevationVertexBuffer.updateData(elevationVertexArray);
+            tile.elevation[layer.id] = true;
+        }
+
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram('circle', programConfiguration);
         const layoutVertexBuffer = bucket.layoutVertexBuffer;
@@ -74,6 +88,7 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
             programConfiguration,
             program,
             layoutVertexBuffer,
+            elevationVertexBuffer,
             indexBuffer,
             uniformValues,
         };
@@ -101,13 +116,17 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
         segmentsRenderStates.sort((a, b) => a.sortKey - b.sortKey);
     }
 
+    context.activeTexture.set(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, painter.style.terrainSourceCache.getCoordsFramebuffer(painter).colorAttachment.get());
+
     for (const segmentsState of segmentsRenderStates) {
-        const {programConfiguration, program, layoutVertexBuffer, indexBuffer, uniformValues} = segmentsState.state;
+        const {programConfiguration, program, layoutVertexBuffer, elevationVertexBuffer, indexBuffer, uniformValues} = segmentsState.state;
         const segments = segmentsState.segments;
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
             uniformValues, layer.id,
             layoutVertexBuffer, indexBuffer, segments,
-            layer.paint, painter.transform.zoom, programConfiguration);
+            layer.paint, painter.transform.zoom, programConfiguration,
+            elevationVertexBuffer);
     }
 }

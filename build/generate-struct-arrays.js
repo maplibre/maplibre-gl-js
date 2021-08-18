@@ -151,6 +151,7 @@ const {
     symbolLayoutAttributes,
     dynamicLayoutAttributes,
     placementOpacityAttributes,
+    elevationAttributes,
     collisionBox,
     collisionBoxLayout,
     collisionCircleLayout,
@@ -165,6 +166,7 @@ const {
 createStructArrayType(`symbol_layout`, symbolLayoutAttributes);
 createStructArrayType(`symbol_dynamic_layout`, dynamicLayoutAttributes);
 createStructArrayType(`symbol_opacity`, placementOpacityAttributes);
+createStructArrayType(`symbol_elevation`, elevationAttributes);
 createStructArrayType('collision_box', collisionBox, true);
 createStructArrayType(`collision_box_layout`, collisionBoxLayout);
 createStructArrayType(`collision_circle_layout`, collisionCircleLayout);

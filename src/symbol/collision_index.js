@@ -6,7 +6,7 @@ import PathInterpolator from './path_interpolator';
 
 import * as intersectionTests from '../util/intersection_tests';
 import Grid from './grid_index';
-import {mat4} from 'gl-matrix';
+import {mat4, vec4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 import assert from 'assert';
 
@@ -66,8 +66,8 @@ class CollisionIndex {
         this.gridBottomBoundary = transform.height + 2 * viewportPadding;
     }
 
-    placeCollisionBox(collisionBox: SingleCollisionBox, allowOverlap: boolean, textPixelRatio: number, posMatrix: mat4, collisionGroupPredicate?: any): { box: Array<number>, offscreen: boolean } {
-        const projectedPoint = this.projectAndGetPerspectiveRatio(posMatrix, collisionBox.anchorPointX, collisionBox.anchorPointY);
+    placeCollisionBox(collisionBox: SingleCollisionBox, allowOverlap: boolean, textPixelRatio: number, posMatrix: mat4, collisionGroupPredicate?: any, getElevation: any): { box: Array<number>, offscreen: boolean } {
+        const projectedPoint = this.projectAndGetPerspectiveRatio(posMatrix, collisionBox.anchorPointX, collisionBox.anchorPointY, getElevation);
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
         const tlX = collisionBox.x1 * tileToViewport + projectedPoint.point.x;
         const tlY = collisionBox.y1 * tileToViewport + projectedPoint.point.y;
@@ -100,16 +100,17 @@ class CollisionIndex {
                           pitchWithMap: boolean,
                           collisionGroupPredicate?: any,
                           circlePixelDiameter: number,
-                          textPixelPadding: number): { circles: Array<number>, offscreen: boolean, collisionDetected: boolean } {
+                          textPixelPadding: number,
+                          getElevation: any): { circles: Array<number>, offscreen: boolean, collisionDetected: boolean } {
         const placedCollisionCircles = [];
 
         const tileUnitAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
-        const screenAnchorPoint = projection.project(tileUnitAnchorPoint, posMatrix);
+        const screenAnchorPoint = projection.project(tileUnitAnchorPoint, posMatrix, getElevation);
         const perspectiveRatio = projection.getPerspectiveRatio(this.transform.cameraToCenterDistance, screenAnchorPoint.signedDistanceFromCamera);
         const labelPlaneFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
         const labelPlaneFontScale = labelPlaneFontSize / ONE_EM;
 
-        const labelPlaneAnchorPoint = projection.project(tileUnitAnchorPoint, labelPlaneMatrix).point;
+        const labelPlaneAnchorPoint = projection.project(tileUnitAnchorPoint, labelPlaneMatrix, getElevation).point;
 
         const projectionCache = {};
         const lineOffsetX = symbol.lineOffsetX * labelPlaneFontScale;
@@ -126,7 +127,8 @@ class CollisionIndex {
             symbol,
             lineVertexArray,
             labelPlaneMatrix,
-            projectionCache);
+            projectionCache,
+            getElevation);
 
         let collisionDetected = false;
         let inGrid = false;
@@ -156,7 +158,7 @@ class CollisionIndex {
 
             // The path might need to be converted into screen space if a pitched map is used as the label space
             if (labelToScreenMatrix) {
-                const screenSpacePath = projectedPath.map(p => projection.project(p, labelToScreenMatrix));
+                const screenSpacePath = projectedPath.map(p => projection.project(p, labelToScreenMatrix, getElevation));
 
                 // Do not try to place collision circles if even of the points is behind the camera.
                 // This is a plausible scenario with big camera pitch angles
@@ -334,9 +336,9 @@ class CollisionIndex {
         }
     }
 
-    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number) {
-        const p = [x, y, 0, 1];
-        projection.xyTransformMat4(p, p, posMatrix);
+    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, getElevation: any) {
+        const p = [x, y, getElevation(x, y), 1];
+        vec4.transformMat4(p, p, posMatrix);
         const a = new Point(
             (((p[0] / p[3] + 1) / 2) * this.transform.width) + viewportPadding,
             (((-p[1] / p[3] + 1) / 2) * this.transform.height) + viewportPadding

@@ -60,6 +60,18 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
         const bucket: ?FillExtrusionBucket = (tile.getBucket(layer): any);
         if (!bucket) continue;
 
+        const elevationVertexArray = bucket.elevationVertexArray
+        const elevationVertexBuffer = bucket.elevationVertexBuffer;
+        if (tile.state == "loaded" && !tile.elevation[layer.id]) {
+            elevationVertexArray.clear();
+            for (const point of bucket.points) {
+                  const elevation = painter.style.terrainSourceCache.getElevation(coord, point.x, point.y);
+                  for (let i=0; i<point.size; i++) elevationVertexArray.emplaceBack(elevation);
+            }
+            elevationVertexBuffer.updateData(elevationVertexArray);
+            tile.elevation[layer.id] = true;
+        }
+
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration);
 
@@ -90,6 +102,6 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
             bucket.segments, layer.paint, painter.transform.zoom,
-            programConfiguration);
+            programConfiguration, elevationVertexBuffer);
     }
 }

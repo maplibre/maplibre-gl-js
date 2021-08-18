@@ -54,6 +54,9 @@ import symbolSDFFrag from './symbol_sdf.fragment.glsl';
 import symbolSDFVert from './symbol_sdf.vertex.glsl';
 import symbolTextAndIconFrag from './symbol_text_and_icon.fragment.glsl';
 import symbolTextAndIconVert from './symbol_text_and_icon.vertex.glsl';
+import terrainCoordsFrag from './terrain_coords.fragment.glsl';
+import terrainFrag from './terrain.fragment.glsl';
+import terrainVert from './terrain.vertex.glsl';
 
 export const prelude = compile(preludeFrag, preludeVert);
 export const background = compile(backgroundFrag, backgroundVert);
@@ -81,6 +84,8 @@ export const raster = compile(rasterFrag, rasterVert);
 export const symbolIcon = compile(symbolIconFrag, symbolIconVert);
 export const symbolSDF = compile(symbolSDFFrag, symbolSDFVert);
 export const symbolTextAndIcon = compile(symbolTextAndIconFrag, symbolTextAndIconVert);
+export const terrain = compile(terrainFrag, terrainVert);
+export const terrainCoords = compile(terrainCoordsFrag, terrainVert);
 
 // Expand #pragmas to #ifdefs.
 

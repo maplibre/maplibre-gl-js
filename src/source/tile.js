@@ -88,6 +88,7 @@ class Tile {
     hasSymbolBuckets: boolean;
     hasRTLText: boolean;
     dependencies: Object;
+    elevation: Object;
 
     /**
      * @param {OverscaledTileID} tileID
@@ -105,6 +106,7 @@ class Tile {
         this.hasSymbolBuckets = false;
         this.hasRTLText = false;
         this.dependencies = {};
+        this.elevation = {};
 
         // Counts the number of times a response was already expired when
         // received. We're using this to add a delay when making a new request

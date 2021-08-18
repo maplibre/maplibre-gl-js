@@ -115,8 +115,9 @@ export type RasterDEMSourceSpecification = {
     "maxzoom"?: number,
     "tileSize"?: number,
     "attribution"?: string,
-    "encoding"?: "terrarium" | "mapbox",
-    "volatile"?: boolean
+    "encoding"?: "terrarium" | "mapbox" | "mtk",
+    "volatile"?: boolean,
+    "useForTerrain"?: boolean
 }
 
 export type GeoJSONSourceSpecification = {|

@@ -12,6 +12,7 @@ import {lineUniforms, lineGradientUniforms, linePatternUniforms, lineSDFUniforms
 import {rasterUniforms} from './raster_program';
 import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms} from './symbol_program';
 import {backgroundUniforms, backgroundPatternUniforms} from './background_program';
+import {terrainUniforms, terrainCoordsUniforms} from './terrain_program';
 
 export const programUniforms = {
     fillExtrusion: fillExtrusionUniforms,
@@ -38,5 +39,7 @@ export const programUniforms = {
     symbolSDF: symbolSDFUniforms,
     symbolTextAndIcon: symbolTextAndIconUniforms,
     background: backgroundUniforms,
-    backgroundPattern: backgroundPatternUniforms
+    backgroundPattern: backgroundPatternUniforms,
+    terrain: terrainUniforms,
+    terrainCoords: terrainCoordsUniforms
 };

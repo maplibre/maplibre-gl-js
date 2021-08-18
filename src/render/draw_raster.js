@@ -41,7 +41,6 @@ function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterSty
             layer.paint.get('raster-opacity') === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
         const tile = sourceCache.getTile(coord);
-        const posMatrix = painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
 
         tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
 
@@ -66,6 +65,8 @@ function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterSty
             tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
         }
 
+        const posMatrix = painter.prepareFramebuffer(tile.tileID, "raster")
+            || painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
         const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer);
 
         if (source instanceof ImageSource) {
@@ -77,6 +78,8 @@ function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterSty
                 uniformValues, layer.id, painter.rasterBoundsBuffer,
                 painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
         }
+
+        painter.finishFramebuffer(tile.tileID, "raster");
     }
 }
 

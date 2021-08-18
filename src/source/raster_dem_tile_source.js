@@ -18,7 +18,7 @@ import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '../style-spec/types';
 
 class RasterDEMTileSource extends RasterTileSource implements Source {
-    encoding: "mapbox" | "terrarium";
+    encoding: "mapbox" | "terrarium" | "mtk";
 
     constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
@@ -73,14 +73,14 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
             }
         }
 
-        function done(err, dem) {
+        function done(err, data) {
             if (err) {
                 tile.state = 'errored';
                 callback(err);
             }
 
-            if (dem) {
-                tile.dem = dem;
+            if (data) {
+                tile.dem = data.dem;
                 tile.needsHillshadePrepare = true;
                 tile.state = 'loaded';
                 callback(null);

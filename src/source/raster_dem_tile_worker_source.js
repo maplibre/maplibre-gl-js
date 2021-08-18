@@ -3,7 +3,7 @@
 import DEMData from '../data/dem_data';
 import {RGBAImage} from '../util/image';
 import window from '../util/window';
-
+import EXTENT from '../data/extent';
 import type Actor from '../util/actor';
 import type {
     WorkerDEMTileParameters,
@@ -29,7 +29,7 @@ class RasterDEMTileWorkerSource {
         const dem = new DEMData(uid, imagePixels, encoding);
         this.loaded = this.loaded || {};
         this.loaded[uid] = dem;
-        callback(null, dem);
+        callback(null, { dem: dem, mesh: null });
     }
 
     getImageData(imgBitmap: ImageBitmap): RGBAImage {

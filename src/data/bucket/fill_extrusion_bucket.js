@@ -1,8 +1,8 @@
 // @flow
 
-import {FillExtrusionLayoutArray} from '../array_types';
+import {FillExtrusionLayoutArray, FillExtrusionElevationArray} from '../array_types';
 
-import {members as layoutAttributes} from './fill_extrusion_attributes';
+import {members as layoutAttributes, elevationAttributes} from './fill_extrusion_attributes';
 import SegmentVector from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
@@ -64,6 +64,9 @@ class FillExtrusionBucket implements Bucket {
     layoutVertexArray: FillExtrusionLayoutArray;
     layoutVertexBuffer: VertexBuffer;
 
+    elevationVertexArray: FillExtrusionElevationArray;
+    elevationVertexBuffer: VertexBuffer;
+
     indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
 
@@ -72,6 +75,7 @@ class FillExtrusionBucket implements Bucket {
     segments: SegmentVector;
     uploaded: boolean;
     features: Array<BucketFeature>;
+    points: Array<Object>;
 
     constructor(options: BucketParameters<FillExtrusionStyleLayer>) {
         this.zoom = options.zoom;
@@ -82,11 +86,12 @@ class FillExtrusionBucket implements Bucket {
         this.hasPattern = false;
 
         this.layoutVertexArray = new FillExtrusionLayoutArray();
+        this.elevationVertexArray = new FillExtrusionElevationArray();
         this.indexArray = new TriangleIndexArray();
         this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
         this.segments = new SegmentVector();
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
-
+        this.points = [];
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
@@ -132,7 +137,7 @@ class FillExtrusionBucket implements Bucket {
     }
 
     isEmpty() {
-        return this.layoutVertexArray.length === 0;
+        return this.layoutVertexArray.length === 0 && this.elevationVertexArray.length === 0;
     }
 
     uploadPending() {
@@ -142,6 +147,7 @@ class FillExtrusionBucket implements Bucket {
     upload(context: Context) {
         if (!this.uploaded) {
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
+            this.elevationVertexBuffer = context.createVertexBuffer(this.elevationVertexArray, elevationAttributes.members, true);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
         }
         this.programConfigurations.upload(context);
@@ -154,9 +160,11 @@ class FillExtrusionBucket implements Bucket {
         this.indexBuffer.destroy();
         this.programConfigurations.destroy();
         this.segments.destroy();
+        this.elevationVertexBuffer.destroy();
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
+        const point = { x: 0, y: 0, size: 0 };
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             let numVertices = 0;
             for (const ring of polygon) {
@@ -192,11 +200,13 @@ class FillExtrusionBucket implements Bucket {
 
                             addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
                             addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
+                            point.x += 2 * p1.x; point.y += 2 * p1.y; point.size += 2;
 
                             edgeDistance += dist;
 
                             addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
                             addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
+                            point.x += 2 * p2.x; point.y += 2 * p2.y; point.size += 2;
 
                             const bottomRight = segment.vertexLength;
 
@@ -213,6 +223,7 @@ class FillExtrusionBucket implements Bucket {
                         }
                     }
                 }
+
             }
 
             if (segment.vertexLength + numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
@@ -241,10 +252,12 @@ class FillExtrusionBucket implements Bucket {
                     const p = ring[i];
 
                     addVertex(this.layoutVertexArray, p.x, p.y, 0, 0, 1, 1, 0);
+                    point.x += p.x; point.y += p.y; point.size += 1;
 
                     flattened.push(p.x);
                     flattened.push(p.y);
                 }
+
             }
 
             const indices = earcut(flattened, holeIndices);
@@ -261,6 +274,15 @@ class FillExtrusionBucket implements Bucket {
             segment.primitiveLength += indices.length / 3;
             segment.vertexLength += numVertices;
         }
+
+
+        // remember polygon centroid to calculate elevation later
+        this.points.push({
+            x: Math.floor(point.x / point.size),
+            y: Math.floor(point.y / point.size),
+            size: point.size
+        });
+        for (let i=0; i<point.size; i++) this.elevationVertexArray.emplaceBack(0); // calculated later
 
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }

@@ -50,11 +50,13 @@ function renderHillshade(painter, tile, layer, depthMode, stencilMode, colorMode
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
-    const uniformValues = hillshadeUniformValues(painter, tile, layer);
+    let posMatrix = painter.prepareFramebuffer(tile.tileID, "hillshade");
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        uniformValues, layer.id, painter.rasterBoundsBuffer,
+        hillshadeUniformValues(painter, tile, layer, posMatrix), layer.id, painter.rasterBoundsBuffer,
         painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
+
+    painter.finishFramebuffer(tile.tileID, "hillshade");
 }
 
 // hillshade rendering is done in two steps. the prepare step first calculates the slope of the terrain in the x and y
