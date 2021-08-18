@@ -55,6 +55,7 @@ class Transform {
     _constraining: boolean;
     _posMatrixCache: {[_: string]: Float32Array};
     _alignedPosMatrixCache: {[_: string]: Float32Array};
+    _coveringTilesCache: {[_: string]: Array<any>};
 
     constructor(minZoom: ?number, maxZoom: ?number, minPitch: ?number, maxPitch: ?number, renderWorldCopies: boolean | void) {
         this.tileSize = 512; // constant
@@ -80,6 +81,7 @@ class Transform {
         this._edgeInsets = new EdgeInsets();
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
+        this._coveringTilesCache = {};
     }
 
     clone(): Transform {
@@ -319,10 +321,19 @@ class Transform {
             minzoom?: number,
             maxzoom?: number,
             roundZoom?: boolean,
-            reparseOverscaled?: boolean,
-            renderWorldCopies?: boolean
+            reparseOverscaled?: boolean
         }
     ): Array<OverscaledTileID> {
+
+        const loadCacheEntry = (cacheEntry): Array<OverscaledTileID> => {
+            return cacheEntry.map(it => new OverscaledTileID(it.overscaledZ, it.wrap, it.zoom, it.x, it.y));
+        };
+
+        const optionsKey = JSON.stringify([options, this._renderWorldCopies]);
+        if (this._coveringTilesCache[optionsKey]) {
+            return loadCacheEntry(this._coveringTilesCache[optionsKey]);
+        }
+
         let z = this.coveringZoomLevel(options);
         const actualZ = z;
 
@@ -357,7 +368,7 @@ class Transform {
 
         // Do a depth-first traversal to find visible tiles and proper levels of detail
         const stack = [];
-        const result = [];
+        const cacheEntry = [];
         const maxZoom = z;
         const overscaledZ = options.reparseOverscaled ? actualZ : z;
 
@@ -400,8 +411,13 @@ class Transform {
 
             // Have we reached the target depth or is the tile too far away to be any split further?
             if (it.zoom === maxZoom || (longestDim > distToSplit && it.zoom >= minZoom)) {
-                result.push({
-                    tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
+                cacheEntry.push({
+                    tileParameters: {
+                        overscaledZ: it.zoom === maxZoom ? overscaledZ : it.zoom,
+                        wrap: it.wrap,
+                        zoom: it.zoom,
+                        x, y
+                    },
                     distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y])
                 });
                 continue;
@@ -415,7 +431,10 @@ class Transform {
             }
         }
 
-        return result.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileID);
+        const sortedCacheEntry = cacheEntry.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileParameters);
+        this._coveringTilesCache[optionsKey] = sortedCacheEntry;
+
+        return loadCacheEntry(sortedCacheEntry);
     }
 
     resize(width: number, height: number) {
@@ -766,6 +785,7 @@ class Transform {
 
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
+        this._coveringTilesCache = {};
     }
 
     maxPitchScaleFactor() {
