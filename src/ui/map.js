@@ -655,7 +655,9 @@ class Map extends Camera {
      * map.setMaxBounds(bounds);
      */
     setMaxBounds(bounds: LngLatBoundsLike) {
-        this.transform.setMaxBounds(LngLatBounds.convert(bounds));
+        if (!this.transform.setMaxBounds(LngLatBounds.convert(bounds))) {
+            return this;
+        }
         return this._update();
     }
 
@@ -680,6 +682,10 @@ class Map extends Camera {
         minZoom = minZoom === null || minZoom === undefined ? defaultMinZoom : minZoom;
 
         if (minZoom >= defaultMinZoom && minZoom <= this.transform.maxZoom) {
+            if (minZoom === this.transform.minZoom) {
+                return this;
+            }
+
             this.transform.minZoom = minZoom;
             this._update();
 
@@ -715,6 +721,10 @@ class Map extends Camera {
         maxZoom = maxZoom === null || maxZoom === undefined ? defaultMaxZoom : maxZoom;
 
         if (maxZoom >= this.transform.minZoom) {
+            if (maxZoom === this.transform.maxZoom) {
+                return this;
+            }
+
             this.transform.maxZoom = maxZoom;
             this._update();
 
@@ -752,6 +762,10 @@ class Map extends Camera {
         }
 
         if (minPitch >= defaultMinPitch && minPitch <= this.transform.maxPitch) {
+            if (minPitch === this.transform.minPitch) {
+                return this;
+            }
+
             this.transform.minPitch = minPitch;
             this._update();
 
@@ -787,6 +801,10 @@ class Map extends Camera {
         }
 
         if (maxPitch >= this.transform.minPitch) {
+            if (maxPitch === this.transform.maxPitch) {
+                return this;
+            }
+
             this.transform.maxPitch = maxPitch;
             this._update();
 
@@ -833,6 +851,9 @@ class Map extends Camera {
      * @see [Render world copies](https://maplibre.org/maplibre-gl-js-docs/example/render-world-copies/)
      */
     setRenderWorldCopies(renderWorldCopies?: ?boolean) {
+        if (renderWorldCopies === this.transform.renderWorldCopies) {
+            return this;
+        }
         this.transform.renderWorldCopies = renderWorldCopies;
         return this._update();
     }
@@ -1489,7 +1510,9 @@ class Map extends Camera {
      */
     addSource(id: string, source: SourceSpecification) {
         this._lazyInitEmptyStyle();
-        this.style.addSource(id, source);
+        if (!this.style.addSource(id, source)) {
+            return this;
+        }
         return this._update(true);
     }
 
@@ -1555,7 +1578,9 @@ class Map extends Camera {
      * map.removeSource('bathymetry-data');
      */
     removeSource(id: string) {
-        this.style.removeSource(id);
+        if (!this.style.removeSource(id)) {
+            return this;
+        }
         return this._update(true);
     }
 
@@ -1894,7 +1919,9 @@ class Map extends Camera {
      */
     addLayer(layer: LayerSpecification | CustomLayerInterface, beforeId?: string) {
         this._lazyInitEmptyStyle();
-        this.style.addLayer(layer, beforeId);
+        if (!this.style.addLayer(layer, beforeId)) {
+            return this;
+        }
         return this._update(true);
     }
 
@@ -1910,7 +1937,9 @@ class Map extends Camera {
      * map.moveLayer('polygon', 'country-label');
      */
     moveLayer(id: string, beforeId?: string) {
-        this.style.moveLayer(id, beforeId);
+        if (!this.style.moveLayer(id, beforeId)) {
+            return this;
+        }
         return this._update(true);
     }
 
@@ -1928,7 +1957,9 @@ class Map extends Camera {
      * if (map.getLayer('state-data')) map.removeLayer('state-data');
      */
     removeLayer(id: string) {
-        this.style.removeLayer(id);
+        if (!this.style.removeLayer(id)) {
+            return this;
+        }
         return this._update(true);
     }
 
@@ -1970,7 +2001,9 @@ class Map extends Camera {
      *
      */
     setLayerZoomRange(layerId: string, minzoom: number, maxzoom: number) {
-        this.style.setLayerZoomRange(layerId, minzoom, maxzoom);
+        if (!this.style.setLayerZoomRange(layerId, minzoom, maxzoom)) {
+            return this;
+        }
         return this._update(true);
     }
 
@@ -2006,7 +2039,9 @@ class Map extends Camera {
      * @see Tutorial: [Show changes over time](https://docs.mapbox.com/help/tutorials/show-changes-over-time/)
      */
     setFilter(layerId: string, filter: ?FilterSpecification,  options: StyleSetterOptions = {}) {
-        this.style.setFilter(layerId, filter, options);
+        if (!this.style.setFilter(layerId, filter, options)) {
+            return this;
+        }
         return this._update(true);
     }
 
@@ -2036,7 +2071,9 @@ class Map extends Camera {
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
     setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}) {
-        this.style.setPaintProperty(layerId, name, value, options);
+        if (!this.style.setPaintProperty(layerId, name, value, options)) {
+            return this;
+        }
         return this._update(true);
     }
 
@@ -2064,7 +2101,9 @@ class Map extends Camera {
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
      */
     setLayoutProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}) {
-        this.style.setLayoutProperty(layerId, name, value, options);
+        if (!this.style.setLayoutProperty(layerId, name, value, options)) {
+            return this;
+        }
         return this._update(true);
     }
 
@@ -2091,7 +2130,9 @@ class Map extends Camera {
      */
     setLight(light: LightSpecification, options: StyleSetterOptions = {}) {
         this._lazyInitEmptyStyle();
-        this.style.setLight(light, options);
+        if (!this.style.setLight(light, options)) {
+            return this;
+        }
         return this._update(true);
     }
 
@@ -2144,7 +2185,9 @@ class Map extends Camera {
      * @see Tutorial: [Create interactive hover effects with Mapbox GL JS](https://docs.mapbox.com/help/tutorials/create-interactive-hover-effects-with-mapbox-gl-js/)
      */
     setFeatureState(feature: { source: string; sourceLayer?: string; id: string | number; }, state: Object) {
-        this.style.setFeatureState(feature, state);
+        if (!this.style.setFeatureState(feature, state)) {
+            return this;
+        }
         return this._update();
     }
 
@@ -2196,7 +2239,9 @@ class Map extends Camera {
      *
     */
     removeFeatureState(target: { source: string; sourceLayer?: string; id?: string | number; }, key?: string) {
-        this.style.removeFeatureState(target, key);
+        if (!this.style.removeFeatureState(target, key)) {
+            return this;
+        }
         return this._update();
     }
 

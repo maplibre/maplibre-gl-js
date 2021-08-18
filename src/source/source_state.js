@@ -52,11 +52,15 @@ class SourceFeatureState {
                 }
             }
         }
+
     }
 
-    removeFeatureState(sourceLayer: string, featureId?: number | string, key?: string) {
+    /**
+     * @returns {boolean} true if any changes were made; false otherwise
+     */
+    removeFeatureState(sourceLayer: string, featureId?: number | string, key?: string): boolean {
         const sourceLayerDeleted = this.deletedStates[sourceLayer] === null;
-        if (sourceLayerDeleted) return;
+        if (sourceLayerDeleted) return false;
 
         const feature = String(featureId);
 
@@ -80,6 +84,7 @@ class SourceFeatureState {
             this.deletedStates[sourceLayer] = null;
         }
 
+        return true;
     }
 
     getState(sourceLayer: string, featureId: number | string) {

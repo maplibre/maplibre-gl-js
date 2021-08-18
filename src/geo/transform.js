@@ -4,7 +4,7 @@ import LngLat from './lng_lat';
 import LngLatBounds from './lng_lat_bounds';
 import MercatorCoordinate, {mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp} from '../util/util';
+import {deepEqual, wrap, clamp} from '../util/util';
 import {number as interpolate} from '../style-spec/util/interpolate';
 import EXTENT from '../data/extent';
 import {vec4, mat4, mat2, vec2} from 'gl-matrix';
@@ -566,16 +566,24 @@ class Transform {
     /**
      * Sets or clears the map's geographical constraints.
      * @param {LngLatBounds} bounds A {@link LngLatBounds} object describing the new geographic boundaries of the map.
+     * @returns {boolean} true if any changes were made; false otherwise
      */
-    setMaxBounds(bounds?: LngLatBounds) {
-        if (bounds) {
-            this.lngRange = [bounds.getWest(), bounds.getEast()];
-            this.latRange = [bounds.getSouth(), bounds.getNorth()];
-            this._constrain();
-        } else {
-            this.lngRange = null;
-            this.latRange = [-this.maxValidLatitude, this.maxValidLatitude];
+    setMaxBounds(bounds?: LngLatBounds): boolean {
+        const lngRange = bounds ? [bounds.getWest(), bounds.getEast()] : null;
+        const latRange = bounds ? [bounds.getSouth(), bounds.getNorth()] : [-this.maxValidLatitude, this.maxValidLatitude];
+
+        if (deepEqual(this.lngRange, lngRange) && deepEqual(this.latRange, latRange)) {
+            return false;
         }
+
+        this.lngRange = lngRange;
+        this.latRange = latRange;
+
+        if (bounds) {
+            this._constrain();
+        }
+
+        return true;
     }
 
     /**

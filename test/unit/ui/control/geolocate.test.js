@@ -424,7 +424,7 @@ test('GeolocateControl switches to BACKGROUND state on map manipulation', (t) =>
     geolocate.once('geolocate', () => {
         t.equal(geolocate._watchState, 'ACTIVE_LOCK');
         map.jumpTo({
-            center: [0, 0]
+            center: [10, 5]
         });
         t.equal(geolocate._watchState, 'BACKGROUND');
         t.end();
