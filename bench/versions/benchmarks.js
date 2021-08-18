@@ -1,5 +1,4 @@
 import maplibregl from '../../src';
-import accessToken from '../lib/access_token';
 import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '@mapbox/gazetteer/benchmark/style-benchmark-locations.json';
 import Layout from '../benchmarks/layout';
@@ -25,8 +24,6 @@ import getWorkerPool from '../../src/util/global_worker_pool';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features);
 
-maplibregl.accessToken = accessToken;
-
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 
 const version = process.env.BENCHMARK_VERSION;
@@ -36,7 +33,7 @@ function register(name, bench) {
     window.maplibreglBenchmarks[name][version] = bench;
 }
 
-const style = 'mapbox://styles/mapbox/streets-v10';
+const style = 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL';
 const center = [-77.032194, 38.912753];
 const zooms = [4, 8, 11, 13, 15, 17];
 const locations = zooms.map(zoom => ({center, zoom}));
@@ -44,19 +41,20 @@ const locations = zooms.map(zoom => ({center, zoom}));
 register('Paint', new Paint(style, locations));
 register('QueryPoint', new QueryPoint(style, locations));
 register('QueryBox', new QueryBox(style, locations));
-register('Layout', new Layout(style));
+//register('Layout', new Layout(style));
 register('Placement', new Placement(style, locations));
-register('Validate', new Validate(style));
+//register('Validate', new Validate(style));
 register('StyleLayerCreate', new StyleLayerCreate(style));
 register('FunctionCreate', new FunctionCreate(style));
 register('FunctionEvaluate', new FunctionEvaluate(style));
 register('ExpressionCreate', new ExpressionCreate(style));
 register('ExpressionEvaluate', new ExpressionEvaluate(style));
-register('WorkerTransfer', new WorkerTransfer(style));
-register('PaintStates', new PaintStates(center));
-register('PropertyLevelRemove', new PropertyLevelRemove(center));
-register('FeatureLevelRemove', new FeatureLevelRemove(center));
-register('SourceLevelRemove', new SourceLevelRemove(center));
+//register('WorkerTransfer', new WorkerTransfer(style));
+//register('PaintStates', new PaintStates(center));
+//register('PropertyLevelRemove', new PropertyLevelRemove(center));
+//register('FeatureLevelRemove', new FeatureLevelRemove(center));
+//register('SourceLevelRemove', new SourceLevelRemove(center));
+/*
 register('LayerBackground', new LayerBackground());
 register('LayerCircle', new LayerCircle());
 register('LayerFill', new LayerFill());
@@ -69,12 +67,13 @@ register('LayerSymbol', new LayerSymbol());
 register('LayerSymbolWithIcons', new LayerSymbolWithIcons());
 register('LayerTextWithVariableAnchor', new LayerTextWithVariableAnchor());
 register('LayerSymbolWithSortKey', new LayerSymbolWithSortKey());
+*/
 register('Load', new Load());
-register('LayoutDDS', new LayoutDDS());
-register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => location.tileID[0])));
+//register('LayoutDDS', new LayoutDDS());
+//register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => location.tileID[0])));
 register('FilterCreate', new FilterCreate());
-register('FilterEvaluate', new FilterEvaluate());
-register('HillshadeLoad', new HillshadeLoad());
+//register('FilterEvaluate', new FilterEvaluate());
+//register('HillshadeLoad', new HillshadeLoad());
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits

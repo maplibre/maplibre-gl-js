@@ -1,5 +1,4 @@
 import maplibregl from '../../src';
-import accessToken from '../lib/access_token';
 import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '@mapbox/gazetteer/benchmark/style-benchmark-locations.json';
 import StyleLayerCreate from '../benchmarks/style_layer_create';
@@ -13,16 +12,14 @@ import getWorkerPool from '../../src/util/global_worker_pool';
 
 const locations = locationsWithTileID(styleBenchmarkLocations.features);
 
-maplibregl.accessToken = accessToken;
-
 const benchmarks = window.benchmarks = [];
 
 function register(name, Benchmark, locations, location) {
     const versions = [];
 
-    for (const style of process.env.MAPBOX_STYLES) {
+    for (const style of process.env.MAPLIBRE_STYLES) {
         versions.push({
-            name: style.name || style.replace('mapbox://styles/', ''),
+            name: style.name || style,
             bench: new Benchmark(style, locations)
         });
     }
@@ -30,8 +27,8 @@ function register(name, Benchmark, locations, location) {
 }
 
 register('StyleLayerCreate', StyleLayerCreate);
-register('Validate', Validate);
-locations.forEach(location => register('Layout', Layout, location.tileID, location));
+//register('Validate', Validate);
+//locations.forEach(location => register('Layout', Layout, location.tileID, location));
 locations.forEach(location => register('Paint', Paint, [location], location));
 register('QueryPoint', QueryPoint, locations);
 register('QueryBox', QueryBox, locations);
