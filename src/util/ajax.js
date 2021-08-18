@@ -146,7 +146,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         const requestTime = Date.now();
 
         window.fetch(request).then(response => {
-            if (response.ok) {
+            if (response.ok && response.status !== 204) {
                 const cacheableResponse = cacheIgnoringSearch ? response.clone() : null;
                 return finishRequest(response, cacheableResponse, requestTime);
 
@@ -215,7 +215,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
         callback(new Error(xhr.statusText));
     };
     xhr.onload = () => {
-        if (((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) && xhr.response !== null) {
+        if (((xhr.status >= 200 && xhr.status < 300 && xhr.status !== 204) || xhr.status === 0) && xhr.response !== null) {
             let data: mixed = xhr.response;
             if (requestParameters.type === 'json') {
                 // We're manually parsing JSON here to get better error messages.
