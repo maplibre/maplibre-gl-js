@@ -104,9 +104,7 @@ class FillBucket implements Bucket {
         }
 
         if (sortFeaturesByKey) {
-            bucketFeatures.sort((a, b) => {
-                return (a.sortKey) - (b.sortKey);
-            });
+            bucketFeatures.sort((a, b) => a.sortKey - b.sortKey);
         }
 
         for (const bucketFeature of bucketFeatures) {

@@ -605,7 +605,6 @@ class Transform {
     }
 
     customLayerMatrix(): mat4 {
-        // I assume the previous 'slice' was just to trigger a copy?
         return mat4.clone(this.mercatorMatrix);
     }
 

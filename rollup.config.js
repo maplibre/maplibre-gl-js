@@ -11,8 +11,8 @@ const outputFile =
     minified ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-unminified.js';
 
 export default [{
-    // Before rollup you should run build-tsc to transpile from typesript to javascript 
-    // and to copy the shaders and convert them to js strings 
+    // Before rollup you should run build-tsc to transpile from typescript to javascript
+    // and to copy the shaders and convert them to js strings
     // Rollup will use code splitting to bundle GL JS into three "chunks":
     // - rollup/build/maplibregl/index.js: the main module, plus all its dependencies not shared by the worker module
     // - rollup/build/maplibregl/worker.js: the worker module, plus all dependencies not shared by the main module

@@ -4,13 +4,9 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
 import json from '@rollup/plugin-json';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import {fileURLToPath} from 'url';
 
 const esm = 'esm' in process.env;
-
-const ROOT_DIR = __dirname;
 
 const config = [{
     input: 'rollup/build/tsc/style-spec/style-spec.js',
@@ -29,7 +25,7 @@ const config = [{
                 // This check will cause the build to fail on CI allowing these issues to be caught.
                 if (importer && !importer.includes('node_modules')) {
                     const resolvedPath = path.join(importer, source);
-                    const fromRoot = path.relative(ROOT_DIR, resolvedPath);
+                    const fromRoot = path.relative(dirname(fileURLToPath(import.meta.url)), resolvedPath);
                     if (fromRoot.length > 2 && fromRoot.slice(0, 2) === '..') {
                         throw new Error(`Module ${importer} imports ${source} from outside the style-spec package root directory.`);
                     }
