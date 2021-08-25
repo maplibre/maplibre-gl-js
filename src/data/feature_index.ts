@@ -47,7 +47,7 @@ class FeatureIndex {
     grid: Grid;
     grid3D: Grid;
     featureIndexArray: FeatureIndexArray;
-    promoteId: PromoteIdSpecification | undefined | null;
+    promoteId?: PromoteIdSpecification;
 
     rawTileData: ArrayBuffer;
     bucketLayerIDs: Array<Array<string>>;

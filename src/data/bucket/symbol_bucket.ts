@@ -85,7 +85,7 @@ export type SymbolFeature = {
   sourceLayerIndex: number,
   geometry: Array<Array<Point>>,
   properties: any,
-  type: "Point" | "LineString" | "Polygon",
+  type: 'Point' | 'LineString' | 'Polygon',
   id?: any
 };
 
@@ -107,7 +107,21 @@ const shaderOpacityAttributes = [
     {name: 'a_fade_opacity', components: 1, type: 'Uint8' as ViewType, offset: 0}
 ];
 
-function addVertex(array, anchorX, anchorY, ox, oy, tx, ty, sizeVertex, isSDF: boolean, pixelOffsetX, pixelOffsetY, minFontScaleX, minFontScaleY) {
+function addVertex(
+    array: StructArray,
+    anchorX: number,
+    anchorY: number,
+    ox: number,
+    oy: number,
+    tx: number,
+    ty: number,
+    sizeVertex: number,
+    isSDF: boolean,
+    pixelOffsetX: number,
+    pixelOffsetY: number,
+    minFontScaleX: number,
+    minFontScaleY: number
+) {
     const aSizeX = sizeVertex ? Math.min(MAX_PACKED_SIZE, Math.round(sizeVertex[0])) : 0;
     const aSizeY = sizeVertex ? Math.min(MAX_PACKED_SIZE, Math.round(sizeVertex[1])) : 0;
     array.emplaceBack(
@@ -615,7 +629,7 @@ class SymbolBucket implements Bucket {
                lineOffset: [number, number],
                alongLine: boolean,
                feature: SymbolFeature,
-               writingMode: any,
+               writingMode: WritingMode,
                labelAnchor: Anchor,
                lineStartIndex: number,
                lineLength: number,
@@ -657,15 +671,21 @@ class SymbolBucket implements Bucket {
             }
         }
 
-        arrays.placedSymbolArray.emplaceBack(labelAnchor.x, labelAnchor.y,
-            glyphOffsetArrayStart, this.glyphOffsetArray.length - glyphOffsetArrayStart, vertexStartIndex,
-            lineStartIndex, lineLength, ((labelAnchor.segment as any)),
-            sizeVertex ? sizeVertex[0] : 0, sizeVertex ? sizeVertex[1] : 0,
+        arrays.placedSymbolArray.emplaceBack(
+            labelAnchor.x, labelAnchor.y,
+            glyphOffsetArrayStart,
+            this.glyphOffsetArray.length - glyphOffsetArrayStart,
+            vertexStartIndex,
+            lineStartIndex,
+            lineLength,
+            labelAnchor.segment,
+            sizeVertex ? sizeVertex[0] : 0,
+            sizeVertex ? sizeVertex[1] : 0,
             lineOffset[0], lineOffset[1],
             writingMode,
             // placedOrientation is null initially; will be updated to horizontal(1)/vertical(2) if placed
             0,
-            (false as any),
+            false as unknown as number,
             // The crossTileID is only filled/used on the foreground for dynamic text anchors
             0,
             associatedIconIndex
