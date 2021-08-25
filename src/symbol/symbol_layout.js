@@ -300,10 +300,10 @@ export function performSymbolLayout(bucket: SymbolBucket,
                     imagePositions[feature.icon.name],
                     layout.get('icon-offset').evaluate(feature, {}, canonical),
                     layout.get('icon-anchor').evaluate(feature, {}, canonical));
-                isSDFIcon = image.sdf;
+                isSDFIcon = !!image.sdf;
                 if (bucket.sdfIcons === undefined) {
-                    bucket.sdfIcons = image.sdf;
-                } else if (bucket.sdfIcons !== image.sdf) {
+                    bucket.sdfIcons = isSDFIcon;
+                } else if (bucket.sdfIcons !== isSDFIcon) {
                     warnOnce('Style sheet warning: Cannot mix SDF and non-SDF icons in one buffer');
                 }
                 if (image.pixelRatio !== bucket.pixelRatio) {
