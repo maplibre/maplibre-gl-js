@@ -205,7 +205,6 @@ export function uniqueId(): number {
  * Return a random UUID (v4). Taken from: https://gist.github.com/jed/982883
  * @private
  */
-// HM TODO: replace this with uuid library
 export function uuid(): string {
     function b(a?): string {
         return a ?
