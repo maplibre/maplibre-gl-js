@@ -29,7 +29,7 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
 
     const dasharray = layer.paint.get('line-dasharray');
     const patternProperty = layer.paint.get('line-pattern');
-    const image = patternProperty.constantOr(((1 as any)));
+    const image = patternProperty.constantOr(1 as any);
 
     const gradient = layer.paint.get('line-gradient');
     const crossfade = layer.getCrossfadeParameters();

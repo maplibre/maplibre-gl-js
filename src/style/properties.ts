@@ -165,7 +165,7 @@ class TransitionablePropertyValue<T, R> {
  */
 export class Transitionable<Props> {
     _properties: Properties<Props>;
-    _values: { [K in keyof Props]: TransitionablePropertyValue<any, unknown>};
+    _values: {[K in keyof Props]: TransitionablePropertyValue<any, unknown>};
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
@@ -302,7 +302,7 @@ class TransitioningPropertyValue<T, R> {
  */
 export class Transitioning<Props> {
     _properties: Properties<Props>;
-    _values: { [K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>};
+    _values: {[K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>};
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
@@ -346,7 +346,7 @@ export class Transitioning<Props> {
  */
 export class Layout<Props> {
     _properties: Properties<Props>;
-    _values: { [K in keyof Props]: PropertyValue<any, PossiblyEvaluatedPropertyValue<any>>};
+    _values: {[K in keyof Props]: PropertyValue<any, PossiblyEvaluatedPropertyValue<any>>};
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
@@ -594,7 +594,7 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
         if (value.value === undefined) {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, parameters);
         } else if (value.expression.kind === 'constant') {
-            const evaluatedValue = value.expression.evaluate(parameters, ((null as any)), {}, canonical, availableImages);
+            const evaluatedValue = value.expression.evaluate(parameters, (null as any), {}, canonical, availableImages);
             const isImageExpression = value.property.specification.type as any === 'resolvedImage';
             const constantValue = isImageExpression && typeof evaluatedValue !== 'string' ? evaluatedValue.name : evaluatedValue;
             const constant = this._calculate(constantValue, constantValue, constantValue, parameters);
@@ -665,7 +665,7 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T> | undefi
         if (value.value === undefined) {
             return undefined;
         } else if (value.expression.kind === 'constant') {
-            const constant = value.expression.evaluate(parameters, ((null as any)), {}, canonical, availableImages);
+            const constant = value.expression.evaluate(parameters, (null as any), {}, canonical, availableImages);
             return this._calculate(constant, constant, constant, parameters);
         } else {
             assert(!value.isDataDriven());

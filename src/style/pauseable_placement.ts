@@ -108,7 +108,7 @@ class PauseablePlacement {
                 (!layer.maxzoom || layer.maxzoom > placementZoom)) {
 
                 if (!this._inProgressLayer) {
-                    this._inProgressLayer = new LayerPlacement((layer as any as SymbolStyleLayer));
+                    this._inProgressLayer = new LayerPlacement(layer as any as SymbolStyleLayer);
                 }
 
                 const pausePlacement = this._inProgressLayer.continuePlacement(layerTiles[layer.source], this.placement, this._showCollisionBoxes, layer, shouldPausePlacement);

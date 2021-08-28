@@ -72,8 +72,8 @@ class Hash {
             hash += `${zoom}/${lat}/${lng}`;
         }
 
-        if (bearing || pitch) hash += ((`/${Math.round(bearing * 10) / 10}`));
-        if (pitch) hash += ((`/${Math.round(pitch)}`));
+        if (bearing || pitch) hash += (`/${Math.round(bearing * 10) / 10}`);
+        if (pitch) hash += (`/${Math.round(pitch)}`);
 
         if (this._hashName) {
             const hashName = this._hashName;

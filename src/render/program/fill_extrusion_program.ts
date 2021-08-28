@@ -59,10 +59,8 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
     'u_height_factor': new Uniform1f(context, locations.u_height_factor),
-
     // pattern uniforms
     'u_image': new Uniform1i(context, locations.u_image),
-
     'u_texsize': new Uniform2f(context, locations.u_texsize),
     'u_pixel_coord_upper': new Uniform2f(context, locations.u_pixel_coord_upper),
     'u_pixel_coord_lower': new Uniform2f(context, locations.u_pixel_coord_lower),

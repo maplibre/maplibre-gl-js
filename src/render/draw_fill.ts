@@ -60,7 +60,7 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
     const gl = painter.context.gl;
 
     const patternProperty = layer.paint.get('fill-pattern');
-    const image = patternProperty && patternProperty.constantOr(((1 as any)));
+    const image = patternProperty && patternProperty.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
