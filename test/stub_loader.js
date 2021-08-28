@@ -89,7 +89,7 @@ window.localStorage = window.sessionStorage = () => console.log('Local and sessi
 
 window.devicePixelRatio = 1;
 
-global.requestAnimationFrame = window.requestAnimationFrame = function (callback) {
+global.requestAnimationFrame = window.requestAnimationFrame = (callback) => {
     return setImmediate(callback, 0);
 };
 global.cancelAnimationFrame = clearImmediate;
@@ -109,10 +109,10 @@ function imitateWebGlGetContext(type, attributes) {
 }
 global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 
-window.useFakeXMLHttpRequest = function () {
+window.useFakeXMLHttpRequest = () => {
     sinon.xhr.supportsCORS = true;
-    this.server = sinon.fakeServer.create();
-    global.XMLHttpRequest = this.server.xhr;
+    window.server = sinon.fakeServer.create();
+    global.XMLHttpRequest = window.server.xhr;
 };
 
 window.clearFakeXMLHttpRequest = () => {
@@ -125,22 +125,22 @@ global.URL.createObjectURL = (blob) => {
     return 'blob:';
 };
 
-global.URL.revokeObjectURL = function () {
+global.URL.revokeObjectURL = () => {
     lastDataFromUrl = null;
 };
 
-window.useFakeWorkerPresence = function () {
+window.useFakeWorkerPresence = () => {
     global.WorkerGlobalScope = function () { };
     global.self = new global.WorkerGlobalScope();
 };
-window.clearFakeWorkerPresence = function () {
+window.clearFakeWorkerPresence = () => {
     global.WorkerGlobalScope = undefined;
     global.self = undefined;
 };
 
-window.performance.getEntriesByName = function () { };
-window.performance.mark = function () { };
-window.performance.measure = function () { };
-window.performance.clearMarks = function () { };
-window.performance.clearMeasures = function () { };
+window.performance.getEntriesByName = () => { };
+window.performance.mark = () => { };
+window.performance.measure = () => { };
+window.performance.clearMarks = () => { };
+window.performance.clearMeasures = () => { };
 
