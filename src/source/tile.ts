@@ -1,7 +1,6 @@
 import {uniqueId, parseCacheControl} from '../util/util';
 import {deserialize as deserializeBucket} from '../data/bucket';
-import '../data/feature_index';
-import type FeatureIndex from '../data/feature_index';
+import FeatureIndex from '../data/feature_index';
 import GeoJSONFeature from '../util/vectortile_to_geojson';
 import featureFilter from '../style-spec/feature_filter';
 import SymbolBucket from '../data/bucket/symbol_bucket';
