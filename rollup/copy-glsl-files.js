@@ -16,7 +16,6 @@ console.log(`Copying glsl files to ${outputBaseDir}, minify: ${minify}`);
 glob("./src/**/*.glsl", null, (err, files) => {
     for (let file of files) {
         let code = fs.readFileSync(file, 'utf8');
-        let minify = false;
 
         if (minify) {
             code = code.trim() // strip whitespace at the start/end
