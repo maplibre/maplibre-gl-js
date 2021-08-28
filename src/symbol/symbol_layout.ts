@@ -194,7 +194,7 @@ export function performSymbolLayout(
     sizes.layoutIconSize = unevaluatedLayoutValues['icon-size'].possiblyEvaluate(new EvaluationParameters(bucket.zoom + 1), canonical);
     sizes.textMaxSize = unevaluatedLayoutValues['text-size'].possiblyEvaluate(new EvaluationParameters(18));
 
-    const lineHeight = Number(layout.get('text-line-height')) * ONE_EM;
+    const lineHeight = layout.get('text-line-height') * ONE_EM;
     const textAlongLine = layout.get('text-rotation-alignment') === 'map' && layout.get('symbol-placement') !== 'point';
     const keepUpright = layout.get('text-keep-upright');
     const textSize = layout.get('text-size');
@@ -382,10 +382,10 @@ function addFeature(bucket: SymbolBucket,
         textBoxScale = bucket.tilePixelRatio * fontScale,
         textMaxBoxScale = bucket.tilePixelRatio * textMaxSize / glyphSize,
         iconBoxScale = bucket.tilePixelRatio * layoutIconSize,
-        symbolMinDistance = bucket.tilePixelRatio * Number(layout.get('symbol-spacing')),
-        textPadding = Number(layout.get('text-padding')) * bucket.tilePixelRatio,
-        iconPadding = Number(layout.get('icon-padding')) * bucket.tilePixelRatio,
-        textMaxAngle = Number(layout.get('text-max-angle')) / 180 * Math.PI,
+        symbolMinDistance = bucket.tilePixelRatio * layout.get('symbol-spacing'),
+        textPadding = layout.get('text-padding') * bucket.tilePixelRatio,
+        iconPadding = layout.get('icon-padding') * bucket.tilePixelRatio,
+        textMaxAngle = layout.get('text-max-angle') / 180 * Math.PI,
         textAlongLine = layout.get('text-rotation-alignment') === 'map' && layout.get('symbol-placement') !== 'point',
         iconAlongLine = layout.get('icon-rotation-alignment') === 'map' && layout.get('symbol-placement') !== 'point',
         symbolPlacement = layout.get('symbol-placement'),

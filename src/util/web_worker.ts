@@ -2,7 +2,6 @@
 // See package.json 'browser' field and rollup documentation.
 // This file is intended for use in the GL-JS test suite when they run on node since node doesn't support workers.
 // It implements a MessageBus main thread interface
-// I haven't fuond a good way to remove this file and stub its code in stub loader file... delete this comment if you managed to :-)
 
 import MaplibreWorker from '../source/worker';
 

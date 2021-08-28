@@ -1,7 +1,6 @@
 {
   "extends": [
     "mourner",
-    // "plugin:@typescript-eslint/recommended",
     "plugin:import/recommended",
     "plugin:import/typescript"
   ],
@@ -16,10 +15,6 @@
     "jsdoc"
   ],
   "rules": {
-    "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/restrict-plus-operands": "off",
-    "@typescript-eslint/restrict-template-expressions": "off",
-    "@typescript-eslint/explicit-module-boundary-types": "off",
     "no-dupe-class-members": "off",
     "@typescript-eslint/no-dupe-class-members": ["error"],
     "@typescript-eslint/no-unused-vars": [

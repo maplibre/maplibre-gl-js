@@ -320,7 +320,6 @@ function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | null, im
 
 function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) {
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
-    // HM TODO: check that this works - removing window shouldn't affect this in theory
     createImageBitmap(blob).then((imgBitmap) => {
         callback(null, imgBitmap);
     }).catch((e) => {

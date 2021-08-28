@@ -753,7 +753,7 @@ export class Properties<Props> {
             this.defaultTransitioningPropertyValues[property] =
                 defaultTransitionablePropertyValue.untransitioned();
             this.defaultPossiblyEvaluatedValues[property] =
-                defaultPropertyValue.possiblyEvaluate((({} as any)));
+                defaultPropertyValue.possiblyEvaluate({} as any);
         }
     }
 }
