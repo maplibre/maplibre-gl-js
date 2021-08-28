@@ -53,9 +53,6 @@ const paint: Properties<PaintProps> = new Properties({
     "raster-fade-duration": new DataConstantProperty(styleSpec["paint_raster"]["raster-fade-duration"] as any as StylePropertySpecification),
 });
 
-// Note: without adding the explicit type annotation, Flow infers weaker types
-// for these objects from their use in the constructor to StyleLayer, as
-// {layout?: Properties<...>, paint: Properties<...>}
 export default ({ paint } as {
   paint: Properties<PaintProps>
 });

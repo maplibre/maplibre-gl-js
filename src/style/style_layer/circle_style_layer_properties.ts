@@ -74,9 +74,6 @@ const paint: Properties<PaintProps> = new Properties({
     "circle-stroke-opacity": new DataDrivenProperty(styleSpec["paint_circle"]["circle-stroke-opacity"] as any as StylePropertySpecification),
 });
 
-// Note: without adding the explicit type annotation, Flow infers weaker types
-// for these objects from their use in the constructor to StyleLayer, as
-// {layout?: Properties<...>, paint: Properties<...>}
 export default ({ paint, layout } as {
   paint: Properties<PaintProps>,
   layout: Properties<LayoutProps>
