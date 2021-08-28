@@ -28,7 +28,7 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
 
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
-        (!pattern.constantOr(((1 as any))) &&
+        (!pattern.constantOr(1 as any) &&
         color.constantOr(Color.transparent).a === 1 &&
         opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
 
@@ -60,7 +60,7 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
     const gl = painter.context.gl;
 
     const patternProperty = layer.paint.get('fill-pattern');
-    const image = patternProperty && patternProperty.constantOr(((1 as any)));
+    const image = patternProperty && patternProperty.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 

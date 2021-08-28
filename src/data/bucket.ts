@@ -114,8 +114,8 @@ export function deserialize(input: Array<Bucket>, style: Style): {[_: string]: B
         // look up StyleLayer objects from layer ids (since we don't
         // want to waste time serializing/copying them from the worker)
         (bucket as any).layers = layers;
-        if ((bucket as any).stateDependentLayerIds) {
-            (bucket as any).stateDependentLayers = (bucket as any).stateDependentLayerIds.map((lId) => layers.filter((l) => l.id === lId)[0]);
+        if (bucket.stateDependentLayerIds) {
+            (bucket as any).stateDependentLayers = bucket.stateDependentLayerIds.map((lId) => layers.filter((l) => l.id === lId)[0]);
         }
         for (const layer of layers) {
             output[layer.id] = bucket;

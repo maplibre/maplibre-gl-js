@@ -24,7 +24,7 @@ function draw(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLa
     if (painter.renderPass === 'translucent') {
         const depthMode = new DepthMode(painter.context.gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D);
 
-        if (opacity === 1 && !layer.paint.get('fill-extrusion-pattern').constantOr(((1 as any)))) {
+        if (opacity === 1 && !layer.paint.get('fill-extrusion-pattern').constantOr(1 as any)) {
             const colorMode = painter.colorModeForRenderPass();
             drawExtrusionTiles(painter, source, layer, coords, depthMode, StencilMode.disabled, colorMode);
 
@@ -49,7 +49,7 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
     const context = painter.context;
     const gl = context.gl;
     const patternProperty = layer.paint.get('fill-extrusion-pattern');
-    const image = patternProperty.constantOr(((1 as any)));
+    const image = patternProperty.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
     const opacity = layer.paint.get('fill-extrusion-opacity');
 

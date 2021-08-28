@@ -28,4 +28,4 @@ Release candidate versions do not generate release notes.
 
 The changelog should be updated on every PR - there is a placeholder at the top of the document - and heading should be renamed to the same version which is going to be set in the version tag during release.
 
-The workflow expects `NODE_AUTH_TOKEN` repo secret in order to push to NPM registry.
+The workflow expects `${{ secrets.NPM_ORG_TOKEN }}` organization secret in order to push to NPM registry.

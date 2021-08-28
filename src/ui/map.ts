@@ -480,7 +480,7 @@ class Map extends Camera {
 
         this.on('style.load', () => {
             if (this.transform.unmodified) {
-                this.jumpTo(((this.style.stylesheet as any)));
+                this.jumpTo(this.style.stylesheet as any);
             }
         });
         this.on('data', (event: MapDataEvent) => {
@@ -1065,7 +1065,7 @@ class Map extends Camera {
         this._delegatedListeners[type].push(delegatedListener);
 
         for (const event in delegatedListener.delegates) {
-            this.on(((event as any)), delegatedListener.delegates[event]);
+            this.on(event as any, delegatedListener.delegates[event]);
         }
 
         return this;
@@ -1110,7 +1110,7 @@ class Map extends Camera {
         const delegatedListener = this._createDelegatedListener(type, layerId, listener);
 
         for (const event in delegatedListener.delegates) {
-            this.once(((event as any)), delegatedListener.delegates[event]);
+            this.once(event as any, delegatedListener.delegates[event]);
         }
 
         return this;

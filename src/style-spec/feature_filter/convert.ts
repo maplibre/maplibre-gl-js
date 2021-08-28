@@ -94,13 +94,13 @@ function _convertFilter(filter: FilterSpecification, expectedTypes: ExpectedType
     } else if (op === 'none') {
         return ['!', _convertFilter(['any'].concat(filter.slice(1) as any), {})];
     } else if (op === 'in') {
-        converted = convertInOp(((filter[1] as any)), filter.slice(2));
+        converted = convertInOp(filter[1] as any, filter.slice(2));
     } else if (op === '!in') {
-        converted = convertInOp(((filter[1] as any)), filter.slice(2), true);
+        converted = convertInOp(filter[1] as any, filter.slice(2), true);
     } else if (op === 'has') {
-        converted = convertHasOp(((filter[1] as any)));
+        converted = convertHasOp(filter[1] as any);
     } else if (op === '!has') {
-        converted = ['!', convertHasOp(((filter[1] as any)))];
+        converted = ['!', convertHasOp(filter[1] as any)];
     } else {
         converted = true;
     }

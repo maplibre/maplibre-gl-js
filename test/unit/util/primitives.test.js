@@ -112,10 +112,8 @@ test('primitives', (t) => {
 
     t.test('frustum', (t) => {
         t.test('Create a frustum from inverse projection matrix', (t) => {
-            const proj = new Float64Array(16); // [] also passes test
-            const invProj = new Float64Array(16); // [] also passes test
-            // FAIL const proj = mat4.create(); // Float32Array also fails
-            // FAIL const invProj = mat4.create(); // Float32Array also fails
+            const proj = new Float64Array(16);
+            const invProj = new Float64Array(16);
             mat4.perspective(proj, Math.PI / 2, 1.0, 0.1, 100.0);
             mat4.invert(invProj, proj);
 
