@@ -7,11 +7,9 @@ import d3 from 'd3';
 import colors from 'chalk';
 import template from 'lodash.template';
 import createServer from './server';
-import {createRequire} from 'module';
 import {fileURLToPath} from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
 
 const {queue} = d3;
 const {shuffle} = shuffleSeed;
@@ -26,7 +24,7 @@ export default function (directory, implementation, options, run) {
     let sequence = glob.sync(`**/${options.fixtureFilename || 'style.json'}`, {cwd: directory})
         .map(fixture => {
             const id = path.dirname(fixture);
-            const style = require(path.join(directory, fixture)); // HM TODO: read file regularly?
+            const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8'));
 
             server.localizeURLs(style);
 

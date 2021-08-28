@@ -26,8 +26,6 @@ interface DOMInterface {
 const DOM = {} as DOMInterface;
 export default DOM;
 
-// HM TODO: make this a static helper?
-
 DOM.create = function (tagName: string, className: string | undefined | null, container?: HTMLElement) {
     const el = window.document.createElement(tagName);
     if (className !== undefined) el.className = className;

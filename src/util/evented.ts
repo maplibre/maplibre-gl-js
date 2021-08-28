@@ -1,6 +1,6 @@
 import {extend} from './util';
 
-type Listener = (a: any) => any;
+export type Listener = (a: any) => any;
 
 type Listeners = {[_: string]: Array<Listener>};
 

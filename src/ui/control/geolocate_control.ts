@@ -497,18 +497,6 @@ class GeolocateControl extends Evented implements IControl {
             case 'ACTIVE_LOCK':
                 this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-active', 'mapboxgl-ctrl-geolocate-active');
                 break;
-            // HM TODO: this states can't be reached according to above switch case? and typescript compilation as well...
-            //case 'ACTIVE_ERROR':
-            //    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-waiting', 'mapboxgl-ctrl-geolocate-waiting');
-            //    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-active-error', 'mapboxgl-ctrl-geolocate-active-error');
-            //    break;
-            //case 'BACKGROUND':
-            //    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background', 'mapboxgl-ctrl-geolocate-background');
-            //    break;
-            //case 'BACKGROUND_ERROR':
-            //    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-waiting', 'mapboxgl-ctrl-geolocate-waiting');
-            //    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background-error', 'mapboxgl-ctrl-geolocate-background-error');
-            //    break;
             case 'OFF':
                 break;
             default:

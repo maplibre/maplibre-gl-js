@@ -17,7 +17,7 @@ import AttributionControl from './control/attribution_control';
 import LogoControl from './control/logo_control';
 import isSupported from '@mapbox/mapbox-gl-supported';
 import {RGBAImage} from '../util/image';
-import {Event, ErrorEvent} from '../util/evented';
+import {Event, ErrorEvent, Listener} from '../util/evented';
 import {MapMouseEvent} from './events';
 import TaskQueue from '../util/task_queue';
 import webpSupported from '../util/webp_supported';
@@ -52,7 +52,6 @@ import type {
     LightSpecification,
     SourceSpecification
 } from '../style-spec/types';
-import type {Listener} from 'selenium-webdriver';
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 
@@ -105,7 +104,6 @@ export type MapOptions = {
 };
 
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
-// HM TODO: This might need to move to  amore general place
 type Complete<T> = {
     [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
 }
