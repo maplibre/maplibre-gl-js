@@ -126,7 +126,6 @@ class SymbolStyleLayer extends StyleLayer {
             if (overriden.value.kind === 'constant' || overriden.value.kind === 'source') {
                 expression = (new ZoomConstantExpression('source', styleExpression) as SourceExpression);
             } else {
-                // HM TODO: this doesn't make sence as the entire codebase doesn't have this member name...???
                 expression = (new ZoomDependentExpression('composite',
                                                           styleExpression,
                                                           overriden.value.zoomStops,

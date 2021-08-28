@@ -10,7 +10,6 @@ import {PossiblyEvaluated} from '../../style/properties';
 
 type PatternStyleLayers = Array<LineStyleLayer> | Array<FillStyleLayer> | Array<FillExtrusionStyleLayer>;
 
-// HM TODO: this is not the right way to do this when it comes to typed code...
 export function hasPattern(type: string, layers: PatternStyleLayers, options: PopulateParameters) {
     const patterns = options.patternDependencies;
     let hasPattern = false;

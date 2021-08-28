@@ -5,8 +5,12 @@ import Transform from '../../../rollup/build/tsc/geo/transform';
 import {Event, Evented} from '../../../rollup/build/tsc/util/evented';
 import {extend} from '../../../rollup/build/tsc/util/util';
 
+let originalGetContext = HTMLCanvasElement.prototype.getContext;
+
 function createSource(options) {
-    window.useFakeHTMLCanvasGetContext();
+    
+    HTMLCanvasElement.prototype.getContext = () =>  { return '2d'; };
+    
 
     const c = options && options.canvas || window.document.createElement('canvas');
     c.width = 20;
@@ -38,7 +42,7 @@ class StubMap extends Evented {
 
 test('CanvasSource', (t) => {
     t.afterEach((callback) => {
-        window.clearFakeHTMLCanvasGetContext();
+        HTMLCanvasElement.prototype.getContext = originalGetContext;
         callback();
     });
 

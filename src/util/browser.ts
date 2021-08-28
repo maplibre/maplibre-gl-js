@@ -43,7 +43,6 @@ const exported = {
 
     hardwareConcurrency: navigator && navigator.hardwareConcurrency || 4,
 
-    // HM TODO: remove this from here...
     get devicePixelRatio() { return devicePixelRatio; },
     get prefersReducedMotion(): boolean {
         if (!matchMedia) return false;

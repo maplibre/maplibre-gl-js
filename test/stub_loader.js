@@ -109,16 +109,6 @@ function imitateWebGlGetContext(type, attributes) {
 }
 global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 
-// HM TODO: move this to the relevat test...
-window.useFakeHTMLCanvasGetContext = function () {
-    this.HTMLCanvasElement.prototype.getContext = () =>  { return '2d'; };
-};
-
-window.clearFakeHTMLCanvasGetContext = () => {
-    global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
-};
-
-// HM TODO: move this to the relevat test...
 window.useFakeXMLHttpRequest = function () {
     sinon.xhr.supportsCORS = true;
     this.server = sinon.fakeServer.create();
