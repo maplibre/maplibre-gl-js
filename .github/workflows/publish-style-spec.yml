@@ -29,9 +29,8 @@ jobs:
       
       - name: Build style spec
         run: |
-          cd src/style-spec
-          npm install
-          npm run prepublish
+          npm run build-style-spec
+          cp dist/style-spec/ src/style-spec/dist
       
       - name: Check version and publish
         run: |
