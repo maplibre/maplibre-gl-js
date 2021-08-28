@@ -18,3 +18,20 @@ export function createSymbolBucket(layerId, font, text, collisionBoxArray) {
         layers: [layer]
     });
 }
+
+export function createSymbolIconBucket(layerId, iconProperty, collisionBoxArray) {
+    const layer = new SymbolStyleLayer({
+        id: layerId,
+        type: 'symbol',
+        layout: { 'icon-image': ['get', iconProperty] },
+        filter: featureFilter()
+    });
+    layer.recalculate({ zoom: 0, zoomHistory: {} });
+
+    return new SymbolBucket({
+        overscaling: 1,
+        zoom: 0,
+        collisionBoxArray,
+        layers: [layer]
+    });
+}
