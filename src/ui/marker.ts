@@ -395,7 +395,7 @@ export default class Marker extends Evented {
         const targetElement = e.originalEvent.target;
         const element = this._element;
 
-        if (this._popup && (targetElement === element || element.contains(((targetElement as any))))) {
+        if (this._popup && (targetElement === element || element.contains(targetElement as any))) {
             this.togglePopup();
         }
     }
@@ -559,7 +559,7 @@ export default class Marker extends Evented {
     }
 
     _addDragHandler(e: MapMouseEvent | MapTouchEvent) {
-        if (this._element.contains(((e.originalEvent.target as any)))) {
+        if (this._element.contains(e.originalEvent.target as any)) {
             e.preventDefault();
 
             // We need to calculate the pixel distance between the click point

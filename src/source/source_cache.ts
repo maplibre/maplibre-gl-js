@@ -503,7 +503,7 @@ class SourceCache extends Evented {
             });
 
             if (this._source.hasTile) {
-                idealTileIDs = idealTileIDs.filter((coord) => ((this._source.hasTile as any))(coord));
+                idealTileIDs = idealTileIDs.filter((coord) => (this._source.hasTile as any)(coord));
             }
         }
 
