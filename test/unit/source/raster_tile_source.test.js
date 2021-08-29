@@ -20,14 +20,12 @@ function createSource(options, transformCallback) {
 }
 
 test('RasterTileSource', (t) => {
-    t.beforeEach((callback) => {
+    t.beforeEach(() => {
         window.useFakeXMLHttpRequest();
-        callback();
     });
 
-    t.afterEach((callback) => {
+    t.afterEach(() => {
         window.clearFakeXMLHttpRequest();
-        callback();
     });
 
     t.test('transforms request for TileJSON URL', (t) => {

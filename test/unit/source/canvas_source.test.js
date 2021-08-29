@@ -8,9 +8,9 @@ import {extend} from '../../../rollup/build/tsc/util/util';
 let originalGetContext = HTMLCanvasElement.prototype.getContext;
 
 function createSource(options) {
-    
+
     HTMLCanvasElement.prototype.getContext = () =>  { return '2d'; };
-    
+
 
     const c = options && options.canvas || window.document.createElement('canvas');
     c.width = 20;
@@ -41,9 +41,8 @@ class StubMap extends Evented {
 }
 
 test('CanvasSource', (t) => {
-    t.afterEach((callback) => {
+    t.afterEach(() => {
         HTMLCanvasElement.prototype.getContext = originalGetContext;
-        callback();
     });
 
     t.test('constructor', (t) => {

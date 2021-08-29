@@ -11,14 +11,12 @@ import config from '../../../rollup/build/tsc/util/config';
 import webpSupported from '../../../rollup/build/tsc/util/webp_supported';
 
 test('ajax', (t) => {
-    t.beforeEach(callback => {
+    t.beforeEach(() => {
         window.useFakeXMLHttpRequest();
-        callback();
     });
 
-    t.afterEach(callback => {
+    t.afterEach(() => {
         window.clearFakeXMLHttpRequest();
-        callback();
     });
 
     t.test('getArrayBuffer, 404', (t) => {

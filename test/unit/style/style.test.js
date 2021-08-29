@@ -56,10 +56,9 @@ class StubMap extends Evented {
 }
 
 test('Style', (t) => {
-    t.afterEach((callback) => {
+    t.afterEach(() => {
         window.clearFakeXMLHttpRequest();
         window.clearFakeWorkerPresence();
-        callback();
     });
 
     t.test('registers plugin state change listener', (t) => {
@@ -105,14 +104,12 @@ test('Style', (t) => {
 });
 
 test('Style#loadURL', (t) => {
-    t.beforeEach((callback) => {
+    t.beforeEach(() => {
         window.useFakeXMLHttpRequest();
-        callback();
     });
 
-    t.afterEach((callback) => {
+    t.afterEach(() => {
         window.clearFakeXMLHttpRequest();
-        callback();
     });
 
     t.test('fires "dataloading"', (t) => {
@@ -182,9 +179,8 @@ test('Style#loadURL', (t) => {
 });
 
 test('Style#loadJSON', (t) => {
-    t.afterEach((callback) => {
+    t.afterEach(() => {
         window.clearFakeXMLHttpRequest();
-        callback();
     });
 
     t.test('fires "dataloading" (synchronously)', (t) => {
@@ -2035,7 +2031,7 @@ test('Style#query*Features', (t) => {
     let onError;
     let transform;
 
-    t.beforeEach((callback) => {
+    t.beforeEach(() => {
         transform = new Transform();
         transform.resize(100, 100);
         style = new Style(new StubMap());
@@ -2055,7 +2051,10 @@ test('Style#query*Features', (t) => {
 
         style.on('error', onError)
             .on('style.load', () => {
-                callback();
+                // hmm nested callback seems like we need async here..
+                // callback();
+                // changelog for tap 15.0
+                // Remove callback argument from t.beforeEach and t.afterEach. Return a promise if you wish these methods to be async.
             });
     });
 

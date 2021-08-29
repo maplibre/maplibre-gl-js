@@ -24,11 +24,10 @@ function withFixedDate(t, now, fn) {
 }
 
 test("mapbox", (t) => {
-    t.beforeEach((callback) => {
+    t.beforeEach(() => {
         config.ACCESS_TOKEN = 'key';
         config.REQUIRE_ACCESS_TOKEN = true;
         config.API_URL = 'https://api.mapbox.com';
-        callback();
     });
 
     t.test('.isMapboxHTTPURL', (t) => {
@@ -418,15 +417,13 @@ test("mapbox", (t) => {
     t.test('TurnstileEvent', (t) => {
         const ms25Hours = (25 * 60 * 60 * 1000);
         let event;
-        t.beforeEach((callback) => {
+        t.beforeEach(() => {
             window.useFakeXMLHttpRequest();
             event = new mapbox.TurnstileEvent();
-            callback();
         });
 
-        t.afterEach((callback) => {
+        t.afterEach(() => {
             window.clearFakeXMLHttpRequest();
-            callback();
         });
 
         t.test('mapbox.postTurnstileEvent', (t) => {
@@ -488,7 +485,7 @@ test("mapbox", (t) => {
 
         t.test('with LocalStorage available', (t) => {
             let prevLocalStorage;
-            t.beforeEach((callback) => {
+            t.beforeEach(() => {
                 prevLocalStorage = window.localStorage;
                 window.localStorage = {
                     data: {},
@@ -502,12 +499,10 @@ test("mapbox", (t) => {
                         if (Object.prototype.hasOwnProperty.call(this, id)) delete this[id];
                     }
                 };
-                callback();
             });
 
-            t.afterEach((callback) => {
+            t.afterEach(() => {
                 window.localStorage = prevLocalStorage;
-                callback();
             });
 
             t.test('does not POST event when previously stored data is on the same day', (t) => {
@@ -750,16 +745,14 @@ test("mapbox", (t) => {
         let event;
         let turnstileEvent;
         const skuToken = '1234567890123';
-        t.beforeEach((callback) => {
+        t.beforeEach(() => {
             window.useFakeXMLHttpRequest();
             event = new mapbox.MapLoadEvent();
             turnstileEvent = new mapbox.TurnstileEvent();
-            callback();
         });
 
-        t.afterEach((callback) => {
+        t.afterEach(() => {
             window.clearFakeXMLHttpRequest();
-            callback();
         });
 
         t.test('mapbox.postMapLoadEvent', (t) => {
@@ -821,7 +814,7 @@ test("mapbox", (t) => {
 
         t.test('with LocalStorage available', (t) => {
             let prevLocalStorage;
-            t.beforeEach((callback) => {
+            t.beforeEach(() => {
                 prevLocalStorage = window.localStorage;
                 window.localStorage = {
                     data: {},
@@ -835,12 +828,10 @@ test("mapbox", (t) => {
                         if (Object.prototype.hasOwnProperty.call(this, id)) delete this[id];
                     }
                 };
-                callback();
             });
 
-            t.afterEach((callback) => {
+            t.afterEach(() => {
                 window.localStorage = prevLocalStorage;
-                callback();
             });
 
             t.test('generates new uuid when previously stored anonId is not a valid uuid', (t) => {

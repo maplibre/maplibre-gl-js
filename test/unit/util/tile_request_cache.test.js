@@ -4,15 +4,13 @@ import {cacheGet, cachePut, cacheClose} from '../../../rollup/build/tsc/util/til
 import sinon from 'sinon';
 
 test('tile_request_cache', (t) => {
-    t.beforeEach(callback => {
+    t.beforeEach(() => {
         cacheClose();
         global.caches = sinon.stub();
-        callback();
     });
 
-    t.afterEach(callback => {
+    t.afterEach(() => {
         delete global.caches;
-        callback();
     });
 
     t.test('cachePut, no caches', (t) => {

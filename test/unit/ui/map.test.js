@@ -21,14 +21,12 @@ function createStyleSource() {
 }
 
 test('Map', (t) => {
-    t.beforeEach((callback) => {
+    t.beforeEach(() => {
         window.useFakeXMLHttpRequest();
-        callback();
     });
 
-    t.afterEach((callback) => {
+    t.afterEach(() => {
         window.clearFakeXMLHttpRequest();
-        callback();
     });
 
     t.test('constructor', (t) => {
