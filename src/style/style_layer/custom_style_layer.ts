@@ -3,8 +3,6 @@ import type Map from '../../ui/map';
 import assert from 'assert';
 import {mat4} from 'gl-matrix';
 
-// careful of this change from matrix from Array<number> to mat4 as custom layer can be 2D or 3D
-// this may or may not be an issue, investigate
 type CustomRenderMethod = (gl: WebGLRenderingContext, matrix: mat4) => void;
 
 /**
@@ -110,7 +108,7 @@ type CustomRenderMethod = (gl: WebGLRenderingContext, matrix: mat4) => void;
  * @instance
  * @name prerender
  * @param {WebGLRenderingContext} gl The map's gl context.
- * @param {Array<number>} matrix The map's camera matrix. It projects spherical mercator
+ * @param {mat4} matrix The map's camera matrix. It projects spherical mercator
  * coordinates to gl coordinates. The mercator coordinate `[0, 0]` represents the
  * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
  * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
