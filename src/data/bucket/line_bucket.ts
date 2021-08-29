@@ -75,9 +75,9 @@ type LineClips = {
 };
 
 type GradientTexture = {
-  texture: Texture,
+  texture?: Texture,
   gradient?: RGBAImage,
-  version: number
+  version?: number
 };
 
 /**
@@ -128,7 +128,7 @@ class LineBucket implements Bucket {
         this.lineClipsArray = [];
         this.gradients = {};
         this.layers.forEach(layer => {
-            this.gradients[layer.id] = {} as GradientTexture;
+            this.gradients[layer.id] = {};
         });
 
         this.layoutVertexArray = new LineLayoutArray();
