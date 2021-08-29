@@ -12,7 +12,7 @@
 ### Features and improvements
 
 - Migrated the production code to typescript
-- ** Breaking Change ** removed `version` from buplic API
+- ** Breaking Change ** removed `version` from the public API
 - ** Breaking Change ** stopped supporting IE (internet explorer)
 - *...Add new stuff here...*
 
