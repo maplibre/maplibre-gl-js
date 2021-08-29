@@ -1,4 +1,4 @@
-// This file is generated. Edit build/generate-struct-arrays.js, then run `yarn run codegen`.
+// This file was generated. Edit build/generate-struct-arrays.js, see https://github.com/maplibre/maplibre-gl-js/issues/266.
 import assert from 'assert';
 import {Struct, StructArray} from '../util/struct_array';
 import {register} from '../util/web_worker_transfer';

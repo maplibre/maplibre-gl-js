@@ -1,4 +1,4 @@
-// This file is generated. Edit build/generate-style-code.js, then run `yarn run codegen`.
+// This file was generated. Edit build/generate-style-code.js, , see https://github.com/maplibre/maplibre-gl-js/issues/266.
 /* eslint-disable */
 
 import styleSpec from '../../style-spec/reference/latest';
