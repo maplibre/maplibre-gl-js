@@ -157,7 +157,7 @@ export default function(style, options, _callback) {
 
         } else if (operation[0] === 'wait') {
             if (operation.length > 1) {
-                now += operation[1];
+                // now += operation[1];
                 map._render();
                 applyOperations(map, operations.slice(1), callback);
 
