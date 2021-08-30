@@ -10,10 +10,10 @@ const IMAGE_PADDING: number = 1;
 export {IMAGE_PADDING};
 
 type Rect = {
-  x: number,
-  y: number,
-  w: number,
-  h: number
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 };
 
 export class ImagePosition {

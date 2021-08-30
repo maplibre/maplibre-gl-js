@@ -11,7 +11,7 @@ export default function (fontstack: string,
                            urlTemplate: string,
                            requestManager: RequestManager,
                            callback: Callback<{
-                             [_: number]: StyleGlyph | null
+                             [_: number]: StyleGlyph | null;
                            }>) {
     const begin = range * 256;
     const end = begin + 255;

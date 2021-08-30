@@ -14,8 +14,8 @@ import type {Bin} from 'potpack';
 import type {Callback} from '../types/callback';
 
 type Pattern = {
-  bin: Bin,
-  position: ImagePosition
+  bin: Bin;
+  position: ImagePosition;
 };
 
 // When copied into the atlas texture, image data is padded by one pixel on each side. Icon
@@ -41,8 +41,8 @@ class ImageManager extends Evented {
     callbackDispatchedThisFrame: {[_: string]: boolean};
     loaded: boolean;
     requestors: Array<{
-      ids: Array<string>,
-      callback: Callback<{[_: string]: StyleImage}>
+      ids: Array<string>;
+      callback: Callback<{[_: string]: StyleImage}>;
     }>;
 
     patterns: {[_: string]: Pattern};

@@ -62,23 +62,23 @@ export interface Handler {
 
 // All handler methods that are called with events can optionally return a `HandlerResult`.
 export type HandlerResult = {
-  panDelta?: Point,
-  zoomDelta?: number,
-  bearingDelta?: number,
-  pitchDelta?: number,
+  panDelta?: Point;
+  zoomDelta?: number;
+  bearingDelta?: number;
+  pitchDelta?: number;
   // the point to not move when changing the camera
-  around?: Point | null,
+  around?: Point | null;
   // same as above, except for pinch actions, which are given higher priority
-  pinchAround?: Point | null,
+  pinchAround?: Point | null;
   // A method that can fire a one-off easing by directly changing the map's camera.
-  cameraAnimation?: (map: Map) => any,
+  cameraAnimation?: (map: Map) => any;
   // The last three properties are needed by only one handler: scrollzoom.
   // The DOM event to be used as the `originalEvent` on any camera change events.
-  originalEvent?: any,
+  originalEvent?: any;
   // Makes the manager trigger a frame, allowing the handler to return multiple results over time (see scrollzoom).
-  needsRenderFrame?: boolean,
+  needsRenderFrame?: boolean;
   // The camera changes won't get recorded for inertial zooming.
-  noInertia?: boolean
+  noInertia?: boolean;
 };
 
 function hasChange(result: HandlerResult) {
@@ -89,9 +89,9 @@ class HandlerManager {
     _map: Map;
     _el: HTMLElement;
     _handlers: Array<{
-      handlerName: string,
-      handler: Handler,
-      allowed: any
+      handlerName: string;
+      handler: Handler;
+      allowed: any;
     }>;
     _eventsInProgress: any;
     _frameId: number;
@@ -102,8 +102,8 @@ class HandlerManager {
     _changes: Array<[HandlerResult, any, any]>;
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
-      passive?: boolean,
-      capture?: boolean
+      passive?: boolean;
+      capture?: boolean;
     } | undefined]>;
 
     constructor(map: Map, options: CompleteMapOptions) {

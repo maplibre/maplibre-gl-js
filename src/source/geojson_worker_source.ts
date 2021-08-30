@@ -23,14 +23,14 @@ import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {Callback} from '../types/callback';
 
 export type LoadGeoJSONParameters = {
-  request?: RequestParameters,
-  data?: string,
-  source: string,
-  cluster: boolean,
-  superclusterOptions?: any,
-  geojsonVtOptions?: any,
-  clusterProperties?: any,
-  filter?: Array<unknown>
+  request?: RequestParameters;
+  data?: string;
+  source: string;
+  cluster: boolean;
+  superclusterOptions?: any;
+  geojsonVtOptions?: any;
+  clusterProperties?: any;
+  filter?: Array<unknown>;
 };
 
 export type LoadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>) => void;
@@ -89,8 +89,8 @@ export type SourceState = // Source empty or data loaded
 class GeoJSONWorkerSource extends VectorTileWorkerSource {
     _state: SourceState;
     _pendingCallback: Callback<{
-      resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>},
-      abandoned?: boolean
+      resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
+      abandoned?: boolean;
     }>;
     _pendingLoadDataParams: LoadGeoJSONParameters;
     _geoJSONIndex: GeoJSONIndex;
@@ -126,8 +126,8 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @private
      */
     loadData(params: LoadGeoJSONParameters, callback: Callback<{
-      resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>},
-      abandoned?: boolean
+      resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
+      abandoned?: boolean;
     }>) {
         if (this._pendingCallback) {
             // Tell the foreground the previous call has been abandoned
@@ -285,7 +285,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     removeSource(params: {
-      source: string
+      source: string;
     }, callback: WorkerTileCallback) {
         if (this._pendingCallback) {
             // Don't leak callbacks
@@ -295,7 +295,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     getClusterExpansionZoom(params: {
-      clusterId: number
+      clusterId: number;
     }, callback: Callback<number>) {
         try {
             callback(null, this._geoJSONIndex.getClusterExpansionZoom(params.clusterId));
@@ -305,7 +305,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     getClusterChildren(params: {
-      clusterId: number
+      clusterId: number;
     }, callback: Callback<Array<GeoJSON.Feature>>) {
         try {
             callback(null, this._geoJSONIndex.getChildren(params.clusterId));
@@ -315,9 +315,9 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     getClusterLeaves(params: {
-      clusterId: number,
-      limit: number,
-      offset: number
+      clusterId: number;
+      limit: number;
+      offset: number;
     }, callback: Callback<Array<GeoJSON.Feature>>) {
         try {
             callback(null, this._geoJSONIndex.getLeaves(params.clusterId, params.limit, params.offset));
@@ -327,7 +327,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 }
 
-function getSuperclusterOptions({superclusterOptions, clusterProperties}: { superclusterOptions?: any, clusterProperties?: any}) {
+function getSuperclusterOptions({superclusterOptions, clusterProperties}: { superclusterOptions?: any; clusterProperties?: any}) {
     if (!clusterProperties || !superclusterOptions) return superclusterOptions;
 
     const mapExpressions = {};

@@ -1,11 +1,11 @@
 type Config = {
-  API_URL: string,
-  EVENTS_URL: string | undefined | null,
-  FEEDBACK_URL: string,
-  REQUIRE_ACCESS_TOKEN: boolean,
-  ACCESS_TOKEN: string | undefined | null,
-  MAX_PARALLEL_IMAGE_REQUESTS: number,
-  REGISTERED_PROTOCOLS: {[x: string]: any}
+  API_URL: string;
+  EVENTS_URL: string | undefined | null;
+  FEEDBACK_URL: string;
+  REQUIRE_ACCESS_TOKEN: boolean;
+  ACCESS_TOKEN: string | undefined | null;
+  MAX_PARALLEL_IMAGE_REQUESTS: number;
+  REGISTERED_PROTOCOLS: {[x: string]: any};
 };
 
 const config: Config = {

@@ -6,9 +6,9 @@ export type TextureFilter = WebGLRenderingContext["LINEAR"] | WebGLRenderingCont
 export type TextureWrap = WebGLRenderingContext["REPEAT"] | WebGLRenderingContext["CLAMP_TO_EDGE"] | WebGLRenderingContext["MIRRORED_REPEAT"];
 
 type EmptyImage = {
-  width: number,
-  height: number,
-  data: null
+  width: number;
+  height: number;
+  data: null;
 };
 
 type DataTextureImage = RGBAImage | AlphaImage | EmptyImage;
@@ -24,8 +24,8 @@ class Texture {
     useMipmap: boolean;
 
     constructor(context: Context, image: TextureImage, format: TextureFormat, options?: {
-      premultiply?: boolean,
-      useMipmap?: boolean
+      premultiply?: boolean;
+      useMipmap?: boolean;
     } | null) {
         this.context = context;
         this.format = format;
@@ -34,11 +34,11 @@ class Texture {
     }
 
     update(image: TextureImage, options?: {
-      premultiply?: boolean,
-      useMipmap?: boolean
+      premultiply?: boolean;
+      useMipmap?: boolean;
     } | null, position?: {
-      x: number,
-      y: number
+      x: number;
+      y: number;
     }) {
         const {width, height} = image;
         const resize = (!this.size || this.size[0] !== width || this.size[1] !== height) && !position;

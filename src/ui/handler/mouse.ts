@@ -25,7 +25,7 @@ class MouseHandler {
     _clickTolerance: number;
 
     constructor(options: {
-      clickTolerance: number
+      clickTolerance: number;
     }) {
         this.reset();
         this._clickTolerance = options.clickTolerance || 1;

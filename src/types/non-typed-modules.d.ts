@@ -2,12 +2,12 @@ import type Pbf from 'pbf';
 
 declare module "@mapbox/mapbox-gl-supported" {
     type isSupported = {
-        webGLContextAttributes: WebGLContextAttributes,
+        webGLContextAttributes: WebGLContextAttributes;
         (
             options?: {
-                failIfMajorPerformanceCaveat: boolean
+                failIfMajorPerformanceCaveat: boolean;
             }
-        ): boolean
+        ): boolean;
     };
 
     let __exports: isSupported;
@@ -29,16 +29,16 @@ declare module "@mapbox/unitbezier" {
 }
 declare module "potpack" {
     type Bin = {
-        x: number,
-        y: number,
-        w: number,
-        h: number
+        x: number;
+        y: number;
+        w: number;
+        h: number;
     };
 
     function potpack(bins: Array<Bin>): {
-        w: number,
-        h: number,
-        fill: number
+        w: number;
+        h: number;
+        fill: number;
     }
 
     let __exports: typeof potpack;
@@ -47,17 +47,17 @@ declare module "potpack" {
 
 declare module "sinon" {
     type SpyCall = {
-        args: Array<unknown>
+        args: Array<unknown>;
     };
 
     type Spy = {
-        calledOnce: number,
-        getCall(i: number): SpyCall,
-        (): any
+        calledOnce: number;
+        getCall(i: number): SpyCall;
+        (): any;
     };
 
     type Stub = {
-        callsFake(fn: unknown): Spy
+        callsFake(fn: unknown): Spy;
     };
 
     class FakeServer {
@@ -66,15 +66,15 @@ declare module "sinon" {
 
     type Sandbox = {
         xhr: {
-            supportsCORS: boolean
-        },
+            supportsCORS: boolean;
+        };
         fakeServer: {
-            create: () => FakeServer
-        },
-        createSandbox(options: unknown): Sandbox,
-        stub(obj?: unknown, prop?: string): Stub,
-        spy(obj?: unknown, prop?: string): Spy,
-        restore(): void
+            create: () => FakeServer;
+        };
+        createSandbox(options: unknown): Sandbox;
+        stub(obj?: unknown, prop?: string): Stub;
+        spy(obj?: unknown, prop?: string): Spy;
+        restore(): void;
     };
 
     let __exports: Sandbox;
@@ -116,8 +116,8 @@ declare module "@mapbox/vector-tile" {
     }
 
     let __exports: {
-        VectorTile: typeof VectorTileImpl,
-        VectorTileFeature: typeof VectorTileFeatureImpl
+        VectorTile: typeof VectorTileImpl;
+        VectorTileFeature: typeof VectorTileFeatureImpl;
     };
 
     export = __exports

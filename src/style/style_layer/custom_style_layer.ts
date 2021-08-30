@@ -145,13 +145,13 @@ type CustomRenderMethod = (gl: WebGLRenderingContext, matrix: mat4) => void;
  * can be used to project a `LngLat` to a mercator coordinate.
  */
 export type CustomLayerInterface = {
-  id: string,
-  type: "custom",
-  renderingMode: "2d" | "3d",
-  render: CustomRenderMethod,
-  prerender: CustomRenderMethod | undefined | null,
-  onAdd: ((map: Map, gl: WebGLRenderingContext) => void) | undefined | null,
-  onRemove: ((map: Map, gl: WebGLRenderingContext) => void) | undefined | null
+  id: string;
+  type: "custom";
+  renderingMode: "2d" | "3d";
+  render: CustomRenderMethod;
+  prerender: CustomRenderMethod | undefined | null;
+  onAdd: ((map: Map, gl: WebGLRenderingContext) => void) | undefined | null;
+  onRemove: ((map: Map, gl: WebGLRenderingContext) => void) | undefined | null;
 };
 
 export function validateCustomStyleLayer(layerObject: CustomLayerInterface) {

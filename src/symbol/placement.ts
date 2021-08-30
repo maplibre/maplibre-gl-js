@@ -96,8 +96,8 @@ export class RetainedQueryData {
 }
 
 type CollisionGroup = {
-  ID: number,
-  predicate?: any
+  ID: number;
+  predicate?: any;
 };
 
 class CollisionGroups {
@@ -170,33 +170,33 @@ function shiftVariableCollisionBox(collisionBox: SingleCollisionBox,
 }
 
 export type VariableOffset = {
-  textOffset: [number, number],
-  width: number,
-  height: number,
-  anchor: TextAnchor,
-  textBoxScale: number,
-  prevAnchor?: TextAnchor
+  textOffset: [number, number];
+  width: number;
+  height: number;
+  anchor: TextAnchor;
+  textBoxScale: number;
+  prevAnchor?: TextAnchor;
 };
 
 type TileLayerParameters = {
-  bucket: SymbolBucket,
-  layout: any,
-  posMatrix: mat4,
-  textLabelPlaneMatrix: mat4,
-  labelToScreenMatrix: mat4,
-  scale: number,
-  textPixelRatio: number,
-  holdingForFade: boolean,
-  collisionBoxArray: CollisionBoxArray | undefined | null,
-  partiallyEvaluatedTextSize: any,
-  collisionGroup: any
+  bucket: SymbolBucket;
+  layout: any;
+  posMatrix: mat4;
+  textLabelPlaneMatrix: mat4;
+  labelToScreenMatrix: mat4;
+  scale: number;
+  textPixelRatio: number;
+  holdingForFade: boolean;
+  collisionBoxArray: CollisionBoxArray | undefined | null;
+  partiallyEvaluatedTextSize: any;
+  collisionGroup: any;
 };
 
 export type BucketPart = {
-  sortKey?: number | void,
-  symbolInstanceStart: number,
-  symbolInstanceEnd: number,
-  parameters: TileLayerParameters
+  sortKey?: number | void;
+  symbolInstanceStart: number;
+  symbolInstanceEnd: number;
+  parameters: TileLayerParameters;
 };
 
 export type CrossTileID = string | number;
@@ -222,7 +222,7 @@ export class Placement {
     stale: boolean;
     fadeDuration: number;
     retainedQueryData: {
-      [_: number]: RetainedQueryData
+      [_: number]: RetainedQueryData;
     };
     collisionGroups: CollisionGroups;
     prevPlacement: Placement | undefined | null;
@@ -345,11 +345,11 @@ export class Placement {
       orientation: number,
       iconBox?: SingleCollisionBox | null
     ): {
-      shift: Point,
+      shift: Point;
       placedGlyphBoxes: {
-        box: Array<number>,
-        offscreen: boolean
-      }
+        box: Array<number>;
+        offscreen: boolean;
+      };
     } | undefined | null {
 
         const textOffset = [symbolInstance.textOffset0, symbolInstance.textOffset1] as [number, number];
@@ -560,8 +560,8 @@ export class Placement {
                         const variableIconBox = hasIconTextFit && !iconAllowOverlap ? collisionIconBox : null;
 
                         let placedBox: {
-                          box: Array<number>,
-                          offscreen: boolean
+                          box: Array<number>;
+                          offscreen: boolean;
                         } | undefined | null  = {box: [], offscreen: false};
                         const placementAttempts = textAllowOverlap ? anchors.length * 2 : anchors.length;
                         for (let i = 0; i < placementAttempts; ++i) {

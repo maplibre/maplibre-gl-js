@@ -69,11 +69,11 @@ type SourceStatics = {
      * An optional URL to a script which, when run by a Worker, registers a {@link WorkerSource}
      * implementation for this Source type by calling `self.registerWorkerSource(workerSource: WorkerSource)`.
      */
-  workerSourceURL?: URL
+  workerSourceURL?: URL;
 };
 
 export type SourceClass = {
-  new (...args: any): Source
+  new (...args: any): Source;
 } & SourceStatics;
 
 import vector from '../source/vector_tile_source';
@@ -122,7 +122,7 @@ export const getType = function (name: string) {
 };
 
 export const setType = function (name: string, type: {
-  new (...args: any): Source
+  new (...args: any): Source;
 }) {
     sourceTypes[name] = type;
 };

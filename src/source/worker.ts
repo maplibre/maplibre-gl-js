@@ -32,20 +32,20 @@ export default class Worker {
     availableImages: {[_: string]: Array<string>};
     workerSourceTypes: {
       [_: string]: {
-        new (...args: any): WorkerSource
-      }
+        new (...args: any): WorkerSource;
+      };
     };
     workerSources: {
       [_: string]: {
         [_: string]: {
-          [_: string]: WorkerSource
-        }
-      }
+          [_: string]: WorkerSource;
+        };
+      };
     };
     demWorkerSources: {
       [_: string]: {
-        [_: string]: RasterDEMTileWorkerSource
-      }
+        [_: string]: RasterDEMTileWorkerSource;
+      };
     };
     referrer: string | undefined | null;
 
@@ -66,7 +66,7 @@ export default class Worker {
         this.demWorkerSources = {};
 
         this.self.registerWorkerSource = (name: string, WorkerSource: {
-          new (...args: any): WorkerSource
+          new (...args: any): WorkerSource;
         }) => {
             if (this.workerSourceTypes[name]) {
                 throw new Error(`Worker source with name "${name}" already registered.`);
@@ -76,9 +76,9 @@ export default class Worker {
 
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin: {
-          applyArabicShaping: Function,
-          processBidirectionalText: ((b: string, a: Array<number>) => Array<string>) | undefined | null,
-          processStyledBidirectionalText?: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>) | undefined | null
+          applyArabicShaping: Function;
+          processBidirectionalText: ((b: string, a: Array<number>) => Array<string>) | undefined | null;
+          processStyledBidirectionalText?: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>) | undefined | null;
         }) => {
             if (globalRTLTextPlugin.isParsed()) {
                 throw new Error('RTL text plugin already registered.');
@@ -110,15 +110,15 @@ export default class Worker {
     }
 
     updateLayers(mapId: string, params: {
-      layers: Array<LayerSpecification>,
-      removedIds: Array<string>
+      layers: Array<LayerSpecification>;
+      removedIds: Array<string>;
     }, callback: WorkerTileCallback) {
         this.getLayerIndex(mapId).update(params.layers, params.removedIds);
         callback();
     }
 
     loadTile(mapId: string, params: WorkerTileParameters & {
-      type: string
+      type: string;
     }, callback: WorkerTileCallback) {
         assert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).loadTile(params, callback);
@@ -129,21 +129,21 @@ export default class Worker {
     }
 
     reloadTile(mapId: string, params: WorkerTileParameters & {
-      type: string
+      type: string;
     }, callback: WorkerTileCallback) {
         assert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).reloadTile(params, callback);
     }
 
     abortTile(mapId: string, params: TileParameters & {
-      type: string
+      type: string;
     }, callback: WorkerTileCallback) {
         assert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).abortTile(params, callback);
     }
 
     removeTile(mapId: string, params: TileParameters & {
-      type: string
+      type: string;
     }, callback: WorkerTileCallback) {
         assert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).removeTile(params, callback);
@@ -154,9 +154,9 @@ export default class Worker {
     }
 
     removeSource(mapId: string, params: {
-      source: string
+      source: string;
     } & {
-      type: string
+      type: string;
     }, callback: WorkerTileCallback) {
         assert(params.type);
         assert(params.source);
@@ -184,7 +184,7 @@ export default class Worker {
      *  @private
      */
     loadWorkerSource(map: string, params: {
-      url: string
+      url: string;
     }, callback: Callback<void>) {
         try {
             this.self.importScripts(params.url);

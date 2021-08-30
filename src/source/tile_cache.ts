@@ -12,9 +12,9 @@ class TileCache {
     max: number;
     data: {
       [key: string]: Array<{
-        value: Tile,
-        timeout: ReturnType<typeof setTimeout> | undefined | null
-      }>
+        value: Tile;
+        timeout: ReturnType<typeof setTimeout> | undefined | null;
+      }>;
     };
     order: Array<string>;
     onRemove: (element: Tile) => void;
@@ -157,8 +157,8 @@ class TileCache {
      * @private
      */
     remove(tileID: OverscaledTileID, value?: {
-      value: Tile,
-      timeout: ReturnType<typeof setTimeout> | undefined | null
+      value: Tile;
+      timeout: ReturnType<typeof setTimeout> | undefined | null;
     } | null) {
         if (!this.has(tileID)) { return this; }
         const key = tileID.wrapped().key;

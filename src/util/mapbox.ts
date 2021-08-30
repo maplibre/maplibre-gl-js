@@ -27,10 +27,10 @@ type ResourceTypeEnum = keyof IResourceType;
 export type RequestTransformFunction = (url: string, resourceType?: ResourceTypeEnum) => RequestParameters;
 
 type UrlObject = {
-  protocol: string,
-  authority: string,
-  path: string,
-  params: Array<string>
+  protocol: string;
+  authority: string;
+  path: string;
+  params: Array<string>;
 };
 
 export class RequestManager {
@@ -373,8 +373,8 @@ class TelemetryEvent {
     }
 
     queueRequest(event: number | {
-      id: number,
-      timestamp: number
+      id: number;
+      timestamp: number;
     }, customAccessToken?: string | null) {
         this.queue.push(event);
         this.processRequests(customAccessToken);
@@ -383,7 +383,7 @@ class TelemetryEvent {
 
 export class MapLoadEvent extends TelemetryEvent {
     readonly success: {
-      [_: number]: boolean
+      [_: number]: boolean;
     };
     skuToken: string;
 

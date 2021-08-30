@@ -70,14 +70,14 @@ const LINE_DISTANCE_SCALE = 1 / 2;
 const MAX_LINE_DISTANCE = Math.pow(2, LINE_DISTANCE_BUFFER_BITS - 1) / LINE_DISTANCE_SCALE;
 
 type LineClips = {
-  start: number,
-  end: number
+  start: number;
+  end: number;
 };
 
 type GradientTexture = {
-  texture?: Texture,
-  gradient?: RGBAImage,
-  version?: number
+  texture?: Texture;
+  gradient?: RGBAImage;
+  version?: number;
 };
 
 /**

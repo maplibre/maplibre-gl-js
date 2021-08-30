@@ -10,8 +10,8 @@ type FilterExpression = (
 ) => boolean;
 
 export type FeatureFilter = {
-  filter: FilterExpression,
-  needGeometry: boolean
+  filter: FilterExpression;
+  needGeometry: boolean;
 };
 
 export default createFilter;

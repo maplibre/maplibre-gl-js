@@ -16,35 +16,35 @@ import type Tile from '../../source/tile';
 import {mat4} from 'gl-matrix';
 
 export type FillUniformsType = {
-  'u_matrix': UniformMatrix4f
+  'u_matrix': UniformMatrix4f;
 };
 
 export type FillOutlineUniformsType = {
-  'u_matrix': UniformMatrix4f,
-  'u_world': Uniform2f
+  'u_matrix': UniformMatrix4f;
+  'u_world': Uniform2f;
 };
 
 export type FillPatternUniformsType = {
-  'u_matrix': UniformMatrix4f,
+  'u_matrix': UniformMatrix4f;
   // pattern uniforms:
-  'u_texsize': Uniform2f,
-  'u_image': Uniform1i,
-  'u_pixel_coord_upper': Uniform2f,
-  'u_pixel_coord_lower': Uniform2f,
-  'u_scale': Uniform3f,
-  'u_fade': Uniform1f
+  'u_texsize': Uniform2f;
+  'u_image': Uniform1i;
+  'u_pixel_coord_upper': Uniform2f;
+  'u_pixel_coord_lower': Uniform2f;
+  'u_scale': Uniform3f;
+  'u_fade': Uniform1f;
 };
 
 export type FillOutlinePatternUniformsType = {
-  'u_matrix': UniformMatrix4f,
-  'u_world': Uniform2f,
+  'u_matrix': UniformMatrix4f;
+  'u_world': Uniform2f;
   // pattern uniforms:
-  'u_texsize': Uniform2f,
-  'u_image': Uniform1i,
-  'u_pixel_coord_upper': Uniform2f,
-  'u_pixel_coord_lower': Uniform2f,
-  'u_scale': Uniform3f,
-  'u_fade': Uniform1f
+  'u_texsize': Uniform2f;
+  'u_image': Uniform1i;
+  'u_pixel_coord_upper': Uniform2f;
+  'u_pixel_coord_lower': Uniform2f;
+  'u_scale': Uniform3f;
+  'u_fade': Uniform1f;
 };
 
 const fillUniforms = (context: Context, locations: UniformLocations): FillUniformsType => ({

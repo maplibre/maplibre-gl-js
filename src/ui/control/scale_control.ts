@@ -7,8 +7,8 @@ import type {ControlPosition, IControl} from './control';
 type Unit = "imperial" | "metric" | "nautical";
 
 type Options = {
-  maxWidth?: number,
-  unit?: Unit
+  maxWidth?: number;
+  unit?: Unit;
 };
 
 const defaultOptions: Options = {

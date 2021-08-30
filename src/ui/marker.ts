@@ -12,16 +12,16 @@ import type {LngLatLike} from "../geo/lng_lat";
 import type {MapMouseEvent, MapTouchEvent} from './events';
 
 type Options = {
-  element?: HTMLElement,
-  offset?: PointLike,
-  anchor?: Anchor,
-  color?: string,
-  scale?: number,
-  draggable?: boolean,
-  clickTolerance?: number,
-  rotation?: number,
-  rotationAlignment?: string,
-  pitchAlignment?: string
+  element?: HTMLElement;
+  offset?: PointLike;
+  anchor?: Anchor;
+  color?: string;
+  scale?: number;
+  draggable?: boolean;
+  clickTolerance?: number;
+  rotation?: number;
+  rotationAlignment?: string;
+  pitchAlignment?: string;
 };
 
 /**
@@ -436,7 +436,7 @@ export default class Marker extends Evented {
     }
 
     _update(e?: {
-      type: "move" | "moveend"
+      type: "move" | "moveend";
     }) {
         if (!this._map) return;
 

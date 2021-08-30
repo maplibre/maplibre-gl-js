@@ -46,11 +46,11 @@ import murmur3 from 'murmurhash-js';
 // (1) and (2) are stored in `bucket.layers[0].layout`. The remainder are below.
 //
 type Sizes = {
-  layoutTextSize: PossiblyEvaluatedPropertyValue<number> // (3),
-  layoutIconSize: PossiblyEvaluatedPropertyValue<number> // (3),
-  textMaxSize: PossiblyEvaluatedPropertyValue<number>    // (4),
-  compositeTextSizes: [PossiblyEvaluatedPropertyValue<number>, PossiblyEvaluatedPropertyValue<number>] // (5),
-  compositeIconSizes: [PossiblyEvaluatedPropertyValue<number>, PossiblyEvaluatedPropertyValue<number>] // (5)
+  layoutTextSize: PossiblyEvaluatedPropertyValue<number>; // (3),
+  layoutIconSize: PossiblyEvaluatedPropertyValue<number>; // (3),
+  textMaxSize: PossiblyEvaluatedPropertyValue<number>;    // (4),
+  compositeTextSizes: [PossiblyEvaluatedPropertyValue<number>, PossiblyEvaluatedPropertyValue<number>]; // (5),
+  compositeIconSizes: [PossiblyEvaluatedPropertyValue<number>, PossiblyEvaluatedPropertyValue<number>]; // (5)
 };
 
 export type TextAnchor = "center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
@@ -149,13 +149,13 @@ export function performSymbolLayout(
     bucket: SymbolBucket,
     glyphMap: {
         [_: string]: {
-            [x: number]: StyleGlyph | undefined | null
-        }
+            [x: number]: StyleGlyph | undefined | null;
+        };
     },
     glyphPositions: {
         [_: string]: {
-            [x: number]: GlyphPosition
-        }
+            [x: number]: GlyphPosition;
+        };
     },
     imageMap: {[_: string]: StyleImage},
     imagePositions: {[_: string]: ImagePosition},
@@ -490,8 +490,8 @@ function addTextVertices(bucket: SymbolBucket,
                          feature: SymbolFeature,
                          textOffset: [number, number],
                          lineArray: {
-                           lineStartIndex: number,
-                           lineLength: number
+                           lineStartIndex: number;
+                           lineLength: number;
                          },
                          writingMode: number,
                          placementTypes: Array<"vertical" | "center" | "left" | "right">,

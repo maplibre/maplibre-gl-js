@@ -68,8 +68,8 @@ class StyleLayer extends Evented {
     readonly onRemove: ((map: Map) => void) | undefined | null;
 
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
-      layout?: Properties<any>,
-      paint?: Properties<any>
+      layout?: Properties<any>;
+      paint?: Properties<any>;
     }>) {
         super();
 

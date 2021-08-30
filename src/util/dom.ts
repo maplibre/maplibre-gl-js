@@ -9,12 +9,12 @@ interface DOMInterface {
     enableDrag();
     setTransform(el: HTMLElement, value: string);
     addEventListener(target: any, type: any, callback: any, options?: void | {
-        passive?: boolean,
-        capture?: boolean
+        passive?: boolean;
+        capture?: boolean;
       });
     removeEventListener(target: any, type: any, callback: any, options?: void | {
-        passive?: boolean,
-        capture?: boolean
+        passive?: boolean;
+        capture?: boolean;
     });
     suppressClick();
     mousePos(el: HTMLElement, e: MouseEvent | Touch);
@@ -92,8 +92,8 @@ try {
 }
 
 DOM.addEventListener = function(target: any, type: any, callback: any, options: {
-  passive?: boolean,
-  capture?: boolean
+  passive?: boolean;
+  capture?: boolean;
 } = {}) {
     if ('passive' in options && passiveSupported) {
         target.addEventListener(type, callback, options);
@@ -103,8 +103,8 @@ DOM.addEventListener = function(target: any, type: any, callback: any, options: 
 };
 
 DOM.removeEventListener = function(target: any, type: any, callback: any, options: {
-  passive?: boolean,
-  capture?: boolean
+  passive?: boolean;
+  capture?: boolean;
 } = {}) {
     if ('passive' in options && passiveSupported) {
         target.removeEventListener(type, callback, options);

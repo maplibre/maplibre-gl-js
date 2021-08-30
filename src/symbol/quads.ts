@@ -26,24 +26,24 @@ import {Rect} from '../render/glyph_atlas';
  * @private
  */
 export type SymbolQuad = {
-  tl: Point,
-  tr: Point,
-  bl: Point,
-  br: Point,
+  tl: Point;
+  tr: Point;
+  bl: Point;
+  br: Point;
   tex: {
-    x: number,
-    y: number,
-    w: number,
-    h: number
-  },
-  pixelOffsetTL: Point,
-  pixelOffsetBR: Point,
-  writingMode: any | void,
-  glyphOffset: [number, number],
-  sectionIndex: number,
-  isSDF: boolean,
-  minFontScaleX: number,
-  minFontScaleY: number
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  };
+  pixelOffsetTL: Point;
+  pixelOffsetBR: Point;
+  writingMode: any | void;
+  glyphOffset: [number, number];
+  sectionIndex: number;
+  isSDF: boolean;
+  minFontScaleX: number;
+  minFontScaleY: number;
 };
 
 // If you have a 10px icon that isn't perfectly aligned to the pixel grid it will cover 11 actual

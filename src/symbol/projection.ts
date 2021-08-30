@@ -345,7 +345,7 @@ function placeGlyphAlongLine(offsetX: number,
                              lineVertexArray: SymbolLineVertexArray,
                              labelPlaneMatrix: mat4,
                              projectionCache: {
-                               [_: number]: Point
+                               [_: number]: Point;
                              }) {
 
     const combinedOffsetX = flip ?

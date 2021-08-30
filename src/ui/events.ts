@@ -230,9 +230,9 @@ export class MapWheelEvent extends Event {
  * @property {Map} target The `Map` instance that triggerred the event
  */
 export type MapBoxZoomEvent = {
-  type: "boxzoomstart" | "boxzoomend" | "boxzoomcancel",
-  target: Map,
-  originalEvent: MouseEvent
+  type: "boxzoomstart" | "boxzoomend" | "boxzoomcancel";
+  target: Map;
+  originalEvent: MouseEvent;
 };
 
 /**
@@ -264,13 +264,13 @@ export type MapBoxZoomEvent = {
  * });
  */
 export type MapDataEvent = {
-  type: string,
-  dataType: string
+  type: string;
+  dataType: string;
 };
 
 export type MapContextEvent = {
-  type: "webglcontextlost" | "webglcontextrestored",
-  originalEvent: WebGLContextEvent
+  type: "webglcontextlost" | "webglcontextrestored";
+  originalEvent: WebGLContextEvent;
 };
 
 export type MapEvent = /**

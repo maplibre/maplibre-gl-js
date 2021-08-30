@@ -37,10 +37,10 @@ class Program<Us extends UniformBindings> {
     constructor(context: Context,
             name: string,
             source: {
-              fragmentSource: string,
-              vertexSource: string,
-              staticAttributes: Array<string>,
-              staticUniforms: Array<string>
+              fragmentSource: string;
+              vertexSource: string;
+              staticAttributes: Array<string>;
+              staticUniforms: Array<string>;
             },
             configuration: ProgramConfiguration | undefined | null,
             fixedUniforms: (b: Context, a: UniformLocations) => Us,

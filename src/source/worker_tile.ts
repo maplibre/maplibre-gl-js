@@ -130,8 +130,8 @@ class WorkerTile {
         let error: Error | undefined | null;
         let glyphMap: {
           [_: string]: {
-            [_: number]: StyleGlyph | undefined | null
-          }
+            [_: number]: StyleGlyph | undefined | null;
+          };
         } | undefined | null;
         let iconMap: {[_: string]: StyleImage} | undefined | null;
         let patternMap: {[_: string]: StyleImage} | undefined | null;

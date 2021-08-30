@@ -21,15 +21,15 @@ class Actor {
     parent: any;
     mapId: number | undefined | null;
     callbacks: {
-      number: any
+      number: any;
     };
     name: string;
     tasks: {
-      number: any
+      number: any;
     };
     taskQueue: Array<number>;
     cancelCallbacks: {
-      number: Cancelable
+      number: Cancelable;
     };
     invoker: ThrottledInvoker;
     globalScope: any;

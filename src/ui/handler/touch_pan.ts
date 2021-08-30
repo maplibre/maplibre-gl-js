@@ -13,7 +13,7 @@ export default class TouchPanHandler {
     _sum: Point;
 
     constructor(options: {
-      clickTolerance: number
+      clickTolerance: number;
     }) {
         this._minTouches = 1;
         this._clickTolerance = options.clickTolerance || 1;

@@ -29,12 +29,12 @@ class TileLayerIndex {
     tileID: OverscaledTileID;
     indexedSymbolInstances: {
       [_: number]: Array<{
-        crossTileID: number,
+        crossTileID: number;
         coord: {
-          x: number,
-          y: number
-        }
-      }>
+          x: number;
+          y: number;
+        };
+      }>;
     };
     bucketInstanceId: number;
 
@@ -74,7 +74,7 @@ class TileLayerIndex {
     }
 
     findMatches(symbolInstances: SymbolInstanceArray, newTileID: OverscaledTileID, zoomCrossTileIDs: {
-      [crossTileID: number]: boolean
+      [crossTileID: number]: boolean;
     }) {
         const tolerance = this.tileID.canonical.z < newTileID.canonical.z ? 1 : Math.pow(2, this.tileID.canonical.z - newTileID.canonical.z);
 
@@ -129,7 +129,7 @@ class CrossTileSymbolLayerIndex {
     };
     usedCrossTileIDs: {
       [zoom in string | number]: {
-        [crossTileID: number]: boolean
+        [crossTileID: number]: boolean;
       };
     };
     lng: number;

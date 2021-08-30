@@ -43,9 +43,9 @@ export function queryRenderedFeatures(
     serializedLayers: {[_: string]: any},
     queryGeometry: Array<Point>,
     params: {
-        filter: FilterSpecification,
-        layers: Array<string>,
-        availableImages: Array<string>
+        filter: FilterSpecification;
+        layers: Array<string>;
+        availableImages: Array<string>;
     },
     transform: Transform
 ) {
@@ -95,13 +95,13 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
                             sourceCaches: {[_: string]: SourceCache},
                             queryGeometry: Array<Point>,
                             params: {
-                              filter: FilterSpecification,
-                              layers: Array<string>,
-                              availableImages: Array<string>
+                              filter: FilterSpecification;
+                              layers: Array<string>;
+                              availableImages: Array<string>;
                             },
                             collisionIndex: CollisionIndex,
                             retainedQueryData: {
-                              [_: number]: RetainedQueryData
+                              [_: number]: RetainedQueryData;
                             }) {
     const result = {};
     const renderedSymbols = collisionIndex.queryRenderedSymbols(queryGeometry);

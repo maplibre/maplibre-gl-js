@@ -143,8 +143,8 @@ class ImageSource extends Evented implements Source {
      * @returns {ImageSource} this
      */
     updateImage(options: {
-      url: string,
-      coordinates?: Coordinates
+      url: string;
+      coordinates?: Coordinates;
     }) {
         if (!this.image || !options.url) {
             return this;

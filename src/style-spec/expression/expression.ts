@@ -18,8 +18,8 @@ export interface Expression {
 
 export type ExpressionParser = (args: ReadonlyArray<unknown>, context: ParsingContext) => Expression | undefined | null;
 export type ExpressionRegistration = {
-  new (...args: any): Expression
+  new (...args: any): Expression;
 } & {
-  readonly parse: ExpressionParser
+  readonly parse: ExpressionParser;
 };
 export type ExpressionRegistry = {[_: string]: ExpressionRegistration};

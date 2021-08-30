@@ -20,21 +20,21 @@ import type DEMData from '../../data/dem_data';
 import type {OverscaledTileID} from '../../source/tile_id';
 
 export type HillshadeUniformsType = {
-  'u_matrix': UniformMatrix4f,
-  'u_image': Uniform1i,
-  'u_latrange': Uniform2f,
-  'u_light': Uniform2f,
-  'u_shadow': UniformColor,
-  'u_highlight': UniformColor,
-  'u_accent': UniformColor
+  'u_matrix': UniformMatrix4f;
+  'u_image': Uniform1i;
+  'u_latrange': Uniform2f;
+  'u_light': Uniform2f;
+  'u_shadow': UniformColor;
+  'u_highlight': UniformColor;
+  'u_accent': UniformColor;
 };
 
 export type HillshadePrepareUniformsType = {
-  'u_matrix': UniformMatrix4f,
-  'u_image': Uniform1i,
-  'u_dimension': Uniform2f,
-  'u_zoom': Uniform1f,
-  'u_unpack': Uniform4f
+  'u_matrix': UniformMatrix4f;
+  'u_image': Uniform1i;
+  'u_dimension': Uniform2f;
+  'u_zoom': Uniform1f;
+  'u_unpack': Uniform4f;
 };
 
 const hillshadeUniforms = (context: Context, locations: UniformLocations): HillshadeUniformsType => ({

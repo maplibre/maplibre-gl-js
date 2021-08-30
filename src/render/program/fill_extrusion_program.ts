@@ -18,29 +18,29 @@ import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type Tile from '../../source/tile';
 
 export type FillExtrusionUniformsType = {
-  'u_matrix': UniformMatrix4f,
-  'u_lightpos': Uniform3f,
-  'u_lightintensity': Uniform1f,
-  'u_lightcolor': Uniform3f,
-  'u_vertical_gradient': Uniform1f,
-  'u_opacity': Uniform1f
+  'u_matrix': UniformMatrix4f;
+  'u_lightpos': Uniform3f;
+  'u_lightintensity': Uniform1f;
+  'u_lightcolor': Uniform3f;
+  'u_vertical_gradient': Uniform1f;
+  'u_opacity': Uniform1f;
 };
 
 export type FillExtrusionPatternUniformsType = {
-  'u_matrix': UniformMatrix4f,
-  'u_lightpos': Uniform3f,
-  'u_lightintensity': Uniform1f,
-  'u_lightcolor': Uniform3f,
-  'u_height_factor': Uniform1f,
-  'u_vertical_gradient': Uniform1f,
+  'u_matrix': UniformMatrix4f;
+  'u_lightpos': Uniform3f;
+  'u_lightintensity': Uniform1f;
+  'u_lightcolor': Uniform3f;
+  'u_height_factor': Uniform1f;
+  'u_vertical_gradient': Uniform1f;
   // pattern uniforms:
-  'u_texsize': Uniform2f,
-  'u_image': Uniform1i,
-  'u_pixel_coord_upper': Uniform2f,
-  'u_pixel_coord_lower': Uniform2f,
-  'u_scale': Uniform3f,
-  'u_fade': Uniform1f,
-  'u_opacity': Uniform1f
+  'u_texsize': Uniform2f;
+  'u_image': Uniform1i;
+  'u_pixel_coord_upper': Uniform2f;
+  'u_pixel_coord_lower': Uniform2f;
+  'u_scale': Uniform3f;
+  'u_fade': Uniform1f;
+  'u_opacity': Uniform1f;
 };
 
 const fillExtrusionUniforms = (context: Context, locations: UniformLocations): FillExtrusionUniformsType => ({

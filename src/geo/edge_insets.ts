@@ -97,10 +97,10 @@ class EdgeInsets {
 }
 
 export type PaddingOptions = {
-  top: number | undefined | null,
-  bottom: number | undefined | null,
-  right: number | undefined | null,
-  left: number | undefined | null
+  top: number | undefined | null;
+  bottom: number | undefined | null;
+  right: number | undefined | null;
+  left: number | undefined | null;
 };
 
 export default EdgeInsets;
