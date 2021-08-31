@@ -36,7 +36,7 @@ class Match implements Expression {
         if (args.length < 5)
             return context.error(`Expected at least 4 arguments, but found only ${args.length - 1}.`) as null;
         if (args.length % 2 !== 1)
-            return context.error(`Expected an even number of arguments.`) as null;
+            return context.error('Expected an even number of arguments.') as null;
 
         let inputType;
         let outputType;
@@ -60,12 +60,12 @@ class Match implements Expression {
 
             for (const label of labels) {
                 if (typeof label !== 'number' && typeof label !== 'string') {
-                    return labelContext.error(`Branch labels must be numbers or strings.`) as null;
+                    return labelContext.error('Branch labels must be numbers or strings.') as null;
                 } else if (typeof label === 'number' && Math.abs(label) > Number.MAX_SAFE_INTEGER) {
                     return labelContext.error(`Branch labels must be integers no larger than ${Number.MAX_SAFE_INTEGER}.`) as null;
 
                 } else if (typeof label === 'number' && Math.floor(label) !== label) {
-                    return labelContext.error(`Numeric branch labels must be integer values.`) as null;
+                    return labelContext.error('Numeric branch labels must be integer values.') as null;
 
                 } else if (!inputType) {
                     inputType = typeOf(label);
@@ -118,7 +118,7 @@ class Match implements Expression {
     }
 
     serialize(): Array<unknown> {
-        const serialized = ["match", this.input.serialize()];
+        const serialized = ['match', this.input.serialize()];
 
         // Sort so serialization has an arbitrary defined order, even though
         // branch order doesn't affect evaluation

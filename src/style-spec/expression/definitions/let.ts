@@ -38,7 +38,7 @@ class Let implements Expression {
             }
 
             if (/[^a-zA-Z0-9_]/.test(name)) {
-                return context.error(`Variable names must contain only alphanumeric characters or '_'.`, i) as null;
+                return context.error('Variable names must contain only alphanumeric characters or \'_\'.', i) as null;
             }
 
             const value = context.parse(args[i + 1], i + 1);
@@ -58,7 +58,7 @@ class Let implements Expression {
     }
 
     serialize() {
-        const serialized = ["let" as unknown];
+        const serialized = ['let' as unknown];
         for (const [name, expr] of this.bindings) {
             serialized.push(name, expr.serialize());
         }

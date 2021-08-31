@@ -14,17 +14,17 @@ declare class Intl$Collator {
 }
 
 type CollatorOptions = {
-  localeMatcher?: "lookup" | "best fit";
-  usage?: "sort" | "search";
-  sensitivity?: "base" | "accent" | "case" | "variant";
+  localeMatcher?: 'lookup' | 'best fit';
+  usage?: 'sort' | 'search';
+  sensitivity?: 'base' | 'accent' | 'case' | 'variant';
   ignorePunctuation?: boolean;
   numeric?: boolean;
-  caseFirst?: "upper" | "lower" | "false";
+  caseFirst?: 'upper' | 'lower' | 'false';
 };
 
 export default class Collator {
     locale: string | null;
-    sensitivity: "base" | "accent" | "case" | "variant";
+    sensitivity: 'base' | 'accent' | 'case' | 'variant';
     collator: Intl$Collator;
 
     constructor(caseSensitive: boolean, diacriticSensitive: boolean, locale: string | null) {

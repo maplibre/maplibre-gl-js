@@ -175,7 +175,7 @@ class SymbolStyleLayer extends StyleLayer {
                 }
             };
 
-            const expr: ZoomConstantExpression<"source"> = (textField.value as any);
+            const expr: ZoomConstantExpression<'source'> = (textField.value as any);
             if (expr._styleExpression) {
                 checkExpression(expr._styleExpression.expression);
             }

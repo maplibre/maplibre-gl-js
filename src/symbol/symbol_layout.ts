@@ -53,7 +53,7 @@ type Sizes = {
   compositeIconSizes: [PossiblyEvaluatedPropertyValue<number>, PossiblyEvaluatedPropertyValue<number>]; // (5)
 };
 
-export type TextAnchor = "center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+export type TextAnchor = 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 // The radial offset is to the edge of the text box
 // In the horizontal direction, the edge of the text box is where glyphs start
@@ -233,7 +233,7 @@ export function performSymbolLayout(
             }
 
             let textJustify = textAlongLine ?
-                "center" :
+                'center' :
                 layout.get('text-justify').evaluate(feature, {}, canonical);
 
             const symbolPlacement = layout.get('symbol-placement');
@@ -253,7 +253,7 @@ export function performSymbolLayout(
 
             // If this layer uses text-variable-anchor, generate shapings for all justification possibilities.
             if (!textAlongLine && variableTextAnchor) {
-                const justifications = textJustify === "auto" ?
+                const justifications = textJustify === 'auto' ?
                     variableTextAnchor.map(a => getAnchorJustification(a)) :
                     [textJustify];
 
@@ -279,7 +279,7 @@ export function performSymbolLayout(
 
                 addVerticalShapingForPointLabelIfNeeded();
             } else {
-                if (textJustify === "auto") {
+                if (textJustify === 'auto') {
                     textJustify = getAnchorJustification(textAnchor);
                 }
 
@@ -494,7 +494,7 @@ function addTextVertices(bucket: SymbolBucket,
                            lineLength: number;
                          },
                          writingMode: number,
-                         placementTypes: Array<"vertical" | "center" | "left" | "right">,
+                         placementTypes: Array<'vertical' | 'center' | 'left' | 'right'>,
                          placedTextSymbolIndices: {[_: string]: number},
                          placedIconIndex: number,
                          sizes: Sizes,
@@ -754,7 +754,7 @@ function addSymbol(bucket: SymbolBucket,
         collisionCircleDiameter *= layoutTextSize / ONE_EM;
 
     if (bucket.glyphOffsetArray.length >= SymbolBucket.MAX_GLYPHS) warnOnce(
-        "Too many glyphs being rendered in a tile. See https://github.com/mapbox/mapbox-gl-js/issues/2907"
+        'Too many glyphs being rendered in a tile. See https://github.com/mapbox/mapbox-gl-js/issues/2907'
     );
 
     if (feature.sortKey !== undefined) {

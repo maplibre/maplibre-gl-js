@@ -73,8 +73,8 @@ function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataC
 }
 
 export type SourceState = // Source empty or data loaded
-"Idle" | // Data finished loading, but discard 'loadData' messages until receiving 'coalesced'
-"Coalescing" | "NeedsLoadData";  // 'loadData' received while coalescing, trigger one more 'loadData' on receiving 'coalesced'
+'Idle' | // Data finished loading, but discard 'loadData' messages until receiving 'coalesced'
+'Coalescing' | 'NeedsLoadData';  // 'loadData' received while coalescing, trigger one more 'loadData' on receiving 'coalesced'
 
 /**
  * The {@link WorkerSource} implementation that supports {@link GeoJSONSource}.

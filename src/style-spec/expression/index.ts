@@ -27,14 +27,14 @@ import type Point from '../../symbol/point';
 import type {CanonicalTileID} from '../../source/tile_id';
 
 export type Feature = {
-  readonly type: 1 | 2 | 3 | "Unknown" | "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon" | "MultiPolygon";
+  readonly type: 1 | 2 | 3 | 'Unknown' | 'Point' | 'MultiPoint' | 'LineString' | 'MultiLineString' | 'Polygon' | 'MultiPolygon';
   readonly id?: any;
   readonly properties: {[_: string]: any};
   readonly patterns?: {
     [_: string]: {
-      "min": string;
-      "mid": string;
-      "max": string;
+      'min': string;
+      'mid': string;
+      'max': string;
     };
   };
   readonly geometry?: Array<Array<Point>>;
@@ -232,7 +232,7 @@ export class ZoomDependentExpression<Kind extends EvaluationKind> {
 }
 
 export type ConstantExpression = {
-  kind: "constant";
+  kind: 'constant';
   readonly evaluate: (
     globals: GlobalProperties,
     feature?: Feature,
@@ -243,7 +243,7 @@ export type ConstantExpression = {
 };
 
 export type SourceExpression = {
-  kind: "source";
+  kind: 'source';
   isStateDependent: boolean;
   readonly evaluate: (
     globals: GlobalProperties,
@@ -256,7 +256,7 @@ export type SourceExpression = {
 };
 
 export type CameraExpression = {
-  kind: "camera";
+  kind: 'camera';
   readonly evaluate: (
     globals: GlobalProperties,
     feature?: Feature,
@@ -270,7 +270,7 @@ export type CameraExpression = {
 };
 
 export type CompositeExpression = {
-  kind: "composite";
+  kind: 'composite';
   isStateDependent: boolean;
   readonly evaluate: (
     globals: GlobalProperties,

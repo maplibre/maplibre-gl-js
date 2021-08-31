@@ -32,25 +32,25 @@ var emptyFc = {type: 'FeatureCollection', features: []};
 map.on('style.load', function() {
     map.addSource('queried', {type: 'geojson', data: emptyFc});
     map.addLayer({
-        "id": "query",
-        "type": "line",
-        "source": "queried",
-        "paint": {
-            "line-color": "#8D8DEC",
-            "line-width": {base: 1.5, stops: [[5, 0.75], [18, 32]]}
+        'id': 'query',
+        'type': 'line',
+        'source': 'queried',
+        'paint': {
+            'line-color': '#8D8DEC',
+            'line-width': {base: 1.5, stops: [[5, 0.75], [18, 32]]}
         }
     }, 'country-label-sm');
 
     map.addSource('boxsource', {type: 'geojson', data: emptyFc});
     map.addLayer({
-        "id": "box",
-        "type": "fill",
-        "source": "boxsource",
-        "paint": {
-            "fill-color": "#8D8DEC",
-            "fill-opacity": 0.5
+        'id': 'box',
+        'type': 'fill',
+        'source': 'boxsource',
+        'paint': {
+            'fill-color': '#8D8DEC',
+            'fill-opacity': 0.5
         },
-        "interactive": true
+        'interactive': true
     }, 'country-label-sm');
 });
 

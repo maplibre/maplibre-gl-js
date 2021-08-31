@@ -310,7 +310,7 @@ class Within implements Expression {
                 return new Within(geojson, geojson);
             }
         }
-        return context.error(`'within' expression requires valid geojson object that contains polygon geometry type.`) as null;
+        return context.error('\'within\' expression requires valid geojson object that contains polygon geometry type.') as null;
     }
 
     evaluate(ctx: EvaluationContext) {
@@ -331,7 +331,7 @@ class Within implements Expression {
     }
 
     serialize(): Array<unknown> {
-        return ["within", this.geojson];
+        return ['within', this.geojson];
     }
 
 }

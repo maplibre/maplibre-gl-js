@@ -25,11 +25,11 @@ class LogoControl implements IControl {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl mapboxgl-ctrl');
         const anchor = DOM.create('a', 'maplibregl-ctrl-logo mapboxgl-ctrl-logo') as HTMLAnchorElement;
-        anchor.target = "_blank";
-        anchor.rel = "noopener nofollow";
-        anchor.href = "https://maplibre.org/";
-        anchor.setAttribute("aria-label", this._map._getUIString('LogoControl.Title'));
-        anchor.setAttribute("rel", "noopener nofollow");
+        anchor.target = '_blank';
+        anchor.rel = 'noopener nofollow';
+        anchor.href = 'https://maplibre.org/';
+        anchor.setAttribute('aria-label', this._map._getUIString('LogoControl.Title'));
+        anchor.setAttribute('rel', 'noopener nofollow');
         this._container.appendChild(anchor);
         this._container.style.display = 'none';
 

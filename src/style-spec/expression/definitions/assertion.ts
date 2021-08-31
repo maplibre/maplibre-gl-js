@@ -36,7 +36,7 @@ class Assertion implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length < 2)
-            return context.error(`Expected at least one argument.`) as null;
+            return context.error('Expected at least one argument.') as null;
 
         let i = 1;
         let type;

@@ -6,7 +6,7 @@ import {wrap, clamp} from '../util/util';
 import {number as interpolate} from '../style-spec/util/interpolate';
 import EXTENT from '../data/extent';
 import {vec4, mat4, mat2, vec2, vec3} from 'gl-matrix';
-import {Aabb, Frustum} from "../util/primitives";
+import {Aabb, Frustum} from '../util/primitives';
 import EdgeInsets from './edge_insets';
 
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
@@ -762,7 +762,7 @@ class Transform {
 
         // inverse matrix for conversion from screen coordinaes to location
         m = mat4.invert(new Float64Array(16) as any, this.pixelMatrix);
-        if (!m) throw new Error("failed to invert matrix");
+        if (!m) throw new Error('failed to invert matrix');
         this.pixelMatrixInverse = m;
 
         this._posMatrixCache = {};

@@ -118,7 +118,7 @@ class Style extends Evented {
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
     _changed: boolean;
-    _updatedSources: {[_: string]: "clear" | "reload"};
+    _updatedSources: {[_: string]: 'clear' | 'reload'};
     _updatedLayers: {[_: string]: true};
     _removedLayers: {[_: string]: StyleLayer};
     _changedImages: {[_: string]: true};
@@ -931,15 +931,15 @@ class Style extends Evented {
         }
         const sourceType = sourceCache.getSource().type;
         if (sourceType === 'geojson' && sourceLayer) {
-            this.fire(new ErrorEvent(new Error(`GeoJSON sources cannot have a sourceLayer parameter.`)));
+            this.fire(new ErrorEvent(new Error('GeoJSON sources cannot have a sourceLayer parameter.')));
             return;
         }
         if (sourceType === 'vector' && !sourceLayer) {
-            this.fire(new ErrorEvent(new Error(`The sourceLayer parameter must be provided for vector source types.`)));
+            this.fire(new ErrorEvent(new Error('The sourceLayer parameter must be provided for vector source types.')));
             return;
         }
         if (target.id === undefined) {
-            this.fire(new ErrorEvent(new Error(`The feature id parameter must be provided.`)));
+            this.fire(new ErrorEvent(new Error('The feature id parameter must be provided.')));
         }
 
         sourceCache.setFeatureState(sourceLayer, target.id, state);
@@ -963,12 +963,12 @@ class Style extends Evented {
         const sourceLayer = sourceType === 'vector' ? target.sourceLayer : undefined;
 
         if (sourceType === 'vector' && !sourceLayer) {
-            this.fire(new ErrorEvent(new Error(`The sourceLayer parameter must be provided for vector source types.`)));
+            this.fire(new ErrorEvent(new Error('The sourceLayer parameter must be provided for vector source types.')));
             return;
         }
 
         if (key && (typeof target.id !== 'string' && typeof target.id !== 'number')) {
-            this.fire(new ErrorEvent(new Error(`A feature id is required to remove its specific state property.`)));
+            this.fire(new ErrorEvent(new Error('A feature id is required to remove its specific state property.')));
             return;
         }
 
@@ -991,11 +991,11 @@ class Style extends Evented {
         }
         const sourceType = sourceCache.getSource().type;
         if (sourceType === 'vector' && !sourceLayer) {
-            this.fire(new ErrorEvent(new Error(`The sourceLayer parameter must be provided for vector source types.`)));
+            this.fire(new ErrorEvent(new Error('The sourceLayer parameter must be provided for vector source types.')));
             return;
         }
         if (target.id === undefined) {
-            this.fire(new ErrorEvent(new Error(`The feature id parameter must be provided.`)));
+            this.fire(new ErrorEvent(new Error('The feature id parameter must be provided.')));
         }
 
         return sourceCache.getFeatureState(sourceLayer, target.id);

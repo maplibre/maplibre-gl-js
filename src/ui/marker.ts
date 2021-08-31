@@ -8,7 +8,7 @@ import type {Anchor} from './anchor';
 import {Event, Evented} from '../util/evented';
 import type Map from './map';
 import Popup, {Offset} from './popup';
-import type {LngLatLike} from "../geo/lng_lat";
+import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
 
 type Options = {
@@ -66,7 +66,7 @@ export default class Marker extends Evented {
     _draggable: boolean;
     _clickTolerance: number;
     _isDragging: boolean;
-    _state: "inactive" | "pending" | "active"; // used for handling drag events
+    _state: 'inactive' | 'pending' | 'active'; // used for handling drag events
     _positionDelta: Point | undefined | null;
     _pointerdownPos: Point | undefined | null;
     _rotation: number;
@@ -436,7 +436,7 @@ export default class Marker extends Evented {
     }
 
     _update(e?: {
-      type: "move" | "moveend";
+      type: 'move' | 'moveend';
     }) {
         if (!this._map) return;
 
@@ -446,24 +446,24 @@ export default class Marker extends Evented {
 
         this._pos = this._map.project(this._lngLat)._add(this._offset);
 
-        let rotation = "";
-        if (this._rotationAlignment === "viewport" || this._rotationAlignment === "auto") {
+        let rotation = '';
+        if (this._rotationAlignment === 'viewport' || this._rotationAlignment === 'auto') {
             rotation = `rotateZ(${this._rotation}deg)`;
-        } else if (this._rotationAlignment === "map") {
+        } else if (this._rotationAlignment === 'map') {
             rotation = `rotateZ(${this._rotation - this._map.getBearing()}deg)`;
         }
 
-        let pitch = "";
-        if (this._pitchAlignment === "viewport" || this._pitchAlignment === "auto") {
-            pitch = "rotateX(0deg)";
-        } else if (this._pitchAlignment === "map") {
+        let pitch = '';
+        if (this._pitchAlignment === 'viewport' || this._pitchAlignment === 'auto') {
+            pitch = 'rotateX(0deg)';
+        } else if (this._pitchAlignment === 'map') {
             pitch = `rotateX(${this._map.getPitch()}deg)`;
         }
 
         // because rounding the coordinates at every `move` event causes stuttered zooming
         // we only round them when _update is called with `moveend` or when its called with
         // no arguments (when the Marker is initialized or Marker#setLngLat is invoked).
-        if (!e || e.type === "moveend") {
+        if (!e || e.type === 'moveend') {
             this._pos = this._pos.round();
         }
 

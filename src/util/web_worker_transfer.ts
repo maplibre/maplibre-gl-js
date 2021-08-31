@@ -174,7 +174,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         const klass = (input.constructor as any);
         const name = klass._classRegistryKey;
         if (!name) {
-            throw new Error(`can't serialize object of unregistered class`);
+            throw new Error('can\'t serialize object of unregistered class');
         }
         assert(registry[name]);
 

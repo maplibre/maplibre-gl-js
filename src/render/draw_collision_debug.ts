@@ -26,7 +26,7 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray | undefined | null;
 
-function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, translate: [number, number], translateAnchor: "map" | "viewport", isText: boolean) {
+function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, translate: [number, number], translateAnchor: 'map' | 'viewport', isText: boolean) {
     const context = painter.context;
     const gl = context.gl;
     const program = painter.useProgram('collisionBox');

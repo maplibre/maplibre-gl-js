@@ -40,7 +40,7 @@ class LineAtlas {
      * @private
      */
     getDash(dasharray: Array<number>, round: boolean) {
-        const key = dasharray.join(",") + String(round);
+        const key = dasharray.join(',') + String(round);
 
         if (!this.dashEntry[key]) {
             this.dashEntry[key] = this.addDash(dasharray, round);

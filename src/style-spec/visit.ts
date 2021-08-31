@@ -37,7 +37,7 @@ export function eachLayer(style: StyleSpecification, callback: (_: LayerSpecific
 
 type PropertyCallback = (
   a: {
-    path: [string, "paint" | "layout", string]; // [layerid, paint/layout, property key],
+    path: [string, 'paint' | 'layout', string]; // [layerid, paint/layout, property key],
     key: string;
     value: PropertyValueSpecification<unknown> | DataDrivenPropertyValueSpecification<unknown>;
     reference: StylePropertySpecification;
@@ -55,7 +55,7 @@ export function eachProperty(
     },
     callback: PropertyCallback
 ) {
-    function inner(layer, propertyType: "paint" | "layout") {
+    function inner(layer, propertyType: 'paint' | 'layout') {
         const properties = (layer[propertyType] as any);
         if (!properties) return;
         Object.keys(properties).forEach((key) => {

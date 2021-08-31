@@ -33,7 +33,7 @@ class Step implements Expression {
         }
 
         if ((args.length - 1) % 2 !== 0) {
-            return context.error(`Expected an even number of arguments.`) as null;
+            return context.error('Expected an even number of arguments.') as null;
         }
 
         const input = context.parse(args[1], 1, NumberType);
@@ -104,7 +104,7 @@ class Step implements Expression {
     }
 
     serialize() {
-        const serialized = ["step", this.input.serialize()];
+        const serialized = ['step', this.input.serialize()];
         for (let i = 0; i < this.labels.length; i++) {
             if (i > 0) {
                 serialized.push(this.labels[i]);

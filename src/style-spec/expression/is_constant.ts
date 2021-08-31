@@ -1,6 +1,6 @@
 import CompoundExpression from './compound_expression';
 import Within from './definitions/within';
-import type {Expression} from "./expression";
+import type {Expression} from './expression';
 
 function isFeatureConstant(e: Expression) {
     if (e instanceof CompoundExpression) {

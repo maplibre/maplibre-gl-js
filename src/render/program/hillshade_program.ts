@@ -56,9 +56,9 @@ const hillshadePrepareUniforms = (context: Context, locations: UniformLocations)
 });
 
 const hillshadeUniformValues = (painter: Painter, tile: Tile, layer: HillshadeStyleLayer): UniformValues<HillshadeUniformsType> => {
-    const shadow = layer.paint.get("hillshade-shadow-color");
-    const highlight = layer.paint.get("hillshade-highlight-color");
-    const accent = layer.paint.get("hillshade-accent-color");
+    const shadow = layer.paint.get('hillshade-shadow-color');
+    const highlight = layer.paint.get('hillshade-highlight-color');
+    const accent = layer.paint.get('hillshade-accent-color');
 
     let azimuthal = layer.paint.get('hillshade-illumination-direction') * (Math.PI / 180);
     // modify azimuthal angle by map rotation if light is anchored at the viewport

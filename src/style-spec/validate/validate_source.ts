@@ -85,7 +85,7 @@ export default function validateSource(options) {
         });
 
     case 'canvas':
-        return [new ValidationError(key, null, `Please use runtime APIs to add canvas sources, rather than including them in stylesheets.`, 'source.canvas')];
+        return [new ValidationError(key, null, 'Please use runtime APIs to add canvas sources, rather than including them in stylesheets.', 'source.canvas')];
 
     default:
         return validateEnum({
