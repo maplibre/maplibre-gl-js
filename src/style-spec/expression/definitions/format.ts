@@ -35,12 +35,12 @@ export default class FormatExpression implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length < 2) {
-            return context.error(`Expected at least one argument.`) as null;
+            return context.error('Expected at least one argument.') as null;
         }
 
         const firstArg = args[1];
         if (!Array.isArray(firstArg) && typeof firstArg === 'object')  {
-            return context.error(`First argument must be an image or text section.`) as null;
+            return context.error('First argument must be an image or text section.') as null;
         }
 
         const sections: Array<FormattedSectionExpression> = [];
@@ -48,7 +48,7 @@ export default class FormatExpression implements Expression {
         for (let i = 1; i <= args.length - 1; ++i) {
             const arg = (args[i] as any);
 
-            if (nextTokenMayBeObject && typeof arg === "object" && !Array.isArray(arg)) {
+            if (nextTokenMayBeObject && typeof arg === 'object' && !Array.isArray(arg)) {
                 nextTokenMayBeObject = false;
 
                 let scale = null;
@@ -79,7 +79,7 @@ export default class FormatExpression implements Expression {
 
                 const kind = content.type.kind;
                 if (kind !== 'string' && kind !== 'value' && kind !== 'null' && kind !== 'resolvedImage')
-                    return context.error(`Formatted text type must be 'string', 'value', 'image' or 'null'.`) as null;
+                    return context.error('Formatted text type must be \'string\', \'value\', \'image\' or \'null\'.') as null;
 
                 nextTokenMayBeObject = true;
                 sections.push({content, scale: null, font: null, textColor: null});
@@ -130,7 +130,7 @@ export default class FormatExpression implements Expression {
     }
 
     serialize() {
-        const serialized = ["format"] as (string | {})[];
+        const serialized = ['format'] as (string | {})[];
         for (const section of this.sections) {
             serialized.push(section.content.serialize());
             const options = {};

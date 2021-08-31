@@ -43,9 +43,9 @@ export type BucketFeature = {
   id?: any;
   readonly patterns: {
     [_: string]: {
-      "min": string;
-      "mid": string;
-      "max": string;
+      'min': string;
+      'mid': string;
+      'max': string;
     };
   };
   sortKey?: number;

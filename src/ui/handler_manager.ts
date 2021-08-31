@@ -25,7 +25,7 @@ export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
 const isMoving = p => p.zoom || p.drag || p.pitch || p.rotate;
 
 class RenderFrameEvent extends Event {
-    type: "renderFrame";
+    type: 'renderFrame';
     timeStamp: number;
 }
 

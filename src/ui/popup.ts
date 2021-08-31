@@ -17,7 +17,7 @@ const defaultOptions = {
     closeOnClick: true,
     focusAfterOpen: true,
     className: '',
-    maxWidth: "240px"
+    maxWidth: '240px'
 };
 
 export type Offset = number | PointLike | {
@@ -36,14 +36,14 @@ export type PopupOptions = {
 };
 
 const focusQuerySelector = [
-    "a[href]",
-    "[tabindex]:not([tabindex='-1'])",
-    "[contenteditable]:not([contenteditable='false'])",
-    "button:not([disabled])",
-    "input:not([disabled])",
-    "select:not([disabled])",
-    "textarea:not([disabled])",
-].join(", ");
+    'a[href]',
+    '[tabindex]:not([tabindex=\'-1\'])',
+    '[contenteditable]:not([contenteditable=\'false\'])',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+].join(', ');
 
 /**
  * A popup component.

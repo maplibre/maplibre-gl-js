@@ -21,7 +21,7 @@ class Literal implements Expression {
             return context.error(`'literal' expression requires exactly one argument, but found ${args.length - 1} instead.`) as null;
 
         if (!isValue(args[1]))
-            return context.error(`invalid value`) as null;
+            return context.error('invalid value') as null;
 
         const value = (args[1] as any);
         let type = typeOf(value);
@@ -53,12 +53,12 @@ class Literal implements Expression {
 
     serialize(): Array<unknown> {
         if (this.type.kind === 'array' || this.type.kind === 'object') {
-            return ["literal", this.value];
+            return ['literal', this.value];
         } else if (this.value instanceof Color) {
             // Constant-folding can generate Literal expressions that you
             // couldn't actually generate with a "literal" expression,
             // so we have to implement an equivalent serialization here
-            return ["rgba" as unknown].concat(this.value.toArray());
+            return ['rgba' as unknown].concat(this.value.toArray());
         } else if (this.value instanceof Formatted) {
             // Same as Color
             return this.value.serialize();

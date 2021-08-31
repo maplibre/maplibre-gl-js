@@ -53,24 +53,24 @@ class LightPositionProperty implements Property<[number, number, number], LightP
 }
 
 type Props = {
-  "anchor": DataConstantProperty<"map" | "viewport">;
-  "position": LightPositionProperty;
-  "color": DataConstantProperty<Color>;
-  "intensity": DataConstantProperty<number>;
+  'anchor': DataConstantProperty<'map' | 'viewport'>;
+  'position': LightPositionProperty;
+  'color': DataConstantProperty<Color>;
+  'intensity': DataConstantProperty<number>;
 };
 
 type PropsPossiblyEvaluated = {
-    "anchor": "map" | "viewport";
-    "position": LightPosition;
-    "color": Color;
-    "intensity": number;
+    'anchor': 'map' | 'viewport';
+    'position': LightPosition;
+    'color': Color;
+    'intensity': number;
 };
 
 const properties: Properties<Props> = new Properties({
-    "anchor": new DataConstantProperty(styleSpec.light.anchor as StylePropertySpecification),
-    "position": new LightPositionProperty(),
-    "color": new DataConstantProperty(styleSpec.light.color as StylePropertySpecification),
-    "intensity": new DataConstantProperty(styleSpec.light.intensity as StylePropertySpecification),
+    'anchor': new DataConstantProperty(styleSpec.light.anchor as StylePropertySpecification),
+    'position': new LightPositionProperty(),
+    'color': new DataConstantProperty(styleSpec.light.color as StylePropertySpecification),
+    'intensity': new DataConstantProperty(styleSpec.light.intensity as StylePropertySpecification),
 });
 
 const TRANSITION_SUFFIX = '-transition';

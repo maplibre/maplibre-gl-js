@@ -1,4 +1,4 @@
-export type ControlPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 /* eslint-disable no-use-before-define */
 export type IControl = {

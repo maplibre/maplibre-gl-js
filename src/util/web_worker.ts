@@ -17,8 +17,8 @@ type MessageListener = (
 // The main thread interface. Provided by Worker in a browser environment,
 // and MessageBus below in a node environment.
 export interface WorkerInterface {
-    addEventListener(type: "message", listener: MessageListener): void;
-    removeEventListener(type: "message", listener: MessageListener): void;
+    addEventListener(type: 'message', listener: MessageListener): void;
+    removeEventListener(type: 'message', listener: MessageListener): void;
     postMessage(message: any): void;
     terminate(): void;
 }
@@ -46,13 +46,13 @@ class MessageBus implements WorkerInterface, WorkerGlobalScopeInterface {
         this.postListeners = postListeners;
     }
 
-    addEventListener(event: "message", callback: MessageListener) {
+    addEventListener(event: 'message', callback: MessageListener) {
         if (event === 'message') {
             this.addListeners.push(callback);
         }
     }
 
-    removeEventListener(event: "message", callback: MessageListener) {
+    removeEventListener(event: 'message', callback: MessageListener) {
         const i = this.addListeners.indexOf(callback);
         if (i >= 0) {
             this.addListeners.splice(i, 1);

@@ -80,13 +80,13 @@ let passiveSupported = false;
 try {
     // https://github.com/facebook/flow/issues/285
     // $FlowFixMe
-    const options = Object.defineProperty({}, "passive", {
+    const options = Object.defineProperty({}, 'passive', {
         get() { // eslint-disable-line
             passiveSupported = true;
         }
     });
-    window.addEventListener("test", options as any, options);
-    window.removeEventListener("test", options as any, options);
+    window.addEventListener('test', options as any, options);
+    window.removeEventListener('test', options as any, options);
 } catch (err) {
     passiveSupported = false;
 }

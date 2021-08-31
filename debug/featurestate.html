@@ -27,19 +27,19 @@ var map = window.map = new maplibregl.Map({
 map.on('load', () => {
 
     map.addSource('counties', {
-        "type": "vector",
-        "url": "mapbox://mapbox.82pkq93d",
-        "promoteId": {"original": "COUNTY"}
+        'type': 'vector',
+        'url': 'mapbox://mapbox.82pkq93d',
+        'promoteId': {'original': 'COUNTY'}
     });
 
     map.addLayer({
-        "id": "counties",
-        "type": "fill",
-        "source": "counties",
-        "source-layer": "original",
-        "paint": {
-            "fill-outline-color": "black",
-            "fill-color": ["case", ["boolean", ["feature-state", "hover"], false], "red", "lightgrey"]
+        'id': 'counties',
+        'type': 'fill',
+        'source': 'counties',
+        'source-layer': 'original',
+        'paint': {
+            'fill-outline-color': 'black',
+            'fill-color': ['case', ['boolean', ['feature-state', 'hover'], false], 'red', 'lightgrey']
         }
     });
 
@@ -52,11 +52,11 @@ map.on('load', () => {
         }
     }
 
-    map.on("mouseleave", "counties", () => {
+    map.on('mouseleave', 'counties', () => {
         resetFeatureState();
     });
 
-    map.on("mousemove", "counties", (e) => {
+    map.on('mousemove', 'counties', (e) => {
         const feature = e.features[0];
 
         if (selectedCounty !== feature.id) {

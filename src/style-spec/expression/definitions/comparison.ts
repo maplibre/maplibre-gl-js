@@ -8,7 +8,7 @@ import type EvaluationContext from '../evaluation_context';
 import type ParsingContext from '../parsing_context';
 import type {Type} from '../types';
 
-type ComparisonOperator = "==" | "!=" | "<" | ">" | "<=" | ">=";
+type ComparisonOperator = '==' | '!=' | '<' | '>' | '<=' | '>=';
 
 function isComparableType(op: ComparisonOperator, type: Type) {
     if (op === '==' || op === '!=') {
@@ -77,7 +77,7 @@ function makeComparison(op: ComparisonOperator, compareBasic, compareWithCollato
 
         static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
             if (args.length !== 3 && args.length !== 4)
-                return context.error(`Expected two or three arguments.`) as null;
+                return context.error('Expected two or three arguments.') as null;
 
             const op: ComparisonOperator = (args[0] as any);
 
@@ -119,7 +119,7 @@ function makeComparison(op: ComparisonOperator, compareBasic, compareWithCollato
                     lhs.type.kind !== 'value' &&
                     rhs.type.kind !== 'value'
                 ) {
-                    return context.error(`Cannot use collator to compare non-string types.`) as null;
+                    return context.error('Cannot use collator to compare non-string types.') as null;
                 }
                 collator = context.parse(args[3], 3, CollatorType);
                 if (!collator) return null;

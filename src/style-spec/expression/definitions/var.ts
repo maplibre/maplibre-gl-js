@@ -16,7 +16,7 @@ class Var implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length !== 2 || typeof args[1] !== 'string')
-            return context.error(`'var' expression requires exactly one string literal argument.`) as null;
+            return context.error('\'var\' expression requires exactly one string literal argument.') as null;
 
         const name = args[1];
         if (!context.scope.has(name)) {
@@ -37,7 +37,7 @@ class Var implements Expression {
     }
 
     serialize() {
-        return ["var", this.name];
+        return ['var', this.name];
     }
 }
 

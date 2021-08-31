@@ -126,7 +126,7 @@ class AttributionControl implements IControl {
                     acc += `${next.key}=${next.value}${i < params.length - 1 ? '&' : ''}`;
                 }
                 return acc;
-            }, `?`);
+            }, '?');
             editLink.href = `${config.FEEDBACK_URL}/${paramString}${this._map._hash ? this._map._hash.getHashString(true) : ''}`;
             editLink.rel = 'noopener nofollow';
             this._setElementTitle(editLink, 'MapFeedback');

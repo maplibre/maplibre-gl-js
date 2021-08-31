@@ -27,10 +27,10 @@ var radius = 30;
 
 function line(angle, radius) {
     return {
-        "type": "Feature",
-        "geometry": {
-            "type": "LineString",
-            "coordinates": [
+        'type': 'Feature',
+        'geometry': {
+            'type': 'LineString',
+            'coordinates': [
                 [-Math.cos(angle) * radius, -Math.sin(angle) * radius + 1],
                 [Math.cos(angle) * radius, Math.sin(angle) * radius + 1],
             ]
@@ -40,8 +40,8 @@ function line(angle, radius) {
 
 function crossWithAngle(angle) {
     return {
-        "type": "FeatureCollection",
-        "features": [
+        'type': 'FeatureCollection',
+        'features': [
             line(angle - Math.PI / 4, radius),
             line(angle + Math.PI / 4, radius)
         ]
@@ -51,27 +51,27 @@ function crossWithAngle(angle) {
 map.on('load', function () {
     // Add a source and layer displaying a point which will be animated in a circle.
     map.addSource('lines', {
-        "type": "geojson",
-        "data": crossWithAngle(0)
+        'type': 'geojson',
+        'data': crossWithAngle(0)
     });
 
     map.addLayer({
-        "id": "lines",
-        "source": "lines",
-        "type": "line",
-        "paint": {
-            "line-width": 4,
-            "line-color": "#007cbf"
+        'id': 'lines',
+        'source': 'lines',
+        'type': 'line',
+        'paint': {
+            'line-width': 4,
+            'line-color': '#007cbf'
         }
     });
 
     map.addLayer({
-        "id": "dot",
-        "source": "lines",
-        "type": "circle",
-        "paint": {
-            "circle-radius": 10,
-            "circle-color": "#007cbf"
+        'id': 'dot',
+        'source': 'lines',
+        'type': 'circle',
+        'paint': {
+            'circle-radius': 10,
+            'circle-color': '#007cbf'
         }
     });
 

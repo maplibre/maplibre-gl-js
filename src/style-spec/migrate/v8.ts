@@ -161,7 +161,7 @@ export default function(style) {
             return font;
 
         } else {
-            throw new Error("unexpected font value");
+            throw new Error('unexpected font value');
         }
     }
 

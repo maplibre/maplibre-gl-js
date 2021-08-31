@@ -59,7 +59,7 @@ class ParsingContext {
       expectedType?: Type | null,
       bindings?: Array<[string, Expression]>,
       options: {
-        typeAnnotation?: "assert" | "coerce" | "omit";
+        typeAnnotation?: 'assert' | 'coerce' | 'omit';
       } = {}
     ): Expression | undefined | null {
         if (index) {
@@ -71,14 +71,14 @@ class ParsingContext {
     _parse(
       expr: unknown,
       options: {
-        typeAnnotation?: "assert" | "coerce" | "omit";
+        typeAnnotation?: 'assert' | 'coerce' | 'omit';
       }
     ): Expression | undefined | null {
         if (expr === null || typeof expr === 'string' || typeof expr === 'boolean' || typeof expr === 'number') {
             expr = ['literal', expr];
         }
 
-        function annotate(parsed, type, typeAnnotation: "assert" | "coerce" | "omit") {
+        function annotate(parsed, type, typeAnnotation: 'assert' | 'coerce' | 'omit') {
             if (typeAnnotation === 'assert') {
                 return new Assertion(type, [parsed]);
             } else if (typeAnnotation === 'coerce') {
@@ -90,7 +90,7 @@ class ParsingContext {
 
         if (Array.isArray(expr)) {
             if (expr.length === 0) {
-                return this.error(`Expected an array with at least one element. If you wanted a literal array, use ["literal", []].`) as null;
+                return this.error('Expected an array with at least one element. If you wanted a literal array, use ["literal", []].') as null;
             }
 
             const op = expr[0];
@@ -144,9 +144,9 @@ class ParsingContext {
 
             return this.error(`Unknown expression "${op}". If you wanted a literal array, use ["literal", [...]].`, 0) as null;
         } else if (typeof expr === 'undefined') {
-            return this.error(`'undefined' value invalid. Use null instead.`) as null;
+            return this.error('\'undefined\' value invalid. Use null instead.') as null;
         } else if (typeof expr === 'object') {
-            return this.error(`Bare objects invalid. Use ["literal", {...}] instead.`) as null;
+            return this.error('Bare objects invalid. Use ["literal", {...}] instead.') as null;
         } else {
             return this.error(`Expected an array, but found ${typeof expr} instead.`) as null;
         }

@@ -169,8 +169,8 @@ function convertPropertyFunction(parameters, propertySpec, stops) {
         const base = parameters.base !== undefined ? parameters.base : 1;
         const expression = [
             getInterpolateOperator(parameters),
-            base === 1 ? ["linear"] : ["exponential", base],
-            ["number", get]
+            base === 1 ? ['linear'] : ['exponential', base],
+            ['number', get]
         ];
 
         for (const stop of stops) {
@@ -196,7 +196,7 @@ function convertZoomFunction(parameters, propertySpec, stops, input = ['zoom']) 
         isStep = true;
     } else if (type === 'exponential') {
         const base = parameters.base !== undefined ? parameters.base : 1;
-        expression = [getInterpolateOperator(parameters), base === 1 ? ["linear"] : ["exponential", base], input];
+        expression = [getInterpolateOperator(parameters), base === 1 ? ['linear'] : ['exponential', base], input];
 
     } else {
         throw new Error(`Unknown zoom function type "${type}"`);

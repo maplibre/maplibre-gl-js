@@ -60,7 +60,7 @@ import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-
  * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js-docs/example/cluster/)
  */
 class GeoJSONSource extends Evented implements Source {
-    type: "geojson";
+    type: 'geojson';
     id: string;
     minzoom: number;
     maxzoom: number;

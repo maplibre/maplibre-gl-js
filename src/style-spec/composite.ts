@@ -7,7 +7,7 @@ export default function (style) {
     for (const id in style.sources) {
         const source = style.sources[id];
 
-        if (source.type !== "vector")
+        if (source.type !== 'vector')
             continue;
 
         const match = /^mapbox:\/\/(.*)/.exec(source.url);
@@ -25,11 +25,11 @@ export default function (style) {
         delete style.sources[id];
     });
 
-    const compositeID = sourceIDs.join(",");
+    const compositeID = sourceIDs.join(',');
 
     style.sources[compositeID] = {
-        "type": "vector",
-        "url": `mapbox://${compositeID}`
+        'type': 'vector',
+        'url': `mapbox://${compositeID}`
     };
 
     style.layers.forEach((layer) => {

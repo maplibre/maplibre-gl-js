@@ -25,7 +25,7 @@ class Case implements Expression {
         if (args.length < 4)
             return context.error(`Expected at least 3 arguments, but found only ${args.length - 1}.`) as null;
         if (args.length % 2 !== 0)
-            return context.error(`Expected an odd number of arguments.`) as null;
+            return context.error('Expected an odd number of arguments.') as null;
 
         let outputType: Type | undefined | null;
         if (context.expectedType && context.expectedType.kind !== 'value') {
@@ -74,7 +74,7 @@ class Case implements Expression {
     }
 
     serialize() {
-        const serialized = ["case" as unknown];
+        const serialized = ['case' as unknown];
         this.eachChild(child => { serialized.push(child.serialize()); });
         return serialized;
     }

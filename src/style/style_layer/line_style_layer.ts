@@ -56,7 +56,7 @@ class LineStyleLayer extends StyleLayer {
 
     _handleSpecialPaintPropertyUpdate(name: string) {
         if (name === 'line-gradient') {
-            const expression: ZoomConstantExpression<"source"> = (this._transitionablePaint._values['line-gradient'].value.expression as any);
+            const expression: ZoomConstantExpression<'source'> = (this._transitionablePaint._values['line-gradient'].value.expression as any);
             this.stepInterpolant = expression._styleExpression.expression instanceof Step;
             this.gradientVersion = (this.gradientVersion + 1) % Number.MAX_SAFE_INTEGER;
         }

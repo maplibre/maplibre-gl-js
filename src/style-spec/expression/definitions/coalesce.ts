@@ -19,7 +19,7 @@ class Coalesce implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length < 2) {
-            return context.error("Expectected at least one argument.") as null;
+            return context.error('Expectected at least one argument.') as null;
         }
         let outputType: Type = (null as any);
         const expectedType = context.expectedType;
@@ -82,7 +82,7 @@ class Coalesce implements Expression {
     }
 
     serialize() {
-        const serialized = ["coalesce" as unknown];
+        const serialized = ['coalesce' as unknown];
         this.eachChild(child => { serialized.push(child.serialize()); });
         return serialized;
     }

@@ -1,6 +1,6 @@
 import Point from '../util/point';
 
-import type {PossiblyEvaluatedPropertyValue} from "./properties";
+import type {PossiblyEvaluatedPropertyValue} from './properties';
 import type StyleLayer from '../style/style_layer';
 import type CircleBucket from '../data/bucket/circle_bucket';
 import type LineBucket from '../data/bucket/line_bucket';
@@ -24,7 +24,7 @@ export function translateDistance(translate: [number, number]) {
 
 export function translate(queryGeometry: Array<Point>,
                    translate: [number, number],
-                   translateAnchor: "viewport" | "map",
+                   translateAnchor: 'viewport' | 'map',
                    bearing: number,
                    pixelsToTileUnits: number) {
     if (!translate[0] && !translate[1]) {
@@ -32,7 +32,7 @@ export function translate(queryGeometry: Array<Point>,
     }
     const pt = Point.convert(translate)._mult(pixelsToTileUnits);
 
-    if (translateAnchor === "viewport") {
+    if (translateAnchor === 'viewport') {
         pt._rotate(-bearing);
     }
 

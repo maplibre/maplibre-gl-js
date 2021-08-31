@@ -61,7 +61,7 @@ class At implements Expression {
     }
 
     serialize() {
-        return ["at", this.index.serialize(), this.input.serialize()];
+        return ['at', this.index.serialize(), this.input.serialize()];
     }
 }
 

@@ -12,25 +12,25 @@ import type EvaluationContext from '../evaluation_context';
 import type {Type} from '../types';
 
 export type InterpolationType = {
-  name: "linear";
+  name: 'linear';
 } | {
-  name: "exponential";
+  name: 'exponential';
   base: number;
 } | {
-  name: "cubic-bezier";
+  name: 'cubic-bezier';
   controlPoints: [number, number, number, number];
 };
 
 class Interpolate implements Expression {
     type: Type;
 
-    operator: "interpolate" | "interpolate-hcl" | "interpolate-lab";
+    operator: 'interpolate' | 'interpolate-hcl' | 'interpolate-lab';
     interpolation: InterpolationType;
     input: Expression;
     labels: Array<number>;
     outputs: Array<Expression>;
 
-    constructor(type: Type, operator: "interpolate" | "interpolate-hcl" | "interpolate-lab", interpolation: InterpolationType, input: Expression, stops: Stops) {
+    constructor(type: Type, operator: 'interpolate' | 'interpolate-hcl' | 'interpolate-lab', interpolation: InterpolationType, input: Expression, stops: Stops) {
         this.type = type;
         this.operator = operator;
         this.interpolation = interpolation;
@@ -62,7 +62,7 @@ class Interpolate implements Expression {
         let [operator, interpolation, input, ...rest] = args;
 
         if (!Array.isArray(interpolation) || interpolation.length === 0) {
-            return context.error(`Expected an interpolation type expression.`, 1) as null;
+            return context.error('Expected an interpolation type expression.', 1) as null;
         }
 
         if (interpolation[0] === 'linear') {
@@ -70,7 +70,7 @@ class Interpolate implements Expression {
         } else if (interpolation[0] === 'exponential') {
             const base = interpolation[1];
             if (typeof base !== 'number')
-                return context.error(`Exponential interpolation requires a numeric base.`, 1, 1) as null;
+                return context.error('Exponential interpolation requires a numeric base.', 1, 1) as null;
             interpolation = {
                 name: 'exponential',
                 base
@@ -97,7 +97,7 @@ class Interpolate implements Expression {
         }
 
         if ((args.length - 1) % 2 !== 0) {
-            return context.error(`Expected an even number of arguments.`) as null;
+            return context.error('Expected an even number of arguments.') as null;
         }
 
         input = context.parse(input, 2, NumberType);
@@ -196,15 +196,15 @@ class Interpolate implements Expression {
     serialize(): Array<unknown> {
         let interpolation;
         if (this.interpolation.name === 'linear') {
-            interpolation = ["linear"];
+            interpolation = ['linear'];
         } else if (this.interpolation.name === 'exponential') {
             if  (this.interpolation.base === 1) {
-                interpolation = ["linear"];
+                interpolation = ['linear'];
             } else {
-                interpolation = ["exponential", this.interpolation.base];
+                interpolation = ['exponential', this.interpolation.base];
             }
         } else {
-            interpolation = ["cubic-bezier" as unknown].concat(this.interpolation.controlPoints);
+            interpolation = ['cubic-bezier' as unknown].concat(this.interpolation.controlPoints);
         }
 
         const serialized = [this.operator, interpolation, this.input.serialize()];

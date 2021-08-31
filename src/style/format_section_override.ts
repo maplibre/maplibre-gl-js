@@ -36,7 +36,7 @@ export default class FormatSectionOverride<T> implements Expression {
 
     eachChild(fn: (_: Expression) => void) {
         if (!this.defaultValue.isConstant()) {
-            const expr: ZoomConstantExpression<"source"> = (this.defaultValue.value as any);
+            const expr: ZoomConstantExpression<'source'> = (this.defaultValue.value as any);
             fn(expr._styleExpression.expression);
         }
     }

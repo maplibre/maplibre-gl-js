@@ -48,22 +48,22 @@ export default class Formatted {
     }
 
     serialize(): Array<unknown> {
-        const serialized: Array<unknown> = ["format"];
+        const serialized: Array<unknown> = ['format'];
         for (const section of this.sections) {
             if (section.image) {
-                serialized.push(["image", section.image.name]);
+                serialized.push(['image', section.image.name]);
                 continue;
             }
             serialized.push(section.text);
             const options: {[key: string]: unknown} = {};
             if (section.fontStack) {
-                options["text-font"] = ["literal", section.fontStack.split(',')];
+                options['text-font'] = ['literal', section.fontStack.split(',')];
             }
             if (section.scale) {
-                options["font-scale"] = section.scale;
+                options['font-scale'] = section.scale;
             }
             if (section.textColor) {
-                options["text-color"] = (["rgba"] as Array<unknown>).concat(section.textColor.toArray());
+                options['text-color'] = (['rgba'] as Array<unknown>).concat(section.textColor.toArray());
             }
             serialized.push(options);
         }

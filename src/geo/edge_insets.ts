@@ -1,6 +1,7 @@
-import {number} from "../style-spec/util/interpolate";
+
+import {number} from '../style-spec/util/interpolate';
 import Point from '../util/point';
-import {clamp} from "../util/util";
+import {clamp} from '../util/util';
 
 /**
  * An `EdgeInset` object represents screen space padding applied to the edges of the viewport.
