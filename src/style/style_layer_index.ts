@@ -1,7 +1,6 @@
 import StyleLayer from './style_layer';
 import createStyleLayer from './create_style_layer';
 
-import {values} from '../util/util';
 import featureFilter from '../style-spec/feature_filter';
 import groupByLayout from '../style-spec/group_by_layout';
 
@@ -52,7 +51,7 @@ class StyleLayerIndex {
 
         this.familiesBySource = {};
 
-        const groups = groupByLayout(values(this._layerConfigs), this.keyCache);
+        const groups = groupByLayout(Object.values(this._layerConfigs), this.keyCache);
 
         for (const layerConfigs of groups) {
             const layers = layerConfigs.map((layerConfig) => this._layers[layerConfig.id]);

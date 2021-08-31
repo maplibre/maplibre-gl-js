@@ -6,7 +6,6 @@ import fetchStyle from '../lib/fetch_style';
 import TileParser from '../lib/tile_parser';
 import {OverscaledTileID} from '../../src/source/tile_id';
 import {serialize, deserialize} from '../../src/util/web_worker_transfer';
-import {values} from '../../src/util/util';
 
 export default class WorkerTransfer extends Benchmark {
     parser: TileParser;
@@ -48,8 +47,8 @@ export default class WorkerTransfer extends Benchmark {
                 return Promise.all(tiles.map(tile => this.parser.parseTile(tile)));
             }).then((tileResults) => {
                 const payload = tileResults
-                    .concat(values(this.parser.icons))
-                    .concat(values(this.parser.glyphs)).map((obj) => serialize(obj, []));
+                    .concat(Object.values(this.parser.icons))
+                    .concat(Object.values(this.parser.glyphs)).map((obj) => serialize(obj, []));
                 this.payloadJSON = payload.map(barePayload);
                 this.payloadTiles = payload.slice(0, tileResults.length);
             });

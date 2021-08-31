@@ -6,7 +6,6 @@ import EXTENT from '../data/extent';
 import pixelsToTileUnits from '../source/pixels_to_tile_units';
 import SegmentVector from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types';
-import {values} from '../util/util';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import posAttributes from '../data/pos_attributes';
 import ProgramConfiguration from '../data/program_configuration';
@@ -458,7 +457,7 @@ class Painter {
             //Use source with highest maxzoom
             let selectedSource;
             let sourceCache;
-            const layers = values(this.style._layers);
+            const layers = Object.values(this.style._layers);
             layers.forEach((layer) => {
                 if (layer.source && !layer.isHidden(this.transform.zoom)) {
                     if (layer.source !== (sourceCache && sourceCache.id)) {
