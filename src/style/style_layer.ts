@@ -1,4 +1,4 @@
-import {endsWith, filterObject} from '../util/util';
+import {filterObject} from '../util/util';
 
 import styleSpec from '../style-spec/reference/latest';
 import {
@@ -140,7 +140,7 @@ class StyleLayer extends Evented {
     }
 
     getPaintProperty(name: string) {
-        if (endsWith(name, TRANSITION_SUFFIX)) {
+        if (name.endsWith(TRANSITION_SUFFIX)) {
             return this._transitionablePaint.getTransition(name.slice(0, -TRANSITION_SUFFIX.length));
         } else {
             return this._transitionablePaint.getValue(name);
@@ -155,7 +155,7 @@ class StyleLayer extends Evented {
             }
         }
 
-        if (endsWith(name, TRANSITION_SUFFIX)) {
+        if (name.endsWith(TRANSITION_SUFFIX)) {
             this._transitionablePaint.setTransition(name.slice(0, -TRANSITION_SUFFIX.length), (value as any) || undefined);
             return false;
         } else {
