@@ -1,6 +1,6 @@
 import {test} from '../../util/test';
 
-import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, endsWith, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, uuid, validateUuid, nextPowerOfTwo, isPowerOfTwo} from '../../../rollup/build/tsc/util/util';
+import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, uuid, validateUuid, nextPowerOfTwo, isPowerOfTwo} from '../../../rollup/build/tsc/util/util';
 import Point from '../../../rollup/build/tsc/symbol/point';
 
 test('util', (t) => {
@@ -142,12 +142,6 @@ test('util', (t) => {
         }, () => {
             t.end();
         });
-    });
-
-    t.test('endsWith', (t) => {
-        t.ok(endsWith('mapbox', 'box'));
-        t.notOk(endsWith('mapbox', 'map'));
-        t.end();
     });
 
     t.test('mapObject', (t) => {

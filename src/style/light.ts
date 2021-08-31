@@ -1,6 +1,6 @@
 import styleSpec from '../style-spec/reference/latest';
 
-import {endsWith, extend, sphericalToCartesian} from '../util/util';
+import {extend, sphericalToCartesian} from '../util/util';
 import {Evented} from '../util/evented';
 import {
     validateStyle,
@@ -101,7 +101,7 @@ class Light extends Evented {
 
         for (const name in light) {
             const value = light[name];
-            if (endsWith(name, TRANSITION_SUFFIX)) {
+            if (name.endsWith(TRANSITION_SUFFIX)) {
                 this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof Props, value);
             } else {
                 this._transitionable.setValue(name as keyof Props, value);

@@ -5,7 +5,7 @@ import LineBucket from '../../data/bucket/line_bucket';
 import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
 import properties, {LayoutPropsPossiblyEvaluated, PaintPropsPossiblyEvaluated} from './line_style_layer_properties';
-import {extend, MAX_SAFE_INTEGER} from '../../util/util';
+import {extend} from '../../util/util';
 import EvaluationParameters from '../evaluation_parameters';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProperty} from '../properties';
 
@@ -58,7 +58,7 @@ class LineStyleLayer extends StyleLayer {
         if (name === 'line-gradient') {
             const expression: ZoomConstantExpression<"source"> = (this._transitionablePaint._values['line-gradient'].value.expression as any);
             this.stepInterpolant = expression._styleExpression.expression instanceof Step;
-            this.gradientVersion = (this.gradientVersion + 1) % MAX_SAFE_INTEGER;
+            this.gradientVersion = (this.gradientVersion + 1) % Number.MAX_SAFE_INTEGER;
         }
     }
 

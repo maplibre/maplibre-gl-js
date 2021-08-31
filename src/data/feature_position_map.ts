@@ -82,11 +82,9 @@ export default class FeaturePositionMap {
     }
 }
 
-const MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
 function getNumericId(value: unknown) {
     const numValue = +value;
-    if (!isNaN(numValue) && numValue <= MAX_SAFE_INTEGER) {
+    if (!isNaN(numValue) && numValue <= Number.MAX_SAFE_INTEGER) {
         return numValue;
     }
     return murmur3(String(value));

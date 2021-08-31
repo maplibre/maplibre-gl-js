@@ -4,9 +4,6 @@ import Point from '../symbol/point';
 
 import type {Callback} from '../types/callback';
 
-// Number.MAX_SAFE_INTEGER not available in IE
-export const MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
 /**
  * @module util
  * @private
@@ -106,22 +103,6 @@ export function asyncAll<Item, Result>(
             if (--remaining === 0) callback(error, results);
         });
     });
-}
-
-/*
- * Polyfill for Object.values. Not fully spec compliant, but we don't
- * need it to be.
- *
- * @private
- */
-export function values<T>(
-  obj: {[key: string]: T}
-): Array<T> {
-    const result = [];
-    for (const k in obj) {
-        result.push(obj[k]);
-    }
-    return result;
 }
 
 /*
@@ -270,15 +251,6 @@ export function bindAll(fns: Array<string>, context: any): void {
 }
 
 /**
- * Determine if a string ends with a particular substring
- *
- * @private
- */
-export function endsWith(string: string, suffix: string): boolean {
-    return string.indexOf(suffix, string.length - suffix.length) !== -1;
-}
-
-/**
  * Create an object by mapping all the values of an existing object while
  * preserving their keys.
  *
@@ -365,7 +337,7 @@ export function isCounterClockwise(a: Point, b: Point, c: Point): boolean {
 }
 
 /**
- * Returns the signed area for the polygon ring.  Postive areas are exterior rings and
+ * Returns the signed area for the polygon ring.  Positive areas are exterior rings and
  * have a clockwise winding.  Negative areas are interior rings and have a counter clockwise
  * ordering.
  *
@@ -437,7 +409,7 @@ export function sphericalToCartesian([r, azimuthal, polar]: [number, number, num
 
 /* global self, WorkerGlobalScope */
 /**
- *  Retuns true if the when run in the web-worker context.
+ *  Returns true if the when run in the web-worker context.
  *
  * @private
  * @returns {boolean}
@@ -527,13 +499,4 @@ export function b64DecodeUnicode(str: string) {
     return decodeURIComponent(atob(str).split('').map((c) => {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); //eslint-disable-line
     }).join(''));
-}
-
-const mapboxHTTPURLRe = /^((https?:)?\/\/)?([^\/]+\.)?mapbox\.c(n|om)(\/|\?|$)/i;
-export function isMapboxHTTPURL(url: string): boolean {
-    return mapboxHTTPURLRe.test(url);
-}
-
-export function hasCacheDefeatingSku(url: string) {
-    return url.indexOf('sku=') > 0 && isMapboxHTTPURL(url);
 }
