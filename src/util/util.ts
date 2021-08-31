@@ -4,9 +4,6 @@ import Point from '../symbol/point';
 
 import type {Callback} from '../types/callback';
 
-// Number.MAX_SAFE_INTEGER not available in IE
-export const MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
 /**
  * @module util
  * @private
