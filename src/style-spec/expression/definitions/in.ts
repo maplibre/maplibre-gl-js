@@ -72,7 +72,7 @@ class In implements Expression {
     }
 
     serialize() {
-        return ["in", this.needle.serialize(), this.haystack.serialize()];
+        return ['in', this.needle.serialize(), this.haystack.serialize()];
     }
 }
 

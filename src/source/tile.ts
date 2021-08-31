@@ -34,11 +34,11 @@ import type Point from '../symbol/point';
 import {mat4} from 'gl-matrix';
 
 export type TileState = // Tile data is in the process of loading.
-"loading" | // Tile data has been loaded. Tile can be rendered.
-"loaded" | // Tile data has been loaded and is being updated. Tile can be rendered.
-"reloading" | // Tile data has been deleted.
-"unloaded" | // Tile data was not loaded because of an error.
-"errored" | "expired";  /* Tile data was previously loaded, but has expired per its
+'loading' | // Tile data has been loaded. Tile can be rendered.
+'loaded' | // Tile data has been loaded and is being updated. Tile can be rendered.
+'reloading' | // Tile data has been deleted.
+'unloaded' | // Tile data was not loaded because of an error.
+'errored' | 'expired';  /* Tile data was previously loaded, but has expired per its
                    * HTTP headers and is in the process of refreshing. */
 
 /**

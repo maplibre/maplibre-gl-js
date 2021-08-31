@@ -118,7 +118,7 @@ class Match implements Expression {
     }
 
     serialize(): Array<unknown> {
-        const serialized = ["match", this.input.serialize()];
+        const serialized = ['match', this.input.serialize()];
 
         // Sort so serialization has an arbitrary defined order, even though
         // branch order doesn't affect evaluation

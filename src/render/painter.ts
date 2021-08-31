@@ -62,7 +62,7 @@ import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type ResolvedImage from '../style-spec/expression/types/resolved_image';
 import type {RGBAImage} from '../util/image';
 
-export type RenderPass = "offscreen" | "opaque" | "translucent";
+export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
 type PainterOptions = {
   showOverdrawInspector: boolean;
@@ -541,7 +541,7 @@ class Painter {
      * @returns {mat4} matrix
      * @private
      */
-    translatePosMatrix(matrix: mat4, tile: Tile, translate: [number, number], translateAnchor: "map" | "viewport", inViewportPixelUnitsUnits?: boolean) {
+    translatePosMatrix(matrix: mat4, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport', inViewportPixelUnitsUnits?: boolean) {
         if (!translate[0] && !translate[1]) return matrix;
 
         const angle = inViewportPixelUnitsUnits ?

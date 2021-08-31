@@ -92,7 +92,7 @@ class FullscreenControl implements IControl {
 
     _updateTitle() {
         const title = this._getTitle();
-        this._fullscreenButton.setAttribute("aria-label", title);
+        this._fullscreenButton.setAttribute('aria-label', title);
         this._fullscreenButton.title = title;
     }
 

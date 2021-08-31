@@ -32,7 +32,7 @@ export class MapMouseEvent extends Event {
      * {@link Map.event:mouseout},
      * {@link Map.event:contextmenu}).
      */
-    type: "mousedown" | "mouseup" | "click" | "dblclick" | "mousemove" | "mouseover" | "mouseenter" | "mouseleave" | "mouseout" | "contextmenu";
+    type: 'mousedown' | 'mouseup' | 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseenter' | 'mouseleave' | 'mouseout' | 'contextmenu';
 
     /**
      * The `Map` object that fired the event.
@@ -99,7 +99,7 @@ export class MapTouchEvent extends Event {
     /**
      * The event type.
      */
-    type: "touchstart" | "touchend" | "touchcancel";
+    type: 'touchstart' | 'touchend' | 'touchcancel';
 
     /**
      * The `Map` object that fired the event.
@@ -161,7 +161,7 @@ export class MapTouchEvent extends Event {
      * @private
      */
     constructor(type: string, map: Map, originalEvent: TouchEvent) {
-        const touches = type === "touchend" ? originalEvent.changedTouches : originalEvent.touches;
+        const touches = type === 'touchend' ? originalEvent.changedTouches : originalEvent.touches;
         const points = DOM.touchPos(map.getCanvasContainer(), touches);
         const lngLats = points.map((t) => map.unproject(t));
         const point = points.reduce((prev, curr, i, arr) => {
@@ -181,7 +181,7 @@ export class MapWheelEvent extends Event {
     /**
      * The event type.
      */
-    type: "wheel";
+    type: 'wheel';
 
     /**
      * The `Map` object that fired the event.
@@ -230,7 +230,7 @@ export class MapWheelEvent extends Event {
  * @property {Map} target The `Map` instance that triggerred the event
  */
 export type MapBoxZoomEvent = {
-  type: "boxzoomstart" | "boxzoomend" | "boxzoomcancel";
+  type: 'boxzoomstart' | 'boxzoomend' | 'boxzoomcancel';
   target: Map;
   originalEvent: MouseEvent;
 };
@@ -269,7 +269,7 @@ export type MapDataEvent = {
 };
 
 export type MapContextEvent = {
-  type: "webglcontextlost" | "webglcontextrestored";
+  type: 'webglcontextlost' | 'webglcontextrestored';
   originalEvent: WebGLContextEvent;
 };
 
@@ -300,7 +300,7 @@ export type MapEvent = /**
      * });
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
-"mousedown"
+'mousedown'
 
 /**
      * Fired when a pointing device (usually a mouse) is released within the map.
@@ -328,7 +328,7 @@ export type MapEvent = /**
      *   console.log('A mouseup event has occurred on a visible portion of the poi-label layer.');
      * });
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
-     */ | "mouseup"
+     */ | 'mouseup'
 
 /**
      * Fired when a pointing device (usually a mouse) is moved within the map.
@@ -360,7 +360,7 @@ export type MapEvent = /**
      * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/mouse-position/)
      * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
-     */ | "mouseover"
+     */ | 'mouseover'
 
 /**
      * Fired when a pointing device (usually a mouse) is moved while the cursor is inside the map.
@@ -391,7 +391,7 @@ export type MapEvent = /**
      * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/mouse-position/)
      * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      * @see [Display a popup on over](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
-     */ | "mousemove"
+     */ | 'mousemove'
 
 /**
      * Fired when a pointing device (usually a mouse) is pressed and released at the same point on the map.
@@ -420,7 +420,7 @@ export type MapEvent = /**
      * });
      * @see [Measure distances](https://maplibre.org/maplibre-gl-js-docs/example/measure/)
      * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js-docs/example/center-on-symbol/)
-     */ | "click"
+     */ | 'click'
 
 /**
      * Fired when a pointing device (usually a mouse) is pressed and released twice at the same point on
@@ -448,7 +448,7 @@ export type MapEvent = /**
      * map.on('dblclick', 'poi-label', function(e) {
      *   console.log('A dblclick event has occurred on a visible portion of the poi-label layer at ' + e.lngLat);
      * });
-     */ | "dblclick"
+     */ | 'dblclick'
 
 /**
      * Fired when a pointing device (usually a mouse) enters a visible portion of a specified layer from
@@ -470,7 +470,7 @@ export type MapEvent = /**
      * });
      * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js-docs/example/center-on-symbol/)
      * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
-     */ | "mouseenter"
+     */ | 'mouseenter'
 
 /**
      * Fired when a pointing device (usually a mouse) leaves a visible portion of a specified layer, or leaves
@@ -494,7 +494,7 @@ export type MapEvent = /**
      * });
      * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
-     */ | "mouseleave"
+     */ | 'mouseleave'
 
 /**
      * Fired when a point device (usually a mouse) leaves the map's canvas.
@@ -512,7 +512,7 @@ export type MapEvent = /**
      * map.on('mouseout', function() {
      *   console.log('A mouseout event occurred.');
      * });
-     */ | "mouseout"
+     */ | 'mouseout'
 
 /**
      * Fired when the right button of the mouse is clicked or the context menu key is pressed within the map.
@@ -530,7 +530,7 @@ export type MapEvent = /**
      * map.on('contextmenu', function() {
      *   console.log('A contextmenu event occurred.');
      * });
-     */ | "contextmenu"
+     */ | 'contextmenu'
 
 /**
      * Fired when a [`wheel`](https://developer.mozilla.org/en-US/docs/Web/Events/wheel) event occurs within the map.
@@ -547,7 +547,7 @@ export type MapEvent = /**
      * map.on('wheel', function() {
      *   console.log('A wheel event occurred.');
      * });
-     */ | "wheel"
+     */ | 'wheel'
 
 /**
      * Fired when a [`touchstart`](https://developer.mozilla.org/en-US/docs/Web/Events/touchstart) event occurs within the map.
@@ -564,7 +564,7 @@ export type MapEvent = /**
      *   console.log('A touchstart event occurred.');
      * });
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
-     */ | "touchstart"
+     */ | 'touchstart'
 
 /**
      * Fired when a [`touchend`](https://developer.mozilla.org/en-US/docs/Web/Events/touchend) event occurs within the map.
@@ -582,7 +582,7 @@ export type MapEvent = /**
      *   console.log('A touchstart event occurred.');
      * });
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
-     */ | "touchend"
+     */ | 'touchend'
 
 /**
      * Fired when a [`touchmove`](https://developer.mozilla.org/en-US/docs/Web/Events/touchmove) event occurs within the map.
@@ -600,7 +600,7 @@ export type MapEvent = /**
      *   console.log('A touchmove event occurred.');
      * });
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
-     */ | "touchmove"
+     */ | 'touchmove'
 
 /**
      * Fired when a [`touchcancel`](https://developer.mozilla.org/en-US/docs/Web/Events/touchcancel) event occurs within the map.
@@ -617,7 +617,7 @@ export type MapEvent = /**
      * map.on('touchcancel', function() {
      *   console.log('A touchcancel event occurred.');
      * });
-     */ | "touchcancel"
+     */ | 'touchcancel'
 
 /**
      * Fired just before the map begins a transition from one
@@ -636,7 +636,7 @@ export type MapEvent = /**
      * map.on('movestart', function() {
      *   console.log('A movestart` event occurred.');
      * });
-     */ | "movestart"
+     */ | 'movestart'
 
 /**
      * Fired repeatedly during an animated transition from one view to
@@ -655,7 +655,7 @@ export type MapEvent = /**
      *   console.log('A move event occurred.');
      * });
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js-docs/example/cluster-html/)
-     */ | "move"
+     */ | 'move'
 
 /**
      * Fired just after the map completes a transition from one
@@ -674,7 +674,7 @@ export type MapEvent = /**
      *   console.log('A moveend event occurred.');
      * });
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js-docs/example/cluster-html/)
-     */ | "moveend"
+     */ | 'moveend'
 
 /**
      * Fired when a "drag to pan" interaction starts. See {@link DragPanHandler}.
@@ -691,7 +691,7 @@ export type MapEvent = /**
      * map.on('dragstart', function() {
      *   console.log('A dragstart event occurred.');
      * });
-     */ | "dragstart"
+     */ | 'dragstart'
 
 /**
      * Fired repeatedly during a "drag to pan" interaction. See {@link DragPanHandler}.
@@ -708,7 +708,7 @@ export type MapEvent = /**
      * map.on('drag', function() {
      *   console.log('A drag event occurred.');
      * });
-     */ | "drag"
+     */ | 'drag'
 
 /**
      * Fired when a "drag to pan" interaction ends. See {@link DragPanHandler}.
@@ -726,7 +726,7 @@ export type MapEvent = /**
      *   console.log('A dragend event occurred.');
      * });
      * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
-     */ | "dragend"
+     */ | 'dragend'
 
 /**
      * Fired just before the map begins a transition from one zoom level to another,
@@ -744,7 +744,7 @@ export type MapEvent = /**
      * map.on('zoomstart', function() {
      *   console.log('A zoomstart event occurred.');
      * });
-     */ | "zoomstart"
+     */ | 'zoomstart'
 
 /**
      * Fired repeatedly during an animated transition from one zoom level to another,
@@ -762,7 +762,7 @@ export type MapEvent = /**
      * map.on('zoom', function() {
      *   console.log('A zoom event occurred.');
      * });
-     */ | "zoom"
+     */ | 'zoom'
 
 /**
      * Fired just after the map completes a transition from one zoom level to another,
@@ -780,7 +780,7 @@ export type MapEvent = /**
      * map.on('zoomend', function() {
      *   console.log('A zoomend event occurred.');
      * });
-     */ | "zoomend"
+     */ | 'zoomend'
 
 /**
      * Fired when a "drag to rotate" interaction starts. See {@link DragRotateHandler}.
@@ -797,7 +797,7 @@ export type MapEvent = /**
      * map.on('rotatestart', function() {
      *   console.log('A rotatestart event occurred.');
      * });
-     */ | "rotatestart"
+     */ | 'rotatestart'
 
 /**
      * Fired repeatedly during a "drag to rotate" interaction. See {@link DragRotateHandler}.
@@ -814,7 +814,7 @@ export type MapEvent = /**
      * map.on('rotate', function() {
      *   console.log('A rotate event occurred.');
      * });
-     */ | "rotate"
+     */ | 'rotate'
 
 /**
      * Fired when a "drag to rotate" interaction ends. See {@link DragRotateHandler}.
@@ -831,7 +831,7 @@ export type MapEvent = /**
      * map.on('rotateend', function() {
      *   console.log('A rotateend event occurred.');
      * });
-     */ | "rotateend"
+     */ | 'rotateend'
 
 /**
      * Fired whenever the map's pitch (tilt) begins a change as
@@ -849,7 +849,7 @@ export type MapEvent = /**
      * map.on('pitchstart', function() {
      *   console.log('A pitchstart event occurred.');
      * });
-     */ | "pitchstart"
+     */ | 'pitchstart'
 
 /**
      * Fired repeatedly during the map's pitch (tilt) animation between
@@ -868,7 +868,7 @@ export type MapEvent = /**
      * map.on('pitch', function() {
      *   console.log('A pitch event occurred.');
      * });
-     */ | "pitch"
+     */ | 'pitch'
 
 /**
      * Fired immediately after the map's pitch (tilt) finishes changing as
@@ -886,7 +886,7 @@ export type MapEvent = /**
      * map.on('pitchend', function() {
      *   console.log('A pitchend event occurred.');
      * });
-     */ | "pitchend"
+     */ | 'pitchend'
 
 /**
      * Fired when a "box zoom" interaction starts. See {@link BoxZoomHandler}.
@@ -903,7 +903,7 @@ export type MapEvent = /**
      * map.on('boxzoomstart', function() {
      *   console.log('A boxzoomstart event occurred.');
      * });
-     */ | "boxzoomstart"
+     */ | 'boxzoomstart'
 
 /**
      * Fired when a "box zoom" interaction ends.  See {@link BoxZoomHandler}.
@@ -921,7 +921,7 @@ export type MapEvent = /**
      * map.on('boxzoomend', function() {
      *   console.log('A boxzoomend event occurred.');
      * });
-     */ | "boxzoomend"
+     */ | 'boxzoomend'
 
 /**
      * Fired when the user cancels a "box zoom" interaction, or when the bounding box does not meet the minimum size threshold.
@@ -939,7 +939,7 @@ export type MapEvent = /**
      * map.on('boxzoomcancel', function() {
      *   console.log('A boxzoomcancel event occurred.');
      * });
-     */ | "boxzoomcancel"
+     */ | 'boxzoomcancel'
 
 /**
      * Fired immediately after the map has been resized.
@@ -955,7 +955,7 @@ export type MapEvent = /**
      * map.on('resize', function() {
      *   console.log('A resize event occurred.');
      * });
-     */ | "resize"
+     */ | 'resize'
 
 /**
      * Fired when the WebGL context is lost.
@@ -971,7 +971,7 @@ export type MapEvent = /**
      * map.on('webglcontextlost', function() {
      *   console.log('A webglcontextlost event occurred.');
      * });
-     */ | "webglcontextlost"
+     */ | 'webglcontextlost'
 
 /**
      * Fired when the WebGL context is restored.
@@ -987,7 +987,7 @@ export type MapEvent = /**
      * map.on('webglcontextrestored', function() {
      *   console.log('A webglcontextrestored event occurred.');
      * });
-     */ | "webglcontextrestored"
+     */ | 'webglcontextrestored'
 
 /**
      * Fired immediately after all necessary resources have been downloaded
@@ -1008,7 +1008,7 @@ export type MapEvent = /**
      * @see [Draw GeoJSON points](https://maplibre.org/maplibre-gl-js-docs/example/geojson-markers/)
      * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js-docs/example/live-geojson/)
      * @see [Animate a point](https://maplibre.org/maplibre-gl-js-docs/example/animate-point-along-line/)
-     */ | "load"
+     */ | 'load'
 
 /**
      * Fired whenever the map is drawn to the screen, as the result of
@@ -1029,7 +1029,7 @@ export type MapEvent = /**
      * map.on('render', function() {
      *   console.log('A render event occurred.');
      * });
-     */ | "render"
+     */ | 'render'
 
 /**
      * Fired after the last frame rendered before the map enters an
@@ -1050,7 +1050,7 @@ export type MapEvent = /**
      * map.on('idle', function() {
      *   console.log('A idle event occurred.');
      * });
-     */ | "idle"
+     */ | 'idle'
 
 /**
      * Fired immediately after the map has been removed with {@link Map.event:remove}.
@@ -1066,7 +1066,7 @@ export type MapEvent = /**
      * map.on('remove', function() {
      *   console.log('A remove event occurred.');
      * });
-     */ | "remove"
+     */ | 'remove'
 
 /**
      * Fired when an error occurs. This is GL JS's primary error reporting
@@ -1086,7 +1086,7 @@ export type MapEvent = /**
      * map.on('error', function() {
      *   console.log('A error event occurred.');
      * });
-     */ | "error"
+     */ | 'error'
 
 /**
      * Fired when any map data loads or changes. See {@link MapDataEvent}
@@ -1105,7 +1105,7 @@ export type MapEvent = /**
      *   console.log('A data event occurred.');
      * });
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js-docs/example/cluster-html/)
-     */ | "data"
+     */ | 'data'
 
 /**
      * Fired when the map's style loads or changes. See
@@ -1123,7 +1123,7 @@ export type MapEvent = /**
      * map.on('styledata', function() {
      *   console.log('A styledata event occurred.');
      * });
-     */ | "styledata"
+     */ | 'styledata'
 
 /**
      * Fired when one of the map's sources loads or changes, including if a tile belonging
@@ -1141,7 +1141,7 @@ export type MapEvent = /**
      * map.on('sourcedata', function() {
      *   console.log('A sourcedata event occurred.');
      * });
-     */ | "sourcedata"
+     */ | 'sourcedata'
 
 /**
      * Fired when any map data (style, source, tile, etc) begins loading or
@@ -1161,7 +1161,7 @@ export type MapEvent = /**
      * map.on('dataloading', function() {
      *   console.log('A dataloading event occurred.');
      * });
-     */ | "dataloading"
+     */ | 'dataloading'
 
 /**
      * Fired when the map's style begins loading or changing asyncronously.
@@ -1181,7 +1181,7 @@ export type MapEvent = /**
      * map.on('styledataloading', function() {
      *   console.log('A styledataloading event occurred.');
      * });
-     */ | "styledataloading"
+     */ | 'styledataloading'
 
 /**
      * Fired when one of the map's sources begins loading or changing asyncronously.
@@ -1201,7 +1201,7 @@ export type MapEvent = /**
      * map.on('sourcedataloading', function() {
      *   console.log('A sourcedataloading event occurred.');
      * });
-     */ | "sourcedataloading"
+     */ | 'sourcedataloading'
 
 /**
      * Fired when an icon or pattern needed by the style is missing. The missing image can
@@ -1221,11 +1221,11 @@ export type MapEvent = /**
      *   console.log('A styleimagemissing event occurred.');
      * });
      * @see [Generate and add a missing icon to the map](https://mapbox.com/mapbox-gl-js/example/add-image-missing-generated/)
-     */ | "styleimagemissing"
+     */ | 'styleimagemissing'
 
 /**
      * @event style.load
      * @memberof Map
      * @instance
      * @private
-     */ | "style.load";
+     */ | 'style.load';

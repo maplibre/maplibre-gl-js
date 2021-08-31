@@ -118,7 +118,7 @@ class Style extends Evented {
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
     _changed: boolean;
-    _updatedSources: {[_: string]: "clear" | "reload"};
+    _updatedSources: {[_: string]: 'clear' | 'reload'};
     _updatedLayers: {[_: string]: true};
     _removedLayers: {[_: string]: StyleLayer};
     _changedImages: {[_: string]: true};

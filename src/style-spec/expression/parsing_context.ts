@@ -59,7 +59,7 @@ class ParsingContext {
       expectedType?: Type | null,
       bindings?: Array<[string, Expression]>,
       options: {
-        typeAnnotation?: "assert" | "coerce" | "omit";
+        typeAnnotation?: 'assert' | 'coerce' | 'omit';
       } = {}
     ): Expression | undefined | null {
         if (index) {
@@ -71,14 +71,14 @@ class ParsingContext {
     _parse(
       expr: unknown,
       options: {
-        typeAnnotation?: "assert" | "coerce" | "omit";
+        typeAnnotation?: 'assert' | 'coerce' | 'omit';
       }
     ): Expression | undefined | null {
         if (expr === null || typeof expr === 'string' || typeof expr === 'boolean' || typeof expr === 'number') {
             expr = ['literal', expr];
         }
 
-        function annotate(parsed, type, typeAnnotation: "assert" | "coerce" | "omit") {
+        function annotate(parsed, type, typeAnnotation: 'assert' | 'coerce' | 'omit') {
             if (typeAnnotation === 'assert') {
                 return new Assertion(type, [parsed]);
             } else if (typeAnnotation === 'coerce') {

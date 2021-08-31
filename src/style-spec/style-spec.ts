@@ -1,5 +1,5 @@
-type ExpressionType = "data-driven" | "cross-faded" | "cross-faded-data-driven" | "color-ramp" | "data-constant" | "constant";
-type ExpressionParameters = Array<"zoom" | "feature" | "feature-state" | "heatmap-density" | "line-progress">;
+type ExpressionType = 'data-driven' | 'cross-faded' | 'cross-faded-data-driven' | 'color-ramp' | 'data-constant' | 'constant';
+type ExpressionParameters = Array<'zoom' | 'feature' | 'feature-state' | 'heatmap-density' | 'line-progress'>;
 
 type ExpressionSpecification = {
   interpolated: boolean;
@@ -7,49 +7,49 @@ type ExpressionSpecification = {
 };
 
 export type StylePropertySpecification = {
-  type: "number";
+  type: 'number';
   'property-type': ExpressionType;
   expression?: ExpressionSpecification;
   transition: boolean;
   default?: number;
 } | {
-  type: "string";
+  type: 'string';
   'property-type': ExpressionType;
   expression?: ExpressionSpecification;
   transition: boolean;
   default?: string;
   tokens?: boolean;
 } | {
-  type: "boolean";
+  type: 'boolean';
   'property-type': ExpressionType;
   expression?: ExpressionSpecification;
   transition: boolean;
   default?: boolean;
 } | {
-  type: "enum";
+  type: 'enum';
   'property-type': ExpressionType;
   expression?: ExpressionSpecification;
   values: {[_: string]: {}};
   transition: boolean;
   default?: string;
 } | {
-  type: "color";
+  type: 'color';
   'property-type': ExpressionType;
   expression?: ExpressionSpecification;
   transition: boolean;
   default?: string;
   overridable: boolean;
 } | {
-  type: "array";
-  value: "number";
+  type: 'array';
+  value: 'number';
   'property-type': ExpressionType;
   expression?: ExpressionSpecification;
   length?: number;
   transition: boolean;
   default?: Array<number>;
 } | {
-  type: "array";
-  value: "string";
+  type: 'array';
+  value: 'string';
   'property-type': ExpressionType;
   expression?: ExpressionSpecification;
   length?: number;

@@ -39,7 +39,7 @@ class WorkerTile {
     collectResourceTiming: boolean;
     returnDependencies: boolean;
 
-    status: "parsing" | "done";
+    status: 'parsing' | 'done';
     data: VectorTile;
     collisionBoxArray: CollisionBoxArray;
 

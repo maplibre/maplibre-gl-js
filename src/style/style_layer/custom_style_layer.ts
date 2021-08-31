@@ -146,8 +146,8 @@ type CustomRenderMethod = (gl: WebGLRenderingContext, matrix: mat4) => void;
  */
 export type CustomLayerInterface = {
   id: string;
-  type: "custom";
-  renderingMode: "2d" | "3d";
+  type: 'custom';
+  renderingMode: '2d' | '3d';
   render: CustomRenderMethod;
   prerender: CustomRenderMethod | undefined | null;
   onAdd: ((map: Map, gl: WebGLRenderingContext) => void) | undefined | null;
@@ -203,7 +203,7 @@ class CustomStyleLayer extends StyleLayer {
     hasTransition() { return false; }
 
     serialize() {
-        assert(false, "Custom layers cannot be serialized");
+        assert(false, 'Custom layers cannot be serialized');
     }
 
     onAdd = (map: Map) => {

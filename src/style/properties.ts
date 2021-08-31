@@ -409,7 +409,7 @@ export class Layout<Props> {
  * @private
  */
 type PossiblyEvaluatedValue<T> = {
-  kind: "constant";
+  kind: 'constant';
   value: T;
 } | SourceExpression | CompositeExpression;
 

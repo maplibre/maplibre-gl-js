@@ -23,9 +23,9 @@ enum WritingMode {
 }
 
 export class WriteModeMap {
-    "horizontal": WritingMode.horizontal;
-    "vertical": WritingMode.vertical;
-    "horizontalOnly": WritingMode.horizontalOnly;
+    'horizontal': WritingMode.horizontal;
+    'vertical': WritingMode.vertical;
+    'horizontalOnly': WritingMode.horizontalOnly;
 }
 
 const SHAPING_DEFAULT_OFFSET = -17;
@@ -72,8 +72,8 @@ function isEmpty(positionedLines: Array<PositionedLine>) {
     return true;
 }
 
-export type SymbolAnchor = "center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
-export type TextJustify = "left" | "center" | "right";
+export type SymbolAnchor = 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+export type TextJustify = 'left' | 'center' | 'right';
 
 // Max number of images in label is 6401 U+E000–U+F8FF that covers
 // Basic Multilingual Plane Unicode Private Use Area (PUA).
@@ -89,7 +89,7 @@ class SectionOptions {
 
     constructor() {
         this.scale = 1.0;
-        this.fontStack = "";
+        this.fontStack = '';
         this.imageName = null;
     }
 
@@ -115,7 +115,7 @@ class TaggedString {
     imageSectionID: number | null;
 
     constructor() {
-        this.text = "";
+        this.text = '';
         this.sectionIndex = [];
         this.sections = [];
         this.imageSectionID = null;
@@ -520,7 +520,7 @@ function determineLineBreaks(
     const potentialLineBreaks = [];
     const targetWidth = determineAverageLineWidth(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
 
-    const hasServerSuggestedBreakpoints = logicalInput.text.indexOf("\u200b") >= 0;
+    const hasServerSuggestedBreakpoints = logicalInput.text.indexOf('\u200b') >= 0;
 
     let currentX = 0;
 

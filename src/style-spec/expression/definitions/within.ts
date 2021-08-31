@@ -331,7 +331,7 @@ class Within implements Expression {
     }
 
     serialize(): Array<unknown> {
-        return ["within", this.geojson];
+        return ['within', this.geojson];
     }
 
 }

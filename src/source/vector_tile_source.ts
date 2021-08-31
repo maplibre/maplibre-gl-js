@@ -44,7 +44,7 @@ import type {VectorSourceSpecification, PromoteIdSpecification} from '../style-s
  * @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/third-party/)
  */
 class VectorTileSource extends Evented implements Source {
-    type: "vector";
+    type: 'vector';
     id: string;
     minzoom: number;
     maxzoom: number;

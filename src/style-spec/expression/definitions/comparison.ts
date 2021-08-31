@@ -8,7 +8,7 @@ import type EvaluationContext from '../evaluation_context';
 import type ParsingContext from '../parsing_context';
 import type {Type} from '../types';
 
-type ComparisonOperator = "==" | "!=" | "<" | ">" | "<=" | ">=";
+type ComparisonOperator = '==' | '!=' | '<' | '>' | '<=' | '>=';
 
 function isComparableType(op: ComparisonOperator, type: Type) {
     if (op === '==' || op === '!=') {

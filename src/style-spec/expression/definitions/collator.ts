@@ -24,7 +24,7 @@ export default class CollatorExpression implements Expression {
             return context.error(`Expected one argument.`) as null;
 
         const options = (args[1] as any);
-        if (typeof options !== "object" || Array.isArray(options))
+        if (typeof options !== 'object' || Array.isArray(options))
             return context.error(`Collator options argument must be an object.`) as null;
 
         const caseSensitive = context.parse(
@@ -71,6 +71,6 @@ export default class CollatorExpression implements Expression {
         if (this.locale) {
             options['locale'] = this.locale.serialize();
         }
-        return ["collator", options];
+        return ['collator', options];
     }
 }

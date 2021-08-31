@@ -104,7 +104,7 @@ class Step implements Expression {
     }
 
     serialize() {
-        const serialized = ["step", this.input.serialize()];
+        const serialized = ['step', this.input.serialize()];
         for (let i = 0; i < this.labels.length; i++) {
             if (i > 0) {
                 serialized.push(this.labels[i]);

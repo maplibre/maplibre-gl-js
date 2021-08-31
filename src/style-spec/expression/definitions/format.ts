@@ -48,7 +48,7 @@ export default class FormatExpression implements Expression {
         for (let i = 1; i <= args.length - 1; ++i) {
             const arg = (args[i] as any);
 
-            if (nextTokenMayBeObject && typeof arg === "object" && !Array.isArray(arg)) {
+            if (nextTokenMayBeObject && typeof arg === 'object' && !Array.isArray(arg)) {
                 nextTokenMayBeObject = false;
 
                 let scale = null;
@@ -130,7 +130,7 @@ export default class FormatExpression implements Expression {
     }
 
     serialize() {
-        const serialized = ["format"] as (string | {})[];
+        const serialized = ['format'] as (string | {})[];
         for (const section of this.sections) {
             serialized.push(section.content.serialize());
             const options = {};

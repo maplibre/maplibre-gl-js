@@ -765,9 +765,9 @@ export class Placement {
 
     markUsedJustification(bucket: SymbolBucket, placedAnchor: TextAnchor, symbolInstance: SymbolInstance, orientation: number) {
         const justifications = {
-            "left": symbolInstance.leftJustifiedTextSymbolIndex,
-            "center": symbolInstance.centerJustifiedTextSymbolIndex,
-            "right": symbolInstance.rightJustifiedTextSymbolIndex
+            'left': symbolInstance.leftJustifiedTextSymbolIndex,
+            'center': symbolInstance.centerJustifiedTextSymbolIndex,
+            'right': symbolInstance.rightJustifiedTextSymbolIndex
         };
 
         let autoIndex;

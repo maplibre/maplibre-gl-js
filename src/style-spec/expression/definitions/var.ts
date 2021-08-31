@@ -37,7 +37,7 @@ class Var implements Expression {
     }
 
     serialize() {
-        return ["var", this.name];
+        return ['var', this.name];
     }
 }
 

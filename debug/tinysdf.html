@@ -55,8 +55,8 @@ function localizeLayers(map) {
         var style = map.getStyle();
         for (var layerID in style.layers) {
             var layer = style.layers[layerID];
-            if (layer.layout && layer.layout['text-field'] === "{name_en}") {
-                layer.layout['text-field'] = "{name}";
+            if (layer.layout && layer.layout['text-field'] === '{name_en}') {
+                layer.layout['text-field'] = '{name}';
             }
         }
         map.setStyle(style);
