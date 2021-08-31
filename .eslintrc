@@ -59,7 +59,7 @@
     "prefer-arrow-callback": "error",
     "prefer-const": ["error", {"destructuring": "all"}],
     "prefer-template": "error",
-    "quotes": "off",
+    "quotes": ["error", "single", {"allowTemplateLiterals": true}],
     "space-before-function-paren": "off",
     "template-curly-spacing": "error",
     "no-useless-escape": "off",
