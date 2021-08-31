@@ -38,8 +38,8 @@ import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
 // to continue to allow canvas sources to be added at runtime/updated in
 // smart setStyle (see https://github.com/mapbox/mapbox-gl-js/pull/6424):
 const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
-  message: string,
-  identifier?: string
+  message: string;
+  identifier?: string;
 }> | null) =>
     _emitValidationErrors(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
 
@@ -89,12 +89,12 @@ const ignoredDiffOperations = pick(diffOperations, [
 const empty = emptyStyle() as StyleSpecification;
 
 export type StyleOptions = {
-  validate?: boolean,
-  localIdeographFontFamily?: string
+  validate?: boolean;
+  localIdeographFontFamily?: string;
 };
 
 export type StyleSetterOptions = {
-  validate?: boolean
+  validate?: boolean;
 };
 /**
  * @private
@@ -204,8 +204,8 @@ class Style extends Evented {
     }
 
     loadURL(url: string, options: {
-      validate?: boolean,
-      accessToken?: string
+      validate?: boolean;
+      accessToken?: string;
     } = {}) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
@@ -916,9 +916,9 @@ class Style extends Evented {
     }
 
     setFeatureState(target: {
-      source: string,
-      sourceLayer?: string,
-      id: string | number
+      source: string;
+      sourceLayer?: string;
+      id: string | number;
     }, state: any) {
         this._checkLoaded();
         const sourceId = target.source;
@@ -946,9 +946,9 @@ class Style extends Evented {
     }
 
     removeFeatureState(target: {
-      source: string,
-      sourceLayer?: string,
-      id?: string | number
+      source: string;
+      sourceLayer?: string;
+      id?: string | number;
     }, key?: string) {
         this._checkLoaded();
         const sourceId = target.source;
@@ -976,9 +976,9 @@ class Style extends Evented {
     }
 
     getFeatureState(target: {
-      source: string,
-      sourceLayer?: string,
-      id: string | number
+      source: string;
+      sourceLayer?: string;
+      id: string | number;
     }) {
         this._checkLoaded();
         const sourceId = target.source;
@@ -1162,9 +1162,9 @@ class Style extends Evented {
     querySourceFeatures(
         sourceID: string,
         params?: {
-            sourceLayer: string | undefined | null,
-            filter: Array<any> | undefined | null,
-            validate?: boolean
+            sourceLayer: string | undefined | null;
+            filter: Array<any> | undefined | null;
+            validate?: boolean;
         } | null
     ) {
         if (params && params.filter) {
@@ -1221,7 +1221,7 @@ class Style extends Evented {
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {
-      validate?: boolean
+      validate?: boolean;
     } = {}) {
         if (options && options.validate === false) {
             return false;
@@ -1359,10 +1359,10 @@ class Style extends Evented {
     getImages(
       mapId: string,
       params: {
-        icons: Array<string>,
-        source: string,
-        tileID: OverscaledTileID,
-        type: string
+        icons: Array<string>;
+        source: string;
+        tileID: OverscaledTileID;
+        type: string;
       },
       callback: Callback<{[_: string]: StyleImage}>
     ) {

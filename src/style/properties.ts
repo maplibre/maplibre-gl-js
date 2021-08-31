@@ -24,8 +24,8 @@ import {
 type TimePoint = number;
 
 export type CrossFaded<T> = {
-  to: T,
-  from: T
+  to: T;
+  from: T;
 };
 
 /**
@@ -120,8 +120,8 @@ export class PropertyValue<T, R> {
 // ------- Transitionable -------
 
 export type TransitionParameters = {
-  now: TimePoint,
-  transition: TransitionSpecification
+  now: TimePoint;
+  transition: TransitionSpecification;
 };
 
 /**
@@ -409,8 +409,8 @@ export class Layout<Props> {
  * @private
  */
 type PossiblyEvaluatedValue<T> = {
-  kind: "constant",
-  value: T
+  kind: "constant";
+  value: T;
 } | SourceExpression | CompositeExpression;
 
 /**

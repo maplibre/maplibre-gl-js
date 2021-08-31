@@ -323,7 +323,7 @@ class Point {
      * // is equivalent to
      * var point = new Point(0, 1);
      */
-    static convert(a: PointLike | {x: number, y: number}): Point {
+    static convert(a: PointLike | {x: number; y: number}): Point {
         if (a instanceof Point) {
             return a;
         }

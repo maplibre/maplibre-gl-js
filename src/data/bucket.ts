@@ -9,46 +9,46 @@ import type {CanonicalTileID} from '../source/tile_id';
 import Point from '../symbol/point';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
-  index: number,
-  layers: Array<Layer>,
-  zoom: number,
-  pixelRatio: number,
-  overscaling: number,
-  collisionBoxArray: CollisionBoxArray,
-  sourceLayerIndex: number,
-  sourceID: string
+  index: number;
+  layers: Array<Layer>;
+  zoom: number;
+  pixelRatio: number;
+  overscaling: number;
+  collisionBoxArray: CollisionBoxArray;
+  sourceLayerIndex: number;
+  sourceID: string;
 };
 
 export type PopulateParameters = {
-  featureIndex: FeatureIndex,
-  iconDependencies: {},
-  patternDependencies: {},
-  glyphDependencies: {},
-  availableImages: Array<string>
+  featureIndex: FeatureIndex;
+  iconDependencies: {};
+  patternDependencies: {};
+  glyphDependencies: {};
+  availableImages: Array<string>;
 };
 
 export type IndexedFeature = {
-  feature: VectorTileFeature,
-  id: number | string,
-  index: number,
-  sourceLayerIndex: number
+  feature: VectorTileFeature;
+  id: number | string;
+  index: number;
+  sourceLayerIndex: number;
 };
 
 export type BucketFeature = {
-  index: number,
-  sourceLayerIndex: number,
-  geometry: Array<Array<Point>>,
-  properties: any,
-  type: 1 | 2 | 3,
-  id?: any,
+  index: number;
+  sourceLayerIndex: number;
+  geometry: Array<Array<Point>>;
+  properties: any;
+  type: 1 | 2 | 3;
+  id?: any;
   readonly patterns: {
     [_: string]: {
-      "min": string,
-      "mid": string,
-      "max": string
-    }
-  },
-  sortKey?: number
+      "min": string;
+      "mid": string;
+      "max": string;
+    };
+  };
+  sortKey?: number;
 };
 
 /**

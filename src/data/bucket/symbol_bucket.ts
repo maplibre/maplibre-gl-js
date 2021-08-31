@@ -58,41 +58,41 @@ import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 
 export type SingleCollisionBox = {
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  anchorPointX: number,
-  anchorPointY: number
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  anchorPointX: number;
+  anchorPointY: number;
 };
 
 export type CollisionArrays = {
-  textBox?: SingleCollisionBox,
-  verticalTextBox?: SingleCollisionBox,
-  iconBox?: SingleCollisionBox,
-  verticalIconBox?: SingleCollisionBox,
-  textFeatureIndex?: number,
-  verticalTextFeatureIndex?: number,
-  iconFeatureIndex?: number,
-  verticalIconFeatureIndex?: number
+  textBox?: SingleCollisionBox;
+  verticalTextBox?: SingleCollisionBox;
+  iconBox?: SingleCollisionBox;
+  verticalIconBox?: SingleCollisionBox;
+  textFeatureIndex?: number;
+  verticalTextFeatureIndex?: number;
+  iconFeatureIndex?: number;
+  verticalIconFeatureIndex?: number;
 };
 
 export type SymbolFeature = {
-  sortKey: number | void,
-  text: Formatted | void,
-  icon: ResolvedImage | undefined | null,
-  index: number,
-  sourceLayerIndex: number,
-  geometry: Array<Array<Point>>,
-  properties: any,
-  type: 'Point' | 'LineString' | 'Polygon',
-  id?: any
+  sortKey: number | void;
+  text: Formatted | void;
+  icon: ResolvedImage | undefined | null;
+  index: number;
+  sourceLayerIndex: number;
+  geometry: Array<Array<Point>>;
+  properties: any;
+  type: 'Point' | 'LineString' | 'Polygon';
+  id?: any;
 };
 
 export type SortKeyRange = {
-  sortKey: number,
-  symbolInstanceStart: number,
-  symbolInstanceEnd: number
+  sortKey: number;
+  symbolInstanceStart: number;
+  symbolInstanceEnd: number;
 };
 
 // Opacity arrays are frequently updated but don't contain a lot of information, so we pack them
@@ -243,11 +243,11 @@ class CollisionBuffers {
     collisionVertexBuffer: VertexBuffer;
 
     constructor(LayoutArray: {
-      new (...args: any): StructArray
+      new (...args: any): StructArray;
     },
                 layoutAttributes: Array<StructArrayMember>,
                 IndexArray: {
-                  new (...args: any): TriangleIndexArray | LineIndexArray
+                  new (...args: any): TriangleIndexArray | LineIndexArray;
                 }) {
         this.layoutVertexArray = new LayoutArray();
         this.layoutAttributes = layoutAttributes;

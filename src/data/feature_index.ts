@@ -25,18 +25,18 @@ import type {FilterSpecification, PromoteIdSpecification} from '../style-spec/ty
 import type {FeatureState} from '../style-spec/expression';
 
 type QueryParameters = {
-  scale: number,
-  pixelPosMatrix: mat4,
-  transform: Transform,
-  tileSize: number,
-  queryGeometry: Array<Point>,
-  cameraQueryGeometry: Array<Point>,
-  queryPadding: number,
+  scale: number;
+  pixelPosMatrix: mat4;
+  transform: Transform;
+  tileSize: number;
+  queryGeometry: Array<Point>;
+  cameraQueryGeometry: Array<Point>;
+  queryPadding: number;
   params: {
-    filter: FilterSpecification,
-    layers: Array<string>,
-    availableImages: Array<string>
-  }
+    filter: FilterSpecification;
+    layers: Array<string>;
+    availableImages: Array<string>;
+  };
 };
 
 class FeatureIndex {
@@ -107,10 +107,10 @@ class FeatureIndex {
       styleLayers: {[_: string]: StyleLayer},
       serializedLayers: {[_: string]: any},
       sourceFeatureState: SourceFeatureState
-    ): {[_: string]: Array<{featureIndex: number, feature: GeoJSONFeature}>} {
+    ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {
         this.loadVTLayers();
 
-        const params = args.params || {} as { filter: any, layers: string[], availableImages: string[] },
+        const params = args.params || {} as { filter: any; layers: string[]; availableImages: string[] },
             pixelsToTileUnits = EXTENT / args.tileSize / args.scale,
             filter = featureFilter(params.filter);
 
@@ -171,10 +171,10 @@ class FeatureIndex {
     loadMatchingFeature(
         result: {
           [_: string]: Array<{
-            featureIndex: number,
-            feature: GeoJSONFeature,
-            intersectionZ?: boolean | number
-          }>
+            featureIndex: number;
+            feature: GeoJSONFeature;
+            intersectionZ?: boolean | number;
+          }>;
         },
         bucketIndex: number,
         sourceLayerIndex: number,

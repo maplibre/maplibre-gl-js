@@ -71,8 +71,8 @@ class CollisionIndex {
       posMatrix: mat4,
       collisionGroupPredicate?: any
     ): {
-      box: Array<number>,
-      offscreen: boolean
+      box: Array<number>;
+      offscreen: boolean;
     } {
         const projectedPoint = this.projectAndGetPerspectiveRatio(posMatrix, collisionBox.anchorPointX, collisionBox.anchorPointY);
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
@@ -110,9 +110,9 @@ class CollisionIndex {
       circlePixelDiameter: number,
       textPixelPadding: number
     ): {
-      circles: Array<number>,
-      offscreen: boolean,
-      collisionDetected: boolean
+      circles: Array<number>;
+      offscreen: boolean;
+      collisionDetected: boolean;
     } {
         const placedCollisionCircles = [];
 

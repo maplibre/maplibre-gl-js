@@ -66,13 +66,13 @@ if (typeof Object.freeze == 'function') {
  *
  */
 export type RequestParameters = {
-  url: string,
-  headers?: any,
-  method?: "GET" | "POST" | "PUT",
-  body?: string,
-  type?: "string" | "json" | "arrayBuffer",
-  credentials?: "same-origin" | "include",
-  collectResourceTiming?: boolean
+  url: string;
+  headers?: any;
+  method?: "GET" | "POST" | "PUT";
+  body?: string;
+  type?: "string" | "json" | "arrayBuffer";
+  credentials?: "same-origin" | "include";
+  collectResourceTiming?: boolean;
 };
 
 export type ResponseCallback<T> = (

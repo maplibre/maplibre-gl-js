@@ -30,9 +30,9 @@ import type {FeatureStates} from '../source/source_state';
 import type {FormattedSection} from '../style-spec/expression/types/formatted';
 
 export type BinderUniform = {
-  name: string,
-  property: string,
-  binding: Uniform<any>
+  name: string;
+  property: string;
+  binding: Uniform<any>;
 };
 
 function packColor(color: Color): [number, number] {
@@ -174,7 +174,7 @@ class SourceExpressionBinder implements AttributeBinder {
     paintVertexBuffer: VertexBuffer | undefined | null;
 
     constructor(expression: SourceExpression, names: Array<string>, type: string, PaintVertexArray: {
-      new (...args: any): StructArray
+      new (...args: any): StructArray;
     }) {
         this.expression = expression;
         this.type = type;
@@ -244,7 +244,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
     paintVertexBuffer: VertexBuffer | undefined | null;
 
     constructor(expression: CompositeExpression, names: Array<string>, type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
-      new (...args: any): StructArray
+      new (...args: any): StructArray;
     }) {
         this.expression = expression;
         this.uniformNames = names.map(name => `u_${name}_t`);
@@ -331,7 +331,7 @@ class CrossFadedCompositeBinder implements AttributeBinder {
     paintVertexAttributes: Array<StructArrayMember>;
 
     constructor(expression: CompositeExpression, type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
-      new (...args: any): StructArray
+      new (...args: any): StructArray;
     }, layerId: string) {
         this.expression = expression;
         this.type = type;

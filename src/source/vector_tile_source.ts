@@ -66,7 +66,7 @@ class VectorTileSource extends Evented implements Source {
     _loaded: boolean;
 
     constructor(id: string, options: VectorSourceSpecification & {
-      collectResourceTiming: boolean
+      collectResourceTiming: boolean;
     }, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;

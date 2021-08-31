@@ -24,7 +24,7 @@ export class SingleTapRecognizer {
     };
 
     constructor(options: {
-      numTouches: number
+      numTouches: number;
     }) {
         this.reset();
         this.numTouches = options.numTouches;
@@ -92,8 +92,8 @@ export class TapRecognizer {
     count: number;
 
     constructor(options: {
-      numTaps: number,
-      numTouches: number
+      numTaps: number;
+      numTouches: number;
     }) {
         this.singleTap = new SingleTapRecognizer(options);
         this.numTaps = options.numTaps;

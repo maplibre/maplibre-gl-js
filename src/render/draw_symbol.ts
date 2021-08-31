@@ -34,19 +34,19 @@ import type {CrossTileID, VariableOffset} from '../symbol/placement';
 export default drawSymbols;
 
 type SymbolTileRenderState = {
-  segments: SegmentVector,
-  sortKey: number,
+  segments: SegmentVector;
+  sortKey: number;
   state: {
-    program: any,
-    buffers: SymbolBuffers,
-    uniformValues: any,
-    atlasTexture: Texture,
-    atlasTextureIcon: Texture | null,
-    atlasInterpolation: any,
-    atlasInterpolationIcon: any,
-    isSDF: boolean,
-    hasHalo: boolean
-  }
+    program: any;
+    buffers: SymbolBuffers;
+    uniformValues: any;
+    atlasTexture: Texture;
+    atlasTextureIcon: Texture | null;
+    atlasInterpolation: any;
+    atlasInterpolationIcon: any;
+    isSDF: boolean;
+    hasHalo: boolean;
+  };
 };
 
 // create() creates an identity matrix https://github.com/toji/gl-matrix/blob/master/src/mat4.js#L13

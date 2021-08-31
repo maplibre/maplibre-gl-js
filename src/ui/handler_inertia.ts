@@ -30,10 +30,10 @@ const defaultPitchInertiaOptions = extend({
 }, defaultInertiaOptions);
 
 export type InertiaOptions = {
-  linearity: number,
-  easing: (t: number) => number,
-  deceleration: number,
-  maxSpeed: number
+  linearity: number;
+  easing: (t: number) => number;
+  deceleration: number;
+  maxSpeed: number;
 };
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
@@ -41,8 +41,8 @@ export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
 export default class HandlerInertia {
     _map: Map;
     _inertiaBuffer: Array<{
-      time: number,
-      settings: any
+      time: number;
+      settings: any;
     }>;
 
     constructor(map: Map) {

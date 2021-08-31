@@ -10,11 +10,11 @@ import type {AnimationOptions, CameraOptions} from '../camera';
 import type {IControl} from './control';
 
 type Options = {
-  positionOptions?: PositionOptions,
-  fitBoundsOptions?: AnimationOptions & CameraOptions,
-  trackUserLocation?: boolean,
-  showAccuracyCircle?: boolean,
-  showUserLocation?: boolean
+  positionOptions?: PositionOptions;
+  fitBoundsOptions?: AnimationOptions & CameraOptions;
+  trackUserLocation?: boolean;
+  showAccuracyCircle?: boolean;
+  showUserLocation?: boolean;
 };
 
 const defaultOptions: Options = {

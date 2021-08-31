@@ -6,8 +6,8 @@ import type Map from '../map';
 import type {ControlPosition, IControl} from './control';
 
 type Options = {
-  compact?: boolean,
-  customAttribution?: string | Array<string>
+  compact?: boolean;
+  customAttribution?: string | Array<string>;
 };
 
 /**

@@ -262,8 +262,8 @@ class Transform {
      * @returns {number} zoom level An integer zoom level at which all tiles will be visible.
      */
     coveringZoomLevel(options: {
-      roundZoom?: boolean,
-      tileSize: number
+      roundZoom?: boolean;
+      tileSize: number;
     }) {
         const z = (options.roundZoom ? Math.round : Math.floor)(
             this.zoom + this.scaleZoom(this.tileSize / options.tileSize)
@@ -316,12 +316,12 @@ class Transform {
      */
     coveringTiles(
       options: {
-        tileSize: number,
-        minzoom?: number,
-        maxzoom?: number,
-        roundZoom?: boolean,
-        reparseOverscaled?: boolean,
-        renderWorldCopies?: boolean
+        tileSize: number;
+        minzoom?: number;
+        maxzoom?: number;
+        roundZoom?: boolean;
+        reparseOverscaled?: boolean;
+        renderWorldCopies?: boolean;
       }
     ): Array<OverscaledTileID> {
         let z = this.coveringZoomLevel(options);

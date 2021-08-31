@@ -10,7 +10,7 @@ export default resolveTokens;
  */
 function resolveTokens(
   properties: {
-    readonly [x: string]: unknown
+    readonly [x: string]: unknown;
   },
   text: string
 ): string {

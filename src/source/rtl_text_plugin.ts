@@ -13,8 +13,8 @@ const status = {
 };
 
 export type PluginState = {
-  pluginStatus: typeof status[keyof typeof status],
-  pluginURL: string | undefined | null
+  pluginStatus: typeof status[keyof typeof status];
+  pluginURL: string | undefined | null;
 };
 
 type ErrorCallback = (error?: Error | null) => void;
@@ -93,14 +93,14 @@ export const downloadRTLTextPlugin = function() {
 };
 
 export const plugin: {
-  applyArabicShaping: Function | undefined | null,
-  processBidirectionalText: ((b: string, a: Array<number>) => Array<string>) | undefined | null,
-  processStyledBidirectionalText: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>) | undefined | null,
-  isLoaded: () => boolean,
-  isLoading: () => boolean,
-  setState: (state: PluginState) => void,
-  isParsed: () => boolean,
-  getPluginURL: () => string | undefined | null
+  applyArabicShaping: Function | undefined | null;
+  processBidirectionalText: ((b: string, a: Array<number>) => Array<string>) | undefined | null;
+  processStyledBidirectionalText: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>) | undefined | null;
+  isLoaded: () => boolean;
+  isLoading: () => boolean;
+  setState: (state: PluginState) => void;
+  isParsed: () => boolean;
+  getPluginURL: () => string | undefined | null;
 } = {
     applyArabicShaping: null,
     processBidirectionalText: null,

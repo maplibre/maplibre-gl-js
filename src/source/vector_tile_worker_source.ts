@@ -18,11 +18,11 @@ import type StyleLayerIndex from '../style/style_layer_index';
 import type {Callback} from '../types/callback';
 
 export type LoadVectorTileResult = {
-  vectorTile: VectorTile,
-  rawData: ArrayBuffer,
-  expires?: any,
-  cacheControl?: any,
-  resourceTiming?: Array<PerformanceResourceTiming>
+  vectorTile: VectorTile;
+  rawData: ArrayBuffer;
+  expires?: any;
+  cacheControl?: any;
+  resourceTiming?: Array<PerformanceResourceTiming>;
 };
 
 /**
@@ -117,7 +117,7 @@ class VectorTileWorkerSource implements WorkerSource {
             }
 
             const rawTileData = response.rawData;
-            const cacheControl = {} as {expires: any, cacheControl: any};
+            const cacheControl = {} as {expires: any; cacheControl: any};
             if (response.expires) cacheControl.expires = response.expires;
             if (response.cacheControl) cacheControl.cacheControl = response.cacheControl;
 

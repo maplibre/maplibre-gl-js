@@ -8,9 +8,9 @@ import type Map from '../map';
 import type {IControl} from './control';
 
 type Options = {
-  showCompass?: boolean,
-  showZoom?: boolean,
-  visualizePitch?: boolean
+  showCompass?: boolean;
+  showZoom?: boolean;
+  visualizePitch?: boolean;
 };
 
 const defaultOptions: Options = {

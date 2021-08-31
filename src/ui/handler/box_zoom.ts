@@ -24,7 +24,7 @@ class BoxZoomHandler {
      * @private
      */
     constructor(map: Map, options: {
-      clickTolerance: number
+      clickTolerance: number;
     }) {
         this._map = map;
         this._el = map.getCanvasContainer();

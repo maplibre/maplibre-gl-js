@@ -161,11 +161,11 @@ class LngLat {
  * var v3 = {lon: -122.420679, lat: 37.772537};
  */
 export type LngLatLike = LngLat | {
-  lng: number,
-  lat: number
+  lng: number;
+  lat: number;
 } | {
-  lon: number,
-  lat: number
+  lon: number;
+  lat: number;
 } | [number, number];
 
 export default LngLat;

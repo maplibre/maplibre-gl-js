@@ -27,27 +27,27 @@ import type Point from '../../symbol/point';
 import type {CanonicalTileID} from '../../source/tile_id';
 
 export type Feature = {
-  readonly type: 1 | 2 | 3 | "Unknown" | "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon" | "MultiPolygon",
-  readonly id?: any,
-  readonly properties: {[_: string]: any},
+  readonly type: 1 | 2 | 3 | "Unknown" | "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon" | "MultiPolygon";
+  readonly id?: any;
+  readonly properties: {[_: string]: any};
   readonly patterns?: {
     [_: string]: {
-      "min": string,
-      "mid": string,
-      "max": string
-    }
-  },
-  readonly geometry?: Array<Array<Point>>
+      "min": string;
+      "mid": string;
+      "max": string;
+    };
+  };
+  readonly geometry?: Array<Array<Point>>;
 };
 
 export type FeatureState = {[_: string]: any};
 
 export type GlobalProperties = Readonly<{
-  zoom: number,
-  heatmapDensity?: number,
-  lineProgress?: number,
-  isSupportedScript?: (_: string) => boolean,
-  accumulated?: Value
+  zoom: number;
+  heatmapDensity?: number;
+  lineProgress?: number;
+  isSupportedScript?: (_: string) => boolean;
+  accumulated?: Value;
 }>;
 
 export class StyleExpression {
@@ -232,19 +232,19 @@ export class ZoomDependentExpression<Kind extends EvaluationKind> {
 }
 
 export type ConstantExpression = {
-  kind: "constant",
+  kind: "constant";
   readonly evaluate: (
     globals: GlobalProperties,
     feature?: Feature,
     featureState?: FeatureState,
     canonical?: CanonicalTileID,
     availableImages?: Array<string>
-  ) => any
+  ) => any;
 };
 
 export type SourceExpression = {
-  kind: "source",
-  isStateDependent: boolean,
+  kind: "source";
+  isStateDependent: boolean;
   readonly evaluate: (
     globals: GlobalProperties,
     feature?: Feature,
@@ -252,26 +252,26 @@ export type SourceExpression = {
     canonical?: CanonicalTileID,
     availableImages?: Array<string>,
     formattedSection?: FormattedSection
-  ) => any
+  ) => any;
 };
 
 export type CameraExpression = {
-  kind: "camera",
+  kind: "camera";
   readonly evaluate: (
     globals: GlobalProperties,
     feature?: Feature,
     featureState?: FeatureState,
     canonical?: CanonicalTileID,
     availableImages?: Array<string>
-  ) => any,
-  readonly interpolationFactor: (input: number, lower: number, upper: number) => number,
-  zoomStops: Array<number>,
-  interpolationType: InterpolationType | undefined | null
+  ) => any;
+  readonly interpolationFactor: (input: number, lower: number, upper: number) => number;
+  zoomStops: Array<number>;
+  interpolationType: InterpolationType | undefined | null;
 };
 
 export type CompositeExpression = {
-  kind: "composite",
-  isStateDependent: boolean,
+  kind: "composite";
+  isStateDependent: boolean;
   readonly evaluate: (
     globals: GlobalProperties,
     feature?: Feature,
@@ -279,10 +279,10 @@ export type CompositeExpression = {
     canonical?: CanonicalTileID,
     availableImages?: Array<string>,
     formattedSection?: FormattedSection
-  ) => any,
-  readonly interpolationFactor: (input: number, lower: number, upper: number) => number,
-  zoomStops: Array<number>,
-  interpolationType: InterpolationType | undefined | null
+  ) => any;
+  readonly interpolationFactor: (input: number, lower: number, upper: number) => number;
+  zoomStops: Array<number>;
+  interpolationType: InterpolationType | undefined | null;
 };
 
 export type StylePropertyExpression = ConstantExpression | SourceExpression | CameraExpression | CompositeExpression;
@@ -348,8 +348,8 @@ export class StylePropertyFunction<T> {
     }
 
     static deserialize<T>(serialized: {
-      _parameters: PropertyValueSpecification<T>,
-      _specification: StylePropertySpecification
+      _parameters: PropertyValueSpecification<T>;
+      _specification: StylePropertySpecification;
     }) {
         return new StylePropertyFunction(serialized._parameters, serialized._specification) as StylePropertyFunction<T>;
     }

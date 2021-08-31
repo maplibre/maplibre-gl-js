@@ -37,21 +37,21 @@ export function eachLayer(style: StyleSpecification, callback: (_: LayerSpecific
 
 type PropertyCallback = (
   a: {
-    path: [string, "paint" | "layout", string] // [layerid, paint/layout, property key],
-    key: string,
-    value: PropertyValueSpecification<unknown> | DataDrivenPropertyValueSpecification<unknown>,
-    reference: StylePropertySpecification,
+    path: [string, "paint" | "layout", string]; // [layerid, paint/layout, property key],
+    key: string;
+    value: PropertyValueSpecification<unknown> | DataDrivenPropertyValueSpecification<unknown>;
+    reference: StylePropertySpecification;
     set: (
       a: PropertyValueSpecification<unknown> | DataDrivenPropertyValueSpecification<unknown>
-    ) => void
+    ) => void;
   }
 ) => void;
 
 export function eachProperty(
     style: StyleSpecification,
     options: {
-      paint?: boolean,
-      layout?: boolean
+      paint?: boolean;
+      layout?: boolean;
     },
     callback: PropertyCallback
 ) {

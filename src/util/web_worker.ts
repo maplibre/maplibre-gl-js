@@ -9,8 +9,8 @@ import type {WorkerSource} from '../source/worker_source';
 
 type MessageListener = (
     a: {
-        data: any,
-        target: any
+        data: any;
+        target: any;
     }
 ) => unknown;
 
@@ -28,7 +28,7 @@ export interface WorkerGlobalScopeInterface {
     registerWorkerSource: (
         b: string,
         a: {
-            new(...args: any): WorkerSource
+            new(...args: any): WorkerSource;
         }
     ) => void;
     registerRTLTextPlugin: (_: any) => void;

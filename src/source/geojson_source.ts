@@ -84,8 +84,8 @@ class GeoJSONSource extends Evented implements Source {
      * @private
      */
     constructor(id: string, options: GeoJSONSourceSpecification & {
-      workerOptions?: any,
-      collectResourceTiming: boolean
+      workerOptions?: any;
+      collectResourceTiming: boolean;
     }, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
 

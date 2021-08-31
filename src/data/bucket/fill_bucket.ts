@@ -125,14 +125,14 @@ class FillBucket implements Bucket {
     }
 
     update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {
-      [_: string]: ImagePosition
+      [_: string]: ImagePosition;
     }) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
     }
 
     addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {
-      [_: string]: ImagePosition
+      [_: string]: ImagePosition;
     }) {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions);
@@ -167,7 +167,7 @@ class FillBucket implements Bucket {
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {
-      [_: string]: ImagePosition
+      [_: string]: ImagePosition;
     }) {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             let numVertices = 0;

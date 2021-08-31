@@ -12,52 +12,52 @@ import type {StyleImage} from '../style/style_image';
 import type {PromoteIdSpecification} from '../style-spec/types';
 
 export type TileParameters = {
-  source: string,
-  uid: string
+  source: string;
+  uid: string;
 };
 
 export type WorkerTileParameters = TileParameters & {
-  tileID: OverscaledTileID,
-  request: RequestParameters,
-  zoom: number,
-  maxZoom: number,
-  tileSize: number,
-  promoteId: PromoteIdSpecification | undefined | null,
-  pixelRatio: number,
-  showCollisionBoxes: boolean,
-  collectResourceTiming?: boolean,
-  returnDependencies?: boolean
+  tileID: OverscaledTileID;
+  request: RequestParameters;
+  zoom: number;
+  maxZoom: number;
+  tileSize: number;
+  promoteId: PromoteIdSpecification | undefined | null;
+  pixelRatio: number;
+  showCollisionBoxes: boolean;
+  collectResourceTiming?: boolean;
+  returnDependencies?: boolean;
 };
 
 export type WorkerDEMTileParameters = TileParameters & {
   coord: {
-    z: number,
-    x: number,
-    y: number,
-    w: number
-  },
-  rawImageData: RGBAImage | ImageBitmap,
-  encoding: "mapbox" | "terrarium"
+    z: number;
+    x: number;
+    y: number;
+    w: number;
+  };
+  rawImageData: RGBAImage | ImageBitmap;
+  encoding: "mapbox" | "terrarium";
 };
 
 export type WorkerTileResult = {
-  buckets: Array<Bucket>,
-  imageAtlas: ImageAtlas,
-  glyphAtlasImage: AlphaImage,
-  featureIndex: FeatureIndex,
-  collisionBoxArray: CollisionBoxArray,
-  rawTileData?: ArrayBuffer,
-  resourceTiming?: Array<PerformanceResourceTiming>,
+  buckets: Array<Bucket>;
+  imageAtlas: ImageAtlas;
+  glyphAtlasImage: AlphaImage;
+  featureIndex: FeatureIndex;
+  collisionBoxArray: CollisionBoxArray;
+  rawTileData?: ArrayBuffer;
+  resourceTiming?: Array<PerformanceResourceTiming>;
   // Only used for benchmarking:
   glyphMap?: {
     [_: string]: {
-      [_: number]: StyleGlyph | undefined | null
-    }
-  } | null,
+      [_: number]: StyleGlyph | undefined | null;
+    };
+  } | null;
   iconMap?: {
-    [_: string]: StyleImage
-  } | null,
-  glyphPositions?: GlyphPositions | null
+    [_: string]: StyleImage;
+  } | null;
+  glyphPositions?: GlyphPositions | null;
 };
 
 export type WorkerTileCallback = (error?: Error | null, result?: WorkerTileResult | null) => void;
@@ -108,7 +108,7 @@ export interface WorkerSource {
      */
   removeSource?: (
     params: {
-      source: string
+      source: string;
     },
     callback: WorkerTileCallback
   ) => void;

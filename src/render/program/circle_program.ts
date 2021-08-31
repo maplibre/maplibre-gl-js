@@ -10,12 +10,12 @@ import type Painter from '../painter';
 import browser from '../../util/browser';
 
 export type CircleUniformsType = {
-  'u_camera_to_center_distance': Uniform1f,
-  'u_scale_with_map': Uniform1i,
-  'u_pitch_with_map': Uniform1i,
-  'u_extrude_scale': Uniform2f,
-  'u_device_pixel_ratio': Uniform1f,
-  'u_matrix': UniformMatrix4f
+  'u_camera_to_center_distance': Uniform1f;
+  'u_scale_with_map': Uniform1i;
+  'u_pitch_with_map': Uniform1i;
+  'u_extrude_scale': Uniform2f;
+  'u_device_pixel_ratio': Uniform1f;
+  'u_matrix': UniformMatrix4f;
 };
 
 const circleUniforms = (context: Context, locations: UniformLocations): CircleUniformsType => ({

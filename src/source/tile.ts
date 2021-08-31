@@ -274,14 +274,14 @@ class Tile {
       cameraQueryGeometry: Array<Point>,
       scale: number,
       params: {
-        filter: FilterSpecification,
-        layers: Array<string>,
-        availableImages: Array<string>
+        filter: FilterSpecification;
+        layers: Array<string>;
+        availableImages: Array<string>;
       },
       transform: Transform,
       maxPitchScaleFactor: number,
       pixelPosMatrix: mat4
-    ): {[_: string]: Array<{featureIndex: number, feature: GeoJSONFeature}>} {
+    ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {
         if (!this.latestFeatureIndex || !this.latestFeatureIndex.rawTileData)
             return {};
 

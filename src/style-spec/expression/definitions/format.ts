@@ -18,10 +18,10 @@ import type {Type} from '../types';
 type FormattedSectionExpression = {
   // Content of a section may be Image expression or other
   // type of expression that is coercable to 'string'.
-  content: Expression,
-  scale: Expression | null,
-  font: Expression | null,
-  textColor: Expression | null
+  content: Expression;
+  scale: Expression | null;
+  font: Expression | null;
+  textColor: Expression | null;
 };
 
 export default class FormatExpression implements Expression {

@@ -8,7 +8,7 @@ export class MapEventHandler {
     _map: Map;
 
     constructor(map: Map, options: {
-      clickTolerance: number
+      clickTolerance: number;
     }) {
         this._map = map;
         this._clickTolerance = options.clickTolerance;

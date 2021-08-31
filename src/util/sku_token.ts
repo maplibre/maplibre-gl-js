@@ -12,8 +12,8 @@
 ******************************************************************************/
 
 type SkuTokenObject = {
-  token: string,
-  tokenExpiresAt: number
+  token: string;
+  tokenExpiresAt: number;
 };
 
 const SKU_ID = '01';

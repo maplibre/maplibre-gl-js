@@ -12,31 +12,31 @@ import type {Callback} from '../types/callback';
 type Entry = {
   // null means we've requested the range, but the glyph wasn't included in the result.
   glyphs: {
-    [id: number]: StyleGlyph | null
-  },
+    [id: number]: StyleGlyph | null;
+  };
   requests: {
     [range: number]: Array<Callback<{
-      [_: number]: StyleGlyph | null
-    }>>
-  },
+      [_: number]: StyleGlyph | null;
+    }>>;
+  };
   ranges: {
-    [range: number]: boolean | null
-  },
-  tinySDF?: TinySDF
+    [range: number]: boolean | null;
+  };
+  tinySDF?: TinySDF;
 };
 
 class GlyphManager {
     requestManager: RequestManager;
     localIdeographFontFamily: string | undefined | null;
     entries: {
-      [_: string]: Entry
+      [_: string]: Entry;
     };
     url: string | undefined | null;
 
     // exposed as statics to enable stubbing in unit tests
     static loadGlyphRange: typeof loadGlyphRange;
     static TinySDF: {
-      new (...args: any): TinySDF
+      new (...args: any): TinySDF;
     };
 
     constructor(requestManager: RequestManager, localIdeographFontFamily?: string | null) {
@@ -50,11 +50,11 @@ class GlyphManager {
     }
 
     getGlyphs(glyphs: {
-      [stack: string]: Array<number>
+      [stack: string]: Array<number>;
     }, callback: Callback<{
       [stack: string]: {
-        [id: number]: StyleGlyph | undefined | null
-      }
+        [id: number]: StyleGlyph | undefined | null;
+      };
     }>) {
         const all = [];
 
@@ -65,9 +65,9 @@ class GlyphManager {
         }
 
         asyncAll(all, ({stack, id}, callback: Callback<{
-          stack: string,
-          id: number,
-          glyph: StyleGlyph | undefined | null
+          stack: string;
+          id: number;
+          glyph: StyleGlyph | undefined | null;
         }>) => {
             let entry = this.entries[stack];
             if (!entry) {
@@ -107,7 +107,7 @@ class GlyphManager {
                 requests = entry.requests[range] = [];
                 GlyphManager.loadGlyphRange(stack, range, ((this.url as any)), this.requestManager,
                     (err, response?: {
-                      [_: number]: StyleGlyph | null
+                      [_: number]: StyleGlyph | null;
                     } | null) => {
                         if (response) {
                             for (const id in response) {
@@ -125,7 +125,7 @@ class GlyphManager {
             }
 
             requests.push((err, result?: {
-              [_: number]: StyleGlyph | null
+              [_: number]: StyleGlyph | null;
             } | null) => {
                 if (err) {
                     callback(err);
@@ -134,9 +134,9 @@ class GlyphManager {
                 }
             });
         }, (err, glyphs?: Array<{
-          stack: string,
-          id: number,
-          glyph: StyleGlyph | undefined | null
+          stack: string;
+          id: number;
+          glyph: StyleGlyph | undefined | null;
         }> | null) => {
             if (err) {
                 callback(err);

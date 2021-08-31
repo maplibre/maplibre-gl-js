@@ -10,7 +10,7 @@ import ResolvedImage from '../style-spec/expression/types/resolved_image';
 import type {Transferable} from '../types/transferable';
 
 type SerializedObject = {
-  [_: string]: Serialized
+  [_: string]: Serialized;
 }; // eslint-disable-line
 
 export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | Array<Serialized> | SerializedObject;
@@ -18,17 +18,17 @@ export type Serialized = null | void | boolean | number | string | Boolean | Num
 type Registry = {
   [_: string]: {
     klass: {
-      new (...args: any): any,
-      deserialize?: (input: Serialized) => unknown
-    },
-    omit: ReadonlyArray<string>,
-    shallow: ReadonlyArray<string>
-  }
+      new (...args: any): any;
+      deserialize?: (input: Serialized) => unknown;
+    };
+    omit: ReadonlyArray<string>;
+    shallow: ReadonlyArray<string>;
+  };
 };
 
 type RegisterOptions<T> = {
-  omit?: ReadonlyArray<keyof T>,
-  shallow?: ReadonlyArray<keyof T>
+  omit?: ReadonlyArray<keyof T>;
+  shallow?: ReadonlyArray<keyof T>;
 };
 
 const registry: Registry = {};
@@ -45,7 +45,7 @@ const registry: Registry = {};
 export function register<T extends any>(
   name: string,
   klass: {
-    new (...args: any): T
+    new (...args: any): T;
   },
   options: RegisterOptions<T> = {}
 ) {
@@ -64,7 +64,7 @@ export function register<T extends any>(
 register('Object', Object);
 
 type SerializedGrid = {
-  buffer: ArrayBuffer
+  buffer: ArrayBuffer;
 };
 
 Grid.serialize = function serialize(grid: Grid, transferables?: Array<Transferable>): SerializedGrid {
