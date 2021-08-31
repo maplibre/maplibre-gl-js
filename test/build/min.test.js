@@ -7,7 +7,7 @@ import browserify from 'browserify';
 import {fileURLToPath} from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
+const minBundle = fs.readFileSync('dist/maplibre-gl-dev.js', 'utf8');
 
 test('production build removes asserts', (t) => {
     t.assert(minBundle.indexOf('canary assert') === -1);
@@ -47,7 +47,7 @@ test('evaluates without errors', async (t) => {
     global.performance = {};
     global.navigator = {};
     try {
-        await import('../../dist/maplibre-gl.js');
+        await import('../../dist/maplibre-gl-dev.js');
     } catch (e) {
         t.error(e);
     }
