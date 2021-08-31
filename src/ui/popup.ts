@@ -3,7 +3,7 @@ import {Event, Evented} from '../util/evented';
 import {MapMouseEvent} from '../ui/events';
 import DOM from '../util/dom';
 import LngLat from '../geo/lng_lat';
-import Point, {PointLike} from '../symbol/point';
+import Point, {PointLike} from '../util/point';
 import smartWrap from '../util/smart_wrap';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 

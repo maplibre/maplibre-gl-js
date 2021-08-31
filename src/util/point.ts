@@ -16,7 +16,7 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-import {register} from '../util/web_worker_transfer';
+import {register} from './web_worker_transfer';
 
 /**
  * A standalone point geometry with useful accessor, comparison, and

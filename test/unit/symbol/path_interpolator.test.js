@@ -1,5 +1,5 @@
 import {test} from '../../util/test';
-import Point from '../../../rollup/build/tsc/symbol/point';
+import Point from '../../../rollup/build/tsc/util/point';
 import PathInterpolator from '../../../rollup/build/tsc/symbol/path_interpolator';
 
 test('PathInterpolator', (t) => {

@@ -6,7 +6,7 @@ import Tile from '../../../rollup/build/tsc/source/tile';
 import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
 import Transform from '../../../rollup/build/tsc/geo/transform';
 import LngLat from '../../../rollup/build/tsc/geo/lng_lat';
-import Point from '../../../rollup/build/tsc/symbol/point';
+import Point from '../../../rollup/build/tsc/util/point';
 import {Event, ErrorEvent, Evented} from '../../../rollup/build/tsc/util/evented';
 import {extend} from '../../../rollup/build/tsc/util/util';
 import browser from '../../../rollup/build/tsc/util/browser';

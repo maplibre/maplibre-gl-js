@@ -1,4 +1,4 @@
-import Point from '../symbol/point';
+import Point from '../util/point';
 import clipLine from './clip_line';
 import PathInterpolator from './path_interpolator';
 

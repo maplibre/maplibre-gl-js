@@ -2,7 +2,7 @@ import quickselect from 'quickselect';
 
 import {calculateSignedArea} from './util';
 
-import type Point from '../symbol/point';
+import type Point from './point';
 
 // classifies an array of rings into polygons with outer rings and holes
 export default function classifyRings(rings: Array<Array<Point>>, maxRings: number) {

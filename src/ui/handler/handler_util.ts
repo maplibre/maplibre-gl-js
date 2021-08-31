@@ -1,5 +1,5 @@
 import assert from 'assert';
-import Point from '../../symbol/point';
+import Point from '../../util/point';
 
 export function indexTouches(touches: Array<Touch>, points: Array<Point>) {
     assert(touches.length === points.length);

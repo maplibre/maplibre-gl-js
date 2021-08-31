@@ -1,6 +1,6 @@
 import Queue from 'tinyqueue';
 
-import Point from '../symbol/point';
+import Point from './point';
 import {distToSegmentSquared} from './intersection_tests';
 
 /**

@@ -1,6 +1,6 @@
 import DOM from '../util/dom';
 import LngLat from '../geo/lng_lat';
-import Point, {PointLike} from '../symbol/point';
+import Point, {PointLike} from '../util/point';
 import smartWrap from '../util/smart_wrap';
 import {bindAll, extend} from '../util/util';
 import {anchorTranslate, applyAnchorClass} from './anchor';

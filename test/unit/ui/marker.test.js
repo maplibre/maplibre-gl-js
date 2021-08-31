@@ -4,7 +4,7 @@ import {createMap as globalCreateMap} from '../../util';
 import Marker from '../../../rollup/build/tsc/ui/marker';
 import Popup from '../../../rollup/build/tsc/ui/popup';
 import LngLat from '../../../rollup/build/tsc/geo/lng_lat';
-import Point from '../../../rollup/build/tsc/symbol/point';
+import Point from '../../../rollup/build/tsc/util/point';
 import simulate from '../../util/simulate_interaction';
 
 function createMap(t, options = {}) {

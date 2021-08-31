@@ -1,5 +1,5 @@
 import {TapRecognizer} from './tap_recognizer';
-import type Point from '../../symbol/point';
+import type Point from '../../util/point';
 import type Map from '../map';
 
 export default class TapZoomHandler {

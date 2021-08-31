@@ -1,6 +1,6 @@
 import {isCounterClockwise} from './util';
 
-import Point from '../symbol/point';
+import Point from './point';
 
 export {polygonIntersectsBufferedPoint, polygonIntersectsMultiPolygon, polygonIntersectsBufferedMultiLine, polygonIntersectsPolygon, distToSegmentSquared, polygonIntersectsBox};
 

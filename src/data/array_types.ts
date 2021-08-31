@@ -2,7 +2,7 @@
 import assert from 'assert';
 import {Struct, StructArray} from '../util/struct_array';
 import {register} from '../util/web_worker_transfer';
-import Point from '../symbol/point';
+import Point from '../util/point';
 
 /**
  * Implementation of the StructArray layout:

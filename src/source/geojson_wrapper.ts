@@ -1,4 +1,4 @@
-import Point from '../symbol/point';
+import Point from '../util/point';
 
 import mvt from '@mapbox/vector-tile';
 const toGeoJSON = mvt.VectorTileFeature.prototype.toGeoJSON;

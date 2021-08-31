@@ -1,5 +1,5 @@
 import {test} from '../../util/test';
-import Point from '../../../rollup/build/tsc/symbol/point';
+import Point from '../../../rollup/build/tsc/util/point';
 import findPoleOfInaccessibility from '../../../rollup/build/tsc/util/find_pole_of_inaccessibility';
 
 test('polygon_poi', (t) => {

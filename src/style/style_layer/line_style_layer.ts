@@ -1,4 +1,4 @@
-import Point from '../../symbol/point';
+import Point from '../../util/point';
 
 import StyleLayer from '../style_layer';
 import LineBucket from '../../data/bucket/line_bucket';

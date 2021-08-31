@@ -26,7 +26,7 @@ import type FillStyleLayer from '../../style/style_layer/fill_style_layer';
 import type Context from '../../gl/context';
 import type IndexBuffer from '../../gl/index_buffer';
 import type VertexBuffer from '../../gl/vertex_buffer';
-import type Point from '../../symbol/point';
+import type Point from '../../util/point';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 

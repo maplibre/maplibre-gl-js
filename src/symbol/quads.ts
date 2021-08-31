@@ -1,4 +1,4 @@
-import Point from '../symbol/point';
+import Point from '../util/point';
 
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
 

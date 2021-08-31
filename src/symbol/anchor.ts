@@ -1,4 +1,4 @@
-import Point from '../symbol/point';
+import Point from '../util/point';
 
 import {register} from '../util/web_worker_transfer';
 

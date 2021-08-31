@@ -28,7 +28,7 @@ import type {ImagePosition} from '../render/image_atlas';
 import type {GlyphPosition} from '../render/glyph_atlas';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties';
 
-import Point from './point';
+import Point from '../util/point';
 import murmur3 from 'murmurhash-js';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and

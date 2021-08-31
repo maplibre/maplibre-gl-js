@@ -1,5 +1,5 @@
 import type {CollisionBoxArray} from '../data/array_types';
-import Point from '../symbol/point';
+import Point from '../util/point';
 import type Anchor from './anchor';
 
 /**
