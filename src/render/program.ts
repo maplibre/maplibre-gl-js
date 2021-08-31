@@ -14,7 +14,7 @@ import type CullFaceMode from '../gl/cull_face_mode';
 import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding';
 import type {BinderUniform} from '../data/program_configuration';
 
-export type DrawMode = WebGLRenderingContext["LINES"] | WebGLRenderingContext["TRIANGLES"] | WebGLRenderingContext["LINE_STRIP"];
+export type DrawMode = WebGLRenderingContext['LINES'] | WebGLRenderingContext['TRIANGLES'] | WebGLRenderingContext['LINE_STRIP'];
 
 function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> {
     const result = [];

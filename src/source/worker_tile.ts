@@ -39,7 +39,7 @@ class WorkerTile {
     collectResourceTiming: boolean;
     returnDependencies: boolean;
 
-    status: "parsing" | "done";
+    status: 'parsing' | 'done';
     data: VectorTile;
     collisionBoxArray: CollisionBoxArray;
 
@@ -90,7 +90,7 @@ class WorkerTile {
 
             if (sourceLayer.version === 1) {
                 warnOnce(`Vector tile source "${this.source}" layer "${sourceLayerId}" ` +
-                    `does not use vector tile spec v2 and therefore may have some rendering errors.`);
+                    'does not use vector tile spec v2 and therefore may have some rendering errors.');
             }
 
             const sourceLayerIndex = sourceLayerCoder.encode(sourceLayerId);

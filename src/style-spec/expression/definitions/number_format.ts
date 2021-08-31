@@ -18,7 +18,7 @@ declare class Intl$NumberFormat {
 }
 
 type NumberFormatOptions = {
-  style?: "decimal" | "currency" | "percent";
+  style?: 'decimal' | 'currency' | 'percent';
   currency?: null | string;
   minimumFractionDigits?: null | string;
   maximumFractionDigits?: null | string;
@@ -47,14 +47,14 @@ export default class NumberFormat implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length !== 3)
-            return context.error(`Expected two arguments.`) as null;
+            return context.error('Expected two arguments.') as null;
 
         const number = context.parse(args[1], 1, NumberType);
         if (!number) return null;
 
         const options = (args[2] as any);
-        if (typeof options !== "object" || Array.isArray(options))
-            return context.error(`NumberFormat options argument must be an object.`) as null;
+        if (typeof options !== 'object' || Array.isArray(options))
+            return context.error('NumberFormat options argument must be an object.') as null;
 
         let locale = null;
         if (options['locale']) {
@@ -86,7 +86,7 @@ export default class NumberFormat implements Expression {
     evaluate(ctx: EvaluationContext) {
         return new Intl.NumberFormat(this.locale ? this.locale.evaluate(ctx) : [],
             {
-                style: this.currency ? "currency" : "decimal",
+                style: this.currency ? 'currency' : 'decimal',
                 currency: this.currency ? this.currency.evaluate(ctx) : undefined,
                 minimumFractionDigits: this.minFractionDigits ? this.minFractionDigits.evaluate(ctx) : undefined,
                 maximumFractionDigits: this.maxFractionDigits ? this.maxFractionDigits.evaluate(ctx) : undefined,
@@ -127,6 +127,6 @@ export default class NumberFormat implements Expression {
         if (this.maxFractionDigits) {
             options['max-fraction-digits'] = this.maxFractionDigits.serialize();
         }
-        return ["number-format", this.number.serialize(), options];
+        return ['number-format', this.number.serialize(), options];
     }
 }

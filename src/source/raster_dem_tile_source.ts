@@ -15,14 +15,14 @@ import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '../style-spec/types';
 
 class RasterDEMTileSource extends RasterTileSource implements Source {
-    encoding: "mapbox" | "terrarium";
+    encoding: 'mapbox' | 'terrarium';
 
     constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
         this.type = 'raster-dem';
         this.maxzoom = 22;
         this._options = extend({type: 'raster-dem'}, options);
-        this.encoding = options.encoding || "mapbox";
+        this.encoding = options.encoding || 'mapbox';
     }
 
     serialize() {

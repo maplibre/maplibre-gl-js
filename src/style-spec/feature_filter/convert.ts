@@ -2,7 +2,7 @@ import {isExpressionFilter} from './index';
 
 import type {FilterSpecification} from '../types';
 
-type ExpectedTypes = {[_: string]: "string" | "number" | "boolean"};
+type ExpectedTypes = {[_: string]: 'string' | 'number' | 'boolean'};
 
 /**
  * Convert the given legacy filter to (the JSON representation of) an

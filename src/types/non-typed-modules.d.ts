@@ -1,6 +1,6 @@
 import type Pbf from 'pbf';
 
-declare module "@mapbox/mapbox-gl-supported" {
+declare module '@mapbox/mapbox-gl-supported' {
     type isSupported = {
         webGLContextAttributes: WebGLContextAttributes;
         (
@@ -14,7 +14,7 @@ declare module "@mapbox/mapbox-gl-supported" {
     export = __exports
 }
 
-declare module "@mapbox/unitbezier" {
+declare module '@mapbox/unitbezier' {
     class UnitBezier {
         constructor(p1x: number, p1y: number, p2x: number, p2y: number);
         sampleCurveX(t: number): number;
@@ -27,7 +27,7 @@ declare module "@mapbox/unitbezier" {
     let __exports: typeof UnitBezier;
     export = __exports
 }
-declare module "potpack" {
+declare module 'potpack' {
     type Bin = {
         x: number;
         y: number;
@@ -45,7 +45,7 @@ declare module "potpack" {
     export = __exports
 }
 
-declare module "sinon" {
+declare module 'sinon' {
     type SpyCall = {
         args: Array<unknown>;
     };
@@ -104,14 +104,14 @@ declare global {
     }
 }
 
-declare module "@mapbox/vector-tile" {
-    import "@mapbox/vector-tile";
+declare module '@mapbox/vector-tile' {
+    import '@mapbox/vector-tile';
     class VectorTileImpl {
         constructor(pbf: Pbf);
     }
 
     class VectorTileFeatureImpl {
-        static types: ["Unknown", "Point", "LineString", "Polygon"];
+        static types: ['Unknown', 'Point', 'LineString', 'Polygon'];
         toGeoJSON(x: number, y: number, z: number): GeoJSON.Feature;
     }
 

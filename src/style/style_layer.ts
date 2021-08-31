@@ -40,7 +40,7 @@ class StyleLayer extends Evented {
     minzoom: number | undefined | null;
     maxzoom: number | undefined | null;
     filter: FilterSpecification | void;
-    visibility: "visible" | "none" | void;
+    visibility: 'visible' | 'none' | void;
     _crossfadeParameters: CrossfadeParameters;
 
     _unevaluatedLayout: Layout<any>;
@@ -160,7 +160,7 @@ class StyleLayer extends Evented {
             return false;
         } else {
             const transitionable = this._transitionablePaint._values[name];
-            const isCrossFadedProperty = transitionable.property.specification["property-type"] === 'cross-faded-data-driven';
+            const isCrossFadedProperty = transitionable.property.specification['property-type'] === 'cross-faded-data-driven';
             const wasDataDriven = transitionable.value.isDataDriven();
             const oldValue = transitionable.value;
 

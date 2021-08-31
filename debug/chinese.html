@@ -38,23 +38,23 @@ var map = window.map = new maplibregl.Map({
 map.addControl(new maplibregl.NavigationControl());
 
 map.on('load', function () {
-    map.addSource("points", {
-        "type": "geojson",
-        "data": '/test/integration/data/chinese.geojson'
+    map.addSource('points', {
+        'type': 'geojson',
+        'data': '/test/integration/data/chinese.geojson'
     });
 
     map.addLayer({
-        "id": "points",
-        "type": "symbol",
-        "source": "points",
-        "layout": {
-            "icon-image": "{icon}-15",
-            "text-field": "{name}",
-            "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-            "text-offset": [0, 0.6],
-            "text-anchor": "top",
-            "text-allow-overlap": true,
-            "icon-allow-overlap": true
+        'id': 'points',
+        'type': 'symbol',
+        'source': 'points',
+        'layout': {
+            'icon-image': '{icon}-15',
+            'text-field': '{name}',
+            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+            'text-offset': [0, 0.6],
+            'text-anchor': 'top',
+            'text-allow-overlap': true,
+            'icon-allow-overlap': true
         }
     });
 });

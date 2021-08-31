@@ -11,19 +11,19 @@ const SIZE_PACK_FACTOR = 128;
 export {getSizeData, evaluateSizeForFeature, evaluateSizeForZoom, SIZE_PACK_FACTOR};
 
 export type SizeData = {
-  kind: "constant";
+  kind: 'constant';
   layoutSize: number;
 } | {
-  kind: "source";
+  kind: 'source';
 } | {
-  kind: "camera";
+  kind: 'camera';
   minZoom: number;
   maxZoom: number;
   minSize: number;
   maxSize: number;
   interpolationType: InterpolationType | undefined | null;
 } | {
-  kind: "composite";
+  kind: 'composite';
   minZoom: number;
   maxZoom: number;
   interpolationType: InterpolationType | undefined | null;

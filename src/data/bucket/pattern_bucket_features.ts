@@ -37,7 +37,7 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
         const patternProperty = (layer.paint  as PossiblyEvaluated<any, any>).get(`${type}-pattern`);
 
         const patternPropertyValue = patternProperty.value;
-        if (patternPropertyValue.kind !== "constant") {
+        if (patternPropertyValue.kind !== 'constant') {
             let min = patternPropertyValue.evaluate({zoom: zoom - 1}, patternFeature, {}, options.availableImages);
             let mid = patternPropertyValue.evaluate({zoom}, patternFeature, {}, options.availableImages);
             let max = patternPropertyValue.evaluate({zoom: zoom + 1}, patternFeature, {}, options.availableImages);

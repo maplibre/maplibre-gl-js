@@ -154,9 +154,9 @@ function convertInOp(property: string, values: Array<any>) {
     if (values.length === 0) { return false; }
     switch (property) {
     case '$type':
-        return [`filter-type-in`, ['literal', values]];
+        return ['filter-type-in', ['literal', values]];
     case '$id':
-        return [`filter-id-in`, ['literal', values]];
+        return ['filter-id-in', ['literal', values]];
     default:
         if (values.length > 200 && !values.some(v => typeof v !== typeof values[0])) {
             return ['filter-in-large', property, ['literal', values.sort(compare)]];
@@ -171,9 +171,9 @@ function convertHasOp(property: string) {
     case '$type':
         return true;
     case '$id':
-        return [`filter-has-id`];
+        return ['filter-has-id'];
     default:
-        return [`filter-has`, property];
+        return ['filter-has', property];
     }
 }
 

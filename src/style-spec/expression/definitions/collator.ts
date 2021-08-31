@@ -21,11 +21,11 @@ export default class CollatorExpression implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length !== 2)
-            return context.error(`Expected one argument.`) as null;
+            return context.error('Expected one argument.') as null;
 
         const options = (args[1] as any);
-        if (typeof options !== "object" || Array.isArray(options))
-            return context.error(`Collator options argument must be an object.`) as null;
+        if (typeof options !== 'object' || Array.isArray(options))
+            return context.error('Collator options argument must be an object.') as null;
 
         const caseSensitive = context.parse(
             options['case-sensitive'] === undefined ? false : options['case-sensitive'], 1, BooleanType);
@@ -71,6 +71,6 @@ export default class CollatorExpression implements Expression {
         if (this.locale) {
             options['locale'] = this.locale.serialize();
         }
-        return ["collator", options];
+        return ['collator', options];
     }
 }

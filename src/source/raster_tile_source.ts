@@ -22,7 +22,7 @@ import type {
 } from '../style-spec/types';
 
 class RasterTileSource extends Evented implements Source {
-    type: "raster" | "raster-dem";
+    type: 'raster' | 'raster-dem';
     id: string;
     minzoom: number;
     maxzoom: number;

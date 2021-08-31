@@ -59,7 +59,9 @@
     "prefer-arrow-callback": "error",
     "prefer-const": ["error", {"destructuring": "all"}],
     "prefer-template": "error",
+    // @typescript-eslint/quotes requires standard quotes rule to be turned off
     "quotes": "off",
+    "@typescript-eslint/quotes": ["error", "single"],
     "space-before-function-paren": "off",
     "template-curly-spacing": "error",
     "no-useless-escape": "off",

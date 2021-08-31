@@ -126,7 +126,7 @@ export class RequestManager {
     }
 
     canonicalizeTileURL(url: string, removeAccessToken: boolean) {
-        const version = "/v4/";
+        const version = '/v4/';
         // matches any file extension specified by a dot and one or more alphanumeric characters
         const extensionRe = /\.[\w]+$/;
 
@@ -138,7 +138,7 @@ export class RequestManager {
             return url;
         }
         // Reassemble the canonical URL from the parts we've parsed before.
-        let result = "mapbox://tiles/";
+        let result = 'mapbox://tiles/';
         result +=  urlObject.path.replace(version, '');
 
         // Append the query string, minus the access token parameter.
@@ -261,7 +261,7 @@ function parseAccessToken(accessToken?: string | null) {
     }
 }
 
-type TelemetryEventType = "appUserTurnstile" | "map.load";
+type TelemetryEventType = 'appUserTurnstile' | 'map.load';
 
 class TelemetryEvent {
     eventData: any;
@@ -481,7 +481,7 @@ export class TurnstileEvent extends TelemetryEvent {
             return this.processRequests();
         }
 
-        this.postEvent(nextUpdate, {"enabled.telemetry": false}, (err) => {
+        this.postEvent(nextUpdate, {'enabled.telemetry': false}, (err) => {
             if (!err) {
                 this.eventData.lastSuccess = nextUpdate;
                 this.eventData.tokenU = tokenU;

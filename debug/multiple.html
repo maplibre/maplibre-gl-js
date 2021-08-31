@@ -21,34 +21,34 @@
 <script>
 
 var style = {
-    "version": 8,
-    "sources": {
-        "satellite": {
-            "type": "raster",
-            "url": "mapbox://mapbox.satellite",
-            "tileSize": 256
+    'version': 8,
+    'sources': {
+        'satellite': {
+            'type': 'raster',
+            'url': 'mapbox://mapbox.satellite',
+            'tileSize': 256
         },
-        "streets": {
-            "type": "vector",
-            "url": "mapbox://mapbox.mapbox-streets-v7"
+        'streets': {
+            'type': 'vector',
+            'url': 'mapbox://mapbox.mapbox-streets-v7'
         }
     },
-    "layers": [{
-        "id": "background",
-        "type": "background",
-        "paint": {
-            "background-color": "rgb(4,7,14)"
+    'layers': [{
+        'id': 'background',
+        'type': 'background',
+        'paint': {
+            'background-color': 'rgb(4,7,14)'
         }
     }, {
-        "id": "satellite",
-        "type": "raster",
-        "source": "satellite"
+        'id': 'satellite',
+        'type': 'raster',
+        'source': 'satellite'
     }, {
-        "id": "road",
-        "type": "line",
-        "source": "streets",
-        "source-layer": "road",
-        "paint": {"line-color": "rgb(55,89,144)",  "line-width": 4}
+        'id': 'road',
+        'type': 'line',
+        'source': 'streets',
+        'source-layer': 'road',
+        'paint': {'line-color': 'rgb(55,89,144)',  'line-width': 4}
     }]
 };
 

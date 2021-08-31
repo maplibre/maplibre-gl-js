@@ -370,11 +370,11 @@ class Map extends Camera {
         options = extend({}, defaultOptions, options);
 
         if (options.minZoom != null && options.maxZoom != null && options.minZoom > options.maxZoom) {
-            throw new Error(`maxZoom must be greater than or equal to minZoom`);
+            throw new Error('maxZoom must be greater than or equal to minZoom');
         }
 
         if (options.minPitch != null && options.maxPitch != null && options.minPitch > options.maxPitch) {
-            throw new Error(`maxPitch must be greater than or equal to minPitch`);
+            throw new Error('maxPitch must be greater than or equal to minPitch');
         }
 
         if (options.minPitch != null && options.minPitch < defaultMinPitch) {
@@ -416,7 +416,7 @@ class Map extends Camera {
         } else if (options.container instanceof HTMLElement) {
             this._container = options.container;
         } else {
-            throw new Error(`Invalid type: 'container' must be a String or HTMLElement.`);
+            throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
         }
 
         if (options.maxBounds) {
@@ -434,7 +434,7 @@ class Map extends Camera {
         this._setupContainer();
         this._setupPainter();
         if (this.painter === undefined) {
-            throw new Error(`Failed to initialize WebGL.`);
+            throw new Error('Failed to initialize WebGL.');
         }
 
         this.on('move', () => this._update(false));
@@ -728,7 +728,7 @@ class Map extends Camera {
 
             return this;
 
-        } else throw new Error(`maxZoom must be greater than the current minZoom`);
+        } else throw new Error('maxZoom must be greater than the current minZoom');
     }
 
     /**
@@ -800,7 +800,7 @@ class Map extends Camera {
 
             return this;
 
-        } else throw new Error(`maxPitch must be greater than the current minPitch`);
+        } else throw new Error('maxPitch must be greater than the current minPitch');
     }
 
     /**

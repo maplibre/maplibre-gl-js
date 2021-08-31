@@ -190,7 +190,7 @@ export function uuid(): string {
     function b(a?): string {
         return a ?
             (a ^ Math.random() * 16 >> a / 4).toString(16) :
-            "10000000-1000-4000-8000-100000000000".replace(/[018]/g, b);
+            '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, b);
     }
     return b();
 }
@@ -320,7 +320,7 @@ const warnOnceHistory: {[key: string]: boolean} = {};
 export function warnOnce(message: string): void {
     if (!warnOnceHistory[message]) {
         // console isn't defined in some WebWorkers, see #2558
-        if (typeof console !== "undefined") console.warn(message);
+        if (typeof console !== 'undefined') console.warn(message);
         warnOnceHistory[message] = true;
     }
 }

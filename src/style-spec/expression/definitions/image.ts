@@ -17,11 +17,11 @@ export default class ImageExpression implements Expression {
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
         if (args.length !== 2) {
-            return context.error(`Expected two arguments.`) as null;
+            return context.error('Expected two arguments.') as null;
         }
 
         const name = context.parse(args[1], 1, StringType);
-        if (!name) return context.error(`No image name provided.`) as null;
+        if (!name) return context.error('No image name provided.') as null;
 
         return new ImageExpression(name);
     }
@@ -45,6 +45,6 @@ export default class ImageExpression implements Expression {
     }
 
     serialize() {
-        return ["image", this.input.serialize()];
+        return ['image', this.input.serialize()];
     }
 }

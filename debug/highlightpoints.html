@@ -27,23 +27,23 @@ var map = window.map = new maplibregl.Map({
 map.showTileBoundaries = true;
 map.on('load', function() {
     map.addSource('places', {
-        type: "geojson",
-        data: "/test/integration/data/places.geojson"
+        type: 'geojson',
+        data: '/test/integration/data/places.geojson'
     });
     map.addLayer({
-        id:"places",
-        source: "places",
-        type:"circle",
+        id:'places',
+        source: 'places',
+        type:'circle',
         paint: {
-            "circle-radius": ["case",
-                ["boolean", ["feature-state", "hover"], false],
-                ["number", 20],
-                ["number", 10]
+            'circle-radius': ['case',
+                ['boolean', ['feature-state', 'hover'], false],
+                ['number', 20],
+                ['number', 10]
             ],
-            "circle-color": ["case",
-                ["boolean", ["feature-state", "hover"], false],
-                ["rgb", 21, 210, 210],
-                ["rgb", 233, 103, 233]
+            'circle-color': ['case',
+                ['boolean', ['feature-state', 'hover'], false],
+                ['rgb', 21, 210, 210],
+                ['rgb', 233, 103, 233]
             ]
         }
     });

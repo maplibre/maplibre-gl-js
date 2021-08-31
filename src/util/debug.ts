@@ -15,7 +15,7 @@ export const Debug = {
         fn();
     },
 
-    logToElement(message: string, overwrite: boolean = false, id: string = "log") {
+    logToElement(message: string, overwrite: boolean = false, id: string = 'log') {
         const el = window.document.getElementById(id);
         if (el) {
             if (overwrite) el.innerHTML = '';

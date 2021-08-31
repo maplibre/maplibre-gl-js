@@ -22,6 +22,6 @@ export default class ResolvedImage {
     }
 
     serialize(): Array<string> {
-        return ["image", this.name];
+        return ['image', this.name];
     }
 }

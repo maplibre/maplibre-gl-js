@@ -55,9 +55,9 @@ class NavigationControl implements IControl {
                 '_updateZoomButtons'
             ], this);
             this._zoomInButton = this._createButton('maplibregl-ctrl-zoom-in mapboxgl-ctrl-zoom-in', (e) => this._map.zoomIn({}, {originalEvent: e}));
-            DOM.create('span', `maplibregl-ctrl-icon mapboxgl-ctrl-icon`, this._zoomInButton).setAttribute('aria-hidden', 'true');
+            DOM.create('span', 'maplibregl-ctrl-icon mapboxgl-ctrl-icon', this._zoomInButton).setAttribute('aria-hidden', 'true');
             this._zoomOutButton = this._createButton('maplibregl-ctrl-zoom-out mapboxgl-ctrl-zoom-out', (e) => this._map.zoomOut({}, {originalEvent: e}));
-            DOM.create('span', `maplibregl-ctrl-icon mapboxgl-ctrl-icon`, this._zoomOutButton).setAttribute('aria-hidden', 'true');
+            DOM.create('span', 'maplibregl-ctrl-icon mapboxgl-ctrl-icon', this._zoomOutButton).setAttribute('aria-hidden', 'true');
         }
         if (this.options.showCompass) {
             bindAll([

@@ -1,5 +1,5 @@
 class Feature {
-    type: "Feature";
+    type: 'Feature';
     _geometry: GeoJSON.Geometry | undefined | null;
     properties: {};
     id: number | string | void;
