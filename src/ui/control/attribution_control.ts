@@ -1,6 +1,5 @@
 import DOM from '../../util/dom';
 import {bindAll} from '../../util/util';
-import config from '../../util/config';
 
 import type Map from '../map';
 import type {ControlPosition, IControl} from './control';

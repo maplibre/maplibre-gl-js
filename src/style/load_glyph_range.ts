@@ -17,7 +17,7 @@ export default function (fontstack: string,
     const end = begin + 255;
 
     const request = requestManager.transformRequest(
-        urlTemplate.replace('{fontstack}', fontstack).replace('{range}', `${begin}-${end}`), 
+        urlTemplate.replace('{fontstack}', fontstack).replace('{range}', `${begin}-${end}`),
         ResourceType.Glyphs
     );
 
