@@ -1,5 +1,5 @@
 import {test} from '../../util/test';
-import Point from '../../../rollup/build/tsc/symbol/point';
+import Point from '../../../rollup/build/tsc/util/point';
 import clipLine from '../../../rollup/build/tsc/symbol/clip_line';
 
 test('clipLines', (t) => {

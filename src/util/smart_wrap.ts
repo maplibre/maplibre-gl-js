@@ -1,6 +1,6 @@
 import LngLat from '../geo/lng_lat';
 
-import type Point from '../symbol/point';
+import type Point from './point';
 import type Transform from '../geo/transform';
 
 /**

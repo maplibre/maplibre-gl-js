@@ -1,4 +1,4 @@
-import Point from '../symbol/point';
+import Point from '../util/point';
 import drawCollisionDebug from './draw_collision_debug';
 
 import SegmentVector from '../data/segment';

@@ -1,5 +1,5 @@
 import DOM from '../../util/dom';
-import type Point from '../../symbol/point';
+import type Point from '../../util/point';
 
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;

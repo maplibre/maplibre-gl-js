@@ -1,5 +1,5 @@
 import loadGeometry from './load_geometry';
-import type Point from '../symbol/point';
+import type Point from '../util/point';
 
 type EvaluationFeature = {
   readonly type: 1 | 2 | 3 | 'Unknown' | 'Point' | 'MultiPoint' | 'LineString' | 'MultiLineString' | 'Polygon' | 'MultiPolygon';

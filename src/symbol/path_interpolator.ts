@@ -1,5 +1,5 @@
 import {clamp} from '../util/util';
-import Point from '../symbol/point';
+import Point from '../util/point';
 import assert from 'assert';
 
 class PathInterpolator {

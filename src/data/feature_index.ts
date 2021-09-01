@@ -1,4 +1,4 @@
-import Point from '../symbol/point';
+import Point from '../util/point';
 import loadGeometry from './load_geometry';
 import toEvaluationFeature from './evaluation_feature';
 import EXTENT from './extent';

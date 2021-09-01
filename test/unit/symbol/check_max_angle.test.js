@@ -1,5 +1,5 @@
 import {test} from '../../util/test';
-import Point from '../../../rollup/build/tsc/symbol/point';
+import Point from '../../../rollup/build/tsc/util/point';
 import checkMaxAngle from '../../../rollup/build/tsc/symbol/check_max_angle';
 import Anchor from '../../../rollup/build/tsc/symbol/anchor';
 

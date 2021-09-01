@@ -1,6 +1,6 @@
 import {test} from '../../util/test';
 import mergeLines from '../../../rollup/build/tsc/symbol/mergelines';
-import Point from '../../../rollup/build/tsc/symbol/point';
+import Point from '../../../rollup/build/tsc/util/point';
 
 function makeFeatures(lines) {
     const features = [];

@@ -4,7 +4,7 @@ import fs from 'fs';
 import path, {dirname} from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import Point from '../../../rollup/build/tsc/symbol/point';
+import Point from '../../../rollup/build/tsc/util/point';
 import segment from '../../../rollup/build/tsc/data/segment';
 import LineBucket from '../../../rollup/build/tsc/data/bucket/line_bucket';
 import LineStyleLayer from '../../../rollup/build/tsc/style/style_layer/line_style_layer';

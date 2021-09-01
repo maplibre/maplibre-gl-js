@@ -1,4 +1,4 @@
-import Point from '../../symbol/point';
+import Point from '../../util/point';
 import DOM from '../../util/dom';
 
 class TwoTouchHandler {

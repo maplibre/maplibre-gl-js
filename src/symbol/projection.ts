@@ -1,4 +1,4 @@
-import Point from '../symbol/point';
+import Point from '../util/point';
 
 import {mat4, vec4} from 'gl-matrix';
 import * as symbolSize from './symbol_size';

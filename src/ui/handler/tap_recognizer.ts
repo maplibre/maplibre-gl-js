@@ -1,4 +1,4 @@
-import Point from '../../symbol/point';
+import Point from '../../util/point';
 import {indexTouches} from './handler_util';
 
 function getCentroid(points: Array<Point>) {

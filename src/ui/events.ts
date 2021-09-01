@@ -1,7 +1,7 @@
 import {Event} from '../util/evented';
 
 import DOM from '../util/dom';
-import Point from '../symbol/point';
+import Point from '../util/point';
 import {extend} from '../util/util';
 
 import type Map from './map';

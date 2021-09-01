@@ -6,7 +6,7 @@ import {translateDistance, translate} from '../query_utils';
 import properties, {PaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 import {mat4, vec4} from 'gl-matrix';
-import Point from '../../symbol/point';
+import Point from '../../util/point';
 import type {FeatureState} from '../../style-spec/expression';
 import type {BucketParameters} from '../../data/bucket';
 import type {PaintProps} from './fill_extrusion_style_layer_properties';

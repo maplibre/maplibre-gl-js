@@ -6,7 +6,7 @@ import type Context from '../gl/context';
 import type {FeatureStates} from '../source/source_state';
 import type {ImagePosition} from '../render/image_atlas';
 import type {CanonicalTileID} from '../source/tile_id';
-import Point from '../symbol/point';
+import Point from '../util/point';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
   index: number;

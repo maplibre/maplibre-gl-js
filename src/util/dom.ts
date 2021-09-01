@@ -1,4 +1,4 @@
-import Point from '../symbol/point';
+import Point from './point';
 
 import assert from 'assert';
 

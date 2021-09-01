@@ -1,4 +1,4 @@
-import Point from '../symbol/point';
+import Point from '../util/point';
 
 import type {PossiblyEvaluatedPropertyValue} from './properties';
 import type StyleLayer from '../style/style_layer';

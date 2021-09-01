@@ -1,6 +1,6 @@
 export default checkMaxAngle;
 
-import type Point from '../symbol/point';
+import type Point from '../util/point';
 import type Anchor from './anchor';
 
 /**

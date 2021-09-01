@@ -16,7 +16,7 @@ import {SymbolLayoutArray,
     SymbolLineVertexArray
 } from '../array_types';
 
-import Point from '../../symbol/point';
+import Point from '../../util/point';
 import SegmentVector from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray, LineIndexArray} from '../index_array_type';
