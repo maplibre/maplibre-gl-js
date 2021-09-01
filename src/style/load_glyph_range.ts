@@ -3,7 +3,7 @@ import {getArrayBuffer, ResourceType} from '../util/ajax';
 import parseGlyphPBF from './parse_glyph_pbf';
 
 import type {StyleGlyph} from './style_glyph';
-import type {RequestManager} from '../util/mapbox';
+import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 
 export default function (fontstack: string,
@@ -17,10 +17,9 @@ export default function (fontstack: string,
     const end = begin + 255;
 
     const request = requestManager.transformRequest(
-        requestManager.normalizeGlyphsURL(urlTemplate)
-            .replace('{fontstack}', fontstack)
-            .replace('{range}', `${begin}-${end}`),
-        ResourceType.Glyphs);
+        urlTemplate.replace('{fontstack}', fontstack).replace('{range}', `${begin}-${end}`), 
+        ResourceType.Glyphs
+    );
 
     getArrayBuffer(request, (err?: Error | null, data?: ArrayBuffer | null) => {
         if (err) {

@@ -2,7 +2,7 @@ import {extend, bindAll, warnOnce, uniqueId} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
 import {getImage, getJSON, ResourceType} from '../util/ajax';
-import {RequestManager} from '../util/mapbox';
+import {RequestManager} from '../util/request_manager';
 import Style from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
@@ -25,7 +25,7 @@ import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
 
 import {setCacheLimits} from '../util/tile_request_cache';
 
-import type {RequestTransformFunction} from '../util/mapbox';
+import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {StyleOptions, StyleSetterOptions} from '../style/style';
@@ -90,7 +90,6 @@ export type MapOptions = {
   renderWorldCopies?: boolean;
   maxTileCacheSize?: number;
   transformRequest?: RequestTransformFunction;
-  accessToken: string;
   locale?: any;
   fadeDuration?: number;
   crossSourceCollisions?: boolean;
@@ -155,7 +154,6 @@ const defaultOptions = {
     maxTileCacheSize: null,
     localIdeographFontFamily: 'sans-serif',
     transformRequest: null,
-    accessToken: null,
     fadeDuration: 300,
     crossSourceCollisions: true
 } as CompleteMapOptions;
@@ -249,7 +247,6 @@ const defaultOptions = {
  * @param {boolean} [options.collectResourceTiming=false] If `true`, Resource Timing API information will be collected for requests made by GeoJSON and Vector Tile web workers (this information is normally inaccessible from the main Javascript thread). Information will be returned in a `resourceTiming` property of relevant `data` events.
  * @param {number} [options.fadeDuration=300] Controls the duration of the fade-in/fade-out animation for label collisions, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
  * @param {boolean} [options.crossSourceCollisions=true] If `true`, symbols from multiple sources can collide with each other during collision detection. If `false`, collision detection is run separately for the symbols in each source.
- * @param {string} [options.accessToken=null] If specified, map will use this token instead of the one defined in mapboxgl.accessToken.
  * @param {Object} [options.locale=null] A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
  * @example
  * var map = new maplibregl.Map({
@@ -406,7 +403,7 @@ class Map extends Camera {
         this._locale = extend({}, defaultLocale, options.locale);
         this._clickTolerance = options.clickTolerance;
 
-        this._requestManager = new RequestManager(options.transformRequest, options.accessToken);
+        this._requestManager = new RequestManager(options.transformRequest);
 
         if (typeof options.container === 'string') {
             this._container = document.getElementById(options.container);
@@ -1419,7 +1416,7 @@ class Map extends Camera {
       diff?: boolean;
     } & StyleOptions) {
         if (typeof style === 'string') {
-            const url = this._requestManager.normalizeStyleURL(style);
+            const url = style;
             const request = this._requestManager.transformRequest(url, ResourceType.Style);
             getJSON(request, (error?: Error | null, json?: any | null) => {
                 if (error) {

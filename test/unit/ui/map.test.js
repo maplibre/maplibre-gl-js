@@ -54,7 +54,7 @@ test('Map', (t) => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'offsetWidth', {value: 512});
         Object.defineProperty(container, 'offsetHeight', {value: 512});
-        createMap(t, {accessToken:'notAToken'});
+        createMap(t);
         t.error();
         t.end();
     });

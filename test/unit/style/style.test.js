@@ -155,21 +155,6 @@ test('Style#loadURL', (t) => {
         window.server.respond();
     });
 
-    t.test('skips validation for mapbox:// styles', (t) => {
-        const style = new Style(new StubMap())
-            .on('error', () => {
-                t.fail();
-            })
-            .on('style.load', () => {
-                t.end();
-            });
-
-        style.loadURL('mapbox://styles/test/test', {accessToken: 'none'});
-
-        window.server.respondWith(JSON.stringify(createStyleJSON({version: 'invalid'})));
-        window.server.respond();
-    });
-
     t.test('cancels pending requests if removed', (t) => {
         const style = new Style(new StubMap());
         style.loadURL('style.json');

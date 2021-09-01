@@ -107,14 +107,6 @@ document.addEventListener('DOMContentLoaded', function() {
         params[entry[0]] = entry[1];
     });
 
-    if (!params.access_token) {
-        if (maplibre.accessToken) {
-            params.access_token = maplibre.accessToken;
-        } else {
-            params.access_token = prompt("Access Token");
-        }
-    }
-
     let pageIndex = pageKeys.indexOf(params.page);
     if (pageIndex < 0) pageIndex = 0;
     params.page = pageKeys[pageIndex];
@@ -212,7 +204,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 '    <meta charset="utf-8">',
                 '    <meta name="viewport" content="width=device-width, initial-scale=1">',
                 '    <script src="' + js + '"><\/script>',
-                '    <script>maplibre.accessToken = "' + params.access_token + '";<\/script>',
                 '    <link rel="stylesheet" href="' + css + '" />',
                 '    <style>',
                 '        body { margin: 0; padding: 0; }',
@@ -232,9 +223,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let hash = 'page=' + page;
         if (version !== 'latest') {
             hash += '&version=' + version;
-        }
-        if (!maplibre.accessToken) {
-            hash += '&access_token=' + params.access_token;
         }
         location.hash = hash;
     }
