@@ -105,7 +105,7 @@ class Interpolate implements Expression {
 
         const stops: Stops = [];
 
-        let outputType: Type = (null as any);
+        let outputType: Type = null;
         if (operator === 'interpolate-hcl' || operator === 'interpolate-lab') {
             outputType = ColorType;
         } else if (context.expectedType && context.expectedType.kind !== 'value') {

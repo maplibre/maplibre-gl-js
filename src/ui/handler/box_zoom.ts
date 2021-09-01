@@ -148,7 +148,7 @@ class BoxZoomHandler {
 
         if (this._box) {
             DOM.remove(this._box);
-            this._box = (null as any);
+            this._box = null;
         }
 
         DOM.enableDrag();

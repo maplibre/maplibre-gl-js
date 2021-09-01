@@ -16,7 +16,7 @@ class EvaluationContext {
     _parseColorCache: {[_: string]: Color | undefined | null};
 
     constructor() {
-        this.globals = (null as any);
+        this.globals = null;
         this.feature = null;
         this.featureState = null;
         this.formattedSection = null;

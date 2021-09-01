@@ -68,7 +68,7 @@ class FullscreenControl implements IControl {
 
     onRemove() {
         DOM.remove(this._controlContainer);
-        this._map = (null as any);
+        this._map = null;
         window.document.removeEventListener(this._fullscreenchange, this._changeIcon);
     }
 
