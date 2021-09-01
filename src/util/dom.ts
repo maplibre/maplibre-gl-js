@@ -74,28 +74,11 @@ DOM.setTransform = function(el: HTMLElement, value: string) {
     el.style[transformProp] = value;
 };
 
-// Feature detection for {passive: false} support in add/removeEventListener.
-let passiveSupported = false;
-
-try {
-    // https://github.com/facebook/flow/issues/285
-    // $FlowFixMe
-    const options = Object.defineProperty({}, 'passive', {
-        get() { // eslint-disable-line
-            passiveSupported = true;
-        }
-    });
-    window.addEventListener('test', options as any, options);
-    window.removeEventListener('test', options as any, options);
-} catch (err) {
-    passiveSupported = false;
-}
-
 DOM.addEventListener = function(target: any, type: any, callback: any, options: {
   passive?: boolean;
   capture?: boolean;
 } = {}) {
-    if ('passive' in options && passiveSupported) {
+    if ('passive' in options) {
         target.addEventListener(type, callback, options);
     } else {
         target.addEventListener(type, callback, options.capture);
@@ -106,7 +89,7 @@ DOM.removeEventListener = function(target: any, type: any, callback: any, option
   passive?: boolean;
   capture?: boolean;
 } = {}) {
-    if ('passive' in options && passiveSupported) {
+    if ('passive' in options) {
         target.removeEventListener(type, callback, options);
     } else {
         target.removeEventListener(type, callback, options.capture);
