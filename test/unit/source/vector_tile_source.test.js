@@ -3,7 +3,7 @@ import {test} from '../../util/test';
 import VectorTileSource from '../../../rollup/build/tsc/source/vector_tile_source';
 import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
 import {Evented} from '../../../rollup/build/tsc/util/evented';
-import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
+import {RequestManager} from '../../../rollup/build/tsc/util/request_manager';
 import fixturesSource from '../../fixtures/source.json';
 
 const wrapDispatcher = (dispatcher) => {

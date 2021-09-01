@@ -5,7 +5,7 @@ import SourceCache from '../../../rollup/build/tsc/source/source_cache';
 import StyleLayer from '../../../rollup/build/tsc/style/style_layer';
 import Transform from '../../../rollup/build/tsc/geo/transform';
 import {extend} from '../../../rollup/build/tsc/util/util';
-import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
+import {RequestManager} from '../../../rollup/build/tsc/util/request_manager';
 import {Event, Evented} from '../../../rollup/build/tsc/util/evented';
 import {
     setRTLTextPlugin,
