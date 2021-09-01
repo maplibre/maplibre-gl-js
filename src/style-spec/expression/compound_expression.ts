@@ -70,7 +70,7 @@ class CompoundExpression implements Expression {
             signature.length === args.length - 1 // correct param count
         ));
 
-        let signatureContext: ParsingContext = (null as any);
+        let signatureContext: ParsingContext = null;
 
         for (const [params, evaluate] of overloads) {
             // Use a fresh context for each attempted signature so that, if

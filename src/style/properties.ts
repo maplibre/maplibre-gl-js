@@ -525,7 +525,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
       availableImages?: Array<string>
     ): PossiblyEvaluatedPropertyValue<T> {
         if (value.expression.kind === 'constant' || value.expression.kind === 'camera') {
-            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: value.expression.evaluate(parameters, ((null as any)), {}, canonical, availableImages)}, parameters);
+            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: value.expression.evaluate(parameters, null, {}, canonical, availableImages)}, parameters);
         } else {
             return new PossiblyEvaluatedPropertyValue(this, value.expression, parameters);
         }
@@ -594,7 +594,7 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
         if (value.value === undefined) {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, parameters);
         } else if (value.expression.kind === 'constant') {
-            const evaluatedValue = value.expression.evaluate(parameters, (null as any), {}, canonical, availableImages);
+            const evaluatedValue = value.expression.evaluate(parameters, null, {}, canonical, availableImages);
             const isImageExpression = value.property.specification.type as any === 'resolvedImage';
             const constantValue = isImageExpression && typeof evaluatedValue !== 'string' ? evaluatedValue.name : evaluatedValue;
             const constant = this._calculate(constantValue, constantValue, constantValue, parameters);
@@ -665,7 +665,7 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T> | undefi
         if (value.value === undefined) {
             return undefined;
         } else if (value.expression.kind === 'constant') {
-            const constant = value.expression.evaluate(parameters, (null as any), {}, canonical, availableImages);
+            const constant = value.expression.evaluate(parameters, null, {}, canonical, availableImages);
             return this._calculate(constant, constant, constant, parameters);
         } else {
             assert(!value.isDataDriven());
@@ -708,7 +708,7 @@ export class ColorRampProperty implements Property<Color, boolean> {
       canonical?: CanonicalTileID,
       availableImages?: Array<string>
     ): boolean {
-        return !!value.expression.evaluate(parameters, ((null as any)), {}, canonical, availableImages);
+        return !!value.expression.evaluate(parameters, null, {}, canonical, availableImages);
     }
 
     interpolate(): boolean { return false; }

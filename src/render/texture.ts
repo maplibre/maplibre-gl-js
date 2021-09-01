@@ -104,7 +104,7 @@ class Texture {
     destroy() {
         const {gl} = this.context;
         gl.deleteTexture(this.texture);
-        this.texture = (null as any);
+        this.texture = null;
     }
 }
 

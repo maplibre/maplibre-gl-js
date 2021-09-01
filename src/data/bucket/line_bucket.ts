@@ -295,11 +295,11 @@ class LineBucket implements Bucket {
         // we could be more precise, but it would only save a negligible amount of space
         const segment = this.segments.prepareSegment(len * 10, this.layoutVertexArray, this.indexArray);
 
-        let currentVertex;
-        let prevVertex = undefined as Point;
-        let nextVertex = undefined as Point;
-        let prevNormal = undefined as Point;
-        let nextNormal = undefined as Point;
+        let currentVertex: Point;
+        let prevVertex: Point;
+        let nextVertex: Point;
+        let prevNormal: Point;
+        let nextNormal: Point;
 
         // the last two vertices added
         this.e1 = this.e2 = -1;
