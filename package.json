@@ -75,7 +75,7 @@
     "@types/puppeteer": "^1.20.7",
     "@types/react": "^17.0.19",
     "@types/react-dom": "^17.0.9",
-    "@types/request": "^2.48.5",
+    "@types/request": "^2.48.7",
     "@types/rollup-plugin-json": "^3.0.2",
     "@types/selenium-webdriver": "^4.0.10",
     "@types/shuffle-seed": "^1.1.0",
