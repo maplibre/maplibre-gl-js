@@ -140,7 +140,7 @@
     "rollup-plugin-sourcemaps": "^0.6.3",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-unassert": "^0.3.0",
-    "selenium-webdriver": "^4.0.0-alpha.5",
+    "selenium-webdriver": "^4.0.0-rc-1",
     "semver": "^5.5.0",
     "shuffle-seed": "^1.1.6",
     "sinon": "^7.3.2",
