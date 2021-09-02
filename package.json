@@ -43,7 +43,7 @@
     "@mapbox/gazetteer": "^5.1.0",
     "@mapbox/mapbox-gl-rtl-text": "^0.2.1",
     "@mapbox/mvt-fixtures": "^3.6.0",
-    "@octokit/rest": "^16.43.2",
+    "@octokit/rest": "^18.10.0",
     "@rollup/plugin-commonjs": "^20.0.0",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
