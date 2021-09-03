@@ -995,6 +995,16 @@ test('Map', (t) => {
         });
     });
 
+    t.test('#redraw', (t) => {
+        const map = createMap(t);
+
+        map.once('idle', () => {
+            map.once('render', () => t.end());
+
+            map.redraw();
+        });
+    });
+
     t.test('#addControl', (t) => {
         const map = createMap(t);
         const control = {

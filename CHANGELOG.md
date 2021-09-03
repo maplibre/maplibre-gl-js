@@ -16,6 +16,7 @@
 - ** Breaking Change ** stopped supporting IE (internet explorer)
 - ** Breaking Change ** removed all code related to `accessToken` and mabox specific urls, including telemetry etc
 - ** Breaking Change ** removed `baseApiUrl` as it was used only for mapbox related urls
+- Added redraw function to map (#206)
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
