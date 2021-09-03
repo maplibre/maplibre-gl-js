@@ -82,7 +82,7 @@
     "@types/sinon": "^7.5.2",
     "@types/stylelint": "^13.13.2",
     "@types/supercluster": "^5.0.2",
-    "@types/tape": "^4.13.0",
+    "@types/tape": "^4.13.2",
     "@types/window-or-global": "^1.0.4",
     "@typescript-eslint/eslint-plugin": "^4.30.0",
     "@typescript-eslint/parser": "^4.30.0",
@@ -149,7 +149,7 @@
     "stylelint-config-standard": "^22.0.0",
     "tap": "~12.4.1",
     "tap-parser": "^10.0.1",
-    "tape": "^4.13.2",
+    "tape": "^5.3.1",
     "tape-filter": "^1.0.4",
     "testem": "^3.5.0",
     "typescript": "^4.4.2"
