@@ -110,7 +110,7 @@
     "glob": "^7.1.4",
     "is-builtin-module": "^3.0.0",
     "jsdom": "^13.0.0",
-    "json-stringify-pretty-compact": "^2.0.0",
+    "json-stringify-pretty-compact": "^3.0.0",
     "jsonwebtoken": "^8.3.0",
     "list-npm-contents": "^1.0.2",
     "lodash": "^4.17.19",
