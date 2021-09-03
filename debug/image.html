@@ -18,12 +18,12 @@
 <script>
 
 var imageStyle = {
-    "version": 8,
-    "sources": {
-        "image": {
-            "type": "image",
-            "url": "/test/integration/image/0.png",
-            "coordinates": [
+    'version': 8,
+    'sources': {
+        'image': {
+            'type': 'image',
+            'url': '/test/integration/image/0.png',
+            'coordinates': [
                 [-122.51596391201019, 37.56238816766053],
                 [-122.51467645168304, 37.56410183312965],
                 [-122.51309394836426, 37.563391708549425],
@@ -31,23 +31,23 @@ var imageStyle = {
             ]
         }
     },
-    "layers": [{
-        "id": "background",
-        "type": "background",
-        "paint": {
-            "background-color": "rgb(128,128,128)"
+    'layers': [{
+        'id': 'background',
+        'type': 'background',
+        'paint': {
+            'background-color': 'rgb(128,128,128)'
         }
     }, {
-        "id": "image",
-        "type": "raster",
-        "source": "image",
-        "paint": {
-            "raster-resampling": "nearest"
+        'id': 'image',
+        'type': 'raster',
+        'source': 'image',
+        'paint': {
+            'raster-resampling': 'nearest'
         }
     }]
 };
 
-var map = new maplibregl.Map({
+new maplibregl.Map({
     container: 'map',
     minZoom: 14,
     zoom: 17,

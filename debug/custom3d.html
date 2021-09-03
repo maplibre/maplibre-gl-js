@@ -65,8 +65,8 @@ class Custom {
         gl.linkProgram(this.program);
         gl.validateProgram(this.program);
 
-        this.program.aPos = gl.getAttribLocation(this.program, "aPos");
-        this.program.uMatrix = gl.getUniformLocation(this.program, "uMatrix");
+        this.program.aPos = gl.getAttribLocation(this.program, 'aPos');
+        this.program.uMatrix = gl.getUniformLocation(this.program, 'uMatrix');
 
         const x = 0.5;
         const y = 0.5;

@@ -34,13 +34,13 @@ function drawToCanvas() {
 }
 
 var canvasStyle = {
-    "version": 8,
-    "sources": {
-        "canvas": {
-            "type": "canvas",
-            "canvas": "testCanvasID",
-            "animate": false,
-            "coordinates": [
+    'version': 8,
+    'sources': {
+        'canvas': {
+            'type': 'canvas',
+            'canvas': 'testCanvasID',
+            'animate': false,
+            'coordinates': [
                 [-122.51596391201019, 37.56238816766053],
                 [-122.51467645168304, 37.56410183312965],
                 [-122.51309394836426, 37.563391708549425],
@@ -48,20 +48,20 @@ var canvasStyle = {
             ]
         }
     },
-    "layers": [{
-        "id": "background",
-        "type": "background",
-        "paint": {
-            "background-color": "rgb(4,7,14)"
+    'layers': [{
+        'id': 'background',
+        'type': 'background',
+        'paint': {
+            'background-color': 'rgb(4,7,14)'
         }
     }, {
-        "id": "canvas",
-        "type": "raster",
-        "source": "canvas"
+        'id': 'canvas',
+        'type': 'raster',
+        'source': 'canvas'
     }]
 };
 
-var map = new maplibregl.Map({
+new maplibregl.Map({
     container: 'map',
     minZoom: 14,
     zoom: 17,

@@ -22,17 +22,17 @@
 <script>
 
 var videoStyle = {
-    "version": 8,
-    "sources": {
-        "satellite": {
-            "type": "raster",
-            "url": "mapbox://mapbox.satellite",
-            "tileSize": 256
+    'version': 8,
+    'sources': {
+        'satellite': {
+            'type': 'raster',
+            'url': 'mapbox://mapbox.satellite',
+            'tileSize': 256
         },
-        "video": {
-            "type": "video",
-            "urls": [ "https://static-assets.mapbox.com/mapbox-gl-js/drone.mp4", "https://static-assets.mapbox.com/mapbox-gl-js/drone.webm" ],
-            "coordinates": [
+        'video': {
+            'type': 'video',
+            'urls': [ 'https://static-assets.mapbox.com/mapbox-gl-js/drone.mp4', 'https://static-assets.mapbox.com/mapbox-gl-js/drone.webm' ],
+            'coordinates': [
                 [-122.51596391201019, 37.56238816766053],
                 [-122.51467645168304, 37.56410183312965],
                 [-122.51309394836426, 37.563391708549425],
@@ -40,20 +40,20 @@ var videoStyle = {
             ]
         }
     },
-    "layers": [{
-        "id": "background",
-        "type": "background",
-        "paint": {
-            "background-color": "rgb(4,7,14)"
+    'layers': [{
+        'id': 'background',
+        'type': 'background',
+        'paint': {
+            'background-color': 'rgb(4,7,14)'
         }
     }, {
-        "id": "satellite",
-        "type": "raster",
-        "source": "satellite"
+        'id': 'satellite',
+        'type': 'raster',
+        'source': 'satellite'
     }, {
-        "id": "video",
-        "type": "raster",
-        "source": "video"
+        'id': 'video',
+        'type': 'raster',
+        'source': 'video'
     }]
 };
 var map = new maplibregl.Map({
@@ -81,8 +81,8 @@ window.setInterval(function() {
 
 function togglePlayback() {
     playing = !playing;
-    if (playing) map.getSource("video").play();
-    else map.getSource("video").pause();
+    if (playing) map.getSource('video').play();
+    else map.getSource('video').pause();
 }
 </script>
 </body>

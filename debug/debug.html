@@ -55,64 +55,64 @@ map.addControl(new maplibregl.FullscreenControl());
 
 map.on('load', function() {
     map.addSource('geojson', {
-        "type": "geojson",
-        "data": "/test/integration/data/linestring.geojson",
-        "attribution": "GeoJSON Attribution"
+        'type': 'geojson',
+        'data': '/test/integration/data/linestring.geojson',
+        'attribution': 'GeoJSON Attribution'
     });
     map.addLayer({
-        "id": "route",
-        "type": "line",
-        "source": "geojson",
-        "paint": {
-            "line-color": "#EC8D8D",
-            "line-width": {"base": 1.5, "stops": [[5, 0.75], [18, 32]]}
+        'id': 'route',
+        'type': 'line',
+        'source': 'geojson',
+        'paint': {
+            'line-color': '#EC8D8D',
+            'line-width': {'base': 1.5, 'stops': [[5, 0.75], [18, 32]]}
         }
     }, 'country-label-lg');
 
-    map.addSource("points", {
-        "type": "geojson",
-        "data": '/debug/cross_source_points.geojson'
+    map.addSource('points', {
+        'type': 'geojson',
+        'data': '/debug/cross_source_points.geojson'
     });
 
     map.addLayer({
-        "id": "points",
-        "type": "symbol",
-        "source": "points",
-        "layout": {
-            "text-field": "{name}",
-            "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"]
+        'id': 'points',
+        'type': 'symbol',
+        'source': 'points',
+        'layout': {
+            'text-field': '{name}',
+            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold']
         }
     });
 
     map.addLayer({
-        id: "marker",
-        type: "symbol",
-        source: "points",
+        id: 'marker',
+        type: 'symbol',
+        source: 'points',
         layout: {
-            "icon-image": "bus-11",
-            "icon-size": 2,
-            "icon-ignore-placement": true,
-            "icon-allow-overlap": true
+            'icon-image': 'bus-11',
+            'icon-size': 2,
+            'icon-ignore-placement': true,
+            'icon-allow-overlap': true
         }
     });
 
     map.addLayer({
-        id: "marker-hover",
-        type: "symbol",
-        filter: ["==", "name", ""],
-        source: "points",
+        id: 'marker-hover',
+        type: 'symbol',
+        filter: ['==', 'name', ''],
+        source: 'points',
         layout: {
-            "icon-image": "bus-15",
-            "icon-size": 2,
-            "icon-ignore-placement": true,
-            "icon-allow-overlap": true
+            'icon-image': 'bus-15',
+            'icon-size': 2,
+            'icon-ignore-placement': true,
+            'icon-allow-overlap': true
         }
     });
 
     map.on('mouseenter', 'marker', function(e) {
         map.setFilter('marker-hover', ['==', 'name', e.features[0].properties.name]);
     });
-    map.on('mouseleave', 'marker', function(e) {
+    map.on('mouseleave', 'marker', function(_) {
         map.setFilter('marker-hover', ['==', 'name', '']);
     });
 
@@ -122,7 +122,7 @@ map.on('click', function(e) {
     if (e.originalEvent.shiftKey) return;
     (new maplibregl.Popup())
         .setLngLat(map.unproject(e.point))
-        .setHTML("<h1>Hello World!</h1>")
+        .setHTML('<h1>Hello World!</h1>')
         .addTo(map);
 });
 
@@ -146,7 +146,7 @@ document.getElementById('pitch-checkbox').onclick = function() {
 document.onkeypress = function(e) {
     if (e.charCode === 111 && !e.shiftKey && !e.metaKey && !e.altKey) {
         var center = map.getCenter();
-        location.href = "mapboxgl://?center=" + center.lat + "," + center.lng + "&zoom=" + map.getZoom() + "&bearing=" + map.getBearing();
+        location.href = 'mapboxgl://?center=' + center.lat + ',' + center.lng + '&zoom=' + map.getZoom() + '&bearing=' + map.getBearing();
         return false;
     }
 };

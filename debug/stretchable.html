@@ -72,53 +72,53 @@ map.on('styleimagemissing', function(e) {
 
 map.on('load', function () {
     map.addLayer({
-        "id": "points",
-        "type": "symbol",
-        "source": {
-            "type": "geojson",
-            "data": {
-                "type": "FeatureCollection",
-                "features": [{
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [0, 0]
+        'id': 'points',
+        'type': 'symbol',
+        'source': {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': [{
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [0, 0]
                     },
-                    "properties": {
-                        "text": "ASDF",
-                        "size": 36,
-                        "color": "255,0,0"
+                    'properties': {
+                        'text': 'ASDF',
+                        'size': 36,
+                        'color': '255,0,0'
                     }
                 }, {
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [50, 0]
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [50, 0]
                     },
-                    "properties": {
-                        "text": "ASDF \n - \nqwer",
-                        "size": 24,
-                        "color": "255,209,28"
+                    'properties': {
+                        'text': 'ASDF \n - \nqwer',
+                        'size': 24,
+                        'color': '255,209,28'
                     }
                 }, {
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [-50, 0]
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [-50, 0]
                     },
-                    "properties": {
-                        "text": "ASDF",
-                        "size": 18,
-                        "color": "242,127,32"
+                    'properties': {
+                        'text': 'ASDF',
+                        'size': 18,
+                        'color': '242,127,32'
                     }
                 }]
             }
         },
-        "layout": {
-            "text-field": ["get", "text"],
-            "icon-text-fit": "both",
-            "text-size": ["get", "size"],
-            "icon-image": ["concat", "stretchable-", ["get", "color"]]
+        'layout': {
+            'text-field': ['get', 'text'],
+            'icon-text-fit': 'both',
+            'text-size': ['get', 'size'],
+            'icon-image': ['concat', 'stretchable-', ['get', 'color']]
         }
     });
 });
