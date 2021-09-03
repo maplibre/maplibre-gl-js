@@ -144,7 +144,7 @@
     "shuffle-seed": "^1.1.6",
     "sinon": "^11.1.2",
     "source-map-explorer": "^2.5.1",
-    "st": "^1.2.2",
+    "st": "^3.0.0",
     "stylelint": "^13.13.1",
     "stylelint-config-standard": "^22.0.0",
     "tap": "~12.4.1",
