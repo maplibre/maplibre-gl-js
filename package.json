@@ -90,7 +90,7 @@
     "babel-eslint": "^10.0.1",
     "babelify": "^10.0.0",
     "benchmark": "^2.1.4",
-    "browserify": "^16.5.0",
+    "browserify": "^17.0.0",
     "canvas": "^2.6.1",
     "chalk": "^4.1.2",
     "chokidar": "^3.0.2",
