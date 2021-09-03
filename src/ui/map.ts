@@ -2361,7 +2361,7 @@ class Map extends Camera {
     }
 
     _resizeCanvas(width: number, height: number) {
-        const pixelRatio = browser.devicePixelRatio || 1;
+        const pixelRatio = devicePixelRatio || 1;
 
         // Request the required canvas size taking the pixelratio into account.
         this._canvas.width = pixelRatio * width;

@@ -24,11 +24,6 @@ test('browser', (t) => {
         t.end();
     });
 
-    t.test('devicePixelRatio', (t) => {
-        t.equal(typeof browser.devicePixelRatio, 'number');
-        t.end();
-    });
-
     t.test('hardwareConcurrency', (t) => {
         t.equal(typeof browser.hardwareConcurrency, 'number');
         t.end();

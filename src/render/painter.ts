@@ -147,8 +147,8 @@ class Painter {
      * for a new width and height value.
      */
     resize(width: number, height: number) {
-        this.width = width * browser.devicePixelRatio;
-        this.height = height * browser.devicePixelRatio;
+        this.width = width * devicePixelRatio;
+        this.height = height * devicePixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
 
         if (this.style) {

@@ -1,6 +1,5 @@
 import {Uniform1i, Uniform1f, Uniform2f, UniformMatrix4f} from '../uniform_binding';
 import {extend} from '../../util/util';
-import browser from '../../util/browser';
 
 import type Context from '../../gl/context';
 import type Painter from '../painter';
@@ -196,7 +195,7 @@ const symbolSDFUniformValues = (
         rotateInShader, pitchWithMap, painter, matrix, labelPlaneMatrix,
         glCoordMatrix, isText, texSize), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform._pitch) * transform.cameraToCenterDistance : 1),
-        'u_device_pixel_ratio': browser.devicePixelRatio,
+        'u_device_pixel_ratio': devicePixelRatio,
         'u_is_halo': +isHalo
     });
 };
