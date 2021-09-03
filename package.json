@@ -180,7 +180,7 @@
     "start-tests": "run-p watch-css watch-query start-server",
     "start-bench": "run-p watch-benchmarks start-server",
     "start-release": "run-s build-prod-min build-css print-release-url start-server",
-    "diff-tarball": "cross-env build/run-node build/diff-tarball",
+    "diff-tarball": "node build/diff-tarball.js",
     "lint": "eslint --ext \".ts,.js,.html\" --ignore-path .gitignore src build debug/*.html",
     "lint-docs": "documentation lint src/index.ts",
     "lint-css": "stylelint 'src/css/maplibre-gl.css'",
@@ -199,7 +199,7 @@
     "test-cov": "nyc --reporter=text-summary --reporter=lcov --cache run-s test-unit test-expressions test-query test-render",
     "prepublishOnly": "run-s build-dev build-prod-min build-prod build-csp build-css build-style-spec test-build diff-tarball",
     "print-release-url": "node build/print-release-url.js",
-    "codegen": "cross-env build/run-node build/generate-style-code.js && build/run-node build/generate-struct-arrays.js"
+    "codegen": "node build/generate-style-code.js && node build/generate-struct-arrays.js"
   },
   "files": [
     "build/",

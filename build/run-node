@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-node -r @mapbox/flow-remove-types/register -r esm ${@}
