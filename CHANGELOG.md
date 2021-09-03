@@ -14,6 +14,8 @@
 - Migrated the production code to typescript
 - ** Breaking Change ** removed `version` from the public API
 - ** Breaking Change ** stopped supporting IE (internet explorer)
+- ** Breaking Change ** removed all code related to `accessToken` and mabox specific urls, including telemetry etc
+- ** Breaking Change ** removed `baseApiUrl` as it was used only for mapbox related urls
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes

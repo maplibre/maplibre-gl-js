@@ -5,7 +5,7 @@ import SourceCache from '../../../rollup/build/tsc/source/source_cache';
 import StyleLayer from '../../../rollup/build/tsc/style/style_layer';
 import Transform from '../../../rollup/build/tsc/geo/transform';
 import {extend} from '../../../rollup/build/tsc/util/util';
-import {RequestManager} from '../../../rollup/build/tsc/util/mapbox';
+import {RequestManager} from '../../../rollup/build/tsc/util/request_manager';
 import {Event, Evented} from '../../../rollup/build/tsc/util/evented';
 import {
     setRTLTextPlugin,
@@ -151,21 +151,6 @@ test('Style#loadURL', (t) => {
         });
 
         style.loadURL('style.json');
-        window.server.respondWith(JSON.stringify(createStyleJSON({version: 'invalid'})));
-        window.server.respond();
-    });
-
-    t.test('skips validation for mapbox:// styles', (t) => {
-        const style = new Style(new StubMap())
-            .on('error', () => {
-                t.fail();
-            })
-            .on('style.load', () => {
-                t.end();
-            });
-
-        style.loadURL('mapbox://styles/test/test', {accessToken: 'none'});
-
         window.server.respondWith(JSON.stringify(createStyleJSON({version: 'invalid'})));
         window.server.respond();
     });
