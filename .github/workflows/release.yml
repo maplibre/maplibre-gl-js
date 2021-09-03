@@ -163,12 +163,8 @@ jobs:
         run: |
           rm -f ${{ steps.prepare_release.outputs.release_notes }}
 
-      - name: Update NPM Package Version
-        run: |
-          yarn version --non-interactive --no-git-tag-version --new-version ${{ steps.prepare_release.outputs.version }}
-
       - name: Publish NPM package
         run: |
-          yarn publish --non-interactive
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
