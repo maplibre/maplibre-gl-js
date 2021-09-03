@@ -26,7 +26,7 @@ const map = new maplibregl.Map({
     hash: false
 });
 
-const path = "/docs/pages/assets/";
+const path = '/docs/pages/assets/';
 
 const frameCount = 5;
 
@@ -37,28 +37,28 @@ const coordinates = [
     [-80.425, 37.936]
 ];
 
-map.on("load", () => {
+map.on('load', () => {
     let currentImage = 0;
     const getPath = () => `${path}radar${currentImage}.gif`;
 
-    map.addSource("radar", {
-        type: "image",
+    map.addSource('radar', {
+        type: 'image',
         url: getPath(),
         coordinates
     });
     map.addLayer({
-        id: "radar-layer",
-        "type": "raster",
-        "source": "radar",
-        "paint": {
-            "raster-resampling": "nearest",
-            "raster-fade-duration": 0
+        id: 'radar-layer',
+        'type': 'raster',
+        'source': 'radar',
+        'paint': {
+            'raster-resampling': 'nearest',
+            'raster-fade-duration': 0
         }
     });
 
     setInterval(() => {
         currentImage = (currentImage + 1) % frameCount;
-        map.getSource("radar").updateImage({url: getPath()});
+        map.getSource('radar').updateImage({url: getPath()});
     }, 200);
 });
 

@@ -27,55 +27,55 @@ var map = window.map = new maplibregl.Map({
 
 map.on('load', function () {
     map.addLayer({
-        "id": "points",
-        "type": "symbol",
-        "source": {
-            "type": "geojson",
-            "data": {
-                "type": "FeatureCollection",
-                "features": [
+        'id': 'points',
+        'type': 'symbol',
+        'source': {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': [
                     {
-                        "type": "Feature",
-                        "geometry": {
-                            "type": "Point",
-                            "coordinates": [
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [
                                 -77.03238901390978,
                                 38.913188059745586
                             ]
                         },
-                        "properties": {
-                            "icon": "monument",
-                            "title": "Mapbox DC"
+                        'properties': {
+                            'icon': 'monument',
+                            'title': 'Mapbox DC'
                         }
                     }, {
-                        "type": "Feature",
-                        "geometry": {
-                            "type": "Point",
-                            "coordinates": [
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [
                                 -122.414,
                                 37.776
                             ]
                         },
-                        "properties": {
-                            "title": "Mapbox SF",
-                            "icon": "harbor"
+                        'properties': {
+                            'title': 'Mapbox SF',
+                            'icon': 'harbor'
                         }
                     }
                 ]
             }
         },
-        "layout": {
-            "icon-image": ["coalesce", ["image", "foo"], ["image", "bar"], ["image", ["concat", ["get", "icon"], "-15"]], ["image", "baz"]],
-            "text-field": "{title}",
-            "text-font": [
-                "Open Sans Semibold",
-                "Arial Unicode MS Bold"
+        'layout': {
+            'icon-image': ['coalesce', ['image', 'foo'], ['image', 'bar'], ['image', ['concat', ['get', 'icon'], '-15']], ['image', 'baz']],
+            'text-field': '{title}',
+            'text-font': [
+                'Open Sans Semibold',
+                'Arial Unicode MS Bold'
             ],
-            "text-offset": [
+            'text-offset': [
                 0,
                 0.6
             ],
-            "text-anchor": "top"
+            'text-anchor': 'top'
         }
     });
 });

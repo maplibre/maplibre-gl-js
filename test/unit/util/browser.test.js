@@ -1,5 +1,6 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
-import browser from '../../../src/util/browser';
+import browser from '../../../rollup/build/tsc/util/browser';
 
 test('browser', (t) => {
     t.test('frame', (t) => {
@@ -20,11 +21,6 @@ test('browser', (t) => {
             t.fail();
         });
         frame.cancel();
-        t.end();
-    });
-
-    t.test('devicePixelRatio', (t) => {
-        t.equal(typeof browser.devicePixelRatio, 'number');
         t.end();
     });
 
