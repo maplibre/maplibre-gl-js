@@ -117,7 +117,7 @@ jobs:
       - run: npm ci
       - run: npm run build-dev
       - run: DETECT_CHROMEDRIVER_VERSION=true npm install -g chromedriver
-      - run: npm install -g geckodriver
+      - run: npm install -g geckodriver@2.0.4
       - name: Test Chrome
         env:
           SELENIUM_BROWSER: chrome
