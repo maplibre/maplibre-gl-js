@@ -21,7 +21,7 @@
 
 ### 🐞 Bug fixes
 
-- *...Add new stuff here...*
+- Fix warning due to strict comparison of SDF property in image sprite (#303)
 
 ## 1.15.2
 
