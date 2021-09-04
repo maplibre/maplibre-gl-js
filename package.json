@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.15.4",
-    "@mapbox/gazetteer": "^4.0.4",
+    "@mapbox/gazetteer": "^5.1.0",
     "@mapbox/mapbox-gl-rtl-text": "^0.2.1",
     "@mapbox/mvt-fixtures": "^3.6.0",
     "@octokit/rest": "^18.10.0",
