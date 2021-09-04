@@ -15,8 +15,6 @@ if (process.env.MAPBOX_STYLES) {
 
 const replaceConfig = {
     'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION),
-    'process.env.MAPBOX_ACCESS_TOKEN': JSON.stringify(process.env.MAPBOX_ACCESS_TOKEN),
-    'process.env.MapboxAccessToken': JSON.stringify(process.env.MapboxAccessToken),
     'process.env.MAPBOX_STYLES': JSON.stringify(styles),
     'process.env.NODE_ENV': JSON.stringify('production')
 };

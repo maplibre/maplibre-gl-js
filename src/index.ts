@@ -80,39 +80,6 @@ const exported = {
     clearPrewarmedResources,
 
     /**
-     * Gets and sets the map's [access token](https://www.mapbox.com/help/define-access-token/).
-     *
-     * @var {string} accessToken
-     * @returns {string} The currently set access token.
-     * @example
-     * maplibregl.accessToken = myAccessToken;
-     * @see [Display a map](https://maplibre.org/maplibre-gl-js-docs/examples/)
-     */
-    get accessToken(): string | undefined | null {
-        return config.ACCESS_TOKEN;
-    },
-
-    set accessToken(token: string) {
-        config.ACCESS_TOKEN = token;
-    },
-
-    /**
-     * Gets and sets the map's default API URL for requesting tiles, styles, sprites, and glyphs
-     *
-     * @var {string} baseApiUrl
-     * @returns {string} The current base API URL.
-     * @example
-     * maplibregl.baseApiUrl = 'https://api.mapbox.com';
-     */
-    get baseApiUrl(): string | undefined | null {
-        return config.API_URL;
-    },
-
-    set baseApiUrl(url: string) {
-        config.API_URL = url;
-    },
-
-    /**
      * Gets and sets the number of web workers instantiated on a page with GL JS maps.
      * By default, it is set to half the number of CPU cores (capped at 6).
      * Make sure to set this property before creating any map instances for it to have effect.

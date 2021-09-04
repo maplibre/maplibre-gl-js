@@ -640,14 +640,6 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     text-decoration: underline;
 }
 
-/* stylelint-disable selector-class-pattern */
-.maplibregl-ctrl-attrib .mapbox-improve-map,
-.mapboxgl-ctrl-attrib .mapbox-improve-map {
-    font-weight: bold;
-    margin-left: 2px;
-}
-/* stylelint-enable selector-class-pattern */
-
 .maplibregl-attrib-empty,
 .mapboxgl-attrib-empty {
     display: none;
@@ -950,11 +942,4 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     background: #fff;
     border: 2px dotted #202020;
     opacity: 0.5;
-}
-
-@media print {
-    /* stylelint-disable-next-line selector-class-pattern */
-    .mapbox-improve-map {
-        display: none;
-    }
 }
