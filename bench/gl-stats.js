@@ -10,7 +10,6 @@ const {execSync} = require('child_process');
 
 const benchHTML = benchSrc
     .replace(/<script src="..\/dist\/maplibre-gl.js"><\/script>/, `<script>${maplibreGLJSSrc}</script>`)
-    .replace('MAPBOX_ACCESS_TOKEN', process.env.MAPBOX_ACCESS_TOKEN);
 
 function waitForConsole(page) {
     return new Promise((resolve) => {
