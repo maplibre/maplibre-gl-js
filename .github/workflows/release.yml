@@ -163,8 +163,16 @@ jobs:
         run: |
           rm -f ${{ steps.prepare_release.outputs.release_notes }}
 
-      - name: Publish NPM package
+      - name: Publish NPM package (regular)
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         run: |
           npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
+
+      - name: Publish NPM package (pre-release)
+        if: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
+        run: |
+          npm publish --tag next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
