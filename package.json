@@ -182,7 +182,7 @@
     "diff-tarball": "node build/diff-tarball.js",
     "lint": "eslint --ext \".ts,.js,.html\" --ignore-path .gitignore src build debug/*.html",
     "lint-docs": "documentation lint src/index.ts",
-    "lint-css": "stylelint 'src/css/maplibre-gl.css'",
+    "lint-css": "stylelint \"src/css/maplibre-gl.css\"",
     "test": "run-s lint lint-css lint-docs test-unit",
     "test-suite": "run-s test-render test-query test-expressions",
     "test-suite-clean": "find test/integration/{render,query, expressions}-tests -mindepth 2 -type d -exec test -e \"{}/actual.png\" \\; -not \\( -exec test -e \"{}/style.json\" \\; \\) -print | xargs -t rm -r",
