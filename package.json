@@ -190,7 +190,7 @@
     "lint-docs": "documentation lint src/index.ts",
     "lint-css": "stylelint \"src/css/maplibre-gl.css\"",
     "test": "run-s lint lint-css lint-docs test-unit",
-    "test-jest": "jest test/jest/",
+    "test-jest": "eslint --fix --ext \".ts,.js,.html\" test/jest && jest test/jest/",
     "test-suite": "run-s test-render test-query test-expressions",
     "test-suite-clean": "find test/integration/{render,query, expressions}-tests -mindepth 2 -type d -exec test -e \"{}/actual.png\" \\; -not \\( -exec test -e \"{}/style.json\" \\; \\) -print | xargs -t rm -r",
     "test-unit": "tap --node-arg --no-warnings --node-arg --experimental-specifier-resolution=node --node-arg --experimental-json-modules --reporter classic --no-coverage test/unit",
