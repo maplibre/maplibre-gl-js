@@ -1,3 +1,4 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import {
     getArrayBuffer,
@@ -5,10 +6,9 @@ import {
     postData,
     getImage,
     resetImageRequestQueue
-} from '../../../src/util/ajax';
-import window from '../../../src/util/window';
-import config from '../../../src/util/config';
-import webpSupported from '../../../src/util/webp_supported';
+} from '../../../rollup/build/tsc/util/ajax';
+import config from '../../../rollup/build/tsc/util/config';
+import webpSupported from '../../../rollup/build/tsc/util/webp_supported';
 
 test('ajax', (t) => {
     t.beforeEach(callback => {
@@ -17,7 +17,7 @@ test('ajax', (t) => {
     });
 
     t.afterEach(callback => {
-        window.restore();
+        window.clearFakeXMLHttpRequest();
         callback();
     });
 
@@ -78,18 +78,6 @@ test('ajax', (t) => {
         window.server.respond();
     });
 
-    t.test('getJSON, 401: Mapbox domain', (t) => {
-        window.server.respondWith(request => {
-            request.respond(401);
-        });
-        getJSON({url:'api.mapbox.com'}, (error) => {
-            t.equal(error.status, 401);
-            t.equal(error.message, "Unauthorized: you may have provided an invalid Mapbox access token. See https://www.mapbox.com/api-documentation/#access-tokens-and-token-scopes");
-            t.end();
-        });
-        window.server.respond();
-    });
-
     t.test('postData, 204(no content): no error', (t) => {
         window.server.respondWith(request => {
             request.respond(204);
@@ -106,21 +94,10 @@ test('ajax', (t) => {
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
-        // jsdom doesn't call image onload; fake it https://github.com/jsdom/jsdom/issues/1816
-        const jsdomImage = window.Image;
-        window.Image = class {
-            set src(src) {
-                setTimeout(() => {
-                    if (this.onload) this.onload();
-                });
-            }
-        };
-
         function callback(err) {
             if (err) return;
             // last request is only added after we got a response from one of the previous ones
             t.equals(window.server.requests.length, maxRequests + 1);
-            window.Image = jsdomImage;
             t.end();
         }
 
@@ -139,19 +116,10 @@ test('ajax', (t) => {
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
-        // jsdom doesn't call image onload; fake it https://github.com/jsdom/jsdom/issues/1816
-        const jsdomImage = window.Image;
-        window.Image = class {
-            set src(src) {
-                setTimeout(() => this.onload());
-            }
-        };
-
         for (let i = 0; i < maxRequests + 1; i++) {
             getImage({url: ''}, () => t.fail).cancel();
         }
         t.equals(window.server.requests.length, maxRequests + 1);
-        window.Image = jsdomImage;
         t.end();
     });
 
@@ -198,15 +166,6 @@ test('ajax', (t) => {
 
         // mock webp support
         webpSupported.supported = true;
-
-        // jsdom doesn't call image onload; fake it https://github.com/jsdom/jsdom/issues/1816
-        window.Image = class {
-            set src(src) {
-                setTimeout(() => {
-                    if (this.onload) this.onload();
-                });
-            }
-        };
 
         getImage({url: ''}, () => { t.end(); });
 

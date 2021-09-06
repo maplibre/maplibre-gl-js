@@ -73,33 +73,33 @@ var map = new maplibregl.Map({
 map.on('load', function () {
 
     map.addSource('mapbox-dem', {
-        "type": "raster-dem",
-        "url": "mapbox://mapbox.terrain-rgb",
-        "tileSize": 256,
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.terrain-rgb',
+        'tileSize': 256,
     });
     map.addLayer({
-        "id": "Mapbox data",
-        "source": "mapbox-dem",
-        "type": "hillshade"
+        'id': 'Mapbox data',
+        'source': 'mapbox-dem',
+        'type': 'hillshade'
     // insert below waterway-river-canal-shadow;
     // where hillshading sits in the Mapbox Outdoors style
     }, 'waterway-river-canal-shadow');
 
     map.addSource('terrarium-dem', {
-        "type": "raster-dem",
-        "encoding": "terrarium",
-        "tiles": [
-            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+        'type': 'raster-dem',
+        'encoding': 'terrarium',
+        'tiles': [
+            'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'
         ],
-        "tileSize": 128,
-        "maxzoom": 15
+        'tileSize': 128,
+        'maxzoom': 15
     });
     map.addLayer({
-        "id": "Terrarium data",
-        "source": "terrarium-dem",
-        "type": "hillshade",
-        "layout": {
-            "visibility": "none"
+        'id': 'Terrarium data',
+        'source': 'terrarium-dem',
+        'type': 'hillshade',
+        'layout': {
+            'visibility': 'none'
         }
     // insert below waterway-river-canal-shadow;
     // where hillshading sits in the Mapbox Outdoors style
@@ -108,17 +108,17 @@ map.on('load', function () {
     // Add variant of Hillshade that overzooms beyond zoom 7.
     // Note: source tiles are 512, so the following only goes up to native zoom 7.
     map.addSource('mapbox-dem-z8', {
-        "type": "raster-dem",
-        "url": "mapbox://mapbox.terrain-rgb",
-        "tileSize": 256,
-        "maxzoom": 8
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.terrain-rgb',
+        'tileSize': 256,
+        'maxzoom': 8
     });
     map.addLayer({
-        "id": "Mapbox data to Z8",
-        "source": "mapbox-dem-z8",
-        "type": "hillshade",
-        "layout": {
-            "visibility": "none"
+        'id': 'Mapbox data to Z8',
+        'source': 'mapbox-dem-z8',
+        'type': 'hillshade',
+        'layout': {
+            'visibility': 'none'
         }
     }, 'waterway-river-canal-shadow');
 });

@@ -18,12 +18,12 @@ jobs:
       # report status back to pull request
       - uses: haya14busa/action-workflow_run-status@v1
       - uses: actions/checkout@v2
-      - name: Use Node.js 10 x64
+      - name: Use Node.js 14 x64
         uses: actions/setup-node@v2-beta
         with:
-          node-version: 10
+          node-version: 14
           architecture: x64
-      - run: yarn install --frozen-lockfile
+      - run: npm ci
       - name: Download branch artifact
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -51,8 +51,8 @@ jobs:
           name: dist
           path: before
           repo: maplibre/maplibre-gl-js
-      - run: yarn source-map-explorer before/maplibre-gl.js --gzip --json before.json
-      - run: yarn source-map-explorer after/maplibre-gl.js --gzip --json after.json
+      - run: npx source-map-explorer before/maplibre-gl.js --gzip --json before.json
+      - run: npx source-map-explorer after/maplibre-gl.js --gzip --json after.json
       - name: Build bundle size report
         run: node build/check-bundle-size.js > comment-body.txt
       - name: Dump bundle size report

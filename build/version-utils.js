@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 
-const execSync = require('child_process').execSync;
-const semver = require('semver');
+import child_process from 'child_process';
+import semver from 'semver';
 
 const args = process.argv.slice(2);
 
 function latestVersionTag() {
-    const latestVersionTag = execSync('git describe --tags --match=v*.*.* --abbrev=0')
+    const latestVersionTag = child_process.execSync('git describe --tags --match=v*.*.* --abbrev=0')
         .toString()
         .trim();
     return latestVersionTag;
 }
 
 function latestFromTags() {
-    const currentVersion = execSync('git describe --tags --match=v*.*.* --abbrev=0')
+    const currentVersion = child_process.execSync('git describe --tags --match=v*.*.* --abbrev=0')
         .toString()
         .trim()
         .replace(/^v/, '');
@@ -21,7 +21,7 @@ function latestFromTags() {
 }
 
 function listTags() {
-    let gitTags = execSync('git log --no-walk --tags --pretty=format:%S')
+    let gitTags = child_process.execSync('git log --no-walk --tags --pretty=format:%S')
         .toString()
         .split('\n')
         .reduce((filtered, tag) => {

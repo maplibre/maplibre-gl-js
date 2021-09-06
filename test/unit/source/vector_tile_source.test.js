@@ -1,9 +1,10 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
-import VectorTileSource from '../../../src/source/vector_tile_source';
-import {OverscaledTileID} from '../../../src/source/tile_id';
-import window from '../../../src/util/window';
-import {Evented} from '../../../src/util/evented';
-import {RequestManager} from '../../../src/util/mapbox';
+import VectorTileSource from '../../../rollup/build/tsc/source/vector_tile_source';
+import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
+import {Evented} from '../../../rollup/build/tsc/util/evented';
+import {RequestManager} from '../../../rollup/build/tsc/util/request_manager';
+import fixturesSource from '../../fixtures/source.json';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -40,7 +41,7 @@ test('VectorTileSource', (t) => {
     });
 
     t.afterEach((callback) => {
-        window.restore();
+        window.clearFakeXMLHttpRequest();
         callback();
     });
 
@@ -64,7 +65,7 @@ test('VectorTileSource', (t) => {
     });
 
     t.test('can be constructed from a TileJSON URL', (t) => {
-        window.server.respondWith('/source.json', JSON.stringify(require('../../fixtures/source')));
+        window.server.respondWith('/source.json', JSON.stringify(fixturesSource));
 
         const source = createSource({url: "/source.json"});
 
@@ -82,7 +83,7 @@ test('VectorTileSource', (t) => {
     });
 
     t.test('transforms the request for TileJSON URL', (t) => {
-        window.server.respondWith('/source.json', JSON.stringify(require('../../fixtures/source')));
+        window.server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const transformSpy = t.spy((url) => {
             return {url};
         });
@@ -95,7 +96,7 @@ test('VectorTileSource', (t) => {
     });
 
     t.test('fires event with metadata property', (t) => {
-        window.server.respondWith('/source.json', JSON.stringify(require('../../fixtures/source')));
+        window.server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const source = createSource({url: "/source.json"});
         source.on('data', (e) => {
             if (e.sourceDataType === 'content') t.end();
@@ -104,7 +105,7 @@ test('VectorTileSource', (t) => {
     });
 
     t.test('fires "dataloading" event', (t) => {
-        window.server.respondWith('/source.json', JSON.stringify(require('../../fixtures/source')));
+        window.server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const evented = new Evented();
         let dataloadingFired = false;
         evented.on('dataloading', () => {
@@ -178,7 +179,7 @@ test('VectorTileSource', (t) => {
     testScheme('tms', 'http://example.com/10/5/1018.png');
 
     t.test('transforms tile urls before requesting', (t) => {
-        window.server.respondWith('/source.json', JSON.stringify(require('../../fixtures/source')));
+        window.server.respondWith('/source.json', JSON.stringify(fixturesSource));
 
         const source = createSource({url: "/source.json"});
         const transformSpy = t.spy(source.map._requestManager, 'transformRequest');
@@ -199,33 +200,6 @@ test('VectorTileSource', (t) => {
         });
 
         window.server.respond();
-    });
-
-    t.test('canonicalizes tile URLs in inline TileJSON', (t) => {
-        const source = createSource({
-            minzoom: 1,
-            maxzoom: 10,
-            attribution: "Mapbox",
-            tiles: ["https://api.mapbox.com/v4/user.map/{z}/{x}/{y}.png?access_token=key"]
-        });
-        const transformSpy = t.spy(source.map._requestManager, 'transformRequest');
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                t.deepEqual(source.tiles, ["mapbox://tiles/user.map/{z}/{x}/{y}.png?access_token=key"]);
-                const tile = {
-                    tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-                    state: 'loading',
-                    loadVectorData () {},
-                    setExpiryData() {}
-                };
-                source.loadTile(tile, () => {});
-                t.ok(transformSpy.calledOnce);
-                t.equal(transformSpy.getCall(0).args[0], `https://api.mapbox.com/v4/user.map/10/5/5.png?sku=${source.map._requestManager._skuToken}&access_token=key`);
-                t.equal(transformSpy.getCall(0).args[1], 'Tile');
-                t.end();
-            }
-        });
-
     });
 
     t.test('reloads a loading tile properly', (t) => {

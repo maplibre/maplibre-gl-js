@@ -1,5 +1,4 @@
 import maplibregl from '../../src';
-import accessToken from '../lib/access_token';
 import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '@mapbox/gazetteer/benchmark/style-benchmark-locations.json';
 import Layout from '../benchmarks/layout';
@@ -24,8 +23,6 @@ import FilterEvaluate from '../benchmarks/filter_evaluate';
 import getWorkerPool from '../../src/util/global_worker_pool';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features);
-
-maplibregl.accessToken = accessToken;
 
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 

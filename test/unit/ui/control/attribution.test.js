@@ -1,11 +1,10 @@
+import '../../../stub_loader';
 import {test} from '../../../util/test';
-import config from '../../../../src/util/config';
-import AttributionControl from '../../../../src/ui/control/attribution_control';
+import AttributionControl from '../../../../rollup/build/tsc/ui/control/attribution_control';
 import {createMap as globalCreateMap} from '../../../util';
 import simulate from '../../../util/simulate_interaction';
 
 function createMap(t) {
-    config.ACCESS_TOKEN = 'pk.123';
 
     return globalCreateMap(t, {
         attributionControl: false,
@@ -128,26 +127,6 @@ test('AttributionControl dedupes attributions that are substrings of others', (t
                 t.end();
             }
         }
-    });
-});
-
-test('AttributionControl has the correct edit map link', (t) => {
-    config.FEEDBACK_URL = "https://feedback.com";
-    const map = createMap(t);
-    const attribution = new AttributionControl();
-    map.addControl(attribution);
-    map.on('load', () => {
-        map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: '<a class="mapbox-improve-map" href="https://feedback.com" target="_blank">Improve this map</a>'});
-        map.addLayer({id: '1', type: 'fill', source: '1'});
-        map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
-                t.equal(attribution._editLink.rel, 'noopener nofollow');
-                t.equal(attribution._editLink.href, 'https://feedback.com/?owner=mapbox&id=streets-v10&access_token=pk.123#/0/0/0', 'edit link contains map location data');
-                map.setZoom(2);
-                t.equal(attribution._editLink.href, 'https://feedback.com/?owner=mapbox&id=streets-v10&access_token=pk.123#/0/0/2', 'edit link updates on mapmove');
-                t.end();
-            }
-        });
     });
 });
 

@@ -2,7 +2,6 @@ import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import replace from 'rollup-plugin-replace';
 import {plugins} from '../build/rollup_plugins';
-import buble from 'rollup-plugin-buble';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 
@@ -16,8 +15,6 @@ if (process.env.MAPBOX_STYLES) {
 
 const replaceConfig = {
     'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION),
-    'process.env.MAPBOX_ACCESS_TOKEN': JSON.stringify(process.env.MAPBOX_ACCESS_TOKEN),
-    'process.env.MapboxAccessToken': JSON.stringify(process.env.MapboxAccessToken),
     'process.env.MAPBOX_STYLES': JSON.stringify(styles),
     'process.env.NODE_ENV': JSON.stringify('production')
 };
@@ -58,7 +55,6 @@ const viewConfig = {
         sourcemap: false
     },
     plugins: [
-        buble({transforms: {dangerousForOf: true}, objectAssign: true}),
         resolve({browser: true, preferBuiltins: false}),
         commonjs(),
         replace(replaceConfig)

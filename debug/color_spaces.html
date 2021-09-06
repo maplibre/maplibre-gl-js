@@ -46,19 +46,19 @@ map.addControl(new maplibregl.ScaleControl());
 
 map.on('load', function() {
     map.addSource('geojson', {
-        "type": "geojson",
-        "data": "https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_110m_admin_0_countries.geojson"
+        'type': 'geojson',
+        'data': 'https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_110m_admin_0_countries.geojson'
     });
 
     map.addLayer({
-        "id": "countries",
-        "type": "fill",
-        "source": "geojson",
-        "paint": {
-            "fill-color": {
-                "property": "pop_est",
-                "colorSpace": "lab",
-                "stops": [
+        'id': 'countries',
+        'type': 'fill',
+        'source': 'geojson',
+        'paint': {
+            'fill-color': {
+                'property': 'pop_est',
+                'colorSpace': 'lab',
+                'stops': [
                     [0, 'blue'],
                     [140041247, 'red']
                 ]
@@ -69,9 +69,9 @@ map.on('load', function() {
 
 function pickInterpolation(input) {
     map.setPaintProperty('countries', 'fill-color', {
-        "property": "pop_est",
-        "colorSpace": input.value,
-        "stops": [
+        'property': 'pop_est',
+        'colorSpace': input.value,
+        'stops': [
             [0, 'blue'],
             [140041247, 'red']
         ]

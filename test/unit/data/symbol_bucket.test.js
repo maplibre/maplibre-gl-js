@@ -1,18 +1,24 @@
+import '../../stub_loader';
 import {test} from '../../util/test';
 import fs from 'fs';
-import path from 'path';
+import path, {dirname} from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import SymbolBucket from '../../../src/data/bucket/symbol_bucket';
-import {CollisionBoxArray} from '../../../src/data/array_types';
-import {performSymbolLayout} from '../../../src/symbol/symbol_layout';
-import {Placement} from '../../../src/symbol/placement';
-import Transform from '../../../src/geo/transform';
-import {OverscaledTileID} from '../../../src/source/tile_id';
-import Tile from '../../../src/source/tile';
-import CrossTileSymbolIndex from '../../../src/symbol/cross_tile_symbol_index';
-import FeatureIndex from '../../../src/data/feature_index';
-import {createSymbolBucket} from '../../util/create_symbol_layer';
+import SymbolBucket from '../../../rollup/build/tsc/data/bucket/symbol_bucket';
+import {CollisionBoxArray} from '../../../rollup/build/tsc/data/array_types';
+import {performSymbolLayout} from '../../../rollup/build/tsc/symbol/symbol_layout';
+import {Placement} from '../../../rollup/build/tsc/symbol/placement';
+import Transform from '../../../rollup/build/tsc/geo/transform';
+import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
+import Tile from '../../../rollup/build/tsc/source/tile';
+import CrossTileSymbolIndex from '../../../rollup/build/tsc/symbol/cross_tile_symbol_index';
+import FeatureIndex from '../../../rollup/build/tsc/data/feature_index';
+import {createSymbolBucket, createSymbolIconBucket} from '../../util/create_symbol_layer';
+import {fileURLToPath} from 'url';
+import {RGBAImage} from '../../../rollup/build/tsc/util/image';
+import {ImagePosition} from '../../../rollup/build/tsc/render/image_atlas';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load a point feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'))));
@@ -30,6 +36,25 @@ const stacks = {'Test': glyphs};
 
 function bucketSetup(text = 'abcde') {
     return createSymbolBucket('test', 'Test', text, collisionBoxArray);
+}
+
+function createIndexedFeature(id, index, iconId) {
+    return {
+        feature: {
+            extent: 8192,
+            type: 1,
+            id,
+            properties: {
+                icon: iconId
+            },
+            loadGeometry: function () {
+                return [[{x: 0, y: 0}]]
+            }
+        },
+        id,
+        index,
+        sourceLayerIndex: 0
+    };
 }
 
 test('SymbolBucket', (t) => {
@@ -89,6 +114,85 @@ test('SymbolBucket integer overflow', (t) => {
 
     t.ok(console.warn.calledOnce);
     t.ok(console.warn.getCall(0).calledWithMatch(/Too many glyphs being rendered in a tile./));
+    t.end();
+});
+
+test('SymbolBucket image undefined sdf', (t) => {
+    t.stub(console, 'warn').callsFake(() => { });
+
+    const imageMap = {
+        a: {
+            data: new RGBAImage({ width: 0, height: 0 })
+        },
+        b: {
+            data: new RGBAImage({ width: 0, height: 0 }),
+            sdf: false
+        }
+    };
+    const imagePos = {
+        a: new ImagePosition({ x: 0, y: 0, w: 10, h: 10 }, 1, 1),
+        b: new ImagePosition({ x: 10, y: 0, w: 10, h: 10 }, 1, 1)
+    };
+    const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray);
+    const options = { iconDependencies: {}, glyphDependencies: {} };
+
+    bucket.populate(
+        [
+            createIndexedFeature(0, 0, 'a'),
+            createIndexedFeature(1, 1, 'b'),
+            createIndexedFeature(2, 2, 'a')
+        ],
+        options
+    );
+
+    const icons = options.iconDependencies;
+    t.equal(icons.a, true, 'references icon a');
+    t.equal(icons.b, true, 'references icon b');
+
+    performSymbolLayout(bucket, null, null, imageMap, imagePos);
+
+    // undefined SDF should be treated the same as false SDF - no warning raised
+    t.ok(!console.warn.calledOnce);
+    t.end();
+});
+
+test('SymbolBucket image mismatched sdf', (t) => {
+    t.stub(console, 'warn').callsFake(() => { });
+
+    const imageMap = {
+        a: {
+            data: new RGBAImage({ width: 0, height: 0 }),
+            sdf: true
+        },
+        b: {
+            data: new RGBAImage({ width: 0, height: 0 }),
+            sdf: false
+        }
+    };
+    const imagePos = {
+        a: new ImagePosition({ x: 0, y: 0, w: 10, h: 10 }, 1, 1),
+        b: new ImagePosition({ x: 10, y: 0, w: 10, h: 10 }, 1, 1)
+    };
+    const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray);
+    const options = { iconDependencies: {}, glyphDependencies: {} };
+
+    bucket.populate(
+        [
+            createIndexedFeature(0, 0, 'a'),
+            createIndexedFeature(1, 1, 'b'),
+            createIndexedFeature(2, 2, 'a')
+        ],
+        options
+    );
+
+    const icons = options.iconDependencies;
+    t.equal(icons.a, true, 'references icon a');
+    t.equal(icons.b, true, 'references icon b');
+
+    performSymbolLayout(bucket, null, null, imageMap, imagePos);
+
+    // true SDF and false SDF in same bucket should trigger warning
+    t.ok(console.warn.calledOnce);
     t.end();
 });
 

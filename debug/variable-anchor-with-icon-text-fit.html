@@ -17,76 +17,76 @@
 <script src='../dist/maplibre-gl-dev.js'></script>
 <script>
 var places = {
-    "type": "FeatureCollection",
-    "features": [{
-        "type": "Feature",
-        "properties": {
-            "description": "Ford's Theater",
-            "icon": "theatre"
+    'type': 'FeatureCollection',
+    'features': [{
+        'type': 'Feature',
+        'properties': {
+            'description': 'Ford\'s Theater',
+            'icon': 'theatre'
         },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [-77.038659, 38.931567]
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [-77.038659, 38.931567]
         }
     }, {
-        "type": "Feature",
-        "properties": {
-            "description": "The Gaslight",
-            "icon": "theatre"
+        'type': 'Feature',
+        'properties': {
+            'description': 'The Gaslight',
+            'icon': 'theatre'
         },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [-77.003168, 38.894651]
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [-77.003168, 38.894651]
         }
     }, {
-        "type": "Feature",
-        "properties": {
-            "description": "Horrible Harry's",
-            "icon": "bar"
+        'type': 'Feature',
+        'properties': {
+            'description': 'Horrible Harry\'s',
+            'icon': 'bar'
         },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [-77.090372, 38.881189]
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [-77.090372, 38.881189]
         }
     }, {
-        "type": "Feature",
-        "properties": {
-            "description": "Bike Party",
-            "icon": "bicycle"
+        'type': 'Feature',
+        'properties': {
+            'description': 'Bike Party',
+            'icon': 'bicycle'
         },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [-77.052477, 38.943951]
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [-77.052477, 38.943951]
         }
     }, {
-        "type": "Feature",
-        "properties": {
-            "description": "Rockabilly Rockstars",
-            "icon": "music"
+        'type': 'Feature',
+        'properties': {
+            'description': 'Rockabilly Rockstars',
+            'icon': 'music'
         },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [-77.031706, 38.914581]
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [-77.031706, 38.914581]
         }
     }, {
-        "type": "Feature",
-        "properties": {
-            "description": "District Drum Tribe",
-            "icon": "music"
+        'type': 'Feature',
+        'properties': {
+            'description': 'District Drum Tribe',
+            'icon': 'music'
         },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [-77.020945, 38.878241]
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [-77.020945, 38.878241]
         }
     }, {
-        "type": "Feature",
-        "properties": {
-            "description": "Motown Memories",
-            "icon": "music"
+        'type': 'Feature',
+        'properties': {
+            'description': 'Motown Memories',
+            'icon': 'music'
         },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [-77.007481, 38.876516]
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [-77.007481, 38.876516]
         }
     }]
 };
@@ -101,7 +101,7 @@ var style = {
         }
     },
     sprite: 'https://demotiles.maplibre.org/style.json',
-    glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+    glyphs: 'mapbox://fonts/mapbox/{fontstack}/{range}.pbf',
     layers: [{
         id: 'foo',
         type: 'symbol',
@@ -121,7 +121,7 @@ var style = {
     }]
 };
 
-var map = window.map = new maplibregl.Map({
+new maplibregl.Map({
     container: 'map',
     style
 });

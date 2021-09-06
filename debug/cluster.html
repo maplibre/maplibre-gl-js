@@ -27,67 +27,67 @@ var map = window.map = new maplibregl.Map({
 
 map.on('load', () => {
     map.addSource('geojson', {
-        "type": "geojson",
-        "data": "/test/integration/data/places.geojson",
-        "cluster": true,
-        "clusterRadius": 50,
-        "clusterProperties": {
-            "max": ["max", ["get", "scalerank"]],
-            "sum": ["+", ["get", "scalerank"]],
-            "has_island": ["any", ["==", ["get", "featureclass"], "island"]]
+        'type': 'geojson',
+        'data': '/test/integration/data/places.geojson',
+        'cluster': true,
+        'clusterRadius': 50,
+        'clusterProperties': {
+            'max': ['max', ['get', 'scalerank']],
+            'sum': ['+', ['get', 'scalerank']],
+            'has_island': ['any', ['==', ['get', 'featureclass'], 'island']]
         }
     });
     map.addLayer({
-        "id": "cluster",
-        "type": "circle",
-        "source": "geojson",
-        "filter": ["==", "cluster", true],
-        "paint": {
-            "circle-color": ["case", ["get", "has_island"], "orange", "rgba(0, 200, 0, 1)"],
-            "circle-radius": 20
+        'id': 'cluster',
+        'type': 'circle',
+        'source': 'geojson',
+        'filter': ['==', 'cluster', true],
+        'paint': {
+            'circle-color': ['case', ['get', 'has_island'], 'orange', 'rgba(0, 200, 0, 1)'],
+            'circle-radius': 20
         }
     });
     map.addLayer({
-        "id": "cluster_label",
-        "type": "symbol",
-        "source": "geojson",
-        "filter": ["==", "cluster", true],
-        "layout": {
-            "text-field": "{point_count} ({max})",
-            "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-            "text-size": 12,
-            "text-allow-overlap": true,
-            "text-ignore-placement": true
+        'id': 'cluster_label',
+        'type': 'symbol',
+        'source': 'geojson',
+        'filter': ['==', 'cluster', true],
+        'layout': {
+            'text-field': '{point_count} ({max})',
+            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+            'text-size': 12,
+            'text-allow-overlap': true,
+            'text-ignore-placement': true
         }
     });
     map.addLayer({
-        "id": "unclustered_point",
-        "type": "circle",
-        "source": "geojson",
-        "filter": ["!=", "cluster", true],
-        "paint": {
-            "circle-color": "rgb(0, 0, 200)",
-            "circle-radius": 10
+        'id': 'unclustered_point',
+        'type': 'circle',
+        'source': 'geojson',
+        'filter': ['!=', 'cluster', true],
+        'paint': {
+            'circle-color': 'rgb(0, 0, 200)',
+            'circle-radius': 10
         }
     });
 
     var hoverData = {
-        "type": "FeatureCollection",
-        "features": []
+        'type': 'FeatureCollection',
+        'features': []
     };
 
     map.addSource('cluster_children', {
-        "type": "geojson",
-        "data": hoverData
+        'type': 'geojson',
+        'data': hoverData
     });
 
     map.addLayer({
-        "id": "cluster_children",
-        "type": "circle",
-        "source": "cluster_children",
-        "paint": {
-            "circle-color": "rgb(0, 150, 0)",
-            "circle-radius": 7
+        'id': 'cluster_children',
+        'type': 'circle',
+        'source': 'cluster_children',
+        'paint': {
+            'circle-color': 'rgb(0, 150, 0)',
+            'circle-radius': 7
         }
     });
 
@@ -117,7 +117,7 @@ map.on('load', () => {
         });
     });
 
-    map.on('mouseleave', 'cluster', (e) => {
+    map.on('mouseleave', 'cluster', (_) => {
         map.getCanvas().style.cursor = '';
         updateHover([]);
     });
