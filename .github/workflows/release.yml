@@ -11,55 +11,130 @@ on:
 
 jobs:
   lint_build_test:
-    name: Build, Lint and Test
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+        node_version:
+          - 14
+        architecture:
+          - x64
+
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2-beta
         with:
-          fetch-depth: 0
+          node-version: ${{ matrix.node_version }}
+          architecture: ${{ matrix.architecture }}
+      - run: npm ci
 
+      - run: npm run lint
+      - run: npm run build-dev
+      - run: npm run test-unit
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
       - name: Use Node.js 14 x64
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v2-beta
         with:
           node-version: 14
           architecture: x64
-          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run lint-docs
+      - run: npm run lint-css
 
-      - name: Install
-        run: npm ci
+  test-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 14
+          architecture: x64
+      - run: npm ci
+      - run: npm run build-dev
+      # see: https://github.com/stackgl/headless-gl#how-can-headless-gl-be-used-on-a-headless-linux-machine
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit
 
-      - name: Validate version tag
-        run: |
-          node build\version-utils.js validate-latest-tag
+  test-query:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 14
+          architecture: x64
+      - run: npm ci
+      - run: npm run build-dev
+      - run: npm run test-query
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./test/integration/query-tests
+          name: querytests
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./test/integration/query-tests/index.html
+          name: querytests.html
 
-      - name: Prepare
-        id: prepare
-        run: |
-          $LatestVersionTag=$(node build\version-utils.js latest-version-tag)
-          echo "Latest version tag=$LatestVersionTag"
-          echo "::set-output name=version_tag::$LatestVersionTag"
+  test-expressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 14
+          architecture: x64
+      - run: npm ci
+      - run: npm run build-dev
+      - run: npm run test-expressions
 
-      - name: Ensure correct revision
-        run: |
-          git checkout tags/${{ steps.prepare.outputs.version_tag }}
-
-      - name: Lint
-        run: |
-          npm run lint
-          npm run lint-docs
-          npm run lint-css
-
-      - name: Test
-        run: |
-          npm run test-unit
-          npm run test-render
-          npm run test-query
-          npm run test-expressions
+  test-browser:
+    timeout-minutes: 20
+    # These are a bit flaky and occasionally time out
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 14
+          architecture: x64
+      - run: npm ci
+      - run: npm run build-dev
+      - run: DETECT_CHROMEDRIVER_VERSION=true npm install -g chromedriver
+      - run: npm install -g geckodriver@2.0.4
+      - name: Test Chrome
+        env:
+          SELENIUM_BROWSER: chrome
+          TAP_COLORS: 1
+        run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser
+      - name: Test Firefox
+        env:
+          SELENIUM_BROWSER: firefox
+          TAP_COLORS: 1
+        run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser
 
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: lint_build_test
+    needs: [lint_build_test, lint, test-unit, test-query, test-expressions, test-browser]
     defaults:
       run:
         shell: bash
