@@ -1,42 +1,51 @@
 import LngLat from '../../../../rollup/build/tsc/geo/lng_lat';
 import MercatorCoordinate, {mercatorScale} from '../../../../rollup/build/tsc/geo/mercator_coordinate';
 
-test('LngLat', (t) => {
-    t.test('#constructor', (t) => {
-        t.ok(new MercatorCoordinate(0, 0) instanceof MercatorCoordinate, 'creates an object');
-        t.ok(new MercatorCoordinate(0, 0, 0) instanceof MercatorCoordinate, 'creates an object with altitude');
-        t.end();
+describe('Constructor MercatorCoordinate', () => {
+    test('creates an object', () => {
+        expect(new MercatorCoordinate(0, 0)).toBeInstanceOf(MercatorCoordinate);
+    });
+    test('creates an object with altitude', () => {
+        expect(new MercatorCoordinate(0, 0, 0)).toBeInstanceOf(MercatorCoordinate);
+    });
+});
+
+describe('Method fromLngLat()', () => {
+    const nullIsland = new LngLat(0, 0);
+    expect(MercatorCoordinate.fromLngLat(nullIsland)).toEqual({x: 0.5, y: 0.5, z: 0});
+});
+
+describe('Method toLngLat()', () => {
+    const dc = new LngLat(-77, 39);
+    expect(MercatorCoordinate.fromLngLat(dc, 500).toLngLat()).toEqual({lng: -77, lat: 39});
+});
+
+describe('Method toAltitude()', () => {
+    const dc = new LngLat(-77, 39);
+
+    test('length of 1 meter in MercatorCoordinate units at the equator', () => {
+        expect(MercatorCoordinate.fromLngLat(dc, 500).toAltitude()).toBe(500);
     });
 
-    t.test('#fromLngLat', (t) => {
+    test('length of 1 meter in MercatorCoordinate units at the equator', () => {
+        expect(MercatorCoordinate.fromLngLat(dc).toAltitude()).toBe(0);
+    });
+
+});
+
+describe('Method meterInMercatorCoordinateUnits()', () => {
+    test('length of 1 meter in MercatorCoordinate units at the equator', () => {
         const nullIsland = new LngLat(0, 0);
-        t.deepEqual(MercatorCoordinate.fromLngLat(nullIsland), {x: 0.5, y: 0.5, z: 0});
-        t.end();
+        expect(MercatorCoordinate.fromLngLat(nullIsland).meterInMercatorCoordinateUnits()).toBe(2.4981121214570498e-8);
+    });
+});
+
+describe('Method mercatorScale()', () => {
+    test('mercator scale at the equator', () => {
+        expect(mercatorScale(0)).toBe(1);
     });
 
-    t.test('#toLngLat', (t) => {
-        const dc = new LngLat(-77, 39);
-        t.deepEqual(MercatorCoordinate.fromLngLat(dc, 500).toLngLat(), {lng: -77, lat: 39});
-        t.end();
+    test('mercator scale at 45 degrees latitude', () => {
+        expect(mercatorScale(45)).toBe(1.414213562373095);
     });
-
-    t.test('#toAltitude', (t) => {
-        const dc = new LngLat(-77, 39);
-        t.equal(MercatorCoordinate.fromLngLat(dc, 500).toAltitude(), 500);
-        t.end();
-    });
-
-    t.test('#mercatorScale', (t) => {
-        t.equal(mercatorScale(0), 1, 'mercator scale at the equator');
-        t.equal(mercatorScale(45), 1.414213562373095, 'mercator scale at 45 degrees latitude');
-        t.end();
-    });
-
-    t.test('#meterInMercatorCoordinateUnits', (t) => {
-        const nullIsland = new LngLat(0, 0);
-        t.equal(MercatorCoordinate.fromLngLat(nullIsland).meterInMercatorCoordinateUnits(), 2.4981121214570498e-8, 'length of 1 meter in MercatorCoordinate units at the equator');
-        t.end();
-    });
-
-    t.end();
 });
