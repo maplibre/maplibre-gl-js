@@ -1,0 +1,36 @@
+name: Create Pull Request Demo
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set-up node
+      uses: actions/setup-node@v2
+      with:
+        node-version: 14
+
+    - name: Build
+      run: |
+        npm ci
+        npm run build-prod-min
+        npm run build-css
+        cp debug/pull-request-demo.html dist/index.html
+
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@4.1.0
+      with:
+        branch: gh-pages
+        folder: dist
+        target-folder: ${{ github.event.number }}
+    
+    - name: Add comment
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        message: |
+          Live demo of this pull request is available at <https://maplibre.github.io/maplibre-gl-js/${{ github.event.number }}>.
