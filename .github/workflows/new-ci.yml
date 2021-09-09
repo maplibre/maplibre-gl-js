@@ -54,7 +54,6 @@ jobs:
         os:
           - macos-latest
           - windows-latest
-          - ubuntu-latest
         node_version:
           - 14
         architecture:
