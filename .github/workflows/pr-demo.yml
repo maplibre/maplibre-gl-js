@@ -16,7 +16,7 @@ jobs:
         node-version: 14.x
 
     - name: Build
-    - run: |
+      run: |
         npm ci
         npm run build-prod-min
         npm run build-css
