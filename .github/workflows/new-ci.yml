@@ -71,6 +71,7 @@ jobs:
           node-version: ${{ matrix.node_version }}
           architecture: ${{ matrix.architecture }}
       - run: npm ci
+      - run: npm run build-dev
       - run: npm run test-unit
       - run: npm run test-render
       - run: npm run test-query
