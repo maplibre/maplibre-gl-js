@@ -32,5 +32,6 @@ jobs:
     - name: Add comment
       uses: marocchino/sticky-pull-request-comment@v2
       with:
+        header: demo
         message: |
           Live demo of this pull request is available at <https://maplibre.github.io/maplibre-gl-js/${{ github.event.number }}>.

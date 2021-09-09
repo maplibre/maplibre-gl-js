@@ -25,5 +25,6 @@ jobs:
     - name: Add comment
       uses: marocchino/sticky-pull-request-comment@v2
       with:
+        header: demo
         message: |
           Live demo was deleted.
