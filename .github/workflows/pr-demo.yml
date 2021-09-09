@@ -36,6 +36,7 @@ jobs:
 
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@4.1.0
+      if: success() && steps.findPr.outputs.number
       with:
         branch: gh-pages
         folder: dist
