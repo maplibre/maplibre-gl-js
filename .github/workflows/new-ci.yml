@@ -101,7 +101,7 @@ jobs:
       - run: npm ci
       - run: npm run build-dev
       # see: https://github.com/stackgl/headless-gl#how-can-headless-gl-be-used-on-a-headless-linux-machine
-      - run: npm run xvfb-run -s "-ac -screen 0 1280x1024x24" test-unit
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit
       - run: npm run test-render
       - run: npm run test-query
       - run: npm run test-expressions
