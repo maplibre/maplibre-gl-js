@@ -32,4 +32,3 @@ majority vote) regarding the direction of all MapLibre projects.
   company would like to meaningfully contribute in this way, please open an
   issue, and we can discuss options.
 
-
