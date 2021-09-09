@@ -1,0 +1,104 @@
+name: new CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          architecture: x64
+      - run: npm ci
+      - run: npm run lint-all
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+          - ubuntu-latest
+        node_version:
+          - 14
+        architecture:
+          - x64
+
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node_version }}
+          architecture: ${{ matrix.architecture }}
+      - run: npm ci
+      - run: npm run build-dev
+      - run: npm run build-prod-min
+      - run: npm run build-css
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+          - ubuntu-latest
+        node_version:
+          - 14
+        architecture:
+          - x64
+
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node_version }}
+          architecture: ${{ matrix.architecture }}
+      - run: npm ci
+      - run: npm run test-unit
+      - run: npm run test-render
+      - run: npm run test-query
+      - run: npm run test-expressions
+
+
+  test-browser:
+    timeout-minutes: 20
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: 14
+          architecture: x64
+      - run: npm ci
+      - run: npm run build-dev
+      - run: DETECT_CHROMEDRIVER_VERSION=true npm install -g chromedriver
+      - run: npm install -g geckodriver@2.0.4
+      - name: Test Chrome
+        env:
+          SELENIUM_BROWSER: chrome
+          TAP_COLORS: 1
+        run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser
+      - name: Test Firefox
+        env:
+          SELENIUM_BROWSER: firefox
+          TAP_COLORS: 1
+        run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser
