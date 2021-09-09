@@ -25,6 +25,7 @@ majority vote) regarding the direction of all MapLibre projects.
 
 ## Notes
 
+
 - The community is currently quite young and informal. We are working towards
   formalizing this structure, including adopting by-laws and forming an
   official organization if necessary.
