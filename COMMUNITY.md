@@ -31,3 +31,5 @@ majority vote) regarding the direction of all MapLibre projects.
 - We cannot currently accept funds to support development, but if you or your
   company would like to meaningfully contribute in this way, please open an
   issue, and we can discuss options.
+
+
