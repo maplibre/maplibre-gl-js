@@ -131,16 +131,16 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
 
     if (isArrayBuffer(input)) {
         if (transferables) {
-            transferables.push(((input)));
+            transferables.push(input);
         }
-        return input as Serialized;
+        return input;
     }
 
     if (isImageBitmap(input)) {
         if (transferables) {
-            transferables.push(((input)));
+            transferables.push(input);
         }
-        return input as Serialized;
+        return input;
     }
 
     if (ArrayBuffer.isView(input)) {
@@ -148,7 +148,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         if (transferables) {
             transferables.push(view.buffer);
         }
-        return view as Serialized;
+        return view;
     }
 
     if (input instanceof ImageData) {
