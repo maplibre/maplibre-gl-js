@@ -183,6 +183,7 @@
     "lint": "eslint --ext \".ts,.js,.html\" --ignore-path .gitignore src build debug/*.html",
     "lint-docs": "documentation lint src/index.ts",
     "lint-css": "stylelint \"src/css/maplibre-gl.css\"",
+    "lint-all": "run-p lint lint-docs lint-css",
     "test": "run-s lint lint-css lint-docs test-unit",
     "test-unit": "tap --node-arg --no-warnings --node-arg --experimental-specifier-resolution=node --node-arg --experimental-json-modules --reporter classic --no-coverage test/unit",
     "test-unit-file": "tap --node-arg --no-warnings --node-arg --experimental-specifier-resolution=node --node-arg --experimental-json-modules --reporter classic --no-coverage ",
