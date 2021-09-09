@@ -20,6 +20,7 @@ jobs:
         npm ci
         npm run build-prod-min
         npm run build-css
+        cp index.html dist
 
     - name: Find Pull Request number
       uses: jwalton/gh-find-current-pr@v1
@@ -27,15 +28,16 @@ jobs:
       with:
         state: open
 
-    - run: echo "Your PR is ${PR}"
+    - name: Show Pull Request number
+      run: echo "Your PR is ${PR}"
       if: success() && steps.findPr.outputs.number
       env:
         PR: ${{ steps.findPr.outputs.pr }}
 
-    # - name: Deploy
-    #   uses: JamesIves/github-pages-deploy-action@4.1.0
-    #   with:
-    #     branch: gh-pages
-    #     folder: dist
-    #     target-folder: ${{ steps.findPr.outputs.pr }}
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@4.1.0
+      with:
+        branch: gh-pages
+        folder: dist
+        target-folder: ${{ steps.findPr.outputs.pr }}
 
