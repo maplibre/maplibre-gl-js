@@ -72,7 +72,7 @@ class FillExtrusionBucket implements Bucket {
     segments: SegmentVector;
     uploaded: boolean;
     features: Array<BucketFeature>;
-    points: Array<{x: number; y: number; size: number;}>;
+    centroids: Array<{ x: number; y: number; vertexCount: number; }>;
 
     constructor(options: BucketParameters<FillExtrusionStyleLayer>) {
         this.zoom = options.zoom;
@@ -88,7 +88,7 @@ class FillExtrusionBucket implements Bucket {
         this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
         this.segments = new SegmentVector();
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
-        this.points = [];
+        this.centroids = [];
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
@@ -161,7 +161,7 @@ class FillExtrusionBucket implements Bucket {
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
-        const point = { x: 0, y: 0, size: 0 };
+        const centroid = { x: 0, y: 0, vertexCount: 0 };
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             let numVertices = 0;
             for (const ring of polygon) {
@@ -197,13 +197,13 @@ class FillExtrusionBucket implements Bucket {
 
                             addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
                             addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
-                            point.x += 2 * p1.x; point.y += 2 * p1.y; point.size += 2;
+                            centroid.x += 2 * p1.x; centroid.y += 2 * p1.y; centroid.vertexCount +=2;
 
                             edgeDistance += dist;
 
                             addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
                             addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
-                            point.x += 2 * p2.x; point.y += 2 * p2.y; point.size += 2;
+                            centroid.x += 2 * p2.x; centroid.y += 2 * p2.y; centroid.vertexCount +=2;
 
                             const bottomRight = segment.vertexLength;
 
@@ -249,7 +249,7 @@ class FillExtrusionBucket implements Bucket {
                     const p = ring[i];
 
                     addVertex(this.layoutVertexArray, p.x, p.y, 0, 0, 1, 1, 0);
-                    point.x += p.x; point.y += p.y; point.size += 1;
+                    centroid.x += p.x; centroid.y += p.y; centroid.vertexCount += 1;
 
                     flattened.push(p.x);
                     flattened.push(p.y);
@@ -272,14 +272,13 @@ class FillExtrusionBucket implements Bucket {
             segment.vertexLength += numVertices;
         }
 
-
-        // remember polygon centroid to calculate elevation later
-        this.points.push({
-            x: Math.floor(point.x / point.size),
-            y: Math.floor(point.y / point.size),
-            size: point.size
+        // remember polygon centroid to calculate elevation in a later step
+        this.centroids.push({
+            x: Math.floor(centroid.x / centroid.vertexCount),
+            y: Math.floor(centroid.y / centroid.vertexCount),
+            vertexCount: centroid.vertexCount
         });
-        for (let i=0; i<point.size; i++) this.elevationVertexArray.emplaceBack(0); // calculated later
+        for (let i=0; i<centroid.vertexCount; i++) this.elevationVertexArray.emplaceBack(0); // calculated later
 
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }

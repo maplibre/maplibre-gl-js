@@ -62,9 +62,9 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
         const elevationVertexBuffer = bucket.elevationVertexBuffer;
         if (tile.state == "loaded" && !tile.elevation[layer.id]) {
             elevationVertexArray.clear();
-            for (const point of bucket.points) {
-                  const elevation = painter.style.terrainSourceCache.getElevation(coord, point.x, point.y);
-                  for (let i=0; i<point.size; i++) elevationVertexArray.emplaceBack(elevation);
+            for (const centroid of bucket.centroids) {
+                  const elevation = painter.style.terrainSourceCache.getElevation(coord, centroid.x, centroid.y);
+                  for (let i=0; i<centroid.vertexCount; i++) elevationVertexArray.emplaceBack(elevation);
             }
             elevationVertexBuffer.updateData(elevationVertexArray);
             tile.elevation[layer.id] = true;

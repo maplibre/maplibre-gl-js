@@ -63,7 +63,7 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
     segments: SegmentVector;
     uploaded: boolean;
 
-    points: Array<Object>;
+    centroids: Array<{ x: number; y: number; }>;
 
     constructor(options: BucketParameters<Layer>) {
         this.zoom = options.zoom;
@@ -79,7 +79,7 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
         this.segments = new SegmentVector();
         this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
-        this.points = [];
+        this.centroids = [];
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
@@ -195,7 +195,7 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
                 this.indexArray.emplaceBack(index, index + 1, index + 2);
                 this.indexArray.emplaceBack(index, index + 3, index + 2);
 
-                this.points.push([x, y]);
+                this.centroids.push({ x: x, y: y });
 
                 segment.vertexLength += 4;
                 segment.primitiveLength += 2;

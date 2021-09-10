@@ -31,16 +31,15 @@ function drawTerrainCoords(painter, sourceCache: TerrainSourceCache) {
    context.clear({ color: Color.transparent, depth: 1 });
 
    sourceCache.coordsIndex = [];
-   for (const tileID of sourceCache.getRenderableTileIds(painter.transform)) {
-      const tile = sourceCache.getTileByID(tileID.key);
+   for (const tile of sourceCache.getRenderableTiles(painter.transform)) {
       context.activeTexture.set(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, coords.texture);
-      const posMatrix = painter.transform.calculatePosMatrix(tileID.toUnwrapped());
+      const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
       program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW,
           terrainCoordsUniformValues(painter, posMatrix, 255 - sourceCache.coordsIndex.length), "terrain",
           mesh.vertexBuffer, mesh.indexBuffer, mesh.segments,
           null, null, null, tile.elevationVertexBuffer);
-      sourceCache.coordsIndex.push(tileID.key);
+      sourceCache.coordsIndex.push(tile.tileID.key);
    }
    painter.finishFramebuffer();
 }
@@ -53,8 +52,7 @@ function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache) {
     const program = painter.useProgram('terrain');
     const mesh = sourceCache.getTerrainMesh(context);
 
-    for (const tileID of sourceCache.getRenderableTileIds(painter.transform)) {
-        const tile = sourceCache.getTileByID(tileID.key);
+    for (const tile of sourceCache.getRenderableTiles(painter.transform)) {
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, tile.fbo.colorAttachment.get());
         const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
@@ -65,11 +63,10 @@ function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache) {
     }
 }
 
-function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, depth: number=1) {
+function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache) {
    const context = painter.context;
    let fbo = 0;
-   for (const tileID of sourceCache.getRenderableTileIds(painter.transform)) {
-      const tile = sourceCache.getTileByID(tileID.key);
+   for (const tile of sourceCache.getRenderableTiles(painter.transform)) {
       const tileSize = tile.tileSize * 2;
       if (!tile.textures[painter.batch]) {
          tile.textures[painter.batch] = new Texture(context, {width: tileSize, height: tileSize, data: null}, context.gl.RGBA);
@@ -78,7 +75,7 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, depth
       if (!tile.elevationVertexBuffer) {
          const meshSize = sourceCache.meshSize, vertexArray = new TerrainElevationArray();
          for (let y=0; y<=meshSize; y++) for (let x=0; x<=meshSize; x++) {
-             vertexArray.emplaceBack(sourceCache.getElevation(tileID, x, y, meshSize));
+             vertexArray.emplaceBack(sourceCache.getElevation(tile.tileID, x, y, meshSize));
          }
          tile.elevationVertexBuffer = context.createVertexBuffer(vertexArray, elevationAttributes.members, true);
       }
@@ -96,8 +93,7 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, depth
 
 function clearTerrain(painter: Painter, sourceCache: TerrainSourceCache, depth: number=1) {
    const context = painter.context;
-   for (const tileID of sourceCache.getRenderableTileIds(painter.transform)) {
-      const tile = sourceCache.getTileByID(tileID.key);
+   for (const tile of sourceCache.getRenderableTiles(painter.transform)) {
       context.bindFramebuffer.set(tile.fbo.framebuffer);
       context.clear({ color: Color.transparent, depth: depth });
       painter.finishFramebuffer();

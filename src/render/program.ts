@@ -44,7 +44,8 @@ class Program<Us extends UniformBindings> {
             },
             configuration: ProgramConfiguration | undefined | null,
             fixedUniforms: (b: Context, a: UniformLocations) => Us,
-            showOverdrawInspector: boolean) {
+            showOverdrawInspector: boolean,
+            useTerrain: boolean) {
         const gl = context.gl;
         this.program = gl.createProgram();
 
@@ -65,7 +66,9 @@ class Program<Us extends UniformBindings> {
         if (showOverdrawInspector) {
             defines.push('#define OVERDRAW_INSPECTOR;');
         }
-
+        if (useTerrain) {
+            defines.push('#define TERRAIN3D;');
+        }
         const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');
         const vertexSource = defines.concat(shaders.prelude.vertexSource, source.vertexSource).join('\n');
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);

@@ -43,8 +43,10 @@ function drawBackground(painter: Painter, sourceCache: SourceCache, layer: Backg
 
     const crossfade = layer.getCrossfadeParameters();
     for (const tileID of tileIDs) {
-        const matrix = painter.prepareFramebuffer(tileID, "background")
-            || painter.transform.calculatePosMatrix(tileID.toUnwrapped());
+        const terrainTile = painter.getTerrainTile(tileID);
+        if (terrainTile) painter.prepareFramebuffer(tileID, terrainTile);
+
+        const matrix = terrainTile ? terrainTile.tileID.posMatrix : painter.transform.calculatePosMatrix(tileID.toUnwrapped());
         const uniformValues = image ?
             backgroundPatternUniformValues(matrix, opacity, painter, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(matrix, opacity, color);
@@ -52,6 +54,6 @@ function drawBackground(painter: Painter, sourceCache: SourceCache, layer: Backg
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
             uniformValues, layer.id, painter.tileExtentBuffer,
             painter.quadTriangleIndexBuffer, painter.tileExtentSegments);
-        painter.finishFramebuffer(tileID, "background");
+        if (terrainTile) painter.finishFramebuffer();
     }
 }

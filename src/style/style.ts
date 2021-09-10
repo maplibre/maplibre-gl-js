@@ -119,7 +119,6 @@ class Style extends Evented {
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
     _changed: boolean;
-    _modified: boolean;
     _updatedSources: {[_: string]: 'clear' | 'reload'};
     _updatedLayers: {[_: string]: true};
     _removedLayers: {[_: string]: StyleLayer};
@@ -158,8 +157,8 @@ class Style extends Evented {
         this._loaded = false;
         this._availableImages = [];
 
-        // make elevtaion accessible from map.transform
-        // FIXME-3D! refactor this hack
+        // make elevation accessible from map.transform
+        // FIXME-3D! is this the right place to assign this?
         map.transform.terrainSourceCache = this.terrainSourceCache;
 
         this._resetUpdates();
@@ -578,8 +577,6 @@ class Style extends Evented {
 
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
         const sourceCache = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
-        // FIXME-3D: is is may be ugly. Should we use map.setTerrain like mapbox does it?
-        if (source.type == "raster-dem") this.terrainSourceCache.setSourceCache(sourceCache);
         sourceCache.style = this;
         sourceCache.setEventedParent(this, () => ({
             isSourceLoaded: this.loaded(),

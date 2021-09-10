@@ -13,6 +13,7 @@ import browser from '../util/browser';
 
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
+import TerrainSourceCache from '../source/terrain_source_cache';
 
 /**
  * A single transform, generally used for a single tile to be
@@ -43,7 +44,7 @@ class Transform {
     pixelMatrixInverse: mat4;
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
-    terrainSourceCache: any;
+    terrainSourceCache: TerrainSourceCache;
     _fov: number;
     _pitch: number;
     _zoom: number;
@@ -802,7 +803,7 @@ class Transform {
         const nearZ = this.height / 50;
 
         // matrix for conversion from location to GL coordinates (-1 .. 1)
-        m = mat4.create();
+        m = new Float64Array(16) as any;
         mat4.perspective(m, this._fov, this.width / this.height, nearZ, farZ);
 
         // Apply center of perspective offset
@@ -823,13 +824,13 @@ class Transform {
         mat4.scale(m, m, vec3.fromValues(1, 1, metersPerPixel));
 
         // matrix for conversion from location to screen coordinates
-        this.pixelMatrix = mat4.multiply(mat4.create(), this.labelPlaneMatrix, m);
+        this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
         // matrix for conversion from location to GL coordinates (-1 .. 1)
         this.invProjMatrix = mat4.invert(mat4.create(), m);
         mat4.translate(m, m, [0, 0, -elevation]); // elevate camera over terrain
         this.projMatrix = m;
-        this.pixelMatrix2 = mat4.multiply(mat4.create(), this.labelPlaneMatrix, m);
+        this.pixelMatrix2 = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
         this.invProjMatrix2 = mat4.invert(mat4.create(), m);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
@@ -847,7 +848,7 @@ class Transform {
         this.alignedProjMatrix = alignedM;
 
         // inverse matrix for conversion from screen coordinaes to location
-        m = mat4.invert(mat4.create(), this.pixelMatrix);
+        m = mat4.invert(new Float64Array(16) as any, this.pixelMatrix);
         if (!m) throw new Error('failed to invert matrix');
         this.pixelMatrixInverse = m;
 

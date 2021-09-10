@@ -96,7 +96,10 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        let posMatrix = painter.prepareFramebuffer(coord, "fill") || coord.posMatrix;
+        const terrainTile = painter.getTerrainTile(coord);
+        if (terrainTile) painter.prepareFramebuffer(coord, terrainTile);
+
+        let posMatrix = terrainTile ? terrainTile.tileID.posMatrix : coord.posMatrix;
         const tileMatrix = painter.translatePosMatrix(posMatrix, tile,
             layer.paint.get('fill-translate'), layer.paint.get('fill-translate-anchor'));
 
@@ -120,6 +123,6 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
 
-        painter.finishFramebuffer(tile.tileID, "fill");
+        if (terrainTile) painter.finishFramebuffer();
     }
 }

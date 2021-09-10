@@ -481,7 +481,7 @@ export class Placement {
                 verticalTextFeatureIndex = collisionArrays.verticalTextFeatureIndex;
             }
 
-            // update elevtaion of collisionArrays
+            // update elevation of collisionArrays
             let tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
             let getElevation = (x: number, y: number) => this.transform.terrainSourceCache.getElevationWithExaggeration(tileID, x, y);
             for (let boxType of ['textBox', 'verticalTextBox', 'iconBox', 'verticalIconBox']) {

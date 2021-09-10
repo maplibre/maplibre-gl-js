@@ -61,6 +61,7 @@ import type IndexBuffer from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type ResolvedImage from '../style-spec/expression/types/resolved_image';
 import type {RGBAImage} from '../util/image';
+import { console } from 'window-or-global';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -337,25 +338,20 @@ class Painter {
     }
 
     // start drawing into the framebuffer, which is drawn on terrain-mesh
-    prepareFramebuffer(tileID: OverscaledTileID, layerType: string) {
-        const tile = this.getTerrainTile(tileID);
-        if (tile) {
-            const z = Math.floor(this.transform.zoom);
-            // dz is the tileSize difference of the layer-source and the 512px terrain-source
-            // so if dz > 0 the frameport's viewbuffer is located to the currect subtile
-            const dz = tileID.canonical.z - (z < tile.tileID.canonical.z ? z : tile.tileID.canonical.z);
-            const x = tileID.canonical.x - (tile.tileID.canonical.x << dz);
-            const y = tileID.canonical.y - (tile.tileID.canonical.y << dz);
-            const size = tile.fbo.width / (1 << dz);
-            this.context.bindFramebuffer.set(tile.fbo.framebuffer);
-            this.context.viewport.set([size * x, size * y, size, size]);
-            return tile.tileID.posMatrix;
-        }
-        return null;
+    prepareFramebuffer(tileID: OverscaledTileID, terrainTile: Tile) {
+        const z = Math.floor(this.transform.zoom);
+        // dz is the tileSize difference of the layer-source and the 512px terrain-source
+        // so if dz > 0 the frameport's viewbuffer is located to the currect subtile
+        const dz = tileID.canonical.z - (z < terrainTile.tileID.canonical.z ? z : terrainTile.tileID.canonical.z);
+        const x = tileID.canonical.x - (terrainTile.tileID.canonical.x << dz);
+        const y = tileID.canonical.y - (terrainTile.tileID.canonical.y << dz);
+        const size = terrainTile.fbo.width / (1 << dz);
+        this.context.bindFramebuffer.set(terrainTile.fbo.framebuffer);
+        this.context.viewport.set([size * x, size * y, size, size]);
     }
 
     // draw onto the screen
-    finishFramebuffer(tileID?: OverscaledTileID | null, note?: string | null) {
+    finishFramebuffer() {
         this.context.bindFramebuffer.set(null);
         this.context.viewport.set([0, 0, this.width, this.height]);
     }
@@ -432,18 +428,20 @@ class Painter {
                 break;
             }
         }
-        // disable opaque rendering until terrain is disable
-        this.opaquePassCutoff = 0;
 
-        this.batch = 0;
-        prepareTerrain(this, this.style.terrainSourceCache);
+        const isTerrainEnabled = this.style.terrainSourceCache.isEnabled();
+        if (isTerrainEnabled) {
+            this.opaquePassCutoff = 0;
+            this.batch = 0;
+            prepareTerrain(this, this.style.terrainSourceCache);
 
-        // update coords-framebuffer only on camera movement
-        const newTiles = this.style.terrainSourceCache.tilesForTime(this.coordsBuffer.renderTime);
-        if (!mat4.equals(this.coordsBuffer.matrix, this.transform.projMatrix) || newTiles.length) {
-            mat4.copy(this.coordsBuffer.matrix, this.transform.projMatrix);
-            this.coordsBuffer.renderTime = Date.now();
-            drawTerrainCoords(this, this.style.terrainSourceCache);
+            // update coords-framebuffer on camera movement
+            const newTiles = this.style.terrainSourceCache.tilesAfterTime(this.coordsBuffer.renderTime);
+            if (!mat4.equals(this.coordsBuffer.matrix, this.transform.projMatrix) || newTiles.length) {
+                mat4.copy(this.coordsBuffer.matrix, this.transform.projMatrix);
+                this.coordsBuffer.renderTime = Date.now();
+                drawTerrainCoords(this, this.style.terrainSourceCache);
+            }
         }
 
         // Offscreen pass ===============================================
@@ -474,7 +472,7 @@ class Painter {
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
-        if (this.opaquePassCutoff > 0) {
+        if (!isTerrainEnabled) {
             this.renderPass = 'opaque';
 
             for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
@@ -490,9 +488,11 @@ class Painter {
         // Translucent pass ===============================================
         // Draw all other layers bottom-to-top.
         this.renderPass = 'translucent';
+        // the following variables only used when terrain-3d is enabled
         let prevType = null;
-        const rerender = this.style.terrainSourceCache._rerender || this.style._modified;
+        const rerender = this.style.terrainSourceCache._rerender;
         let renderToTexture = { background: true, fill: true, line: true, raster: true };
+
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
@@ -503,44 +503,48 @@ class Painter {
             // separate clipping masks
             let coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
-            // render only tiles which has loaded terrain
-            if (coords) coords = coords.filter(tileID => {
-                const tile = this.getTerrainTile(tileID);
-                return tile && tile.state == "loaded";
-            });
+            if (isTerrainEnabled) {
+                // render only tiles which has loaded terrain
+                if (coords) coords = coords.filter(tileID => {
+                    const tile = this.getTerrainTile(tileID);
+                    return tile && tile.state == "loaded";
+                });
 
-            // render background, fill, line & raster layer into texture
-            if (renderToTexture[type]) {
-                if (prevType == 'hillshade') drawTerrain(this, this.style.terrainSourceCache);
-                if (prevType && !renderToTexture[prevType]) {
+                // render background, fill, line & raster layer into texture
+                if (renderToTexture[type]) {
+                    if (prevType == 'hillshade') drawTerrain(this, this.style.terrainSourceCache);
+                    if (prevType && !renderToTexture[prevType]) {
+                        this.batch++;
+                        prepareTerrain(this, this.style.terrainSourceCache);
+                        if (rerender) clearTerrain(this, this.style.terrainSourceCache);
+                    }
+                    prevType = type;
+                    if (!rerender) continue;
+
+                // render hillshading-texture to separate mesh-texture
+                // FIXME-3D! render hillshading-texture direct to screen for performance
+                } else if (type == 'hillshade') {
+                    if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
                     this.batch++;
                     prepareTerrain(this, this.style.terrainSourceCache);
-                    if (rerender) clearTerrain(this, this.style.terrainSourceCache);
+                    clearTerrain(this, this.style.terrainSourceCache);
+                    prevType = type;
+
+                // render all other layers direct to screen
+                } else {
+                    if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
+                    prevType = type;
                 }
-                prevType = type;
-                if (!rerender) continue;
-
-            // render hillshading-texture to separate mesh-texture
-            // FIXME-3D! render hillshading-texture direct to screen for performance
-            } else if (type == 'hillshade') {
-                if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
-                this.batch++;
-                prepareTerrain(this, this.style.terrainSourceCache);
-                clearTerrain(this, this.style.terrainSourceCache);
-                prevType = type;
-
-            // render all other layers direct to screen
-            } else {
-                if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
-                prevType = type;
             }
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source]);
             this.renderLayer(this, sourceCache, layer, coords);
         }
 
-        if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
-        this.style.terrainSourceCache._rerender = false;
+        if (isTerrainEnabled) {
+            if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
+            this.style.terrainSourceCache._rerender = false;
+        }
 
         if (this.options.showTileBoundaries) {
             //Use source with highest maxzoom
@@ -687,9 +691,20 @@ class Painter {
 
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null): Program<any> {
         this.cache = this.cache || {};
-        const key = `${name}${programConfiguration ? programConfiguration.cacheKey : ''}${this._showOverdrawInspector ? '/overdraw' : ''}`;
+        const key = name
+            + (programConfiguration ? programConfiguration.cacheKey : '')
+            + (this._showOverdrawInspector ? '/overdraw' : '')
+            + (this.style.terrainSourceCache.isEnabled() ? '/terrain' : '');
         if (!this.cache[key]) {
-            this.cache[key] = new Program(this.context, name, shaders[name], programConfiguration, programUniforms[name], this._showOverdrawInspector);
+            this.cache[key] = new Program(
+                this.context,
+                name,
+                shaders[name],
+                programConfiguration,
+                programUniforms[name],
+                this._showOverdrawInspector,
+                this.style.terrainSourceCache.isEnabled()
+            );
         }
         return this.cache[key];
     }

@@ -65,11 +65,13 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const posMatrix = painter.prepareFramebuffer(tile.tileID, "line");
-        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, posMatrix) :
-            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, posMatrix) :
-            gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length, posMatrix) :
-            lineUniformValues(painter, tile, layer, posMatrix);
+        const terrainTile = painter.getTerrainTile(tile.tileID);
+        if (terrainTile) painter.prepareFramebuffer(tile.tileID, terrainTile);
+
+        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, terrainTile) :
+            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, terrainTile) :
+            gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length, terrainTile) :
+            lineUniformValues(painter, tile, layer, terrainTile);
 
         if (image) {
             context.activeTexture.set(gl.TEXTURE0);
@@ -118,7 +120,7 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
             layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 
-        painter.finishFramebuffer(tile.tileID, "line");
+        if (terrainTile) painter.finishFramebuffer();
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
     }

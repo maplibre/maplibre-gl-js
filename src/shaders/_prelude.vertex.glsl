@@ -76,22 +76,30 @@ float hasBit(float value, int pos) {
     return floor(mod(floor(value / pow(2.0, float(pos))), 2.0));
 }
 
-// unpack a RGBA value from the the coords framebuffer into a vec2 in the range from 0 .. 8191
+// unpack a RGBA value from the coords framebuffer into a vec2 in the range from 0 .. 8191
 vec2 unpackCoord(vec4 rgba) {
     float r = floor(rgba.r * 255.0);
     float g = floor(rgba.g * 255.0);
     float b = floor(rgba.b * 255.0);
     float x = r + hasBit(b, 4) * 256.0 + hasBit(b, 5) * 512.0 + hasBit(b, 6) * 1024.0 + hasBit(b, 7) * 2048.0;
     float y = g + hasBit(b, 0) * 256.0 + hasBit(b, 1) * 512.0 + hasBit(b, 2) * 1024.0 + hasBit(b, 3) * 2048.0;
-    return vec2(x, y) * 2.0;
+    return vec2(x, y) * 2.0; // multiply by 2 is necesarry because the coords-texture has only 4096x4096 pixels.
 }
 
-// unpack a coord RGBA to vec2
+// calculate the visibility of a coordinate in terrain and return an opacity value.
+// if a coordinate is behind the terrain reduce its opacity
 float calculate_visibility(sampler2D u_coords, vec4 pos, vec2 tilePos) {
-    vec3 frag = pos.xyz / pos.w;
-    vec2 coord = unpackCoord(texture2D(u_coords, frag.xy * 0.5 + 0.5));
-    vec2 delta = tilePos - coord;
-    float distance = sqrt(delta.x * delta.x + delta.y * delta.y);
-    if (distance < 100.0) return 1.0;
-    return 0.2;
+    #ifdef TERRAIN3D
+        vec3 frag = pos.xyz / pos.w;
+        vec2 coord = unpackCoord(texture2D(u_coords, frag.xy * 0.5 + 0.5));
+        // distance is in vector-tile coordinate-space. e.g. 0 .. 8191
+        // e.g. the distance of the pos.coordinate to the tile.coordinate on the same screen-pixel.
+        float distance = length(tilePos - coord);
+        if (distance < 100.0) return 1.0; // assume fully visible on terrain
+        return 0.2; // opacity 0.2 behind terrain
+        // FIXME-3D: to get a correct fadeout effect it is necesarry to grab more
+        // pixels around pos to find the exact screen-pixel distance behind the terrain.
+    #else
+        return 1.0;
+    #endif
 }

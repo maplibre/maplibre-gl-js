@@ -6,6 +6,7 @@ import EXTENT from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
 import Style from '../style/style';
+import Color from '../style-spec/util/color';
 import Texture from '../render/texture';
 import {RGBAImage} from '../util/image';
 import {PosArray, TriangleIndexArray} from '../data/array_types';
@@ -21,15 +22,17 @@ class TerrainSourceCache extends Evented {
     _style: Style;
     _source: RasterDEMTileSource;
     _sourceCache: SourceCache;
-    _tiles: Array<any>;
+    _tiles: {[_: string]: Tile};
     _loadQueue: Array<any>;
     _coordsFramebuffer: any;
     _rerender: boolean;
     minzoom: number;
     maxzoom: number;
     tileSize: number;
+    maxOverscaleFactor: number; // limit tileSize on overzooming for performant rendering
     meshSize: number;
     exaggeration: number;
+    elevationOffset: number;
     coordsIndex: Array<any>;
     fbo: any;
     mesh: any;
@@ -40,29 +43,54 @@ class TerrainSourceCache extends Evented {
         this._style = style;
         this._sourceCache = null;
         this._source = null;
-        this._tiles = [];
+        this._tiles = {};
         this._loadQueue = [];
         this._coordsFramebuffer = null;
         this._rerender = true;
         this.minzoom = 5;
         this.maxzoom = 14;
         this.tileSize = 512;
+        this.maxOverscaleFactor = 3; // e.g. maximal tileSize will be 2048
         this.meshSize = 128;
         this.exaggeration = 1.0;
         this.coordsIndex = [];
         this.fbo = null;
         this.mesh = null;
         this.coords = null;
+        this.elevationOffset = 450; // add a global offset of 450m to put the dead-sea into positive values.
         style.on("data", () => this._rerender = true);
     }
 
-    setSourceCache(sourceCache: SourceCache) {
+    enable(sourceCache: SourceCache, options?: {exaggeration: boolean; elevationOffset: number; meshSize: number; maxOverscaleFactor:number}) {
+        this._rerender = true;
         this._sourceCache = sourceCache;
+        ['exaggeration', 'elevationOffset', 'meshSize', 'maxOverscaleFactor'].forEach(key => {
+           if (options && options[key] != undefined) this[key] = options[key]
+        });
         this._source = sourceCache._source as RasterDEMTileSource;
         if (! this._source.loaded()) this._source.once("data", () => {
            this._loadQueue.forEach(tile => this._source.loadTile(tile, () => this._tileLoaded(tile)));
            this._loadQueue = [];
         });
+      }
+
+    disable() {
+        this._sourceCache = this._source = null;
+        for (const key in this._tiles) {
+            let tile = this._tiles[key];
+            tile.textures.forEach(t => t.destroy());
+            tile.textures = [];
+        }
+        for (let s in this._style.sourceCaches) {
+            for (let key in this._style.sourceCaches[s]._tiles) {
+               this._style.sourceCaches[s]._tiles[key].elevation = {};
+            }
+        }
+        this._tiles = {};
+    }
+
+    isEnabled() {
+       return this._sourceCache ? true : false;
     }
 
     /**
@@ -71,6 +99,7 @@ class TerrainSourceCache extends Evented {
      * @private
      */
     update(transform: Transform) {
+        if (! this.isEnabled()) return;
         transform.updateElevation();
         let idealTileIDs = this.getRenderableTileIds(transform);
         let outdated = {};
@@ -101,6 +130,10 @@ class TerrainSourceCache extends Evented {
         });
     }
 
+    getRenderableTiles(transform: Transform) {
+        return this.getRenderableTileIds(transform).map(tileID => this.getTileByID(tileID.key)).filter(t => t);
+    }
+
     getRenderableIds() {
         return Object.values(this._tiles).map(t => t.tileID.key);
     }
@@ -125,11 +158,12 @@ class TerrainSourceCache extends Evented {
      * @param {number} extent optional, default 8192
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number=EXTENT): number {
+        if (!this.isEnabled()) return 0;
         const tile = this.getTileByID(tileID.key);
         const elevation = tile && tile.dem && x >= 0 && y >= 0 && x <= extent && y <= extent //FIXME-3D handle negative coordinates
            ? tile.dem.get(Math.floor(x / extent * tile.dem.dim), Math.floor(y / extent * tile.dem.dim))
            : 0;
-        return (elevation + 450); // add a global offset of 450m to put the dead-sea into positive values.
+        return (elevation + this.elevationOffset);
     }
 
     /**
@@ -148,8 +182,8 @@ class TerrainSourceCache extends Evented {
      * FIXME-3D resize texture on window-resize
      */
     getCoordsFramebuffer(painter: Painter) {
-        const width = painter.width / devicePixelRatio;
-        const height = painter.height  / devicePixelRatio;
+        const width = this.isEnabled() ? painter.width / devicePixelRatio : 10;
+        const height = this.isEnabled() ? painter.height  / devicePixelRatio : 10;
         if (this.fbo && (this.fbo.width != width || this.fbo.height != height)) {
             this.fbo.destroy();
             delete this.fbo;
@@ -169,7 +203,7 @@ class TerrainSourceCache extends Evented {
      * get a list of tiles, loaded after a spezific time
      * @param {Date} time
      */
-    tilesForTime(time=Date.now()) {
+    tilesAfterTime(time=Date.now()) {
         return Object.values(this._tiles).filter(t => t.timeLoaded >= time);
     }
 
@@ -191,7 +225,7 @@ class TerrainSourceCache extends Evented {
         };
     }
 
-    // create coords texture, needed to grab coordianates from canvas
+    // create coords texture, needed to grab coordinates from canvas
     // encode coords coordinate into 4 bytes:
     //   - 8 lower bits for x
     //   - 8 lower bits for y
@@ -236,12 +270,14 @@ class TerrainSourceCache extends Evented {
               this._style.sourceCaches[s]._tiles[key].elevation = {};
            }
         }
+        this._rerender = true;
     }
 
     _createEmptyTile(tileID: OverscaledTileID) {
         tileID.posMatrix = mat4.create();
         mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
-        let tile = new Tile(tileID, this.tileSize * tileID.overscaleFactor());
+        let tileSize = this.tileSize * Math.min(this.maxOverscaleFactor, tileID.overscaleFactor());
+        let tile = new Tile(tileID, tileSize);
         tile.textures = [];
         return tile;
     }

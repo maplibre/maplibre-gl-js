@@ -68,8 +68,8 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
         const elevationVertexBuffer = bucket.elevationVertexBuffer;
         if (bucket && tile.state == "loaded" && !tile.elevation[layer.id]) {
             elevationVertexArray.clear();
-            for (const point of bucket.points) {
-                const elevation = painter.style.terrainSourceCache.getElevation(coord, point[0], point[1]);
+            for (const centroid of bucket.centroids) {
+                const elevation = painter.style.terrainSourceCache.getElevation(coord, centroid.x, centroid.y);
                 addElevation(elevationVertexArray, elevation);
             }
             elevationVertexBuffer.updateData(elevationVertexArray);
