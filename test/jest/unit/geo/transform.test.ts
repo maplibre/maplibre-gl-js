@@ -1,7 +1,6 @@
 import Point from '../../../../rollup/build/tsc/util/point';
 import Transform from '../../../../rollup/build/tsc/geo/transform';
 import LngLat from '../../../../rollup/build/tsc/geo/lng_lat';
-import {OverscaledTileID, CanonicalTileID} from '../../../../rollup/build/tsc/source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../../util/fixed';
 
 describe('creates a transform', () => {
@@ -154,3 +153,14 @@ describe('does not throw on `bad` center', () => {
         expect(transform['center']).toEqual({lng: 260, lat: 0});
     });
 });
+
+describe('setLocationAt', () => {
+    const transform = new Transform();
+    transform.resize(500, 500);
+    transform.zoom = 4;
+
+    test('setLocationAt 500 500 zoom 4', () => {
+        expect(transform.center).toEqual({lng: 0, lat: 0});
+    });
+});
+
