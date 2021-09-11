@@ -81,7 +81,7 @@ export class RetainedQueryData {
     sourceLayerIndex: number;
     bucketIndex: number;
     tileID: OverscaledTileID;
-    featureSortOrder: Array<number> | undefined | null;
+    featureSortOrder: Array<number>;
     constructor(bucketInstanceId: number,
                 featureIndex: FeatureIndex,
                 sourceLayerIndex: number,
@@ -187,7 +187,7 @@ type TileLayerParameters = {
   scale: number;
   textPixelRatio: number;
   holdingForFade: boolean;
-  collisionBoxArray: CollisionBoxArray | undefined | null;
+  collisionBoxArray: CollisionBoxArray;
   partiallyEvaluatedTextSize: any;
   collisionGroup: any;
 };
@@ -225,7 +225,7 @@ export class Placement {
       [_: number]: RetainedQueryData;
     };
     collisionGroups: CollisionGroups;
-    prevPlacement: Placement | undefined | null;
+    prevPlacement: Placement;
     zoomAtLastRecencyCheck: number;
     collisionCircleArrays: {
       [k in any]: CollisionCircleArray;
@@ -350,7 +350,7 @@ export class Placement {
         box: Array<number>;
         offscreen: boolean;
       };
-    } | undefined | null {
+    } {
 
         const textOffset = [symbolInstance.textOffset0, symbolInstance.textOffset1] as [number, number];
         const shift = calculateVariableLayoutShift(anchor, width, height, textOffset, textBoxScale);
@@ -562,7 +562,7 @@ export class Placement {
                         let placedBox: {
                           box: Array<number>;
                           offscreen: boolean;
-                        } | undefined | null  = {box: [], offscreen: false};
+                        } = {box: [], offscreen: false};
                         const placementAttempts = textAllowOverlap ? anchors.length * 2 : anchors.length;
                         for (let i = 0; i < placementAttempts; ++i) {
                             const anchor = anchors[i % anchors.length];

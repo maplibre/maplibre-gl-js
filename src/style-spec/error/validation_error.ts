@@ -2,8 +2,8 @@
 
 export default class ValidationError {
     message: string;
-    identifier: string | undefined | null;
-    line: number | undefined | null;
+    identifier: string;
+    line: number;
 
     constructor(key: string | undefined | null, value: {
       __line__: number;

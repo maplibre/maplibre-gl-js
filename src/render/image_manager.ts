@@ -47,7 +47,7 @@ class ImageManager extends Evented {
 
     patterns: {[_: string]: Pattern};
     atlasImage: RGBAImage;
-    atlasTexture: Texture | undefined | null;
+    atlasTexture: Texture;
     dirty: boolean;
 
     constructor() {
@@ -82,7 +82,7 @@ class ImageManager extends Evented {
         }
     }
 
-    getImage(id: string): StyleImage | undefined | null {
+    getImage(id: string): StyleImage {
         return this.images[id];
     }
 
@@ -212,7 +212,7 @@ class ImageManager extends Evented {
         return {width, height};
     }
 
-    getPattern(id: string): ImagePosition | undefined | null {
+    getPattern(id: string): ImagePosition {
         const pattern = this.patterns[id];
 
         const image = this.getImage(id);

@@ -27,11 +27,11 @@ type Entry = {
 
 class GlyphManager {
     requestManager: RequestManager;
-    localIdeographFontFamily: string | undefined | null;
+    localIdeographFontFamily: string;
     entries: {
       [_: string]: Entry;
     };
-    url: string | undefined | null;
+    url: string;
 
     // exposed as statics to enable stubbing in unit tests
     static loadGlyphRange: typeof loadGlyphRange;
@@ -53,7 +53,7 @@ class GlyphManager {
       [stack: string]: Array<number>;
     }, callback: Callback<{
       [stack: string]: {
-        [id: number]: StyleGlyph | undefined | null;
+        [id: number]: StyleGlyph;
       };
     }>) {
         const all = [];
@@ -67,7 +67,7 @@ class GlyphManager {
         asyncAll(all, ({stack, id}, callback: Callback<{
           stack: string;
           id: number;
-          glyph: StyleGlyph | undefined | null;
+          glyph: StyleGlyph;
         }>) => {
             let entry = this.entries[stack];
             if (!entry) {
@@ -136,7 +136,7 @@ class GlyphManager {
         }, (err, glyphs?: Array<{
           stack: string;
           id: number;
-          glyph: StyleGlyph | undefined | null;
+          glyph: StyleGlyph;
         }> | null) => {
             if (err) {
                 callback(err);
@@ -167,7 +167,7 @@ class GlyphManager {
         /* eslint-enable new-cap */
     }
 
-    _tinySDF(entry: Entry, stack: string, id: number): StyleGlyph | undefined | null {
+    _tinySDF(entry: Entry, stack: string, id: number): StyleGlyph {
         const family = this.localIdeographFontFamily;
         if (!family) {
             return;

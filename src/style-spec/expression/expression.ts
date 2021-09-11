@@ -16,7 +16,7 @@ export interface Expression {
   serialize(): SerializedExpression;
 }
 
-export type ExpressionParser = (args: ReadonlyArray<unknown>, context: ParsingContext) => Expression | undefined | null;
+export type ExpressionParser = (args: ReadonlyArray<unknown>, context: ParsingContext) => Expression;
 export type ExpressionRegistration = {
   new (...args: any): Expression;
 } & {

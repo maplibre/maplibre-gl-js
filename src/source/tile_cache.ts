@@ -13,7 +13,7 @@ class TileCache {
     data: {
       [key: string]: Array<{
         value: Tile;
-        timeout: ReturnType<typeof setTimeout> | undefined | null;
+        timeout: ReturnType<typeof setTimeout>;
       }>;
     };
     order: Array<string>;
@@ -105,7 +105,7 @@ class TileCache {
      * @returns {*} the data, or null if it isn't found
      * @private
      */
-    getAndRemove(tileID: OverscaledTileID): Tile | undefined | null {
+    getAndRemove(tileID: OverscaledTileID): Tile {
         if (!this.has(tileID)) { return null; }
         return this._getAndRemoveByKey(tileID.wrapped().key);
     }
@@ -113,7 +113,7 @@ class TileCache {
     /*
      * Get and remove the value with the specified key.
      */
-    _getAndRemoveByKey(key: string): Tile | undefined | null {
+    _getAndRemoveByKey(key: string): Tile {
         const data = this.data[key].shift();
         if (data.timeout) clearTimeout(data.timeout);
 
@@ -128,7 +128,7 @@ class TileCache {
     /*
      * Get the value with the specified (wrapped tile) key.
      */
-    getByKey(key: string): Tile | undefined | null {
+    getByKey(key: string): Tile {
         const data = this.data[key];
         return data ? data[0].value : null;
     }
@@ -141,7 +141,7 @@ class TileCache {
      * @returns {*} the data, or null if it isn't found
      * @private
      */
-    get(tileID: OverscaledTileID): Tile | undefined | null {
+    get(tileID: OverscaledTileID): Tile {
         if (!this.has(tileID)) { return null; }
 
         const data = this.data[tileID.wrapped().key][0];

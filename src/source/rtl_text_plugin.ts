@@ -14,7 +14,7 @@ const status = {
 
 export type PluginState = {
   pluginStatus: typeof status[keyof typeof status];
-  pluginURL: string | undefined | null;
+  pluginURL: string;
 };
 
 type ErrorCallback = (error?: Error | null) => void;
@@ -93,14 +93,14 @@ export const downloadRTLTextPlugin = function() {
 };
 
 export const plugin: {
-  applyArabicShaping: Function | undefined | null;
-  processBidirectionalText: ((b: string, a: Array<number>) => Array<string>) | undefined | null;
-  processStyledBidirectionalText: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>) | undefined | null;
+  applyArabicShaping: Function;
+  processBidirectionalText: ((b: string, a: Array<number>) => Array<string>);
+  processStyledBidirectionalText: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>);
   isLoaded: () => boolean;
   isLoading: () => boolean;
   setState: (state: PluginState) => void;
   isParsed: () => boolean;
-  getPluginURL: () => string | undefined | null;
+  getPluginURL: () => string;
 } = {
     applyArabicShaping: null,
     processBidirectionalText: null,
@@ -125,7 +125,7 @@ export const plugin: {
             plugin.processBidirectionalText != null &&
             plugin.processStyledBidirectionalText != null;
     },
-    getPluginURL(): string | undefined | null {
+    getPluginURL(): string {
         assert(isWorker(), 'rtl-text-plugin url can only be queried from the worker threads');
         return pluginURL;
     }

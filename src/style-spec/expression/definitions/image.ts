@@ -15,7 +15,7 @@ export default class ImageExpression implements Expression {
         this.input = input;
     }
 
-    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression {
         if (args.length !== 2) {
             return context.error('Expected two arguments.') as null;
         }

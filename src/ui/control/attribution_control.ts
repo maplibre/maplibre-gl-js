@@ -28,7 +28,7 @@ class AttributionControl implements IControl {
     _container: HTMLElement;
     _innerContainer: HTMLElement;
     _compactButton: HTMLButtonElement;
-    _editLink: HTMLAnchorElement | undefined | null;
+    _editLink: HTMLAnchorElement;
     _attribHTML: string;
     styleId: string;
     styleOwner: string;

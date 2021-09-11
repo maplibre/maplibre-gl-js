@@ -2,9 +2,9 @@
  * Throttle the given function to run at most every `period` milliseconds.
  * @private
  */
-export default function throttle(fn: () => void, time: number): () => ReturnType<typeof setTimeout> | undefined | null {
+export default function throttle(fn: () => void, time: number): () => ReturnType<typeof setTimeout> {
     let pending = false;
-    let timerId: ReturnType<typeof setTimeout> | undefined | null = null;
+    let timerId: ReturnType<typeof setTimeout> = null;
 
     const later = () => {
         timerId = null;

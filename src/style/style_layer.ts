@@ -36,9 +36,9 @@ class StyleLayer extends Evented {
     metadata: unknown;
     type: string;
     source: string;
-    sourceLayer: string | undefined | null;
-    minzoom: number | undefined | null;
-    maxzoom: number | undefined | null;
+    sourceLayer: string;
+    minzoom: number;
+    maxzoom: number;
     filter: FilterSpecification | void;
     visibility: 'visible' | 'none' | void;
     _crossfadeParameters: CrossfadeParameters;
@@ -64,8 +64,8 @@ class StyleLayer extends Evented {
       pixelPosMatrix: mat4
     ) => boolean | number;
 
-    readonly onAdd: ((map: Map) => void) | undefined | null;
-    readonly onRemove: ((map: Map) => void) | undefined | null;
+    readonly onAdd: ((map: Map) => void);
+    readonly onRemove: ((map: Map) => void);
 
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
       layout?: Properties<any>;

@@ -1,4 +1,4 @@
-let supportsOffscreenCanvas: boolean | undefined | null;
+let supportsOffscreenCanvas: boolean;
 
 export default function offscreenCanvasSupported(): boolean {
     if (supportsOffscreenCanvas == null) {

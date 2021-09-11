@@ -12,7 +12,7 @@ export type UniformLocations = {[_: string]: WebGLUniformLocation};
 
 abstract class Uniform<T> {
     gl: WebGLRenderingContext;
-    location: WebGLUniformLocation | undefined | null;
+    location: WebGLUniformLocation;
     current: T;
 
     constructor(context: Context, location: WebGLUniformLocation) {

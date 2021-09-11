@@ -56,7 +56,7 @@ export class StyleExpression {
     _evaluator: EvaluationContext;
     _defaultValue: Value;
     _warningHistory: {[key: string]: boolean};
-    _enumValues: {[_: string]: any} | undefined | null;
+    _enumValues: {[_: string]: any};
 
     constructor(expression: Expression, propertySpec?: StylePropertySpecification | null) {
         this.expression = expression;
@@ -190,7 +190,7 @@ export class ZoomDependentExpression<Kind extends EvaluationKind> {
     isStateDependent: boolean;
 
     _styleExpression: StyleExpression;
-    interpolationType: InterpolationType | undefined | null;
+    interpolationType: InterpolationType;
 
     constructor(kind: Kind, expression: StyleExpression, zoomStops: Array<number>, interpolationType?: InterpolationType) {
         this.kind = kind;
@@ -266,7 +266,7 @@ export type CameraExpression = {
   ) => any;
   readonly interpolationFactor: (input: number, lower: number, upper: number) => number;
   zoomStops: Array<number>;
-  interpolationType: InterpolationType | undefined | null;
+  interpolationType: InterpolationType;
 };
 
 export type CompositeExpression = {
@@ -282,7 +282,7 @@ export type CompositeExpression = {
   ) => any;
   readonly interpolationFactor: (input: number, lower: number, upper: number) => number;
   zoomStops: Array<number>;
-  interpolationType: InterpolationType | undefined | null;
+  interpolationType: InterpolationType;
 };
 
 export type StylePropertyExpression = ConstantExpression | SourceExpression | CameraExpression | CompositeExpression;
@@ -338,8 +338,8 @@ export class StylePropertyFunction<T> {
 
     kind: EvaluationKind;
     evaluate: (globals: GlobalProperties, feature?: Feature) => any;
-    interpolationFactor: ((input: number, lower: number, upper: number) => number) | undefined | null;
-    zoomStops: Array<number> | undefined | null;
+    interpolationFactor: ((input: number, lower: number, upper: number) => number);
+    zoomStops: Array<number>;
 
     constructor(parameters: PropertyValueSpecification<T>, specification: StylePropertySpecification) {
         this._parameters = parameters;

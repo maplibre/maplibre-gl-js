@@ -66,7 +66,7 @@ class GeoJSONSource extends Evented implements Source {
     maxzoom: number;
     tileSize: number;
     attribution: string;
-    promoteId: PromoteIdSpecification | undefined | null;
+    promoteId: PromoteIdSpecification;
 
     isTileClipped: boolean;
     reparseOverscaled: boolean;

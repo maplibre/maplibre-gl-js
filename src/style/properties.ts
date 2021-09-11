@@ -243,7 +243,7 @@ export class Transitionable<Props> {
 class TransitioningPropertyValue<T, R> {
     property: Property<T, R>;
     value: PropertyValue<T, R>;
-    prior: TransitioningPropertyValue<T, R> | undefined | null;
+    prior: TransitioningPropertyValue<T, R>;
     begin: TimePoint;
     end: TimePoint;
 
@@ -493,7 +493,7 @@ export class DataConstantProperty<T> implements Property<T, T> {
     }
 
     interpolate(a: T, b: T, t: number): T {
-        const interp: ((a: T, b: T, t: number) => T) | undefined | null = (interpolate as any)[this.specification.type];
+        const interp: ((a: T, b: T, t: number) => T) = (interpolate as any)[this.specification.type];
         if (interp) {
             return interp(a, b, t);
         } else {
@@ -552,7 +552,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, a.parameters);
         }
 
-        const interp: ((a: T, b: T, t: number) => T) | undefined | null = (interpolate as any)[this.specification.type];
+        const interp: ((a: T, b: T, t: number) => T) = (interpolate as any)[this.specification.type];
         if (interp) {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: interp(a.value.value, b.value.value, t)}, a.parameters);
         } else {
@@ -583,14 +583,14 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
  * @private
  */
 
-export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFaded<T> | undefined | null> {
+export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFaded<T>> {
 
     possiblyEvaluate(
       value: PropertyValue<CrossFaded<T> | undefined | null, PossiblyEvaluatedPropertyValue<CrossFaded<T> | undefined | null>>,
       parameters: EvaluationParameters,
       canonical?: CanonicalTileID,
       availableImages?: Array<string>
-    ): PossiblyEvaluatedPropertyValue<CrossFaded<T> | undefined | null> {
+    ): PossiblyEvaluatedPropertyValue<CrossFaded<T>> {
         if (value.value === undefined) {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, parameters);
         } else if (value.expression.kind === 'constant') {
@@ -619,7 +619,7 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
       featureState: FeatureState,
       canonical?: CanonicalTileID,
       availableImages?: Array<string>
-    ): CrossFaded<T> | undefined | null {
+    ): CrossFaded<T> {
         if (value.kind === 'source') {
             const constant = value.evaluate(globals, feature, featureState, canonical, availableImages);
             return this._calculate(constant, constant, constant, globals);
@@ -649,7 +649,7 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
  *
  * @private
  */
-export class CrossFadedProperty<T> implements Property<T, CrossFaded<T> | undefined | null> {
+export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
     specification: StylePropertySpecification;
 
     constructor(specification: StylePropertySpecification) {
@@ -677,12 +677,12 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T> | undefi
         }
     }
 
-    _calculate(min: T, mid: T, max: T, parameters: EvaluationParameters): CrossFaded<T> | undefined | null {
+    _calculate(min: T, mid: T, max: T, parameters: EvaluationParameters): CrossFaded<T> {
         const z = parameters.zoom;
         return z > parameters.zoomHistory.lastIntegerZoom ? {from: min, to: mid} : {from: max, to: mid};
     }
 
-    interpolate(a?: CrossFaded<T> | null): CrossFaded<T> | undefined | null {
+    interpolate(a?: CrossFaded<T> | null): CrossFaded<T> {
         return a;
     }
 }

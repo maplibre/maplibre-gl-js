@@ -21,12 +21,12 @@ export type SizeData = {
   maxZoom: number;
   minSize: number;
   maxSize: number;
-  interpolationType: InterpolationType | undefined | null;
+  interpolationType: InterpolationType;
 } | {
   kind: 'composite';
   minZoom: number;
   maxZoom: number;
-  interpolationType: InterpolationType | undefined | null;
+  interpolationType: InterpolationType;
 };
 
 // For {text,icon}-size, get the bucket-level data that will be needed by

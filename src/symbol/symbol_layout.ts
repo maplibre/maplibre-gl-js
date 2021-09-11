@@ -149,7 +149,7 @@ export function performSymbolLayout(
     bucket: SymbolBucket,
     glyphMap: {
         [_: string]: {
-            [x: number]: StyleGlyph | undefined | null;
+            [x: number]: StyleGlyph;
         };
     },
     glyphPositions: {

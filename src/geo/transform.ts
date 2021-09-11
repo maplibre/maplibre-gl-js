@@ -20,8 +20,8 @@ import type {PaddingOptions} from './edge_insets';
 class Transform {
     tileSize: number;
     tileZoom: number;
-    lngRange: [number, number] | undefined | null;
-    latRange: [number, number] | undefined | null;
+    lngRange: [number, number];
+    latRange: [number, number];
     maxValidLatitude: number;
     scale: number;
     width: number;

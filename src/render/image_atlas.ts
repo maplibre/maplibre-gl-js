@@ -20,9 +20,9 @@ export class ImagePosition {
     paddedRect: Rect;
     pixelRatio: number;
     version: number;
-    stretchY: Array<[number, number]> | undefined | null;
-    stretchX: Array<[number, number]> | undefined | null;
-    content: [number, number, number, number] | undefined | null;
+    stretchY: Array<[number, number]>;
+    stretchX: Array<[number, number]>;
+    content: [number, number, number, number];
 
     constructor(paddedRect: Rect, {
         pixelRatio,
@@ -70,7 +70,7 @@ export default class ImageAtlas {
     iconPositions: {[_: string]: ImagePosition};
     patternPositions: {[_: string]: ImagePosition};
     haveRenderCallbacks: Array<string>;
-    uploaded: boolean | undefined | null;
+    uploaded: boolean;
 
     constructor(icons: {[_: string]: StyleImage}, patterns: {[_: string]: StyleImage}) {
         const iconPositions = {}, patternPositions = {};

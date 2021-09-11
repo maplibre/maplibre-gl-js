@@ -107,8 +107,8 @@ class Style extends Evented {
     lineAtlas: LineAtlas;
     light: Light;
 
-    _request: Cancelable | undefined | null;
-    _spriteRequest: Cancelable | undefined | null;
+    _request: Cancelable;
+    _spriteRequest: Cancelable;
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: any};
     _order: Array<string>;
@@ -527,7 +527,7 @@ class Style extends Evented {
         this.imageManager.updateImage(id, image);
     }
 
-    getImage(id: string): StyleImage | undefined | null {
+    getImage(id: string): StyleImage {
         return this.imageManager.getImage(id);
     }
 

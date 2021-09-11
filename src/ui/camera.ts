@@ -121,7 +121,7 @@ abstract class Camera extends Evented {
 
     _onEaseFrame: (_: number) => void;
     _onEaseEnd: (easeId?: string) => void;
-    _easeFrameId: TaskID | undefined | null;
+    _easeFrameId: TaskID;
 
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
