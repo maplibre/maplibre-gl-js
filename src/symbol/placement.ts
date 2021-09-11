@@ -22,7 +22,7 @@ import type {TextAnchor} from './symbol_layout';
 class OpacityState {
     opacity: number;
     placed: boolean;
-    constructor(prevState: OpacityState | undefined | null, increment: number, placed: boolean, skipFade?: boolean | null) {
+    constructor(prevState: OpacityState, increment: number, placed: boolean, skipFade?: boolean | null) {
         if (prevState) {
             this.opacity = Math.max(0, Math.min(1, prevState.opacity + (prevState.placed ? increment : -increment)));
         } else {
@@ -38,7 +38,7 @@ class OpacityState {
 class JointOpacityState {
     text: OpacityState;
     icon: OpacityState;
-    constructor(prevState: JointOpacityState | undefined | null, increment: number, placedText: boolean, placedIcon: boolean, skipFade?: boolean | null) {
+    constructor(prevState: JointOpacityState, increment: number, placedText: boolean, placedIcon: boolean, skipFade?: boolean | null) {
         this.text = new OpacityState(prevState ? prevState.text : null, increment, placedText, skipFade);
         this.icon = new OpacityState(prevState ? prevState.icon : null, increment, placedIcon, skipFade);
     }

@@ -878,7 +878,7 @@ abstract class Camera extends Evented {
         return this;
     }
 
-    _prepareEase(eventData: any | undefined | null, noMoveStart: boolean, currently: any = {}) {
+    _prepareEase(eventData: any, noMoveStart: boolean, currently: any = {}) {
         this._moving = true;
 
         if (!noMoveStart && !currently.moving) {

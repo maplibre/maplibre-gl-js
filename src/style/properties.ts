@@ -249,7 +249,7 @@ class TransitioningPropertyValue<T, R> {
 
     constructor(property: Property<T, R>,
                 value: PropertyValue<T, R>,
-                prior: TransitioningPropertyValue<T, R> | undefined | null,
+                prior: TransitioningPropertyValue<T, R>,
                 transition: TransitionSpecification,
                 now: TimePoint) {
         this.property = property;
@@ -586,7 +586,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
 export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFaded<T>> {
 
     possiblyEvaluate(
-      value: PropertyValue<CrossFaded<T> | undefined | null, PossiblyEvaluatedPropertyValue<CrossFaded<T> | undefined | null>>,
+      value: PropertyValue<CrossFaded<T>, PossiblyEvaluatedPropertyValue<CrossFaded<T>>>,
       parameters: EvaluationParameters,
       canonical?: CanonicalTileID,
       availableImages?: Array<string>
@@ -613,7 +613,7 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
     }
 
     evaluate(
-      value: PossiblyEvaluatedValue<CrossFaded<T> | undefined | null>,
+      value: PossiblyEvaluatedValue<CrossFaded<T>>,
       globals: EvaluationParameters,
       feature: Feature,
       featureState: FeatureState,
@@ -639,7 +639,7 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
         return z > parameters.zoomHistory.lastIntegerZoom ? {from: min, to: mid} : {from: max, to: mid};
     }
 
-    interpolate(a: PossiblyEvaluatedPropertyValue<CrossFaded<T> | undefined | null>): PossiblyEvaluatedPropertyValue<CrossFaded<T> | undefined | null> {
+    interpolate(a: PossiblyEvaluatedPropertyValue<CrossFaded<T>>): PossiblyEvaluatedPropertyValue<CrossFaded<T>> {
         return a;
     }
 }
@@ -657,11 +657,11 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
     }
 
     possiblyEvaluate(
-      value: PropertyValue<T, CrossFaded<T> | undefined | null>,
+      value: PropertyValue<T, CrossFaded<T>>,
       parameters: EvaluationParameters,
       canonical?: CanonicalTileID,
       availableImages?: Array<string>
-    ): CrossFaded<T> | undefined | null {
+    ): CrossFaded<T> {
         if (value.value === undefined) {
             return undefined;
         } else if (value.expression.kind === 'constant') {

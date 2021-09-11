@@ -5,9 +5,9 @@ export default class ValidationError {
     identifier: string;
     line: number;
 
-    constructor(key: string | undefined | null, value: {
+    constructor(key: string, value: {
       __line__: number;
-    } | undefined | null, message: string, identifier?: string | null) {
+    }, message: string, identifier?: string | null) {
         this.message = (key ? `${key}: ` : '') + message;
         if (identifier) this.identifier = identifier;
 

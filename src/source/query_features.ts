@@ -18,7 +18,7 @@ function getPixelPosMatrix(transform, tileID) {
     return mat4.multiply(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
 }
 
-function queryIncludes3DLayer(layers: Array<string> | undefined | null, styleLayers: {[_: string]: StyleLayer}, sourceID: string) {
+function queryIncludes3DLayer(layers: Array<string>, styleLayers: {[_: string]: StyleLayer}, sourceID: string) {
     if (layers) {
         for (const layerID of layers) {
             const layer = styleLayers[layerID];

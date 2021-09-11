@@ -1159,8 +1159,8 @@ class Style extends Evented {
     querySourceFeatures(
         sourceID: string,
         params?: {
-            sourceLayer: string | undefined | null;
-            filter: Array<any> | undefined | null;
+            sourceLayer: string;
+            filter: Array<any>;
             validate?: boolean;
         } | null
     ) {
@@ -1384,7 +1384,7 @@ class Style extends Evented {
     getGlyphs(
         mapId: string,
         params: {stacks: {[_: string]: Array<number>}},
-        callback: Callback<{[_: string]: {[_: number]: StyleGlyph | undefined | null}}>
+        callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
     ) {
         this.glyphManager.getGlyphs(params.stacks, callback);
     }

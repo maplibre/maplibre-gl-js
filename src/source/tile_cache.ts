@@ -158,8 +158,8 @@ class TileCache {
      */
     remove(tileID: OverscaledTileID, value?: {
       value: Tile;
-      timeout: ReturnType<typeof setTimeout> | undefined | null;
-    } | null) {
+      timeout: ReturnType<typeof setTimeout>;
+    }) {
         if (!this.has(tileID)) { return this; }
         const key = tileID.wrapped().key;
 

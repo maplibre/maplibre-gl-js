@@ -25,7 +25,7 @@ let _completionCallback = null;
 let pluginStatus = status.unavailable;
 let pluginURL = null;
 
-export const triggerPluginCompletionEvent = function(error: Error | string | undefined | null) {
+export const triggerPluginCompletionEvent = function(error: Error | string) {
     // NetworkError's are not correctly reflected by the plugin status which prevents reloading plugin
     if (error && typeof error === 'string' && error.indexOf('NetworkError') > -1) {
         pluginStatus = status.error;
@@ -59,7 +59,7 @@ export const clearRTLTextPlugin = function() {
     pluginURL = null;
 };
 
-export const setRTLTextPlugin = function(url: string, callback: ErrorCallback | undefined | null, deferred: boolean = false) {
+export const setRTLTextPlugin = function(url: string, callback: ErrorCallback, deferred: boolean = false) {
     if (pluginStatus === status.deferred || pluginStatus === status.loading || pluginStatus === status.loaded) {
         throw new Error('setRTLTextPlugin cannot be called multiple times.');
     }

@@ -54,7 +54,7 @@ class Transform {
     _posMatrixCache: {[_: string]: mat4};
     _alignedPosMatrixCache: {[_: string]: mat4};
 
-    constructor(minZoom: number | undefined | null, maxZoom: number | undefined | null, minPitch: number | undefined | null, maxPitch: number | undefined | null, renderWorldCopies: boolean) {
+    constructor(minZoom: number, maxZoom: number, minPitch: number, maxPitch: number, renderWorldCopies: boolean) {
         this.tileSize = 512; // constant
         this.maxValidLatitude = 85.051129; // constant
 
@@ -126,7 +126,7 @@ class Transform {
     }
 
     get renderWorldCopies(): boolean { return this._renderWorldCopies; }
-    set renderWorldCopies(renderWorldCopies: boolean | undefined | null) {
+    set renderWorldCopies(renderWorldCopies: boolean) {
         if (renderWorldCopies === undefined) {
             renderWorldCopies = true;
         } else if (renderWorldCopies === null) {

@@ -137,7 +137,7 @@ export default class ImageAtlas {
         }
     }
 
-    patchUpdatedImage(position: ImagePosition | undefined | null, image: StyleImage | undefined | null, texture: Texture) {
+    patchUpdatedImage(position: ImagePosition, image: StyleImage, texture: Texture) {
         if (!position || !image) return;
 
         if (position.version === image.version) return;

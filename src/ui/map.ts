@@ -1306,8 +1306,8 @@ class Map extends Camera {
      *
      */
     querySourceFeatures(sourceId: string, parameters?: {
-      sourceLayer: string | undefined | null;
-      filter: Array<any> | undefined | null;
+      sourceLayer: string;
+      filter: Array<any>;
       validate?: boolean;
     } | null) {
         return this.style.querySourceFeatures(sourceId, parameters);

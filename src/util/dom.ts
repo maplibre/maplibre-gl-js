@@ -3,7 +3,7 @@ import Point from './point';
 import assert from 'assert';
 
 interface DOMInterface {
-    create(tagName: string, className?: string | undefined | null, container?: HTMLElement): HTMLElement;
+    create(tagName: string, className?: string, container?: HTMLElement): HTMLElement;
     createNS(namespaceURI: string, tagName: string);
     disableDrag();
     enableDrag();
@@ -26,7 +26,7 @@ interface DOMInterface {
 const DOM = {} as DOMInterface;
 export default DOM;
 
-DOM.create = function (tagName: string, className: string | undefined | null, container?: HTMLElement) {
+DOM.create = function (tagName: string, className: string, container?: HTMLElement) {
     const el = window.document.createElement(tagName);
     if (className !== undefined) el.className = className;
     if (container) container.appendChild(el);

@@ -738,7 +738,7 @@ function addSymbol(bucket: SymbolBucket,
     // All measurements are in glyph metrics and later converted into pixels using proper font size "layoutTextSize"
     let collisionCircleDiameter = -1;
 
-    const getCollisionCircleHeight = (feature: CollisionFeature | undefined | null, prevHeight: number): number => {
+    const getCollisionCircleHeight = (feature: CollisionFeature, prevHeight: number): number => {
         if (feature && feature.circleDiameter)
             return Math.max(feature.circleDiameter, prevHeight);
         return prevHeight;
