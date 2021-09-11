@@ -500,3 +500,7 @@ export function b64DecodeUnicode(str: string) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); //eslint-disable-line
     }).join(''));
 }
+
+export function isImageBitmap(image: any): image is ImageBitmap {
+    return typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap;
+}

@@ -1,4 +1,4 @@
-import {extend, bindAll, warnOnce, uniqueId} from '../util/util';
+import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
 import {getImage, getJSON, ResourceType} from '../util/ajax';
@@ -1662,8 +1662,8 @@ class Map extends Camera {
         this._lazyInitEmptyStyle();
         const version = 0;
 
-        if (image instanceof HTMLImageElement || (ImageBitmap && image instanceof ImageBitmap)) {
-            const {width, height, data} = browser.getImageData(image as HTMLImageElement | ImageBitmap);
+        if (image instanceof HTMLImageElement || isImageBitmap(image)) {
+            const {width, height, data} = browser.getImageData(image);
             this.style.addImage(id, {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, sdf, version});
         } else if (image.width === undefined || image.height === undefined) {
             return this.fire(new ErrorEvent(new Error(
@@ -1720,9 +1720,9 @@ class Map extends Camera {
             return this.fire(new ErrorEvent(new Error(
                 'The map has no image with that id. If you are adding a new image use `map.addImage(...)` instead.')));
         }
-        const imageData = (image instanceof HTMLImageElement || (ImageBitmap && image instanceof ImageBitmap)) ?
-            browser.getImageData(image as HTMLImageElement | ImageBitmap) :
-            image as ImageData;
+        const imageData = (image instanceof HTMLImageElement || isImageBitmap(image)) ?
+            browser.getImageData(image) :
+            image;
         const {width, height, data} = imageData;
 
         if (width === undefined || height === undefined) {
@@ -1736,7 +1736,7 @@ class Map extends Camera {
                 'The width and height of the updated image must be that same as the previous version of the image')));
         }
 
-        const copy = !(image instanceof HTMLImageElement || (ImageBitmap && image instanceof ImageBitmap));
+        const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
         existingImage.data.replace(data, copy);
 
         this.style.updateImage(id, existingImage);
