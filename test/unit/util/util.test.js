@@ -1,6 +1,6 @@
 import {test} from '../../util/test';
 
-import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, uuid, validateUuid, nextPowerOfTwo, isPowerOfTwo} from '../../../rollup/build/tsc/util/util';
+import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, nextPowerOfTwo, isPowerOfTwo} from '../../../rollup/build/tsc/util/util';
 import Point from '../../../rollup/build/tsc/util/point';
 
 test('util', (t) => {
@@ -313,14 +313,6 @@ test('util', (t) => {
             t.end();
         });
 
-        t.end();
-    });
-
-    t.test('validateUuid', (t) => {
-        t.true(validateUuid(uuid()));
-        t.false(validateUuid(uuid().substr(0, 10)));
-        t.false(validateUuid('foobar'));
-        t.false(validateUuid(null));
         t.end();
     });
 
