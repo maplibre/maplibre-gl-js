@@ -4,12 +4,12 @@ import validateStyleMin from '../../../rollup/build/tsc/style-spec/validate_styl
 
 test('it generates something', (t) => {
     const style = emptyStyle();
-    t.ok(style);
+    expect(style).toBeTruthy();
     t.end();
 });
 
 test('generated empty style is a valid style', (t) => {
     const errors = validateStyleMin(emptyStyle());
-    t.equal(errors.length, 0);
+    expect(errors.length).toBe(0);
     t.end();
 });

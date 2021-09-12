@@ -9,9 +9,9 @@ test('primitives', (t) => {
             const max = vec3.fromValues(2, 4, 6);
             const aabb = new Aabb(min, max);
 
-            t.equal(aabb.min, min);
-            t.equal(aabb.max, max);
-            t.deepEqual(aabb.center, vec3.fromValues(1, 2, 3));
+            expect(aabb.min).toBe(min);
+            expect(aabb.max).toBe(max);
+            expect(aabb.center).toEqual(vec3.fromValues(1, 2, 3));
             t.end();
         });
 
@@ -20,10 +20,10 @@ test('primitives', (t) => {
             const max = vec3.fromValues(2, 4, 1);
             const aabb = new Aabb(min, max);
 
-            t.deepEqual(aabb.quadrant(0), new Aabb(vec3.fromValues(0, 0, 0), vec3.fromValues(1, 2, 1)));
-            t.deepEqual(aabb.quadrant(1), new Aabb(vec3.fromValues(1, 0, 0), vec3.fromValues(2, 2, 1)));
-            t.deepEqual(aabb.quadrant(2), new Aabb(vec3.fromValues(0, 2, 0), vec3.fromValues(1, 4, 1)));
-            t.deepEqual(aabb.quadrant(3), new Aabb(vec3.fromValues(1, 2, 0), vec3.fromValues(2, 4, 1)));
+            expect(aabb.quadrant(0)).toEqual(new Aabb(vec3.fromValues(0, 0, 0), vec3.fromValues(1, 2, 1)));
+            expect(aabb.quadrant(1)).toEqual(new Aabb(vec3.fromValues(1, 0, 0), vec3.fromValues(2, 2, 1)));
+            expect(aabb.quadrant(2)).toEqual(new Aabb(vec3.fromValues(0, 2, 0), vec3.fromValues(1, 4, 1)));
+            expect(aabb.quadrant(3)).toEqual(new Aabb(vec3.fromValues(1, 2, 0), vec3.fromValues(2, 4, 1)));
 
             t.end();
         });
@@ -33,17 +33,17 @@ test('primitives', (t) => {
             const max = vec3.fromValues(1, 1, 1);
             const aabb = new Aabb(min, max);
 
-            t.equal(aabb.distanceX([0.5, -0.5]), 0);
-            t.equal(aabb.distanceY([0.5, -0.5]), 0);
+            expect(aabb.distanceX([0.5, -0.5])).toBe(0);
+            expect(aabb.distanceY([0.5, -0.5])).toBe(0);
 
-            t.equal(aabb.distanceX([1, 1]), 0);
-            t.equal(aabb.distanceY([1, 1]), 0);
+            expect(aabb.distanceX([1, 1])).toBe(0);
+            expect(aabb.distanceY([1, 1])).toBe(0);
 
-            t.equal(aabb.distanceX([0, 10]), 0);
-            t.equal(aabb.distanceY([0, 10]), -9);
+            expect(aabb.distanceX([0, 10])).toBe(0);
+            expect(aabb.distanceY([0, 10])).toBe(-9);
 
-            t.equal(aabb.distanceX([-2, -2]), 1);
-            t.equal(aabb.distanceY([-2, -2]), 1);
+            expect(aabb.distanceX([-2, -2])).toBe(1);
+            expect(aabb.distanceY([-2, -2])).toBe(1);
             t.end();
         });
 
@@ -73,7 +73,7 @@ test('primitives', (t) => {
             ];
 
             for (const aabb of aabbList)
-                t.equal(aabb.intersects(frustum), 2);
+                expect(aabb.intersects(frustum)).toBe(2);
 
             t.end();
         });
@@ -87,7 +87,7 @@ test('primitives', (t) => {
             ];
 
             for (const aabb of aabbList)
-                t.equal(aabb.intersects(frustum), 1);
+                expect(aabb.intersects(frustum)).toBe(1);
 
             t.end();
         });
@@ -102,7 +102,7 @@ test('primitives', (t) => {
             ];
 
             for (const aabb of aabbList)
-                t.equal(aabb.intersects(frustum), 0);
+                expect(aabb.intersects(frustum)).toBe(0);
 
             t.end();
         });
@@ -143,8 +143,8 @@ test('primitives', (t) => {
                 [0, 0.707, 0.707, 0]
             ];
 
-            t.deepEqual(frustum.points, expectedFrustumPoints);
-            t.deepEqual(frustum.planes, expectedFrustumPlanes);
+            expect(frustum.points).toEqual(expectedFrustumPoints);
+            expect(frustum.planes).toEqual(expectedFrustumPlanes);
             t.end();
         });
         t.end();

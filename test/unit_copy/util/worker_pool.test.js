@@ -8,14 +8,14 @@ test('WorkerPool', (t) => {
 
         const pool = new WorkerPool();
 
-        t.notOk(pool.workers);
+        expect(pool.workers).toBeFalsy();
         const workers1 = pool.acquire('map-1');
         const workers2 = pool.acquire('map-2');
-        t.equal(workers1.length, 4);
-        t.equal(workers2.length, 4);
+        expect(workers1.length).toBe(4);
+        expect(workers2.length).toBe(4);
 
         // check that the two different dispatchers' workers arrays correspond
-        workers1.forEach((w, i) => { t.equal(w, workers2[i]); });
+        workers1.forEach((w, i) => { expect(w).toBe(workers2[i]); });
         t.end();
     });
 
@@ -31,14 +31,14 @@ test('WorkerPool', (t) => {
         });
 
         pool.release('map-2');
-        t.comment('keeps workers if a dispatcher is still active');
-        t.equal(workersTerminated, 0);
-        t.ok(pool.workers.length > 0);
+        console.log('keeps workers if a dispatcher is still active');
+        expect(workersTerminated).toBe(0);
+        expect(pool.workers.length > 0).toBeTruthy();
 
-        t.comment('terminates workers if no dispatchers are active');
+        console.log('terminates workers if no dispatchers are active');
         pool.release('map-1');
-        t.equal(workersTerminated, 4);
-        t.notOk(pool.workers);
+        expect(workersTerminated).toBe(4);
+        expect(pool.workers).toBeFalsy();
 
         t.end();
     });

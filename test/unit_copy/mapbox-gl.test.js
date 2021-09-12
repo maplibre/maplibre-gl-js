@@ -4,7 +4,7 @@ import mapboxgl from '../../rollup/build/tsc';
 
 test('mapboxgl', (t) => {
     t.test('workerCount', (t) => {
-        t.ok(typeof mapboxgl.workerCount === 'number');
+        expect(typeof mapboxgl.workerCount === 'number').toBeTruthy();
         t.end();
     });
     t.end();

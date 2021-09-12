@@ -19,18 +19,18 @@ test('BoxZoomHandler fires boxzoomstart and boxzoomend events at appropriate tim
 
     simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 0);
-    t.equal(boxzoomend.callCount, 0);
+    expect(boxzoomstart.callCount).toBe(0);
+    expect(boxzoomend.callCount).toBe(0);
 
     simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 1);
-    t.equal(boxzoomend.callCount, 0);
+    expect(boxzoomstart.callCount).toBe(1);
+    expect(boxzoomend.callCount).toBe(0);
 
     simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 1);
-    t.equal(boxzoomend.callCount, 1);
+    expect(boxzoomstart.callCount).toBe(1);
+    expect(boxzoomend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -58,22 +58,22 @@ test('BoxZoomHandler avoids conflicts with DragPanHandler when disabled and reen
 
     simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 0);
-    t.equal(boxzoomend.callCount, 0);
+    expect(boxzoomstart.callCount).toBe(0);
+    expect(boxzoomend.callCount).toBe(0);
 
     simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 1);
-    t.equal(boxzoomend.callCount, 0);
+    expect(boxzoomstart.callCount).toBe(1);
+    expect(boxzoomend.callCount).toBe(0);
 
     simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 1);
-    t.equal(boxzoomend.callCount, 1);
+    expect(boxzoomstart.callCount).toBe(1);
+    expect(boxzoomend.callCount).toBe(1);
 
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     map.remove();
     t.end();
@@ -99,8 +99,8 @@ test('BoxZoomHandler does not begin a box zoom if preventDefault is called on th
     simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
     map._renderTaskQueue.run();
 
-    t.equal(boxzoomstart.callCount, 0);
-    t.equal(boxzoomend.callCount, 0);
+    expect(boxzoomstart.callCount).toBe(0);
+    expect(boxzoomend.callCount).toBe(0);
 
     map.remove();
     t.end();
@@ -117,18 +117,18 @@ test('BoxZoomHandler does not begin a box zoom on spurious mousemove events', (t
 
     simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 0);
-    t.equal(boxzoomend.callCount, 0);
+    expect(boxzoomstart.callCount).toBe(0);
+    expect(boxzoomend.callCount).toBe(0);
 
     simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 0);
-    t.equal(boxzoomend.callCount, 0);
+    expect(boxzoomstart.callCount).toBe(0);
+    expect(boxzoomend.callCount).toBe(0);
 
     simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 0);
-    t.equal(boxzoomend.callCount, 0);
+    expect(boxzoomstart.callCount).toBe(0);
+    expect(boxzoomend.callCount).toBe(0);
 
     map.remove();
     t.end();
@@ -145,18 +145,18 @@ test('BoxZoomHandler does not begin a box zoom until mouse move is larger than c
 
     simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 0);
-    t.equal(boxzoomend.callCount, 0);
+    expect(boxzoomstart.callCount).toBe(0);
+    expect(boxzoomend.callCount).toBe(0);
 
     simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 3, clientY: 0});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 0);
-    t.equal(boxzoomend.callCount, 0);
+    expect(boxzoomstart.callCount).toBe(0);
+    expect(boxzoomend.callCount).toBe(0);
 
     simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 4});
     map._renderTaskQueue.run();
-    t.equal(boxzoomstart.callCount, 1);
-    t.equal(boxzoomend.callCount, 0);
+    expect(boxzoomstart.callCount).toBe(1);
+    expect(boxzoomend.callCount).toBe(0);
 
     map.remove();
     t.end();

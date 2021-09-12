@@ -6,11 +6,11 @@ test('TaskQueue', (t) => {
         const q = new TaskQueue();
         let first = 0;
         let second = 0;
-        q.add(() => t.equal(++first, 1) && t.equal(second, 0));
-        q.add(() => t.equal(first, 1) && t.equal(++second, 1));
+        q.add(() => expect(++first).toBe(1) && expect(second).toBe(0));
+        q.add(() => expect(first).toBe(1) && expect(++second).toBe(1));
         q.run();
-        t.equal(first, 1);
-        t.equal(second, 1);
+        expect(first).toBe(1);
+        expect(second).toBe(1);
         t.end();
     });
 
@@ -20,7 +20,7 @@ test('TaskQueue', (t) => {
         q.add(fn);
         q.add(fn);
         q.run();
-        t.equal(fn.callCount, 2);
+        expect(fn.callCount).toBe(2);
         t.end();
     });
 
@@ -32,8 +32,8 @@ test('TaskQueue', (t) => {
         const id = q.add(no);
         q.remove(id);
         q.run();
-        t.equal(yes.callCount, 1);
-        t.equal(no.callCount, 0);
+        expect(yes.callCount).toBe(1);
+        expect(no.callCount).toBe(0);
         t.end();
     });
 
@@ -46,8 +46,8 @@ test('TaskQueue', (t) => {
         q.add(() => q.remove(id));
         id = q.add(no);
         q.run();
-        t.equal(yes.callCount, 1);
-        t.equal(no.callCount, 0);
+        expect(yes.callCount).toBe(1);
+        expect(no.callCount).toBe(0);
         t.end();
     });
 
@@ -58,7 +58,7 @@ test('TaskQueue', (t) => {
         const id = q.add(cb);
         q.remove(id);
         q.run();
-        t.equal(cb.callCount, 1);
+        expect(cb.callCount).toBe(1);
         t.end();
     });
 
@@ -68,7 +68,7 @@ test('TaskQueue', (t) => {
         const id = q.add(cb);
         q.run();
         q.remove(id);
-        t.equal(cb.callCount, 1);
+        expect(cb.callCount).toBe(1);
         t.end();
     });
 
@@ -77,16 +77,16 @@ test('TaskQueue', (t) => {
         const cb = t.spy();
         q.add(() => q.add(cb));
         q.run();
-        t.equal(cb.callCount, 0);
+        expect(cb.callCount).toBe(0);
         q.run();
-        t.equal(cb.callCount, 1);
+        expect(cb.callCount).toBe(1);
         t.end();
     });
 
     t.test('TaskQueue#run() throws on attempted re-entrance', (t) => {
         const q = new TaskQueue();
         q.add(() => q.run());
-        t.throws(() => q.run());
+        expect(() => q.run()).toThrow();
         t.end();
     });
 
@@ -98,8 +98,8 @@ test('TaskQueue', (t) => {
         q.clear();
         q.add(after);
         q.run();
-        t.equal(before.callCount, 0);
-        t.equal(after.callCount, 1);
+        expect(before.callCount).toBe(0);
+        expect(after.callCount).toBe(1);
         t.end();
     });
 
@@ -111,9 +111,9 @@ test('TaskQueue', (t) => {
         q.add(() => q.clear());
         q.add(before);
         q.run();
-        t.equal(before.callCount, 0);
+        expect(before.callCount).toBe(0);
         q.run();
-        t.equal(after.callCount, 0);
+        expect(after.callCount).toBe(0);
         t.end();
     });
 

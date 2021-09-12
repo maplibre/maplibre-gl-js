@@ -19,10 +19,10 @@ test('Dispatcher', (t) => {
         };
 
         const dispatcher = new Dispatcher(workerPool, {});
-        t.same(dispatcher.actors.map((actor) => { return actor.target; }), workers);
+        expect(dispatcher.actors.map((actor) => { return actor.target; })).toEqual(workers);
         dispatcher.remove();
-        t.equal(dispatcher.actors.length, 0, 'actors discarded');
-        t.same(releaseCalled, [dispatcher.id]);
+        expect(dispatcher.actors.length).toBe(0);
+        expect(releaseCalled).toEqual([dispatcher.id]);
 
         t.end();
     });
@@ -35,7 +35,7 @@ test('Dispatcher', (t) => {
 
         const workerPool = new WorkerPool();
         const dispatchers = [new Dispatcher(workerPool, {}), new Dispatcher(workerPool, {})];
-        t.same(ids, dispatchers.map((d) => { return d.id; }));
+        expect(ids).toEqual(dispatchers.map((d) => { return d.id; }));
 
         t.end();
     });
@@ -51,7 +51,7 @@ test('Dispatcher', (t) => {
         const workerPool = new WorkerPool();
         const dispatcher = new Dispatcher(workerPool, {});
         dispatcher.remove();
-        t.equal(actorsRemoved.length, 4);
+        expect(actorsRemoved.length).toBe(4);
         t.end();
     });
 

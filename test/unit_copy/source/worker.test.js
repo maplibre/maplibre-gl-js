@@ -17,7 +17,7 @@ test('load tile', (t) => {
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             request: {url: '/error'}// Sinon fake server gives 404 responses by default
         }, (err) => {
-            t.ok(err);
+            expect(err).toBeTruthy();
             window.clearFakeXMLHttpRequest();
             t.end();
         });
@@ -39,7 +39,7 @@ test('isolates different instances\' data', (t) => {
         {id: 'two', type: 'circle'},
     ], () => {});
 
-    t.notEqual(worker.layerIndexes[0], worker.layerIndexes[1]);
+    expect(worker.layerIndexes[0]).not.toBe(worker.layerIndexes[1]);
     t.end();
 });
 
@@ -47,8 +47,8 @@ test('worker source messages dispatched to the correct map instance', (t) => {
     const worker = new Worker(_self);
 
     worker.actor.send = function (type, data, callback, mapId) {
-        t.equal(type, 'main thread task');
-        t.equal(mapId, 999);
+        expect(type).toBe('main thread task');
+        expect(mapId).toBe(999);
         t.end();
     };
 

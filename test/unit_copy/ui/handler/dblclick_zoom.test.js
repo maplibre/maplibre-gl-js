@@ -31,7 +31,7 @@ test('DoubleClickZoomHandler zooms on dblclick event', (t) => {
     simulate.dblclick(map.getCanvas());
     map._renderTaskQueue.run();
 
-    t.ok(zoom.called);
+    expect(zoom.called).toBeTruthy();
 
     map.remove();
     t.end();
@@ -48,7 +48,7 @@ test('DoubleClickZoomHandler does not zoom if preventDefault is called on the db
     simulate.dblclick(map.getCanvas());
     map._renderTaskQueue.run();
 
-    t.equal(zoom.callCount, 0);
+    expect(zoom.callCount).toBe(0);
 
     map.remove();
     t.end();
@@ -61,7 +61,7 @@ test('DoubleClickZoomHandler zooms on double tap if touchstart events are < 300m
     map.on('zoomstart', zoom);
 
     simulateDoubleTap(map, 100).then(() => {
-        t.ok(zoom.called);
+        expect(zoom.called).toBeTruthy();
 
         map.remove();
         t.end();
@@ -76,7 +76,7 @@ test('DoubleClickZoomHandler does not zoom on double tap if touchstart events ar
     map.on('zoom', zoom);
 
     simulateDoubleTap(map, 500).then(() => {
-        t.equal(zoom.callCount, 0);
+        expect(zoom.callCount).toBe(0);
 
         map.remove();
         t.end();
@@ -106,7 +106,7 @@ test('DoubleClickZoomHandler does not zoom on double tap if touchstart events ar
     };
 
     simulateTwoDifferentTaps().then(() => {
-        t.equal(zoom.callCount, 0);
+        expect(zoom.callCount).toBe(0);
 
         map.remove();
         t.end();
@@ -128,23 +128,23 @@ test('DoubleClickZoomHandler zooms on the second touchend event of a double tap'
     simulate.touchstart(canvas, touchOptions);
     map._renderTaskQueue.run();
     map._renderTaskQueue.run();
-    t.notOk(zoom.called, 'should not trigger zoom before second touchend');
+    expect(zoom.called).toBeFalsy();
 
     simulate.touchcancel(canvas);
     simulate.touchend(canvas);
     map._renderTaskQueue.run();
-    t.notOk(zoom.called, 'should not trigger zoom if second touch is canceled');
+    expect(zoom.called).toBeFalsy();
 
     simulate.touchstart(canvas, touchOptions);
     simulate.touchend(canvas);
     simulate.touchstart(canvas, touchOptions);
     map._renderTaskQueue.run();
-    t.notOk(zoom.called);
+    expect(zoom.called).toBeFalsy();
 
     simulate.touchend(canvas);
     map._renderTaskQueue.run();
 
-    t.ok(zoom.called, 'should trigger zoom after second touchend');
+    expect(zoom.called).toBeTruthy();
 
     t.end();
 });
@@ -171,7 +171,7 @@ test('DoubleClickZoomHandler does not zoom on double tap if second touchend is >
     };
 
     simulateSlowSecondTap().then(() => {
-        t.notOk(zoom.called);
+        expect(zoom.called).toBeFalsy();
 
         t.end();
     });

@@ -25,15 +25,15 @@ test('composites Mapbox vector sources', (t) => {
         }]
     });
 
-    t.deepEqual(result.sources, {
+    expect(result.sources).toEqual({
         "a,b": {
             "type": "vector",
             "url": "mapbox://a,b"
         }
     });
 
-    t.equal(result.layers[0].source, "a,b");
-    t.equal(result.layers[1].source, "a,b");
+    expect(result.layers[0].source).toBe("a,b");
+    expect(result.layers[1].source).toBe("a,b");
     t.end();
 });
 
@@ -53,7 +53,7 @@ test('does not composite vector + raster', (t) => {
         "layers": []
     });
 
-    t.deepEqual(Object.keys(result.sources), ["a", "b"]);
+    expect(Object.keys(result.sources)).toEqual(["a", "b"]);
     t.end();
 });
 
@@ -73,12 +73,12 @@ test('incorrect url match', (t) => {
         "layers": []
     });
 
-    t.deepEqual(Object.keys(result.sources), ["a", "b"]);
+    expect(Object.keys(result.sources)).toEqual(["a", "b"]);
     t.end();
 });
 
 test('composites Mapbox vector sources with conflicting source layer names', (t) => {
-    t.throws(() => {
+    expect(() => {
         composite({
             "version": 7,
             "sources": {
@@ -103,7 +103,7 @@ test('composites Mapbox vector sources with conflicting source layer names', (t)
                 "source": "mapbox-b"
             }]
         });
-    }, /Conflicting source layer names/, 'throws error on conflicting source layer names');
+    }).toThrowError(/Conflicting source layer names/);
 
     t.end();
 });

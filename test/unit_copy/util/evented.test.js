@@ -9,7 +9,7 @@ test('Evented', (t) => {
         evented.on('a', listener);
         evented.fire(new Event('a'));
         evented.fire(new Event('a'));
-        t.ok(listener.calledTwice);
+        expect(listener.calledTwice).toBeTruthy();
         t.end();
     });
 
@@ -19,15 +19,15 @@ test('Evented', (t) => {
         evented.once('a', listener);
         evented.fire(new Event('a'));
         evented.fire(new Event('a'));
-        t.ok(listener.calledOnce);
-        t.notOk(evented.listens('a'));
+        expect(listener.calledOnce).toBeTruthy();
+        expect(evented.listens('a')).toBeFalsy();
         t.end();
     });
 
     t.test('passes data to listeners', (t) => {
         const evented = new Evented();
         evented.on('a', (data) => {
-            t.equal(data.foo, 'bar');
+            expect(data.foo).toBe('bar');
         });
         evented.fire(new Event('a', {foo: 'bar'}));
         t.end();
@@ -36,7 +36,7 @@ test('Evented', (t) => {
     t.test('passes "target" to listeners', (t) => {
         const evented = new Evented();
         evented.on('a', (data) => {
-            t.equal(data.target, evented);
+            expect(data.target).toBe(evented);
         });
         evented.fire(new Event('a'));
         t.end();
@@ -45,7 +45,7 @@ test('Evented', (t) => {
     t.test('passes "type" to listeners', (t) => {
         const evented = new Evented();
         evented.on('a', (data) => {
-            t.deepEqual(data.type, 'a');
+            expect(data.type).toEqual('a');
         });
         evented.fire(new Event('a'));
         t.end();
@@ -57,7 +57,7 @@ test('Evented', (t) => {
         evented.on('a', listener);
         evented.off('a', listener);
         evented.fire(new Event('a'));
-        t.ok(listener.notCalled);
+        expect(listener.notCalled).toBeTruthy();
         t.end();
     });
 
@@ -67,7 +67,7 @@ test('Evented', (t) => {
         evented.once('a', listener);
         evented.off('a', listener);
         evented.fire(new Event('a'));
-        t.ok(listener.notCalled);
+        expect(listener.notCalled).toBeTruthy();
         t.end();
     });
 
@@ -79,15 +79,15 @@ test('Evented', (t) => {
             evented.fire(new Event('a'));
         });
         evented.fire(new Event('a'));
-        t.ok(listener.calledOnce);
+        expect(listener.calledOnce).toBeTruthy();
         t.end();
     });
 
     t.test('reports if an event has listeners with "listens"', (t) => {
         const evented = new Evented();
         evented.on('a', () => {});
-        t.ok(evented.listens('a'));
-        t.notOk(evented.listens('b'));
+        expect(evented.listens('a')).toBeTruthy();
+        expect(evented.listens('b')).toBeFalsy();
         t.end();
     });
 
@@ -96,7 +96,7 @@ test('Evented', (t) => {
         const listener = () => {};
         evented.on('a', listener);
         evented.off('a', listener);
-        t.notOk(evented.listens('a'));
+        expect(evented.listens('a')).toBeFalsy();
         t.end();
     });
 
@@ -114,8 +114,8 @@ test('Evented', (t) => {
         const listener = t.spy();
         evented.on('a', listener);
         evented.fire('a', {foo: 'bar'});
-        t.ok(listener.calledOnce);
-        t.ok(listener.firstCall.args[0].foo, 'bar');
+        expect(listener.calledOnce).toBeTruthy();
+        expect(listener.firstCall.args[0].foo).toBeTruthy();
         t.end();
     });
 
@@ -127,8 +127,8 @@ test('Evented', (t) => {
         evented.on('a', listenerB);
         evented.on('a', listenerA);
         evented.fire(new Event('a'));
-        t.ok(listenerA.calledOnce);
-        t.ok(listenerA.calledBefore(listenerB));
+        expect(listenerA.calledOnce).toBeTruthy();
+        expect(listenerA.calledBefore(listenerB)).toBeTruthy();
         t.end();
     });
 
@@ -142,7 +142,7 @@ test('Evented', (t) => {
             eventedSink.on('a', listener);
             eventedSource.fire(new Event('a'));
             eventedSource.fire(new Event('a'));
-            t.ok(listener.calledTwice);
+            expect(listener.calledTwice).toBeTruthy();
             t.end();
         });
 
@@ -151,7 +151,7 @@ test('Evented', (t) => {
             const eventedSink = new Evented();
             eventedSource.setEventedParent(eventedSink);
             eventedSink.on('a', (data) => {
-                t.equal(data.foo, 'bar');
+                expect(data.foo).toBe('bar');
             });
             eventedSource.fire(new Event('a', {foo: 'bar'}));
             t.end();
@@ -162,7 +162,7 @@ test('Evented', (t) => {
             const eventedSink = new Evented();
             eventedSource.setEventedParent(eventedSink, {foz: 'baz'});
             eventedSink.on('a', (data) => {
-                t.equal(data.foz, 'baz');
+                expect(data.foz).toBe('baz');
             });
             eventedSource.fire(new Event('a', {foo: 'bar'}));
             t.end();
@@ -173,7 +173,7 @@ test('Evented', (t) => {
             const eventedSink = new Evented();
             eventedSource.setEventedParent(eventedSink, () => ({foz: 'baz'}));
             eventedSink.on('a', (data) => {
-                t.equal(data.foz, 'baz');
+                expect(data.foz).toBe('baz');
             });
             eventedSource.fire(new Event('a', {foo: 'bar'}));
             t.end();
@@ -185,7 +185,7 @@ test('Evented', (t) => {
             eventedSource.setEventedParent(eventedSink);
             eventedSource.setEventedParent(null);
             eventedSink.on('a', (data) => {
-                t.equal(data.target, eventedSource);
+                expect(data.target).toBe(eventedSource);
             });
             eventedSource.fire(new Event('a'));
             t.end();
@@ -199,7 +199,7 @@ test('Evented', (t) => {
             eventedSource.setEventedParent(eventedSink);
             eventedSource.setEventedParent(null);
             eventedSource.fire(new Event('a'));
-            t.ok(listener.notCalled);
+            expect(listener.notCalled).toBeTruthy();
             t.end();
         });
 
@@ -208,7 +208,7 @@ test('Evented', (t) => {
             const eventedSink = new Evented();
             eventedSink.on('a', () => {});
             eventedSource.setEventedParent(eventedSink);
-            t.ok(eventedSink.listens('a'));
+            expect(eventedSink.listens('a')).toBeTruthy();
             t.end();
         });
 
@@ -219,9 +219,9 @@ test('Evented', (t) => {
             eventedSource.setEventedParent(eventedParent, () => i++);
             eventedSource.on('a', () => {});
             eventedSource.fire(new Event('a'));
-            t.equal(i, 1);
+            expect(i).toBe(1);
             eventedSource.fire(new Event('a'));
-            t.equal(i, 2);
+            expect(i).toBe(2);
             t.end();
         });
 

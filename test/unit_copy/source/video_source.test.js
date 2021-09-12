@@ -29,9 +29,9 @@ test('VideoSource', (t) => {
     });
 
     t.test('constructor', (t) => {
-        t.equal(source.minzoom, 0);
-        t.equal(source.maxzoom, 22);
-        t.equal(source.tileSize, 512);
+        expect(source.minzoom).toBe(0);
+        expect(source.maxzoom).toBe(22);
+        expect(source.tileSize).toBe(512);
         t.end();
     });
 
@@ -41,7 +41,7 @@ test('VideoSource', (t) => {
         source.setCoordinates(newCoordinates);
         const serialized = source.serialize();
 
-        t.deepEqual(serialized.coordinates, newCoordinates);
+        expect(serialized.coordinates).toEqual(newCoordinates);
         t.end();
 
     });
@@ -62,7 +62,7 @@ test('VideoSource', (t) => {
             ]
         });
 
-        t.equal(source.getVideo(), el);
+        expect(source.getVideo()).toBe(el);
         t.end();
     });
 

@@ -21,19 +21,19 @@ test('VectorTileWorkerSource#abortTile aborts pending request', (t) => {
         tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
         request: {url: 'http://localhost:2900/abort'}
     }, (err, res) => {
-        t.false(err);
-        t.false(res);
+        expect(err).toBeFalsy();
+        expect(res).toBeFalsy();
     });
 
     source.abortTile({
         source: 'source',
         uid: 0
     }, (err, res) => {
-        t.false(err);
-        t.false(res);
+        expect(err).toBeFalsy();
+        expect(res).toBeFalsy();
     });
 
-    t.deepEqual(source.loading, {});
+    expect(source.loading).toEqual({});
     window.clearFakeXMLHttpRequest();
     t.end();
 });
@@ -49,11 +49,11 @@ test('VectorTileWorkerSource#removeTile removes loaded tile', (t) => {
         source: 'source',
         uid: 0
     }, (err, res) => {
-        t.false(err);
-        t.false(res);
+        expect(err).toBeFalsy();
+        expect(res).toBeFalsy();
     });
 
-    t.deepEqual(source.loaded, {});
+    expect(source.loaded).toEqual({});
     t.end();
 });
 
@@ -71,10 +71,10 @@ test('VectorTileWorkerSource#reloadTile reloads a previously-loaded tile', (t) =
 
     const callback = t.spy();
     source.reloadTile({uid: 0}, callback);
-    t.equal(parse.callCount, 1);
+    expect(parse.callCount).toBe(1);
 
     parse.firstCall.args[4]();
-    t.equal(callback.callCount, 1);
+    expect(callback.callCount).toBe(1);
 
     t.end();
 });
@@ -94,20 +94,20 @@ test('VectorTileWorkerSource#reloadTile queues a reload when parsing is in progr
     const callback1 = t.spy();
     const callback2 = t.spy();
     source.reloadTile({uid: 0}, callback1);
-    t.equal(parse.callCount, 1);
+    expect(parse.callCount).toBe(1);
 
     source.loaded[0].status = 'parsing';
     source.reloadTile({uid: 0}, callback2);
-    t.equal(parse.callCount, 1);
+    expect(parse.callCount).toBe(1);
 
     parse.firstCall.args[4]();
-    t.equal(parse.callCount, 2);
-    t.equal(callback1.callCount, 1);
-    t.equal(callback2.callCount, 0);
+    expect(parse.callCount).toBe(2);
+    expect(callback1.callCount).toBe(1);
+    expect(callback2.callCount).toBe(0);
 
     parse.secondCall.args[4]();
-    t.equal(callback1.callCount, 1);
-    t.equal(callback2.callCount, 1);
+    expect(callback1.callCount).toBe(1);
+    expect(callback2.callCount).toBe(1);
 
     t.end();
 });
@@ -129,34 +129,34 @@ test('VectorTileWorkerSource#reloadTile handles multiple pending reloads', (t) =
     const callback2 = t.spy();
     const callback3 = t.spy();
     source.reloadTile({uid: 0}, callback1);
-    t.equal(parse.callCount, 1);
+    expect(parse.callCount).toBe(1);
 
     source.loaded[0].status = 'parsing';
     source.reloadTile({uid: 0}, callback2);
-    t.equal(parse.callCount, 1);
+    expect(parse.callCount).toBe(1);
 
     parse.firstCall.args[4]();
-    t.equal(parse.callCount, 2);
-    t.equal(callback1.callCount, 1);
-    t.equal(callback2.callCount, 0);
-    t.equal(callback3.callCount, 0);
+    expect(parse.callCount).toBe(2);
+    expect(callback1.callCount).toBe(1);
+    expect(callback2.callCount).toBe(0);
+    expect(callback3.callCount).toBe(0);
 
     source.reloadTile({uid: 0}, callback3);
-    t.equal(parse.callCount, 2);
-    t.equal(callback1.callCount, 1);
-    t.equal(callback2.callCount, 0);
-    t.equal(callback3.callCount, 0);
+    expect(parse.callCount).toBe(2);
+    expect(callback1.callCount).toBe(1);
+    expect(callback2.callCount).toBe(0);
+    expect(callback3.callCount).toBe(0);
 
     parse.secondCall.args[4]();
-    t.equal(parse.callCount, 3);
-    t.equal(callback1.callCount, 1);
-    t.equal(callback2.callCount, 1);
-    t.equal(callback3.callCount, 0);
+    expect(parse.callCount).toBe(3);
+    expect(callback1.callCount).toBe(1);
+    expect(callback2.callCount).toBe(1);
+    expect(callback3.callCount).toBe(0);
 
     parse.thirdCall.args[4]();
-    t.equal(callback1.callCount, 1);
-    t.equal(callback2.callCount, 1);
-    t.equal(callback3.callCount, 1);
+    expect(callback1.callCount).toBe(1);
+    expect(callback2.callCount).toBe(1);
+    expect(callback3.callCount).toBe(1);
 
     t.end();
 });
@@ -175,8 +175,8 @@ test('VectorTileWorkerSource#reloadTile does not reparse tiles with no vectorTil
     const callback = t.spy();
 
     source.reloadTile({uid: 0}, callback);
-    t.ok(parse.notCalled);
-    t.ok(callback.calledOnce);
+    expect(parse.notCalled).toBeTruthy();
+    expect(callback.calledOnce).toBeTruthy();
 
     t.end();
 });
@@ -231,8 +231,8 @@ test('VectorTileWorkerSource provides resource timing information', (t) => {
         tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
         request: {url: 'http://localhost:2900/faketile.pbf', collectResourceTiming: true}
     }, (err, res) => {
-        t.false(err);
-        t.deepEquals(res.resourceTiming[0], exampleResourceTiming, 'resourceTiming resp is expected');
+        expect(err).toBeFalsy();
+        expect(res.resourceTiming[0]).toEqual(exampleResourceTiming);
         t.end();
     });
 });
@@ -285,8 +285,10 @@ test('VectorTileWorkerSource provides resource timing information (fallback meth
         tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
         request: {url: 'http://localhost:2900/faketile.pbf', collectResourceTiming: true}
     }, (err, res) => {
-        t.false(err);
-        t.deepEquals(res.resourceTiming[0], {"duration": 250, "entryType": "measure", "name": "http://localhost:2900/faketile.pbf", "startTime": 100}, 'resourceTiming resp is expected');
+        expect(err).toBeFalsy();
+        expect(res.resourceTiming[0]).toEqual(
+            {"duration": 250, "entryType": "measure", "name": "http://localhost:2900/faketile.pbf", "startTime": 100}
+        );
         t.end();
     });
 });

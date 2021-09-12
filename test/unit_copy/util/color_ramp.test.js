@@ -36,14 +36,14 @@ test('renderColorRamp linear', (t) => {
 
     const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress'});
 
-    t.equal(ramp.width, 256);
-    t.equal(ramp.height, 1);
+    expect(ramp.width).toBe(256);
+    expect(ramp.height).toBe(1);
 
-    t.equal(pixelAt(ramp, 0)[3], 0, 'pixel at 0.0 matches input alpha');
-    t.ok(nearlyEquals(pixelAt(ramp, 63), [255, 255, 255, 255]), 'pixel at 0.25 matches input');
-    t.ok(nearlyEquals(pixelAt(ramp, 127), [0, 255, 255, 127]), 'pixel at 0.5 matches input');
-    t.ok(nearlyEquals(pixelAt(ramp, 191), [0, 0, 0, 255]), 'pixel at 0.75 matches input');
-    t.ok(nearlyEquals(pixelAt(ramp, 255), [255, 0, 0, 255]), 'pixel at 1.0 matches input');
+    expect(pixelAt(ramp, 0)[3]).toBe(0);
+    expect(nearlyEquals(pixelAt(ramp, 63), [255, 255, 255, 255])).toBeTruthy();
+    expect(nearlyEquals(pixelAt(ramp, 127), [0, 255, 255, 127])).toBeTruthy();
+    expect(nearlyEquals(pixelAt(ramp, 191), [0, 0, 0, 255])).toBeTruthy();
+    expect(nearlyEquals(pixelAt(ramp, 255), [255, 0, 0, 255])).toBeTruthy();
 
     t.end();
 });
@@ -63,15 +63,15 @@ test('renderColorRamp step', (t) => {
 
     const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512});
 
-    t.equal(ramp.width, 512);
-    t.equal(ramp.height, 1);
+    expect(ramp.width).toBe(512);
+    expect(ramp.height).toBe(1);
 
-    t.equal(pixelAt(ramp, 0)[3], 25, 'pixel at 0.0 matches input alpha');
-    t.ok(nearlyEquals(pixelAt(ramp, 50), [0, 0, 255, 25]), 'pixel < 0.1 matches input');
-    t.ok(nearlyEquals(pixelAt(ramp, 53), [255, 0, 0, 255]), 'pixel > 0.1 & < 0.2 matches input');
-    t.ok(nearlyEquals(pixelAt(ramp, 103), [255, 255, 0, 255]), 'pixel > 0.2 & < 0.3 matches input');
-    t.ok(nearlyEquals(pixelAt(ramp, 160), [255, 255, 255, 255]), 'pixel > 0.3 & < 0.5 matches input');
-    t.ok(nearlyEquals(pixelAt(ramp, 256), [0, 0, 0, 255]), 'pixel > 0.5 matches input');
+    expect(pixelAt(ramp, 0)[3]).toBe(25);
+    expect(nearlyEquals(pixelAt(ramp, 50), [0, 0, 255, 25])).toBeTruthy();
+    expect(nearlyEquals(pixelAt(ramp, 53), [255, 0, 0, 255])).toBeTruthy();
+    expect(nearlyEquals(pixelAt(ramp, 103), [255, 255, 0, 255])).toBeTruthy();
+    expect(nearlyEquals(pixelAt(ramp, 160), [255, 255, 255, 255])).toBeTruthy();
+    expect(nearlyEquals(pixelAt(ramp, 256), [0, 0, 0, 255])).toBeTruthy();
 
     t.end();
 });
@@ -91,17 +91,17 @@ test('renderColorRamp usePlacement', (t) => {
 
     const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512});
 
-    t.equal(ramp.width, 512);
-    t.equal(ramp.height, 1);
+    expect(ramp.width).toBe(512);
+    expect(ramp.height).toBe(1);
 
     renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512, image: ramp});
 
-    t.equal(pixelAt(ramp, 0)[3], 127, 'pixel at 0.0 matches input alpha');
-    t.ok(nearlyEquals(pixelAt(ramp, 50), [255, 0, 0, 127]), 'pixel < 0.1 matches input');
-    t.ok(nearlyEquals(pixelAt(ramp, 53), [0, 0, 0, 255]), 'pixel > 0.1 & < 0.2 matches input');
-    t.ok(nearlyEquals(pixelAt(ramp, 103), [255, 0, 0, 255]), 'pixel > 0.2 & < 0.3 matches input');
-    t.ok(nearlyEquals(pixelAt(ramp, 160), [0, 0, 255, 255]), 'pixel > 0.3 & < 0.5 matches input');
-    t.ok(nearlyEquals(pixelAt(ramp, 256), [255, 255, 255, 255]), 'pixel > 0.5 matches input');
+    expect(pixelAt(ramp, 0)[3]).toBe(127);
+    expect(nearlyEquals(pixelAt(ramp, 50), [255, 0, 0, 127])).toBeTruthy();
+    expect(nearlyEquals(pixelAt(ramp, 53), [0, 0, 0, 255])).toBeTruthy();
+    expect(nearlyEquals(pixelAt(ramp, 103), [255, 0, 0, 255])).toBeTruthy();
+    expect(nearlyEquals(pixelAt(ramp, 160), [0, 0, 255, 255])).toBeTruthy();
+    expect(nearlyEquals(pixelAt(ramp, 256), [255, 255, 255, 255])).toBeTruthy();
 
     t.end();
 });

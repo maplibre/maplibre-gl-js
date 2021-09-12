@@ -11,7 +11,7 @@ function createMap() {
 
 test('Map#isZooming returns false by default', (t) => {
     const map = createMap(t);
-    t.equal(map.isZooming(), false);
+    expect(map.isZooming()).toBe(false);
     map.remove();
     t.end();
 });
@@ -20,11 +20,11 @@ test('Map#isZooming returns true during a camera zoom animation', (t) => {
     const map = createMap(t);
 
     map.on('zoomstart', () => {
-        t.equal(map.isZooming(), true);
+        expect(map.isZooming()).toBe(true);
     });
 
     map.on('zoomend', () => {
-        t.equal(map.isZooming(), false);
+        expect(map.isZooming()).toBe(false);
         map.remove();
         t.end();
     });
@@ -36,11 +36,11 @@ test('Map#isZooming returns true when scroll zooming', (t) => {
     const map = createMap(t);
 
     map.on('zoomstart', () => {
-        t.equal(map.isZooming(), true);
+        expect(map.isZooming()).toBe(true);
     });
 
     map.on('zoomend', () => {
-        t.equal(map.isZooming(), false);
+        expect(map.isZooming()).toBe(false);
         map.remove();
         t.end();
     });
@@ -61,11 +61,11 @@ test('Map#isZooming returns true when double-click zooming', (t) => {
     const map = createMap(t);
 
     map.on('zoomstart', () => {
-        t.equal(map.isZooming(), true);
+        expect(map.isZooming()).toBe(true);
     });
 
     map.on('zoomend', () => {
-        t.equal(map.isZooming(), false);
+        expect(map.isZooming()).toBe(false);
         map.remove();
         t.end();
     });

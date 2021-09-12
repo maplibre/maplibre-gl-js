@@ -49,13 +49,13 @@ test('CanvasSource', (t) => {
     t.test('constructor', (t) => {
         const source = createSource();
 
-        t.equal(source.minzoom, 0);
-        t.equal(source.maxzoom, 22);
-        t.equal(source.tileSize, 512);
-        t.equal(source.animate, true);
+        expect(source.minzoom).toBe(0);
+        expect(source.maxzoom).toBe(22);
+        expect(source.tileSize).toBe(512);
+        expect(source.animate).toBe(true);
         source.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
-                t.equal(typeof source.play, 'function');
+                expect(typeof source.play).toBe('function');
                 t.end();
             }
         });
@@ -66,24 +66,24 @@ test('CanvasSource', (t) => {
     t.test('self-validates', (t) => {
         const stub = t.stub(console, 'error');
         createSource({coordinates: []});
-        t.ok(stub.called, 'should error when `coordinates` array parameter has incorrect number of elements');
+        expect(stub.called).toBeTruthy();
         stub.resetHistory();
 
         createSource({coordinates: 'asdf'});
-        t.ok(stub.called, 'should error with non-array `coordinates` parameter');
+        expect(stub.called).toBeTruthy();
         stub.resetHistory();
 
         createSource({animate: 8});
-        t.ok(stub.called, 'should error with non-boolean `animate` parameter');
+        expect(stub.called).toBeTruthy();
         stub.resetHistory();
 
         createSource({canvas: {}});
-        t.ok(stub.called, 'should error with non-string/non-Canvas `canvas` parameter');
+        expect(stub.called).toBeTruthy();
         stub.resetHistory();
 
         const canvasEl = window.document.createElement('canvas');
         createSource({canvas: canvasEl});
-        t.notOk(stub.called, 'should not error with HTMLCanvasElement');
+        expect(stub.called).toBeFalsy();
         stub.resetHistory();
 
         t.end();
@@ -97,7 +97,7 @@ test('CanvasSource', (t) => {
 
         source.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
-                t.equal(source.canvas, el);
+                expect(source.canvas).toBe(el);
                 t.end();
             }
         });
@@ -110,7 +110,7 @@ test('CanvasSource', (t) => {
         const map = new StubMap();
 
         map.on('rerender', () => {
-            t.ok(true, 'fires rerender event');
+            expect(true).toBeTruthy();
             t.end();
         });
 
@@ -124,13 +124,13 @@ test('CanvasSource', (t) => {
         const map = new StubMap();
 
         map.on('rerender', () => {
-            t.notOk(true, 'shouldn\'t rerender here');
+            expect(true).toBeFalsy();
             t.end();
         });
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata' && e.dataType === 'source') {
-                t.ok(true, 'fires load event without rerendering');
+                expect(true).toBeTruthy();
                 t.end();
             }
         });
@@ -144,15 +144,15 @@ test('CanvasSource', (t) => {
 
         source.onAdd(map);
 
-        t.equal(source.hasTransition(), true, 'should animate initally');
+        expect(source.hasTransition()).toBe(true);
 
         source.onRemove();
 
-        t.equal(source.hasTransition(), false, 'should stop animating');
+        expect(source.hasTransition()).toBe(false);
 
         source.onAdd(map);
 
-        t.equal(source.hasTransition(), true, 'should animate when added again');
+        expect(source.hasTransition()).toBe(true);
 
         t.end();
     });
@@ -163,15 +163,15 @@ test('CanvasSource', (t) => {
 
         source.onAdd(map);
 
-        t.equal(source.hasTransition(), true, 'initially animating');
+        expect(source.hasTransition()).toBe(true);
 
         source.pause();
 
-        t.equal(source.hasTransition(), false, 'can be paused');
+        expect(source.hasTransition()).toBe(false);
 
         source.play();
 
-        t.equal(source.hasTransition(), true, 'can be played');
+        expect(source.hasTransition()).toBe(true);
 
         t.end();
     });
@@ -183,8 +183,8 @@ test('CanvasSource#serialize', (t) => {
     const source = createSource();
 
     const serialized = source.serialize();
-    t.equal(serialized.type, 'canvas');
-    t.deepEqual(serialized.coordinates, [[0, 0], [1, 0], [1, 1], [0, 1]]);
+    expect(serialized.type).toBe('canvas');
+    expect(serialized.coordinates).toEqual([[0, 0], [1, 0], [1, 1], [0, 1]]);
 
     t.end();
 });

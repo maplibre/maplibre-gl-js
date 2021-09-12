@@ -16,14 +16,14 @@ function createMap(t, options = {}) {
 
 test('Marker uses a default marker element with an appropriate offset', (t) => {
     const marker = new Marker();
-    t.ok(marker.getElement());
-    t.ok(marker.getOffset().equals(new Point(0, -14)));
+    expect(marker.getElement()).toBeTruthy();
+    expect(marker.getOffset().equals(new Point(0, -14))).toBeTruthy();
     t.end();
 });
 
 test('Marker uses a default marker element with custom color', (t) => {
     const marker = new Marker({color: '#123456'});
-    t.ok(marker.getElement().innerHTML.includes('#123456'));
+    expect(marker.getElement().innerHTML.includes('#123456')).toBeTruthy();
     t.end();
 });
 
@@ -42,31 +42,37 @@ test('Marker uses a default marker element with custom scale', (t) => {
         .addTo(map);
 
     // initial dimensions of svg element
-    t.ok(defaultMarker.getElement().firstChild.getAttribute('height').includes('41'));
-    t.ok(defaultMarker.getElement().firstChild.getAttribute('width').includes('27'));
+    expect(
+        defaultMarker.getElement().firstChild.getAttribute('height').includes('41')
+    ).toBeTruthy();
+    expect(defaultMarker.getElement().firstChild.getAttribute('width').includes('27')).toBeTruthy();
 
     // (41 * 0.8) = 32.8, (27 * 0.8) = 21.6
-    t.ok(smallerMarker.getElement().firstChild.getAttribute('height').includes(`32.8`));
-    t.ok(smallerMarker.getElement().firstChild.getAttribute('width').includes(`21.6`));
+    expect(
+        smallerMarker.getElement().firstChild.getAttribute('height').includes(`32.8`)
+    ).toBeTruthy();
+    expect(
+        smallerMarker.getElement().firstChild.getAttribute('width').includes(`21.6`)
+    ).toBeTruthy();
 
     // (41 * 2) = 82, (27 * 2) = 54
-    t.ok(largerMarker.getElement().firstChild.getAttribute('height').includes('82'));
-    t.ok(largerMarker.getElement().firstChild.getAttribute('width').includes('54'));
+    expect(largerMarker.getElement().firstChild.getAttribute('height').includes('82')).toBeTruthy();
+    expect(largerMarker.getElement().firstChild.getAttribute('width').includes('54')).toBeTruthy();
 
     t.end();
 });
 
 test('Marker uses a default marker with custom offset', (t) => {
     const marker = new Marker({offset: [1, 2]});
-    t.ok(marker.getElement());
-    t.ok(marker.getOffset().equals(new Point(1, 2)));
+    expect(marker.getElement()).toBeTruthy();
+    expect(marker.getOffset().equals(new Point(1, 2))).toBeTruthy();
     t.end();
 });
 
 test('Marker uses the provided element', (t) => {
     const element = window.document.createElement('div');
     const marker = new Marker({element});
-    t.equal(marker.getElement(), element);
+    expect(marker.getElement()).toBe(element);
     t.end();
 });
 
@@ -76,30 +82,30 @@ test('Marker#addTo adds the marker element to the canvas container', (t) => {
         .setLngLat([-77.01866, 38.888])
         .addTo(map);
 
-    t.equal(map.getCanvasContainer().querySelectorAll('.maplibregl-marker').length, 1);
+    expect(map.getCanvasContainer().querySelectorAll('.maplibregl-marker').length).toBe(1);
 
     map.remove();
     t.end();
 });
 
 test('Marker provides LngLat accessors', (t) => {
-    t.equal(new Marker().getLngLat(), undefined);
+    expect(new Marker().getLngLat()).toBe(undefined);
 
-    t.ok(new Marker().setLngLat([1, 2]).getLngLat() instanceof LngLat);
-    t.deepEqual(new Marker().setLngLat([1, 2]).getLngLat(), new LngLat(1, 2));
+    expect(new Marker().setLngLat([1, 2]).getLngLat() instanceof LngLat).toBeTruthy();
+    expect(new Marker().setLngLat([1, 2]).getLngLat()).toEqual(new LngLat(1, 2));
 
-    t.ok(new Marker().setLngLat(new LngLat(1, 2)).getLngLat() instanceof LngLat);
-    t.deepEqual(new Marker().setLngLat(new LngLat(1, 2)).getLngLat(), new LngLat(1, 2));
+    expect(new Marker().setLngLat(new LngLat(1, 2)).getLngLat() instanceof LngLat).toBeTruthy();
+    expect(new Marker().setLngLat(new LngLat(1, 2)).getLngLat()).toEqual(new LngLat(1, 2));
 
     t.end();
 });
 
 test('Marker provides offset accessors', (t) => {
-    t.ok(new Marker().setOffset([1, 2]).getOffset() instanceof Point);
-    t.deepEqual(new Marker().setOffset([1, 2]).getOffset(), new Point(1, 2));
+    expect(new Marker().setOffset([1, 2]).getOffset() instanceof Point).toBeTruthy();
+    expect(new Marker().setOffset([1, 2]).getOffset()).toEqual(new Point(1, 2));
 
-    t.ok(new Marker().setOffset(new Point(1, 2)).getOffset() instanceof Point);
-    t.deepEqual(new Marker().setOffset(new Point(1, 2)).getOffset(), new Point(1, 2));
+    expect(new Marker().setOffset(new Point(1, 2)).getOffset() instanceof Point).toBeTruthy();
+    expect(new Marker().setOffset(new Point(1, 2)).getOffset()).toEqual(new Point(1, 2));
 
     t.end();
 });
@@ -108,7 +114,7 @@ test('Marker#setPopup binds a popup', (t) => {
     const popup = new Popup();
     const marker = new Marker()
         .setPopup(popup);
-    t.equal(marker.getPopup(), popup);
+    expect(marker.getPopup()).toBe(popup);
     t.end();
 });
 
@@ -116,7 +122,7 @@ test('Marker#setPopup unbinds a popup', (t) => {
     const marker = new Marker()
         .setPopup(new Popup())
         .setPopup();
-    t.ok(!marker.getPopup());
+    expect(!marker.getPopup()).toBeTruthy();
     t.end();
 });
 
@@ -128,7 +134,7 @@ test('Marker#togglePopup opens a popup that was closed', (t) => {
         .setPopup(new Popup())
         .togglePopup();
 
-    t.ok(marker.getPopup().isOpen());
+    expect(marker.getPopup().isOpen()).toBeTruthy();
 
     map.remove();
     t.end();
@@ -143,7 +149,7 @@ test('Marker#togglePopup closes a popup that was open', (t) => {
         .togglePopup()
         .togglePopup();
 
-    t.ok(!marker.getPopup().isOpen());
+    expect(!marker.getPopup().isOpen()).toBeTruthy();
 
     map.remove();
     t.end();
@@ -157,12 +163,12 @@ test('Enter key on Marker opens a popup that was closed', (t) => {
         .setPopup(new Popup());
 
     // popup not initially open
-    t.notOk(marker.getPopup().isOpen());
+    expect(marker.getPopup().isOpen()).toBeFalsy();
 
     simulate.keypress(marker.getElement(), {code: 'Enter'});
 
     // popup open after Enter keypress
-    t.ok(marker.getPopup().isOpen());
+    expect(marker.getPopup().isOpen()).toBeTruthy();
 
     map.remove();
     t.end();
@@ -176,12 +182,12 @@ test('Space key on Marker opens a popup that was closed', (t) => {
         .setPopup(new Popup());
 
     // popup not initially open
-    t.notOk(marker.getPopup().isOpen());
+    expect(marker.getPopup().isOpen()).toBeFalsy();
 
     simulate.keypress(marker.getElement(), {code: 'Space'});
 
     // popup open after Enter keypress
-    t.ok(marker.getPopup().isOpen());
+    expect(marker.getPopup().isOpen()).toBeTruthy();
 
     map.remove();
     t.end();
@@ -191,7 +197,7 @@ test('Marker#setPopup sets a tabindex', (t) => {
     const popup = new Popup();
     const marker = new Marker()
         .setPopup(popup);
-    t.equal(marker.getElement().getAttribute('tabindex'), "0");
+    expect(marker.getElement().getAttribute('tabindex')).toBe("0");
     t.end();
 });
 
@@ -200,7 +206,7 @@ test('Marker#setPopup removes tabindex when unset', (t) => {
     const marker = new Marker()
         .setPopup(popup)
         .setPopup();
-    t.notOk(marker.getElement().getAttribute('tabindex'));
+    expect(marker.getElement().getAttribute('tabindex')).toBeFalsy();
     t.end();
 });
 
@@ -210,7 +216,7 @@ test('Marker#setPopup does not replace existing tabindex', (t) => {
     const popup = new Popup();
     const marker = new Marker({element})
         .setPopup(popup);
-    t.equal(marker.getElement().getAttribute('tabindex'), "5");
+    expect(marker.getElement().getAttribute('tabindex')).toBe("5");
     t.end();
 });
 
@@ -220,7 +226,7 @@ test('Marker anchor defaults to center', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.ok(marker.getElement().classList.contains('maplibregl-marker-anchor-center'));
+    expect(marker.getElement().classList.contains('maplibregl-marker-anchor-center')).toBeTruthy();
     t.match(marker.getElement().style.transform, /translate\(-50%,-50%\)/);
 
     map.remove();
@@ -233,7 +239,7 @@ test('Marker anchors as specified by the anchor option', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.ok(marker.getElement().classList.contains('maplibregl-marker-anchor-top'));
+    expect(marker.getElement().classList.contains('maplibregl-marker-anchor-top')).toBeTruthy();
     t.match(marker.getElement().style.transform, /translate\(-50%,0\)/);
 
     map.remove();
@@ -244,11 +250,11 @@ test('Marker accepts backward-compatible constructor parameters', (t) => {
     const element = window.document.createElement('div');
 
     const m1 = new Marker(element);
-    t.equal(m1.getElement(), element);
+    expect(m1.getElement()).toBe(element);
 
     const m2 = new Marker(element, {offset: [1, 2]});
-    t.equal(m2.getElement(), element);
-    t.ok(m2.getOffset().equals(new Point(1, 2)));
+    expect(m2.getElement()).toBe(element);
+    expect(m2.getOffset().equals(new Point(1, 2))).toBeTruthy();
     t.end();
 });
 
@@ -260,18 +266,18 @@ test('Popup offsets around default Marker', (t) => {
         .setPopup(new Popup().setText('Test'))
         .addTo(map);
 
-    t.ok(marker.getPopup().options.offset.bottom[1] < 0, 'popup is vertically offset somewhere above the tip');
-    t.ok(marker.getPopup().options.offset.top[1] === 0, 'popup is vertically offset at the tip');
-    t.ok(marker.getPopup().options.offset.left[0] > 0, 'popup is horizontally offset somewhere to the right of the tip');
-    t.ok(marker.getPopup().options.offset.right[0] < 0, 'popup is horizontally offset somewhere to the left of the tip');
+    expect(marker.getPopup().options.offset.bottom[1] < 0).toBeTruthy();
+    expect(marker.getPopup().options.offset.top[1] === 0).toBeTruthy();
+    expect(marker.getPopup().options.offset.left[0] > 0).toBeTruthy();
+    expect(marker.getPopup().options.offset.right[0] < 0).toBeTruthy();
 
-    t.ok(marker.getPopup().options.offset['bottom-left'][0] > 0, 'popup is horizontally offset somewhere to the top right of the tip');
-    t.ok(marker.getPopup().options.offset['bottom-left'][1] < 0, 'popup is vertically offset somewhere to the top right of the tip');
-    t.ok(marker.getPopup().options.offset['bottom-right'][0] < 0, 'popup is horizontally offset somewhere to the top left of the tip');
-    t.ok(marker.getPopup().options.offset['bottom-right'][1] < 0, 'popup is vertically offset somewhere to the top left of the tip');
+    expect(marker.getPopup().options.offset['bottom-left'][0] > 0).toBeTruthy();
+    expect(marker.getPopup().options.offset['bottom-left'][1] < 0).toBeTruthy();
+    expect(marker.getPopup().options.offset['bottom-right'][0] < 0).toBeTruthy();
+    expect(marker.getPopup().options.offset['bottom-right'][1] < 0).toBeTruthy();
 
-    t.deepEqual(marker.getPopup().options.offset['top-left'], [0, 0], 'popup offset at the tip when below to the right');
-    t.deepEqual(marker.getPopup().options.offset['top-right'], [0, 0], 'popup offset at the tip when below to the left');
+    expect(marker.getPopup().options.offset['top-left']).toEqual([0, 0]);
+    expect(marker.getPopup().options.offset['top-right']).toEqual([0, 0]);
 
     t.end();
 });
@@ -296,35 +302,51 @@ test('Popup anchors around default Marker', (t) => {
     Object.defineProperty(marker.getPopup()._container, 'offsetHeight', {value: 100});
 
     // marker should default to above since it has enough space
-    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom'), 'popup anchors above marker');
+    expect(
+        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom')
+    ).toBeTruthy();
 
     // move marker to the top forcing the popup to below
     marker.setLngLat(map.unproject([mapHeight / 2, markerTop]));
-    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top'), 'popup anchors below marker');
+    expect(
+        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top')
+    ).toBeTruthy();
 
     // move marker to the right forcing the popup to the left
     marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight / 2]));
-    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-right'), 'popup anchors left of marker');
+    expect(
+        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-right')
+    ).toBeTruthy();
 
     // move marker to the left forcing the popup to the right
     marker.setLngLat(map.unproject([markerRight, mapHeight / 2]));
-    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-left'), 'popup anchors right of marker');
+    expect(
+        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-left')
+    ).toBeTruthy();
 
     // move marker to the top left forcing the popup to the bottom right
     marker.setLngLat(map.unproject([markerRight, markerTop]));
-    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-left'), 'popup anchors bottom right of marker');
+    expect(
+        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-left')
+    ).toBeTruthy();
 
     // move marker to the top right forcing the popup to the bottom left
     marker.setLngLat(map.unproject([mapHeight - markerRight, markerTop]));
-    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-right'), 'popup anchors bottom left of marker');
+    expect(
+        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-right')
+    ).toBeTruthy();
 
     // move marker to the bottom left forcing the popup to the top right
     marker.setLngLat(map.unproject([markerRight, mapHeight]));
-    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-left'), 'popup anchors top right of marker');
+    expect(
+        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-left')
+    ).toBeTruthy();
 
     // move marker to the bottom right forcing the popup to the top left
     marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight]));
-    t.ok(marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right'), 'popup anchors top left of marker');
+    expect(
+        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right')
+    ).toBeTruthy();
 
     t.end();
 });
@@ -335,7 +357,7 @@ test('Marker drag functionality can be added with drag option', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.equal(marker.isDraggable(), true);
+    expect(marker.isDraggable()).toBe(true);
 
     map.remove();
     t.end();
@@ -348,7 +370,7 @@ test('Marker#setDraggable adds drag functionality', (t) => {
         .setDraggable(true)
         .addTo(map);
 
-    t.equal(marker.isDraggable(), true);
+    expect(marker.isDraggable()).toBe(true);
 
     map.remove();
     t.end();
@@ -360,11 +382,11 @@ test('Marker#setDraggable turns off drag functionality', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.equal(marker.isDraggable(), true);
+    expect(marker.isDraggable()).toBe(true);
 
     marker.setDraggable(false);
 
-    t.equal(marker.isDraggable(), false);
+    expect(marker.isDraggable()).toBe(false);
 
     map.remove();
     t.end();
@@ -386,35 +408,35 @@ test('Marker with draggable:true fires dragstart, drag, and dragend events at ap
     marker.on('dragend',   dragend);
 
     simulate.mousedown(el, {clientX: 0, clientY: 0});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, '');
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('');
 
     simulate.mousemove(el, {clientX: 2.9, clientY: 0});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0, "drag not called yet, movement below marker's map-inherited click tolerance");
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, '');
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('');
 
     // above map's click tolerance
     simulate.mousemove(el, {clientX: 3.1, clientY: 0});
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1, 'drag fired once click tolerance exceeded');
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, 'none', 'cancels pointer events while dragging');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('none');
 
     simulate.mousemove(el, {clientX: 0, clientY: 0});
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2, 'drag fired when moving back within clickTolerance of mousedown');
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, 'none', 'cancels pointer events while dragging');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('none');
 
     simulate.mouseup(el);
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2);
-    t.equal(dragend.callCount, 1);
-    t.equal(el.style.pointerEvents, 'auto');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(1);
+    expect(el.style.pointerEvents).toBe('auto');
 
     map.remove();
     t.end();
@@ -436,35 +458,35 @@ test('Marker with draggable:true fires dragstart, drag, and dragend events at ap
     marker.on('dragend',   dragend);
 
     simulate.mousedown(el, {clientX: 0, clientY: 0});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, '');
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('');
 
     simulate.mousemove(el, {clientX: 3.9, clientY: 0});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0, "drag not called yet, movement below marker's map-inherited click tolerance");
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, '');
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('');
 
     // above map's click tolerance
     simulate.mousemove(el, {clientX: 4.1, clientY: 0});
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1, 'drag fired once click tolerance exceeded');
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, 'none', 'cancels pointer events while dragging');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('none');
 
     simulate.mousemove(el, {clientX: 0, clientY: 0});
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2, 'drag fired when moving back within clickTolerance of mousedown');
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, 'none', 'cancels pointer events while dragging');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('none');
 
     simulate.mouseup(el);
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2);
-    t.equal(dragend.callCount, 1);
-    t.equal(el.style.pointerEvents, 'auto');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(1);
+    expect(el.style.pointerEvents).toBe('auto');
 
     map.remove();
     t.end();
@@ -486,19 +508,19 @@ test('Marker with draggable:false does not fire dragstart, drag, and dragend eve
     marker.on('dragend',   dragend);
 
     simulate.mousedown(el, {clientX: 0, clientY: 0});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mousemove(el, {clientX: 3, clientY: 1});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mouseup(el);
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     map.remove();
     t.end();
@@ -520,35 +542,35 @@ test('Marker with draggable:true fires dragstart, drag, and dragend events at ap
     marker.on('dragend',   dragend);
 
     simulate.touchstart(el, {touches: [{clientX: 0, clientY: 0}]});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, '');
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('');
 
     simulate.touchmove(el, {touches: [{clientX: 2.9, clientY: 0}]});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0, "drag not called yet, movement below marker's map-inherited click tolerance");
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, '');
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('');
 
     // above map's click tolerance
     simulate.touchmove(el, {touches: [{clientX: 3.1, clientY: 0}]});
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1, 'drag fired once click tolerance exceeded');
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, 'none', 'cancels pointer events while dragging');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('none');
 
     simulate.touchmove(el, {touches: [{clientX: 0, clientY: 0}]});
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2, 'drag fired when moving back within clickTolerance of touchstart');
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, 'none', 'cancels pointer events while dragging');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('none');
 
     simulate.touchend(el);
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2);
-    t.equal(dragend.callCount, 1);
-    t.equal(el.style.pointerEvents, 'auto');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(1);
+    expect(el.style.pointerEvents).toBe('auto');
 
     map.remove();
     t.end();
@@ -570,35 +592,35 @@ test('Marker with draggable:true fires dragstart, drag, and dragend events at ap
     marker.on('dragend',   dragend);
 
     simulate.touchstart(el, {touches: [{clientX: 0, clientY: 0}]});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, '');
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('');
 
     simulate.touchmove(el, {touches: [{clientX: 3.9, clientY: 0}]});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0, "drag not called yet, movement below marker's map-inherited click tolerance");
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, '');
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('');
 
     // above map's click tolerance
     simulate.touchmove(el, {touches: [{clientX: 4.1, clientY: 0}]});
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1, 'drag fired once click tolerance exceeded');
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, 'none', 'cancels pointer events while dragging');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('none');
 
     simulate.touchmove(el, {touches: [{clientX: 0, clientY: 0}]});
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2, 'drag fired when moving back within clickTolerance of touchstart');
-    t.equal(dragend.callCount, 0);
-    t.equal(el.style.pointerEvents, 'none', 'cancels pointer events while dragging');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(0);
+    expect(el.style.pointerEvents).toBe('none');
 
     simulate.touchend(el);
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2);
-    t.equal(dragend.callCount, 1);
-    t.equal(el.style.pointerEvents, 'auto');
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(1);
+    expect(el.style.pointerEvents).toBe('auto');
 
     map.remove();
     t.end();
@@ -620,19 +642,19 @@ test('Marker with draggable:false does not fire dragstart, drag, and dragend eve
     marker.on('dragend',   dragend);
 
     simulate.touchstart(el, {touches: [{clientX: 0, clientY: 0}]});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     simulate.touchmove(el, {touches: [{clientX: 0, clientY: 0}]});
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     simulate.touchend(el);
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     map.remove();
     t.end();
@@ -650,8 +672,8 @@ test('Marker with draggable:true moves to new position in response to a mouse-tr
     simulate.mouseup(el);
 
     const endPos = map.project(marker.getLngLat());
-    t.equal(Math.round(endPos.x), startPos.x + 10);
-    t.equal(Math.round(endPos.y), startPos.y + 10);
+    expect(Math.round(endPos.x)).toBe(startPos.x + 10);
+    expect(Math.round(endPos.y)).toBe(startPos.y + 10);
 
     map.remove();
     t.end();
@@ -671,8 +693,8 @@ test('Marker with draggable:false does not move to new position in response to a
 
     const endPos = map.project(marker.getLngLat());
 
-    t.equal(startPos.x, endPos.x);
-    t.equal(startPos.y, endPos.y);
+    expect(startPos.x).toBe(endPos.x);
+    expect(startPos.y).toBe(endPos.y);
 
     map.remove();
     t.end();
@@ -688,7 +710,7 @@ test('Marker with draggable:true does not error if removed on mousedown', (t) =>
     simulate.mousemove(el, {clientX: 10, clientY: 10});
 
     marker.remove();
-    t.ok(map.fire('mouseup'));
+    expect(map.fire('mouseup')).toBeTruthy();
     t.end();
 });
 
@@ -698,8 +720,8 @@ test('Marker can set rotationAlignment and pitchAlignment', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.equal(marker.getRotationAlignment(), 'map');
-    t.equal(marker.getPitchAlignment(), 'map');
+    expect(marker.getRotationAlignment()).toBe('map');
+    expect(marker.getPitchAlignment()).toBe('map');
 
     map.remove();
     t.end();
@@ -711,10 +733,10 @@ test('Marker can set and update rotation', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.equal(marker.getRotation(), 45);
+    expect(marker.getRotation()).toBe(45);
 
     marker.setRotation(90);
-    t.equal(marker.getRotation(), 90);
+    expect(marker.getRotation()).toBe(90);
 
     map.remove();
     t.end();
@@ -732,7 +754,7 @@ test('Marker transforms rotation with the map', (t) => {
     map.setBearing(map.getBearing() + 180);
 
     const finalRotation = marker.getElement().style.transform.match(rotationRegex)[1];
-    t.notEqual(initialRotation, finalRotation);
+    expect(initialRotation).not.toBe(finalRotation);
 
     map.remove();
     t.end();
@@ -752,7 +774,7 @@ test('Marker transforms pitch with the map', (t) => {
     map.setPitch(45);
 
     const finalPitch = marker.getElement().style.transform.match(rotationRegex)[1];
-    t.notEqual(initialPitch, finalPitch);
+    expect(initialPitch).not.toBe(finalPitch);
 
     map.remove();
     t.end();
@@ -764,7 +786,7 @@ test('Marker pitchAlignment when set to auto defaults to rotationAlignment', (t)
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.equal(marker.getRotationAlignment(), marker.getPitchAlignment());
+    expect(marker.getRotationAlignment()).toBe(marker.getPitchAlignment());
 
     map.remove();
     t.end();
@@ -776,10 +798,10 @@ test('Marker pitchAlignment when set to auto defaults to rotationAlignment (sett
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.equal(marker.getPitchAlignment(), 'map');
+    expect(marker.getPitchAlignment()).toBe('map');
     marker.setRotationAlignment('viewport');
     marker.setPitchAlignment('auto');
-    t.equal(marker.getRotationAlignment(), marker.getPitchAlignment());
+    expect(marker.getRotationAlignment()).toBe(marker.getPitchAlignment());
 
     map.remove();
     t.end();

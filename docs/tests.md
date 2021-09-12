@@ -31,38 +31,12 @@ Ran all test suites.
 
 The configuration of Jest is defined by the file `jest.config.js`. 
 
-##### preset
+#### Migrate tests from Tape to Jest
 
-```ts
-preset: "ts-jest"
-```
 
-A default used as the basis for typescript tests. See https://github.com/kulshekhar/ts-jest.
 
-##### rootDir
 
-```ts
-rootDir: "src"
-```
-
-We set `src` as the root directory that Jest should search for Jest tests. This way we can store the files with the tests next to the source files. 
-
-##### testEnvironment
-
-``ts
-testEnvironment: "jsdom"
-```
-The test environment used for testing is the recommended way to simulate a browser with jsdom, a lightweight browser implementation running in Node.js. See https://github.com/jsdom/jsdom.
-
-##### transform
-
-```ts
-transform: {
-'^.+\\.(ts|tsx)?$': 'ts-jest',
-}
-```
-
-A mapping from regular expressions to paths to transformers. For typescript files we use `ts-jest`. 
+#### 
 
 ## Integration
 

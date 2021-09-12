@@ -44,7 +44,7 @@ test('split text-font', (t) => {
         ]
     };
 
-    t.deepEqual(migrate(input), output, 'splits text-font');
+    expect(migrate(input)).toEqual(output);
     t.end();
 });
 
@@ -89,7 +89,7 @@ test('rename symbol-min-distance', (t) => {
         ]
     };
 
-    t.deepEqual(migrate(input), output, 'renames symbol-min-distance');
+    expect(migrate(input)).toEqual(output);
     t.end();
 });
 
@@ -116,7 +116,7 @@ test('renames urls', (t) => {
         "layers": []
     };
 
-    t.deepEqual(migrate(input), output, 'renames url and flips coordinates of of video');
+    expect(migrate(input)).toEqual(output);
     t.end();
 });
 
@@ -165,7 +165,7 @@ test('not migrate interpolated functions', (t) => {
         }]
     };
 
-    t.deepEqual(migrate(input), output);
+    expect(migrate(input)).toEqual(output);
     t.end();
 });
 
@@ -212,7 +212,7 @@ test('not migrate piecewise-constant functions', (t) => {
         }]
     };
 
-    t.deepEqual(migrate(input), output);
+    expect(migrate(input)).toEqual(output);
     t.end();
 });
 
@@ -256,7 +256,7 @@ test('inline constants', (t) => {
         ]
     };
 
-    t.deepEqual(migrate(input), output, 'infers opacity type');
+    expect(migrate(input)).toEqual(output);
     t.end();
 });
 
@@ -300,7 +300,7 @@ test('migrate and inline fontstack constants', (t) => {
         ]
     };
 
-    t.deepEqual(migrate(input), output, 'infers opacity type');
+    expect(migrate(input)).toEqual(output);
     t.end();
 });
 
@@ -359,7 +359,7 @@ test('update fontstack function', (t) => {
         ]
     };
 
-    t.deepEqual(migrate(input), output);
+    expect(migrate(input)).toEqual(output);
     t.end();
 });
 
@@ -421,7 +421,7 @@ test('inline and migrate fontstack constant function', (t) => {
         ]
     };
 
-    t.deepEqual(migrate(input), output);
+    expect(migrate(input)).toEqual(output);
     t.end();
 });
 
@@ -478,7 +478,7 @@ test('update fontstack function constant', (t) => {
         ]
     };
 
-    t.deepEqual(migrate(input), output);
+    expect(migrate(input)).toEqual(output);
     t.end();
 });
 
@@ -495,7 +495,7 @@ test('migrate UNversioned fontstack urls', (t) => {
         "layers": []
     };
 
-    t.deepEqual(migrate(input), output);
+    expect(migrate(input)).toEqual(output);
     t.end();
 });
 
@@ -512,6 +512,6 @@ test('migrate versioned fontstack urls', (t) => {
         "layers": []
     };
 
-    t.deepEqual(migrate(input), output);
+    expect(migrate(input)).toEqual(output);
     t.end();
 });

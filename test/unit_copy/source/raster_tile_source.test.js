@@ -45,8 +45,8 @@ test('RasterTileSource', (t) => {
         createSource({url: "/source.json"}, transformSpy);
         window.server.respond();
 
-        t.equal(transformSpy.getCall(0).args[0], '/source.json');
-        t.equal(transformSpy.getCall(0).args[1], 'Source');
+        expect(transformSpy.getCall(0).args[0]).toBe('/source.json');
+        expect(transformSpy.getCall(0).args[1]).toBe('Source');
         t.end();
     });
 
@@ -60,8 +60,8 @@ test('RasterTileSource', (t) => {
         });
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                t.false(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132)), 'returns false for tiles outside bounds');
-                t.true(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132)), 'returns true for tiles inside bounds');
+                expect(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132))).toBeFalsy();
+                expect(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132))).toBeTruthy();
                 t.end();
             }
         });
@@ -78,7 +78,7 @@ test('RasterTileSource', (t) => {
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                t.deepEqual(source.tileBounds.bounds, {_sw:{lng: -47, lat: -7}, _ne:{lng: -45, lat: 90}}, 'converts invalid bounds to closest valid bounds');
+                expect(source.tileBounds.bounds).toEqual({_sw:{lng: -47, lat: -7}, _ne:{lng: -45, lat: 90}});
                 t.end();
             }
         });
@@ -96,8 +96,8 @@ test('RasterTileSource', (t) => {
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                t.false(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132)), 'returns false for tiles outside bounds');
-                t.true(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132)), 'returns true for tiles inside bounds');
+                expect(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132))).toBeFalsy();
+                expect(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132))).toBeTruthy();
                 t.end();
             }
         });
@@ -123,9 +123,9 @@ test('RasterTileSource', (t) => {
                     setExpiryData() {}
                 };
                 source.loadTile(tile, () => {});
-                t.ok(transformSpy.calledOnce);
-                t.equal(transformSpy.getCall(0).args[0], 'http://example.com/10/5/5.png');
-                t.equal(transformSpy.getCall(0).args[1], 'Tile');
+                expect(transformSpy.calledOnce).toBeTruthy();
+                expect(transformSpy.getCall(0).args[0]).toBe('http://example.com/10/5/5.png');
+                expect(transformSpy.getCall(0).args[1]).toBe('Tile');
                 t.end();
             }
         });
@@ -135,7 +135,7 @@ test('RasterTileSource', (t) => {
     t.test('cancels TileJSON request if removed', (t) => {
         const source = createSource({url: "/source.json"});
         source.onRemove();
-        t.equal(window.server.lastRequest.aborted, true);
+        expect(window.server.lastRequest.aborted).toBe(true);
         t.end();
     });
 

@@ -28,21 +28,21 @@ test('DragPanHandler fires dragstart, drag, and dragend events at appropriate ti
 
     simulate.mousedown(map.getCanvas());
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mouseup(map.getCanvas());
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1);
-    t.equal(dragend.callCount, 1);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -61,21 +61,21 @@ test('DragPanHandler captures mousemove events during a mouse-triggered drag (re
 
     simulate.mousedown(map.getCanvas());
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mousemove(window.document.body, {buttons, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mouseup(map.getCanvas());
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1);
-    t.equal(dragend.callCount, 1);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -95,21 +95,21 @@ test('DragPanHandler fires dragstart, drag, and dragend events at appropriate ti
 
     simulate.touchstart(map.getCanvas(), {touches: [{target, clientX: 0, clientY: 0}]});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, clientX: 10, clientY: 10}]});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
 
     simulate.touchend(map.getCanvas());
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1);
-    t.equal(dragend.callCount, 1);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -130,7 +130,7 @@ test('DragPanHandler prevents mousemove events from firing during a drag (#1555)
     simulate.mouseup(map.getCanvasContainer());
     map._renderTaskQueue.run();
 
-    t.ok(mousemove.notCalled);
+    expect(mousemove.notCalled).toBeTruthy();
 
     map.remove();
     t.end();
@@ -149,7 +149,7 @@ test('DragPanHandler ends a mouse-triggered drag if the window blurs', (t) => {
     map._renderTaskQueue.run();
 
     simulate.blur(window);
-    t.equal(dragend.callCount, 1);
+    expect(dragend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -169,7 +169,7 @@ test('DragPanHandler ends a touch-triggered drag if the window blurs', (t) => {
     map._renderTaskQueue.run();
 
     simulate.blur(window);
-    t.equal(dragend.callCount, 1);
+    expect(dragend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -181,14 +181,14 @@ test('DragPanHandler requests a new render frame after each mousemove event', (t
 
     simulate.mousedown(map.getCanvas());
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
-    t.ok(requestFrame.callCount > 0);
+    expect(requestFrame.callCount > 0).toBeTruthy();
 
     map._renderTaskQueue.run();
 
     // https://github.com/mapbox/mapbox-gl-js/issues/6063
     requestFrame.resetHistory();
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 20, clientY: 20});
-    t.equal(requestFrame.callCount, 1);
+    expect(requestFrame.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -208,34 +208,34 @@ test('DragPanHandler can interleave with another handler', (t) => {
 
     simulate.mousedown(map.getCanvas());
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
 
     // simulate a scroll zoom
     simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 20, clientY: 20});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mouseup(map.getCanvas());
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2);
-    t.equal(dragend.callCount, 1);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -244,7 +244,7 @@ test('DragPanHandler can interleave with another handler', (t) => {
 ['ctrl', 'shift'].forEach((modifier) => {
     test(`DragPanHandler does not begin a drag if the ${modifier} key is down on mousedown`, (t) => {
         const map = createMap();
-        t.ok(map.dragRotate.isEnabled());
+        expect(map.dragRotate.isEnabled()).toBeTruthy();
 
         const dragstart = t.spy();
         const drag      = t.spy();
@@ -256,21 +256,21 @@ test('DragPanHandler can interleave with another handler', (t) => {
 
         simulate.mousedown(map.getCanvas(), {buttons, [`${modifier}Key`]: true});
         map._renderTaskQueue.run();
-        t.equal(dragstart.callCount, 0);
-        t.equal(drag.callCount, 0);
-        t.equal(dragend.callCount, 0);
+        expect(dragstart.callCount).toBe(0);
+        expect(drag.callCount).toBe(0);
+        expect(dragend.callCount).toBe(0);
 
         simulate.mousemove(map.getCanvas(), {buttons, [`${modifier}Key`]: true, clientX: 10, clientY: 10});
         map._renderTaskQueue.run();
-        t.equal(dragstart.callCount, 0);
-        t.equal(drag.callCount, 0);
-        t.equal(dragend.callCount, 0);
+        expect(dragstart.callCount).toBe(0);
+        expect(drag.callCount).toBe(0);
+        expect(dragend.callCount).toBe(0);
 
         simulate.mouseup(map.getCanvas(), {[`${modifier}Key`]: true});
         map._renderTaskQueue.run();
-        t.equal(dragstart.callCount, 0);
-        t.equal(drag.callCount, 0);
-        t.equal(dragend.callCount, 0);
+        expect(dragstart.callCount).toBe(0);
+        expect(drag.callCount).toBe(0);
+        expect(dragend.callCount).toBe(0);
 
         map.remove();
         t.end();
@@ -278,7 +278,7 @@ test('DragPanHandler can interleave with another handler', (t) => {
 
     test(`DragPanHandler still ends a drag if the ${modifier} key is down on mouseup`, (t) => {
         const map = createMap();
-        t.ok(map.dragRotate.isEnabled());
+        expect(map.dragRotate.isEnabled()).toBeTruthy();
 
         const dragstart = t.spy();
         const drag      = t.spy();
@@ -290,21 +290,21 @@ test('DragPanHandler can interleave with another handler', (t) => {
 
         simulate.mousedown(map.getCanvas());
         map._renderTaskQueue.run();
-        t.equal(dragstart.callCount, 0);
-        t.equal(drag.callCount, 0);
-        t.equal(dragend.callCount, 0);
+        expect(dragstart.callCount).toBe(0);
+        expect(drag.callCount).toBe(0);
+        expect(dragend.callCount).toBe(0);
 
         simulate.mouseup(map.getCanvas(), {[`${modifier}Key`]: true});
         map._renderTaskQueue.run();
-        t.equal(dragstart.callCount, 0);
-        t.equal(drag.callCount, 0);
-        t.equal(dragend.callCount, 0);
+        expect(dragstart.callCount).toBe(0);
+        expect(drag.callCount).toBe(0);
+        expect(dragend.callCount).toBe(0);
 
         simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
         map._renderTaskQueue.run();
-        t.equal(dragstart.callCount, 0);
-        t.equal(drag.callCount, 0);
-        t.equal(dragend.callCount, 0);
+        expect(dragstart.callCount).toBe(0);
+        expect(drag.callCount).toBe(0);
+        expect(dragend.callCount).toBe(0);
 
         map.remove();
         t.end();
@@ -325,21 +325,21 @@ test('DragPanHandler does not begin a drag on right button mousedown', (t) => {
 
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     map.remove();
     t.end();
@@ -359,39 +359,39 @@ test('DragPanHandler does not end a drag on right button mouseup', (t) => {
 
     simulate.mousedown(map.getCanvas());
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mousedown(map.getCanvas(), {buttons: buttons + 2, button: 2});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mouseup(map.getCanvas(), {buttons, button: 2});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 1);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(1);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 20, clientY: 20});
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(0);
 
     simulate.mouseup(map.getCanvas());
     map._renderTaskQueue.run();
-    t.equal(dragstart.callCount, 1);
-    t.equal(drag.callCount, 2);
-    t.equal(dragend.callCount, 1);
+    expect(dragstart.callCount).toBe(1);
+    expect(drag.callCount).toBe(2);
+    expect(dragend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -419,9 +419,9 @@ test('DragPanHandler does not begin a drag if preventDefault is called on the mo
     simulate.mouseup(map.getCanvas());
     map._renderTaskQueue.run();
 
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     map.remove();
     t.end();
@@ -450,9 +450,9 @@ test('DragPanHandler does not begin a drag if preventDefault is called on the to
     simulate.touchend(map.getCanvas());
     map._renderTaskQueue.run();
 
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     map.remove();
     t.end();
@@ -488,9 +488,9 @@ test('DragPanHandler does not begin a drag if preventDefault is called on the to
     simulate.touchend(map.getCanvas());
     map._renderTaskQueue.run();
 
-    t.equal(dragstart.callCount, 0);
-    t.equal(drag.callCount, 0);
-    t.equal(dragend.callCount, 0);
+    expect(dragstart.callCount).toBe(0);
+    expect(drag.callCount).toBe(0);
+    expect(dragend.callCount).toBe(0);
 
     map.remove();
     t.end();

@@ -68,7 +68,7 @@ test('GeoJSONSource#setData', (t) => {
 
     t.test('returns self', (t) => {
         const source = createSource();
-        t.equal(source.setData({}), source);
+        expect(source.setData({})).toBe(source);
         t.end();
     });
 
@@ -96,7 +96,7 @@ test('GeoJSONSource#setData', (t) => {
         };
         source.actor.send = function(type, params, cb) {
             if (type === 'geojson.loadData') {
-                t.true(params.request.collectResourceTiming, 'collectResourceTiming is true on dispatcher message');
+                expect(params.request.collectResourceTiming).toBeTruthy();
                 setTimeout(cb, 0);
                 t.end();
             }
@@ -111,9 +111,9 @@ test('GeoJSONSource#onRemove', (t) => {
     t.test('broadcasts "removeSource" event', (t) => {
         const source = new GeoJSONSource('id', {data: {}}, wrapDispatcher({
             send(type, data, callback) {
-                t.false(callback);
-                t.equal(type, 'removeSource');
-                t.deepEqual(data, {type: 'geojson', source: 'id'});
+                expect(callback).toBeFalsy();
+                expect(type).toBe('removeSource');
+                expect(data).toEqual({type: 'geojson', source: 'id'});
                 t.end();
             },
             broadcast() {
@@ -137,7 +137,7 @@ test('GeoJSONSource#update', (t) => {
     t.test('sends initial loadData request to dispatcher', (t) => {
         const mockDispatcher = wrapDispatcher({
             send(message) {
-                t.equal(message, 'geojson.loadData');
+                expect(message).toBe('geojson.loadData');
                 t.end();
             }
         });
@@ -149,8 +149,8 @@ test('GeoJSONSource#update', (t) => {
     t.test('forwards geojson-vt options with worker request', (t) => {
         const mockDispatcher = wrapDispatcher({
             send(message, params) {
-                t.equal(message, 'geojson.loadData');
-                t.deepEqual(params.geojsonVtOptions, {
+                expect(message).toBe('geojson.loadData');
+                expect(params.geojsonVtOptions).toEqual({
                     extent: 8192,
                     maxZoom: 10,
                     tolerance: 4,
@@ -174,8 +174,8 @@ test('GeoJSONSource#update', (t) => {
     t.test('forwards Supercluster options with worker request', (t) => {
         const mockDispatcher = wrapDispatcher({
             send(message, params) {
-                t.equal(message, 'geojson.loadData');
-                t.deepEqual(params.superclusterOptions, {
+                expect(message).toBe('geojson.loadData');
+                expect(params.superclusterOptions).toEqual({
                     maxZoom: 12,
                     minPoints: 3,
                     extent: 8192,
@@ -206,8 +206,8 @@ test('GeoJSONSource#update', (t) => {
         const transformSpy = t.spy(mapStub._requestManager, 'transformRequest');
         const source = new GeoJSONSource('id', {data: 'https://example.com/data.geojson'}, mockDispatcher);
         source.onAdd(mapStub);
-        t.ok(transformSpy.calledOnce);
-        t.equal(transformSpy.getCall(0).args[0], 'https://example.com/data.geojson');
+        expect(transformSpy.calledOnce).toBeTruthy();
+        expect(transformSpy.getCall(0).args[0]).toBe('https://example.com/data.geojson');
         t.end();
     });
     t.test('fires event when metadata loads', (t) => {
@@ -240,7 +240,7 @@ test('GeoJSONSource#update', (t) => {
         const source = new GeoJSONSource('id', {data: {}}, mockDispatcher);
 
         source.on('error', (err) => {
-            t.equal(err.error, 'error');
+            expect(err.error).toBe('error');
             t.end();
         });
 
@@ -288,7 +288,7 @@ test('GeoJSONSource#serialize', (t) => {
         const source = new GeoJSONSource('id', {data: hawkHill}, mockDispatcher);
         source.map = mapStub;
         source.load();
-        t.deepEqual(source.serialize(), {
+        expect(source.serialize()).toEqual({
             type: 'geojson',
             data: hawkHill
         });
@@ -299,7 +299,7 @@ test('GeoJSONSource#serialize', (t) => {
         const source = new GeoJSONSource('id', {data: 'local://data.json'}, mockDispatcher);
         source.map = mapStub;
         source.load();
-        t.deepEqual(source.serialize(), {
+        expect(source.serialize()).toEqual({
             type: 'geojson',
             data: 'local://data.json'
         });
@@ -311,7 +311,7 @@ test('GeoJSONSource#serialize', (t) => {
         source.map = mapStub;
         source.load();
         source.setData(hawkHill);
-        t.deepEqual(source.serialize(), {
+        expect(source.serialize()).toEqual({
             type: 'geojson',
             data: hawkHill
         });
@@ -320,7 +320,7 @@ test('GeoJSONSource#serialize', (t) => {
 
     t.test('serialize source with additional options', (t) => {
         const source = new GeoJSONSource('id', {data: {}, cluster: true}, mockDispatcher);
-        t.deepEqual(source.serialize(), {
+        expect(source.serialize()).toEqual({
             type: 'geojson',
             data: {},
             cluster: true

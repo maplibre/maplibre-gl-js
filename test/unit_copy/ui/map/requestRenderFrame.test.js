@@ -6,7 +6,7 @@ test('Map#_requestRenderFrame schedules a new render frame if necessary', (t) =>
     const map = createMap(t);
     t.stub(map, 'triggerRepaint');
     map._requestRenderFrame(() => {});
-    t.equal(map.triggerRepaint.callCount, 1);
+    expect(map.triggerRepaint.callCount).toBe(1);
     map.remove();
     t.end();
 });
@@ -16,7 +16,7 @@ test('Map#_requestRenderFrame queues a task for the next render frame', (t) => {
     const cb = t.spy();
     map._requestRenderFrame(cb);
     map.once('render', () => {
-        t.equal(cb.callCount, 1);
+        expect(cb.callCount).toBe(1);
         map.remove();
         t.end();
     });
@@ -28,7 +28,7 @@ test('Map#_cancelRenderFrame cancels a queued task', (t) => {
     const id = map._requestRenderFrame(cb);
     map._cancelRenderFrame(id);
     map.once('render', () => {
-        t.equal(cb.callCount, 0);
+        expect(cb.callCount).toBe(0);
         map.remove();
         t.end();
     });

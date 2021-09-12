@@ -25,22 +25,22 @@ test('MapEvent handler fires touch events with correct values', (t) => {
     const touchesEnd = [{target, identifier: 1, clientX: 0, clientY: 60}];
 
     simulate.touchstart(map.getCanvas(), {touches: touchesStart, targetTouches: touchesStart});
-    t.equal(touchstart.callCount, 1);
-    t.deepEqual(touchstart.getCall(0).args[0].point, {x: 0, y: 50});
-    t.equal(touchmove.callCount, 0);
-    t.equal(touchend.callCount, 0);
+    expect(touchstart.callCount).toBe(1);
+    expect(touchstart.getCall(0).args[0].point).toEqual({x: 0, y: 50});
+    expect(touchmove.callCount).toBe(0);
+    expect(touchend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: touchesMove, targetTouches: touchesMove});
-    t.equal(touchstart.callCount, 1);
-    t.equal(touchmove.callCount, 1);
-    t.deepEqual(touchmove.getCall(0).args[0].point, {x: 0, y: 60});
-    t.equal(touchend.callCount, 0);
+    expect(touchstart.callCount).toBe(1);
+    expect(touchmove.callCount).toBe(1);
+    expect(touchmove.getCall(0).args[0].point).toEqual({x: 0, y: 60});
+    expect(touchend.callCount).toBe(0);
 
     simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touchesEnd});
-    t.equal(touchstart.callCount, 1);
-    t.equal(touchmove.callCount, 1);
-    t.equal(touchend.callCount, 1);
-    t.deepEqual(touchend.getCall(0).args[0].point, {x: 0, y: 60});
+    expect(touchstart.callCount).toBe(1);
+    expect(touchmove.callCount).toBe(1);
+    expect(touchend.callCount).toBe(1);
+    expect(touchend.getCall(0).args[0].point).toEqual({x: 0, y: 60});
 
     map.remove();
     t.end();
@@ -66,25 +66,25 @@ test('MapEvent handler fires touchmove even while drag handler is active', (t) =
     const touchesEnd = [{target, identifier: 1, clientX: 0, clientY: 60}];
 
     simulate.touchstart(map.getCanvas(), {touches: touchesStart, targetTouches: touchesStart});
-    t.equal(touchstart.callCount, 1);
-    t.deepEqual(touchstart.getCall(0).args[0].point, {x: 0, y: 50});
-    t.equal(touchmove.callCount, 0);
-    t.equal(touchend.callCount, 0);
+    expect(touchstart.callCount).toBe(1);
+    expect(touchstart.getCall(0).args[0].point).toEqual({x: 0, y: 50});
+    expect(touchmove.callCount).toBe(0);
+    expect(touchend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: touchesMove, targetTouches: touchesMove});
-    t.equal(touchstart.callCount, 1);
-    t.equal(touchmove.callCount, 1);
-    t.deepEqual(touchmove.getCall(0).args[0].point, {x: 0, y: 60});
-    t.equal(touchend.callCount, 0);
+    expect(touchstart.callCount).toBe(1);
+    expect(touchmove.callCount).toBe(1);
+    expect(touchmove.getCall(0).args[0].point).toEqual({x: 0, y: 60});
+    expect(touchend.callCount).toBe(0);
 
     simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touchesEnd});
-    t.equal(touchstart.callCount, 1);
-    t.equal(touchmove.callCount, 1);
-    t.equal(touchend.callCount, 1);
-    t.deepEqual(touchend.getCall(0).args[0].point, {x: 0, y: 60});
+    expect(touchstart.callCount).toBe(1);
+    expect(touchmove.callCount).toBe(1);
+    expect(touchend.callCount).toBe(1);
+    expect(touchend.getCall(0).args[0].point).toEqual({x: 0, y: 60});
 
     map._renderTaskQueue.run();
-    t.equal(drag.callCount, 1);
+    expect(drag.callCount).toBe(1);
 
     map.remove();
     t.end();

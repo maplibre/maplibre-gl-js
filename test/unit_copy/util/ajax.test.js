@@ -26,7 +26,7 @@ test('ajax', (t) => {
             request.respond(404);
         });
         getArrayBuffer({url:''}, (error) => {
-            t.equal(error.status, 404);
+            expect(error.status).toBe(404);
             t.end();
         });
         window.server.respond();
@@ -37,8 +37,8 @@ test('ajax', (t) => {
             request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
         });
         getJSON({url:''}, (error, body) => {
-            t.error(error);
-            t.deepEqual(body, {foo: 'bar'});
+            expect(error).toBeFalsy();
+            expect(body).toEqual({foo: 'bar'});
             t.end();
         });
         window.server.respond();
@@ -49,7 +49,7 @@ test('ajax', (t) => {
             request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
         });
         getJSON({url:''}, (error) => {
-            t.ok(error);
+            expect(error).toBeTruthy();
             t.end();
         });
         window.server.respond();
@@ -60,7 +60,7 @@ test('ajax', (t) => {
             request.respond(404);
         });
         getJSON({url:''}, (error) => {
-            t.equal(error.status, 404);
+            expect(error.status).toBe(404);
             t.end();
         });
         window.server.respond();
@@ -71,8 +71,8 @@ test('ajax', (t) => {
             request.respond(401);
         });
         getJSON({url:''}, (error) => {
-            t.equal(error.status, 401);
-            t.equal(error.message, "Unauthorized");
+            expect(error.status).toBe(401);
+            expect(error.message).toBe("Unauthorized");
             t.end();
         });
         window.server.respond();
@@ -83,7 +83,7 @@ test('ajax', (t) => {
             request.respond(204);
         });
         postData({url:'api.mapbox.com'}, (error) => {
-            t.equal(error, null);
+            expect(error).toBe(null);
             t.end();
         });
         window.server.respond();
@@ -97,14 +97,14 @@ test('ajax', (t) => {
         function callback(err) {
             if (err) return;
             // last request is only added after we got a response from one of the previous ones
-            t.equals(window.server.requests.length, maxRequests + 1);
+            expect(window.server.requests.length).toBe(maxRequests + 1);
             t.end();
         }
 
         for (let i = 0; i < maxRequests + 1; i++) {
             getImage({url: ''}, callback);
         }
-        t.equals(window.server.requests.length, maxRequests);
+        expect(window.server.requests.length).toBe(maxRequests);
 
         window.server.requests[0].respond();
     });
@@ -119,7 +119,7 @@ test('ajax', (t) => {
         for (let i = 0; i < maxRequests + 1; i++) {
             getImage({url: ''}, () => t.fail).cancel();
         }
-        t.equals(window.server.requests.length, maxRequests + 1);
+        expect(window.server.requests.length).toBe(maxRequests + 1);
         t.end();
     });
 
@@ -134,24 +134,24 @@ test('ajax', (t) => {
         }
 
         // the limit of allowed requests is reached
-        t.equals(window.server.requests.length, maxRequests);
+        expect(window.server.requests.length).toBe(maxRequests);
 
         const queuedURL = 'this-is-the-queued-request';
         const queued = getImage({url: queuedURL}, () => t.fail());
 
         // the new requests is queued because the limit is reached
-        t.equals(window.server.requests.length, maxRequests);
+        expect(window.server.requests.length).toBe(maxRequests);
 
         // cancel the first request to let the queued request start
         requests[0].cancel();
-        t.equals(window.server.requests.length, maxRequests + 1);
+        expect(window.server.requests.length).toBe(maxRequests + 1);
 
         // abort the previously queued request and confirm that it is aborted
         const queuedRequest = window.server.requests[window.server.requests.length - 1];
-        t.equals(queuedRequest.url, queuedURL);
-        t.equals(queuedRequest.aborted, undefined);
+        expect(queuedRequest.url).toBe(queuedURL);
+        expect(queuedRequest.aborted).toBe(undefined);
         queued.cancel();
-        t.equals(queuedRequest.aborted, true);
+        expect(queuedRequest.aborted).toBe(true);
 
         t.end();
     });
@@ -160,7 +160,7 @@ test('ajax', (t) => {
         resetImageRequestQueue();
 
         window.server.respondWith((request) => {
-            t.ok(request.requestHeaders.accept.includes('image/webp'), 'accepts header contains image/webp');
+            expect(request.requestHeaders.accept.includes('image/webp')).toBeTruthy();
             request.respond(200, {'Content-Type': 'image/webp'}, '');
         });
 

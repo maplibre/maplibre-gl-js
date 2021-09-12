@@ -43,8 +43,8 @@ test('CrossTileSymbolIndex.addLayer', (t) => {
 
         index.addLayer(styleLayer, [mainTile], 0);
         // Assigned new IDs
-        t.equal(mainInstances[0].crossTileID, 1);
-        t.equal(mainInstances[1].crossTileID, 2);
+        expect(mainInstances[0].crossTileID).toBe(1);
+        expect(mainInstances[1].crossTileID).toBe(2);
 
         const childID = new OverscaledTileID(7, 0, 7, 16, 16);
         const childInstances = [
@@ -57,13 +57,13 @@ test('CrossTileSymbolIndex.addLayer', (t) => {
 
         index.addLayer(styleLayer, [mainTile, childTile], 0);
         // matched parent tile
-        t.equal(childInstances[0].crossTileID, 1);
+        expect(childInstances[0].crossTileID).toBe(1);
         // does not match because of different key
-        t.equal(childInstances[1].crossTileID, 3);
+        expect(childInstances[1].crossTileID).toBe(3);
         // does not match because of different location
-        t.equal(childInstances[2].crossTileID, 4);
+        expect(childInstances[2].crossTileID).toBe(4);
         // matches with a slightly different location
-        t.equal(childInstances[3].crossTileID, 2);
+        expect(childInstances[3].crossTileID).toBe(2);
 
         const parentID = new OverscaledTileID(5, 0, 5, 4, 4);
         const parentInstances = [
@@ -73,7 +73,7 @@ test('CrossTileSymbolIndex.addLayer', (t) => {
 
         index.addLayer(styleLayer, [mainTile, childTile, parentTile], 0);
         // matched child tile
-        t.equal(parentInstances[0].crossTileID, 1);
+        expect(parentInstances[0].crossTileID).toBe(1);
 
         const grandchildID = new OverscaledTileID(8, 0, 8, 32, 32);
         const grandchildInstances = [
@@ -85,9 +85,9 @@ test('CrossTileSymbolIndex.addLayer', (t) => {
         index.addLayer(styleLayer, [mainTile], 0);
         index.addLayer(styleLayer, [mainTile, grandchildTile], 0);
         // Matches the symbol in `mainBucket`
-        t.equal(grandchildInstances[0].crossTileID, 1);
+        expect(grandchildInstances[0].crossTileID).toBe(1);
         // Does not match the previous value for Windsor because that tile was removed
-        t.equal(grandchildInstances[1].crossTileID, 5);
+        expect(grandchildInstances[1].crossTileID).toBe(5);
 
         t.end();
     });
@@ -105,19 +105,19 @@ test('CrossTileSymbolIndex.addLayer', (t) => {
 
         // assigns a new id
         index.addLayer(styleLayer, [mainTile], 0);
-        t.equal(mainInstances[0].crossTileID, 1);
+        expect(mainInstances[0].crossTileID).toBe(1);
 
         // removes the tile
         index.addLayer(styleLayer, [], 0);
 
         // assigns a new id
         index.addLayer(styleLayer, [childTile], 0);
-        t.equal(childInstances[0].crossTileID, 2);
+        expect(childInstances[0].crossTileID).toBe(2);
 
         // overwrites the old id to match the already-added tile
         index.addLayer(styleLayer, [mainTile, childTile], 0);
-        t.equal(mainInstances[0].crossTileID, 2);
-        t.equal(childInstances[0].crossTileID, 2);
+        expect(mainInstances[0].crossTileID).toBe(2);
+        expect(childInstances[0].crossTileID).toBe(2);
 
         t.end();
     });
@@ -142,21 +142,21 @@ test('CrossTileSymbolIndex.addLayer', (t) => {
 
         // assigns new ids
         index.addLayer(styleLayer, [mainTile], 0);
-        t.equal(mainInstances[0].crossTileID, 1);
-        t.equal(mainInstances[1].crossTileID, 2);
+        expect(mainInstances[0].crossTileID).toBe(1);
+        expect(mainInstances[1].crossTileID).toBe(2);
 
         const layerIndex = index.layerIndexes[styleLayer.id];
-        t.deepEqual(Object.keys(layerIndex.usedCrossTileIDs[6]), [1, 2]);
+        expect(Object.keys(layerIndex.usedCrossTileIDs[6])).toEqual([1, 2]);
 
         // copies parent ids without duplicate ids in this tile
         index.addLayer(styleLayer, [childTile], 0);
-        t.equal(childInstances[0].crossTileID, 1); // A' copies from A
-        t.equal(childInstances[1].crossTileID, 2); // B' copies from B
-        t.equal(childInstances[2].crossTileID, 3); // C' gets new ID
+        expect(childInstances[0].crossTileID).toBe(1); // A' copies from A
+        expect(childInstances[1].crossTileID).toBe(2); // B' copies from B
+        expect(childInstances[2].crossTileID).toBe(3); // C' gets new ID
 
         // Updates per-zoom usedCrossTileIDs
-        t.deepEqual(Object.keys(layerIndex.usedCrossTileIDs[6]), []);
-        t.deepEqual(Object.keys(layerIndex.usedCrossTileIDs[7]), [1, 2, 3]);
+        expect(Object.keys(layerIndex.usedCrossTileIDs[6])).toEqual([]);
+        expect(Object.keys(layerIndex.usedCrossTileIDs[7])).toEqual([1, 2, 3]);
 
         t.end();
     });
@@ -180,19 +180,19 @@ test('CrossTileSymbolIndex.addLayer', (t) => {
 
         // assigns new ids
         index.addLayer(styleLayer, [firstTile], 0);
-        t.equal(firstInstances[0].crossTileID, 1);
-        t.equal(firstInstances[1].crossTileID, 2);
+        expect(firstInstances[0].crossTileID).toBe(1);
+        expect(firstInstances[1].crossTileID).toBe(2);
 
         const layerIndex = index.layerIndexes[styleLayer.id];
-        t.deepEqual(Object.keys(layerIndex.usedCrossTileIDs[6]), [1, 2]);
+        expect(Object.keys(layerIndex.usedCrossTileIDs[6])).toEqual([1, 2]);
 
         // uses same ids when tile gets updated
         index.addLayer(styleLayer, [secondTile], 0);
-        t.equal(secondInstances[0].crossTileID, 1); // A' copies from A
-        t.equal(secondInstances[1].crossTileID, 2); // B' copies from B
-        t.equal(secondInstances[2].crossTileID, 3); // C' gets new ID
+        expect(secondInstances[0].crossTileID).toBe(1); // A' copies from A
+        expect(secondInstances[1].crossTileID).toBe(2); // B' copies from B
+        expect(secondInstances[2].crossTileID).toBe(3); // C' gets new ID
 
-        t.deepEqual(Object.keys(layerIndex.usedCrossTileIDs[6]), [1, 2, 3]);
+        expect(Object.keys(layerIndex.usedCrossTileIDs[6])).toEqual([1, 2, 3]);
 
         t.end();
     });
@@ -208,12 +208,12 @@ test('CrossTileSymbolIndex.addLayer', (t) => {
         const tile = makeTile(tileID, firstInstances);
 
         index.addLayer(styleLayer, [tile], longitude);
-        t.equal(firstInstances[0].crossTileID, 1); // A
+        expect(firstInstances[0].crossTileID).toBe(1); // A
 
         tile.tileID = tileID.wrapped();
 
         index.addLayer(styleLayer, [tile], longitude % 360);
-        t.equal(firstInstances[0].crossTileID, 1);
+        expect(firstInstances[0].crossTileID).toBe(1);
         t.end();
 
     });
@@ -233,13 +233,13 @@ test('CrossTileSymbolIndex.pruneUnusedLayers', (t) => {
 
     // assigns new ids
     index.addLayer(styleLayer, [tile], 0);
-    t.equal(instances[0].crossTileID, 1);
-    t.equal(instances[1].crossTileID, 2);
-    t.ok(index.layerIndexes[styleLayer.id]);
+    expect(instances[0].crossTileID).toBe(1);
+    expect(instances[1].crossTileID).toBe(2);
+    expect(index.layerIndexes[styleLayer.id]).toBeTruthy();
 
     // remove styleLayer
     index.pruneUnusedLayers([]);
-    t.notOk(index.layerIndexes[styleLayer.id]);
+    expect(index.layerIndexes[styleLayer.id]).toBeFalsy();
 
     t.end();
 });

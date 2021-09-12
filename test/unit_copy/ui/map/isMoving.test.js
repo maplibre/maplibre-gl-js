@@ -14,7 +14,7 @@ const buttons = 1;
 
 test('Map#isMoving returns false by default', (t) => {
     const map = createMap(t);
-    t.equal(map.isMoving(), false);
+    expect(map.isMoving()).toBe(false);
     map.remove();
     t.end();
 });
@@ -23,11 +23,11 @@ test('Map#isMoving returns true during a camera zoom animation', (t) => {
     const map = createMap(t);
 
     map.on('zoomstart', () => {
-        t.equal(map.isMoving(), true);
+        expect(map.isMoving()).toBe(true);
     });
 
     map.on('zoomend', () => {
-        t.equal(map.isMoving(), false);
+        expect(map.isMoving()).toBe(false);
         map.remove();
         t.end();
     });
@@ -39,17 +39,17 @@ test('Map#isMoving returns true when drag panning', (t) => {
     const map = createMap(t);
 
     map.on('movestart', () => {
-        t.equal(map.isMoving(), true);
+        expect(map.isMoving()).toBe(true);
     });
     map.on('dragstart', () => {
-        t.equal(map.isMoving(), true);
+        expect(map.isMoving()).toBe(true);
     });
 
     map.on('dragend', () => {
-        t.equal(map.isMoving(), false);
+        expect(map.isMoving()).toBe(false);
     });
     map.on('moveend', () => {
-        t.equal(map.isMoving(), false);
+        expect(map.isMoving()).toBe(false);
         map.remove();
         t.end();
     });
@@ -71,17 +71,17 @@ test('Map#isMoving returns true when drag rotating', (t) => {
     t.stub(browser, 'now').returns(0);
 
     map.on('movestart', () => {
-        t.equal(map.isMoving(), true);
+        expect(map.isMoving()).toBe(true);
     });
     map.on('rotatestart', () => {
-        t.equal(map.isMoving(), true);
+        expect(map.isMoving()).toBe(true);
     });
 
     map.on('rotateend', () => {
-        t.equal(map.isMoving(), false);
+        expect(map.isMoving()).toBe(false);
     });
     map.on('moveend', () => {
-        t.equal(map.isMoving(), false);
+        expect(map.isMoving()).toBe(false);
         map.remove();
         t.end();
     });
@@ -100,11 +100,11 @@ test('Map#isMoving returns true when scroll zooming', (t) => {
     const map = createMap(t);
 
     map.on('zoomstart', () => {
-        t.equal(map.isMoving(), true);
+        expect(map.isMoving()).toBe(true);
     });
 
     map.on('zoomend', () => {
-        t.equal(map.isMoving(), false);
+        expect(map.isMoving()).toBe(false);
         map.remove();
         t.end();
     });
@@ -126,15 +126,15 @@ test('Map#isMoving returns true when drag panning and scroll zooming interleave'
     const map = createMap(t);
 
     map.on('dragstart', () => {
-        t.equal(map.isMoving(), true);
+        expect(map.isMoving()).toBe(true);
     });
 
     map.on('zoomstart', () => {
-        t.equal(map.isMoving(), true);
+        expect(map.isMoving()).toBe(true);
     });
 
     map.on('zoomend', () => {
-        t.equal(map.isMoving(), true);
+        expect(map.isMoving()).toBe(true);
         simulate.mouseup(map.getCanvas());
         setTimeout(() => {
             map._renderTaskQueue.run();
@@ -142,7 +142,7 @@ test('Map#isMoving returns true when drag panning and scroll zooming interleave'
     });
 
     map.on('dragend', () => {
-        t.equal(map.isMoving(), false);
+        expect(map.isMoving()).toBe(false);
         map.remove();
         t.end();
     });

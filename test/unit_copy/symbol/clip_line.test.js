@@ -21,7 +21,7 @@ test('clipLines', (t) => {
             new Point(-80, 195)
         ];
 
-        t.deepEqual(clipLineTest([line]), [line]);
+        expect(clipLineTest([line])).toEqual([line]);
         t.end();
     });
 
@@ -42,7 +42,7 @@ test('clipLines', (t) => {
 
         const lines = [line0, line1];
 
-        t.deepEqual(clipLineTest(lines), lines);
+        expect(clipLineTest(lines)).toEqual(lines);
         t.end();
     });
 
@@ -58,7 +58,7 @@ test('clipLines', (t) => {
             new Point(10000, 500)
         ];
 
-        t.deepEqual(clipLineTest([line0, line1]), []);
+        expect(clipLineTest([line0, line1])).toEqual([]);
         t.end();
     });
 
@@ -83,7 +83,7 @@ test('clipLines', (t) => {
             new Point(maxX, 0)
         ];
 
-        t.deepEqual(clipLineTest([line0, line1]), [result0, result1]);
+        expect(clipLineTest([line0, line1])).toEqual([result0, result1]);
         t.end();
     });
 
@@ -110,7 +110,7 @@ test('clipLines', (t) => {
             new Point(50, maxY)
         ];
 
-        t.deepEqual(clipLineTest([line0, line1]), [result0, result1]);
+        expect(clipLineTest([line0, line1])).toEqual([result0, result1]);
         t.end();
     });
 
@@ -132,7 +132,7 @@ test('clipLines', (t) => {
             new Point(120, 0),
         ];
 
-        t.deepEqual(clipLineTest([line]), [result0, result1]);
+        expect(clipLineTest([line])).toEqual([result0, result1]);
         t.end();
     });
 
@@ -142,7 +142,7 @@ test('clipLines', (t) => {
             new Point(131.2356763, 0.956732)
         ];
 
-        t.deepEqual(clipLineTest([line])[1], line[0][1]);
+        expect(clipLineTest([line])[1]).toEqual(line[0][1]);
         t.end();
     });
 
@@ -157,7 +157,7 @@ test('clipLines', (t) => {
             new Point(290, 2.5)
         ];
 
-        t.deepEqual(clipLineTest([line]), [result]);
+        expect(clipLineTest([line])).toEqual([result]);
         t.end();
     });
 

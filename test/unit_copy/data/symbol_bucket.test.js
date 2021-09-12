@@ -92,12 +92,12 @@ test('SymbolBucket', (t) => {
     const a = placement.collisionIndex.grid.keysLength();
     place(bucketA.layers[0], tileA);
     const b = placement.collisionIndex.grid.keysLength();
-    t.notEqual(a, b, 'places feature');
+    expect(a).not.toBe(b);
 
     const a2 = placement.collisionIndex.grid.keysLength();
     place(bucketB.layers[0], tileB);
     const b2 = placement.collisionIndex.grid.keysLength();
-    t.equal(b2, a2, 'detects collision and does not place feature');
+    expect(b2).toBe(a2);
     t.end();
 });
 
@@ -112,8 +112,10 @@ test('SymbolBucket integer overflow', (t) => {
     const fakeGlyph = {rect: {w: 10, h: 10}, metrics: {left: 10, top: 10, advance: 10}};
     performSymbolLayout(bucket, stacks, {'Test': {97: fakeGlyph, 98: fakeGlyph, 99: fakeGlyph, 100: fakeGlyph, 101: fakeGlyph, 102: fakeGlyph}});
 
-    t.ok(console.warn.calledOnce);
-    t.ok(console.warn.getCall(0).calledWithMatch(/Too many glyphs being rendered in a tile./));
+    expect(console.warn.calledOnce).toBeTruthy();
+    expect(
+        console.warn.getCall(0).calledWithMatch(/Too many glyphs being rendered in a tile./)
+    ).toBeTruthy();
     t.end();
 });
 
@@ -146,13 +148,13 @@ test('SymbolBucket image undefined sdf', (t) => {
     );
 
     const icons = options.iconDependencies;
-    t.equal(icons.a, true, 'references icon a');
-    t.equal(icons.b, true, 'references icon b');
+    expect(icons.a).toBe(true);
+    expect(icons.b).toBe(true);
 
     performSymbolLayout(bucket, null, null, imageMap, imagePos);
 
     // undefined SDF should be treated the same as false SDF - no warning raised
-    t.ok(!console.warn.calledOnce);
+    expect(!console.warn.calledOnce).toBeTruthy();
     t.end();
 });
 
@@ -186,13 +188,13 @@ test('SymbolBucket image mismatched sdf', (t) => {
     );
 
     const icons = options.iconDependencies;
-    t.equal(icons.a, true, 'references icon a');
-    t.equal(icons.b, true, 'references icon b');
+    expect(icons.a).toBe(true);
+    expect(icons.b).toBe(true);
 
     performSymbolLayout(bucket, null, null, imageMap, imagePos);
 
     // true SDF and false SDF in same bucket should trigger warning
-    t.ok(console.warn.calledOnce);
+    expect(console.warn.calledOnce).toBeTruthy();
     t.end();
 });
 
@@ -203,8 +205,8 @@ test('SymbolBucket detects rtl text', (t) => {
     rtlBucket.populate([{feature}], options);
     ltrBucket.populate([{feature}], options);
 
-    t.ok(rtlBucket.hasRTLText);
-    t.notOk(ltrBucket.hasRTLText);
+    expect(rtlBucket.hasRTLText).toBeTruthy();
+    expect(ltrBucket.hasRTLText).toBeFalsy();
     t.end();
 });
 
@@ -215,8 +217,8 @@ test('SymbolBucket with rtl text is NOT empty even though no symbol instances ar
     rtlBucket.createArrays();
     rtlBucket.populate([{feature}], options);
 
-    t.notOk(rtlBucket.isEmpty());
-    t.equal(rtlBucket.symbolInstances.length, 0);
+    expect(rtlBucket.isEmpty()).toBeFalsy();
+    expect(rtlBucket.symbolInstances.length).toBe(0);
     t.end();
 });
 
@@ -225,7 +227,7 @@ test('SymbolBucket detects rtl text mixed with ltr text', (t) => {
     const options = {iconDependencies: {}, glyphDependencies: {}};
     mixedBucket.populate([{feature}], options);
 
-    t.ok(mixedBucket.hasRTLText);
+    expect(mixedBucket.hasRTLText).toBeTruthy();
     t.end();
 });
 

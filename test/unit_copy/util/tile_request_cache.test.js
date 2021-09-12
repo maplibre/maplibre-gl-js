@@ -22,9 +22,9 @@ test('tile_request_cache', (t) => {
         try {
             result = cachePut({url:''});
             t.pass('should return successfully');
-            t.notOk(result, 'should return null');
+            expect(result).toBeFalsy();
         } catch (e) {
-            t.ifError(e, 'should not result in error');
+            expect(e).toBeFalsy();
         }
         t.end();
     });
@@ -33,8 +33,8 @@ test('tile_request_cache', (t) => {
         delete global.caches;
 
         cacheGet({url:''}, (result) => {
-            t.ifError(result, 'should not result in error');
-            t.equals(result, null, 'should return null');
+            expect(result).toBeFalsy();
+            expect(result).toBe(null);
             t.end();
         });
     });
@@ -43,8 +43,8 @@ test('tile_request_cache', (t) => {
         global.caches.open = sinon.stub().rejects(new Error('The operation is insecure'));
 
         cacheGet({url:''}, (error) => {
-            t.ok(error, 'should result in error');
-            t.equals(error.message, 'The operation is insecure', 'should give the right error message');
+            expect(error).toBeTruthy();
+            expect(error.message).toBe('The operation is insecure');
             t.end();
         });
     });
@@ -55,8 +55,8 @@ test('tile_request_cache', (t) => {
         global.caches.open = sinon.stub().resolves(fakeCache);
 
         cacheGet({url:'someurl'}, (error) => {
-            t.ok(error, 'should result in error');
-            t.equals(error.message, 'ohno', 'should give the right error message');
+            expect(error).toBeTruthy();
+            expect(error.message).toBe('ohno');
             t.end();
         });
     });
@@ -79,13 +79,13 @@ test('tile_request_cache', (t) => {
         global.caches.open = sinon.stub().resolves(fakeCache);
 
         cacheGet({url:'someurl'}, (error, response, fresh) => {
-            t.ifError(error, 'should not result in error');
-            t.ok(fakeCache.match.calledWith('someurl'), 'should call cache.match with correct url');
-            t.ok(fakeCache.delete.calledWith('someurl'), 'should call cache.delete with correct url');
-            t.ok(response, 'should give a response');
-            t.equals(response.body, 'yay', 'should give the right response object');
-            t.ok(fresh, 'should consider a response with a future expiry date as "fresh"');
-            t.ok(fakeCache.put.calledWith('someurl', fakeResponse), 'should call cache.put for fresh response');
+            expect(error).toBeFalsy();
+            expect(fakeCache.match.calledWith('someurl')).toBeTruthy();
+            expect(fakeCache.delete.calledWith('someurl')).toBeTruthy();
+            expect(response).toBeTruthy();
+            expect(response.body).toBe('yay');
+            expect(fresh).toBeTruthy();
+            expect(fakeCache.put.calledWith('someurl', fakeResponse)).toBeTruthy();
             t.end();
         });
     });

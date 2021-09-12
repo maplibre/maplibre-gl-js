@@ -14,21 +14,21 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const UPDATE = !!process.env.UPDATE;
 
 test('does not migrate from version 5', (t) => {
-    t.throws(() => {
+    expect(() => {
         migrate({version: 5, layers: []});
-    }, new Error('Cannot migrate from 5'));
+    }).toThrowError(new Error('Cannot migrate from 5'));
     t.end();
 });
 
 test('does not migrate from version 6', (t) => {
-    t.throws(() => {
+    expect(() => {
         migrate({version: 6, layers: []});
-    }, new Error('Cannot migrate from 6'));
+    }).toThrowError(new Error('Cannot migrate from 6'));
     t.end();
 });
 
 test('migrates to latest version from version 7', (t) => {
-    t.deepEqual(migrate({version: 7, layers: []}).version, spec.latest.$version);
+    expect(migrate({version: 7, layers: []}).version).toEqual(spec.latest.$version);
     t.end();
 });
 
@@ -41,8 +41,8 @@ test('converts token strings to expressions', (t) => {
             layout: {'text-field': 'a{x}', 'icon-image': '{y}'}
         }]
     }, spec.latest.$version);
-    t.deepEqual(migrated.layers[0].layout['text-field'], ['concat', 'a', ['get', 'x']]);
-    t.deepEqual(migrated.layers[0].layout['icon-image'], ['to-string', ['get', 'y']]);
+    expect(migrated.layers[0].layout['text-field']).toEqual(['concat', 'a', ['get', 'x']]);
+    expect(migrated.layers[0].layout['icon-image']).toEqual(['to-string', ['get', 'y']]);
     t.end();
 });
 
@@ -69,7 +69,7 @@ test('converts stop functions to expressions', (t) => {
             }
         }]
     }, spec.latest.$version);
-    t.deepEqual(migrated.layers[0].paint['background-opacity'], [
+    expect(migrated.layers[0].paint['background-opacity']).toEqual([
         'interpolate',
         ['linear'],
         ['zoom'],
@@ -78,7 +78,7 @@ test('converts stop functions to expressions', (t) => {
         10,
         0.72
     ]);
-    t.deepEqual(migrated.layers[1].paint['background-opacity'], [
+    expect(migrated.layers[1].paint['background-opacity']).toEqual([
         'interpolate',
         ['linear'],
         ['zoom'],
@@ -114,14 +114,14 @@ test('converts categorical function on resolvedImage type to valid expression', 
             }
         }]
     }, spec.latest.$version);
-    t.deepEqual(migrated.layers[0].layout['icon-image'], [
+    expect(migrated.layers[0].layout['icon-image']).toEqual([
         "match",
         ["get", "type" ],
         "park",
         "some-icon",
         ""
     ]);
-    t.deepEqual(validate.parsed(migrated, v8), []);
+    expect(validate.parsed(migrated, v8)).toEqual([]);
     t.end();
 });
 
@@ -130,10 +130,10 @@ glob.sync(`${__dirname}/fixture/v7-migrate/*.input.json`).forEach((file) => {
         const outputfile = file.replace('.input', '.output');
         const style = JSON.parse(fs.readFileSync(file));
         const result = migrate(style);
-        t.deepEqual(validate.parsed(result, v8), []);
+        expect(validate.parsed(result, v8)).toEqual([]);
         if (UPDATE) fs.writeFileSync(outputfile, JSON.stringify(result, null, 2));
         const expect = JSON.parse(fs.readFileSync(outputfile));
-        t.deepEqual(result, expect);
+        expect(result).toEqual(expect);
         t.end();
     });
 });

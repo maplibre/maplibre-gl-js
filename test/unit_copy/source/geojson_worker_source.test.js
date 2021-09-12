@@ -41,14 +41,14 @@ test('reloadTile', (t) => {
         function addData(callback) {
             source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)}, (err) => {
                 source.coalesce({source: 'sourceId'});
-                t.equal(err, null);
+                expect(err).toBe(null);
                 callback();
             });
         }
 
         function reloadTile(callback) {
             source.reloadTile(tileParams, (err, data) => {
-                t.equal(err, null);
+                expect(err).toBe(null);
                 return callback(data);
             });
         }
@@ -59,26 +59,26 @@ test('reloadTile', (t) => {
             reloadTile(data => {
                 firstData = data;
             });
-            t.equal(loadVectorCallCount, 1);
+            expect(loadVectorCallCount).toBe(1);
 
             // second call won't give us new rawTileData
             reloadTile(data => {
-                t.notOk('rawTileData' in data);
+                expect('rawTileData' in data).toBeFalsy();
                 data.rawTileData = firstData.rawTileData;
-                t.deepEqual(data, firstData);
+                expect(data).toEqual(firstData);
             });
 
             // also shouldn't call loadVectorData again
-            t.equal(loadVectorCallCount, 1);
+            expect(loadVectorCallCount).toBe(1);
 
             // replace geojson data
             addData(() => {
                 // should call loadVectorData again after changing geojson data
                 reloadTile(data => {
-                    t.ok('rawTileData' in data);
-                    t.deepEqual(data, firstData);
+                    expect('rawTileData' in data).toBeTruthy();
+                    expect(data).toEqual(firstData);
                 });
-                t.equal(loadVectorCallCount, 2);
+                expect(loadVectorCallCount).toBe(2);
                 t.end();
             });
         });
@@ -132,8 +132,8 @@ test('resourceTiming', (t) => {
         const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => { return callback(null, geoJson); });
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}}, (err, result) => {
-            t.equal(err, null);
-            t.deepEquals(result.resourceTiming.testSource, [ exampleResourceTiming ], 'got expected resource timing');
+            expect(err).toBe(null);
+            expect(result.resourceTiming.testSource).toEqual([ exampleResourceTiming ]);
             t.end();
         });
     });
@@ -164,8 +164,10 @@ test('resourceTiming', (t) => {
         const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => { return callback(null, geoJson); });
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}}, (err, result) => {
-            t.equal(err, null);
-            t.deepEquals(result.resourceTiming.testSource, [{"duration": 250, "entryType": "measure", "name": "http://localhost/nonexistent", "startTime": 100}], 'got expected resource timing');
+            expect(err).toBe(null);
+            expect(result.resourceTiming.testSource).toEqual(
+                [{"duration": 250, "entryType": "measure", "name": "http://localhost/nonexistent", "startTime": 100}]
+            );
             t.end();
         });
     });
@@ -175,8 +177,8 @@ test('resourceTiming', (t) => {
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
 
         source.loadData({source: 'testSource', data: JSON.stringify(geoJson)}, (err, result) => {
-            t.equal(err, null);
-            t.equal(result.resourceTiming, undefined, 'no resourceTiming property when loadData is not sent a URL');
+            expect(err).toBe(null);
+            expect(result.resourceTiming).toBe(undefined);
             t.end();
         });
     });
@@ -227,19 +229,19 @@ test('loadData', (t) => {
         // and third to run in response to coalesce
         const worker = createWorker();
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
-            t.equal(err, null);
-            t.notOk(result && result.abandoned);
+            expect(err).toBe(null);
+            expect(result && result.abandoned).toBeFalsy();
             worker.coalesce({source: 'source1'});
         });
 
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
-            t.equal(err, null);
-            t.ok(result && result.abandoned);
+            expect(err).toBe(null);
+            expect(result && result.abandoned).toBeTruthy();
         });
 
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
-            t.equal(err, null);
-            t.notOk(result && result.abandoned);
+            expect(err).toBe(null);
+            expect(result && result.abandoned).toBeFalsy();
             t.end();
         });
     });
@@ -252,18 +254,18 @@ test('loadData', (t) => {
         // First loadData finishes running, sends results back to foreground
         const worker = createWorker();
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
-            t.equal(err, null);
-            t.notOk(result && result.abandoned);
+            expect(err).toBe(null);
+            expect(result && result.abandoned).toBeFalsy();
             t.end();
         });
 
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
-            t.equal(err, null);
-            t.ok(result && result.abandoned);
+            expect(err).toBe(null);
+            expect(result && result.abandoned).toBeTruthy();
         });
 
         worker.removeSource({source: 'source1'}, (err) => {
-            t.notOk(err);
+            expect(err).toBeFalsy();
         });
 
     });

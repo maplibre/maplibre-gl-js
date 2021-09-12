@@ -4,38 +4,38 @@ import MercatorCoordinate, {mercatorScale} from '../../../rollup/build/tsc/geo/m
 
 test('LngLat', (t) => {
     t.test('#constructor', (t) => {
-        t.ok(new MercatorCoordinate(0, 0) instanceof MercatorCoordinate, 'creates an object');
-        t.ok(new MercatorCoordinate(0, 0, 0) instanceof MercatorCoordinate, 'creates an object with altitude');
+        expect(new MercatorCoordinate(0, 0) instanceof MercatorCoordinate).toBeTruthy();
+        expect(new MercatorCoordinate(0, 0, 0) instanceof MercatorCoordinate).toBeTruthy();
         t.end();
     });
 
     t.test('#fromLngLat', (t) => {
         const nullIsland = new LngLat(0, 0);
-        t.deepEqual(MercatorCoordinate.fromLngLat(nullIsland), {x: 0.5, y: 0.5, z: 0});
+        expect(MercatorCoordinate.fromLngLat(nullIsland)).toEqual({x: 0.5, y: 0.5, z: 0});
         t.end();
     });
 
     t.test('#toLngLat', (t) => {
         const dc = new LngLat(-77, 39);
-        t.deepEqual(MercatorCoordinate.fromLngLat(dc, 500).toLngLat(), {lng: -77, lat: 39});
+        expect(MercatorCoordinate.fromLngLat(dc, 500).toLngLat()).toEqual({lng: -77, lat: 39});
         t.end();
     });
 
     t.test('#toAltitude', (t) => {
         const dc = new LngLat(-77, 39);
-        t.equal(MercatorCoordinate.fromLngLat(dc, 500).toAltitude(), 500);
+        expect(MercatorCoordinate.fromLngLat(dc, 500).toAltitude()).toBe(500);
         t.end();
     });
 
     t.test('#mercatorScale', (t) => {
-        t.equal(mercatorScale(0), 1, 'mercator scale at the equator');
-        t.equal(mercatorScale(45), 1.414213562373095, 'mercator scale at 45 degrees latitude');
+        expect(mercatorScale(0)).toBe(1);
+        expect(mercatorScale(45)).toBe(1.414213562373095);
         t.end();
     });
 
     t.test('#meterInMercatorCoordinateUnits', (t) => {
         const nullIsland = new LngLat(0, 0);
-        t.equal(MercatorCoordinate.fromLngLat(nullIsland).meterInMercatorCoordinateUnits(), 2.4981121214570498e-8, 'length of 1 meter in MercatorCoordinate units at the equator');
+        expect(MercatorCoordinate.fromLngLat(nullIsland).meterInMercatorCoordinateUnits()).toBe(2.4981121214570498e-8);
         t.end();
     });
 
