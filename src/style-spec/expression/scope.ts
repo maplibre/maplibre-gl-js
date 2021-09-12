@@ -5,7 +5,7 @@ import type {Expression} from './expression';
  * @private
  */
 class Scope {
-    parent: Scope | undefined | null;
+    parent: Scope;
     bindings: {[_: string]: Expression};
     constructor(parent?: Scope, bindings: Array<[string, Expression]> = []) {
         this.parent = parent;

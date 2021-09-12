@@ -103,10 +103,10 @@ class CollisionIndex {
       fontSize: number,
       posMatrix: mat4,
       labelPlaneMatrix: mat4,
-      labelToScreenMatrix: mat4 | undefined | null,
+      labelToScreenMatrix: mat4,
       showCollisionCircles: boolean,
       pitchWithMap: boolean,
-      collisionGroupPredicate: any | undefined | null,
+      collisionGroupPredicate: any,
       circlePixelDiameter: number,
       textPixelPadding: number
     ): {

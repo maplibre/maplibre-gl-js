@@ -113,7 +113,7 @@ class Painter {
     opaquePassCutoff: number;
     renderPass: RenderPass;
     currentLayer: number;
-    currentStencilSource: string | undefined | null;
+    currentStencilSource: string;
     nextStencilID: number;
     id: string;
     _showOverdrawInspector: boolean;

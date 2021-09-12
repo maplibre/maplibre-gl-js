@@ -57,22 +57,22 @@ export default class Marker extends Evented {
     _anchor: Anchor;
     _offset: Point;
     _element: HTMLElement;
-    _popup: Popup | undefined | null;
+    _popup: Popup;
     _lngLat: LngLat;
-    _pos: Point | undefined | null;
-    _color: string | undefined | null;
+    _pos: Point;
+    _color: string;
     _scale: number;
     _defaultMarker: boolean;
     _draggable: boolean;
     _clickTolerance: number;
     _isDragging: boolean;
     _state: 'inactive' | 'pending' | 'active'; // used for handling drag events
-    _positionDelta: Point | undefined | null;
-    _pointerdownPos: Point | undefined | null;
+    _positionDelta: Point;
+    _pointerdownPos: Point;
     _rotation: number;
     _pitchAlignment: string;
     _rotationAlignment: string;
-    _originalTabIndex: string | undefined | null; // original tabindex of _element
+    _originalTabIndex: string; // original tabindex of _element
 
     constructor(options?: Options, legacyOptions?: Options) {
         super();

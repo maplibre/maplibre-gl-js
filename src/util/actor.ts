@@ -19,7 +19,7 @@ import type {Cancelable} from '../types/cancelable';
 class Actor {
     target: any;
     parent: any;
-    mapId: number | undefined | null;
+    mapId: number;
     callbacks: {
       number: any;
     };
@@ -62,7 +62,7 @@ class Actor {
       callback?: Function | null,
       targetMapId?: string | null,
       mustQueue: boolean = false
-    ): Cancelable | undefined | null {
+    ): Cancelable {
         // We're using a string ID instead of numbers because they are being used as object keys
         // anyway, and thus stringified implicitly. We use random IDs because an actor may receive
         // message from multiple other actors which could run in different execution context. A
@@ -71,7 +71,7 @@ class Actor {
         if (callback) {
             this.callbacks[id] = callback;
         }
-        const buffers: Array<Transferable> | undefined | null = isSafari(this.globalScope) ? undefined : [];
+        const buffers: Array<Transferable> = isSafari(this.globalScope) ? undefined : [];
         this.target.postMessage({
             id,
             type,
@@ -175,7 +175,7 @@ class Actor {
             }
         } else {
             let completed = false;
-            const buffers: Array<Transferable> | undefined | null = isSafari(this.globalScope) ? undefined : [];
+            const buffers: Array<Transferable> = isSafari(this.globalScope) ? undefined : [];
             const done = task.hasCallback ? (err: Error, data?: any) => {
                 completed = true;
                 delete this.cancelCallbacks[id];

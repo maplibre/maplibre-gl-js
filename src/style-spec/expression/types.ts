@@ -40,7 +40,7 @@ ArrayType | ErrorTypeT | CollatorTypeT | FormattedTypeT | ResolvedImageTypeT;
 export type ArrayType = {
   kind: 'array';
   itemType: Type;
-  N: number | undefined | null;
+  N: number;
 };
 
 export type NativeType = 'number' | 'string' | 'boolean' | 'null' | 'array' | 'object';
@@ -93,7 +93,7 @@ const valueMemberTypes = [
  * error message.
  * @private
  */
-export function checkSubtype(expected: Type, t: Type): string | undefined | null {
+export function checkSubtype(expected: Type, t: Type): string {
     if (t.kind === 'error') {
         // Error is a subtype of every type
         return null;

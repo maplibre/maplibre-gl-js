@@ -16,7 +16,7 @@ class Literal implements Expression {
         this.value = value;
     }
 
-    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression {
         if (args.length !== 2)
             return context.error(`'literal' expression requires exactly one argument, but found ${args.length - 1} instead.`) as null;
 

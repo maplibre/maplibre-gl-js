@@ -128,8 +128,8 @@ class ConstantBinder implements UniformBinder {
 
 class CrossFadedConstantBinder implements UniformBinder {
     uniformNames: Array<string>;
-    patternFrom: Array<number> | undefined | null;
-    patternTo: Array<number> | undefined | null;
+    patternFrom: Array<number> ;
+    patternTo: Array<number>;
     pixelRatioFrom: number;
     pixelRatioTo: number;
 
@@ -171,7 +171,7 @@ class SourceExpressionBinder implements AttributeBinder {
 
     paintVertexArray: StructArray;
     paintVertexAttributes: Array<StructArrayMember>;
-    paintVertexBuffer: VertexBuffer | undefined | null;
+    paintVertexBuffer: VertexBuffer;
 
     constructor(expression: SourceExpression, names: Array<string>, type: string, PaintVertexArray: {
       new (...args: any): StructArray;
@@ -241,7 +241,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
 
     paintVertexArray: StructArray;
     paintVertexAttributes: Array<StructArrayMember>;
-    paintVertexBuffer: VertexBuffer | undefined | null;
+    paintVertexBuffer: VertexBuffer;
 
     constructor(expression: CompositeExpression, names: Array<string>, type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
       new (...args: any): StructArray;
@@ -326,8 +326,8 @@ class CrossFadedCompositeBinder implements AttributeBinder {
 
     zoomInPaintVertexArray: StructArray;
     zoomOutPaintVertexArray: StructArray;
-    zoomInPaintVertexBuffer: VertexBuffer | undefined | null;
-    zoomOutPaintVertexBuffer: VertexBuffer | undefined | null;
+    zoomInPaintVertexBuffer: VertexBuffer;
+    zoomOutPaintVertexBuffer: VertexBuffer;
     paintVertexAttributes: Array<StructArrayMember>;
 
     constructor(expression: CompositeExpression, type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {

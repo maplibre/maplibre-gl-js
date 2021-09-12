@@ -276,19 +276,19 @@ class Map extends Camera {
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
-    _interactive: boolean | undefined | null;
-    _showTileBoundaries: boolean | undefined | null;
-    _showCollisionBoxes: boolean | undefined | null;
-    _showPadding: boolean | undefined | null;
+    _interactive: boolean;
+    _showTileBoundaries: boolean;
+    _showCollisionBoxes: boolean;
+    _showPadding: boolean;
     _showOverdrawInspector: boolean;
-    _repaint: boolean | undefined | null;
-    _vertices: boolean | undefined | null;
+    _repaint: boolean;
+    _vertices: boolean;
     _canvas: HTMLCanvasElement;
     _maxTileCacheSize: number;
-    _frame: Cancelable | undefined | null;
-    _styleDirty: boolean | undefined | null;
-    _sourcesDirty: boolean | undefined | null;
-    _placementDirty: boolean | undefined | null;
+    _frame: Cancelable;
+    _styleDirty: boolean;
+    _sourcesDirty: boolean;
+    _placementDirty: boolean;
     _loaded: boolean;
     // accounts for placement finishing as well
     _fullyLoaded: boolean;
@@ -1306,8 +1306,8 @@ class Map extends Camera {
      *
      */
     querySourceFeatures(sourceId: string, parameters?: {
-      sourceLayer: string | undefined | null;
-      filter: Array<any> | undefined | null;
+      sourceLayer: string;
+      filter: Array<any>;
       validate?: boolean;
     } | null) {
         return this.style.querySourceFeatures(sourceId, parameters);

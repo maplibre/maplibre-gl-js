@@ -244,7 +244,7 @@ function shapeText(
   text: Formatted,
   glyphMap: {
     [_: string]: {
-      [_: number]: StyleGlyph | undefined | null;
+      [_: number]: StyleGlyph;
     };
   },
   glyphPositions: {
@@ -369,7 +369,7 @@ function getGlyphAdvance(
   section: SectionOptions,
   glyphMap: {
     [_: string]: {
-      [_: number]: StyleGlyph | undefined | null;
+      [_: number]: StyleGlyph;
     };
   },
   imagePositions: {[_: string]: ImagePosition},
@@ -393,7 +393,7 @@ function determineAverageLineWidth(logicalInput: TaggedString,
                                    maxWidth: number,
                                    glyphMap: {
                                      [_: string]: {
-                                       [_: number]: StyleGlyph | undefined | null;
+                                       [_: number]: StyleGlyph;
                                      };
                                    },
                                    imagePositions: {[_: string]: ImagePosition},
@@ -453,7 +453,7 @@ function calculatePenalty(codePoint: number, nextCodePoint: number, penalizableI
 type Break = {
   index: number;
   x: number;
-  priorBreak: Break | undefined | null;
+  priorBreak: Break;
   badness: number;
 };
 
@@ -470,7 +470,7 @@ function evaluateBreak(
     //  ...and when targetWidth and maxWidth are close, strictly enforcing maxWidth can give
     //     more lopsided results.
 
-    let bestPriorBreak: Break | undefined | null = null;
+    let bestPriorBreak: Break = null;
     let bestBreakBadness = calculateBadness(breakX, targetWidth, penalty, isLastBreak);
 
     for (const potentialBreak of potentialBreaks) {
@@ -504,7 +504,7 @@ function determineLineBreaks(
   maxWidth: number,
   glyphMap: {
     [_: string]: {
-      [_: number]: StyleGlyph | undefined | null;
+      [_: number]: StyleGlyph;
     };
   },
   imagePositions: {[_: string]: ImagePosition},
@@ -592,7 +592,7 @@ function getAnchorAlignment(anchor: SymbolAnchor) {
 function shapeLines(shaping: Shaping,
                     glyphMap: {
                       [_: string]: {
-                        [_: number]: StyleGlyph | undefined | null;
+                        [_: number]: StyleGlyph;
                       };
                     },
                     glyphPositions: {

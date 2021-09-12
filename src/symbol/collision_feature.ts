@@ -13,7 +13,7 @@ import type Anchor from './anchor';
 class CollisionFeature {
     boxStartIndex: number;
     boxEndIndex: number;
-    circleDiameter: number | undefined | null;
+    circleDiameter: number;
 
     /**
      * Create a CollisionFeature, adding its collision box data to the given collisionBoxArray in the process.

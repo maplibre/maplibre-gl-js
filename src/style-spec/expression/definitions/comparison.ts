@@ -64,7 +64,7 @@ function makeComparison(op: ComparisonOperator, compareBasic, compareWithCollato
         type: Type;
         lhs: Expression;
         rhs: Expression;
-        collator: Expression | undefined | null;
+        collator: Expression;
         hasUntypedArgument: boolean;
 
         constructor(lhs: Expression, rhs: Expression, collator?: Expression | null) {
@@ -75,7 +75,7 @@ function makeComparison(op: ComparisonOperator, compareBasic, compareWithCollato
             this.hasUntypedArgument = lhs.type.kind === 'value' || rhs.type.kind === 'value';
         }
 
-        static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
+        static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression {
             if (args.length !== 3 && args.length !== 4)
                 return context.error('Expected two or three arguments.') as null;
 

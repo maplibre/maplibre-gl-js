@@ -49,18 +49,18 @@ class VectorTileSource extends Evented implements Source {
     url: string;
     scheme: string;
     tileSize: number;
-    promoteId: PromoteIdSpecification | undefined | null;
+    promoteId: PromoteIdSpecification;
 
     _options: VectorSourceSpecification;
     _collectResourceTiming: boolean;
     dispatcher: Dispatcher;
     map: Map;
-    bounds: [number, number, number, number] | undefined | null;
+    bounds: [number, number, number, number];
     tiles: Array<string>;
     tileBounds: TileBounds;
     reparseOverscaled: boolean;
     isTileClipped: boolean;
-    _tileJSONRequest: Cancelable | undefined | null;
+    _tileJSONRequest: Cancelable;
     _loaded: boolean;
 
     constructor(id: string, options: VectorSourceSpecification & {

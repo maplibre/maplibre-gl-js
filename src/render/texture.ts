@@ -20,8 +20,8 @@ class Texture {
     size: [number, number];
     texture: WebGLTexture;
     format: TextureFormat;
-    filter: TextureFilter | undefined | null;
-    wrap: TextureWrap | undefined | null;
+    filter: TextureFilter;
+    wrap: TextureWrap;
     useMipmap: boolean;
 
     constructor(context: Context, image: TextureImage, format: TextureFormat, options?: {

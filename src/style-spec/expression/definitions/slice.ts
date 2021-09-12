@@ -19,7 +19,7 @@ class Slice implements Expression {
     type: Type;
     input: Expression;
     beginIndex: Expression;
-    endIndex: Expression | undefined | null;
+    endIndex: Expression;
 
     constructor(type: Type, input: Expression, beginIndex: Expression, endIndex?: Expression) {
         this.type = type;
@@ -29,7 +29,7 @@ class Slice implements Expression {
 
     }
 
-    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression {
         if (args.length <= 2 ||  args.length >= 5) {
             return context.error(`Expected 3 or 4 arguments, but found ${args.length - 1} instead.`) as null;
         }

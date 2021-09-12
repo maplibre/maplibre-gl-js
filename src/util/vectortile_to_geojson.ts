@@ -1,6 +1,6 @@
 class Feature {
     type: 'Feature';
-    _geometry: GeoJSON.Geometry | undefined | null;
+    _geometry: GeoJSON.Geometry;
     properties: {};
     id: number | string | void;
 
@@ -18,7 +18,7 @@ class Feature {
         this.id = id;
     }
 
-    get geometry(): GeoJSON.Geometry | undefined | null {
+    get geometry(): GeoJSON.Geometry {
         if (this._geometry === undefined) {
             this._geometry = this._vectorTileFeature.toGeoJSON(
                 (this._vectorTileFeature as any)._x,
@@ -28,7 +28,7 @@ class Feature {
         return this._geometry;
     }
 
-    set geometry(g: GeoJSON.Geometry | undefined | null) {
+    set geometry(g: GeoJSON.Geometry) {
         this._geometry = g;
     }
 

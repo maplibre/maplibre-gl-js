@@ -45,7 +45,7 @@ export default class NumberFormat implements Expression {
         this.maxFractionDigits = maxFractionDigits;
     }
 
-    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression {
         if (args.length !== 3)
             return context.error('Expected two arguments.') as null;
 

@@ -33,7 +33,7 @@ class WorkerTile {
     pixelRatio: number;
     tileSize: number;
     source: string;
-    promoteId: PromoteIdSpecification | undefined | null;
+    promoteId: PromoteIdSpecification;
     overscaling: number;
     showCollisionBoxes: boolean;
     collectResourceTiming: boolean;
@@ -43,7 +43,7 @@ class WorkerTile {
     data: VectorTile;
     collisionBoxArray: CollisionBoxArray;
 
-    abort: (() => void) | undefined | null;
+    abort: (() => void);
     reloadCallback: WorkerTileCallback;
     vectorTile: VectorTile;
 
@@ -127,14 +127,14 @@ class WorkerTile {
             }
         }
 
-        let error: Error | undefined | null;
+        let error: Error;
         let glyphMap: {
           [_: string]: {
-            [_: number]: StyleGlyph | undefined | null;
+            [_: number]: StyleGlyph;
           };
-        } | undefined | null;
-        let iconMap: {[_: string]: StyleImage} | undefined | null;
-        let patternMap: {[_: string]: StyleImage} | undefined | null;
+        };
+        let iconMap: {[_: string]: StyleImage};
+        let patternMap: {[_: string]: StyleImage};
 
         const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
         if (Object.keys(stacks).length) {

@@ -100,7 +100,7 @@ class GeolocateControl extends Evented implements IControl {
     _circleElement: HTMLElement;
     _geolocateButton: HTMLButtonElement;
     _geolocationWatchID: number;
-    _timeoutId: ReturnType<typeof setTimeout> | undefined | null;
+    _timeoutId: ReturnType<typeof setTimeout>;
     _watchState: 'OFF' | 'ACTIVE_LOCK' | 'WAITING_ACTIVE' | 'ACTIVE_ERROR' | 'BACKGROUND' | 'BACKGROUND_ERROR';
     _lastKnownPosition: any;
     _userLocationDotMarker: Marker;
