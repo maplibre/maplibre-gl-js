@@ -26,11 +26,14 @@ describe('LngLat', () => {
         expect(LngLat.convert({lon: 0, lat: 0}) instanceof LngLat).toBeTruthy();
         // expect(LngLat.convert({lon: 0, lat: 0, elev: 0}) instanceof LngLat).toBeTruthy();
         expect(LngLat.convert(new LngLat(0, 0)) instanceof LngLat).toBeTruthy();
-        /* expect(() => {
+
+        /*
+        Test failed with: src/geo/lng_lat.test.ts:31:31 - error TS2554: Expected 1 arguments, but got 2.
+        const t2 = () => {
             LngLat.convert(0, 10);
-        }).toThrowError(
-            "`LngLatLike` argument must be specified as a LngLat instance, an object {lng: <lng>, lat: <lat>}, an object {lon: <lng>, lat: <lat>}, or an array of [<lng>, <lat>]"
-        );*/
+        };
+        expect(t2).toThrow('`LngLatLike` argument must be specified as a LngLat instance, an object {lng: <lng>, lat: <lat>}, an object {lon: <lng>, lat: <lat>}, or an array of [<lng>, <lat>]');
+        */
     });
 
     test('#wrap',  () => {
