@@ -183,7 +183,7 @@
     "start-bench": "run-p watch-benchmarks start-server",
     "start-release": "run-s build-prod-min build-css print-release-url start-server",
     "diff-tarball": "node build/diff-tarball.js",
-    "lint": "eslint --fix --ext \".ts,.js,.html\" --ignore-path .gitignore src build debug/*.html",
+    "lint": "eslint --ext \".ts,.js,.html\" --ignore-path .gitignore src build debug/*.html",
     "lint-docs": "documentation lint src/index.ts",
     "lint-css": "stylelint \"src/css/maplibre-gl.css\"",
     "test": "run-s lint lint-css lint-docs test-unit",
