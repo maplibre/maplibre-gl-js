@@ -150,4 +150,3 @@ describe('setLocationAt', () => {
         expect(transform.center).toEqual({lng: 0, lat: 0});
     });
 });
-
