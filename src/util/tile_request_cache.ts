@@ -17,7 +17,7 @@ export type ResponseOptions = {
 // We're using a global shared cache object. Normally, requesting ad-hoc Cache objects is fine, but
 // Safari has a memory leak in which it fails to release memory when requesting keys() from a Cache
 // object. See https://bugs.webkit.org/show_bug.cgi?id=203991 for more information.
-let sharedCache: Promise<Cache> | undefined | null;
+let sharedCache: Promise<Cache>;
 
 function cacheOpen() {
     if (typeof caches !== 'undefined' && !sharedCache) {

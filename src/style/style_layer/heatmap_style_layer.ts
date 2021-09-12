@@ -13,9 +13,9 @@ import type {LayerSpecification} from '../../style-spec/types';
 
 class HeatmapStyleLayer extends StyleLayer {
 
-    heatmapFbo: Framebuffer | undefined | null;
+    heatmapFbo: Framebuffer;
     colorRamp: RGBAImage;
-    colorRampTexture: Texture | undefined | null;
+    colorRampTexture: Texture;
 
     _transitionablePaint: Transitionable<PaintProps>;
     _transitioningPaint: Transitioning<PaintProps>;

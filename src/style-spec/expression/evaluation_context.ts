@@ -7,13 +7,13 @@ const geometryTypes = ['Unknown', 'Point', 'LineString', 'Polygon'];
 
 class EvaluationContext {
     globals: GlobalProperties;
-    feature: Feature | undefined | null;
-    featureState: FeatureState | undefined | null;
-    formattedSection: FormattedSection | undefined | null;
-    availableImages: Array<string> | undefined | null;
-    canonical: CanonicalTileID | undefined | null;
+    feature: Feature;
+    featureState: FeatureState;
+    formattedSection: FormattedSection;
+    availableImages: Array<string>;
+    canonical: CanonicalTileID;
 
-    _parseColorCache: {[_: string]: Color | undefined | null};
+    _parseColorCache: {[_: string]: Color};
 
     constructor() {
         this.globals = null;
@@ -45,7 +45,7 @@ class EvaluationContext {
         return this.feature && this.feature.properties || {};
     }
 
-    parseColor(input: string): Color | undefined | null {
+    parseColor(input: string): Color {
         let cached = this._parseColorCache[input];
         if (!cached) {
             cached = this._parseColorCache[input] = Color.parse(input) as Color;

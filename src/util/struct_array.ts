@@ -56,7 +56,7 @@ export type StructArrayMember = {
 export type StructArrayLayout = {
   members: Array<StructArrayMember>;
   size: number;
-  alignment: number | undefined | null;
+  alignment: number;
 };
 
 export type SerializedStructArray = {

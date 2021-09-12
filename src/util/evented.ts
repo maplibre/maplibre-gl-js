@@ -50,8 +50,8 @@ export class ErrorEvent extends Event {
 export class Evented {
     _listeners: Listeners;
     _oneTimeListeners: Listeners;
-    _eventedParent: Evented | undefined | null;
-    _eventedParentData: any | (() => any) | undefined | null;
+    _eventedParent: Evented;
+    _eventedParentData: any | (() => any);
 
     /**
      * Adds a listener to a specified event type.

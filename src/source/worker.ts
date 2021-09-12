@@ -47,7 +47,7 @@ export default class Worker {
         [_: string]: RasterDEMTileWorkerSource;
       };
     };
-    referrer: string | undefined | null;
+    referrer: string;
 
     constructor(self: WorkerGlobalScopeInterface) {
         this.self = self;
@@ -77,8 +77,8 @@ export default class Worker {
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin: {
           applyArabicShaping: Function;
-          processBidirectionalText: ((b: string, a: Array<number>) => Array<string>) | undefined | null;
-          processStyledBidirectionalText?: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>) | undefined | null;
+          processBidirectionalText: ((b: string, a: Array<number>) => Array<string>);
+          processStyledBidirectionalText?: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>);
         }) => {
             if (globalRTLTextPlugin.isParsed()) {
                 throw new Error('RTL text plugin already registered.');

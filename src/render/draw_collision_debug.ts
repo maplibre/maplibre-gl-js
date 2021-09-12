@@ -24,7 +24,7 @@ type TileBatch = {
   invTransform: mat4;
 };
 
-let quadTriangles: QuadTriangleArray | undefined | null;
+let quadTriangles: QuadTriangleArray;
 
 function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, translate: [number, number], translateAnchor: 'map' | 'viewport', isText: boolean) {
     const context = painter.context;
@@ -37,7 +37,7 @@ function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: S
     for (let i = 0; i < coords.length; i++) {
         const coord = coords[i];
         const tile = sourceCache.getTile(coord);
-        const bucket: SymbolBucket | undefined | null = (tile.getBucket(layer) as any);
+        const bucket: SymbolBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
         let posMatrix = coord.posMatrix;
         if (translate[0] !== 0 || translate[1] !== 0) {

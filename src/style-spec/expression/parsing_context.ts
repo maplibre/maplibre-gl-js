@@ -29,7 +29,7 @@ class ParsingContext {
     // implementations to infer argument types: Expression#parse() need not
     // check that the output type of the parsed expression matches
     // `expectedType`.
-    expectedType: Type | undefined | null;
+    expectedType: Type;
 
     constructor(
         registry: ExpressionRegistry,
@@ -61,7 +61,7 @@ class ParsingContext {
       options: {
         typeAnnotation?: 'assert' | 'coerce' | 'omit';
       } = {}
-    ): Expression | undefined | null {
+    ): Expression {
         if (index) {
             return this.concat(index, expectedType, bindings)._parse(expr, options);
         }
@@ -73,7 +73,7 @@ class ParsingContext {
       options: {
         typeAnnotation?: 'assert' | 'coerce' | 'omit';
       }
-    ): Expression | undefined | null {
+    ): Expression {
         if (expr === null || typeof expr === 'string' || typeof expr === 'boolean' || typeof expr === 'number') {
             expr = ['literal', expr];
         }
@@ -188,7 +188,7 @@ class ParsingContext {
      * Returns null if `t` is a subtype of `expected`; otherwise returns an
      * error message and also pushes it to `this.errors`.
      */
-    checkSubtype(expected: Type, t: Type): string | undefined | null {
+    checkSubtype(expected: Type, t: Type): string {
         const error = checkSubtype(expected, t);
         if (error) this.error(error);
         return error;

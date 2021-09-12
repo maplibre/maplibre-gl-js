@@ -289,7 +289,7 @@ class Within implements Expression {
         this.geometries = geometries;
     }
 
-    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression {
         if (args.length !== 2)
             return context.error(`'within' expression requires exactly one argument, but found ${args.length - 1} instead.`) as null;
         if (isValue(args[1])) {

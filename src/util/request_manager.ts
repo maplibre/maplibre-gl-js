@@ -13,7 +13,7 @@ type UrlObject = {
 };
 
 export class RequestManager {
-    _transformRequestFn: RequestTransformFunction | undefined | null;
+    _transformRequestFn: RequestTransformFunction;
 
     constructor(transformRequestFn?: RequestTransformFunction) {
         this._transformRequestFn = transformRequestFn;

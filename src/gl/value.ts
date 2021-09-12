@@ -314,7 +314,7 @@ export class FrontFace extends BaseValue<FrontFaceType> {
     }
 }
 
-export class Program extends BaseValue<WebGLProgram | undefined | null> {
+export class Program extends BaseValue<WebGLProgram> {
     getDefault(): WebGLProgram {
         return null;
     }
@@ -352,7 +352,7 @@ export class Viewport extends BaseValue<ViewportType> {
     }
 }
 
-export class BindFramebuffer extends BaseValue<WebGLFramebuffer | undefined | null> {
+export class BindFramebuffer extends BaseValue<WebGLFramebuffer> {
     getDefault(): WebGLFramebuffer {
         return null;
     }
@@ -365,7 +365,7 @@ export class BindFramebuffer extends BaseValue<WebGLFramebuffer | undefined | nu
     }
 }
 
-export class BindRenderbuffer extends BaseValue<WebGLRenderbuffer | undefined | null> {
+export class BindRenderbuffer extends BaseValue<WebGLRenderbuffer> {
     getDefault(): WebGLRenderbuffer {
         return null;
     }
@@ -378,7 +378,7 @@ export class BindRenderbuffer extends BaseValue<WebGLRenderbuffer | undefined | 
     }
 }
 
-export class BindTexture extends BaseValue<WebGLTexture | undefined | null> {
+export class BindTexture extends BaseValue<WebGLTexture> {
     getDefault(): WebGLTexture {
         return null;
     }
@@ -391,7 +391,7 @@ export class BindTexture extends BaseValue<WebGLTexture | undefined | null> {
     }
 }
 
-export class BindVertexBuffer extends BaseValue<WebGLBuffer | undefined | null> {
+export class BindVertexBuffer extends BaseValue<WebGLBuffer> {
     getDefault(): WebGLBuffer {
         return null;
     }
@@ -404,7 +404,7 @@ export class BindVertexBuffer extends BaseValue<WebGLBuffer | undefined | null> 
     }
 }
 
-export class BindElementBuffer extends BaseValue<WebGLBuffer | undefined | null> {
+export class BindElementBuffer extends BaseValue<WebGLBuffer> {
     getDefault(): WebGLBuffer {
         return null;
     }
@@ -474,7 +474,7 @@ export class PixelStoreUnpackFlipY extends BaseValue<boolean> {
     }
 }
 
-class FramebufferAttachment<T> extends BaseValue<T | undefined | null> {
+class FramebufferAttachment<T> extends BaseValue<T> {
     parent: WebGLFramebuffer;
     context: Context;
 

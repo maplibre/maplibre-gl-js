@@ -65,7 +65,7 @@ class PauseablePlacement {
     _currentPlacementIndex: number;
     _forceFullPlacement: boolean;
     _showCollisionBoxes: boolean;
-    _inProgressLayer: LayerPlacement | undefined | null;
+    _inProgressLayer: LayerPlacement;
 
     constructor(
         transform: Transform,

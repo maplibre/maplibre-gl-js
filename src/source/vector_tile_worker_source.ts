@@ -31,10 +31,10 @@ export type LoadVectorTileResult = {
  * @param vectorTile
  * @private
  */
-export type LoadVectorDataCallback = Callback<LoadVectorTileResult | undefined | null>;
+export type LoadVectorDataCallback = Callback<LoadVectorTileResult>;
 
 export type AbortVectorData = () => void;
-export type LoadVectorData = (params: WorkerTileParameters, callback: LoadVectorDataCallback) => AbortVectorData | void | undefined | null;
+export type LoadVectorData = (params: WorkerTileParameters, callback: LoadVectorDataCallback) => AbortVectorData | void;
 
 /**
  * @private

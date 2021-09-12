@@ -45,7 +45,7 @@ function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: HeatmapS
             if (sourceCache.hasRenderableParent(coord)) continue;
 
             const tile = sourceCache.getTile(coord);
-            const bucket: HeatmapBucket | undefined | null = (tile.getBucket(layer) as any);
+            const bucket: HeatmapBucket = (tile.getBucket(layer) as any);
             if (!bucket) continue;
 
             const programConfiguration = bucket.programConfigurations.get(layer.id);

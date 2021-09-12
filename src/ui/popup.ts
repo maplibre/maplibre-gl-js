@@ -105,7 +105,7 @@ export default class Popup extends Evented {
     _tip: HTMLElement;
     _lngLat: LngLat;
     _trackPointer: boolean;
-    _pos: Point | undefined | null;
+    _pos: Point;
 
     constructor(options: PopupOptions) {
         super();
@@ -542,7 +542,7 @@ export default class Popup extends Evented {
 
         const pos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
 
-        let anchor: Anchor | undefined | null = this.options.anchor;
+        let anchor: Anchor = this.options.anchor;
         const offset = normalizeOffset(this.options.offset);
 
         if (!anchor) {
