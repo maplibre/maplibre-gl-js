@@ -4,11 +4,11 @@
 
 ### Tape
 
-Unit tests in the `test` directory are written in [Tape](https://github.com/substack/tape) and are executed via `npm run test-unit`.
+Unit tests in the `test` directory are written in [Tape](https://github.com/substack/tape) and run via `npm run test-unit`.
 
 ### Jest
 
-New tests can be written for [Jest](https://jestjs.io/). We place the test files for Jest directly with the productive files. For example, the file `/maplibre-gl-js/src/geo/lng_lat.test.ts` contains the test of the file `/maplibre-gl-js/src/geo/lng_lat.ts`. The tests are executed via `npm run test-jest`. The output should look somethink like this:
+New tests can be written for [Jest](https://jestjs.io/). We place the test files for Jest directly with the productive files. For example, the file `/maplibre-gl-js/src/geo/lng_lat.test.ts` contains the test of the file `/maplibre-gl-js/src/geo/lng_lat.ts`. The tests are executed via `npm run test-jest`. The output should look something like this:
 
 ```
 $ npm run test-jest
@@ -29,7 +29,7 @@ Ran all test suites.
 
 #### Configuration
 
-Jest's configuration is defined through the file `jest.config.js`. 
+The configuration of Jest is defined by the file `jest.config.js`. 
 
 ##### preset
 
@@ -37,7 +37,7 @@ Jest's configuration is defined through the file `jest.config.js`.
 preset: "ts-jest"
 ```
 
-A preset that is used as a base for typescript test. See https://github.com/kulshekhar/ts-jest.
+A default used as the basis for typescript tests. See https://github.com/kulshekhar/ts-jest.
 
 ##### rootDir
 
@@ -45,16 +45,16 @@ A preset that is used as a base for typescript test. See https://github.com/kuls
 rootDir: "src"
 ```
 
-We set `src` as root directory that Jest should scan for jest tests. This way we can store the files with the tests next to the source files. 
+We set `src` as the root directory that Jest should search for Jest tests. This way we can store the files with the tests next to the source files. 
 
 ##### testEnvironment
 
-```ts
+``ts
 testEnvironment: "jsdom"
 ```
-The test environment that will be used for testing we use the recommended way to simulat a browser with jsdom, a lightweight browser implementation that runs inside Node.js. See https://github.com/jsdom/jsdom.
+The test environment used for testing is the recommended way to simulate a browser with jsdom, a lightweight browser implementation running in Node.js. See https://github.com/jsdom/jsdom.
 
-### transform
+##### transform
 
 ```ts
 transform: {
@@ -62,7 +62,7 @@ transform: {
 }
 ```
 
-A map from regular expressions to paths to transformers. For typescript files we use `ts-jest`. 
+A mapping from regular expressions to paths to transformers. For typescript files we use `ts-jest`. 
 
 ## Integration
 
