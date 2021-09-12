@@ -1,5 +1,5 @@
-import LngLat from '../../../../rollup/build/tsc/geo/lng_lat';
-import MercatorCoordinate, {mercatorScale} from '../../../../rollup/build/tsc/geo/mercator_coordinate';
+import LngLat from './lng_lat';
+import MercatorCoordinate, {mercatorScale} from './mercator_coordinate';
 
 describe('Constructor MercatorCoordinate', () => {
     test('creates an object', () => {

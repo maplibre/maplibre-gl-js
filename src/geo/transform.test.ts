@@ -1,10 +1,9 @@
-import Point from '../../../../rollup/build/tsc/util/point';
-import Transform from '../../../../rollup/build/tsc/geo/transform';
-import LngLat from '../../../../rollup/build/tsc/geo/lng_lat';
-import {fixedLngLat, fixedCoord} from '../../../util/fixed';
+import Point from '../util/point';
+import Transform from './transform';
+import LngLat from './lng_lat';
 
 describe('creates a transform', () => {
-    const transform = new Transform();
+    const transform = new Transform(0, 10, 0, 10, false);
     transform.resize(500, 500);
 
     test('_unmodified', () => {
@@ -107,18 +106,6 @@ describe('creates a transform', () => {
         expect(transform.height).toBe(500);
     });
 
-    test('pointLocation', () => {
-        const point = (transform['pointLocation'](new Point(250, 250)));
-        const fixedPoint = fixedLngLat(point);
-        expect(fixedPoint).toEqual({lng: 0, lat: -0});
-    });
-
-    test('pointCoordinate', () => {
-        const point = (transform['pointCoordinate'](new Point(250, 250)));
-        const fixedPoint = fixedCoord(point);
-        expect(fixedPoint).toEqual({x: 0.5, y: 0.5, z: 0});
-    });
-
     test('locationPoint', () => {
         const locationPoint = (transform['locationPoint'](new LngLat(0, 0)));
         expect(locationPoint).toEqual({x: 250, y: 250});
@@ -133,21 +120,21 @@ describe('creates a transform', () => {
 
 describe('does not throw on `bad` center', () => {
     test('set center', () => {
-        const transform = new Transform();
+        const transform = new Transform(0, 10, 0, 10, false);
         transform.resize(500, 500);
         transform['center'] = new LngLat(50, -90);
         expect(transform['center']).toEqual({lng: 49.99999999999997, lat: -4.214945686958828});
     });
 
     test('set center', () => {
-        const transform = new Transform();
+        const transform = new Transform(0, 10, 0, 10, false);
         transform.resize(500, 500);
         transform['center'] = new LngLat(50, 90);
         expect(transform['center']).toEqual({lng: 49.99999999999997, lat: 4.214945686958913});
     });
 
     test('set center to value with lat bigger than 180', () => {
-        const transform = new Transform();
+        const transform = new Transform(0, 10, 0, 10, false);
         transform.resize(500, 500);
         transform['center'] = new LngLat(260, 0);
         expect(transform['center']).toEqual({lng: 260, lat: 0});
@@ -155,7 +142,7 @@ describe('does not throw on `bad` center', () => {
 });
 
 describe('setLocationAt', () => {
-    const transform = new Transform();
+    const transform = new Transform(0, 10, 0, 10, false);
     transform.resize(500, 500);
     transform.zoom = 4;
 

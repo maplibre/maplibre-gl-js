@@ -1,10 +1,9 @@
-import LngLat from '../../../../rollup/build/tsc/geo/lng_lat';
+import LngLat from './lng_lat';
 
 describe('Constructor', () => {
     test('creates an object', () => {
         expect(new LngLat(0, 0)).toBeInstanceOf(LngLat);
         expect(new LngLat(10, 90)).toBeInstanceOf(LngLat);
-        expect(new LngLat('10', '90')).toBeInstanceOf(LngLat);
         expect(new LngLat(10, -90)).toBeInstanceOf(LngLat);
         expect(new LngLat(200, 10)).toBeInstanceOf(LngLat);
         expect(new LngLat(-200, 10)).toBeInstanceOf(LngLat);
@@ -16,20 +15,6 @@ describe('Constructor', () => {
         expect(Position).toHaveProperty('lng');
         expect(Position.lat).toBe(90);
         expect(Position.lng).toBe(10);
-    });
-
-    test('detects and throws on invalid input', () => {
-        const t = () => {
-            new LngLat('foo', 0);
-        };
-        expect(t).toThrow('Invalid LngLat object: (foo, 0)');
-    });
-
-    test('detects and throws on invalid input', () => {
-        const t = () => {
-            new LngLat('10foo', 0);
-        };
-        expect(t).toThrow('Invalid LngLat object: (10foo, 0)');
     });
 
     test('detects and throws on invalid lat input - for lng see wrap()', () => {
@@ -76,31 +61,12 @@ describe('Method convert()', () => {
 
         expect(LngLat.convert({lng: 0, lat: 0})).toBeInstanceOf(LngLat);
         expect(LngLat.convert({lng: 0, lat: 10})).toBeInstanceOf(LngLat);
-        expect(LngLat.convert({lng: 0, lat: 0, elev: 0})).toBeInstanceOf(LngLat);
 
         expect(LngLat.convert({lon: 0, lat: 0})).toBeInstanceOf(LngLat);
         expect(LngLat.convert({lon: 0, lat: 10})).toBeInstanceOf(LngLat);
-        expect(LngLat.convert({lon: 0, lat: 0, elev: 0})).toBeInstanceOf(LngLat);
 
         expect(LngLat.convert(new LngLat(0, 0))).toBeInstanceOf(LngLat);
     });
-
-    test('convert creates a LngLat instance (Elevation)', () => {
-        expect(LngLat.convert([0, 10, 0])).toBeInstanceOf(LngLat);
-    });
-
-    test('detects and throws on invalid input', () => {
-        const t1 = () => {
-            LngLat.convert([0, 10, 0, 5]);
-        };
-        expect(t1).toThrow('`LngLatLike` argument must be specified as a LngLat instance, an object {lng: <lng>, lat: <lat>}, an object {lon: <lng>, lat: <lat>}, or an array of [<lng>, <lat>]');
-
-        const t2 = () => {
-            LngLat.convert(0, 10);
-        };
-        expect(t2).toThrow('`LngLatLike` argument must be specified as a LngLat instance, an object {lng: <lng>, lat: <lat>}, an object {lon: <lng>, lat: <lat>}, or an array of [<lng>, <lat>]');
-    });
-
 });
 
 describe('Method toString()', () => {
