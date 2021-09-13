@@ -129,6 +129,52 @@ jobs:
           TAP_COLORS: 1
         run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser
 
+  lint_build_test_windows:
+    name: Build, Lint and Test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          architecture: x64
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install
+        run: npm ci
+
+      - name: Validate version tag
+        run: |
+          node build\version-utils.js validate-latest-tag
+
+      - name: Prepare
+        id: prepare
+        run: |
+          $LatestVersionTag=$(node build\version-utils.js latest-version-tag)
+          echo "Latest version tag=$LatestVersionTag"
+          echo "::set-output name=version_tag::$LatestVersionTag"
+
+      - name: Ensure correct revision
+        run: |
+          git checkout tags/${{ steps.prepare.outputs.version_tag }}
+
+      - name: Lint
+        run: |
+          npm run lint
+          npm run lint-docs
+          npm run lint-css
+
+      - name: Test
+        run: |
+          npm run test-unit
+          npm run test-render
+          npm run test-query
+          npm run test-expressions
+  
   # TODO need a data provider for these:
   # collect-stats:
   #   runs-on: ubuntu-latest
