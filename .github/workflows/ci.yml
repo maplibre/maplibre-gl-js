@@ -149,5 +149,5 @@ jobs:
 
       - name: Test
         run: |
-          npm run test-unit
+          npm run build-tsc
           npm run test-render
