@@ -149,4 +149,5 @@ jobs:
 
       - name: Test
         run: |
+          npm run test-unit
           npm run test-render
