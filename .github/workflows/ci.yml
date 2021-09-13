@@ -149,7 +149,4 @@ jobs:
 
       - name: Test
         run: |
-          npm run test-unit
           npm run test-render
-          npm run test-query
-          npm run test-expressions
