@@ -147,5 +147,8 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Build
+        run: npm run build-dev
+
       - name: Test
         run: npm run test-render
