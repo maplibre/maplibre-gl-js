@@ -147,21 +147,6 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Validate version tag
-        run: |
-          node build\version-utils.js validate-latest-tag
-
-      - name: Prepare
-        id: prepare
-        run: |
-          $LatestVersionTag=$(node build\version-utils.js latest-version-tag)
-          echo "Latest version tag=$LatestVersionTag"
-          echo "::set-output name=version_tag::$LatestVersionTag"
-
-      - name: Ensure correct revision
-        run: |
-          git checkout tags/${{ steps.prepare.outputs.version_tag }}
-
       - name: Lint
         run: |
           npm run lint
