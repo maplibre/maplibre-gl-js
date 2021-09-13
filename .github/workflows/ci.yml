@@ -129,8 +129,8 @@ jobs:
           TAP_COLORS: 1
         run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser
 
-  lint_build_test_windows:
-    name: Build, Lint and Test
+  test-render:
+    name: Run render tests
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
@@ -147,18 +147,8 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Lint
-        run: |
-          npm run lint
-          npm run lint-docs
-          npm run lint-css
-
       - name: Test
-        run: |
-          npm run test-unit
-          npm run test-render
-          npm run test-query
-          npm run test-expressions
+        run: npm run test-render
   
   # TODO need a data provider for these:
   # collect-stats:
