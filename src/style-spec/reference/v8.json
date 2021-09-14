@@ -1178,7 +1178,6 @@
           "doc": "The icon will be hidden if it collides with other previously drawn symbols, unless those symbols are also using `cooperative` overlap."
         }
       },
-      "default": "unset",
       "doc": "Allows for control over whether to show an icon when it overlaps other symbols on the map. If `icon-overlap` is not set, `icon-allow-overlap` is used instead.",
       "requires": [
         "icon-image"
@@ -2377,7 +2376,6 @@
           "doc": "The text will be hidden if it collides with other previously drawn symbols, unless those symbols are also using `cooperative` overlap."
         }
       },
-      "default": "unset",
       "doc": "Allows for control over whether to show symbol text when it overlaps other symbols on the map. If `text-overlap` is not set, `text-allow-overlap` is used instead.",
       "requires": [
         "text-field"
