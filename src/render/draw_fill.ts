@@ -96,8 +96,8 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const terrainTile = painter.getTerrainTile(coord);
-        if (terrainTile) painter.prepareFramebuffer(coord, terrainTile);
+        const terrainTile = painter.style.terrainSourceCache.getTerrainTile(coord, painter.transform.zoom);
+        if (terrainTile) painter.setTextureViewport(coord, terrainTile);
 
         let posMatrix = terrainTile ? terrainTile.tileID.posMatrix : coord.posMatrix;
         const tileMatrix = painter.translatePosMatrix(posMatrix, tile,
@@ -122,7 +122,5 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
             painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
-
-        if (terrainTile) painter.finishFramebuffer();
     }
 }

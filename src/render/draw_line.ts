@@ -65,8 +65,8 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const terrainTile = painter.getTerrainTile(tile.tileID);
-        if (terrainTile) painter.prepareFramebuffer(tile.tileID, terrainTile);
+        const terrainTile = painter.style.terrainSourceCache.getTerrainTile(tile.tileID, painter.transform.zoom);
+        if (terrainTile) painter.setTextureViewport(tile.tileID, terrainTile);
 
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, terrainTile) :
             dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, terrainTile) :
@@ -120,7 +120,6 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
             layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 
-        if (terrainTile) painter.finishFramebuffer();
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
     }

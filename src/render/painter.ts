@@ -31,7 +31,7 @@ import raster from './draw_raster';
 import background from './draw_background';
 import debug, {drawDebugPadding} from './draw_debug';
 import custom from './draw_custom';
-import {clearTerrain, prepareTerrain, drawTerrain, drawTerrainCoords} from './draw_terrain';
+import {prepareTerrain, drawTerrain, drawTerrainCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 
 const draw = {
@@ -61,7 +61,6 @@ import type IndexBuffer from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type ResolvedImage from '../style-spec/expression/types/resolved_image';
 import type {RGBAImage} from '../util/image';
-import { console } from 'window-or-global';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -126,7 +125,6 @@ class Painter {
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
     coordsBuffer: { matrix: mat4; renderTime: number; };
-    batch: number;
 
     constructor(gl: WebGLRenderingContext, transform: Transform) {
         this.context = new Context(gl);
@@ -328,32 +326,16 @@ class Painter {
         return [{[minTileZ]: StencilMode.disabled}, coords];
     }
 
-    getTerrainTile(tileID: OverscaledTileID) {
-        const z = Math.floor(this.transform.zoom);
-        const canonical = tileID.canonical.z > this.style.terrainSourceCache.maxzoom
-            ? tileID.scaledTo(this.style.terrainSourceCache.maxzoom).canonical
-            : tileID.canonical;
-        const id = new OverscaledTileID(canonical.z > z ? canonical.z : z, tileID.wrap, canonical.z, canonical.x, canonical.y);
-        return this.style.terrainSourceCache.getTileByID(id.scaledTo(z).key);
-    }
-
-    // start drawing into the framebuffer, which is drawn on terrain-mesh
-    prepareFramebuffer(tileID: OverscaledTileID, terrainTile: Tile) {
+    // calculate the correct viewport when rendering it to texture
+    setTextureViewport(tileID: OverscaledTileID, terrainTile: Tile) {
         const z = Math.floor(this.transform.zoom);
         // dz is the tileSize difference of the layer-source and the 512px terrain-source
         // so if dz > 0 the frameport's viewbuffer is located to the currect subtile
         const dz = tileID.canonical.z - (z < terrainTile.tileID.canonical.z ? z : terrainTile.tileID.canonical.z);
         const x = tileID.canonical.x - (terrainTile.tileID.canonical.x << dz);
         const y = tileID.canonical.y - (terrainTile.tileID.canonical.y << dz);
-        const size = terrainTile.fbo.width / (1 << dz);
-        this.context.bindFramebuffer.set(terrainTile.fbo.framebuffer);
+        const size = terrainTile.tileSize * this.style.terrainSourceCache.qualityFactor / (1 << dz);
         this.context.viewport.set([size * x, size * y, size, size]);
-    }
-
-    // draw onto the screen
-    finishFramebuffer() {
-        this.context.bindFramebuffer.set(null);
-        this.context.viewport.set([0, 0, this.width, this.height]);
     }
 
     colorModeForRenderPass(): Readonly<ColorMode> {
@@ -401,6 +383,8 @@ class Painter {
 
         const layerIds = this.style._order;
         const sourceCaches = this.style.sourceCaches;
+        const renderToTexture = { background: true, fill: true, line: true, raster: true };
+        const isTerrainEnabled = this.style.terrainSourceCache.isEnabled();
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -410,6 +394,7 @@ class Painter {
         }
 
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
+        const coordsAscendingInv: {[_: string]: {[_:string]: Array<OverscaledTileID>}} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
@@ -418,6 +403,16 @@ class Painter {
             coordsAscending[id] = sourceCache.getVisibleCoordinates();
             coordsDescending[id] = coordsAscending[id].slice().reverse();
             coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
+            if (isTerrainEnabled) {
+                coordsAscendingInv[id] = {};
+                for (let c=0; c<coordsAscending[id].length; c++) {
+                    const terrainTile = this.style.terrainSourceCache.getTerrainTile(coordsAscending[id][c], this.transform.zoom);
+                    if (!terrainTile) continue;
+                    const key = terrainTile.tileID.key;
+                    if (!coordsAscendingInv[id][key]) coordsAscendingInv[id][key] = [];
+                    coordsAscendingInv[id][key].push(coordsAscending[id][c]);
+                }
+            }
         }
 
         this.opaquePassCutoff = Infinity;
@@ -429,11 +424,8 @@ class Painter {
             }
         }
 
-        const isTerrainEnabled = this.style.terrainSourceCache.isEnabled();
         if (isTerrainEnabled) {
             this.opaquePassCutoff = 0;
-            this.batch = 0;
-            prepareTerrain(this, this.style.terrainSourceCache);
 
             // update coords-framebuffer on camera movement
             const newTiles = this.style.terrainSourceCache.tilesAfterTime(this.coordsBuffer.renderTime);
@@ -490,60 +482,62 @@ class Painter {
         this.renderPass = 'translucent';
         // the following variables only used when terrain-3d is enabled
         let prevType = null;
-        const rerender = this.style.terrainSourceCache._rerender;
-        let renderToTexture = { background: true, fill: true, line: true, raster: true };
+        const stacks = [];
 
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
             const type = layer.type;
 
+            if (isTerrainEnabled) {
+
+                // remember background, fill, line & raster layer to render into texture-batch
+                if (renderToTexture[type]) {
+                    if (!prevType || !renderToTexture[prevType]) stacks.push([]);
+                    prevType = type;
+                    stacks[stacks.length-1].push(layerIds[this.currentLayer]);
+                    continue; // rendering is done later, all in once
+
+                // render all stack-layers into a texture
+                } else if (renderToTexture[prevType] || type == "hillshade") {
+                    prevType = type;
+                    const stack = stacks.length - 1, layers = stacks[stack];
+                    for (const tile of this.style.terrainSourceCache.getRenderableTiles(this.transform)) {
+                        const render = tile.rerender || !tile.textures[stack];
+                        prepareTerrain(this, this.style.terrainSourceCache, tile, stack);
+                        if (render) {
+                            this.context.clear({ color: Color.transparent });
+                            for (let l=0; l<layers.length; l++) {
+                                const _layer = this.style._layers[layers[l]];
+                                const coords = _layer.source ? coordsAscendingInv[_layer.source][tile.tileID.key] : [tile.tileID];
+                                this.renderLayer(this, this.style.sourceCaches[_layer.source], _layer, coords)
+                            }
+                        }
+                        drawTerrain(this, this.style.terrainSourceCache, tile);
+                    }
+
+                    if (type == "hillshade") {
+                        stacks.push([layerIds[this.currentLayer]]);
+                        for (const tile of this.style.terrainSourceCache.getRenderableTiles(this.transform)) {
+                            // FIXME! replace prepareTerrain with setting hillshading texture from prepareHillshading directly
+                            prepareTerrain(this, this.style.terrainSourceCache, tile, stacks.length - 1);
+                            this.context.clear({ color: Color.transparent });
+                            this.renderLayer(this, sourceCache, layer, coordsAscendingInv[layer.source][tile.tileID.key]);
+                            drawTerrain(this, this.style.terrainSourceCache, tile);
+                        }
+                        continue;
+                    }
+                }
+
+            }
+
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
             // separate clipping masks
             let coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
-            if (isTerrainEnabled) {
-                // render only tiles which has loaded terrain
-                if (coords) coords = coords.filter(tileID => {
-                    const tile = this.getTerrainTile(tileID);
-                    return tile && tile.state == "loaded";
-                });
-
-                // render background, fill, line & raster layer into texture
-                if (renderToTexture[type]) {
-                    if (prevType == 'hillshade') drawTerrain(this, this.style.terrainSourceCache);
-                    if (prevType && !renderToTexture[prevType]) {
-                        this.batch++;
-                        prepareTerrain(this, this.style.terrainSourceCache);
-                        if (rerender) clearTerrain(this, this.style.terrainSourceCache);
-                    }
-                    prevType = type;
-                    if (!rerender) continue;
-
-                // render hillshading-texture to separate mesh-texture
-                // FIXME-3D! render hillshading-texture direct to screen for performance
-                } else if (type == 'hillshade') {
-                    if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
-                    this.batch++;
-                    prepareTerrain(this, this.style.terrainSourceCache);
-                    clearTerrain(this, this.style.terrainSourceCache);
-                    prevType = type;
-
-                // render all other layers direct to screen
-                } else {
-                    if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
-                    prevType = type;
-                }
-            }
-
             this._renderTileClippingMasks(layer, coordsAscending[layer.source]);
             this.renderLayer(this, sourceCache, layer, coords);
-        }
-
-        if (isTerrainEnabled) {
-            if (renderToTexture[prevType]) drawTerrain(this, this.style.terrainSourceCache);
-            this.style.terrainSourceCache._rerender = false;
         }
 
         if (this.options.showTileBoundaries) {
@@ -577,7 +571,7 @@ class Painter {
 
     renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>) {
         if (layer.isHidden(this.transform.zoom)) return;
-        if (layer.type !== 'background' && layer.type !== 'custom' && !coords.length) return;
+        if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
         this.gpuTimingStart(layer);

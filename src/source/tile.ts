@@ -85,6 +85,7 @@ class Tile {
     reloadCallback: any;
     resourceTiming: Array<PerformanceResourceTiming> | undefined | null;
     queryPadding: number;
+    rerender: boolean;
 
     symbolFadeHoldUntil: number | undefined | null;
     hasSymbolBuckets: boolean;
@@ -111,6 +112,7 @@ class Tile {
         this.hasRTLText = false;
         this.dependencies = {};
         this.elevation = {};
+        this.rerender = false;
 
         // Counts the number of times a response was already expired when
         // received. We're using this to add a delay when making a new request

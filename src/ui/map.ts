@@ -1536,11 +1536,12 @@ class Map extends Camera {
      * Loads a 3D terrain mesh, based on a "raster-dem" source.
      *
      * @param {string} id The ID of the raster-dem source to use.
+     * @param options Allowed options are exaggeration, elevationOffset & meshSize
      * @returns {Map} `this`
      * @example
      * map.addTerrain('my-data');
      */
-    addTerrain(id: string, options?: {exaggeration: boolean; elevationOffset: number; meshSize: number; maxOverscaleFactor:number}) {
+    addTerrain(id: string, options?: {exaggeration: boolean; elevationOffset: number; meshSize: number}) {
         this.isSourceLoaded(id);
         this.style.terrainSourceCache.enable(this.style.sourceCaches[id], options);
         this.style.terrainSourceCache.update(this.transform);
@@ -1558,11 +1559,11 @@ class Map extends Camera {
      * map.removeTerrain();
      */
     removeTerrain() {
-      this.style.terrainSourceCache.disable();
-      this.transform.updateElevation();
-      this.triggerRepaint();
-      return this;
-  }
+        this.style.terrainSourceCache.disable();
+        this.transform.updateElevation();
+        this.triggerRepaint();
+        return this;
+    }
 
     /**
      * Returns a Boolean indicating whether all tiles in the viewport from all sources on
@@ -1572,7 +1573,6 @@ class Map extends Camera {
      * @example
      * var tilesLoaded = map.areTilesLoaded();
      */
-
     areTilesLoaded() {
         const sources = this.style && this.style.sourceCaches;
         for (const id in sources) {
