@@ -16,6 +16,7 @@ import type {
     GlyphOffsetArray,
     SymbolLineVertexArray
 } from '../data/array_types';
+import type { OverlapMode } from '../style/style_layer/symbol_style_layer';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -24,6 +25,13 @@ import type {
 // occur offscreen. Making this constant greater increases label
 // stability, but it's expensive.
 const viewportPadding = 100;
+
+export type FeatureKey = {
+    bucketInstanceId: number;
+    featureIndex: number;
+    collisionGroupID: number;
+    overlapMode: OverlapMode;
+};
 
 /**
  * A collision index used to prevent symbols from overlapping. It keep tracks of
@@ -38,8 +46,8 @@ const viewportPadding = 100;
  * @private
  */
 class CollisionIndex {
-    grid: Grid;
-    ignoredGrid: Grid;
+    grid: Grid<FeatureKey>;
+    ignoredGrid: Grid<FeatureKey>;
     transform: Transform;
     pitchfactor: number;
     screenRightBoundary: number;
@@ -49,8 +57,8 @@ class CollisionIndex {
 
     constructor(
         transform: Transform,
-        grid: Grid = new Grid(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
-        ignoredGrid: Grid = new Grid(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
+        grid = new Grid<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
+        ignoredGrid = new Grid<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
     ) {
         this.transform = transform;
 
@@ -66,10 +74,10 @@ class CollisionIndex {
 
     placeCollisionBox(
       collisionBox: SingleCollisionBox,
-      allowOverlap: boolean,
+      overlapMode: OverlapMode,
       textPixelRatio: number,
       posMatrix: mat4,
-      collisionGroupPredicate?: any
+      collisionGroupPredicate?: (key: FeatureKey) => boolean
     ): {
       box: Array<number>;
       offscreen: boolean;
@@ -82,7 +90,7 @@ class CollisionIndex {
         const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
 
         if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
-            (!allowOverlap && this.grid.hitTest(tlX, tlY, brX, brY, collisionGroupPredicate))) {
+            (overlapMode !== 'full' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate))) {
             return {
                 box: [],
                 offscreen: false
@@ -96,7 +104,7 @@ class CollisionIndex {
     }
 
     placeCollisionCircles(
-      allowOverlap: boolean,
+      overlapMode: OverlapMode,
       symbol: any,
       lineVertexArray: SymbolLineVertexArray,
       glyphOffsetArray: GlyphOffsetArray,
@@ -106,7 +114,7 @@ class CollisionIndex {
       labelToScreenMatrix: mat4,
       showCollisionCircles: boolean,
       pitchWithMap: boolean,
-      collisionGroupPredicate: any,
+      collisionGroupPredicate: (key: FeatureKey) => boolean,
       circlePixelDiameter: number,
       textPixelPadding: number
     ): {
@@ -239,18 +247,16 @@ class CollisionIndex {
                     entirelyOffscreen = entirelyOffscreen && this.isOffscreen(x1, y1, x2, y2);
                     inGrid = inGrid || this.isInsideGrid(x1, y1, x2, y2);
 
-                    if (!allowOverlap) {
-                        if (this.grid.hitTestCircle(centerX, centerY, radius, collisionGroupPredicate)) {
-                            // Don't early exit if we're showing the debug circles because we still want to calculate
-                            // which circles are in use
-                            collisionDetected = true;
-                            if (!showCollisionCircles) {
-                                return {
-                                    circles: [],
-                                    offscreen: false,
-                                    collisionDetected
-                                };
-                            }
+                    if (overlapMode !== 'full' && this.grid.hitTestCircle(centerX, centerY, radius, overlapMode, collisionGroupPredicate)) {
+                        // Don't early exit if we're showing the debug circles because we still want to calculate
+                        // which circles are in use
+                        collisionDetected = true;
+                        if (!showCollisionCircles) {
+                            return {
+                                circles: [],
+                                offscreen: false,
+                                collisionDetected
+                            };
                         }
                     }
                 }
@@ -331,17 +337,17 @@ class CollisionIndex {
         return result;
     }
 
-    insertCollisionBox(collisionBox: Array<number>, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
+    insertCollisionBox(collisionBox: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
         const grid = ignorePlacement ? this.ignoredGrid : this.grid;
 
-        const key = {bucketInstanceId, featureIndex, collisionGroupID};
+        const key = {bucketInstanceId, featureIndex, collisionGroupID, overlapMode};
         grid.insert(key, collisionBox[0], collisionBox[1], collisionBox[2], collisionBox[3]);
     }
 
-    insertCollisionCircles(collisionCircles: Array<number>, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
+    insertCollisionCircles(collisionCircles: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
         const grid = ignorePlacement ? this.ignoredGrid : this.grid;
 
-        const key = {bucketInstanceId, featureIndex, collisionGroupID};
+        const key = {bucketInstanceId, featureIndex, collisionGroupID, overlapMode};
         for (let k = 0; k < collisionCircles.length; k += 4) {
             grid.insertCircle(key, collisionCircles[k], collisionCircles[k + 1], collisionCircles[k + 2]);
         }

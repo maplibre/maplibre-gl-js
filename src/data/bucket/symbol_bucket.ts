@@ -49,6 +49,7 @@ import type {
 import type {CollisionBoxArray, CollisionBox, SymbolInstance} from '../array_types';
 import type {StructArray, StructArrayMember, ViewType} from '../../util/struct_array';
 import SymbolStyleLayer from '../../style/style_layer/symbol_style_layer';
+import { getOverlapMode } from '../../style/style_layer/symbol_style_layer';
 import type Context from '../../gl/context';
 import type IndexBuffer from '../../gl/index_buffer';
 import type VertexBuffer from '../../gl/vertex_buffer';
@@ -387,8 +388,8 @@ class SymbolBucket implements Bucket {
         const sortKey = layout.get('symbol-sort-key');
         const zOrder = layout.get('symbol-z-order');
         this.canOverlap =
-            layout.get('text-allow-overlap') ||
-            layout.get('icon-allow-overlap') ||
+            getOverlapMode(layout, 'text-overlap', 'text-allow-overlap') !== 'none' ||
+            getOverlapMode(layout, 'icon-overlap', 'icon-allow-overlap') !== 'none' ||
             layout.get('text-ignore-placement') ||
             layout.get('icon-ignore-placement');
         this.sortFeaturesByKey = zOrder !== 'viewport-y' && !sortKey.isConstant();
