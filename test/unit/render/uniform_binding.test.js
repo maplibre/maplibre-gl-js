@@ -4,7 +4,8 @@ import {
     Uniform1f,
     Uniform2f,
     Uniform3f,
-    Uniform4f
+    Uniform4f,
+    UniformMatrix4f
 } from '../../../rollup/build/tsc/render/uniform_binding';
 
 test('Uniform1i', (t) => {
@@ -100,5 +101,24 @@ test('Uniform4f', (t) => {
     t.deepEqual(u.current, [1, 1, 1, 1], 'correctly set value');
     u.set([1, 1, 1, 1]);
     u.set([2, 1, 1, 1]);
+    t.end();
+});
+
+test('UniformMatrix4f', (t) => {
+    t.plan(4);
+
+    const context = {
+        gl: {
+            uniformMatrix4fv: () => { t.ok(true, 'sets value when unique'); }
+        }
+    };
+
+    const u = new UniformMatrix4f(context, 0);
+    const ident = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+    t.same(u.current, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'not set upon initialization');
+    u.set(ident);
+    t.same(u.current, ident, 'correctly set value');
+    u.set(ident);
+    u.set([2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
     t.end();
 });
