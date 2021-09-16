@@ -1,4 +1,4 @@
-import type { OverlapMode } from "../style/style_layer/symbol_style_layer";
+import type {OverlapMode} from '../style/style_layer/symbol_style_layer';
 
 type QueryArgs = {
     hitTest: boolean;
@@ -15,7 +15,7 @@ type QueryArgs = {
         circle: {
             [_: number]: boolean;
         };
-    }
+    };
 };
 
 type QueryResult<T> = {
@@ -211,7 +211,7 @@ class GridIndex<T extends GridKey> {
     }
 
     private _queryCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: Array<boolean | QueryResult<T>>, queryArgs: QueryArgs, predicate?: (key: T) => boolean) {
-        const { seenUids, hitTest, overlapMode } = queryArgs;
+        const {seenUids, hitTest, overlapMode} = queryArgs;
         const boxCell = this.boxCells[cellIndex];
         if (boxCell !== null) {
             const bboxes = this.bboxes;
@@ -286,7 +286,7 @@ class GridIndex<T extends GridKey> {
     }
 
     _queryCellCircle(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: Array<boolean>, queryArgs: QueryArgs, predicate?: (key: T) => boolean) {
-        const { circle, seenUids, overlapMode } = queryArgs;
+        const {circle, seenUids, overlapMode} = queryArgs;
         const boxCell = this.boxCells[cellIndex];
 
         if (boxCell !== null) {

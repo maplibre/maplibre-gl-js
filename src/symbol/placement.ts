@@ -1,5 +1,5 @@
 import CollisionIndex from './collision_index';
-import type { FeatureKey } from './collision_index';
+import type {FeatureKey} from './collision_index';
 import EXTENT from '../data/extent';
 import * as symbolSize from './symbol_size';
 import * as projection from './projection';
@@ -13,7 +13,7 @@ import type Transform from '../geo/transform';
 import type StyleLayer from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';
 import type {LayoutProps, LayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties';
-import { getOverlapMode, OverlapMode } from '../style/style_layer/symbol_style_layer';
+import {getOverlapMode, OverlapMode} from '../style/style_layer/symbol_style_layer';
 
 import type Tile from '../source/tile';
 import SymbolBucket, {CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';

@@ -57,69 +57,63 @@
         map.addControl(new maplibregl.GeolocateControl());
 
         var sourceData = {
-            "type": "FeatureCollection",
-            "features": [
-            {
-                    "type": "Feature",
-                    "properties": {
-                        "name": "Dennis",
-                        "featureclass": "top"
-                    },
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [-77.01866, 38.888]
-                    },
-                    "id": 163
+            'type': 'FeatureCollection',
+            'features': [{
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Dennis',
+                    'featureclass': 'top'
                 },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "name": "Point A",
-                        "featureclass": "base"
-                    },
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [-77.01866, 38.988]
-                    },
-                    "id": 163
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.01866, 38.888]
                 },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "name": "Point B",
-                        "featureclass": "base"
-                    },
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [-77.01866, 38.788]
-                    },
-                    "id": 164
+                'id': 163
+            }, {
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Point A',
+                    'featureclass': 'base'
                 },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "name": "Point C",
-                        "featureclass": "base"
-                    },
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [-77.15866, 38.888]
-                    },
-                    "id": 165
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.01866, 38.988]
                 },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "name": "Point D",
-                        "featureclass": "base"
-                    },
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [-76.87866, 38.888]
-                    },
-                    "id": 166
+                'id': 163
+            }, {
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Point B',
+                    'featureclass': 'base'
                 },
-            ]
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.01866, 38.788]
+                },
+                'id': 164
+            }, {
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Point C',
+                    'featureclass': 'base'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.15866, 38.888]
+                },
+                'id': 165
+            }, {
+                'type': 'Feature',
+                'properties': {
+                    'name': 'Point D',
+                    'featureclass': 'base'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-76.87866, 38.888]
+                },
+                'id': 166
+            }]
         };
 
         map.on('load', function () {

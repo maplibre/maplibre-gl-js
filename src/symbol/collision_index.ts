@@ -16,7 +16,7 @@ import type {
     GlyphOffsetArray,
     SymbolLineVertexArray
 } from '../data/array_types';
-import type { OverlapMode } from '../style/style_layer/symbol_style_layer';
+import type {OverlapMode} from '../style/style_layer/symbol_style_layer';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around

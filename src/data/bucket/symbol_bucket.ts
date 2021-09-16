@@ -48,8 +48,7 @@ import type {
 } from '../bucket';
 import type {CollisionBoxArray, CollisionBox, SymbolInstance} from '../array_types';
 import type {StructArray, StructArrayMember, ViewType} from '../../util/struct_array';
-import SymbolStyleLayer from '../../style/style_layer/symbol_style_layer';
-import { getOverlapMode } from '../../style/style_layer/symbol_style_layer';
+import SymbolStyleLayer, {getOverlapMode} from '../../style/style_layer/symbol_style_layer';
 import type Context from '../../gl/context';
 import type IndexBuffer from '../../gl/index_buffer';
 import type VertexBuffer from '../../gl/vertex_buffer';
