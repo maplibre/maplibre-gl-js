@@ -15,7 +15,7 @@ import type {LngLatLike} from '../geo/lng_lat';
 const defaultOptions = {
     closeButton: true,
     closeOnClick: true,
-    focusAfterOpen: true,
+    focusAfterOpen: false,
     className: '',
     maxWidth: '240px'
 };
