@@ -668,11 +668,11 @@ test('Popup closes on Map#remove', (t) => {
     t.end();
 });
 
-test('Adding popup with no focusable content (Popup#setText) does not change the active element', (t) => {
+test('Adding popup with enabled focusing and no focusable content (Popup#setText) does not change the active element', (t) => {
     const dummyFocusedEl = window.document.createElement('button');
     dummyFocusedEl.focus();
 
-    new Popup({closeButton: false})
+    new Popup({closeButton: false, focusAfterOpen: true})
         .setText('Test')
         .setLngLat([0, 0])
         .addTo(createMap(t));
@@ -681,11 +681,11 @@ test('Adding popup with no focusable content (Popup#setText) does not change the
     t.end();
 });
 
-test('Adding popup with no focusable content (Popup#setHTML) does not change the active element', (t) => {
+test('Adding popup with enabled focusing no focusable content (Popup#setHTML) does not change the active element', (t) => {
     const dummyFocusedEl = window.document.createElement('button');
     dummyFocusedEl.focus();
 
-    new Popup({closeButton: false})
+    new Popup({closeButton: false, focusAfterOpen: true})
         .setHTML('<span>Test</span>')
         .setLngLat([0, 0])
         .addTo(createMap(t));
@@ -698,7 +698,7 @@ test('Close button is focused if it is the only focusable element', (t) => {
     const dummyFocusedEl = window.document.createElement('button');
     dummyFocusedEl.focus();
 
-    const popup = new Popup({closeButton: true})
+    const popup = new Popup({closeButton: true, focusAfterOpen: true})
         .setHTML('<span>Test</span>')
         .setLngLat([0, 0])
         .addTo(createMap(t));
@@ -711,7 +711,7 @@ test('Close button is focused if it is the only focusable element', (t) => {
 });
 
 test('If popup content contains a focusable element it is focused', (t) => {
-    const popup = new Popup({closeButton: true})
+    const popup = new Popup({closeButton: true, focusAfterOpen: true})
         .setHTML('<span tabindex="0" data-testid="abc">Test</span>')
         .setLngLat([0, 0])
         .addTo(createMap(t));
@@ -723,7 +723,7 @@ test('If popup content contains a focusable element it is focused', (t) => {
 });
 
 test('Element with tabindex="-1" is not focused', (t) => {
-    const popup = new Popup({closeButton: true})
+    const popup = new Popup({closeButton: true, focusAfterOpen: true})
         .setHTML('<span tabindex="-1" data-testid="abc">Test</span>')
         .setLngLat([0, 0])
         .addTo(createMap(t));
@@ -737,7 +737,7 @@ test('Element with tabindex="-1" is not focused', (t) => {
 });
 
 test('If popup contains a disabled button and a focusable element then the latter is focused', (t) => {
-    const popup = new Popup({closeButton: true})
+    const popup = new Popup({closeButton: true, focusAfterOpen: true})
         .setHTML(`
             <button disabled>No focus here</button>
             <select data-testid="abc">
