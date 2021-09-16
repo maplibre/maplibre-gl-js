@@ -30,6 +30,9 @@ jobs:
           npm run lint-docs
           npm run lint-css
 
+      - name: Build
+        run: npm run build-dev
+
       - name: Test
         run: |
           npm run test-unit
