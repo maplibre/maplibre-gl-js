@@ -24,16 +24,10 @@ jobs:
       - name: Install
         run: yarn install --frozen-lockfile
 
-      - name: Lint
+      - name: Build
         run: |
-          yarn run lint
-          yarn run lint-docs
-          yarn run lint-css
+          yarn run build-dev
 
       - name: Test
         run: |
-          yarn run test-flow
-          yarn run test-unit
           yarn run test-render
-          yarn run test-query
-          yarn run test-expressions
