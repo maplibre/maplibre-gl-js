@@ -38,7 +38,7 @@ test('CanonicalTileID', (t) => {
 
     t.test('.url', (t) => {
         t.test('replaces {z}/{x}/{y}', (t) => {
-            t.equal(new CanonicalTileID(1, 0, 0).url(['{z}/{x}/{y}.json']), '1/0/0.json');
+            t.equal(new CanonicalTileID(2, 1, 0).url(['{z}/{x}/{y}.json']), '2/1/0.json');
             t.end();
         });
 
@@ -61,8 +61,8 @@ test('CanonicalTileID', (t) => {
         });
 
         //Tests that multiple values of the same placeholder are replaced.
-        t.test('replaces {z}/{x}/{y}/{z}/{x}/{y}}', (t) => {
-            t.equal(new CanonicalTileID(1, 0, 0).url(['{z}/{x}/{y}/{z}/{x}/{y}.json']), '1/0/0/1/0/0.json');
+        t.test('replaces {z}/{x}/{y}/{z}/{x}/{y}', (t) => {
+            t.equal(new CanonicalTileID(2, 1, 0).url(['{z}/{x}/{y}/{z}/{x}/{y}.json']), '2/1/0/2/1/0.json');
             t.end();
         });
 
