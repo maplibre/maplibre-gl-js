@@ -24,18 +24,9 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Lint
-        run: |
-          npm run lint
-          npm run lint-docs
-          npm run lint-css
-
       - name: Build
         run: npm run build-dev
 
       - name: Test
         run: |
-          npm run test-unit
           npm run test-render
-          npm run test-query
-          npm run test-expressions
