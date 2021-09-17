@@ -6,7 +6,6 @@
 
 ### 🐞 Bug fixes
 
-- Fix tile placeholder replacement to allow for placeholders to be in a URL more than once. (#348)
 - *...Add new stuff here...*
 
 ## 2.0.0
@@ -24,6 +23,7 @@
 ### 🐞 Bug fixes
 
 - Fix warning due to strict comparison of SDF property in image sprite (#303)
+- Fix tile placeholder replacement to allow for placeholders to be in a URL more than once. (#348)
 
 ## 1.15.2
 
