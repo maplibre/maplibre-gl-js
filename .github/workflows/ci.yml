@@ -128,32 +128,3 @@ jobs:
           SELENIUM_BROWSER: firefox
           TAP_COLORS: 1
         run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser
-
-  test-render:
-    name: Run render tests
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Use Node.js 14 x64
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-          architecture: x64
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install
-        run: npm ci
-
-      - name: Lint
-        run: |
-          npm run lint
-          npm run lint-docs
-          npm run lint-css
-
-      - name: Test
-        run: |
-          npm run test-unit
-          npm run test-render
