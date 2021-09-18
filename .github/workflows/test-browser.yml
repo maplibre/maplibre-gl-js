@@ -7,7 +7,7 @@ on:
 
 jobs:
   test_browser:
-    name: Test Browser on ubuntu-latest
+    name: ubuntu-latest
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
