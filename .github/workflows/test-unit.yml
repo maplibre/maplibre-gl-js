@@ -18,7 +18,7 @@ jobs:
         architecture:
           - x64
 
-    name: Test Unit on ${{ matrix.os }}
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
@@ -33,7 +33,7 @@ jobs:
       - run: npm run test-unit
 
   test_unit_ubuntu:
-    name: Test Unit on ubuntu-latest
+    name: ubuntu-latest
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
