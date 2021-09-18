@@ -7,7 +7,7 @@ on:
 
 jobs:
   test_expressions:
-    name: Test Expressions on ubuntu-latest
+    name: ubuntu-latest
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
