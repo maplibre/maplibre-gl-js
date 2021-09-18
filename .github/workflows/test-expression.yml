@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test-query:
+  test_expression:
     name: Test Expression on ubuntu-latest
     runs-on: ubuntu-latest
     timeout-minutes: 20
