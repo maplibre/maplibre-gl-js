@@ -1,4 +1,4 @@
-name: Test Expression
+name: Test Expressions
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
   pull_request:
 
 jobs:
-  test_expression:
-    name: Test Expression on ubuntu-latest
+  test_expressions:
+    name: Test Expressions on ubuntu-latest
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -19,4 +19,4 @@ jobs:
           architecture: x64
       - run: npm ci
       - run: npm run build-dev
-      - run: npm run test-expression
+      - run: npm run test-expressions
