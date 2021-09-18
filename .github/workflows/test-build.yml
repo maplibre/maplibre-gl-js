@@ -31,4 +31,5 @@ jobs:
           architecture: ${{ matrix.architecture }}
       - run: npm ci
       - run: npm run build-prod-min
+      - run: npm run build-dev
       - run: npm run test-build
