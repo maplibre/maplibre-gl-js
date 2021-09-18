@@ -19,7 +19,7 @@ jobs:
         architecture:
           - x64
 
-    name: Lint on ${{ matrix.os }}
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
