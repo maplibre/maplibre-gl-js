@@ -1,0 +1,34 @@
+name: Test Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test_build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+          - ubuntu-latest
+        node_version:
+          - 14
+        architecture:
+          - x64
+
+    name: Test Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node_version }}
+          architecture: ${{ matrix.architecture }}
+      - run: npm ci
+      - run: npm run build-prod-min
+      - run: npm run test-build
