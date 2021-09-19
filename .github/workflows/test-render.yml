@@ -1,0 +1,38 @@
+name: Test Render
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  latest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          architecture: x64
+      - run: npm ci
+      - run: npm run build-dev
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-render debug/overdraw
+
+
+  just_before_typescript:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: 49bc4ca45aba6b6af98df7e1e91735dcb0d6f20f
+      - name: Use Node.js 10 x64
+        uses: actions/setup-node@v2
+        with:
+          node-version: 10
+          architecture: x64
+      - run: yarn install --frozen-lockfile
+      - run: yarn run build-dev
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" yarn run test-render debug/overdraw
