@@ -102,7 +102,7 @@ function getGlCoordMatrix(posMatrix: mat4,
 }
 
 function project(point: Point, matrix: mat4) {
-    const pos = vec4.fromValues(point.x, point.y, 0, 1);
+    const pos = [point.x, point.y, 0, 1] as any;
     xyTransformMat4(pos, pos, matrix);
     const w = pos[3];
     return {
@@ -170,7 +170,7 @@ function updateLineLabels(bucket: SymbolBucket,
         // Awkward... but we're counting on the paired "vertical" symbol coming immediately after its horizontal counterpart
         useVertical = false;
 
-        const anchorPos = vec4.fromValues(symbol.anchorX, symbol.anchorY, 0, 1);
+        const anchorPos = [symbol.anchorX, symbol.anchorY, 0, 1] as any;
         vec4.transformMat4(anchorPos, anchorPos, posMatrix);
 
         // Don't bother calculating the correct point for invisible labels.

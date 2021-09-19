@@ -49,8 +49,7 @@ type SymbolTileRenderState = {
   };
 };
 
-// create() creates an identity matrix https://github.com/toji/gl-matrix/blob/master/src/mat4.js#L13
-const identityMat4 = mat4.create();
+const identityMat4 = mat4.identity(new Float32Array(16));
 
 function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
   [_ in CrossTileID]: VariableOffset;

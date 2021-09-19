@@ -7,21 +7,21 @@ class Frustum {
 
     public static fromInvProjectionMatrix(invProj: mat4, worldSize: number, zoom: number): Frustum {
         const clipSpaceCorners = [
-            vec4.fromValues(-1, 1, -1, 1),
-            vec4.fromValues(1, 1, -1, 1),
-            vec4.fromValues(1, -1, -1, 1),
-            vec4.fromValues(-1, -1, -1, 1),
-            vec4.fromValues(-1, 1, 1, 1),
-            vec4.fromValues(1, 1, 1, 1),
-            vec4.fromValues(1, -1, 1, 1),
-            vec4.fromValues(-1, -1, 1, 1)
+            [-1, 1, -1, 1],
+            [ 1, 1, -1, 1],
+            [ 1, -1, -1, 1],
+            [-1, -1, -1, 1],
+            [-1, 1, 1, 1],
+            [ 1, 1, 1, 1],
+            [ 1, -1, 1, 1],
+            [-1, -1, 1, 1]
         ];
 
         const scale = Math.pow(2, zoom);
 
         // Transform frustum corner points from clip space to tile space
         const frustumCoords = clipSpaceCorners
-            .map(v => vec4.transformMat4(vec4.create(), v, invProj))
+            .map(v => vec4.transformMat4([] as any, v as any, invProj))
             .map(v => vec4.scale([] as any, v, 1.0 / v[3] / worldSize * scale));
 
         const frustumPlanePointIndices = [
@@ -34,11 +34,11 @@ class Frustum {
         ];
 
         const frustumPlanes = frustumPlanePointIndices.map((p: number[]) => {
-            const a = vec3.sub(vec3.create(), frustumCoords[p[0]] as vec3, frustumCoords[p[1]] as vec3);
-            const b = vec3.sub(vec3.create(), frustumCoords[p[2]] as vec3, frustumCoords[p[1]] as vec3);
-            const n = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), a, b));
+            const a = vec3.sub([] as any, frustumCoords[p[0]] as vec3, frustumCoords[p[1]] as vec3);
+            const b = vec3.sub([] as any, frustumCoords[p[2]] as vec3, frustumCoords[p[1]] as vec3);
+            const n = vec3.normalize([] as any, vec3.cross([] as any, a, b)) as any;
             const d = -vec3.dot(n, frustumCoords[p[1]] as vec3);
-            return [n[0], n[1], n[2], d] as any as vec4;
+            return n.concat(d);
         });
 
         return new Frustum(frustumCoords, frustumPlanes);
@@ -53,7 +53,7 @@ class Aabb {
     constructor(min_: vec3, max_: vec3) {
         this.min = min_;
         this.max = max_;
-        this.center = vec3.scale(vec3.create(), vec3.add(vec3.create(), this.min, this.max), 0.5);
+        this.center = vec3.scale([] as any, vec3.add([] as any, this.min, this.max), 0.5);
     }
 
     quadrant(index: number): Aabb {
@@ -88,10 +88,10 @@ class Aabb {
         assert(this.min[2] === 0 && this.max[2] === 0);
 
         const aabbPoints = [
-            vec4.fromValues(this.min[0], this.min[1], 0.0, 1),
-            vec4.fromValues(this.max[0], this.min[1], 0.0, 1),
-            vec4.fromValues(this.max[0], this.max[1], 0.0, 1),
-            vec4.fromValues(this.min[0], this.max[1], 0.0, 1)
+            [this.min[0], this.min[1], 0.0, 1],
+            [this.max[0], this.min[1], 0.0, 1],
+            [this.max[0], this.max[1], 0.0, 1],
+            [this.min[0], this.max[1], 0.0, 1]
         ];
 
         let fullyInside = true;
@@ -101,7 +101,7 @@ class Aabb {
             let pointsInside = 0;
 
             for (let i = 0; i < aabbPoints.length; i++) {
-                if (vec4.dot(plane, aabbPoints[i]) >= 0) {
+                if (vec4.dot(plane, aabbPoints[i] as any) >= 0) {
                     pointsInside++;
                 }
             }
