@@ -4,7 +4,7 @@ import PathInterpolator from './path_interpolator';
 
 import * as intersectionTests from '../util/intersection_tests';
 import Grid from './grid_index';
-import {mat4, vec4} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 import assert from 'assert';
 
