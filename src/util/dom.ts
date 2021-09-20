@@ -38,7 +38,7 @@ DOM.createNS = function (namespaceURI: string, tagName: string) {
     return el;
 };
 
-const docStyle = typeof window !== 'undefined' && window.document && window.document.documentElement.style;
+const docStyle = typeof window !== 'undefined' && window.document.documentElement.style;
 
 function testProp(props) {
     if (!docStyle) return props[0];
