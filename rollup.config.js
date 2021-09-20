@@ -7,8 +7,8 @@ const {BUILD, MINIFY} = process.env;
 const minified = MINIFY === 'true';
 const production = BUILD === 'production';
 const outputFile =
-    !production ? 'dist/maplibre-gl-dev.js' :
-    minified ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-unminified.js';
+    !production ? 'dist/maplibre-gl-dev' :
+    minified ? 'dist/maplibre-gl' : 'dist/maplibre-gl-unminified';
 
 export default [{
     // Before rollup you should run build-tsc to transpile from typescript to javascript
@@ -34,15 +34,26 @@ export default [{
     // into a single, final bundle. See rollup/bundle_prelude.js and
     // rollup/maplibregl.js for details.
     input: 'rollup/maplibregl.js',
-    output: {
-        name: 'maplibregl',
-        file: outputFile,
-        format: 'umd',
-        sourcemap: production ? true : 'inline',
-        indent: false,
-        intro: fs.readFileSync('./rollup/bundle_prelude.js', 'utf8'),
-        banner
-    },
+    output: [
+        {
+            name: 'maplibregl',
+            file: `${outputFile}.js`,
+            format: 'umd',
+            sourcemap: production ? true : 'inline',
+            indent: false,
+            intro: fs.readFileSync('./rollup/bundle_prelude.js', 'utf8'),
+            banner
+        },
+        {
+            name: 'maplibregl',
+            file: `${outputFile}.module.js`,
+            format: 'esm',
+            sourcemap: production ? true : 'inline',
+            indent: false,
+            intro: fs.readFileSync('./rollup/bundle_prelude.js', 'utf8'),
+            banner
+        }
+    ],
     treeshake: false,
     plugins: [
         // Ingest the sourcemaps produced in the first step of the build.
