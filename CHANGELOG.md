@@ -19,6 +19,7 @@
 - ** Breaking Change ** removed `baseApiUrl` as it was used only for mapbox related urls
 - Added redraw function to map (#206)
 - *...Add new stuff here...*
+- Add module entrypoint for ESM (#334)
 
 ### 🐞 Bug fixes
 
