@@ -7,7 +7,7 @@ on:
 
 jobs:
 
-  just_before_typescript:
+  test_render:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
