@@ -6,7 +6,7 @@ import banner from './build/banner.js';
 const {BUILD, MINIFY} = process.env;
 const minified = MINIFY === 'true';
 const production = BUILD === 'production';
-const outputFile =
+const outputFilePrefix =
     !production ? 'dist/maplibre-gl-dev' :
     minified ? 'dist/maplibre-gl' : 'dist/maplibre-gl-unminified';
 
@@ -37,7 +37,7 @@ export default [{
     output: [
         {
             name: 'maplibregl',
-            file: `${outputFile}.js`,
+            file: `${outputFilePrefix}.js`,
             format: 'umd',
             sourcemap: production ? true : 'inline',
             indent: false,
@@ -46,7 +46,7 @@ export default [{
         },
         {
             name: 'maplibregl',
-            file: `${outputFile}.module.js`,
+            file: `${outputFilePrefix}.module.js`,
             format: 'esm',
             sourcemap: production ? true : 'inline',
             indent: false,
