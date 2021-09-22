@@ -55,11 +55,11 @@ class HeatmapStyleLayer extends StyleLayer {
         }
     }
 
-    queryRadius = (): number => {
+    queryRadius(): number {
         return 0;
     }
 
-    queryIntersectsFeature = (): boolean => {
+    queryIntersectsFeature(): boolean {
         return false;
     }
 

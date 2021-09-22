@@ -28,7 +28,7 @@ class FillExtrusionStyleLayer extends StyleLayer {
         return new FillExtrusionBucket(parameters);
     }
 
-    queryRadius = (): number => {
+    queryRadius(): number {
         return translateDistance(this.paint.get('fill-extrusion-translate'));
     }
 
@@ -36,7 +36,7 @@ class FillExtrusionStyleLayer extends StyleLayer {
         return true;
     }
 
-    queryIntersectsFeature = (
+    queryIntersectsFeature(
       queryGeometry: Array<Point>,
       feature: VectorTileFeature,
       featureState: FeatureState,
@@ -45,7 +45,7 @@ class FillExtrusionStyleLayer extends StyleLayer {
       transform: Transform,
       pixelsToTileUnits: number,
       pixelPosMatrix: mat4
-    ): boolean | number => {
+    ): boolean | number {
 
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('fill-extrusion-translate'),

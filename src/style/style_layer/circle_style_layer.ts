@@ -29,14 +29,14 @@ class CircleStyleLayer extends StyleLayer {
         return new CircleBucket(parameters);
     }
 
-    queryRadius = (bucket: Bucket): number => {
+    queryRadius(bucket: Bucket): number {
         const circleBucket: CircleBucket<CircleStyleLayer> = (bucket as any);
         return getMaximumPaintValue('circle-radius', this, circleBucket) +
             getMaximumPaintValue('circle-stroke-width', this, circleBucket) +
             translateDistance(this.paint.get('circle-translate'));
     }
 
-    queryIntersectsFeature = (
+    queryIntersectsFeature(
       queryGeometry: Array<Point>,
       feature: VectorTileFeature,
       featureState: FeatureState,
@@ -45,7 +45,7 @@ class CircleStyleLayer extends StyleLayer {
       transform: Transform,
       pixelsToTileUnits: number,
       pixelPosMatrix: mat4
-    ): boolean => {
+    ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('circle-translate'),
             this.paint.get('circle-translate-anchor'),
