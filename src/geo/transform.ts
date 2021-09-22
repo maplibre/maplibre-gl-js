@@ -727,7 +727,7 @@ class Transform {
         this.mercatorMatrix = mat4.scale([] as any, m, [this.worldSize, this.worldSize, this.worldSize] as any);
 
         // scale vertically to meters per pixel (inverse of ground resolution):
-        mat4.scale(m, m, [1, 1, mercatorZfromAltitude(1, this.center.lat) * this.worldSize]);
+        mat4.scale(m, m, [1, 1, mercatorZfromAltitude(1, this.center.lat) * this.worldSize, 1] as any);
 
         this.projMatrix = m;
         this.invProjMatrix = mat4.invert([] as any, this.projMatrix);
