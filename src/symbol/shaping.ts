@@ -17,6 +17,7 @@ import type {Rect, GlyphPosition} from '../render/glyph_atlas';
 import Formatted, {FormattedSection} from '../style-spec/expression/types/formatted';
 
 enum WritingMode {
+    none = 0,
     horizontal = 1,
     vertical = 2,
     horizontalOnly = 3
