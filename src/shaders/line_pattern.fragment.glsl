@@ -1,3 +1,6 @@
+#ifdef GL_ES
+    precision highp float;
+#endif
 uniform lowp float u_device_pixel_ratio;
 uniform vec2 u_texsize;
 uniform float u_fade;
