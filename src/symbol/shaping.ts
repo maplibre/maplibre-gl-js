@@ -22,12 +22,6 @@ enum WritingMode {
     horizontalOnly = 3
 }
 
-export class WriteModeMap {
-    'horizontal': WritingMode.horizontal;
-    'vertical': WritingMode.vertical;
-    'horizontalOnly': WritingMode.horizontalOnly;
-}
-
 const SHAPING_DEFAULT_OFFSET = -17;
 export {shapeText, shapeIcon, fitIconToText, getAnchorAlignment, WritingMode, SHAPING_DEFAULT_OFFSET};
 

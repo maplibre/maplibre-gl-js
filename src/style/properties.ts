@@ -465,7 +465,7 @@ export class PossiblyEvaluated<Props, PossibleEvaluatedProps> {
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
-        this._values = (Object.create(properties.defaultPossiblyEvaluatedValues) as any);
+        this._values = Object.create(properties.defaultPossiblyEvaluatedValues);
     }
 
     get<S extends keyof PossibleEvaluatedProps>(name: S): PossibleEvaluatedProps[S] {
