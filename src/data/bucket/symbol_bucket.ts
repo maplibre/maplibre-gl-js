@@ -23,7 +23,7 @@ import {TriangleIndexArray, LineIndexArray} from '../index_array_type';
 import transformText from '../../symbol/transform_text';
 import mergeLines from '../../symbol/mergelines';
 import {allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection';
-import {WriteModeMap, WritingMode} from '../../symbol/shaping';
+import {WritingMode} from '../../symbol/shaping';
 import loadGeometry from '../load_geometry';
 import toEvaluationFeature from '../evaluation_feature';
 import mvt from '@mapbox/vector-tile';
@@ -356,7 +356,7 @@ class SymbolBucket implements Bucket {
     sourceLayerIndex: number;
     sourceID: string;
     symbolInstanceIndexes: Array<number>;
-    writingModes: Array<number>;
+    writingModes: WritingMode[];
     allowVerticalPlacement: boolean;
     hasRTLText: boolean;
 
@@ -396,7 +396,7 @@ class SymbolBucket implements Bucket {
         this.sortFeaturesByY = zOrderByViewportY && this.canOverlap;
 
         if (layout.get('symbol-placement') === 'point') {
-            this.writingModes = layout.get('text-writing-mode').map(wm => WriteModeMap[wm]);
+            this.writingModes = layout.get('text-writing-mode').map(wm => WritingMode[wm]);
         }
 
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
