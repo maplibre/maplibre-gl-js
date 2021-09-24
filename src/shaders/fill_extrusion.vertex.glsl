@@ -4,7 +4,7 @@ uniform lowp vec3 u_lightpos;
 uniform lowp float u_lightintensity;
 uniform float u_vertical_gradient;
 uniform lowp float u_opacity;
-uniform lowp float u_ele_exaggeration;
+uniform lowp float u_terrain_exaggeration;
 
 attribute vec2 a_pos;
 attribute vec4 a_normal_ed;
@@ -24,8 +24,8 @@ void main() {
 
     vec3 normal = a_normal_ed.xyz;
 
-    base = max(0.0, a_ele * u_ele_exaggeration + base - 10.0); // minus 10 to avoid floating buildings because centroid is used for elevation
-    height = max(0.0, a_ele * u_ele_exaggeration + height);
+    base = max(0.0, a_ele * u_terrain_exaggeration + base - 10.0); // minus 10 to avoid floating buildings because centroid is used for elevation
+    height = max(0.0, a_ele * u_terrain_exaggeration + height);
 
     float t = mod(normal.x, 2.0);
 

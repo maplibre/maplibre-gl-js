@@ -352,7 +352,7 @@ class Transform {
         const centerCoord = MercatorCoordinate.fromLngLat(this.center);
         const numTiles = Math.pow(2, z);
         const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-        const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invProjMatrix2, this.worldSize, z);
+        const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invProjMatrix, this.worldSize, z);
 
         // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
         let minZoom = options.minzoom || 0;
@@ -365,10 +365,7 @@ class Transform {
 
         const newRootTile = (wrap: number): any => {
             return {
-                // FIXME-3D! -5 .. 5 is enough for rendering front elevation tiles, dont know why
-                // but with this simple hack, there a rendered to many tiles outside the viewport,
-                // which is a performance issue
-                aabb: new Aabb([wrap * numTiles, 0, 0], [(wrap + 1) * numTiles, numTiles, 5]),
+                aabb: new Aabb([wrap * numTiles, 0, 0], [(wrap + 1) * numTiles, numTiles, 0]),
                 zoom: 0,
                 x: 0,
                 y: 0,
@@ -473,12 +470,13 @@ class Transform {
 
     getElevation(lnglat: LngLat) {
         const merc = this.locationCoordinate(lnglat), tsc = this.terrainSourceCache;
-        if (!tsc) return 0;
-        const tileZ = tsc.maxzoom < this.tileZoom ? tsc.maxzoom : this.tileZoom;
+        if (!tsc.isEnabled()) return 0;
+        const maxzoom = tsc._sourceCache._source.maxzoom;
+        const tileZ = maxzoom < this.tileZoom ? maxzoom : this.tileZoom;
         const tileSize = tsc.tileSize, worldSize = (1 << tileZ) * tileSize;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
         const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
-        const tileID = new OverscaledTileID(this.tileZoom, 0, tileZ, tileX, tileY);
+        const tileID = new OverscaledTileID(tileZ, 0, tileZ, tileX, tileY);
         return this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize, tileSize);
     }
 
@@ -595,7 +593,7 @@ class Transform {
         // decode coordinates (encoding see terrain-source-cache)
         const x = rgba[0] + ((rgba[2] >> 4) << 8);
         const y = rgba[1] + ((rgba[2] & 15) << 8);
-        const tileID = this.terrainSourceCache.coordsIndex[255 - rgba[3]];
+        const tileID = this.terrainSourceCache._coordsIndex[255 - rgba[3]];
         const tile = tileID && this.terrainSourceCache.getTileByID(tileID);
         if (!tile) return this.pointCoordinate(p); // FIXME! remove this hack
         const tileSize = this.terrainSourceCache.tileSize;

@@ -65,13 +65,13 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const terrainTile = painter.style.terrainSourceCache.getTerrainTile(tile.tileID, painter.transform.zoom);
-        if (terrainTile) painter.setTextureViewport(tile.tileID, terrainTile);
+        const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
+        if (terrainCoord) painter.setTextureViewport(terrainCoord);
 
-        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, terrainTile) :
-            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, terrainTile) :
-            gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length, terrainTile) :
-            lineUniformValues(painter, tile, layer, terrainTile);
+        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, terrainCoord) :
+            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, terrainCoord) :
+            gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length, terrainCoord) :
+            lineUniformValues(painter, tile, layer, terrainCoord);
 
         if (image) {
             context.activeTexture.set(gl.TEXTURE0);

@@ -83,12 +83,12 @@ vec2 unpackCoord(vec4 rgba) {
     float b = floor(rgba.b * 255.0);
     float x = r + hasBit(b, 4) * 256.0 + hasBit(b, 5) * 512.0 + hasBit(b, 6) * 1024.0 + hasBit(b, 7) * 2048.0;
     float y = g + hasBit(b, 0) * 256.0 + hasBit(b, 1) * 512.0 + hasBit(b, 2) * 1024.0 + hasBit(b, 3) * 2048.0;
-    return vec2(x, y) * 2.0; // multiply by 2 is necesarry because the coords-texture has only 4096x4096 pixels.
+    return vec2(x, y) * 8.0; // multiply by 8 is necesarry because the coords-texture has only 1024x1024 pixels.
 }
 
 // calculate the visibility of a coordinate in terrain and return an opacity value.
 // if a coordinate is behind the terrain reduce its opacity
-float calculate_visibility(sampler2D u_coords, vec4 pos, vec2 tilePos) {
+float calculate_visibility(sampler2D u_coords, sampler2D u_coords_index, vec4 pos, vec2 tilePos) {
     #ifdef TERRAIN3D
         vec3 frag = pos.xyz / pos.w;
         vec2 coord = unpackCoord(texture2D(u_coords, frag.xy * 0.5 + 0.5));

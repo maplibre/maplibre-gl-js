@@ -57,6 +57,7 @@ class SourceCache extends Evented {
     _coveredTiles: {[_: string]: boolean};
     transform: Transform;
     used: boolean;
+    usedForTerrain: boolean;
     _state: SourceFeatureState;
     _loadedParentTiles: {[_: string]: Tile | undefined | null};
 
@@ -488,7 +489,7 @@ class SourceCache extends Evented {
         this._coveredTiles = {};
 
         let idealTileIDs;
-        if (!this.used) {
+        if (!this.used && !this.usedForTerrain) {
             idealTileIDs = [];
         } else if (this._source.tileID) {
             idealTileIDs = transform.getVisibleUnwrappedCoordinates(this._source.tileID)

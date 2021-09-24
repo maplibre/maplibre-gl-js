@@ -59,7 +59,7 @@ const hillshadeUniformValues = (
     painter: Painter,
     tile: Tile,
     layer: HillshadeStyleLayer,
-    terrainTile: Tile
+    coord: OverscaledTileID
 ): UniformValues<HillshadeUniformsType> => {
     const shadow = layer.paint.get('hillshade-shadow-color');
     const highlight = layer.paint.get('hillshade-highlight-color');
@@ -72,7 +72,7 @@ const hillshadeUniformValues = (
     }
     const align = !painter.options.moving;
     return {
-        'u_matrix': terrainTile ? terrainTile.tileID.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align),
+        'u_matrix': coord ? coord.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align),
         'u_image': 0,
         'u_latrange': getTileLatRange(painter, tile.tileID),
         'u_light': [layer.paint.get('hillshade-exaggeration'), azimuthal],

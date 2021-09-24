@@ -30,14 +30,14 @@ function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: Hillsh
         if (tile.needsHillshadePrepare && painter.renderPass === 'offscreen') {
             prepareHillshade(painter, tile, layer, depthMode, StencilMode.disabled, colorMode);
         } else if (painter.renderPass === 'translucent') {
-            renderHillshade(painter, tile, layer, depthMode, stencilModes[coord.overscaledZ], colorMode);
+            renderHillshade(painter, coord, tile, layer, depthMode, stencilModes[coord.overscaledZ], colorMode);
         }
     }
 
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
 
-function renderHillshade(painter, tile, layer, depthMode, stencilMode, colorMode) {
+function renderHillshade(painter, coord, tile, layer, depthMode, stencilMode, colorMode) {
     const context = painter.context;
     const gl = context.gl;
     const fbo = tile.fbo;
@@ -48,11 +48,11 @@ function renderHillshade(painter, tile, layer, depthMode, stencilMode, colorMode
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
-    const terrainTile = painter.style.terrainSourceCache.getTerrainTile(tile.tileID, painter.transform.zoom);
-    if (terrainTile) painter.setTextureViewport(tile.tileID, terrainTile);
+    const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
+    if (terrainCoord) painter.setTextureViewport(terrainCoord);
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        hillshadeUniformValues(painter, tile, layer, terrainTile), layer.id, painter.rasterBoundsBuffer,
+        hillshadeUniformValues(painter, tile, layer, terrainCoord), layer.id, painter.rasterBoundsBuffer,
         painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
 
 }

@@ -75,6 +75,7 @@ class Tile {
 
     neighboringTiles: any;
     dem: DEMData | undefined | null;
+    demMatrix: mat4;
     aborted: boolean | undefined | null;
     needsHillshadePrepare: boolean | undefined | null;
     request: Cancelable | undefined | null;
@@ -92,8 +93,8 @@ class Tile {
     hasRTLText: boolean;
     dependencies: any;
     elevation: any;
+    elevationMax: number;
     textures: Array<Texture>;
-    elevationVertexBuffer: VertexBuffer;
 
     /**
      * @param {OverscaledTileID} tileID
@@ -112,7 +113,9 @@ class Tile {
         this.hasRTLText = false;
         this.dependencies = {};
         this.elevation = {};
+        this.elevationMax = 0;
         this.rerender = false;
+        this.textures = [];
 
         // Counts the number of times a response was already expired when
         // received. We're using this to add a delay when making a new request

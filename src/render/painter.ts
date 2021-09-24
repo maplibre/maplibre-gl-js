@@ -61,6 +61,7 @@ import type IndexBuffer from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type ResolvedImage from '../style-spec/expression/types/resolved_image';
 import type {RGBAImage} from '../util/image';
+import Match from '../style-spec/expression/definitions/match';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -326,15 +327,15 @@ class Painter {
         return [{[minTileZ]: StencilMode.disabled}, coords];
     }
 
-    // calculate the correct viewport when rendering it to texture
-    setTextureViewport(tileID: OverscaledTileID, terrainTile: Tile) {
-        const z = Math.floor(this.transform.zoom);
-        // dz is the tileSize difference of the layer-source and the 512px terrain-source
-        // so if dz > 0 the frameport's viewbuffer is located to the currect subtile
-        const dz = tileID.canonical.z - (z < terrainTile.tileID.canonical.z ? z : terrainTile.tileID.canonical.z);
-        const x = tileID.canonical.x - (terrainTile.tileID.canonical.x << dz);
-        const y = tileID.canonical.y - (terrainTile.tileID.canonical.y << dz);
-        const size = terrainTile.tileSize * this.style.terrainSourceCache.qualityFactor / (1 << dz);
+    // calculate the correct tiles-viewport when rendering to texture
+    setTextureViewport(tileID: OverscaledTileID) {
+        let x = 0, y = 0, size = this.style.terrainSourceCache.tileSize * this.style.terrainSourceCache.qualityFactor;
+        const z = Math.floor(this.transform.zoom), dz = tileID.canonical.z - z;
+        if (dz > 0) {
+            x = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+            y = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+            size /= 1 << dz;
+        }
         this.context.viewport.set([size * x, size * y, size, size]);
     }
 
@@ -394,8 +395,8 @@ class Painter {
         }
 
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
-        const coordsAscendingInv: {[_: string]: {[_:string]: Array<OverscaledTileID>}} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
+        const coordsDescendingInv: {[_: string]: {[_:string]: Array<OverscaledTileID>}} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
         for (const id in sourceCaches) {
@@ -404,13 +405,13 @@ class Painter {
             coordsDescending[id] = coordsAscending[id].slice().reverse();
             coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
             if (isTerrainEnabled) {
-                coordsAscendingInv[id] = {};
-                for (let c=0; c<coordsAscending[id].length; c++) {
-                    const terrainTile = this.style.terrainSourceCache.getTerrainTile(coordsAscending[id][c], this.transform.zoom);
-                    if (!terrainTile) continue;
-                    const key = terrainTile.tileID.key;
-                    if (!coordsAscendingInv[id][key]) coordsAscendingInv[id][key] = [];
-                    coordsAscendingInv[id][key].push(coordsAscending[id][c]);
+               coordsDescendingInv[id] = {};
+                for (let c=0; c<coordsDescending[id].length; c++) {
+                    const coords = this.style.terrainSourceCache.getTerrainCoords(coordsDescending[id][c]);
+                    for (let key in coords) {
+                        if (!coordsDescendingInv[id][key]) coordsDescendingInv[id][key] = [];
+                        coordsDescendingInv[id][key].push(coords[key]);
+                    }
                 }
             }
         }
@@ -508,21 +509,25 @@ class Painter {
                         if (render) {
                             this.context.clear({ color: Color.transparent });
                             for (let l=0; l<layers.length; l++) {
-                                const _layer = this.style._layers[layers[l]];
-                                const coords = _layer.source ? coordsAscendingInv[_layer.source][tile.tileID.key] : [tile.tileID];
-                                this.renderLayer(this, this.style.sourceCaches[_layer.source], _layer, coords)
+                                const layer = this.style._layers[layers[l]];
+                                const coords = layer.source ? coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
+                              //   this._renderTileClippingMasks(layer, coords);
+                                this.renderLayer(this, this.style.sourceCaches[layer.source], layer, coords)
                             }
                         }
+                        tile.rerender = false;
                         drawTerrain(this, this.style.terrainSourceCache, tile);
                     }
 
                     if (type == "hillshade") {
                         stacks.push([layerIds[this.currentLayer]]);
                         for (const tile of this.style.terrainSourceCache.getRenderableTiles(this.transform)) {
-                            // FIXME! replace prepareTerrain with setting hillshading texture from prepareHillshading directly
+                            const coords = coordsDescendingInv[layer.source][tile.tileID.key];
+                            // FIXME! replace prepareTerrain with hillshading texture from prepareHillshading directly
                             prepareTerrain(this, this.style.terrainSourceCache, tile, stacks.length - 1);
                             this.context.clear({ color: Color.transparent });
-                            this.renderLayer(this, sourceCache, layer, coordsAscendingInv[layer.source][tile.tileID.key]);
+                            this._renderTileClippingMasks(layer, coords);
+                            this.renderLayer(this, sourceCache, layer, coords);
                             drawTerrain(this, this.style.terrainSourceCache, tile);
                         }
                         continue;

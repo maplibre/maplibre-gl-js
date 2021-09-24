@@ -30,7 +30,8 @@ uniform float u_fade_change;
 uniform vec2 u_texsize;
 uniform vec2 u_texsize_icon;
 uniform highp sampler2D u_coords;
-uniform lowp float u_ele_exaggeration;
+uniform highp sampler2D u_coords_index;
+uniform lowp float u_terrain_exaggeration;
 
 varying vec4 v_data0;
 varying vec4 v_data1;
@@ -68,7 +69,7 @@ void main() {
         size = u_size;
     }
 
-    vec4 projectedPoint = u_matrix * vec4(a_pos, a_ele * u_ele_exaggeration, 1);
+    vec4 projectedPoint = u_matrix * vec4(a_pos, a_ele * u_terrain_exaggeration, 1);
     highp float camera_to_anchor_distance = projectedPoint.w;
     // If the label is pitched with the map, layout is done in pitched space,
     // which makes labels in the distance smaller relative to viewport space.
@@ -93,7 +94,7 @@ void main() {
         // Point labels with 'rotation-alignment: map' are horizontal with respect to tile units
         // To figure out that angle in projected space, we draw a short horizontal line in tile
         // space, project it, and measure its angle in projected space.
-        vec4 offsetProjectedPoint = u_matrix * vec4(a_pos + vec2(1, 0), a_ele * u_ele_exaggeration, 1);
+        vec4 offsetProjectedPoint = u_matrix * vec4(a_pos + vec2(1, 0), a_ele * u_terrain_exaggeration, 1);
 
         vec2 a = projectedPoint.xy / projectedPoint.w;
         vec2 b = offsetProjectedPoint.xy / offsetProjectedPoint.w;
@@ -105,13 +106,13 @@ void main() {
     highp float angle_cos = cos(segment_angle + symbol_rotation);
     mat2 rotation_matrix = mat2(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
-    vec4 projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy, a_ele * u_ele_exaggeration, 1.0);
+    vec4 projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy, a_ele * u_terrain_exaggeration, 1.0);
     float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w; // After draping them to texture, no need for this.
     gl_Position = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale), z, 1.0);
     float gamma_scale = gl_Position.w;
 
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
-    float visibility = calculate_visibility(u_coords, projectedPoint, a_pos);
+    float visibility = calculate_visibility(u_coords, u_coords_index, projectedPoint, a_pos);
     float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
     float interpolated_fade_opacity = max(0.0, min(visibility, fade_opacity[0] + fade_change));
 

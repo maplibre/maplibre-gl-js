@@ -18,6 +18,8 @@ export default class DEMData {
     data: Uint32Array;
     stride: number;
     dim: number;
+    min: number;
+    max: number;
     encoding: "mapbox" | "terrarium" | "mtk";
 
     // RGBAImage data has uniform 1px padding on all sides: square tile edge size defines stride
@@ -52,6 +54,15 @@ export default class DEMData {
         this.data[this._idx(dim, -1)] = this.data[this._idx(dim - 1, 0)];
         this.data[this._idx(-1, dim)] = this.data[this._idx(0, dim - 1)];
         this.data[this._idx(dim, dim)] = this.data[this._idx(dim - 1, dim - 1)];
+
+        // calculate min/max values
+        this.min = Number.MAX_SAFE_INTEGER;
+        this.max = Number.MIN_SAFE_INTEGER;
+        for (let x=0; x<dim; x++) for (let y=0; y<dim; y++) {
+           let ele = this.get(x, y);
+           if (ele > this.max) this.max = ele;
+           if (ele < this.min) this.min = ele;
+        }
     }
 
     get(x: number, y: number) {
@@ -71,7 +82,7 @@ export default class DEMData {
 
     getUnpackVector() {
         if (this.encoding === "terrarium") return [256.0, 1.0, 1.0 / 256.0, 32768.0];
-        if (this.encoding === "mtk") return [6553.6, 25.6, 0.03, 10000.0];
+        if (this.encoding === "mtk") return [65536.0 * 0.03, 256.0 * 0.03, 0.03, 10000.0];
         return [6553.6, 25.6, 0.1, 10000.0];
     }
 

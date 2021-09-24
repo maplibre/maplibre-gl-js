@@ -10,6 +10,7 @@ import type {CrossFaded} from '../../style/properties';
 import type LineStyleLayer from '../../style/style_layer/line_style_layer';
 import type Painter from '../painter';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
+import { OverscaledTileID } from '../../source/tile_id';
 
 export type LineUniformsType = {
   'u_matrix': UniformMatrix4f;
@@ -97,12 +98,12 @@ const lineUniformValues = (
     painter: Painter,
     tile: Tile,
     layer: LineStyleLayer,
-    terrainTile: Tile
+    coord: OverscaledTileID
 ): UniformValues<LineUniformsType> => {
     const transform = painter.transform;
 
     return {
-        'u_matrix': calculateMatrix(painter, tile, layer, terrainTile),
+        'u_matrix': calculateMatrix(painter, tile, layer, coord),
         'u_ratio': 1 / pixelsToTileUnits(tile, 1, transform.zoom),
         'u_device_pixel_ratio': devicePixelRatio,
         'u_units_to_pixels': [
@@ -117,9 +118,9 @@ const lineGradientUniformValues = (
     tile: Tile,
     layer: LineStyleLayer,
     imageHeight: number,
-    terrainTile: Tile
+    coord: OverscaledTileID
 ): UniformValues<LineGradientUniformsType> => {
-    return extend(lineUniformValues(painter, tile, layer, terrainTile), {
+    return extend(lineUniformValues(painter, tile, layer, coord), {
         'u_image': 0,
         'u_image_height': imageHeight,
     });
@@ -130,12 +131,12 @@ const linePatternUniformValues = (
     tile: Tile,
     layer: LineStyleLayer,
     crossfade: CrossfadeParameters,
-    terrainTile: Tile
+    coord: OverscaledTileID
 ): UniformValues<LinePatternUniformsType> => {
     const transform = painter.transform;
     const tileZoomRatio = calculateTileRatio(tile, transform);
     return {
-        'u_matrix': calculateMatrix(painter, tile, layer, terrainTile),
+        'u_matrix': calculateMatrix(painter, tile, layer, coord),
         'u_texsize': tile.imageAtlasTexture.size,
         // camera zoom ratio
         'u_ratio': 1 / pixelsToTileUnits(tile, 1, transform.zoom),
@@ -156,7 +157,7 @@ const lineSDFUniformValues = (
     layer: LineStyleLayer,
     dasharray: CrossFaded<Array<number>>,
     crossfade: CrossfadeParameters,
-    terrainTile: Tile
+    coord: OverscaledTileID
 ): UniformValues<LineSDFUniformsType> => {
     const transform = painter.transform;
     const lineAtlas = painter.lineAtlas;
@@ -170,7 +171,7 @@ const lineSDFUniformValues = (
     const widthA = posA.width * crossfade.fromScale;
     const widthB = posB.width * crossfade.toScale;
 
-    return extend(lineUniformValues(painter, tile, layer, terrainTile), {
+    return extend(lineUniformValues(painter, tile, layer, coord), {
         'u_patternscale_a': [tileRatio / widthA, -posA.height / 2],
         'u_patternscale_b': [tileRatio / widthB, -posB.height / 2],
         'u_sdfgamma': lineAtlas.width / (Math.min(widthA, widthB) * 256 * devicePixelRatio) / 2,
@@ -185,9 +186,9 @@ function calculateTileRatio(tile: Tile, transform: Transform) {
     return 1 / pixelsToTileUnits(tile, 1, transform.tileZoom);
 }
 
-function calculateMatrix(painter, tile, layer, terrainTile) {
+function calculateMatrix(painter, tile, layer, coord) {
     return painter.translatePosMatrix(
-        terrainTile ? terrainTile.tileID.posMatrix : tile.tileID.posMatrix,
+        coord ? coord.posMatrix : tile.tileID.posMatrix,
         tile,
         layer.paint.get('line-translate'),
         layer.paint.get('line-translate-anchor')

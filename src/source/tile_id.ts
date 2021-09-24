@@ -41,6 +41,11 @@ export class CanonicalTileID {
             .replace('{bbox-epsg-3857}', bbox);
     }
 
+    isChildOf(parent: CanonicalTileID) {
+        const dz = this.z - parent.z;
+        return  dz > 0 && parent.x === (this.x >> dz) && parent.y === (this.y >> dz);
+    }
+
     getTilePoint(coord: MercatorCoordinate) {
         const tilesAtZoom = Math.pow(2, this.z);
         return new Point(
@@ -78,6 +83,10 @@ export class OverscaledTileID {
         this.wrap = wrap;
         this.canonical = new CanonicalTileID(z, +x, +y);
         this.key = calculateKey(wrap, overscaledZ, z, x, y);
+    }
+
+    clone() {
+       return new OverscaledTileID(this.overscaledZ, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y);
     }
 
     equals(id: OverscaledTileID) {

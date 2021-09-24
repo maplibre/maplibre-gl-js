@@ -63,10 +63,10 @@ function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterSty
             tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
         }
 
-        const terrainTile = painter.style.terrainSourceCache.getTerrainTile(tile.tileID, painter.transform.zoom);
-        if (terrainTile) painter.setTextureViewport(tile.tileID, terrainTile);
+        const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
+        if (terrainCoord) painter.setTextureViewport(terrainCoord);
 
-        const posMatrix = terrainTile ? terrainTile.tileID.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
+        const posMatrix = terrainCoord ? terrainCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
         const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer);
 
         if (source instanceof ImageSource) {
