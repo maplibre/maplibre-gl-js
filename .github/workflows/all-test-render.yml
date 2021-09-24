@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: a963b6e
+          ref: a963b6e7930aae82ac555e9d95165077750bfd89
           fetch-depth: 0
       - name: Use Node.js 14 x64
         uses: actions/setup-node@v2
@@ -61,7 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: a963b6e
+          ref: a963b6e7930aae82ac555e9d95165077750bfd89
           fetch-depth: 0
       - name: Use Node.js 14 x64
         uses: actions/setup-node@v2
