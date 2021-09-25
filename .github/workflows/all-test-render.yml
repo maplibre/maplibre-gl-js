@@ -24,9 +24,9 @@ jobs:
         with:
           node-version: 10
           architecture: x64
-      - run: npm ci
-      - run: npm run build-dev
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-render
+      - run: yarn install --frozen-lockfile
+      - run: yarn run build-dev
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" yarn run test-render
       - uses: actions/upload-artifact@v2
         if: always()
         with:
@@ -60,9 +60,9 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
           architecture: ${{ matrix.architecture }}
-      - run: npm ci
-      - run: npm run build-dev
-      - run: npm run test-render
+      - run: yarn install --frozen-lockfile
+      - run: yarn run build-dev
+      - run: yarn run test-render
       - uses: actions/upload-artifact@v2
         if: always()
         with:
