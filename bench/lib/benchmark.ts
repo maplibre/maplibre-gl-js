@@ -37,7 +37,6 @@ class Benchmark {
      */
     teardown(): Promise<void> | void {}
 
-    _measureAsync: () => Promise<Array<Measurement>>;
     _elapsed: number;
     _measurements: Array<Measurement>;
     _iterationsPerMeasurement: number;
