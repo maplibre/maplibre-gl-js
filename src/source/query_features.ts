@@ -12,7 +12,7 @@ import {mat4} from 'gl-matrix';
  * Returns a matrix that can be used to convert from tile coordinates to viewport pixel coordinates.
  */
 function getPixelPosMatrix(transform, tileID) {
-    const t = mat4.identity([] as any);
+    const t = mat4.create();
     mat4.translate(t, t, [1, 1, 0]);
     mat4.scale(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
     return mat4.multiply(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
