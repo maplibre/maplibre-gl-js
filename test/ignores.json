@@ -31,5 +31,5 @@
   "render-tests/extent/1024-symbol": "skip - MapLibre 1.13.1 baseline",
   "render-tests/icon-text-fit/enlargen-both": "skip - MapLibre 1.13.1 baseline",
   "render-tests/line-dasharray/case/round": "skip - MapLibre 1.13.1 baseline",
-  "render-tests/debug/tile-overscaled": "skip - allow CI to be green until we decide what to do with this test"
+  "render-tests/debug/tile-overscaled": "skip - MapLibre 1.13.1 baseline"
 }
