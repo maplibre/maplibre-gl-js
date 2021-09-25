@@ -82,7 +82,7 @@ Object.defineProperty(global.Image.prototype, 'src', {
     }
 });
 
-// This assumes that the code is using appendChild to add a srouce element to the video element.
+// This assumes that the code is using appendChild to add a source element to the video element.
 // At this time the fake code will go to the server and get the "video".
 // Hack: since node doesn't have any good video codec modules, just grab a png with
 // the first frame and fake the video API.
