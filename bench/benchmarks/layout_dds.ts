@@ -89,7 +89,7 @@ export default class LayoutDDS extends Benchmark {
             }
         }
 
-        this.parser = new TileParser(styleJSON, 'mapbox');
+        this.parser = new TileParser(styleJSON as any, 'mapbox');
         return this.parser.setup()
             .then(() => {
                 return Promise.all(tileIDs.map(tileID => this.parser.fetchTile(tileID)));
