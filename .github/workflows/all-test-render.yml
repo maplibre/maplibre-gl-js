@@ -6,101 +6,66 @@ on:
   pull_request:
 
 jobs:
-  just_before_typescript_ubuntu:
+  test_render_ubuntu:
+    strategy:
+      fail-fast: false
+      matrix:
+        ref:
+          - f87090b70b8a6fbde1a779c44933ce32bffc5d2c
+          - 49bc4ca45aba6b6af98df7e1e91735dcb0d6f20f
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: 49bc4ca45aba6b6af98df7e1e91735dcb0d6f20f
+          ref: ${{ matrix.ref }}
       - name: Use Node.js 10 x64
         uses: actions/setup-node@v2
         with:
           node-version: 10
           architecture: x64
-      - run: yarn install --frozen-lockfile
-      - run: yarn run build-dev
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" yarn run test-render
+      - run: npm ci
+      - run: npm run build-dev
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-render
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: test-render-ubuntu-latest-$${ matrix.ref }.html
+          path: test/integration/render-tests/index.html
 
-  just_before_typescript_macos:
-    runs-on: macos-latest
+  test_render_win_mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+        node_version:
+          - 10
+        architecture:
+          - x64
+        ref:
+          - f87090b70b8a6fbde1a779c44933ce32bffc5d2c
+          - 49bc4ca45aba6b6af98df7e1e91735dcb0d6f20f
+
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: 49bc4ca45aba6b6af98df7e1e91735dcb0d6f20f
-      - name: Use Node.js 10 x64
+          ref: ${{ matrix.ref }}
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
-          node-version: 10
-          architecture: x64
-      - run: yarn install --frozen-lockfile
-      - run: yarn run build-dev
-      - run: yarn run test-render
-  
-  during_migration_ubuntu:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: a963b6e7930aae82ac555e9d95165077750bfd89
-          fetch-depth: 0
-      - name: Use Node.js 14 x64
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-          architecture: x64
-      - run: npm ci
-      - run: npm run build-dev
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-render
-  
-  during_migration_macos:
-    runs-on: macos-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: a963b6e7930aae82ac555e9d95165077750bfd89
-          fetch-depth: 0
-      - name: Use Node.js 14 x64
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-          architecture: x64
+          node-version: ${{ matrix.node_version }}
+          architecture: ${{ matrix.architecture }}
       - run: npm ci
       - run: npm run build-dev
       - run: npm run test-render
-      
-  revert_ubuntu:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v2
+      - uses: actions/upload-artifact@v2
+        if: always()
         with:
-          ref: test-render-revert
-      - name: Use Node.js 14 x64
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-          architecture: x64
-      - run: npm ci
-      - run: npm run build-dev
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-render
-      
-  revert_macos:
-    runs-on: macos-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: test-render-revert
-      - name: Use Node.js 14 x64
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-          architecture: x64
-      - run: npm ci
-      - run: npm run build-dev
-      - run: npm run test-render
+          name: test-render-${{ matrix.os }}-$${ matrix.ref }}.html
+          path: test/integration/render-tests/index.html
       
