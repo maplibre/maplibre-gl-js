@@ -52,7 +52,7 @@ class Benchmark {
             .catch(e => {
                 // The bench run will break here but should at least provide helpful information:
                 console.error(e);
-            });
+            }) as any;
     }
 
     _done() {
