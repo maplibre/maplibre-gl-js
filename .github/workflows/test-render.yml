@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test_render_ubuntu:
+  test_render:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -22,36 +22,5 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: test-render-ubuntu-latest.html
-          path: test/integration/render-tests/index.html
-
-  test_render_win_mac:
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - macos-latest
-          - windows-latest
-        node_version:
-          - 14
-        architecture:
-          - x64
-
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node_version }}
-          architecture: ${{ matrix.architecture }}
-      - run: npm ci
-      - run: npm run build-dev
-      - run: npm run test-render
-      - uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: test-render-${{ matrix.os }}.html
+          name: index.html
           path: test/integration/render-tests/index.html
