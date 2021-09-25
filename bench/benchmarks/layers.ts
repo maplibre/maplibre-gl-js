@@ -1,18 +1,20 @@
-
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 import style from '../data/empty.json';
-
 const width = 1024;
 const height = 768;
 const layerCount = 50;
 
 function generateLayers(layer) {
     const generated = [];
+
     for (let i = 0; i < layerCount; i++) {
         const id = layer.id + i;
-        generated.push(Object.assign({}, layer, {id}));
+        generated.push(Object.assign({}, layer, {
+            id
+        }));
     }
+
     return generated;
 }
 
@@ -38,12 +40,11 @@ export class LayerBenchmark extends Benchmark {
     teardown() {
         this.map.remove();
     }
-}
 
+}
 export class LayerBackground extends LayerBenchmark {
     constructor() {
         super();
-
         this.layerStyle = Object.assign({}, style, {
             layers: generateLayers({
                 id: 'backgroundlayer',
@@ -51,12 +52,11 @@ export class LayerBackground extends LayerBenchmark {
             })
         });
     }
-}
 
+}
 export class LayerCircle extends LayerBenchmark {
     constructor() {
         super();
-
         this.layerStyle = Object.assign({}, style, {
             layers: generateLayers({
                 'id': 'circlelayer',
@@ -66,12 +66,11 @@ export class LayerCircle extends LayerBenchmark {
             })
         });
     }
-}
 
+}
 export class LayerFill extends LayerBenchmark {
     constructor() {
         super();
-
         this.layerStyle = Object.assign({}, style, {
             layers: generateLayers({
                 'id': 'filllayer',
@@ -85,12 +84,11 @@ export class LayerFill extends LayerBenchmark {
             })
         });
     }
-}
 
+}
 export class LayerFillExtrusion extends LayerBenchmark {
     constructor() {
         super();
-
         this.layerStyle = Object.assign({}, style, {
             layers: generateLayers({
                 'id': 'fillextrusionlayer',
@@ -103,54 +101,40 @@ export class LayerFillExtrusion extends LayerBenchmark {
             })
         });
     }
-}
 
+}
 export class LayerHeatmap extends LayerBenchmark {
     setup() {
-        return fetch('/bench/data/naturalearth-land.json')
-            .then(response => response.json())
-            .then(data => {
-                this.layerStyle = Object.assign({}, style, {
-                    sources: {
-                        'heatmap': {
-                            'type': 'geojson',
-                            data,
-                            'maxzoom': 23
-                        }
-                    },
-                    layers: generateLayers({
-                        'id': 'layer',
-                        'type': 'heatmap',
-                        'source': 'heatmap',
-                        'paint': {
-                            "heatmap-radius": 50,
-                            "heatmap-weight": {
-                                "stops": [[0, 0.5], [4, 2]]
-                            },
-                            "heatmap-intensity": 0.9,
-                            "heatmap-color": [
-                                "interpolate",
-                                ["linear"],
-                                ["heatmap-density"],
-                                0, "rgba(0, 0, 255, 0)",
-                                0.1, "royalblue",
-                                0.3, "cyan",
-                                0.5, "lime",
-                                0.7, "yellow",
-                                1, "red"
-                            ]
-                        }
-                    })
-                });
-            })
-            .then(() => super.setup());
+        return fetch('/bench/data/naturalearth-land.json').then(response => response.json()).then(data => {
+            this.layerStyle = Object.assign({}, style, {
+                sources: {
+                    'heatmap': {
+                        'type': 'geojson',
+                        data,
+                        'maxzoom': 23
+                    }
+                },
+                layers: generateLayers({
+                    'id': 'layer',
+                    'type': 'heatmap',
+                    'source': 'heatmap',
+                    'paint': {
+                        "heatmap-radius": 50,
+                        "heatmap-weight": {
+                            "stops": [[0, 0.5], [4, 2]]
+                        },
+                        "heatmap-intensity": 0.9,
+                        "heatmap-color": ["interpolate", ["linear"], ["heatmap-density"], 0, "rgba(0, 0, 255, 0)", 0.1, "royalblue", 0.3, "cyan", 0.5, "lime", 0.7, "yellow", 1, "red"]
+                    }
+                })
+            });
+        }).then(() => super.setup());
     }
-}
 
+}
 export class LayerHillshade extends LayerBenchmark {
     constructor() {
         super();
-
         this.layerStyle = Object.assign({}, style, {
             sources: {
                 'terrain-rgb': {
@@ -161,16 +145,15 @@ export class LayerHillshade extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'layer',
                 'type': 'hillshade',
-                'source': 'terrain-rgb',
+                'source': 'terrain-rgb'
             })
         });
     }
-}
 
+}
 export class LayerLine extends LayerBenchmark {
     constructor() {
         super();
-
         this.layerStyle = Object.assign({}, style, {
             layers: generateLayers({
                 'id': 'linelayer',
@@ -180,12 +163,11 @@ export class LayerLine extends LayerBenchmark {
             })
         });
     }
-}
 
+}
 export class LayerRaster extends LayerBenchmark {
     constructor() {
         super();
-
         this.layerStyle = Object.assign({}, style, {
             sources: {
                 'satellite': {
@@ -201,12 +183,11 @@ export class LayerRaster extends LayerBenchmark {
             })
         });
     }
-}
 
+}
 export class LayerSymbol extends LayerBenchmark {
     constructor() {
         super();
-
         this.layerStyle = Object.assign({}, style, {
             layers: generateLayers({
                 'id': 'symbollayer',
@@ -220,12 +201,11 @@ export class LayerSymbol extends LayerBenchmark {
             })
         });
     }
-}
 
+}
 export class LayerSymbolWithIcons extends LayerBenchmark {
     constructor() {
         super();
-
         this.layerStyle = Object.assign({}, style, {
             layers: generateLayers({
                 'id': 'symbollayer',
@@ -239,12 +219,11 @@ export class LayerSymbolWithIcons extends LayerBenchmark {
             })
         });
     }
-}
 
+}
 export class LayerSymbolWithSortKey extends LayerBenchmark {
     constructor() {
         super();
-
         this.layerStyle = Object.assign({}, style, {
             layers: this.generateSortKeyLayers()
         });
@@ -252,6 +231,7 @@ export class LayerSymbolWithSortKey extends LayerBenchmark {
 
     generateSortKeyLayers() {
         const generated = [];
+
         for (let i = 0; i < layerCount; i++) {
             generated.push({
                 'id': `symbollayer${i}`,
@@ -264,14 +244,14 @@ export class LayerSymbolWithSortKey extends LayerBenchmark {
                 }
             });
         }
+
         return generated;
     }
-}
 
+}
 export class LayerTextWithVariableAnchor extends LayerBenchmark {
     constructor() {
         super();
-
         this.layerStyle = Object.assign({}, style, {
             layers: generateLayers({
                 'id': 'symbollayer',
@@ -281,19 +261,10 @@ export class LayerTextWithVariableAnchor extends LayerBenchmark {
                 'layout': {
                     'text-field': 'Test Test Test',
                     'text-justify': 'auto',
-                    'text-variable-anchor': [
-                        'center',
-                        'top',
-                        'bottom',
-                        'left',
-                        'right',
-                        'top-left',
-                        'top-right',
-                        'bottom-left',
-                        'bottom-right'
-                    ]
+                    'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right']
                 }
             })
         });
     }
+
 }

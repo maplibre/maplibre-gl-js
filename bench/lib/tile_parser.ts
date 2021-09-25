@@ -1,20 +1,16 @@
-// @flow
-
 import Protobuf from 'pbf';
 import VT from '@mapbox/vector-tile';
 import assert from 'assert';
-
 import deref from '../../src/style-spec/deref';
 import Style from '../../src/style/style';
 import {Evented} from '../../src/util/evented';
 import {RequestManager} from '../../src/util/request_manager';
 import WorkerTile from '../../src/source/worker_tile';
 import StyleLayerIndex from '../../src/style/style_layer_index';
-
-import type {StyleSpecification} from '../../src/style-spec/types';
-import type {WorkerTileResult} from '../../src/source/worker_source';
-import type {OverscaledTileID} from '../../src/source/tile_id';
-import type {TileJSON} from '../../src/types/tilejson';
+import {StyleSpecification} from '../../src/style-spec/types';
+import {WorkerTileResult} from '../../src/source/worker_source';
+import {OverscaledTileID} from '../../src/source/tile_id';
+import {TileJSON} from '../../src/types/tilejson';
 
 class StubMap extends Evented {
     _requestManager: RequestManager;
@@ -29,17 +25,14 @@ const mapStub = new StubMap();
 
 function createStyle(styleJSON: StyleSpecification): Promise<Style> {
     return new Promise((resolve, reject) => {
-        const style = new Style((mapStub: any));
+        const style = new Style((mapStub as any));
         style.loadJSON(styleJSON);
-        style
-            .on('style.load', () => resolve(style))
-            .on('error', reject);
+        style.on('style.load', () => resolve(style)).on('error', reject);
     });
 }
 
 function fetchTileJSON(requestManager: RequestManager, sourceURL: string): Promise<TileJSON> {
-    return fetch(requestManager.normalizeSourceURL(sourceURL))
-        .then(response => response.json());
+    return fetch(requestManager.normalizeSourceURL(sourceURL)).then(response => response.json());
 }
 
 export default class TileParser {
@@ -47,10 +40,12 @@ export default class TileParser {
     tileJSON: TileJSON;
     sourceID: string;
     layerIndex: StyleLayerIndex;
-    icons: Object;
-    glyphs: Object;
+    icons: object;
+    glyphs: object;
     style: Style;
-    actor: { send: Function };
+    actor: {
+        send: Function;
+    };
 
     constructor(styleJSON: StyleSpecification, sourceID: string) {
         this.styleJSON = styleJSON;
@@ -60,8 +55,9 @@ export default class TileParser {
         this.icons = {};
     }
 
-    loadImages(params: Object, callback: Function) {
+    loadImages(params: object, callback: Function) {
         const key = JSON.stringify(params);
+
         if (this.icons[key]) {
             callback(null, this.icons[key]);
         } else {
@@ -72,8 +68,9 @@ export default class TileParser {
         }
     }
 
-    loadGlyphs(params: Object, callback: Function) {
+    loadGlyphs(params: object, callback: Function) {
         const key = JSON.stringify(params);
+
         if (this.glyphs[key]) {
             callback(null, this.glyphs[key]);
         } else {
@@ -96,24 +93,25 @@ export default class TileParser {
                     } else assert(false);
                 }, 0);
             }
-        };
 
-        return Promise.all([
-            createStyle(this.styleJSON),
-            fetchTileJSON(mapStub._requestManager, (this.styleJSON.sources[this.sourceID]: any).url)
-        ]).then(([style: Style, tileJSON: TileJSON]) => {
+        };
+        return Promise.all([createStyle(this.styleJSON), fetchTileJSON(mapStub._requestManager, (this.styleJSON.sources[this.sourceID] as any).url)]).then(([style, tileJSON]) => {
             this.style = style;
             this.tileJSON = tileJSON;
         });
     }
 
     fetchTile(tileID: OverscaledTileID) {
-        return fetch(this.style.map._requestManager.normalizeTileURL(tileID.canonical.url(this.tileJSON.tiles)))
-            .then(response => response.arrayBuffer())
-            .then(buffer => ({tileID, buffer}));
+        return fetch(this.style.map._requestManager.normalizeTileURL(tileID.canonical.url(this.tileJSON.tiles))).then(response => response.arrayBuffer()).then(buffer => ({
+            tileID,
+            buffer
+        }));
     }
 
-    parseTile(tile: {tileID: OverscaledTileID, buffer: ArrayBuffer}, returnDependencies?: boolean): Promise<?WorkerTileResult> {
+    parseTile(tile: {
+        tileID: OverscaledTileID;
+        buffer: ArrayBuffer;
+    }, returnDependencies?: boolean): Promise<WorkerTileResult | undefined | null> {
         const workerTile = new WorkerTile({
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,
@@ -124,7 +122,9 @@ export default class TileParser {
             uid: '0',
             maxZoom: 22,
             pixelRatio: 1,
-            request: {url: ''},
+            request: {
+                url: ''
+            },
             angle: 0,
             pitch: 0,
             cameraToCenterDistance: 0,
@@ -132,11 +132,9 @@ export default class TileParser {
             returnDependencies,
             promoteId: undefined
         });
-
         const vectorTile = new VT.VectorTile(new Protobuf(tile.buffer));
-
         return new Promise((resolve, reject) => {
-            workerTile.parse(vectorTile, this.layerIndex, [], (this.actor: any), (err, result) => {
+            workerTile.parse(vectorTile, this.layerIndex, [], (this.actor as any), (err, result) => {
                 if (err) {
                     reject(err);
                 } else {

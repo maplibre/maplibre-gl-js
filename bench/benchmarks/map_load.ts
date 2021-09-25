@@ -1,4 +1,3 @@
-
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 
@@ -10,10 +9,8 @@ export default class MapLoad extends Benchmark {
                 sources: {},
                 layers: []
             }
-        })
-            .then(map => map.remove())
-            .catch(error => {
-                console.error(error);
-            });
+        }).then(map => map.remove()).catch(error => {
+            console.error(error);
+        });
     }
 }
