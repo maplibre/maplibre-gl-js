@@ -77,7 +77,7 @@ class LineStyleLayer extends StyleLayer {
         return new LineBucket(parameters);
     }
 
-    queryRadius = (bucket: Bucket): number => {
+    queryRadius(bucket: Bucket): number {
         const lineBucket: LineBucket = (bucket as any);
         const width = getLineWidth(
             getMaximumPaintValue('line-width', this, lineBucket),
@@ -86,7 +86,7 @@ class LineStyleLayer extends StyleLayer {
         return width / 2 + Math.abs(offset) + translateDistance(this.paint.get('line-translate'));
     }
 
-    queryIntersectsFeature = (
+    queryIntersectsFeature(
       queryGeometry: Array<Point>,
       feature: VectorTileFeature,
       featureState: FeatureState,
@@ -94,7 +94,7 @@ class LineStyleLayer extends StyleLayer {
       zoom: number,
       transform: Transform,
       pixelsToTileUnits: number
-    ): boolean => {
+    ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('line-translate'),
             this.paint.get('line-translate-anchor'),
