@@ -20,6 +20,7 @@ jobs:
       - run: npm run build-dev
       - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-render
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: test-render-ubuntu-latest.html
           path: test/integration/render-tests/index.html
@@ -50,6 +51,7 @@ jobs:
       - run: npm run build-dev
       - run: npm run test-render
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: test-render-${{ matrix.os }}.html
           path: test/integration/render-tests/index.html
