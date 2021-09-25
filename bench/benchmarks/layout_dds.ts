@@ -1,5 +1,3 @@
-// @flow
-
 import Benchmark from '../lib/benchmark';
 import TileParser from '../lib/tile_parser';
 import {OverscaledTileID} from '../../src/source/tile_id';
@@ -7,7 +5,10 @@ import {OverscaledTileID} from '../../src/source/tile_id';
 const LAYER_COUNT = 2;
 
 export default class LayoutDDS extends Benchmark {
-    tiles: Array<{tileID: OverscaledTileID, buffer: ArrayBuffer}>;
+    tiles: Array<{
+      tileID: OverscaledTileID,
+      buffer: ArrayBuffer
+    }>;
     parser: TileParser;
 
     setup(): Promise<void> {
@@ -82,7 +83,7 @@ export default class LayoutDDS extends Benchmark {
 
         while (styleJSON.layers.length < LAYER_COUNT) {
             for (const layer of layers) {
-                styleJSON.layers.push(Object.assign(({}: any), layer, {
+                styleJSON.layers.push(Object.assign((({} as any)), layer, {
                     id: layer.id + styleJSON.layers.length
                 }));
             }

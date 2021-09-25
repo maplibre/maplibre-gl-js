@@ -1,4 +1,3 @@
-// @flow
 // According to https://developer.mozilla.org/en-US/docs/Web/API/Performance/now,
 // performance.now() should be accurate to 0.005ms. Set the minimum running
 // time for a single measurement at 5ms, so that the error due to timer
@@ -6,8 +5,8 @@
 const minTimeForMeasurement = 0.005 * 1000;
 
 export type Measurement = {
-    iterations: number,
-    time: number
+  iterations: number,
+  time: number
 };
 
 class Benchmark {
@@ -48,7 +47,7 @@ class Benchmark {
      * Run the benchmark by executing `setup` once, sampling the execution time of `bench` some number of
      * times, and then executing `teardown`. Yields an array of execution times.
      */
-    run(): Promise<?Array<Measurement>> {
+    run(): Promise<Array<Measurement> | undefined | null> {
         return Promise.resolve(this.setup())
             .then(() => this._begin())
             .catch(e => {
@@ -72,7 +71,7 @@ class Benchmark {
         if (bench instanceof Promise) {
             return bench.then(this._measureAsync);
         } else {
-            return (this._measureSync(): any);
+            return this._measureSync() as any;
         }
     }
 
@@ -112,7 +111,7 @@ class Benchmark {
     }
 
     _runAsync(n: number): Promise<void> {
-        const bench = ((this.bench(): any): Promise<void>);
+        const bench = (this.bench() as any as Promise<void>);
         if (n === 1) {
             return bench;
         } else {
