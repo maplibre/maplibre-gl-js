@@ -62,8 +62,6 @@
     // @typescript-eslint/quotes requires standard quotes rule to be turned off
     "quotes": "off",
     "@typescript-eslint/quotes": ["error", "single"],
-    "no-redeclare": "off",
-    "@typescript-eslint/no-redeclare": ["error"],
     "space-before-function-paren": "off",
     "template-curly-spacing": "error",
     "no-useless-escape": "off",
