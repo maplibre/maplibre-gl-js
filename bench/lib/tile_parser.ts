@@ -36,7 +36,7 @@ function createStyle(styleJSON: StyleSpecification): Promise<Style> {
 }
 
 function fetchTileJSON(requestManager: RequestManager, sourceURL: string): Promise<TileJSON> {
-    return fetch(requestManager.normalizeSourceURL(sourceURL))
+    return fetch(sourceURL)
         .then(response => response.json());
 }
 
@@ -108,7 +108,7 @@ export default class TileParser {
     }
 
     fetchTile(tileID: OverscaledTileID) {
-        return fetch(this.style.map._requestManager.normalizeTileURL(tileID.canonical.url(this.tileJSON.tiles)))
+        return fetch(tileID.canonical.url(this.tileJSON.tiles))
             .then(response => response.arrayBuffer())
             .then(buffer => ({tileID, buffer}));
     }
