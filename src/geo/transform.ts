@@ -595,17 +595,17 @@ class Transform {
         const scale = this.worldSize / this.zoomScale(canonical.z);
         const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
 
-        const posMatrix = mat4.create();
+        const posMatrix = mat4.identity(new Float64Array(16) as any);
         mat4.translate(posMatrix, posMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
         mat4.scale(posMatrix, posMatrix, [scale / EXTENT, scale / EXTENT, 1]);
         mat4.multiply(posMatrix, aligned ? this.alignedProjMatrix : this.projMatrix, posMatrix);
 
-        cache[posMatrixKey] = mat4.clone(posMatrix);
+        cache[posMatrixKey] = new Float32Array(posMatrix);
         return cache[posMatrixKey];
     }
 
     customLayerMatrix(): mat4 {
-        return mat4.clone(this.mercatorMatrix);
+        return this.mercatorMatrix.slice() as any;
     }
 
     _constrain() {
@@ -724,13 +724,13 @@ class Transform {
 
         // The mercatorMatrix can be used to transform points from mercator coordinates
         // ([0, 0] nw, [1, 1] se) to GL coordinates.
-        this.mercatorMatrix = mat4.scale(mat4.create(), m, vec3.fromValues(this.worldSize, this.worldSize, this.worldSize));
+        this.mercatorMatrix = mat4.scale([] as any, m, vec3.fromValues(this.worldSize, this.worldSize, this.worldSize));
 
         // scale vertically to meters per pixel (inverse of ground resolution):
         mat4.scale(m, m, vec3.fromValues(1, 1, mercatorZfromAltitude(1, this.center.lat) * this.worldSize));
 
         this.projMatrix = m;
-        this.invProjMatrix = mat4.invert(mat4.create(), this.projMatrix);
+        this.invProjMatrix = mat4.invert([] as any, this.projMatrix);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional
@@ -742,7 +742,7 @@ class Transform {
             angleCos = Math.cos(this.angle), angleSin = Math.sin(this.angle),
             dx = x - Math.round(x) + angleCos * xShift + angleSin * yShift,
             dy = y - Math.round(y) + angleCos * yShift + angleSin * xShift;
-        const alignedM = mat4.clone(m);
+        const alignedM = new Float64Array(m) as any as mat4;
         mat4.translate(alignedM, alignedM, [ dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0 ]);
         this.alignedProjMatrix = alignedM;
 
