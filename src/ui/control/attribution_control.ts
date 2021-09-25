@@ -52,7 +52,7 @@ class AttributionControl implements IControl {
 
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib');
-        this._compactButton = DOM.create('button', 'maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button', this._container) as HTMLButtonElement;
+        this._compactButton = DOM.create('button', 'maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button', this._container);
         this._compactButton.addEventListener('click', this._toggleAttribution);
         this._compactButton.type = 'button';
         this._setElementTitle(this._compactButton, 'ToggleAttribution');

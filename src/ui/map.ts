@@ -2338,7 +2338,7 @@ class Map extends Camera {
             canvasContainer.classList.add('maplibregl-interactive', 'mapboxgl-interactive');
         }
 
-        this._canvas = DOM.create('canvas', 'maplibregl-canvas mapboxgl-canvas', canvasContainer) as HTMLCanvasElement;
+        this._canvas = DOM.create('canvas', 'maplibregl-canvas mapboxgl-canvas', canvasContainer);
         this._canvas.addEventListener('webglcontextlost', this._contextLost, false);
         this._canvas.addEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.setAttribute('tabindex', '0');
@@ -2655,8 +2655,8 @@ class Map extends Camera {
 
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension) extension.loseContext();
-        removeNode(this._canvasContainer);
-        removeNode(this._controlContainer);
+        DOM.remove(this._canvasContainer);
+        DOM.remove(this._controlContainer);
         this._container.classList.remove('maplibregl-map', 'mapboxgl-map');
 
         PerformanceUtils.clearMetrics();
@@ -2803,12 +2803,6 @@ class Map extends Camera {
 }
 
 export default Map;
-
-function removeNode(node) {
-    if (node.parentNode) {
-        node.parentNode.removeChild(node);
-    }
-}
 
 /**
  * Interface for interactive controls added to the map. This is a
