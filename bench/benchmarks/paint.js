@@ -1,18 +1,16 @@
-// @flow
-
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import type Map from '../../src/ui/map';
+import Map from '../../src/ui/map';
 
 const width = 1024;
 const height = 768;
 
 export default class Paint extends Benchmark {
     style: string;
-    locations: Array<Object>;
+    locations: Array<object>;
     maps: Array<Map>;
 
-    constructor(style: string, locations: Array<Object>) {
+    constructor(style: string, locations: Array<object>) {
         super();
         this.style = style;
         this.locations = locations;
@@ -27,19 +25,18 @@ export default class Paint extends Benchmark {
                 center: location.center,
                 style: this.style
             });
-        }))
-            .then(maps => {
-                this.maps = maps;
-            })
-            .catch(error => {
-                console.error(error);
-            });
+        })).then(maps => {
+            this.maps = maps;
+        }).catch(error => {
+            console.error(error);
+        });
     }
 
     bench() {
         for (const map of this.maps) {
             map._styleDirty = true;
             map._sourcesDirty = true;
+
             map._render(Date.now());
         }
     }

@@ -1,29 +1,24 @@
-// @flow
-
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import type Map from '../../src/ui/map';
+import Map from '../../src/ui/map';
 
 const width = 1024;
 const height = 768;
-
 const points = [];
 const d = 4;
+
 for (let x = 0; x < d; x++) {
     for (let y = 0; y < d; y++) {
-        points.push([
-            (x / d) * width,
-            (y / d) * height
-        ]);
+        points.push([x / d * width, y / d * height]);
     }
 }
 
 export default class QueryPoint extends Benchmark {
     style: string;
-    locations: Array<Object>;
+    locations: Array<object>;
     maps: Array<Map>;
 
-    constructor(style: string, locations: Array<Object>) {
+    constructor(style: string, locations: Array<object>) {
         super();
         this.style = style;
         this.locations = locations;
@@ -38,13 +33,11 @@ export default class QueryPoint extends Benchmark {
                 center: location.center,
                 style: this.style
             });
-        }))
-            .then(maps => {
-                this.maps = maps;
-            })
-            .catch(error => {
-                console.error(error);
-            });
+        })).then(maps => {
+            this.maps = maps;
+        }).catch(error => {
+            console.error(error);
+        });
     }
 
     bench() {

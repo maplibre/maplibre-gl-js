@@ -1,6 +1,4 @@
-// @flow
-
-import type {StyleSpecification} from '../../src/style-spec/types';
+import {StyleSpecification} from '../../src/style-spec/types';
 import Benchmark from '../lib/benchmark';
 import createStyleLayer from '../../src/style/create_style_layer';
 import deref from '../../src/style-spec/deref';
@@ -8,7 +6,7 @@ import fetchStyle from '../lib/fetch_style';
 
 export default class StyleLayerCreate extends Benchmark {
     style: string | StyleSpecification;
-    layers: Array<Object>;
+    layers: Array<object>;
 
     constructor(style: string | StyleSpecification) {
         super();
@@ -16,8 +14,9 @@ export default class StyleLayerCreate extends Benchmark {
     }
 
     setup(): Promise<void> {
-        return fetchStyle(this.style)
-            .then(json => { this.layers = deref(json.layers); });
+        return fetchStyle(this.style).then(json => {
+            this.layers = deref(json.layers);
+        });
     }
 
     bench() {
@@ -25,4 +24,5 @@ export default class StyleLayerCreate extends Benchmark {
             createStyleLayer(layer);
         }
     }
+
 }
