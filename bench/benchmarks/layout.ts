@@ -1,18 +1,19 @@
-// @flow
-
-import type {StyleSpecification} from '../../src/style-spec/types';
+import type { StyleSpecification } from '../../src/style-spec/types';
 import Benchmark from '../lib/benchmark';
 import fetchStyle from '../lib/fetch_style';
 import TileParser from '../lib/tile_parser';
 import {OverscaledTileID} from '../../src/source/tile_id';
 
 export default class Layout extends Benchmark {
-    tiles: Array<{tileID: OverscaledTileID, buffer: ArrayBuffer}>;
+    tiles: Array<{
+      tileID: OverscaledTileID,
+      buffer: ArrayBuffer
+    }>;
     parser: TileParser;
     style: string | StyleSpecification;
     tileIDs: Array<OverscaledTileID>;
 
-    constructor(style: string | StyleSpecification, tileIDs: ?Array<OverscaledTileID>) {
+    constructor(style: string | StyleSpecification, tileIDs?: Array<OverscaledTileID> | null) {
         super();
         this.style = style;
         this.tileIDs = tileIDs || [
