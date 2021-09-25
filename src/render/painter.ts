@@ -1,6 +1,6 @@
 import browser from '../util/browser';
 
-import {mat4} from 'gl-matrix';
+import {mat4, vec3} from 'gl-matrix';
 import SourceCache from '../source/source_cache';
 import EXTENT from '../data/extent';
 import pixelsToTileUnits from '../source/pixels_to_tile_units';
@@ -557,14 +557,14 @@ class Painter {
             ];
         }
 
-        const translation = [
+        const translation = vec3.fromValues(
             inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], this.transform.zoom),
             inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], this.transform.zoom),
             0
-        ];
+        );
 
         const translatedMatrix = new Float32Array(16);
-        mat4.translate(translatedMatrix, matrix, translation as any);
+        mat4.translate(translatedMatrix, matrix, translation);
         return translatedMatrix;
     }
 

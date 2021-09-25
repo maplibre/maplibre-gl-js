@@ -4,7 +4,7 @@ import PathInterpolator from './path_interpolator';
 
 import * as intersectionTests from '../util/intersection_tests';
 import Grid from './grid_index';
-import {mat4} from 'gl-matrix';
+import {mat4, vec4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 import assert from 'assert';
 
@@ -348,7 +348,7 @@ class CollisionIndex {
     }
 
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number) {
-        const p = [x, y, 0, 1] as any;
+        const p = vec4.fromValues(x, y, 0, 1);
         projection.xyTransformMat4(p, p, posMatrix);
         const a = new Point(
             (((p[0] / p[3] + 1) / 2) * this.transform.width) + viewportPadding,
