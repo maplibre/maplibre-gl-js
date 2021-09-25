@@ -31,22 +31,7 @@ import {mat4} from 'gl-matrix';
 
 const TRANSITION_SUFFIX = '-transition';
 
-// this interface is used to allow optional overload for this methods in the derived classes.
-interface StyleLayer {
-    queryRadius?(bucket: Bucket): number;
-    queryIntersectsFeature?(
-      queryGeometry: Array<Point>,
-      feature: VectorTileFeature,
-      featureState: FeatureState,
-      geometry: Array<Array<Point>>,
-      zoom: number,
-      transform: Transform,
-      pixelsToTileUnits: number,
-      pixelPosMatrix: mat4
-    ): boolean | number;
-}
-
-abstract class StyleLayer extends Evented {
+class StyleLayer extends Evented {
     id: string;
     metadata: unknown;
     type: string;
@@ -66,6 +51,18 @@ abstract class StyleLayer extends Evented {
     readonly paint: unknown;
 
     _featureFilter: FeatureFilter;
+
+    readonly queryRadius: (bucket: Bucket) => number;
+    readonly queryIntersectsFeature: (
+      queryGeometry: Array<Point>,
+      feature: VectorTileFeature,
+      featureState: FeatureState,
+      geometry: Array<Array<Point>>,
+      zoom: number,
+      transform: Transform,
+      pixelsToTileUnits: number,
+      pixelPosMatrix: mat4
+    ) => boolean | number;
 
     readonly onAdd: ((map: Map) => void);
     readonly onRemove: ((map: Map) => void);
