@@ -5,6 +5,6 @@ const requestManager = new RequestManager();
 
 export default function fetchStyle(value: string | StyleSpecification): Promise<StyleSpecification> {
     return typeof value === 'string' ?
-        fetch(requestManager.normalizeStyleURL(value)).then(response => response.json()) :
+        fetch(value) as any :
         Promise.resolve(value);
 }
