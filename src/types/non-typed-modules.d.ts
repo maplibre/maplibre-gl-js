@@ -10,7 +10,9 @@ declare module '@mapbox/mapbox-gl-supported' {
         ): boolean;
     };
 
-    let __exports: isSupported;
+    let __exports: {
+        supported: isSupported;
+    };
     export = __exports
 }
 
@@ -42,42 +44,6 @@ declare module 'potpack' {
     }
 
     let __exports: typeof potpack;
-    export = __exports
-}
-
-declare module 'sinon' {
-    type SpyCall = {
-        args: Array<unknown>;
-    };
-
-    type Spy = {
-        calledOnce: number;
-        getCall(i: number): SpyCall;
-        (): any;
-    };
-
-    type Stub = {
-        callsFake(fn: unknown): Spy;
-    };
-
-    class FakeServer {
-        xhr: XMLHttpRequest;
-    }
-
-    type Sandbox = {
-        xhr: {
-            supportsCORS: boolean;
-        };
-        fakeServer: {
-            create: () => FakeServer;
-        };
-        createSandbox(options: unknown): Sandbox;
-        stub(obj?: unknown, prop?: string): Stub;
-        spy(obj?: unknown, prop?: string): Spy;
-        restore(): void;
-    };
-
-    let __exports: Sandbox;
     export = __exports
 }
 
