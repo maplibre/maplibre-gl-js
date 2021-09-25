@@ -1,5 +1,3 @@
-// @flow
-
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 import type {StyleSpecification} from '../../src/style-spec/types';

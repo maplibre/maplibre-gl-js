@@ -1,8 +1,6 @@
-// @flow
-
 import Map from '../../src/ui/map';
 
-export default function (options: any): Promise<Map> {
+export default function(options: any): Promise<Map> {
     return new Promise((resolve, reject) => {
         if (options) {
             options.stubRender = options.stubRender == null ? true : options.stubRender;
@@ -18,7 +16,7 @@ export default function (options: any): Promise<Map> {
         if (!options.showMap) {
             container.style.visibility = 'hidden';
         }
-        (document.body: any).appendChild(container);
+        (document.body as any).appendChild(container);
 
         const map = new Map(Object.assign({
             container,

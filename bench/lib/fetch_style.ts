@@ -1,6 +1,4 @@
-// @flow
-
-import type {StyleSpecification} from '../../src/style-spec/types';
+import type { StyleSpecification } from '../../src/style-spec/types';
 import {RequestManager} from '../../src/util/request_manager';
 
 const requestManager = new RequestManager();

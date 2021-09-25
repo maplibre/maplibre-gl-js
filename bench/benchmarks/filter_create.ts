@@ -1,5 +1,3 @@
-// @flow
-
 import Benchmark from '../lib/benchmark';
 
 import createFilter from '../../src/style-spec/feature_filter';
