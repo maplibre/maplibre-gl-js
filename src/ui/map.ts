@@ -15,7 +15,7 @@ import LngLatBounds from '../geo/lng_lat_bounds';
 import Point, {PointLike} from '../util/point';
 import AttributionControl from './control/attribution_control';
 import LogoControl from './control/logo_control';
-import isSupported from '@mapbox/mapbox-gl-supported';
+import {supported} from '@mapbox/mapbox-gl-supported';
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
 import {MapMouseEvent} from './events';
@@ -2370,7 +2370,7 @@ class Map extends Camera {
     }
 
     _setupPainter() {
-        const attributes = extend({}, isSupported.webGLContextAttributes, {
+        const attributes = extend({}, supported.webGLContextAttributes, {
             failIfMajorPerformanceCaveat: this._failIfMajorPerformanceCaveat,
             preserveDrawingBuffer: this._preserveDrawingBuffer,
             antialias: this._antialias || false
