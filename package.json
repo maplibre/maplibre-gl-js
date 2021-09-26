@@ -181,7 +181,7 @@
     "start": "run-p watch-css watch-query watch-benchmarks start-server",
     "start-debug": "run-p watch-css watch-dev start-server",
     "start-tests": "run-p watch-css watch-query start-server",
-    "start-bench": "run-p watch-dev watch-benchmarks start-server",
+    "start-bench": "run-p watch-css watch-dev watch-benchmarks start-server",
     "start-release": "run-s build-prod-min build-css print-release-url start-server",
     "diff-tarball": "node build/diff-tarball.js",
     "lint": "eslint --ext \".ts,.js,.html\" --ignore-path .gitignore src build debug/*.html",
