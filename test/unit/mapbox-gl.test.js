@@ -1,6 +1,6 @@
 import '../stub_loader';
 import {test} from '../util/test';
-import mapboxgl from '../../rollup/build/tsc';
+import mapboxgl from '../../rollup/build/tsc/src';
 
 test('mapboxgl', (t) => {
     t.test('workerCount', (t) => {

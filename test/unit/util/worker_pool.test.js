@@ -1,6 +1,6 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import WorkerPool from '../../../rollup/build/tsc/util/worker_pool';
+import WorkerPool from '../../../rollup/build/tsc/src/util/worker_pool';
 
 test('WorkerPool', (t) => {
     t.test('#acquire', (t) => {

@@ -1,10 +1,10 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import {extend} from '../../../../rollup/build/tsc/util/util';
-import Map from '../../../../rollup/build/tsc/ui/map';
-import DOM from '../../../../rollup/build/tsc/util/dom';
+import {extend} from '../../../../rollup/build/tsc/src/util/util';
+import Map from '../../../../rollup/build/tsc/src/ui/map';
+import DOM from '../../../../rollup/build/tsc/src/util/dom';
 import simulate from '../../../util/simulate_interaction';
-import browser from '../../../../rollup/build/tsc/util/browser';
+import browser from '../../../../rollup/build/tsc/src/util/browser';
 
 function createMap(options) {
     return new Map(extend({container: DOM.create('div', '', window.document.body)}, options));

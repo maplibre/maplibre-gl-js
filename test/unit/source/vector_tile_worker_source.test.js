@@ -4,9 +4,9 @@ import path, {dirname} from 'path';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import {test} from '../../util/test';
-import VectorTileWorkerSource from '../../../rollup/build/tsc/source/vector_tile_worker_source';
-import StyleLayerIndex from '../../../rollup/build/tsc/style/style_layer_index';
-import perf from '../../../rollup/build/tsc/util/performance';
+import VectorTileWorkerSource from '../../../rollup/build/tsc/src/source/vector_tile_worker_source';
+import StyleLayerIndex from '../../../rollup/build/tsc/src/style/style_layer_index';
+import perf from '../../../rollup/build/tsc/src/util/performance';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

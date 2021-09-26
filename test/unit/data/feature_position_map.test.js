@@ -1,8 +1,8 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
 
-import FeatureMap from '../../../rollup/build/tsc/data/feature_position_map';
-import {serialize, deserialize} from '../../../rollup/build/tsc/util/web_worker_transfer';
+import FeatureMap from '../../../rollup/build/tsc/src/data/feature_position_map';
+import {serialize, deserialize} from '../../../rollup/build/tsc/src/util/web_worker_transfer';
 
 test('FeaturePositionMap', (t) => {
 

@@ -1,9 +1,9 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import Map from '../../../../rollup/build/tsc/ui/map';
-import DOM from '../../../../rollup/build/tsc/util/dom';
+import Map from '../../../../rollup/build/tsc/src/ui/map';
+import DOM from '../../../../rollup/build/tsc/src/util/dom';
 import simulate from '../../../util/simulate_interaction';
-import {extend} from '../../../../rollup/build/tsc/util/util';
+import {extend} from '../../../../rollup/build/tsc/src/util/util';
 
 function createMap(options) {
     return new Map(extend({

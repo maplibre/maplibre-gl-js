@@ -1,11 +1,11 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import Tile from '../../../rollup/build/tsc/source/tile';
-import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
-import GeoJSONSource from '../../../rollup/build/tsc/source/geojson_source';
-import Transform from '../../../rollup/build/tsc/geo/transform';
-import LngLat from '../../../rollup/build/tsc/geo/lng_lat';
-import {extend} from '../../../rollup/build/tsc/util/util';
+import Tile from '../../../rollup/build/tsc/src/source/tile';
+import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
+import GeoJSONSource from '../../../rollup/build/tsc/src/source/geojson_source';
+import Transform from '../../../rollup/build/tsc/src/geo/transform';
+import LngLat from '../../../rollup/build/tsc/src/geo/lng_lat';
+import {extend} from '../../../rollup/build/tsc/src/util/util';
 
 const wrapDispatcher = (dispatcher) => {
     return {

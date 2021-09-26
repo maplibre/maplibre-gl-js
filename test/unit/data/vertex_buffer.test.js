@@ -1,7 +1,7 @@
 import {test} from '../../util/test';
-import VertexBuffer from '../../../rollup/build/tsc/gl/vertex_buffer';
-import {StructArrayLayout3i6} from '../../../rollup/build/tsc/data/array_types';
-import Context from '../../../rollup/build/tsc/gl/context';
+import VertexBuffer from '../../../rollup/build/tsc/src/gl/vertex_buffer';
+import {StructArrayLayout3i6} from '../../../rollup/build/tsc/src/data/array_types';
+import Context from '../../../rollup/build/tsc/src/gl/context';
 import gl from 'gl';
 
 test('VertexBuffer', (t) => {

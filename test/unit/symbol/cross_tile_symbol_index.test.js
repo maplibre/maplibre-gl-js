@@ -1,6 +1,6 @@
 import {test} from '../../util/test';
-import CrossTileSymbolIndex from '../../../rollup/build/tsc/symbol/cross_tile_symbol_index';
-import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
+import CrossTileSymbolIndex from '../../../rollup/build/tsc/src/symbol/cross_tile_symbol_index';
+import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
 
 const styleLayer = {
     id: 'test'

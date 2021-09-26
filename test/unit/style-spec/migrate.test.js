@@ -2,13 +2,13 @@ import {test} from '../../util/test';
 import fs from 'fs';
 import glob from 'glob';
 import path, {dirname} from 'path';
-import validate from '../../../rollup/build/tsc/style-spec/validate_style';
+import validate from '../../../rollup/build/tsc/src/style-spec/validate_style';
 /* eslint-disable import/no-unresolved */
-import v8 from '../../../rollup/build/tsc/style-spec/reference/v8';
-import migrate from '../../../rollup/build/tsc/style-spec/migrate';
+import v8 from '../../../rollup/build/tsc/src/style-spec/reference/v8';
+import migrate from '../../../rollup/build/tsc/src/style-spec/migrate';
 import {fileURLToPath} from 'url';
 /* eslint-disable import/namespace */
-import * as spec from '../../../rollup/build/tsc/style-spec/style-spec';
+import * as spec from '../../../rollup/build/tsc/src/style-spec/style-spec';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const UPDATE = !!process.env.UPDATE;
