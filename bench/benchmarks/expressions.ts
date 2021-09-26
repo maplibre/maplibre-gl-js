@@ -12,11 +12,11 @@ import type {StylePropertyExpression} from '../../src/style-spec/expression';
 
 class ExpressionBenchmark extends Benchmark {
     data: Array<{
-      propertySpec: StylePropertySpecification,
-      rawValue: unknown,
-      rawExpression: unknown,
-      compiledFunction: StylePropertyExpression,
-      compiledExpression: StylePropertyExpression
+      propertySpec: StylePropertySpecification;
+      rawValue: unknown;
+      rawExpression: unknown;
+      compiledFunction: StylePropertyExpression;
+      compiledExpression: StylePropertyExpression;
     }>;
     style: string | StyleSpecification;
 
