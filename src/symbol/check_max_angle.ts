@@ -22,7 +22,7 @@ function checkMaxAngle(line: Array<Point>, anchor: Anchor, labelLength: number, 
     if (anchor.segment === undefined) return true;
 
     let p = anchor;
-    let index = Number(anchor.segment) + 1;
+    let index = anchor.segment + 1;
     let anchorDistance = 0;
 
     // move backwards along the line to the first segment the label appears on

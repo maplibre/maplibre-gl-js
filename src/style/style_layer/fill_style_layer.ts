@@ -39,11 +39,11 @@ class FillStyleLayer extends StyleLayer {
         return new FillBucket(parameters);
     }
 
-    queryRadius = (): number => {
+    queryRadius(): number {
         return translateDistance(this.paint.get('fill-translate'));
     }
 
-    queryIntersectsFeature = (
+    queryIntersectsFeature(
       queryGeometry: Array<Point>,
       feature: VectorTileFeature,
       featureState: FeatureState,
@@ -51,7 +51,7 @@ class FillStyleLayer extends StyleLayer {
       zoom: number,
       transform: Transform,
       pixelsToTileUnits: number
-    ): boolean => {
+    ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('fill-translate'),
             this.paint.get('fill-translate-anchor'),

@@ -17,3 +17,4 @@ updates:
       - dependency-name: "documentation"
       - dependency-name: "jsdom"
       - dependency-name: "tap"
+      - dependency-name: "@mapbox/mapbox-gl-supported"

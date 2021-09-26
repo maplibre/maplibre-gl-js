@@ -17,15 +17,10 @@ import type {Rect, GlyphPosition} from '../render/glyph_atlas';
 import Formatted, {FormattedSection} from '../style-spec/expression/types/formatted';
 
 enum WritingMode {
+    none = 0,
     horizontal = 1,
     vertical = 2,
     horizontalOnly = 3
-}
-
-export class WriteModeMap {
-    'horizontal': WritingMode.horizontal;
-    'vertical': WritingMode.vertical;
-    'horizontalOnly': WritingMode.horizontalOnly;
 }
 
 const SHAPING_DEFAULT_OFFSET = -17;

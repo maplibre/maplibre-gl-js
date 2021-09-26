@@ -19,6 +19,16 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 import {register} from './web_worker_transfer';
 
 /**
+ * A {@link Point} or an array of two numbers representing `x` and `y` screen coordinates in pixels.
+ *
+ * @typedef {(Point | [number, number])} PointLike
+ * @example
+ * var p1 = new maplibregl.Point(-77, 38); // a PointLike which is a Point
+ * var p2 = [-77, 38]; // a PointLike which is an array of two numbers
+ */
+export type PointLike = Point | [number, number];
+
+/**
  * A standalone point geometry with useful accessor, comparison, and
  * modification methods.
  *
@@ -30,9 +40,6 @@ import {register} from './web_worker_transfer';
  * @example
  * var point = new Point(-77, 38);
  */
-
-export type PointLike = Point | [number, number];
-
 class Point {
     x: number;
     y: number;

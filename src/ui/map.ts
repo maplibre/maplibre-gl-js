@@ -15,7 +15,7 @@ import LngLatBounds from '../geo/lng_lat_bounds';
 import Point, {PointLike} from '../util/point';
 import AttributionControl from './control/attribution_control';
 import LogoControl from './control/logo_control';
-import isSupported from '@mapbox/mapbox-gl-supported';
+import {supported} from '@mapbox/mapbox-gl-supported';
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
 import {MapMouseEvent} from './events';
@@ -2338,7 +2338,7 @@ class Map extends Camera {
             canvasContainer.classList.add('maplibregl-interactive', 'mapboxgl-interactive');
         }
 
-        this._canvas = DOM.create('canvas', 'maplibregl-canvas mapboxgl-canvas', canvasContainer) as HTMLCanvasElement;
+        this._canvas = DOM.create('canvas', 'maplibregl-canvas mapboxgl-canvas', canvasContainer);
         this._canvas.addEventListener('webglcontextlost', this._contextLost, false);
         this._canvas.addEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.setAttribute('tabindex', '0');
@@ -2370,7 +2370,7 @@ class Map extends Camera {
     }
 
     _setupPainter() {
-        const attributes = extend({}, isSupported.webGLContextAttributes, {
+        const attributes = extend({}, supported.webGLContextAttributes, {
             failIfMajorPerformanceCaveat: this._failIfMajorPerformanceCaveat,
             preserveDrawingBuffer: this._preserveDrawingBuffer,
             antialias: this._antialias || false
@@ -2655,8 +2655,8 @@ class Map extends Camera {
 
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension) extension.loseContext();
-        removeNode(this._canvasContainer);
-        removeNode(this._controlContainer);
+        DOM.remove(this._canvasContainer);
+        DOM.remove(this._controlContainer);
         this._container.classList.remove('maplibregl-map', 'mapboxgl-map');
 
         PerformanceUtils.clearMetrics();
@@ -2803,114 +2803,3 @@ class Map extends Camera {
 }
 
 export default Map;
-
-function removeNode(node) {
-    if (node.parentNode) {
-        node.parentNode.removeChild(node);
-    }
-}
-
-/**
- * Interface for interactive controls added to the map. This is a
- * specification for implementers to model: it is not
- * an exported method or class.
- *
- * Controls must implement `onAdd` and `onRemove`, and must own an
- * element, which is often a `div` element. To use Mapbox GL JS's
- * default control styling, add the `maplibregl-ctrl` class to your control's
- * node.
- *
- * @interface IControl
- * @example
- * // Control implemented as ES6 class
- * class HelloWorldControl {
- *     onAdd(map) {
- *         this._map = map;
- *         this._container = document.createElement('div');
- *         this._container.className = 'maplibregl-ctrl';
- *         this._container.textContent = 'Hello, world';
- *         return this._container;
- *     }
- *
- *     onRemove() {
- *         this._container.parentNode.removeChild(this._container);
- *         this._map = undefined;
- *     }
- * }
- *
- * // Control implemented as ES5 prototypical class
- * function HelloWorldControl() { }
- *
- * HelloWorldControl.prototype.onAdd = function(map) {
- *     this._map = map;
- *     this._container = document.createElement('div');
- *     this._container.className = 'maplibregl-ctrl';
- *     this._container.textContent = 'Hello, world';
- *     return this._container;
- * };
- *
- * HelloWorldControl.prototype.onRemove = function () {
- *      this._container.parentNode.removeChild(this._container);
- *      this._map = undefined;
- * };
- */
-
-/**
- * Register a control on the map and give it a chance to register event listeners
- * and resources. This method is called by {@link Map#addControl}
- * internally.
- *
- * @function
- * @memberof IControl
- * @instance
- * @name onAdd
- * @param {Map} map the Map this control will be added to
- * @returns {HTMLElement} The control's container element. This should
- * be created by the control and returned by onAdd without being attached
- * to the DOM: the map will insert the control's element into the DOM
- * as necessary.
- */
-
-/**
- * Unregister a control on the map and give it a chance to detach event listeners
- * and resources. This method is called by {@link Map#removeControl}
- * internally.
- *
- * @function
- * @memberof IControl
- * @instance
- * @name onRemove
- * @param {Map} map the Map this control will be removed from
- * @returns {undefined} there is no required return value for this method
- */
-
-/**
- * Optionally provide a default position for this control. If this method
- * is implemented and {@link Map#addControl} is called without the `position`
- * parameter, the value returned by getDefaultPosition will be used as the
- * control's position.
- *
- * @function
- * @memberof IControl
- * @instance
- * @name getDefaultPosition
- * @returns {string} a control position, one of the values valid in addControl.
- */
-
-/**
- * A [`Point` geometry](https://github.com/mapbox/point-geometry) object, which has
- * `x` and `y` properties representing screen coordinates in pixels.
- *
- * @typedef {Object} Point
- * @example
- * var point = new maplibregl.Point(-77, 38);
- */
-
-/**
- * A {@link Point} or an array of two numbers representing `x` and `y` screen coordinates in pixels.
- *
- * @typedef {(Point | Array<number>)} PointLike
- * @example
- * var p1 = new maplibregl.Point(-77, 38); // a PointLike which is a Point
- * var p2 = [-77, 38]; // a PointLike which is an array of two numbers
- */

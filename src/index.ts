@@ -1,5 +1,5 @@
 import assert from 'assert';
-import supported from '@mapbox/mapbox-gl-supported';
+import {supported} from '@mapbox/mapbox-gl-supported';
 
 import Map from './ui/map';
 import NavigationControl from './ui/control/navigation_control';

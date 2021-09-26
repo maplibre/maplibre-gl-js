@@ -30,5 +30,6 @@
   "render-tests/text-variable-anchor/avoid-edges-tile-map-mode": "skip - mapbox-gl-js does not support tile-mode",
   "render-tests/extent/1024-symbol": "skip - MapLibre 1.13.1 baseline",
   "render-tests/icon-text-fit/enlargen-both": "skip - MapLibre 1.13.1 baseline",
-  "render-tests/line-dasharray/case/round": "skip - MapLibre 1.13.1 baseline"
+  "render-tests/line-dasharray/case/round": "skip - MapLibre 1.13.1 baseline",
+  "render-tests/debug/tile-overscaled": "skip - MapLibre 1.13.1 baseline"
 }
