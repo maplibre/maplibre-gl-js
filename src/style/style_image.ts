@@ -19,27 +19,6 @@ export type StyleImageMetadata = {
 
 export type StyleImage = StyleImageData & StyleImageMetadata;
 
-export type StyleImageInterface = {
-  width: number;
-  height: number;
-  data: Uint8Array | Uint8ClampedArray;
-  render?: () => boolean;
-  onAdd?: (map: Map, id: string) => void;
-  onRemove?: () => void;
-};
-
-export function renderStyleImage(image: StyleImage) {
-    const {userImage} = image;
-    if (userImage && userImage.render) {
-        const updated = userImage.render();
-        if (updated) {
-            image.data.replace(new Uint8Array(userImage.data.buffer));
-            return true;
-        }
-    }
-    return false;
-}
-
 /**
  * Interface for dynamically generated style images. This is a specification for
  * implementers to model: it is not an exported method or class.
@@ -50,10 +29,6 @@ export function renderStyleImage(image: StyleImage) {
  * can be used to update the image.
  *
  * @interface StyleImageInterface
- * @property {number} width
- * @property {number} height
- * @property {Uint8Array | Uint8ClampedArray} data
- *
  * @see [Add an animated icon to the map.](https://maplibre.org/maplibre-gl-js-docs/example/add-image-animated/)
  *
  * @example
@@ -97,39 +72,66 @@ export function renderStyleImage(image: StyleImage) {
  *  map.addImage('flashing_square', flashingSquare);
  */
 
-/**
- * This method is called once before every frame where the icon will be used.
- * The method can optionally update the image's `data` member with a new image.
- *
- * If the method updates the image it must return `true` to commit the change.
- * If the method returns `false` or nothing the image is assumed to not have changed.
- *
- * If updates are infrequent it maybe easier to use {@link Map#updateImage} to update
- * the image instead of implementing this method.
- *
- * @function
- * @memberof StyleImageInterface
- * @instance
- * @name render
- * @return {boolean} `true` if this method updated the image. `false` if the image was not changed.
- */
+export interface StyleImageInterface {
+  /**
+   * @property {number} width
+   */
+  width: number;
+  /**
+  * @property {number} height
+  */
+  height: number;
+  /**
+   * @property {Uint8Array | Uint8ClampedArray} data
+  */
+  data: Uint8Array | Uint8ClampedArray;
+  /**
+   * This method is called once before every frame where the icon will be used.
+   * The method can optionally update the image's `data` member with a new image.
+   *
+   * If the method updates the image it must return `true` to commit the change.
+   * If the method returns `false` or nothing the image is assumed to not have changed.
+   *
+   * If updates are infrequent it maybe easier to use {@link Map#updateImage} to update
+   * the image instead of implementing this method.
+   *
+   * @function
+   * @memberof StyleImageInterface
+   * @instance
+   * @name render
+   * @return {boolean} `true` if this method updated the image. `false` if the image was not changed.
+   */
+  render?: () => boolean;
+  /**
+   * Optional method called when the layer has been added to the Map with {@link Map#addImage}.
+   *
+   * @function
+   * @memberof StyleImageInterface
+   * @instance
+   * @name onAdd
+   * @param {Map} map The Map this custom layer was just added to.
+   */
+  onAdd?: (map: Map, id: string) => void;
+  /**
+   * Optional method called when the icon is removed from the map with {@link Map#removeImage}.
+   * This gives the image a chance to clean up resources and event listeners.
+   *
+   * @function
+   * @memberof StyleImageInterface
+   * @instance
+   * @name onRemove
+   */
+  onRemove?: () => void;
+}
 
-/**
- * Optional method called when the layer has been added to the Map with {@link Map#addImage}.
- *
- * @function
- * @memberof StyleImageInterface
- * @instance
- * @name onAdd
- * @param {Map} map The Map this custom layer was just added to.
- */
-
-/**
- * Optional method called when the icon is removed from the map with {@link Map#removeImage}.
- * This gives the image a chance to clean up resources and event listeners.
- *
- * @function
- * @memberof StyleImageInterface
- * @instance
- * @name onRemove
- */
+export function renderStyleImage(image: StyleImage) {
+    const {userImage} = image;
+    if (userImage && userImage.render) {
+        const updated = userImage.render();
+        if (updated) {
+            image.data.replace(new Uint8Array(userImage.data.buffer));
+            return true;
+        }
+    }
+    return false;
+}
