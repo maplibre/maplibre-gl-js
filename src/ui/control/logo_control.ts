@@ -24,7 +24,7 @@ class LogoControl implements IControl {
     onAdd(map: Map) {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl mapboxgl-ctrl');
-        const anchor = DOM.create('a', 'maplibregl-ctrl-logo mapboxgl-ctrl-logo') as HTMLAnchorElement;
+        const anchor = DOM.create('a', 'maplibregl-ctrl-logo mapboxgl-ctrl-logo');
         anchor.target = '_blank';
         anchor.rel = 'noopener nofollow';
         anchor.href = 'https://maplibre.org/';

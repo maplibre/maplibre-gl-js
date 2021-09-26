@@ -82,7 +82,7 @@ class FullscreenControl implements IControl {
     }
 
     _setupUI() {
-        const button = this._fullscreenButton = DOM.create('button', (('maplibregl-ctrl-fullscreen mapboxgl-ctrl-fullscreen')), this._controlContainer) as HTMLButtonElement;
+        const button = this._fullscreenButton = DOM.create('button', (('maplibregl-ctrl-fullscreen mapboxgl-ctrl-fullscreen')), this._controlContainer);
         DOM.create('span', 'maplibregl-ctrl-icon mapboxgl-ctrl-icon', button).setAttribute('aria-hidden', 'true');
         button.type = 'button';
         this._updateTitle();
