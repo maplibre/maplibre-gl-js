@@ -30,7 +30,7 @@ jobs:
       - name: Build style spec
         run: |
           npm run build-style-spec
-          cp -r dist/style-spec/ src/style-spec/dist
+          cp -r dist/style-spec/* src/style-spec/dist
       
       - name: Check version and publish
         run: |

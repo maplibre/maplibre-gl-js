@@ -12,8 +12,8 @@
     "maplibre-gl-js"
   ],
   "license": "ISC",
-  "main": "./dist/style-spec/index.js",
-  "module": "./dist/style-spec/index.es.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.es.js",
   "scripts": {
   },
   "repository": {
