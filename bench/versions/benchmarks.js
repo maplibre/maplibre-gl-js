@@ -1,4 +1,4 @@
-import maplibregl from '../../rollup/build/tsc/src';
+import maplibregl from '../../src';
 import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '@mapbox/gazetteer/benchmark/style-benchmark-locations.json';
 import Layout from '../benchmarks/layout';

@@ -23,7 +23,7 @@ const allPlugins = plugins(true, true).concat(replace(replaceConfig));
 const intro = fs.readFileSync('rollup/bundle_prelude.js', 'utf8');
 
 const splitConfig = (name) => [{
-    input: [`bench/${name}/benchmarks.js`, 'rollup/build/tsc/src/source/worker.js'],
+    input: [`rollup/build/tsc/bench/${name}/benchmarks.js`, 'rollup/build/tsc/src/source/worker.js'],
     output: {
         dir: `rollup/build/benchmarks/${name}`,
         format: 'amd',

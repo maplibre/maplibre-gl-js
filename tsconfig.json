@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "allowJs": false,
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "checkJs": false,
     "declaration": true,
@@ -28,7 +28,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "bench/**/*.ts"
+    "bench/**/*.ts",
+    "bench/**/*.js"
   ],
   "exclude": [
     "node_modules",
