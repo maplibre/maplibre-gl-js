@@ -49,7 +49,7 @@ export default class TileParser {
     glyphs: any;
     style: Style;
     actor: {
-      send: Function
+      send: Function;
     };
 
     constructor(styleJSON: StyleSpecification, sourceID: string) {
@@ -115,8 +115,8 @@ export default class TileParser {
 
     parseTile(
       tile: {
-        tileID: OverscaledTileID,
-        buffer: ArrayBuffer
+        tileID: OverscaledTileID;
+        buffer: ArrayBuffer;
       },
       returnDependencies?: boolean
     ): Promise<WorkerTileResult | undefined | null> {
