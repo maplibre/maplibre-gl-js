@@ -1,5 +1,5 @@
 import {test} from '../../util/test';
-import {RequestManager} from '../../../rollup/build/tsc/util/request_manager';
+import {RequestManager} from '../../../rollup/build/tsc/src/util/request_manager';
 
 test('RequestManager', (t) => {
     t.test('.normalizeSpriteURL', (t) => {

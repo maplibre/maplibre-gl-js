@@ -1,7 +1,7 @@
 // @flow
 
 import {test} from '../../util/test';
-import Color from '../../../rollup/build/tsc/style-spec/util/color';
+import Color from '../../../rollup/build/tsc/src/style-spec/util/color';
 
 test('Color.parse', (t) => {
     t.deepEqual(Color.parse('red'), new Color(1, 0, 0, 1));

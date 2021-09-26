@@ -1,16 +1,16 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
 import {createSymbolBucket} from '../../util/create_symbol_layer';
-import Tile from '../../../rollup/build/tsc/source/tile';
-import GeoJSONWrapper from '../../../rollup/build/tsc/source/geojson_wrapper';
-import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
+import Tile from '../../../rollup/build/tsc/src/source/tile';
+import GeoJSONWrapper from '../../../rollup/build/tsc/src/source/geojson_wrapper';
+import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
 import fs from 'fs';
 import path, {dirname} from 'path';
 import vtpbf from 'vt-pbf';
-import FeatureIndex from '../../../rollup/build/tsc/data/feature_index';
-import {CollisionBoxArray} from '../../../rollup/build/tsc/data/array_types';
-import {extend} from '../../../rollup/build/tsc/util/util';
-import {serialize, deserialize} from '../../../rollup/build/tsc/util/web_worker_transfer';
+import FeatureIndex from '../../../rollup/build/tsc/src/data/feature_index';
+import {CollisionBoxArray} from '../../../rollup/build/tsc/src/data/array_types';
+import {extend} from '../../../rollup/build/tsc/src/util/util';
+import {serialize, deserialize} from '../../../rollup/build/tsc/src/util/web_worker_transfer';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

@@ -1,6 +1,6 @@
-import SymbolBucket from '../../rollup/build/tsc/data/bucket/symbol_bucket';
-import SymbolStyleLayer from '../../rollup/build/tsc/style/style_layer/symbol_style_layer';
-import featureFilter from '../../rollup/build/tsc/style-spec/feature_filter';
+import SymbolBucket from '../../rollup/build/tsc/src/data/bucket/symbol_bucket';
+import SymbolStyleLayer from '../../rollup/build/tsc/src/style/style_layer/symbol_style_layer';
+import featureFilter from '../../rollup/build/tsc/src/style-spec/feature_filter';
 
 export function createSymbolBucket(layerId, font, text, collisionBoxArray) {
     const layer = new SymbolStyleLayer({

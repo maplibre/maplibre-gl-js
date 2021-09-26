@@ -1,5 +1,5 @@
 import {test} from '../../util/test';
-import deref from '../../../rollup/build/tsc/style-spec/deref';
+import deref from '../../../rollup/build/tsc/src/style-spec/deref';
 
 test('derefs a ref layer which follows its parent', (t) => {
     t.deepEqual(deref([

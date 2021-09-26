@@ -2,7 +2,7 @@ import {test} from '../../util/test';
 import glob from 'glob';
 import fs from 'fs';
 import path, {dirname} from 'path';
-import validate from '../../../rollup/build/tsc/style-spec/validate_style';
+import validate from '../../../rollup/build/tsc/src/style-spec/validate_style';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -22,7 +22,7 @@ glob.sync(`${__dirname}/fixture/*.input.json`).forEach((file) => {
 
 const fixtures = glob.sync(`${__dirname}/fixture/*.input.json`);
 const style = JSON.parse(fs.readFileSync(fixtures[0]));
-import reference from '../../../rollup/build/tsc/style-spec/reference/latest';
+import reference from '../../../rollup/build/tsc/src/style-spec/reference/latest';
 
 test('validate.parsed exists', (t) => {
     t.equal(typeof validate.parsed, 'function');

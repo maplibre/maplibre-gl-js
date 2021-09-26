@@ -1,8 +1,8 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import browser from '../../../../rollup/build/tsc/util/browser';
-import Map from '../../../../rollup/build/tsc/ui/map';
-import DOM from '../../../../rollup/build/tsc/util/dom';
+import browser from '../../../../rollup/build/tsc/src/util/browser';
+import Map from '../../../../rollup/build/tsc/src/ui/map';
+import DOM from '../../../../rollup/build/tsc/src/util/dom';
 import simulate from '../../../util/simulate_interaction';
 
 function createMap() {

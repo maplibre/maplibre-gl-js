@@ -1,7 +1,7 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
 import {createMap} from '../../../util';
-import FullscreenControl from '../../../../rollup/build/tsc/ui/control/fullscreen_control';
+import FullscreenControl from '../../../../rollup/build/tsc/src/ui/control/fullscreen_control';
 
 test('FullscreenControl appears when fullscreen is enabled', (t) => {
     window.document.fullscreenEnabled = true;

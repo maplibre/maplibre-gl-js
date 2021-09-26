@@ -6,9 +6,9 @@ import {
     postData,
     getImage,
     resetImageRequestQueue
-} from '../../../rollup/build/tsc/util/ajax';
-import config from '../../../rollup/build/tsc/util/config';
-import webpSupported from '../../../rollup/build/tsc/util/webp_supported';
+} from '../../../rollup/build/tsc/src/util/ajax';
+import config from '../../../rollup/build/tsc/src/util/config';
+import webpSupported from '../../../rollup/build/tsc/src/util/webp_supported';
 
 test('ajax', (t) => {
     t.beforeEach(callback => {

@@ -1,6 +1,6 @@
 import {test} from '../../../util/test';
 import {createMap as globalCreateMap} from '../../../util';
-import VectorTileSource from '../../../../rollup/build/tsc/source/vector_tile_source';
+import VectorTileSource from '../../../../rollup/build/tsc/src/source/vector_tile_source';
 
 function createMap(t, logoPosition, logoRequired) {
     return globalCreateMap(t, {

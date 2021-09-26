@@ -1,7 +1,7 @@
 
 import {test} from '../../../util/test';
 import {createMap} from '../../../util';
-import ScaleControl from '../../../../rollup/build/tsc/ui/control/scale_control';
+import ScaleControl from '../../../../rollup/build/tsc/src/ui/control/scale_control';
 
 test('ScaleControl appears in bottom-left by default', (t) => {
     const map = createMap(t);

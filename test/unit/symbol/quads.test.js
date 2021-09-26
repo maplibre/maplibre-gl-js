@@ -1,6 +1,6 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import {getIconQuads} from '../../../rollup/build/tsc/symbol/quads';
+import {getIconQuads} from '../../../rollup/build/tsc/src/symbol/quads';
 
 test('getIconQuads', (t) => {
     const image = Object.freeze({

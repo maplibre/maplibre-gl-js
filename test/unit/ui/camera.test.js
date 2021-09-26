@@ -1,9 +1,9 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import Camera from '../../../rollup/build/tsc/ui/camera';
-import Transform from '../../../rollup/build/tsc/geo/transform';
-import TaskQueue from '../../../rollup/build/tsc/util/task_queue';
-import browser from '../../../rollup/build/tsc/util/browser';
+import Camera from '../../../rollup/build/tsc/src/ui/camera';
+import Transform from '../../../rollup/build/tsc/src/geo/transform';
+import TaskQueue from '../../../rollup/build/tsc/src/util/task_queue';
+import browser from '../../../rollup/build/tsc/src/util/browser';
 import {fixedLngLat, fixedNum} from '../../util/fixed';
 import {equalWithPrecision} from '../../util';
 

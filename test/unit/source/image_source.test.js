@@ -1,10 +1,10 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import ImageSource from '../../../rollup/build/tsc/source/image_source';
-import {Evented} from '../../../rollup/build/tsc/util/evented';
-import Transform from '../../../rollup/build/tsc/geo/transform';
-import {extend} from '../../../rollup/build/tsc/util/util';
-import browser from '../../../rollup/build/tsc/util/browser';
+import ImageSource from '../../../rollup/build/tsc/src/source/image_source';
+import {Evented} from '../../../rollup/build/tsc/src/util/evented';
+import Transform from '../../../rollup/build/tsc/src/geo/transform';
+import {extend} from '../../../rollup/build/tsc/src/util/util';
+import browser from '../../../rollup/build/tsc/src/util/browser';
 
 function createSource(options) {
     options = extend({

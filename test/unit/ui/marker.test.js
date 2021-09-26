@@ -1,10 +1,10 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
 import {createMap as globalCreateMap} from '../../util';
-import Marker from '../../../rollup/build/tsc/ui/marker';
-import Popup from '../../../rollup/build/tsc/ui/popup';
-import LngLat from '../../../rollup/build/tsc/geo/lng_lat';
-import Point from '../../../rollup/build/tsc/util/point';
+import Marker from '../../../rollup/build/tsc/src/ui/marker';
+import Popup from '../../../rollup/build/tsc/src/ui/popup';
+import LngLat from '../../../rollup/build/tsc/src/geo/lng_lat';
+import Point from '../../../rollup/build/tsc/src/util/point';
 import simulate from '../../util/simulate_interaction';
 
 function createMap(t, options = {}) {

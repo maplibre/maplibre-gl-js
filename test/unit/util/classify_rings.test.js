@@ -3,7 +3,7 @@ import fs from 'fs';
 import path, {dirname} from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import classifyRings from '../../../rollup/build/tsc/util/classify_rings';
+import classifyRings from '../../../rollup/build/tsc/src/util/classify_rings';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

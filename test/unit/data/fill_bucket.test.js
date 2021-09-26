@@ -5,10 +5,10 @@ import fs from 'fs';
 import path, {dirname} from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import Point from '../../../rollup/build/tsc/util/point';
-import segment from '../../../rollup/build/tsc/data/segment';
-import FillBucket from '../../../rollup/build/tsc/data/bucket/fill_bucket';
-import FillStyleLayer from '../../../rollup/build/tsc/style/style_layer/fill_style_layer';
+import Point from '../../../rollup/build/tsc/src/util/point';
+import segment from '../../../rollup/build/tsc/src/data/segment';
+import FillBucket from '../../../rollup/build/tsc/src/data/bucket/fill_bucket';
+import FillStyleLayer from '../../../rollup/build/tsc/src/style/style_layer/fill_style_layer';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

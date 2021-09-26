@@ -1,6 +1,6 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import browser from '../../../rollup/build/tsc/util/browser';
+import browser from '../../../rollup/build/tsc/src/util/browser';
 
 test('browser', (t) => {
     t.test('frame', (t) => {
