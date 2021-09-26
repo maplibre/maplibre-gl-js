@@ -4,6 +4,7 @@ import replace from 'rollup-plugin-replace';
 import {plugins} from '../build/rollup_plugins';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
+import buble from 'rollup-plugin-buble';
 
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
@@ -55,6 +56,7 @@ const viewConfig = {
         sourcemap: false
     },
     plugins: [
+        buble({transforms: {dangerousForOf: true}, objectAssign: true}),
         resolve({browser: true, preferBuiltins: false}),
         commonjs(),
         replace(replaceConfig)
