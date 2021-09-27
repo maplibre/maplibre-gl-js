@@ -5,8 +5,8 @@
 const minTimeForMeasurement = 0.005 * 1000;
 
 export type Measurement = {
-  iterations: number;
-  time: number;
+  iterations: number,
+  time: number
 };
 
 class Benchmark {
