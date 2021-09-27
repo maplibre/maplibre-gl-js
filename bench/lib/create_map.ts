@@ -20,7 +20,7 @@ export default function(options: any): Promise<Map> {
 
         const map = new Map(Object.assign({
             container,
-            style: 'mapbox://styles/mapbox/streets-v10'
+            style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
         }, options));
 
         map
