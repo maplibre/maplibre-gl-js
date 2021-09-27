@@ -155,7 +155,7 @@ export class LayerHillshade extends LayerBenchmark {
             sources: {
                 'terrain-rgb': {
                     'type': 'raster-dem',
-                    'url': 'mapbox://mapbox.terrain-rgb'
+                    'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
                 }
             },
             layers: generateLayers({
@@ -189,7 +189,7 @@ export class LayerRaster extends LayerBenchmark {
         this.layerStyle = Object.assign({}, style, {
             sources: {
                 'satellite': {
-                    'url': 'mapbox://mapbox.satellite',
+                    'url': 'https://api.maptiler.com/tiles/satellite/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
                     'type': 'raster',
                     'tileSize': 256
                 }

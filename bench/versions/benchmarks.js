@@ -59,9 +59,9 @@ register('LayerCircle', new LayerCircle());
 register('LayerFill', new LayerFill());
 register('LayerFillExtrusion', new LayerFillExtrusion());
 register('LayerHeatmap', new LayerHeatmap());
-//register('LayerHillshade', new LayerHillshade());
-//register('LayerLine', new LayerLine());
-//register('LayerRaster', new LayerRaster());
+register('LayerHillshade', new LayerHillshade());
+register('LayerLine', new LayerLine());
+register('LayerRaster', new LayerRaster());
 register('LayerSymbol', new LayerSymbol());
 register('LayerSymbolWithIcons', new LayerSymbolWithIcons());
 register('LayerTextWithVariableAnchor', new LayerTextWithVariableAnchor());
@@ -71,7 +71,7 @@ register('Load', new Load());
 //register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => location.tileID[0])));
 register('FilterCreate', new FilterCreate());
 //register('FilterEvaluate', new FilterEvaluate());
-//register('HillshadeLoad', new HillshadeLoad());
+register('HillshadeLoad', new HillshadeLoad());
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits
