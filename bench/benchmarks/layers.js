@@ -61,8 +61,8 @@ export class LayerCircle extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'circlelayer',
                 'type': 'circle',
-                'source': 'composite',
-                'source-layer': 'poi_label'
+                'source': 'openmaptiles',
+                'source-layer': 'poi'
             })
         });
     }
@@ -76,7 +76,7 @@ export class LayerFill extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'filllayer',
                 'type': 'fill',
-                'source': 'composite',
+                'source': 'openmaptiles',
                 'source-layer': 'building',
                 'paint': {
                     'fill-color': 'black',
@@ -95,7 +95,7 @@ export class LayerFillExtrusion extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'fillextrusionlayer',
                 'type': 'fill-extrusion',
-                'source': 'composite',
+                'source': 'openmaptiles',
                 'source-layer': 'building',
                 'paint': {
                     'fill-extrusion-height': 30
@@ -175,8 +175,8 @@ export class LayerLine extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'linelayer',
                 'type': 'line',
-                'source': 'composite',
-                'source-layer': 'road'
+                'source': 'openmaptiles',
+                'source-layer': 'transportation'
             })
         });
     }
@@ -211,11 +211,11 @@ export class LayerSymbol extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'symbollayer',
                 'type': 'symbol',
-                'source': 'composite',
-                'source-layer': 'poi_label',
+                'source': 'openmaptiles',
+                'source-layer': 'poi',
                 'layout': {
                     'icon-image': 'dot-11',
-                    'text-field': '{name_en}'
+                    'text-field': '{name:en}'
                 }
             })
         });
@@ -230,11 +230,11 @@ export class LayerSymbolWithIcons extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'symbollayer',
                 'type': 'symbol',
-                'source': 'composite',
-                'source-layer': 'poi_label',
+                'source': 'openmaptiles',
+                'source-layer': 'poi',
                 'layout': {
                     'icon-image': 'dot-11',
-                    'text-field': ['format', ['get', 'name_en'], ['image', 'dot-11']]
+                    'text-field': ['format', ['get', 'name:en'], ['image', 'dot-11']]
                 }
             })
         });
@@ -256,11 +256,11 @@ export class LayerSymbolWithSortKey extends LayerBenchmark {
             generated.push({
                 'id': `symbollayer${i}`,
                 'type': 'symbol',
-                'source': 'composite',
-                'source-layer': 'poi_label',
+                'source': 'openmaptiles',
+                'source-layer': 'poi',
                 'layout': {
                     'symbol-sort-key': i,
-                    'text-field': '{name_en}'
+                    'text-field': '{name:en}'
                 }
             });
         }
@@ -276,8 +276,8 @@ export class LayerTextWithVariableAnchor extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'symbollayer',
                 'type': 'symbol',
-                'source': 'composite',
-                'source-layer': 'poi_label',
+                'source': 'openmaptiles',
+                'source-layer': 'poi',
                 'layout': {
                     'text-field': 'Test Test Test',
                     'text-justify': 'auto',

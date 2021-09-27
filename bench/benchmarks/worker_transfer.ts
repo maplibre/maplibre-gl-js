@@ -35,7 +35,7 @@ export default class WorkerTransfer extends Benchmark {
 
         return fetchStyle(this.style)
             .then((styleJSON) => {
-                this.parser = new TileParser(styleJSON, 'composite');
+                this.parser = new TileParser(styleJSON, 'openmaptiles');
                 return this.parser.setup();
             })
             .then(() => {

@@ -27,7 +27,7 @@ export default class Layout extends Benchmark {
     setup(): Promise<void> {
         return fetchStyle(this.style)
             .then((styleJSON) => {
-                this.parser = new TileParser(styleJSON, 'composite');
+                this.parser = new TileParser(styleJSON, 'openmaptiles');
                 return this.parser.setup();
             })
             .then(() => {
