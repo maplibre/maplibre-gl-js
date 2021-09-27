@@ -354,6 +354,7 @@ class BenchmarkStatistic extends React.Component {
         case 'running':
             return <p>Running...</p>;
         case 'error':
+        case 'errored':
             return <p>{this.props.error.message}</p>;
         default:
             return this.props.statistic(this.props);
