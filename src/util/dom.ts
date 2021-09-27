@@ -3,7 +3,7 @@ import Point from './point';
 import assert from 'assert';
 
 export default class DOM {
-    private static readonly docStyle = window.document && window.document.documentElement.style;
+    private static readonly docStyle = typeof window !== 'undefined' && window.document && window.document.documentElement.style;
 
     private static userSelect: string;
 
