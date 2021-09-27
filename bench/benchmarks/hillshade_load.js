@@ -17,17 +17,17 @@ export default class HillshadeLoad extends Benchmark {
             "bearing": 0,
             "pitch": 0,
             "sources": {
-                "mapbox://mapbox.terrain-rgb": {
-                    "url": "mapbox://mapbox.terrain-rgb",
-                    "type": "raster-dem",
+                'terrain-rgb': {
+                    'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                    'type': 'raster-dem',
                     "tileSize": 256
                 }
             },
             "layers": [
                 {
-                    "id": "mapbox-terrain-rgb",
+                    "id": "maplibre-terrain-rgb",
                     "type": "hillshade",
-                    "source": "mapbox://mapbox.terrain-rgb",
+                    "source": "terrain-rgb",
                     "layout": {},
                     "paint": {}
                 }
