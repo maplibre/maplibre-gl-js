@@ -18,3 +18,4 @@ updates:
       - dependency-name: "jsdom"
       - dependency-name: "tap"
       - dependency-name: "@mapbox/mapbox-gl-supported"
+      - dependency-name: "@mapbox/tiny-sdf"
