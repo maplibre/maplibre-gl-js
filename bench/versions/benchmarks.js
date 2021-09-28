@@ -22,7 +22,7 @@ import FilterEvaluate from '../benchmarks/filter_evaluate';
 
 import getWorkerPool from '../../src/util/global_worker_pool';
 
-const styleLocations = locationsWithTileID(styleBenchmarkLocations.features);
+const styleLocations = locationsWithTileID(styleBenchmarkLocations.features).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 
@@ -68,7 +68,7 @@ register('LayerTextWithVariableAnchor', new LayerTextWithVariableAnchor());
 register('LayerSymbolWithSortKey', new LayerSymbolWithSortKey());
 register('Load', new Load());
 //register('LayoutDDS', new LayoutDDS());
-//register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => location.tileID[0])));
+register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => location.tileID[0])));
 register('FilterCreate', new FilterCreate());
 //register('FilterEvaluate', new FilterEvaluate());
 register('HillshadeLoad', new HillshadeLoad());
