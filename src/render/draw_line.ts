@@ -49,7 +49,7 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
 
         if (image && !tile.patternsLoaded()) continue;
 
-        const bucket: LineBucket | undefined | null = (tile.getBucket(layer) as any);
+        const bucket: LineBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);

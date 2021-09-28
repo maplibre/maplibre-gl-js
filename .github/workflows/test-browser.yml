@@ -1,0 +1,33 @@
+name: Test Browser
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test_browser:
+    name: ubuntu-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          architecture: x64
+      - run: npm ci
+      - run: npm run build-dev
+      - run: DETECT_CHROMEDRIVER_VERSION=true npm install -g chromedriver
+      - run: npm install -g geckodriver@2.0.4
+      - name: Test Chrome
+        env:
+          SELENIUM_BROWSER: chrome
+          TAP_COLORS: 1
+        run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser
+      - name: Test Firefox
+        env:
+          SELENIUM_BROWSER: firefox
+          TAP_COLORS: 1
+        run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser

@@ -10,7 +10,7 @@ import customLayerImplementations from './integration/custom_layer_implementatio
 import {fileURLToPath} from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
+var now = 0;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
 
 rtlTextPlugin['applyArabicShaping'] = rtlText.applyArabicShaping;
@@ -50,7 +50,7 @@ export default function(style, options, _callback) {
         }
     }
 
-    window.devicePixelRatio = options.pixelRatio;
+    global.devicePixelRatio = options.pixelRatio;
     window.useFakeXMLHttpRequest();
     XMLHttpRequest.onCreate = req => {
         setTimeout(() => {
@@ -91,6 +91,10 @@ export default function(style, options, _callback) {
 
     // Configure the map to never stop the render loop
     map.repaint = true;
+    now = 0;
+    browser.now = () => {
+        return now;
+    }
 
     if (options.debug) map.showTileBoundaries = true;
     if (options.showOverdrawInspector) map.showOverdrawInspector = true;
@@ -115,11 +119,11 @@ export default function(style, options, _callback) {
             const pixels = new Uint8Array(w * h * 4);
             gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
-            const data = new Buffer(pixels);
+            const data = new Buffer.from(pixels);
 
             // Flip the scanlines.
             const stride = w * 4;
-            const tmp = new Buffer(stride);
+            const tmp = new Buffer.alloc(stride);
             for (let i = 0, j = h - 1; i < j; i++, j--) {
                 const start = i * stride;
                 const end = j * stride;

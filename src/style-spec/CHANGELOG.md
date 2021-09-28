@@ -1,3 +1,8 @@
+## 14.0.2
+
+### ✨ Features and improvements
+* Fix node entry points [#400](https://github.com/maplibre/maplibre-gl-js/issues/400)
+
 ## 14.0.1
 
 ### ✨ Features and improvements

@@ -159,7 +159,7 @@ const symbolIconUniformValues = (
   size: {
     uSizeT: number;
     uSize: number;
-  } | undefined | null,
+  },
   rotateInShader: boolean,
   pitchWithMap: boolean,
   painter: Painter,
@@ -199,7 +199,7 @@ const symbolSDFUniformValues = (
   size: {
     uSizeT: number;
     uSize: number;
-  } | undefined | null,
+  },
   rotateInShader: boolean,
   pitchWithMap: boolean,
   painter: Painter,
@@ -226,7 +226,7 @@ const symbolTextAndIconUniformValues = (
   size: {
     uSizeT: number;
     uSize: number;
-  } | undefined | null,
+  },
   rotateInShader: boolean,
   pitchWithMap: boolean,
   painter: Painter,

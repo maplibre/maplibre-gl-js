@@ -76,7 +76,7 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
         const tile = sourceCache.getTile(coord);
         if (image && !tile.patternsLoaded()) continue;
 
-        const bucket: FillBucket | undefined | null = (tile.getBucket(layer) as any);
+        const bucket: FillBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);

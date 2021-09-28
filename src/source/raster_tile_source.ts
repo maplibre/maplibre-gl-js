@@ -29,7 +29,7 @@ class RasterTileSource extends Evented implements Source {
     scheme: string;
     tileSize: number;
 
-    bounds: [number, number, number, number] | undefined | null;
+    bounds: [number, number, number, number];
     tileBounds: TileBounds;
     roundZoom: boolean;
     dispatcher: Dispatcher;
@@ -38,7 +38,7 @@ class RasterTileSource extends Evented implements Source {
 
     _loaded: boolean;
     _options: RasterSourceSpecification | RasterDEMSourceSpecification;
-    _tileJSONRequest: Cancelable | undefined | null;
+    _tileJSONRequest: Cancelable;
 
     constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super();

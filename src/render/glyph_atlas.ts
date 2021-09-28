@@ -30,7 +30,7 @@ export default class GlyphAtlas {
 
     constructor(stacks: {
       [_: string]: {
-        [_: number]: StyleGlyph | undefined | null;
+        [_: number]: StyleGlyph;
       };
     }) {
         const positions = {};

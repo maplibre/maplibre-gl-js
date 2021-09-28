@@ -58,7 +58,7 @@ class Interpolate implements Expression {
         return t;
     }
 
-    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression {
         let [operator, interpolation, input, ...rest] = args;
 
         if (!Array.isArray(interpolation) || interpolation.length === 0) {

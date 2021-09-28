@@ -25,7 +25,7 @@ type ClearArgs = {
 class Context {
     gl: WebGLRenderingContext;
     extVertexArrayObject: any;
-    currentNumAttributes: number | undefined | null;
+    currentNumAttributes: number;
     maxTextureSize: number;
 
     clearColor: ClearColor;

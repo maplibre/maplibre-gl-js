@@ -1,6 +1,7 @@
 import gl from 'gl';
 import {JSDOM, VirtualConsole} from "jsdom";
 import {PNG} from 'pngjs';
+import request from 'request';
 import sinon from 'sinon';
 
 let lastDataFromUrl = null;
@@ -18,6 +19,7 @@ global.HTMLElement = window.HTMLElement;
 global.HTMLImageElement = window.HTMLImageElement;
 global.HTMLVideoElement = window.HTMLVideoElement;
 global.HTMLCanvasElement = window.HTMLCanvasElement;
+global.HTMLSourceElement = window.HTMLSourceElement;
 global.OffscreenCanvas = window.OffscreenCanvas;
 global.Image = window.Image;
 global.navigator = window.navigator;
@@ -79,6 +81,29 @@ Object.defineProperty(global.Image.prototype, 'src', {
         reader.readAsArrayBuffer(lastDataFromUrl);
     }
 });
+
+// This assumes that the code is using appendChild to add a source element to the video element.
+// At this time the fake code will go to the server and get the "video".
+// Hack: since node doesn't have any good video codec modules, just grab a png with
+// the first frame and fake the video API.
+HTMLVideoElement.prototype.appendChild = function(s) {
+    if (!this.onloadstart) {
+        return;
+    }
+    request({url: s.src, encoding: null}, (error, response, body) => {
+        if (!error && response.statusCode >= 200 && response.statusCode < 300) {
+            new PNG().parse(body, (_, png) => {
+                Object.defineProperty(this, 'readyState', { get: () => 4}); // HAVE_ENOUGH_DATA
+                this.addEventListener = () => {};
+                this.play = () => {};
+                this.width = png.width;
+                this.height =  png.height;
+                this.data = png.data;
+                this.onloadstart();
+            });
+        }
+    });
+}
 
 // Delete local and session storage from JSDOM and stub them out with a warning log
 // Accessing these properties during extend() produces an error in Node environments

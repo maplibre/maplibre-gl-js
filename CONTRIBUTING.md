@@ -13,7 +13,7 @@ Install the Xcode Command Line Tools Package
 xcode-select --install
 ```
 
-Install [node.js](https://nodejs.org/) version ^10.15 ( Minimum 10.15 while sticking only to major version 10.0 )
+Install [node.js](https://nodejs.org/) version ^14
 ```bash
 brew install node
 ```
@@ -42,9 +42,10 @@ Install [nvm](https://github.com/nvm-sh/nvm)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
 ```
 
-Install [Node.js](https://nodejs.org/) ^10.15
+Install [Node.js](https://nodejs.org/) ^14
 ```
-nvm install 10.24.1 # latest v10 version that will run the test suite
+nvm install 14
+nvm install --latest-npm # you need npm version 7.x
 ```
 
 Clone the repository
@@ -60,7 +61,7 @@ npm install
 
 ### Windows
 
-Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^10.15), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
+Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^14), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
 
 Clone the repository
 ```bash
@@ -84,14 +85,14 @@ copy node_modules/headless-gl/deps/windows/dll/x64/*.dll c:\windows\system32
 Start the debug server
 
 ```bash
-MAPBOX_ACCESS_TOKEN={YOUR MAPBOX ACCESS TOKEN} npm run start-debug
+npm run start-debug
 ```
 
 Open the debug page at [http://localhost:9966/debug](http://localhost:9966/debug)
 
 ## Creating a Standalone Build
 
-A standalone build allows you to turn the contents of this repository into `mapbox-gl.js` and `mapbox-gl.css` files that can be included on an html page.
+A standalone build allows you to turn the contents of this repository into `maplibre-gl.js` and `maplibre-gl.css` files that can be included on an html page.
 
 To create a standalone build, run
 ```bash
@@ -99,7 +100,7 @@ npm run build-prod-min
 npm run build-css
 ```
 
-Once those commands finish, you will have a standalone build at `dist/mapbox-gl.js` and `dist/mapbox-gl.css`
+Once those commands finish, you will have a standalone build at `dist/maplibre-gl.js` and `dist/maplibre-gl.css`
 
 ## Writing & Running Tests
 

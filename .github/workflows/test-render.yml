@@ -1,0 +1,26 @@
+name: Test Render
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test_render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          architecture: x64
+      - run: npm ci
+      - run: npm run build-dev
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-render
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: index.html
+          path: test/integration/render-tests/index.html

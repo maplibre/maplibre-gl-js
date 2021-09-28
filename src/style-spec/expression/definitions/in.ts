@@ -27,7 +27,7 @@ class In implements Expression {
         this.haystack = haystack;
     }
 
-    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression {
         if (args.length !== 3) {
             return context.error(`Expected 2 arguments, but found ${args.length - 1} instead.`) as null;
         }

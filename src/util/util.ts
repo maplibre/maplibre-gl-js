@@ -183,19 +183,6 @@ export function uniqueId(): number {
 }
 
 /**
- * Return a random UUID (v4). Taken from: https://gist.github.com/jed/982883
- * @private
- */
-export function uuid(): string {
-    function b(a?): string {
-        return a ?
-            (a ^ Math.random() * 16 >> a / 4).toString(16) :
-            '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, b);
-    }
-    return b();
-}
-
-/**
  * Return whether a given value is a power of two
  * @private
  */
@@ -210,16 +197,6 @@ export function isPowerOfTwo(value: number): boolean {
 export function nextPowerOfTwo(value: number): number {
     if (value <= 1) return 1;
     return Math.pow(2, Math.ceil(Math.log(value) / Math.LN2));
-}
-
-/**
- * Validate a string to match UUID(v4) of the
- * form: xxxxxxxx-xxxx-4xxx-[89ab]xxx-xxxxxxxxxxxx
- * @param str string to validate.
- * @private
- */
-export function validateUuid(str?: string | null): boolean {
-    return str ? /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str) : false;
 }
 
 /**
@@ -499,4 +476,8 @@ export function b64DecodeUnicode(str: string) {
     return decodeURIComponent(atob(str).split('').map((c) => {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); //eslint-disable-line
     }).join(''));
+}
+
+export function isImageBitmap(image: any): image is ImageBitmap {
+    return typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap;
 }

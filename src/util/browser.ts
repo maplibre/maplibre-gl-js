@@ -41,7 +41,7 @@ const exported = {
         return linkEl.href;
     },
 
-    hardwareConcurrency: navigator && navigator.hardwareConcurrency || 4,
+    hardwareConcurrency: typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 4,
 
     get prefersReducedMotion(): boolean {
         if (!matchMedia) return false;

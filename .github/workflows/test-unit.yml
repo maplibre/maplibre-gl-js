@@ -1,0 +1,49 @@
+name: Test Unit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test_unit_win_mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+        node_version:
+          - 14
+        architecture:
+          - x64
+
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node_version }}
+          architecture: ${{ matrix.architecture }}
+      - run: npm ci
+      - run: npm run build-dev
+      - run: npm run test-unit
+
+  test_unit_ubuntu:
+    name: ubuntu-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          architecture: x64
+      - run: npm ci
+      - run: npm run build-dev
+      # see: https://github.com/stackgl/headless-gl#how-can-headless-gl-be-used-on-a-headless-linux-machine
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit

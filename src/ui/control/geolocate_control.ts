@@ -100,7 +100,7 @@ class GeolocateControl extends Evented implements IControl {
     _circleElement: HTMLElement;
     _geolocateButton: HTMLButtonElement;
     _geolocationWatchID: number;
-    _timeoutId: ReturnType<typeof setTimeout> | undefined | null;
+    _timeoutId: ReturnType<typeof setTimeout>;
     _watchState: 'OFF' | 'ACTIVE_LOCK' | 'WAITING_ACTIVE' | 'ACTIVE_ERROR' | 'BACKGROUND' | 'BACKGROUND_ERROR';
     _lastKnownPosition: any;
     _userLocationDotMarker: Marker;
@@ -372,7 +372,7 @@ class GeolocateControl extends Evented implements IControl {
 
     _setupUI(supported: boolean) {
         this._container.addEventListener('contextmenu', (e: MouseEvent) => e.preventDefault());
-        this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate mapboxgl-ctrl-geolocate', this._container) as HTMLButtonElement;
+        this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate mapboxgl-ctrl-geolocate', this._container);
         DOM.create('span', 'maplibregl-ctrl-icon mapboxgl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');
         this._geolocateButton.type = 'button';
 

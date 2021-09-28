@@ -8,12 +8,13 @@ import expressions from '../style-spec/expression/definitions';
 import ResolvedImage from '../style-spec/expression/types/resolved_image';
 
 import type {Transferable} from '../types/transferable';
+import {isImageBitmap} from './util';
 
 type SerializedObject = {
   [_: string]: Serialized;
 }; // eslint-disable-line
 
-export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | Array<Serialized> | SerializedObject;
+export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Array<Serialized> | SerializedObject;
 
 type Registry = {
   [_: string]: {
@@ -95,14 +96,9 @@ for (const name in expressions) {
     register(`Expression_${name}`, expressions[name]);
 }
 
-function isArrayBuffer(val: any): boolean {
-    return val && typeof ArrayBuffer !== 'undefined' &&
-           (val instanceof ArrayBuffer || (val.constructor && val.constructor.name === 'ArrayBuffer'));
-}
-
-function isImageBitmap(val: any): boolean {
-    return ImageBitmap &&
-        val instanceof ImageBitmap;
+function isArrayBuffer(value: any): value is ArrayBuffer {
+    return value && typeof ArrayBuffer !== 'undefined' &&
+           (value instanceof ArrayBuffer || (value.constructor && value.constructor.name === 'ArrayBuffer'));
 }
 
 /**
@@ -135,16 +131,16 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
 
     if (isArrayBuffer(input)) {
         if (transferables) {
-            transferables.push(((input as any as ArrayBuffer)));
+            transferables.push(input);
         }
-        return input as Serialized;
+        return input;
     }
 
     if (isImageBitmap(input)) {
         if (transferables) {
-            transferables.push(((input as any as ImageBitmap)));
+            transferables.push(input);
         }
-        return input as Serialized;
+        return input;
     }
 
     if (ArrayBuffer.isView(input)) {
@@ -152,7 +148,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         if (transferables) {
             transferables.push(view.buffer);
         }
-        return view as Serialized;
+        return view;
     }
 
     if (input instanceof ImageData) {

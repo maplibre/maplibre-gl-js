@@ -7,14 +7,14 @@ import type Context from '../gl/context';
 
 class VertexArrayObject {
     context: Context;
-    boundProgram: Program<any> | undefined | null;
-    boundLayoutVertexBuffer: VertexBuffer | undefined | null;
+    boundProgram: Program<any>;
+    boundLayoutVertexBuffer: VertexBuffer;
     boundPaintVertexBuffers: Array<VertexBuffer>;
-    boundIndexBuffer: IndexBuffer | undefined | null;
-    boundVertexOffset: number | undefined | null;
-    boundDynamicVertexBuffer: VertexBuffer | undefined | null;
-    boundDynamicVertexBuffer2: VertexBuffer | undefined | null;
-    boundDynamicVertexBuffer3: VertexBuffer | undefined | null;
+    boundIndexBuffer: IndexBuffer;
+    boundVertexOffset: number;
+    boundDynamicVertexBuffer: VertexBuffer;
+    boundDynamicVertexBuffer2: VertexBuffer;
+    boundDynamicVertexBuffer3: VertexBuffer;
     vao: any;
 
     constructor() {

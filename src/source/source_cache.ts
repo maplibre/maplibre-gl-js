@@ -51,7 +51,7 @@ class SourceCache extends Evented {
     _cacheTimers: {
       [_ in any]: ReturnType<typeof setTimeout>;
     };
-    _maxTileCacheSize: number | undefined | null;
+    _maxTileCacheSize: number;
     _paused: boolean;
     _shouldReloadOnResume: boolean;
     _coveredTiles: {[_: string]: boolean};
@@ -59,7 +59,7 @@ class SourceCache extends Evented {
     used: boolean;
     usedForTerrain: boolean;
     _state: SourceFeatureState;
-    _loadedParentTiles: {[_: string]: Tile | undefined | null};
+    _loadedParentTiles: {[_: string]: Tile};
 
     static maxUnderzooming: number;
     static maxOverzooming: number;
@@ -380,7 +380,7 @@ class SourceCache extends Evented {
      * Find a loaded parent of the given tile (up to minCoveringZoom)
      * @private
      */
-    findLoadedParent(tileID: OverscaledTileID, minCoveringZoom: number): Tile | undefined | null {
+    findLoadedParent(tileID: OverscaledTileID, minCoveringZoom: number): Tile {
         if (tileID.key in this._loadedParentTiles) {
             const parent = this._loadedParentTiles[tileID.key];
             if (parent && parent.tileID.overscaledZ >= minCoveringZoom) {
@@ -398,7 +398,7 @@ class SourceCache extends Evented {
         }
     }
 
-    _getLoadedTile(tileID: OverscaledTileID): Tile | undefined | null {
+    _getLoadedTile(tileID: OverscaledTileID): Tile {
         const tile = this._tiles[tileID.key];
         if (tile && tile.hasData()) {
             return tile;
@@ -666,7 +666,7 @@ class SourceCache extends Evented {
 
         for (const tileKey in this._tiles) {
             const path = [];
-            let parentTile: Tile | undefined | null;
+            let parentTile: Tile;
             let currentId = this._tiles[tileKey].tileID;
 
             // Find the closest loaded ancestor by traversing the tile tree towards the root and
@@ -890,7 +890,7 @@ class SourceCache extends Evented {
      * Set the value of a particular state for a feature
      * @private
      */
-    setFeatureState(sourceLayer: string | undefined | null, featureId: number | string, state: any) {
+    setFeatureState(sourceLayer: string, featureId: number | string, state: any) {
         sourceLayer = sourceLayer || '_geojsonTileLayer';
         this._state.updateState(sourceLayer, featureId, state);
     }
@@ -908,7 +908,7 @@ class SourceCache extends Evented {
      * Get the entire state object for a feature
      * @private
      */
-    getFeatureState(sourceLayer: string | undefined | null, featureId: number | string) {
+    getFeatureState(sourceLayer: string, featureId: number | string) {
         sourceLayer = sourceLayer || '_geojsonTileLayer';
         return this._state.getState(sourceLayer, featureId);
     }

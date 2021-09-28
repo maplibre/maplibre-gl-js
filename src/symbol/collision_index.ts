@@ -104,10 +104,10 @@ class CollisionIndex {
       fontSize: number,
       posMatrix: mat4,
       labelPlaneMatrix: mat4,
-      labelToScreenMatrix: mat4 | undefined | null,
+      labelToScreenMatrix: mat4,
       showCollisionCircles: boolean,
       pitchWithMap: boolean,
-      collisionGroupPredicate: any | undefined | null,
+      collisionGroupPredicate: any,
       circlePixelDiameter: number,
       textPixelPadding: number,
       getElevation: any
@@ -380,7 +380,7 @@ class CollisionIndex {
     *   example transformation: clipPos = glCoordMatrix * viewportMatrix * circle_pos
     */
     getViewportMatrix() {
-        const m = mat4.create(); // creates identity matrix
+        const m = mat4.identity([] as any);
         mat4.translate(m, m, [-viewportPadding, -viewportPadding, 0.0]);
         return m;
     }

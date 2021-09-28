@@ -2,141 +2,118 @@ import Point from './point';
 
 import assert from 'assert';
 
-interface DOMInterface {
-    create(tagName: string, className?: string | undefined | null, container?: HTMLElement): HTMLElement;
-    createNS(namespaceURI: string, tagName: string);
-    disableDrag();
-    enableDrag();
-    setTransform(el: HTMLElement, value: string);
-    addEventListener(target: any, type: any, callback: any, options?: void | {
-        passive?: boolean;
-        capture?: boolean;
-      });
-    removeEventListener(target: any, type: any, callback: any, options?: void | {
-        passive?: boolean;
-        capture?: boolean;
-    });
-    suppressClick();
-    mousePos(el: HTMLElement, e: MouseEvent | Touch);
-    touchPos(el: HTMLElement, touches: TouchList);
-    mouseButton(e: MouseEvent);
-    remove(node: HTMLElement);
-}
+export default class DOM {
+    private static readonly docStyle = typeof window !== 'undefined' && window.document && window.document.documentElement.style;
 
-const DOM = {} as DOMInterface;
-export default DOM;
+    private static userSelect: string;
 
-DOM.create = function (tagName: string, className: string | undefined | null, container?: HTMLElement) {
-    const el = window.document.createElement(tagName);
-    if (className !== undefined) el.className = className;
-    if (container) container.appendChild(el);
-    return el;
-};
+    private static selectProp = DOM.testProp(['userSelect', 'MozUserSelect', 'WebkitUserSelect', 'msUserSelect']);
 
-DOM.createNS = function (namespaceURI: string, tagName: string) {
-    const el = window.document.createElementNS(namespaceURI, tagName);
-    return el;
-};
+    private static transformProp = DOM.testProp(['transform', 'WebkitTransform']);
 
-const docStyle = window.document && window.document.documentElement.style;
+    private static testProp(props: string[]): string {
+        if (!DOM.docStyle) return props[0];
+        for (let i = 0; i < props.length; i++) {
+            if (props[i] in DOM.docStyle) {
+                return props[i];
+            }
+        }
+        return props[0];
+    }
 
-function testProp(props) {
-    if (!docStyle) return props[0];
-    for (let i = 0; i < props.length; i++) {
-        if (props[i] in docStyle) {
-            return props[i];
+    public static create<K extends keyof HTMLElementTagNameMap>(tagName: K, className?: string, container?: HTMLElement): HTMLElementTagNameMap[K] {
+        const el = window.document.createElement(tagName);
+        if (className !== undefined) el.className = className;
+        if (container) container.appendChild(el);
+        return el;
+    }
+
+    public static createNS(namespaceURI: string, tagName: string) {
+        const el = window.document.createElementNS(namespaceURI, tagName);
+        return el;
+    }
+
+    public static disableDrag() {
+        if (DOM.docStyle && DOM.selectProp) {
+            DOM.userSelect = DOM.docStyle[DOM.selectProp];
+            DOM.docStyle[DOM.selectProp] = 'none';
         }
     }
-    return props[0];
+
+    public static enableDrag() {
+        if (DOM.docStyle && DOM.selectProp) {
+            DOM.docStyle[DOM.selectProp] = DOM.userSelect;
+        }
+    }
+
+    public static setTransform(el: HTMLElement, value: string) {
+        el.style[DOM.transformProp] = value;
+    }
+
+    public static addEventListener(target: any, type: any, callback: any, options: {
+        passive?: boolean;
+        capture?: boolean;
+      } = {}) {
+        if ('passive' in options) {
+            target.addEventListener(type, callback, options);
+        } else {
+            target.addEventListener(type, callback, options.capture);
+        }
+    }
+
+    public static removeEventListener(target: any, type: any, callback: any, options: {
+        passive?: boolean;
+        capture?: boolean;
+      } = {}) {
+        if ('passive' in options) {
+            target.removeEventListener(type, callback, options);
+        } else {
+            target.removeEventListener(type, callback, options.capture);
+        }
+    }
+
+    // Suppress the next click, but only if it's immediate.
+    private static suppressClickInternal(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.removeEventListener('click', DOM.suppressClickInternal, true);
+    }
+
+    public static suppressClick() {
+        window.addEventListener('click', DOM.suppressClickInternal, true);
+        window.setTimeout(() => {
+            window.removeEventListener('click', DOM.suppressClickInternal, true);
+        }, 0);
+    }
+
+    public static mousePos(el: HTMLElement, e: MouseEvent | Touch) {
+        const rect = el.getBoundingClientRect();
+        return new Point(
+            e.clientX - rect.left - el.clientLeft,
+            e.clientY - rect.top - el.clientTop
+        );
+    }
+
+    public static touchPos(el: HTMLElement, touches: TouchList) {
+        const rect = el.getBoundingClientRect();
+        const points: Point[] = [];
+        for (let i = 0; i < touches.length; i++) {
+            points.push(new Point(
+                touches[i].clientX - rect.left - el.clientLeft,
+                touches[i].clientY - rect.top - el.clientTop
+            ));
+        }
+        return points;
+    }
+
+    public static mouseButton(e: MouseEvent) {
+        assert(e.type === 'mousedown' || e.type === 'mouseup');
+        return e.button;
+    }
+
+    public static remove(node: HTMLElement) {
+        if (node.parentNode) {
+            node.parentNode.removeChild(node);
+        }
+    }
 }
-
-const selectProp = testProp(['userSelect', 'MozUserSelect', 'WebkitUserSelect', 'msUserSelect']);
-let userSelect;
-
-DOM.disableDrag = function () {
-    if (docStyle && selectProp) {
-        userSelect = docStyle[selectProp];
-        docStyle[selectProp] = 'none';
-    }
-};
-
-DOM.enableDrag = function () {
-    if (docStyle && selectProp) {
-        docStyle[selectProp] = userSelect;
-    }
-};
-
-const transformProp = testProp(['transform', 'WebkitTransform']);
-
-DOM.setTransform = function(el: HTMLElement, value: string) {
-    // https://github.com/facebook/flow/issues/7754
-    // $FlowFixMe
-    el.style[transformProp] = value;
-};
-
-DOM.addEventListener = function(target: any, type: any, callback: any, options: {
-  passive?: boolean;
-  capture?: boolean;
-} = {}) {
-    if ('passive' in options) {
-        target.addEventListener(type, callback, options);
-    } else {
-        target.addEventListener(type, callback, options.capture);
-    }
-};
-
-DOM.removeEventListener = function(target: any, type: any, callback: any, options: {
-  passive?: boolean;
-  capture?: boolean;
-} = {}) {
-    if ('passive' in options) {
-        target.removeEventListener(type, callback, options);
-    } else {
-        target.removeEventListener(type, callback, options.capture);
-    }
-};
-
-// Suppress the next click, but only if it's immediate.
-const suppressClick: EventListener = function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    window.removeEventListener('click', suppressClick, true);
-};
-
-DOM.suppressClick = function() {
-    window.addEventListener('click', suppressClick, true);
-    window.setTimeout(() => {
-        window.removeEventListener('click', suppressClick, true);
-    }, 0);
-};
-
-DOM.mousePos = function (el: HTMLElement, e: MouseEvent | Touch) {
-    const rect = el.getBoundingClientRect();
-    return new Point(
-        e.clientX - rect.left - el.clientLeft,
-        e.clientY - rect.top - el.clientTop
-    );
-};
-
-DOM.touchPos = function (el: HTMLElement, touches: TouchList) {
-    const rect = el.getBoundingClientRect(),
-        points = [];
-    for (let i = 0; i < touches.length; i++) {
-        points.push(new Point(
-            touches[i].clientX - rect.left - el.clientLeft,
-            touches[i].clientY - rect.top - el.clientTop
-        ));
-    }
-    return points;
-};
-
-DOM.mouseButton = function (e: MouseEvent) {
-    assert(e.type === 'mousedown' || e.type === 'mouseup');
-    return e.button;
-};
-
-DOM.remove = function(node: HTMLElement) {
-    if (node.parentNode) {
-        node.parentNode.removeChild(node);
-    }
-};

@@ -32,7 +32,7 @@ class VertexBuffer {
     length: number;
     attributes: ReadonlyArray<StructArrayMember>;
     itemSize: number;
-    dynamicDraw: boolean | undefined | null;
+    dynamicDraw: boolean;
     context: Context;
     buffer: WebGLBuffer;
 

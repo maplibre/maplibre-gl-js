@@ -25,19 +25,17 @@ type Entry = {
   tinySDF?: TinySDF;
 };
 
-class GlyphManager {
+export default class GlyphManager {
     requestManager: RequestManager;
-    localIdeographFontFamily: string | undefined | null;
+    localIdeographFontFamily: string;
     entries: {
       [_: string]: Entry;
     };
-    url: string | undefined | null;
+    url: string;
 
     // exposed as statics to enable stubbing in unit tests
-    static loadGlyphRange: typeof loadGlyphRange;
-    static TinySDF: {
-      new (...args: any): TinySDF;
-    };
+    static loadGlyphRange = loadGlyphRange;
+    static TinySDF = TinySDF;
 
     constructor(requestManager: RequestManager, localIdeographFontFamily?: string | null) {
         this.requestManager = requestManager;
@@ -53,7 +51,7 @@ class GlyphManager {
       [stack: string]: Array<number>;
     }, callback: Callback<{
       [stack: string]: {
-        [id: number]: StyleGlyph | undefined | null;
+        [id: number]: StyleGlyph;
       };
     }>) {
         const all = [];
@@ -67,7 +65,7 @@ class GlyphManager {
         asyncAll(all, ({stack, id}, callback: Callback<{
           stack: string;
           id: number;
-          glyph: StyleGlyph | undefined | null;
+          glyph: StyleGlyph;
         }>) => {
             let entry = this.entries[stack];
             if (!entry) {
@@ -136,7 +134,7 @@ class GlyphManager {
         }, (err, glyphs?: Array<{
           stack: string;
           id: number;
-          glyph: StyleGlyph | undefined | null;
+          glyph: StyleGlyph;
         }> | null) => {
             if (err) {
                 callback(err);
@@ -167,9 +165,9 @@ class GlyphManager {
         /* eslint-enable new-cap */
     }
 
-    _tinySDF(entry: Entry, stack: string, id: number): StyleGlyph | undefined | null {
-        const family = this.localIdeographFontFamily;
-        if (!family) {
+    _tinySDF(entry: Entry, stack: string, id: number): StyleGlyph {
+        const fontFamily = this.localIdeographFontFamily;
+        if (!fontFamily) {
             return;
         }
 
@@ -187,7 +185,14 @@ class GlyphManager {
             } else if (/light/i.test(stack)) {
                 fontWeight = '200';
             }
-            tinySDF = entry.tinySDF = new GlyphManager.TinySDF(24, 3, 8, .25, family, fontWeight);
+            tinySDF = entry.tinySDF = new GlyphManager.TinySDF({
+                fontSize: 24,
+                buffer: 3,
+                radius: 8,
+                cutoff: 0.25,
+                fontFamily,
+                fontWeight
+            });
         }
 
         return {
@@ -203,8 +208,3 @@ class GlyphManager {
         };
     }
 }
-
-GlyphManager.loadGlyphRange = loadGlyphRange;
-GlyphManager.TinySDF = TinySDF;
-
-export default GlyphManager;

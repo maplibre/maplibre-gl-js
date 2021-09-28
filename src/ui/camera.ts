@@ -121,7 +121,7 @@ abstract class Camera extends Evented {
 
     _onEaseFrame: (_: number) => void;
     _onEaseEnd: (easeId?: string) => void;
-    _easeFrameId: TaskID | undefined | null;
+    _easeFrameId: TaskID;
 
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
@@ -878,7 +878,7 @@ abstract class Camera extends Evented {
         return this;
     }
 
-    _prepareEase(eventData: any | undefined | null, noMoveStart: boolean, currently: any = {}) {
+    _prepareEase(eventData: any, noMoveStart: boolean, currently: any = {}) {
         this._moving = true;
 
         if (!noMoveStart && !currently.moving) {

@@ -42,7 +42,7 @@ class Program<Us extends UniformBindings> {
               staticAttributes: Array<string>;
               staticUniforms: Array<string>;
             },
-            configuration: ProgramConfiguration | undefined | null,
+            configuration: ProgramConfiguration,
             fixedUniforms: (b: Context, a: UniformLocations) => Us,
             showOverdrawInspector: boolean,
             useTerrain: boolean) {

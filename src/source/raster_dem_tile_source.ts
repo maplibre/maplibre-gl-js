@@ -1,5 +1,5 @@
 import {getImage, ResourceType} from '../util/ajax';
-import {extend} from '../util/util';
+import {extend, isImageBitmap} from '../util/util';
 import {Evented} from '../util/evented';
 import browser from '../util/browser';
 import offscreenCanvasSupported from '../util/offscreen_canvas_supported';
@@ -53,7 +53,7 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
                 if (this.map._refreshExpiredTiles) tile.setExpiryData(img);
                 delete (img as any).cacheControl;
                 delete (img as any).expires;
-                const transfer = ImageBitmap && img instanceof ImageBitmap && offscreenCanvasSupported();
+                const transfer = isImageBitmap(img) && offscreenCanvasSupported();
                 const rawImageData = transfer ? img : browser.getImageData(img, 1);
                 const params = {
                     uid: tile.uid,

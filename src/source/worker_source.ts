@@ -21,7 +21,7 @@ export type WorkerTileParameters = TileParameters & {
   zoom: number;
   maxZoom: number;
   tileSize: number;
-  promoteId: PromoteIdSpecification | undefined | null;
+  promoteId: PromoteIdSpecification;
   pixelRatio: number;
   showCollisionBoxes: boolean;
   collectResourceTiming?: boolean;
@@ -50,7 +50,7 @@ export type WorkerTileResult = {
   // Only used for benchmarking:
   glyphMap?: {
     [_: string]: {
-      [_: number]: StyleGlyph | undefined | null;
+      [_: number]: StyleGlyph;
     };
   } | null;
   iconMap?: {

@@ -12,7 +12,7 @@ export type UniformLocations = {[_: string]: WebGLUniformLocation};
 
 abstract class Uniform<T> {
     gl: WebGLRenderingContext;
-    location: WebGLUniformLocation | undefined | null;
+    location: WebGLUniformLocation;
     current: T;
 
     constructor(context: Context, location: WebGLUniformLocation) {
@@ -109,7 +109,7 @@ class UniformColor extends Uniform<Color> {
     }
 }
 
-const emptyMat4 = mat4.create();
+const emptyMat4 = new Float32Array(16) as mat4;
 class UniformMatrix4f extends Uniform<mat4> {
     constructor(context: Context, location: WebGLUniformLocation) {
         super(context, location);

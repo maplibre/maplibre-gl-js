@@ -19,7 +19,7 @@ export default class CollatorExpression implements Expression {
         this.diacriticSensitive = diacriticSensitive;
     }
 
-    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression | undefined | null {
+    static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression {
         if (args.length !== 2)
             return context.error('Expected one argument.') as null;
 

@@ -11,8 +11,8 @@ import type Map from './map';
  */
 class Hash {
     _map: Map;
-    _updateHash: () => ReturnType<typeof setTimeout> | undefined | null;
-    _hashName: string | undefined | null;
+    _updateHash: () => ReturnType<typeof setTimeout>;
+    _hashName: string;
 
     constructor(hashName?: string | null) {
         this._hashName = hashName && encodeURIComponent(hashName);

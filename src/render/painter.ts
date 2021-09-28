@@ -114,7 +114,7 @@ class Painter {
     opaquePassCutoff: number;
     renderPass: RenderPass;
     currentLayer: number;
-    currentStencilSource: string | undefined | null;
+    currentStencilSource: string;
     nextStencilID: number;
     id: string;
     _showOverdrawInspector: boolean;
@@ -655,7 +655,7 @@ class Painter {
             0
         );
 
-        const translatedMatrix = mat4.create();
+        const translatedMatrix = new Float32Array(16);
         mat4.translate(translatedMatrix, matrix, translation);
         return translatedMatrix;
     }

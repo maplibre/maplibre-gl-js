@@ -1,5 +1,6 @@
 import type Context from '../gl/context';
 import type {RGBAImage, AlphaImage} from '../util/image';
+import {isImageBitmap} from '../util/util';
 
 export type TextureFormat = WebGLRenderingContext['RGBA'] | WebGLRenderingContext['ALPHA'];
 export type TextureFilter = WebGLRenderingContext['LINEAR'] | WebGLRenderingContext['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContext['NEAREST'];
@@ -12,15 +13,15 @@ type EmptyImage = {
 };
 
 type DataTextureImage = RGBAImage | AlphaImage | EmptyImage;
-export type TextureImage = HTMLImageElement | HTMLCanvasElement | HTMLVideoElement | ImageData | ImageBitmap | DataTextureImage;
+export type TextureImage = TexImageSource | DataTextureImage;
 
 class Texture {
     context: Context;
     size: [number, number];
     texture: WebGLTexture;
     format: TextureFormat;
-    filter: TextureFilter | undefined | null;
-    wrap: TextureWrap | undefined | null;
+    filter: TextureFilter;
+    wrap: TextureWrap;
     useMipmap: boolean;
 
     constructor(context: Context, image: TextureImage, format: TextureFormat, options?: {
@@ -55,7 +56,7 @@ class Texture {
         if (resize) {
             this.size = [width, height];
 
-            if (image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof HTMLVideoElement || image instanceof ImageData || (ImageBitmap && image instanceof ImageBitmap)) {
+            if (image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof HTMLVideoElement || image instanceof ImageData || isImageBitmap(image)) {
                 gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, gl.UNSIGNED_BYTE, image);
             } else {
                 gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, gl.UNSIGNED_BYTE, (image as DataTextureImage).data);
@@ -63,7 +64,7 @@ class Texture {
 
         } else {
             const {x, y} = position || {x: 0, y: 0};
-            if (image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof HTMLVideoElement || image instanceof ImageData || (ImageBitmap && image instanceof ImageBitmap)) {
+            if (image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof HTMLVideoElement || image instanceof ImageData || isImageBitmap(image)) {
                 gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, image);
             } else {
                 gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, (image as DataTextureImage).data);

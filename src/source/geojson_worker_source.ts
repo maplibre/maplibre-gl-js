@@ -43,7 +43,7 @@ export interface GeoJSONIndex {
   getLeaves(clusterId: number, limit: number, offset: number): Array<GeoJSON.Feature>;
 }
 
-function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataCallback): (() => void) | void | undefined | null {
+function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataCallback): (() => void) | void {
     const canonical = params.tileID.canonical;
 
     if (!this._geoJSONIndex) {
