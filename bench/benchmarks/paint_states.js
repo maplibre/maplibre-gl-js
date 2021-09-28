@@ -28,12 +28,12 @@ export default class PaintStates extends Benchmark {
             .then(data => {
                 this.numFeatures = data.features.length;
                 return Object.assign({}, style, {
-                    sources: {land: {type: 'geojson', data, maxzoom: 23}},
+                    sources: {'land': {'type': 'geojson', data, 'maxzoom': 23}},
                     layers: generateLayers({
-                        id: 'layer',
-                        type: 'fill',
-                        source: 'land',
-                        paint: {
+                        'id': 'layer',
+                        'type': 'fill',
+                        'source': 'land',
+                        'paint': {
                             'fill-color': [
                                 'case',
                                 ['boolean', ['feature-state', 'bench'], false],

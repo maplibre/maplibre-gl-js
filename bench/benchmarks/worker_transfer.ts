@@ -1,4 +1,4 @@
-import type {StyleSpecification} from '../../src/style-spec/types';
+import type { StyleSpecification } from '../../src/style-spec/types';
 import Benchmark from '../lib/benchmark';
 import fetchStyle from '../lib/fetch_style';
 import TileParser from '../lib/tile_parser';
@@ -35,7 +35,7 @@ export default class WorkerTransfer extends Benchmark {
 
         return fetchStyle(this.style)
             .then((styleJSON) => {
-                this.parser = new TileParser(styleJSON, 'composite');
+                this.parser = new TileParser(styleJSON, 'openmaptiles');
                 return this.parser.setup();
             })
             .then(() => {

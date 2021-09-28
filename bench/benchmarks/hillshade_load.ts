@@ -8,26 +8,26 @@ export default class HillshadeLoad extends Benchmark {
     constructor() {
         super();
         this.style = {
-            version: 8,
-            name: 'Hillshade-only',
-            center: [-112.81596278901452, 37.251160384573595],
-            zoom: 11.560975632435424,
-            bearing: 0,
-            pitch: 0,
-            sources: {
-                'mapbox://mapbox.terrain-rgb': {
-                    url: 'mapbox://mapbox.terrain-rgb',
-                    type: 'raster-dem',
-                    tileSize: 256
+            "version": 8,
+            "name": "Hillshade-only",
+            "center": [-112.81596278901452, 37.251160384573595],
+            "zoom": 11.560975632435424,
+            "bearing": 0,
+            "pitch": 0,
+            "sources": {
+                'terrain-rgb': {
+                    'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                    'type': 'raster-dem',
+                    "tileSize": 256
                 }
             },
-            layers: [
+            "layers": [
                 {
-                    id: 'mapbox-terrain-rgb',
-                    type: 'hillshade',
-                    source: 'mapbox://mapbox.terrain-rgb',
-                    layout: {},
-                    paint: {}
+                    "id": "maplibre-terrain-rgb",
+                    "type": "hillshade",
+                    "source": "terrain-rgb",
+                    "layout": {},
+                    "paint": {}
                 }
             ]
         };
