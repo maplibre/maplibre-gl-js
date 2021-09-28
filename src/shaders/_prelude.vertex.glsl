@@ -90,11 +90,19 @@ vec2 unpackCoord(vec4 rgba) {
 // if a coordinate is behind the terrain reduce its opacity
 float calculate_visibility(sampler2D u_coords, sampler2D u_coords_index, vec4 pos, vec2 tilePos) {
     #ifdef TERRAIN3D
+        // get pixel from coords framebuffer
         vec3 frag = pos.xyz / pos.w;
-        vec2 coord = unpackCoord(texture2D(u_coords, frag.xy * 0.5 + 0.5));
+        vec4 coord_color = texture2D(u_coords, frag.xy * 0.5 + 0.5);
+        vec2 coord = unpackCoord(coord_color);
+        // ask coords_index for sub-regions.
+        // HINT: '1.0 - coord_color.a' is because coords-index is stored in reverse order
+        // because web-gl do not render pixels with zero opacity
+        vec4 coords_index = texture2D(u_coords_index, vec2(1.0 - coord_color.a, 0.0));
+        float q = 8192.0 / pow(2.0, floor(coords_index.a * 255.0));
+        vec2 xy = coords_index.xy * 255.0 * q + coord / 8192.0 * q;
         // distance is in vector-tile coordinate-space. e.g. 0 .. 8191
         // e.g. the distance of the pos.coordinate to the tile.coordinate on the same screen-pixel.
-        float distance = length(tilePos - coord);
+        float distance = length(tilePos - xy);
         if (distance < 100.0) return 1.0; // assume fully visible on terrain
         return 0.2; // opacity 0.2 behind terrain
         // FIXME-3D: to get a correct fadeout effect it is necesarry to grab more

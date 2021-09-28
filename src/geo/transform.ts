@@ -8,8 +8,6 @@ import EXTENT from '../data/extent';
 import {vec4, mat4, mat2, vec2, vec3} from 'gl-matrix';
 import {Aabb, Frustum} from '../util/primitives';
 import EdgeInsets from './edge_insets';
-import Texture from '../render/texture';
-import browser from '../util/browser';
 
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';

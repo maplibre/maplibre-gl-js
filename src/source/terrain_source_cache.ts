@@ -75,7 +75,7 @@ class TerrainSourceCache extends Evented {
         this._emptyDem = new DEMData("0", new RGBAImage({width: 4, height: 4}), "mapbox");
         this._emptyDemTexture = new Texture(context, this._emptyDem.getPixels(), context.gl.RGBA, {premultiply: false});
         this._emptyDemTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
-        this._emptyDemMatrix = mat4.create();
+        this._emptyDemMatrix = new Float64Array(16) as any;
         mat4.ortho(this._emptyDemMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
 
         // create empty coordsIndexTexture
@@ -183,8 +183,8 @@ class TerrainSourceCache extends Evented {
             const maxzoom = this._sourceCache._source.maxzoom;
             const sourceTileID = this._sourceTileIDs[tileID.key] = tileID.overscaledZ > maxzoom ? tileID.scaledTo(maxzoom) : tileID;
             // create pos matrix in relation to source tile
-            tileID.posMatrix = mat4.create();
-            const demMatrix = mat4.create();
+            tileID.posMatrix = new Float64Array(16) as any;
+            const demMatrix = new Float64Array(16) as any;
             if (tileID.canonical.z == sourceTileID.canonical.z) {
                 mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
                 mat4.ortho(demMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
@@ -296,6 +296,7 @@ class TerrainSourceCache extends Evented {
      * @returns {Tile}
      */
     getSourceTile(tileID: OverscaledTileID): Tile {
+        if (!this.isEnabled()) return null;
         const coord = this._sourceTileIDs[tileID.key];
         return coord && this._sourceCache.getTileByID(coord.key);
     }
@@ -445,11 +446,11 @@ class TerrainSourceCache extends Evented {
     updateCoordsIndexTexture(context: Context) {
         const data = new Uint8Array(256 * 4);
         for (let i=0; i<this._coordsIndex.length * 4; i+=4) {
-            const tile = this.getTileByID(this._coordsIndex[i]);
+            const tile = this.getTileByID(this._coordsIndex[i/4]);
             if (!tile) continue;
             const dz = Math.max(0, tile.tileID.canonical.z - this._sourceCache._source.maxzoom);
-            data[i + 0] = tile.tileID.canonical.x - tile.tileID.canonical.x >> dz << dz;
-            data[i + 1] = tile.tileID.canonical.y - tile.tileID.canonical.y >> dz << dz;
+            data[i + 0] = tile.tileID.canonical.x - (tile.tileID.canonical.x >> dz << dz);
+            data[i + 1] = tile.tileID.canonical.y - (tile.tileID.canonical.y >> dz << dz);
             data[i + 2] = tile.tileID.canonical.z;
             data[i + 3] = dz;
         }
@@ -457,7 +458,6 @@ class TerrainSourceCache extends Evented {
         this._coordsIndexTexture.update(image, {premultiply: false});
         this._coordsIndexTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
     }
-
 }
 
 export default TerrainSourceCache;

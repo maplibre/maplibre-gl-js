@@ -78,6 +78,8 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
 
             if (data) {
                 tile.dem = data.dem;
+                tile.elevationMin = data.dem.min;
+                tile.elevationMax = data.dem.max;
                 tile.needsHillshadePrepare = true;
                 tile.state = 'loaded';
                 callback(null);
