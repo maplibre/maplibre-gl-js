@@ -70,7 +70,7 @@ register('Load', new Load());
 //register('LayoutDDS', new LayoutDDS());
 register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => location.tileID[0])));
 register('FilterCreate', new FilterCreate());
-//register('FilterEvaluate', new FilterEvaluate());
+register('FilterEvaluate', new FilterEvaluate());
 register('HillshadeLoad', new HillshadeLoad());
 
 Promise.resolve().then(() => {
