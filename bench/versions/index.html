@@ -32,6 +32,9 @@
                 for (const name in window.maplibreglBenchmarks) {
                     const versions = [];
 
+                    // also handle benchmarks from mapboxgl releases
+                    Object.assign(window.maplibreglBenchmarks[name], window.mapboxglBenchmarks[name] || {});
+
                     for (const test in window.maplibreglBenchmarks[name]) {
                         versions.push({
                             name: test,
