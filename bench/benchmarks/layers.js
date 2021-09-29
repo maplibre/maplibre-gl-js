@@ -214,8 +214,8 @@ export class LayerSymbol extends LayerBenchmark {
                 'source': 'openmaptiles',
                 'source-layer': 'poi',
                 'layout': {
-                    'icon-image': 'dot-11',
-                    'text-field': '{name:en}'
+                    'icon-image': 'dot_11',
+                    'text-field': '{name_en}'
                 }
             })
         });
@@ -233,8 +233,8 @@ export class LayerSymbolWithIcons extends LayerBenchmark {
                 'source': 'openmaptiles',
                 'source-layer': 'poi',
                 'layout': {
-                    'icon-image': 'dot-11',
-                    'text-field': ['format', ['get', 'name:en'], ['image', 'dot-11']]
+                    'icon-image': 'dot_11',
+                    'text-field': ['format', ['get', 'name_en'], ['image', 'dot_11']]
                 }
             })
         });
@@ -260,7 +260,7 @@ export class LayerSymbolWithSortKey extends LayerBenchmark {
                 'source-layer': 'poi',
                 'layout': {
                     'symbol-sort-key': i,
-                    'text-field': '{name:en}'
+                    'text-field': '{name_en}'
                 }
             });
         }
