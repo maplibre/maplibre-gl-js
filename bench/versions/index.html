@@ -21,8 +21,9 @@
             .then(response => response.json())
             .then(pkg => [pkg['tag_name'], 'main']))
             .then(versions => {
-                //TODO get generated benchmarks_generated.js for released maplibre-gl-js
-                return ['/bench/versions/benchmarks_generated.js']
+                return versions
+                    .map(v => `https://maplibre.org/maplibre-gl-js/benchmarks/${v}/benchmarks_generated.js`)
+                    .concat('/bench/versions/benchmarks_generated.js')
                     .reduce((p, script) => p.then(() => loadScript(script)), Promise.resolve());
             })
             .then(() => {
