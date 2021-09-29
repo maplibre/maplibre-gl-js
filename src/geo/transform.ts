@@ -427,8 +427,16 @@ class Transform {
             for (let i = 0; i < 4; i++) {
                 const childX = (x << 1) + (i % 2);
                 const childY = (y << 1) + (i >> 1);
-
-                stack.push({aabb: it.aabb.quadrant(i), zoom: it.zoom + 1, x: childX, y: childY, wrap: it.wrap, fullyVisible});
+                const childZ = it.zoom + 1;
+                let quadrant = it.aabb.quadrant(i);
+                if (this.terrainSourceCache.isEnabled()) {
+                    let tile = this.terrainSourceCache.getSourceTile(new OverscaledTileID(childZ, it.wrap, childZ, childX, childY));
+                    quadrant = new Aabb(
+                        vec3.fromValues(quadrant.min[0], quadrant.min[1], tile && tile.dem ? tile.dem.min - this.elevation : -this.elevation),
+                        vec3.fromValues(quadrant.max[0], quadrant.max[1], tile && tile.dem ? Math.max(0, tile.dem.max - this.elevation) : 0)
+                    );
+                }
+                stack.push({aabb: quadrant, zoom: childZ, x: childX, y: childY, wrap: it.wrap, fullyVisible});
             }
         }
 

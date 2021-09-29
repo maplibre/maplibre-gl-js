@@ -19,10 +19,12 @@ class Frustum {
 
         const scale = Math.pow(2, zoom);
 
-        // Transform frustum corner points from clip space to tile space
-        const frustumCoords = clipSpaceCorners
-            .map(v => vec4.transformMat4([] as any, v as any, invProj))
-            .map(v => vec4.scale([] as any, v, 1.0 / v[3] / worldSize * scale));
+        // Transform frustum corner points from clip space to tile space, Z to meters
+        const frustumCoords = clipSpaceCorners.map(v => {
+            v = vec4.transformMat4([] as any, v as any, invProj) as any;
+            const s = 1.0 / v[3] / worldSize * scale;
+            return vec4.mul(v as any, v as any, vec4.fromValues(s, s, 1.0 / v[3], s));
+        });
 
         const frustumPlanePointIndices = [
             [0, 1, 2],  // near
@@ -89,7 +91,7 @@ class Aabb {
             [this.min[0], this.min[1], this.min[2], 1],
             [this.max[0], this.min[1], this.min[2], 1],
             [this.max[0], this.max[1], this.min[2], 1],
-            [this.min[0], this.max[1], this.min[2], 1]
+            [this.min[0], this.max[1], this.min[2], 1],
             [this.min[0], this.min[1], this.max[2], 1],
             [this.max[0], this.min[1], this.max[2], 1],
             [this.max[0], this.max[1], this.max[2], 1],
