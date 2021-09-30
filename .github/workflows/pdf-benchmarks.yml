@@ -1,0 +1,36 @@
+name: PDF Benchmarks
+
+on:
+  pull_request
+
+jobs:
+  pdf_benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          architecture: x64
+
+      - name: Install
+        run: npm ci
+
+      - name: Build benchmarks
+        run: |
+          npm run build-dev
+          npm run build-css
+          npm run build-benchmarks
+
+      - name: Start server and generate PDF
+        run: |
+          npm run start-server&
+          node bench/versions/to_pdf.js
+
+      - name: Upload PDF
+        uses: actions/upload-artifact@v2
+        with:
+          name: benchmarks.pdf
+          path: benchmarks.pdf
