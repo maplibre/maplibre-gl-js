@@ -4,7 +4,7 @@ import * as d3 from 'd3';
 import {kde, probabilitiesOfSuperiority, summaryStatistics, regression} from './lib/statistics';
 
 const versionColor = d3.scaleOrdinal(['#1b9e77', '#7570b3', '#d95f02']);
-const formatSample = d3.format(".3r");
+const formatSample = d3.format('.3r');
 
 function identity(x) {
     return x;
@@ -139,12 +139,12 @@ class StatisticsPlot extends React.Component {
                 ref={(ref) => { this.ref = ref; }}>
                 <defs>
                     <g id="up-arrow">
-                        <path transform="translate(-6, -2)" style={{stroke: "inherit", fill: "inherit"}}
+                        <path transform="translate(-6, -2)" style={{stroke: 'inherit', fill: 'inherit'}}
                             d="M2,10 L6,2 L10,10"></path>
                     </g>
                 </defs>
                 <g transform={`translate(${margin.left},${margin.top})`}>
-                    <Axis orientation="bottom" scale={p} ticks={[2, "%"]} transform={`translate(0,${height})`}>
+                    <Axis orientation="bottom" scale={p} ticks={[2, '%']} transform={`translate(0,${height})`}>
                     </Axis>
                     <Axis orientation="left" scale={t} tickFormat={formatSample}>
                         <text fill='#000' textAnchor="end"  y={6} transform="rotate(-90)" dy=".71em">Time (ms)</text>

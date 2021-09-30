@@ -1,4 +1,4 @@
-import type { StyleSpecification } from '../../src/style-spec/types';
+import type {StyleSpecification} from '../../src/style-spec/types';
 import Benchmark from '../lib/benchmark';
 import fetchStyle from '../lib/fetch_style';
 import TileParser from '../lib/tile_parser';

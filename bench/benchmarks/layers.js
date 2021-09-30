@@ -123,21 +123,21 @@ export class LayerHeatmap extends LayerBenchmark {
                         'type': 'heatmap',
                         'source': 'heatmap',
                         'paint': {
-                            "heatmap-radius": 50,
-                            "heatmap-weight": {
-                                "stops": [[0, 0.5], [4, 2]]
+                            'heatmap-radius': 50,
+                            'heatmap-weight': {
+                                'stops': [[0, 0.5], [4, 2]]
                             },
-                            "heatmap-intensity": 0.9,
-                            "heatmap-color": [
-                                "interpolate",
-                                ["linear"],
-                                ["heatmap-density"],
-                                0, "rgba(0, 0, 255, 0)",
-                                0.1, "royalblue",
-                                0.3, "cyan",
-                                0.5, "lime",
-                                0.7, "yellow",
-                                1, "red"
+                            'heatmap-intensity': 0.9,
+                            'heatmap-color': [
+                                'interpolate',
+                                ['linear'],
+                                ['heatmap-density'],
+                                0, 'rgba(0, 0, 255, 0)',
+                                0.1, 'royalblue',
+                                0.3, 'cyan',
+                                0.5, 'lime',
+                                0.7, 'yellow',
+                                1, 'red'
                             ]
                         }
                     })
