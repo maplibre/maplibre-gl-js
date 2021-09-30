@@ -2,6 +2,8 @@ import maplibregl from '../../src';
 import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '@mapbox/gazetteer/benchmark/style-benchmark-locations.json';
 import StyleLayerCreate from '../benchmarks/style_layer_create';
+import Validate from '../benchmarks/style_validate';
+import Layout from '../benchmarks/layout';
 import Paint from '../benchmarks/paint';
 import QueryPoint from '../benchmarks/query_point';
 import QueryBox from '../benchmarks/query_box';
@@ -25,6 +27,8 @@ function register(name, Benchmark, locations, location) {
 }
 
 register('StyleLayerCreate', StyleLayerCreate);
+register('Validate', Validate);
+locations.forEach(location => register('Layout', Layout, location.tileID, location));
 locations.forEach(location => register('Paint', Paint, [location], location));
 register('QueryPoint', QueryPoint, locations);
 register('QueryBox', QueryBox, locations);
