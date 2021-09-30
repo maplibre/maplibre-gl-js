@@ -25,12 +25,17 @@ jobs:
       - name: Build benchmarks
         run: npm run build-benchmarks
 
+      - name: Copy benchmarks_generated.js
+        run: |
+          mkdir tmp
+          cp bench/versions/benchmarks_generated.js tmp
+
       - name: Upload to GitHub Pages (main)
         if: startsWith(github.ref, 'refs/heads/main')
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: bench/versions
+          publish_dir: tmp
           destination_dir: benchmarks/main
       
       - name: Get tag
@@ -42,5 +47,5 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: bench/versions
+          publish_dir: tmp
           destination_dir: benchmarks/${{ env.TAG }}
