@@ -25,8 +25,6 @@ function register(name, Benchmark, locations, location) {
 }
 
 register('StyleLayerCreate', StyleLayerCreate);
-//register('Validate', Validate);
-//locations.forEach(location => register('Layout', Layout, location.tileID, location));
 locations.forEach(location => register('Paint', Paint, [location], location));
 register('QueryPoint', QueryPoint, locations);
 register('QueryBox', QueryBox, locations);
