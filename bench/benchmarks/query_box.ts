@@ -1,6 +1,7 @@
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 import type Map from '../../src/ui/map';
+import {PointLike} from '../../src/util/point';
 
 const width = 1024;
 const height = 768;
@@ -36,7 +37,7 @@ export default class QueryBox extends Benchmark {
 
     bench() {
         for (const map of this.maps) {
-            map.queryRenderedFeatures({} as any);
+            map.queryRenderedFeatures({} as PointLike);
         }
     }
 
