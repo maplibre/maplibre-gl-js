@@ -6,7 +6,7 @@ import {OverscaledTileID} from '../../src/source/tile_id';
 export default class SymbolLayout extends Layout {
     parsedTiles: Array<any>;
 
-    constructor(style: string, locations?: Array<OverscaledTileID> | null) {
+    constructor(style: string, locations?: Array<OverscaledTileID>) {
         super(style, locations);
         this.parsedTiles = [];
     }

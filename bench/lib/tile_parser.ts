@@ -119,7 +119,7 @@ export default class TileParser {
         buffer: ArrayBuffer;
       },
       returnDependencies?: boolean
-    ): Promise<WorkerTileResult | undefined | null> {
+    ): Promise<WorkerTileResult> {
         const workerTile = new WorkerTile({
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,

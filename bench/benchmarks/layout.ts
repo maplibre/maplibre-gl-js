@@ -13,7 +13,7 @@ export default class Layout extends Benchmark {
     style: string | StyleSpecification;
     tileIDs: Array<OverscaledTileID>;
 
-    constructor(style: string | StyleSpecification, tileIDs?: Array<OverscaledTileID> | null) {
+    constructor(style: string | StyleSpecification, tileIDs?: Array<OverscaledTileID>) {
         super();
         this.style = style;
         this.tileIDs = tileIDs || [
