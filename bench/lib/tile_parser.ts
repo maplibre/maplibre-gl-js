@@ -23,11 +23,11 @@ class StubMap extends Evented {
     }
 }
 
-const mapStub = new StubMap();
+const mapStub = new StubMap() as any;
 
 function createStyle(styleJSON: StyleSpecification): Promise<Style> {
     return new Promise((resolve, reject) => {
-        const style = new Style((mapStub as any));
+        const style = new Style(mapStub);
         style.loadJSON(styleJSON);
         style
             .on('style.load', () => resolve(style))
