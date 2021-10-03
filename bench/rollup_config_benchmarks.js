@@ -3,8 +3,8 @@ import sourcemaps from 'rollup-plugin-sourcemaps';
 import replace from 'rollup-plugin-replace';
 import {plugins} from '../build/rollup_plugins';
 import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
-import buble from 'rollup-plugin-buble';
+import commonjs from '@rollup/plugin-commonjs';
+import jsx from 'rollup-plugin-jsx'
 
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
@@ -47,7 +47,7 @@ const splitConfig = (name) => [{
 }];
 
 const viewConfig = {
-    input: 'rollup/build/tsc/bench/benchmarks_view.js',
+    input: 'rollup/build/tsc/bench/benchmarks_view.jsx',
     output: {
         name: 'Benchmarks',
         file: 'bench/benchmarks_view_generated.js',
@@ -56,6 +56,7 @@ const viewConfig = {
         sourcemap: false
     },
     plugins: [
+        jsx({factory: 'React.createElement'}),
         resolve({browser: true, preferBuiltins: false}),
         commonjs(),
         replace(replaceConfig)
