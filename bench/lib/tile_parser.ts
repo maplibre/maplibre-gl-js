@@ -110,20 +110,15 @@ export default class TileParser {
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,
             tileSize: 512,
-            overscaling: 1,
             showCollisionBoxes: false,
             source: this.sourceID,
             uid: '0',
             maxZoom: 22,
             pixelRatio: 1,
             request: {url: ''},
-            angle: 0,
-            pitch: 0,
-            cameraToCenterDistance: 0,
-            cameraToTileDistance: 0,
             returnDependencies,
             promoteId: undefined
-        } as any);
+        });
 
         const vectorTile = new VT.VectorTile(new Protobuf(tile.buffer));
 
