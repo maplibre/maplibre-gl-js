@@ -16,7 +16,7 @@ const createMap = (options: any): Promise<Map> => {
         if (!options.showMap) {
             container.style.visibility = 'hidden';
         }
-        (document.body as any).appendChild(container);
+        document.body.appendChild(container);
 
         const map = new Map(Object.assign({
             container,
@@ -37,6 +37,6 @@ const createMap = (options: any): Promise<Map> => {
             .on('error', (e) => reject(e.error))
             .on('remove', () => container.remove());
     });
-}
+};
 
 export default createMap;
