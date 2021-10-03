@@ -11,10 +11,6 @@ export type Measurement = {
 
 class Benchmark {
 
-    constructor() {
-        this._measureAsync = this._measureAsync.bind(this);
-    }
-
     /**
      * The `setup` method is intended to be overridden by subclasses. It will be called once, prior to
      * running any benchmark iterations, and may set state on `this` which the benchmark later accesses.
