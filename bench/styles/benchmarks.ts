@@ -14,12 +14,12 @@ const locations = locationsWithTileID(styleBenchmarkLocations.features);
 
 const benchmarks = window.benchmarks = [];
 
-function register(name, Benchmark, locations, location) {
+function register(name, Benchmark, locations?, location?) {
     const versions = [];
 
     for (const style of process.env.MAPLIBRE_STYLES) {
         versions.push({
-            name: style.name || style,
+            name: typeof style === 'string' ? style : (style as any).name,
             bench: new Benchmark(style, locations)
         });
     }
