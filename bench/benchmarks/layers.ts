@@ -17,6 +17,10 @@ function generateLayers(layer) {
 }
 
 export class LayerBenchmark extends Benchmark {
+
+    layerStyle: any;
+    map: any;
+
     setup() {
         return createMap({
             zoom: 16,
