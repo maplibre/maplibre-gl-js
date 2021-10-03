@@ -56,12 +56,12 @@ class Benchmark {
         }
     }
 
-    _done() {
+    private _done() {
         // 210 samples => 20 observations for regression
         return this._elapsed >= 500 && this._measurements.length > 210;
     }
 
-    _begin(): Promise<Array<Measurement>> {
+    private _begin(): Promise<Array<Measurement>> {
         this._measurements = [];
         this._elapsed = 0;
         this._iterationsPerMeasurement = 1;
@@ -75,7 +75,7 @@ class Benchmark {
         }
     }
 
-    _measureSync(): Promise<Array<Measurement>> {
+    private _measureSync(): Promise<Array<Measurement>> {
         // Avoid Promise overhead for sync benchmarks.
         while (true) {
             const time = performance.now() - this._start;
@@ -95,7 +95,7 @@ class Benchmark {
         }
     }
 
-    _measureAsync(): Promise<Array<Measurement>> {
+    private _measureAsync(): Promise<Array<Measurement>> {
         const time = performance.now() - this._start;
         this._elapsed += time;
         if (time < minTimeForMeasurement) {
@@ -110,7 +110,7 @@ class Benchmark {
         return this._runAsync(this._iterationsPerMeasurement).then(this._measureAsync);
     }
 
-    _runAsync(n: number): Promise<void> {
+    private _runAsync(n: number): Promise<void> {
         const bench = (this.bench() as any as Promise<void>);
         if (n === 1) {
             return bench;
@@ -119,7 +119,7 @@ class Benchmark {
         }
     }
 
-    _end(): Promise<Array<Measurement>> {
+    private _end(): Promise<Array<Measurement>> {
         return Promise.resolve(this.teardown()).then(() => this._measurements);
     }
 }
