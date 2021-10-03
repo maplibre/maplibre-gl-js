@@ -1,6 +1,6 @@
 import Map from '../../src/ui/map';
 
-export default function(options: any): Promise<Map> {
+const createMap = (options: any): Promise<Map> => {
     return new Promise((resolve, reject) => {
         if (options) {
             options.stubRender = options.stubRender == null ? true : options.stubRender;
@@ -38,3 +38,5 @@ export default function(options: any): Promise<Map> {
             .on('remove', () => container.remove());
     });
 }
+
+export default createMap;
