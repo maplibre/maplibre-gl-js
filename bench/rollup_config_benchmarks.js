@@ -4,7 +4,7 @@ import replace from 'rollup-plugin-replace';
 import {plugins} from '../build/rollup_plugins';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import jsx from 'rollup-plugin-jsx'
+import jsx from 'rollup-plugin-jsx';
 
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
