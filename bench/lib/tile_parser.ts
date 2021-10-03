@@ -5,7 +5,6 @@ import assert from 'assert';
 import deref from '../../src/style-spec/deref';
 import Style from '../../src/style/style';
 import {Evented} from '../../src/util/evented';
-import {RequestManager} from '../../src/util/request_manager';
 import WorkerTile from '../../src/source/worker_tile';
 import StyleLayerIndex from '../../src/style/style_layer_index';
 
@@ -13,17 +12,9 @@ import type {StyleSpecification} from '../../src/style-spec/types';
 import type {WorkerTileResult} from '../../src/source/worker_source';
 import type {OverscaledTileID} from '../../src/source/tile_id';
 import type {TileJSON} from '../../src/types/tilejson';
+import type Map from '../../src/ui/map';
 
-class StubMap extends Evented {
-    _requestManager: RequestManager;
-
-    constructor() {
-        super();
-        this._requestManager = new RequestManager();
-    }
-}
-
-const mapStub = new StubMap() as any;
+const mapStub = new Evented() as any as Map;
 
 function createStyle(styleJSON: StyleSpecification): Promise<Style> {
     return new Promise((resolve, reject) => {
@@ -33,11 +24,6 @@ function createStyle(styleJSON: StyleSpecification): Promise<Style> {
             .on('style.load', () => resolve(style))
             .on('error', reject);
     });
-}
-
-function fetchTileJSON(requestManager: RequestManager, sourceURL: string): Promise<TileJSON> {
-    return fetch(sourceURL)
-        .then(response => response.json());
 }
 
 export default class TileParser {
@@ -100,7 +86,7 @@ export default class TileParser {
 
         return Promise.all([
             createStyle(this.styleJSON),
-            fetchTileJSON(mapStub._requestManager, (this.styleJSON.sources[this.sourceID] as any).url)
+            fetch((this.styleJSON.sources[this.sourceID] as any).url).then(response => response.json())
         ]).then(([style, tileJSON]) => {
             this.style = style;
             this.tileJSON = tileJSON;
