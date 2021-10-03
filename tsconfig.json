@@ -29,7 +29,7 @@
   "include": [
     "src/**/*.ts",
     "bench/**/*.ts",
-    "bench/**/*.js"
+    "bench/**/*.tsx"
   ],
   "exclude": [
     "node_modules",

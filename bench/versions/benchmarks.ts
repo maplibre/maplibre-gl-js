@@ -21,7 +21,7 @@ import FilterEvaluate from '../benchmarks/filter_evaluate';
 
 import getWorkerPool from '../../src/util/global_worker_pool';
 
-const styleLocations = locationsWithTileID(styleBenchmarkLocations.features).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
+const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
 (window as any).maplibreglBenchmarks = (window as any).maplibreglBenchmarks || {};
 
