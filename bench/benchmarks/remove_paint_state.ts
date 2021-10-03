@@ -17,6 +17,11 @@ const height = 768;
 const zoom = 4;
 
 class RemovePaintState extends Benchmark {
+
+    center: any;
+    numFeatures: any;
+    map: any;
+
     constructor(center) {
         super();
         this.center = center;
