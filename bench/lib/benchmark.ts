@@ -48,10 +48,9 @@ class Benchmark {
      */
     async run(): Promise<Array<Measurement>> {
         try {
-            await this.setup()
-            return this._begin()
-        }
-        catch (e) {
+            await this.setup();
+            return this._begin();
+        } catch (e) {
             // The bench run will break here but should at least provide helpful information:
             console.error(e);
         }
