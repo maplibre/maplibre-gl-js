@@ -23,13 +23,13 @@ import getWorkerPool from '../../src/util/global_worker_pool';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
-window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
+(window as any).maplibreglBenchmarks = (window as any).maplibreglBenchmarks || {};
 
 const version = process.env.BENCHMARK_VERSION;
 
 function register(name, bench) {
-    window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
-    window.maplibreglBenchmarks[name][version] = bench;
+    (window as any).maplibreglBenchmarks[name] = (window as any).maplibreglBenchmarks[name] || {};
+    (window as any).maplibreglBenchmarks[name][version] = bench;
 }
 
 const style = 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL';

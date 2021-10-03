@@ -12,7 +12,7 @@ import getWorkerPool from '../../src/util/global_worker_pool';
 
 const locations = locationsWithTileID(styleBenchmarkLocations.features);
 
-const benchmarks = window.benchmarks = [];
+const benchmarks = (window as any).benchmarks = [];
 
 function register(name, Benchmark, locations?, location?) {
     const versions = [];
