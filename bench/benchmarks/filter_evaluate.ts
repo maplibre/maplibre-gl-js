@@ -7,6 +7,8 @@ import filters from '../data/filters.json';
 import assert from 'assert';
 
 export default class FilterEvaluate extends Benchmark {
+    layers: any[];
+
     setup() {
         return fetch('/bench/data/785.vector.pbf')
             .then(response => response.arrayBuffer())
