@@ -1,6 +1,7 @@
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 import type Map from '../../src/ui/map';
+import type {LngLatLike} from '../../src/geo/lng_lat';
 
 const width = 1024;
 const height = 768;
@@ -18,7 +19,10 @@ for (let x = 0; x < d; x++) {
 
 export default class QueryPoint extends Benchmark {
     style: string;
-    locations: Array<any>;
+    locations: Array<{
+        zoom: number;
+        center: LngLatLike;
+    }>;
     maps: Array<Map>;
 
     constructor(style: string, locations: Array<any>) {
