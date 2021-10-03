@@ -70,11 +70,11 @@ class Benchmark {
         if (bench instanceof Promise) {
             return bench.then(this._measureAsync);
         } else {
-            return this._measureSync() as any;
+            return this._measureSync();
         }
     }
 
-    _measureSync() {
+    _measureSync(): Promise<Array<Measurement>> {
         // Avoid Promise overhead for sync benchmarks.
         while (true) {
             const time = performance.now() - this._start;
