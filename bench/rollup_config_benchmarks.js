@@ -47,7 +47,7 @@ const splitConfig = (name) => [{
 }];
 
 const viewConfig = {
-    input: 'bench/benchmarks_view.js',
+    input: 'rollup/build/tsc/bench/benchmarks_view.js',
     output: {
         name: 'Benchmarks',
         file: 'bench/benchmarks_view_generated.js',
@@ -56,7 +56,6 @@ const viewConfig = {
         sourcemap: false
     },
     plugins: [
-        buble({transforms: {dangerousForOf: true}, objectAssign: true}),
         resolve({browser: true, preferBuiltins: false}),
         commonjs(),
         replace(replaceConfig)
