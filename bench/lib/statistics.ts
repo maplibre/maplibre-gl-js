@@ -99,7 +99,7 @@ export function kde(samples, summary, ticks) {
     // https://en.wikipedia.org/wiki/Kernel_density_estimation#A_rule-of-thumb_bandwidth_estimator
     const bandwidth = 1.06 * summary.windsorizedDeviation * Math.pow(samples.length, -0.2);
     return ticks.map((x) => {
-        return [x, d3.mean(samples, (v) => kernel((x - v) / bandwidth)) / bandwidth];
+        return [x, d3.mean(samples, (v: any) => kernel((x - v) / bandwidth)) / bandwidth];
     });
 }
 
