@@ -3,8 +3,7 @@
   const layoutProperties = locals.layoutProperties;
   const paintProperties = locals.paintProperties;
 -%>
-// This file is generated. Edit build/generate-style-code.js, then run `npm run codegen`.
-// @flow
+// This file is generated. Edit build/generate-style-code.ts, then run `npm run codegen`.
 /* eslint-disable */
 
 import styleSpec from '../../style-spec/reference/latest';
@@ -15,7 +14,9 @@ import {
     DataDrivenProperty,
     CrossFadedDataDrivenProperty,
     CrossFadedProperty,
-    ColorRampProperty
+    ColorRampProperty,
+    PossiblyEvaluatedPropertyValue,
+    CrossFaded
 } from '../properties';
 
 import type Color from '../../style-spec/util/color';
@@ -23,6 +24,7 @@ import type Color from '../../style-spec/util/color';
 import type Formatted from '../../style-spec/expression/types/formatted';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
+import {StylePropertySpecification} from '../../style-spec/style-spec';
 <%
 const overridables = paintProperties.filter(p => p.overridable)
 if (overridables.length) { -%>
@@ -34,11 +36,17 @@ import {
 <% } -%>
 
 <% if (layoutProperties.length) { -%>
-export type LayoutProps = {|
+export type LayoutProps = {
 <% for (const property of layoutProperties) { -%>
     "<%= property.name %>": <%- propertyType(property) %>,
 <% } -%>
-|};
+};
+
+export type LayoutPropsPossiblyEvaluated = {
+<% for (const property of layoutProperties) { -%>
+    "<%= property.name %>": <%- possiblyEvaluatedType(property) %>,
+<% } -%>
+};
 
 const layout: Properties<LayoutProps> = new Properties({
 <% for (const property of layoutProperties) { -%>
@@ -47,11 +55,17 @@ const layout: Properties<LayoutProps> = new Properties({
 });
 <% } -%>
 <% if(paintProperties.length){ %>
-export type PaintProps = {|
+export type PaintProps = {
 <% for (const property of paintProperties) { -%>
     "<%= property.name %>": <%- propertyType(property) %>,
 <% } -%>
-|};
+};
+
+export type PaintPropsPossiblyEvaluated = {
+<% for (const property of paintProperties) { -%>
+    "<%= property.name %>": <%- possiblyEvaluatedType(property) %>,
+<% } -%>
+};
 <% } else{ %>
 export type PaintProps = {};
 <% } %>
@@ -64,6 +78,7 @@ const paint: Properties<PaintProps> = new Properties({
 // Note: without adding the explicit type annotation, Flow infers weaker types
 // for these objects from their use in the constructor to StyleLayer, as
 // {layout?: Properties<...>, paint: Properties<...>}
-export default ({ paint<% if (layoutProperties.length) { %>, layout<% } %> }: $Exact<{
-  paint: Properties<PaintProps><% if (layoutProperties.length) { %>, layout: Properties<LayoutProps><% } %>
-}>);
+export default ({ paint<% if (layoutProperties.length) { %>, layout<% } %> } as {
+    paint: Properties<PaintProps><% if (layoutProperties.length) { %>,
+    layout: Properties<LayoutProps><% } %>
+});
