@@ -400,21 +400,22 @@ class RegressionPlot extends React.Component<RegressionPlotProps, RegressionPlot
 type BenchmarkStatisticProps = {
     status: string;
     error: Error;
-    statistic: Function;
+    statistic: (version: Version) => any;
+    version: Version;
 }
 
 class BenchmarkStatistic extends React.Component<BenchmarkStatisticProps, {}> {
     render() {
         switch (this.props.status) {
-        case 'waiting':
-            return <p className="quiet"></p>;
-        case 'running':
-            return <p>Running...</p>;
-        case 'error':
-        case 'errored':
-            return <p>{this.props.error.message}</p>;
-        default:
-            return this.props.statistic(this.props);
+            case 'waiting':
+                return <p className="quiet"></p>;
+            case 'running':
+                return <p>Running...</p>;
+            case 'error':
+            case 'errored':
+                return <p>{this.props.error.message}</p>;
+            default:
+                return this.props.statistic(this.props.version);
         }
     }
 }
@@ -506,7 +507,7 @@ class BenchmarkRow extends React.Component<BenchmarkRowProps, {}> {
             <tr>
                 <th>{title}</th>
                 {this.props.versions.map(version =>
-                    <td key={version.name}><BenchmarkStatistic statistic={statistic} status={version.status} error={version.error}/></td>
+                    <td key={version.name}><BenchmarkStatistic statistic={statistic} status={version.status} error={version.error} version={version}/></td>
                 )}
             </tr>
         );
