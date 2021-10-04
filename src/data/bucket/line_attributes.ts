@@ -1,4 +1,4 @@
-import {createLayout} from '../../util/struct_array';
+import {createLayout} from '../../util/struct_array.js';
 
 const lineLayoutAttributes = createLayout([
     {name: 'a_pos_normal', components: 2, type: 'Int16'},
