@@ -10,14 +10,14 @@ function camelize(str) {
     return str.replace(/(?:^|-)(.)/g, function (_, x) {
         return x.toUpperCase();
     });
-};
+}
 global.camelize = camelize;
 
 function camelizeWithLeadingLowercase(str) {
     return str.replace(/-(.)/g, function (_, x) {
       return x.toUpperCase();
     });
-};
+}
 global.camelizeWithLeadingLowercase = camelizeWithLeadingLowercase;
 
 function flowType(property) {
@@ -44,7 +44,7 @@ function flowType(property) {
             }
         default: throw new Error(`unknown type for ${property.name}`)
     }
-};
+}
 global.flowType = flowType;
 
 function possiblyEvaluatedType(property)  {
@@ -81,7 +81,7 @@ function propertyType(property) {
         default:
             throw new Error(`unknown property-type "${property['property-type']}" for ${property.name}`);
     }
-};
+}
 global.propertyType = propertyType;
 
 function runtimeType(property) {
@@ -107,7 +107,7 @@ function runtimeType(property) {
             }
         default: throw new Error(`unknown type for ${property.name}`)
     }
-};
+}
 global.runtimeType = runtimeType;
 
 function defaultValue(property) {
@@ -127,7 +127,7 @@ function defaultValue(property) {
             }
         default: throw new Error(`unknown type for ${property.name}`)
     }
-};
+}
 global.defaultValue = defaultValue;
 
 function overrides(property) {
@@ -157,7 +157,7 @@ function propertyValue(property, type) {
         default:
             throw new Error(`unknown property-type "${property['property-type']}" for ${property.name}`);
     }
-};
+}
 global.propertyValue = propertyValue;
 
 const propertiesJs = ejs.compile(fs.readFileSync('src/style/style_layer/layer_properties.js.ejs', 'utf8'), {strict: true});

@@ -158,14 +158,14 @@ import {
     lineVertex
 } from '../src/data/bucket/symbol_attributes.js';
 
-createStructArrayType(`symbol_layout`, symbolLayoutAttributes);
-createStructArrayType(`symbol_dynamic_layout`, dynamicLayoutAttributes);
-createStructArrayType(`symbol_opacity`, placementOpacityAttributes);
+createStructArrayType('symbol_layout', symbolLayoutAttributes);
+createStructArrayType('symbol_dynamic_layout', dynamicLayoutAttributes);
+createStructArrayType('symbol_opacity', placementOpacityAttributes);
 createStructArrayType('collision_box', collisionBox, true);
-createStructArrayType(`collision_box_layout`, collisionBoxLayout);
-createStructArrayType(`collision_circle_layout`, collisionCircleLayout);
-createStructArrayType(`collision_vertex`, collisionVertexAttributes);
-createStructArrayType(`quad_triangle`, quadTriangle);
+createStructArrayType('collision_box_layout', collisionBoxLayout);
+createStructArrayType('collision_circle_layout', collisionCircleLayout);
+createStructArrayType('collision_vertex', collisionVertexAttributes);
+createStructArrayType('quad_triangle', quadTriangle);
 createStructArrayType('placed_symbol', placement, true);
 createStructArrayType('symbol_instance', symbolInstance, true);
 createStructArrayType('glyph_offset', glyphOffset, true);

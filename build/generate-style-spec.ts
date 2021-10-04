@@ -47,7 +47,7 @@ function flowType(property) {
     } else if (properties.supportsZoomExpression(property)) {
         return `PropertyValueSpecification<${baseType}>`;
     } else if (property.expression) {
-        return `ExpressionSpecification`;
+        return 'ExpressionSpecification';
     } else {
         return baseType;
     }
