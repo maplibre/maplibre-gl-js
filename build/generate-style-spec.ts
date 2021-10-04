@@ -1,12 +1,13 @@
-const spec = require('../src/style-spec/reference/v8.json');
-const properties = require('../src/style-spec/util/properties');
-const fs = require('fs');
+import * as fs from 'fs';
+import * as properties from '../src/style-spec/util/properties.js';
+
+const spec = JSON.parse(fs.readFileSync('src/style-spec/reference/v8.json', 'utf8'));
 
 function flowEnum(values) {
     if (Array.isArray(values)) {
-        return values.map(JSON.stringify).join(' | ');
+        return values.map(v => JSON.stringify(v)).join(' | ');
     } else {
-        return Object.keys(values).map(JSON.stringify).join(' | ');
+        return Object.keys(values).map(v => JSON.stringify(v)).join(' | ');
     }
 }
 
@@ -35,7 +36,7 @@ function flowType(property) {
             case 'sources':
                 return '{[_: string]: SourceSpecification}';
             case '*':
-                return 'mixed';
+                return 'unknown';
             default:
                 return `${property.type.slice(0, 1).toUpperCase()}${property.type.slice(1)}Specification`;
         }
@@ -57,16 +58,16 @@ function flowProperty(key, property) {
 }
 
 function flowObjectDeclaration(key, properties) {
-    return `export type ${key} = ${flowObject(properties, '', '*' in properties ? '' : '|')}`;
+    return `export type ${key} = ${flowObject(properties, '')};`;
 }
 
-function flowObject(properties, indent, sealing = '') {
-    return `{${sealing}
+function flowObject(properties, indent) {
+    return `{
 ${Object.keys(properties)
         .filter(k => k !== '*')
         .map(k => `    ${indent}${flowProperty(k, properties[k])}`)
         .join(',\n')}
-${indent}${sealing}}`
+${indent}}`
 }
 
 function flowSourceTypeName(key) {
@@ -92,11 +93,11 @@ function flowLayer(key) {
     delete layer['paint.*'];
 
     layer.paint.type = () => {
-        return flowObject(spec[`paint_${key}`], '    ', '|');
+        return flowObject(spec[`paint_${key}`], '    ');
     };
 
     layer.layout.type = () => {
-        return flowObject(spec[`layout_${key}`], '    ', '|');
+        return flowObject(spec[`layout_${key}`], '    ');
     };
 
     if (key === 'background') {
@@ -112,8 +113,8 @@ function flowLayer(key) {
 
 const layerTypes = Object.keys(spec.layer.type.values);
 
-fs.writeFileSync('src/style-spec/types.js', `// @flow
-// Generated code; do not edit. Edit build/generate-flow-typed-style-spec.js instead.
+fs.writeFileSync('src/style-spec/types.ts',
+`// Generated code; do not edit. Edit build/generate-style-spec.ts instead.
 /* eslint-disable */
 
 export type ColorSpecification = string;
@@ -125,7 +126,7 @@ export type ResolvedImageSpecification = string;
 export type PromoteIdSpecification = {[_: string]: string} | string;
 
 export type FilterSpecification =
-    | ['has', string]
+      ['has', string]
     | ['!has', string]
     | ['==', string, string | number | boolean]
     | ['!=', string, string | number | boolean]
@@ -143,29 +144,29 @@ export type TransitionSpecification = {
 // Note: doesn't capture interpolatable vs. non-interpolatable types.
 
 export type CameraFunctionSpecification<T> =
-    | {| type: 'exponential', stops: Array<[number, T]> |}
-    | {| type: 'interval',    stops: Array<[number, T]> |};
+      { type: 'exponential', stops: Array<[number, T]> }
+    | { type: 'interval',    stops: Array<[number, T]> };
 
 export type SourceFunctionSpecification<T> =
-    | {| type: 'exponential', stops: Array<[number, T]>, property: string, default?: T |}
-    | {| type: 'interval',    stops: Array<[number, T]>, property: string, default?: T |}
-    | {| type: 'categorical', stops: Array<[string | number | boolean, T]>, property: string, default?: T |}
-    | {| type: 'identity', property: string, default?: T |};
+      { type: 'exponential', stops: Array<[number, T]>, property: string, default?: T }
+    | { type: 'interval',    stops: Array<[number, T]>, property: string, default?: T }
+    | { type: 'categorical', stops: Array<[string | number | boolean, T]>, property: string, default?: T }
+    | { type: 'identity', property: string, default?: T };
 
 export type CompositeFunctionSpecification<T> =
-    | {| type: 'exponential', stops: Array<[{zoom: number, value: number}, T]>, property: string, default?: T |}
-    | {| type: 'interval',    stops: Array<[{zoom: number, value: number}, T]>, property: string, default?: T |}
-    | {| type: 'categorical', stops: Array<[{zoom: number, value: string | number | boolean}, T]>, property: string, default?: T |};
+      { type: 'exponential', stops: Array<[{zoom: number, value: number}, T]>, property: string, default?: T }
+    | { type: 'interval',    stops: Array<[{zoom: number, value: number}, T]>, property: string, default?: T }
+    | { type: 'categorical', stops: Array<[{zoom: number, value: string | number | boolean}, T]>, property: string, default?: T };
 
-export type ExpressionSpecification = Array<mixed>;
+export type ExpressionSpecification = Array<unknown>;
 
 export type PropertyValueSpecification<T> =
-    | T
+      T
     | CameraFunctionSpecification<T>
     | ExpressionSpecification;
 
 export type DataDrivenPropertyValueSpecification<T> =
-    | T
+      T
     | CameraFunctionSpecification<T>
     | SourceFunctionSpecification<T>
     | CompositeFunctionSpecification<T>
