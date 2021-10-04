@@ -6,11 +6,12 @@ import Color from '../src/style-spec/util/color.js';
 
 const spec = JSON.parse(fs.readFileSync('src/style-spec/reference/v8.json', 'utf8'));
 
-global.camelize = function camelize(str) {
+function camelize(str) {
     return str.replace(/(?:^|-)(.)/g, function (_, x) {
         return x.toUpperCase();
     });
 };
+global.camelize = camelize;
 
 function camelizeWithLeadingLowercase(str) {
     return str.replace(/-(.)/g, function (_, x) {
