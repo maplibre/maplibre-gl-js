@@ -602,12 +602,12 @@ class Transform {
         const tileID = this.terrainSourceCache._coordsIndex[255 - rgba[3]];
         const tile = tileID && this.terrainSourceCache.getTileByID(tileID);
         if (!tile) return this.pointCoordinate(p); // FIXME! remove this hack
-        const tileSize = this.terrainSourceCache.tileSize;
-        const worldSize = (1 << tile.tileID.canonical.z) * tileSize;
+        const coordsSize = this.terrainSourceCache._coordsTextureSize;
+        const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
         return new MercatorCoordinate(
-            (tile.tileID.canonical.x * tileSize + x / 8) / worldSize,
-            (tile.tileID.canonical.y * tileSize + y / 8) / worldSize,
-            this.terrainSourceCache.getElevation(tile.tileID, x, y, 4096)
+            (tile.tileID.canonical.x * coordsSize + x) / worldSize,
+            (tile.tileID.canonical.y * coordsSize + y) / worldSize,
+            this.terrainSourceCache.getElevation(tile.tileID, x, y, coordsSize)
         );
     }
 
@@ -770,12 +770,12 @@ class Transform {
         const offset = this.centerOffset;
         this.cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this.height;
 
-        let m = mat4.create();
+        let m = mat4.identity(new Float64Array(16) as any);
         mat4.scale(m, m, [this.width / 2, -this.height / 2, 1]);
         mat4.translate(m, m, [1, -1, 0]);
         this.labelPlaneMatrix = m;
 
-        m = mat4.create();
+        m = mat4.identity(new Float64Array(16) as any);
         mat4.scale(m, m, [1, -1, 1]);
         mat4.translate(m, m, [-1, -1, 0]);
         mat4.scale(m, m, [2 / this.width, 2 / this.height, 1]);
@@ -822,7 +822,7 @@ class Transform {
 
         // The mercatorMatrix can be used to transform points from mercator coordinates
         // ([0, 0] nw, [1, 1] se) to GL coordinates.
-        this.mercatorMatrix = mat4.scale([] as any, m, vec3.fromValues(this.worldSize, this.worldSize, this.worldSize));
+        this.mercatorMatrix = mat4.scale(new Float64Array(16) as any, m, vec3.fromValues(this.worldSize, this.worldSize, this.worldSize));
 
         // scale vertically to meters per pixel (inverse of ground resolution):
         mat4.scale(m, m, vec3.fromValues(1, 1, metersPerPixel));
