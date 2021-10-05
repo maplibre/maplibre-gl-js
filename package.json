@@ -191,7 +191,6 @@
     "test-build": "tap --node-arg --no-warnings --node-arg --experimental-specifier-resolution=node --node-arg --experimental-json-modules --reporter classic --no-coverage test/build/**/*.test.js",
     "test-browser": "tap --node-arg --no-warnings --node-arg --experimental-specifier-resolution=node --node-arg --experimental-json-modules --reporter classic --no-coverage test/browser/**/*.test.js",
     "test-render": "node --experimental-specifier-resolution=node --experimental-json-modules --max-old-space-size=2048 test/render.test.js",
-    "test-query-node": "node --experimental-specifier-resolution=node --experimental-json-modules test/query.test.js",
     "watch-query": "testem -f test/integration/testem.cjs",
     "test-query": "testem ci -f test/integration/testem.cjs -R xunit > test/integration/query-tests/test-results.xml",
     "test-expressions": "node --experimental-specifier-resolution=node test/expression.test.js",
