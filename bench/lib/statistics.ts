@@ -1,5 +1,28 @@
 import * as d3 from 'd3';
 
+export type RegressionResults = {
+    correlation:number;
+    slope:number;
+    intercept: number;
+    data: [number, number][];
+}
+
+export type Summary = {
+    mean: number;
+    trimmedMean: number;
+    variance: number;
+    deviation: number;
+    windsorizedDeviation: number;
+    q1: number;
+    q2: number;
+    q3: number;
+    iqr: number;
+    argmin: number;
+    min: number;
+    argmax: number;
+    max: number;
+}
+
 export function probabilitiesOfSuperiority(before, after) {
     const timerPrecision = 0.005;
 
@@ -22,7 +45,7 @@ export function probabilitiesOfSuperiority(before, after) {
     };
 }
 
-export function summaryStatistics(data) {
+export function summaryStatistics(data): Summary {
     const variance = d3.variance(data);
     const sorted = data.slice().sort(d3.ascending);
     const [q1, q2, q3] = [.25, .5, .75].map((d) => d3.quantile(sorted, d));
@@ -73,7 +96,7 @@ export function regression(measurements) {
     return leastSquaresRegression(result);
 }
 
-function leastSquaresRegression(data) {
+function leastSquaresRegression(data): RegressionResults {
     const meanX = d3.sum(data, d => d[0]) / data.length;
     const meanY = d3.sum(data, d => d[1]) / data.length;
     const varianceX = d3.variance(data, d => d[0]);
@@ -90,7 +113,7 @@ function leastSquaresRegression(data) {
     return {correlation, slope, intercept, data};
 }
 
-export function kde(samples, summary, ticks) {
+export function kde(samples, summary, ticks): [number, number][] {
     const kernel = kernelEpanechnikov;
 
     if (samples.length === 0) {
