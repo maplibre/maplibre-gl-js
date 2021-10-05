@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as ejs from 'ejs';
 import Color from '../src/style-spec/util/color';
 
-const spec = JSON.parse(fs.readFileSync('src/style-spec/reference/v8.json', 'utf8'));
+import spec from '../src/style-spec/reference/v8.json';
 
 function camelize(str) {
     return str.replace(/(?:^|-)(.)/g, function (_, x) {
@@ -20,7 +20,7 @@ function camelizeWithLeadingLowercase(str) {
 }
 global.camelizeWithLeadingLowercase = camelizeWithLeadingLowercase;
 
-function flowType(property) {
+function nativeType(property) {
     switch (property.type) {
         case 'boolean':
             return 'boolean';
@@ -38,17 +38,17 @@ function flowType(property) {
             return 'ResolvedImage';
         case 'array':
             if (property.length) {
-                return `[${new Array(property.length).fill(flowType({type: property.value})).join(', ')}]`;
+                return `[${new Array(property.length).fill(nativeType({type: property.value})).join(', ')}]`;
             } else {
-                return `Array<${flowType({type: property.value, values: property.values})}>`;
+                return `Array<${nativeType({type: property.value, values: property.values})}>`;
             }
         default: throw new Error(`unknown type for ${property.name}`)
     }
 }
-global.flowType = flowType;
+global.nativeType = nativeType;
 
 function possiblyEvaluatedType(property)  {
-    const propType = flowType(property);
+    const propType = nativeType(property);
 
     switch (property['property-type']) {
         case 'color-ramp':
@@ -68,16 +68,16 @@ global.possiblyEvaluatedType = possiblyEvaluatedType;
 function propertyType(property) {
     switch (property['property-type']) {
         case 'data-driven':
-            return `DataDrivenProperty<${flowType(property)}>`;
+            return `DataDrivenProperty<${nativeType(property)}>`;
         case 'cross-faded':
-            return `CrossFadedProperty<${flowType(property)}>`;
+            return `CrossFadedProperty<${nativeType(property)}>`;
         case 'cross-faded-data-driven':
-            return `CrossFadedDataDrivenProperty<${flowType(property)}>`;
+            return `CrossFadedDataDrivenProperty<${nativeType(property)}>`;
         case 'color-ramp':
             return 'ColorRampProperty';
         case 'data-constant':
         case 'constant':
-            return `DataConstantProperty<${flowType(property)}>`;
+            return `DataConstantProperty<${nativeType(property)}>`;
         default:
             throw new Error(`unknown property-type "${property['property-type']}" for ${property.name}`);
     }

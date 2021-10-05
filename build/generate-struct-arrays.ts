@@ -14,6 +14,30 @@ import * as util from '../src/util/util';
 import {createLayout, viewTypes} from '../src/util/struct_array';
 import type {ViewType, StructArrayLayout} from '../src/util/struct_array';
 
+import posAttributes from '../src/data/pos_attributes';
+import rasterBoundsAttributes from '../src/data/raster_bounds_attributes';
+import circleAttributes from '../src/data/bucket/circle_attributes';
+import fillAttributes from '../src/data/bucket/fill_attributes';
+import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes';
+import lineAttributes from '../src/data/bucket/line_attributes';
+import lineAttributesExt from '../src/data/bucket/line_attributes_ext';
+import patternAttributes from '../src/data/bucket/pattern_attributes';
+// symbol layer specific arrays
+import {
+    symbolLayoutAttributes,
+    dynamicLayoutAttributes,
+    placementOpacityAttributes,
+    collisionBox,
+    collisionBoxLayout,
+    collisionCircleLayout,
+    collisionVertexAttributes,
+    quadTriangle,
+    placement,
+    symbolInstance,
+    glyphOffset,
+    lineVertex
+} from '../src/data/bucket/symbol_attributes';
+
 const structArrayLayoutJs = ejs.compile(fs.readFileSync('src/util/struct_array_layout.js.ejs', 'utf8'), {strict: true});
 const structArrayJs = ejs.compile(fs.readFileSync('src/util/struct_array.js.ejs', 'utf8'), {strict: true});
 
@@ -115,18 +139,8 @@ function camelize (str) {
 
 global.camelize = camelize;
 
-import posAttributes from '../src/data/pos_attributes';
-import rasterBoundsAttributes from '../src/data/raster_bounds_attributes';
-
 createStructArrayType('pos', posAttributes);
 createStructArrayType('raster_bounds', rasterBoundsAttributes);
-
-import circleAttributes from '../src/data/bucket/circle_attributes';
-import fillAttributes from '../src/data/bucket/fill_attributes';
-import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes';
-import lineAttributes from '../src/data/bucket/line_attributes';
-import lineAttributesExt from '../src/data/bucket/line_attributes_ext';
-import patternAttributes from '../src/data/bucket/pattern_attributes';
 
 // layout vertex arrays
 const layoutAttributes = {
@@ -141,22 +155,6 @@ const layoutAttributes = {
 for (const name in layoutAttributes) {
     createStructArrayType(`${name.replace(/-/g, '_')}_layout`, layoutAttributes[name]);
 }
-
-// symbol layer specific arrays
-import {
-    symbolLayoutAttributes,
-    dynamicLayoutAttributes,
-    placementOpacityAttributes,
-    collisionBox,
-    collisionBoxLayout,
-    collisionCircleLayout,
-    collisionVertexAttributes,
-    quadTriangle,
-    placement,
-    symbolInstance,
-    glyphOffset,
-    lineVertex
-} from '../src/data/bucket/symbol_attributes';
 
 createStructArrayType('symbol_layout', symbolLayoutAttributes);
 createStructArrayType('symbol_dynamic_layout', dynamicLayoutAttributes);

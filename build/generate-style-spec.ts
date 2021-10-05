@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as properties from '../src/style-spec/util/properties';
 
-const spec = JSON.parse(fs.readFileSync('src/style-spec/reference/v8.json', 'utf8'));
+import spec from '../src/style-spec/reference/v8.json';
 
-function flowEnum(values) {
+function unionType(values) {
     if (Array.isArray(values)) {
         return values.map(v => JSON.stringify(v)).join(' | ');
     } else {
@@ -11,7 +11,7 @@ function flowEnum(values) {
     }
 }
 
-function flowType(property) {
+function propertyType(property) {
     if (typeof property.type === 'function') {
         return property.type();
     }
@@ -23,9 +23,9 @@ function flowType(property) {
             case 'boolean':
                 return property.type;
             case 'enum':
-                return flowEnum(property.values);
+                return unionType(property.values);
             case 'array':
-                const elementType = flowType(typeof property.value === 'string' ? {type: property.value, values: property.values} : property.value)
+                const elementType = propertyType(typeof property.value === 'string' ? {type: property.value, values: property.values} : property.value)
                 if (property.length) {
                     return `[${Array(property.length).fill(elementType).join(', ')}]`;
                 } else {
@@ -53,35 +53,35 @@ function flowType(property) {
     }
 }
 
-function flowProperty(key, property) {
-    return `"${key}"${property.required ? '' : '?'}: ${flowType(property)}`;
+function propertyDeclaration(key, property) {
+    return `"${key}"${property.required ? '' : '?'}: ${propertyType(property)}`;
 }
 
-function flowObjectDeclaration(key, properties) {
-    return `export type ${key} = ${flowObject(properties, '')};`;
+function objectDeclaration(key, properties) {
+    return `export type ${key} = ${objectType(properties, '')};`;
 }
 
-function flowObject(properties, indent) {
+function objectType(properties, indent) {
     return `{
 ${Object.keys(properties)
         .filter(k => k !== '*')
-        .map(k => `    ${indent}${flowProperty(k, properties[k])}`)
+        .map(k => `    ${indent}${propertyDeclaration(k, properties[k])}`)
         .join(',\n')}
 ${indent}}`
 }
 
-function flowSourceTypeName(key) {
+function sourceTypeName(key) {
     return key.replace(/source_(.)(.*)/, (_, _1, _2) => `${_1.toUpperCase()}${_2}SourceSpecification`)
         .replace(/_dem/, 'DEM')
         .replace(/Geojson/, 'GeoJSON');
 }
 
-function flowLayerTypeName(key) {
+function layerTypeName(key) {
     return key.split('-').map(k => k.replace(/(.)(.*)/, (_, _1, _2) => `${_1.toUpperCase()}${_2}`)).concat('LayerSpecification').join('');
 }
 
-function flowLayer(key) {
-    const layer = spec.layer;
+function layerType(key) {
+    const layer = spec.layer as any;
 
     layer.type = {
         type: 'enum',
@@ -93,11 +93,11 @@ function flowLayer(key) {
     delete layer['paint.*'];
 
     layer.paint.type = () => {
-        return flowObject(spec[`paint_${key}`], '    ');
+        return objectType(spec[`paint_${key}`], '    ');
     };
 
     layer.layout.type = () => {
-        return flowObject(spec[`layout_${key}`], '    ');
+        return objectType(spec[`layout_${key}`], '    ');
     };
 
     if (key === 'background') {
@@ -108,7 +108,7 @@ function flowLayer(key) {
         layer.source.required = true;
     }
 
-    return flowObjectDeclaration(flowLayerTypeName(key), layer);
+    return objectDeclaration(layerTypeName(key), layer);
 }
 
 const layerTypes = Object.keys(spec.layer.type.values);
@@ -172,18 +172,18 @@ export type DataDrivenPropertyValueSpecification<T> =
     | CompositeFunctionSpecification<T>
     | ExpressionSpecification;
 
-${flowObjectDeclaration('StyleSpecification', spec.$root)}
+${objectDeclaration('StyleSpecification', spec.$root)}
 
-${flowObjectDeclaration('LightSpecification', spec.light)}
+${objectDeclaration('LightSpecification', spec.light)}
 
-${spec.source.map(key => flowObjectDeclaration(flowSourceTypeName(key), spec[key])).join('\n\n')}
+${spec.source.map(key => objectDeclaration(sourceTypeName(key), spec[key])).join('\n\n')}
 
 export type SourceSpecification =
-${spec.source.map(key => `    | ${flowSourceTypeName(key)}`).join('\n')}
+${spec.source.map(key => `    | ${sourceTypeName(key)}`).join('\n')}
 
-${layerTypes.map(key => flowLayer(key)).join('\n\n')}
+${layerTypes.map(key => layerType(key)).join('\n\n')}
 
 export type LayerSpecification =
-${layerTypes.map(key => `    | ${flowLayerTypeName(key)}`).join('\n')};
+${layerTypes.map(key => `    | ${layerTypeName(key)}`).join('\n')};
 
 `);
