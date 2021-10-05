@@ -10,9 +10,9 @@
 
 import * as fs from 'fs';
 import * as ejs from 'ejs';
-import * as util from '../src/util/util.js';
-import {createLayout, viewTypes} from '../src/util/struct_array.js';
-import type {ViewType, StructArrayLayout} from '../src/util/struct_array.js';
+import * as util from '../src/util/util';
+import {createLayout, viewTypes} from '../src/util/struct_array';
+import type {ViewType, StructArrayLayout} from '../src/util/struct_array';
 
 const structArrayLayoutJs = ejs.compile(fs.readFileSync('src/util/struct_array_layout.js.ejs', 'utf8'), {strict: true});
 const structArrayJs = ejs.compile(fs.readFileSync('src/util/struct_array.js.ejs', 'utf8'), {strict: true});
@@ -115,18 +115,18 @@ function camelize (str) {
 
 global.camelize = camelize;
 
-import posAttributes from '../src/data/pos_attributes.js';
-import rasterBoundsAttributes from '../src/data/raster_bounds_attributes.js';
+import posAttributes from '../src/data/pos_attributes';
+import rasterBoundsAttributes from '../src/data/raster_bounds_attributes';
 
 createStructArrayType('pos', posAttributes);
 createStructArrayType('raster_bounds', rasterBoundsAttributes);
 
-import circleAttributes from '../src/data/bucket/circle_attributes.js';
-import fillAttributes from '../src/data/bucket/fill_attributes.js';
-import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes.js';
-import lineAttributes from '../src/data/bucket/line_attributes.js';
-import lineAttributesExt from '../src/data/bucket/line_attributes_ext.js';
-import patternAttributes from '../src/data/bucket/pattern_attributes.js';
+import circleAttributes from '../src/data/bucket/circle_attributes';
+import fillAttributes from '../src/data/bucket/fill_attributes';
+import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes';
+import lineAttributes from '../src/data/bucket/line_attributes';
+import lineAttributesExt from '../src/data/bucket/line_attributes_ext';
+import patternAttributes from '../src/data/bucket/pattern_attributes';
 
 // layout vertex arrays
 const layoutAttributes = {
@@ -156,7 +156,7 @@ import {
     symbolInstance,
     glyphOffset,
     lineVertex
-} from '../src/data/bucket/symbol_attributes.js';
+} from '../src/data/bucket/symbol_attributes';
 
 createStructArrayType('symbol_layout', symbolLayoutAttributes);
 createStructArrayType('symbol_dynamic_layout', dynamicLayoutAttributes);

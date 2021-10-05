@@ -1,4 +1,4 @@
-import {createLayout} from '../../util/struct_array.js';
+import {createLayout} from '../../util/struct_array';
 
 const patternAttributes = createLayout([
     // [tl.x, tl.y, br.x, br.y]

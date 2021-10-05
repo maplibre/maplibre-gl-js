@@ -1,4 +1,4 @@
-import {createLayout} from '../../util/struct_array.js';
+import {createLayout} from '../../util/struct_array';
 
 export const symbolLayoutAttributes = createLayout([
     {name: 'a_pos_offset',  components: 4, type: 'Int16'},

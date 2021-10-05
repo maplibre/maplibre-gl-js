@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 import * as ejs from 'ejs';
-import Color from '../src/style-spec/util/color.js';
+import Color from '../src/style-spec/util/color';
 
 const spec = JSON.parse(fs.readFileSync('src/style-spec/reference/v8.json', 'utf8'));
 

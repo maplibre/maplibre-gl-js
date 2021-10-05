@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import * as properties from '../src/style-spec/util/properties.js';
+import * as properties from '../src/style-spec/util/properties';
 
 const spec = JSON.parse(fs.readFileSync('src/style-spec/reference/v8.json', 'utf8'));
 
