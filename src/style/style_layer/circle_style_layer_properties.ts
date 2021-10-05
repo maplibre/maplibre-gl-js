@@ -1,4 +1,4 @@
-// This file is generated. Edit build/generate-style-code.ts, then run `npm run codegen`.
+// This file is generated. Edit build/generate-style-code.ts, then run 'npm run codegen'.
 /* eslint-disable */
 
 import styleSpec from '../../style-spec/reference/latest';

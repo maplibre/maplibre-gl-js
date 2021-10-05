@@ -1,24 +1,14 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as ejs from 'ejs';
-import Color from '../src/style-spec/util/color';
 
 import spec from '../src/style-spec/reference/v8.json';
-
-function camelize(str) {
-    return str.replace(/(?:^|-)(.)/g, function (_, x) {
-        return x.toUpperCase();
-    });
-}
-global.camelize = camelize;
 
 function camelizeWithLeadingLowercase(str) {
     return str.replace(/-(.)/g, function (_, x) {
       return x.toUpperCase();
     });
 }
-global.camelizeWithLeadingLowercase = camelizeWithLeadingLowercase;
 
 function nativeType(property) {
     switch (property.type) {
@@ -45,7 +35,6 @@ function nativeType(property) {
         default: throw new Error(`unknown type for ${property.name}`)
     }
 }
-global.nativeType = nativeType;
 
 function possiblyEvaluatedType(property)  {
     const propType = nativeType(property);
@@ -63,7 +52,6 @@ function possiblyEvaluatedType(property)  {
 
     return propType;
 }
-global.possiblyEvaluatedType = possiblyEvaluatedType;
 
 function propertyType(property) {
     switch (property['property-type']) {
@@ -82,7 +70,6 @@ function propertyType(property) {
             throw new Error(`unknown property-type "${property['property-type']}" for ${property.name}`);
     }
 }
-global.propertyType = propertyType;
 
 function runtimeType(property) {
     switch (property.type) {
@@ -108,32 +95,10 @@ function runtimeType(property) {
         default: throw new Error(`unknown type for ${property.name}`)
     }
 }
-global.runtimeType = runtimeType;
-
-function defaultValue(property) {
-    switch (property.type) {
-        case 'boolean':
-        case 'number':
-        case 'string':
-        case 'array':
-        case 'enum':
-            return JSON.stringify(property.default);
-        case 'color':
-            if (typeof property.default !== 'string') {
-                return JSON.stringify(property.default);
-            } else {
-                const {r, g, b, a} = Color.parse(property.default) as Color;
-                return `new Color(${r}, ${g}, ${b}, ${a})`;
-            }
-        default: throw new Error(`unknown type for ${property.name}`)
-    }
-}
-global.defaultValue = defaultValue;
 
 function overrides(property) {
     return `{ runtimeType: ${runtimeType(property)}, getOverride: (o) => o.${camelizeWithLeadingLowercase(property.name)}, hasOverride: (o) => !!o.${camelizeWithLeadingLowercase(property.name)} }`;
 }
-global.overrides = overrides;
 
 function propertyValue(property, type) {
     const propertyAsSpec = `styleSpec["${type}_${property.layerType}"]["${property.name}"] as any as StylePropertySpecification`;
@@ -158,9 +123,6 @@ function propertyValue(property, type) {
             throw new Error(`unknown property-type "${property['property-type']}" for ${property.name}`);
     }
 }
-global.propertyValue = propertyValue;
-
-const propertiesJs = ejs.compile(fs.readFileSync('src/style/style_layer/layer_properties.js.ejs', 'utf8'), {strict: true});
 
 const layers = Object.keys(spec.layer.type.values).map((type) => {
     const layoutProperties = Object.keys(spec[`layout_${type}`]).reduce((memo, name) => {
@@ -182,6 +144,127 @@ const layers = Object.keys(spec.layer.type.values).map((type) => {
     return { type, layoutProperties, paintProperties };
 });
 
+function emitlayerProperties(locals) {
+    const output = [];
+
+    const {
+        layoutProperties,
+        paintProperties
+    } = locals;
+
+    output.push(
+        `// This file is generated. Edit build/generate-style-code.ts, then run 'npm run codegen'.
+/* eslint-disable */
+
+import styleSpec from '../../style-spec/reference/latest';
+
+import {
+    Properties,
+    DataConstantProperty,
+    DataDrivenProperty,
+    CrossFadedDataDrivenProperty,
+    CrossFadedProperty,
+    ColorRampProperty,
+    PossiblyEvaluatedPropertyValue,
+    CrossFaded
+} from '../properties';
+
+import type Color from '../../style-spec/util/color';
+
+import type Formatted from '../../style-spec/expression/types/formatted';
+
+import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
+import {StylePropertySpecification} from '../../style-spec/style-spec';
+`);
+
+    const overridables = paintProperties.filter(p => p.overridable);
+    if (overridables.length) {
+        output.push(
+            `import {
+    ${overridables.reduce((imports, prop) => { imports.push(runtimeType(prop)); return imports; }, []).join(',\n    ')}
+} from '../../style-spec/expression/types';
+`);
+    }
+
+    if (layoutProperties.length) {
+        output.push(
+            'export type LayoutProps = {');
+
+        for (const property of layoutProperties) {
+            output.push(
+                `    "${property.name}": ${propertyType(property)},`);
+        }
+
+        output.push(
+            `};
+
+export type LayoutPropsPossiblyEvaluated = {`);
+
+        for (const property of layoutProperties) {
+            output.push(
+                `    "${property.name}": ${possiblyEvaluatedType(property)},`);
+        }
+
+        output.push(
+            `};
+
+const layout: Properties<LayoutProps> = new Properties({`);
+
+        for (const property of layoutProperties) {
+            output.push(
+                `    "${property.name}": ${propertyValue(property, 'layout')},`);
+        }
+
+        output.push(
+            '});');
+    }
+
+    if (paintProperties.length) {
+        output.push(
+            `
+export type PaintProps = {`);
+
+        for (const property of paintProperties) {
+            output.push(
+                `    "${property.name}": ${propertyType(property)},`);
+        }
+
+        output.push(
+            `};
+
+export type PaintPropsPossiblyEvaluated = {`);
+
+        for (const property of paintProperties) {
+            output.push(
+                `    "${property.name}": ${possiblyEvaluatedType(property)},`);
+        }
+
+        output.push(
+            '};');
+    } else {
+        output.push(
+            'export type PaintProps = {};');
+    }
+
+    output.push(
+        `
+const paint: Properties<PaintProps> = new Properties({`);
+
+    for (const property of paintProperties) {
+        output.push(
+            `    "${property.name}": ${propertyValue(property, 'paint')},`);
+    }
+
+    output.push(
+        `});
+
+export default ({ paint${layoutProperties.length ? ', layout' : ''} } as {
+    paint: Properties<PaintProps>${layoutProperties.length ? ',\n    layout: Properties<LayoutProps>' : ''}
+});`);
+
+    return output.join('\n');
+}
+
 for (const layer of layers) {
-    fs.writeFileSync(`src/style/style_layer/${layer.type.replace('-', '_')}_style_layer_properties.ts`, propertiesJs(layer))
+    fs.writeFileSync(`src/style/style_layer/${layer.type.replace('-', '_')}_style_layer_properties.ts`, emitlayerProperties(layer))
 }

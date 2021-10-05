@@ -9,7 +9,6 @@
 'use strict'; // eslint-disable-line strict
 
 import * as fs from 'fs';
-import * as ejs from 'ejs';
 import * as util from '../src/util/util';
 import {createLayout, viewTypes} from '../src/util/struct_array';
 import type {ViewType, StructArrayLayout} from '../src/util/struct_array';
@@ -37,9 +36,6 @@ import {
     glyphOffset,
     lineVertex
 } from '../src/data/bucket/symbol_attributes';
-
-const structArrayLayoutJs = ejs.compile(fs.readFileSync('src/util/struct_array_layout.js.ejs', 'utf8'), {strict: true});
-const structArrayJs = ejs.compile(fs.readFileSync('src/util/struct_array.js.ejs', 'utf8'), {strict: true});
 
 const typeAbbreviations = {
     'Int8': 'b',
@@ -137,8 +133,6 @@ function camelize (str) {
     });
 }
 
-global.camelize = camelize;
-
 createStructArrayType('pos', posAttributes);
 createStructArrayType('raster_bounds', rasterBoundsAttributes);
 
@@ -219,6 +213,215 @@ createStructArrayLayoutType(createLayout([{
 
 const layouts = Object.keys(layoutCache).map(k => layoutCache[k]);
 
+function emitStructArrayLayout(locals) {
+    const output = [];
+    const {
+        className,
+        members,
+        size,
+        usedTypes
+    } = locals;
+    const structArrayLayoutClass = className;
+
+    output.push(
+        `/**
+ * Implementation of the StructArray layout:`);
+
+    for (const member of members) {
+        output.push(
+            ` * [${member.offset}]: ${member.type}[${member.components}]`);
+    }
+
+    output.push(
+        ` *
+ * @private
+ */
+class ${structArrayLayoutClass} extends StructArray {`);
+
+    for (const type of usedTypes) {
+        output.push(
+            `    ${type.toLowerCase()}: ${type}Array;`);
+    }
+
+    output.push(`
+    _refreshViews() {`);
+
+    for (const type of usedTypes) {
+        output.push(
+            `        this.${type.toLowerCase()} = new ${type}Array(this.arrayBuffer);`);
+    }
+
+    output.push(
+        '    }');
+
+    // prep for emplaceBack: collect type sizes and count the number of arguments
+    // we'll need
+    const bytesPerElement = size;
+    const usedTypeSizes = [];
+    const argNames = [];
+    const argNamesTyped = [];
+
+    for (const member of members) {
+        if (usedTypeSizes.indexOf(member.size) < 0) {
+            usedTypeSizes.push(member.size);
+        }
+        for (let c = 0; c < member.components; c++) {
+            // arguments v0, v1, v2, ... are, in order, the components of
+            // member 0, then the components of member 1, etc.
+            const name = `v${argNames.length}`;
+            argNames.push(name);
+            argNamesTyped.push(`${name}: number`);
+        }
+    }
+
+    output.push(
+        `
+    public emplaceBack(${argNamesTyped.join(', ')}) {
+        const i = this.length;
+        this.resize(i + 1);
+        return this.emplace(i, ${argNames.join(', ')});
+    }
+
+    public emplace(i: number, ${argNamesTyped.join(', ')}) {`);
+
+    for (const size of usedTypeSizes) {
+        output.push(
+            `        const o${size.toFixed(0)} = i * ${(bytesPerElement / size).toFixed(0)};`);
+    }
+
+    let argIndex = 0;
+    for (const member of members) {
+        for (let c = 0; c < member.components; c++) {
+            // The index for `member` component `c` into the appropriate type array is:
+            // this.{TYPE}[o{SIZE} + MEMBER_OFFSET + {c}] = v{X}
+            // where MEMBER_OFFSET = ROUND(member.offset / size) is the per-element
+            // offset of this member into the array
+            const index = `o${member.size.toFixed(0)} + ${(member.offset / member.size + c).toFixed(0)}`;
+
+            output.push(
+                `        this.${member.view}[${index}] = v${argIndex++};`);
+        }
+    }
+
+    output.push(
+        `        return i;
+    }
+}
+
+${structArrayLayoutClass}.prototype.bytesPerElement = ${size};
+register('${structArrayLayoutClass}', ${structArrayLayoutClass});
+`);
+
+    return output.join('\n');
+}
+
+function emitStructArray(locals) {
+    const output = [];
+    const {
+        arrayClass,
+        members,
+        size,
+        hasAnchorPoint,
+        layoutClass,
+        includeStructAccessors
+    } = locals;
+
+    const structTypeClass = arrayClass.replace('Array', 'Struct');
+    const structArrayClass = arrayClass;
+    const structArrayLayoutClass = layoutClass;
+
+    // collect components
+    const components = [];
+    for (const member of members) {
+        for (let c = 0; c < member.components; c++) {
+            let name = member.name;
+            if (member.components > 1) {
+                name += c;
+            }
+            components.push({name, member, component: c});
+        }
+    }
+
+    // exceptions for which we generate accessors on the array rather than a separate struct for performance
+    const useComponentGetters = structArrayClass === 'GlyphOffsetArray' || structArrayClass === 'SymbolLineVertexArray';
+
+    if (includeStructAccessors && !useComponentGetters) {
+        output.push(
+            `class ${structTypeClass} extends Struct {
+    _structArray: ${structArrayClass};`);
+
+        for (const {name, member, component} of components) {
+            const elementOffset = `this._pos${member.size.toFixed(0)}`;
+            const componentOffset = (member.offset / member.size + component).toFixed(0);
+            const index = `${elementOffset} + ${componentOffset}`;
+            const componentAccess = `this._structArray.${member.view}[${index}]`;
+
+            output.push(
+                `    get ${name}() { return ${componentAccess}; }`);
+
+            // generate setters for properties that are updated during runtime symbol placement; others are read-only
+            if (name === 'crossTileID' || name === 'placedOrientation' || name === 'hidden') {
+                output.push(
+                    `    set ${name}(x: number) { ${componentAccess} = x; }`);
+            }
+        }
+
+        // Special case used for the CollisionBoxArray type
+        if (hasAnchorPoint) {
+            output.push(
+                '    get anchorPoint() { return new Point(this.anchorPointX, this.anchorPointY); }');
+        }
+
+        output.push(
+            `}
+
+${structTypeClass}.prototype.size = ${size};
+
+export type ${structTypeClass.replace('Struct', '')} = ${structTypeClass};
+`);
+    } // end 'if (includeStructAccessors)'
+
+    output.push(
+        `/**
+ * @private
+ */
+export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
+
+    if (useComponentGetters) {
+        for (const member of members) {
+            for (let c = 0; c < member.components; c++) {
+                if (!includeStructAccessors) continue;
+                let name = `get${member.name}`;
+                if (member.components > 1) {
+                    name += c;
+                }
+                const componentOffset = (member.offset / member.size + c).toFixed(0);
+                const componentStride = size / member.size;
+                output.push(
+                    `    ${name}(index: number) { return this.${member.view}[index * ${componentStride} + ${componentOffset}]; }`);
+            }
+        }
+    } else if (includeStructAccessors) { // get(i)
+        output.push(
+            `    /**
+     * Return the ${structTypeClass} at the given location in the array.
+     * @param {number} index The index of the element.
+     * @private
+     */
+    get(index: number): ${structTypeClass} {
+        assert(!this.isTransferred);
+        return new ${structTypeClass}(this, index);
+    }`);
+    }
+    output.push(
+        `}
+
+register('${structArrayClass}', ${structArrayClass});
+`);
+
+    return output.join('\n');
+}
+
 fs.writeFileSync('src/data/array_types.ts',
     `// This file is generated. Edit build/generate-struct-arrays.ts, then run \`npm run codegen\`.
 
@@ -227,8 +430,8 @@ import {Struct, StructArray} from '../util/struct_array';
 import {register} from '../util/web_worker_transfer';
 import Point from '../util/point';
 
-${layouts.map(structArrayLayoutJs).join('\n')}
-${arraysWithStructAccessors.map(structArrayJs).join('\n')}
+${layouts.map(emitStructArrayLayout).join('\n')}
+${arraysWithStructAccessors.map(emitStructArray).join('\n')}
 export {
     ${layouts.map(layout => layout.className).join(',\n    ')},
     ${[...arrayTypeEntries].join(',\n    ')}
