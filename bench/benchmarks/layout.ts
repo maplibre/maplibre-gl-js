@@ -1,5 +1,3 @@
-// @flow
-
 import type {StyleSpecification} from '../../src/style-spec/types';
 import Benchmark from '../lib/benchmark';
 import fetchStyle from '../lib/fetch_style';
@@ -7,12 +5,15 @@ import TileParser from '../lib/tile_parser';
 import {OverscaledTileID} from '../../src/source/tile_id';
 
 export default class Layout extends Benchmark {
-    tiles: Array<{tileID: OverscaledTileID, buffer: ArrayBuffer}>;
+    tiles: Array<{
+      tileID: OverscaledTileID;
+      buffer: ArrayBuffer;
+    }>;
     parser: TileParser;
     style: string | StyleSpecification;
     tileIDs: Array<OverscaledTileID>;
 
-    constructor(style: string | StyleSpecification, tileIDs: ?Array<OverscaledTileID>) {
+    constructor(style: string | StyleSpecification, tileIDs?: Array<OverscaledTileID>) {
         super();
         this.style = style;
         this.tileIDs = tileIDs || [
@@ -26,7 +27,7 @@ export default class Layout extends Benchmark {
     setup(): Promise<void> {
         return fetchStyle(this.style)
             .then((styleJSON) => {
-                this.parser = new TileParser(styleJSON, 'composite');
+                this.parser = new TileParser(styleJSON, 'openmaptiles');
                 return this.parser.setup();
             })
             .then(() => {

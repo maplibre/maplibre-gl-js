@@ -50,17 +50,17 @@ samples to do an analysis -- and records how long each call takes. From these sa
 statistics and plots that help in determining whether a given change increased or decreased performance.
 
 * **Mean**, **Minimum**, and **Deviation** are the standard summary statistics.
-* **R? Slope / Correlation** are measures derived from comparing increasingly large groups of samples (1 sample,
+* **R2 Slope / Correlation** are measures derived from comparing increasingly large groups of samples (1 sample,
 2 samples, 3 samples, ...) to the sum of those samples' execution time. Ideally, the number of samples is
 perfectly linearly correlated to the sum of execution times. If it is, then the slope of the line is equivalent
 the average execution time. But usually, the correlation is not perfect due to natural variance and outliers.
-The R? correlation indicates how good the linear approximation is. Values greater than 0.99 are good. Less
+The R2 correlation indicates how good the linear approximation is. Values greater than 0.99 are good. Less
 than 0.99 is iffy (??), and less than 0.90 means something is confounding the results, and they should be
 regarded as unreliable (??).
 * The top plot shows the distribution of samples, both by plotting each individual sample (on the right),
 and by plotting a kernel density estimate. On the right, you can also see (from left to right) the mean,
 minimum and maximum sample, and sample values at the first quartile, second quartile (median), and third quartile.
-* The bottom plot shows the R? analysis and resulting linear approximation.
+* The bottom plot shows the R2 analysis and resulting linear approximation.
 
 ## Posting benchmark results to PRs
 

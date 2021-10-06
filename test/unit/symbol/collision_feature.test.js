@@ -1,8 +1,8 @@
 import {test} from '../../util/test';
-import CollisionFeature from '../../../rollup/build/tsc/symbol/collision_feature';
-import Anchor from '../../../rollup/build/tsc/symbol/anchor';
-import Point from '../../../rollup/build/tsc/util/point';
-import {CollisionBoxArray} from '../../../rollup/build/tsc/data/array_types';
+import CollisionFeature from '../../../rollup/build/tsc/src/symbol/collision_feature';
+import Anchor from '../../../rollup/build/tsc/src/symbol/anchor';
+import Point from '../../../rollup/build/tsc/src/util/point';
+import {CollisionBoxArray} from '../../../rollup/build/tsc/src/data/array_types';
 
 test('CollisionFeature', (t) => {
 

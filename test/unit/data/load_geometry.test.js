@@ -3,7 +3,7 @@ import fs from 'fs';
 import path, {dirname} from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import loadGeometry from '../../../rollup/build/tsc/data/load_geometry.js';
+import loadGeometry from '../../../rollup/build/tsc/src/data/load_geometry.js';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

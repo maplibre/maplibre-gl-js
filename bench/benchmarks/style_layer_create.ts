@@ -1,5 +1,3 @@
-// @flow
-
 import type {StyleSpecification} from '../../src/style-spec/types';
 import Benchmark from '../lib/benchmark';
 import createStyleLayer from '../../src/style/create_style_layer';
@@ -8,7 +6,7 @@ import fetchStyle from '../lib/fetch_style';
 
 export default class StyleLayerCreate extends Benchmark {
     style: string | StyleSpecification;
-    layers: Array<Object>;
+    layers: Array<any>;
 
     constructor(style: string | StyleSpecification) {
         super();

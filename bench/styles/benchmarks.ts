@@ -10,16 +10,16 @@ import QueryBox from '../benchmarks/query_box';
 
 import getWorkerPool from '../../src/util/global_worker_pool';
 
-const locations = locationsWithTileID(styleBenchmarkLocations.features);
+const locations = locationsWithTileID(styleBenchmarkLocations.features as GeoJSON.Feature<GeoJSON.Point>[]);
 
-const benchmarks = window.benchmarks = [];
+const benchmarks = (window as any).benchmarks = [];
 
-function register(name, Benchmark, locations, location) {
+function register(name, Benchmark, locations?, location?) {
     const versions = [];
 
-    for (const style of process.env.MAPBOX_STYLES) {
+    for (const style of process.env.MAPLIBRE_STYLES) {
         versions.push({
-            name: style.name || style.replace('mapbox://styles/', ''),
+            name: typeof style === 'string' ? style : (style as any).name,
             bench: new Benchmark(style, locations)
         });
     }

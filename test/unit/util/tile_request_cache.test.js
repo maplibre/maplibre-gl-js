@@ -1,6 +1,6 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import {cacheGet, cachePut, cacheClose} from '../../../rollup/build/tsc/util/tile_request_cache';
+import {cacheGet, cachePut, cacheClose} from '../../../rollup/build/tsc/src/util/tile_request_cache';
 import sinon from 'sinon';
 
 test('tile_request_cache', (t) => {

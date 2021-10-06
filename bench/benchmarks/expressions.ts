@@ -1,5 +1,3 @@
-// @flow
-
 import Benchmark from '../lib/benchmark';
 
 import spec from '../../src/style-spec/reference/latest';
@@ -12,14 +10,16 @@ import type {StyleSpecification} from '../../src/style-spec/types';
 import type {StylePropertySpecification} from '../../src/style-spec/style-spec';
 import type {StylePropertyExpression} from '../../src/style-spec/expression';
 
+interface DataT {
+    propertySpec: StylePropertySpecification;
+    rawValue: unknown;
+    rawExpression: unknown;
+    compiledFunction: StylePropertyExpression;
+    compiledExpression: StylePropertyExpression;
+}
+
 class ExpressionBenchmark extends Benchmark {
-    data: Array<{
-        propertySpec: StylePropertySpecification,
-        rawValue: mixed,
-        rawExpression: mixed,
-        compiledFunction: StylePropertyExpression,
-        compiledExpression: StylePropertyExpression
-    }>;
+    data: Array<DataT>;
     style: string | StyleSpecification;
 
     constructor(style: string | StyleSpecification) {
@@ -39,9 +39,9 @@ class ExpressionBenchmark extends Benchmark {
                         continue;
                     }
 
-                    const expressionData = function(rawValue, propertySpec: StylePropertySpecification) {
+                    const expressionData = (rawValue, propertySpec: StylePropertySpecification): DataT => {
                         const rawExpression = convertFunction(rawValue, propertySpec);
-                        const compiledFunction = createFunction(rawValue, propertySpec);
+                        const compiledFunction = createFunction(rawValue, propertySpec) as StylePropertyExpression;
                         const compiledExpression = createPropertyExpression(rawExpression, propertySpec);
                         if (compiledExpression.result === 'error') {
                             throw new Error(compiledExpression.value.map(err => `${err.key}: ${err.message}`).join(', '));

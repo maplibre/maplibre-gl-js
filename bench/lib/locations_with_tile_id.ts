@@ -1,7 +1,14 @@
 import MercatorCoordinate from '../../src/geo/mercator_coordinate';
 import {OverscaledTileID} from '../../src/source/tile_id';
 
-export default function locationsWithTileID(locations) {
+export type LocationsWithTileID = {
+    description: string;
+    tileID: OverscaledTileID[];
+    zoom: number;
+    center: GeoJSON.Position;
+}
+
+export default function locationsWithTileID(locations: GeoJSON.Feature<GeoJSON.Point>[]): LocationsWithTileID[] {
     return locations.map(feature => {
         const {coordinates} = feature.geometry;
         const {zoom} = feature.properties;

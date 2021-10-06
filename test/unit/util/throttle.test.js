@@ -2,7 +2,7 @@
 
 import {test} from '../../util/test';
 
-import throttle from '../../../rollup/build/tsc/util/throttle';
+import throttle from '../../../rollup/build/tsc/src/util/throttle';
 
 test('throttle', (t) => {
 

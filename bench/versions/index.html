@@ -6,7 +6,6 @@
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link href='https://www.mapbox.com/base/latest/base.css' rel='stylesheet' />
     <link rel='stylesheet' href='/dist/maplibre-gl.css'/>
     <script src='https://unpkg.com/url-search-params@0.10.0/build/url-search-params.js'></script>
 </head>
@@ -18,25 +17,29 @@
         const params = new URLSearchParams(location.search.slice(1));
         Promise.resolve(params.has('compare') ?
             params.getAll('compare').filter(Boolean) :
-            fetch('https://api.github.com/repos/mapbox/mapbox-gl-js/releases/latest')
-            .then(response => response.json())
-            .then(pkg => [pkg['tag_name'], 'main']))
+            fetch('https://api.github.com/repos/maplibre/maplibre-gl-js/releases/latest')
+                .then(response => response.json())
+                .then(pkg => [pkg['tag_name'], 'main']))
             .then(versions => {
                 return versions
-                    .map(v => `https://s3.amazonaws.com/mapbox-gl-js/${v}/benchmarks.js`)
+                    .map(v => `https://maplibre.org/maplibre-gl-js/benchmarks/${v}/benchmarks_generated.js`)
                     .concat('/bench/versions/benchmarks_generated.js')
                     .reduce((p, script) => p.then(() => loadScript(script)), Promise.resolve());
             })
             .then(() => {
                 const benchmarks = [];
 
-                for (const name in window.mapboxglBenchmarks) {
+                for (const name in window.maplibreglBenchmarks) {
                     const versions = [];
 
-                    for (const test in window.mapboxglBenchmarks[name]) {
+                    // also handle benchmarks from mapboxgl releases
+                    if (window.mapboxglBenchmarks && window.mapboxglBenchmarks[name])
+                        Object.assign(window.maplibreglBenchmarks[name], window.mapboxglBenchmarks[name]);
+
+                    for (const test in window.maplibreglBenchmarks[name]) {
                         versions.push({
                             name: test,
-                            bench: window.mapboxglBenchmarks[name][test]
+                            bench: window.maplibreglBenchmarks[name][test]
                         });
                     }
                     benchmarks.push({name, versions});
@@ -47,7 +50,7 @@
             .catch(err => console.error(err));
 
         function loadScript(src) {
-            return new Promise(function (resolve, reject) {
+            return new Promise((resolve, reject) => {
                 const s = document.createElement('script');
                 s.src = src;
                 s.onload = resolve;

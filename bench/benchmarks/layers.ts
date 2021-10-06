@@ -17,6 +17,10 @@ function generateLayers(layer) {
 }
 
 export class LayerBenchmark extends Benchmark {
+
+    layerStyle: any;
+    map: any;
+
     setup() {
         return createMap({
             zoom: 16,
@@ -61,8 +65,8 @@ export class LayerCircle extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'circlelayer',
                 'type': 'circle',
-                'source': 'composite',
-                'source-layer': 'poi_label'
+                'source': 'openmaptiles',
+                'source-layer': 'poi'
             })
         });
     }
@@ -76,7 +80,7 @@ export class LayerFill extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'filllayer',
                 'type': 'fill',
-                'source': 'composite',
+                'source': 'openmaptiles',
                 'source-layer': 'building',
                 'paint': {
                     'fill-color': 'black',
@@ -95,7 +99,7 @@ export class LayerFillExtrusion extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'fillextrusionlayer',
                 'type': 'fill-extrusion',
-                'source': 'composite',
+                'source': 'openmaptiles',
                 'source-layer': 'building',
                 'paint': {
                     'fill-extrusion-height': 30
@@ -123,21 +127,21 @@ export class LayerHeatmap extends LayerBenchmark {
                         'type': 'heatmap',
                         'source': 'heatmap',
                         'paint': {
-                            "heatmap-radius": 50,
-                            "heatmap-weight": {
-                                "stops": [[0, 0.5], [4, 2]]
+                            'heatmap-radius': 50,
+                            'heatmap-weight': {
+                                'stops': [[0, 0.5], [4, 2]]
                             },
-                            "heatmap-intensity": 0.9,
-                            "heatmap-color": [
-                                "interpolate",
-                                ["linear"],
-                                ["heatmap-density"],
-                                0, "rgba(0, 0, 255, 0)",
-                                0.1, "royalblue",
-                                0.3, "cyan",
-                                0.5, "lime",
-                                0.7, "yellow",
-                                1, "red"
+                            'heatmap-intensity': 0.9,
+                            'heatmap-color': [
+                                'interpolate',
+                                ['linear'],
+                                ['heatmap-density'],
+                                0, 'rgba(0, 0, 255, 0)',
+                                0.1, 'royalblue',
+                                0.3, 'cyan',
+                                0.5, 'lime',
+                                0.7, 'yellow',
+                                1, 'red'
                             ]
                         }
                     })
@@ -155,7 +159,7 @@ export class LayerHillshade extends LayerBenchmark {
             sources: {
                 'terrain-rgb': {
                     'type': 'raster-dem',
-                    'url': 'mapbox://mapbox.terrain-rgb'
+                    'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
                 }
             },
             layers: generateLayers({
@@ -175,8 +179,8 @@ export class LayerLine extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'linelayer',
                 'type': 'line',
-                'source': 'composite',
-                'source-layer': 'road'
+                'source': 'openmaptiles',
+                'source-layer': 'transportation'
             })
         });
     }
@@ -189,7 +193,7 @@ export class LayerRaster extends LayerBenchmark {
         this.layerStyle = Object.assign({}, style, {
             sources: {
                 'satellite': {
-                    'url': 'mapbox://mapbox.satellite',
+                    'url': 'https://api.maptiler.com/tiles/satellite/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
                     'type': 'raster',
                     'tileSize': 256
                 }
@@ -211,10 +215,10 @@ export class LayerSymbol extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'symbollayer',
                 'type': 'symbol',
-                'source': 'composite',
-                'source-layer': 'poi_label',
+                'source': 'openmaptiles',
+                'source-layer': 'poi',
                 'layout': {
-                    'icon-image': 'dot-11',
+                    'icon-image': 'dot_11',
                     'text-field': '{name_en}'
                 }
             })
@@ -230,11 +234,11 @@ export class LayerSymbolWithIcons extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'symbollayer',
                 'type': 'symbol',
-                'source': 'composite',
-                'source-layer': 'poi_label',
+                'source': 'openmaptiles',
+                'source-layer': 'poi',
                 'layout': {
-                    'icon-image': 'dot-11',
-                    'text-field': ['format', ['get', 'name_en'], ['image', 'dot-11']]
+                    'icon-image': 'dot_11',
+                    'text-field': ['format', ['get', 'name_en'], ['image', 'dot_11']]
                 }
             })
         });
@@ -256,8 +260,8 @@ export class LayerSymbolWithSortKey extends LayerBenchmark {
             generated.push({
                 'id': `symbollayer${i}`,
                 'type': 'symbol',
-                'source': 'composite',
-                'source-layer': 'poi_label',
+                'source': 'openmaptiles',
+                'source-layer': 'poi',
                 'layout': {
                     'symbol-sort-key': i,
                     'text-field': '{name_en}'
@@ -276,8 +280,8 @@ export class LayerTextWithVariableAnchor extends LayerBenchmark {
             layers: generateLayers({
                 'id': 'symbollayer',
                 'type': 'symbol',
-                'source': 'composite',
-                'source-layer': 'poi_label',
+                'source': 'openmaptiles',
+                'source-layer': 'poi',
                 'layout': {
                     'text-field': 'Test Test Test',
                     'text-justify': 'auto',

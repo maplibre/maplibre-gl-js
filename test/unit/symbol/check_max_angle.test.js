@@ -1,7 +1,7 @@
 import {test} from '../../util/test';
-import Point from '../../../rollup/build/tsc/util/point';
-import checkMaxAngle from '../../../rollup/build/tsc/symbol/check_max_angle';
-import Anchor from '../../../rollup/build/tsc/symbol/anchor';
+import Point from '../../../rollup/build/tsc/src/util/point';
+import checkMaxAngle from '../../../rollup/build/tsc/src/symbol/check_max_angle';
+import Anchor from '../../../rollup/build/tsc/src/symbol/anchor';
 
 test('line with no sharp angles', (t) => {
     const line = [ new Point(0, 0), new Point(20, -1), new Point(40, 1), new Point(60, 0) ];

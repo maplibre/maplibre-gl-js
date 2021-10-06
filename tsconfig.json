@@ -27,11 +27,14 @@
     "declarationMap": true
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "bench/**/*.ts",
+    "bench/**/*.tsx"
   ],
   "exclude": [
     "node_modules",
     "lib",
-    "dist"
+    "dist",
+    "bench/**/*generated*"
   ]
 }

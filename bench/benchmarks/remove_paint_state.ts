@@ -16,7 +16,12 @@ const width = 1024;
 const height = 768;
 const zoom = 4;
 
-export default class PaintStates extends Benchmark {
+class RemovePaintState extends Benchmark {
+
+    center: any;
+    numFeatures: any;
+    map: any;
+
     constructor(center) {
         super();
         this.center = center;
@@ -53,9 +58,10 @@ export default class PaintStates extends Benchmark {
                     style
                 }).then(map => {
                     this.map = map;
-                }).catch(error => {
-                    console.error(error);
-                });
+                })
+                    .catch(error => {
+                        console.error(error);
+                    });
             });
     }
 
@@ -63,13 +69,51 @@ export default class PaintStates extends Benchmark {
         this.map._styleDirty = true;
         this.map._sourcesDirty = true;
         this.map._render();
-        for (let i = 0; i < this.numFeatures; i += 50) {
-            this.map.setFeatureState({source: 'land', id: i}, {bench: true});
-        }
-        this.map._render();
     }
 
     teardown() {
         this.map.remove();
+    }
+}
+
+export class PropertyLevelRemove extends RemovePaintState {
+    bench() {
+
+        for (let i = 0; i < this.numFeatures; i += 50) {
+            this.map.setFeatureState({source: 'land', id: i}, {bench: true});
+        }
+        for (let i = 0; i < this.numFeatures; i += 50) {
+            this.map.removeFeatureState({source: 'land', id: i}, 'bench');
+        }
+        this.map._render();
+
+    }
+}
+
+export class FeatureLevelRemove extends RemovePaintState {
+    bench() {
+
+        for (let i = 0; i < this.numFeatures; i += 50) {
+            this.map.setFeatureState({source: 'land', id: i}, {bench: true});
+        }
+        for (let i = 0; i < this.numFeatures; i += 50) {
+            this.map.removeFeatureState({source: 'land', id: i});
+        }
+        this.map._render();
+
+    }
+}
+
+export class SourceLevelRemove extends RemovePaintState {
+    bench() {
+
+        for (let i = 0; i < this.numFeatures; i += 50) {
+            this.map.setFeatureState({source: 'land', id: i}, {bench: true});
+        }
+        for (let i = 0; i < this.numFeatures; i += 50) {
+            this.map.removeFeatureState({source: 'land', id: i});
+        }
+        this.map._render();
+
     }
 }

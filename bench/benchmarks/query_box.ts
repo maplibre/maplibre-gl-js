@@ -1,18 +1,17 @@
-// @flow
-
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 import type Map from '../../src/ui/map';
+import {PointLike} from '../../src/util/point';
 
 const width = 1024;
 const height = 768;
 
 export default class QueryBox extends Benchmark {
     style: string;
-    locations: Array<Object>;
+    locations: Array<any>;
     maps: Array<Map>;
 
-    constructor(style: string, locations: Array<Object>) {
+    constructor(style: string, locations: Array<any>) {
         super();
         this.style = style;
         this.locations = locations;
@@ -38,7 +37,7 @@ export default class QueryBox extends Benchmark {
 
     bench() {
         for (const map of this.maps) {
-            map.queryRenderedFeatures({});
+            map.queryRenderedFeatures({} as PointLike);
         }
     }
 

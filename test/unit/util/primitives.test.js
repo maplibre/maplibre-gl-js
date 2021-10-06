@@ -1,5 +1,5 @@
 import {test} from '../../util/test';
-import {Aabb, Frustum} from '../../../rollup/build/tsc/util/primitives';
+import {Aabb, Frustum} from '../../../rollup/build/tsc/src/util/primitives';
 import {mat4, vec3} from 'gl-matrix';
 
 test('primitives', (t) => {

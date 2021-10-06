@@ -1,12 +1,12 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import {extend} from '../../../rollup/build/tsc/util/util';
-import Map from '../../../rollup/build/tsc/ui/map';
+import {extend} from '../../../rollup/build/tsc/src/util/util';
+import Map from '../../../rollup/build/tsc/src/ui/map';
 import {createMap} from '../../util';
-import LngLat from '../../../rollup/build/tsc/geo/lng_lat';
-import Tile from '../../../rollup/build/tsc/source/tile';
-import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
-import {Event, ErrorEvent} from '../../../rollup/build/tsc/util/evented';
+import LngLat from '../../../rollup/build/tsc/src/geo/lng_lat';
+import Tile from '../../../rollup/build/tsc/src/source/tile';
+import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
+import {Event, ErrorEvent} from '../../../rollup/build/tsc/src/util/evented';
 import simulate from '../../util/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../util/fixed';
 

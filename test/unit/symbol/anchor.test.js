@@ -1,5 +1,5 @@
 import {test} from '../../util/test';
-import Anchor from '../../../rollup/build/tsc/symbol/anchor';
+import Anchor from '../../../rollup/build/tsc/src/symbol/anchor';
 
 test('Anchor', (t) => {
     t.test('#constructor', (t) => {

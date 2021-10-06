@@ -3,7 +3,6 @@ import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '@mapbox/gazetteer/benchmark/style-benchmark-locations.json';
 import Layout from '../benchmarks/layout';
 import Placement from '../benchmarks/placement';
-import LayoutDDS from '../benchmarks/layout_dds';
 import SymbolLayout from '../benchmarks/symbol_layout';
 import WorkerTransfer from '../benchmarks/worker_transfer';
 import Paint from '../benchmarks/paint';
@@ -22,18 +21,18 @@ import FilterEvaluate from '../benchmarks/filter_evaluate';
 
 import getWorkerPool from '../../src/util/global_worker_pool';
 
-const styleLocations = locationsWithTileID(styleBenchmarkLocations.features);
+const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
-window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
+(window as any).maplibreglBenchmarks = (window as any).maplibreglBenchmarks || {};
 
 const version = process.env.BENCHMARK_VERSION;
 
 function register(name, bench) {
-    window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
-    window.maplibreglBenchmarks[name][version] = bench;
+    (window as any).maplibreglBenchmarks[name] = (window as any).maplibreglBenchmarks[name] || {};
+    (window as any).maplibreglBenchmarks[name][version] = bench;
 }
 
-const style = 'mapbox://styles/mapbox/streets-v10';
+const style = 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL';
 const center = [-77.032194, 38.912753];
 const zooms = [4, 8, 11, 13, 15, 17];
 const locations = zooms.map(zoom => ({center, zoom}));
@@ -67,7 +66,6 @@ register('LayerSymbolWithIcons', new LayerSymbolWithIcons());
 register('LayerTextWithVariableAnchor', new LayerTextWithVariableAnchor());
 register('LayerSymbolWithSortKey', new LayerSymbolWithSortKey());
 register('Load', new Load());
-register('LayoutDDS', new LayoutDDS());
 register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => location.tileID[0])));
 register('FilterCreate', new FilterCreate());
 register('FilterEvaluate', new FilterEvaluate());

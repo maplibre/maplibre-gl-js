@@ -1,4 +1,3 @@
-// @flow
 // According to https://developer.mozilla.org/en-US/docs/Web/API/Performance/now,
 // performance.now() should be accurate to 0.005ms. Set the minimum running
 // time for a single measurement at 5ms, so that the error due to timer
@@ -6,15 +5,11 @@
 const minTimeForMeasurement = 0.005 * 1000;
 
 export type Measurement = {
-    iterations: number,
-    time: number
+  iterations: number;
+  time: number;
 };
 
 class Benchmark {
-
-    constructor() {
-        this._measureAsync = this._measureAsync.bind(this);
-    }
 
     /**
      * The `setup` method is intended to be overridden by subclasses. It will be called once, prior to
@@ -38,7 +33,6 @@ class Benchmark {
      */
     teardown(): Promise<void> | void {}
 
-    _measureAsync: () => Promise<Array<Measurement>>;
     _elapsed: number;
     _measurements: Array<Measurement>;
     _iterationsPerMeasurement: number;
@@ -48,21 +42,22 @@ class Benchmark {
      * Run the benchmark by executing `setup` once, sampling the execution time of `bench` some number of
      * times, and then executing `teardown`. Yields an array of execution times.
      */
-    run(): Promise<?Array<Measurement>> {
-        return Promise.resolve(this.setup())
-            .then(() => this._begin())
-            .catch(e => {
-                // The bench run will break here but should at least provide helpful information:
-                console.error(e);
-            });
+    async run(): Promise<Array<Measurement>> {
+        try {
+            await this.setup();
+            return this._begin();
+        } catch (e) {
+            // The bench run will break here but should at least provide helpful information:
+            console.error(e);
+        }
     }
 
-    _done() {
+    private _done() {
         // 210 samples => 20 observations for regression
         return this._elapsed >= 500 && this._measurements.length > 210;
     }
 
-    _begin(): Promise<Array<Measurement>> {
+    private _begin(): Promise<Array<Measurement>> {
         this._measurements = [];
         this._elapsed = 0;
         this._iterationsPerMeasurement = 1;
@@ -72,11 +67,11 @@ class Benchmark {
         if (bench instanceof Promise) {
             return bench.then(this._measureAsync);
         } else {
-            return (this._measureSync(): any);
+            return this._measureSync();
         }
     }
 
-    _measureSync() {
+    private _measureSync(): Promise<Array<Measurement>> {
         // Avoid Promise overhead for sync benchmarks.
         while (true) {
             const time = performance.now() - this._start;
@@ -96,7 +91,7 @@ class Benchmark {
         }
     }
 
-    _measureAsync(): Promise<Array<Measurement>> {
+    private _measureAsync(): Promise<Array<Measurement>> {
         const time = performance.now() - this._start;
         this._elapsed += time;
         if (time < minTimeForMeasurement) {
@@ -111,8 +106,8 @@ class Benchmark {
         return this._runAsync(this._iterationsPerMeasurement).then(this._measureAsync);
     }
 
-    _runAsync(n: number): Promise<void> {
-        const bench = ((this.bench(): any): Promise<void>);
+    private _runAsync(n: number): Promise<void> {
+        const bench = (this.bench() as any as Promise<void>);
         if (n === 1) {
             return bench;
         } else {
@@ -120,7 +115,7 @@ class Benchmark {
         }
     }
 
-    _end(): Promise<Array<Measurement>> {
+    private _end(): Promise<Array<Measurement>> {
         return Promise.resolve(this.teardown()).then(() => this._measurements);
     }
 }

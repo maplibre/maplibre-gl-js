@@ -1,10 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import * as d3 from 'd3';
-import {kde, probabilitiesOfSuperiority, summaryStatistics, regression} from './lib/statistics';
+import {kde, probabilitiesOfSuperiority, summaryStatistics, regression, RegressionResults, Summary} from './lib/statistics';
+import {LocationsWithTileID} from './lib/locations_with_tile_id';
+import type {ScaleBand, ScaleLinear} from 'd3';
 
 const versionColor = d3.scaleOrdinal(['#1b9e77', '#7570b3', '#d95f02']);
-const formatSample = d3.format(".3r");
+const formatSample = d3.format('.3r');
 
 function identity(x) {
     return x;
@@ -28,7 +30,22 @@ function center(scale) {
     };
 }
 
-class Axis extends React.Component {
+type AxisProps = {
+    scale: ScaleBand<string> | ScaleLinear<number, number>;
+    orientation: string;
+    ticks?: number | (number | string)[];
+    tickValues?: number[];
+    tickFormat?: (n: number | {
+        valueOf(): number;
+    }) => string;
+    tickSize?: number;
+    tickSizeInner?: number;
+    tickSizeOuter?: number;
+    tickPadding?: number;
+    transform?: string;
+}
+
+class Axis extends React.Component<AxisProps, {}> {
     render() {
         const scale = this.props.scale;
         const orient = this.props.orientation || 'left';
@@ -43,13 +60,17 @@ class Axis extends React.Component {
         const x = orient === 'left' || orient === 'right' ? 'x' : 'y';
         const transform = orient === 'top' || orient === 'bottom' ? translateX : translateY;
 
-        const values = tickValues == null ? (scale.ticks ? scale.ticks(...tickArguments) : scale.domain()) : tickValues;
-        const format = tickFormat == null ? (scale.tickFormat ? scale.tickFormat(...tickArguments) : identity) : tickFormat;
+        const values = tickValues == null ? ((scale as ScaleLinear<number, number>).ticks 
+            ? (scale as ScaleLinear<number, number>).ticks(...tickArguments) 
+            : scale.domain()) : tickValues;
+        const format = tickFormat == null ? ((scale as ScaleLinear<number, number>).tickFormat 
+            ? (scale as ScaleLinear<number, number>).tickFormat(...tickArguments) 
+            : identity) : tickFormat;
         const spacing = Math.max(tickSizeInner, 0) + tickPadding;
         const range = scale.range();
         const range0 = +range[0] + 0.5;
         const range1 = +range[range.length - 1] + 0.5;
-        const position = (scale.bandwidth ? center : number)(scale.copy());
+        const position = ((scale as ScaleBand<string>).bandwidth ? center : number)(scale.copy());
 
         return (
             <g
@@ -84,7 +105,25 @@ class Axis extends React.Component {
     }
 }
 
-class StatisticsPlot extends React.Component {
+type Version = {
+    name: string;
+    status: string;
+    samples: number[];
+    density: [number, number][];
+    summary: Summary;
+    regression: RegressionResults;
+    error: Error;
+}
+
+type StatisticsPlotProps = {
+    versions: Version[];
+}
+
+type StatisticsPlotState = {
+    width: number;
+}
+
+class StatisticsPlot extends React.Component<StatisticsPlotProps, StatisticsPlotState> {
     constructor(props) {
         super(props);
         this.state = {width: 100};
@@ -136,15 +175,16 @@ class StatisticsPlot extends React.Component {
                 width="100%"
                 height={height + margin.top + margin.bottom}
                 style={{overflow: 'visible'}}
-                ref={(ref) => { this.ref = ref; }}>
+                // Old API that is not advised anymore
+                ref={(ref) => { (this as any).ref = ref; }}>
                 <defs>
                     <g id="up-arrow">
-                        <path transform="translate(-6, -2)" style={{stroke: "inherit", fill: "inherit"}}
+                        <path transform="translate(-6, -2)" style={{stroke: 'inherit', fill: 'inherit'}}
                             d="M2,10 L6,2 L10,10"></path>
                     </g>
                 </defs>
                 <g transform={`translate(${margin.left},${margin.top})`}>
-                    <Axis orientation="bottom" scale={p} ticks={[2, "%"]} transform={`translate(0,${height})`}>
+                    <Axis orientation="bottom" scale={p} ticks={[2, '%']} transform={`translate(0,${height})`}>
                     </Axis>
                     <Axis orientation="left" scale={t} tickFormat={formatSample}>
                         <text fill='#000' textAnchor="end"  y={6} transform="rotate(-90)" dy=".71em">Time (ms)</text>
@@ -275,11 +315,20 @@ class StatisticsPlot extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({width: this.ref.clientWidth});
+        // Old API that is not advised anymore
+        this.setState({width: (this as any).ref.clientWidth});
     }
 }
 
-class RegressionPlot extends React.Component {
+type RegressionPlotProps = {
+    versions: Version[];
+}
+
+type RegressionPlotState = {
+    width: number;
+}
+
+class RegressionPlot extends React.Component<RegressionPlotProps, RegressionPlotState> {
     constructor(props) {
         super(props);
         this.state = {width: 100};
@@ -310,7 +359,8 @@ class RegressionPlot extends React.Component {
                 width="100%"
                 height={height + margin.top + margin.bottom}
                 style={{overflow: 'visible'}}
-                ref={(ref) => { this.ref = ref; }}>
+                // Old API that is not advised anymore
+                ref={(ref) => { (this as any).ref = ref; }}>
                 <g transform={`translate(${margin.left},${margin.top})`}>
                     <Axis orientation="bottom" scale={x} transform={`translate(0,${height})`}>
                         <text fill='#000' textAnchor="end" y={-6} x={width}>Iterations</text>
@@ -342,26 +392,41 @@ class RegressionPlot extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({width: this.ref.clientWidth});
+        // Old API that is not advised anymore
+        this.setState({width: (this as any).ref.clientWidth});
     }
 }
 
-class BenchmarkStatistic extends React.Component {
+type BenchmarkStatisticProps = {
+    status: string;
+    error: Error;
+    statistic: (version: Version) => any;
+    version: Version;
+}
+
+class BenchmarkStatistic extends React.Component<BenchmarkStatisticProps, {}> {
     render() {
         switch (this.props.status) {
-        case 'waiting':
-            return <p className="quiet"></p>;
-        case 'running':
-            return <p>Running...</p>;
-        case 'error':
-            return <p>{this.props.error.message}</p>;
-        default:
-            return this.props.statistic(this.props);
+            case 'waiting':
+                return <p className="quiet"></p>;
+            case 'running':
+                return <p>Running...</p>;
+            case 'error':
+            case 'errored':
+                return <p>{this.props.error.message}</p>;
+            default:
+                return this.props.statistic(this.props.version);
         }
     }
 }
 
-class BenchmarkRow extends React.Component {
+type BenchmarkRowProps = {
+    name: string;
+    location: LocationsWithTileID;
+    versions: Version[];
+}
+
+class BenchmarkRow extends React.Component<BenchmarkRowProps, {}> {
     render() {
         const endedCount = this.props.versions.filter(version => version.status === 'ended').length;
 
@@ -437,12 +502,12 @@ class BenchmarkRow extends React.Component {
         );
     }
 
-    renderStatistic(title, statistic) {
+    renderStatistic(title: string, statistic: (version: Version) => any) {
         return (
             <tr>
                 <th>{title}</th>
                 {this.props.versions.map(version =>
-                    <td key={version.name}><BenchmarkStatistic statistic={statistic} {...version}/></td>
+                    <td key={version.name}><BenchmarkStatistic statistic={statistic} status={version.status} error={version.error} version={version}/></td>
                 )}
             </tr>
         );
@@ -453,11 +518,16 @@ class BenchmarkRow extends React.Component {
     }
 }
 
-class BenchmarksTable extends React.Component {
+type BenchmarksTableProps = {
+    finished: boolean;
+    benchmarks: BenchmarkRowProps[];
+}
+
+class BenchmarksTable extends React.Component<BenchmarksTableProps, {}> {
     render() {
         return (
             <div style={{width: 960, margin: '2em auto'}}>
-                <h1 className="space-bottom1">Mapbox GL JS Benchmarks – {
+                <h1 className="space-bottom1">MapLibre GL JS Benchmarks – {
                     this.props.finished ?
                         <span>Finished</span> :
                         <span>Running</span>}</h1>
@@ -469,7 +539,7 @@ class BenchmarksTable extends React.Component {
     }
 }
 
-function updateUI(benchmarks, finished) {
+function updateUI(benchmarks, finished?) {
     finished = !!finished;
 
     ReactDOM.render(

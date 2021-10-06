@@ -1,5 +1,3 @@
-// @flow
-
 import type {StyleSpecification} from '../../src/style-spec/types';
 import Benchmark from '../lib/benchmark';
 import validateStyle from '../../src/style-spec/validate_style.min';

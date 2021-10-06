@@ -2,7 +2,7 @@ import '../../../stub_loader';
 import geolocation from 'mock-geolocation';
 import {test} from '../../../util/test';
 import {createMap} from '../../../util';
-import GeolocateControl from '../../../../rollup/build/tsc/ui/control/geolocate_control';
+import GeolocateControl from '../../../../rollup/build/tsc/src/ui/control/geolocate_control';
 
 geolocation.use();
 

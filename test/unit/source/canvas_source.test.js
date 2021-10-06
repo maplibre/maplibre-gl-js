@@ -1,9 +1,9 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import CanvasSource from '../../../rollup/build/tsc/source/canvas_source';
-import Transform from '../../../rollup/build/tsc/geo/transform';
-import {Event, Evented} from '../../../rollup/build/tsc/util/evented';
-import {extend} from '../../../rollup/build/tsc/util/util';
+import CanvasSource from '../../../rollup/build/tsc/src/source/canvas_source';
+import Transform from '../../../rollup/build/tsc/src/geo/transform';
+import {Event, Evented} from '../../../rollup/build/tsc/src/util/evented';
+import {extend} from '../../../rollup/build/tsc/src/util/util';
 
 let originalGetContext = HTMLCanvasElement.prototype.getContext;
 

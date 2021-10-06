@@ -1,7 +1,7 @@
 import {test} from '../util/test';
 import fs from 'fs';
 import path, {dirname} from 'path';
-import reference from '../../rollup/build/tsc/style-spec/reference/latest';
+import reference from '../../rollup/build/tsc/src/style-spec/reference/latest';
 import packageJson from '../../package.json';
 import browserify from 'browserify';
 import {fileURLToPath} from 'url';
