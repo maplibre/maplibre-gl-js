@@ -3,9 +3,9 @@ name: Upload Benchmarks
 on:
   push:
     branches:
-      - main
-    tags: 
-      - v*
+      - 1.x
+    tags:
+      - v1*
 
 jobs:
   upload_benchmarks:
@@ -13,17 +13,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Use Node.js 14 x64
+      - name: Use Node.js 10 x64
         uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 10
           architecture: x64
 
       - name: Install
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Build benchmarks
-        run: npm run build-benchmarks
+        run: yarn run build-benchmarks
 
       - name: Copy benchmarks_generated.js
         run: |
@@ -32,19 +32,19 @@ jobs:
           cp bench/versions/benchmarks_generated.js.map tmp
 
       - name: Upload to GitHub Pages (main)
-        if: startsWith(github.ref, 'refs/heads/main')
+        if: startsWith(github.ref, 'refs/heads/1.x')
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: tmp
-          destination_dir: benchmarks/main
-      
+          destination_dir: benchmarks/1.x
+
       - name: Get tag
         if: startsWith(github.ref, 'refs/tags/v')
         run: echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Upload to GitHub Pages (tag)
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v1')
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
