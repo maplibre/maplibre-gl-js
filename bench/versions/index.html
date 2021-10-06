@@ -19,7 +19,7 @@
             params.getAll('compare').filter(Boolean) :
             fetch('https://api.github.com/repos/maplibre/maplibre-gl-js/releases/latest')
             .then(response => response.json())
-            .then(pkg => [pkg['tag_name'], 'main']))
+            .then(pkg => [pkg['tag_name'], '1.x']))
             .then(versions => {
                 return versions
                     .map(v => `https://maplibre.org/maplibre-gl-js/benchmarks/${v}/benchmarks_generated.js`)
