@@ -78,6 +78,7 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, tile:
    }
    FBOs[tile.tileSize].colorAttachment.set(tile.textures[stack].texture);
    context.bindFramebuffer.set(FBOs[tile.tileSize].framebuffer);
+   context.viewport.set([0, 0, size, size]);
 }
 
 export {

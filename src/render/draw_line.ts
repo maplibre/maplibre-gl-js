@@ -66,8 +66,6 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
         }
 
         const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
-        if (terrainCoord) painter.setTextureViewport(terrainCoord);
-
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, terrainCoord) :
             dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, terrainCoord) :
             gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length, terrainCoord) :

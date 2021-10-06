@@ -49,8 +49,6 @@ function renderHillshade(painter, coord, tile, layer, depthMode, stencilMode, co
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
     const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
-    if (terrainCoord) painter.setTextureViewport(terrainCoord);
-
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
         hillshadeUniformValues(painter, tile, layer, terrainCoord), layer.id, painter.rasterBoundsBuffer,
         painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);

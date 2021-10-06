@@ -327,18 +327,6 @@ class Painter {
         return [{[minTileZ]: StencilMode.disabled}, coords];
     }
 
-    // calculate the correct tiles-viewport when rendering to texture
-    setTextureViewport(tileID: OverscaledTileID) {
-        let x = 0, y = 0, size = this.style.terrainSourceCache.tileSize * this.style.terrainSourceCache.qualityFactor;
-        const z = Math.floor(this.transform.zoom), dz = tileID.canonical.z - z;
-        if (dz > 0) {
-            x = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
-            y = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-            size /= 1 << dz;
-        }
-        this.context.viewport.set([size * x, size * y, size, size]);
-    }
-
     colorModeForRenderPass(): Readonly<ColorMode> {
         const gl = this.context.gl;
         if (this._showOverdrawInspector) {

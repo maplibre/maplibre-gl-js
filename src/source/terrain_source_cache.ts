@@ -24,6 +24,7 @@ class TerrainSourceCache extends Evented {
     _source: RasterDEMTileSource;
     _sourceCache: SourceCache;
     _tiles: {[_: string]: Tile};
+    _renderableTiles: Array<string>;
     _loadQueue: Array<any>;
     _coordsFramebuffer: any;
     _fbo: any;
@@ -54,6 +55,7 @@ class TerrainSourceCache extends Evented {
         this._sourceCache = null;
         this._source = null;
         this._tiles = {};
+        this._renderableTiles = [];
         this._loadQueue = [];
         this._coordsFramebuffer = null;
         this._fbo = null;
@@ -175,8 +177,10 @@ class TerrainSourceCache extends Evented {
         transform.updateElevation();
         let outdated = {};
         for (let key in this._tiles) outdated[key] = true;
+        this._renderableTiles = [];
         // create tiles for current view
         for (const tileID of this.getRenderableTileIds(transform)) {
+            this._renderableTiles.push(tileID.key);
             delete(outdated[tileID.key]);
             if (this._tiles[tileID.key]) continue;
             // find parent source tile
@@ -184,17 +188,14 @@ class TerrainSourceCache extends Evented {
             const sourceTileID = this._sourceTileIDs[tileID.key] = tileID.overscaledZ > maxzoom ? tileID.scaledTo(maxzoom) : tileID;
             // create pos matrix in relation to source tile
             tileID.posMatrix = new Float64Array(16) as any;
+            mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
             const demMatrix = new Float64Array(16) as any;
             if (tileID.canonical.z == sourceTileID.canonical.z) {
-                mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
                 mat4.ortho(demMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
             } else {
                 const dz = tileID.canonical.z - sourceTileID.canonical.z;
                 const dx = tileID.canonical.x - (sourceTileID.canonical.x << dz);
                 const dy = tileID.canonical.y - (sourceTileID.canonical.y << dz);
-                const size = EXTENT >> dz
-                mat4.ortho(tileID.posMatrix, 0, size, 0, size, 0, 1);
-                mat4.translate(tileID.posMatrix, tileID.posMatrix, [-dx * size, -dy * size, 0]);
                 mat4.ortho(demMatrix, 0, EXTENT << dz, 0, EXTENT << dz, 0, 1);
                 mat4.translate(demMatrix, demMatrix, [dx * EXTENT, dy * EXTENT, 0]);
             }
@@ -275,15 +276,33 @@ class TerrainSourceCache extends Evented {
      */
     getTerrainCoords(tileID: OverscaledTileID): {[_: string]: OverscaledTileID} {
         const coords = {};
-        for (let key in this._tiles) {
+        for (let key of this._renderableTiles) {
             const _tileID = this._tiles[key].tileID;
-            // handle reparseOverscaled tilesources
-            if (_tileID.equals(tileID)
-                || _tileID.canonical.isChildOf(tileID.canonical)
-                || tileID.canonical.isChildOf(_tileID.canonical)
-            ) {
+            if (_tileID.equals(tileID)) {
                 const coord = tileID.clone();
-                coord.posMatrix = mat4.clone(_tileID.posMatrix);
+                coord.posMatrix = new Float64Array(16) as any;
+                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                coords[key] = coord;
+            } else if (_tileID.canonical.isChildOf(tileID.canonical)) {
+                const coord = tileID.clone();
+                coord.posMatrix = new Float64Array(16) as any;
+                const dz = _tileID.canonical.z - tileID.canonical.z;
+                const dx = _tileID.canonical.x - (_tileID.canonical.x >> dz << dz);
+                const dy = _tileID.canonical.y - (_tileID.canonical.y >> dz << dz);
+                const size = EXTENT >> dz;
+                mat4.ortho(coord.posMatrix, 0, size, 0, size, 0, 1);
+                mat4.translate(coord.posMatrix, coord.posMatrix, [-dx * size, -dy * size, 0]);
+                coords[key] = coord;
+            } else if (tileID.canonical.isChildOf(_tileID.canonical)) {
+                const coord = tileID.clone();
+                coord.posMatrix = new Float64Array(16) as any;
+                const dz = tileID.canonical.z - _tileID.canonical.z;
+                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+                const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+                const size = EXTENT >> dz;
+                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                mat4.translate(coord.posMatrix, coord.posMatrix, [dx * size, dy * size, 0]);
+                mat4.scale(coord.posMatrix, coord.posMatrix, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
                 coords[key] = coord;
             }
         }
@@ -314,10 +333,31 @@ class TerrainSourceCache extends Evented {
      * @returns {number}
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number=EXTENT): number {
-        if (!this.isEnabled()) return 0;
-        const maxzoom = this._sourceCache._source.maxzoom, shouldScale = tileID.overscaledZ > maxzoom;
-        const tile = this._sourceCache.getTileByID(shouldScale ? tileID.scaledTo(maxzoom).key : tileID.key);
-        let elevation = tile && tile.dem && x >= 0 && y >= 0 && x <= extent && y <= extent //FIXME-3D handle negative coordinates
+        if (!this.isEnabled()) return this.elevationOffset;
+        if (!(x >= 0 && x <= extent && y >= 0 && y <= extent)) return this.elevationOffset;
+        // convert tileID to tileID.overscaledZ level
+        let dz = tileID.overscaledZ - tileID.canonical.z;
+        if (dz > 0) {
+            const size = extent >> dz;
+            const tx = (tileID.canonical.x << dz) + Math.floor(x / size);
+            const ty = (tileID.canonical.y << dz) + Math.floor(y / size);
+            tileID = new OverscaledTileID(tileID.overscaledZ, tileID.wrap, tileID.overscaledZ, tx, ty);
+            x = (x % size) / size * extent;
+            y = (y % size) / size * extent;
+        }
+        // search for sourceTile
+        dz = tileID.overscaledZ - this._sourceCache._source.maxzoom;
+        if (dz > 0) {
+            const size = extent >> dz;
+            const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+            const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+            tileID = tileID.scaledTo(tileID.overscaledZ - dz);
+            x = dx * size + x / extent * size;
+            y = dy * size + y / extent * size;
+        }
+        const tile = this._sourceCache.getTileByID(tileID.key);
+        // get elevation from dem
+        let elevation = tile && tile.dem
             ? tile.dem.get(Math.floor(x / extent * tile.dem.dim), Math.floor(y / extent * tile.dem.dim))
             : 0;
         if (elevation > 8191) elevation = 0; // REMOVEME: this hack is for MTK data, because of false nodata values

@@ -97,8 +97,6 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
         }
 
         const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
-        if (terrainCoord) painter.setTextureViewport(terrainCoord);
-
         let posMatrix = terrainCoord ? terrainCoord.posMatrix : coord.posMatrix;
         const tileMatrix = painter.translatePosMatrix(posMatrix, tile,
             layer.paint.get('fill-translate'), layer.paint.get('fill-translate-anchor'));

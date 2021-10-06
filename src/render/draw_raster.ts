@@ -64,8 +64,6 @@ function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterSty
         }
 
         const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
-        if (terrainCoord) painter.setTextureViewport(terrainCoord);
-
         const posMatrix = terrainCoord ? terrainCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
         const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer);
 
