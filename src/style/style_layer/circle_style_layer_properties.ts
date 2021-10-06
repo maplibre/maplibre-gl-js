@@ -1,4 +1,4 @@
-// This file was generated. Edit build/generate-style-code.js, , see https://github.com/maplibre/maplibre-gl-js/issues/266.
+// This file is generated. Edit build/generate-style-code.ts, then run 'npm run codegen'.
 /* eslint-disable */
 
 import styleSpec from '../../style-spec/reference/latest';
@@ -10,7 +10,8 @@ import {
     CrossFadedDataDrivenProperty,
     CrossFadedProperty,
     ColorRampProperty,
-    PossiblyEvaluatedPropertyValue
+    PossiblyEvaluatedPropertyValue,
+    CrossFaded
 } from '../properties';
 
 import type Color from '../../style-spec/util/color';
@@ -18,14 +19,14 @@ import type Color from '../../style-spec/util/color';
 import type Formatted from '../../style-spec/expression/types/formatted';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
-import { StylePropertySpecification } from '../../style-spec/style-spec';
+import {StylePropertySpecification} from '../../style-spec/style-spec';
 
 export type LayoutProps = {
-  "circle-sort-key": DataDrivenProperty<number>
+    "circle-sort-key": DataDrivenProperty<number>,
 };
 
 export type LayoutPropsPossiblyEvaluated = {
-  "circle-sort-key": PossiblyEvaluatedPropertyValue<number>
+    "circle-sort-key": PossiblyEvaluatedPropertyValue<number>,
 };
 
 const layout: Properties<LayoutProps> = new Properties({
@@ -33,31 +34,31 @@ const layout: Properties<LayoutProps> = new Properties({
 });
 
 export type PaintProps = {
-  "circle-radius": DataDrivenProperty<number>,
-  "circle-color": DataDrivenProperty<Color>,
-  "circle-blur": DataDrivenProperty<number>,
-  "circle-opacity": DataDrivenProperty<number>,
-  "circle-translate": DataConstantProperty<[number, number]>,
-  "circle-translate-anchor": DataConstantProperty<"map" | "viewport">,
-  "circle-pitch-scale": DataConstantProperty<"map" | "viewport">,
-  "circle-pitch-alignment": DataConstantProperty<"map" | "viewport">,
-  "circle-stroke-width": DataDrivenProperty<number>,
-  "circle-stroke-color": DataDrivenProperty<Color>,
-  "circle-stroke-opacity": DataDrivenProperty<number>
+    "circle-radius": DataDrivenProperty<number>,
+    "circle-color": DataDrivenProperty<Color>,
+    "circle-blur": DataDrivenProperty<number>,
+    "circle-opacity": DataDrivenProperty<number>,
+    "circle-translate": DataConstantProperty<[number, number]>,
+    "circle-translate-anchor": DataConstantProperty<"map" | "viewport">,
+    "circle-pitch-scale": DataConstantProperty<"map" | "viewport">,
+    "circle-pitch-alignment": DataConstantProperty<"map" | "viewport">,
+    "circle-stroke-width": DataDrivenProperty<number>,
+    "circle-stroke-color": DataDrivenProperty<Color>,
+    "circle-stroke-opacity": DataDrivenProperty<number>,
 };
 
 export type PaintPropsPossiblyEvaluated = {
-  "circle-radius": PossiblyEvaluatedPropertyValue<number>,
-  "circle-color": PossiblyEvaluatedPropertyValue<Color>,
-  "circle-blur": PossiblyEvaluatedPropertyValue<number>,
-  "circle-opacity": PossiblyEvaluatedPropertyValue<number>,
-  "circle-translate": [number, number],
-  "circle-translate-anchor": "map" | "viewport",
-  "circle-pitch-scale": "map" | "viewport",
-  "circle-pitch-alignment": "map" | "viewport",
-  "circle-stroke-width": PossiblyEvaluatedPropertyValue<number>,
-  "circle-stroke-color": PossiblyEvaluatedPropertyValue<Color>,
-  "circle-stroke-opacity": PossiblyEvaluatedPropertyValue<number>
+    "circle-radius": PossiblyEvaluatedPropertyValue<number>,
+    "circle-color": PossiblyEvaluatedPropertyValue<Color>,
+    "circle-blur": PossiblyEvaluatedPropertyValue<number>,
+    "circle-opacity": PossiblyEvaluatedPropertyValue<number>,
+    "circle-translate": [number, number],
+    "circle-translate-anchor": "map" | "viewport",
+    "circle-pitch-scale": "map" | "viewport",
+    "circle-pitch-alignment": "map" | "viewport",
+    "circle-stroke-width": PossiblyEvaluatedPropertyValue<number>,
+    "circle-stroke-color": PossiblyEvaluatedPropertyValue<Color>,
+    "circle-stroke-opacity": PossiblyEvaluatedPropertyValue<number>,
 };
 
 const paint: Properties<PaintProps> = new Properties({
@@ -75,6 +76,6 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint, layout } as {
-  paint: Properties<PaintProps>,
-  layout: Properties<LayoutProps>
+    paint: Properties<PaintProps>,
+    layout: Properties<LayoutProps>
 });

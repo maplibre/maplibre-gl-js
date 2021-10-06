@@ -1,4 +1,4 @@
-// This file was generated. Edit build/generate-style-code.js, see https://github.com/maplibre/maplibre-gl-js/issues/266.
+// This file is generated. Edit build/generate-style-code.ts, then run 'npm run codegen'.
 /* eslint-disable */
 
 import styleSpec from '../../style-spec/reference/latest';
@@ -9,7 +9,9 @@ import {
     DataDrivenProperty,
     CrossFadedDataDrivenProperty,
     CrossFadedProperty,
-    ColorRampProperty
+    ColorRampProperty,
+    PossiblyEvaluatedPropertyValue,
+    CrossFaded
 } from '../properties';
 
 import type Color from '../../style-spec/util/color';
@@ -17,29 +19,29 @@ import type Color from '../../style-spec/util/color';
 import type Formatted from '../../style-spec/expression/types/formatted';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
-import { StylePropertySpecification } from '../../style-spec/style-spec';
+import {StylePropertySpecification} from '../../style-spec/style-spec';
 
 
 export type PaintProps = {
-  "raster-opacity": DataConstantProperty<number>,
-  "raster-hue-rotate": DataConstantProperty<number>,
-  "raster-brightness-min": DataConstantProperty<number>,
-  "raster-brightness-max": DataConstantProperty<number>,
-  "raster-saturation": DataConstantProperty<number>,
-  "raster-contrast": DataConstantProperty<number>,
-  "raster-resampling": DataConstantProperty<"linear" | "nearest">,
-  "raster-fade-duration": DataConstantProperty<number>
+    "raster-opacity": DataConstantProperty<number>,
+    "raster-hue-rotate": DataConstantProperty<number>,
+    "raster-brightness-min": DataConstantProperty<number>,
+    "raster-brightness-max": DataConstantProperty<number>,
+    "raster-saturation": DataConstantProperty<number>,
+    "raster-contrast": DataConstantProperty<number>,
+    "raster-resampling": DataConstantProperty<"linear" | "nearest">,
+    "raster-fade-duration": DataConstantProperty<number>,
 };
 
 export type PaintPropsPossiblyEvaluated = {
-  "raster-opacity": number,
-  "raster-hue-rotate": number,
-  "raster-brightness-min": number,
-  "raster-brightness-max": number,
-  "raster-saturation": number,
-  "raster-contrast": number,
-  "raster-resampling": "linear" | "nearest",
-  "raster-fade-duration": number
+    "raster-opacity": number,
+    "raster-hue-rotate": number,
+    "raster-brightness-min": number,
+    "raster-brightness-max": number,
+    "raster-saturation": number,
+    "raster-contrast": number,
+    "raster-resampling": "linear" | "nearest",
+    "raster-fade-duration": number,
 };
 
 const paint: Properties<PaintProps> = new Properties({
@@ -54,5 +56,5 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint } as {
-  paint: Properties<PaintProps>
+    paint: Properties<PaintProps>
 });

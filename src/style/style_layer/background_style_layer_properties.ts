@@ -1,4 +1,4 @@
-// This file was generated. Edit build/generate-style-code.js, see https://github.com/maplibre/maplibre-gl-js/issues/266.
+// This file is generated. Edit build/generate-style-code.ts, then run 'npm run codegen'.
 /* eslint-disable */
 
 import styleSpec from '../../style-spec/reference/latest';
@@ -19,19 +19,19 @@ import type Color from '../../style-spec/util/color';
 import type Formatted from '../../style-spec/expression/types/formatted';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
-import { StylePropertySpecification } from '../../style-spec/style-spec';
+import {StylePropertySpecification} from '../../style-spec/style-spec';
 
 
 export type PaintProps = {
-  "background-color": DataConstantProperty<Color>,
-  "background-pattern": CrossFadedProperty<ResolvedImage>,
-  "background-opacity": DataConstantProperty<number>
+    "background-color": DataConstantProperty<Color>,
+    "background-pattern": CrossFadedProperty<ResolvedImage>,
+    "background-opacity": DataConstantProperty<number>,
 };
 
 export type PaintPropsPossiblyEvaluated = {
-  "background-color": Color,
-  "background-pattern": CrossFaded<ResolvedImage>,
-  "background-opacity": number
+    "background-color": Color,
+    "background-pattern": CrossFaded<ResolvedImage>,
+    "background-opacity": number,
 };
 
 const paint: Properties<PaintProps> = new Properties({
@@ -40,9 +40,6 @@ const paint: Properties<PaintProps> = new Properties({
     "background-opacity": new DataConstantProperty(styleSpec["paint_background"]["background-opacity"] as any as StylePropertySpecification),
 });
 
-// Note: without adding the explicit type annotation, Flow infers weaker types
-// for these objects from their use in the constructor to StyleLayer, as
-// {layout?: Properties<...>, paint: Properties<...>}
 export default ({ paint } as {
-  paint: Properties<PaintProps>
+    paint: Properties<PaintProps>
 });

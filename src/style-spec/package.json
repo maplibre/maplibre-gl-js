@@ -14,6 +14,7 @@
   "license": "ISC",
   "main": "./dist/index.js",
   "module": "./dist/index.es.js",
+  "type": "module",
   "scripts": {
   },
   "repository": {
