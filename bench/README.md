@@ -17,7 +17,7 @@ By default, the benchmark page will compare the local branch against `main` and 
 Start the benchmark server
 
 ```bash
-MAPLIBRE_STYLES={YOUR STYLES HERE} yarn start
+MAPLIBRE_STYLES={YOUR STYLES HERE} npm run start-bench
 ```
 Note: `MAPLIBRE_STYLES` takes a comma-separated list of up to 3 MapLibre styles provided as a style URL or file system path (e.g. `path/to/style-a.json,path/to/style-b.json`)
 
