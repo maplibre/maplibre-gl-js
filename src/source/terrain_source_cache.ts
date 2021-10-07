@@ -105,18 +105,18 @@ class TerrainSourceCache extends Evented {
                 } else if (e.coord) {
                     // FIXME! mark only necessary tiles to rerender
                     for (let key in this._tiles) this.getTileByID(key).rerender = true;
-                  //   let dz = e.coord.canonical.z - transform.tileZoom;
-                  //   let x = e.coord.canonical.x, y = e.coord.canonical.y, wrap = e.coord.wrap, z = transform.tileZoom;
-                  //   const sourceTile = this.getSourceTile(dz > 0 ? new OverscaledTileID(z, wrap, z, x >> dz, y >> dz) : e.coord);
-                  //   const tile = sourceTile && this.getTileByID(sourceTile.tileID.key);
-                  //   if (tile) {
-                  //      tile.rerender = true;
-                  //   } else if (sourceTile) {
-                  //      for (let key in this._tiles) {
-                  //         let _tile = this.getTileByID(key);
-                  //         if (_tile.tileID.isChildOf(sourceTile.tileID)) _tile.rerender = true;
-                  //      }
-                  //   }
+                    //   let dz = e.coord.canonical.z - transform.tileZoom;
+                    //   let x = e.coord.canonical.x, y = e.coord.canonical.y, wrap = e.coord.wrap, z = transform.tileZoom;
+                    //   const sourceTile = this.getSourceTile(dz > 0 ? new OverscaledTileID(z, wrap, z, x >> dz, y >> dz) : e.coord);
+                    //   const tile = sourceTile && this.getTileByID(sourceTile.tileID.key);
+                    //   if (tile) {
+                    //      tile.rerender = true;
+                    //   } else if (sourceTile) {
+                    //      for (let key in this._tiles) {
+                    //         let _tile = this.getTileByID(key);
+                    //         if (_tile.tileID.isChildOf(sourceTile.tileID)) _tile.rerender = true;
+                    //      }
+                    //   }
                 }
             }
         });
@@ -484,7 +484,7 @@ class TerrainSourceCache extends Evented {
     }
 
     getDepthTexture(): Texture {
-       return  this._fboCoordsTexture || this._emptyDepthTexture;
+       return  this._fboDepthTexture || this._emptyDepthTexture;
     }
 }
 
