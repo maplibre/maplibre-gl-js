@@ -63,5 +63,4 @@ The following files are being used to generate release notes:
 `release-notes.md.ejs` Used for the generation as a template file
 
 
-### diff-tarball.js - ??
 ### generate-release-list.js - ??
