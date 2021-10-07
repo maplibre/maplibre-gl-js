@@ -20,7 +20,6 @@ Generates the various `style/style_layer/[layer type]_style_layer_properties.ts`
 Generates `style-spec/types.ts` based on the content of `v8.json`. This provides the type signatures for a style specification (sources, layers, etc.).
 <hr>
 
-### print-release-url.js			
 ### release-notes.js			
 ### release-notes.md.ejs
 ### rollup_plugin_minify_style_spec.js

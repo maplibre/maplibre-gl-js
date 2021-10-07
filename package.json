@@ -183,7 +183,7 @@
     "start-debug": "run-p watch-css watch-dev start-server",
     "start-tests": "run-p watch-css watch-query start-server",
     "start-bench": "run-p watch-css watch-dev watch-benchmarks start-server",
-    "start-release": "run-s build-prod-min build-css print-release-url start-server",
+    "start-release": "run-s build-prod-min build-css start-server",
     "diff-tarball": "node build/diff-tarball.js",
     "lint": "eslint --ext \".ts,.js,.html\" --ignore-path .gitignore src build debug/*.html bench",
     "lint-docs": "documentation lint src/index.ts",
@@ -201,7 +201,6 @@
     "test-expressions": "node --experimental-specifier-resolution=node test/expression.test.js",
     "test-cov": "nyc --reporter=text-summary --reporter=lcov --cache run-s test-unit test-expressions test-query test-render",
     "prepublishOnly": "run-s build-dev build-prod-min build-prod build-csp build-css build-style-spec test-build diff-tarball",
-    "print-release-url": "node build/print-release-url.js",
     "codegen": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-code.ts && node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-struct-arrays.ts && node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-spec.ts"
   },
   "files": [
