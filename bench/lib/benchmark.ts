@@ -10,10 +10,6 @@ export type Measurement = {
 };
 
 class Benchmark {
-    constructor() {
-        this._measureAsync = this._measureAsync.bind(this);
-    }
-
     /**
      * The `setup` method is intended to be overridden by subclasses. It will be called once, prior to
      * running any benchmark iterations, and may set state on `this` which the benchmark later accesses.
@@ -68,7 +64,7 @@ class Benchmark {
 
         const bench = this.bench();
         if (bench instanceof Promise) {
-            return bench.then(this._measureAsync);
+            return bench.then(() => this._measureAsync());
         } else {
             return this._measureSync();
         }
@@ -106,7 +102,7 @@ class Benchmark {
             return this._end();
         }
         this._start = performance.now();
-        return this._runAsync(this._iterationsPerMeasurement).then(this._measureAsync);
+        return this._runAsync(this._iterationsPerMeasurement).then(() => this._measureAsync());
     }
 
     private _runAsync(n: number): Promise<void> {
