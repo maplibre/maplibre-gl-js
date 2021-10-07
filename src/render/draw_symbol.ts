@@ -402,7 +402,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
         }
 
         context.activeTexture.set(gl.TEXTURE2);
-        gl.bindTexture(gl.TEXTURE_2D, painter.style.terrainSourceCache.getFramebuffer(painter, "depth").colorAttachment.get());
+        gl.bindTexture(gl.TEXTURE_2D, painter.style.terrainSourceCache.getDepthTexture().texture);
 
         if (state.isSDF) {
             const uniformValues = (state.uniformValues as any as UniformValues<SymbolSDFUniformsType>);

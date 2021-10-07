@@ -30,11 +30,11 @@ class TerrainSourceCache extends Evented {
     _fbo: any;
     _fboCoordsTexture: Texture;
     _fboDepthTexture: Texture;
+    _emptyDepthTexture: Texture;
     _mesh: any;
     _coordsIndex: Array<any>;
     _coordsTexture: Texture;
     _coordsTextureSize: number;
-    _coordsIndexTexture: Texture;
     _terrainTileCache: {[_: string]: string};
     _sourceTileIDs: {[_: string]: OverscaledTileID};
     _emptyDem: any;
@@ -78,9 +78,9 @@ class TerrainSourceCache extends Evented {
         mat4.ortho(this._emptyDemMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
 
         // create empty coordsIndexTexture
-        const image = new RGBAImage({width: 256, height: 1}, new Uint8Array(256 * 4));
+        const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4));
         const texture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
-        this._coordsIndexTexture = texture;
+        this._emptyDepthTexture = texture;
 
         // rerender corresponding tiles on source-tile updates
         style.on("data", e => {
@@ -379,8 +379,8 @@ class TerrainSourceCache extends Evented {
      * @returns {Framebuffer}
      */
     getFramebuffer(painter: Painter, texture: string): Framebuffer {
-        const width = this.isEnabled() ? painter.width / devicePixelRatio : 10;
-        const height = this.isEnabled() ? painter.height  / devicePixelRatio : 10;
+        const width = painter.width / devicePixelRatio;
+        const height = painter.height  / devicePixelRatio;
         if (this._fbo && (this._fbo.width != width || this._fbo.height != height)) {
             this._fbo.destroy();
             this._fboCoordsTexture.destroy();
@@ -481,6 +481,10 @@ class TerrainSourceCache extends Evented {
         let texture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
         texture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
         return this._coordsTexture = texture;
+    }
+
+    getDepthTexture(): Texture {
+       return  this._fboCoordsTexture || this._emptyDepthTexture;
     }
 }
 
