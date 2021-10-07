@@ -25,6 +25,7 @@
 - Fix warning due to strict comparison of SDF property in image sprite (#303)
 - Fix tile placeholder replacement to allow for placeholders to be in a URL more than once. (#348)
 - Fix type check for non dom environment. (#334)
+- Fix precision problem in patterns when overzoomed in OpenGL ES devices.
 
 ## 1.15.2
 
