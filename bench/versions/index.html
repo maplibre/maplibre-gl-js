@@ -28,7 +28,7 @@
                     const responseJson = await response.json();
                     versions = [responseJson['tag_name'], 'main'];
                 }
-                console.log(`Comapring versions: ${versions}`);
+                console.log(`Comparing versions: ${versions}`);
                 const versionsScripts = versions.map(v => `https://maplibre.org/maplibre-gl-js/benchmarks/${v}/benchmarks_generated.js`)
                     .concat('/bench/versions/benchmarks_generated.js');
                 for (const script of versionsScripts) {
