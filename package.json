@@ -162,8 +162,8 @@
     "./rollup/build/tsc/src/util/web_worker.js": "./build/web_worker_replacement.js"
   },
   "scripts": {
-    "build-glsl": "node rollup/copy-glsl-files.js ./rollup/build/tsc/src/shaders",
-    "build-glsl-min": "node rollup/copy-glsl-files.js ./rollup/build/tsc/src/shaders true",
+    "build-glsl": "node build/copy-glsl-files.js ./rollup/build/tsc/src/shaders",
+    "build-glsl-min": "node build/copy-glsl-files.js ./rollup/build/tsc/src/shaders true",
     "build-tsc": "tsc && npm run build-glsl",
     "build-tsc-min": "tsc && npm run build-glsl-min",
     "build-dev": "npm run build-tsc && rollup -c --environment BUILD:dev",
