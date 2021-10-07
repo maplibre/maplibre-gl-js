@@ -72,41 +72,24 @@ vec2 get_pattern_pos(const vec2 pixel_coord_upper, const vec2 pixel_coord_lower,
     return (tile_units_to_pixels * pos + offset) / pattern_size;
 }
 
-float hasBit(float value, int pos) {
-    return floor(mod(floor(value / pow(2.0, float(pos))), 2.0));
-}
+// methods for pack/unpack depth value to texture rgba
+// https://stackoverflow.com/questions/34963366/encode-floating-point-data-in-a-rgba-texture
+const highp vec4 bitSh = vec4(256. * 256. * 256., 256. * 256., 256., 1.);
+const highp vec4 bitShifts = vec4(1.) / bitSh;
 
-// unpack a RGBA value from the coords framebuffer into a vec2 in the range from 0 .. 8191
-vec2 unpackCoord(vec4 rgba) {
-    float r = floor(rgba.r * 255.0);
-    float g = floor(rgba.g * 255.0);
-    float b = floor(rgba.b * 255.0);
-    float x = r + hasBit(b, 4) * 256.0 + hasBit(b, 5) * 512.0 + hasBit(b, 6) * 1024.0 + hasBit(b, 7) * 2048.0;
-    float y = g + hasBit(b, 0) * 256.0 + hasBit(b, 1) * 512.0 + hasBit(b, 2) * 1024.0 + hasBit(b, 3) * 2048.0;
-    return vec2(x, y) * 8.0; // multiply by 8 is necesarry because the coords-texture has only 1024x1024 pixels.
+highp float unpack(highp vec4 color) {
+   return dot(color , bitShifts);
 }
 
 // calculate the visibility of a coordinate in terrain and return an opacity value.
 // if a coordinate is behind the terrain reduce its opacity
-float calculate_visibility(sampler2D u_coords, sampler2D u_coords_index, vec4 pos, vec2 tilePos) {
+float calculate_visibility(sampler2D u_depth, vec4 pos) {
     #ifdef TERRAIN3D
-        // get pixel from coords framebuffer
         vec3 frag = pos.xyz / pos.w;
-        vec4 coord_color = texture2D(u_coords, frag.xy * 0.5 + 0.5);
-        vec2 coord = unpackCoord(coord_color);
-        // ask coords_index for sub-regions.
-        // HINT: '1.0 - coord_color.a' is because coords-index is stored in reverse order
-        // because web-gl do not render pixels with zero opacity
-        vec4 coords_index = texture2D(u_coords_index, vec2(1.0 - coord_color.a, 0.0));
-        float q = 8192.0 / pow(2.0, floor(coords_index.a * 255.0));
-        vec2 xy = coords_index.xy * 255.0 * q + coord / 8192.0 * q;
-        // distance is in vector-tile coordinate-space. e.g. 0 .. 8191
-        // e.g. the distance of the pos.coordinate to the tile.coordinate on the same screen-pixel.
-        float distance = length(tilePos - xy);
-        if (distance < 100.0) return 1.0; // assume fully visible on terrain
-        return 0.2; // opacity 0.2 behind terrain
-        // FIXME-3D: to get a correct fadeout effect it is necesarry to grab more
-        // pixels around pos to find the exact screen-pixel distance behind the terrain.
+        vec4 rgba = texture2D(u_depth, frag.xy * 0.5 + 0.5);
+        highp float depth = unpack(rgba);
+        if ((depth + 0.001) < frag.z) return 0.2;
+        return 1.0;
     #else
         return 1.0;
     #endif

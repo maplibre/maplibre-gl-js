@@ -28,6 +28,8 @@ class TerrainSourceCache extends Evented {
     _loadQueue: Array<any>;
     _coordsFramebuffer: any;
     _fbo: any;
+    _fboCoordsTexture: Texture;
+    _fboDepthTexture: Texture;
     _mesh: any;
     _coordsIndex: Array<any>;
     _coordsTexture: Texture;
@@ -52,14 +54,9 @@ class TerrainSourceCache extends Evented {
     constructor(style: Style) {
         super();
         this._style = style;
-        this._sourceCache = null;
-        this._source = null;
         this._tiles = {};
         this._renderableTiles = [];
         this._loadQueue = [];
-        this._coordsFramebuffer = null;
-        this._fbo = null;
-        this._mesh = null;
         this._terrainTileCache = {};
         this._sourceTileIDs = {};
         this._coordsIndex = [];
@@ -381,21 +378,30 @@ class TerrainSourceCache extends Evented {
      * @param {Painter} painter
      * @returns {Framebuffer}
      */
-    getCoordsFramebuffer(painter: Painter): Framebuffer {
+    getFramebuffer(painter: Painter, texture: string): Framebuffer {
         const width = this.isEnabled() ? painter.width / devicePixelRatio : 10;
         const height = this.isEnabled() ? painter.height  / devicePixelRatio : 10;
         if (this._fbo && (this._fbo.width != width || this._fbo.height != height)) {
             this._fbo.destroy();
+            this._fboCoordsTexture.destroy();
+            this._fboDepthTexture.destroy();
             delete this._fbo;
+            delete this._fboDepthTexture;
+            delete this._fboCoordsTexture;
+        }
+        if (!this._fboCoordsTexture) {
+            this._fboCoordsTexture = new Texture(painter.context, { width: width, height: height, data: null }, painter.context.gl.RGBA, {premultiply: false});
+            this._fboCoordsTexture.bind(painter.context.gl.NEAREST, painter.context.gl.CLAMP_TO_EDGE);
+        }
+        if (!this._fboDepthTexture) {
+            this._fboDepthTexture = new Texture(painter.context, { width: width, height: height, data: null }, painter.context.gl.RGBA, {premultiply: false});
+            this._fboDepthTexture.bind(painter.context.gl.NEAREST, painter.context.gl.CLAMP_TO_EDGE);
         }
         if (! this._fbo) {
-            painter.context.activeTexture.set(painter.context.gl.TEXTURE0);
-            let texture = new Texture(painter.context, { width: width, height: height, data: null }, painter.context.gl.RGBA, {premultiply: false});
-            texture.bind(painter.context.gl.NEAREST, painter.context.gl.CLAMP_TO_EDGE);
             this._fbo = painter.context.createFramebuffer(width, height, true);
-            this._fbo.colorAttachment.set(texture.texture);
             this._fbo.depthAttachment.set(painter.context.createRenderbuffer(painter.context.gl.DEPTH_COMPONENT16, width, height));
         }
+        this._fbo.colorAttachment.set(texture == "coords" ? this._fboCoordsTexture.texture : this._fboDepthTexture.texture);
         return this._fbo;
     }
 
@@ -475,28 +481,6 @@ class TerrainSourceCache extends Evented {
         let texture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
         texture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
         return this._coordsTexture = texture;
-    }
-
-    /**
-     * create texture, with informations about the coords-index
-     * e.g. for each coords tile, size & quadrant
-     * @param {Context} context
-     * @returns {Texture}
-     */
-    updateCoordsIndexTexture(context: Context) {
-        const data = new Uint8Array(256 * 4);
-        for (let i=0; i<this._coordsIndex.length * 4; i+=4) {
-            const tile = this.getTileByID(this._coordsIndex[i/4]);
-            if (!tile) continue;
-            const dz = Math.max(0, tile.tileID.canonical.z - this._sourceCache._source.maxzoom);
-            data[i + 0] = tile.tileID.canonical.x - (tile.tileID.canonical.x >> dz << dz);
-            data[i + 1] = tile.tileID.canonical.y - (tile.tileID.canonical.y >> dz << dz);
-            data[i + 2] = tile.tileID.canonical.z;
-            data[i + 3] = dz;
-        }
-        const image = new RGBAImage({width: 256, height: 1}, data);
-        this._coordsIndexTexture.update(image, {premultiply: false});
-        this._coordsIndexTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
     }
 }
 

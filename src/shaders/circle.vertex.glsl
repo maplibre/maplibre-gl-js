@@ -4,8 +4,7 @@ uniform bool u_pitch_with_map;
 uniform vec2 u_extrude_scale;
 uniform lowp float u_device_pixel_ratio;
 uniform highp float u_camera_to_center_distance;
-uniform highp sampler2D u_coords;
-uniform highp sampler2D u_coords_index;
+uniform highp sampler2D u_depth;
 uniform lowp float u_terrain_exaggeration;
 
 attribute vec2 a_pos;
@@ -37,7 +36,7 @@ void main(void) {
     // multiply a_pos by 0.5, since we had it * 2 in order to sneak
     // in extrusion data
     vec2 circle_center = floor(a_pos * 0.5);
-    v_visibility = calculate_visibility(u_coords, u_coords_index, u_matrix * vec4(circle_center, a_ele * u_terrain_exaggeration, 1.0), circle_center);
+    v_visibility = calculate_visibility(u_depth, u_matrix * vec4(circle_center, a_ele * u_terrain_exaggeration, 1.0));
 
     if (u_pitch_with_map) {
         vec2 corner_position = circle_center;

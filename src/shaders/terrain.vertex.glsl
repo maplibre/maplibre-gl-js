@@ -8,7 +8,7 @@ uniform float u_terrain_exaggeration;
 uniform float u_terrain_offset;
 
 varying vec2 v_texture_pos;
-varying vec2 v_terrain_pos;
+varying float v_depth;
 
 float getElevation(vec2 coord) {
     vec4 rgb = (texture2D(u_terrain, coord) * 255.0) * u_terrain_unpack;
@@ -18,6 +18,7 @@ float getElevation(vec2 coord) {
 
 void main() {
     v_texture_pos = a_pos / 8192.0;
-    v_terrain_pos = (u_terrain_matrix * vec4(a_pos, 0.0, 1.0)).xy * 0.5 + 0.5;
-    gl_Position = u_matrix * vec4(a_pos, getElevation(v_terrain_pos), 1.0);
+    vec2 terrain_pos = (u_terrain_matrix * vec4(a_pos, 0.0, 1.0)).xy * 0.5 + 0.5;
+    gl_Position = u_matrix * vec4(a_pos, getElevation(terrain_pos), 1.0);
+    v_depth = gl_Position.z / gl_Position.w;
 }

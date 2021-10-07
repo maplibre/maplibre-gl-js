@@ -29,8 +29,7 @@ uniform highp float u_camera_to_center_distance;
 uniform float u_fade_change;
 uniform vec2 u_texsize;
 uniform vec2 u_texsize_icon;
-uniform highp sampler2D u_coords;
-uniform highp sampler2D u_coords_index;
+uniform highp sampler2D u_depth;
 uniform lowp float u_terrain_exaggeration;
 
 varying vec4 v_data0;
@@ -112,7 +111,7 @@ void main() {
     float gamma_scale = gl_Position.w;
 
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
-    float visibility = calculate_visibility(u_coords, u_coords_index, projectedPoint, a_pos);
+    float visibility = calculate_visibility(u_depth, projectedPoint);
     float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
     float interpolated_fade_opacity = max(0.0, min(visibility, fade_opacity[0] + fade_change));
 

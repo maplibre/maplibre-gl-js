@@ -593,7 +593,7 @@ class Transform {
         const rgba = new Uint8Array(4);
         const painter = this.terrainSourceCache._style.map.painter, context = painter.context, gl = context.gl;
         // grab coordinate pixel from coordinates framebuffer
-        context.bindFramebuffer.set(this.terrainSourceCache.getCoordsFramebuffer(painter).framebuffer);
+        context.bindFramebuffer.set(this.terrainSourceCache.getFramebuffer(painter, "coords").framebuffer);
         gl.readPixels(p.x, painter.height / devicePixelRatio - p.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
         context.bindFramebuffer.set(null);
         // decode coordinates (encoding see terrain-source-cache)
