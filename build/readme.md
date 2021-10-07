@@ -61,6 +61,3 @@ The following files are being used to generate release notes:
 `release-notes.js` Used to generate release notes when releasing a new version
 
 `release-notes.md.ejs` Used for the generation as a template file
-
-
-### generate-release-list.js - ??
