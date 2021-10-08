@@ -1,10 +1,9 @@
-import {test} from '../../util/test';
-import CollisionFeature from '../../../rollup/build/tsc/src/symbol/collision_feature';
-import Anchor from '../../../rollup/build/tsc/src/symbol/anchor';
-import Point from '../../../rollup/build/tsc/src/util/point';
-import {CollisionBoxArray} from '../../../rollup/build/tsc/src/data/array_types';
+import CollisionFeature from './collision_feature';
+import Anchor from './anchor';
+import Point from '../util/point';
+import {CollisionBoxArray} from '../data/array_types';
 
-test('CollisionFeature', (t) => {
+describe('CollisionFeature', () => {
 
     const collisionBoxArray = new CollisionBoxArray();
 
@@ -15,32 +14,30 @@ test('CollisionFeature', (t) => {
         bottom: 10
     };
 
-    test('point label', (t) => {
+    test('point label', () => {
         const point = new Point(500, 0);
         const anchor = new Anchor(point.x, point.y, 0, undefined);
 
-        const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, 0, false);
-        t.notOk(cf.circleDiameter);
-        t.equal(cf.boxEndIndex - cf.boxStartIndex, 1);
+        const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, 0, false, 0);
+        expect(cf.circleDiameter).toBeFalsy();
+        expect(cf.boxEndIndex - cf.boxStartIndex).toBe(1);
 
         const box = collisionBoxArray.get(cf.boxStartIndex);
-        t.equal(box.x1, -50);
-        t.equal(box.x2, 50);
-        t.equal(box.y1, -10);
-        t.equal(box.y2, 10);
-        t.end();
+        expect(box.x1).toBe(-50);
+        expect(box.x2).toBe(50);
+        expect(box.y1).toBe(-10);
+        expect(box.y2).toBe(10);
     });
 
-    test('Compute line height for runtime collision circles (line label)', (t) => {
+    test('Compute line height for runtime collision circles (line label)', () => {
         const anchor = new Anchor(505, 95, 0, 1);
-        const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, 0, true);
-        t.ok(cf.circleDiameter);
-        t.equal(cf.circleDiameter, shapedText.bottom - shapedText.top);
-        t.equal(cf.boxEndIndex - cf.boxStartIndex, 0);
-        t.end();
+        const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, 0, true, 0);
+        expect(cf.circleDiameter).toBeTruthy();
+        expect(cf.circleDiameter).toBe(shapedText.bottom - shapedText.top);
+        expect(cf.boxEndIndex - cf.boxStartIndex).toBe(0);
     });
 
-    test('Collision circle diameter is not computed for features with zero height', (t) => {
+    test('Collision circle diameter is not computed for features with zero height', () => {
         const shapedText = {
             left: -50,
             top: -10,
@@ -49,13 +46,12 @@ test('CollisionFeature', (t) => {
         };
 
         const anchor = new Anchor(505, 95, 0, 1);
-        const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, 0, true);
-        t.equal(cf.boxEndIndex - cf.boxStartIndex, 0);
-        t.notOk(cf.circleDiameter);
-        t.end();
+        const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, 0, true, 0);
+        expect(cf.boxEndIndex - cf.boxStartIndex).toBe(0);
+        expect(cf.circleDiameter).toBeFalsy();
     });
 
-    test('Collision circle diameter is not computed for features with negative height', (t) => {
+    test('Collision circle diameter is not computed for features with negative height', () => {
         const shapedText = {
             left: -50,
             top: 10,
@@ -64,13 +60,12 @@ test('CollisionFeature', (t) => {
         };
 
         const anchor = new Anchor(505, 95, 0, 1);
-        const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, 0, true);
-        t.equal(cf.boxEndIndex - cf.boxStartIndex, 0);
-        t.notOk(cf.circleDiameter);
-        t.end();
+        const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, 0, true, 0);
+        expect(cf.boxEndIndex - cf.boxStartIndex).toBe(0);
+        expect(cf.circleDiameter).toBeFalsy();
     });
 
-    test('Use minimum collision circle diameter', (t) => {
+    test('Use minimum collision circle diameter', () => {
         const shapedText = {
             left: -50,
             top: 10,
@@ -79,11 +74,8 @@ test('CollisionFeature', (t) => {
         };
 
         const anchor = new Anchor(505, 95, 0, 1);
-        const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, 0, true);
-        t.equal(cf.boxEndIndex - cf.boxStartIndex, 0);
-        t.equal(cf.circleDiameter, 10);
-        t.end();
+        const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, 0, true, 0);
+        expect(cf.boxEndIndex - cf.boxStartIndex).toBe(0);
+        expect(cf.circleDiameter).toBe(10);
     });
-
-    t.end();
 });
