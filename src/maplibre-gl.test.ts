@@ -1,11 +1,7 @@
-import '../stub_loader';
-import {test} from '../util/test';
-import mapboxgl from '../../rollup/build/tsc/src';
+import mapboxgl from '.';
 
-test('mapboxgl', (t) => {
-    t.test('workerCount', (t) => {
-        t.ok(typeof mapboxgl.workerCount === 'number');
-        t.end();
+describe('mapboxgl', () => {
+    test('workerCount', () => {
+        expect(typeof mapboxgl.workerCount === 'number').toBeTruthy();
     });
-    t.end();
 });
