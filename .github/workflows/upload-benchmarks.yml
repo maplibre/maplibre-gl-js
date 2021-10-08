@@ -5,7 +5,7 @@ on:
     branches:
       - 1.x
     tags:
-      - v1*
+      - v1.*
 
 jobs:
   upload_benchmarks:
@@ -44,7 +44,7 @@ jobs:
         run: echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Upload to GitHub Pages (tag)
-        if: startsWith(github.ref, 'refs/tags/v1')
+        if: startsWith(github.ref, 'refs/tags/v1.')
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
