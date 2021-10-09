@@ -2,16 +2,18 @@ import expect from 'expect';
 import EdgeInsets from '../geo/edge_insets';
 
 describe('EdgeInsets', () => {
-    test('#constructor', () => {
+    describe('#constructor', () => {
         expect(new EdgeInsets() instanceof EdgeInsets).toBeTruthy();
-        expect(() => {
+
+        const t1 = () => {
             new EdgeInsets(NaN, 10);
-        }).toThrowError('Invalid input EdgeInsets(NaN, 10) gets detected and error is thrown');
-        expect(() => {
+        };
+        expect(t1).toThrow('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
+
+        const t2 = () => {
             new EdgeInsets(-10, 10, 20, 10);
-        }).toThrowError(
-            'Invalid input EdgeInsets(-10, 10, 20, 10) gets detected and error is thrown'
-        );
+        };
+        expect(t2).toThrow('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
 
         test('valid initialization', () => {
             const top = 10;
@@ -27,7 +29,7 @@ describe('EdgeInsets', () => {
         });
     });
 
-    test('#getCenter', () => {
+    describe('#getCenter', () => {
         test('valid input', () => {
             const inset = new EdgeInsets(10, 15, 50, 10);
             const center = inset.getCenter(600, 400);
@@ -44,7 +46,7 @@ describe('EdgeInsets', () => {
         });
     });
 
-    test('#interpolate', () => {
+    describe('#interpolate', () => {
         test('it works', () => {
             const inset1 = new EdgeInsets(10, 15, 50, 10);
             const inset2 = new EdgeInsets(20, 30, 100, 10);
