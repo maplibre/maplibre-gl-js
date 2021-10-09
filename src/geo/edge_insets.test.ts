@@ -60,21 +60,6 @@ describe('EdgeInsets', () => {
             expect(inset3.left).toBe(75);
             expect(inset3.right).toBe(10);
         });
-
-        test('it retains insets that dont have new parameters passed in', () => {
-            const inset = new EdgeInsets(10, 15, 50, 10);
-            const target = {
-                top: 20,
-                bottom: inset.bottom,
-                left: inset.left,
-                right: inset.right
-            };
-            inset.interpolate(inset, target, 0.5);
-            expect(inset.top).toBe(15);
-            expect(inset.bottom).toBe(15);
-            expect(inset.left).toBe(50);
-            expect(inset.right).toBe(10);
-        });
     });
 
     test('#equals', () => {
