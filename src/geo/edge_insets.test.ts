@@ -51,6 +51,7 @@ describe('EdgeInsets', () => {
             const inset1 = new EdgeInsets(10, 15, 50, 10);
             const inset2 = new EdgeInsets(20, 30, 100, 10);
             const inset3 = inset1.interpolate(inset1, inset2, 0.5);
+
             // inset1 is mutated in-place
             expect(inset3).toBe(inset1);
 
