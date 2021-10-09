@@ -58,7 +58,7 @@ class Actor {
      */
     send(
       type: string,
-      data: unknown,
+      data: any,
       callback?: Function | null,
       targetMapId?: string | null,
       mustQueue: boolean = false
