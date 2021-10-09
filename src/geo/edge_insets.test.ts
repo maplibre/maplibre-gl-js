@@ -3,17 +3,21 @@ import EdgeInsets from '../geo/edge_insets';
 
 describe('EdgeInsets', () => {
     describe('#constructor', () => {
-        expect(new EdgeInsets() instanceof EdgeInsets).toBeTruthy();
+        test('type', () => {
+            expect(new EdgeInsets() instanceof EdgeInsets).toBeTruthy();
+        });
 
-        const t1 = () => {
-            new EdgeInsets(NaN, 10);
-        };
-        expect(t1).toThrow('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
+        test('invalid initialization', () => {
+            const t1 = () => {
+                new EdgeInsets(NaN, 10);
+            };
+            expect(t1).toThrow('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
 
-        const t2 = () => {
-            new EdgeInsets(-10, 10, 20, 10);
-        };
-        expect(t2).toThrow('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
+            const t2 = () => {
+                new EdgeInsets(-10, 10, 20, 10);
+            };
+            expect(t2).toThrow('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
+        });
 
         test('valid initialization', () => {
             const top = 10;
@@ -40,6 +44,7 @@ describe('EdgeInsets', () => {
         test('center clamping', () => {
             const inset = new EdgeInsets(300, 200, 500, 200);
             const center = inset.getCenter(600, 400);
+
             // Midpoint of the overlap when padding overlaps
             expect(center.x).toBe(450);
             expect(center.y).toBe(250);
@@ -60,6 +65,7 @@ describe('EdgeInsets', () => {
             expect(inset3.left).toBe(75);
             expect(inset3.right).toBe(10);
         });
+
     });
 
     test('#equals', () => {
