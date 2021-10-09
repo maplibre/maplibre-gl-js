@@ -4,7 +4,6 @@ import {Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import {stub as sinonStub} from 'sinon';
 
-import type Map from '../ui/map';
 import type Dispatcher from '../util/dispatcher';
 
 function createSource(options?) {
@@ -40,6 +39,11 @@ class StubMap extends Evented {
 }
 
 describe('CanvasSource', () => {
+    let map;
+    beforeEach(() => {
+        map = new StubMap();
+    });
+
     test('constructor', () => {
         const source = createSource();
 
@@ -53,7 +57,7 @@ describe('CanvasSource', () => {
             }
         });
 
-        source.onAdd(new StubMap() as Map);
+        source.onAdd(map);
     });
 
     test('self-validates', () => {
@@ -93,25 +97,23 @@ describe('CanvasSource', () => {
             }
         });
 
-        source.onAdd(new StubMap() as Map);
+        source.onAdd(map);
     });
 
     test('rerenders if animated', () => {
         const source = createSource();
-        const map = new StubMap();
 
         map.on('rerender', () => {
             expect(true).toBeTruthy();
         });
 
-        source.onAdd(map as Map);
+        source.onAdd(map);
     });
 
     test('can be static', () => {
         const source = createSource({
             animate: false
         });
-        const map = new StubMap();
 
         map.on('rerender', () => {
             expect(true).toBeFalsy();
@@ -123,14 +125,13 @@ describe('CanvasSource', () => {
             }
         });
 
-        source.onAdd(map as Map);
+        source.onAdd(map);
     });
 
     test('onRemove stops animation', () => {
         const source = createSource();
-        const map = new StubMap();
 
-        source.onAdd(map as Map);
+        source.onAdd(map);
 
         expect(source.hasTransition()).toBe(true);
 
@@ -138,7 +139,7 @@ describe('CanvasSource', () => {
 
         expect(source.hasTransition()).toBe(false);
 
-        source.onAdd(map as Map);
+        source.onAdd(map);
 
         expect(source.hasTransition()).toBe(true);
 
@@ -146,9 +147,8 @@ describe('CanvasSource', () => {
 
     test('play and pause animation', () => {
         const source = createSource();
-        const map = new StubMap();
 
-        source.onAdd(map as Map);
+        source.onAdd(map);
 
         expect(source.hasTransition()).toBe(true);
 
