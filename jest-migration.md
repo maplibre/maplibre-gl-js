@@ -32,20 +32,11 @@ jest-codemods --force src/symbol/anchor.test.ts
 > Yes, use the globals provided by Jest (recommended)
 ```
 
-Manually edit `src/symbol/anchor.test.ts`:
+Run our custom codemods script with:
 
-```diff
--import {test} from '../../util/test';
--import Anchor from '../../../rollup/build/tsc/src/symbol/anchor';
-+import Anchor from './anchor';
 ```
-
-Search and replace:
-
-* `\ntest` -> `\ndescribe`
-* `t.test` -> `test`
-* `\(t\)` -> `()`
-* `t.end\(\);` -> ` `
+node codemods.js src/**/*test.ts
+```
 
 Fix remaining typescript errors by hand.
 
@@ -67,3 +58,7 @@ Finish:
 git add src/symbol/anchor.test.ts
 git commit -m "Migrate symbol/anchor.test.js"
 ```
+
+## After the migration to jest
+
+Once we have migrated all tests to jest we should remove the helper script `codemods.js` and get rid of `replace-in-file` in `package.json`.
