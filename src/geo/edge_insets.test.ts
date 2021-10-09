@@ -74,7 +74,6 @@ describe('EdgeInsets', () => {
             expect(inset.left).toBe(50);
             expect(inset.right).toBe(10);
         });
-
     });
 
     test('#equals', () => {
@@ -91,5 +90,4 @@ describe('EdgeInsets', () => {
         expect(inset2 === inset1).toBeFalsy();
         expect(inset1.equals(inset2)).toBeTruthy();
     });
-
 });
