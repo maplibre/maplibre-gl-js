@@ -631,7 +631,7 @@ test('Style#addSource', (t) => {
             style.addSource('source-id', source);
             t.throws(() => {
                 style.addSource('source-id', source);
-            }, /There is already a source with this ID/);
+            }, /Source "source-id" already exists./);
             t.end();
         });
     });
@@ -1100,7 +1100,7 @@ test('Style#addLayer', (t) => {
 
         style.on('style.load', () => {
             style.on('error', (error) => {
-                t.match(error.error, /does not exist on this map/);
+                t.match(error.error, /Cannot add layer "c" before non-existing layer "z"./);
                 t.end();
             });
             style.addLayer(layer, 'z');
@@ -1190,7 +1190,7 @@ test('Style#removeLayer', (t) => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                t.match(error.message, /does not exist in the map\'s style and cannot be removed/);
+                t.match(error.message, /Cannot remove non-existing layer "background"./);
                 t.end();
             });
             style.removeLayer('background');
@@ -1687,7 +1687,7 @@ test('Style#setFilter', (t) => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                t.match(error.message, /does not exist in the map\'s style and cannot be filtered/);
+                t.match(error.message, /Cannot filter non-existing layer "non-existant"./);
                 t.end();
             });
             style.setFilter('non-existant', ['==', 'id', 1]);
@@ -1769,7 +1769,7 @@ test('Style#setLayerZoomRange', (t) => {
         const style = createStyle();
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                t.match(error.message, /does not exist in the map\'s style and cannot have zoom extent/);
+                t.match(error.message, /Cannot set the zoom range of non-existing layer "non-existant"./);
                 t.end();
             });
             style.setLayerZoomRange('non-existant', 5, 12);
