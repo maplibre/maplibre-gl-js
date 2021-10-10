@@ -3,11 +3,13 @@ import LngLat from '../geo/lng_lat';
 describe('LngLat', () => {
     test('#constructor', () => {
         expect(new LngLat(0, 0) instanceof LngLat).toBeTruthy();
+
         const t1 = () => {
             /*eslint no-new: 0*/
             new LngLat(0, -91);
         };
         expect(t1).toThrow('Invalid LngLat latitude value: must be between -90 and 90');
+
         const t2 = () => {
             /*eslint no-new: 0*/
             new LngLat(0, 91);
@@ -72,5 +74,4 @@ describe('LngLat', () => {
         );
         expect(new LngLat(-73.9749, 40.7736).toBounds().toArray()).toEqual([[-73.9749, 40.7736], [-73.9749, 40.7736]]);
     });
-
 });
