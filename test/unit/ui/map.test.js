@@ -1479,7 +1479,7 @@ test('Map', (t) => {
 
             map.on('style.load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /Cannot get style of non-existing layer "non-existant"./);
+                    t.match(error.message, /Cannot style non-existing layer "non-existant"./);
                     t.end();
                 });
                 map.setPaintProperty('non-existant', 'background-color', 'red');
