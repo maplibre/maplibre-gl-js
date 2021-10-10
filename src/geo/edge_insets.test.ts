@@ -3,7 +3,7 @@ import EdgeInsets from '../geo/edge_insets';
 
 describe('EdgeInsets', () => {
     describe('#constructor', () => {
-        test('type', () => {
+        test('creates an object with default values', () => {
             expect(new EdgeInsets() instanceof EdgeInsets).toBeTruthy();
         });
 
