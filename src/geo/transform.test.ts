@@ -1,93 +1,86 @@
-import {test} from '../../util/test';
-import Point from '../../../rollup/build/tsc/src/util/point';
-import Transform from '../../../rollup/build/tsc/src/geo/transform';
-import LngLat from '../../../rollup/build/tsc/src/geo/lng_lat';
-import {OverscaledTileID, CanonicalTileID} from '../../../rollup/build/tsc/src/source/tile_id';
+import Point from '../util/point';
+import Transform from '../geo/transform';
+import LngLat from '../geo/lng_lat';
+import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../util/fixed';
 
-test('transform', (t) => {
+describe('transform', () => {
 
-    t.test('creates a transform', (t) => {
+    test('creates a transform', () => {
         const transform = new Transform();
         transform.resize(500, 500);
-        t.equal(transform.unmodified, true);
-        t.equal(transform.maxValidLatitude, 85.051129);
-        t.equal(transform.tileSize, 512, 'tileSize');
-        t.equal(transform.worldSize, 512, 'worldSize');
-        t.equal(transform.width, 500, 'width');
-        t.equal(transform.minZoom, 0, 'minZoom');
-        t.equal(transform.minPitch, 0, 'minPitch');
-        t.equal(transform.bearing, 0, 'bearing');
-        t.equal(transform.bearing = 1, 1, 'set bearing');
-        t.equal(transform.bearing, 1, 'bearing');
-        t.equal(transform.bearing = 0, 0, 'set bearing');
-        t.equal(transform.unmodified, false);
-        t.equal(transform.minZoom = 10, 10);
-        t.equal(transform.maxZoom = 10, 10);
-        t.equal(transform.minZoom, 10);
-        t.deepEqual(transform.center, {lng: 0, lat: 0});
-        t.equal(transform.maxZoom, 10);
-        t.equal(transform.minPitch = 10, 10);
-        t.equal(transform.maxPitch = 10, 10);
-        t.equal(transform.size.equals(new Point(500, 500)), true);
-        t.equal(transform.centerPoint.equals(new Point(250, 250)), true);
-        t.equal(transform.scaleZoom(0), -Infinity);
-        t.equal(transform.scaleZoom(10), 3.3219280948873626);
-        t.deepEqual(transform.point, new Point(262144, 262144));
-        t.equal(transform.height, 500);
-        t.deepEqual(fixedLngLat(transform.pointLocation(new Point(250, 250))), {lng: 0, lat: 0});
-        t.deepEqual(fixedCoord(transform.pointCoordinate(new Point(250, 250))), {x: 0.5, y: 0.5, z: 0});
-        t.deepEqual(transform.locationPoint(new LngLat(0, 0)), {x: 250, y: 250});
-        t.deepEqual(transform.locationCoordinate(new LngLat(0, 0)), {x: 0.5, y: 0.5, z: 0});
-        t.end();
+        expect(transform.unmodified).toBe(true);
+        expect(transform.maxValidLatitude).toBe(85.051129);
+        expect(transform.tileSize).toBe(512);
+        expect(transform.worldSize).toBe(512);
+        expect(transform.width).toBe(500);
+        expect(transform.minZoom).toBe(0);
+        expect(transform.minPitch).toBe(0);
+        expect(transform.bearing).toBe(0);
+        expect(transform.bearing = 1).toBe(1);
+        expect(transform.bearing).toBe(1);
+        expect(transform.bearing = 0).toBe(0);
+        expect(transform.unmodified).toBe(false);
+        expect(transform.minZoom = 10).toBe(10);
+        expect(transform.maxZoom = 10).toBe(10);
+        expect(transform.minZoom).toBe(10);
+        expect(transform.center).toEqual({lng: 0, lat: 0});
+        expect(transform.maxZoom).toBe(10);
+        expect(transform.minPitch = 10).toBe(10);
+        expect(transform.maxPitch = 10).toBe(10);
+        expect(transform.size.equals(new Point(500, 500))).toBe(true);
+        expect(transform.centerPoint.equals(new Point(250, 250))).toBe(true);
+        expect(transform.scaleZoom(0)).toBe(-Infinity);
+        expect(transform.scaleZoom(10)).toBe(3.3219280948873626);
+        expect(transform.point).toEqual(new Point(262144, 262144));
+        expect(transform.height).toBe(500);
+        expect(fixedLngLat(transform.pointLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
+        expect(fixedCoord(transform.pointCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
+        expect(transform.locationPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});
+        expect(transform.locationCoordinate(new LngLat(0, 0))).toEqual({x: 0.5, y: 0.5, z: 0});
     });
 
-    t.test('does not throw on bad center', (t) => {
+    test('does not throw on bad center', () => {
         const transform = new Transform();
         transform.resize(500, 500);
         transform.center = {lng: 50, lat: -90};
-        t.end();
     });
 
-    t.test('setLocationAt', (t) => {
+    test('setLocationAt', () => {
         const transform = new Transform();
         transform.resize(500, 500);
         transform.zoom = 4;
-        t.deepEqual(transform.center, {lng: 0, lat: 0});
+        expect(transform.center).toEqual({lng: 0, lat: 0});
         transform.setLocationAtPoint({lng: 13, lat: 10}, new Point(15, 45));
-        t.deepEqual(fixedLngLat(transform.pointLocation(new Point(15, 45))), {lng: 13, lat: 10});
-        t.end();
+        expect(fixedLngLat(transform.pointLocation(new Point(15, 45)))).toEqual({lng: 13, lat: 10});
     });
 
-    t.test('setLocationAt tilted', (t) => {
+    test('setLocationAt tilted', () => {
         const transform = new Transform();
         transform.resize(500, 500);
         transform.zoom = 4;
         transform.pitch = 50;
-        t.deepEqual(transform.center, {lng: 0, lat: 0});
+        expect(transform.center).toEqual({lng: 0, lat: 0});
         transform.setLocationAtPoint({lng: 13, lat: 10}, new Point(15, 45));
-        t.deepEqual(fixedLngLat(transform.pointLocation(new Point(15, 45))), {lng: 13, lat: 10});
-        t.end();
+        expect(fixedLngLat(transform.pointLocation(new Point(15, 45)))).toEqual({lng: 13, lat: 10});
     });
 
-    t.test('has a default zoom', (t) => {
+    test('has a default zoom', () => {
         const transform = new Transform();
         transform.resize(500, 500);
-        t.equal(transform.tileZoom, 0);
-        t.equal(transform.tileZoom, transform.zoom);
-        t.end();
+        expect(transform.tileZoom).toBe(0);
+        expect(transform.tileZoom).toBe(transform.zoom);
     });
 
-    t.test('set fov', (t) => {
+    test('set fov', () => {
         const transform = new Transform();
         transform.fov = 10;
-        t.equal(transform.fov, 10);
+        expect(transform.fov).toBe(10);
         transform.fov = 10;
-        t.equal(transform.fov, 10);
-        t.end();
+        expect(transform.fov).toBe(10);
     });
 
-    t.test('lngRange & latRange constrain zoom and center', (t) => {
+    test('lngRange & latRange constrain zoom and center', () => {
         const transform = new Transform();
         transform.center = new LngLat(0, 0);
         transform.zoom = 10;
@@ -97,19 +90,18 @@ test('transform', (t) => {
         transform.latRange = [-5, 5];
 
         transform.zoom = 0;
-        t.equal(transform.zoom, 5.135709286104402);
+        expect(transform.zoom).toBe(5.135709286104402);
 
         transform.center = new LngLat(-50, -30);
-        t.same(transform.center, new LngLat(0, -0.0063583052861417855));
+        expect(transform.center).toEqual(new LngLat(0, -0.0063583052861417855));
 
         transform.zoom = 10;
         transform.center = new LngLat(-50, -30);
-        t.same(transform.center, new LngLat(-4.828338623046875, -4.828969771321582));
+        expect(transform.center).toEqual(new LngLat(-4.828338623046875, -4.828969771321582));
 
-        t.end();
     });
 
-    test('coveringTiles', (t) => {
+    test('coveringTiles', () => {
         const options = {
             minzoom: 1,
             maxzoom: 10,
@@ -123,31 +115,31 @@ test('transform', (t) => {
         transform.center = {lng: -0.01, lat: 0.01};
 
         transform.zoom = 0;
-        t.deepEqual(transform.coveringTiles(options), []);
+        expect(transform.coveringTiles(options)).toEqual([]);
 
         transform.zoom = 1;
-        t.deepEqual(transform.coveringTiles(options), [
+        expect(transform.coveringTiles(options)).toEqual([
             new OverscaledTileID(1, 0, 1, 0, 0),
             new OverscaledTileID(1, 0, 1, 1, 0),
             new OverscaledTileID(1, 0, 1, 0, 1),
             new OverscaledTileID(1, 0, 1, 1, 1)]);
 
         transform.zoom = 2.4;
-        t.deepEqual(transform.coveringTiles(options), [
+        expect(transform.coveringTiles(options)).toEqual([
             new OverscaledTileID(2, 0, 2, 1, 1),
             new OverscaledTileID(2, 0, 2, 2, 1),
             new OverscaledTileID(2, 0, 2, 1, 2),
             new OverscaledTileID(2, 0, 2, 2, 2)]);
 
         transform.zoom = 10;
-        t.deepEqual(transform.coveringTiles(options), [
+        expect(transform.coveringTiles(options)).toEqual([
             new OverscaledTileID(10, 0, 10, 511, 511),
             new OverscaledTileID(10, 0, 10, 512, 511),
             new OverscaledTileID(10, 0, 10, 511, 512),
             new OverscaledTileID(10, 0, 10, 512, 512)]);
 
         transform.zoom = 11;
-        t.deepEqual(transform.coveringTiles(options), [
+        expect(transform.coveringTiles(options)).toEqual([
             new OverscaledTileID(10, 0, 10, 511, 511),
             new OverscaledTileID(10, 0, 10, 512, 511),
             new OverscaledTileID(10, 0, 10, 511, 512),
@@ -158,7 +150,7 @@ test('transform', (t) => {
         transform.bearing = 32.0;
         transform.center = new LngLat(56.90, 48.20);
         transform.resize(1024, 768);
-        t.deepEqual(transform.coveringTiles(options), [
+        expect(transform.coveringTiles(options)).toEqual([
             new OverscaledTileID(5, 0, 5, 21, 11),
             new OverscaledTileID(5, 0, 5, 20, 11),
             new OverscaledTileID(5, 0, 5, 21, 10),
@@ -187,14 +179,14 @@ test('transform', (t) => {
         transform.bearing = 45.0;
         transform.center = new LngLat(25.02, 60.15);
         transform.resize(300, 50);
-        t.deepEqual(transform.coveringTiles(options), [
+        expect(transform.coveringTiles(options)).toEqual([
             new OverscaledTileID(8, 0, 8, 145, 74),
             new OverscaledTileID(8, 0, 8, 145, 73),
             new OverscaledTileID(8, 0, 8, 146, 74)
         ]);
 
         transform.resize(50, 300);
-        t.deepEqual(transform.coveringTiles(options), [
+        expect(transform.coveringTiles(options)).toEqual([
             new OverscaledTileID(8, 0, 8, 145, 74),
             new OverscaledTileID(8, 0, 8, 145, 73),
             new OverscaledTileID(8, 0, 8, 146, 74),
@@ -205,55 +197,50 @@ test('transform', (t) => {
         transform.pitch = 0;
         transform.bearing = 0;
         transform.resize(300, 300);
-        t.test('calculates tile coverage at w > 0', (t) => {
+        test('calculates tile coverage at w > 0', () => {
             transform.center = {lng: 630.01, lat: 0.01};
-            t.deepEqual(transform.coveringTiles(options), [
+            expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(2, 2, 2, 1, 1),
                 new OverscaledTileID(2, 2, 2, 1, 2),
                 new OverscaledTileID(2, 2, 2, 0, 1),
                 new OverscaledTileID(2, 2, 2, 0, 2)
             ]);
-            t.end();
         });
 
-        t.test('calculates tile coverage at w = -1', (t) => {
+        test('calculates tile coverage at w = -1', () => {
             transform.center = {lng: -360.01, lat: 0.01};
-            t.deepEqual(transform.coveringTiles(options), [
+            expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(2, -1, 2, 1, 1),
                 new OverscaledTileID(2, -1, 2, 1, 2),
                 new OverscaledTileID(2, -1, 2, 2, 1),
                 new OverscaledTileID(2, -1, 2, 2, 2)
             ]);
-            t.end();
         });
 
-        t.test('calculates tile coverage across meridian', (t) => {
+        test('calculates tile coverage across meridian', () => {
             transform.zoom = 1;
             transform.center = {lng: -180.01, lat: 0.01};
-            t.deepEqual(transform.coveringTiles(options), [
+            expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1),
                 new OverscaledTileID(1, -1, 1, 1, 0),
                 new OverscaledTileID(1, -1, 1, 1, 1)
             ]);
-            t.end();
         });
 
-        t.test('only includes tiles for a single world, if renderWorldCopies is set to false', (t) => {
+        test('only includes tiles for a single world, if renderWorldCopies is set to false', () => {
             transform.zoom = 1;
             transform.center = {lng: -180.01, lat: 0.01};
             transform.renderWorldCopies = false;
-            t.deepEqual(transform.coveringTiles(options), [
+            expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1)
             ]);
-            t.end();
         });
 
-        t.end();
     });
 
-    test('coveringZoomLevel', (t) => {
+    test('coveringZoomLevel', () => {
         const options = {
             minzoom: 1,
             maxzoom: 10,
@@ -263,95 +250,90 @@ test('transform', (t) => {
         const transform = new Transform();
 
         transform.zoom = 0;
-        t.deepEqual(transform.coveringZoomLevel(options), 0);
+        expect(transform.coveringZoomLevel(options)).toEqual(0);
 
         transform.zoom = 0.1;
-        t.deepEqual(transform.coveringZoomLevel(options), 0);
+        expect(transform.coveringZoomLevel(options)).toEqual(0);
 
         transform.zoom = 1;
-        t.deepEqual(transform.coveringZoomLevel(options), 1);
+        expect(transform.coveringZoomLevel(options)).toEqual(1);
 
         transform.zoom = 2.4;
-        t.deepEqual(transform.coveringZoomLevel(options), 2);
+        expect(transform.coveringZoomLevel(options)).toEqual(2);
 
         transform.zoom = 10;
-        t.deepEqual(transform.coveringZoomLevel(options), 10);
+        expect(transform.coveringZoomLevel(options)).toEqual(10);
 
         transform.zoom = 11;
-        t.deepEqual(transform.coveringZoomLevel(options), 11);
+        expect(transform.coveringZoomLevel(options)).toEqual(11);
 
         transform.zoom = 11.5;
-        t.deepEqual(transform.coveringZoomLevel(options), 11);
+        expect(transform.coveringZoomLevel(options)).toEqual(11);
 
         options.tileSize = 256;
 
         transform.zoom = 0;
-        t.deepEqual(transform.coveringZoomLevel(options), 1);
+        expect(transform.coveringZoomLevel(options)).toEqual(1);
 
         transform.zoom = 0.1;
-        t.deepEqual(transform.coveringZoomLevel(options), 1);
+        expect(transform.coveringZoomLevel(options)).toEqual(1);
 
         transform.zoom = 1;
-        t.deepEqual(transform.coveringZoomLevel(options), 2);
+        expect(transform.coveringZoomLevel(options)).toEqual(2);
 
         transform.zoom = 2.4;
-        t.deepEqual(transform.coveringZoomLevel(options), 3);
+        expect(transform.coveringZoomLevel(options)).toEqual(3);
 
         transform.zoom = 10;
-        t.deepEqual(transform.coveringZoomLevel(options), 11);
+        expect(transform.coveringZoomLevel(options)).toEqual(11);
 
         transform.zoom = 11;
-        t.deepEqual(transform.coveringZoomLevel(options), 12);
+        expect(transform.coveringZoomLevel(options)).toEqual(12);
 
         transform.zoom = 11.5;
-        t.deepEqual(transform.coveringZoomLevel(options), 12);
+        expect(transform.coveringZoomLevel(options)).toEqual(12);
 
         options.roundZoom = true;
 
-        t.deepEqual(transform.coveringZoomLevel(options), 13);
+        expect(transform.coveringZoomLevel(options)).toEqual(13);
 
-        t.end();
     });
 
-    t.test('clamps latitude', (t) => {
+    test('clamps latitude', () => {
         const transform = new Transform();
 
-        t.deepEqual(transform.project(new LngLat(0, -90)), transform.project(new LngLat(0, -transform.maxValidLatitude)));
-        t.deepEqual(transform.project(new LngLat(0, 90)), transform.project(new LngLat(0, transform.maxValidLatitude)));
-        t.end();
+        expect(transform.project(new LngLat(0, -90))).toEqual(transform.project(new LngLat(0, -transform.maxValidLatitude)));
+        expect(transform.project(new LngLat(0, 90))).toEqual(transform.project(new LngLat(0, transform.maxValidLatitude)));
     });
 
-    t.test('clamps pitch', (t) => {
+    test('clamps pitch', () => {
         const transform = new Transform();
 
         transform.pitch = 45;
-        t.equal(transform.pitch, 45);
+        expect(transform.pitch).toBe(45);
 
         transform.pitch = -10;
-        t.equal(transform.pitch, 0);
+        expect(transform.pitch).toBe(0);
 
         transform.pitch = 90;
-        t.equal(transform.pitch, 60);
+        expect(transform.pitch).toBe(60);
 
-        t.end();
     });
 
-    t.test('visibleUnwrappedCoordinates', (t) => {
+    test('visibleUnwrappedCoordinates', () => {
         const transform = new Transform();
         transform.resize(200, 200);
         transform.zoom = 0;
         transform.center = {lng: -170.01, lat: 0.01};
 
         let unwrappedCoords = transform.getVisibleUnwrappedCoordinates(new CanonicalTileID(0, 0, 0));
-        t.equal(unwrappedCoords.length, 4);
+        expect(unwrappedCoords.length).toBe(4);
 
         //getVisibleUnwrappedCoordinates should honor _renderWorldCopies
         transform._renderWorldCopies = false;
         unwrappedCoords = transform.getVisibleUnwrappedCoordinates(new CanonicalTileID(0, 0, 0));
-        t.equal(unwrappedCoords.length, 1);
+        expect(unwrappedCoords.length).toBe(1);
 
-        t.end();
     });
 
-    t.end();
 });
