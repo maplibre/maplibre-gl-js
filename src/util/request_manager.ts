@@ -43,7 +43,7 @@ const urlRe = /^(\w+):\/\/([^/?]*)(\/[^?]+)?\??(.+)?/;
 function parseUrl(url: string): UrlObject {
     const parts = url.match(urlRe);
     if (!parts) {
-        throw new Error(`Unable to parse URL "${url}"');
+        throw new Error(`Unable to parse URL "${url}"`);
     }
     return {
         protocol: parts[1],
