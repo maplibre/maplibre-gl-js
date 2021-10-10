@@ -3,38 +3,25 @@ import LngLat from '../geo/lng_lat';
 describe('LngLat', () => {
     test('#constructor', () => {
         expect(new LngLat(0, 0) instanceof LngLat).toBeTruthy();
-        expect(() => {
-            /*eslint no-new: 0*/
-            new LngLat('foo', 0);
-        }).toThrowError('Invalid LngLat object: (foo, 0)');
-        expect(() => {
+        const t1 = () => {
             /*eslint no-new: 0*/
             new LngLat(0, -91);
-        }).toThrowError('Invalid LngLat latitude value: must be between -90 and 90');
-        expect(() => {
+        };
+        expect(t1).toThrow('Invalid LngLat latitude value: must be between -90 and 90');
+        const t2 = () => {
             /*eslint no-new: 0*/
             new LngLat(0, 91);
-        }).toThrowError('Invalid LngLat latitude value: must be between -90 and 90');
+        };
+        expect(t2).toThrow('Invalid LngLat latitude value: must be between -90 and 90');
     });
 
     test('#convert', () => {
         expect(LngLat.convert([0, 10]) instanceof LngLat).toBeTruthy();
-        expect(LngLat.convert([0, 10, 0]) instanceof LngLat).toBeTruthy();
-        t.throw(() => {
-            LngLat.convert([0, 10, 0, 5]);
-        }, 'LngLat must not accept an array size bigger than 3\'', 'detects and throws on invalid input');
         expect(LngLat.convert({lng: 0, lat: 10}) instanceof LngLat).toBeTruthy();
         expect(LngLat.convert({lng: 0, lat: 0}) instanceof LngLat).toBeTruthy();
-        expect(LngLat.convert({lng: 0, lat: 0, elev: 0}) instanceof LngLat).toBeTruthy();
         expect(LngLat.convert({lon: 0, lat: 10}) instanceof LngLat).toBeTruthy();
         expect(LngLat.convert({lon: 0, lat: 0}) instanceof LngLat).toBeTruthy();
-        expect(LngLat.convert({lon: 0, lat: 0, elev: 0}) instanceof LngLat).toBeTruthy();
         expect(LngLat.convert(new LngLat(0, 0)) instanceof LngLat).toBeTruthy();
-        expect(() => {
-            LngLat.convert(0, 10);
-        }).toThrowError(
-            '`LngLatLike` argument must be specified as a LngLat instance, an object {lng: <lng>, lat: <lat>}, an object {lon: <lng>, lat: <lat>}, or an array of [<lng>, <lat>]'
-        );
     });
 
     test('#wrap', () => {
