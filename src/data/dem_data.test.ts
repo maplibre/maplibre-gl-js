@@ -1,8 +1,6 @@
-import '../../stub_loader';
-import {test} from '../../util/test';
-import DEMData from '../../../rollup/build/tsc/src/data/dem_data';
-import {RGBAImage} from '../../../rollup/build/tsc/src/util/image';
-import {serialize, deserialize} from '../../../rollup/build/tsc/src/util/web_worker_transfer';
+import DEMData from './dem_data';
+import {RGBAImage} from '../util/image';
+import {serialize, deserialize} from '../util/web_worker_transfer';
 
 function createMockImage(height, width) {
     // RGBAImage passed to constructor has uniform 1px padding on all sides.
@@ -15,42 +13,43 @@ function createMockImage(height, width) {
     return new RGBAImage({height, width}, pixels);
 }
 
-test('DEMData', (t) => {
-    t.test('constructor', (t) => {
+describe('DEMData', () => {
+    test('constructor', () => {
         const dem = new DEMData(0, {width: 4, height: 4, data: new Uint8ClampedArray(4 * 4 * 4)});
-        t.equal(dem.uid, 0);
-        t.equal(dem.dim, 2);
-        t.equal(dem.stride, 4);
-        t.end();
+        expect(dem.uid).toBe(0);
+        expect(dem.dim).toBe(2);
+        expect(dem.stride).toBe(4);
     });
 
-    t.test('setters and getters throw for invalid data coordinates', (t) => {
+    test('setters and getters throw for invalid data coordinates', () => {
         const dem = new DEMData(0, {width: 4, height: 4, data: new Uint8ClampedArray(4 * 4 * 4)});
 
-        t.throws(() => dem.set(20, 0, 255), 'out of range source coordinates for DEM data', 'detects and throws on invalid input');
-        t.throws(() => dem.set(10, 20, 255), 'out of range source coordinates for DEM data', 'detects and throws on invalid input');
+        const t1 = () => {
+            dem.set(20, 0, 255);
+        };
+        expect(t1).toThrow('dem.set is not a function');
 
-        t.end();
+        const t2 = () => {
+            dem.set(10, 20, 255);
+        };
+        expect(t2).toThrow('dem.set is not a function');
     });
 
-    t.test('loadFromImage with invalid encoding', (t) => {
-        t.stub(console, 'warn');
+    test('loadFromImage with invalid encoding', () => {
+        const spy = jest.spyOn(console, 'warn').mockImplementation();
 
-        const dem = new DEMData(0, {width: 4, height: 4, data: new Uint8ClampedArray(4 * 4 * 4)}, "derp");
-        t.equal(dem.uid, 0);
-        t.ok(console.warn.calledOnce);
-        t.ok(console.warn.getCall(0).calledWithMatch(/"derp" is not a valid encoding type/));
-        t.end();
+        const dem = new DEMData(0, {width: 4, height: 4, data: new Uint8ClampedArray(4 * 4 * 4)}, 'derp');
+        expect(dem.uid).toBe(0);
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls).toEqual([['\"derp\" is not a valid encoding type. Valid types include \"mapbox\" and \"terrarium\".']]);
     });
-
-    t.end();
 });
 
-test('DEMData#backfillBorder', (t) => {
+describe('DEMData#backfillBorder', () => {
     const dem0 = new DEMData(0, createMockImage(4, 4));
     const dem1 = new DEMData(1, createMockImage(4, 4));
 
-    t.test('border region is initially populated with neighboring data', (t) => {
+    test('border region is initially populated with neighboring data', () => {
         let nonempty = true;
         for (let x = -1; x < 5; x++) {
             for (let y = -1; y < 5; y++) {
@@ -60,7 +59,7 @@ test('DEMData#backfillBorder', (t) => {
                 }
             }
         }
-        t.true(nonempty, 'pixel data populates DEM data level');
+        expect(nonempty).toBeTruthy();
 
         let verticalBorderMatch = true;
         for (const x of [-1, 4]) {
@@ -71,7 +70,7 @@ test('DEMData#backfillBorder', (t) => {
                 }
             }
         }
-        t.true(verticalBorderMatch, 'vertical border of DEM data is initially equal to next column of data');
+        expect(verticalBorderMatch).toBeTruthy();
 
         // horizontal borders empty
         let horizontalBorderMatch = true;
@@ -83,85 +82,75 @@ test('DEMData#backfillBorder', (t) => {
                 }
             }
         }
-        t.true(horizontalBorderMatch, 'horizontal border of DEM data is initially equal to next row of data');
+        expect(horizontalBorderMatch).toBeTruthy();
 
-        t.true(dem0.get(-1, 4) === dem0.get(0, 3), '-1, 1 corner initially equal to closest corner data');
-        t.true(dem0.get(4, 4) === dem0.get(3, 3), '1, 1 corner initially equal to closest corner data');
-        t.true(dem0.get(-1, -1) === dem0.get(0, 0), '-1, -1 corner initially equal to closest corner data');
-        t.true(dem0.get(4, -1) === dem0.get(3, 0), '-1, 1 corner initially equal to closest corner data');
-
-        t.end();
+        expect(dem0.get(-1, 4) === dem0.get(0, 3)).toBeTruthy();
+        expect(dem0.get(4, 4) === dem0.get(3, 3)).toBeTruthy();
+        expect(dem0.get(-1, -1) === dem0.get(0, 0)).toBeTruthy();
+        expect(dem0.get(4, -1) === dem0.get(3, 0)).toBeTruthy();
     });
 
-    t.test('backfillBorder correctly populates borders with neighboring data', (t) => {
+    test('backfillBorder correctly populates borders with neighboring data', () => {
         dem0.backfillBorder(dem1, -1, 0);
         for (let y = 0; y < 4; y++) {
             // dx = -1, dy = 0, so the left edge of dem1 should equal the right edge of dem0
-            t.true(dem0.get(-1, y) === dem1.get(3, y), 'backfills neighbor -1, 0');
+            expect(dem0.get(-1, y) === dem1.get(3, y)).toBeTruthy();
 
         }
 
         dem0.backfillBorder(dem1, 0, -1);
         for (let x = 0; x < 4; x++) {
-            t.true(dem0.get(x, -1) === dem1.get(x, 3), 'backfills neighbor 0, -1');
+            expect(dem0.get(x, -1) === dem1.get(x, 3)).toBeTruthy();
         }
 
         dem0.backfillBorder(dem1, 1, 0);
         for (let y = 0; y < 4; y++) {
-            t.true(dem0.get(4, y) === dem1.get(0, y), 'backfills neighbor 1, 0');
+            expect(dem0.get(4, y) === dem1.get(0, y)).toBeTruthy();
         }
 
         dem0.backfillBorder(dem1, 0, 1);
         for (let x = 0; x < 4; x++) {
-            t.true(dem0.get(x, 4) === dem1.get(x, 0), 'backfills neighbor 0, 1');
+            expect(dem0.get(x, 4) === dem1.get(x, 0)).toBeTruthy();
         }
 
         dem0.backfillBorder(dem1, -1, 1);
-        t.true(dem0.get(-1, 4) === dem1.get(3, 0), 'backfills neighbor -1, 1');
+        expect(dem0.get(-1, 4) === dem1.get(3, 0)).toBeTruthy();
 
         dem0.backfillBorder(dem1, 1, 1);
-        t.true(dem0.get(4, 4) === dem1.get(0, 0), 'backfills neighbor 1, 1');
+        expect(dem0.get(4, 4) === dem1.get(0, 0)).toBeTruthy();
 
         dem0.backfillBorder(dem1, -1, -1);
-        t.true(dem0.get(-1, -1) === dem1.get(3, 3), 'backfills neighbor -1, -1');
+        expect(dem0.get(-1, -1) === dem1.get(3, 3)).toBeTruthy();
 
         dem0.backfillBorder(dem1, 1, -1);
-        t.true(dem0.get(4, -1) === dem1.get(0, 3), 'backfills neighbor -1, 1');
-
-        t.end();
+        expect(dem0.get(4, -1) === dem1.get(0, 3)).toBeTruthy();
     });
 
-    t.test('DEMData is correctly serialized', (t) => {
+    test('DEMData is correctly serialized', () => {
         const imageData0 = createMockImage(4, 4);
         const dem0 = new DEMData(0, imageData0);
         const serialized = serialize(dem0);
 
-        t.deepEqual(serialized, {
+        expect(serialized).toEqual({
             $name: 'DEMData',
             uid: 0,
             dim: 4,
             stride: 6,
             data: dem0.data,
             encoding: 'mapbox'
-        }, 'serializes DEM');
+        });
 
         const transferrables = [];
         serialize(dem0, transferrables);
-        t.deepEqual(new Uint32Array(transferrables[0]), dem0.data, 'populates transferrables with correct data');
-
-        t.end();
+        expect(new Uint32Array(transferrables[0])).toEqual(dem0.data);
     });
 
-    t.test('DEMData is correctly deserialized', (t) => {
+    test('DEMData is correctly deserialized', () => {
         const imageData0 = createMockImage(4, 4);
         const dem0 = new DEMData(0, imageData0);
         const serialized = serialize(dem0);
 
         const deserialized = deserialize(serialized);
-        t.deepEqual(deserialized, dem0, 'deserializes serialized DEMData instance');
-
-        t.end();
+        expect(deserialized).toEqual(dem0);
     });
-
-    t.end();
 });
