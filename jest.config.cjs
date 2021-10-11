@@ -14,4 +14,5 @@ module.exports = {
   testEnvironment: "jsdom",
   transformIgnorePatterns: [
   ],
+  setupFiles: ["jest-canvas-mock"],
 }
