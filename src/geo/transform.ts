@@ -149,7 +149,12 @@ class Transform {
     }
 
     get bearing(): number {
-        return -this.angle / Math.PI * 180;
+        const bearing = -this.angle / Math.PI * 180;
+        if ([bearing].includes(-0)) {
+            return 0;
+        } else {
+            return bearing;
+        }
     }
     set bearing(bearing: number) {
         const b = -wrap(bearing, -180, 180) * Math.PI / 180;

@@ -15,7 +15,7 @@ describe('transform', () => {
         expect(transform.width).toBe(500);
         expect(transform.minZoom).toBe(0);
         expect(transform.minPitch).toBe(0);
-        expect(transform.bearing).toBe(-0);
+        expect(transform.bearing).toBe(0);
         expect(transform.bearing = 1).toBe(1);
         expect(transform.bearing).toBe(1);
         expect(transform.bearing = 0).toBe(0);
@@ -33,7 +33,7 @@ describe('transform', () => {
         expect(transform.scaleZoom(10)).toBe(3.3219280948873626);
         expect(transform.point).toEqual(new Point(262144, 262144));
         expect(transform.height).toBe(500);
-        expect(fixedLngLat(transform.pointLocation(new Point(250, 250)))).toEqual({lng: 0, lat: -0});
+        expect(fixedLngLat(transform.pointLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
         expect(fixedCoord(transform.pointCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
         expect(transform.locationPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});
         expect(transform.locationCoordinate(new LngLat(0, 0))).toEqual({x: 0.5, y: 0.5, z: 0});
