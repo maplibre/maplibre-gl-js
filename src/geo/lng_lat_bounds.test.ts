@@ -82,6 +82,14 @@ describe('LngLatBounds', () => {
         expect(bounds1.getWest()).toBe(-20);
         expect(bounds1.getNorth()).toBe(20);
         expect(bounds1.getEast()).toBe(20);
+
+        const bounds5 = new LngLatBounds();
+        bounds1.extend(bounds5);
+
+        expect(bounds1.getSouth()).toBe(-20);
+        expect(bounds1.getWest()).toBe(-20);
+        expect(bounds1.getNorth()).toBe(20);
+        expect(bounds1.getEast()).toBe(20);
     });
 
     test('#extend with null', () => {
