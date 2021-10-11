@@ -15,7 +15,8 @@ describe('transform', () => {
         expect(transform.width).toBe(500);
         expect(transform.minZoom).toBe(0);
         expect(transform.minPitch).toBe(0);
-        expect(transform.bearing).toBe(0);
+        // Support signed zero
+        expect(transform.bearing === 0 ? 0 : transform.bearing).toBe(0);
         expect(transform.bearing = 1).toBe(1);
         expect(transform.bearing).toBe(1);
         expect(transform.bearing = 0).toBe(0);
