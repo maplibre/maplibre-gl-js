@@ -167,6 +167,11 @@ describe('LngLatBounds', () => {
     test('#isEmpty', () => {
         const nullBounds = new LngLatBounds();
         expect(nullBounds.isEmpty()).toBe(true);
+
+        const sw = new LngLat(0, 0);
+        const ne = new LngLat(-10, 10);
+        const bounds = new LngLatBounds(sw, ne);
+        expect(bounds.isEmpty()).toBe(false);
     });
 
     describe('contains', () => {
