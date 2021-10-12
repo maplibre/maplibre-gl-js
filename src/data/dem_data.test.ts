@@ -13,41 +13,36 @@ function createMockImage(height, width) {
     return new RGBAImage({height, width}, pixels);
 }
 
+function createMockClampImage(height, width) {
+    const pixels = new Uint8ClampedArray(height * width * 4);
+    for (let i = 0; i < pixels.length; i++) {
+        pixels[i] = (i + 1) % 4 === 0 ? 1 : Math.floor(Math.random() * 256);
+    }
+    return new RGBAImage({height, width}, pixels);
+}
+
 describe('DEMData', () => {
     test('constructor', () => {
-        const dem = new DEMData(0, {width: 4, height: 4, data: new Uint8ClampedArray(4 * 4 * 4)});
-        expect(dem.uid).toBe(0);
-        expect(dem.dim).toBe(2);
-        expect(dem.stride).toBe(4);
+        const imageData0 = createMockImage(4, 4);
+        const dem = new DEMData('0', imageData0, 'mapbox');
+        expect(dem.uid).toBe('0');
+        expect(dem.dim).toBe(4);
+        expect(dem.stride).toBe(6);
     });
 
-    test('setters and getters throw for invalid data coordinates', () => {
-        const dem = new DEMData(0, {width: 4, height: 4, data: new Uint8ClampedArray(4 * 4 * 4)});
-
-        const t1 = () => {
-            dem.set(20, 0, 255);
-        };
-        expect(t1).toThrow('dem.set is not a function');
-
-        const t2 = () => {
-            dem.set(10, 20, 255);
-        };
-        expect(t2).toThrow('dem.set is not a function');
-    });
-
-    test('loadFromImage with invalid encoding', () => {
-        const spy = jest.spyOn(console, 'warn').mockImplementation();
-
-        const dem = new DEMData(0, {width: 4, height: 4, data: new Uint8ClampedArray(4 * 4 * 4)}, 'derp');
-        expect(dem.uid).toBe(0);
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy.mock.calls).toEqual([['\"derp\" is not a valid encoding type. Valid types include \"mapbox\" and \"terrarium\".']]);
+    test('constructor', () => {
+        const imageData0 = createMockClampImage(4, 4);
+        const dem = new DEMData('0', imageData0, 'mapbox');
+        expect(dem).not.toBeNull();
+        expect(dem['uid']).toBe('0');
+        expect(dem['dim']).toBe(2);
+        expect(dem['stride']).toBe(4);
     });
 });
 
 describe('DEMData#backfillBorder', () => {
-    const dem0 = new DEMData(0, createMockImage(4, 4));
-    const dem1 = new DEMData(1, createMockImage(4, 4));
+    const dem0 = new DEMData('0', createMockImage(4, 4), 'terrarium');
+    const dem1 = new DEMData('1', createMockImage(4, 4), 'terrarium');
 
     test('border region is initially populated with neighboring data', () => {
         let nonempty = true;
@@ -128,12 +123,12 @@ describe('DEMData#backfillBorder', () => {
 
     test('DEMData is correctly serialized', () => {
         const imageData0 = createMockImage(4, 4);
-        const dem0 = new DEMData(0, imageData0);
+        const dem0 = new DEMData('0', imageData0, 'mapbox');
         const serialized = serialize(dem0);
 
         expect(serialized).toEqual({
             $name: 'DEMData',
-            uid: 0,
+            uid: '0',
             dim: 4,
             stride: 6,
             data: dem0.data,
@@ -147,7 +142,7 @@ describe('DEMData#backfillBorder', () => {
 
     test('DEMData is correctly deserialized', () => {
         const imageData0 = createMockImage(4, 4);
-        const dem0 = new DEMData(0, imageData0);
+        const dem0 = new DEMData('0', imageData0, 'terrarium');
         const serialized = serialize(dem0);
 
         const deserialized = deserialize(serialized);
