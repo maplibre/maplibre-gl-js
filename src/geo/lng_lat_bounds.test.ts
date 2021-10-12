@@ -55,6 +55,13 @@ describe('LngLatBounds', () => {
         expect(bounds.getWest()).toBe(-15);
         expect(bounds.getNorth()).toBe(10);
         expect(bounds.getEast()).toBe(10);
+
+        bounds.extend([-90, -90, 90, 90]);
+
+        expect(bounds.getSouth()).toBe(-90);
+        expect(bounds.getWest()).toBe(-90);
+        expect(bounds.getNorth()).toBe(90);
+        expect(bounds.getEast()).toBe(90);
     });
 
     test('#extend with bounds', () => {
@@ -70,6 +77,14 @@ describe('LngLatBounds', () => {
 
         const bounds4 = new LngLatBounds([-20, -20, 20, 20]);
         bounds1.extend(bounds4);
+
+        expect(bounds1.getSouth()).toBe(-20);
+        expect(bounds1.getWest()).toBe(-20);
+        expect(bounds1.getNorth()).toBe(20);
+        expect(bounds1.getEast()).toBe(20);
+
+        const bounds5 = new LngLatBounds();
+        bounds1.extend(bounds5);
 
         expect(bounds1.getSouth()).toBe(-20);
         expect(bounds1.getWest()).toBe(-20);
@@ -152,6 +167,11 @@ describe('LngLatBounds', () => {
     test('#isEmpty', () => {
         const nullBounds = new LngLatBounds();
         expect(nullBounds.isEmpty()).toBe(true);
+
+        const sw = new LngLat(0, 0);
+        const ne = new LngLat(-10, 10);
+        const bounds = new LngLatBounds(sw, ne);
+        expect(bounds.isEmpty()).toBe(false);
     });
 
     describe('contains', () => {
