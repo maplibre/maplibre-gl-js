@@ -112,6 +112,7 @@
     "glob": "^7.1.4",
     "is-builtin-module": "^3.0.0",
     "jest": "^27.2.4",
+    "jest-canvas-mock": "^2.3.1",
     "jest-raw-loader": "^1.0.1",
     "jsdom": "^13.0.0",
     "json-stringify-pretty-compact": "^3.0.0",
