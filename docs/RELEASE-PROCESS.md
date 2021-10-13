@@ -3,7 +3,7 @@
 To publish this library to NPM, create a tag and push it to GitHub. Make sure that the version in ```package.json``` matches the version you define in the tag. A workflow will do all the necessary steps:
 
 ```bash
-git checkout main
+git checkout 1.x
 git tag -a v1.14.1 -m "version 1.14.1"
 git push origin v1.14.1
 ```
