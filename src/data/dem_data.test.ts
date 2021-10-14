@@ -40,7 +40,7 @@ describe('DEMData', () => {
     });
 });
 
-describe('DEMData#backfillBorder with endocding', () => {
+describe('DEMData#backfillBorder with encoding', () => {
     describe('mabox endocding', () => {
         const dem0 = new DEMData('0', createMockImage(4, 4), 'mapbox');
         const dem1 = new DEMData('1', createMockImage(4, 4), 'mapbox');
