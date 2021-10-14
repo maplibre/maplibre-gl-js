@@ -41,7 +41,7 @@ describe('DEMData', () => {
 });
 
 describe('DEMData#backfillBorder with encoding', () => {
-    describe('mabox endocding', () => {
+    describe('mabox encoding', () => {
         const dem0 = new DEMData('0', createMockImage(4, 4), 'mapbox');
         const dem1 = new DEMData('1', createMockImage(4, 4), 'mapbox');
 
@@ -122,7 +122,7 @@ describe('DEMData#backfillBorder with encoding', () => {
         });
     });
 
-    describe('terrarium endocding', () => {
+    describe('terrarium encoding', () => {
         const dem0 = new DEMData('0', createMockImage(4, 4), 'terrarium');
         const dem1 = new DEMData('1', createMockImage(4, 4), 'terrarium');
 
