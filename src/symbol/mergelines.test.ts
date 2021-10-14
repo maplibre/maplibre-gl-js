@@ -1,6 +1,5 @@
-import {test} from '../../util/test';
-import mergeLines from '../../../rollup/build/tsc/src/symbol/mergelines';
-import Point from '../../../rollup/build/tsc/src/util/point';
+import mergeLines from '../symbol/mergelines';
+import Point from '../util/point';
 
 function makeFeatures(lines) {
     const features = [];
@@ -14,19 +13,19 @@ function makeFeatures(lines) {
     return features;
 }
 
-test('mergeLines merges lines with the same text', (t) => {
+describe('mergeLines merges lines with the same text', done => {
     expect(
         mergeLines(makeFeatures([['a', 0, 1, 2], ['b', 4, 5, 6], ['a', 8, 9], ['a', 2, 3, 4], ['a', 6, 7, 8], ['a', 5, 6]]))
     ).toEqual(makeFeatures([['a', 0, 1, 2, 3, 4], ['b', 4, 5, 6], ['a', 5, 6, 7, 8, 9]]));
-    t.end();
+    done();
 });
 
-test('mergeLines handles merge from both ends', (t) => {
+describe('mergeLines handles merge from both ends', done => {
     expect(mergeLines(makeFeatures([['a', 0, 1, 2], ['a', 4, 5, 6], ['a', 2, 3, 4]]))).toEqual(makeFeatures([['a', 0, 1, 2, 3, 4, 5, 6]]));
-    t.end();
+    done();
 });
 
-test('mergeLines handles circular lines', (t) => {
+describe('mergeLines handles circular lines', done => {
     expect(mergeLines(makeFeatures([['a', 0, 1, 2], ['a', 2, 3, 4], ['a', 4, 0]]))).toEqual(makeFeatures([['a', 0, 1, 2, 3, 4, 0]]));
-    t.end();
+    done();
 });
