@@ -9,11 +9,13 @@ test('GridIndex', (t) => {
         grid.insert(1, 4, 10, 30, 12);
         grid.insert(2, -10, 30, 5, 35);
 
-        t.deepEqual(grid.query(4, 10, 5, 11).map(x => x.key).sort(), [0, 1]);
-        t.deepEqual(grid.query(24, 10, 25, 11).map(x => x.key).sort(), [1]);
-        t.deepEqual(grid.query(40, 40, 100, 100).map(x => x.key), []);
-        t.deepEqual(grid.query(-6, 0, 3, 100).map(x => x.key), [2]);
-        t.deepEqual(grid.query(-Infinity, -Infinity, Infinity, Infinity).map(x => x.key).sort(), [0, 1, 2]);
+        expect(grid.query(4, 10, 5, 11).map(x => x.key).sort()).toEqual([0, 1]);
+        expect(grid.query(24, 10, 25, 11).map(x => x.key).sort()).toEqual([1]);
+        expect(grid.query(40, 40, 100, 100).map(x => x.key)).toEqual([]);
+        expect(grid.query(-6, 0, 3, 100).map(x => x.key)).toEqual([2]);
+        expect(
+            grid.query(-Infinity, -Infinity, Infinity, Infinity).map(x => x.key).sort()
+        ).toEqual([0, 1, 2]);
         t.end();
     });
 
@@ -23,7 +25,7 @@ test('GridIndex', (t) => {
         grid.insert(key, 3, 3, 4, 4);
         grid.insert(key, 13, 13, 14, 14);
         grid.insert(key, 23, 23, 24, 24);
-        t.deepEqual(grid.query(0, 0, 30, 30).map(x => x.key), [key, key, key]);
+        expect(grid.query(0, 0, 30, 30).map(x => x.key)).toEqual([key, key, key]);
         t.end();
     });
 
@@ -33,10 +35,10 @@ test('GridIndex', (t) => {
         grid.insertCircle(1, 60, 60, 15);
         grid.insertCircle(2, -10, 110, 20);
 
-        t.ok(grid.hitTestCircle(55, 55, 2));
-        t.notOk(grid.hitTestCircle(10, 10, 10));
-        t.ok(grid.hitTestCircle(0, 100, 10));
-        t.ok(grid.hitTestCircle(80, 60, 10));
+        expect(grid.hitTestCircle(55, 55, 2)).toBeTruthy();
+        expect(grid.hitTestCircle(10, 10, 10)).toBeFalsy();
+        expect(grid.hitTestCircle(0, 100, 10)).toBeTruthy();
+        expect(grid.hitTestCircle(80, 60, 10)).toBeTruthy();
 
         t.end();
     });
@@ -47,9 +49,9 @@ test('GridIndex', (t) => {
         grid.insertCircle(1, 60, 60, 15);
         grid.insertCircle(2, -10, 110, 20);
 
-        t.deepEqual(grid.query(45, 45, 55, 55).map(x => x.key), [0, 1]);
-        t.deepEqual(grid.query(0, 0, 30, 30).map(x => x.key), []);
-        t.deepEqual(grid.query(0, 80, 20, 100).map(x => x.key), [2]);
+        expect(grid.query(45, 45, 55, 55).map(x => x.key)).toEqual([0, 1]);
+        expect(grid.query(0, 0, 30, 30).map(x => x.key)).toEqual([]);
+        expect(grid.query(0, 80, 20, 100).map(x => x.key)).toEqual([2]);
 
         t.end();
     });
