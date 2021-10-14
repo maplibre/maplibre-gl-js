@@ -19,7 +19,7 @@ test('FeaturePositionMap', (t) => {
 
         const compareIndex = (a, b) => a.index - b.index;
 
-        t.same(featureMap2.getPositions(7).sort(compareIndex), [
+        expect(featureMap2.getPositions(7).sort(compareIndex)).toEqual([
             {index: 1, start: 0, end: 1},
             {index: 3, start: 2, end: 3},
             {index: 6, start: 5, end: 7}
@@ -32,9 +32,9 @@ test('FeaturePositionMap', (t) => {
         const featureMap = new FeatureMap();
         featureMap.add(0, 1, 2, 3);
 
-        t.throws(() => {
+        expect(() => {
             featureMap.getPositions(0);
-        });
+        }).toThrow();
 
         t.end();
     });
