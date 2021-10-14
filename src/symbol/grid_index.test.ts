@@ -1,8 +1,8 @@
-import GridIndex from '../symbol/grid_index';
+import GridIndex from './grid_index';
 
-describe('GridIndex', done => {
+describe('GridIndex', () => {
 
-    test('indexes features', done => {
+    test('indexes features', () => {
         const grid = new GridIndex(100, 100, 10);
         grid.insert(0, 4, 10, 6, 30);
         grid.insert(1, 4, 10, 30, 12);
@@ -15,20 +15,18 @@ describe('GridIndex', done => {
         expect(
             grid.query(-Infinity, -Infinity, Infinity, Infinity).map(x => x.key).sort()
         ).toEqual([0, 1, 2]);
-        done();
     });
 
-    test('returns multiple copies of a key if multiple boxes were inserted with the same key', done => {
+    test('returns multiple copies of a key if multiple boxes were inserted with the same key', () => {
         const grid = new GridIndex(100, 100, 10);
         const key = 123;
         grid.insert(key, 3, 3, 4, 4);
         grid.insert(key, 13, 13, 14, 14);
         grid.insert(key, 23, 23, 24, 24);
         expect(grid.query(0, 0, 30, 30).map(x => x.key)).toEqual([key, key, key]);
-        done();
     });
 
-    test('circle-circle intersection', done => {
+    test('circle-circle intersection', () => {
         const grid = new GridIndex(100, 100, 10);
         grid.insertCircle(0, 50, 50, 10);
         grid.insertCircle(1, 60, 60, 15);
@@ -38,11 +36,9 @@ describe('GridIndex', done => {
         expect(grid.hitTestCircle(10, 10, 10)).toBeFalsy();
         expect(grid.hitTestCircle(0, 100, 10)).toBeTruthy();
         expect(grid.hitTestCircle(80, 60, 10)).toBeTruthy();
-
-        done();
     });
 
-    test('circle-rectangle intersection', done => {
+    test('circle-rectangle intersection', () => {
         const grid = new GridIndex(100, 100, 10);
         grid.insertCircle(0, 50, 50, 10);
         grid.insertCircle(1, 60, 60, 15);
@@ -51,9 +47,6 @@ describe('GridIndex', done => {
         expect(grid.query(45, 45, 55, 55).map(x => x.key)).toEqual([0, 1]);
         expect(grid.query(0, 0, 30, 30).map(x => x.key)).toEqual([]);
         expect(grid.query(0, 80, 20, 100).map(x => x.key)).toEqual([2]);
-
-        done();
     });
 
-    done();
 });
