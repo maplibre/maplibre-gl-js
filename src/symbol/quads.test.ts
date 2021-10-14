@@ -10,13 +10,13 @@ test('getIconQuads', (t) => {
     });
 
     t.test('point', (t) => {
-        t.deepEqual(getIconQuads({
+        expect(getIconQuads({
             top: -5.5,
             right: 7.5,
             bottom: 5.5,
             left: -7.5,
             image
-        }, 0, true), [{
+        }, 0, true)).toEqual([{
             tl: {x: -8.5, y: -6.5},
             tr: {x: 8.5, y: -6.5},
             bl: {x: -8.5, y: 6.5},
@@ -36,15 +36,15 @@ test('getIconQuads', (t) => {
                 x: 0,
                 y: 0
             }
-        }], 'icon-anchor: center');
+        }]);
 
-        t.deepEqual(getIconQuads({
+        expect(getIconQuads({
             top: -11,
             right: 15,
             bottom: 11,
             left: -15,
             image
-        }, 0, false), [{
+        }, 0, false)).toEqual([{
             tl: {x: -17, y: -13},
             tr: {x: 17, y: -13},
             bl: {x: -17, y: 13},
@@ -64,15 +64,15 @@ test('getIconQuads', (t) => {
                 x: 0,
                 y: 0
             }
-        }], 'icon-anchor: center icon, icon-scale: 2');
+        }]);
 
-        t.deepEqual(getIconQuads({
+        expect(getIconQuads({
             top: 0,
             right: 0,
             bottom: 11,
             left: -15,
             image
-        }, 0, false), [{
+        }, 0, false)).toEqual([{
             tl: {x: -16, y: -1},
             tr: {x: 1, y: -1},
             bl: {x: -16, y: 12},
@@ -92,15 +92,15 @@ test('getIconQuads', (t) => {
                 x: 0,
                 y: 0
             }
-        }], 'icon-anchor: top-right');
+        }]);
 
-        t.deepEqual(getIconQuads({
+        expect(getIconQuads({
             top: -5.5,
             right: 30,
             bottom: 5.5,
             left: -30,
             image
-        }, 0, false), [{
+        }, 0, false)).toEqual([{
             tl: {x: -34, y: -6.5},
             tr: {x: 34, y: -6.5},
             bl: {x: -34, y: 6.5},
@@ -120,19 +120,19 @@ test('getIconQuads', (t) => {
                 x: 0,
                 y: 0
             }
-        }], 'icon-text-fit: both');
+        }]);
 
         t.end();
     });
 
     t.test('line', (t) => {
-        t.deepEqual(getIconQuads({
+        expect(getIconQuads({
             top: -5.5,
             right: 7.5,
             bottom: 5.5,
             left: -7.5,
             image
-        }, 0, false), [{
+        }, 0, false)).toEqual([{
             tl: {x: -8.5, y: -6.5},
             tr: {x: 8.5, y: -6.5},
             bl: {x: -8.5, y: 6.5},
