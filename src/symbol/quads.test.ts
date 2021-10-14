@@ -1,15 +1,14 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import {getIconQuads} from '../../../rollup/build/tsc/src/symbol/quads';
+import {getIconQuads} from '../symbol/quads';
 
-test('getIconQuads', (t) => {
+describe('getIconQuads', done => {
     const image = Object.freeze({
         pixelRatio: 1,
         displaySize: Object.freeze([ 15, 11 ]),
         paddedRect: Object.freeze({x: 0, y: 0, w: 17, h: 13})
     });
 
-    t.test('point', (t) => {
+    test('point', done => {
         expect(getIconQuads({
             top: -5.5,
             right: 7.5,
@@ -122,10 +121,10 @@ test('getIconQuads', (t) => {
             }
         }]);
 
-        t.end();
+        done();
     });
 
-    t.test('line', (t) => {
+    test('line', done => {
         expect(getIconQuads({
             top: -5.5,
             right: 7.5,
@@ -153,7 +152,7 @@ test('getIconQuads', (t) => {
                 y: 0
             }
         }]);
-        t.end();
+        done();
     });
-    t.end();
+    done();
 });
