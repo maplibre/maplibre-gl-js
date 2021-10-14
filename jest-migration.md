@@ -38,6 +38,15 @@ Run our custom codemods script with:
 node codemods.js src/**/*test.ts
 ```
 
+Remove `done()` in tests that do not run asynchronously by changing:
+
+```diff
+--test('something', done => {
+++test('something', () => {
+--    done()
+})
+```
+
 Fix remaining typescript errors by hand.
 
 Run jest with:
