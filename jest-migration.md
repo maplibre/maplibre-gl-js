@@ -38,7 +38,7 @@ Run our custom codemods script with:
 node codemods.js src/**/*test.ts
 ```
 
-Remove `done()` in tests that do not run asynchronously by changing:
+Remove `done()` in tests that do not run asynchronous by changing:
 
 ```diff
 --test('something', done => {
