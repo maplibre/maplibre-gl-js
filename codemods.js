@@ -22,13 +22,13 @@ replace.sync({
 replace.sync({
     files: args,
     from: /\(t\) =>/g,
-    to: '() =>',
+    to: 'done =>',
 });
 
 replace.sync({
     files: args,
-    from: /t.end\(\);\n/g,
-    to: '',
+    from: /t.end\(\)/g,
+    to: 'done()',
 });
 
 replace.sync({
