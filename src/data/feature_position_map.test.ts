@@ -1,12 +1,11 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
 
-import FeatureMap from '../../../rollup/build/tsc/src/data/feature_position_map';
-import {serialize, deserialize} from '../../../rollup/build/tsc/src/util/web_worker_transfer';
+import FeatureMap from '../data/feature_position_map';
+import {serialize, deserialize} from '../util/web_worker_transfer';
 
-test('FeaturePositionMap', (t) => {
+describe('FeaturePositionMap', done => {
 
-    test('Can be queried after serialization/deserialization', (t) => {
+    test('Can be queried after serialization/deserialization', done => {
         const featureMap = new FeatureMap();
         featureMap.add(7, 1, 0, 1);
         featureMap.add(3, 2, 1, 2);
@@ -25,10 +24,10 @@ test('FeaturePositionMap', (t) => {
             {index: 6, start: 5, end: 7}
         ].sort(compareIndex));
 
-        t.end();
+        done();
     });
 
-    test('Can not be queried before serialization/deserialization', (t) => {
+    test('Can not be queried before serialization/deserialization', done => {
         const featureMap = new FeatureMap();
         featureMap.add(0, 1, 2, 3);
 
@@ -36,8 +35,8 @@ test('FeaturePositionMap', (t) => {
             featureMap.getPositions(0);
         }).toThrow();
 
-        t.end();
+        done();
     });
 
-    t.end();
+    done();
 });
