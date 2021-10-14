@@ -17,9 +17,9 @@ test('PathInterpolator', (t) => {
 
         const interpolator = new PathInterpolator(line);
 
-        t.deepEqual(interpolator.lerp(0.0), line[0]);
-        t.deepEqual(interpolator.lerp(0.5), new Point(5, 0));
-        t.deepEqual(interpolator.lerp(1.0), line[1]);
+        expect(interpolator.lerp(0.0)).toEqual(line[0]);
+        expect(interpolator.lerp(0.5)).toEqual(new Point(5, 0));
+        expect(interpolator.lerp(1.0)).toEqual(line[1]);
         t.end();
     });
 
@@ -30,7 +30,7 @@ test('PathInterpolator', (t) => {
         ];
 
         const interpolator = new PathInterpolator(line);
-        t.deepEqual(interpolator.lerp(-100.0), line[0]);
+        expect(interpolator.lerp(-100.0)).toEqual(line[0]);
         t.end();
     });
 
@@ -41,7 +41,7 @@ test('PathInterpolator', (t) => {
         ];
 
         const interpolator = new PathInterpolator(line);
-        t.deepEqual(interpolator.lerp(100.0), line[1]);
+        expect(interpolator.lerp(100.0)).toEqual(line[1]);
         t.end();
     });
 
@@ -56,12 +56,12 @@ test('PathInterpolator', (t) => {
         ];
 
         const interpolator = new PathInterpolator(line);
-        t.ok(pointEquals(interpolator.lerp(1.0), new Point(-3, 1)));
-        t.ok(pointEquals(interpolator.lerp(0.95), new Point(-2.1, 1)));
-        t.ok(pointEquals(interpolator.lerp(0.5), new Point(1, -2)));
-        t.ok(pointEquals(interpolator.lerp(0.25), new Point(-1, 0.5)));
-        t.ok(pointEquals(interpolator.lerp(0.1), new Point(-1.2, 3)));
-        t.ok(pointEquals(interpolator.lerp(0.0), new Point(-3, 3)));
+        expect(pointEquals(interpolator.lerp(1.0), new Point(-3, 1))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(0.95), new Point(-2.1, 1))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(0.5), new Point(1, -2))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(0.25), new Point(-1, 0.5))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(0.1), new Point(-1.2, 3))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(0.0), new Point(-3, 3))).toBeTruthy();
         t.end();
     });
 
@@ -74,10 +74,10 @@ test('PathInterpolator', (t) => {
         const padding = 0.5;
         const interpolator = new PathInterpolator(line, padding);
 
-        t.ok(pointEquals(interpolator.lerp(0.0), new Point(-3.5, 1)));
-        t.ok(pointEquals(interpolator.lerp(0.25), new Point(-1.75, 1)));
-        t.ok(pointEquals(interpolator.lerp(0.5), new Point(0, 1)));
-        t.ok(pointEquals(interpolator.lerp(1.0), new Point(3.5, 1)));
+        expect(pointEquals(interpolator.lerp(0.0), new Point(-3.5, 1))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(0.25), new Point(-1.75, 1))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(0.5), new Point(0, 1))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(1.0), new Point(3.5, 1))).toBeTruthy();
         t.end();
     });
 
@@ -90,16 +90,16 @@ test('PathInterpolator', (t) => {
         const padding = 10.0;
         const interpolator = new PathInterpolator(line, padding);
 
-        t.ok(pointEquals(interpolator.lerp(0.0), new Point(0, 0)));
-        t.ok(pointEquals(interpolator.lerp(0.4), new Point(0, 0)));
-        t.ok(pointEquals(interpolator.lerp(1.0), new Point(0, 0)));
+        expect(pointEquals(interpolator.lerp(0.0), new Point(0, 0))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(0.4), new Point(0, 0))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(1.0), new Point(0, 0))).toBeTruthy();
         t.end();
     });
 
     t.test('Single point path', (t) => {
         const interpolator = new PathInterpolator([new Point(0, 0)]);
-        t.ok(pointEquals(interpolator.lerp(0), new Point(0, 0)));
-        t.ok(pointEquals(interpolator.lerp(1.0), new Point(0, 0)));
+        expect(pointEquals(interpolator.lerp(0), new Point(0, 0))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(1.0), new Point(0, 0))).toBeTruthy();
         t.end();
     });
 
@@ -116,14 +116,14 @@ test('PathInterpolator', (t) => {
 
         const interpolator = new PathInterpolator(line0);
 
-        t.deepEqual(interpolator.lerp(0.0), line0[0]);
-        t.deepEqual(interpolator.lerp(0.5), new Point(5, 0));
-        t.deepEqual(interpolator.lerp(1.0), line0[1]);
+        expect(interpolator.lerp(0.0)).toEqual(line0[0]);
+        expect(interpolator.lerp(0.5)).toEqual(new Point(5, 0));
+        expect(interpolator.lerp(1.0)).toEqual(line0[1]);
 
         interpolator.reset(line1);
-        t.ok(pointEquals(interpolator.lerp(0.0), line1[0]));
-        t.ok(pointEquals(interpolator.lerp(0.5), new Point(0, 0)));
-        t.ok(pointEquals(interpolator.lerp(1.0), line1[1]));
+        expect(pointEquals(interpolator.lerp(0.0), line1[0])).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(0.5), new Point(0, 0))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(1.0), line1[1])).toBeTruthy();
         t.end();
     });
 
@@ -135,10 +135,10 @@ test('PathInterpolator', (t) => {
         ];
 
         const interpolator = new PathInterpolator(line);
-        t.ok(pointEquals(interpolator.lerp(0), line[0]));
-        t.ok(pointEquals(interpolator.lerp(0.5), new Point(0, 0)));
-        t.ok(pointEquals(interpolator.lerp(1), line[1]));
-        t.ok(pointEquals(interpolator.lerp(1), line[2]));
+        expect(pointEquals(interpolator.lerp(0), line[0])).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(0.5), new Point(0, 0))).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(1), line[1])).toBeTruthy();
+        expect(pointEquals(interpolator.lerp(1), line[2])).toBeTruthy();
         t.end();
     });
 
