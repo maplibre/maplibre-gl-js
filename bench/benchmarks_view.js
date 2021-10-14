@@ -354,6 +354,7 @@ class BenchmarkStatistic extends React.Component {
         case 'running':
             return <p>Running...</p>;
         case 'error':
+        case 'errored':
             return <p>{this.props.error.message}</p>;
         default:
             return this.props.statistic(this.props);
@@ -457,7 +458,7 @@ class BenchmarksTable extends React.Component {
     render() {
         return (
             <div style={{width: 960, margin: '2em auto'}}>
-                <h1 className="space-bottom1">Mapbox GL JS Benchmarks – {
+                <h1 className="space-bottom1">MapLibre GL JS Benchmarks – {
                     this.props.finished ?
                         <span>Finished</span> :
                         <span>Running</span>}</h1>

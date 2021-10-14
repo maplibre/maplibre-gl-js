@@ -2,12 +2,16 @@
   "version": 8,
   "name": "Empty",
   "sources": {
-    "composite": {
-      "url": "mapbox://mapbox.mapbox-streets-v7",
+    "openmaptiles": {
+      "url": "https://api.maptiler.com/tiles/v3/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
       "type": "vector"
+    },
+    "maptiler_attribution": {
+      "type": "vector",
+      "attribution": "&lt;a href=\"https://www.maptiler.com/copyright/\"; target=\"_blank\"&gt;&amp;copy; MapTiler&lt;/a&gt; &lt;a href=\"https://www.openstreetmap.org/copyright\"; target=\"_blank\"&gt;&amp;copy; OpenStreetMap contributors&lt;/a&gt;"
     }
   },
-  "sprite": "mapbox://sprites/mapbox/light-v9",
-  "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+  "sprite": "https://api.maptiler.com/maps/streets/sprite",
+  "glyphs": "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
   "layers": []
 }
