@@ -1,4 +1,4 @@
-import '../../stub_loader';
+import {ImagePosition} from '../render/image_atlas';
 import {getIconQuads} from './quads';
 
 describe('getIconQuads', () => {
@@ -6,7 +6,7 @@ describe('getIconQuads', () => {
         pixelRatio: 1,
         displaySize: Object.freeze([ 15, 11 ]),
         paddedRect: Object.freeze({x: 0, y: 0, w: 17, h: 13})
-    });
+    }) as ImagePosition;
 
     test('point', () => {
         expect(getIconQuads({
@@ -21,7 +21,7 @@ describe('getIconQuads', () => {
             bl: {x: -8.5, y: 6.5},
             br: {x: 8.5, y: 6.5},
             tex: {x: 0, y: 0, w: 17, h: 13},
-            writingMode: null,
+            writingMode: undefined,
             glyphOffset: [0, 0],
             isSDF: true,
             sectionIndex: 0,
@@ -49,7 +49,7 @@ describe('getIconQuads', () => {
             bl: {x: -17, y: 13},
             br: {x: 17, y: 13},
             tex: {x: 0, y: 0, w: 17, h: 13},
-            writingMode: null,
+            writingMode: undefined,
             glyphOffset: [0, 0],
             isSDF: false,
             sectionIndex: 0,
@@ -77,7 +77,7 @@ describe('getIconQuads', () => {
             bl: {x: -16, y: 12},
             br: {x: 1, y: 12},
             tex: {x: 0, y: 0, w: 17, h: 13},
-            writingMode: null,
+            writingMode: undefined,
             glyphOffset: [0, 0],
             isSDF: false,
             sectionIndex: 0,
@@ -105,7 +105,7 @@ describe('getIconQuads', () => {
             bl: {x: -34, y: 6.5},
             br: {x: 34, y: 6.5},
             tex: {x: 0, y: 0, w: 17, h: 13},
-            writingMode: null,
+            writingMode: undefined,
             glyphOffset: [0, 0],
             isSDF: false,
             sectionIndex: 0,
@@ -136,7 +136,7 @@ describe('getIconQuads', () => {
             bl: {x: -8.5, y: 6.5},
             br: {x: 8.5, y: 6.5},
             tex: {x: 0, y: 0, w: 17, h: 13},
-            writingMode: null,
+            writingMode: undefined,
             glyphOffset: [0, 0],
             isSDF: false,
             sectionIndex: 0,
