@@ -15,7 +15,7 @@ describe('getIconQuads', () => {
             bottom: 5.5,
             left: -7.5,
             image
-        }, 0, true)).toEqual([{
+        }, 0, true, false)).toEqual([{
             tl: {x: -8.5, y: -6.5},
             tr: {x: 8.5, y: -6.5},
             bl: {x: -8.5, y: 6.5},
@@ -43,7 +43,7 @@ describe('getIconQuads', () => {
             bottom: 11,
             left: -15,
             image
-        }, 0, false)).toEqual([{
+        }, 0, false, false)).toEqual([{
             tl: {x: -17, y: -13},
             tr: {x: 17, y: -13},
             bl: {x: -17, y: 13},
@@ -71,7 +71,7 @@ describe('getIconQuads', () => {
             bottom: 11,
             left: -15,
             image
-        }, 0, false)).toEqual([{
+        }, 0, false, false)).toEqual([{
             tl: {x: -16, y: -1},
             tr: {x: 1, y: -1},
             bl: {x: -16, y: 12},
@@ -99,7 +99,7 @@ describe('getIconQuads', () => {
             bottom: 5.5,
             left: -30,
             image
-        }, 0, false)).toEqual([{
+        }, 0, false, false)).toEqual([{
             tl: {x: -34, y: -6.5},
             tr: {x: 34, y: -6.5},
             bl: {x: -34, y: 6.5},
@@ -130,7 +130,7 @@ describe('getIconQuads', () => {
             bottom: 5.5,
             left: -7.5,
             image
-        }, 0, false)).toEqual([{
+        }, 0, false, false)).toEqual([{
             tl: {x: -8.5, y: -6.5},
             tr: {x: 8.5, y: -6.5},
             bl: {x: -8.5, y: 6.5},
