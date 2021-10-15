@@ -22,21 +22,33 @@ function createMockClampImage(height, width) {
 }
 
 describe('DEMData', () => {
-    test('constructor', () => {
-        const imageData0 = createMockImage(4, 4);
-        const dem = new DEMData('0', imageData0, 'mapbox');
-        expect(dem.uid).toBe('0');
-        expect(dem.dim).toBe(4);
-        expect(dem.stride).toBe(6);
-    });
+    describe('constructor', () => {
+        test('Uint8Array', () => {
+            const imageData0 = createMockImage(4, 4);
+            const dem = new DEMData('0', imageData0, 'mapbox');
+            expect(dem.uid).toBe('0');
+            expect(dem.dim).toBe(4);
+            expect(dem.stride).toBe(6);
+        });
 
-    test('constructor', () => {
-        const imageData0 = createMockClampImage(4, 4);
-        const dem = new DEMData('0', imageData0, 'mapbox');
-        expect(dem).not.toBeNull();
-        expect(dem['uid']).toBe('0');
-        expect(dem['dim']).toBe(2);
-        expect(dem['stride']).toBe(4);
+        test('Uint8ClampedArray', () => {
+            const imageData0 = createMockClampImage(4, 4);
+            const dem = new DEMData('0', imageData0, 'mapbox');
+            expect(dem).not.toBeNull();
+            expect(dem['uid']).toBe('0');
+            expect(dem['dim']).toBe(2);
+            expect(dem['stride']).toBe(4);
+        });
+
+        test('otherEncoding', () => {
+            const spyOnWarnConsole = jest.spyOn(console, 'warn').mockImplementation();
+
+            const imageData0 = createMockImage(4, 4);
+            new DEMData('0', imageData0, 'otherEncoding' as any);
+
+            expect(spyOnWarnConsole).toHaveBeenCalledTimes(1);
+            expect(spyOnWarnConsole.mock.calls).toEqual([['\"otherEncoding\" is not a valid encoding type. Valid types include \"mapbox\" and \"terrarium\".']]);
+        });
     });
 });
 
