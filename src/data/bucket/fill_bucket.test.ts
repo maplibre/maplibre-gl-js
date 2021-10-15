@@ -4,9 +4,10 @@ import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import Point from '../../util/point';
-import segment from '../../data/segment';
 import FillBucket from './fill_bucket';
 import FillStyleLayer from '../../style/style_layer/fill_style_layer';
+
+jest.mock('../../data/segment');
 
 const maplibreRootDirname = 'import_meta_url'; // replaced in babel.config.cjs
 
@@ -14,7 +15,11 @@ const maplibreRootDirname = 'import_meta_url'; // replaced in babel.config.cjs
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(maplibreRootDirname, '/test/fixtures/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.water.feature(0);
 
-function createPolygon(numPoints) {
+beforeEach(() => {
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+});
+
+function createPolygon(numPoints): any[] {
     const points = [];
     for (let i = 0; i < numPoints; i++) {
         points.push(new Point(2048 + 256 * Math.cos(i / numPoints * 2 * Math.PI, 2048 + 256 * Math.sin(i / numPoints * 2 * Math.PI))));
@@ -47,10 +52,6 @@ describe('FillBucket', () => {
 
 describe('FillBucket segmentation', () => {
     test('addFeature', () => {
-    // Stub MAX_VERTEX_ARRAY_LENGTH so we can test features
-    // breaking across array groups without tests taking a _long_ time.
-        t.stub(segment, 'MAX_VERTEX_ARRAY_LENGTH').value(256);
-
         const layer = new FillStyleLayer({
             id: 'test',
             type: 'fill',
