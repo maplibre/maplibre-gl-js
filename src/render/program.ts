@@ -13,6 +13,7 @@ import type ColorMode from '../gl/color_mode';
 import type CullFaceMode from '../gl/cull_face_mode';
 import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding';
 import type {BinderUniform} from '../data/program_configuration';
+import {terrainPreludeUniforms} from './program/terrain_program';
 
 export type DrawMode = WebGLRenderingContext['LINES'] | WebGLRenderingContext['TRIANGLES'] | WebGLRenderingContext['LINE_STRIP'];
 
@@ -31,6 +32,7 @@ class Program<Us extends UniformBindings> {
     attributes: {[_: string]: number};
     numAttributes: number;
     fixedUniforms: Us;
+    terrainUniforms: any;
     binderUniforms: Array<BinderUniform>;
     failedToCreate: boolean;
 
@@ -53,10 +55,11 @@ class Program<Us extends UniformBindings> {
         const dynamicAttrInfo = configuration ? configuration.getBinderAttributes() : [];
         const allAttrInfo = staticAttrInfo.concat(dynamicAttrInfo);
 
+        const preludeUniformsInfo = shaders.prelude.staticUniforms ? getTokenizedAttributesAndUniforms(shaders.prelude.staticUniforms) : [];
         const staticUniformsInfo = source.staticUniforms ? getTokenizedAttributesAndUniforms(source.staticUniforms) : [];
         const dynamicUniformsInfo = configuration ? configuration.getBinderUniforms() : [];
         // remove duplicate uniforms
-        const uniformList = staticUniformsInfo.concat(dynamicUniformsInfo);
+        const uniformList = preludeUniformsInfo.concat(staticUniformsInfo).concat(dynamicUniformsInfo);
         const allUniformsInfo = [];
         for (const uniform of uniformList) {
             if (allUniformsInfo.indexOf(uniform) < 0) allUniformsInfo.push(uniform);
@@ -120,6 +123,7 @@ class Program<Us extends UniformBindings> {
         }
 
         this.fixedUniforms = fixedUniforms(context, uniformLocations);
+        this.terrainUniforms = terrainPreludeUniforms(context, uniformLocations);
         this.binderUniforms = configuration ? configuration.getUniforms(context, uniformLocations) : [];
     }
 
@@ -130,6 +134,7 @@ class Program<Us extends UniformBindings> {
          colorMode: Readonly<ColorMode>,
          cullFaceMode: Readonly<CullFaceMode>,
          uniformValues: UniformValues<Us>,
+         terrain: any,
          layerID: string,
          layoutVertexBuffer: VertexBuffer,
          indexBuffer: IndexBuffer,
@@ -150,6 +155,16 @@ class Program<Us extends UniformBindings> {
         context.setStencilMode(stencilMode);
         context.setColorMode(colorMode);
         context.setCullFace(cullFaceMode);
+
+        if (terrain) {
+            context.activeTexture.set(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, terrain.depthTexture);
+            context.activeTexture.set(gl.TEXTURE3);
+            gl.bindTexture(gl.TEXTURE_2D, terrain.texture);
+            for (const name in this.terrainUniforms) {
+                this.terrainUniforms[name].set(terrain[name]);
+            }
+        }
 
         for (const name in this.fixedUniforms) {
             this.fixedUniforms[name].set(uniformValues[name]);

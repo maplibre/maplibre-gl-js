@@ -81,6 +81,7 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(programName, programConfiguration);
+        const terrain = painter.style.terrainSourceCache.getTerrain(coord);
 
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);
@@ -117,7 +118,7 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
         }
 
         program.draw(painter.context, drawMode, depthMode,
-            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues,
+            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrain,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }

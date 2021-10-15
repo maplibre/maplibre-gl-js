@@ -27,14 +27,12 @@ function drawTerrainCoords(painter, sourceCache: TerrainSourceCache) {
    context.clear({ color: Color.transparent, depth: 1 });
    sourceCache._coordsIndex = [];
    for (const tile of tiles) {
-      const dem = sourceCache.getDem(tile.tileID);
+      const terrain = sourceCache.getTerrain(tile.tileID);
       context.activeTexture.set(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, dem.texture);
-      context.activeTexture.set(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, coords.texture);
       const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
-      const uniformValues = terrainCoordsUniformValues(painter, posMatrix, dem.matrix, 255 - sourceCache._coordsIndex.length, dem.unpackVector, sourceCache.elevationOffset);
-      program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, "terrain", mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+      const uniformValues = terrainCoordsUniformValues(posMatrix, 255 - sourceCache._coordsIndex.length);
+      program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrain, "terrain", mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
       sourceCache._coordsIndex.push(tile.tileID.key);
    }
 
@@ -44,12 +42,10 @@ function drawTerrainCoords(painter, sourceCache: TerrainSourceCache) {
    context.viewport.set([0, 0, painter.width  / devicePixelRatio, painter.height / devicePixelRatio]);
    context.clear({ color: Color.transparent, depth: 1 });
    for (const tile of tiles) {
-      const dem = sourceCache.getDem(tile.tileID);
-      context.activeTexture.set(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, dem.texture);
+      const terrain = sourceCache.getTerrain(tile.tileID);
       const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
-      const uniformValues = terrainDepthUniformValues(painter, posMatrix, dem.matrix, dem.unpackVector, sourceCache.elevationOffset);
-      program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, "terrain", mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+      const uniformValues = terrainDepthUniformValues(posMatrix);
+      program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrain, "terrain", mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
    }
 
    context.bindFramebuffer.set(null);
@@ -63,17 +59,15 @@ function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache, tile: Ti
    const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D);
    const program = painter.useProgram('terrain');
    const mesh = sourceCache.getTerrainMesh(context);
-   const dem = sourceCache.getDem(tile.tileID);
+   const terrain = sourceCache.getTerrain(tile.tileID);
 
    context.bindFramebuffer.set(null);
    context.viewport.set([0, 0, painter.width, painter.height]);
    context.activeTexture.set(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, dem.texture);
-   context.activeTexture.set(gl.TEXTURE1);
    gl.bindTexture(gl.TEXTURE_2D, FBOs[tile.tileSize].colorAttachment.get());
    const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
-   const uniformValues = terrainUniformValues(painter, posMatrix, dem.matrix, dem.unpackVector, sourceCache.elevationOffset);
-   program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, "terrain", mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+   const uniformValues = terrainUniformValues(posMatrix);
+   program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrain, "terrain", mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 }
 
 function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, tile: Tile, stack: number) {

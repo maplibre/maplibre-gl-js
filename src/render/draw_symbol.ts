@@ -9,7 +9,7 @@ import {mat4} from 'gl-matrix';
 import StencilMode from '../gl/stencil_mode';
 import DepthMode from '../gl/depth_mode';
 import CullFaceMode from '../gl/cull_face_mode';
-import {addDynamicAttributes, addElevation} from '../data/bucket/symbol_bucket';
+import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
 import {getAnchorAlignment, WritingMode} from '../symbol/shaping';
 import ONE_EM from '../symbol/one_em';
@@ -38,6 +38,7 @@ export default drawSymbols;
 type SymbolTileRenderState = {
   segments: SegmentVector;
   sortKey: number;
+  terrain: any;
   state: {
     program: any;
     buffers: SymbolBuffers;
@@ -62,8 +63,6 @@ function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: SymbolSt
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
     const variablePlacement = layer.layout.get('text-variable-anchor');
-
-    updateElevation(coords, painter, layer, sourceCache);
 
     //Compute variable-offsets before painting since icons and text data positioning
     //depend on each other in this case.
@@ -114,31 +113,6 @@ function calculateVariableRenderShift(anchor, width, height, textOffset, textBox
         (shiftX / textBoxScale + variableOffset[0]) * renderTextSize,
         (shiftY / textBoxScale + variableOffset[1]) * renderTextSize
     );
-}
-
-function updateElevation(coords, painter, layer, sourceCache) {
-    for (const coord of coords) {
-        const tile = sourceCache.getTile(coord);
-        const bucket: SymbolBucket = tile.getBucket(layer);
-        if (!bucket || tile.state != "loaded" || tile.elevation[layer.id]) continue;
-        for (const type of ['text', 'icon']) {
-            const placedSymbols = bucket && bucket[type] && bucket[type].placedSymbolArray;
-            if (placedSymbols) {
-                const elevationVertexArray = bucket[type].elevationVertexArray;
-                elevationVertexArray.clear();
-                for (let s = 0; s < placedSymbols.length; s++) {
-                    const symbol: any = placedSymbols.get(s);
-                    const elevation = painter.style.terrainSourceCache.getElevation(coord, symbol.anchorX, symbol.anchorY);
-                    for (let g = 0; g < symbol.numGlyphs; g++) {
-                        addElevation(elevationVertexArray, elevation);
-                    }
-                }
-                if (bucket[type].elevationVertexBuffer)
-                    bucket[type].elevationVertexBuffer.updateData(elevationVertexArray);
-            }
-        }
-        tile.elevation[layer.id] = true;
-    }
 }
 
 function updateVariableAnchors(coords, painter, layer, sourceCache, rotationAlignment, pitchAlignment, variableOffsets) {
@@ -291,6 +265,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
 
         const program = painter.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
         const size = symbolSize.evaluateSizeForZoom(sizeData, tr.zoom);
+        const terrain = painter.style.terrainSourceCache.getTerrain(coord);
 
         let texSize: [number, number];
         let texSizeIcon: [number, number] = [0, 0];
@@ -373,14 +348,16 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
                 tileRenderState.push({
                     segments: new SegmentVector([segment]),
                     sortKey: (segment.sortKey as any as number),
-                    state
+                    state,
+                    terrain
                 });
             }
         } else {
             tileRenderState.push({
                 segments: buffers.segments,
                 sortKey: 0,
-                state
+                state,
+                terrain
             });
         }
     }
@@ -401,27 +378,24 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
             }
         }
 
-        context.activeTexture.set(gl.TEXTURE2);
-        gl.bindTexture(gl.TEXTURE_2D, painter.style.terrainSourceCache.getDepthTexture().texture);
-
         if (state.isSDF) {
             const uniformValues = (state.uniformValues as any as UniformValues<SymbolSDFUniformsType>);
             if (state.hasHalo) {
                 uniformValues['u_is_halo'] = 1;
-                drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues);
+                drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, segmentState.terrain);
             }
             uniformValues['u_is_halo'] = 0;
         }
-        drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues);
+        drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, segmentState.terrain);
     }
 }
 
-function drawSymbolElements(buffers, segments, layer, painter, program, depthMode, stencilMode, colorMode, uniformValues) {
+function drawSymbolElements(buffers, segments, layer, painter, program, depthMode, stencilMode, colorMode, uniformValues, terrain) {
     const context = painter.context;
     const gl = context.gl;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        uniformValues, layer.id, buffers.layoutVertexBuffer,
+        uniformValues, terrain, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
         painter.transform.zoom, buffers.programConfigurations.get(layer.id),
-        buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer, buffers.elevationVertexBuffer);
+        buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);
 }

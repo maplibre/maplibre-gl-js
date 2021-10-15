@@ -22,6 +22,7 @@ type TileBatch = {
   circleOffset: number;
   transform: mat4;
   invTransform: mat4;
+  coord: OverscaledTileID;
 };
 
 let quadTriangles: QuadTriangleArray;
@@ -60,7 +61,8 @@ function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: S
                 circleArray,
                 circleOffset,
                 transform,
-                invTransform
+                invTransform,
+                coord
             });
 
             circleCount += circleArray.length / 4;  // 4 values per circle
@@ -75,6 +77,7 @@ function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: S
                 posMatrix,
                 painter.transform,
                 tile),
+            painter.style.terrainSourceCache.getTerrain(coord),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);
@@ -132,6 +135,7 @@ function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: S
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
             uniforms,
+            painter.style.terrainSourceCache.getTerrain(batch.coord),
             layer.id,
             vertexBuffer,
             indexBuffer,

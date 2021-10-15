@@ -1,5 +1,5 @@
-import {CircleLayoutArray, CircleElevationArray} from '../array_types';
-import layout, {members as layoutAttributes, elevationAttributes} from './circle_attributes';
+import {CircleLayoutArray} from '../array_types';
+import {members as layoutAttributes} from './circle_attributes';
 import SegmentVector from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
@@ -25,7 +25,6 @@ import type VertexBuffer from '../../gl/vertex_buffer';
 import type Point from '../../util/point';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
-import { addElevation } from './symbol_bucket';
 
 function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {
     layoutVertexArray.emplaceBack(
@@ -52,9 +51,6 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
     layoutVertexArray: CircleLayoutArray;
     layoutVertexBuffer: VertexBuffer;
 
-    elevationVertexArray: CircleElevationArray;
-    elevationVertexBuffer: VertexBuffer;
-
     indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
 
@@ -62,8 +58,6 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
     programConfigurations: ProgramConfigurationSet<Layer>;
     segments: SegmentVector;
     uploaded: boolean;
-
-    centroids: Array<{ x: number; y: number; }>;
 
     constructor(options: BucketParameters<Layer>) {
         this.zoom = options.zoom;
@@ -74,12 +68,10 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
         this.hasPattern = false;
 
         this.layoutVertexArray = new CircleLayoutArray();
-        this.elevationVertexArray = new CircleElevationArray();
         this.indexArray = new TriangleIndexArray();
         this.segments = new SegmentVector();
         this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
-        this.centroids = [];
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
@@ -138,7 +130,7 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
     }
 
     isEmpty() {
-        return this.layoutVertexArray.length === 0 && this.elevationVertexArray.length === 0;
+        return this.layoutVertexArray.length === 0;
     }
 
     uploadPending() {
@@ -148,7 +140,6 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
     upload(context: Context) {
         if (!this.uploaded) {
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
-            this.elevationVertexBuffer = context.createVertexBuffer(this.elevationVertexArray, elevationAttributes.members, true);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
         }
         this.programConfigurations.upload(context);
@@ -161,7 +152,6 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
         this.indexBuffer.destroy();
         this.programConfigurations.destroy();
         this.segments.destroy();
-        this.elevationVertexBuffer.destroy();
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID) {
@@ -190,12 +180,8 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
                 addCircleVertex(this.layoutVertexArray, x, y, 1, 1);
                 addCircleVertex(this.layoutVertexArray, x, y, -1, 1);
 
-                addElevation(this.elevationVertexArray, 0);
-
                 this.indexArray.emplaceBack(index, index + 1, index + 2);
                 this.indexArray.emplaceBack(index, index + 3, index + 2);
-
-                this.centroids.push({ x: x, y: y });
 
                 segment.vertexLength += 4;
                 segment.primitiveLength += 2;

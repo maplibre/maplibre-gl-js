@@ -66,14 +66,15 @@ function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterSty
         const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
         const posMatrix = terrainCoord ? terrainCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
         const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer);
+        const terrain = painter.style.terrainSourceCache.getTerrain(coord);
 
         if (source instanceof ImageSource) {
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.disabled,
-                uniformValues, layer.id, source.boundsBuffer,
+                uniformValues, terrain, layer.id, source.boundsBuffer,
                 painter.quadTriangleIndexBuffer, source.boundsSegments);
         } else {
             program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
-                uniformValues, layer.id, painter.rasterBoundsBuffer,
+                uniformValues, terrain, layer.id, painter.rasterBoundsBuffer,
                 painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
         }
     }

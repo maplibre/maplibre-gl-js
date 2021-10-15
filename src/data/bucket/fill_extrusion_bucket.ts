@@ -1,5 +1,5 @@
-import {FillExtrusionLayoutArray, FillExtrusionElevationArray} from '../array_types';
-import {members as layoutAttributes, elevationAttributes} from './fill_extrusion_attributes';
+import {FillExtrusionLayoutArray, PosArray} from '../array_types';
+import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes';
 import SegmentVector from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
@@ -61,8 +61,8 @@ class FillExtrusionBucket implements Bucket {
     layoutVertexArray: FillExtrusionLayoutArray;
     layoutVertexBuffer: VertexBuffer;
 
-    elevationVertexArray: FillExtrusionElevationArray;
-    elevationVertexBuffer: VertexBuffer;
+    centroidVertexArray: PosArray;
+    centroidVertexBuffer: VertexBuffer;
 
     indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
@@ -72,7 +72,6 @@ class FillExtrusionBucket implements Bucket {
     segments: SegmentVector;
     uploaded: boolean;
     features: Array<BucketFeature>;
-    centroids: Array<{ x: number; y: number; vertexCount: number; }>;
 
     constructor(options: BucketParameters<FillExtrusionStyleLayer>) {
         this.zoom = options.zoom;
@@ -83,12 +82,11 @@ class FillExtrusionBucket implements Bucket {
         this.hasPattern = false;
 
         this.layoutVertexArray = new FillExtrusionLayoutArray();
-        this.elevationVertexArray = new FillExtrusionElevationArray();
+        this.centroidVertexArray = new PosArray();
         this.indexArray = new TriangleIndexArray();
         this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
         this.segments = new SegmentVector();
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
-        this.centroids = [];
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
@@ -134,7 +132,7 @@ class FillExtrusionBucket implements Bucket {
     }
 
     isEmpty() {
-        return this.layoutVertexArray.length === 0 && this.elevationVertexArray.length === 0;
+        return this.layoutVertexArray.length === 0 && this.centroidVertexArray.length === 0;
     }
 
     uploadPending() {
@@ -144,7 +142,7 @@ class FillExtrusionBucket implements Bucket {
     upload(context: Context) {
         if (!this.uploaded) {
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
-            this.elevationVertexBuffer = context.createVertexBuffer(this.elevationVertexArray, elevationAttributes.members, true);
+            this.centroidVertexBuffer = context.createVertexBuffer(this.centroidVertexArray, centroidAttributes.members, true);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
         }
         this.programConfigurations.upload(context);
@@ -157,7 +155,7 @@ class FillExtrusionBucket implements Bucket {
         this.indexBuffer.destroy();
         this.programConfigurations.destroy();
         this.segments.destroy();
-        this.elevationVertexBuffer.destroy();
+        this.centroidVertexBuffer.destroy();
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
@@ -272,13 +270,11 @@ class FillExtrusionBucket implements Bucket {
             segment.vertexLength += numVertices;
         }
 
-        // remember polygon centroid to calculate elevation in a later step
-        this.centroids.push({
-            x: Math.floor(centroid.x / centroid.vertexCount),
-            y: Math.floor(centroid.y / centroid.vertexCount),
-            vertexCount: centroid.vertexCount
-        });
-        for (let i=0; i<centroid.vertexCount; i++) this.elevationVertexArray.emplaceBack(0); // calculated later
+        // remember polygon centroid to calculate elevation in GPU
+        for (let i=0; i<centroid.vertexCount; i++) this.centroidVertexArray.emplaceBack(
+            Math.floor(centroid.x / centroid.vertexCount),
+            Math.floor(centroid.y / centroid.vertexCount)
+        );
 
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }

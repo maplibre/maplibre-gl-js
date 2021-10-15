@@ -1,4 +1,4 @@
-import {Uniform1i, Uniform1f, Uniform2f, UniformMatrix4f} from '../uniform_binding';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform4f, UniformMatrix4f} from '../uniform_binding';
 import pixelsToTileUnits from '../../source/pixels_to_tile_units';
 
 import type Context from '../../gl/context';
@@ -15,8 +15,6 @@ export type CircleUniformsType = {
   'u_extrude_scale': Uniform2f;
   'u_device_pixel_ratio': Uniform1f;
   'u_matrix': UniformMatrix4f;
-  'u_depth': Uniform1i;
-  'u_terrain_exaggeration': Uniform1f;
 };
 
 const circleUniforms = (context: Context, locations: UniformLocations): CircleUniformsType => ({
@@ -25,16 +23,14 @@ const circleUniforms = (context: Context, locations: UniformLocations): CircleUn
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
     'u_extrude_scale': new Uniform2f(context, locations.u_extrude_scale),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_depth': new Uniform1i(context, locations.u_depth),
-    'u_terrain_exaggeration': new Uniform1f(context, locations.u_terrain_exaggeration)
+    'u_matrix': new UniformMatrix4f(context, locations.u_matrix)
 });
 
 const circleUniformValues = (
   painter: Painter,
   coord: OverscaledTileID,
   tile: Tile,
-  layer: CircleStyleLayer
+  layer: CircleStyleLayer,
 ): UniformValues<CircleUniformsType> => {
     const transform = painter.transform;
 
@@ -58,9 +54,7 @@ const circleUniformValues = (
             layer.paint.get('circle-translate-anchor')),
         'u_pitch_with_map': +(pitchWithMap),
         'u_device_pixel_ratio': devicePixelRatio,
-        'u_extrude_scale': extrudeScale,
-        'u_depth': 0,
-        'u_terrain_exaggeration': painter.style.terrainSourceCache.exaggeration
+        'u_extrude_scale': extrudeScale
     };
 };
 

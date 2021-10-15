@@ -72,6 +72,17 @@ vec2 get_pattern_pos(const vec2 pixel_coord_upper, const vec2 pixel_coord_lower,
     return (tile_units_to_pixels * pos + offset) / pattern_size;
 }
 
+// logic for terrain 3d
+
+#ifdef TERRAIN3D
+uniform sampler2D u_terrain;
+uniform mat4 u_terrain_matrix;
+uniform vec4 u_terrain_unpack;
+uniform float u_terrain_offset;
+uniform float u_terrain_exaggeration;
+uniform highp sampler2D u_depth;
+#endif
+
 // methods for pack/unpack depth value to texture rgba
 // https://stackoverflow.com/questions/34963366/encode-floating-point-data-in-a-rgba-texture
 const highp vec4 bitSh = vec4(256. * 256. * 256., 256. * 256., 256., 1.);
@@ -83,7 +94,7 @@ highp float unpack(highp vec4 color) {
 
 // calculate the visibility of a coordinate in terrain and return an opacity value.
 // if a coordinate is behind the terrain reduce its opacity
-float calculate_visibility(sampler2D u_depth, vec4 pos) {
+float calculate_visibility(vec4 pos) {
     #ifdef TERRAIN3D
         vec3 frag = pos.xyz / pos.w;
         vec4 rgba = texture2D(u_depth, frag.xy * 0.5 + 0.5);
@@ -92,5 +103,16 @@ float calculate_visibility(sampler2D u_depth, vec4 pos) {
         return 1.0;
     #else
         return 1.0;
+    #endif
+}
+
+float get_elevation(vec2 pos) {
+    #ifdef TERRAIN3D
+        vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * 0.5 + 0.5;
+        vec4 rgb = (texture2D(u_terrain, coord) * 255.0) * u_terrain_unpack;
+        float ele = rgb.r + rgb.g + rgb.b - u_terrain_unpack.a;
+        return (ele + u_terrain_offset) * u_terrain_exaggeration;
+    #else
+        return 0.0;
     #endif
 }

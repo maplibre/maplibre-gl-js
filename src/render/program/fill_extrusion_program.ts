@@ -4,6 +4,7 @@ import {
     Uniform1f,
     Uniform2f,
     Uniform3f,
+    Uniform4f,
     UniformMatrix4f
 } from '../uniform_binding';
 
@@ -24,7 +25,6 @@ export type FillExtrusionUniformsType = {
   'u_lightcolor': Uniform3f;
   'u_vertical_gradient': Uniform1f;
   'u_opacity': Uniform1f;
-  'u_terrain_exaggeration': Uniform1f;
 };
 
 export type FillExtrusionPatternUniformsType = {
@@ -42,7 +42,6 @@ export type FillExtrusionPatternUniformsType = {
   'u_scale': Uniform3f;
   'u_fade': Uniform1f;
   'u_opacity': Uniform1f;
-  'u_terrain_exaggeration': Uniform1f;
 };
 
 const fillExtrusionUniforms = (context: Context, locations: UniformLocations): FillExtrusionUniformsType => ({
@@ -51,8 +50,7 @@ const fillExtrusionUniforms = (context: Context, locations: UniformLocations): F
     'u_lightintensity': new Uniform1f(context, locations.u_lightintensity),
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
-    'u_opacity': new Uniform1f(context, locations.u_opacity),
-    'u_terrain_exaggeration': new Uniform1f(context, locations.u_terrain_exaggeration)
+    'u_opacity': new Uniform1f(context, locations.u_opacity)
 });
 
 const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocations): FillExtrusionPatternUniformsType => ({
@@ -69,8 +67,7 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
     'u_pixel_coord_lower': new Uniform2f(context, locations.u_pixel_coord_lower),
     'u_scale': new Uniform3f(context, locations.u_scale),
     'u_fade': new Uniform1f(context, locations.u_fade),
-    'u_opacity': new Uniform1f(context, locations.u_opacity),
-    'u_terrain_exaggeration': new Uniform1f(context, locations.u_terrain_exaggeration)
+    'u_opacity': new Uniform1f(context, locations.u_opacity)
 });
 
 const fillExtrusionUniformValues = (
@@ -96,8 +93,7 @@ const fillExtrusionUniformValues = (
         'u_lightintensity': light.properties.get('intensity'),
         'u_lightcolor': [lightColor.r, lightColor.g, lightColor.b],
         'u_vertical_gradient': +shouldUseVerticalGradient,
-        'u_opacity': opacity,
-        'u_terrain_exaggeration': painter.style.terrainSourceCache.exaggeration
+        'u_opacity': opacity
     };
 };
 

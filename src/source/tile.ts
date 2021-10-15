@@ -92,9 +92,6 @@ class Tile {
     hasSymbolBuckets: boolean;
     hasRTLText: boolean;
     dependencies: any;
-    elevation: any;
-    elevationMin: number;
-    elevationMax: number;
     textures: Array<Texture>;
 
     /**
@@ -113,9 +110,6 @@ class Tile {
         this.hasSymbolBuckets = false;
         this.hasRTLText = false;
         this.dependencies = {};
-        this.elevation = {};
-        this.elevationMin = 0;
-        this.elevationMax = 0;
         this.rerender = false;
         this.textures = [];
 
