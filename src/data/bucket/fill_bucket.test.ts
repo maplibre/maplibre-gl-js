@@ -1,4 +1,3 @@
-
 import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
@@ -6,6 +5,9 @@ import {VectorTile} from '@mapbox/vector-tile';
 import Point from '../../util/point';
 import FillBucket from './fill_bucket';
 import FillStyleLayer from '../../style/style_layer/fill_style_layer';
+import {BucketFeature} from '../bucket';
+import EvaluationParameters from '../../style/evaluation_parameters';
+import type {CollisionBoxArray} from '../array_types';
 
 jest.mock('../../data/segment');
 
@@ -19,35 +21,48 @@ beforeEach(() => {
     jest.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
-function createPolygon(numPoints): any[] {
+function createPolygon(numPoints) {
     const points = [];
     for (let i = 0; i < numPoints; i++) {
-        points.push(new Point(2048 + 256 * Math.cos(i / numPoints * 2 * Math.PI, 2048 + 256 * Math.sin(i / numPoints * 2 * Math.PI))));
+        points.push(
+            new Point(
+                (2048 + 256 * Math.cos(i / numPoints * 2 * Math.PI)),
+                (2048 + 256 * Math.sin(i / numPoints * 2 * Math.PI))
+            ));
     }
     return points;
 }
 
 describe('FillBucket', () => {
     test('addFeature', () => {
-        const layer = new FillStyleLayer({id: 'test', type: 'fill', layout: {}});
-        layer.recalculate({zoom: 0, zoomHistory: {}});
+        const layer = new FillStyleLayer({
+            id: 'test',
+            type: 'fill',
+            source: '', layout: {}
+        });
+        const evaluationParameters : EvaluationParameters = {zoom: 0, zoomHistory: {}} as EvaluationParameters;
+        const availableImages: Array<string> = [''];
+        layer.recalculate(evaluationParameters, availableImages);
 
-        const bucket = new FillBucket({layers: [layer]});
+        const bucket = new FillBucket({layers: [layer], index: 0, zoom : 0, pixelRatio:0, overscaling: 0, collisionBoxArray: [] as unknown as CollisionBoxArray,  sourceLayerIndex: 0, sourceID: ''});
+        expect(bucket.layoutVertexArray.length).toBe(0);
 
-        bucket.addFeature({}, [[
+        bucket.addFeature({} as BucketFeature, [[
             new Point(0, 0),
             new Point(10, 10)
-        ]]);
+        ]], undefined, undefined, undefined);
+        expect(bucket.layoutVertexArray.length).toBe(2);
 
-        bucket.addFeature({}, [[
+        bucket.addFeature({} as BucketFeature, [[
             new Point(0, 0),
             new Point(10, 10),
-            new Point(10, 20)
-        ]]);
+            new Point(10, 20),
+        ]], undefined, undefined, undefined);
+        expect(bucket.layoutVertexArray.length).toBe(5);
 
-        bucket.addFeature(feature, feature.loadGeometry());
+        bucket.addFeature(feature, feature.loadGeometry(), undefined, undefined, undefined);
+        expect(bucket.layoutVertexArray.length).toBe(411);
     });
-
 });
 
 describe('FillBucket segmentation', () => {
@@ -55,24 +70,25 @@ describe('FillBucket segmentation', () => {
         const layer = new FillStyleLayer({
             id: 'test',
             type: 'fill',
+            source: '',
             layout: {},
-            paint: {
-                'fill-color': ['to-color', ['get', 'foo'], '#000']
-            }
+            paint: {'fill-color': ['to-color', ['get', 'foo'], '#000']}
         });
-        layer.recalculate({zoom: 0, zoomHistory: {}});
+        const evaluationParameters : EvaluationParameters = {zoom: 0, zoomHistory: {}} as EvaluationParameters;
+        const availableImages: Array<string> = [''];
+        layer.recalculate(evaluationParameters, availableImages);
 
-        const bucket = new FillBucket({layers: [layer]});
+        const bucket = new FillBucket({layers: [layer], index: 0, zoom : 0, pixelRatio:0, overscaling: 0, collisionBoxArray: [] as unknown as CollisionBoxArray,  sourceLayerIndex: 0, sourceID: ''});
 
         // first add an initial, small feature to make sure the next one starts at
         // a non-zero offset
-        bucket.addFeature({}, [createPolygon(10)]);
+        bucket.addFeature({} as BucketFeature, [createPolygon(10)], undefined, undefined, undefined);
 
         // add a feature that will break across the group boundary
-        bucket.addFeature({}, [
+        bucket.addFeature({} as BucketFeature, [
             createPolygon(128),
             createPolygon(128)
-        ]);
+        ], undefined, undefined, undefined);
 
         // Each polygon must fit entirely within a segment, so we expect the
         // first segment to include the first feature and the first polygon
