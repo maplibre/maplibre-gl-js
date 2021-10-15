@@ -1,17 +1,17 @@
 
 import fs from 'fs';
-import path, {dirname} from 'path';
+import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import Point from '../../util/point';
 import segment from '../../data/segment';
 import FillBucket from './fill_bucket';
 import FillStyleLayer from '../../style/style_layer/fill_style_layer';
-import {fileURLToPath} from 'url';
-const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const maplibreRootDirname = 'import_meta_url'; // replaced in babel.config.cjs
 
 // Load a fill feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'))));
+const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(maplibreRootDirname, '/test/fixtures/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.water.feature(0);
 
 function createPolygon(numPoints) {

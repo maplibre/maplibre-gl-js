@@ -7,8 +7,7 @@ module.exports = {
     "**/?(*.)+(spec|test).+(ts|tsx|js)"
   ],
   "transform": {
-    "^.+\\.(ts|tsx)$": "ts-jest",
-    "^.+\\.(js)$": "babel-jest",
+    "^.+\\.(js|ts)$": "babel-jest",
     "^.+\\.(glsl)$": "jest-raw-loader",
   },
   testEnvironment: "jsdom",
