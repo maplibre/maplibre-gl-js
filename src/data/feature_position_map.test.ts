@@ -26,9 +26,8 @@ describe('FeaturePositionMap', () => {
         const featureMap = new FeatureMap();
         featureMap.add(0, 1, 2, 3);
 
-        const t1 = () => {
+        expect(() => {
             featureMap.getPositions(0);
-        };
-        expect(t1).toThrow();
+        }).toThrow();
     });
 });
