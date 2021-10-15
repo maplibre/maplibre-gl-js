@@ -4,17 +4,15 @@ describe('LngLat', () => {
     test('#constructor', () => {
         expect(new LngLat(0, 0) instanceof LngLat).toBeTruthy();
 
-        const t1 = () => {
+        expect(() => {
             /*eslint no-new: 0*/
             new LngLat(0, -91);
-        };
-        expect(t1).toThrow('Invalid LngLat latitude value: must be between -90 and 90');
+        }).toThrow('Invalid LngLat latitude value: must be between -90 and 90');
 
-        const t2 = () => {
+        expect(() => {
             /*eslint no-new: 0*/
             new LngLat(0, 91);
-        };
-        expect(t2).toThrow('Invalid LngLat latitude value: must be between -90 and 90');
+        }).toThrow('Invalid LngLat latitude value: must be between -90 and 90');
     });
 
     test('#convert', () => {
