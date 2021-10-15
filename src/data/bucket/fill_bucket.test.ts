@@ -1,14 +1,13 @@
 
 import '../../stub_loader';
-import {test} from '../../util/test';
 import fs from 'fs';
 import path, {dirname} from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import Point from '../../../rollup/build/tsc/src/util/point';
-import segment from '../../../rollup/build/tsc/src/data/segment';
-import FillBucket from '../../../rollup/build/tsc/src/data/bucket/fill_bucket';
-import FillStyleLayer from '../../../rollup/build/tsc/src/style/style_layer/fill_style_layer';
+import Point from '../util/point';
+import segment from '../data/segment';
+import FillBucket from '../data/bucket/fill_bucket';
+import FillStyleLayer from '../style/style_layer/fill_style_layer';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -24,7 +23,7 @@ function createPolygon(numPoints) {
     return points;
 }
 
-test('FillBucket', (t) => {
+describe('FillBucket', done => {
     const layer = new FillStyleLayer({id: 'test', type: 'fill', layout: {}});
     layer.recalculate({zoom: 0, zoomHistory: {}});
 
@@ -43,10 +42,10 @@ test('FillBucket', (t) => {
 
     bucket.addFeature(feature, feature.loadGeometry());
 
-    t.end();
+    done();
 });
 
-test('FillBucket segmentation', (t) => {
+describe('FillBucket segmentation', done => {
     // Stub MAX_VERTEX_ARRAY_LENGTH so we can test features
     // breaking across array groups without tests taking a _long_ time.
     t.stub(segment, 'MAX_VERTEX_ARRAY_LENGTH').value(256);
@@ -77,19 +76,19 @@ test('FillBucket segmentation', (t) => {
     // first segment to include the first feature and the first polygon
     // of the second feature, and the second segment to include the
     // second polygon of the second feature.
-    t.equal(bucket.layoutVertexArray.length, 266);
-    t.deepEqual(bucket.segments.get()[0], {
+    expect(bucket.layoutVertexArray.length).toBe(266);
+    expect(bucket.segments.get()[0]).toEqual({
         vertexOffset: 0,
         vertexLength: 138,
         primitiveOffset: 0,
         primitiveLength: 134
     });
-    t.deepEqual(bucket.segments.get()[1], {
+    expect(bucket.segments.get()[1]).toEqual({
         vertexOffset: 138,
         vertexLength: 128,
         primitiveOffset: 134,
         primitiveLength: 126
     });
 
-    t.end();
+    done();
 });
