@@ -8,15 +8,13 @@ describe('EdgeInsets', () => {
         });
 
         test('invalid initialization', () => {
-            const t1 = () => {
+            expect(() => {
                 new EdgeInsets(NaN, 10);
-            };
-            expect(t1).toThrow('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
+            }).toThrow('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
 
-            const t2 = () => {
+            expect(() => {
                 new EdgeInsets(-10, 10, 20, 10);
-            };
-            expect(t2).toThrow('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
+            }).toThrow('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
         });
 
         test('valid initialization', () => {
