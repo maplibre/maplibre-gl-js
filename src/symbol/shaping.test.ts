@@ -1,14 +1,11 @@
 import '../../stub_loader';
 import fs from 'fs';
-import path, {dirname} from 'path';
 import {WritingMode, shapeIcon, shapeText, fitIconToText} from './shaping';
 import Formatted, {FormattedSection} from '../style-spec/expression/types/formatted';
 import ResolvedImage from '../style-spec/expression/types/resolved_image';
-import expectedJson from '../../expected/text-shaping-linebreak.json';
+import expectedJson from '../../test/expected/text-shaping-linebreak.json';
 import {ImagePosition} from '../render/image_atlas';
-import {fileURLToPath} from 'url';
 import {StyleImage} from '../style/style_image';
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let UPDATE = false;
 if (typeof process !== 'undefined' && process.env !== undefined) {
@@ -21,7 +18,7 @@ describe('shaping', () => {
     const layoutTextSizeThisZoom = 16;
     const fontStack = 'Test';
     const glyphs = {
-        'Test': JSON.parse(fs.readFileSync(path.join(__dirname, '/../../fixtures/fontstack-glyphs.json')))
+        'Test': require('../../test/fixtures/fontstack-glyphs.json')
     };
     const glyphPositions = glyphs;
 
@@ -44,51 +41,51 @@ describe('shaping', () => {
     JSON.parse('{}');
 
     shaped = shapeText(Formatted.fromString(`hi${String.fromCharCode(0)}`), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
-    if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-null.json'), JSON.stringify(shaped, null, 2));
+    if (UPDATE) fs.writeFileSync('../../test/expected/text-shaping-null.json', JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(
-        JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-null.json')))
+        require('../../test/expected/text-shaping-null.json')
     );
 
     // Default shaping.
     shaped = shapeText(Formatted.fromString('abcde'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
-    if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-default.json'), JSON.stringify(shaped, null, 2));
+    if (UPDATE) fs.writeFileSync('../../test/expected/text-shaping-default.json', JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(
-        JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-default.json')))
+        require('../../test/expected/text-shaping-default.json')
     );
 
     // Letter spacing.
     shaped = shapeText(Formatted.fromString('abcde'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0.125 * oneEm, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
-    if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-spacing.json'), JSON.stringify(shaped, null, 2));
+    if (UPDATE) fs.writeFileSync('../../test/expected/text-shaping-spacing.json', JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(
-        JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-spacing.json')))
+        require('../../test/expected/text-shaping-spacing.json')
     );
 
     // Line break.
     shaped = shapeText(Formatted.fromString('abcde abcde'), glyphs, glyphPositions, images, fontStack, 4 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
-    if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-linebreak.json'), JSON.stringify(shaped, null, 2));
+    if (UPDATE) fs.writeFileSync('../../test/expected/text-shaping-linebreak.json', JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(expectedJson);
 
-    const expectedNewLine = JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-newline.json')));
+    const expectedNewLine = require('../../test/expected/text-shaping-newline.json');
 
     shaped = shapeText(Formatted.fromString('abcde\nabcde'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
-    if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-newline.json'), JSON.stringify(shaped, null, 2));
+    if (UPDATE) fs.writeFileSync('../../test/expected/text-shaping-newline.json', JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(expectedNewLine);
 
     shaped = shapeText(Formatted.fromString('abcde\r\nabcde'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
     expect(shaped.positionedLines).toEqual(expectedNewLine.positionedLines);
 
-    const expectedNewLinesInMiddle = JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-newlines-in-middle.json')));
+    const expectedNewLinesInMiddle = require('../../test/expected/text-shaping-newlines-in-middle.json');
 
     shaped = shapeText(Formatted.fromString('abcde\n\nabcde'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
-    if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-newlines-in-middle.json'), JSON.stringify(shaped, null, 2));
+    if (UPDATE) fs.writeFileSync('../../test/expected/text-shaping-newlines-in-middle.json', JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(expectedNewLinesInMiddle);
 
     // Prefer zero width spaces when breaking lines. Zero width spaces are used by Mapbox data sources as a hint that
     // a position is ideal for breaking.
-    const expectedZeroWidthSpaceBreak = JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-zero-width-space.json')));
+    const expectedZeroWidthSpaceBreak = require('../../test/expected/text-shaping-zero-width-space.json');
 
     shaped = shapeText(Formatted.fromString('三三\u200b三三\u200b三三\u200b三三三三三三\u200b三三'), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
-    if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-zero-width-space.json'), JSON.stringify(shaped, null, 2));
+    if (UPDATE) fs.writeFileSync('../../test/expected/text-shaping-zero-width-space.json', JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(expectedZeroWidthSpaceBreak);
 
     // Null shaping.
@@ -111,7 +108,7 @@ describe('shaping', () => {
     });
 
     test('images in horizontal layout', () => {
-        const expectedImagesHorizontal = JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-images-horizontal.json')));
+        const expectedImagesHorizontal = require('../../test/expected/text-shaping-images-horizontal.json');
         const horizontalFormatted = new Formatted([
             sectionForText('Foo'),
             sectionForImage('square'),
@@ -122,13 +119,13 @@ describe('shaping', () => {
             sectionForText(' bar'),
         ]);
         const shaped = shapeText(horizontalFormatted, glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
-        if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-images-horizontal.json'), JSON.stringify(shaped, null, 2));
+        if (UPDATE) fs.writeFileSync('../../test/expected/text-shaping-images-horizontal.json', JSON.stringify(shaped, null, 2));
         expect(shaped).toEqual(expectedImagesHorizontal);
 
     });
 
     test('images in vertical layout', () => {
-        const expectedImagesVertical = JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-images-vertical.json')));
+        const expectedImagesVertical = require('../../test/expected/text-shaping-images-vertical.json');
         const horizontalFormatted = new Formatted([
             sectionForText('三'),
             sectionForImage('square'),
@@ -139,7 +136,7 @@ describe('shaping', () => {
             sectionForText('三'),
         ]);
         const shaped = shapeText(horizontalFormatted, glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.vertical, true, 'point', layoutTextSize, layoutTextSizeThisZoom);
-        if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-images-vertical.json'), JSON.stringify(shaped, null, 2));
+        if (UPDATE) fs.writeFileSync('../../test/expected/text-shaping-images-vertical.json', JSON.stringify(shaped, null, 2));
         expect(shaped).toEqual(expectedImagesVertical);
 
     });
