@@ -1,9 +1,8 @@
-import {test} from '../../util/test';
 import fs from 'fs';
 import path, {dirname} from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import classifyRings from '../../../rollup/build/tsc/src/util/classify_rings';
+import classifyRings from '../util/classify_rings';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -11,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.water.feature(0);
 
-test('classifyRings', (assert) => {
+describe('classifyRings', (assert) => {
     let geometry;
     let classified;
 
@@ -74,10 +73,10 @@ test('classifyRings', (assert) => {
     assert.equal(classified[0].length, 1, 'polygon 1 has 1 exterior');
     assert.equal(classified[1].length, 10, 'polygon 2 has 1 exterior, 9 interior');
 
-    assert.end();
+    asserdone();
 });
 
-test('classifyRings + maxRings', (t) => {
+describe('classifyRings + maxRings', done => {
 
     function createGeometry(options) {
         const geometry = [
@@ -96,35 +95,35 @@ test('classifyRings + maxRings', (t) => {
         return geometry;
     }
 
-    t.test('maxRings=undefined', (t) => {
+    test('maxRings=undefined', done => {
         const geometry = sortRings(classifyRings(createGeometry()));
         expect(geometry.length).toBe(1);
         expect(geometry[0].length).toBe(3);
         expect(geometry[0][0].area).toBe(3200);
         expect(geometry[0][1].area).toBe(100);
         expect(geometry[0][2].area).toBe(4);
-        t.end();
+        done();
     });
 
-    t.test('maxRings=2', (t) => {
+    test('maxRings=2', done => {
         const geometry = sortRings(classifyRings(createGeometry(), 2));
         expect(geometry.length).toBe(1);
         expect(geometry[0].length).toBe(2);
         expect(geometry[0][0].area).toBe(3200);
         expect(geometry[0][1].area).toBe(100);
-        t.end();
+        done();
     });
 
-    t.test('maxRings=2, reversed geometry', (t) => {
+    test('maxRings=2, reversed geometry', done => {
         const geometry = sortRings(classifyRings(createGeometry({reverse: true}), 2));
         expect(geometry.length).toBe(1);
         expect(geometry[0].length).toBe(2);
         expect(geometry[0][0].area).toBe(3200);
         expect(geometry[0][1].area).toBe(100);
-        t.end();
+        done();
     });
 
-    t.test('maxRings=5, geometry from fixture', (t) => {
+    test('maxRings=5, geometry from fixture', done => {
         const geometry = sortRings(classifyRings(feature.loadGeometry(), 5));
         expect(geometry.length).toBe(2);
         expect(geometry[0].length).toBe(1);
@@ -132,10 +131,10 @@ test('classifyRings + maxRings', (t) => {
 
         const areas = geometry[1].map((ring) => { return ring.area; });
         expect(areas).toEqual([2763951, 21600, 8298, 4758, 3411]);
-        t.end();
+        done();
     });
 
-    t.end();
+    done();
 });
 
 function sortRings(geometry) {
