@@ -1,5 +1,5 @@
 
-import {renderColorRamp} from '../util/color_ramp';
+import {renderColorRamp} from './color_ramp';
 import {createPropertyExpression} from '../style-spec/expression';
 
 const spec = {
@@ -20,7 +20,7 @@ function nearlyEquals(a, b) {
     return a.every((e, i) => Math.abs(e - b[i]) <= 3);
 }
 
-describe('renderColorRamp linear', done => {
+describe('renderColorRamp linear', () => {
 
     const expression = createPropertyExpression([
         'interpolate',
@@ -44,10 +44,9 @@ describe('renderColorRamp linear', done => {
     expect(nearlyEquals(pixelAt(ramp, 191), [0, 0, 0, 255])).toBeTruthy();
     expect(nearlyEquals(pixelAt(ramp, 255), [255, 0, 0, 255])).toBeTruthy();
 
-    done();
 });
 
-describe('renderColorRamp step', done => {
+describe('renderColorRamp step', () => {
 
     const expression = createPropertyExpression([
         'step',
@@ -72,10 +71,9 @@ describe('renderColorRamp step', done => {
     expect(nearlyEquals(pixelAt(ramp, 160), [255, 255, 255, 255])).toBeTruthy();
     expect(nearlyEquals(pixelAt(ramp, 256), [0, 0, 0, 255])).toBeTruthy();
 
-    done();
 });
 
-describe('renderColorRamp usePlacement', done => {
+describe('renderColorRamp usePlacement', () => {
 
     const expression = createPropertyExpression([
         'step',
@@ -102,5 +100,4 @@ describe('renderColorRamp usePlacement', done => {
     expect(nearlyEquals(pixelAt(ramp, 160), [0, 0, 255, 255])).toBeTruthy();
     expect(nearlyEquals(pixelAt(ramp, 256), [255, 255, 255, 255])).toBeTruthy();
 
-    done();
 });
