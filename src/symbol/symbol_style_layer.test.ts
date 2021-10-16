@@ -1,8 +1,7 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import SymbolStyleLayer from '../../../rollup/build/tsc/src/style/style_layer/symbol_style_layer';
-import FormatSectionOverride from '../../../rollup/build/tsc/src/style/format_section_override';
-import properties from '../../../rollup/build/tsc/src/style/style_layer/symbol_style_layer_properties';
+import SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
+import FormatSectionOverride from '../style/format_section_override';
+import properties from '../style/style_layer/symbol_style_layer_properties';
 
 function createSymbolLayer(layerProperties) {
     const layer = new SymbolStyleLayer(layerProperties);
@@ -17,89 +16,89 @@ function isOverriden(paintProperty) {
     return false;
 }
 
-test('setPaintOverrides', (t) => {
-    t.test('setPaintOverrides, no overrides', (t) => {
+describe('setPaintOverrides', done => {
+    test('setPaintOverrides, no overrides', done => {
         const layer = createSymbolLayer({});
         layer._setPaintOverrides();
         for (const overridable of properties.paint.overridableProperties) {
             expect(isOverriden(layer.paint.get(overridable))).toBe(false);
         }
-        t.end();
+        done();
     });
 
-    t.test('setPaintOverrides, format expression, overriden text-color', (t) => {
+    test('setPaintOverrides, format expression, overriden text-color', done => {
         const props = {layout: {'text-field': ["format", "text", {"text-color": "yellow"}]}};
         const layer = createSymbolLayer(props);
         layer._setPaintOverrides();
         expect(isOverriden(layer.paint.get('text-color'))).toBe(true);
-        t.end();
+        done();
     });
 
-    t.test('setPaintOverrides, format expression, no overrides', (t) => {
+    test('setPaintOverrides, format expression, no overrides', done => {
         const props = {layout: {'text-field': ["format", "text", {}]}};
         const layer = createSymbolLayer(props);
         layer._setPaintOverrides();
         expect(isOverriden(layer.paint.get('text-color'))).toBe(false);
-        t.end();
+        done();
     });
 
-    t.end();
+    done();
 });
 
-test('hasPaintOverrides', (t) => {
-    t.test('undefined', (t) => {
+describe('hasPaintOverrides', done => {
+    test('undefined', done => {
         const layer = createSymbolLayer({});
         expect(SymbolStyleLayer.hasPaintOverride(layer.layout, 'text-color')).toBe(false);
-        t.end();
+        done();
     });
 
-    t.test('constant, Formatted type, overriden text-color', (t) => {
+    test('constant, Formatted type, overriden text-color', done => {
         const props = {layout: {'text-field': ["format", "text", {"text-color": "red"}]}};
         const layer = createSymbolLayer(props);
         expect(SymbolStyleLayer.hasPaintOverride(layer.layout, 'text-color')).toBe(true);
-        t.end();
+        done();
     });
 
-    t.test('constant, Formatted type, no overrides', (t) => {
+    test('constant, Formatted type, no overrides', done => {
         const props = {layout: {'text-field': ["format", "text", {"font-scale": 0.8}]}};
         const layer = createSymbolLayer(props);
         expect(SymbolStyleLayer.hasPaintOverride(layer.layout, 'text-color')).toBe(false);
-        t.end();
+        done();
     });
 
-    t.test('format expression, overriden text-color', (t) => {
+    test('format expression, overriden text-color', done => {
         const props = {layout: {'text-field': ["format", ["get", "name"], {"text-color":"red"}]}};
         const layer = createSymbolLayer(props);
         expect(SymbolStyleLayer.hasPaintOverride(layer.layout, 'text-color')).toBe(true);
-        t.end();
+        done();
     });
 
-    t.test('format expression, no overrides', (t) => {
+    test('format expression, no overrides', done => {
         const props = {layout: {'text-field': ["format", ["get", "name"], {}]}};
         const layer = createSymbolLayer(props);
         expect(SymbolStyleLayer.hasPaintOverride(layer.layout, 'text-color')).toBe(false);
-        t.end();
+        done();
     });
 
-    t.test('nested expression, overriden text-color', (t) => {
+    test('nested expression, overriden text-color', done => {
         const matchExpr = ["match", ["get", "case"],
             "one", ["format", "color", {"text-color": "blue"}],
             "default"];
         const props = {layout: {'text-field': matchExpr}};
         const layer = createSymbolLayer(props);
         expect(SymbolStyleLayer.hasPaintOverride(layer.layout, 'text-color')).toBe(true);
-        t.end();
+        done();
     });
 
-    t.test('nested expression, no overrides', (t) => {
+    test('nested expression, no overrides', done => {
         const matchExpr = ["match", ["get", "case"],
             "one", ["format", "b&w", {}],
             "default"];
         const props = {layout: {'text-field': matchExpr}};
         const layer = createSymbolLayer(props);
         expect(SymbolStyleLayer.hasPaintOverride(layer.layout, 'text-color')).toBe(false);
-        t.end();
+        done();
     });
 
-    t.end();
+    done();
 });
