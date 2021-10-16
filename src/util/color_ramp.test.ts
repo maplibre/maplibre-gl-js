@@ -21,7 +21,8 @@ function nearlyEquals(a, b) {
     return a.every((e, i) => Math.abs(e - b[i]) <= 3);
 }
 
-describe('renderColorRamp linear', () => {
+
+test('renderColorRamp linear', () => {
 
     const expression = createPropertyExpression([
         'interpolate',
@@ -36,7 +37,6 @@ describe('renderColorRamp linear', () => {
 
     const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress'});
 
-
     expect(ramp.width).toBe(256);
     expect(ramp.height).toBe(1);
 
@@ -47,7 +47,7 @@ describe('renderColorRamp linear', () => {
     expect(nearlyEquals(pixelAt(ramp, 255), [255, 0, 0, 255])).toBeTruthy();
 });
 
-describe('renderColorRamp step', () => {
+test('renderColorRamp step', () => {
 
     const expression = createPropertyExpression([
         'step',
@@ -74,7 +74,7 @@ describe('renderColorRamp step', () => {
 
 });
 
-describe('renderColorRamp usePlacement', () => {
+test('renderColorRamp usePlacement', () => {
 
     const expression = createPropertyExpression([
         'step',
