@@ -8,10 +8,15 @@ import FillStyleLayer from '../../style/style_layer/fill_style_layer';
 import {BucketFeature} from '../bucket';
 import EvaluationParameters from '../../style/evaluation_parameters';
 import type {CollisionBoxArray} from '../array_types';
+import segment from '../../data/segment';
 
 // Load a fill feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/fixtures/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.water.feature(0);
+
+beforeEach(() => {
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+});
 
 function createPolygon(numPoints) {
     const points = [];
@@ -58,6 +63,7 @@ describe('FillBucket', () => {
 });
 
 describe('FillBucket segmentation', () => {
+    segment.MAX_VERTEX_ARRAY_LENGTH = 256;
     const layer = new FillStyleLayer({
         id: 'test',
         type: 'fill',
