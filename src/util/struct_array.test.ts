@@ -8,20 +8,20 @@ test('StructArray', (t) => {
 
     t.test('array constructs itself', (t) => {
         const array = new TestArray();
-        t.equal(array.length, 0);
-        t.ok(array.arrayBuffer);
+        expect(array.length).toBe(0);
+        expect(array.arrayBuffer).toBeTruthy();
         t.end();
     });
 
     t.test('emplaceBack', (t) => {
         const array = new TestArray();
 
-        t.equal(0, array.emplaceBack(1, 7, 3));
-        t.equal(1, array.emplaceBack(4, 2, 5));
+        expect(0).toBe(array.emplaceBack(1, 7, 3));
+        expect(1).toBe(array.emplaceBack(4, 2, 5));
 
-        t.equal(array.length, 2);
+        expect(array.length).toBe(2);
 
-        t.deepEqual(array.int16.slice(0, 6), [1, 7, 3, 4, 2, 5]);
+        expect(array.int16.slice(0, 6)).toEqual([1, 7, 3, 4, 2, 5]);
 
         t.end();
     });
@@ -30,9 +30,9 @@ test('StructArray', (t) => {
         // emplaceBack is typically used in fairly hot code paths, where
         // conditionally varying the number of arguments can be expensive.
         const array = new TestArray();
-        t.equal((array/*: any*/).emplaceBack(3, 1, 4, 1, 5, 9), 0);
-        t.equal(array.length, 1);
-        t.deepEqual(array.int16.slice(0, 3), [3, 1, 4]);
+        expect((array/*: any*/).emplaceBack(3, 1, 4, 1, 5, 9)).toBe(0);
+        expect(array.length).toBe(1);
+        expect(array.int16.slice(0, 3)).toEqual([3, 1, 4]);
         t.end();
     });
 
@@ -44,7 +44,7 @@ test('StructArray', (t) => {
 
         for (let i = 0; i < 100; i++) {
             array.emplaceBack(1, 1, 1);
-            t.equal(array.capacity, initialCapacity);
+            expect(array.capacity).toBe(initialCapacity);
         }
 
         t.end();
@@ -58,10 +58,10 @@ test('StructArray', (t) => {
             array.emplaceBack(1, 1, 1);
         }
 
-        t.equal(array.capacity, initialCapacity);
+        expect(array.capacity).toBe(initialCapacity);
 
         array.emplaceBack(1, 1, 1);
-        t.ok(array.capacity > initialCapacity);
+        expect(array.capacity > initialCapacity).toBeTruthy();
 
         t.end();
     });
@@ -71,11 +71,11 @@ test('StructArray', (t) => {
         const capacityInitial = array.capacity;
 
         array.emplaceBack(1, 1, 1);
-        t.equal(array.capacity, capacityInitial);
+        expect(array.capacity).toBe(capacityInitial);
 
         array._trim();
-        t.equal(array.capacity, 1);
-        t.equal(array.arrayBuffer.byteLength, array.bytesPerElement);
+        expect(array.capacity).toBe(1);
+        expect(array.arrayBuffer.byteLength).toBe(array.bytesPerElement);
 
         t.end();
     });
@@ -88,31 +88,31 @@ test('FeatureIndexArray', (t) => {
 
     t.test('array constructs itself', (t) => {
         const array = new TestArray();
-        t.equal(array.length, 0);
-        t.ok(array.arrayBuffer);
+        expect(array.length).toBe(0);
+        expect(array.arrayBuffer).toBeTruthy();
         t.end();
     });
 
     t.test('emplace and retrieve', (t) => {
         const array = new TestArray();
-        t.equal(0, array.emplaceBack(1, 7, 3));
-        t.equal(1, array.emplaceBack(4, 2, 5));
+        expect(0).toBe(array.emplaceBack(1, 7, 3));
+        expect(1).toBe(array.emplaceBack(4, 2, 5));
 
-        t.equal(array.length, 2);
+        expect(array.length).toBe(2);
 
         const elem0 = array.get(0);
-        t.ok(elem0);
+        expect(elem0).toBeTruthy();
 
-        t.equal(elem0.featureIndex, 1, 'returns correct featureIndex');
-        t.equal(elem0.sourceLayerIndex, 7, 'returns correct sourceLayerIndex');
-        t.equal(elem0.bucketIndex, 3, 'returns correct bucketIndex');
+        expect(elem0.featureIndex).toBe(1);
+        expect(elem0.sourceLayerIndex).toBe(7);
+        expect(elem0.bucketIndex).toBe(3);
 
         const elem1 = array.get(1);
-        t.ok(elem1);
+        expect(elem1).toBeTruthy();
 
-        t.equal(elem1.featureIndex, 4, 'returns correct featureIndex');
-        t.equal(elem1.sourceLayerIndex, 2, 'returns correct sourceLayerIndex');
-        t.equal(elem1.bucketIndex, 5, 'returns correct bucketIndex');
+        expect(elem1.featureIndex).toBe(4);
+        expect(elem1.sourceLayerIndex).toBe(2);
+        expect(elem1.bucketIndex).toBe(5);
 
         t.end();
     });
