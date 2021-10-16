@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.water.feature(0);
 
-describe('classifyRings', (assert) => {
+describe('classifyRings', () => {
     let geometry;
     let classified;
 
@@ -72,11 +72,9 @@ describe('classifyRings', (assert) => {
     assert.equal(classified.length, 2, '2 polygons');
     assert.equal(classified[0].length, 1, 'polygon 1 has 1 exterior');
     assert.equal(classified[1].length, 10, 'polygon 2 has 1 exterior, 9 interior');
-
-    asserdone();
 });
 
-describe('classifyRings + maxRings', done => {
+describe('classifyRings + maxRings', () => {
 
     function createGeometry(options) {
         const geometry = [
@@ -95,35 +93,35 @@ describe('classifyRings + maxRings', done => {
         return geometry;
     }
 
-    test('maxRings=undefined', done => {
+    test('maxRings=undefined', () => {
         const geometry = sortRings(classifyRings(createGeometry()));
         expect(geometry.length).toBe(1);
         expect(geometry[0].length).toBe(3);
         expect(geometry[0][0].area).toBe(3200);
         expect(geometry[0][1].area).toBe(100);
         expect(geometry[0][2].area).toBe(4);
-        done();
+
     });
 
-    test('maxRings=2', done => {
+    test('maxRings=2', () => {
         const geometry = sortRings(classifyRings(createGeometry(), 2));
         expect(geometry.length).toBe(1);
         expect(geometry[0].length).toBe(2);
         expect(geometry[0][0].area).toBe(3200);
         expect(geometry[0][1].area).toBe(100);
-        done();
+
     });
 
-    test('maxRings=2, reversed geometry', done => {
+    test('maxRings=2, reversed geometry', () => {
         const geometry = sortRings(classifyRings(createGeometry({reverse: true}), 2));
         expect(geometry.length).toBe(1);
         expect(geometry[0].length).toBe(2);
         expect(geometry[0][0].area).toBe(3200);
         expect(geometry[0][1].area).toBe(100);
-        done();
+
     });
 
-    test('maxRings=5, geometry from fixture', done => {
+    test('maxRings=5, geometry from fixture', () => {
         const geometry = sortRings(classifyRings(feature.loadGeometry(), 5));
         expect(geometry.length).toBe(2);
         expect(geometry[0].length).toBe(1);
@@ -131,10 +129,9 @@ describe('classifyRings + maxRings', done => {
 
         const areas = geometry[1].map((ring) => { return ring.area; });
         expect(areas).toEqual([2763951, 21600, 8298, 4758, 3411]);
-        done();
+
     });
 
-    done();
 });
 
 function sortRings(geometry) {
