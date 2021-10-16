@@ -7,6 +7,7 @@ import ResolvedImage from '../style-spec/expression/types/resolved_image';
 import expectedJson from '../../expected/text-shaping-linebreak.json';
 import {ImagePosition} from '../render/image_atlas';
 import {fileURLToPath} from 'url';
+import {StyleImage} from '../style/style_image';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WritingMode = shaping.WritingMode;
 
@@ -26,9 +27,9 @@ describe('shaping', () => {
     const glyphPositions = glyphs;
 
     const images = {
-        'square': new ImagePosition({x: 0, y: 0, w: 16, h: 16}, {pixelRatio: 1, version: 1}),
-        'tall': new ImagePosition({x: 0, y: 0, w: 16, h: 32}, {pixelRatio: 1, version: 1}),
-        'wide': new ImagePosition({x: 0, y: 0, w: 32, h: 16}, {pixelRatio: 1, version: 1}),
+        'square': new ImagePosition({x: 0, y: 0, w: 16, h: 16}, {pixelRatio: 1, version: 1} as StyleImage),
+        'tall': new ImagePosition({x: 0, y: 0, w: 16, h: 32}, {pixelRatio: 1, version: 1} as StyleImage),
+        'wide': new ImagePosition({x: 0, y: 0, w: 32, h: 16}, {pixelRatio: 1, version: 1} as StyleImage),
     };
 
     const sectionForImage = (name) => {
@@ -147,7 +148,7 @@ describe('shaping', () => {
 });
 
 describe('shapeIcon', () => {
-    const imagePosition = new ImagePosition({x: 0, y: 0, w: 22, h: 22}, {pixelRatio: 1, version: 1});
+    const imagePosition = new ImagePosition({x: 0, y: 0, w: 22, h: 22}, {pixelRatio: 1, version: 1} as StyleImage);
     const image = Object.freeze({
         content: null,
         stretchX: null,
