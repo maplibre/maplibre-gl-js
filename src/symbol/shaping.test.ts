@@ -145,9 +145,9 @@ describe('shaping', () => {
 describe('shapeIcon', () => {
     const imagePosition = new ImagePosition({x: 0, y: 0, w: 22, h: 22}, {pixelRatio: 1, version: 1} as StyleImage);
     const image = Object.freeze({
-        content: null,
-        stretchX: null,
-        stretchY: null,
+        content: undefined,
+        stretchX: undefined,
+        stretchY: undefined,
         paddedRect: Object.freeze({x: 0, y: 0, w: 22, h: 22}),
         pixelRatio: 1,
         version: 1
