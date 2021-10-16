@@ -1,10 +1,12 @@
 import SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
 import FormatSectionOverride from '../style/format_section_override';
-import properties from '../style/style_layer/symbol_style_layer_properties';
+import properties, {PaintPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties';
+import ZoomHistory from '../style/zoom_history';
+import EvaluationParameters from '../style/evaluation_parameters';
 
 function createSymbolLayer(layerProperties) {
     const layer = new SymbolStyleLayer(layerProperties);
-    layer.recalculate({zoom: 0, zoomHistory: {}});
+    layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
     return layer;
 }
 
@@ -20,7 +22,7 @@ describe('setPaintOverrides', () => {
         const layer = createSymbolLayer({});
         layer._setPaintOverrides();
         for (const overridable of properties.paint.overridableProperties) {
-            expect(isOverriden(layer.paint.get(overridable))).toBe(false);
+            expect(isOverriden(layer.paint.get(overridable as keyof PaintPropsPossiblyEvaluated))).toBe(false);
         }
 
     });
