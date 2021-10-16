@@ -1,7 +1,6 @@
 
-import {test} from '../../util/test';
-import {renderColorRamp} from '../../../rollup/build/tsc/src/util/color_ramp';
-import {createPropertyExpression} from '../../../rollup/build/tsc/src/style-spec/expression';
+import {renderColorRamp} from '../util/color_ramp';
+import {createPropertyExpression} from '../style-spec/expression';
 
 const spec = {
     'function': true,
@@ -21,7 +20,7 @@ function nearlyEquals(a, b) {
     return a.every((e, i) => Math.abs(e - b[i]) <= 3);
 }
 
-test('renderColorRamp linear', (t) => {
+describe('renderColorRamp linear', done => {
 
     const expression = createPropertyExpression([
         'interpolate',
@@ -45,10 +44,10 @@ test('renderColorRamp linear', (t) => {
     expect(nearlyEquals(pixelAt(ramp, 191), [0, 0, 0, 255])).toBeTruthy();
     expect(nearlyEquals(pixelAt(ramp, 255), [255, 0, 0, 255])).toBeTruthy();
 
-    t.end();
+    done();
 });
 
-test('renderColorRamp step', (t) => {
+describe('renderColorRamp step', done => {
 
     const expression = createPropertyExpression([
         'step',
@@ -73,10 +72,10 @@ test('renderColorRamp step', (t) => {
     expect(nearlyEquals(pixelAt(ramp, 160), [255, 255, 255, 255])).toBeTruthy();
     expect(nearlyEquals(pixelAt(ramp, 256), [0, 0, 0, 255])).toBeTruthy();
 
-    t.end();
+    done();
 });
 
-test('renderColorRamp usePlacement', (t) => {
+describe('renderColorRamp usePlacement', done => {
 
     const expression = createPropertyExpression([
         'step',
@@ -103,5 +102,5 @@ test('renderColorRamp usePlacement', (t) => {
     expect(nearlyEquals(pixelAt(ramp, 160), [0, 0, 255, 255])).toBeTruthy();
     expect(nearlyEquals(pixelAt(ramp, 256), [255, 255, 255, 255])).toBeTruthy();
 
-    t.end();
+    done();
 });
