@@ -15,7 +15,7 @@ if (typeof process !== 'undefined' && process.env !== undefined) {
     UPDATE = !!process.env.UPDATE;
 }
 
-describe('shaping', done => {
+describe('shaping', () => {
     const oneEm = 24;
     const layoutTextSize = 16;
     const layoutTextSizeThisZoom = 16;
@@ -103,14 +103,14 @@ describe('shaping', done => {
     const shaped2 = shaping.shapeText(Formatted.fromString('foo bar'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
     expect(shaped.positionedLines).toEqual(shaped2.positionedLines);
 
-    test('basic image shaping', done => {
+    test('basic image shaping', () => {
         const shaped = shaping.shapeText(new Formatted([sectionForImage('square')]), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
         expect(shaped.top).toEqual(-12);    // 1em line height
         expect(shaped.left).toEqual(-10.5); // 16 - 2px border * 1.5 scale factor
-        done();
+
     });
 
-    test('images in horizontal layout', done => {
+    test('images in horizontal layout', () => {
         const expectedImagesHorizontal = JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-images-horizontal.json')));
         const horizontalFormatted = new Formatted([
             sectionForText('Foo'),
@@ -124,10 +124,10 @@ describe('shaping', done => {
         const shaped = shaping.shapeText(horizontalFormatted, glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
         if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-images-horizontal.json'), JSON.stringify(shaped, null, 2));
         expect(shaped).toEqual(expectedImagesHorizontal);
-        done();
+
     });
 
-    test('images in vertical layout', done => {
+    test('images in vertical layout', () => {
         const expectedImagesVertical = JSON.parse(fs.readFileSync(path.join(__dirname, '/../../expected/text-shaping-images-vertical.json')));
         const horizontalFormatted = new Formatted([
             sectionForText('三'),
@@ -141,13 +141,12 @@ describe('shaping', done => {
         const shaped = shaping.shapeText(horizontalFormatted, glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.vertical, true, 'point', layoutTextSize, layoutTextSizeThisZoom);
         if (UPDATE) fs.writeFileSync(path.join(__dirname, '/../../expected/text-shaping-images-vertical.json'), JSON.stringify(shaped, null, 2));
         expect(shaped).toEqual(expectedImagesVertical);
-        done();
+
     });
 
-    done();
 });
 
-describe('shapeIcon', done => {
+describe('shapeIcon', () => {
     const imagePosition = new ImagePosition({x: 0, y: 0, w: 22, h: 22}, {pixelRatio: 1, version: 1});
     const image = Object.freeze({
         content: null,
@@ -158,7 +157,7 @@ describe('shapeIcon', done => {
         version: 1
     });
 
-    test('text-anchor: center', done => {
+    test('text-anchor: center', () => {
         expect(shaping.shapeIcon(imagePosition, [ 0, 0 ], 'center')).toEqual({
             top: -10,
             bottom: 10,
@@ -174,10 +173,10 @@ describe('shapeIcon', done => {
             right: 14,
             image
         });
-        done();
+
     });
 
-    test('text-anchor: left', done => {
+    test('text-anchor: left', () => {
         expect(shaping.shapeIcon(imagePosition, [ 0, 0 ], 'left')).toEqual({
             top: -10,
             bottom: 10,
@@ -193,10 +192,10 @@ describe('shapeIcon', done => {
             right: 24,
             image
         });
-        done();
+
     });
 
-    test('text-anchor: bottom-right', done => {
+    test('text-anchor: bottom-right', () => {
         expect(shaping.shapeIcon(imagePosition, [ 0, 0 ], 'bottom-right')).toEqual({
             top: -20,
             bottom: 0,
@@ -212,13 +211,12 @@ describe('shapeIcon', done => {
             right: 4,
             image
         });
-        done();
+
     });
 
-    done();
 });
 
-describe('fitIconToText', done => {
+describe('fitIconToText', () => {
     const glyphSize = 24;
     const shapedIcon = Object.freeze({
         top: -10,
@@ -240,7 +238,7 @@ describe('fitIconToText', done => {
         right: 20
     });
 
-    test('icon-text-fit: width', done => {
+    test('icon-text-fit: width', () => {
         expect(
             shaping.fitIconToText(shapedIcon, shapedText, 'width', [0, 0, 0, 0], [0, 0], 24 / glyphSize)
         ).toEqual({
@@ -286,10 +284,9 @@ describe('fitIconToText', done => {
             left: -40
         });
 
-        done();
     });
 
-    test('icon-text-fit: height', done => {
+    test('icon-text-fit: height', () => {
         expect(
             shaping.fitIconToText(shapedIcon, shapedText, 'height', [0, 0, 0, 0], [0, 0], 24 / glyphSize)
         ).toEqual({
@@ -335,10 +332,9 @@ describe('fitIconToText', done => {
             left: -20
         });
 
-        done();
     });
 
-    test('icon-text-fit: both', done => {
+    test('icon-text-fit: both', () => {
         expect(
             shaping.fitIconToText(shapedIcon, shapedText, 'both', [0, 0, 0, 0], [0, 0], 24 / glyphSize)
         ).toEqual({
@@ -394,8 +390,6 @@ describe('fitIconToText', done => {
             left: -45
         });
 
-        done();
     });
 
-    done();
 });
