@@ -98,40 +98,40 @@ test('classifyRings + maxRings', (t) => {
 
     t.test('maxRings=undefined', (t) => {
         const geometry = sortRings(classifyRings(createGeometry()));
-        t.equal(geometry.length, 1);
-        t.equal(geometry[0].length, 3);
-        t.equal(geometry[0][0].area, 3200);
-        t.equal(geometry[0][1].area, 100);
-        t.equal(geometry[0][2].area, 4);
+        expect(geometry.length).toBe(1);
+        expect(geometry[0].length).toBe(3);
+        expect(geometry[0][0].area).toBe(3200);
+        expect(geometry[0][1].area).toBe(100);
+        expect(geometry[0][2].area).toBe(4);
         t.end();
     });
 
     t.test('maxRings=2', (t) => {
         const geometry = sortRings(classifyRings(createGeometry(), 2));
-        t.equal(geometry.length, 1);
-        t.equal(geometry[0].length, 2);
-        t.equal(geometry[0][0].area, 3200);
-        t.equal(geometry[0][1].area, 100);
+        expect(geometry.length).toBe(1);
+        expect(geometry[0].length).toBe(2);
+        expect(geometry[0][0].area).toBe(3200);
+        expect(geometry[0][1].area).toBe(100);
         t.end();
     });
 
     t.test('maxRings=2, reversed geometry', (t) => {
         const geometry = sortRings(classifyRings(createGeometry({reverse: true}), 2));
-        t.equal(geometry.length, 1);
-        t.equal(geometry[0].length, 2);
-        t.equal(geometry[0][0].area, 3200);
-        t.equal(geometry[0][1].area, 100);
+        expect(geometry.length).toBe(1);
+        expect(geometry[0].length).toBe(2);
+        expect(geometry[0][0].area).toBe(3200);
+        expect(geometry[0][1].area).toBe(100);
         t.end();
     });
 
     t.test('maxRings=5, geometry from fixture', (t) => {
         const geometry = sortRings(classifyRings(feature.loadGeometry(), 5));
-        t.equal(geometry.length, 2);
-        t.equal(geometry[0].length, 1);
-        t.equal(geometry[1].length, 5);
+        expect(geometry.length).toBe(2);
+        expect(geometry[0].length).toBe(1);
+        expect(geometry[1].length).toBe(5);
 
         const areas = geometry[1].map((ring) => { return ring.area; });
-        t.deepEqual(areas, [2763951, 21600, 8298, 4758, 3411]);
+        expect(areas).toEqual([2763951, 21600, 8298, 4758, 3411]);
         t.end();
     });
 
