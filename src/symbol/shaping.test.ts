@@ -1,4 +1,3 @@
-import '../../stub_loader';
 import fs from 'fs';
 import {WritingMode, shapeIcon, shapeText, fitIconToText, PositionedIcon, Shaping} from './shaping';
 import Formatted, {FormattedSection} from '../style-spec/expression/types/formatted';
