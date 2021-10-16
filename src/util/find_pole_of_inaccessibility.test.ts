@@ -1,8 +1,7 @@
-import {test} from '../../util/test';
-import Point from '../../../rollup/build/tsc/src/util/point';
-import findPoleOfInaccessibility from '../../../rollup/build/tsc/src/util/find_pole_of_inaccessibility';
+import Point from '../util/point';
+import findPoleOfInaccessibility from '../util/find_pole_of_inaccessibility';
 
-test('polygon_poi', (t) => {
+describe('polygon_poi', done => {
 
     const closedRing = [
         new Point(0, 0),
@@ -19,5 +18,5 @@ test('polygon_poi', (t) => {
     expect(findPoleOfInaccessibility([closedRing], 0.1)).toEqual(new Point(7.0703125, 2.9296875));
     expect(findPoleOfInaccessibility([closedRing, closedRingHole], 0.1)).toEqual(new Point(7.96875, 2.03125));
 
-    t.end();
+    done();
 });
