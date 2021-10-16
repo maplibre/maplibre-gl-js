@@ -2,17 +2,17 @@
 
 import {StructArrayLayout3i6, FeatureIndexArray} from '../data/array_types';
 
-describe('StructArray', done => {
+describe('StructArray', () => {
     class TestArray extends StructArrayLayout3i6 {}
 
-    test('array constructs itself', done => {
+    test('array constructs itself', () => {
         const array = new TestArray();
         expect(array.length).toBe(0);
         expect(array.arrayBuffer).toBeTruthy();
-        done();
+
     });
 
-    test('emplaceBack', done => {
+    test('emplaceBack', () => {
         const array = new TestArray();
 
         expect(0).toBe(array.emplaceBack(1, 7, 3));
@@ -22,20 +22,19 @@ describe('StructArray', done => {
 
         expect(array.int16.slice(0, 6)).toEqual([1, 7, 3, 4, 2, 5]);
 
-        done();
     });
 
-    test('emplaceBack gracefully accepts extra arguments', done => {
+    test('emplaceBack gracefully accepts extra arguments', () => {
         // emplaceBack is typically used in fairly hot code paths, where
         // conditionally varying the number of arguments can be expensive.
         const array = new TestArray();
         expect((array/*: any*/).emplaceBack(3, 1, 4, 1, 5, 9)).toBe(0);
         expect(array.length).toBe(1);
         expect(array.int16.slice(0, 3)).toEqual([3, 1, 4]);
-        done();
+
     });
 
-    test('reserve', done => {
+    test('reserve', () => {
         const array = new TestArray();
 
         array.reserve(100);
@@ -46,10 +45,9 @@ describe('StructArray', done => {
             expect(array.capacity).toBe(initialCapacity);
         }
 
-        done();
     });
 
-    test('automatically resizes', done => {
+    test('automatically resizes', () => {
         const array = new TestArray();
         const initialCapacity = array.capacity;
 
@@ -62,10 +60,9 @@ describe('StructArray', done => {
         array.emplaceBack(1, 1, 1);
         expect(array.capacity > initialCapacity).toBeTruthy();
 
-        done();
     });
 
-    test('trims', done => {
+    test('trims', () => {
         const array = new TestArray();
         const capacityInitial = array.capacity;
 
@@ -76,23 +73,21 @@ describe('StructArray', done => {
         expect(array.capacity).toBe(1);
         expect(array.arrayBuffer.byteLength).toBe(array.bytesPerElement);
 
-        done();
     });
 
-    done();
 });
 
-describe('FeatureIndexArray', done => {
+describe('FeatureIndexArray', () => {
     class TestArray extends FeatureIndexArray {}
 
-    test('array constructs itself', done => {
+    test('array constructs itself', () => {
         const array = new TestArray();
         expect(array.length).toBe(0);
         expect(array.arrayBuffer).toBeTruthy();
-        done();
+
     });
 
-    test('emplace and retrieve', done => {
+    test('emplace and retrieve', () => {
         const array = new TestArray();
         expect(0).toBe(array.emplaceBack(1, 7, 3));
         expect(1).toBe(array.emplaceBack(4, 2, 5));
@@ -113,8 +108,6 @@ describe('FeatureIndexArray', done => {
         expect(elem1.sourceLayerIndex).toBe(2);
         expect(elem1.bucketIndex).toBe(5);
 
-        done();
     });
 
-    done();
 });
