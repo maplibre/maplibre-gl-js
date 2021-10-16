@@ -1,13 +1,12 @@
 import fs from 'fs';
-import path, {dirname} from 'path';
+import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import classifyRings from '../util/classify_rings';
-import {fileURLToPath} from 'url';
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import classifyRings from './classify_rings';
+import Point from './point';
 
 // Load a fill feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'))));
+const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../test/fixtures/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.water.feature(0);
 
 describe('classifyRings', () => {
@@ -23,9 +22,9 @@ describe('classifyRings', () => {
             {x:0, y:0}
         ]
     ];
-    classified = classifyRings(geometry);
-    assert.equal(classified.length, 1, '1 polygon');
-    assert.equal(classified[0].length, 1, 'polygon 1 has 1 exterior');
+    classified = classifyRings(geometry, undefined);
+    expect(classified.length).toBe(1);
+    expect(classified[0].length).toBe(1);
 
     geometry = [
         [
@@ -43,10 +42,10 @@ describe('classifyRings', () => {
             {x:60, y:0}
         ]
     ];
-    classified = classifyRings(geometry);
-    assert.equal(classified.length, 2, '2 polygons');
-    assert.equal(classified[0].length, 1, 'polygon 1 has 1 exterior');
-    assert.equal(classified[1].length, 1, 'polygon 2 has 1 exterior');
+    classified = classifyRings(geometry, undefined);
+    expect(classified.length).toBe(2);
+    expect(classified[0].length).toBe(1);
+    expect(classified[1].length).toBe(1);
 
     geometry = [
         [
@@ -63,20 +62,20 @@ describe('classifyRings', () => {
             {x:10, y:10}
         ]
     ];
-    classified = classifyRings(geometry);
-    assert.equal(classified.length, 1, '1 polygon');
-    assert.equal(classified[0].length, 2, 'polygon 1 has 1 exterior, 1 interior');
+    classified = classifyRings(geometry, undefined);
+    expect(classified.length).toBe(1);
+    expect(classified[0].length).toBe(2);
 
     geometry = feature.loadGeometry();
-    classified = classifyRings(geometry);
-    assert.equal(classified.length, 2, '2 polygons');
-    assert.equal(classified[0].length, 1, 'polygon 1 has 1 exterior');
-    assert.equal(classified[1].length, 10, 'polygon 2 has 1 exterior, 9 interior');
+    classified = classifyRings(geometry, undefined);
+    expect(classified.length).toBe(2);
+    expect(classified[0].length).toBe(1);
+    expect(classified[1].length).toBe(10);
 });
 
 describe('classifyRings + maxRings', () => {
 
-    function createGeometry(options) {
+    function createGeometry(options?) {
         const geometry = [
             // Outer ring, area = 3200
             [ {x:0, y:0}, {x:0, y:40}, {x:40, y:40}, {x:40, y:0}, {x:0, y:0} ],
@@ -84,7 +83,7 @@ describe('classifyRings + maxRings', () => {
             [ {x:30, y:30}, {x:32, y:30}, {x:32, y:32}, {x:30, y:30} ],
             // Inner ring, area = 4
             [ {x:10, y:10}, {x:20, y:10}, {x:20, y:20}, {x:10, y:10} ]
-        ];
+        ] as Point[][];
         if (options && options.reverse) {
             geometry[0].reverse();
             geometry[1].reverse();
@@ -94,7 +93,7 @@ describe('classifyRings + maxRings', () => {
     }
 
     test('maxRings=undefined', () => {
-        const geometry = sortRings(classifyRings(createGeometry()));
+        const geometry = sortRings(classifyRings(createGeometry(), undefined));
         expect(geometry.length).toBe(1);
         expect(geometry[0].length).toBe(3);
         expect(geometry[0][0].area).toBe(3200);
