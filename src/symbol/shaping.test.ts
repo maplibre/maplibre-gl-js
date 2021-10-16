@@ -1,6 +1,6 @@
 import '../../stub_loader';
 import fs from 'fs';
-import {WritingMode, shapeIcon, shapeText, fitIconToText} from './shaping';
+import {WritingMode, shapeIcon, shapeText, fitIconToText, PositionedIcon, Shaping} from './shaping';
 import Formatted, {FormattedSection} from '../style-spec/expression/types/formatted';
 import ResolvedImage from '../style-spec/expression/types/resolved_image';
 import expectedJson from '../../test/expected/text-shaping-linebreak.json';
@@ -97,11 +97,11 @@ describe('shaping', () => {
 
     // https://github.com/mapbox/mapbox-gl-js/issues/3254
     shaped = shapeText(Formatted.fromString('   foo bar\n'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
-    const shaped2 = shapeText(Formatted.fromString('foo bar'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
+    const shaped2 = shapeText(Formatted.fromString('foo bar'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom) as Shaping;
     expect(shaped.positionedLines).toEqual(shaped2.positionedLines);
 
     test('basic image shaping', () => {
-        const shaped = shapeText(new Formatted([sectionForImage('square')]), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
+        const shaped = shapeText(new Formatted([sectionForImage('square')]), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom) as Shaping;
         expect(shaped.top).toEqual(-12);    // 1em line height
         expect(shaped.left).toEqual(-10.5); // 16 - 2px border * 1.5 scale factor
 
@@ -226,14 +226,14 @@ describe('fitIconToText', () => {
             displaySize: [ 20, 20 ],
             paddedRect: Object.freeze({x: 0, y: 0, w: 22, h: 22})
         })
-    });
+    }) as PositionedIcon;
 
     const shapedText = Object.freeze({
         top: -10,
         bottom: 30,
         left: -60,
         right: 20
-    });
+    }) as Shaping;
 
     test('icon-text-fit: width', () => {
         expect(
