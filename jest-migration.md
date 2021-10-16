@@ -32,19 +32,31 @@ jest-codemods --force src/symbol/anchor.test.ts
 > Yes, use the globals provided by Jest (recommended)
 ```
 
-Run our custom codemods script with:
+Run
 
 ```
-node codemods.js src/**/*test.ts
+git add src/symbol/anchor.test.ts
+git commit -m "Run jest-codemods"
 ```
 
-Remove `done()` in tests that do not run asynchronous by changing:
+If there are no async tests in the file you are migrating run the custom codemods script with:
 
-```diff
---test('something', done => {
-++test('something', () => {
---    done()
-})
+```
+node codemods.js src/symbol/anchor.test.ts
+```
+
+Otherwise, if there are async tests, use:
+
+```
+node codemods.js --async src/symbol/anchor.test.ts
+```
+
+Lint and commit
+
+```
+npm run lint -- --fix
+git add src/symbol/anchor.test.ts
+git commit -m "Run custom codemods"
 ```
 
 Fix remaining typescript errors by hand.
