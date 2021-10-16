@@ -1,12 +1,13 @@
 
 import {renderColorRamp} from './color_ramp';
-import {createPropertyExpression} from '../style-spec/expression';
+import {createPropertyExpression, StylePropertyExpression} from '../style-spec/expression';
+import {StylePropertySpecification} from '../style-spec/style-spec';
 
 const spec = {
     'function': true,
     'property-function': true,
     'type': 'color'
-};
+} as any as StylePropertySpecification;
 
 function pixelAt(image, i) {
     return image.data.slice(i * 4, (i + 1) * 4);
@@ -31,9 +32,10 @@ describe('renderColorRamp linear', () => {
         0.5, 'rgba(0,255,255,0.5)',
         0.75, 'black',
         1, 'red'
-    ], spec, {handleErrors: false}).value;
+    ], spec).value as StylePropertyExpression;
 
     const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress'});
+
 
     expect(ramp.width).toBe(256);
     expect(ramp.height).toBe(1);
@@ -43,7 +45,6 @@ describe('renderColorRamp linear', () => {
     expect(nearlyEquals(pixelAt(ramp, 127), [0, 255, 255, 127])).toBeTruthy();
     expect(nearlyEquals(pixelAt(ramp, 191), [0, 0, 0, 255])).toBeTruthy();
     expect(nearlyEquals(pixelAt(ramp, 255), [255, 0, 0, 255])).toBeTruthy();
-
 });
 
 describe('renderColorRamp step', () => {
@@ -57,7 +58,7 @@ describe('renderColorRamp step', () => {
         0.3, 'white',
         0.5, 'black',
         1, 'black'
-    ], spec, {handleErrors: false}).value;
+    ], spec).value as StylePropertyExpression;
 
     const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512});
 
@@ -84,7 +85,7 @@ describe('renderColorRamp usePlacement', () => {
         0.3, 'blue',
         0.5, 'white',
         1, 'white'
-    ], spec, {handleErrors: false}).value;
+    ], spec).value as StylePropertyExpression;
 
     const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512});
 
