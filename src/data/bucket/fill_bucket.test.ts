@@ -3,7 +3,6 @@ import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import Point from '../../util/point';
-import segment from '../../data/segment';
 import FillBucket from './fill_bucket';
 import FillStyleLayer from '../../style/style_layer/fill_style_layer';
 
@@ -42,11 +41,6 @@ describe('FillBucket', () => {
 });
 
 describe('FillBucket segmentation', () => {
-    test('addFeature', () => {
-    // Stub MAX_VERTEX_ARRAY_LENGTH so we can test features
-    // breaking across array groups without tests taking a _long_ time.
-        t.stub(segment, 'MAX_VERTEX_ARRAY_LENGTH').value(256);
-
         const layer = new FillStyleLayer({
             id: 'test',
             type: 'fill',
