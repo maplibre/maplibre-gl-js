@@ -1,7 +1,7 @@
-import Point from '../util/point';
-import findPoleOfInaccessibility from '../util/find_pole_of_inaccessibility';
+import Point from './point';
+import findPoleOfInaccessibility from './find_pole_of_inaccessibility';
 
-describe('polygon_poi', done => {
+test('polygon_poi', () => {
 
     const closedRing = [
         new Point(0, 0),
@@ -18,5 +18,4 @@ describe('polygon_poi', done => {
     expect(findPoleOfInaccessibility([closedRing], 0.1)).toEqual(new Point(7.0703125, 2.9296875));
     expect(findPoleOfInaccessibility([closedRing, closedRingHole], 0.1)).toEqual(new Point(7.96875, 2.03125));
 
-    done();
 });
