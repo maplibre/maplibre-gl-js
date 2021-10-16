@@ -1,4 +1,3 @@
-import '../../stub_loader';
 import SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
 import FormatSectionOverride from '../style/format_section_override';
 import properties from '../style/style_layer/symbol_style_layer_properties';
