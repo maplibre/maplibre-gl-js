@@ -32,7 +32,7 @@ describe('shaping', () => {
         return new FormattedSection('', ResolvedImage.fromString(name), null, null, null);
     };
 
-    const sectionForText = (name, scale) => {
+    const sectionForText = (name, scale?) => {
         return new FormattedSection(name, null, scale, null, null);
     };
 
