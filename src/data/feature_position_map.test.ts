@@ -11,7 +11,7 @@ describe('FeaturePositionMap', () => {
         featureMap.add(2, 5, 4, 5);
         featureMap.add(7, 6, 5, 7);
 
-        const featureMap2 : any = deserialize(serialize(featureMap, []));
+        const featureMap2 = deserialize(serialize(featureMap, [])) as FeatureMap;
 
         const compareIndex = (a, b) => a.index - b.index;
 
