@@ -1,6 +1,6 @@
-import deref from '../style-spec/deref';
+import deref from './deref';
 
-describe('derefs a ref layer which follows its parent', () => {
+test('derefs a ref layer which follows its parent', () => {
     expect(deref([
         {
             'id': 'parent',
@@ -22,7 +22,7 @@ describe('derefs a ref layer which follows its parent', () => {
     ]);
 });
 
-describe('derefs a ref layer which precedes its parent', () => {
+test('derefs a ref layer which precedes its parent', () => {
     expect(deref([
         {
             'id': 'child',
