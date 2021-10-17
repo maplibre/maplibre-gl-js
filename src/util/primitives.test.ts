@@ -1,5 +1,5 @@
-import {Aabb, Frustum} from '../util/primitives';
-import {mat4, vec3} from 'gl-matrix';
+import {Aabb, Frustum} from './primitives';
+import {mat4, vec3, vec4} from 'gl-matrix';
 
 describe('primitives', () => {
     test('Create an aabb', () => {
@@ -9,7 +9,7 @@ describe('primitives', () => {
 
         expect(aabb.min).toBe(min);
         expect(aabb.max).toBe(max);
-        expect(aabb.center).toEqual(vec3.fromValues(1, 2, 3));
+        expect(aabb.center).toEqual([1, 2, 3]);
     });
 
     test('Create 4 quadrants', () => {
@@ -43,8 +43,8 @@ describe('primitives', () => {
     });
 
     const createTestCameraFrustum = (fovy, aspectRatio, zNear, zFar, elevation, rotation) => {
-        const proj = new Float64Array(16);
-        const invProj = new Float64Array(16);
+        const proj = new Float64Array(16) as any as mat4;
+        const invProj = new Float64Array(16) as any as mat4;
 
         // Note that left handed coordinate space is used where z goes towards the sky.
         // Y has to be flipped as well because it's part of the projection/camera matrix used in transform.js
@@ -103,8 +103,8 @@ describe('primitives', () => {
 
 describe('frustum', () => {
     test('Create a frustum from inverse projection matrix', () => {
-        const proj = new Float64Array(16);
-        const invProj = new Float64Array(16);
+        const proj = new Float64Array(16) as any as mat4;
+        const invProj = new Float64Array(16) as any as mat4;
         mat4.perspective(proj, Math.PI / 2, 1.0, 0.1, 100.0);
         mat4.invert(invProj, proj);
 
@@ -122,16 +122,16 @@ describe('frustum', () => {
             [-100.0, -100.0, -100.0, 1.0],
         ];
 
-        frustum.points = frustum.points.map(array => array.map(n => Math.round(n * 10) / 10));
-        frustum.planes = frustum.planes.map(array => array.map(n => Math.round(n * 1000) / 1000));
+        frustum.points = frustum.points.map(array => array.map(n => Math.round(n * 10) / 10)) as vec4[];
+        frustum.planes = frustum.planes.map(array => array.map(n => Math.round(n * 1000) / 1000)) as vec4[];
 
         const expectedFrustumPlanes = [
             [0, 0, 1.0, 0.1],
-            [0, 0, -1.0, -100.0],
-            [-0.707, 0, 0.707, 0],
-            [0.707, 0, 0.707, 0],
-            [0, -0.707, 0.707, 0],
-            [0, 0.707, 0.707, 0]
+            [-0, -0, -1.0, -100.0],
+            [-0.707, 0, 0.707, -0],
+            [0.707, 0, 0.707, -0],
+            [0, -0.707, 0.707, -0],
+            [-0, 0.707, 0.707, -0]
         ];
 
         expect(frustum.points).toEqual(expectedFrustumPoints);
