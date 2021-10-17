@@ -1,6 +1,6 @@
-import declass from '../style-spec/declass';
+import declass from './declass';
 
-describe('declass a style, one class', () => {
+test('declass a style, one class', () => {
     const style = {
         layers: [{
             id: 'a',
@@ -35,7 +35,7 @@ describe('declass a style, one class', () => {
 
 });
 
-describe('declass a style, missing class ==> noop', () => {
+test('declass a style, missing class ==> noop', () => {
     const style = {
         layers: [{
             id: 'a',
@@ -58,7 +58,7 @@ describe('declass a style, missing class ==> noop', () => {
 
 });
 
-describe('declass a style, multiple classes', () => {
+test('declass a style, multiple classes', () => {
     const style = {
         layers: [{
             id: 'a',
@@ -91,7 +91,7 @@ describe('declass a style, multiple classes', () => {
 
 });
 
-describe('declassing a style removes paint.CLASS definitions, whether or not they are applied', () => {
+test('declassing a style removes paint.CLASS definitions, whether or not they are applied', () => {
     const style = {
         layers: [{
             id: 'a',
