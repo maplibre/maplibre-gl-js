@@ -1,33 +1,32 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import browser from '../../../rollup/build/tsc/src/util/browser';
+import browser from '../util/browser';
 
-test('browser', (t) => {
-    t.test('frame', (t) => {
+describe('browser', done => {
+    test('frame', done => {
         const id = browser.frame(() => {
             t.pass('called frame');
             expect(id).toBeTruthy();
-            t.end();
+            done();
         });
     });
 
-    t.test('now', (t) => {
+    test('now', done => {
         expect(typeof browser.now()).toBe('number');
-        t.end();
+        done();
     });
 
-    t.test('frame', (t) => {
+    test('frame', done => {
         const frame = browser.frame(() => {
             t.fail();
         });
         frame.cancel();
-        t.end();
+        done();
     });
 
-    t.test('hardwareConcurrency', (t) => {
+    test('hardwareConcurrency', done => {
         expect(typeof browser.hardwareConcurrency).toBe('number');
-        t.end();
+        done();
     });
 
-    t.end();
+    done();
 });
