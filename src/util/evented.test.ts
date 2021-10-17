@@ -1,152 +1,152 @@
-import {Event, Evented} from '../util/evented';
+import {Event, Evented} from './evented';
 
 describe('Evented', () => {
 
-    test('calls listeners added with "on"', done => {
+    test('calls listeners added with "on"', () => {
         const evented = new Evented();
-        const listener = t.spy();
+        const listener = jest.fn(() => {});
         evented.on('a', listener);
         evented.fire(new Event('a'));
         evented.fire(new Event('a'));
-        expect(listener.calledTwice).toBeTruthy();
-        done();
+        expect(listener.mock.calls.length === 2).toBeTruthy();
     });
 
-    test('calls listeners added with "once" once', done => {
+    test('calls listeners added with "once" once', () => {
         const evented = new Evented();
-        const listener = t.spy();
+        const listener = jest.fn(() => {});
         evented.once('a', listener);
         evented.fire(new Event('a'));
         evented.fire(new Event('a'));
-        expect(listener.calledOnce).toBeTruthy();
+        expect(listener.mock.calls.length === 1).toBeTruthy();
         expect(evented.listens('a')).toBeFalsy();
-        done();
+
     });
 
-    test('passes data to listeners', done => {
+    test('passes data to listeners', () => {
         const evented = new Evented();
         evented.on('a', (data) => {
             expect(data.foo).toBe('bar');
         });
         evented.fire(new Event('a', {foo: 'bar'}));
-        done();
+
     });
 
-    test('passes "target" to listeners', done => {
+    test('passes "target" to listeners', () => {
         const evented = new Evented();
         evented.on('a', (data) => {
             expect(data.target).toBe(evented);
         });
         evented.fire(new Event('a'));
-        done();
+
     });
 
-    test('passes "type" to listeners', done => {
+    test('passes "type" to listeners', () => {
         const evented = new Evented();
         evented.on('a', (data) => {
             expect(data.type).toEqual('a');
         });
         evented.fire(new Event('a'));
-        done();
+
     });
 
-    test('removes listeners with "off"', done => {
+    test('removes listeners with "off"', () => {
         const evented = new Evented();
-        const listener = t.spy();
+        const listener = jest.fn(() => {});
         evented.on('a', listener);
         evented.off('a', listener);
         evented.fire(new Event('a'));
-        expect(listener.notCalled).toBeTruthy();
-        done();
+        expect(listener.mock.calls.length === 0).toBeTruthy();
+
     });
 
-    test('removes one-time listeners with "off"', done => {
+    test('removes one-time listeners with "off"', () => {
         const evented = new Evented();
-        const listener = t.spy();
+        const listener = jest.fn(() => {});
         evented.once('a', listener);
         evented.off('a', listener);
         evented.fire(new Event('a'));
-        expect(listener.notCalled).toBeTruthy();
-        done();
+        expect(listener.mock.calls.length === 0).toBeTruthy();
+
     });
 
-    test('once listener is removed prior to call', done => {
+    test('once listener is removed prior to call', () => {
         const evented = new Evented();
-        const listener = t.spy();
+        const listener = jest.fn(() => {});
         evented.once('a', () => {
             listener();
             evented.fire(new Event('a'));
         });
         evented.fire(new Event('a'));
-        expect(listener.calledOnce).toBeTruthy();
-        done();
+        expect(listener.mock.calls.length === 1).toBeTruthy();
+
     });
 
-    test('reports if an event has listeners with "listens"', done => {
+    test('reports if an event has listeners with "listens"', () => {
         const evented = new Evented();
         evented.on('a', () => {});
         expect(evented.listens('a')).toBeTruthy();
         expect(evented.listens('b')).toBeFalsy();
-        done();
+
     });
 
-    test('does not report true to "listens" if all listeners have been removed', done => {
+    test('does not report true to "listens" if all listeners have been removed', () => {
         const evented = new Evented();
         const listener = () => {};
         evented.on('a', listener);
         evented.off('a', listener);
         expect(evented.listens('a')).toBeFalsy();
-        done();
+
     });
 
     test('does not immediately call listeners added within another listener', done => {
         const evented = new Evented();
         evented.on('a', () => {
-            evented.on('a', t.fail.bind(t));
+            evented.on('a', () => done('fail'));
         });
         evented.fire(new Event('a'));
         done();
     });
 
-    test('has backward compatibility for fire(string, object) API', done => {
+    test('has backward compatibility for fire(string, object) API', () => {
         const evented = new Evented();
-        const listener = t.spy();
+        const listener = jest.fn(x => x);
         evented.on('a', listener);
-        evented.fire('a', {foo: 'bar'});
-        expect(listener.calledOnce).toBeTruthy();
-        expect(listener.firstCall.args[0].foo).toBeTruthy();
-        done();
+        evented.fire('a' as any as Event, {foo: 'bar'});
+        expect(listener.mock.calls.length === 1).toBeTruthy();
+        expect(listener.mock.calls[0][0].foo).toEqual('bar');
+
     });
 
-    test('on is idempotent', done => {
+    test('on is idempotent', () => {
         const evented = new Evented();
-        const listenerA = t.spy();
-        const listenerB = t.spy();
+        const order = [];
+        const listenerA = jest.fn(() => order.push('A'));
+        const listenerB = jest.fn(() => order.push('B'));
         evented.on('a', listenerA);
         evented.on('a', listenerB);
         evented.on('a', listenerA);
         evented.fire(new Event('a'));
-        expect(listenerA.calledOnce).toBeTruthy();
-        expect(listenerA.calledBefore(listenerB)).toBeTruthy();
-        done();
+        expect(listenerA.mock.calls.length === 1).toBeTruthy();
+        expect(order).toEqual(['A', 'B']);
+
     });
 });
 
 describe('evented parents', () => {
 
-    test('adds parents with "setEventedParent"', done => {
-        const listener = t.spy();
+    test('adds parents with "setEventedParent"', () => {
+        const listener = jest.fn(() => {});
         const eventedSource = new Evented();
         const eventedSink = new Evented();
         eventedSource.setEventedParent(eventedSink);
         eventedSink.on('a', listener);
         eventedSource.fire(new Event('a'));
         eventedSource.fire(new Event('a'));
-        expect(listener.calledTwice).toBeTruthy();
-        done();
+        expect(listener.mock.calls.length === 2).toBeTruthy();
+
     });
 
-    test('passes original data to parent listeners', done => {
+    test('passes original data to parent listeners', () => {
         const eventedSource = new Evented();
         const eventedSink = new Evented();
         eventedSource.setEventedParent(eventedSink);
@@ -154,10 +154,10 @@ describe('evented parents', () => {
             expect(data.foo).toBe('bar');
         });
         eventedSource.fire(new Event('a', {foo: 'bar'}));
-        done();
+
     });
 
-    test('attaches parent data to parent listeners', done => {
+    test('attaches parent data to parent listeners', () => {
         const eventedSource = new Evented();
         const eventedSink = new Evented();
         eventedSource.setEventedParent(eventedSink, {foz: 'baz'});
@@ -165,10 +165,10 @@ describe('evented parents', () => {
             expect(data.foz).toBe('baz');
         });
         eventedSource.fire(new Event('a', {foo: 'bar'}));
-        done();
+
     });
 
-    test('attaches parent data from a function to parent listeners', done => {
+    test('attaches parent data from a function to parent listeners', () => {
         const eventedSource = new Evented();
         const eventedSink = new Evented();
         eventedSource.setEventedParent(eventedSink, () => ({foz: 'baz'}));
@@ -176,10 +176,10 @@ describe('evented parents', () => {
             expect(data.foz).toBe('baz');
         });
         eventedSource.fire(new Event('a', {foo: 'bar'}));
-        done();
+
     });
 
-    test('passes original "target" to parent listeners', done => {
+    test('passes original "target" to parent listeners', () => {
         const eventedSource = new Evented();
         const eventedSink = new Evented();
         eventedSource.setEventedParent(eventedSink);
@@ -188,31 +188,31 @@ describe('evented parents', () => {
             expect(data.target).toBe(eventedSource);
         });
         eventedSource.fire(new Event('a'));
-        done();
+
     });
 
-    test('removes parents with "setEventedParent(null)"', done => {
-        const listener = t.spy();
+    test('removes parents with "setEventedParent(null)"', () => {
+        const listener = jest.fn(() => {});
         const eventedSource = new Evented();
         const eventedSink = new Evented();
         eventedSink.on('a', listener);
         eventedSource.setEventedParent(eventedSink);
         eventedSource.setEventedParent(null);
         eventedSource.fire(new Event('a'));
-        expect(listener.notCalled).toBeTruthy();
-        done();
+        expect(listener.mock.calls.length === 0).toBeTruthy();
+
     });
 
-    test('reports if an event has parent listeners with "listens"', done => {
+    test('reports if an event has parent listeners with "listens"', () => {
         const eventedSource = new Evented();
         const eventedSink = new Evented();
         eventedSink.on('a', () => {});
         eventedSource.setEventedParent(eventedSink);
         expect(eventedSink.listens('a')).toBeTruthy();
-        done();
+
     });
 
-    test('eventedParent data function is evaluated on every fire', done => {
+    test('eventedParent data function is evaluated on every fire', () => {
         const eventedSource = new Evented();
         const eventedParent = new Evented();
         let i = 0;
@@ -222,6 +222,6 @@ describe('evented parents', () => {
         expect(i).toBe(1);
         eventedSource.fire(new Event('a'));
         expect(i).toBe(2);
-        done();
+
     });
 });
