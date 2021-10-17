@@ -1,32 +1,26 @@
-import '../../stub_loader';
-import browser from '../util/browser';
+import browser from './browser';
 
-describe('browser', done => {
+describe('browser', () => {
     test('frame', done => {
         const id = browser.frame(() => {
-            t.pass('called frame');
             expect(id).toBeTruthy();
             done();
         });
     });
 
-    test('now', done => {
+    test('now', () => {
         expect(typeof browser.now()).toBe('number');
-        done();
     });
 
     test('frame', done => {
         const frame = browser.frame(() => {
-            t.fail();
+            done('fail');
         });
         frame.cancel();
         done();
     });
 
-    test('hardwareConcurrency', done => {
+    test('hardwareConcurrency', () => {
         expect(typeof browser.hardwareConcurrency).toBe('number');
-        done();
     });
-
-    done();
 });
