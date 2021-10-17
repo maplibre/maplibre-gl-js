@@ -1,4 +1,3 @@
-import {test} from '../../util/test';
 import {
     Uniform1i,
     Uniform1f,
@@ -6,9 +5,9 @@ import {
     Uniform3f,
     Uniform4f,
     UniformMatrix4f
-} from '../../../rollup/build/tsc/src/render/uniform_binding';
+} from '../render/uniform_binding';
 
-test('Uniform1i', (t) => {
+describe('Uniform1i', () => {
     // test counts ensure we don't call the gl.uniform* setters more than expected
     expect.assertions(4);
 
@@ -25,10 +24,9 @@ test('Uniform1i', (t) => {
     expect(u.current).toBe(1);
     u.set(1);
     u.set(2);
-    t.end();
 });
 
-test('Uniform1f', (t) => {
+describe('Uniform1f', () => {
     expect.assertions(4);
 
     const context = {
@@ -44,10 +42,9 @@ test('Uniform1f', (t) => {
     expect(u.current).toBe(1);
     u.set(1);
     u.set(2);
-    t.end();
 });
 
-test('Uniform2f', (t) => {
+describe('Uniform2f', () => {
     expect.assertions(4);
 
     const context = {
@@ -63,10 +60,9 @@ test('Uniform2f', (t) => {
     expect(u.current).toEqual([1, 1]);
     u.set([1, 1]);
     u.set([1, 2]);
-    t.end();
 });
 
-test('Uniform3f', (t) => {
+describe('Uniform3f', () => {
     expect.assertions(4);
 
     const context = {
@@ -82,10 +78,9 @@ test('Uniform3f', (t) => {
     expect(u.current).toEqual([1, 1, 1]);
     u.set([1, 1, 1]);
     u.set([1, 1, 2]);
-    t.end();
 });
 
-test('Uniform4f', (t) => {
+describe('Uniform4f', () => {
     expect.assertions(4);
 
     const context = {
@@ -101,10 +96,9 @@ test('Uniform4f', (t) => {
     expect(u.current).toEqual([1, 1, 1, 1]);
     u.set([1, 1, 1, 1]);
     u.set([2, 1, 1, 1]);
-    t.end();
 });
 
-test('UniformMatrix4f', (t) => {
+describe('UniformMatrix4f', () => {
     expect.assertions(4);
 
     const context = {
@@ -120,5 +114,4 @@ test('UniformMatrix4f', (t) => {
     expect(u.current).toEqual(ident);
     u.set(ident);
     u.set([2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
-    t.end();
 });
