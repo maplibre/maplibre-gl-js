@@ -14,7 +14,7 @@ describe('browser', () => {
 
     test('frame', done => {
         const frame = browser.frame(() => {
-            done('fail');
+            done.fail();
         });
         frame.cancel();
         done();
