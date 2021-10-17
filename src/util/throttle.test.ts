@@ -1,19 +1,18 @@
 // @flow
 
-import {test} from '../../util/test';
 
-import throttle from '../../../rollup/build/tsc/src/util/throttle';
+import throttle from '../util/throttle';
 
-test('throttle', (t) => {
+describe('throttle', done => {
 
-    t.test('does not execute unthrottled function unless throttled function is invoked', (t) => {
+    test('does not execute unthrottled function unless throttled function is invoked', done => {
         let executionCount = 0;
         throttle(() => { executionCount++; }, 0);
         expect(executionCount).toBe(0);
-        t.end();
+        done();
     });
 
-    t.test('executes unthrottled function once per tick when period is 0', (t) => {
+    test('executes unthrottled function once per tick when period is 0', done => {
         let executionCount = 0;
         const throttledFunction = throttle(() => { executionCount++; }, 0);
         throttledFunction();
@@ -23,21 +22,21 @@ test('throttle', (t) => {
             throttledFunction();
             throttledFunction();
             expect(executionCount).toBe(2);
-            t.end();
+            done();
         }, 0);
     });
 
-    t.test('executes unthrottled function immediately once when period is > 0', (t) => {
+    test('executes unthrottled function immediately once when period is > 0', done => {
         let executionCount = 0;
         const throttledFunction = throttle(() => { executionCount++; }, 5);
         throttledFunction();
         throttledFunction();
         throttledFunction();
         expect(executionCount).toBe(1);
-        t.end();
+        done();
     });
 
-    t.test('queues exactly one execution of unthrottled function when period is > 0', (t) => {
+    test('queues exactly one execution of unthrottled function when period is > 0', done => {
         let executionCount = 0;
         const throttledFunction = throttle(() => { executionCount++; }, 5);
         throttledFunction();
@@ -45,9 +44,9 @@ test('throttle', (t) => {
         throttledFunction();
         setTimeout(() => {
             expect(executionCount).toBe(2);
-            t.end();
+            done();
         }, 10);
     });
 
-    t.end();
+    done();
 });
