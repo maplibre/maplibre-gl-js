@@ -1,6 +1,6 @@
-import composite from '../style-spec/composite';
+import composite from './composite';
 
-describe('composites Mapbox vector sources', () => {
+test('composites Mapbox vector sources', () => {
     const result = composite({
         'version': 7,
         'sources': {
@@ -35,7 +35,7 @@ describe('composites Mapbox vector sources', () => {
     expect(result.layers[1].source).toBe('a,b');
 });
 
-describe('does not composite vector + raster', () => {
+test('does not composite vector + raster', () => {
     const result = composite({
         'version': 7,
         'sources': {
@@ -54,7 +54,7 @@ describe('does not composite vector + raster', () => {
     expect(Object.keys(result.sources)).toEqual(['a', 'b']);
 });
 
-describe('incorrect url match', () => {
+test('incorrect url match', () => {
     const result = composite({
         'version': 7,
         'sources': {
@@ -73,7 +73,7 @@ describe('incorrect url match', () => {
     expect(Object.keys(result.sources)).toEqual(['a', 'b']);
 });
 
-describe('composites Mapbox vector sources with conflicting source layer names', () => {
+test('composites Mapbox vector sources with conflicting source layer names', () => {
     expect(() => {
         composite({
             'version': 7,
