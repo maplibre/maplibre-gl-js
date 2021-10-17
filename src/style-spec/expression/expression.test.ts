@@ -1,7 +1,8 @@
-import {createPropertyExpression} from '../style-spec/expression';
-import definitions from '../style-spec/expression/definitions';
-/* eslint-disable import/no-unresolved */
-import v8 from '../style-spec/reference/v8';
+import {createPropertyExpression, StylePropertyExpression} from '../expression';
+import definitions from './definitions';
+import v8 from '../reference/v8.json';
+import {StylePropertySpecification} from '../style-spec';
+import ParsingError from './parsing_error';
 
 // filter out interal "error" and "filter-*" expressions from definition list
 const filterExpressionRegex = /filter-/;
@@ -29,9 +30,9 @@ describe('createPropertyExpression', () => {
                 'interpolated': false,
                 'parameters': ['zoom']
             }
-        });
+        } as StylePropertySpecification);
         expect(result).toBe('error');
-        expect(value.length).toBe(1);
+        expect((value as ParsingError[]).length).toBe(1);
         expect(value[0].message).toBe('"interpolate" expressions cannot be used with this property');
     });
 
@@ -48,17 +49,15 @@ describe('evaluate expression', () => {
                 'interpolated': false,
                 'parameters': ['zoom', 'feature']
             }
-        });
+        } as any as StylePropertySpecification);
 
-        t.stub(console, 'warn');
+        jest.spyOn(console, 'warn');
 
-        expect(value.kind).toBe('source');
+        expect((value as StylePropertyExpression).kind).toBe('source');
 
-        expect(value.evaluate({}, {properties: {x: 'b'}})).toBe('b');
-        expect(value.evaluate({}, {properties: {x: 'invalid'}})).toBe('a');
-        expect(
-            console.warn.calledWith('Expected value to be one of "a", "b", "c", but found "invalid" instead.')
-        ).toBeTruthy();
+        expect((value as StylePropertyExpression).evaluate({} as any, {properties: {x: 'b'}} as any)).toBe('b');
+        expect((value as StylePropertyExpression).evaluate({} as any, {properties: {x: 'invalid'}} as any)).toBe('a');
+        expect(console.warn).toHaveBeenCalledWith('Expected value to be one of "a", "b", "c", but found "invalid" instead.');
 
     });
 
