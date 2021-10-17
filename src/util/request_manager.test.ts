@@ -1,6 +1,5 @@
 import {RequestManager} from './request_manager';
 
-
 describe('RequestManager.normalizeSpriteURL', () => {
     test('concantenates path, ratio, and extension for non-mapbox:// scheme', () => {
         expect(
