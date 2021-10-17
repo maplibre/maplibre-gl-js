@@ -1,8 +1,7 @@
-import {test} from '../../util/test';
-import {createPropertyExpression} from '../../../rollup/build/tsc/src/style-spec/expression';
-import definitions from '../../../rollup/build/tsc/src/style-spec/expression/definitions';
+import {createPropertyExpression} from '../style-spec/expression';
+import definitions from '../style-spec/expression/definitions';
 /* eslint-disable import/no-unresolved */
-import v8 from '../../../rollup/build/tsc/src/style-spec/reference/v8';
+import v8 from '../style-spec/reference/v8';
 
 // filter out interal "error" and "filter-*" expressions from definition list
 const filterExpressionRegex = /filter-/;
@@ -10,18 +9,17 @@ const definitionList = Object.keys(definitions).filter((expression) => {
     return expression !== 'error' && !filterExpressionRegex.exec(expression);
 }).sort();
 
-test('v8.json includes all definitions from style-spec', (t) => {
+describe('v8.json includes all definitions from style-spec', () => {
     const v8List = Object.keys(v8.expression_name.values);
     const v8SupportedList = v8List.filter((expression) => {
         //filter out expressions that are not supported in GL-JS
-        return !!v8.expression_name.values[expression]["sdk-support"]["basic functionality"]["js"];
+        return !!v8.expression_name.values[expression]['sdk-support']['basic functionality']['js'];
     });
     expect(definitionList).toEqual(v8SupportedList.sort());
-    t.end();
 });
 
-test('createPropertyExpression', (t) => {
-    test('prohibits non-interpolable properties from using an "interpolate" expression', (t) => {
+describe('createPropertyExpression', () => {
+    test('prohibits non-interpolable properties from using an "interpolate" expression', () => {
         const {result, value} = createPropertyExpression([
             'interpolate', ['linear'], ['zoom'], 0, 0, 10, 10
         ], {
@@ -35,14 +33,12 @@ test('createPropertyExpression', (t) => {
         expect(result).toBe('error');
         expect(value.length).toBe(1);
         expect(value[0].message).toBe('"interpolate" expressions cannot be used with this property');
-        t.end();
     });
 
-    t.end();
 });
 
-test('evaluate expression', (t) => {
-    test('warns and falls back to default for invalid enum values', (t) => {
+describe('evaluate expression', () => {
+    test('warns and falls back to default for invalid enum values', () => {
         const {value} = createPropertyExpression([ 'get', 'x' ], {
             type: 'enum',
             values: {a: {}, b: {}, c: {}},
@@ -61,11 +57,9 @@ test('evaluate expression', (t) => {
         expect(value.evaluate({}, {properties: {x: 'b'}})).toBe('b');
         expect(value.evaluate({}, {properties: {x: 'invalid'}})).toBe('a');
         expect(
-            console.warn.calledWith(`Expected value to be one of "a", "b", "c", but found "invalid" instead.`)
+            console.warn.calledWith('Expected value to be one of "a", "b", "c", but found "invalid" instead.')
         ).toBeTruthy();
 
-        t.end();
     });
 
-    t.end();
 });
