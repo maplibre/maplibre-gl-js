@@ -1,7 +1,6 @@
-import {test} from '../../util/test';
-import declass from '../../../rollup/build/tsc/src/style-spec/declass';
+import declass from '../style-spec/declass';
 
-test('declass a style, one class', (t) => {
+describe('declass a style, one class', () => {
     const style = {
         layers: [{
             id: 'a',
@@ -34,10 +33,9 @@ test('declass a style, one class', (t) => {
         }]
     });
 
-    t.end();
 });
 
-test('declass a style, missing class ==> noop', (t) => {
+describe('declass a style, missing class ==> noop', () => {
     const style = {
         layers: [{
             id: 'a',
@@ -58,10 +56,9 @@ test('declass a style, missing class ==> noop', (t) => {
         }]
     });
 
-    t.end();
 });
 
-test('declass a style, multiple classes', (t) => {
+describe('declass a style, multiple classes', () => {
     const style = {
         layers: [{
             id: 'a',
@@ -92,10 +89,9 @@ test('declass a style, multiple classes', (t) => {
         }]
     });
 
-    t.end();
 });
 
-test('declassing a style removes paint.CLASS definitions, whether or not they are applied', (t) => {
+describe('declassing a style removes paint.CLASS definitions, whether or not they are applied', () => {
     const style = {
         layers: [{
             id: 'a',
@@ -117,5 +113,4 @@ test('declassing a style removes paint.CLASS definitions, whether or not they ar
         }]
     });
 
-    t.end();
 });
