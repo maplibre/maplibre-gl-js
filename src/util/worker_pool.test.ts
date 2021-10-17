@@ -1,9 +1,8 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import WorkerPool from '../../../rollup/build/tsc/src/util/worker_pool';
+import WorkerPool from '../util/worker_pool';
 
-test('WorkerPool', (t) => {
-    t.test('#acquire', (t) => {
+describe('WorkerPool', () => {
+    test('#acquire', () => {
         t.stub(WorkerPool, 'workerCount').value(4);
 
         const pool = new WorkerPool();
@@ -16,10 +15,9 @@ test('WorkerPool', (t) => {
 
         // check that the two different dispatchers' workers arrays correspond
         workers1.forEach((w, i) => { expect(w).toBe(workers2[i]); });
-        t.end();
     });
 
-    t.test('#release', (t) => {
+    test('#release', () => {
         let workersTerminated = 0;
         t.stub(WorkerPool, 'workerCount').value(4);
 
@@ -40,8 +38,6 @@ test('WorkerPool', (t) => {
         expect(workersTerminated).toBe(4);
         expect(pool.workers).toBeFalsy();
 
-        t.end();
     });
 
-    t.end();
 });
