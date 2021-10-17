@@ -31,159 +31,161 @@ afterEach(() => {
     jest.clearAllMocks();
 });
 
-test('GlyphManager requests 0-255 PBF', done => {
-    createLoadGlyphRangeStub();
-    const manager = createGlyphManager();
+describe('GlyphManager', () => {
 
-    manager.getGlyphs({'Arial Unicode MS': [55]}, (err, glyphs) => {
-        expect(err).toBeFalsy();
-        expect(glyphs['Arial Unicode MS']['55'].metrics.advance).toBe(12);
-        done();
+    test('GlyphManager requests 0-255 PBF', done => {
+        createLoadGlyphRangeStub();
+        const manager = createGlyphManager();
+
+        manager.getGlyphs({'Arial Unicode MS': [55]}, (err, glyphs) => {
+            expect(err).toBeFalsy();
+            expect(glyphs['Arial Unicode MS']['55'].metrics.advance).toBe(12);
+            done();
+        });
     });
-});
 
-test('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', done => {
-    const stub = createLoadGlyphRangeStub();
-    const manager = createGlyphManager();
-
-    manager.getGlyphs({'Arial Unicode MS': [0.5]}, (err) => {
-        expect(err).toBeFalsy();
-        expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
-        expect(stub).toHaveBeenCalledTimes(1);
-
-        // We remove all requests as in getGlyphs code.
-        delete manager.entries['Arial Unicode MS'].requests[0];
+    test('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', done => {
+        const stub = createLoadGlyphRangeStub();
+        const manager = createGlyphManager();
 
         manager.getGlyphs({'Arial Unicode MS': [0.5]}, (err) => {
             expect(err).toBeFalsy();
             expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
             expect(stub).toHaveBeenCalledTimes(1);
-            done();
+
+            // We remove all requests as in getGlyphs code.
+            delete manager.entries['Arial Unicode MS'].requests[0];
+
+            manager.getGlyphs({'Arial Unicode MS': [0.5]}, (err) => {
+                expect(err).toBeFalsy();
+                expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
+                expect(stub).toHaveBeenCalledTimes(1);
+                done();
+            });
         });
     });
-});
 
-test('GlyphManager requests remote CJK PBF', done => {
-    jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
-        setTimeout(() => callback(null, glyphs), 0);
-    });
+    test('GlyphManager requests remote CJK PBF', done => {
+        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
+            setTimeout(() => callback(null, glyphs), 0);
+        });
 
-    const manager = createGlyphManager();
+        const manager = createGlyphManager();
 
-    manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
-        expect(err).toBeFalsy();
-        expect(glyphs['Arial Unicode MS'][0x5e73]).toBe(null); // The fixture returns a PBF without the glyph we requested
-        done();
-    });
-});
-
-test('GlyphManager does not cache CJK chars that should be rendered locally', done => {
-    jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
-        const overlappingGlyphs = {};
-        const start = range * 256;
-        const end = start + 256;
-        for (let i = start, j = 0; i < end; i++, j++) {
-            overlappingGlyphs[i] = glyphs[j];
-        }
-        setTimeout(() => callback(null, overlappingGlyphs), 0);
-    });
-    Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
-        // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
-        draw() {
-            return new Uint8ClampedArray(900);
-        }
-    } as any as TinySDF});
-    const manager = createGlyphManager('sans-serif');
-
-    //Request char that overlaps Katakana range
-    manager.getGlyphs({'Arial Unicode MS': [0x3005]}, (err, glyphs) => {
-        expect(err).toBeFalsy();
-        expect(glyphs['Arial Unicode MS'][0x3005]).not.toBe(null);
-        //Request char from Katakana range (te)
-        manager.getGlyphs({'Arial Unicode MS': [0x30C6]}, (err, glyphs) => {
+        manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
             expect(err).toBeFalsy();
-            const glyph = glyphs['Arial Unicode MS'][0x30c6];
-            //Ensure that te is locally generated.
-            expect(glyph.bitmap.height).toBe(30);
-            expect(glyph.bitmap.width).toBe(30);
+            expect(glyphs['Arial Unicode MS'][0x5e73]).toBe(null); // The fixture returns a PBF without the glyph we requested
             done();
         });
     });
-});
 
-test('GlyphManager generates CJK PBF locally', done => {
-    Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
-        // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
-        draw() {
-            return new Uint8ClampedArray(900);
-        }
-    } as any as TinySDF});
+    test('GlyphManager does not cache CJK chars that should be rendered locally', done => {
+        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
+            const overlappingGlyphs = {};
+            const start = range * 256;
+            const end = start + 256;
+            for (let i = start, j = 0; i < end; i++, j++) {
+                overlappingGlyphs[i] = glyphs[j];
+            }
+            setTimeout(() => callback(null, overlappingGlyphs), 0);
+        });
+        Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
+            // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
+            draw() {
+                return new Uint8ClampedArray(900);
+            }
+        } as any as TinySDF});
+        const manager = createGlyphManager('sans-serif');
 
-    const manager = createGlyphManager('sans-serif');
-
-    manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
-        expect(err).toBeFalsy();
-        expect(glyphs['Arial Unicode MS'][0x5e73].metrics.advance).toBe(24);
-        done();
+        //Request char that overlaps Katakana range
+        manager.getGlyphs({'Arial Unicode MS': [0x3005]}, (err, glyphs) => {
+            expect(err).toBeFalsy();
+            expect(glyphs['Arial Unicode MS'][0x3005]).not.toBe(null);
+            //Request char from Katakana range (te)
+            manager.getGlyphs({'Arial Unicode MS': [0x30C6]}, (err, glyphs) => {
+                expect(err).toBeFalsy();
+                const glyph = glyphs['Arial Unicode MS'][0x30c6];
+                //Ensure that te is locally generated.
+                expect(glyph.bitmap.height).toBe(30);
+                expect(glyph.bitmap.width).toBe(30);
+                done();
+            });
+        });
     });
-});
 
-test('GlyphManager generates Katakana PBF locally', done => {
-    Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
-        // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
-        draw() {
-            return new Uint8ClampedArray(900);
-        }
-    } as any as TinySDF});
+    test('GlyphManager generates CJK PBF locally', done => {
+        Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
+            // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
+            draw() {
+                return new Uint8ClampedArray(900);
+            }
+        } as any as TinySDF});
 
-    const manager = createGlyphManager('sans-serif');
+        const manager = createGlyphManager('sans-serif');
 
-    // Katakana letter te
-    manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, (err, glyphs) => {
-        expect(err).toBeFalsy();
-        expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(24);
-        done();
-    });
-});
-
-test('GlyphManager generates Hiragana PBF locally', done => {
-    Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
-        // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
-        draw() {
-            return new Uint8ClampedArray(900);
-        }
-    } as any as TinySDF});
-
-    const manager = createGlyphManager('sans-serif');
-
-    //Hiragana letter te
-    manager.getGlyphs({'Arial Unicode MS': [0x3066]}, (err, glyphs) => {
-        expect(err).toBeFalsy();
-        expect(glyphs['Arial Unicode MS'][0x3066].metrics.advance).toBe(24);
-        done();
-    });
-});
-
-test('GlyphManager caches locally generated glyphs', done => {
-    let drawCallCount = 0;
-    Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
-        // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
-        draw() {
-            drawCallCount++;
-            return new Uint8ClampedArray(900);
-        }
-    } as any as TinySDF});
-
-    const manager = createGlyphManager('sans-serif');
-
-    // Katakana letter te
-    manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, (err, glyphs) => {
-        expect(err).toBeFalsy();
-        expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(24);
-        manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, () => {
-            expect(drawCallCount).toBe(1);
+        manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
+            expect(err).toBeFalsy();
+            expect(glyphs['Arial Unicode MS'][0x5e73].metrics.advance).toBe(24);
             done();
         });
     });
-});
 
+    test('GlyphManager generates Katakana PBF locally', done => {
+        Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
+            // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
+            draw() {
+                return new Uint8ClampedArray(900);
+            }
+        } as any as TinySDF});
+
+        const manager = createGlyphManager('sans-serif');
+
+        // Katakana letter te
+        manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, (err, glyphs) => {
+            expect(err).toBeFalsy();
+            expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(24);
+            done();
+        });
+    });
+
+    test('GlyphManager generates Hiragana PBF locally', done => {
+        Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
+            // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
+            draw() {
+                return new Uint8ClampedArray(900);
+            }
+        } as any as TinySDF});
+
+        const manager = createGlyphManager('sans-serif');
+
+        //Hiragana letter te
+        manager.getGlyphs({'Arial Unicode MS': [0x3066]}, (err, glyphs) => {
+            expect(err).toBeFalsy();
+            expect(glyphs['Arial Unicode MS'][0x3066].metrics.advance).toBe(24);
+            done();
+        });
+    });
+
+    test('GlyphManager caches locally generated glyphs', done => {
+        let drawCallCount = 0;
+        Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
+            // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
+            draw() {
+                drawCallCount++;
+                return new Uint8ClampedArray(900);
+            }
+        } as any as TinySDF});
+
+        const manager = createGlyphManager('sans-serif');
+
+        // Katakana letter te
+        manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, (err, glyphs) => {
+            expect(err).toBeFalsy();
+            expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(24);
+            manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, () => {
+                expect(drawCallCount).toBe(1);
+                done();
+            });
+        });
+    });
+});
