@@ -1,6 +1,6 @@
-import diffStyles from '../style-spec/diff';
+import diffStyles from './diff';
 
-describe('diff', () => {
+test('diff', () => {
 
     expect(diffStyles({
         layers: [{id: 'a'}]
@@ -410,4 +410,4 @@ describe('diff', () => {
         {command: 'setTransition', args: ['transition']}
     ]);
 
-    });
+});
