@@ -1,6 +1,6 @@
-import resolveTokens from '../util/resolve_tokens';
+import resolveTokens from './resolve_tokens';
 
-describe('resolveToken', () => {
+test('resolveToken', () => {
     expect('3 Fine Fields').toBe(resolveTokens({a:3, b:'Fine', c:'Fields'}, '{a} {b} {c}'));
 
     // No tokens.
@@ -38,4 +38,4 @@ describe('resolveToken', () => {
         resolveTokens({'$special:characters;': 'mapbox'}, '{$special:characters;}')
     ).toBe('mapbox');
 
-    });
+});
