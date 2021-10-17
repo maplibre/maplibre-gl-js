@@ -1,7 +1,6 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import parseGlyphPBF from '../../../rollup/build/tsc/src/style/parse_glyph_pbf';
-import GlyphManager from '../../../rollup/build/tsc/src/render/glyph_manager';
+import parseGlyphPBF from '../style/parse_glyph_pbf';
+import GlyphManager from '../render/glyph_manager';
 import fs from 'fs';
 
 const glyphs = {};
@@ -11,7 +10,7 @@ for (const glyph of parseGlyphPBF(fs.readFileSync('./test/fixtures/0-255.pbf')))
 
 const identityTransform = (url) => ({url});
 
-const createLoadGlyphRangeStub = (t) => {
+const createLoadGlyphRangeStub = done => {
     return t.stub(GlyphManager, 'loadGlyphRange').callsFake((stack, range, urlTemplate, transform, callback) => {
         expect(stack).toBe('Arial Unicode MS');
         expect(range).toBe(0);
@@ -27,18 +26,18 @@ const createGlyphManager = (font) => {
     return manager;
 };
 
-test('GlyphManager requests 0-255 PBF', (t) => {
+describe('GlyphManager requests 0-255 PBF', done => {
     createLoadGlyphRangeStub(t);
     const manager = createGlyphManager();
 
     manager.getGlyphs({'Arial Unicode MS': [55]}, (err, glyphs) => {
         expect(err).toBeFalsy();
         expect(glyphs['Arial Unicode MS']['55'].metrics.advance).toBe(12);
-        t.end();
+        done();
     });
 });
 
-test('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', (t) => {
+describe('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', done => {
     const stub = createLoadGlyphRangeStub(t);
     const manager = createGlyphManager();
 
@@ -54,12 +53,12 @@ test('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', (t) 
             expect(err).toBeFalsy();
             expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
             expect(stub.calledOnce).toBe(true);
-            t.end();
+            done();
         });
     });
 });
 
-test('GlyphManager requests remote CJK PBF', (t) => {
+describe('GlyphManager requests remote CJK PBF', done => {
     t.stub(GlyphManager, 'loadGlyphRange').callsFake((stack, range, urlTemplate, transform, callback) => {
         setImmediate(() => callback(null, glyphs));
     });
@@ -69,11 +68,11 @@ test('GlyphManager requests remote CJK PBF', (t) => {
     manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
         expect(err).toBeFalsy();
         expect(glyphs['Arial Unicode MS'][0x5e73]).toBe(null); // The fixture returns a PBF without the glyph we requested
-        t.end();
+        done();
     });
 });
 
-test('GlyphManager does not cache CJK chars that should be rendered locally', (t) => {
+describe('GlyphManager does not cache CJK chars that should be rendered locally', done => {
     t.stub(GlyphManager, 'loadGlyphRange').callsFake((stack, range, urlTemplate, transform, callback) => {
         const overlappingGlyphs = {};
         const start = range * 256;
@@ -102,12 +101,12 @@ test('GlyphManager does not cache CJK chars that should be rendered locally', (t
             //Ensure that te is locally generated.
             expect(glyph.bitmap.height).toBe(30);
             expect(glyph.bitmap.width).toBe(30);
-            t.end();
+            done();
         });
     });
 });
 
-test('GlyphManager generates CJK PBF locally', (t) => {
+describe('GlyphManager generates CJK PBF locally', done => {
     t.stub(GlyphManager, 'TinySDF').value(class {
         // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
         draw() {
@@ -120,11 +119,11 @@ test('GlyphManager generates CJK PBF locally', (t) => {
     manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
         expect(err).toBeFalsy();
         expect(glyphs['Arial Unicode MS'][0x5e73].metrics.advance).toBe(24);
-        t.end();
+        done();
     });
 });
 
-test('GlyphManager generates Katakana PBF locally', (t) => {
+describe('GlyphManager generates Katakana PBF locally', done => {
     t.stub(GlyphManager, 'TinySDF').value(class {
         // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
         draw() {
@@ -138,11 +137,11 @@ test('GlyphManager generates Katakana PBF locally', (t) => {
     manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, (err, glyphs) => {
         expect(err).toBeFalsy();
         expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(24);
-        t.end();
+        done();
     });
 });
 
-test('GlyphManager generates Hiragana PBF locally', (t) => {
+describe('GlyphManager generates Hiragana PBF locally', done => {
     t.stub(GlyphManager, 'TinySDF').value(class {
         // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
         draw() {
@@ -156,11 +155,11 @@ test('GlyphManager generates Hiragana PBF locally', (t) => {
     manager.getGlyphs({'Arial Unicode MS': [0x3066]}, (err, glyphs) => {
         expect(err).toBeFalsy();
         expect(glyphs['Arial Unicode MS'][0x3066].metrics.advance).toBe(24);
-        t.end();
+        done();
     });
 });
 
-test('GlyphManager caches locally generated glyphs', (t) => {
+describe('GlyphManager caches locally generated glyphs', done => {
     let drawCallCount = 0;
     t.stub(GlyphManager, 'TinySDF').value(class {
         // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
@@ -178,7 +177,7 @@ test('GlyphManager caches locally generated glyphs', (t) => {
         expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(24);
         manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, () => {
             expect(drawCallCount).toBe(1);
-            t.end();
+            done();
         });
     });
 });
