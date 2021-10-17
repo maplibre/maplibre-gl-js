@@ -1,9 +1,8 @@
-import '../../stub_loader';
-import WorkerPool from '../util/worker_pool';
+import WorkerPool from './worker_pool';
 
 describe('WorkerPool', () => {
     test('#acquire', () => {
-        t.stub(WorkerPool, 'workerCount').value(4);
+        Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 
         const pool = new WorkerPool();
 
@@ -19,7 +18,7 @@ describe('WorkerPool', () => {
 
     test('#release', () => {
         let workersTerminated = 0;
-        t.stub(WorkerPool, 'workerCount').value(4);
+        Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 
         const pool = new WorkerPool();
         pool.acquire('map-1');
