@@ -1,7 +1,6 @@
-import {test} from '../../util/test';
-import diffStyles from '../../../rollup/build/tsc/src/style-spec/diff';
+import diffStyles from '../style-spec/diff';
 
-test('diff', (t) => {
+describe('diff', () => {
 
     expect(diffStyles({
         layers: [{id: 'a'}]
@@ -411,5 +410,4 @@ test('diff', (t) => {
         {command: 'setTransition', args: ['transition']}
     ]);
 
-    t.end();
-});
+    });
