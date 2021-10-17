@@ -1,11 +1,10 @@
-import {test} from '../../util/test';
-import {createFunction} from '../../../rollup/build/tsc/src/style-spec/function';
-import Color from '../../../rollup/build/tsc/src/style-spec/util/color';
-import Formatted from '../../../rollup/build/tsc/src/style-spec/expression/types/formatted';
+import {createFunction} from '../style-spec/function';
+import Color from '../style-spec/util/color';
+import Formatted from '../style-spec/expression/types/formatted';
 import {equalWithPrecision} from '../../util';
 
-test('binary search', (t) => {
-    t.test('will eventually terminate.', (t) => {
+describe('binary search', () => {
+    test('will eventually terminate.', () => {
         const f = createFunction({
             stops: [[9, 10], [17, 11], [17, 11], [18, 13]],
             base: 2
@@ -20,13 +19,11 @@ test('binary search', (t) => {
 
         expect(f({zoom: 17})).toBe(11);
 
-        t.end();
     });
-    t.end();
 });
 
-test('exponential function', (t) => {
-    t.test('is the default for interpolated properties', (t) => {
+describe('exponential function', () => {
+    test('is the default for interpolated properties', () => {
         const f = createFunction({
             stops: [[1, 2], [3, 6]],
             base: 2
@@ -41,10 +38,9 @@ test('exponential function', (t) => {
 
         equalWithPrecision(t, f({zoom: 2}), 30 / 9, 1e-6);
 
-        t.end();
     });
 
-    t.test('base', (t) => {
+    test('base', () => {
         const f = createFunction({
             type: 'exponential',
             stops: [[1, 2], [3, 6]],
@@ -59,10 +55,9 @@ test('exponential function', (t) => {
         equalWithPrecision(t, f({zoom: 3}), 6, 1e-6);
         equalWithPrecision(t, f({zoom: 4}), 6, 1e-6);
 
-        t.end();
     });
 
-    t.test('one stop', (t) => {
+    test('one stop', () => {
         const f = createFunction({
             type: 'exponential',
             stops: [[1, 2]]
@@ -74,10 +69,9 @@ test('exponential function', (t) => {
         expect(f({zoom: 1})).toBe(2);
         expect(f({zoom: 2})).toBe(2);
 
-        t.end();
     });
 
-    t.test('two stops', (t) => {
+    test('two stops', () => {
         const f = createFunction({
             type: 'exponential',
             stops: [[1, 2], [3, 6]]
@@ -91,10 +85,9 @@ test('exponential function', (t) => {
         expect(f({zoom: 3})).toBe(6);
         expect(f({zoom: 4})).toBe(6);
 
-        t.end();
     });
 
-    t.test('three stops', (t) => {
+    test('three stops', () => {
         const f = createFunction({
             type: 'exponential',
             stops: [[1, 2], [3, 6], [5, 10]]
@@ -112,10 +105,9 @@ test('exponential function', (t) => {
         expect(f({zoom: 5})).toBe(10);
         expect(f({zoom: 6})).toBe(10);
 
-        t.end();
     });
 
-    t.test('four stops', (t) => {
+    test('four stops', () => {
         const f = createFunction({
             type: 'exponential',
             stops: [[1, 2], [3, 6], [5, 10], [7, 14]]
@@ -137,10 +129,9 @@ test('exponential function', (t) => {
         expect(f({zoom: 7})).toBe(14);
         expect(f({zoom: 8})).toBe(14);
 
-        t.end();
     });
 
-    t.test('many stops', (t) => {
+    test('many stops', () => {
         const stops = [
             [2, 100],
             [55, 200],
@@ -174,10 +165,9 @@ test('exponential function', (t) => {
         equalWithPrecision(t, f({zoom: 20000}), 3360628.527166095, 1e-6);
         equalWithPrecision(t, f({zoom: 40000}), 10000000, 1e-6);
 
-        t.end();
     });
 
-    t.test('color', (t) => {
+    test('color', () => {
         const f = createFunction({
             type: 'exponential',
             stops: [[1, 'red'], [11, 'blue']]
@@ -189,10 +179,9 @@ test('exponential function', (t) => {
         expect(f({zoom: 5})).toEqual(new Color(0.6, 0, 0.4, 1));
         expect(f({zoom: 11})).toEqual(new Color(0, 0, 1, 1));
 
-        t.end();
     });
 
-    t.test('lab colorspace', (t) => {
+    test('lab colorspace', () => {
         const f = createFunction({
             type: 'exponential',
             colorSpace: 'lab',
@@ -206,10 +195,9 @@ test('exponential function', (t) => {
         equalWithPrecision(t, f({zoom: 5}).g, 0.444, 1e-3);
         equalWithPrecision(t, f({zoom: 5}).b, 0.444, 1e-3);
 
-        t.end();
     });
 
-    t.test('rgb colorspace', (t) => {
+    test('rgb colorspace', () => {
         const f = createFunction({
             type: 'exponential',
             colorSpace: 'rgb',
@@ -220,10 +208,9 @@ test('exponential function', (t) => {
 
         expect(f({zoom: 5})).toEqual(new Color(0.5, 0.5, 0.5, 1));
 
-        t.end();
     });
 
-    t.test('unknown color spaces', (t) => {
+    test('unknown color spaces', () => {
         expect(() => {
             createFunction({
                 type: 'exponential',
@@ -234,10 +221,9 @@ test('exponential function', (t) => {
             });
         }).toThrow();
 
-        t.end();
     });
 
-    t.test('interpolation mutation avoidance', (t) => {
+    test('interpolation mutation avoidance', () => {
         const params = {
             type: 'exponential',
             colorSpace: 'lab',
@@ -248,10 +234,9 @@ test('exponential function', (t) => {
             type: 'color'
         });
         expect(params).toEqual(paramsCopy);
-        t.end();
     });
 
-    t.test('property present', (t) => {
+    test('property present', () => {
         const f = createFunction({
             property: 'foo',
             type: 'exponential',
@@ -262,10 +247,9 @@ test('exponential function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(2);
 
-        t.end();
     });
 
-    t.test('property absent, function default', (t) => {
+    test('property absent, function default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'exponential',
@@ -277,10 +261,9 @@ test('exponential function', (t) => {
 
         expect(f({zoom: 0}, {properties: {}})).toBe(3);
 
-        t.end();
     });
 
-    t.test('property absent, spec default', (t) => {
+    test('property absent, spec default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'exponential',
@@ -292,10 +275,9 @@ test('exponential function', (t) => {
 
         expect(f({zoom: 0}, {properties: {}})).toBe(3);
 
-        t.end();
     });
 
-    t.test('property type mismatch, function default', (t) => {
+    test('property type mismatch, function default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'exponential',
@@ -307,10 +289,9 @@ test('exponential function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 'string'}})).toBe(3);
 
-        t.end();
     });
 
-    t.test('property type mismatch, spec default', (t) => {
+    test('property type mismatch, spec default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'exponential',
@@ -322,10 +303,9 @@ test('exponential function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 'string'}})).toBe(3);
 
-        t.end();
     });
 
-    t.test('zoom-and-property function, one stop', (t) => {
+    test('zoom-and-property function, one stop', () => {
         const f = createFunction({
             type: 'exponential',
             property: 'prop',
@@ -344,10 +324,9 @@ test('exponential function', (t) => {
         expect(f({zoom: 1}, {properties: {prop: 2}})).toBe(2);
         expect(f({zoom: 2}, {properties: {prop: 2}})).toBe(2);
 
-        t.end();
     });
 
-    t.test('zoom-and-property function, two stops', (t) => {
+    test('zoom-and-property function, two stops', () => {
         const f = createFunction({
             type: 'exponential',
             property: 'prop',
@@ -372,10 +351,9 @@ test('exponential function', (t) => {
         expect(f({zoom: 2}, {properties: {prop: 2}})).toBe(8);
         expect(f({zoom: 2}, {properties: {prop: 3}})).toBe(8);
 
-        t.end();
     });
 
-    t.test('zoom-and-property function, three stops', (t) => {
+    test('zoom-and-property function, three stops', () => {
         const f = createFunction({
             type: 'exponential',
             property: 'prop',
@@ -395,10 +373,9 @@ test('exponential function', (t) => {
         expect(f({zoom: 1}, {properties: {prop: 1}})).toBe(2);
         expect(f({zoom: 2}, {properties: {prop: 1}})).toBe(4);
 
-        t.end();
     });
 
-    t.test('zoom-and-property function, two stops, fractional zoom', (t) => {
+    test('zoom-and-property function, two stops, fractional zoom', () => {
         const f = createFunction({
             type: 'exponential',
             property: 'prop',
@@ -415,10 +392,9 @@ test('exponential function', (t) => {
         expect(f({zoom: 2}, {properties: {prop: 1}})).toBe(6);
         expect(f({zoom: 2.1}, {properties: {prop: 1}})).toBe(8);
 
-        t.end();
     });
 
-    test('zoom-and-property function, four stops, integer and fractional zooms', (t) => {
+    test('zoom-and-property function, four stops, integer and fractional zooms', () => {
         const f = createFunction({
             type: 'exponential',
             property: 'prop',
@@ -438,10 +414,9 @@ test('exponential function', (t) => {
         expect(f({zoom: 2}, {properties: {prop: 0}})).toBe(10);
         expect(f({zoom: 2.5}, {properties: {prop: 0}})).toBe(20);
 
-        t.end();
     });
 
-    t.test('zoom-and-property function, no default', (t) => {
+    test('zoom-and-property function, no default', () => {
         // This can happen for fill-outline-color, where the spec has no default.
 
         const f = createFunction({
@@ -460,14 +435,12 @@ test('exponential function', (t) => {
         expect(f({zoom: 0.5}, {properties: {}})).toBe(undefined);
         expect(f({zoom: 1}, {properties: {}})).toBe(undefined);
 
-        t.end();
     });
 
-    t.end();
 });
 
-test('interval function', (t) => {
-    t.test('is the default for non-interpolated properties', (t) => {
+describe('interval function', () => {
+    test('is the default for non-interpolated properties', () => {
         const f = createFunction({
             stops: [[-1, 11], [0, 111]]
         }, {
@@ -484,10 +457,9 @@ test('interval function', (t) => {
         expect(f({zoom: 0})).toBe(111);
         expect(f({zoom: 0.5})).toBe(111);
 
-        t.end();
     });
 
-    t.test('one stop', (t) => {
+    test('one stop', () => {
         const f = createFunction({
             type: 'interval',
             stops: [[0, 11]]
@@ -499,10 +471,9 @@ test('interval function', (t) => {
         expect(f({zoom: 0})).toBe(11);
         expect(f({zoom: 0.5})).toBe(11);
 
-        t.end();
     });
 
-    t.test('two stops', (t) => {
+    test('two stops', () => {
         const f = createFunction({
             type: 'interval',
             stops: [[-1, 11], [0, 111]]
@@ -515,10 +486,9 @@ test('interval function', (t) => {
         expect(f({zoom: 0})).toBe(111);
         expect(f({zoom: 0.5})).toBe(111);
 
-        t.end();
     });
 
-    t.test('three stops', (t) => {
+    test('three stops', () => {
         const f = createFunction({
             type: 'interval',
             stops: [[-1, 11], [0, 111], [1, 1111]]
@@ -533,10 +503,9 @@ test('interval function', (t) => {
         expect(f({zoom: 1})).toBe(1111);
         expect(f({zoom: 1.5})).toBe(1111);
 
-        t.end();
     });
 
-    t.test('four stops', (t) => {
+    test('four stops', () => {
         const f = createFunction({
             type: 'interval',
             stops: [[-1, 11], [0, 111], [1, 1111], [2, 11111]]
@@ -553,10 +522,9 @@ test('interval function', (t) => {
         expect(f({zoom: 2})).toBe(11111);
         expect(f({zoom: 2.5})).toBe(11111);
 
-        t.end();
     });
 
-    t.test('color', (t) => {
+    test('color', () => {
         const f = createFunction({
             type: 'interval',
             stops: [[1, 'red'], [11, 'blue']]
@@ -568,10 +536,9 @@ test('interval function', (t) => {
         expect(f({zoom: 0})).toEqual(new Color(1, 0, 0, 1));
         expect(f({zoom: 11})).toEqual(new Color(0, 0, 1, 1));
 
-        t.end();
     });
 
-    t.test('property present', (t) => {
+    test('property present', () => {
         const f = createFunction({
             property: 'foo',
             type: 'interval',
@@ -582,10 +549,9 @@ test('interval function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 1.5}})).toBe('good');
 
-        t.end();
     });
 
-    t.test('property absent, function default', (t) => {
+    test('property absent, function default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'interval',
@@ -597,10 +563,9 @@ test('interval function', (t) => {
 
         expect(f({zoom: 0}, {properties: {}})).toBe('default');
 
-        t.end();
     });
 
-    t.test('property absent, spec default', (t) => {
+    test('property absent, spec default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'interval',
@@ -612,10 +577,9 @@ test('interval function', (t) => {
 
         expect(f({zoom: 0}, {properties: {}})).toBe('default');
 
-        t.end();
     });
 
-    t.test('property type mismatch, function default', (t) => {
+    test('property type mismatch, function default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'interval',
@@ -627,10 +591,9 @@ test('interval function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 'string'}})).toBe('default');
 
-        t.end();
     });
 
-    t.test('property type mismatch, spec default', (t) => {
+    test('property type mismatch, spec default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'interval',
@@ -642,14 +605,12 @@ test('interval function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 'string'}})).toBe('default');
 
-        t.end();
     });
 
-    t.end();
 });
 
-test('categorical function', (t) => {
-    t.test('string', (t) => {
+describe('categorical function', () => {
+    test('string', () => {
         const f = createFunction({
             property: 'foo',
             type: 'categorical',
@@ -662,10 +623,9 @@ test('categorical function', (t) => {
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe('good');
         expect(f({zoom: 0}, {properties: {foo: 2}})).toBe('bad');
 
-        t.end();
     });
 
-    t.test('string function default', (t) => {
+    test('string function default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'categorical',
@@ -678,10 +638,9 @@ test('categorical function', (t) => {
         expect(f({zoom: 0}, {properties: {}})).toBe('default');
         expect(f({zoom: 0}, {properties: {foo: 3}})).toBe('default');
 
-        t.end();
     });
 
-    t.test('string zoom-and-property function default', (t) => {
+    test('string zoom-and-property function default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'categorical',
@@ -696,10 +655,9 @@ test('categorical function', (t) => {
         expect(f({zoom: 0}, {properties: {foo: 3}})).toBe('default');
         expect(f({zoom: 0}, {properties: {foo: 'bar'}})).toBe('zero');
 
-        t.end();
     });
 
-    t.test('strict type checking', (t) => {
+    test('strict type checking', () => {
         const numberKeys = createFunction({
             property: 'foo',
             type: 'categorical',
@@ -728,10 +686,9 @@ test('categorical function', (t) => {
         expect(stringKeys(0, {properties: {foo: false}})).toBe('default');
         expect(stringKeys(0, {properties: {foo: true}})).toBe('default');
 
-        t.end();
     });
 
-    t.test('string spec default', (t) => {
+    test('string spec default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'categorical',
@@ -744,10 +701,9 @@ test('categorical function', (t) => {
         expect(f({zoom: 0}, {properties: {}})).toBe('default');
         expect(f({zoom: 0}, {properties: {foo: 3}})).toBe('default');
 
-        t.end();
     });
 
-    t.test('color', (t) => {
+    test('color', () => {
         const f = createFunction({
             property: 'foo',
             type: 'categorical',
@@ -759,10 +715,9 @@ test('categorical function', (t) => {
         expect(f({zoom: 0}, {properties: {foo: 0}})).toEqual(new Color(1, 0, 0, 1));
         expect(f({zoom: 1}, {properties: {foo: 1}})).toEqual(new Color(0, 0, 1, 1));
 
-        t.end();
     });
 
-    t.test('color function default', (t) => {
+    test('color function default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'categorical',
@@ -775,10 +730,9 @@ test('categorical function', (t) => {
         expect(f({zoom: 0}, {properties: {}})).toEqual(new Color(0, 1, 0, 1));
         expect(f({zoom: 0}, {properties: {foo: 3}})).toEqual(new Color(0, 1, 0, 1));
 
-        t.end();
     });
 
-    t.test('color spec default', (t) => {
+    test('color spec default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'categorical',
@@ -791,10 +745,9 @@ test('categorical function', (t) => {
         expect(f({zoom: 0}, {properties: {}})).toEqual(new Color(0, 1, 0, 1));
         expect(f({zoom: 0}, {properties: {foo: 3}})).toEqual(new Color(0, 1, 0, 1));
 
-        t.end();
     });
 
-    t.test('boolean', (t) => {
+    test('boolean', () => {
         const f = createFunction({
             property: 'foo',
             type: 'categorical',
@@ -806,14 +759,12 @@ test('categorical function', (t) => {
         expect(f({zoom: 0}, {properties: {foo: true}})).toBe('true');
         expect(f({zoom: 0}, {properties: {foo: false}})).toBe('false');
 
-        t.end();
     });
 
-    t.end();
 });
 
-test('identity function', (t) => {
-    t.test('number', (t) => {
+describe('identity function', () => {
+    test('number', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity'
@@ -823,10 +774,9 @@ test('identity function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(1);
 
-        t.end();
     });
 
-    t.test('number function default', (t) => {
+    test('number function default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity',
@@ -837,10 +787,9 @@ test('identity function', (t) => {
 
         expect(f({zoom: 0}, {properties: {}})).toBe(1);
 
-        t.end();
     });
 
-    t.test('number spec default', (t) => {
+    test('number spec default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity'
@@ -851,10 +800,9 @@ test('identity function', (t) => {
 
         expect(f({zoom: 0}, {properties: {}})).toBe(1);
 
-        t.end();
     });
 
-    t.test('color', (t) => {
+    test('color', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity'
@@ -865,10 +813,9 @@ test('identity function', (t) => {
         expect(f({zoom: 0}, {properties: {foo: 'red'}})).toEqual(new Color(1, 0, 0, 1));
         expect(f({zoom: 1}, {properties: {foo: 'blue'}})).toEqual(new Color(0, 0, 1, 1));
 
-        t.end();
     });
 
-    t.test('color function default', (t) => {
+    test('color function default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity',
@@ -879,10 +826,9 @@ test('identity function', (t) => {
 
         expect(f({zoom: 0}, {properties: {}})).toEqual(new Color(1, 0, 0, 1));
 
-        t.end();
     });
 
-    t.test('color spec default', (t) => {
+    test('color spec default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity'
@@ -893,10 +839,9 @@ test('identity function', (t) => {
 
         expect(f({zoom: 0}, {properties: {}})).toEqual(new Color(1, 0, 0, 1));
 
-        t.end();
     });
 
-    t.test('color invalid', (t) => {
+    test('color invalid', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity'
@@ -907,10 +852,9 @@ test('identity function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 'invalid'}})).toEqual(new Color(1, 0, 0, 1));
 
-        t.end();
     });
 
-    t.test('property type mismatch, function default', (t) => {
+    test('property type mismatch, function default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity',
@@ -921,10 +865,9 @@ test('identity function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe('default');
 
-        t.end();
     });
 
-    t.test('property type mismatch, spec default', (t) => {
+    test('property type mismatch, spec default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity'
@@ -935,10 +878,9 @@ test('identity function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe('default');
 
-        t.end();
     });
 
-    t.test('valid enum', (t) => {
+    test('valid enum', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity'
@@ -952,10 +894,9 @@ test('identity function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 'bar'}})).toBe('bar');
 
-        t.end();
     });
 
-    t.test('invalid enum, spec default', (t) => {
+    test('invalid enum, spec default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity'
@@ -969,10 +910,9 @@ test('identity function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 'baz'}})).toBe('def');
 
-        t.end();
     });
 
-    t.test('invalid type for enum, spec default', (t) => {
+    test('invalid type for enum, spec default', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity'
@@ -986,10 +926,9 @@ test('identity function', (t) => {
 
         expect(f({zoom: 0}, {properties: {foo: 3}})).toBe('def');
 
-        t.end();
     });
 
-    t.test('formatted', (t) => {
+    test('formatted', () => {
         const f = createFunction({
             property: 'foo',
             type: 'identity'
@@ -1002,23 +941,20 @@ test('identity function', (t) => {
         expect(f({zoom: 2}, {properties: {foo: 2}})).toEqual(Formatted.fromString('2'));
         expect(f({zoom: 3}, {properties: {foo: true}})).toEqual(Formatted.fromString('true'));
 
-        t.end();
     });
 
-    t.end();
 });
 
-test('unknown function', (t) => {
+describe('unknown function', () => {
     expect(() => createFunction({
         type: 'nonesuch', stops: [[]]
     }, {
         type: 'string'
     })).toThrowError(/Unknown function type "nonesuch"/);
-    t.end();
 });
 
-test('kind', (t) => {
-    t.test('camera', (t) => {
+describe('kind', () => {
+    test('camera', () => {
         const f = createFunction({
             stops: [[1, 1]]
         }, {
@@ -1026,10 +962,9 @@ test('kind', (t) => {
         });
 
         expect(f.kind).toBe('camera');
-        t.end();
     });
 
-    t.test('source', (t) => {
+    test('source', () => {
         const f = createFunction({
             stops: [[1, 1]],
             property: 'mapbox'
@@ -1038,10 +973,9 @@ test('kind', (t) => {
         });
 
         expect(f.kind).toBe('source');
-        t.end();
     });
 
-    t.test('composite', (t) => {
+    test('composite', () => {
         const f = createFunction({
             stops: [[{zoom: 1, value: 1}, 1]],
             property: 'mapbox'
@@ -1050,8 +984,6 @@ test('kind', (t) => {
         });
 
         expect(f.kind).toBe('composite');
-        t.end();
     });
 
-    t.end();
 });
