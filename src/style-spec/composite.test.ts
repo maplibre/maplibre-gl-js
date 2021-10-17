@@ -1,109 +1,104 @@
-import {test} from '../../util/test';
-import composite from '../../../rollup/build/tsc/src/style-spec/composite';
+import composite from '../style-spec/composite';
 
-test('composites Mapbox vector sources', (t) => {
+describe('composites Mapbox vector sources', () => {
     const result = composite({
-        "version": 7,
-        "sources": {
-            "mapbox-a": {
-                "type": "vector",
-                "url": "mapbox://a"
+        'version': 7,
+        'sources': {
+            'mapbox-a': {
+                'type': 'vector',
+                'url': 'mapbox://a'
             },
-            "mapbox-b": {
-                "type": "vector",
-                "url": "mapbox://b"
+            'mapbox-b': {
+                'type': 'vector',
+                'url': 'mapbox://b'
             }
         },
-        "layers": [{
-            "id": "a",
-            "type": "line",
-            "source": "mapbox-a"
+        'layers': [{
+            'id': 'a',
+            'type': 'line',
+            'source': 'mapbox-a'
         }, {
-            "id": "b",
-            "type": "line",
-            "source": "mapbox-b"
+            'id': 'b',
+            'type': 'line',
+            'source': 'mapbox-b'
         }]
     });
 
     expect(result.sources).toEqual({
-        "a,b": {
-            "type": "vector",
-            "url": "mapbox://a,b"
+        'a,b': {
+            'type': 'vector',
+            'url': 'mapbox://a,b'
         }
     });
 
-    expect(result.layers[0].source).toBe("a,b");
-    expect(result.layers[1].source).toBe("a,b");
-    t.end();
+    expect(result.layers[0].source).toBe('a,b');
+    expect(result.layers[1].source).toBe('a,b');
 });
 
-test('does not composite vector + raster', (t) => {
+describe('does not composite vector + raster', () => {
     const result = composite({
-        "version": 7,
-        "sources": {
-            "a": {
-                "type": "vector",
-                "url": "mapbox://a"
+        'version': 7,
+        'sources': {
+            'a': {
+                'type': 'vector',
+                'url': 'mapbox://a'
             },
-            "b": {
-                "type": "raster",
-                "url": "mapbox://b"
+            'b': {
+                'type': 'raster',
+                'url': 'mapbox://b'
             }
         },
-        "layers": []
+        'layers': []
     });
 
-    expect(Object.keys(result.sources)).toEqual(["a", "b"]);
-    t.end();
+    expect(Object.keys(result.sources)).toEqual(['a', 'b']);
 });
 
-test('incorrect url match', (t) => {
+describe('incorrect url match', () => {
     const result = composite({
-        "version": 7,
-        "sources": {
-            "a": {
-                "type": "vector",
-                "url": "mapbox://a"
+        'version': 7,
+        'sources': {
+            'a': {
+                'type': 'vector',
+                'url': 'mapbox://a'
             },
-            "b": {
-                "type": "vector",
-                "url": ""
+            'b': {
+                'type': 'vector',
+                'url': ''
             }
         },
-        "layers": []
+        'layers': []
     });
 
-    expect(Object.keys(result.sources)).toEqual(["a", "b"]);
-    t.end();
+    expect(Object.keys(result.sources)).toEqual(['a', 'b']);
 });
 
-test('composites Mapbox vector sources with conflicting source layer names', (t) => {
+describe('composites Mapbox vector sources with conflicting source layer names', () => {
     expect(() => {
         composite({
-            "version": 7,
-            "sources": {
-                "mapbox-a": {
-                    "type": "vector",
-                    "url": "mapbox://a"
+            'version': 7,
+            'sources': {
+                'mapbox-a': {
+                    'type': 'vector',
+                    'url': 'mapbox://a'
                 },
-                "mapbox-b": {
-                    "type": "vector",
-                    "url": "mapbox://b"
+                'mapbox-b': {
+                    'type': 'vector',
+                    'url': 'mapbox://b'
                 }
             },
-            "layers": [{
-                "id": "a",
-                "type": "line",
-                "source-layer": "sourcelayer",
-                "source": "mapbox-a"
+            'layers': [{
+                'id': 'a',
+                'type': 'line',
+                'source-layer': 'sourcelayer',
+                'source': 'mapbox-a'
             }, {
-                "id": "b",
-                "type": "line",
-                "source-layer": "sourcelayer",
-                "source": "mapbox-b"
+                'id': 'b',
+                'type': 'line',
+                'source-layer': 'sourcelayer',
+                'source': 'mapbox-b'
             }]
         });
     }).toThrowError(/Conflicting source layer names/);
 
-    t.end();
 });
