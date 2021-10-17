@@ -1,6 +1,6 @@
-import {packUint8ToFloat} from '../shaders/encode_attribute';
+import {packUint8ToFloat} from './encode_attribute';
 
-describe('packUint8ToFloat', () => {
+test('packUint8ToFloat', () => {
     expect(packUint8ToFloat(0, 0)).toBe(0);
     expect(packUint8ToFloat(255, 255)).toBe(65535);
     expect(packUint8ToFloat(123, 45)).toBe(31533);
