@@ -1,6 +1,6 @@
 import {Event, Evented} from '../util/evented';
 
-describe('Evented', done => {
+describe('Evented', () => {
 
     test('calls listeners added with "on"', done => {
         const evented = new Evented();
@@ -130,103 +130,98 @@ describe('Evented', done => {
         expect(listenerA.calledBefore(listenerB)).toBeTruthy();
         done();
     });
+});
 
-    test('evented parents', done => {
+describe('evented parents', () => {
 
-        test('adds parents with "setEventedParent"', done => {
-            const listener = t.spy();
-            const eventedSource = new Evented();
-            const eventedSink = new Evented();
-            eventedSource.setEventedParent(eventedSink);
-            eventedSink.on('a', listener);
-            eventedSource.fire(new Event('a'));
-            eventedSource.fire(new Event('a'));
-            expect(listener.calledTwice).toBeTruthy();
-            done();
-        });
-
-        test('passes original data to parent listeners', done => {
-            const eventedSource = new Evented();
-            const eventedSink = new Evented();
-            eventedSource.setEventedParent(eventedSink);
-            eventedSink.on('a', (data) => {
-                expect(data.foo).toBe('bar');
-            });
-            eventedSource.fire(new Event('a', {foo: 'bar'}));
-            done();
-        });
-
-        test('attaches parent data to parent listeners', done => {
-            const eventedSource = new Evented();
-            const eventedSink = new Evented();
-            eventedSource.setEventedParent(eventedSink, {foz: 'baz'});
-            eventedSink.on('a', (data) => {
-                expect(data.foz).toBe('baz');
-            });
-            eventedSource.fire(new Event('a', {foo: 'bar'}));
-            done();
-        });
-
-        test('attaches parent data from a function to parent listeners', done => {
-            const eventedSource = new Evented();
-            const eventedSink = new Evented();
-            eventedSource.setEventedParent(eventedSink, () => ({foz: 'baz'}));
-            eventedSink.on('a', (data) => {
-                expect(data.foz).toBe('baz');
-            });
-            eventedSource.fire(new Event('a', {foo: 'bar'}));
-            done();
-        });
-
-        test('passes original "target" to parent listeners', done => {
-            const eventedSource = new Evented();
-            const eventedSink = new Evented();
-            eventedSource.setEventedParent(eventedSink);
-            eventedSource.setEventedParent(null);
-            eventedSink.on('a', (data) => {
-                expect(data.target).toBe(eventedSource);
-            });
-            eventedSource.fire(new Event('a'));
-            done();
-        });
-
-        test('removes parents with "setEventedParent(null)"', done => {
-            const listener = t.spy();
-            const eventedSource = new Evented();
-            const eventedSink = new Evented();
-            eventedSink.on('a', listener);
-            eventedSource.setEventedParent(eventedSink);
-            eventedSource.setEventedParent(null);
-            eventedSource.fire(new Event('a'));
-            expect(listener.notCalled).toBeTruthy();
-            done();
-        });
-
-        test('reports if an event has parent listeners with "listens"', done => {
-            const eventedSource = new Evented();
-            const eventedSink = new Evented();
-            eventedSink.on('a', () => {});
-            eventedSource.setEventedParent(eventedSink);
-            expect(eventedSink.listens('a')).toBeTruthy();
-            done();
-        });
-
-        test('eventedParent data function is evaluated on every fire', done => {
-            const eventedSource = new Evented();
-            const eventedParent = new Evented();
-            let i = 0;
-            eventedSource.setEventedParent(eventedParent, () => i++);
-            eventedSource.on('a', () => {});
-            eventedSource.fire(new Event('a'));
-            expect(i).toBe(1);
-            eventedSource.fire(new Event('a'));
-            expect(i).toBe(2);
-            done();
-        });
-
+    test('adds parents with "setEventedParent"', done => {
+        const listener = t.spy();
+        const eventedSource = new Evented();
+        const eventedSink = new Evented();
+        eventedSource.setEventedParent(eventedSink);
+        eventedSink.on('a', listener);
+        eventedSource.fire(new Event('a'));
+        eventedSource.fire(new Event('a'));
+        expect(listener.calledTwice).toBeTruthy();
         done();
-
     });
 
-    done();
+    test('passes original data to parent listeners', done => {
+        const eventedSource = new Evented();
+        const eventedSink = new Evented();
+        eventedSource.setEventedParent(eventedSink);
+        eventedSink.on('a', (data) => {
+            expect(data.foo).toBe('bar');
+        });
+        eventedSource.fire(new Event('a', {foo: 'bar'}));
+        done();
+    });
+
+    test('attaches parent data to parent listeners', done => {
+        const eventedSource = new Evented();
+        const eventedSink = new Evented();
+        eventedSource.setEventedParent(eventedSink, {foz: 'baz'});
+        eventedSink.on('a', (data) => {
+            expect(data.foz).toBe('baz');
+        });
+        eventedSource.fire(new Event('a', {foo: 'bar'}));
+        done();
+    });
+
+    test('attaches parent data from a function to parent listeners', done => {
+        const eventedSource = new Evented();
+        const eventedSink = new Evented();
+        eventedSource.setEventedParent(eventedSink, () => ({foz: 'baz'}));
+        eventedSink.on('a', (data) => {
+            expect(data.foz).toBe('baz');
+        });
+        eventedSource.fire(new Event('a', {foo: 'bar'}));
+        done();
+    });
+
+    test('passes original "target" to parent listeners', done => {
+        const eventedSource = new Evented();
+        const eventedSink = new Evented();
+        eventedSource.setEventedParent(eventedSink);
+        eventedSource.setEventedParent(null);
+        eventedSink.on('a', (data) => {
+            expect(data.target).toBe(eventedSource);
+        });
+        eventedSource.fire(new Event('a'));
+        done();
+    });
+
+    test('removes parents with "setEventedParent(null)"', done => {
+        const listener = t.spy();
+        const eventedSource = new Evented();
+        const eventedSink = new Evented();
+        eventedSink.on('a', listener);
+        eventedSource.setEventedParent(eventedSink);
+        eventedSource.setEventedParent(null);
+        eventedSource.fire(new Event('a'));
+        expect(listener.notCalled).toBeTruthy();
+        done();
+    });
+
+    test('reports if an event has parent listeners with "listens"', done => {
+        const eventedSource = new Evented();
+        const eventedSink = new Evented();
+        eventedSink.on('a', () => {});
+        eventedSource.setEventedParent(eventedSink);
+        expect(eventedSink.listens('a')).toBeTruthy();
+        done();
+    });
+
+    test('eventedParent data function is evaluated on every fire', done => {
+        const eventedSource = new Evented();
+        const eventedParent = new Evented();
+        let i = 0;
+        eventedSource.setEventedParent(eventedParent, () => i++);
+        eventedSource.on('a', () => {});
+        eventedSource.fire(new Event('a'));
+        expect(i).toBe(1);
+        eventedSource.fire(new Event('a'));
+        expect(i).toBe(2);
+        done();
+    });
 });
