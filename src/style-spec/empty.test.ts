@@ -1,12 +1,14 @@
 import emptyStyle from './empty';
 import validateStyleMin from './validate_style.min';
 
-test('it generates something', () => {
-    const style = emptyStyle();
-    expect(style).toBeTruthy();
-});
+describe('empty', () => {
+    test('it generates something', () => {
+        const style = emptyStyle();
+        expect(style).toBeTruthy();
+    });
 
-test('generated empty style is a valid style', () => {
-    const errors = validateStyleMin(emptyStyle());
-    expect(errors.length).toBe(0);
+    test('generated empty style is a valid style', () => {
+        const errors = validateStyleMin(emptyStyle());
+        expect(errors.length).toBe(0);
+    });
 });
