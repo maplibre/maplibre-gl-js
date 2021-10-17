@@ -1,10 +1,11 @@
-import format from '../style-spec/format';
+import { Test } from 'tap';
+import format from './format';
 
 function roundtrip(style) {
     return JSON.parse(format(style));
 }
 
-describe('orders top-level keys', () => {
+test('orders top-level keys', () => {
     expect(Object.keys(roundtrip({
         'layers': [],
         'other': {},
@@ -15,7 +16,7 @@ describe('orders top-level keys', () => {
     }))).toEqual(['version', 'sources', 'sprite', 'glyphs', 'layers', 'other']);
 });
 
-describe('orders layer keys', () => {
+test('orders layer keys', () => {
     expect(Object.keys(roundtrip({
         'layers': [{
             'paint': {},
