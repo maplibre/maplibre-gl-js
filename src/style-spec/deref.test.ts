@@ -2,7 +2,7 @@ import {test} from '../../util/test';
 import deref from '../../../rollup/build/tsc/src/style-spec/deref';
 
 test('derefs a ref layer which follows its parent', (t) => {
-    t.deepEqual(deref([
+    expect(deref([
         {
             'id': 'parent',
             'type': 'line'
@@ -11,7 +11,7 @@ test('derefs a ref layer which follows its parent', (t) => {
             'id': 'child',
             'ref': 'parent'
         }
-    ]), [
+    ])).toEqual([
         {
             'id': 'parent',
             'type': 'line'
@@ -25,7 +25,7 @@ test('derefs a ref layer which follows its parent', (t) => {
 });
 
 test('derefs a ref layer which precedes its parent', (t) => {
-    t.deepEqual(deref([
+    expect(deref([
         {
             'id': 'child',
             'ref': 'parent'
@@ -34,7 +34,7 @@ test('derefs a ref layer which precedes its parent', (t) => {
             'id': 'parent',
             'type': 'line'
         }
-    ]), [
+    ])).toEqual([
         {
             'id': 'child',
             'type': 'line'
