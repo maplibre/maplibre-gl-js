@@ -1,4 +1,4 @@
-import {findStopLessThanOrEqualTo} from '../style-spec/expression/stops';
+import {findStopLessThanOrEqualTo} from './stops';
 
 describe('findStopLessThanOrEqualTo', () => {
     test('When the input > all stops it returns the last stop.', () => {
