@@ -1,12 +1,12 @@
-import emptyStyle from '../style-spec/empty';
-import validateStyleMin from '../style-spec/validate_style.min';
+import emptyStyle from './empty';
+import validateStyleMin from './validate_style.min';
 
-describe('it generates something', () => {
+test('it generates something', () => {
     const style = emptyStyle();
     expect(style).toBeTruthy();
 });
 
-describe('generated empty style is a valid style', () => {
+test('generated empty style is a valid style', () => {
     const errors = validateStyleMin(emptyStyle());
     expect(errors.length).toBe(0);
 });
