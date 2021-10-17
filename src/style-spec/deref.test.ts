@@ -1,7 +1,6 @@
-import {test} from '../../util/test';
-import deref from '../../../rollup/build/tsc/src/style-spec/deref';
+import deref from '../style-spec/deref';
 
-test('derefs a ref layer which follows its parent', (t) => {
+describe('derefs a ref layer which follows its parent', () => {
     expect(deref([
         {
             'id': 'parent',
@@ -21,10 +20,9 @@ test('derefs a ref layer which follows its parent', (t) => {
             'type': 'line'
         }
     ]);
-    t.end();
 });
 
-test('derefs a ref layer which precedes its parent', (t) => {
+describe('derefs a ref layer which precedes its parent', () => {
     expect(deref([
         {
             'id': 'child',
@@ -44,5 +42,4 @@ test('derefs a ref layer which precedes its parent', (t) => {
             'type': 'line'
         }
     ]);
-    t.end();
 });
