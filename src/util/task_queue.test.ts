@@ -24,7 +24,7 @@ describe('TaskQueue', () => {
         q.add(fn);
         q.add(fn);
         q.run();
-        expect(fn.mock.calls.length).toBe(2);
+        expect(fn).toHaveBeenCalledTimes(2);
     });
 
     test('Does not call a callback that was cancelled before the queue was run', () => {
@@ -35,8 +35,8 @@ describe('TaskQueue', () => {
         const id = q.add(no);
         q.remove(id);
         q.run();
-        expect(yes.mock.calls.length).toBe(1);
-        expect(no.mock.calls.length).toBe(0);
+        expect(yes).toHaveBeenCalledTimes(1);
+        expect(no).not.toHaveBeenCalled();
     });
 
     test('Does not call a callback that was cancelled while the queue was running', () => {
@@ -48,8 +48,8 @@ describe('TaskQueue', () => {
         q.add(() => q.remove(id));
         id = q.add(no);
         q.run();
-        expect(yes.mock.calls.length).toBe(1);
-        expect(no.mock.calls.length).toBe(0);
+        expect(yes).toHaveBeenCalledTimes(1);
+        expect(no).not.toHaveBeenCalled();
     });
 
     test('Allows each instance of a multiply-queued callback to be cancelled independently', () => {
@@ -59,7 +59,7 @@ describe('TaskQueue', () => {
         const id = q.add(cb);
         q.remove(id);
         q.run();
-        expect(cb.mock.calls.length).toBe(1);
+        expect(cb).toHaveBeenCalledTimes(1);
     });
 
     test('Does not throw if a remove() is called after running the queue', () => {
@@ -68,7 +68,7 @@ describe('TaskQueue', () => {
         const id = q.add(cb);
         q.run();
         q.remove(id);
-        expect(cb.mock.calls.length).toBe(1);
+        expect(cb).toHaveBeenCalledTimes(1);
     });
 
     test('Does not add tasks to the currently-running queue', () => {
@@ -76,9 +76,9 @@ describe('TaskQueue', () => {
         const cb = jest.fn();
         q.add(() => q.add(cb));
         q.run();
-        expect(cb.mock.calls.length).toBe(0);
+        expect(cb).not.toHaveBeenCalled();
         q.run();
-        expect(cb.mock.calls.length).toBe(1);
+        expect(cb).toHaveBeenCalledTimes(1);
     });
 
     test('TaskQueue#run() throws on attempted re-entrance', () => {
@@ -95,8 +95,8 @@ describe('TaskQueue', () => {
         q.clear();
         q.add(after);
         q.run();
-        expect(before.mock.calls.length).toBe(0);
-        expect(after.mock.calls.length).toBe(1);
+        expect(before).not.toHaveBeenCalled();
+        expect(after).toHaveBeenCalledTimes(1);
     });
 
     test('TaskQueue#clear() interrupts currently-running queue', () => {
@@ -107,8 +107,8 @@ describe('TaskQueue', () => {
         q.add(() => q.clear());
         q.add(before);
         q.run();
-        expect(before.mock.calls.length).toBe(0);
+        expect(before).not.toHaveBeenCalled();
         q.run();
-        expect(after.mock.calls.length).toBe(0);
+        expect(after).not.toHaveBeenCalled();
     });
 });
