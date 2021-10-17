@@ -1,33 +1,38 @@
-import '../../stub_loader';
 import parseGlyphPBF from '../style/parse_glyph_pbf';
-import GlyphManager from '../render/glyph_manager';
+import GlyphManager from './glyph_manager';
 import fs from 'fs';
+import {RequestManager} from '../util/request_manager';
+import TinySDF from '@mapbox/tiny-sdf';
 
 const glyphs = {};
 for (const glyph of parseGlyphPBF(fs.readFileSync('./test/fixtures/0-255.pbf'))) {
     glyphs[glyph.id] = glyph;
 }
 
-const identityTransform = (url) => ({url});
+const identityTransform = ((url) => ({url})) as any as RequestManager;
 
-const createLoadGlyphRangeStub = done => {
-    return t.stub(GlyphManager, 'loadGlyphRange').callsFake((stack, range, urlTemplate, transform, callback) => {
+const createLoadGlyphRangeStub = () => {
+    return jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
         expect(stack).toBe('Arial Unicode MS');
         expect(range).toBe(0);
         expect(urlTemplate).toBe('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
         expect(transform).toBe(identityTransform);
-        setImmediate(() => callback(null, glyphs));
+        setTimeout(() => callback(null, glyphs), 0);
     });
 };
 
-const createGlyphManager = (font) => {
+const createGlyphManager = (font?) => {
     const manager = new GlyphManager(identityTransform, font);
     manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
     return manager;
 };
 
-describe('GlyphManager requests 0-255 PBF', done => {
-    createLoadGlyphRangeStub(t);
+afterEach(() => {
+    jest.clearAllMocks();
+});
+
+test('GlyphManager requests 0-255 PBF', done => {
+    createLoadGlyphRangeStub();
     const manager = createGlyphManager();
 
     manager.getGlyphs({'Arial Unicode MS': [55]}, (err, glyphs) => {
@@ -37,14 +42,14 @@ describe('GlyphManager requests 0-255 PBF', done => {
     });
 });
 
-describe('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', done => {
-    const stub = createLoadGlyphRangeStub(t);
+test('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', done => {
+    const stub = createLoadGlyphRangeStub();
     const manager = createGlyphManager();
 
     manager.getGlyphs({'Arial Unicode MS': [0.5]}, (err) => {
         expect(err).toBeFalsy();
         expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
-        expect(stub.calledOnce).toBe(true);
+        expect(stub).toHaveBeenCalledTimes(1);
 
         // We remove all requests as in getGlyphs code.
         delete manager.entries['Arial Unicode MS'].requests[0];
@@ -52,15 +57,15 @@ describe('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', 
         manager.getGlyphs({'Arial Unicode MS': [0.5]}, (err) => {
             expect(err).toBeFalsy();
             expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
-            expect(stub.calledOnce).toBe(true);
+            expect(stub).toHaveBeenCalledTimes(1);
             done();
         });
     });
 });
 
-describe('GlyphManager requests remote CJK PBF', done => {
-    t.stub(GlyphManager, 'loadGlyphRange').callsFake((stack, range, urlTemplate, transform, callback) => {
-        setImmediate(() => callback(null, glyphs));
+test('GlyphManager requests remote CJK PBF', done => {
+    jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
+        setTimeout(() => callback(null, glyphs), 0);
     });
 
     const manager = createGlyphManager();
@@ -72,22 +77,22 @@ describe('GlyphManager requests remote CJK PBF', done => {
     });
 });
 
-describe('GlyphManager does not cache CJK chars that should be rendered locally', done => {
-    t.stub(GlyphManager, 'loadGlyphRange').callsFake((stack, range, urlTemplate, transform, callback) => {
+test('GlyphManager does not cache CJK chars that should be rendered locally', done => {
+    jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
         const overlappingGlyphs = {};
         const start = range * 256;
         const end = start + 256;
         for (let i = start, j = 0; i < end; i++, j++) {
             overlappingGlyphs[i] = glyphs[j];
         }
-        setImmediate(() => callback(null, overlappingGlyphs));
+        setTimeout(() => callback(null, overlappingGlyphs), 0);
     });
-    t.stub(GlyphManager, 'TinySDF').value(class {
+    Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
         // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
         draw() {
             return new Uint8ClampedArray(900);
         }
-    });
+    } as any as TinySDF});
     const manager = createGlyphManager('sans-serif');
 
     //Request char that overlaps Katakana range
@@ -106,13 +111,13 @@ describe('GlyphManager does not cache CJK chars that should be rendered locally'
     });
 });
 
-describe('GlyphManager generates CJK PBF locally', done => {
-    t.stub(GlyphManager, 'TinySDF').value(class {
+test('GlyphManager generates CJK PBF locally', done => {
+    Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
         // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
         draw() {
             return new Uint8ClampedArray(900);
         }
-    });
+    } as any as TinySDF});
 
     const manager = createGlyphManager('sans-serif');
 
@@ -123,13 +128,13 @@ describe('GlyphManager generates CJK PBF locally', done => {
     });
 });
 
-describe('GlyphManager generates Katakana PBF locally', done => {
-    t.stub(GlyphManager, 'TinySDF').value(class {
+test('GlyphManager generates Katakana PBF locally', done => {
+    Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
         // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
         draw() {
             return new Uint8ClampedArray(900);
         }
-    });
+    } as any as TinySDF});
 
     const manager = createGlyphManager('sans-serif');
 
@@ -141,13 +146,13 @@ describe('GlyphManager generates Katakana PBF locally', done => {
     });
 });
 
-describe('GlyphManager generates Hiragana PBF locally', done => {
-    t.stub(GlyphManager, 'TinySDF').value(class {
+test('GlyphManager generates Hiragana PBF locally', done => {
+    Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
         // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
         draw() {
             return new Uint8ClampedArray(900);
         }
-    });
+    } as any as TinySDF});
 
     const manager = createGlyphManager('sans-serif');
 
@@ -159,15 +164,15 @@ describe('GlyphManager generates Hiragana PBF locally', done => {
     });
 });
 
-describe('GlyphManager caches locally generated glyphs', done => {
+test('GlyphManager caches locally generated glyphs', done => {
     let drawCallCount = 0;
-    t.stub(GlyphManager, 'TinySDF').value(class {
+    Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
         // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
         draw() {
             drawCallCount++;
             return new Uint8ClampedArray(900);
         }
-    });
+    } as any as TinySDF});
 
     const manager = createGlyphManager('sans-serif');
 
