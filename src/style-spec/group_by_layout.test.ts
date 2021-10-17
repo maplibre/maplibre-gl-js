@@ -1,7 +1,6 @@
-import {test} from '../../util/test';
-import group from '../../../rollup/build/tsc/src/style-spec/group_by_layout';
+import group from '../style-spec/group_by_layout';
 
-test('group layers whose ref properties are identical', (t) => {
+describe('group layers whose ref properties are identical', () => {
     const a = {
         'id': 'parent',
         'type': 'line'
@@ -13,10 +12,9 @@ test('group layers whose ref properties are identical', (t) => {
     expect(group([a, b], {})).toEqual([[a, b]]);
     expect(group([a, b], {})[0][0]).toBe(a);
     expect(group([a, b], {})[0][1]).toBe(b);
-    t.end();
 });
 
-test('group does not group unrelated layers', (t) => {
+describe('group does not group unrelated layers', () => {
     expect(group([
         {
             'id': 'parent',
@@ -35,10 +33,9 @@ test('group does not group unrelated layers', (t) => {
             'type': 'fill'
         }]
     ]);
-    t.end();
 });
 
-test('group works even for differing layout key orders', (t) => {
+describe('group works even for differing layout key orders', () => {
     expect(group([
         {
             'id': 'parent',
@@ -62,5 +59,4 @@ test('group works even for differing layout key orders', (t) => {
             'layout': {'b': 2, 'a': 1}
         }
     ]]);
-    t.end();
 });
