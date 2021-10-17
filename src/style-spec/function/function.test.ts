@@ -1,7 +1,7 @@
-import {createFunction} from '../style-spec/function';
-import Color from '../style-spec/util/color';
-import Formatted from '../style-spec/expression/types/formatted';
-import {equalWithPrecision} from '../../util';
+import {createFunction} from '.';
+import Color from '../util/color';
+import Formatted from '../expression/types/formatted';
+import {equalWithPrecisionJest} from '../../../test/util/jest_utils';
 
 describe('binary search', () => {
     test('will eventually terminate.', () => {
@@ -17,7 +17,7 @@ describe('binary search', () => {
             }
         }).evaluate;
 
-        expect(f({zoom: 17})).toBe(11);
+        expect(f({zoom: 17}, undefined)).toBe(11);
 
     });
 });
@@ -36,7 +36,7 @@ describe('exponential function', () => {
             }
         }).evaluate;
 
-        equalWithPrecision(t, f({zoom: 2}), 30 / 9, 1e-6);
+        equalWithPrecisionJest(f({zoom: 2}, undefined), 30 / 9, 1e-6);
 
     });
 
@@ -49,11 +49,11 @@ describe('exponential function', () => {
             type: 'number'
         }).evaluate;
 
-        equalWithPrecision(t, f({zoom: 0}), 2, 1e-6);
-        equalWithPrecision(t, f({zoom: 1}), 2, 1e-6);
-        equalWithPrecision(t, f({zoom: 2}), 30 / 9, 1e-6);
-        equalWithPrecision(t, f({zoom: 3}), 6, 1e-6);
-        equalWithPrecision(t, f({zoom: 4}), 6, 1e-6);
+        equalWithPrecisionJest(f({zoom: 0}, undefined), 2, 1e-6);
+        equalWithPrecisionJest(f({zoom: 1}, undefined), 2, 1e-6);
+        equalWithPrecisionJest(f({zoom: 2}, undefined), 30 / 9, 1e-6);
+        equalWithPrecisionJest(f({zoom: 3}, undefined), 6, 1e-6);
+        equalWithPrecisionJest(f({zoom: 4}, undefined), 6, 1e-6);
 
     });
 
@@ -65,9 +65,9 @@ describe('exponential function', () => {
             type: 'number'
         }).evaluate;
 
-        expect(f({zoom: 0})).toBe(2);
-        expect(f({zoom: 1})).toBe(2);
-        expect(f({zoom: 2})).toBe(2);
+        expect(f({zoom: 0}, undefined)).toBe(2);
+        expect(f({zoom: 1}, undefined)).toBe(2);
+        expect(f({zoom: 2}, undefined)).toBe(2);
 
     });
 
@@ -79,11 +79,11 @@ describe('exponential function', () => {
             type: 'number'
         }).evaluate;
 
-        expect(f({zoom: 0})).toBe(2);
-        expect(f({zoom: 1})).toBe(2);
-        expect(f({zoom: 2})).toBe(4);
-        expect(f({zoom: 3})).toBe(6);
-        expect(f({zoom: 4})).toBe(6);
+        expect(f({zoom: 0}, undefined)).toBe(2);
+        expect(f({zoom: 1}, undefined)).toBe(2);
+        expect(f({zoom: 2}, undefined)).toBe(4);
+        expect(f({zoom: 3}, undefined)).toBe(6);
+        expect(f({zoom: 4}, undefined)).toBe(6);
 
     });
 
@@ -95,15 +95,15 @@ describe('exponential function', () => {
             type: 'number'
         }).evaluate;
 
-        expect(f({zoom: 0})).toBe(2);
-        expect(f({zoom: 1})).toBe(2);
-        expect(f({zoom: 2})).toBe(4);
-        expect(f({zoom: 2.5})).toBe(5);
-        expect(f({zoom: 3})).toBe(6);
-        expect(f({zoom: 4})).toBe(8);
-        expect(f({zoom: 4.5})).toBe(9);
-        expect(f({zoom: 5})).toBe(10);
-        expect(f({zoom: 6})).toBe(10);
+        expect(f({zoom: 0}, undefined)).toBe(2);
+        expect(f({zoom: 1}, undefined)).toBe(2);
+        expect(f({zoom: 2}, undefined)).toBe(4);
+        expect(f({zoom: 2.5}, undefined)).toBe(5);
+        expect(f({zoom: 3}, undefined)).toBe(6);
+        expect(f({zoom: 4}, undefined)).toBe(8);
+        expect(f({zoom: 4.5}, undefined)).toBe(9);
+        expect(f({zoom: 5}, undefined)).toBe(10);
+        expect(f({zoom: 6}, undefined)).toBe(10);
 
     });
 
@@ -115,19 +115,19 @@ describe('exponential function', () => {
             type: 'number'
         }).evaluate;
 
-        expect(f({zoom: 0})).toBe(2);
-        expect(f({zoom: 1})).toBe(2);
-        expect(f({zoom: 2})).toBe(4);
-        expect(f({zoom: 2.5})).toBe(5);
-        expect(f({zoom: 3})).toBe(6);
-        expect(f({zoom: 3.5})).toBe(7);
-        expect(f({zoom: 4})).toBe(8);
-        expect(f({zoom: 4.5})).toBe(9);
-        expect(f({zoom: 5})).toBe(10);
-        expect(f({zoom: 6})).toBe(12);
-        expect(f({zoom: 6.5})).toBe(13);
-        expect(f({zoom: 7})).toBe(14);
-        expect(f({zoom: 8})).toBe(14);
+        expect(f({zoom: 0}, undefined)).toBe(2);
+        expect(f({zoom: 1}, undefined)).toBe(2);
+        expect(f({zoom: 2}, undefined)).toBe(4);
+        expect(f({zoom: 2.5}, undefined)).toBe(5);
+        expect(f({zoom: 3}, undefined)).toBe(6);
+        expect(f({zoom: 3.5}, undefined)).toBe(7);
+        expect(f({zoom: 4}, undefined)).toBe(8);
+        expect(f({zoom: 4.5}, undefined)).toBe(9);
+        expect(f({zoom: 5}, undefined)).toBe(10);
+        expect(f({zoom: 6}, undefined)).toBe(12);
+        expect(f({zoom: 6.5}, undefined)).toBe(13);
+        expect(f({zoom: 7}, undefined)).toBe(14);
+        expect(f({zoom: 8}, undefined)).toBe(14);
 
     });
 
@@ -155,15 +155,15 @@ describe('exponential function', () => {
             type: 'number'
         }).evaluate;
 
-        equalWithPrecision(t, f({zoom: 2}), 100, 1e-6);
-        equalWithPrecision(t, f({zoom: 20}), 133.9622641509434, 1e-6);
-        equalWithPrecision(t, f({zoom: 607}), 400, 1e-6);
-        equalWithPrecision(t, f({zoom: 680}), 410.7352941176471, 1e-6);
-        equalWithPrecision(t, f({zoom: 4927}), 1000, 1e-6); //86
-        equalWithPrecision(t, f({zoom: 7300}), 14779.590419993057, 1e-6);
-        equalWithPrecision(t, f({zoom: 10000}), 99125.30371398819, 1e-6);
-        equalWithPrecision(t, f({zoom: 20000}), 3360628.527166095, 1e-6);
-        equalWithPrecision(t, f({zoom: 40000}), 10000000, 1e-6);
+        equalWithPrecisionJest(f({zoom: 2}, undefined), 100, 1e-6);
+        equalWithPrecisionJest(f({zoom: 20}, undefined), 133.9622641509434, 1e-6);
+        equalWithPrecisionJest(f({zoom: 607}, undefined), 400, 1e-6);
+        equalWithPrecisionJest(f({zoom: 680}, undefined), 410.7352941176471, 1e-6);
+        equalWithPrecisionJest(f({zoom: 4927}, undefined), 1000, 1e-6); //86
+        equalWithPrecisionJest(f({zoom: 7300}, undefined), 14779.590419993057, 1e-6);
+        equalWithPrecisionJest(f({zoom: 10000}, undefined), 99125.30371398819, 1e-6);
+        equalWithPrecisionJest(f({zoom: 20000}, undefined), 3360628.527166095, 1e-6);
+        equalWithPrecisionJest(f({zoom: 40000}, undefined), 10000000, 1e-6);
 
     });
 
@@ -175,9 +175,9 @@ describe('exponential function', () => {
             type: 'color'
         }).evaluate;
 
-        expect(f({zoom: 0})).toEqual(new Color(1, 0, 0, 1));
-        expect(f({zoom: 5})).toEqual(new Color(0.6, 0, 0.4, 1));
-        expect(f({zoom: 11})).toEqual(new Color(0, 0, 1, 1));
+        expect(f({zoom: 0}, undefined)).toEqual(new Color(1, 0, 0, 1));
+        expect(f({zoom: 5}, undefined)).toEqual(new Color(0.6, 0, 0.4, 1));
+        expect(f({zoom: 11}, undefined)).toEqual(new Color(0, 0, 1, 1));
 
     });
 
@@ -190,10 +190,10 @@ describe('exponential function', () => {
             type: 'color'
         }).evaluate;
 
-        expect(f({zoom: 0})).toEqual(new Color(0, 0, 0, 1));
-        equalWithPrecision(t, f({zoom: 5}).r, 0, 1e-6);
-        equalWithPrecision(t, f({zoom: 5}).g, 0.444, 1e-3);
-        equalWithPrecision(t, f({zoom: 5}).b, 0.444, 1e-3);
+        expect(f({zoom: 0}, undefined)).toEqual(new Color(0, 0, 0, 1));
+        equalWithPrecisionJest(f({zoom: 5}, undefined).r, 0, 1e-6);
+        equalWithPrecisionJest(f({zoom: 5}, undefined).g, 0.444, 1e-3);
+        equalWithPrecisionJest(f({zoom: 5}, undefined).b, 0.444, 1e-3);
 
     });
 
@@ -206,7 +206,7 @@ describe('exponential function', () => {
             type: 'color'
         }).evaluate;
 
-        expect(f({zoom: 5})).toEqual(new Color(0.5, 0.5, 0.5, 1));
+        expect(f({zoom: 5}, undefined)).toEqual(new Color(0.5, 0.5, 0.5, 1));
 
     });
 
@@ -452,10 +452,10 @@ describe('interval function', () => {
             }
         }).evaluate;
 
-        expect(f({zoom: -1.5})).toBe(11);
-        expect(f({zoom: -0.5})).toBe(11);
-        expect(f({zoom: 0})).toBe(111);
-        expect(f({zoom: 0.5})).toBe(111);
+        expect(f({zoom: -1.5}, undefined)).toBe(11);
+        expect(f({zoom: -0.5}, undefined)).toBe(11);
+        expect(f({zoom: 0}, undefined)).toBe(111);
+        expect(f({zoom: 0.5}, undefined)).toBe(111);
 
     });
 
@@ -467,9 +467,9 @@ describe('interval function', () => {
             type: 'number'
         }).evaluate;
 
-        expect(f({zoom: -0.5})).toBe(11);
-        expect(f({zoom: 0})).toBe(11);
-        expect(f({zoom: 0.5})).toBe(11);
+        expect(f({zoom: -0.5}, undefined)).toBe(11);
+        expect(f({zoom: 0}, undefined)).toBe(11);
+        expect(f({zoom: 0.5}, undefined)).toBe(11);
 
     });
 
@@ -481,10 +481,10 @@ describe('interval function', () => {
             type: 'number'
         }).evaluate;
 
-        expect(f({zoom: -1.5})).toBe(11);
-        expect(f({zoom: -0.5})).toBe(11);
-        expect(f({zoom: 0})).toBe(111);
-        expect(f({zoom: 0.5})).toBe(111);
+        expect(f({zoom: -1.5}, undefined)).toBe(11);
+        expect(f({zoom: -0.5}, undefined)).toBe(11);
+        expect(f({zoom: 0}, undefined)).toBe(111);
+        expect(f({zoom: 0.5}, undefined)).toBe(111);
 
     });
 
@@ -496,12 +496,12 @@ describe('interval function', () => {
             type: 'number'
         }).evaluate;
 
-        expect(f({zoom: -1.5})).toBe(11);
-        expect(f({zoom: -0.5})).toBe(11);
-        expect(f({zoom: 0})).toBe(111);
-        expect(f({zoom: 0.5})).toBe(111);
-        expect(f({zoom: 1})).toBe(1111);
-        expect(f({zoom: 1.5})).toBe(1111);
+        expect(f({zoom: -1.5}, undefined)).toBe(11);
+        expect(f({zoom: -0.5}, undefined)).toBe(11);
+        expect(f({zoom: 0}, undefined)).toBe(111);
+        expect(f({zoom: 0.5}, undefined)).toBe(111);
+        expect(f({zoom: 1}, undefined)).toBe(1111);
+        expect(f({zoom: 1.5}, undefined)).toBe(1111);
 
     });
 
@@ -513,14 +513,14 @@ describe('interval function', () => {
             type: 'number'
         }).evaluate;
 
-        expect(f({zoom: -1.5})).toBe(11);
-        expect(f({zoom: -0.5})).toBe(11);
-        expect(f({zoom: 0})).toBe(111);
-        expect(f({zoom: 0.5})).toBe(111);
-        expect(f({zoom: 1})).toBe(1111);
-        expect(f({zoom: 1.5})).toBe(1111);
-        expect(f({zoom: 2})).toBe(11111);
-        expect(f({zoom: 2.5})).toBe(11111);
+        expect(f({zoom: -1.5}, undefined)).toBe(11);
+        expect(f({zoom: -0.5}, undefined)).toBe(11);
+        expect(f({zoom: 0}, undefined)).toBe(111);
+        expect(f({zoom: 0.5}, undefined)).toBe(111);
+        expect(f({zoom: 1}, undefined)).toBe(1111);
+        expect(f({zoom: 1.5}, undefined)).toBe(1111);
+        expect(f({zoom: 2}, undefined)).toBe(11111);
+        expect(f({zoom: 2.5}, undefined)).toBe(11111);
 
     });
 
@@ -532,9 +532,9 @@ describe('interval function', () => {
             type: 'color'
         }).evaluate;
 
-        expect(f({zoom: 0})).toEqual(new Color(1, 0, 0, 1));
-        expect(f({zoom: 0})).toEqual(new Color(1, 0, 0, 1));
-        expect(f({zoom: 11})).toEqual(new Color(0, 0, 1, 1));
+        expect(f({zoom: 0}, undefined)).toEqual(new Color(1, 0, 0, 1));
+        expect(f({zoom: 0}, undefined)).toEqual(new Color(1, 0, 0, 1));
+        expect(f({zoom: 11}, undefined)).toEqual(new Color(0, 0, 1, 1));
 
     });
 
@@ -676,15 +676,15 @@ describe('categorical function', () => {
             type: 'string'
         }).evaluate;
 
-        expect(numberKeys(0, {properties: {foo: '0'}})).toBe('default');
-        expect(numberKeys(0, {properties: {foo: '1'}})).toBe('default');
-        expect(numberKeys(0, {properties: {foo: false}})).toBe('default');
-        expect(numberKeys(0, {properties: {foo: true}})).toBe('default');
+        expect(numberKeys(0 as any, {properties: {foo: '0'}})).toBe('default');
+        expect(numberKeys(0 as any, {properties: {foo: '1'}})).toBe('default');
+        expect(numberKeys(0 as any, {properties: {foo: false}})).toBe('default');
+        expect(numberKeys(0 as any, {properties: {foo: true}})).toBe('default');
 
-        expect(stringKeys(0, {properties: {foo: 0}})).toBe('default');
-        expect(stringKeys(0, {properties: {foo: 1}})).toBe('default');
-        expect(stringKeys(0, {properties: {foo: false}})).toBe('default');
-        expect(stringKeys(0, {properties: {foo: true}})).toBe('default');
+        expect(stringKeys(0 as any, {properties: {foo: 0}})).toBe('default');
+        expect(stringKeys(0 as any, {properties: {foo: 1}})).toBe('default');
+        expect(stringKeys(0 as any, {properties: {foo: false}})).toBe('default');
+        expect(stringKeys(0 as any, {properties: {foo: true}})).toBe('default');
 
     });
 
