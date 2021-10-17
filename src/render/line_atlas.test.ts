@@ -1,48 +1,38 @@
-import {test} from '../../util/test';
-import LineAtlas from '../../../rollup/build/tsc/src/render/line_atlas';
+import LineAtlas from '../render/line_atlas';
 
-test('LineAtlas', (t) => {
+describe('LineAtlas', () => {
     const lineAtlas = new LineAtlas(64, 64);
-    t.test('round [0, 0]', (t) => {
+    test('round [0, 0]', () => {
         const entry = lineAtlas.addDash([0, 0], true);
         expect(entry.width).toBe(0);
-        t.end();
     });
-    t.test('round [1, 0]', (t) => {
+    test('round [1, 0]', () => {
         const entry = lineAtlas.addDash([1, 0], true);
         expect(entry.width).toBe(1);
-        t.end();
     });
-    t.test('round [0, 1]', (t) => {
+    test('round [0, 1]', () => {
         const entry = lineAtlas.addDash([0, 1], true);
         expect(entry.width).toBe(1);
-        t.end();
     });
-    t.test('odd round [1, 2, 1]', (t) => {
+    test('odd round [1, 2, 1]', () => {
         const entry = lineAtlas.addDash([1, 2, 1], true);
         expect(entry.width).toBe(4);
-        t.end();
     });
 
-    t.test('regular [0, 0]', (t) => {
+    test('regular [0, 0]', () => {
         const entry = lineAtlas.addDash([0, 0], false);
         expect(entry.width).toBe(0);
-        t.end();
     });
-    t.test('regular [1, 0]', (t) => {
+    test('regular [1, 0]', () => {
         const entry = lineAtlas.addDash([1, 0], false);
         expect(entry.width).toBe(1);
-        t.end();
     });
-    t.test('regular [0, 1]', (t) => {
+    test('regular [0, 1]', () => {
         const entry = lineAtlas.addDash([0, 1], false);
         expect(entry.width).toBe(1);
-        t.end();
     });
-    t.test('odd regular [1, 2, 1]', (t) => {
+    test('odd regular [1, 2, 1]', () => {
         const entry = lineAtlas.addDash([1, 2, 1], false);
         expect(entry.width).toBe(4);
-        t.end();
     });
-    t.end();
 });
