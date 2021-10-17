@@ -1,13 +1,12 @@
-import {test} from '../../util/test';
-import {default as createFilter, isExpressionFilter} from '../../../rollup/build/tsc/src/style-spec/feature_filter';
+import {default as createFilter, isExpressionFilter} from '../style-spec/feature_filter';
 
-import convertFilter from '../../../rollup/build/tsc/src/style-spec/feature_filter/convert';
-import Point from '../../../rollup/build/tsc/src/util/point';
-import MercatorCoordinate from '../../../rollup/build/tsc/src/geo/mercator_coordinate';
-import EXTENT from '../../../rollup/build/tsc/src/data/extent';
+import convertFilter from '../style-spec/feature_filter/convert';
+import Point from '../util/point';
+import MercatorCoordinate from '../geo/mercator_coordinate';
+import EXTENT from '../data/extent';
 
-test('filter', t => {
-    t.test('expression, zoom', (t) => {
+describe('filter', t => {
+    test('expression, zoom', () => {
         const f = createFilter(['>=', ['number', ['get', 'x']], ['zoom']]).filter;
         expect(f({zoom: 1}, {properties: {x: 0}})).toBe(false);
         expect(f({zoom: 1}, {properties: {x: 1.5}})).toBe(true);
@@ -15,10 +14,9 @@ test('filter', t => {
         expect(f({zoom: 2}, {properties: {x: 0}})).toBe(false);
         expect(f({zoom: 2}, {properties: {x: 1.5}})).toBe(false);
         expect(f({zoom: 2}, {properties: {x: 2.5}})).toBe(true);
-        t.end();
     });
 
-    t.test('expression, compare two properties', (t) => {
+    test('expression, compare two properties', () => {
         t.stub(console, 'warn');
         const f = createFilter(['==', ['string', ['get', 'x']], ['string', ['get', 'y']]]).filter;
         expect(f({zoom: 0}, {properties: {x: 1, y: 1}})).toBe(false);
@@ -26,10 +24,9 @@ test('filter', t => {
         expect(f({zoom: 0}, {properties: {x: 'same', y: 'same'}})).toBe(true);
         expect(f({zoom: 0}, {properties: {x: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {x: undefined}})).toBe(false);
-        t.end();
     });
 
-    t.test('expression, collator comparison', (t) => {
+    test('expression, collator comparison', () => {
         const caseSensitive = createFilter(['==', ['string', ['get', 'x']], ['string', ['get', 'y']], ['collator', {'case-sensitive': true}]]).filter;
         expect(caseSensitive({zoom: 0}, {properties: {x: 'a', y: 'b'}})).toBe(false);
         expect(caseSensitive({zoom: 0}, {properties: {x: 'a', y: 'A'}})).toBe(false);
@@ -39,10 +36,9 @@ test('filter', t => {
         expect(caseInsensitive({zoom: 0}, {properties: {x: 'a', y: 'b'}})).toBe(false);
         expect(caseInsensitive({zoom: 0}, {properties: {x: 'a', y: 'A'}})).toBe(true);
         expect(caseInsensitive({zoom: 0}, {properties: {x: 'a', y: 'a'}})).toBe(true);
-        t.end();
     });
 
-    t.test('expression, any/all', (t) => {
+    test('expression, any/all', () => {
         expect(createFilter(['all']).filter()).toBe(true);
         expect(createFilter(['all', true]).filter()).toBe(true);
         expect(createFilter(['all', true, false]).filter()).toBe(false);
@@ -51,10 +47,9 @@ test('filter', t => {
         expect(createFilter(['any', true]).filter()).toBe(true);
         expect(createFilter(['any', true, false]).filter()).toBe(true);
         expect(createFilter(['any', false, false]).filter()).toBe(false);
-        t.end();
     });
 
-    t.test('expression, type error', (t) => {
+    test('expression, type error', () => {
         expect(() => {
             createFilter(['==', ['number', ['get', 'x']], ['string', ['get', 'y']]]);
         }).toThrow();
@@ -67,10 +62,9 @@ test('filter', t => {
             createFilter(['boolean', ['get', 'x']]);
         }).not.toThrow();
 
-        t.end();
     });
 
-    t.test('expression, within', (t) => {
+    test('expression, within', () => {
         const  getPointFromLngLat = (lng, lat, canonical) => {
             const p = MercatorCoordinate.fromLngLat({lng, lat}, 0);
             const tilesAtZoom = Math.pow(2, canonical.z);
@@ -99,45 +93,39 @@ test('filter', t => {
         expect(
             withinFilter.filter({zoom: 3}, {type: 2, geometry: [[getPointFromLngLat(5, 5, canonical), getPointFromLngLat(2, 2, canonical)]]}, canonical)
         ).toBe(false);
-        t.end();
     });
 
     legacyFilterTests(t, createFilter);
 
-    t.end();
 });
 
-test('legacy filter detection', t => {
-    t.test('definitely legacy filters', t => {
+describe('legacy filter detection', t => {
+    test('definitely legacy filters', t => {
         // Expressions with more than two arguments.
-        expect(isExpressionFilter(["in", "color", "red", "blue"])).toBeFalsy();
+        expect(isExpressionFilter(['in', 'color', 'red', 'blue'])).toBeFalsy();
 
         // Expressions where the second argument is not a string or array.
-        expect(isExpressionFilter(["in", "value", 42])).toBeFalsy();
-        expect(isExpressionFilter(["in", "value", true])).toBeFalsy();
-        t.end();
+        expect(isExpressionFilter(['in', 'value', 42])).toBeFalsy();
+        expect(isExpressionFilter(['in', 'value', true])).toBeFalsy();
     });
 
-    t.test('ambiguous value', t => {
+    test('ambiguous value', t => {
         // Should err on the side of reporting as a legacy filter. Style authors can force filters
         // by using a literal expression as the first argument.
-        expect(isExpressionFilter(["in", "color", "red"])).toBeFalsy();
-        t.end();
+        expect(isExpressionFilter(['in', 'color', 'red'])).toBeFalsy();
     });
 
-    t.test('definitely expressions', t => {
-        expect(isExpressionFilter(["in", ["get", "color"], "reddish"])).toBeTruthy();
-        expect(isExpressionFilter(["in", ["get", "color"], ["red", "blue"]])).toBeTruthy();
-        expect(isExpressionFilter(["in", 42, 42])).toBeTruthy();
-        expect(isExpressionFilter(["in", true, true])).toBeTruthy();
-        expect(isExpressionFilter(["in", "red", ["get", "colors"]])).toBeTruthy();
-        t.end();
+    test('definitely expressions', t => {
+        expect(isExpressionFilter(['in', ['get', 'color'], 'reddish'])).toBeTruthy();
+        expect(isExpressionFilter(['in', ['get', 'color'], ['red', 'blue']])).toBeTruthy();
+        expect(isExpressionFilter(['in', 42, 42])).toBeTruthy();
+        expect(isExpressionFilter(['in', true, true])).toBeTruthy();
+        expect(isExpressionFilter(['in', 'red', ['get', 'colors']])).toBeTruthy();
     });
 
-    t.end();
 });
 
-test('convert legacy filters to expressions', t => {
+describe('convert legacy filters to expressions', t => {
     t.beforeEach(done => {
         t.stub(console, 'warn');
         done();
@@ -148,10 +136,10 @@ test('convert legacy filters to expressions', t => {
         return createFilter(converted);
     });
 
-    t.test('mimic legacy type mismatch semantics', (t) => {
-        const filter = ["any",
-            ["all", [">", "y", 0], [">", "y", 0]],
-            [">", "x", 0]
+    test('mimic legacy type mismatch semantics', () => {
+        const filter = ['any',
+            ['all', ['>', 'y', 0], ['>', 'y', 0]],
+            ['>', 'x', 0]
         ];
 
         const converted = convertFilter(filter);
@@ -163,38 +151,37 @@ test('convert legacy filters to expressions', t => {
         expect(f({zoom: 0}, {properties: {x: null, y: 1, z: 1}})).toBe(true);
         expect(f({zoom: 0}, {properties: {x: 1, y: null, z: 1}})).toBe(true);
         expect(f({zoom: 0}, {properties: {x: null, y: null, z: 1}})).toBe(false);
-        t.end();
     });
 
-    t.test('flattens nested, single child all expressions', (t) => {
+    test('flattens nested, single child all expressions', () => {
         const filter = [
-            "all",
+            'all',
             [
-                "in",
-                "$type",
-                "Polygon",
-                "LineString",
-                "Point"
+                'in',
+                '$type',
+                'Polygon',
+                'LineString',
+                'Point'
             ],
             [
-                "all",
-                ["in", "type", "island"]
+                'all',
+                ['in', 'type', 'island']
             ]
         ];
 
         const expected = [
-            "all",
+            'all',
             [
-                "match",
-                ["geometry-type"],
-                ["LineString", "Point", "Polygon"],
+                'match',
+                ['geometry-type'],
+                ['LineString', 'Point', 'Polygon'],
                 true,
                 false
             ],
             [
-                "match",
-                ["get", "type"],
-                ["island"],
+                'match',
+                ['get', 'type'],
+                ['island'],
                 true,
                 false
             ]
@@ -202,13 +189,12 @@ test('convert legacy filters to expressions', t => {
 
         const converted = convertFilter(filter);
         expect(converted).toEqual(expected);
-        t.end();
     });
 
-    t.test('removes duplicates when outputting match expressions', (t) => {
+    test('removes duplicates when outputting match expressions', () => {
         const filter = [
-            "in",
-            "$id",
+            'in',
+            '$id',
             1,
             2,
             3,
@@ -217,8 +203,8 @@ test('convert legacy filters to expressions', t => {
         ];
 
         const expected = [
-            "match",
-            ["id"],
+            'match',
+            ['id'],
             [1, 2, 3],
             true,
             false
@@ -226,28 +212,24 @@ test('convert legacy filters to expressions', t => {
 
         const converted = convertFilter(filter);
         expect(converted).toEqual(expected);
-        t.end();
     });
 
-    t.end();
 });
 
 function legacyFilterTests(t, createFilterExpr) {
-    t.test('degenerate', (t) => {
+    test('degenerate', () => {
         expect(createFilterExpr().filter()).toBe(true);
         expect(createFilterExpr(undefined).filter()).toBe(true);
         expect(createFilterExpr(null).filter()).toBe(true);
-        t.end();
     });
 
-    t.test('==, string', (t) => {
+    test('==, string', () => {
         const f = createFilterExpr(['==', 'foo', 'bar']).filter;
         expect(f({zoom: 0}, {properties: {foo: 'bar'}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 'baz'}})).toBe(false);
-        t.end();
     });
 
-    t.test('==, number', (t) => {
+    test('==, number', () => {
         const f = createFilterExpr(['==', 'foo', 0]).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(false);
@@ -257,10 +239,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
         expect(f({zoom: 0}, {properties: {}})).toBe(false);
-        t.end();
     });
 
-    t.test('==, null', (t) => {
+    test('==, null', () => {
         const f = createFilterExpr(['==', 'foo', null]).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(false);
@@ -270,34 +251,30 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(true);
         // t.equal(f({zoom: 0}, {properties: {foo: undefined}}), false);
         expect(f({zoom: 0}, {properties: {}})).toBe(false);
-        t.end();
     });
 
-    t.test('==, $type', (t) => {
+    test('==, $type', () => {
         const f = createFilterExpr(['==', '$type', 'LineString']).filter;
         expect(f({zoom: 0}, {type: 1})).toBe(false);
         expect(f({zoom: 0}, {type: 2})).toBe(true);
-        t.end();
     });
 
-    t.test('==, $id', (t) => {
+    test('==, $id', () => {
         const f = createFilterExpr(['==', '$id', 1234]).filter;
 
         expect(f({zoom: 0}, {id: 1234})).toBe(true);
         expect(f({zoom: 0}, {id: '1234'})).toBe(false);
         expect(f({zoom: 0}, {properties: {id: 1234}})).toBe(false);
 
-        t.end();
     });
 
-    t.test('!=, string', (t) => {
+    test('!=, string', () => {
         const f = createFilterExpr(['!=', 'foo', 'bar']).filter;
         expect(f({zoom: 0}, {properties: {foo: 'bar'}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 'baz'}})).toBe(true);
-        t.end();
     });
 
-    t.test('!=, number', (t) => {
+    test('!=, number', () => {
         const f = createFilterExpr(['!=', 'foo', 0]).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(true);
@@ -307,10 +284,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(true);
         expect(f({zoom: 0}, {properties: {}})).toBe(true);
-        t.end();
     });
 
-    t.test('!=, null', (t) => {
+    test('!=, null', () => {
         const f = createFilterExpr(['!=', 'foo', null]).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(true);
@@ -320,17 +296,15 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         // t.equal(f({zoom: 0}, {properties: {foo: undefined}}), true);
         expect(f({zoom: 0}, {properties: {}})).toBe(true);
-        t.end();
     });
 
-    t.test('!=, $type', (t) => {
+    test('!=, $type', () => {
         const f = createFilterExpr(['!=', '$type', 'LineString']).filter;
         expect(f({zoom: 0}, {type: 1})).toBe(true);
         expect(f({zoom: 0}, {type: 2})).toBe(false);
-        t.end();
     });
 
-    t.test('<, number', (t) => {
+    test('<, number', () => {
         const f = createFilterExpr(['<', 'foo', 0]).filter;
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
@@ -343,10 +317,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
         expect(f({zoom: 0}, {properties: {}})).toBe(false);
-        t.end();
     });
 
-    t.test('<, string', (t) => {
+    test('<, string', () => {
         const f = createFilterExpr(['<', 'foo', '0']).filter;
         expect(f({zoom: 0}, {properties: {foo: -1}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
@@ -358,10 +331,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: false}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
-        t.end();
     });
 
-    t.test('<=, number', (t) => {
+    test('<=, number', () => {
         const f = createFilterExpr(['<=', 'foo', 0]).filter;
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(true);
@@ -374,10 +346,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
         expect(f({zoom: 0}, {properties: {}})).toBe(false);
-        t.end();
     });
 
-    t.test('<=, string', (t) => {
+    test('<=, string', () => {
         const f = createFilterExpr(['<=', 'foo', '0']).filter;
         expect(f({zoom: 0}, {properties: {foo: -1}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
@@ -389,10 +360,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: false}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
-        t.end();
     });
 
-    t.test('>, number', (t) => {
+    test('>, number', () => {
         const f = createFilterExpr(['>', 'foo', 0]).filter;
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
@@ -405,10 +375,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
         expect(f({zoom: 0}, {properties: {}})).toBe(false);
-        t.end();
     });
 
-    t.test('>, string', (t) => {
+    test('>, string', () => {
         const f = createFilterExpr(['>', 'foo', '0']).filter;
         expect(f({zoom: 0}, {properties: {foo: -1}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
@@ -420,10 +389,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: false}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
-        t.end();
     });
 
-    t.test('>=, number', (t) => {
+    test('>=, number', () => {
         const f = createFilterExpr(['>=', 'foo', 0]).filter;
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(true);
@@ -436,10 +404,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
         expect(f({zoom: 0}, {properties: {}})).toBe(false);
-        t.end();
     });
 
-    t.test('>=, string', (t) => {
+    test('>=, string', () => {
         const f = createFilterExpr(['>=', 'foo', '0']).filter;
         expect(f({zoom: 0}, {properties: {foo: -1}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
@@ -451,16 +418,14 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: false}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
-        t.end();
     });
 
-    t.test('in, degenerate', (t) => {
+    test('in, degenerate', () => {
         const f = createFilterExpr(['in', 'foo']).filter;
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(false);
-        t.end();
     });
 
-    t.test('in, string', (t) => {
+    test('in, string', () => {
         const f = createFilterExpr(['in', 'foo', '0']).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: '0'}})).toBe(true);
@@ -469,10 +434,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
         expect(f({zoom: 0}, {properties: {}})).toBe(false);
-        t.end();
     });
 
-    t.test('in, number', (t) => {
+    test('in, number', () => {
         const f = createFilterExpr(['in', 'foo', 0]).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: '0'}})).toBe(false);
@@ -480,10 +444,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: false}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
-        t.end();
     });
 
-    t.test('in, null', (t) => {
+    test('in, null', () => {
         const f = createFilterExpr(['in', 'foo', null]).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: '0'}})).toBe(false);
@@ -491,18 +454,16 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: false}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(true);
         // t.equal(f({zoom: 0}, {properties: {foo: undefined}}), false);
-        t.end();
     });
 
-    t.test('in, multiple', (t) => {
+    test('in, multiple', () => {
         const f = createFilterExpr(['in', 'foo', 0, 1]).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 3}})).toBe(false);
-        t.end();
     });
 
-    t.test('in, large_multiple', (t) => {
+    test('in, large_multiple', () => {
         const values = Array.from({length: 2000}).map(Number.call, Number);
         values.reverse();
         const f = createFilterExpr(['in', 'foo'].concat(values)).filter;
@@ -510,10 +471,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 1999}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 2000}})).toBe(false);
-        t.end();
     });
 
-    t.test('in, large_multiple, heterogeneous', (t) => {
+    test('in, large_multiple, heterogeneous', () => {
         const values = Array.from({length: 2000}).map(Number.call, Number);
         values.push('a');
         values.unshift('b');
@@ -524,10 +484,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 1999}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 2000}})).toBe(false);
-        t.end();
     });
 
-    t.test('in, $type', (t) => {
+    test('in, $type', () => {
         const f = createFilterExpr(['in', '$type', 'LineString', 'Polygon']).filter;
         expect(f({zoom: 0}, {type: 1})).toBe(false);
         expect(f({zoom: 0}, {type: 2})).toBe(true);
@@ -538,69 +497,61 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f1({zoom: 0}, {type: 2})).toBe(true);
         expect(f1({zoom: 0}, {type: 3})).toBe(true);
 
-        t.end();
     });
 
-    t.test('!in, degenerate', (t) => {
+    test('!in, degenerate', () => {
         const f = createFilterExpr(['!in', 'foo']).filter;
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(true);
-        t.end();
     });
 
-    t.test('!in, string', (t) => {
+    test('!in, string', () => {
         const f = createFilterExpr(['!in', 'foo', '0']).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: '0'}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(true);
         expect(f({zoom: 0}, {properties: {}})).toBe(true);
-        t.end();
     });
 
-    t.test('!in, number', (t) => {
+    test('!in, number', () => {
         const f = createFilterExpr(['!in', 'foo', 0]).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: '0'}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(true);
-        t.end();
     });
 
-    t.test('!in, null', (t) => {
+    test('!in, null', () => {
         const f = createFilterExpr(['!in', 'foo', null]).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: '0'}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         // t.equal(f({zoom: 0}, {properties: {foo: undefined}}), true);
-        t.end();
     });
 
-    t.test('!in, multiple', (t) => {
+    test('!in, multiple', () => {
         const f = createFilterExpr(['!in', 'foo', 0, 1]).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 3}})).toBe(true);
-        t.end();
     });
 
-    t.test('!in, large_multiple', (t) => {
+    test('!in, large_multiple', () => {
         const f = createFilterExpr(['!in', 'foo'].concat(Array.from({length: 2000}).map(Number.call, Number))).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 1999}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 2000}})).toBe(true);
-        t.end();
     });
 
-    t.test('!in, $type', (t) => {
+    test('!in, $type', () => {
         const f = createFilterExpr(['!in', '$type', 'LineString', 'Polygon']).filter;
         expect(f({zoom: 0}, {type: 1})).toBe(true);
         expect(f({zoom: 0}, {type: 2})).toBe(false);
         expect(f({zoom: 0}, {type: 3})).toBe(false);
-        t.end();
     });
 
-    t.test('any', (t) => {
+    test('any', () => {
         const f1 = createFilterExpr(['any']).filter;
         expect(f1({zoom: 0}, {properties: {foo: 1}})).toBe(false);
 
@@ -613,10 +564,9 @@ function legacyFilterTests(t, createFilterExpr) {
         const f4 = createFilterExpr(['any', ['==', 'foo', 0], ['==', 'foo', 1]]).filter;
         expect(f4({zoom: 0}, {properties: {foo: 1}})).toBe(true);
 
-        t.end();
     });
 
-    t.test('all', (t) => {
+    test('all', () => {
         const f1 = createFilterExpr(['all']).filter;
         expect(f1({zoom: 0}, {properties: {foo: 1}})).toBe(true);
 
@@ -629,10 +579,9 @@ function legacyFilterTests(t, createFilterExpr) {
         const f4 = createFilterExpr(['all', ['==', 'foo', 0], ['==', 'foo', 1]]).filter;
         expect(f4({zoom: 0}, {properties: {foo: 1}})).toBe(false);
 
-        t.end();
     });
 
-    t.test('none', (t) => {
+    test('none', () => {
         const f1 = createFilterExpr(['none']).filter;
         expect(f1({zoom: 0}, {properties: {foo: 1}})).toBe(true);
 
@@ -645,10 +594,9 @@ function legacyFilterTests(t, createFilterExpr) {
         const f4 = createFilterExpr(['none', ['==', 'foo', 0], ['==', 'foo', 1]]).filter;
         expect(f4({zoom: 0}, {properties: {foo: 1}})).toBe(false);
 
-        t.end();
     });
 
-    t.test('has', (t) => {
+    test('has', () => {
         const f = createFilterExpr(['has', 'foo']).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(true);
@@ -658,10 +606,9 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(true);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(true);
         expect(f({zoom: 0}, {properties: {}})).toBe(false);
-        t.end();
     });
 
-    t.test('!has', (t) => {
+    test('!has', () => {
         const f = createFilterExpr(['!has', 'foo']).filter;
         expect(f({zoom: 0}, {properties: {foo: 0}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: 1}})).toBe(false);
@@ -671,6 +618,5 @@ function legacyFilterTests(t, createFilterExpr) {
         expect(f({zoom: 0}, {properties: {foo: null}})).toBe(false);
         expect(f({zoom: 0}, {properties: {foo: undefined}})).toBe(false);
         expect(f({zoom: 0}, {properties: {}})).toBe(true);
-        t.end();
     });
 }
