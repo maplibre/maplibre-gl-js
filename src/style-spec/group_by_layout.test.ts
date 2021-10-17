@@ -1,6 +1,6 @@
-import group from '../style-spec/group_by_layout';
+import group from './group_by_layout';
 
-describe('group layers whose ref properties are identical', () => {
+test('group layers whose ref properties are identical', () => {
     const a = {
         'id': 'parent',
         'type': 'line'
@@ -14,7 +14,7 @@ describe('group layers whose ref properties are identical', () => {
     expect(group([a, b], {})[0][1]).toBe(b);
 });
 
-describe('group does not group unrelated layers', () => {
+test('group does not group unrelated layers', () => {
     expect(group([
         {
             'id': 'parent',
@@ -35,7 +35,7 @@ describe('group does not group unrelated layers', () => {
     ]);
 });
 
-describe('group works even for differing layout key orders', () => {
+test('group works even for differing layout key orders', () => {
     expect(group([
         {
             'id': 'parent',
