@@ -16,7 +16,7 @@ test('v8.json includes all definitions from style-spec', (t) => {
         //filter out expressions that are not supported in GL-JS
         return !!v8.expression_name.values[expression]["sdk-support"]["basic functionality"]["js"];
     });
-    t.deepEquals(definitionList, v8SupportedList.sort());
+    expect(definitionList).toEqual(v8SupportedList.sort());
     t.end();
 });
 
@@ -32,9 +32,9 @@ test('createPropertyExpression', (t) => {
                 'parameters': ['zoom']
             }
         });
-        t.equal(result, 'error');
-        t.equal(value.length, 1);
-        t.equal(value[0].message, '"interpolate" expressions cannot be used with this property');
+        expect(result).toBe('error');
+        expect(value.length).toBe(1);
+        expect(value[0].message).toBe('"interpolate" expressions cannot be used with this property');
         t.end();
     });
 
@@ -56,11 +56,13 @@ test('evaluate expression', (t) => {
 
         t.stub(console, 'warn');
 
-        t.equal(value.kind, 'source');
+        expect(value.kind).toBe('source');
 
-        t.equal(value.evaluate({}, {properties: {x: 'b'}}), 'b');
-        t.equal(value.evaluate({}, {properties: {x: 'invalid'}}), 'a');
-        t.ok(console.warn.calledWith(`Expected value to be one of "a", "b", "c", but found "invalid" instead.`));
+        expect(value.evaluate({}, {properties: {x: 'b'}})).toBe('b');
+        expect(value.evaluate({}, {properties: {x: 'invalid'}})).toBe('a');
+        expect(
+            console.warn.calledWith(`Expected value to be one of "a", "b", "c", but found "invalid" instead.`)
+        ).toBeTruthy();
 
         t.end();
     });
