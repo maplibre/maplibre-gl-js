@@ -1,3 +1,5 @@
+import {mat4} from 'gl-matrix';
+import Context from '../gl/context';
 import {
     Uniform1i,
     Uniform1f,
@@ -5,7 +7,7 @@ import {
     Uniform3f,
     Uniform4f,
     UniformMatrix4f
-} from '../render/uniform_binding';
+} from './uniform_binding';
 
 describe('Uniform Binding', () => {
     test('Uniform1i', () => {
@@ -16,7 +18,7 @@ describe('Uniform Binding', () => {
             gl: {
                 uniform1i: () => { expect(true).toBeTruthy(); }
             }
-        };
+        } as any as Context;
 
         const u = new Uniform1i(context, 0);
 
@@ -34,7 +36,7 @@ describe('Uniform Binding', () => {
             gl: {
                 uniform1f: () => { expect(true).toBeTruthy(); }
             }
-        };
+        } as any as Context;
 
         const u = new Uniform1f(context, 0);
 
@@ -52,7 +54,7 @@ describe('Uniform Binding', () => {
             gl: {
                 uniform2f: () => { expect(true).toBeTruthy(); }
             }
-        };
+        } as any as Context;
 
         const u = new Uniform2f(context, 0);
 
@@ -70,7 +72,7 @@ describe('Uniform Binding', () => {
             gl: {
                 uniform3f: () => { expect(true).toBeTruthy(); }
             }
-        };
+        } as any as Context;
 
         const u = new Uniform3f(context, 0);
 
@@ -88,7 +90,7 @@ describe('Uniform Binding', () => {
             gl: {
                 uniform4f: () => { expect(true).toBeTruthy(); }
             }
-        };
+        } as any as Context;
 
         const u = new Uniform4f(context, 0);
 
@@ -106,11 +108,11 @@ describe('Uniform Binding', () => {
             gl: {
                 uniformMatrix4fv: () => { expect(true).toBeTruthy(); }
             }
-        };
+        } as any as Context;
 
         const u = new UniformMatrix4f(context, 0);
-        const ident = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-        expect(u.current).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        const ident = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1] as mat4;
+        expect(u.current).toEqual(new Float32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
         u.set(ident);
         expect(u.current).toEqual(ident);
         u.set(ident);
