@@ -18,12 +18,12 @@ test('declass a style, one class', (t) => {
 
     const declassed = declass(style, ['one']);
 
-    t.notEqual(declassed, style, 'returns a new style object');
-    t.notEqual(declassed.layers, style.layers, 'makes new style.layers array');
-    t.notEqual(declassed.layers[0], style.layers[0], 'makes new layer object');
-    t.notEqual(declassed.layers[0].paint, style.layers[0].paint, 'makes new paint object');
+    expect(declassed).not.toBe(style);
+    expect(declassed.layers).not.toBe(style.layers);
+    expect(declassed.layers[0]).not.toBe(style.layers[0]);
+    expect(declassed.layers[0].paint).not.toBe(style.layers[0].paint);
 
-    t.deepEqual(declassed, {
+    expect(declassed).toEqual({
         layers: [{
             id: 'a',
             paint: {
@@ -48,7 +48,7 @@ test('declass a style, missing class ==> noop', (t) => {
         }]
     };
 
-    t.deepEqual(declass(style, ['one']), {
+    expect(declass(style, ['one'])).toEqual({
         layers: [{
             id: 'a',
             paint: {
@@ -80,7 +80,7 @@ test('declass a style, multiple classes', (t) => {
         }]
     };
 
-    t.deepEqual(declass(style, ['one', 'two']), {
+    expect(declass(style, ['one', 'two'])).toEqual({
         layers: [{
             id: 'a',
             paint: {
@@ -107,7 +107,7 @@ test('declassing a style removes paint.CLASS definitions, whether or not they ar
         }]
     };
 
-    t.deepEqual(declass(style, ['one']), {
+    expect(declass(style, ['one'])).toEqual({
         layers: [{
             id: 'a',
             paint: {
