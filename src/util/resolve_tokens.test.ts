@@ -1,7 +1,6 @@
-import {test} from '../../util/test';
-import resolveTokens from '../../../rollup/build/tsc/src/util/resolve_tokens';
+import resolveTokens from '../util/resolve_tokens';
 
-test('resolveToken', (t) => {
+describe('resolveToken', () => {
     expect('3 Fine Fields').toBe(resolveTokens({a:3, b:'Fine', c:'Fields'}, '{a} {b} {c}'));
 
     // No tokens.
@@ -39,5 +38,4 @@ test('resolveToken', (t) => {
         resolveTokens({'$special:characters;': 'mapbox'}, '{$special:characters;}')
     ).toBe('mapbox');
 
-    t.end();
-});
+    });
