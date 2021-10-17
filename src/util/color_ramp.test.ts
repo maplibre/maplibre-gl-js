@@ -21,83 +21,86 @@ function nearlyEquals(a, b) {
     return a.every((e, i) => Math.abs(e - b[i]) <= 3);
 }
 
-test('renderColorRamp linear', () => {
+describe('renderColorRamp', () => {
+    test('renderColorRamp linear', () => {
 
-    const expression = createPropertyExpression([
-        'interpolate',
-        ['linear'],
-        ['line-progress'],
-        0, 'rgba(0,0,255,0)',
-        0.25, 'white',
-        0.5, 'rgba(0,255,255,0.5)',
-        0.75, 'black',
-        1, 'red'
-    ], spec).value as StylePropertyExpression;
+        const expression = createPropertyExpression([
+            'interpolate',
+            ['linear'],
+            ['line-progress'],
+            0, 'rgba(0,0,255,0)',
+            0.25, 'white',
+            0.5, 'rgba(0,255,255,0.5)',
+            0.75, 'black',
+            1, 'red'
+        ], spec).value as StylePropertyExpression;
 
-    const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress'});
+        const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress'});
 
-    expect(ramp.width).toBe(256);
-    expect(ramp.height).toBe(1);
+        expect(ramp.width).toBe(256);
+        expect(ramp.height).toBe(1);
 
-    expect(pixelAt(ramp, 0)[3]).toBe(0);
-    expect(nearlyEquals(pixelAt(ramp, 63), [255, 255, 255, 255])).toBeTruthy();
-    expect(nearlyEquals(pixelAt(ramp, 127), [0, 255, 255, 127])).toBeTruthy();
-    expect(nearlyEquals(pixelAt(ramp, 191), [0, 0, 0, 255])).toBeTruthy();
-    expect(nearlyEquals(pixelAt(ramp, 255), [255, 0, 0, 255])).toBeTruthy();
-});
+        expect(pixelAt(ramp, 0)[3]).toBe(0);
+        expect(nearlyEquals(pixelAt(ramp, 63), [255, 255, 255, 255])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 127), [0, 255, 255, 127])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 191), [0, 0, 0, 255])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 255), [255, 0, 0, 255])).toBeTruthy();
+    });
 
-test('renderColorRamp step', () => {
+    test('renderColorRamp step', () => {
 
-    const expression = createPropertyExpression([
-        'step',
-        ['line-progress'],
-        'rgba(0, 0, 255, 0.1)',
-        0.1, 'red',
-        0.2, 'yellow',
-        0.3, 'white',
-        0.5, 'black',
-        1, 'black'
-    ], spec).value as StylePropertyExpression;
+        const expression = createPropertyExpression([
+            'step',
+            ['line-progress'],
+            'rgba(0, 0, 255, 0.1)',
+            0.1, 'red',
+            0.2, 'yellow',
+            0.3, 'white',
+            0.5, 'black',
+            1, 'black'
+        ], spec).value as StylePropertyExpression;
 
-    const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512});
+        const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512});
 
-    expect(ramp.width).toBe(512);
-    expect(ramp.height).toBe(1);
+        expect(ramp.width).toBe(512);
+        expect(ramp.height).toBe(1);
 
-    expect(pixelAt(ramp, 0)[3]).toBe(25);
-    expect(nearlyEquals(pixelAt(ramp, 50), [0, 0, 255, 25])).toBeTruthy();
-    expect(nearlyEquals(pixelAt(ramp, 53), [255, 0, 0, 255])).toBeTruthy();
-    expect(nearlyEquals(pixelAt(ramp, 103), [255, 255, 0, 255])).toBeTruthy();
-    expect(nearlyEquals(pixelAt(ramp, 160), [255, 255, 255, 255])).toBeTruthy();
-    expect(nearlyEquals(pixelAt(ramp, 256), [0, 0, 0, 255])).toBeTruthy();
+        expect(pixelAt(ramp, 0)[3]).toBe(25);
+        expect(nearlyEquals(pixelAt(ramp, 50), [0, 0, 255, 25])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 53), [255, 0, 0, 255])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 103), [255, 255, 0, 255])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 160), [255, 255, 255, 255])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 256), [0, 0, 0, 255])).toBeTruthy();
 
-});
+    });
 
-test('renderColorRamp usePlacement', () => {
+    test('renderColorRamp usePlacement', () => {
 
-    const expression = createPropertyExpression([
-        'step',
-        ['line-progress'],
-        'rgba(255, 0, 0, 0.5)',
-        0.1, 'black',
-        0.2, 'red',
-        0.3, 'blue',
-        0.5, 'white',
-        1, 'white'
-    ], spec).value as StylePropertyExpression;
+        const expression = createPropertyExpression([
+            'step',
+            ['line-progress'],
+            'rgba(255, 0, 0, 0.5)',
+            0.1, 'black',
+            0.2, 'red',
+            0.3, 'blue',
+            0.5, 'white',
+            1, 'white'
+        ], spec).value as StylePropertyExpression;
 
-    const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512});
+        const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512});
 
-    expect(ramp.width).toBe(512);
-    expect(ramp.height).toBe(1);
+        expect(ramp.width).toBe(512);
+        expect(ramp.height).toBe(1);
 
-    renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512, image: ramp});
+        renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512, image: ramp});
 
-    expect(pixelAt(ramp, 0)[3]).toBe(127);
-    expect(nearlyEquals(pixelAt(ramp, 50), [255, 0, 0, 127])).toBeTruthy();
-    expect(nearlyEquals(pixelAt(ramp, 53), [0, 0, 0, 255])).toBeTruthy();
-    expect(nearlyEquals(pixelAt(ramp, 103), [255, 0, 0, 255])).toBeTruthy();
-    expect(nearlyEquals(pixelAt(ramp, 160), [0, 0, 255, 255])).toBeTruthy();
-    expect(nearlyEquals(pixelAt(ramp, 256), [255, 255, 255, 255])).toBeTruthy();
+        expect(pixelAt(ramp, 0)[3]).toBe(127);
+        expect(nearlyEquals(pixelAt(ramp, 50), [255, 0, 0, 127])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 53), [0, 0, 0, 255])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 103), [255, 0, 0, 255])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 160), [0, 0, 255, 255])).toBeTruthy();
+        expect(nearlyEquals(pixelAt(ramp, 256), [255, 255, 255, 255])).toBeTruthy();
+
+    });
 
 });
