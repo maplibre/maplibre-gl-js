@@ -9,7 +9,7 @@ test('throttle', (t) => {
     t.test('does not execute unthrottled function unless throttled function is invoked', (t) => {
         let executionCount = 0;
         throttle(() => { executionCount++; }, 0);
-        t.equal(executionCount, 0);
+        expect(executionCount).toBe(0);
         t.end();
     });
 
@@ -18,11 +18,11 @@ test('throttle', (t) => {
         const throttledFunction = throttle(() => { executionCount++; }, 0);
         throttledFunction();
         throttledFunction();
-        t.equal(executionCount, 1);
+        expect(executionCount).toBe(1);
         setTimeout(() => {
             throttledFunction();
             throttledFunction();
-            t.equal(executionCount, 2);
+            expect(executionCount).toBe(2);
             t.end();
         }, 0);
     });
@@ -33,7 +33,7 @@ test('throttle', (t) => {
         throttledFunction();
         throttledFunction();
         throttledFunction();
-        t.equal(executionCount, 1);
+        expect(executionCount).toBe(1);
         t.end();
     });
 
@@ -44,7 +44,7 @@ test('throttle', (t) => {
         throttledFunction();
         throttledFunction();
         setTimeout(() => {
-            t.equal(executionCount, 2);
+            expect(executionCount).toBe(2);
             t.end();
         }, 10);
     });
