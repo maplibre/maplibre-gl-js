@@ -6,13 +6,13 @@ test('browser', (t) => {
     t.test('frame', (t) => {
         const id = browser.frame(() => {
             t.pass('called frame');
-            t.ok(id, 'returns id');
+            expect(id).toBeTruthy();
             t.end();
         });
     });
 
     t.test('now', (t) => {
-        t.equal(typeof browser.now(), 'number');
+        expect(typeof browser.now()).toBe('number');
         t.end();
     });
 
@@ -25,7 +25,7 @@ test('browser', (t) => {
     });
 
     t.test('hardwareConcurrency', (t) => {
-        t.equal(typeof browser.hardwareConcurrency, 'number');
+        expect(typeof browser.hardwareConcurrency).toBe('number');
         t.end();
     });
 
