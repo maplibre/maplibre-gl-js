@@ -6,38 +6,39 @@ import MercatorCoordinate from '../../geo/mercator_coordinate';
 import EXTENT from '../../data/extent';
 import {CanonicalTileID} from '../../source/tile_id';
 import {FilterSpecification} from '../types';
+import {Feature} from '../expression';
 
 describe('filter', () => {
     test('expression, zoom', () => {
         const f = createFilter(['>=', ['number', ['get', 'x']], ['zoom']]).filter;
-        expect(f({zoom: 1}, {properties: {x: 0}} as any)).toBe(false);
-        expect(f({zoom: 1}, {properties: {x: 1.5}} as any)).toBe(true);
-        expect(f({zoom: 1}, {properties: {x: 2.5}} as any)).toBe(true);
-        expect(f({zoom: 2}, {properties: {x: 0}} as any)).toBe(false);
-        expect(f({zoom: 2}, {properties: {x: 1.5}} as any)).toBe(false);
-        expect(f({zoom: 2}, {properties: {x: 2.5}} as any)).toBe(true);
+        expect(f({zoom: 1}, {properties: {x: 0}} as any as Feature)).toBe(false);
+        expect(f({zoom: 1}, {properties: {x: 1.5}} as any as Feature)).toBe(true);
+        expect(f({zoom: 1}, {properties: {x: 2.5}} as any as Feature)).toBe(true);
+        expect(f({zoom: 2}, {properties: {x: 0}} as any as Feature)).toBe(false);
+        expect(f({zoom: 2}, {properties: {x: 1.5}} as any as Feature)).toBe(false);
+        expect(f({zoom: 2}, {properties: {x: 2.5}} as any as Feature)).toBe(true);
     });
 
     test('expression, compare two properties', () => {
         jest.spyOn(console, 'warn');
         const f = createFilter(['==', ['string', ['get', 'x']], ['string', ['get', 'y']]]).filter;
-        expect(f({zoom: 0}, {properties: {x: 1, y: 1}} as any)).toBe(false);
-        expect(f({zoom: 0}, {properties: {x: '1', y: '1'}} as any)).toBe(true);
-        expect(f({zoom: 0}, {properties: {x: 'same', y: 'same'}} as any)).toBe(true);
-        expect(f({zoom: 0}, {properties: {x: null}} as any)).toBe(false);
-        expect(f({zoom: 0}, {properties: {x: undefined}} as any)).toBe(false);
+        expect(f({zoom: 0}, {properties: {x: 1, y: 1}} as any as Feature)).toBe(false);
+        expect(f({zoom: 0}, {properties: {x: '1', y: '1'}} as any as Feature)).toBe(true);
+        expect(f({zoom: 0}, {properties: {x: 'same', y: 'same'}} as any as Feature)).toBe(true);
+        expect(f({zoom: 0}, {properties: {x: null}} as any as Feature)).toBe(false);
+        expect(f({zoom: 0}, {properties: {x: undefined}} as any as Feature)).toBe(false);
     });
 
     test('expression, collator comparison', () => {
         const caseSensitive = createFilter(['==', ['string', ['get', 'x']], ['string', ['get', 'y']], ['collator', {'case-sensitive': true}]]).filter;
-        expect(caseSensitive({zoom: 0}, {properties: {x: 'a', y: 'b'}} as any)).toBe(false);
-        expect(caseSensitive({zoom: 0}, {properties: {x: 'a', y: 'A'}} as any)).toBe(false);
-        expect(caseSensitive({zoom: 0}, {properties: {x: 'a', y: 'a'}} as any)).toBe(true);
+        expect(caseSensitive({zoom: 0}, {properties: {x: 'a', y: 'b'}} as any as Feature)).toBe(false);
+        expect(caseSensitive({zoom: 0}, {properties: {x: 'a', y: 'A'}} as any as Feature)).toBe(false);
+        expect(caseSensitive({zoom: 0}, {properties: {x: 'a', y: 'a'}} as any as Feature)).toBe(true);
 
         const caseInsensitive = createFilter(['==', ['string', ['get', 'x']], ['string', ['get', 'y']], ['collator', {'case-sensitive': false}]]).filter;
-        expect(caseInsensitive({zoom: 0}, {properties: {x: 'a', y: 'b'}} as any)).toBe(false);
-        expect(caseInsensitive({zoom: 0}, {properties: {x: 'a', y: 'A'}} as any)).toBe(true);
-        expect(caseInsensitive({zoom: 0}, {properties: {x: 'a', y: 'a'}} as any)).toBe(true);
+        expect(caseInsensitive({zoom: 0}, {properties: {x: 'a', y: 'b'}} as any as Feature)).toBe(false);
+        expect(caseInsensitive({zoom: 0}, {properties: {x: 'a', y: 'A'}} as any as Feature)).toBe(true);
+        expect(caseInsensitive({zoom: 0}, {properties: {x: 'a', y: 'a'}} as any as Feature)).toBe(true);
     });
 
     test('expression, any/all', () => {
@@ -76,24 +77,24 @@ describe('filter', () => {
         };
         const withinFilter =  createFilter(['within', {'type': 'Polygon', 'coordinates': [[[0, 0], [5, 0], [5, 5], [0, 5], [0, 0]]]}]);
         expect(withinFilter.needGeometry).toBe(true);
-        const canonical = {z: 3, x: 3, y:3};
+        const canonical = {z: 3, x: 3, y:3} as CanonicalTileID;
         expect(
-            withinFilter.filter({zoom: 3}, {type: 1, geometry: [[getPointFromLngLat(2, 2, canonical)]]} as any, canonical as CanonicalTileID)
+            withinFilter.filter({zoom: 3}, {type: 1, geometry: [[getPointFromLngLat(2, 2, canonical)]]} as Feature, canonical)
         ).toBe(true);
         expect(
-            withinFilter.filter({zoom: 3}, {type: 1, geometry: [[getPointFromLngLat(6, 6, canonical)]]} as any, canonical as CanonicalTileID)
+            withinFilter.filter({zoom: 3}, {type: 1, geometry: [[getPointFromLngLat(6, 6, canonical)]]} as Feature, canonical)
         ).toBe(false);
         expect(
-            withinFilter.filter({zoom: 3}, {type: 1, geometry: [[getPointFromLngLat(5, 5, canonical)]]} as any, canonical as CanonicalTileID)
+            withinFilter.filter({zoom: 3}, {type: 1, geometry: [[getPointFromLngLat(5, 5, canonical)]]} as Feature, canonical)
         ).toBe(false);
         expect(
-            withinFilter.filter({zoom: 3}, {type: 2, geometry: [[getPointFromLngLat(2, 2, canonical), getPointFromLngLat(3, 3, canonical)]]} as any, canonical as CanonicalTileID)
+            withinFilter.filter({zoom: 3}, {type: 2, geometry: [[getPointFromLngLat(2, 2, canonical), getPointFromLngLat(3, 3, canonical)]]} as Feature, canonical)
         ).toBe(true);
         expect(
-            withinFilter.filter({zoom: 3}, {type: 2, geometry: [[getPointFromLngLat(6, 6, canonical), getPointFromLngLat(2, 2, canonical)]]} as any, canonical as CanonicalTileID)
+            withinFilter.filter({zoom: 3}, {type: 2, geometry: [[getPointFromLngLat(6, 6, canonical), getPointFromLngLat(2, 2, canonical)]]} as Feature, canonical)
         ).toBe(false);
         expect(
-            withinFilter.filter({zoom: 3}, {type: 2, geometry: [[getPointFromLngLat(5, 5, canonical), getPointFromLngLat(2, 2, canonical)]]} as any, canonical as CanonicalTileID)
+            withinFilter.filter({zoom: 3}, {type: 2, geometry: [[getPointFromLngLat(5, 5, canonical), getPointFromLngLat(2, 2, canonical)]]} as Feature, canonical)
         ).toBe(false);
     });
 
@@ -146,12 +147,12 @@ describe('convert legacy filters to expressions', () => {
         const converted = convertFilter(filter);
         const f = createFilter(converted).filter;
 
-        expect(f({zoom: 0}, {properties: {x: 0, y: 1, z: 1}} as any)).toBe(true);
-        expect(f({zoom: 0}, {properties: {x: 1, y: 0, z: 1}} as any)).toBe(true);
-        expect(f({zoom: 0}, {properties: {x: 0, y: 0, z: 1}} as any)).toBe(false);
-        expect(f({zoom: 0}, {properties: {x: null, y: 1, z: 1}} as any)).toBe(true);
-        expect(f({zoom: 0}, {properties: {x: 1, y: null, z: 1}} as any)).toBe(true);
-        expect(f({zoom: 0}, {properties: {x: null, y: null, z: 1}} as any)).toBe(false);
+        expect(f({zoom: 0}, {properties: {x: 0, y: 1, z: 1}} as any as Feature)).toBe(true);
+        expect(f({zoom: 0}, {properties: {x: 1, y: 0, z: 1}} as any as Feature)).toBe(true);
+        expect(f({zoom: 0}, {properties: {x: 0, y: 0, z: 1}} as any as Feature)).toBe(false);
+        expect(f({zoom: 0}, {properties: {x: null, y: 1, z: 1}} as any as Feature)).toBe(true);
+        expect(f({zoom: 0}, {properties: {x: 1, y: null, z: 1}} as any as Feature)).toBe(true);
+        expect(f({zoom: 0}, {properties: {x: null, y: null, z: 1}} as any as Feature)).toBe(false);
     });
 
     test('flattens nested, single child all expressions', () => {
