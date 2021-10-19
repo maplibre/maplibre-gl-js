@@ -1,4 +1,4 @@
-import {createFunction} from '.';
+import {createFunction} from './index';
 import Color from '../util/color';
 import Formatted from '../expression/types/formatted';
 
