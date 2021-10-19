@@ -9,7 +9,7 @@ test('StyleLayer', (t) => {
     t.test('instantiates the correct subclass', (t) => {
         const layer = createStyleLayer({type: 'fill'});
 
-        t.ok(layer instanceof FillStyleLayer);
+        expect(layer instanceof FillStyleLayer).toBeTruthy();
         t.end();
     });
 
@@ -25,7 +25,7 @@ test('StyleLayer#setPaintProperty', (t) => {
 
         layer.setPaintProperty('background-color', 'blue');
 
-        t.deepEqual(layer.getPaintProperty('background-color'), 'blue');
+        expect(layer.getPaintProperty('background-color')).toEqual('blue');
         t.end();
     });
 
@@ -40,7 +40,7 @@ test('StyleLayer#setPaintProperty', (t) => {
 
         layer.setPaintProperty('background-color', 'blue');
 
-        t.deepEqual(layer.getPaintProperty('background-color'), 'blue');
+        expect(layer.getPaintProperty('background-color')).toEqual('blue');
         t.end();
     });
 
@@ -58,10 +58,10 @@ test('StyleLayer#setPaintProperty', (t) => {
         layer.updateTransitions({});
         layer.recalculate({zoom: 0, zoomHistory: {}});
 
-        t.deepEqual(layer.paint.get('background-color'), new Color(0, 0, 0, 1));
-        t.equal(layer.getPaintProperty('background-color'), undefined);
-        t.equal(layer.paint.get('background-opacity'), 1);
-        t.equal(layer.getPaintProperty('background-opacity'), 1);
+        expect(layer.paint.get('background-color')).toEqual(new Color(0, 0, 0, 1));
+        expect(layer.getPaintProperty('background-color')).toBe(undefined);
+        expect(layer.paint.get('background-opacity')).toBe(1);
+        expect(layer.getPaintProperty('background-opacity')).toBe(1);
 
         t.end();
     });
@@ -80,7 +80,7 @@ test('StyleLayer#setPaintProperty', (t) => {
 
         layer.setPaintProperty('background-color', 'blue');
 
-        t.deepEqual(layer.getPaintProperty('background-color-transition'), {duration: 600});
+        expect(layer.getPaintProperty('background-color-transition')).toEqual({duration: 600});
         t.end();
     });
 
@@ -95,7 +95,7 @@ test('StyleLayer#setPaintProperty', (t) => {
 
         layer.setPaintProperty('background-color-transition', {duration: 400});
 
-        t.deepEqual(layer.getPaintProperty('background-color-transition'), {duration: 400});
+        expect(layer.getPaintProperty('background-color-transition')).toEqual({duration: 400});
         t.end();
     });
 
@@ -106,7 +106,7 @@ test('StyleLayer#setPaintProperty', (t) => {
         });
 
         layer.on('error', () => {
-            t.equal(layer.getPaintProperty('background-opacity'), undefined);
+            expect(layer.getPaintProperty('background-opacity')).toBe(undefined);
             t.end();
         });
 
@@ -141,12 +141,12 @@ test('StyleLayer#setPaintProperty', (t) => {
         layer.setPaintProperty('fill-outline-color', '#f00');
         layer.updateTransitions({});
         layer.recalculate({zoom: 0, zoomHistory: {}});
-        t.deepEqual(layer.paint.get('fill-outline-color').value, {kind: 'constant', value: new Color(1, 0, 0, 1)});
+        expect(layer.paint.get('fill-outline-color').value).toEqual({kind: 'constant', value: new Color(1, 0, 0, 1)});
 
         layer.setPaintProperty('fill-outline-color', undefined);
         layer.updateTransitions({});
         layer.recalculate({zoom: 0, zoomHistory: {}});
-        t.deepEqual(layer.paint.get('fill-outline-color').value, {kind: 'constant', value: new Color(0, 0, 1, 1)});
+        expect(layer.paint.get('fill-outline-color').value).toEqual({kind: 'constant', value: new Color(0, 0, 1, 1)});
 
         t.end();
     });
@@ -190,7 +190,7 @@ test('StyleLayer#setPaintProperty', (t) => {
 
         layer.setPaintProperty('background-color-transition', null);
 
-        t.deepEqual(layer.getPaintProperty('background-color-transition'), null);
+        expect(layer.getPaintProperty('background-color-transition')).toEqual(null);
         t.end();
     });
 
@@ -206,7 +206,7 @@ test('StyleLayer#setLayoutProperty', (t) => {
 
         layer.setLayoutProperty('text-transform', 'lowercase');
 
-        t.deepEqual(layer.getLayoutProperty('text-transform'), 'lowercase');
+        expect(layer.getLayoutProperty('text-transform')).toEqual('lowercase');
         t.end();
     });
 
@@ -234,7 +234,7 @@ test('StyleLayer#setLayoutProperty', (t) => {
 
         layer.setLayoutProperty('text-transform', 'lowercase');
 
-        t.deepEqual(layer.getLayoutProperty('text-transform'), 'lowercase');
+        expect(layer.getLayoutProperty('text-transform')).toEqual('lowercase');
         t.end();
     });
 
@@ -250,8 +250,8 @@ test('StyleLayer#setLayoutProperty', (t) => {
         layer.setLayoutProperty('text-transform', null);
         layer.recalculate({zoom: 0, zoomHistory: {}});
 
-        t.deepEqual(layer.layout.get('text-transform').value, {kind: 'constant', value: 'none'});
-        t.equal(layer.getLayoutProperty('text-transform'), undefined);
+        expect(layer.layout.get('text-transform').value).toEqual({kind: 'constant', value: 'none'});
+        expect(layer.getLayoutProperty('text-transform')).toBe(undefined);
         t.end();
     });
 
@@ -274,10 +274,7 @@ test('StyleLayer#serialize', (t) => {
     }
 
     t.test('serializes layers', (t) => {
-        t.deepEqual(
-            createStyleLayer(createSymbolLayer()).serialize(),
-            createSymbolLayer()
-        );
+        expect(createStyleLayer(createSymbolLayer()).serialize()).toEqual(createSymbolLayer());
         t.end();
     });
 
@@ -289,10 +286,7 @@ test('StyleLayer#serialize', (t) => {
             }
         };
 
-        t.deepEqual(
-            createStyleLayer(createSymbolLayer({paint: layerPaint})).serialize().paint,
-            layerPaint
-        );
+        expect(createStyleLayer(createSymbolLayer({paint: layerPaint})).serialize().paint).toEqual(layerPaint);
         t.end();
     });
 
@@ -300,8 +294,8 @@ test('StyleLayer#serialize', (t) => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setPaintProperty('text-halo-color', 'orange');
 
-        t.equal(layer.serialize().paint['text-halo-color'], 'orange');
-        t.equal(layer.serialize().paint['text-color'], 'blue');
+        expect(layer.serialize().paint['text-halo-color']).toBe('orange');
+        expect(layer.serialize().paint['text-color']).toBe('blue');
 
         t.end();
     });
@@ -310,8 +304,8 @@ test('StyleLayer#serialize', (t) => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setLayoutProperty('text-size', 20);
 
-        t.equal(layer.serialize().layout['text-transform'], 'uppercase');
-        t.equal(layer.serialize().layout['text-size'], 20);
+        expect(layer.serialize().layout['text-transform']).toBe('uppercase');
+        expect(layer.serialize().layout['text-size']).toBe(20);
 
         t.end();
     });
@@ -320,7 +314,7 @@ test('StyleLayer#serialize', (t) => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setLayoutProperty('visibility', 'visible');
 
-        t.equal(layer.serialize().layout['visibility'], 'visible');
+        expect(layer.serialize().layout['visibility']).toBe('visible');
 
         t.end();
     });
@@ -329,7 +323,7 @@ test('StyleLayer#serialize', (t) => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setLayoutProperty('visibility', 'none');
 
-        t.equal(layer.serialize().layout['visibility'], 'none');
+        expect(layer.serialize().layout['visibility']).toBe('none');
 
         t.end();
     });
@@ -338,7 +332,7 @@ test('StyleLayer#serialize', (t) => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setLayoutProperty('visibility', undefined);
 
-        t.equal(layer.serialize().layout['visibility'], undefined);
+        expect(layer.serialize().layout['visibility']).toBe(undefined);
 
         t.end();
     });
@@ -362,10 +356,7 @@ test('StyleLayer#serialize', (t) => {
     }
 
     t.test('serializes layers', (t) => {
-        t.deepEqual(
-            createStyleLayer(createSymbolLayer()).serialize(),
-            createSymbolLayer()
-        );
+        expect(createStyleLayer(createSymbolLayer()).serialize()).toEqual(createSymbolLayer());
         t.end();
     });
 
@@ -377,10 +368,7 @@ test('StyleLayer#serialize', (t) => {
             }
         };
 
-        t.deepEqual(
-            createStyleLayer(createSymbolLayer({paint: layerPaint})).serialize().paint,
-            layerPaint
-        );
+        expect(createStyleLayer(createSymbolLayer({paint: layerPaint})).serialize().paint).toEqual(layerPaint);
         t.end();
     });
 
@@ -388,8 +376,8 @@ test('StyleLayer#serialize', (t) => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setPaintProperty('text-halo-color', 'orange');
 
-        t.equal(layer.serialize().paint['text-halo-color'], 'orange');
-        t.equal(layer.serialize().paint['text-color'], 'blue');
+        expect(layer.serialize().paint['text-halo-color']).toBe('orange');
+        expect(layer.serialize().paint['text-color']).toBe('blue');
 
         t.end();
     });
@@ -398,8 +386,8 @@ test('StyleLayer#serialize', (t) => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setLayoutProperty('text-size', 20);
 
-        t.equal(layer.serialize().layout['text-transform'], 'uppercase');
-        t.equal(layer.serialize().layout['text-size'], 20);
+        expect(layer.serialize().layout['text-transform']).toBe('uppercase');
+        expect(layer.serialize().layout['text-size']).toBe(20);
 
         t.end();
     });
@@ -407,7 +395,7 @@ test('StyleLayer#serialize', (t) => {
     t.test('layer.paint is never undefined', (t) => {
         const layer = createStyleLayer({type: 'fill'});
         // paint is never undefined
-        t.ok(layer.paint);
+        expect(layer.paint).toBeTruthy();
         t.end();
     });
 
