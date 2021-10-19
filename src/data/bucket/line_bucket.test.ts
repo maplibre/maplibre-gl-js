@@ -1,13 +1,12 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
 import fs from 'fs';
 import path, {dirname} from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import Point from '../../../rollup/build/tsc/src/util/point';
-import segment from '../../../rollup/build/tsc/src/data/segment';
-import LineBucket from '../../../rollup/build/tsc/src/data/bucket/line_bucket';
-import LineStyleLayer from '../../../rollup/build/tsc/src/style/style_layer/line_style_layer';
+import Point from '../util/point';
+import segment from '../data/segment';
+import LineBucket from '../data/bucket/line_bucket';
+import LineStyleLayer from '../style/style_layer/line_style_layer';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -23,7 +22,7 @@ function createLine(numPoints) {
     return points;
 }
 
-test('LineBucket', (t) => {
+describe('LineBucket', () => {
     const layer = new LineStyleLayer({id: 'test', type: 'line'});
     layer.recalculate({zoom: 0, zoomHistory: {}});
 
@@ -97,10 +96,9 @@ test('LineBucket', (t) => {
 
     bucket.addFeature(feature, feature.loadGeometry());
 
-    t.end();
 });
 
-test('LineBucket segmentation', (t) => {
+describe('LineBucket segmentation', () => {
     t.stub(console, 'warn');
 
     // Stub MAX_VERTEX_ARRAY_LENGTH so we can test features
@@ -138,5 +136,4 @@ test('LineBucket segmentation', (t) => {
 
     expect(console.warn.callCount).toBe(1);
 
-    t.end();
 });
