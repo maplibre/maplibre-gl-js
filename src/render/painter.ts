@@ -417,7 +417,7 @@ class Painter {
         if (isTerrainEnabled) {
             this.opaquePassCutoff = 0;
 
-            // update coords-framebuffer on camera movement
+            // update coords/depth-framebuffer on camera movement
             const newTiles = this.style.terrainSourceCache.tilesAfterTime(this.coordsBuffer.renderTime);
             if (!mat4.equals(this.coordsBuffer.matrix, this.transform.projMatrix) || newTiles.length) {
                 mat4.copy(this.coordsBuffer.matrix, this.transform.projMatrix);
@@ -493,18 +493,16 @@ class Painter {
                     prevType = type;
                     const stack = stacks.length - 1, layers = stacks[stack];
                     for (const tile of this.style.terrainSourceCache.getRenderableTiles(this.transform)) {
-                        const render = tile.rerender || !tile.textures[stack];
                         prepareTerrain(this, this.style.terrainSourceCache, tile, stack);
-                        if (render) {
+                        if (tile.textures[stack]) {
                             this.context.clear({ color: Color.transparent });
                             for (let l=0; l<layers.length; l++) {
                                 const layer = this.style._layers[layers[l]];
                                 const coords = layer.source ? coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
-                              //   this._renderTileClippingMasks(layer, coords);
+                                this._renderTileClippingMasks(layer, coords);
                                 this.renderLayer(this, this.style.sourceCaches[layer.source], layer, coords)
                             }
                         }
-                        tile.rerender = false;
                         drawTerrain(this, this.style.terrainSourceCache, tile);
                     }
 

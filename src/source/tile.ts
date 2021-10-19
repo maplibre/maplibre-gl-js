@@ -86,7 +86,6 @@ class Tile {
     reloadCallback: any;
     resourceTiming: Array<PerformanceResourceTiming>;
     queryPadding: number;
-    rerender: boolean;
 
     symbolFadeHoldUntil: number;
     hasSymbolBuckets: boolean;
@@ -110,7 +109,6 @@ class Tile {
         this.hasSymbolBuckets = false;
         this.hasRTLText = false;
         this.dependencies = {};
-        this.rerender = false;
         this.textures = [];
 
         // Counts the number of times a response was already expired when
@@ -132,6 +130,11 @@ class Tile {
 
     wasRequested() {
         return this.state === 'errored' || this.state === 'loaded' || this.state === 'reloading';
+    }
+
+    clearTextures(painter: any) {
+        this.textures.forEach(t => painter.saveTileTexture(t));
+        this.textures = [];
     }
 
     /**

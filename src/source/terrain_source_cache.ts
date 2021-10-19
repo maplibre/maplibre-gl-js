@@ -88,24 +88,23 @@ class TerrainSourceCache extends Evented {
                         const tile = this._tiles[key];
                         if (tile.tileID.equals(e.coord) || tile.tileID.isChildOf(e.coord)) {
                             tile.timeLoaded = Date.now();
-                            tile.rerender = true;
+                            tile.clearTextures(this._style.map.painter);
                         }
                     }
-                    const tile = this.getTileByID(e.coord.key);
                     transform.updateElevation();
                 } else if (e.coord) {
                     // FIXME! mark only necessary tiles to rerender
-                    for (let key in this._tiles) this.getTileByID(key).rerender = true;
+                    for (let key in this._tiles) this.getTileByID(key).clearTextures(this._style.map.painter);
                     //   let dz = e.coord.canonical.z - transform.tileZoom;
                     //   let x = e.coord.canonical.x, y = e.coord.canonical.y, wrap = e.coord.wrap, z = transform.tileZoom;
                     //   const sourceTile = this.getSourceTile(dz > 0 ? new OverscaledTileID(z, wrap, z, x >> dz, y >> dz) : e.coord);
                     //   const tile = sourceTile && this.getTileByID(sourceTile.tileID.key);
                     //   if (tile) {
-                    //      tile.rerender = true;
+                    //      tile.clearTextures(this._style.map.painter);
                     //   } else if (sourceTile) {
                     //      for (let key in this._tiles) {
                     //         let _tile = this.getTileByID(key);
-                    //         if (_tile.tileID.isChildOf(sourceTile.tileID)) _tile.rerender = true;
+                    //         if (_tile.tileID.isChildOf(sourceTile.tileID)) _tile.clearTextures(this._style.map.painter);
                     //      }
                     //   }
                 }
