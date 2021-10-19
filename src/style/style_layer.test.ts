@@ -1,22 +1,23 @@
-import '../../stub_loader';
-import createStyleLayer from '../style/create_style_layer';
-import FillStyleLayer from '../style/style_layer/fill_style_layer';
+import createStyleLayer from './create_style_layer';
+import FillStyleLayer from './style_layer/fill_style_layer';
 import {extend} from '../util/util';
 import Color from '../style-spec/util/color';
+import {LayerSpecification} from '../style-spec/types';
+import EvaluationParameters from './evaluation_parameters';
+import {TransitionParameters} from './properties';
+import BackgroundStyleLayer from './style_layer/background_style_layer';
+import SymbolStyleLayer from './style_layer/symbol_style_layer';
 
-describe('StyleLayer', done => {
-    test('instantiates the correct subclass', done => {
-        const layer = createStyleLayer({type: 'fill'});
+describe('StyleLayer', () => {
+    test('instantiates the correct subclass', () => {
+        const layer = createStyleLayer({type: 'fill'} as LayerSpecification);
 
         expect(layer instanceof FillStyleLayer).toBeTruthy();
-        done();
     });
-
-    done();
 });
 
-describe('StyleLayer#setPaintProperty', done => {
-    test('sets new property value', done => {
+describe('StyleLayer#setPaintProperty', () => {
+    test('sets new property value', () => {
         const layer = createStyleLayer({
             'id': 'background',
             'type': 'background'
@@ -25,10 +26,9 @@ describe('StyleLayer#setPaintProperty', done => {
         layer.setPaintProperty('background-color', 'blue');
 
         expect(layer.getPaintProperty('background-color')).toEqual('blue');
-        done();
     });
 
-    test('updates property value', done => {
+    test('updates property value', () => {
         const layer = createStyleLayer({
             'id': 'background',
             'type': 'background',
@@ -40,10 +40,9 @@ describe('StyleLayer#setPaintProperty', done => {
         layer.setPaintProperty('background-color', 'blue');
 
         expect(layer.getPaintProperty('background-color')).toEqual('blue');
-        done();
     });
 
-    test('unsets value', done => {
+    test('unsets value', () => {
         const layer = createStyleLayer({
             'id': 'background',
             'type': 'background',
@@ -51,21 +50,19 @@ describe('StyleLayer#setPaintProperty', done => {
                 'background-color': 'red',
                 'background-opacity': 1
             }
-        });
+        }) as BackgroundStyleLayer;
 
         layer.setPaintProperty('background-color', null);
-        layer.updateTransitions({});
-        layer.recalculate({zoom: 0, zoomHistory: {}});
+        layer.updateTransitions({} as TransitionParameters);
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
         expect(layer.paint.get('background-color')).toEqual(new Color(0, 0, 0, 1));
         expect(layer.getPaintProperty('background-color')).toBe(undefined);
         expect(layer.paint.get('background-opacity')).toBe(1);
         expect(layer.getPaintProperty('background-opacity')).toBe(1);
-
-        done();
     });
 
-    test('preserves existing transition', done => {
+    test('preserves existing transition', () => {
         const layer = createStyleLayer({
             'id': 'background',
             'type': 'background',
@@ -74,16 +71,15 @@ describe('StyleLayer#setPaintProperty', done => {
                 'background-color-transition': {
                     duration: 600
                 }
-            }
+            } as any
         });
 
         layer.setPaintProperty('background-color', 'blue');
 
         expect(layer.getPaintProperty('background-color-transition')).toEqual({duration: 600});
-        done();
     });
 
-    test('sets transition', done => {
+    test('sets transition', () => {
         const layer = createStyleLayer({
             'id': 'background',
             'type': 'background',
@@ -95,7 +91,6 @@ describe('StyleLayer#setPaintProperty', done => {
         layer.setPaintProperty('background-color-transition', {duration: 400});
 
         expect(layer.getPaintProperty('background-color-transition')).toEqual({duration: 400});
-        done();
     });
 
     test('emits on an invalid property value', done => {
@@ -127,7 +122,7 @@ describe('StyleLayer#setPaintProperty', done => {
         });
     });
 
-    test('can unset fill-outline-color #2886', done => {
+    test('can unset fill-outline-color #2886', () => {
         const layer = createStyleLayer({
             id: 'building',
             type: 'fill',
@@ -135,22 +130,21 @@ describe('StyleLayer#setPaintProperty', done => {
             paint: {
                 'fill-color': '#00f'
             }
-        });
+        }) as FillStyleLayer;
 
         layer.setPaintProperty('fill-outline-color', '#f00');
-        layer.updateTransitions({});
-        layer.recalculate({zoom: 0, zoomHistory: {}});
+        layer.updateTransitions({} as TransitionParameters);
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
         expect(layer.paint.get('fill-outline-color').value).toEqual({kind: 'constant', value: new Color(1, 0, 0, 1)});
 
         layer.setPaintProperty('fill-outline-color', undefined);
-        layer.updateTransitions({});
-        layer.recalculate({zoom: 0, zoomHistory: {}});
+        layer.updateTransitions({} as TransitionParameters);
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
         expect(layer.paint.get('fill-outline-color').value).toEqual({kind: 'constant', value: new Color(0, 0, 1, 1)});
 
-        done();
     });
 
-    test('can transition fill-outline-color from undefined to a value #3657', done => {
+    test('can transition fill-outline-color from undefined to a value #3657', () => {
         const layer = createStyleLayer({
             id: 'building',
             type: 'fill',
@@ -158,30 +152,29 @@ describe('StyleLayer#setPaintProperty', done => {
             paint: {
                 'fill-color': '#00f'
             }
-        });
+        }) as FillStyleLayer;
 
         // setup: set and then unset fill-outline-color so that, when we then try
         // to re-set it, StyleTransition#calculate() attempts interpolation
         layer.setPaintProperty('fill-outline-color', '#f00');
-        layer.updateTransitions({});
-        layer.recalculate({zoom: 0, zoomHistory: {}});
+        layer.updateTransitions({} as TransitionParameters);
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
         layer.setPaintProperty('fill-outline-color', undefined);
-        layer.updateTransitions({});
-        layer.recalculate({zoom: 0, zoomHistory: {}});
+        layer.updateTransitions({} as TransitionParameters);
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
         // re-set fill-outline-color and get its value, triggering the attempt
         // to interpolate between undefined and #f00
         layer.setPaintProperty('fill-outline-color', '#f00');
-        layer.updateTransitions({});
-        layer.recalculate({zoom: 0, zoomHistory: {}});
+        layer.updateTransitions({} as TransitionParameters);
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
         layer.paint.get('fill-outline-color');
 
-        done();
     });
 
-    test('sets null property value', done => {
+    test('sets null property value', () => {
         const layer = createStyleLayer({
             'id': 'background',
             'type': 'background'
@@ -189,31 +182,28 @@ describe('StyleLayer#setPaintProperty', done => {
 
         layer.setPaintProperty('background-color-transition', null);
 
-        expect(layer.getPaintProperty('background-color-transition')).toEqual(null);
-        done();
+        expect(layer.getPaintProperty('background-color-transition')).toEqual(undefined);
     });
 
-    done();
 });
 
-describe('StyleLayer#setLayoutProperty', done => {
-    test('sets new property value', done => {
+describe('StyleLayer#setLayoutProperty', () => {
+    test('sets new property value', () => {
         const layer = createStyleLayer({
             'id': 'symbol',
             'type': 'symbol'
-        });
+        } as LayerSpecification);
 
         layer.setLayoutProperty('text-transform', 'lowercase');
 
         expect(layer.getLayoutProperty('text-transform')).toEqual('lowercase');
-        done();
     });
 
     test('emits on an invalid property value', done => {
         const layer = createStyleLayer({
             'id': 'symbol',
             'type': 'symbol'
-        });
+        } as LayerSpecification);
 
         layer.on('error', () => {
             done();
@@ -222,44 +212,40 @@ describe('StyleLayer#setLayoutProperty', done => {
         layer.setLayoutProperty('text-transform', 'mapboxcase');
     });
 
-    test('updates property value', done => {
+    test('updates property value', () => {
         const layer = createStyleLayer({
             'id': 'symbol',
             'type': 'symbol',
             'layout': {
                 'text-transform': 'uppercase'
             }
-        });
+        } as LayerSpecification);
 
         layer.setLayoutProperty('text-transform', 'lowercase');
 
         expect(layer.getLayoutProperty('text-transform')).toEqual('lowercase');
-        done();
     });
 
-    test('unsets property value', done => {
+    test('unsets property value', () => {
         const layer = createStyleLayer({
             'id': 'symbol',
             'type': 'symbol',
             'layout': {
                 'text-transform': 'uppercase'
             }
-        });
+        } as LayerSpecification) as SymbolStyleLayer;
 
         layer.setLayoutProperty('text-transform', null);
-        layer.recalculate({zoom: 0, zoomHistory: {}});
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
         expect(layer.layout.get('text-transform').value).toEqual({kind: 'constant', value: 'none'});
         expect(layer.getLayoutProperty('text-transform')).toBe(undefined);
-        done();
     });
-
-    done();
 });
 
-describe('StyleLayer#serialize', done => {
+describe('StyleLayer#serialize', () => {
 
-    function createSymbolLayer(layer) {
+    function createSymbolLayer(layer?) {
         return extend({
             id: 'symbol',
             type: 'symbol',
@@ -272,12 +258,11 @@ describe('StyleLayer#serialize', done => {
         }, layer);
     }
 
-    test('serializes layers', done => {
+    test('serializes layers', () => {
         expect(createStyleLayer(createSymbolLayer()).serialize()).toEqual(createSymbolLayer());
-        done();
     });
 
-    test('serializes functions', done => {
+    test('serializes functions', () => {
         const layerPaint = {
             'text-color': {
                 base: 2,
@@ -286,62 +271,55 @@ describe('StyleLayer#serialize', done => {
         };
 
         expect(createStyleLayer(createSymbolLayer({paint: layerPaint})).serialize().paint).toEqual(layerPaint);
-        done();
     });
 
-    test('serializes added paint properties', done => {
+    test('serializes added paint properties', () => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setPaintProperty('text-halo-color', 'orange');
 
         expect(layer.serialize().paint['text-halo-color']).toBe('orange');
         expect(layer.serialize().paint['text-color']).toBe('blue');
 
-        done();
     });
 
-    test('serializes added layout properties', done => {
+    test('serializes added layout properties', () => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setLayoutProperty('text-size', 20);
 
         expect(layer.serialize().layout['text-transform']).toBe('uppercase');
         expect(layer.serialize().layout['text-size']).toBe(20);
 
-        done();
     });
 
-    test('serializes "visibility" of "visible"', done => {
+    test('serializes "visibility" of "visible"', () => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setLayoutProperty('visibility', 'visible');
 
         expect(layer.serialize().layout['visibility']).toBe('visible');
 
-        done();
     });
 
-    test('serializes "visibility" of "none"', done => {
+    test('serializes "visibility" of "none"', () => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setLayoutProperty('visibility', 'none');
 
         expect(layer.serialize().layout['visibility']).toBe('none');
 
-        done();
     });
 
-    test('serializes "visibility" of undefined', done => {
+    test('serializes "visibility" of undefined', () => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setLayoutProperty('visibility', undefined);
 
         expect(layer.serialize().layout['visibility']).toBe(undefined);
 
-        done();
     });
 
-    done();
 });
 
-describe('StyleLayer#serialize', done => {
+describe('StyleLayer#serialize', () => {
 
-    function createSymbolLayer(layer) {
+    function createSymbolLayer(layer?) {
         return extend({
             id: 'symbol',
             type: 'symbol',
@@ -354,12 +332,11 @@ describe('StyleLayer#serialize', done => {
         }, layer);
     }
 
-    test('serializes layers', done => {
+    test('serializes layers', () => {
         expect(createStyleLayer(createSymbolLayer()).serialize()).toEqual(createSymbolLayer());
-        done();
     });
 
-    test('serializes functions', done => {
+    test('serializes functions', () => {
         const layerPaint = {
             'text-color': {
                 base: 2,
@@ -368,35 +345,29 @@ describe('StyleLayer#serialize', done => {
         };
 
         expect(createStyleLayer(createSymbolLayer({paint: layerPaint})).serialize().paint).toEqual(layerPaint);
-        done();
     });
 
-    test('serializes added paint properties', done => {
+    test('serializes added paint properties', () => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setPaintProperty('text-halo-color', 'orange');
 
         expect(layer.serialize().paint['text-halo-color']).toBe('orange');
         expect(layer.serialize().paint['text-color']).toBe('blue');
 
-        done();
     });
 
-    test('serializes added layout properties', done => {
+    test('serializes added layout properties', () => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setLayoutProperty('text-size', 20);
 
         expect(layer.serialize().layout['text-transform']).toBe('uppercase');
         expect(layer.serialize().layout['text-size']).toBe(20);
 
-        done();
     });
 
-    test('layer.paint is never undefined', done => {
-        const layer = createStyleLayer({type: 'fill'});
+    test('layer.paint is never undefined', () => {
+        const layer = createStyleLayer({type: 'fill'} as LayerSpecification);
         // paint is never undefined
         expect(layer.paint).toBeTruthy();
-        done();
     });
-
-    done();
 });
