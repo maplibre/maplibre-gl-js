@@ -21,10 +21,10 @@ test('evaluate', (t) => {
         const ctx = new EvaluationContext();
         ctx.feature = {};
         ctx.featureState = {};
-        t.deepEqual(override.evaluate(ctx), defaultColor);
+        expect(override.evaluate(ctx)).toEqual(defaultColor);
 
         ctx.formattedSection = {textColor: overridenColor};
-        t.deepEqual(override.evaluate(ctx), overridenColor);
+        expect(override.evaluate(ctx)).toEqual(overridenColor);
 
         t.end();
     });
@@ -51,13 +51,13 @@ test('evaluate', (t) => {
         ctx.feature = {properties: {}};
         ctx.featureState = {};
 
-        t.deepEqual(override.evaluate(ctx), defaultColor);
+        expect(override.evaluate(ctx)).toEqual(defaultColor);
 
         ctx.feature.properties.color = "red";
-        t.deepEqual(override.evaluate(ctx), propertyColor);
+        expect(override.evaluate(ctx)).toEqual(propertyColor);
 
         ctx.formattedSection = {textColor: overridenColor};
-        t.deepEqual(override.evaluate(ctx), overridenColor);
+        expect(override.evaluate(ctx)).toEqual(overridenColor);
 
         console.warn = warn;
         t.end();
