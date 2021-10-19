@@ -10,9 +10,9 @@ const context = new Context(gl(10, 10));
 function ValueTest(Constructor, options, t) {
     t.test('#constructor', (t) => {
         const v = new Constructor(context);
-        t.ok(v);
+        expect(v).toBeTruthy();
         const currentV = v.get();
-        t.notEqual(typeof currentV, 'undefined', 'instantiates with a default value');
+        expect(typeof currentV).not.toBe('undefined');
         t.end();
     });
 
@@ -20,7 +20,7 @@ function ValueTest(Constructor, options, t) {
         const v = new Constructor(context);
         v.set(options.setValue);
         const equality = (options.equality) || ((a, b) => deepEqual(a, b));
-        t.ok(equality(v.get(), options.setValue));
+        expect(equality(v.get(), options.setValue)).toBeTruthy();
         t.end();
     });
 
