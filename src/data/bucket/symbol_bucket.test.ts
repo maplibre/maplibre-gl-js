@@ -1,22 +1,21 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
 import fs from 'fs';
 import path, {dirname} from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import SymbolBucket from '../../../rollup/build/tsc/src/data/bucket/symbol_bucket';
-import {CollisionBoxArray} from '../../../rollup/build/tsc/src/data/array_types';
-import {performSymbolLayout} from '../../../rollup/build/tsc/src/symbol/symbol_layout';
-import {Placement} from '../../../rollup/build/tsc/src/symbol/placement';
-import Transform from '../../../rollup/build/tsc/src/geo/transform';
-import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
-import Tile from '../../../rollup/build/tsc/src/source/tile';
-import CrossTileSymbolIndex from '../../../rollup/build/tsc/src/symbol/cross_tile_symbol_index';
-import FeatureIndex from '../../../rollup/build/tsc/src/data/feature_index';
+import SymbolBucket from '../data/bucket/symbol_bucket';
+import {CollisionBoxArray} from '../data/array_types';
+import {performSymbolLayout} from '../symbol/symbol_layout';
+import {Placement} from '../symbol/placement';
+import Transform from '../geo/transform';
+import {OverscaledTileID} from '../source/tile_id';
+import Tile from '../source/tile';
+import CrossTileSymbolIndex from '../symbol/cross_tile_symbol_index';
+import FeatureIndex from '../data/feature_index';
 import {createSymbolBucket, createSymbolIconBucket} from '../../util/create_symbol_layer';
 import {fileURLToPath} from 'url';
-import {RGBAImage} from '../../../rollup/build/tsc/src/util/image';
-import {ImagePosition} from '../../../rollup/build/tsc/src/render/image_atlas';
+import {RGBAImage} from '../util/image';
+import {ImagePosition} from '../render/image_atlas';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -47,8 +46,8 @@ function createIndexedFeature(id, index, iconId) {
             properties: {
                 icon: iconId
             },
-            loadGeometry: function () {
-                return [[{x: 0, y: 0}]]
+            loadGeometry () {
+                return [[{x: 0, y: 0}]];
             }
         },
         id,
@@ -57,7 +56,7 @@ function createIndexedFeature(id, index, iconId) {
     };
 }
 
-test('SymbolBucket', (t) => {
+describe('SymbolBucket', () => {
     const bucketA = bucketSetup();
     const bucketB = bucketSetup();
     const options = {iconDependencies: {}, glyphDependencies: {}};
@@ -98,10 +97,9 @@ test('SymbolBucket', (t) => {
     place(bucketB.layers[0], tileB);
     const b2 = placement.collisionIndex.grid.keysLength();
     expect(b2).toBe(a2);
-    t.end();
 });
 
-test('SymbolBucket integer overflow', (t) => {
+describe('SymbolBucket integer overflow', () => {
     t.stub(console, 'warn');
     t.stub(SymbolBucket, 'MAX_GLYPHS').value(5);
 
@@ -116,27 +114,26 @@ test('SymbolBucket integer overflow', (t) => {
     expect(
         console.warn.getCall(0).calledWithMatch(/Too many glyphs being rendered in a tile./)
     ).toBeTruthy();
-    t.end();
 });
 
-test('SymbolBucket image undefined sdf', (t) => {
+describe('SymbolBucket image undefined sdf', () => {
     t.stub(console, 'warn').callsFake(() => { });
 
     const imageMap = {
         a: {
-            data: new RGBAImage({ width: 0, height: 0 })
+            data: new RGBAImage({width: 0, height: 0})
         },
         b: {
-            data: new RGBAImage({ width: 0, height: 0 }),
+            data: new RGBAImage({width: 0, height: 0}),
             sdf: false
         }
     };
     const imagePos = {
-        a: new ImagePosition({ x: 0, y: 0, w: 10, h: 10 }, 1, 1),
-        b: new ImagePosition({ x: 10, y: 0, w: 10, h: 10 }, 1, 1)
+        a: new ImagePosition({x: 0, y: 0, w: 10, h: 10}, 1, 1),
+        b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1, 1)
     };
     const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray);
-    const options = { iconDependencies: {}, glyphDependencies: {} };
+    const options = {iconDependencies: {}, glyphDependencies: {}};
 
     bucket.populate(
         [
@@ -155,28 +152,27 @@ test('SymbolBucket image undefined sdf', (t) => {
 
     // undefined SDF should be treated the same as false SDF - no warning raised
     expect(!console.warn.calledOnce).toBeTruthy();
-    t.end();
 });
 
-test('SymbolBucket image mismatched sdf', (t) => {
+describe('SymbolBucket image mismatched sdf', () => {
     t.stub(console, 'warn').callsFake(() => { });
 
     const imageMap = {
         a: {
-            data: new RGBAImage({ width: 0, height: 0 }),
+            data: new RGBAImage({width: 0, height: 0}),
             sdf: true
         },
         b: {
-            data: new RGBAImage({ width: 0, height: 0 }),
+            data: new RGBAImage({width: 0, height: 0}),
             sdf: false
         }
     };
     const imagePos = {
-        a: new ImagePosition({ x: 0, y: 0, w: 10, h: 10 }, 1, 1),
-        b: new ImagePosition({ x: 10, y: 0, w: 10, h: 10 }, 1, 1)
+        a: new ImagePosition({x: 0, y: 0, w: 10, h: 10}, 1, 1),
+        b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1, 1)
     };
     const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray);
-    const options = { iconDependencies: {}, glyphDependencies: {} };
+    const options = {iconDependencies: {}, glyphDependencies: {}};
 
     bucket.populate(
         [
@@ -195,10 +191,9 @@ test('SymbolBucket image mismatched sdf', (t) => {
 
     // true SDF and false SDF in same bucket should trigger warning
     expect(console.warn.calledOnce).toBeTruthy();
-    t.end();
 });
 
-test('SymbolBucket detects rtl text', (t) => {
+describe('SymbolBucket detects rtl text', () => {
     const rtlBucket = bucketSetup('مرحبا');
     const ltrBucket = bucketSetup('hello');
     const options = {iconDependencies: {}, glyphDependencies: {}};
@@ -207,11 +202,10 @@ test('SymbolBucket detects rtl text', (t) => {
 
     expect(rtlBucket.hasRTLText).toBeTruthy();
     expect(ltrBucket.hasRTLText).toBeFalsy();
-    t.end();
 });
 
 // Test to prevent symbol bucket with rtl from text being culled by worker serialization.
-test('SymbolBucket with rtl text is NOT empty even though no symbol instances are created', (t) => {
+describe('SymbolBucket with rtl text is NOT empty even though no symbol instances are created', () => {
     const rtlBucket = bucketSetup('مرحبا');
     const options = {iconDependencies: {}, glyphDependencies: {}};
     rtlBucket.createArrays();
@@ -219,15 +213,13 @@ test('SymbolBucket with rtl text is NOT empty even though no symbol instances ar
 
     expect(rtlBucket.isEmpty()).toBeFalsy();
     expect(rtlBucket.symbolInstances.length).toBe(0);
-    t.end();
 });
 
-test('SymbolBucket detects rtl text mixed with ltr text', (t) => {
+describe('SymbolBucket detects rtl text mixed with ltr text', () => {
     const mixedBucket = bucketSetup('مرحبا translates to hello');
     const options = {iconDependencies: {}, glyphDependencies: {}};
     mixedBucket.populate([{feature}], options);
 
     expect(mixedBucket.hasRTLText).toBeTruthy();
-    t.end();
 });
 
