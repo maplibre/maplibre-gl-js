@@ -1,14 +1,11 @@
-import '../../../stub_loader';
-import {test} from '../../../util/test';
-import {getIntersectionDistance} from '../../style/style_layer/fill_extrusion_style_layer';
-import Point from '../../util/point';
+import {getIntersectionDistance, Point3D} from './fill_extrusion_style_layer';
 
 describe('getIntersectionDistance', () => {
-    const queryPoint = [new Point(100, 100)];
+    const queryPoint = [new Point3D(100, 100)];
     const z = 3;
-    const a = new Point(100, -90);
-    const b = new Point(110, 110);
-    const c = new Point(-110, 110);
+    const a = new Point3D(100, -90);
+    const b = new Point3D(110, 110);
+    const c = new Point3D(-110, 110);
     a.z = z;
     b.z = z;
     c.z = z;

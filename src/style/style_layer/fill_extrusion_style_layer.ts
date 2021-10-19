@@ -13,7 +13,9 @@ import type {PaintProps} from './fill_extrusion_style_layer_properties';
 import type Transform from '../../geo/transform';
 import type {LayerSpecification} from '../../style-spec/types';
 
-type Point3D = Point & { z: number }
+export class Point3D extends Point {
+    z: number
+}
 
 class FillExtrusionStyleLayer extends StyleLayer {
     _transitionablePaint: Transitionable<PaintProps>;
