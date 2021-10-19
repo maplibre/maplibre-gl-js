@@ -15,31 +15,31 @@ test('getIntersectionDistance', (t) => {
 
     t.test('one point', (t) => {
         const projectedFace = [a, a];
-        t.equal(getIntersectionDistance(queryPoint, projectedFace), Infinity);
+        expect(getIntersectionDistance(queryPoint, projectedFace)).toBe(Infinity);
         t.end();
     });
 
     t.test('two points', (t) => {
         const projectedFace = [a, b, a];
-        t.equal(getIntersectionDistance(queryPoint, projectedFace), Infinity);
+        expect(getIntersectionDistance(queryPoint, projectedFace)).toBe(Infinity);
         t.end();
     });
 
     t.test('two points coincident', (t) => {
         const projectedFace = [a, a, a, b, b, b, b, a];
-        t.equal(getIntersectionDistance(queryPoint, projectedFace), Infinity);
+        expect(getIntersectionDistance(queryPoint, projectedFace)).toBe(Infinity);
         t.end();
     });
 
     t.test('three points', (t) => {
         const projectedFace = [a, b, c, a];
-        t.equal(getIntersectionDistance(queryPoint, projectedFace), z);
+        expect(getIntersectionDistance(queryPoint, projectedFace)).toBe(z);
         t.end();
     });
 
     t.test('three points coincident points', (t) => {
         const projectedFace = [a, a, b, b, b, c, c, a];
-        t.equal(getIntersectionDistance(queryPoint, projectedFace), z);
+        expect(getIntersectionDistance(queryPoint, projectedFace)).toBe(z);
         t.end();
     });
     t.end();
