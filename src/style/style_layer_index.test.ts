@@ -1,9 +1,8 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import {mapObject} from '../../../rollup/build/tsc/src/util/util';
-import StyleLayerIndex from '../../../rollup/build/tsc/src/style/style_layer_index';
+import {mapObject} from '../util/util';
+import StyleLayerIndex from '../style/style_layer_index';
 
-test('StyleLayerIndex#replace', (t) => {
+describe('StyleLayerIndex#replace', done => {
     const index = new StyleLayerIndex([
         {id: '1', type: 'fill', source: 'source', 'source-layer': 'layer', paint: {'fill-color': 'red'}},
         {id: '2', type: 'circle', source: 'source', 'source-layer': 'layer', paint: {'circle-color': 'green'}},
@@ -21,10 +20,10 @@ test('StyleLayerIndex#replace', (t) => {
     index.replace([]);
     expect(index.familiesBySource).toEqual({});
 
-    t.end();
+    done();
 });
 
-test('StyleLayerIndex#update', (t) => {
+describe('StyleLayerIndex#update', done => {
     const index = new StyleLayerIndex([
         {id: '1', type: 'fill', source: 'foo', 'source-layer': 'layer', paint: {'fill-color': 'red'}},
         {id: '2', type: 'circle', source: 'foo', 'source-layer': 'layer', paint: {'circle-color': 'green'}},
@@ -47,10 +46,10 @@ test('StyleLayerIndex#update', (t) => {
     expect(families[1][1].getPaintProperty('circle-color')).toBe('yellow');
     expect(families[1][1].source).toBe('bar');
 
-    t.end();
+    done();
 });
 
-test('StyleLayerIndex#familiesBySource', (t) => {
+describe('StyleLayerIndex#familiesBySource', done => {
     const index = new StyleLayerIndex([
         {id: '0', type: 'fill', 'source': 'A', 'source-layer': 'foo'},
         {id: '1', type: 'fill', 'source': 'A', 'source-layer': 'foo'},
@@ -85,10 +84,10 @@ test('StyleLayerIndex#familiesBySource', (t) => {
         }
     });
 
-    t.end();
+    done();
 });
 
-test('StyleLayerIndex groups families even if layout key order differs', (t) => {
+describe('StyleLayerIndex groups families even if layout key order differs', done => {
     const index = new StyleLayerIndex([
         {id: '0', type: 'line', 'source': 'source', 'source-layer': 'layer',
             'layout': {'line-cap': 'butt', 'line-join': 'miter'}},
@@ -99,5 +98,5 @@ test('StyleLayerIndex groups families even if layout key order differs', (t) => 
     const families = index.familiesBySource['source']['layer'];
     expect(families[0].length).toBe(2);
 
-    t.end();
+    done();
 });
