@@ -6,7 +6,7 @@ import gl from 'gl';
 
 const context = new Context(gl(10, 10));
 
-const valueTest = (Constructor, options) => {
+const valueTest = (Constructor: new (...args:any[]) => any, options) => {
     test('#constructor', () => {
         const v = new Constructor(context);
         expect(v).toBeTruthy();
