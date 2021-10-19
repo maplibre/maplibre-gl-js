@@ -1,7 +1,6 @@
 import {createFunction} from '.';
 import Color from '../util/color';
 import Formatted from '../expression/types/formatted';
-import {equalWithPrecisionJest} from '../../../test/util/jest_utils';
 
 describe('binary search', () => {
     test('will eventually terminate.', () => {
@@ -36,7 +35,7 @@ describe('exponential function', () => {
             }
         }).evaluate;
 
-        equalWithPrecisionJest(f({zoom: 2}, undefined), 30 / 9, 1e-6);
+        expect(f({zoom: 2}, undefined)).toBeCloseTo(30 / 9);
 
     });
 
@@ -49,11 +48,11 @@ describe('exponential function', () => {
             type: 'number'
         }).evaluate;
 
-        equalWithPrecisionJest(f({zoom: 0}, undefined), 2, 1e-6);
-        equalWithPrecisionJest(f({zoom: 1}, undefined), 2, 1e-6);
-        equalWithPrecisionJest(f({zoom: 2}, undefined), 30 / 9, 1e-6);
-        equalWithPrecisionJest(f({zoom: 3}, undefined), 6, 1e-6);
-        equalWithPrecisionJest(f({zoom: 4}, undefined), 6, 1e-6);
+        expect(f({zoom: 0}, undefined)).toBeCloseTo(2);
+        expect(f({zoom: 1}, undefined)).toBeCloseTo(2);
+        expect(f({zoom: 2}, undefined)).toBeCloseTo(30 / 9);
+        expect(f({zoom: 3}, undefined)).toBeCloseTo(6);
+        expect(f({zoom: 4}, undefined)).toBeCloseTo(6);
 
     });
 
@@ -155,15 +154,15 @@ describe('exponential function', () => {
             type: 'number'
         }).evaluate;
 
-        equalWithPrecisionJest(f({zoom: 2}, undefined), 100, 1e-6);
-        equalWithPrecisionJest(f({zoom: 20}, undefined), 133.9622641509434, 1e-6);
-        equalWithPrecisionJest(f({zoom: 607}, undefined), 400, 1e-6);
-        equalWithPrecisionJest(f({zoom: 680}, undefined), 410.7352941176471, 1e-6);
-        equalWithPrecisionJest(f({zoom: 4927}, undefined), 1000, 1e-6); //86
-        equalWithPrecisionJest(f({zoom: 7300}, undefined), 14779.590419993057, 1e-6);
-        equalWithPrecisionJest(f({zoom: 10000}, undefined), 99125.30371398819, 1e-6);
-        equalWithPrecisionJest(f({zoom: 20000}, undefined), 3360628.527166095, 1e-6);
-        equalWithPrecisionJest(f({zoom: 40000}, undefined), 10000000, 1e-6);
+        expect(f({zoom: 2}, undefined)).toBeCloseTo(100); //, 1e-6);
+        expect(f({zoom: 20}, undefined)).toBeCloseTo(133.9622641509434);
+        expect(f({zoom: 607}, undefined)).toBeCloseTo(400);
+        expect(f({zoom: 680}, undefined)).toBeCloseTo(410.7352941176471);
+        expect(f({zoom: 4927}, undefined)).toBeCloseTo(1000);  //86
+        expect(f({zoom: 7300}, undefined)).toBeCloseTo(14779.590419993057);
+        expect(f({zoom: 10000}, undefined)).toBeCloseTo(99125.30371398819);
+        expect(f({zoom: 20000}, undefined)).toBeCloseTo(3360628.527166095);
+        expect(f({zoom: 40000}, undefined)).toBeCloseTo(10000000);
 
     });
 
@@ -191,9 +190,9 @@ describe('exponential function', () => {
         }).evaluate;
 
         expect(f({zoom: 0}, undefined)).toEqual(new Color(0, 0, 0, 1));
-        equalWithPrecisionJest(f({zoom: 5}, undefined).r, 0, 1e-6);
-        equalWithPrecisionJest(f({zoom: 5}, undefined).g, 0.444, 1e-3);
-        equalWithPrecisionJest(f({zoom: 5}, undefined).b, 0.444, 1e-3);
+        expect(f({zoom: 5}, undefined).r).toBeCloseTo(0);
+        expect(f({zoom: 5}, undefined).g).toBeCloseTo(0.444);
+        expect(f({zoom: 5}, undefined).b).toBeCloseTo(0.444);
 
     });
 
