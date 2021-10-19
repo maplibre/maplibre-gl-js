@@ -2,7 +2,6 @@ import parseGlyphPBF from '../style/parse_glyph_pbf';
 import GlyphManager from './glyph_manager';
 import fs from 'fs';
 import {RequestManager} from '../util/request_manager';
-import TinySDF from '@mapbox/tiny-sdf';
 
 const glyphs = {};
 for (const glyph of parseGlyphPBF(fs.readFileSync('./test/fixtures/0-255.pbf'))) {
@@ -89,12 +88,12 @@ describe('GlyphManager', () => {
             }
             setTimeout(() => callback(null, overlappingGlyphs), 0);
         });
-        Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
+        GlyphManager.TinySDF = class {
             // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
             draw() {
                 return new Uint8ClampedArray(900);
             }
-        } as any as TinySDF});
+        };
         const manager = createGlyphManager('sans-serif');
 
         //Request char that overlaps Katakana range
@@ -114,12 +113,12 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager generates CJK PBF locally', done => {
-        Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
+        GlyphManager.TinySDF = class {
             // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
             draw() {
                 return new Uint8ClampedArray(900);
             }
-        } as any as TinySDF});
+        };
 
         const manager = createGlyphManager('sans-serif');
 
@@ -131,12 +130,12 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager generates Katakana PBF locally', done => {
-        Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
+        GlyphManager.TinySDF = class {
             // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
             draw() {
                 return new Uint8ClampedArray(900);
             }
-        } as any as TinySDF});
+        };
 
         const manager = createGlyphManager('sans-serif');
 
@@ -149,12 +148,12 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager generates Hiragana PBF locally', done => {
-        Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
+        GlyphManager.TinySDF = class {
             // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
             draw() {
                 return new Uint8ClampedArray(900);
             }
-        } as any as TinySDF});
+        };
 
         const manager = createGlyphManager('sans-serif');
 
@@ -168,13 +167,13 @@ describe('GlyphManager', () => {
 
     test('GlyphManager caches locally generated glyphs', done => {
         let drawCallCount = 0;
-        Object.defineProperty(GlyphManager, 'TinySDF', {value: class {
+        GlyphManager.TinySDF = class {
             // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
             draw() {
                 drawCallCount++;
                 return new Uint8ClampedArray(900);
             }
-        } as any as TinySDF});
+        };
 
         const manager = createGlyphManager('sans-serif');
 
