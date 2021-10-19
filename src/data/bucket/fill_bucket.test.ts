@@ -25,24 +25,25 @@ function createPolygon(numPoints) {
 }
 
 test('FillBucket', () => {
-    const layer = new FillStyleLayer({id: 'test', type: 'fill', layout: {}} as LayerSpecification);
-    layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, undefined);
+    expect(() => {
+        const layer = new FillStyleLayer({id: 'test', type: 'fill', layout: {}} as LayerSpecification);
+        layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, undefined);
 
-    const bucket = new FillBucket({layers: [layer]} as BucketParameters<FillStyleLayer>);
+        const bucket = new FillBucket({layers: [layer]} as BucketParameters<FillStyleLayer>);
 
-    bucket.addFeature({} as BucketFeature, [[
-        new Point(0, 0),
-        new Point(10, 10)
-    ]], undefined, undefined, undefined);
+        bucket.addFeature({} as BucketFeature, [[
+            new Point(0, 0),
+            new Point(10, 10)
+        ]], undefined, undefined, undefined);
 
-    bucket.addFeature({} as BucketFeature, [[
-        new Point(0, 0),
-        new Point(10, 10),
-        new Point(10, 20)
-    ]], undefined, undefined, undefined);
+        bucket.addFeature({} as BucketFeature, [[
+            new Point(0, 0),
+            new Point(10, 10),
+            new Point(10, 20)
+        ]], undefined, undefined, undefined);
 
-    bucket.addFeature(feature, feature.loadGeometry(), undefined, undefined, undefined);
-
+        bucket.addFeature(feature, feature.loadGeometry(), undefined, undefined, undefined);
+    }).not.toThrow();
 });
 
 test('FillBucket segmentation', () => {
