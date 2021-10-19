@@ -16,11 +16,12 @@ import {RGBAImage} from '../../util/image';
 import {ImagePosition} from '../../render/image_atlas';
 import {IndexedFeature, PopulateParameters} from '../bucket';
 import {StyleImage} from '../../style/style_image';
+import glyphs from '../../../test/fixtures/fontstack-glyphs.json';
+import {StyleGlyph} from '../../style/style_glyph';
 
 // Load a point feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/fixtures/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.place_label.feature(10);
-const glyphs = require(path.resolve(__dirname, '../../../test/fixtures/fontstack-glyphs.json'));
 
 /*eslint new-cap: 0*/
 const collisionBoxArray = new CollisionBoxArray();
@@ -29,7 +30,11 @@ transform.width = 100;
 transform.height = 100;
 transform.cameraToCenterDistance = 100;
 
-const stacks = {'Test': glyphs};
+const stacks = {'Test': glyphs} as any as {
+    [_: string]: {
+        [x: number]: StyleGlyph;
+    };
+};
 
 function bucketSetup(text = 'abcde') {
     return createSymbolBucket('test', 'Test', text, collisionBoxArray);
@@ -167,8 +172,8 @@ describe('SymbolBucket', () => {
             }
         } as any as { [_: string]: StyleImage };
         const imagePos = {
-            a: new ImagePosition({x: 0, y: 0, w: 10, h: 10}, 1 as any),
-            b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1 as any)
+            a: new ImagePosition({x: 0, y: 0, w: 10, h: 10}, 1 as any as StyleImage),
+            b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1 as any as StyleImage)
         };
         const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray) as any as SymbolBucket;
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
