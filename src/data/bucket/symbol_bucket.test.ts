@@ -11,7 +11,7 @@ import {OverscaledTileID} from '../../source/tile_id';
 import Tile from '../../source/tile';
 import CrossTileSymbolIndex from '../../symbol/cross_tile_symbol_index';
 import FeatureIndex from '../../data/feature_index';
-import {createSymbolBucket, createSymbolIconBucket} from '../../../test/util/create_symbol_layer';
+import {createSymbolBucket, createSymbolIconBucket} from '../../../test/util/create_symbol_layer_jest';
 import {RGBAImage} from '../../util/image';
 import {ImagePosition} from '../../render/image_atlas';
 import {IndexedFeature, PopulateParameters} from '../bucket';
