@@ -1,9 +1,10 @@
-import '../../stub_loader';
-import {createExpression, ZoomConstantExpression} from '../style-spec/expression';
+import {createExpression, StyleExpression, ZoomConstantExpression} from '../style-spec/expression';
 import EvaluationContext from '../style-spec/expression/evaluation_context';
-import properties from '../style/style_layer/symbol_style_layer_properties';
-import {PossiblyEvaluatedPropertyValue} from '../style/properties';
-import FormatSectionOverride from '../style/format_section_override';
+import properties from './style_layer/symbol_style_layer_properties';
+import {PossiblyEvaluatedPropertyValue} from './properties';
+import FormatSectionOverride from './format_section_override';
+import EvaluationParameters from './evaluation_parameters';
+import {FormattedSection} from '../style-spec/expression/types/formatted';
 
 describe('evaluate', () => {
 
@@ -13,16 +14,16 @@ describe('evaluate', () => {
         const overriden = new PossiblyEvaluatedPropertyValue(
             properties.paint.properties['text-color'],
             {kind: 'constant', value: defaultColor},
-            {zoom: 0, zoomHistory: {}}
+            {zoom: 0, zoomHistory: {}} as EvaluationParameters
         );
 
         const override = new FormatSectionOverride(overriden);
         const ctx = new EvaluationContext();
-        ctx.feature = {};
+        ctx.feature = {} as any;
         ctx.featureState = {};
         expect(override.evaluate(ctx)).toEqual(defaultColor);
 
-        ctx.formattedSection = {textColor: overridenColor};
+        ctx.formattedSection = {textColor: overridenColor} as FormattedSection;
         expect(override.evaluate(ctx)).toEqual(overridenColor);
 
     });
@@ -37,16 +38,16 @@ describe('evaluate', () => {
             ['get', 'color'],
             properties.paint.properties['text-color'].specification);
 
-        const sourceExpr = new ZoomConstantExpression('source', styleExpr.value);
+        const sourceExpr = new ZoomConstantExpression('source', styleExpr.value as StyleExpression);
         const overriden = new PossiblyEvaluatedPropertyValue(
             properties.paint.properties['text-color'],
             sourceExpr,
-            {zoom: 0, zoomHistory: {}}
+            {zoom: 0, zoomHistory: {}} as EvaluationParameters
         );
 
         const override = new FormatSectionOverride(overriden);
         const ctx = new EvaluationContext();
-        ctx.feature = {properties: {}};
+        ctx.feature = {properties: {}} as any;
         ctx.featureState = {};
 
         expect(override.evaluate(ctx)).toEqual(defaultColor);
@@ -54,7 +55,7 @@ describe('evaluate', () => {
         ctx.feature.properties.color = 'red';
         expect(override.evaluate(ctx)).toEqual(propertyColor);
 
-        ctx.formattedSection = {textColor: overridenColor};
+        ctx.formattedSection = {textColor: overridenColor} as FormattedSection;
         expect(override.evaluate(ctx)).toEqual(overridenColor);
 
         console.warn = warn;
