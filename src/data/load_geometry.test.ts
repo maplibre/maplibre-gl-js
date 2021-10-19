@@ -1,15 +1,13 @@
 import fs from 'fs';
-import path, {dirname} from 'path';
+import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import loadGeometry from '../data/load_geometry.js';
-import {fileURLToPath} from 'url';
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import loadGeometry from './load_geometry';
 
 // Load a line feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'))));
+const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../test/fixtures/mbsv5-6-18-23.vector.pbf'))));
 
-describe('loadGeometry', () => {
+test('loadGeometry', () => {
     const feature = vt.layers.road.feature(0);
     const originalGeometry = feature.loadGeometry();
     const scaledGeometry = loadGeometry(feature);
@@ -17,7 +15,7 @@ describe('loadGeometry', () => {
     expect(scaledGeometry[0][0].y).toBe(originalGeometry[0][0].y * 2);
 });
 
-describe('loadGeometry warns and clamps when exceeding extent', () => {
+test('loadGeometry warns and clamps when exceeding extent', () => {
     const feature = vt.layers.road.feature(0);
     feature.extent = 2048;
 
