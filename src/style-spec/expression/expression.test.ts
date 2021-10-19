@@ -1,4 +1,4 @@
-import {createPropertyExpression, StylePropertyExpression} from '../expression';
+import {createPropertyExpression, Feature, GlobalProperties, StylePropertyExpression} from '../expression';
 import definitions from './definitions';
 import v8 from '../reference/v8.json';
 import {StylePropertySpecification} from '../style-spec';
@@ -55,8 +55,8 @@ describe('evaluate expression', () => {
 
         expect(value.kind).toBe('source');
 
-        expect(value.evaluate({} as any, {properties: {x: 'b'}} as any)).toBe('b');
-        expect(value.evaluate({} as any, {properties: {x: 'invalid'}} as any)).toBe('a');
+        expect(value.evaluate({} as GlobalProperties, {properties: {x: 'b'}} as any as Feature)).toBe('b');
+        expect(value.evaluate({} as GlobalProperties, {properties: {x: 'invalid'}} as any as Feature)).toBe('a');
         expect(console.warn).toHaveBeenCalledWith('Expected value to be one of "a", "b", "c", but found "invalid" instead.');
 
     });
