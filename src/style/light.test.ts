@@ -1,13 +1,12 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import Light from '../../../rollup/build/tsc/src/style/light';
-import styleSpec from '../../../rollup/build/tsc/src/style-spec/reference/latest';
-import Color from '../../../rollup/build/tsc/src/style-spec/util/color';
-import {sphericalToCartesian} from '../../../rollup/build/tsc/src/util/util';
+import Light from '../style/light';
+import styleSpec from '../style-spec/reference/latest';
+import Color from '../style-spec/util/color';
+import {sphericalToCartesian} from '../util/util';
 
 const spec = styleSpec.light;
 
-test('Light with defaults', (t) => {
+describe('Light with defaults', done => {
     const light = new Light({});
     light.recalculate({zoom: 0, zoomHistory: {}});
 
@@ -16,10 +15,10 @@ test('Light with defaults', (t) => {
     expect(light.properties.get('intensity')).toEqual(spec.intensity.default);
     expect(light.properties.get('color')).toEqual(Color.parse(spec.color.default));
 
-    t.end();
+    done();
 });
 
-test('Light with options', (t) => {
+describe('Light with options', done => {
     const light = new Light({
         anchor: 'map',
         position: [2, 30, 30],
@@ -32,10 +31,10 @@ test('Light with options', (t) => {
     expect(light.properties.get('intensity')).toEqual(1);
     expect(light.properties.get('color')).toEqual(Color.parse(spec.color.default));
 
-    t.end();
+    done();
 });
 
-test('Light with stops function', (t) => {
+describe('Light with stops function', done => {
     const light = new Light({
         intensity: {
             stops: [[16, 0.2], [17, 0.8]]
@@ -45,30 +44,30 @@ test('Light with stops function', (t) => {
 
     expect(light.properties.get('intensity')).toEqual(0.5);
 
-    t.end();
+    done();
 });
 
-test('Light#getLight', (t) => {
+describe('Light#getLight', done => {
     const defaults = {};
     for (const key in spec) {
         defaults[key] = spec[key].default;
     }
 
     expect(new Light(defaults).getLight()).toEqual(defaults);
-    t.end();
+    done();
 });
 
-test('Light#setLight', (t) => {
-    t.test('sets light', (t) => {
+describe('Light#setLight', done => {
+    test('sets light', done => {
         const light = new Light({});
-        light.setLight({color: 'red', "color-transition": {duration: 3000}});
+        light.setLight({color: 'red', 'color-transition': {duration: 3000}});
         light.updateTransitions({transition: true}, {});
         light.recalculate({zoom: 16, zoomHistory: {}, now: 1500});
         expect(light.properties.get('color')).toEqual(new Color(1, 0.5, 0.5, 1));
-        t.end();
+        done();
     });
 
-    t.test('validates by default', (t) => {
+    test('validates by default', done => {
         const light = new Light({});
         const lightSpy = t.spy(light, '_validate');
         t.stub(console, 'error');
@@ -78,10 +77,10 @@ test('Light#setLight', (t) => {
         expect(lightSpy.calledOnce).toBeTruthy();
         expect(console.error.calledOnce).toBeTruthy();
         expect(lightSpy.args[0][2]).toEqual({});
-        t.end();
+        done();
     });
 
-    t.test('respects validation option', (t) => {
+    test('respects validation option', done => {
         const light = new Light({});
 
         const lightSpy = t.spy(light, '_validate');
@@ -92,7 +91,7 @@ test('Light#setLight', (t) => {
         expect(lightSpy.calledOnce).toBeTruthy();
         expect(lightSpy.args[0][2]).toEqual({validate: false});
         expect(light.properties.get('color')).toEqual([999]);
-        t.end();
+        done();
     });
-    t.end();
+    done();
 });
