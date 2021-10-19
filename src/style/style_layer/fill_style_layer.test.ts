@@ -1,9 +1,9 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import {getIntersectionDistance} from '../../../../rollup/build/tsc/src/style/style_layer/fill_extrusion_style_layer';
-import Point from '../../../../rollup/build/tsc/src/util/point';
+import {getIntersectionDistance} from '../../style/style_layer/fill_extrusion_style_layer';
+import Point from '../../util/point';
 
-test('getIntersectionDistance', (t) => {
+describe('getIntersectionDistance', () => {
     const queryPoint = [new Point(100, 100)];
     const z = 3;
     const a = new Point(100, -90);
@@ -13,34 +13,28 @@ test('getIntersectionDistance', (t) => {
     b.z = z;
     c.z = z;
 
-    t.test('one point', (t) => {
+    test('one point', () => {
         const projectedFace = [a, a];
         expect(getIntersectionDistance(queryPoint, projectedFace)).toBe(Infinity);
-        t.end();
     });
 
-    t.test('two points', (t) => {
+    test('two points', () => {
         const projectedFace = [a, b, a];
         expect(getIntersectionDistance(queryPoint, projectedFace)).toBe(Infinity);
-        t.end();
     });
 
-    t.test('two points coincident', (t) => {
+    test('two points coincident', () => {
         const projectedFace = [a, a, a, b, b, b, b, a];
         expect(getIntersectionDistance(queryPoint, projectedFace)).toBe(Infinity);
-        t.end();
     });
 
-    t.test('three points', (t) => {
+    test('three points', () => {
         const projectedFace = [a, b, c, a];
         expect(getIntersectionDistance(queryPoint, projectedFace)).toBe(z);
-        t.end();
     });
 
-    t.test('three points coincident points', (t) => {
+    test('three points coincident points', () => {
         const projectedFace = [a, a, b, b, b, c, c, a];
         expect(getIntersectionDistance(queryPoint, projectedFace)).toBe(z);
-        t.end();
     });
-    t.end();
 });
