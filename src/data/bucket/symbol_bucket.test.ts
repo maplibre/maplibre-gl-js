@@ -54,170 +54,171 @@ function createIndexedFeature(id, index, iconId) {
     };
 }
 
-test('SymbolBucket', () => {
-    const bucketA = bucketSetup() as any as SymbolBucket;
-    const bucketB = bucketSetup() as any as SymbolBucket;
-    const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
-    const placement = new Placement(transform, 0, true);
-    const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-    const crossTileSymbolIndex = new CrossTileSymbolIndex();
+describe('SymbolBucket', () => {
+    test('SymbolBucket', () => {
+        const bucketA = bucketSetup() as any as SymbolBucket;
+        const bucketB = bucketSetup() as any as SymbolBucket;
+        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
+        const placement = new Placement(transform, 0, true);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const crossTileSymbolIndex = new CrossTileSymbolIndex();
 
-    // add feature from bucket A
-    bucketA.populate([{feature} as IndexedFeature], options, undefined);
-    performSymbolLayout(bucketA, stacks, {}, undefined, undefined, undefined, undefined);
-    const tileA = new Tile(tileID, 512);
-    tileA.latestFeatureIndex = new FeatureIndex(tileID);
-    tileA.buckets = {test: bucketA};
-    tileA.collisionBoxArray = collisionBoxArray;
+        // add feature from bucket A
+        bucketA.populate([{feature} as IndexedFeature], options, undefined);
+        performSymbolLayout(bucketA, stacks, {}, undefined, undefined, undefined, undefined);
+        const tileA = new Tile(tileID, 512);
+        tileA.latestFeatureIndex = new FeatureIndex(tileID);
+        tileA.buckets = {test: bucketA};
+        tileA.collisionBoxArray = collisionBoxArray;
 
-    // add same feature from bucket B
-    bucketB.populate([{feature} as IndexedFeature], options, undefined);
-    performSymbolLayout(bucketB, stacks, {}, undefined, undefined, undefined, undefined);
-    const tileB = new Tile(tileID, 512);
-    tileB.buckets = {test: bucketB};
-    tileB.collisionBoxArray = collisionBoxArray;
+        // add same feature from bucket B
+        bucketB.populate([{feature} as IndexedFeature], options, undefined);
+        performSymbolLayout(bucketB, stacks, {}, undefined, undefined, undefined, undefined);
+        const tileB = new Tile(tileID, 512);
+        tileB.buckets = {test: bucketB};
+        tileB.collisionBoxArray = collisionBoxArray;
 
-    crossTileSymbolIndex.addLayer(bucketA.layers[0], [tileA, tileB], undefined);
+        crossTileSymbolIndex.addLayer(bucketA.layers[0], [tileA, tileB], undefined);
 
-    const place = (layer, tile) => {
-        const parts = [];
-        placement.getBucketParts(parts, layer, tile, false);
-        for (const part of parts) {
-            placement.placeLayerBucketPart(part, {}, false);
-        }
-    };
-    const a = placement.collisionIndex.grid.keysLength();
-    place(bucketA.layers[0], tileA);
-    const b = placement.collisionIndex.grid.keysLength();
-    expect(a).not.toBe(b);
+        const place = (layer, tile) => {
+            const parts = [];
+            placement.getBucketParts(parts, layer, tile, false);
+            for (const part of parts) {
+                placement.placeLayerBucketPart(part, {}, false);
+            }
+        };
+        const a = placement.collisionIndex.grid.keysLength();
+        place(bucketA.layers[0], tileA);
+        const b = placement.collisionIndex.grid.keysLength();
+        expect(a).not.toBe(b);
 
-    const a2 = placement.collisionIndex.grid.keysLength();
-    place(bucketB.layers[0], tileB);
-    const b2 = placement.collisionIndex.grid.keysLength();
-    expect(b2).toBe(a2);
-});
+        const a2 = placement.collisionIndex.grid.keysLength();
+        place(bucketB.layers[0], tileB);
+        const b2 = placement.collisionIndex.grid.keysLength();
+        expect(b2).toBe(a2);
+    });
 
-test('SymbolBucket integer overflow', () => {
-    const spy = jest.spyOn(console, 'warn');
-    SymbolBucket.MAX_GLYPHS = 5;
+    test('SymbolBucket integer overflow', () => {
+        const spy = jest.spyOn(console, 'warn');
+        SymbolBucket.MAX_GLYPHS = 5;
 
-    const bucket = bucketSetup() as any as SymbolBucket;
-    const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
+        const bucket = bucketSetup() as any as SymbolBucket;
+        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
-    bucket.populate([{feature} as IndexedFeature], options, undefined);
-    const fakeGlyph = {rect: {w: 10, h: 10}, metrics: {left: 10, top: 10, advance: 10}};
-    performSymbolLayout(bucket, stacks, {'Test': {97: fakeGlyph, 98: fakeGlyph, 99: fakeGlyph, 100: fakeGlyph, 101: fakeGlyph, 102: fakeGlyph} as any}, undefined, undefined, undefined, undefined);
+        bucket.populate([{feature} as IndexedFeature], options, undefined);
+        const fakeGlyph = {rect: {w: 10, h: 10}, metrics: {left: 10, top: 10, advance: 10}};
+        performSymbolLayout(bucket, stacks, {'Test': {97: fakeGlyph, 98: fakeGlyph, 99: fakeGlyph, 100: fakeGlyph, 101: fakeGlyph, 102: fakeGlyph} as any}, undefined, undefined, undefined, undefined);
 
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy.mock.calls[0][0].includes('Too many glyphs being rendered in a tile.')).toBeTruthy();
-});
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].includes('Too many glyphs being rendered in a tile.')).toBeTruthy();
+    });
 
-test('SymbolBucket image undefined sdf', () => {
-    const spy = jest.spyOn(console, 'warn').mockImplementation(() => { });
-    spy.mockReset();
+    test('SymbolBucket image undefined sdf', () => {
+        const spy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        spy.mockReset();
 
-    const imageMap = {
-        a: {
-            data: new RGBAImage({width: 0, height: 0})
-        },
-        b: {
-            data: new RGBAImage({width: 0, height: 0}),
-            sdf: false
-        }
-    } as any as { [_: string]: StyleImage };
-    const imagePos = {
-        a: new ImagePosition({x: 0, y: 0, w: 10, h: 10}, 1 as any as StyleImage),
-        b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1 as any as StyleImage)
-    };
-    const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray) as any as SymbolBucket;
-    const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
+        const imageMap = {
+            a: {
+                data: new RGBAImage({width: 0, height: 0})
+            },
+            b: {
+                data: new RGBAImage({width: 0, height: 0}),
+                sdf: false
+            }
+        } as any as { [_: string]: StyleImage };
+        const imagePos = {
+            a: new ImagePosition({x: 0, y: 0, w: 10, h: 10}, 1 as any as StyleImage),
+            b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1 as any as StyleImage)
+        };
+        const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray) as any as SymbolBucket;
+        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
-    bucket.populate(
+        bucket.populate(
         [
             createIndexedFeature(0, 0, 'a'),
             createIndexedFeature(1, 1, 'b'),
             createIndexedFeature(2, 2, 'a')
         ] as any as IndexedFeature[],
         options, undefined
-    );
+        );
 
-    const icons = options.iconDependencies as any;
-    expect(icons.a).toBe(true);
-    expect(icons.b).toBe(true);
+        const icons = options.iconDependencies as any;
+        expect(icons.a).toBe(true);
+        expect(icons.b).toBe(true);
 
-    performSymbolLayout(bucket, null, null, imageMap, imagePos, undefined, undefined);
+        performSymbolLayout(bucket, null, null, imageMap, imagePos, undefined, undefined);
 
-    // undefined SDF should be treated the same as false SDF - no warning raised
-    expect(spy).not.toHaveBeenCalledTimes(1);
-});
+        // undefined SDF should be treated the same as false SDF - no warning raised
+        expect(spy).not.toHaveBeenCalledTimes(1);
+    });
 
-test('SymbolBucket image mismatched sdf', () => {
-    const spy = jest.spyOn(console, 'warn').mockImplementation(() => { });
-    spy.mockReset();
+    test('SymbolBucket image mismatched sdf', () => {
+        const spy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        spy.mockReset();
 
-    const imageMap = {
-        a: {
-            data: new RGBAImage({width: 0, height: 0}),
-            sdf: true
-        },
-        b: {
-            data: new RGBAImage({width: 0, height: 0}),
-            sdf: false
-        }
-    } as any as { [_: string]: StyleImage };
-    const imagePos = {
-        a: new ImagePosition({x: 0, y: 0, w: 10, h: 10}, 1 as any),
-        b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1 as any)
-    };
-    const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray) as any as SymbolBucket;
-    const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
+        const imageMap = {
+            a: {
+                data: new RGBAImage({width: 0, height: 0}),
+                sdf: true
+            },
+            b: {
+                data: new RGBAImage({width: 0, height: 0}),
+                sdf: false
+            }
+        } as any as { [_: string]: StyleImage };
+        const imagePos = {
+            a: new ImagePosition({x: 0, y: 0, w: 10, h: 10}, 1 as any),
+            b: new ImagePosition({x: 10, y: 0, w: 10, h: 10}, 1 as any)
+        };
+        const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray) as any as SymbolBucket;
+        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
-    bucket.populate(
+        bucket.populate(
         [
             createIndexedFeature(0, 0, 'a'),
             createIndexedFeature(1, 1, 'b'),
             createIndexedFeature(2, 2, 'a')
         ] as any as IndexedFeature[],
         options, undefined
-    );
+        );
 
-    const icons = options.iconDependencies as any;
-    expect(icons.a).toBe(true);
-    expect(icons.b).toBe(true);
+        const icons = options.iconDependencies as any;
+        expect(icons.a).toBe(true);
+        expect(icons.b).toBe(true);
 
-    performSymbolLayout(bucket, null, null, imageMap, imagePos, undefined, undefined);
+        performSymbolLayout(bucket, null, null, imageMap, imagePos, undefined, undefined);
 
-    // true SDF and false SDF in same bucket should trigger warning
-    expect(spy).toHaveBeenCalledTimes(1);
+        // true SDF and false SDF in same bucket should trigger warning
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('SymbolBucket detects rtl text', () => {
+        const rtlBucket = bucketSetup('مرحبا');
+        const ltrBucket = bucketSetup('hello');
+        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
+        rtlBucket.populate([{feature} as IndexedFeature], options, undefined);
+        ltrBucket.populate([{feature} as IndexedFeature], options, undefined);
+
+        expect(rtlBucket.hasRTLText).toBeTruthy();
+        expect(ltrBucket.hasRTLText).toBeFalsy();
+    });
+
+    // Test to prevent symbol bucket with rtl from text being culled by worker serialization.
+    test('SymbolBucket with rtl text is NOT empty even though no symbol instances are created', () => {
+        const rtlBucket = bucketSetup('مرحبا');
+        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
+        rtlBucket.createArrays();
+        rtlBucket.populate([{feature} as IndexedFeature], options, undefined);
+
+        expect(rtlBucket.isEmpty()).toBeFalsy();
+        expect(rtlBucket.symbolInstances.length).toBe(0);
+    });
+
+    test('SymbolBucket detects rtl text mixed with ltr text', () => {
+        const mixedBucket = bucketSetup('مرحبا translates to hello');
+        const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
+        mixedBucket.populate([{feature} as IndexedFeature], options, undefined);
+
+        expect(mixedBucket.hasRTLText).toBeTruthy();
+    });
 });
-
-test('SymbolBucket detects rtl text', () => {
-    const rtlBucket = bucketSetup('مرحبا');
-    const ltrBucket = bucketSetup('hello');
-    const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
-    rtlBucket.populate([{feature} as IndexedFeature], options, undefined);
-    ltrBucket.populate([{feature} as IndexedFeature], options, undefined);
-
-    expect(rtlBucket.hasRTLText).toBeTruthy();
-    expect(ltrBucket.hasRTLText).toBeFalsy();
-});
-
-// Test to prevent symbol bucket with rtl from text being culled by worker serialization.
-test('SymbolBucket with rtl text is NOT empty even though no symbol instances are created', () => {
-    const rtlBucket = bucketSetup('مرحبا');
-    const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
-    rtlBucket.createArrays();
-    rtlBucket.populate([{feature} as IndexedFeature], options, undefined);
-
-    expect(rtlBucket.isEmpty()).toBeFalsy();
-    expect(rtlBucket.symbolInstances.length).toBe(0);
-});
-
-test('SymbolBucket detects rtl text mixed with ltr text', () => {
-    const mixedBucket = bucketSetup('مرحبا translates to hello');
-    const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
-    mixedBucket.populate([{feature} as IndexedFeature], options, undefined);
-
-    expect(mixedBucket.hasRTLText).toBeTruthy();
-});
-
