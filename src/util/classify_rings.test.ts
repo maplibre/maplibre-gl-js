@@ -10,67 +10,69 @@ const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '
 const feature = vt.layers.water.feature(0);
 
 describe('classifyRings', () => {
-    let geometry;
-    let classified;
+    test('classified.length', () => {
+        let geometry;
+        let classified;
 
-    geometry = [
-        [
-            {x:0, y:0},
-            {x:0, y:40},
-            {x:40, y:40},
-            {x:40, y:0},
-            {x:0, y:0}
-        ]
-    ];
-    classified = classifyRings(geometry, undefined);
-    expect(classified.length).toBe(1);
-    expect(classified[0].length).toBe(1);
+        geometry = [
+            [
+                {x:0, y:0},
+                {x:0, y:40},
+                {x:40, y:40},
+                {x:40, y:0},
+                {x:0, y:0}
+            ]
+        ];
+        classified = classifyRings(geometry, undefined);
+        expect(classified.length).toBe(1);
+        expect(classified[0].length).toBe(1);
 
-    geometry = [
-        [
-            {x:0, y:0},
-            {x:0, y:40},
-            {x:40, y:40},
-            {x:40, y:0},
-            {x:0, y:0}
-        ],
-        [
-            {x:60, y:0},
-            {x:60, y:40},
-            {x:100, y:40},
-            {x:100, y:0},
-            {x:60, y:0}
-        ]
-    ];
-    classified = classifyRings(geometry, undefined);
-    expect(classified.length).toBe(2);
-    expect(classified[0].length).toBe(1);
-    expect(classified[1].length).toBe(1);
+        geometry = [
+            [
+                {x:0, y:0},
+                {x:0, y:40},
+                {x:40, y:40},
+                {x:40, y:0},
+                {x:0, y:0}
+            ],
+            [
+                {x:60, y:0},
+                {x:60, y:40},
+                {x:100, y:40},
+                {x:100, y:0},
+                {x:60, y:0}
+            ]
+        ];
+        classified = classifyRings(geometry, undefined);
+        expect(classified.length).toBe(2);
+        expect(classified[0].length).toBe(1);
+        expect(classified[1].length).toBe(1);
 
-    geometry = [
-        [
-            {x:0, y:0},
-            {x:0, y:40},
-            {x:40, y:40},
-            {x:40, y:0},
-            {x:0, y:0}
-        ],
-        [
-            {x:10, y:10},
-            {x:20, y:10},
-            {x:20, y:20},
-            {x:10, y:10}
-        ]
-    ];
-    classified = classifyRings(geometry, undefined);
-    expect(classified.length).toBe(1);
-    expect(classified[0].length).toBe(2);
+        geometry = [
+            [
+                {x:0, y:0},
+                {x:0, y:40},
+                {x:40, y:40},
+                {x:40, y:0},
+                {x:0, y:0}
+            ],
+            [
+                {x:10, y:10},
+                {x:20, y:10},
+                {x:20, y:20},
+                {x:10, y:10}
+            ]
+        ];
+        classified = classifyRings(geometry, undefined);
+        expect(classified.length).toBe(1);
+        expect(classified[0].length).toBe(2);
 
-    geometry = feature.loadGeometry();
-    classified = classifyRings(geometry, undefined);
-    expect(classified.length).toBe(2);
-    expect(classified[0].length).toBe(1);
-    expect(classified[1].length).toBe(10);
+        geometry = feature.loadGeometry();
+        classified = classifyRings(geometry, undefined);
+        expect(classified.length).toBe(2);
+        expect(classified[0].length).toBe(1);
+        expect(classified[1].length).toBe(10);
+    });
 });
 
 describe('classifyRings + maxRings', () => {
