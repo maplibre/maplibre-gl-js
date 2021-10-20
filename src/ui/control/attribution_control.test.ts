@@ -10,8 +10,8 @@ function createMap() {
             version: 8,
             sources: {},
             layers: [],
-            owner: 'mapbox',
-            id: 'streets-v10',
+            owner: 'maplibre',
+            id: 'demotiles',
         },
         hash: true
     }, false);
