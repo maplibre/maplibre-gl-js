@@ -104,6 +104,13 @@ describe('Evented', () => {
             evented.fire(new Event('a'));
             done();
         }).not.toThrow();
+
+        expect(() => {
+            const evented = new Evented();
+            evented.on('a', () => done.fail());
+            evented.fire(new Event('a'));
+            done();
+        }).toThrow();
     });
 
     test('has backward compatibility for fire(string, object) API', () => {
