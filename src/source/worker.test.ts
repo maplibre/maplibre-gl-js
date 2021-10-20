@@ -1,5 +1,5 @@
 import {fakeServer} from 'sinon';
-import Worker from '../source/worker';
+import Worker from './worker';
 import {LayerSpecification} from '../style-spec/types';
 import {Cancelable} from '../types/cancelable';
 import {WorkerGlobalScopeInterface} from '../util/web_worker';
