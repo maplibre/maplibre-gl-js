@@ -26,7 +26,7 @@ describe('AttributionControl appears in bottom-right by default', () => {
     expect(
         map.getContainer().querySelectorAll('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib').length
     ).toBe(1);
-    });
+});
 
 describe('AttributionControl appears in the position specified by the position option', () => {
     const map = createMap(t);
@@ -35,7 +35,7 @@ describe('AttributionControl appears in the position specified by the position o
     expect(
         map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left .maplibregl-ctrl-attrib').length
     ).toBe(1);
-    });
+});
 
 describe('AttributionControl appears in compact mode if compact option is used', () => {
     const map = createMap(t);
@@ -62,7 +62,7 @@ describe('AttributionControl appears in compact mode if compact option is used',
     expect(
         container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)').length
     ).toBe(1);
-    });
+});
 
 describe('AttributionControl appears in compact mode if container is less then 640 pixel wide', () => {
     const map = createMap(t);
@@ -81,7 +81,7 @@ describe('AttributionControl appears in compact mode if container is less then 6
     expect(
         container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact').length
     ).toBe(1);
-    });
+});
 
 describe('AttributionControl compact mode control toggles attribution', () => {
     const map = createMap(t);
@@ -102,7 +102,7 @@ describe('AttributionControl compact mode control toggles attribution', () => {
 
     expect(container.querySelectorAll('.maplibregl-compact-show').length).toBe(0);
 
-    });
+});
 
 describe('AttributionControl dedupes attributions that are substrings of others', () => {
     const map = createMap(t);
@@ -131,7 +131,7 @@ describe('AttributionControl dedupes attributions that are substrings of others'
         if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
             if (++times === 7) {
                 expect(attribution._innerContainer.innerHTML).toBe('Hello World | Another Source | GeoJSON Source');
-                            }
+            }
         }
     });
 });
@@ -158,7 +158,7 @@ describe('AttributionControl is hidden if empty', () => {
     const checkNotEmptyLater = () => {
         expect(attribution._innerContainer.innerHTML).toBe('Hello World');
         expect(container.querySelectorAll('.maplibregl-attrib-empty').length).toBe(0);
-            };
+    };
 
     let times = 0;
     map.on('data', (e) => {
@@ -181,7 +181,7 @@ describe('AttributionControl shows custom attribution if customAttribution optio
     map.addControl(attributionControl);
 
     expect(attributionControl._innerContainer.innerHTML).toBe('Custom string');
-    });
+});
 
 describe('AttributionControl shows custom attribution if customAttribution option is provided, control is removed and added back', () => {
     const map = createMap(t);
@@ -193,7 +193,7 @@ describe('AttributionControl shows custom attribution if customAttribution optio
     map.addControl(attributionControl);
 
     expect(attributionControl._innerContainer.innerHTML).toBe('Custom string');
-    });
+});
 
 describe('AttributionControl in compact mode shows custom attribution if customAttribution option is provided', () => {
     const map = createMap(t);
@@ -204,7 +204,7 @@ describe('AttributionControl in compact mode shows custom attribution if customA
     map.addControl(attributionControl);
 
     expect(attributionControl._innerContainer.innerHTML).toBe('Custom string');
-    });
+});
 
 describe('AttributionControl shows all custom attributions if customAttribution array of strings is provided', () => {
     const map = createMap(t);
@@ -214,7 +214,7 @@ describe('AttributionControl shows all custom attributions if customAttribution 
     map.addControl(attributionControl);
 
     expect(attributionControl._innerContainer.innerHTML).toBe('Custom string | Another custom string | Some very long custom string');
-    });
+});
 
 describe('AttributionControl hides attributions for sources that are not currently visible', () => {
     const map = createMap(t);
@@ -234,7 +234,7 @@ describe('AttributionControl hides attributions for sources that are not current
         if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
             if (++times === 3) {
                 expect(attribution._innerContainer.innerHTML).toBe('Used');
-                            }
+            }
         }
     });
 });
@@ -257,7 +257,7 @@ describe('AttributionControl toggles attributions for sources whose visibility c
         if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
             if (map.getZoom() === 13) {
                 expect(attribution._innerContainer.innerHTML).toBe('Used');
-                            }
+            }
         }
     });
 });
