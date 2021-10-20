@@ -1,8 +1,7 @@
-import '../stub_loader';
-import Map from '../../rollup/build/tsc/src/ui/map';
-import {extend} from '../../rollup/build/tsc/src/util/util';
+import Map from '../../ui/map';
+import {extend} from '../../util/util';
 
-export function createMap(t, options, callback) {
+export function createMap(options, callback) {
     const container = window.document.createElement('div');
     const defaultOptions = {
         container,
