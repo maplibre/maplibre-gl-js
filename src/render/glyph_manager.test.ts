@@ -24,7 +24,7 @@ const createGlyphManager = (font?) => {
     GlyphManager.TinySDF = class {
         // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
         draw() {
-            return { data: new Uint8ClampedArray(900) } as any;
+            return {data: new Uint8ClampedArray(900)} as any;
         }
     };
     const manager = new GlyphManager(identityTransform, font);
@@ -94,7 +94,7 @@ describe('GlyphManager', () => {
             }
             setTimeout(() => callback(null, overlappingGlyphs), 0);
         });
-        
+
         const manager = createGlyphManager('sans-serif');
 
         //Request char that overlaps Katakana range
@@ -153,7 +153,7 @@ describe('GlyphManager', () => {
             // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
             draw() {
                 drawCallCount++;
-                return { data: new Uint8ClampedArray(900)} as any;
+                return {data: new Uint8ClampedArray(900)} as any;
             }
         };
 
