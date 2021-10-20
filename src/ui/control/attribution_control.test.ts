@@ -1,12 +1,10 @@
-import '../../../stub_loader';
-import {test} from '../../../util/test';
-import AttributionControl from '../../ui/control/attribution_control';
-import {createMap as globalCreateMap} from '../../../util';
-import simulate from '../../../util/simulate_interaction';
+import AttributionControl from './attribution_control';
+import {createMap as globalCreateMap} from '../../../test/util';
+import simulate from '../../../test/util/simulate_interaction';
 
-function createMap(t) {
+function createMap() {
 
-    return globalCreateMap(t, {
+    return globalCreateMap({
         attributionControl: false,
         style: {
             version: 8,
@@ -20,7 +18,7 @@ function createMap(t) {
 }
 
 describe('AttributionControl appears in bottom-right by default', () => {
-    const map = createMap(t);
+    const map = createMap();
     map.addControl(new AttributionControl());
 
     expect(
@@ -29,7 +27,7 @@ describe('AttributionControl appears in bottom-right by default', () => {
 });
 
 describe('AttributionControl appears in the position specified by the position option', () => {
-    const map = createMap(t);
+    const map = createMap();
     map.addControl(new AttributionControl(), 'top-left');
 
     expect(
@@ -38,7 +36,7 @@ describe('AttributionControl appears in the position specified by the position o
 });
 
 describe('AttributionControl appears in compact mode if compact option is used', () => {
-    const map = createMap(t);
+    const map = createMap();
     Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
 
     let attributionControl = new AttributionControl({
@@ -65,7 +63,7 @@ describe('AttributionControl appears in compact mode if compact option is used',
 });
 
 describe('AttributionControl appears in compact mode if container is less then 640 pixel wide', () => {
-    const map = createMap(t);
+    const map = createMap();
     Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
     map.addControl(new AttributionControl());
 
@@ -84,7 +82,7 @@ describe('AttributionControl appears in compact mode if container is less then 6
 });
 
 describe('AttributionControl compact mode control toggles attribution', () => {
-    const map = createMap(t);
+    const map = createMap();
     map.addControl(new AttributionControl({
         compact: true
     }));
@@ -105,7 +103,7 @@ describe('AttributionControl compact mode control toggles attribution', () => {
 });
 
 describe('AttributionControl dedupes attributions that are substrings of others', () => {
-    const map = createMap(t);
+    const map = createMap();
     const attribution = new AttributionControl();
     map.addControl(attribution);
 
@@ -137,7 +135,7 @@ describe('AttributionControl dedupes attributions that are substrings of others'
 });
 
 describe('AttributionControl is hidden if empty', () => {
-    const map = createMap(t);
+    const map = createMap();
     const attribution = new AttributionControl();
     map.addControl(attribution);
     map.on('load', () => {
@@ -174,7 +172,7 @@ describe('AttributionControl is hidden if empty', () => {
 });
 
 describe('AttributionControl shows custom attribution if customAttribution option is provided', () => {
-    const map = createMap(t);
+    const map = createMap();
     const attributionControl = new AttributionControl({
         customAttribution: 'Custom string'
     });
@@ -184,7 +182,7 @@ describe('AttributionControl shows custom attribution if customAttribution optio
 });
 
 describe('AttributionControl shows custom attribution if customAttribution option is provided, control is removed and added back', () => {
-    const map = createMap(t);
+    const map = createMap();
     const attributionControl = new AttributionControl({
         customAttribution: 'Custom string'
     });
@@ -196,7 +194,7 @@ describe('AttributionControl shows custom attribution if customAttribution optio
 });
 
 describe('AttributionControl in compact mode shows custom attribution if customAttribution option is provided', () => {
-    const map = createMap(t);
+    const map = createMap();
     const attributionControl = new AttributionControl({
         customAttribution: 'Custom string',
         compact: true
@@ -207,7 +205,7 @@ describe('AttributionControl in compact mode shows custom attribution if customA
 });
 
 describe('AttributionControl shows all custom attributions if customAttribution array of strings is provided', () => {
-    const map = createMap(t);
+    const map = createMap();
     const attributionControl = new AttributionControl({
         customAttribution: ['Some very long custom string', 'Custom string', 'Another custom string']
     });
@@ -217,7 +215,7 @@ describe('AttributionControl shows all custom attributions if customAttribution 
 });
 
 describe('AttributionControl hides attributions for sources that are not currently visible', () => {
-    const map = createMap(t);
+    const map = createMap();
     const attribution = new AttributionControl();
     map.addControl(attribution);
 
@@ -240,7 +238,7 @@ describe('AttributionControl hides attributions for sources that are not current
 });
 
 describe('AttributionControl toggles attributions for sources whose visibility changes when zooming', () => {
-    const map = createMap(t);
+    const map = createMap();
     const attribution = new AttributionControl();
     map.addControl(attribution);
 
