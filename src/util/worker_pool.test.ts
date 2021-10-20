@@ -28,11 +28,12 @@ describe('WorkerPool', () => {
         });
 
         pool.release('map-2');
-        console.log('keeps workers if a dispatcher is still active');
+
+        // keeps workers if a dispatcher is still active
         expect(workersTerminated).toBe(0);
         expect(pool.workers.length > 0).toBeTruthy();
 
-        console.log('terminates workers if no dispatchers are active');
+        // terminates workers if no dispatchers are active
         pool.release('map-1');
         expect(workersTerminated).toBe(4);
         expect(pool.workers).toBeFalsy();

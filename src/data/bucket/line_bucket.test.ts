@@ -100,7 +100,7 @@ describe('LineBucket', () => {
     });
 
     test('LineBucket segmentation', () => {
-        jest.spyOn(console, 'warn');
+        jest.spyOn(console, 'warn').mockImplementation(() => { });
 
         // Stub MAX_VERTEX_ARRAY_LENGTH so we can test features
         // breaking across array groups without tests taking a _long_ time.

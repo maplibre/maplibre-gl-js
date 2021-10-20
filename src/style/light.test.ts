@@ -64,7 +64,7 @@ describe('Light#setLight', () => {
     test('validates by default', () => {
         const light = new Light({});
         const lightSpy = jest.spyOn(light, '_validate');
-        jest.spyOn(console, 'error');
+        jest.spyOn(console, 'error').mockImplementation(() => { });
         light.setLight({color: 'notacolor'});
         light.updateTransitions({transition: false} as any as TransitionParameters);
         light.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
