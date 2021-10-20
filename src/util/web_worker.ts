@@ -68,7 +68,7 @@ class MessageBus implements WorkerInterface, WorkerGlobalScopeInterface {
             } catch (e) {
                 console.error(e);
             }
-        });
+        }, 0);
     }
 
     terminate() {
