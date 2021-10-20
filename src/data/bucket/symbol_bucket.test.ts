@@ -104,7 +104,7 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket integer overflow', () => {
-        const spy = jest.spyOn(console, 'warn');
+        const spy = jest.spyOn(console, 'warn').mockImplementation(() => { });
         SymbolBucket.MAX_GLYPHS = 5;
 
         const bucket = bucketSetup() as any as SymbolBucket;
