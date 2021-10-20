@@ -215,24 +215,25 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
 });
 
-describe('CrossTileSymbolIndex.pruneUnusedLayers', () => {
-    const index = new CrossTileSymbolIndex();
+describe('CrossTileSymbolIndex', () => {
+    describe('#pruneUnusedLayers', () => {
+        const index = new CrossTileSymbolIndex();
 
-    const tileID = new OverscaledTileID(6, 0, 6, 8, 8);
-    const instances = [
-        makeSymbolInstance(1000, 1000, ''), // A
-        makeSymbolInstance(1000, 1000, '')  // B
-    ];
-    const tile = makeTile(tileID, instances);
+        const tileID = new OverscaledTileID(6, 0, 6, 8, 8);
+        const instances = [
+            makeSymbolInstance(1000, 1000, ''), // A
+            makeSymbolInstance(1000, 1000, '')  // B
+        ];
+        const tile = makeTile(tileID, instances);
 
-    // assigns new ids
-    index.addLayer(styleLayer, [tile], 0);
-    expect(instances[0].crossTileID).toBe(1);
-    expect(instances[1].crossTileID).toBe(2);
-    expect(index.layerIndexes[styleLayer.id]).toBeTruthy();
+        // assigns new ids
+        index.addLayer(styleLayer, [tile], 0);
+        expect(instances[0].crossTileID).toBe(1);
+        expect(instances[1].crossTileID).toBe(2);
+        expect(index.layerIndexes[styleLayer.id]).toBeTruthy();
 
-    // remove styleLayer
-    index.pruneUnusedLayers([]);
-    expect(index.layerIndexes[styleLayer.id]).toBeFalsy();
-
+        // remove styleLayer
+        index.pruneUnusedLayers([]);
+        expect(index.layerIndexes[styleLayer.id]).toBeFalsy();
+    });
 });
