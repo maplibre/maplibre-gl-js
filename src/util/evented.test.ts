@@ -96,12 +96,14 @@ describe('Evented', () => {
     });
 
     test('does not immediately call listeners added within another listener', done => {
-        const evented = new Evented();
-        evented.on('a', () => {
-            evented.on('a', () => done('fail'));
-        });
-        evented.fire(new Event('a'));
-        done();
+        expect(() => {
+            const evented = new Evented();
+            evented.on('a', () => {
+                evented.on('a', () => done('fail'));
+            });
+            evented.fire(new Event('a'));
+            done();
+        }).not.toThrow();
     });
 
     test('has backward compatibility for fire(string, object) API', () => {

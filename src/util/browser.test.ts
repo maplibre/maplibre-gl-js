@@ -13,11 +13,13 @@ describe('browser', () => {
     });
 
     test('frame', done => {
-        const frame = browser.frame(() => {
-            done.fail();
-        });
-        frame.cancel();
-        done();
+        expect(() => {
+            const frame = browser.frame(() => {
+                done.fail();
+            });
+            frame.cancel();
+            done();
+        }).not.toThrow();
     });
 
     test('hardwareConcurrency', () => {
