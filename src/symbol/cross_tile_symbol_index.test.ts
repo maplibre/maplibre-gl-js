@@ -216,7 +216,7 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 });
 
 describe('CrossTileSymbolIndex', () => {
-    describe('#pruneUnusedLayers', () => {
+    test('#pruneUnusedLayers', () => {
         const index = new CrossTileSymbolIndex();
 
         const tileID = new OverscaledTileID(6, 0, 6, 8, 8);
