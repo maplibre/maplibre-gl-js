@@ -209,7 +209,7 @@ describe('StyleLayer#setLayoutProperty', () => {
             done();
         });
 
-        layer.setLayoutProperty('text-transform', 'mapboxcase');
+        layer.setLayoutProperty('text-transform', 'invalidValue');
     });
 
     test('updates property value', () => {
