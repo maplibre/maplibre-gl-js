@@ -51,7 +51,7 @@ describe('evaluate expression', () => {
             }
         } as any as StylePropertySpecification) as {value: StylePropertyExpression};
 
-        jest.spyOn(console, 'warn');
+        jest.spyOn(console, 'warn').mockImplementation(() => { });
 
         expect(value.kind).toBe('source');
 
