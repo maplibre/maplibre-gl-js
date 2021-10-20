@@ -108,20 +108,18 @@ describe('StyleLayer#setPaintProperty', () => {
     });
 
     test('emits on an invalid transition property value', done => {
-        expect(() => {
-            const layer = createStyleLayer({
-                'id': 'background',
-                'type': 'background'
-            });
+        const layer = createStyleLayer({
+            'id': 'background',
+            'type': 'background'
+        });
 
-            layer.on('error', () => {
-                done();
-            });
+        layer.on('error', () => {
+            done();
+        });
 
-            layer.setPaintProperty('background-opacity-transition', {
-                duration: -10
-            });
-        }).not.toThrow();
+        layer.setPaintProperty('background-opacity-transition', {
+            duration: -10
+        });
     });
 
     test('can unset fill-outline-color #2886', () => {
@@ -147,34 +145,32 @@ describe('StyleLayer#setPaintProperty', () => {
     });
 
     test('can transition fill-outline-color from undefined to a value #3657', () => {
-        expect(() => {
-            const layer = createStyleLayer({
-                id: 'building',
-                type: 'fill',
-                source: 'streets',
-                paint: {
-                    'fill-color': '#00f'
-                }
-            }) as FillStyleLayer;
+        const layer = createStyleLayer({
+            id: 'building',
+            type: 'fill',
+            source: 'streets',
+            paint: {
+                'fill-color': '#00f'
+            }
+        }) as FillStyleLayer;
 
-            // setup: set and then unset fill-outline-color so that, when we then try
-            // to re-set it, StyleTransition#calculate() attempts interpolation
-            layer.setPaintProperty('fill-outline-color', '#f00');
-            layer.updateTransitions({} as TransitionParameters);
-            layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
+        // setup: set and then unset fill-outline-color so that, when we then try
+        // to re-set it, StyleTransition#calculate() attempts interpolation
+        layer.setPaintProperty('fill-outline-color', '#f00');
+        layer.updateTransitions({} as TransitionParameters);
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
-            layer.setPaintProperty('fill-outline-color', undefined);
-            layer.updateTransitions({} as TransitionParameters);
-            layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
+        layer.setPaintProperty('fill-outline-color', undefined);
+        layer.updateTransitions({} as TransitionParameters);
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
-            // re-set fill-outline-color and get its value, triggering the attempt
-            // to interpolate between undefined and #f00
-            layer.setPaintProperty('fill-outline-color', '#f00');
-            layer.updateTransitions({} as TransitionParameters);
-            layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
+        // re-set fill-outline-color and get its value, triggering the attempt
+        // to interpolate between undefined and #f00
+        layer.setPaintProperty('fill-outline-color', '#f00');
+        layer.updateTransitions({} as TransitionParameters);
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
-            layer.paint.get('fill-outline-color');
-        }).not.toThrow();
+        layer.paint.get('fill-outline-color');
 
     });
 
@@ -204,18 +200,16 @@ describe('StyleLayer#setLayoutProperty', () => {
     });
 
     test('emits on an invalid property value', done => {
-        expect(() => {
-            const layer = createStyleLayer({
-                'id': 'symbol',
-                'type': 'symbol'
-            } as LayerSpecification);
+        const layer = createStyleLayer({
+            'id': 'symbol',
+            'type': 'symbol'
+        } as LayerSpecification);
 
-            layer.on('error', () => {
-                done();
-            });
+        layer.on('error', () => {
+            done();
+        });
 
-            layer.setLayoutProperty('text-transform', 'invalidValue');
-        }).not.toThrow();
+        layer.setLayoutProperty('text-transform', 'invalidValue');
     });
 
     test('updates property value', () => {
