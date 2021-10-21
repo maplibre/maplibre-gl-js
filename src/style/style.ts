@@ -1162,7 +1162,7 @@ class Style extends Evented {
             sourceLayer: string;
             filter: Array<any>;
             validate?: boolean;
-        } | null
+        }
     ) {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);
