@@ -1,27 +1,26 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
 import {createSymbolBucket} from '../../util/create_symbol_layer';
-import Tile from '../../../rollup/build/tsc/src/source/tile';
-import GeoJSONWrapper from '../../../rollup/build/tsc/src/source/geojson_wrapper';
-import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
+import Tile from '../source/tile';
+import GeoJSONWrapper from '../source/geojson_wrapper';
+import {OverscaledTileID} from '../source/tile_id';
 import fs from 'fs';
 import path, {dirname} from 'path';
 import vtpbf from 'vt-pbf';
-import FeatureIndex from '../../../rollup/build/tsc/src/data/feature_index';
-import {CollisionBoxArray} from '../../../rollup/build/tsc/src/data/array_types';
-import {extend} from '../../../rollup/build/tsc/src/util/util';
-import {serialize, deserialize} from '../../../rollup/build/tsc/src/util/web_worker_transfer';
+import FeatureIndex from '../data/feature_index';
+import {CollisionBoxArray} from '../data/array_types';
+import {extend} from '../util/util';
+import {serialize, deserialize} from '../util/web_worker_transfer';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-test('querySourceFeatures', (t) => {
+describe('querySourceFeatures', () => {
     const features = [{
         type: 1,
         geometry: [0, 0],
         tags: {oneway: true}
     }];
 
-    t.test('geojson tile', (t) => {
+    test('geojson tile', () => {
         const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2));
         let result;
 
@@ -51,13 +50,12 @@ test('querySourceFeatures', (t) => {
         tile.querySourceFeatures(result, {filter: ['!=', 'oneway', true]});
         expect(result.length).toBe(0);
         result = [];
-        const polygon = {type: "Polygon",  coordinates: [[[-91, -1], [-89, -1], [-89, 1], [-91, 1], [-91, -1]]]};
+        const polygon = {type: 'Polygon',  coordinates: [[[-91, -1], [-89, -1], [-89, 1], [-91, 1], [-91, -1]]]};
         tile.querySourceFeatures(result, {filter: ['within', polygon]});
         expect(result.length).toBe(1);
-        t.end();
     });
 
-    t.test('empty geojson tile', (t) => {
+    test('empty geojson tile', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
         let result;
 
@@ -71,10 +69,9 @@ test('querySourceFeatures', (t) => {
         result = [];
         expect(() => { tile.querySourceFeatures(result); }).not.toThrow();
         expect(result.length).toBe(0);
-        t.end();
     });
 
-    t.test('vector tile', (t) => {
+    test('vector tile', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
         let result;
 
@@ -102,10 +99,9 @@ test('querySourceFeatures', (t) => {
         tile.querySourceFeatures(result, {'sourceLayer': 'road', filter: ['!=', 'class', 'main']});
         expect(result.length).toBe(2);
 
-        t.end();
     });
 
-    t.test('loadVectorData unloads existing data before overwriting it', (t) => {
+    test('loadVectorData unloads existing data before overwriting it', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
         tile.state = 'loaded';
         t.stub(tile, 'unloadVectorData');
@@ -114,10 +110,9 @@ test('querySourceFeatures', (t) => {
         tile.loadVectorData(null, painter);
 
         expect(tile.unloadVectorData.calledWith()).toBeTruthy();
-        t.end();
     });
 
-    t.test('loadVectorData preserves the most recent rawTileData', (t) => {
+    test('loadVectorData preserves the most recent rawTileData', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
         tile.state = 'loaded';
 
@@ -134,14 +129,12 @@ test('querySourceFeatures', (t) => {
         tile.querySourceFeatures(features, {'sourceLayer': 'road'});
         expect(features.length).toBe(3);
 
-        t.end();
     });
 
-    t.end();
 });
 
-test('Tile#isLessThan', (t) => {
-    t.test('correctly sorts tiles', (t) => {
+describe('Tile#isLessThan', () => {
+    test('correctly sorts tiles', () => {
         const tiles = [
             new OverscaledTileID(9, 0, 9, 146, 195),
             new OverscaledTileID(9, 0, 9, 147, 195),
@@ -181,13 +174,11 @@ test('Tile#isLessThan', (t) => {
             new OverscaledTileID(9, 1, 9, 147, 196),
             new OverscaledTileID(10, 1, 10, 293, 390),
         ]);
-        t.end();
     });
-    t.end();
 });
 
-test('expiring tiles', (t) => {
-    t.test('regular tiles do not expire', (t) => {
+describe('expiring tiles', () => {
+    test('regular tiles do not expire', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
         tile.state = 'loaded';
         tile.timeAdded = Date.now();
@@ -195,10 +186,9 @@ test('expiring tiles', (t) => {
         expect(tile.cacheControl).toBeFalsy();
         expect(tile.expires).toBeFalsy();
 
-        t.end();
     });
 
-    t.test('set, get expiry', (t) => {
+    test('set, get expiry', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
         tile.state = 'loaded';
         tile.timeAdded = Date.now();
@@ -225,10 +215,9 @@ test('expiring tiles', (t) => {
         expiryTimeout = tile.getExpiryTimeout();
         expect(expiryTimeout > 598000 && expiryTimeout < 600000).toBeTruthy();
 
-        t.end();
     });
 
-    t.test('exponential backoff handling', (t) => {
+    test('exponential backoff handling', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
         tile.state = 'loaded';
         tile.timeAdded = Date.now();
@@ -265,14 +254,12 @@ test('expiring tiles', (t) => {
         });
         expect(tile.getExpiryTimeout()).toBe(8000);
 
-        t.end();
     });
 
-    t.end();
 });
 
-test('rtl text detection', (t) => {
-    t.test('Tile#hasRTLText is true when a tile loads a symbol bucket with rtl text', (t) => {
+describe('rtl text detection', () => {
+    test('Tile#hasRTLText is true when a tile loads a symbol bucket with rtl text', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
         // Create a stub symbol bucket
         const symbolBucket = createSymbolBucket('test', 'Test', 'test', new CollisionBoxArray());
@@ -288,10 +275,8 @@ test('rtl text detection', (t) => {
         );
 
         expect(tile.hasRTLText).toBeTruthy();
-        t.end();
     });
 
-    t.end();
 });
 
 function createRawTileData() {
