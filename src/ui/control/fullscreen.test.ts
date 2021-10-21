@@ -1,9 +1,9 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
 import {createMap} from '../../../util';
-import FullscreenControl from '../../../../rollup/build/tsc/src/ui/control/fullscreen_control';
+import FullscreenControl from '../../ui/control/fullscreen_control';
 
-test('FullscreenControl appears when fullscreen is enabled', (t) => {
+describe('FullscreenControl appears when fullscreen is enabled', () => {
     window.document.fullscreenEnabled = true;
 
     const map = createMap(t);
@@ -11,10 +11,9 @@ test('FullscreenControl appears when fullscreen is enabled', (t) => {
     map.addControl(fullscreen);
 
     expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen').length).toBe(1);
-    t.end();
 });
 
-test('FullscreenControl does not appear when fullscreen is not enabled', (t) => {
+describe('FullscreenControl does not appear when fullscreen is not enabled', () => {
     window.document.fullscreenEnabled = false;
 
     const consoleWarn = t.stub(console, 'warn');
@@ -25,10 +24,9 @@ test('FullscreenControl does not appear when fullscreen is not enabled', (t) => 
 
     expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen').length).toBe(0);
     expect(consoleWarn.getCall(0).args[0]).toBe('This device does not support fullscreen mode.');
-    t.end();
 });
 
-test('FullscreenControl makes optional container element full screen', (t) => {
+describe('FullscreenControl makes optional container element full screen', () => {
     window.document.fullscreenEnabled = true;
 
     const map = createMap(t);
@@ -40,5 +38,4 @@ test('FullscreenControl makes optional container element full screen', (t) => {
     control._onClickFullscreen();
 
     expect(control._container.tagName).toBe('BODY');
-    t.end();
 });
