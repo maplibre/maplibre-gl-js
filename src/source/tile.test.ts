@@ -27,7 +27,7 @@ test('querySourceFeatures', (t) => {
 
         result = [];
         tile.querySourceFeatures(result, {});
-        t.equal(result.length, 0);
+        expect(result.length).toBe(0);
 
         const geojsonWrapper = new GeoJSONWrapper(features);
         geojsonWrapper.name = '_geojsonTileLayer';
@@ -38,22 +38,22 @@ test('querySourceFeatures', (t) => {
 
         result = [];
         tile.querySourceFeatures(result);
-        t.equal(result.length, 1);
-        t.deepEqual(result[0].geometry.coordinates[0], [-90, 0]);
+        expect(result.length).toBe(1);
+        expect(result[0].geometry.coordinates[0]).toEqual([-90, 0]);
         result = [];
         tile.querySourceFeatures(result, {});
-        t.equal(result.length, 1);
-        t.deepEqual(result[0].properties, features[0].tags);
+        expect(result.length).toBe(1);
+        expect(result[0].properties).toEqual(features[0].tags);
         result = [];
         tile.querySourceFeatures(result, {filter: ['==', 'oneway', true]});
-        t.equal(result.length, 1);
+        expect(result.length).toBe(1);
         result = [];
         tile.querySourceFeatures(result, {filter: ['!=', 'oneway', true]});
-        t.equal(result.length, 0);
+        expect(result.length).toBe(0);
         result = [];
         const polygon = {type: "Polygon",  coordinates: [[[-91, -1], [-89, -1], [-89, 1], [-91, 1], [-91, -1]]]};
         tile.querySourceFeatures(result, {filter: ['within', polygon]});
-        t.equal(result.length, 1);
+        expect(result.length).toBe(1);
         t.end();
     });
 
@@ -63,14 +63,14 @@ test('querySourceFeatures', (t) => {
 
         result = [];
         tile.querySourceFeatures(result, {});
-        t.equal(result.length, 0);
+        expect(result.length).toBe(0);
 
         const geojsonWrapper = new GeoJSONWrapper([]);
         geojsonWrapper.name = '_geojsonTileLayer';
         tile.rawTileData = vtpbf({layers: {'_geojsonTileLayer': geojsonWrapper}});
         result = [];
-        t.doesNotThrow(() => { tile.querySourceFeatures(result); });
-        t.equal(result.length, 0);
+        expect(() => { tile.querySourceFeatures(result); }).not.toThrow();
+        expect(result.length).toBe(0);
         t.end();
     });
 
@@ -80,7 +80,7 @@ test('querySourceFeatures', (t) => {
 
         result = [];
         tile.querySourceFeatures(result, {});
-        t.equal(result.length, 0);
+        expect(result.length).toBe(0);
 
         tile.loadVectorData(
             createVectorData({rawTileData: createRawTileData()}),
@@ -89,18 +89,18 @@ test('querySourceFeatures', (t) => {
 
         result = [];
         tile.querySourceFeatures(result, {'sourceLayer': 'does-not-exist'});
-        t.equal(result.length, 0);
+        expect(result.length).toBe(0);
 
         result = [];
         tile.querySourceFeatures(result, {'sourceLayer': 'road'});
-        t.equal(result.length, 3);
+        expect(result.length).toBe(3);
 
         result = [];
         tile.querySourceFeatures(result, {'sourceLayer': 'road', filter: ['==', 'class', 'main']});
-        t.equal(result.length, 1);
+        expect(result.length).toBe(1);
         result = [];
         tile.querySourceFeatures(result, {'sourceLayer': 'road', filter: ['!=', 'class', 'main']});
-        t.equal(result.length, 2);
+        expect(result.length).toBe(2);
 
         t.end();
     });
@@ -113,7 +113,7 @@ test('querySourceFeatures', (t) => {
 
         tile.loadVectorData(null, painter);
 
-        t.ok(tile.unloadVectorData.calledWith());
+        expect(tile.unloadVectorData.calledWith()).toBeTruthy();
         t.end();
     });
 
@@ -132,7 +132,7 @@ test('querySourceFeatures', (t) => {
 
         const features = [];
         tile.querySourceFeatures(features, {'sourceLayer': 'road'});
-        t.equal(features.length, 3);
+        expect(features.length).toBe(3);
 
         t.end();
     });
@@ -163,7 +163,7 @@ test('Tile#isLessThan', (t) => {
 
         const sortedTiles = tiles.sort((a, b) => { return a.isLessThan(b) ? -1 : b.isLessThan(a) ? 1 : 0; });
 
-        t.deepEqual(sortedTiles, [
+        expect(sortedTiles).toEqual([
             new OverscaledTileID(9, 0, 9, 145, 194),
             new OverscaledTileID(9, 0, 9, 145, 196),
             new OverscaledTileID(9, 0, 9, 146, 195),
@@ -192,8 +192,8 @@ test('expiring tiles', (t) => {
         tile.state = 'loaded';
         tile.timeAdded = Date.now();
 
-        t.notOk(tile.cacheControl);
-        t.notOk(tile.expires);
+        expect(tile.cacheControl).toBeFalsy();
+        expect(tile.expires).toBeFalsy();
 
         t.end();
     });
@@ -203,8 +203,8 @@ test('expiring tiles', (t) => {
         tile.state = 'loaded';
         tile.timeAdded = Date.now();
 
-        t.notOk(tile.cacheControl, 'no cache-control set');
-        t.notOk(tile.expires, 'no expires set');
+        expect(tile.cacheControl).toBeFalsy();
+        expect(tile.expires).toBeFalsy();
 
         tile.setExpiryData({
             cacheControl: 'max-age=60'
@@ -212,7 +212,7 @@ test('expiring tiles', (t) => {
 
         // times are fuzzy, so we'll give this a little leeway:
         let expiryTimeout = tile.getExpiryTimeout();
-        t.ok(expiryTimeout >= 56000 && expiryTimeout <= 60000, 'cache-control parsed as expected');
+        expect(expiryTimeout >= 56000 && expiryTimeout <= 60000).toBeTruthy();
 
         const date = new Date();
         date.setMinutes(date.getMinutes() + 10);
@@ -223,7 +223,7 @@ test('expiring tiles', (t) => {
         });
 
         expiryTimeout = tile.getExpiryTimeout();
-        t.ok(expiryTimeout > 598000 && expiryTimeout < 600000, 'expires header set date as expected');
+        expect(expiryTimeout > 598000 && expiryTimeout < 600000).toBeTruthy();
 
         t.end();
     });
@@ -238,7 +238,7 @@ test('expiring tiles', (t) => {
         });
 
         const expiryTimeout = tile.getExpiryTimeout();
-        t.ok(expiryTimeout >= 8000 && expiryTimeout <= 10000, 'expiry timeout as expected when fresh');
+        expect(expiryTimeout >= 8000 && expiryTimeout <= 10000).toBeTruthy();
 
         const justNow = new Date();
         justNow.setSeconds(justNow.getSeconds() - 1);
@@ -249,21 +249,21 @@ test('expiring tiles', (t) => {
         tile.setExpiryData({
             expires: justNow
         });
-        t.equal(tile.getExpiryTimeout(), 1000, 'tile with one expired request retries after 1 second');
+        expect(tile.getExpiryTimeout()).toBe(1000);
 
         tile.setExpiryData({
             expires: justNow
         });
-        t.equal(tile.getExpiryTimeout(), 2000, 'exponential backoff');
+        expect(tile.getExpiryTimeout()).toBe(2000);
         tile.setExpiryData({
             expires: justNow
         });
-        t.equal(tile.getExpiryTimeout(), 4000, 'exponential backoff');
+        expect(tile.getExpiryTimeout()).toBe(4000);
 
         tile.setExpiryData({
             expires: justNow
         });
-        t.equal(tile.getExpiryTimeout(), 8000, 'exponential backoff');
+        expect(tile.getExpiryTimeout()).toBe(8000);
 
         t.end();
     });
@@ -287,7 +287,7 @@ test('rtl text detection', (t) => {
             })
         );
 
-        t.ok(tile.hasRTLText);
+        expect(tile.hasRTLText).toBeTruthy();
         t.end();
     });
 
