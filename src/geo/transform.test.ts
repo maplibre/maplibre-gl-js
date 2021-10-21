@@ -41,9 +41,11 @@ describe('transform', () => {
     });
 
     test('does not throw on bad center', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
-        transform.resize(500, 500);
-        transform.center = new LngLat(50, -90);
+        expect(() => {
+            const transform = new Transform(0, 22, 0, 60, true);
+            transform.resize(500, 500);
+            transform.center = new LngLat(50, -90);
+        }).not.toThrow();
     });
 
     test('setLocationAt', () => {
