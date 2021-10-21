@@ -1,6 +1,6 @@
 import {createSymbolBucket} from '../../test/util/create_symbol_layer_jest';
 import Tile from '../source/tile';
-import GeoJSONWrapper, { Feature } from '../source/geojson_wrapper';
+import GeoJSONWrapper, {Feature} from '../source/geojson_wrapper';
 import {OverscaledTileID} from '../source/tile_id';
 import fs from 'fs';
 import path from 'path';
@@ -101,7 +101,7 @@ describe('querySourceFeatures', () => {
     test('loadVectorData unloads existing data before overwriting it', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.state = 'loaded';
-        let spy = jest.spyOn(tile, 'unloadVectorData');
+        const spy = jest.spyOn(tile, 'unloadVectorData');
         const painter = {};
 
         tile.loadVectorData(null, painter);
