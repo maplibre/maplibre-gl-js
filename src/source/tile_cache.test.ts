@@ -1,6 +1,5 @@
-import {test} from '../../util/test';
-import TileCache from '../../../rollup/build/tsc/src/source/tile_cache';
-import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
+import TileCache from '../source/tile_cache';
+import {OverscaledTileID} from '../source/tile_id';
 
 const idA = new OverscaledTileID(10, 0, 10, 0, 1);
 const idB = new OverscaledTileID(10, 0, 10, 0, 2);
@@ -16,7 +15,7 @@ function keysExpected(t, cache, ids) {
     expect(cache.order).toEqual(ids.map((id) => id.key));
 }
 
-test('TileCache', (t) => {
+describe('TileCache', () => {
     const cache = new TileCache(10, (removed) => {
         expect(removed).toBe('dc');
     });
@@ -28,10 +27,9 @@ test('TileCache', (t) => {
     expect(cache.getAndRemove(idA)).toBe(null);
     expect(cache.has(idA)).toBe(false);
     keysExpected(t, cache, []);
-    t.end();
 });
 
-test('TileCache - getWithoutRemoving', (t) => {
+describe('TileCache - getWithoutRemoving', () => {
     const cache = new TileCache(10, () => {
         t.fail();
     });
@@ -39,10 +37,9 @@ test('TileCache - getWithoutRemoving', (t) => {
     expect(cache.get(idA)).toBe(tileA);
     keysExpected(t, cache, [idA]);
     expect(cache.get(idA)).toBe(tileA);
-    t.end();
 });
 
-test('TileCache - duplicate add', (t) => {
+describe('TileCache - duplicate add', () => {
     const cache = new TileCache(10, () => {
         t.fail();
     });
@@ -55,14 +52,12 @@ test('TileCache - duplicate add', (t) => {
     expect(cache.getAndRemove(idA)).toBe(tileA);
     expect(cache.has(idA)).toBeTruthy();
     expect(cache.getAndRemove(idA)).toBe(tileA2);
-    t.end();
 });
 
-test('TileCache - expiry', (t) => {
+describe('TileCache - expiry', () => {
     const cache = new TileCache(10, (removed) => {
         expect(cache.has(idB)).toBeTruthy();
         expect(removed).toBe(tileA2);
-        t.end();
     });
 
     cache.add(idB, tileB, 0);
@@ -74,7 +69,7 @@ test('TileCache - expiry', (t) => {
     cache.add(idA, tileA2, 0); // expires immediately and `onRemove` is called.
 });
 
-test('TileCache - remove', (t) => {
+describe('TileCache - remove', () => {
     const cache = new TileCache(10, () => {});
 
     cache.add(idA, tileA);
@@ -91,10 +86,9 @@ test('TileCache - remove', (t) => {
 
     expect(cache.remove(idB)).toBeTruthy();
 
-    t.end();
 });
 
-test('TileCache - overflow', (t) => {
+describe('TileCache - overflow', () => {
     const cache = new TileCache(1, (removed) => {
         expect(removed).toBe(tileA);
     });
@@ -103,10 +97,9 @@ test('TileCache - overflow', (t) => {
 
     expect(cache.has(idB)).toBeTruthy();
     expect(cache.has(idA)).toBeFalsy();
-    t.end();
 });
 
-test('TileCache#reset', (t) => {
+describe('TileCache#reset', () => {
     let called;
     const cache = new TileCache(10, (removed) => {
         expect(removed).toBe(tileA);
@@ -116,10 +109,9 @@ test('TileCache#reset', (t) => {
     expect(cache.reset()).toBe(cache);
     expect(cache.has(idA)).toBe(false);
     expect(called).toBeTruthy();
-    t.end();
 });
 
-test('TileCache#setMaxSize', (t) => {
+describe('TileCache#setMaxSize', () => {
     let numRemoved = 0;
     const cache = new TileCache(10, () => {
         numRemoved++;
@@ -134,5 +126,4 @@ test('TileCache#setMaxSize', (t) => {
     expect(numRemoved).toBe(2);
     cache.add(idD, tileD);
     expect(numRemoved).toBe(3);
-    t.end();
 });
