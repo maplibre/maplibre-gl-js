@@ -18,9 +18,9 @@ if (automate) {
     execSync(`git mv ${file} ${destinationFile}`);
     execSync('git commit -m "Move and rename"');
     file = destinationFile;
-    execSync(`npx jscodeshift --parser babel --standaloneMode --skipImportDetection -t node_modules/jest-codemods/dist/transformers/tape.js ${file}`);
+    execSync(`npx jscodeshift --parser babel --skipImportDetection -t node_modules/jest-codemods/dist/transformers/tape.js ${file}`);
     execSync(`git add ${file}`);
-    execSync('git commit -m "Run jest-codemods"');
+    execSync('git commit -m "Run jscodeshift"');
 }
 
 replace.sync({
@@ -68,6 +68,6 @@ replace.sync({
 if (automate) {
     execSync('npm run lint -- --fix');
     execSync(`git add ${file}`);
-    execSync('git commit -m "Run custom codemods"');
+    execSync('git commit -m "Run custom codemods and lint"');
 }
 
