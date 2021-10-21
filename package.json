@@ -114,6 +114,8 @@
     "jest": "^27.2.4",
     "jest-canvas-mock": "^2.3.1",
     "jest-raw-loader": "^1.0.1",
+    "jest-codemods": "^0.24.0",
+    "jscodeshift": "^0.13.0",
     "jsdom": "^13.0.0",
     "json-stringify-pretty-compact": "^3.0.0",
     "jsonwebtoken": "^8.3.0",
