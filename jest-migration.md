@@ -8,11 +8,12 @@ While migrating a test, keep in mind that someone has to review what you did. Ma
 
 ## Steps
 
-Install `jest-codemods` globally with:
+Manual steps can be seen below, if you would like a script to do is automatically use the following:
 
-```bash
-npm install -g jest-codemods
-```
+`node codemods.js --auto test/unit/symbol/anchor.test.js`
+It will create a branch, move ot it, rename file, run code change and commit with the relavant messages...
+
+### Manual steps
 
 We will migrate `symbol/anchor.test.js`. First move, rename to typescript, and commit:
 
@@ -25,7 +26,7 @@ git commit -m "Move and rename"
 Run `jest-codemods`:
 
 ```
-jest-codemods --force src/symbol/anchor.test.ts
+npx jest-codemods --force src/symbol/anchor.test.ts
 > Babel
 > Tape
 > Yes, and I'm not afraid of false positive transformations
@@ -82,4 +83,4 @@ git commit -m "Migrate symbol/anchor.test.js"
 
 ## After the migration to jest
 
-Once we have migrated all tests to jest we should remove the helper script `codemods.js` and get rid of `replace-in-file` in `package.json`.
+Once we have migrated all tests to jest we should remove the helper script `codemods.js` and get rid of `replace-in-file`, `jest-codemods` and `jscodeshift` in `package.json`.
