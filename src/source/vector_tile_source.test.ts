@@ -1,9 +1,8 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import VectorTileSource from '../../../rollup/build/tsc/src/source/vector_tile_source';
-import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
-import {Evented} from '../../../rollup/build/tsc/src/util/evented';
-import {RequestManager} from '../../../rollup/build/tsc/src/util/request_manager';
+import VectorTileSource from '../source/vector_tile_source';
+import {OverscaledTileID} from '../source/tile_id';
+import {Evented} from '../util/evented';
+import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../fixtures/source.json';
 
 const wrapDispatcher = (dispatcher) => {
@@ -34,7 +33,7 @@ function createSource(options, transformCallback) {
     return source;
 }
 
-test('VectorTileSource', (t) => {
+describe('VectorTileSource', done => {
     t.beforeEach((callback) => {
         window.useFakeXMLHttpRequest();
         callback();
@@ -45,117 +44,117 @@ test('VectorTileSource', (t) => {
         callback();
     });
 
-    t.test('can be constructed from TileJSON', (t) => {
+    test('can be constructed from TileJSON', done => {
         const source = createSource({
             minzoom: 1,
             maxzoom: 10,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"]
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                expect(source.tiles).toEqual(["http://example.com/{z}/{x}/{y}.png"]);
+                expect(source.tiles).toEqual(['http://example.com/{z}/{x}/{y}.png']);
                 expect(source.minzoom).toEqual(1);
                 expect(source.maxzoom).toEqual(10);
-                expect(source.attribution).toEqual("Mapbox");
-                t.end();
+                expect(source.attribution).toEqual('Mapbox');
+                done();
             }
         });
     });
 
-    t.test('can be constructed from a TileJSON URL', (t) => {
+    test('can be constructed from a TileJSON URL', done => {
         window.server.respondWith('/source.json', JSON.stringify(fixturesSource));
 
-        const source = createSource({url: "/source.json"});
+        const source = createSource({url: '/source.json'});
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                expect(source.tiles).toEqual(["http://example.com/{z}/{x}/{y}.png"]);
+                expect(source.tiles).toEqual(['http://example.com/{z}/{x}/{y}.png']);
                 expect(source.minzoom).toEqual(1);
                 expect(source.maxzoom).toEqual(10);
-                expect(source.attribution).toEqual("Mapbox");
-                t.end();
+                expect(source.attribution).toEqual('Mapbox');
+                done();
             }
         });
 
         window.server.respond();
     });
 
-    t.test('transforms the request for TileJSON URL', (t) => {
+    test('transforms the request for TileJSON URL', done => {
         window.server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const transformSpy = t.spy((url) => {
             return {url};
         });
 
-        createSource({url: "/source.json"}, transformSpy);
+        createSource({url: '/source.json'}, transformSpy);
         window.server.respond();
         expect(transformSpy.getCall(0).args[0]).toBe('/source.json');
         expect(transformSpy.getCall(0).args[1]).toBe('Source');
-        t.end();
+        done();
     });
 
-    t.test('fires event with metadata property', (t) => {
+    test('fires event with metadata property', done => {
         window.server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        const source = createSource({url: "/source.json"});
+        const source = createSource({url: '/source.json'});
         source.on('data', (e) => {
-            if (e.sourceDataType === 'content') t.end();
+            if (e.sourceDataType === 'content') done();
         });
         window.server.respond();
     });
 
-    t.test('fires "dataloading" event', (t) => {
+    test('fires "dataloading" event', done => {
         window.server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const evented = new Evented();
         let dataloadingFired = false;
         evented.on('dataloading', () => {
             dataloadingFired = true;
         });
-        const source = createSource({url: "/source.json", eventedParent: evented});
+        const source = createSource({url: '/source.json', eventedParent: evented});
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 if (!dataloadingFired) t.fail();
-                t.end();
+                done();
             }
         });
         window.server.respond();
     });
 
-    t.test('serialize URL', (t) => {
+    test('serialize URL', done => {
         const source = createSource({
-            url: "http://localhost:2900/source.json"
+            url: 'http://localhost:2900/source.json'
         });
         expect(source.serialize()).toEqual({
             type: 'vector',
-            url: "http://localhost:2900/source.json"
+            url: 'http://localhost:2900/source.json'
         });
-        t.end();
+        done();
     });
 
-    t.test('serialize TileJSON', (t) => {
+    test('serialize TileJSON', done => {
         const source = createSource({
             minzoom: 1,
             maxzoom: 10,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"]
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
         expect(source.serialize()).toEqual({
             type: 'vector',
             minzoom: 1,
             maxzoom: 10,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"]
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
-        t.end();
+        done();
     });
 
     function testScheme(scheme, expectedURL) {
-        t.test(`scheme "${scheme}"`, (t) => {
+        test(`scheme "${scheme}"`, done => {
             const source = createSource({
                 minzoom: 1,
                 maxzoom: 10,
-                attribution: "Mapbox",
-                tiles: ["http://example.com/{z}/{x}/{y}.png"],
+                attribution: 'Mapbox',
+                tiles: ['http://example.com/{z}/{x}/{y}.png'],
                 scheme
             });
 
@@ -163,7 +162,7 @@ test('VectorTileSource', (t) => {
                 send(type, params) {
                     expect(type).toBe('loadTile');
                     expect(expectedURL).toBe(params.request.url);
-                    t.end();
+                    done();
                 }
             });
 
@@ -178,10 +177,10 @@ test('VectorTileSource', (t) => {
     testScheme('xyz', 'http://example.com/10/5/5.png');
     testScheme('tms', 'http://example.com/10/5/1018.png');
 
-    t.test('transforms tile urls before requesting', (t) => {
+    test('transforms tile urls before requesting', done => {
         window.server.respondWith('/source.json', JSON.stringify(fixturesSource));
 
-        const source = createSource({url: "/source.json"});
+        const source = createSource({url: '/source.json'});
         const transformSpy = t.spy(source.map._requestManager, 'transformRequest');
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
@@ -195,16 +194,16 @@ test('VectorTileSource', (t) => {
                 expect(transformSpy.calledOnce).toBeTruthy();
                 expect(transformSpy.getCall(0).args[0]).toBe('http://example.com/10/5/5.png');
                 expect(transformSpy.getCall(0).args[1]).toBe('Tile');
-                t.end();
+                done();
             }
         });
 
         window.server.respond();
     });
 
-    t.test('reloads a loading tile properly', (t) => {
+    test('reloads a loading tile properly', done => {
         const source = createSource({
-            tiles: ["http://example.com/{z}/{x}/{y}.png"]
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
         const events = [];
         source.dispatcher = wrapDispatcher({
@@ -232,76 +231,76 @@ test('VectorTileSource', (t) => {
                     expect(events).toEqual(
                         ['loadTile', 'tileLoaded', 'enforceCacheSizeLimit', 'reloadTile', 'tileLoaded']
                     );
-                    t.end();
+                    done();
                 });
             }
         });
     });
 
-    t.test('respects TileJSON.bounds', (t) => {
+    test('respects TileJSON.bounds', done => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"],
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         });
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 expect(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132))).toBeFalsy();
                 expect(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132))).toBeTruthy();
-                t.end();
+                done();
             }
         });
     });
 
-    t.test('does not error on invalid bounds', (t) => {
+    test('does not error on invalid bounds', done => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"],
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, 91]
         });
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 expect(source.tileBounds.bounds).toEqual({_sw:{lng: -47, lat: -7}, _ne:{lng: -45, lat: 90}});
-                t.end();
+                done();
             }
         });
     });
 
-    t.test('respects TileJSON.bounds when loaded from TileJSON', (t) => {
+    test('respects TileJSON.bounds when loaded from TileJSON', done => {
         window.server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"],
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        const source = createSource({url: "/source.json"});
+        const source = createSource({url: '/source.json'});
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 expect(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132))).toBeFalsy();
                 expect(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132))).toBeTruthy();
-                t.end();
+                done();
             }
         });
         window.server.respond();
     });
 
-    t.test('respects collectResourceTiming parameter on source', (t) => {
+    test('respects collectResourceTiming parameter on source', done => {
         const source = createSource({
-            tiles: ["http://example.com/{z}/{x}/{y}.png"],
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
             collectResourceTiming: true
         });
         source.dispatcher = wrapDispatcher({
             send(type, params, cb) {
                 expect(params.request.collectResourceTiming).toBeTruthy();
                 setTimeout(cb, 0);
-                t.end();
+                done();
 
                 // do nothing for cache size check dispatch
                 source.dispatcher = mockDispatcher;
@@ -323,42 +322,42 @@ test('VectorTileSource', (t) => {
         });
     });
 
-    t.test('cancels TileJSON request if removed', (t) => {
-        const source = createSource({url: "/source.json"});
+    test('cancels TileJSON request if removed', done => {
+        const source = createSource({url: '/source.json'});
         source.onRemove();
         expect(window.server.lastRequest.aborted).toBe(true);
-        t.end();
+        done();
     });
 
-    t.test('supports url property updates', (t) => {
+    test('supports url property updates', done => {
         const source = createSource({
-            url: "http://localhost:2900/source.json"
+            url: 'http://localhost:2900/source.json'
         });
-        source.setUrl("http://localhost:2900/source2.json");
+        source.setUrl('http://localhost:2900/source2.json');
         expect(source.serialize()).toEqual({
             type: 'vector',
-            url: "http://localhost:2900/source2.json"
+            url: 'http://localhost:2900/source2.json'
         });
-        t.end();
+        done();
     });
 
-    t.test('supports tiles property updates', (t) => {
+    test('supports tiles property updates', done => {
         const source = createSource({
             minzoom: 1,
             maxzoom: 10,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"]
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
-        source.setTiles(["http://example2.com/{z}/{x}/{y}.png"]);
+        source.setTiles(['http://example2.com/{z}/{x}/{y}.png']);
         expect(source.serialize()).toEqual({
             type: 'vector',
             minzoom: 1,
             maxzoom: 10,
-            attribution: "Mapbox",
-            tiles: ["http://example2.com/{z}/{x}/{y}.png"]
+            attribution: 'Mapbox',
+            tiles: ['http://example2.com/{z}/{x}/{y}.png']
         });
-        t.end();
+        done();
     });
 
-    t.end();
+    done();
 });
