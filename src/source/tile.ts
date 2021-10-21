@@ -133,7 +133,9 @@ class Tile {
     }
 
     clearTextures(painter: any) {
+        this.demTexture && painter.saveTileTexture(this.demTexture);
         this.textures.forEach(t => painter.saveTileTexture(t));
+        this.demTexture = null;
         this.textures = [];
     }
 

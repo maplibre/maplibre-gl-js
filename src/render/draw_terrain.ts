@@ -74,9 +74,9 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, tile:
    const context = painter.context;
    const size = tile.tileSize * sourceCache.qualityFactor; // may increase rendering-size for better quality
    if (!tile.textures[stack]) {
-      tile.textures[stack] = painter.getTileTexture(size)
-         || new Texture(context, {width: size, height: size, data: null}, context.gl.RGBA);
+      tile.textures[stack] = painter.getTileTexture(size) || new Texture(context, {width: size, height: size, data: null}, context.gl.RGBA);
       tile.textures[stack].bind(context.gl.LINEAR, context.gl.CLAMP_TO_EDGE);
+      if (stack == 0) sourceCache._renderHistory.push(tile.tileID.key);
    }
    // reuse a framebuffer from the framebuffer-stack and attach active texture
    if (!FBOs[tile.tileSize]) {

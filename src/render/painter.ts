@@ -61,7 +61,6 @@ import type IndexBuffer from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type ResolvedImage from '../style-spec/expression/types/resolved_image';
 import type {RGBAImage} from '../util/image';
-import Match from '../style-spec/expression/definitions/match';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -472,7 +471,9 @@ class Painter {
         this.renderPass = 'translucent';
         // the following variables only used when terrain-3d is enabled
         let prevType = null;
-        const stacks = [];
+        const stacks = [], rerender = {};
+        const renderableTiles = this.style.terrainSourceCache.getRenderableTiles(this.transform);
+        renderableTiles.forEach(t => rerender[t.tileID.key] = !t.textures.length);
 
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
@@ -492,9 +493,9 @@ class Painter {
                 } else if (renderToTexture[prevType] || type == "hillshade") {
                     prevType = type;
                     const stack = stacks.length - 1, layers = stacks[stack];
-                    for (const tile of this.style.terrainSourceCache.getRenderableTiles(this.transform)) {
+                    for (const tile of renderableTiles) {
                         prepareTerrain(this, this.style.terrainSourceCache, tile, stack);
-                        if (tile.textures[stack]) {
+                        if (rerender[tile.tileID.key]) {
                             this.context.clear({ color: Color.transparent });
                             for (let l=0; l<layers.length; l++) {
                                 const layer = this.style._layers[layers[l]];
@@ -508,7 +509,7 @@ class Painter {
 
                     if (type == "hillshade") {
                         stacks.push([layerIds[this.currentLayer]]);
-                        for (const tile of this.style.terrainSourceCache.getRenderableTiles(this.transform)) {
+                        for (const tile of renderableTiles) {
                             const coords = coordsDescendingInv[layer.source][tile.tileID.key];
                             // FIXME! replace prepareTerrain with hillshading texture from prepareHillshading directly
                             prepareTerrain(this, this.style.terrainSourceCache, tile, stacks.length - 1);

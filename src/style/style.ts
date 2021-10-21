@@ -1271,10 +1271,10 @@ class Style extends Evented {
     }
 
     _updateSources(transform: Transform) {
+        this.terrainSourceCache.update(transform);
         for (const id in this.sourceCaches) {
             this.sourceCaches[id].update(transform);
         }
-        this.terrainSourceCache.update(transform);
     }
 
     _generateCollisionBoxes() {
