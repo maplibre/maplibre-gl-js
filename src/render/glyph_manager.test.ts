@@ -21,6 +21,12 @@ const createLoadGlyphRangeStub = () => {
 };
 
 const createGlyphManager = (font?) => {
+    GlyphManager.TinySDF = class {
+        // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
+        draw() {
+            return {data: new Uint8ClampedArray(900)} as any;
+        }
+    };
     const manager = new GlyphManager(identityTransform, font);
     manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
     return manager;
@@ -88,12 +94,7 @@ describe('GlyphManager', () => {
             }
             setTimeout(() => callback(null, overlappingGlyphs), 0);
         });
-        GlyphManager.TinySDF = class {
-            // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
-            draw() {
-                return new Uint8ClampedArray(900);
-            }
-        };
+
         const manager = createGlyphManager('sans-serif');
 
         //Request char that overlaps Katakana range
@@ -113,13 +114,6 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager generates CJK PBF locally', done => {
-        GlyphManager.TinySDF = class {
-            // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
-            draw() {
-                return new Uint8ClampedArray(900);
-            }
-        };
-
         const manager = createGlyphManager('sans-serif');
 
         manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
@@ -130,13 +124,6 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager generates Katakana PBF locally', done => {
-        GlyphManager.TinySDF = class {
-            // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
-            draw() {
-                return new Uint8ClampedArray(900);
-            }
-        };
-
         const manager = createGlyphManager('sans-serif');
 
         // Katakana letter te
@@ -148,13 +135,6 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager generates Hiragana PBF locally', done => {
-        GlyphManager.TinySDF = class {
-            // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
-            draw() {
-                return new Uint8ClampedArray(900);
-            }
-        };
-
         const manager = createGlyphManager('sans-serif');
 
         //Hiragana letter te
@@ -166,16 +146,16 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager caches locally generated glyphs', done => {
+
+        const manager = createGlyphManager('sans-serif');
         let drawCallCount = 0;
         GlyphManager.TinySDF = class {
             // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
             draw() {
                 drawCallCount++;
-                return new Uint8ClampedArray(900);
+                return {data: new Uint8ClampedArray(900)} as any;
             }
         };
-
-        const manager = createGlyphManager('sans-serif');
 
         // Katakana letter te
         manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, (err, glyphs) => {
