@@ -1,5 +1,6 @@
 import Map from '../../ui/map';
 import {extend} from '../../util/util';
+import gl from 'gl';
 
 export function createMap(options, callback) {
     const container = window.document.createElement('div');
@@ -34,4 +35,21 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
     const actualRounded = Math.round(actual / multiplier) * multiplier;
 
     return test.equal(expectedRounded, actualRounded, message, extra);
+}
+
+// Add webgl context with the supplied GL
+export function setWebGlContext () {
+    const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
+
+    function imitateWebGlGetContext(type, attributes) {
+        if (type === 'webgl') {
+            if (!this._webGLContext) {
+                this._webGLContext = gl(this.width, this.height, attributes);
+            }
+            return this._webGLContext;
+        }
+        // Fallback to existing HTMLCanvasElement getContext behaviour
+        return originalGetContext.call(this, type, attributes);
+    }
+    global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 }
