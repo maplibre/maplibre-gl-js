@@ -13,20 +13,20 @@ const tileC = {tileID: idC};
 const tileD = {tileID: idD};
 
 function keysExpected(t, cache, ids) {
-    t.deepEqual(cache.order, ids.map((id) => id.key), 'keys');
+    expect(cache.order).toEqual(ids.map((id) => id.key));
 }
 
 test('TileCache', (t) => {
     const cache = new TileCache(10, (removed) => {
-        t.equal(removed, 'dc');
+        expect(removed).toBe('dc');
     });
-    t.equal(cache.getAndRemove(idC), null, '.getAndRemove() to null');
-    t.equal(cache.add(idA, tileA), cache, '.add()');
+    expect(cache.getAndRemove(idC)).toBe(null);
+    expect(cache.add(idA, tileA)).toBe(cache);
     keysExpected(t, cache, [idA]);
-    t.equal(cache.has(idA), true, '.has()');
-    t.equal(cache.getAndRemove(idA), tileA, '.getAndRemove()');
-    t.equal(cache.getAndRemove(idA), null, '.getAndRemove()');
-    t.equal(cache.has(idA), false, '.has()');
+    expect(cache.has(idA)).toBe(true);
+    expect(cache.getAndRemove(idA)).toBe(tileA);
+    expect(cache.getAndRemove(idA)).toBe(null);
+    expect(cache.has(idA)).toBe(false);
     keysExpected(t, cache, []);
     t.end();
 });
@@ -35,10 +35,10 @@ test('TileCache - getWithoutRemoving', (t) => {
     const cache = new TileCache(10, () => {
         t.fail();
     });
-    t.equal(cache.add(idA, tileA), cache, '.add()');
-    t.equal(cache.get(idA), tileA, '.get()');
+    expect(cache.add(idA, tileA)).toBe(cache);
+    expect(cache.get(idA)).toBe(tileA);
     keysExpected(t, cache, [idA]);
-    t.equal(cache.get(idA), tileA, '.get()');
+    expect(cache.get(idA)).toBe(tileA);
     t.end();
 });
 
@@ -51,17 +51,17 @@ test('TileCache - duplicate add', (t) => {
     cache.add(idA, tileA2);
 
     keysExpected(t, cache, [idA, idA]);
-    t.ok(cache.has(idA));
-    t.equal(cache.getAndRemove(idA), tileA);
-    t.ok(cache.has(idA));
-    t.equal(cache.getAndRemove(idA), tileA2);
+    expect(cache.has(idA)).toBeTruthy();
+    expect(cache.getAndRemove(idA)).toBe(tileA);
+    expect(cache.has(idA)).toBeTruthy();
+    expect(cache.getAndRemove(idA)).toBe(tileA2);
     t.end();
 });
 
 test('TileCache - expiry', (t) => {
     const cache = new TileCache(10, (removed) => {
-        t.ok(cache.has(idB));
-        t.equal(removed, tileA2);
+        expect(cache.has(idB)).toBeTruthy();
+        expect(removed).toBe(tileA2);
         t.end();
     });
 
@@ -82,40 +82,40 @@ test('TileCache - remove', (t) => {
     cache.add(idC, tileC);
 
     keysExpected(t, cache, [idA, idB, idC]);
-    t.ok(cache.has(idB));
+    expect(cache.has(idB)).toBeTruthy();
 
     cache.remove(idB);
 
     keysExpected(t, cache, [idA, idC]);
-    t.notOk(cache.has(idB));
+    expect(cache.has(idB)).toBeFalsy();
 
-    t.ok(cache.remove(idB));
+    expect(cache.remove(idB)).toBeTruthy();
 
     t.end();
 });
 
 test('TileCache - overflow', (t) => {
     const cache = new TileCache(1, (removed) => {
-        t.equal(removed, tileA);
+        expect(removed).toBe(tileA);
     });
     cache.add(idA, tileA);
     cache.add(idB, tileB);
 
-    t.ok(cache.has(idB));
-    t.notOk(cache.has(idA));
+    expect(cache.has(idB)).toBeTruthy();
+    expect(cache.has(idA)).toBeFalsy();
     t.end();
 });
 
 test('TileCache#reset', (t) => {
     let called;
     const cache = new TileCache(10, (removed) => {
-        t.equal(removed, tileA);
+        expect(removed).toBe(tileA);
         called = true;
     });
     cache.add(idA, tileA);
-    t.equal(cache.reset(), cache);
-    t.equal(cache.has(idA), false);
-    t.ok(called);
+    expect(cache.reset()).toBe(cache);
+    expect(cache.has(idA)).toBe(false);
+    expect(called).toBeTruthy();
     t.end();
 });
 
@@ -127,12 +127,12 @@ test('TileCache#setMaxSize', (t) => {
     cache.add(idA, tileA);
     cache.add(idB, tileB);
     cache.add(idC, tileC);
-    t.equal(numRemoved, 0);
+    expect(numRemoved).toBe(0);
     cache.setMaxSize(15);
-    t.equal(numRemoved, 0);
+    expect(numRemoved).toBe(0);
     cache.setMaxSize(1);
-    t.equal(numRemoved, 2);
+    expect(numRemoved).toBe(2);
     cache.add(idD, tileD);
-    t.equal(numRemoved, 3);
+    expect(numRemoved).toBe(3);
     t.end();
 });
