@@ -1,5 +1,6 @@
 import AttributionControl from './attribution_control';
 import {createMap as globalCreateMap} from '../../util/test/util';
+import {setWebGlContext} from '../../util/test/gl';
 import simulate from '../../../test/util/simulate_interaction';
 
 function createMap() {
@@ -16,6 +17,11 @@ function createMap() {
         hash: true
     }, false);
 }
+
+beforeEach(() => {
+    setWebGlContext();
+    window.performance.mark = jest.fn();
+});
 
 describe('AttributionControl', () => {
     test('AttributionControl appears in bottom-right by default', () => {

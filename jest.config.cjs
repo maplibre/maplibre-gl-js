@@ -15,5 +15,4 @@ module.exports = {
   transformIgnorePatterns: [
   ],
   setupFiles: ["jest-canvas-mock"],
-  setupFilesAfterEnv: ["./setup.js"],
 }
