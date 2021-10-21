@@ -2,7 +2,7 @@ import replace from 'replace-in-file';
 import {execSync} from 'child_process';
 
 
-const file = process.argv[process.argv.length - 1];
+let file = process.argv[process.argv.length - 1];
 const useAsync = process.argv.includes('--async');
 const automate = process.argv.includes('--auto');
 
