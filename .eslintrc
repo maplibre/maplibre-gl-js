@@ -22,6 +22,8 @@
       { "argsIgnorePattern": "^_" }
     ],
     "@typescript-eslint/member-delimiter-style": ["error"],
+    "no-useless-constructor": "off",
+    "@typescript-eslint/no-useless-constructor": ["error"],
     // Disable no-undef. It's covered by @typescript-eslint
     "no-undef": "off",
     // temporarily disabled due to https://github.com/babel/babel-eslint/issues/485
