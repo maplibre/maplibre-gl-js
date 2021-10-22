@@ -1,41 +1,54 @@
-import '../../../stub_loader';
-import {test} from '../../../util/test';
-import {createMap} from '../../../util';
-import FullscreenControl from '../../ui/control/fullscreen_control';
+import {createMap, setWebGlContext} from '../../util/test/util';
+import FullscreenControl from './fullscreen_control';
 
-describe('FullscreenControl appears when fullscreen is enabled', () => {
-    window.document.fullscreenEnabled = true;
-
-    const map = createMap(t);
-    const fullscreen = new FullscreenControl();
-    map.addControl(fullscreen);
-
-    expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen').length).toBe(1);
+beforeEach(() => {
+    setWebGlContext();
+    window.performance.mark = jest.fn();
 });
 
-describe('FullscreenControl does not appear when fullscreen is not enabled', () => {
-    window.document.fullscreenEnabled = false;
+describe('FullscreenControl', () => {
+    test('appears when fullscreen is enabled', () => {
+        Object.defineProperty(window.document, 'fullscreenEnabled', {
+            value: true,
+            writable: true,
+        });
+        const map = createMap(undefined, undefined);
+        const fullscreen = new FullscreenControl(undefined);
+        map.addControl(fullscreen);
 
-    const consoleWarn = t.stub(console, 'warn');
-
-    const map = createMap(t);
-    const fullscreen = new FullscreenControl();
-    map.addControl(fullscreen);
-
-    expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen').length).toBe(0);
-    expect(consoleWarn.getCall(0).args[0]).toBe('This device does not support fullscreen mode.');
-});
-
-describe('FullscreenControl makes optional container element full screen', () => {
-    window.document.fullscreenEnabled = true;
-
-    const map = createMap(t);
-    const fullscreen = new FullscreenControl({container: window.document.querySelector('body')});
-    map.addControl(fullscreen);
-    const control = map._controls.find((ctrl) => {
-        return Object.prototype.hasOwnProperty.call(ctrl, '_fullscreen');
+        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen').length).toBe(1);
     });
-    control._onClickFullscreen();
 
-    expect(control._container.tagName).toBe('BODY');
+    test('does not appear when fullscreen is not enabled', () => {
+        Object.defineProperty(window.document, 'fullscreenEnabled', {
+            value: false,
+            writable: true,
+        });
+
+        jest.spyOn(console, 'warn').mockImplementation(() => { });
+
+        const map = createMap(undefined, undefined);
+        const fullscreen = new FullscreenControl(undefined);
+        map.addControl(fullscreen);
+
+        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen').length).toBe(0);
+        expect(console.warn).toHaveBeenCalledWith('This device does not support fullscreen mode.');
+    });
+
+    test('makes optional container element full screen', () => {
+        Object.defineProperty(window.document, 'fullscreenEnabled', {
+            value: true,
+            writable: true,
+        });
+
+        const map = createMap(undefined, undefined);
+        const fullscreen = new FullscreenControl({container: window.document.querySelector('body')});
+        map.addControl(fullscreen);
+        const control = map._controls.find((ctrl) => {
+            return Object.prototype.hasOwnProperty.call(ctrl, '_fullscreen');
+        }) as FullscreenControl;
+        control._onClickFullscreen();
+
+        expect(control._container.tagName).toBe('BODY');
+    });
 });
