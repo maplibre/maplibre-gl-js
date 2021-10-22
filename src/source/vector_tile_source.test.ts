@@ -52,7 +52,7 @@ describe('VectorTileSource', () => {
         const source = createSource({
             minzoom: 1,
             maxzoom: 10,
-            attribution: 'Mapbox',
+            attribution: 'Maplibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
 
@@ -61,7 +61,7 @@ describe('VectorTileSource', () => {
                 expect(source.tiles).toEqual(['http://example.com/{z}/{x}/{y}.png']);
                 expect(source.minzoom).toEqual(1);
                 expect(source.maxzoom).toEqual(10);
-                expect((source as Source).attribution).toEqual('Mapbox');
+                expect((source as Source).attribution).toEqual('Maplibre');
                 done();
             }
         });
@@ -77,7 +77,7 @@ describe('VectorTileSource', () => {
                 expect(source.tiles).toEqual(['http://example.com/{z}/{x}/{y}.png']);
                 expect(source.minzoom).toEqual(1);
                 expect(source.maxzoom).toEqual(10);
-                expect((source as Source).attribution).toEqual('Mapbox');
+                expect((source as Source).attribution).toEqual('Maplibre');
                 done();
             }
         });
@@ -136,14 +136,14 @@ describe('VectorTileSource', () => {
         const source = createSource({
             minzoom: 1,
             maxzoom: 10,
-            attribution: 'Mapbox',
+            attribution: 'Maplibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
         expect(source.serialize()).toEqual({
             type: 'vector',
             minzoom: 1,
             maxzoom: 10,
-            attribution: 'Mapbox',
+            attribution: 'Maplibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
     });
@@ -153,7 +153,7 @@ describe('VectorTileSource', () => {
             const source = createSource({
                 minzoom: 1,
                 maxzoom: 10,
-                attribution: 'Mapbox',
+                attribution: 'Maplibre',
                 tiles: ['http://example.com/{z}/{x}/{y}.png'],
                 scheme
             });
@@ -240,7 +240,7 @@ describe('VectorTileSource', () => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'Maplibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         });
@@ -257,7 +257,7 @@ describe('VectorTileSource', () => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'Maplibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, 91]
         });
@@ -274,7 +274,7 @@ describe('VectorTileSource', () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'Maplibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
@@ -342,7 +342,7 @@ describe('VectorTileSource', () => {
         const source = createSource({
             minzoom: 1,
             maxzoom: 10,
-            attribution: 'Mapbox',
+            attribution: 'Maplibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
         source.setTiles(['http://example2.com/{z}/{x}/{y}.png']);
@@ -350,7 +350,7 @@ describe('VectorTileSource', () => {
             type: 'vector',
             minzoom: 1,
             maxzoom: 10,
-            attribution: 'Mapbox',
+            attribution: 'Maplibre',
             tiles: ['http://example2.com/{z}/{x}/{y}.png']
         });
     });
