@@ -64,6 +64,7 @@ describe('load tile', () => {
 
     test('worker source messages dispatched to the correct map instance', done => {
         const worker = new Worker(_self);
+        const workerName = 'test';
 
         worker.actor.send = (type, data, callback, mapId): Cancelable => {
             expect(type).toBe('main thread task');
@@ -72,7 +73,11 @@ describe('load tile', () => {
             return {cancel: () => {}};
         };
 
-        _self.registerWorkerSource('test', WorkerSourceMock);
+        _self.registerWorkerSource(workerName, WorkerSourceMock);
+
+        expect(() => {
+            _self.registerWorkerSource(workerName, WorkerSourceMock);
+        }).toThrow(`Worker source with name "${workerName}" already registered.`);
 
         worker.loadTile('999', {type: 'test'} as WorkerTileParameters & { type: string }, () => {});
     });
