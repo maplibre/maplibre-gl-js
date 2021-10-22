@@ -3,6 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Improve attribution controls accessibility. See [#359](https://github.com/maplibre/maplibre-gl-js/issues/359)
 
 ### 🐞 Bug fixes
 
