@@ -5,6 +5,7 @@ import {Cancelable} from '../types/cancelable';
 import {WorkerGlobalScopeInterface} from '../util/web_worker';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {TileParameters, WorkerSource, WorkerTileCallback, WorkerTileParameters} from './worker_source';
+import {plugin as globalRTLTextPlugin} from './rtl_text_plugin';
 
 const _self = {
     addEventListener() {}
@@ -74,5 +75,73 @@ describe('load tile', () => {
         _self.registerWorkerSource('test', WorkerSourceMock);
 
         worker.loadTile('999', {type: 'test'} as WorkerTileParameters & { type: string }, () => {});
+    });
+});
+
+describe('register RTLTextPlugin', () => {
+    test('should not throw and set values in plugin', () => {
+        jest.spyOn(globalRTLTextPlugin, 'isParsed').mockImplementation(() => {
+            return false;
+        });
+
+        const rtlTextPlugin = {
+            applyArabicShaping: 'test',
+            processBidirectionalText: 'test',
+            processStyledBidirectionalText: 'test',
+        };
+
+        _self.registerRTLTextPlugin(rtlTextPlugin);
+        expect(globalRTLTextPlugin['applyArabicShaping']).toBe('test');
+        expect(globalRTLTextPlugin['processBidirectionalText']).toBe('test');
+        expect(globalRTLTextPlugin['processStyledBidirectionalText']).toBe('test');
+    });
+
+    test('should throw if already parsed', () => {
+        jest.spyOn(globalRTLTextPlugin, 'isParsed').mockImplementation(() => {
+            return true;
+        });
+
+        const rtlTextPlugin = {
+            applyArabicShaping: jest.fn(),
+            processBidirectionalText: jest.fn(),
+            processStyledBidirectionalText: jest.fn(),
+        };
+
+        expect(() => {
+            _self.registerRTLTextPlugin(rtlTextPlugin);
+        }).toThrow('RTL text plugin already registered.');
+    });
+});
+
+describe('set Referrer', () => {
+    test('Referrer is set', () => {
+        const worker = new Worker(_self);
+        worker.setReferrer('fakeId', 'myMap');
+        expect(worker.referrer).toBe('myMap');
+    });
+});
+
+describe('load worker source', () => {
+    test('calls callback on error', done => {
+        const server = fakeServer.create();
+        global.fetch = null;
+        const worker = new Worker(_self);
+        worker.loadWorkerSource('0', {
+            url: '/error',
+        }, (err) => {
+            expect(err).toBeTruthy();
+            server.restore();
+            done();
+        });
+        server.respond();
+    });
+});
+
+describe('set images', () => {
+    test('set images', () => {
+        const worker = new Worker(_self);
+        expect(worker.availableImages['0']).toEqual(undefined);
+        worker.setImages('0', ['availableImages'], () => {});
+        expect(worker.availableImages['0']).toEqual(['availableImages']);
     });
 });
