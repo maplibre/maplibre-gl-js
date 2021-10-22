@@ -20,7 +20,7 @@ describe('filter', () => {
     });
 
     test('expression, compare two properties', () => {
-        jest.spyOn(console, 'warn');
+        jest.spyOn(console, 'warn').mockImplementation(() => { });
         const f = createFilter(['==', ['string', ['get', 'x']], ['string', ['get', 'y']]]).filter;
         expect(f({zoom: 0}, {properties: {x: 1, y: 1}} as any as Feature)).toBe(false);
         expect(f({zoom: 0}, {properties: {x: '1', y: '1'}} as any as Feature)).toBe(true);
@@ -130,7 +130,7 @@ describe('legacy filter detection', () => {
 
 describe('convert legacy filters to expressions', () => {
     beforeEach(() => {
-        jest.spyOn(console, 'warn');
+        jest.spyOn(console, 'warn').mockImplementation(() => { });
     });
 
     legacyFilterTests(f => {
