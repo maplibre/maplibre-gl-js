@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>AttributionControl</title>
+        <meta
+            name="viewport"
+            content="initial-scale=1,maximum-scale=1,user-scalable=no"
+        />
+        <script src="../dist/maplibre-gl.js"></script>
+        <link href="../dist/maplibre-gl.css" rel="stylesheet" />
+    </head>
+
+    <body>
+        <div id="map" style="width: 100vw; height: 100vh"></div>
+
+        <script>
+            var map = new maplibregl.Map({
+                container: "map",
+                style: "https://demotiles.maplibre.org/style.json",
+                center: [0.0, 0.0], // Startposition [lng, lat]
+                zoom: 1, // Zoom
+            });
+            map.addControl(
+                new maplibregl.AttributionControl({
+                    customAttribution: "Desiged with ♥️ ", 
+                    compact: true,
+                })
+            );
+            map.addControl(new maplibregl.NavigationControl(), "top-left");
+        </script>
+    </body>
+</html>
