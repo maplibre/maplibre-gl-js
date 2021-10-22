@@ -6,7 +6,7 @@ import EXTENT from '../data/extent';
 
 // The feature type used by geojson-vt and supercluster. Should be extracted to
 // global type and used in module definitions for those two modules.
-type Feature = {
+export type Feature = {
   type: 1;
   id: any;
   tags: {[_: string]: string | number | boolean};
