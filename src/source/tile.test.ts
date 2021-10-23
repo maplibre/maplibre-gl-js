@@ -1,33 +1,29 @@
-import '../../stub_loader';
-import {test} from '../../util/test';
-import {createSymbolBucket} from '../../util/create_symbol_layer';
-import Tile from '../../../rollup/build/tsc/src/source/tile';
-import GeoJSONWrapper from '../../../rollup/build/tsc/src/source/geojson_wrapper';
-import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
+import {createSymbolBucket} from '../../test/util/create_symbol_layer_jest';
+import Tile from '../source/tile';
+import GeoJSONWrapper, {Feature} from '../source/geojson_wrapper';
+import {OverscaledTileID} from '../source/tile_id';
 import fs from 'fs';
-import path, {dirname} from 'path';
+import path from 'path';
 import vtpbf from 'vt-pbf';
-import FeatureIndex from '../../../rollup/build/tsc/src/data/feature_index';
-import {CollisionBoxArray} from '../../../rollup/build/tsc/src/data/array_types';
-import {extend} from '../../../rollup/build/tsc/src/util/util';
-import {serialize, deserialize} from '../../../rollup/build/tsc/src/util/web_worker_transfer';
-import {fileURLToPath} from 'url';
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import FeatureIndex from '../data/feature_index';
+import {CollisionBoxArray} from '../data/array_types';
+import {extend} from '../util/util';
+import {serialize, deserialize} from '../util/web_worker_transfer';
 
-test('querySourceFeatures', (t) => {
+describe('querySourceFeatures', () => {
     const features = [{
         type: 1,
         geometry: [0, 0],
         tags: {oneway: true}
-    }];
+    } as any as Feature];
 
-    t.test('geojson tile', (t) => {
-        const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2));
+    test('geojson tile', () => {
+        const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), undefined);
         let result;
 
         result = [];
-        tile.querySourceFeatures(result, {});
-        t.equal(result.length, 0);
+        tile.querySourceFeatures(result);
+        expect(result.length).toBe(0);
 
         const geojsonWrapper = new GeoJSONWrapper(features);
         geojsonWrapper.name = '_geojsonTileLayer';
@@ -38,49 +34,47 @@ test('querySourceFeatures', (t) => {
 
         result = [];
         tile.querySourceFeatures(result);
-        t.equal(result.length, 1);
-        t.deepEqual(result[0].geometry.coordinates[0], [-90, 0]);
+        expect(result.length).toBe(1);
+        expect(result[0].geometry.coordinates[0]).toEqual([-90, 0]);
         result = [];
-        tile.querySourceFeatures(result, {});
-        t.equal(result.length, 1);
-        t.deepEqual(result[0].properties, features[0].tags);
+        tile.querySourceFeatures(result, {} as any);
+        expect(result.length).toBe(1);
+        expect(result[0].properties).toEqual(features[0].tags);
         result = [];
-        tile.querySourceFeatures(result, {filter: ['==', 'oneway', true]});
-        t.equal(result.length, 1);
+        tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['==', 'oneway', true]});
+        expect(result.length).toBe(1);
         result = [];
-        tile.querySourceFeatures(result, {filter: ['!=', 'oneway', true]});
-        t.equal(result.length, 0);
+        tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['!=', 'oneway', true]});
+        expect(result.length).toBe(0);
         result = [];
-        const polygon = {type: "Polygon",  coordinates: [[[-91, -1], [-89, -1], [-89, 1], [-91, 1], [-91, -1]]]};
-        tile.querySourceFeatures(result, {filter: ['within', polygon]});
-        t.equal(result.length, 1);
-        t.end();
+        const polygon = {type: 'Polygon',  coordinates: [[[-91, -1], [-89, -1], [-89, 1], [-91, 1], [-91, -1]]]};
+        tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['within', polygon]});
+        expect(result.length).toBe(1);
     });
 
-    t.test('empty geojson tile', (t) => {
-        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
+    test('empty geojson tile', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         let result;
 
         result = [];
-        tile.querySourceFeatures(result, {});
-        t.equal(result.length, 0);
+        tile.querySourceFeatures(result);
+        expect(result.length).toBe(0);
 
         const geojsonWrapper = new GeoJSONWrapper([]);
         geojsonWrapper.name = '_geojsonTileLayer';
-        tile.rawTileData = vtpbf({layers: {'_geojsonTileLayer': geojsonWrapper}});
+
         result = [];
-        t.doesNotThrow(() => { tile.querySourceFeatures(result); });
-        t.equal(result.length, 0);
-        t.end();
+        expect(() => { tile.querySourceFeatures(result); }).not.toThrow();
+        expect(result.length).toBe(0);
     });
 
-    t.test('vector tile', (t) => {
-        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
+    test('vector tile', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         let result;
 
         result = [];
-        tile.querySourceFeatures(result, {});
-        t.equal(result.length, 0);
+        tile.querySourceFeatures(result);
+        expect(result.length).toBe(0);
 
         tile.loadVectorData(
             createVectorData({rawTileData: createRawTileData()}),
@@ -88,37 +82,35 @@ test('querySourceFeatures', (t) => {
         );
 
         result = [];
-        tile.querySourceFeatures(result, {'sourceLayer': 'does-not-exist'});
-        t.equal(result.length, 0);
+        tile.querySourceFeatures(result, {sourceLayer: 'does-not-exist', filter: undefined});
+        expect(result.length).toBe(0);
 
         result = [];
-        tile.querySourceFeatures(result, {'sourceLayer': 'road'});
-        t.equal(result.length, 3);
+        tile.querySourceFeatures(result, {sourceLayer: 'road', filter: undefined});
+        expect(result.length).toBe(3);
 
         result = [];
-        tile.querySourceFeatures(result, {'sourceLayer': 'road', filter: ['==', 'class', 'main']});
-        t.equal(result.length, 1);
+        tile.querySourceFeatures(result, {sourceLayer: 'road', filter: ['==', 'class', 'main']});
+        expect(result.length).toBe(1);
         result = [];
-        tile.querySourceFeatures(result, {'sourceLayer': 'road', filter: ['!=', 'class', 'main']});
-        t.equal(result.length, 2);
+        tile.querySourceFeatures(result, {sourceLayer: 'road', filter: ['!=', 'class', 'main']});
+        expect(result.length).toBe(2);
 
-        t.end();
     });
 
-    t.test('loadVectorData unloads existing data before overwriting it', (t) => {
-        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
+    test('loadVectorData unloads existing data before overwriting it', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.state = 'loaded';
-        t.stub(tile, 'unloadVectorData');
+        const spy = jest.spyOn(tile, 'unloadVectorData');
         const painter = {};
 
         tile.loadVectorData(null, painter);
 
-        t.ok(tile.unloadVectorData.calledWith());
-        t.end();
+        expect(spy).toHaveBeenCalledWith();
     });
 
-    t.test('loadVectorData preserves the most recent rawTileData', (t) => {
-        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
+    test('loadVectorData preserves the most recent rawTileData', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.state = 'loaded';
 
         tile.loadVectorData(
@@ -131,17 +123,15 @@ test('querySourceFeatures', (t) => {
         );
 
         const features = [];
-        tile.querySourceFeatures(features, {'sourceLayer': 'road'});
-        t.equal(features.length, 3);
+        tile.querySourceFeatures(features, {sourceLayer: 'road', filter: undefined});
+        expect(features.length).toBe(3);
 
-        t.end();
     });
 
-    t.end();
 });
 
-test('Tile#isLessThan', (t) => {
-    t.test('correctly sorts tiles', (t) => {
+describe('Tile#isLessThan', () => {
+    test('correctly sorts tiles', () => {
         const tiles = [
             new OverscaledTileID(9, 0, 9, 146, 195),
             new OverscaledTileID(9, 0, 9, 147, 195),
@@ -163,7 +153,7 @@ test('Tile#isLessThan', (t) => {
 
         const sortedTiles = tiles.sort((a, b) => { return a.isLessThan(b) ? -1 : b.isLessThan(a) ? 1 : 0; });
 
-        t.deepEqual(sortedTiles, [
+        expect(sortedTiles).toEqual([
             new OverscaledTileID(9, 0, 9, 145, 194),
             new OverscaledTileID(9, 0, 9, 145, 196),
             new OverscaledTileID(9, 0, 9, 146, 195),
@@ -181,30 +171,23 @@ test('Tile#isLessThan', (t) => {
             new OverscaledTileID(9, 1, 9, 147, 196),
             new OverscaledTileID(10, 1, 10, 293, 390),
         ]);
-        t.end();
     });
-    t.end();
 });
 
-test('expiring tiles', (t) => {
-    t.test('regular tiles do not expire', (t) => {
-        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
+describe('expiring tiles', () => {
+    test('regular tiles do not expire', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.state = 'loaded';
         tile.timeAdded = Date.now();
 
-        t.notOk(tile.cacheControl);
-        t.notOk(tile.expires);
+        expect(tile.getExpiryTimeout()).toBeFalsy();
 
-        t.end();
     });
 
-    t.test('set, get expiry', (t) => {
-        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
+    test('set, get expiry', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.state = 'loaded';
         tile.timeAdded = Date.now();
-
-        t.notOk(tile.cacheControl, 'no cache-control set');
-        t.notOk(tile.expires, 'no expires set');
 
         tile.setExpiryData({
             cacheControl: 'max-age=60'
@@ -212,7 +195,7 @@ test('expiring tiles', (t) => {
 
         // times are fuzzy, so we'll give this a little leeway:
         let expiryTimeout = tile.getExpiryTimeout();
-        t.ok(expiryTimeout >= 56000 && expiryTimeout <= 60000, 'cache-control parsed as expected');
+        expect(expiryTimeout >= 56000 && expiryTimeout <= 60000).toBeTruthy();
 
         const date = new Date();
         date.setMinutes(date.getMinutes() + 10);
@@ -223,13 +206,12 @@ test('expiring tiles', (t) => {
         });
 
         expiryTimeout = tile.getExpiryTimeout();
-        t.ok(expiryTimeout > 598000 && expiryTimeout < 600000, 'expires header set date as expected');
+        expect(expiryTimeout > 598000 && expiryTimeout < 600000).toBeTruthy();
 
-        t.end();
     });
 
-    t.test('exponential backoff handling', (t) => {
-        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
+    test('exponential backoff handling', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.state = 'loaded';
         tile.timeAdded = Date.now();
 
@@ -238,7 +220,7 @@ test('expiring tiles', (t) => {
         });
 
         const expiryTimeout = tile.getExpiryTimeout();
-        t.ok(expiryTimeout >= 8000 && expiryTimeout <= 10000, 'expiry timeout as expected when fresh');
+        expect(expiryTimeout >= 8000 && expiryTimeout <= 10000).toBeTruthy();
 
         const justNow = new Date();
         justNow.setSeconds(justNow.getSeconds() - 1);
@@ -249,31 +231,29 @@ test('expiring tiles', (t) => {
         tile.setExpiryData({
             expires: justNow
         });
-        t.equal(tile.getExpiryTimeout(), 1000, 'tile with one expired request retries after 1 second');
+        expect(tile.getExpiryTimeout()).toBe(1000);
 
         tile.setExpiryData({
             expires: justNow
         });
-        t.equal(tile.getExpiryTimeout(), 2000, 'exponential backoff');
+        expect(tile.getExpiryTimeout()).toBe(2000);
         tile.setExpiryData({
             expires: justNow
         });
-        t.equal(tile.getExpiryTimeout(), 4000, 'exponential backoff');
+        expect(tile.getExpiryTimeout()).toBe(4000);
 
         tile.setExpiryData({
             expires: justNow
         });
-        t.equal(tile.getExpiryTimeout(), 8000, 'exponential backoff');
+        expect(tile.getExpiryTimeout()).toBe(8000);
 
-        t.end();
     });
 
-    t.end();
 });
 
-test('rtl text detection', (t) => {
-    t.test('Tile#hasRTLText is true when a tile loads a symbol bucket with rtl text', (t) => {
-        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1));
+describe('rtl text detection', () => {
+    test('Tile#hasRTLText is true when a tile loads a symbol bucket with rtl text', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         // Create a stub symbol bucket
         const symbolBucket = createSymbolBucket('test', 'Test', 'test', new CollisionBoxArray());
         // symbolBucket has not been populated yet so we force override the value in the stub
@@ -287,18 +267,16 @@ test('rtl text detection', (t) => {
             })
         );
 
-        t.ok(tile.hasRTLText);
-        t.end();
+        expect(tile.hasRTLText).toBeTruthy();
     });
 
-    t.end();
 });
 
 function createRawTileData() {
-    return fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'));
+    return fs.readFileSync(path.join(__dirname, '../../test/fixtures/mbsv5-6-18-23.vector.pbf'));
 }
 
-function createVectorData(options) {
+function createVectorData(options?) {
     const collisionBoxArray = new CollisionBoxArray();
     return extend({
         collisionBoxArray: deserialize(serialize(collisionBoxArray)),

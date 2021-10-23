@@ -168,7 +168,11 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     return result;
 }
 
-export function querySourceFeatures(sourceCache: SourceCache, params: any) {
+export function querySourceFeatures(sourceCache: SourceCache, params: {
+    sourceLayer: string;
+    filter: Array<any>;
+    validate?: boolean;
+}) {
     const tiles = sourceCache.getRenderableIds().map((id) => {
         return sourceCache.getTileByID(id);
     });
