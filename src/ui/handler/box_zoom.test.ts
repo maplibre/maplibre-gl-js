@@ -1,14 +1,14 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import Map from '../../../../rollup/build/tsc/src/ui/map';
-import DOM from '../../../../rollup/build/tsc/src/util/dom';
+import Map from '../../ui/map';
+import DOM from '../../util/dom';
 import simulate from '../../../util/simulate_interaction';
 
 function createMap(clickTolerance) {
     return new Map({container: DOM.create('div', '', window.document.body), clickTolerance});
 }
 
-test('BoxZoomHandler fires boxzoomstart and boxzoomend events at appropriate times', (t) => {
+describe('BoxZoomHandler fires boxzoomstart and boxzoomend events at appropriate times', () => {
     const map = createMap();
 
     const boxzoomstart = t.spy();
@@ -33,10 +33,9 @@ test('BoxZoomHandler fires boxzoomstart and boxzoomend events at appropriate tim
     expect(boxzoomend.callCount).toBe(1);
 
     map.remove();
-    t.end();
 });
 
-test('BoxZoomHandler avoids conflicts with DragPanHandler when disabled and reenabled (#2237)', (t) => {
+describe('BoxZoomHandler avoids conflicts with DragPanHandler when disabled and reenabled (#2237)', () => {
     const map = createMap();
 
     map.boxZoom.disable();
@@ -76,10 +75,9 @@ test('BoxZoomHandler avoids conflicts with DragPanHandler when disabled and reen
     expect(dragend.callCount).toBe(0);
 
     map.remove();
-    t.end();
 });
 
-test('BoxZoomHandler does not begin a box zoom if preventDefault is called on the mousedown event', (t) => {
+describe('BoxZoomHandler does not begin a box zoom if preventDefault is called on the mousedown event', () => {
     const map = createMap();
 
     map.on('mousedown', e => e.preventDefault());
@@ -103,10 +101,9 @@ test('BoxZoomHandler does not begin a box zoom if preventDefault is called on th
     expect(boxzoomend.callCount).toBe(0);
 
     map.remove();
-    t.end();
 });
 
-test('BoxZoomHandler does not begin a box zoom on spurious mousemove events', (t) => {
+describe('BoxZoomHandler does not begin a box zoom on spurious mousemove events', () => {
     const map = createMap();
 
     const boxzoomstart = t.spy();
@@ -131,10 +128,9 @@ test('BoxZoomHandler does not begin a box zoom on spurious mousemove events', (t
     expect(boxzoomend.callCount).toBe(0);
 
     map.remove();
-    t.end();
 });
 
-test('BoxZoomHandler does not begin a box zoom until mouse move is larger than click tolerance', (t) => {
+describe('BoxZoomHandler does not begin a box zoom until mouse move is larger than click tolerance', () => {
     const map = createMap(4);
 
     const boxzoomstart = t.spy();
@@ -159,5 +155,4 @@ test('BoxZoomHandler does not begin a box zoom until mouse move is larger than c
     expect(boxzoomend.callCount).toBe(0);
 
     map.remove();
-    t.end();
 });
