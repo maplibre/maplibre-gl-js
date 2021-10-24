@@ -1,158 +1,180 @@
-import '../../../stub_loader';
-import {test} from '../../../util/test';
-import Map from '../../ui/map';
+import Map from '../map';
 import DOM from '../../util/dom';
-import simulate from '../../../util/simulate_interaction';
+import simulate from '../../../test/util/simulate_interaction';
+import {setWebGlContext} from '../../util/test/util';
 
 function createMap(clickTolerance) {
-    return new Map({container: DOM.create('div', '', window.document.body), clickTolerance});
+    return new Map({style: '', container: DOM.create('div', '', window.document.body), clickTolerance});
 }
 
-describe('BoxZoomHandler fires boxzoomstart and boxzoomend events at appropriate times', () => {
-    const map = createMap();
-
-    const boxzoomstart = t.spy();
-    const boxzoomend   = t.spy();
-
-    map.on('boxzoomstart', boxzoomstart);
-    map.on('boxzoomend',   boxzoomend);
-
-    simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(0);
-    expect(boxzoomend.callCount).toBe(0);
-
-    simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(1);
-    expect(boxzoomend.callCount).toBe(0);
-
-    simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(1);
-    expect(boxzoomend.callCount).toBe(1);
-
-    map.remove();
+beforeEach(() => {
+    setWebGlContext();
+    window.performance.mark = jest.fn();
+    window.performance.clearMeasures = jest.fn();
+    window.performance.clearMarks = jest.fn();
+    // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
+    Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: jest.fn().mockImplementation(query => ({
+            matches: false,
+            media: query,
+            onchange: null,
+            addListener: jest.fn(), // deprecated
+            removeListener: jest.fn(), // deprecated
+            addEventListener: jest.fn(),
+            removeEventListener: jest.fn(),
+            dispatchEvent: jest.fn(),
+        })),
+    });
 });
 
-describe('BoxZoomHandler avoids conflicts with DragPanHandler when disabled and reenabled (#2237)', () => {
-    const map = createMap();
+describe('BoxZoomHandler', () => {
+    test('fires boxzoomstart and boxzoomend events at appropriate times', () => {
+        const map = createMap(undefined);
 
-    map.boxZoom.disable();
-    map.boxZoom.enable();
+        const boxzoomstart = jest.fn();
+        const boxzoomend   = jest.fn();
 
-    const boxzoomstart = t.spy();
-    const boxzoomend   = t.spy();
+        map.on('boxzoomstart', boxzoomstart);
+        map.on('boxzoomend',   boxzoomend);
 
-    map.on('boxzoomstart', boxzoomstart);
-    map.on('boxzoomend',   boxzoomend);
+        simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(0);
+        expect(boxzoomend.mock.calls.length).toBe(0);
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+        simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(1);
+        expect(boxzoomend.mock.calls.length).toBe(0);
 
-    map.on('dragstart', dragstart);
-    map.on('drag',      drag);
-    map.on('dragend',   dragend);
+        simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(1);
+        expect(boxzoomend.mock.calls.length).toBe(1);
 
-    simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(0);
-    expect(boxzoomend.callCount).toBe(0);
+        map.remove();
+    });
 
-    simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(1);
-    expect(boxzoomend.callCount).toBe(0);
+    test('avoids conflicts with DragPanHandler when disabled and reenabled (#2237)', () => {
+        const map = createMap(undefined);
 
-    simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(1);
-    expect(boxzoomend.callCount).toBe(1);
+        map.boxZoom.disable();
+        map.boxZoom.enable();
 
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+        const boxzoomstart = jest.fn();
+        const boxzoomend   = jest.fn();
 
-    map.remove();
-});
+        map.on('boxzoomstart', boxzoomstart);
+        map.on('boxzoomend',   boxzoomend);
 
-describe('BoxZoomHandler does not begin a box zoom if preventDefault is called on the mousedown event', () => {
-    const map = createMap();
+        const dragstart = jest.fn();
+        const drag      = jest.fn();
+        const dragend   = jest.fn();
 
-    map.on('mousedown', e => e.preventDefault());
+        map.on('dragstart', dragstart);
+        map.on('drag',      drag);
+        map.on('dragend',   dragend);
 
-    const boxzoomstart = t.spy();
-    const boxzoomend   = t.spy();
+        simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(0);
+        expect(boxzoomend.mock.calls.length).toBe(0);
 
-    map.on('boxzoomstart', boxzoomstart);
-    map.on('boxzoomend',   boxzoomend);
+        simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(1);
+        expect(boxzoomend.mock.calls.length).toBe(0);
 
-    simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
-    map._renderTaskQueue.run();
+        simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(1);
+        expect(boxzoomend.mock.calls.length).toBe(1);
 
-    simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
-    map._renderTaskQueue.run();
+        expect(dragstart.mock.calls.length).toBe(0);
+        expect(drag.mock.calls.length).toBe(0);
+        expect(dragend.mock.calls.length).toBe(0);
 
-    simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
-    map._renderTaskQueue.run();
+        map.remove();
+    });
 
-    expect(boxzoomstart.callCount).toBe(0);
-    expect(boxzoomend.callCount).toBe(0);
+    test('does not begin a box zoom if preventDefault is called on the mousedown event', () => {
+        const map = createMap(undefined);
 
-    map.remove();
-});
+        map.on('mousedown', e => e.preventDefault());
 
-describe('BoxZoomHandler does not begin a box zoom on spurious mousemove events', () => {
-    const map = createMap();
+        const boxzoomstart = jest.fn();
+        const boxzoomend   = jest.fn();
 
-    const boxzoomstart = t.spy();
-    const boxzoomend   = t.spy();
+        map.on('boxzoomstart', boxzoomstart);
+        map.on('boxzoomend',   boxzoomend);
 
-    map.on('boxzoomstart', boxzoomstart);
-    map.on('boxzoomend',   boxzoomend);
+        simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
+        map._renderTaskQueue.run();
 
-    simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(0);
-    expect(boxzoomend.callCount).toBe(0);
+        simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
+        map._renderTaskQueue.run();
 
-    simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(0);
-    expect(boxzoomend.callCount).toBe(0);
+        simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
+        map._renderTaskQueue.run();
 
-    simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(0);
-    expect(boxzoomend.callCount).toBe(0);
+        expect(boxzoomstart.mock.calls.length).toBe(0);
+        expect(boxzoomend.mock.calls.length).toBe(0);
 
-    map.remove();
-});
+        map.remove();
+    });
 
-describe('BoxZoomHandler does not begin a box zoom until mouse move is larger than click tolerance', () => {
-    const map = createMap(4);
+    test('does not begin a box zoom on spurious mousemove events', () => {
+        const map = createMap(undefined);
 
-    const boxzoomstart = t.spy();
-    const boxzoomend   = t.spy();
+        const boxzoomstart = jest.fn();
+        const boxzoomend   = jest.fn();
 
-    map.on('boxzoomstart', boxzoomstart);
-    map.on('boxzoomend',   boxzoomend);
+        map.on('boxzoomstart', boxzoomstart);
+        map.on('boxzoomend',   boxzoomend);
 
-    simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(0);
-    expect(boxzoomend.callCount).toBe(0);
+        simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(0);
+        expect(boxzoomend.mock.calls.length).toBe(0);
 
-    simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 3, clientY: 0});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(0);
-    expect(boxzoomend.callCount).toBe(0);
+        simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(0);
+        expect(boxzoomend.mock.calls.length).toBe(0);
 
-    simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 4});
-    map._renderTaskQueue.run();
-    expect(boxzoomstart.callCount).toBe(1);
-    expect(boxzoomend.callCount).toBe(0);
+        simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(0);
+        expect(boxzoomend.mock.calls.length).toBe(0);
 
-    map.remove();
+        map.remove();
+    });
+
+    test('does not begin a box zoom until mouse move is larger than click tolerance', () => {
+        const map = createMap(4);
+
+        const boxzoomstart = jest.fn();
+        const boxzoomend   = jest.fn();
+
+        map.on('boxzoomstart', boxzoomstart);
+        map.on('boxzoomend',   boxzoomend);
+
+        simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(0);
+        expect(boxzoomend.mock.calls.length).toBe(0);
+
+        simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 3, clientY: 0});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(0);
+        expect(boxzoomend.mock.calls.length).toBe(0);
+
+        simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 4});
+        map._renderTaskQueue.run();
+        expect(boxzoomstart.mock.calls.length).toBe(1);
+        expect(boxzoomend.mock.calls.length).toBe(0);
+
+        map.remove();
+    });
 });
