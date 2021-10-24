@@ -1,7 +1,7 @@
 import Map from '../map';
 import DOM from '../../util/dom';
 import simulate from '../../../test/util/simulate_interaction';
-import {setWebGlContext} from '../../util/test/util';
+import {setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 
 function createMap(clickTolerance) {
     return new Map({style: '', container: DOM.create('div', '', window.document.body), clickTolerance});
@@ -9,23 +9,8 @@ function createMap(clickTolerance) {
 
 beforeEach(() => {
     setWebGlContext();
-    window.performance.mark = jest.fn();
-    window.performance.clearMeasures = jest.fn();
-    window.performance.clearMarks = jest.fn();
-    // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
-    Object.defineProperty(window, 'matchMedia', {
-        writable: true,
-        value: jest.fn().mockImplementation(query => ({
-            matches: false,
-            media: query,
-            onchange: null,
-            addListener: jest.fn(), // deprecated
-            removeListener: jest.fn(), // deprecated
-            addEventListener: jest.fn(),
-            removeEventListener: jest.fn(),
-            dispatchEvent: jest.fn(),
-        })),
-    });
+    setPerformance();
+    setMatchMedia();
 });
 
 describe('BoxZoomHandler', () => {
