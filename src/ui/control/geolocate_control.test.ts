@@ -297,7 +297,6 @@ describe('GeolocateControl with no options', () => {
                     } catch (error) {
                         done(error);
                     }
-
                 });
                 geolocation.changeError({code: 2, message: 'position unavaliable'});
             });
@@ -387,10 +386,8 @@ describe('GeolocateControl with no options', () => {
         geolocation.send({latitude: 10, longitude: 20, accuracy: 30});
     });
 
-    test('trackuserlocationstart event', () => {
+    test('trackuserlocationstart event', done => {
         const map = createMap(undefined, undefined);
-        expect.assertions(0);
-
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
             fitBoundsOptions: {
@@ -402,20 +399,15 @@ describe('GeolocateControl with no options', () => {
         const click = new window.Event('click');
 
         geolocate.once('trackuserlocationstart', () => {
-            geolocate.once('trackuserlocationend', () => {
-                geolocate.once('trackuserlocationstart', () => {
-                });
-                // click the geolocate control button again which should transition back to active_lock state
-                geolocate._geolocateButton.dispatchEvent(click);
-            });
-
-            // manually pan the map away from the geolocation position which should trigger the 'trackuserlocationend' event above
-            map.jumpTo({
-                center: [10, 5]
-            });
+            try {
+                expect(map.getCenter()).toEqual({lng: 0, lat: 0});
+                done();
+            } catch (error) {
+                done(error);
+            }
         });
+
         geolocate._geolocateButton.dispatchEvent(click);
-        geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
     });
 
     test('does not switch to BACKGROUND and stays in ACTIVE_LOCK state on window resize', done => {
