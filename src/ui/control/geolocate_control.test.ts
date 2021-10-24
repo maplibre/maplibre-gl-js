@@ -261,9 +261,7 @@ describe('GeolocateControl with no options', () => {
         geolocation.send({latitude: 10, longitude: 20, accuracy: 1000});
     });
 
-    test('watching map updates recenter on location with dot', () => {
-        expect.assertions(6);
-
+    test('watching map updates recenter on location with dot', done => {
         const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
@@ -278,7 +276,7 @@ describe('GeolocateControl with no options', () => {
 
         let moveendCount = 0;
         map.once('moveend', () => {
-        // moveend was being called a second time, this ensures that we don't run the tests a second time
+            // moveend was being called a second time, this ensures that we don't run the tests a second time
             if (moveendCount > 0) return;
             moveendCount++;
 
@@ -290,10 +288,16 @@ describe('GeolocateControl with no options', () => {
             map.once('moveend', () => {
                 expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '40.0000', 'lng': '50.0000'});
                 geolocate.once('error', () => {
-                    expect(geolocate._userLocationDotMarker._map).toBeTruthy();
-                    expect(
-                    geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')
-                    ).toBeTruthy();
+                    try {
+                        expect(geolocate._userLocationDotMarker._map).toBeTruthy();
+                        expect(
+                        geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')
+                        ).toBeTruthy();
+                        done();
+                    } catch (error) {
+                        done(error);
+                    }
+
                 });
                 geolocation.changeError({code: 2, message: 'position unavaliable'});
             });
@@ -303,10 +307,8 @@ describe('GeolocateControl with no options', () => {
         geolocation.send({latitude: 10, longitude: 20, accuracy: 30});
     });
 
-    test('watching map background event', () => {
+    test('watching map background event', done => {
         const map = createMap(undefined, undefined);
-        expect.assertions(0);
-
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
             fitBoundsOptions: {
@@ -319,11 +321,17 @@ describe('GeolocateControl with no options', () => {
 
         let moveendCount = 0;
         map.once('moveend', () => {
-        // moveend was being called a second time, this ensures that we don't run the tests a second time
+            // moveend was being called a second time, this ensures that we don't run the tests a second time
             if (moveendCount > 0) return;
             moveendCount++;
 
             geolocate.once('trackuserlocationend', () => {
+                try {
+                    expect(map.getCenter()).toEqual({lng: 10, lat: 5});
+                    done();
+                } catch (error) {
+                    done(error);
+                }
             });
 
             // manually pan the map away from the geolocation position which should trigger the 'trackuserlocationend' event above
@@ -351,7 +359,7 @@ describe('GeolocateControl with no options', () => {
 
         let moveendCount = 0;
         map.once('moveend', () => {
-        // moveend was being called a second time, this ensures that we don't run the tests a second time
+            // moveend was being called a second time, this ensures that we don't run the tests a second time
             if (moveendCount > 0) return;
             moveendCount++;
 
