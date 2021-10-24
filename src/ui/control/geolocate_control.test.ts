@@ -134,16 +134,11 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('trigger', () => {
-        expect.assertions(1);
-
         const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
 
-        geolocate.on('geolocate', () => {
-        });
         expect(geolocate.trigger()).toBeTruthy();
-        geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
     });
 
     test('trigger before added to map', () => {
