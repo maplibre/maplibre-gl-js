@@ -1,29 +1,27 @@
 
 import {test} from '../../../util/test';
 import {createMap} from '../../../util';
-import ScaleControl from '../../../../rollup/build/tsc/src/ui/control/scale_control';
+import ScaleControl from '../../ui/control/scale_control';
 
-test('ScaleControl appears in bottom-left by default', (t) => {
+describe('ScaleControl appears in bottom-left by default', () => {
     const map = createMap(t);
     map.addControl(new ScaleControl());
 
     expect(
         map.getContainer().querySelectorAll('.maplibregl-ctrl-bottom-left .maplibregl-ctrl-scale').length
     ).toBe(1);
-    t.end();
 });
 
-test('ScaleControl appears in the position specified by the position option', (t) => {
+describe('ScaleControl appears in the position specified by the position option', () => {
     const map = createMap(t);
     map.addControl(new ScaleControl(), 'top-left');
 
     expect(
         map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left .maplibregl-ctrl-scale').length
     ).toBe(1);
-    t.end();
 });
 
-test('ScaleControl should change unit of distance after calling setUnit', (t) => {
+describe('ScaleControl should change unit of distance after calling setUnit', () => {
     const map = createMap(t);
     const scale = new ScaleControl();
     const selector = '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-scale';
@@ -35,10 +33,9 @@ test('ScaleControl should change unit of distance after calling setUnit', (t) =>
     scale.setUnit('imperial');
     contents = map.getContainer().querySelector(selector).innerHTML;
     t.match(contents, /mi/);
-    t.end();
 });
 
-test('ScaleControl should respect the maxWidth regardless of the unit and actual scale', (t) => {
+describe('ScaleControl should respect the maxWidth regardless of the unit and actual scale', () => {
     const map = createMap(t);
     const maxWidth = 100;
     const scale = new ScaleControl({maxWidth, unit: 'nautical'});
@@ -48,5 +45,4 @@ test('ScaleControl should respect the maxWidth regardless of the unit and actual
 
     const el = map.getContainer().querySelector(selector);
     expect(parseFloat(el.style.width, 10) <= maxWidth).toBeTruthy();
-    t.end();
 });
