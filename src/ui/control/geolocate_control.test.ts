@@ -34,10 +34,11 @@ beforeEach(() => {
 describe('GeolocateControl with no options', () => {
     test('with no options', () => {
         const map = createMap(undefined, undefined);
-        expect.assertions(0);
 
-        const geolocate = new GeolocateControl(undefined);
-        map.addControl(geolocate);
+        expect(() => {
+            const geolocate = new GeolocateControl(undefined);
+            map.addControl(geolocate);
+        }).not.toThrow();
     });
 
     test('error event', () => {
@@ -166,12 +167,13 @@ describe('GeolocateControl with no options', () => {
 
     test('with removed before Geolocation callback', () => {
         const map = createMap(undefined, undefined);
-        expect.assertions(0);
 
-        const geolocate = new GeolocateControl(undefined);
-        map.addControl(geolocate);
-        geolocate.trigger();
-        map.removeControl(geolocate);
+        expect(() => {
+            const geolocate = new GeolocateControl(undefined);
+            map.addControl(geolocate);
+            geolocate.trigger();
+            map.removeControl(geolocate);
+        }).not.toThrow();
     });
 
     test('non-zero bearing', () => {
