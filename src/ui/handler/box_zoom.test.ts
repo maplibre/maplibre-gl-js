@@ -40,18 +40,18 @@ describe('BoxZoomHandler', () => {
 
         simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(0);
-        expect(boxzoomend.mock.calls.length).toBe(0);
+        expect(boxzoomstart).not.toHaveBeenCalled();
+        expect(boxzoomend).not.toHaveBeenCalled();
 
         simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(1);
-        expect(boxzoomend.mock.calls.length).toBe(0);
+        expect(boxzoomstart).toHaveBeenCalledTimes(1);
+        expect(boxzoomend).not.toHaveBeenCalled();
 
         simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(1);
-        expect(boxzoomend.mock.calls.length).toBe(1);
+        expect(boxzoomstart).toHaveBeenCalledTimes(1);
+        expect(boxzoomend).toHaveBeenCalledTimes(1);
 
         map.remove();
     });
@@ -78,22 +78,22 @@ describe('BoxZoomHandler', () => {
 
         simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(0);
-        expect(boxzoomend.mock.calls.length).toBe(0);
+        expect(boxzoomstart).not.toHaveBeenCalled();
+        expect(boxzoomend).not.toHaveBeenCalled();
 
         simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(1);
-        expect(boxzoomend.mock.calls.length).toBe(0);
+        expect(boxzoomstart).toHaveBeenCalledTimes(1);
+        expect(boxzoomend).not.toHaveBeenCalled();
 
         simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(1);
-        expect(boxzoomend.mock.calls.length).toBe(1);
+        expect(boxzoomstart).toHaveBeenCalledTimes(1);
+        expect(boxzoomend).toHaveBeenCalledTimes(1);
 
-        expect(dragstart.mock.calls.length).toBe(0);
-        expect(drag.mock.calls.length).toBe(0);
-        expect(dragend.mock.calls.length).toBe(0);
+        expect(dragstart).not.toHaveBeenCalled();
+        expect(drag).not.toHaveBeenCalled();
+        expect(dragend).not.toHaveBeenCalled();
 
         map.remove();
     });
@@ -118,8 +118,8 @@ describe('BoxZoomHandler', () => {
         simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
         map._renderTaskQueue.run();
 
-        expect(boxzoomstart.mock.calls.length).toBe(0);
-        expect(boxzoomend.mock.calls.length).toBe(0);
+        expect(boxzoomstart).not.toHaveBeenCalled();
+        expect(boxzoomend).not.toHaveBeenCalled();
 
         map.remove();
     });
@@ -135,18 +135,18 @@ describe('BoxZoomHandler', () => {
 
         simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(0);
-        expect(boxzoomend.mock.calls.length).toBe(0);
+        expect(boxzoomstart).not.toHaveBeenCalled();
+        expect(boxzoomend).not.toHaveBeenCalled();
 
         simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(0);
-        expect(boxzoomend.mock.calls.length).toBe(0);
+        expect(boxzoomstart).not.toHaveBeenCalled();
+        expect(boxzoomend).not.toHaveBeenCalled();
 
         simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(0);
-        expect(boxzoomend.mock.calls.length).toBe(0);
+        expect(boxzoomstart).not.toHaveBeenCalled();
+        expect(boxzoomend).not.toHaveBeenCalled();
 
         map.remove();
     });
@@ -162,18 +162,18 @@ describe('BoxZoomHandler', () => {
 
         simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(0);
-        expect(boxzoomend.mock.calls.length).toBe(0);
+        expect(boxzoomstart).not.toHaveBeenCalled();
+        expect(boxzoomend).not.toHaveBeenCalled();
 
         simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 3, clientY: 0});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(0);
-        expect(boxzoomend.mock.calls.length).toBe(0);
+        expect(boxzoomstart).not.toHaveBeenCalled();
+        expect(boxzoomend).not.toHaveBeenCalled();
 
         simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 4});
         map._renderTaskQueue.run();
-        expect(boxzoomstart.mock.calls.length).toBe(1);
-        expect(boxzoomend.mock.calls.length).toBe(0);
+        expect(boxzoomstart).toHaveBeenCalledTimes(1);
+        expect(boxzoomend).not.toHaveBeenCalled();
 
         map.remove();
     });
