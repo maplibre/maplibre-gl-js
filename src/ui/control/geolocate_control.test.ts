@@ -147,7 +147,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('trigger before added to map', () => {
-        expect.assertions(2);
         jest.spyOn(console, 'warn').mockImplementation(() => { });
 
         const geolocate = new GeolocateControl(undefined);
