@@ -1,5 +1,5 @@
 import geolocation from 'mock-geolocation';
-import {createMap, setWebGlContext} from '../../util/test/util';
+import {createMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 import GeolocateControl from './geolocate_control';
 
 geolocation.use();
@@ -14,21 +14,8 @@ function lngLatAsFixed(lngLat, digits) {
 
 beforeEach(() => {
     setWebGlContext();
-    window.performance.mark = jest.fn();
-    // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
-    Object.defineProperty(window, 'matchMedia', {
-        writable: true,
-        value: jest.fn().mockImplementation(query => ({
-            matches: false,
-            media: query,
-            onchange: null,
-            addListener: jest.fn(), // deprecated
-            removeListener: jest.fn(), // deprecated
-            addEventListener: jest.fn(),
-            removeEventListener: jest.fn(),
-            dispatchEvent: jest.fn(),
-        })),
-    });
+    setPerformance();
+    setMatchMedia();
 });
 
 describe('GeolocateControl with no options', () => {
