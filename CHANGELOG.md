@@ -3,6 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Allow maxPitch value up to 85 (#574)
 
 ### 🐞 Bug fixes
 
