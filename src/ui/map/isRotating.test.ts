@@ -1,22 +1,22 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import Map from '../../../../rollup/build/tsc/src/ui/map';
-import DOM from '../../../../rollup/build/tsc/src/util/dom';
+import Map from '../../ui/map';
+import DOM from '../../util/dom';
 import simulate from '../../../util/simulate_interaction';
-import browser from '../../../../rollup/build/tsc/src/util/browser';
+import browser from '../../util/browser';
 
 function createMap() {
     return new Map({container: DOM.create('div', '', window.document.body)});
 }
 
-test('Map#isRotating returns false by default', (t) => {
+describe('Map#isRotating returns false by default', done => {
     const map = createMap(t);
     expect(map.isRotating()).toBe(false);
     map.remove();
-    t.end();
+    done();
 });
 
-test('Map#isRotating returns true during a camera rotate animation', (t) => {
+describe('Map#isRotating returns true during a camera rotate animation', done => {
     const map = createMap(t);
 
     map.on('rotatestart', () => {
@@ -26,13 +26,13 @@ test('Map#isRotating returns true during a camera rotate animation', (t) => {
     map.on('rotateend', () => {
         expect(map.isRotating()).toBe(false);
         map.remove();
-        t.end();
+        done();
     });
 
     map.rotateTo(5, {duration: 0});
 });
 
-test('Map#isRotating returns true when drag rotating', (t) => {
+describe('Map#isRotating returns true when drag rotating', done => {
     const map = createMap(t);
 
     // Prevent inertial rotation.
@@ -45,7 +45,7 @@ test('Map#isRotating returns true when drag rotating', (t) => {
     map.on('rotateend', () => {
         expect(map.isRotating()).toBe(false);
         map.remove();
-        t.end();
+        done();
     });
 
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
