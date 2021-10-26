@@ -42,9 +42,9 @@ function createSource(options, logoRequired) {
 test('LogoControl appears in bottom-left by default', (t) => {
     const map = createMap(t);
     map.on('load', () => {
-        t.equal(map.getContainer().querySelectorAll(
+        expect(map.getContainer().querySelectorAll(
             '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-logo'
-        ).length, 1);
+        ).length).toBe(1);
         t.end();
     });
 });
@@ -52,9 +52,9 @@ test('LogoControl appears in bottom-left by default', (t) => {
 test('LogoControl appears in the position specified by the position option', (t) => {
     const map = createMap(t, 'top-left');
     map.on('load', () => {
-        t.equal(map.getContainer().querySelectorAll(
+        expect(map.getContainer().querySelectorAll(
             '.maplibregl-ctrl-top-left .maplibregl-ctrl-logo'
-        ).length, 1);
+        ).length).toBe(1);
         t.end();
     });
 });
@@ -62,7 +62,9 @@ test('LogoControl appears in the position specified by the position option', (t)
 test('LogoControl is not displayed when the maplibreLogo property is false', (t) => {
     const map = createMap(t, 'top-left', false);
     map.on('load', () => {
-        t.equal(map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left > .maplibregl-ctrl')[0].style.display, 'none');
+        expect(
+            map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left > .maplibregl-ctrl')[0].style.display
+        ).toBe('none');
         t.end();
     });
 });
@@ -77,11 +79,11 @@ test('LogoControl is not added more than once', (t) => {
         ]
     });
     map.on('load', () => {
-        t.equal(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo').length, 1, 'first LogoControl');
+        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo').length).toBe(1);
         map.addSource('source2', source);
         map.on('sourcedata', (e) => {
             if (e.isSourceLoaded && e.sourceId === 'source2' && e.sourceDataType === 'metadata') {
-                t.equal(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo').length, 1, 'only one LogoControl is added with multiple sources');
+                expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo').length).toBe(1);
                 t.end();
             }
         });
@@ -94,11 +96,15 @@ test('LogoControl appears in compact mode if container is less then 250 pixel wi
 
     Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 255, configurable: true});
     map.resize();
-    t.equal(container.querySelectorAll('.maplibregl-ctrl-logo:not(.maplibregl-compact)').length, 1);
+    expect(
+        container.querySelectorAll('.maplibregl-ctrl-logo:not(.maplibregl-compact)').length
+    ).toBe(1);
 
     Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 245, configurable: true});
     map.resize();
-    t.equal(container.querySelectorAll('.maplibregl-ctrl-logo.maplibregl-compact').length, 1);
+    expect(
+        container.querySelectorAll('.maplibregl-ctrl-logo.maplibregl-compact').length
+    ).toBe(1);
 
     t.end();
 });
@@ -110,7 +116,7 @@ test('LogoControl has `rel` nooper and nofollow', (t) => {
         const container = map.getContainer();
         const logo = container.querySelector('.maplibregl-ctrl-logo');
 
-        t.equal(logo.rel, 'noopener nofollow');
+        expect(logo.rel).toBe('noopener nofollow');
 
         t.end();
     });
