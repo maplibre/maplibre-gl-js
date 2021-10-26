@@ -1,8 +1,8 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import browser from '../../../../rollup/build/tsc/src/util/browser';
-import Map from '../../../../rollup/build/tsc/src/ui/map';
-import DOM from '../../../../rollup/build/tsc/src/util/dom';
+import browser from '../../util/browser';
+import Map from '../../ui/map';
+import DOM from '../../util/dom';
 import simulate from '../../../util/simulate_interaction';
 
 function createMap() {
@@ -12,14 +12,13 @@ function createMap() {
 // MouseEvent.buttons
 const buttons = 1;
 
-test('Map#isMoving returns false by default', (t) => {
+describe('Map#isMoving returns false by default', () => {
     const map = createMap(t);
     expect(map.isMoving()).toBe(false);
     map.remove();
-    t.end();
 });
 
-test('Map#isMoving returns true during a camera zoom animation', (t) => {
+describe('Map#isMoving returns true during a camera zoom animation', () => {
     const map = createMap(t);
 
     map.on('zoomstart', () => {
@@ -29,13 +28,12 @@ test('Map#isMoving returns true during a camera zoom animation', (t) => {
     map.on('zoomend', () => {
         expect(map.isMoving()).toBe(false);
         map.remove();
-        t.end();
     });
 
     map.zoomTo(5, {duration: 0});
 });
 
-test('Map#isMoving returns true when drag panning', (t) => {
+describe('Map#isMoving returns true when drag panning', () => {
     const map = createMap(t);
 
     map.on('movestart', () => {
@@ -51,7 +49,6 @@ test('Map#isMoving returns true when drag panning', (t) => {
     map.on('moveend', () => {
         expect(map.isMoving()).toBe(false);
         map.remove();
-        t.end();
     });
 
     simulate.mousedown(map.getCanvas());
@@ -64,7 +61,7 @@ test('Map#isMoving returns true when drag panning', (t) => {
     map._renderTaskQueue.run();
 });
 
-test('Map#isMoving returns true when drag rotating', (t) => {
+describe('Map#isMoving returns true when drag rotating', () => {
     const map = createMap(t);
 
     // Prevent inertial rotation.
@@ -83,7 +80,6 @@ test('Map#isMoving returns true when drag rotating', (t) => {
     map.on('moveend', () => {
         expect(map.isMoving()).toBe(false);
         map.remove();
-        t.end();
     });
 
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
@@ -96,7 +92,7 @@ test('Map#isMoving returns true when drag rotating', (t) => {
     map._renderTaskQueue.run();
 });
 
-test('Map#isMoving returns true when scroll zooming', (t) => {
+describe('Map#isMoving returns true when scroll zooming', () => {
     const map = createMap(t);
 
     map.on('zoomstart', () => {
@@ -106,7 +102,6 @@ test('Map#isMoving returns true when scroll zooming', (t) => {
     map.on('zoomend', () => {
         expect(map.isMoving()).toBe(false);
         map.remove();
-        t.end();
     });
 
     const browserNow = t.stub(browser, 'now');
@@ -122,7 +117,7 @@ test('Map#isMoving returns true when scroll zooming', (t) => {
     }, 400);
 });
 
-test('Map#isMoving returns true when drag panning and scroll zooming interleave', (t) => {
+describe('Map#isMoving returns true when drag panning and scroll zooming interleave', () => {
     const map = createMap(t);
 
     map.on('dragstart', () => {
@@ -144,7 +139,6 @@ test('Map#isMoving returns true when drag panning and scroll zooming interleave'
     map.on('dragend', () => {
         expect(map.isMoving()).toBe(false);
         map.remove();
-        t.end();
     });
 
     // The following should trigger the above events, where a zoomstart/zoomend
