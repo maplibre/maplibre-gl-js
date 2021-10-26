@@ -1,22 +1,22 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import browser from '../../../../rollup/build/tsc/src/util/browser';
-import Map from '../../../../rollup/build/tsc/src/ui/map';
-import DOM from '../../../../rollup/build/tsc/src/util/dom';
+import browser from '../../util/browser';
+import Map from '../../ui/map';
+import DOM from '../../util/dom';
 import simulate from '../../../util/simulate_interaction';
 
 function createMap() {
     return new Map({container: DOM.create('div', '', window.document.body)});
 }
 
-test('Map#isZooming returns false by default', (t) => {
+describe('Map#isZooming returns false by default', done => {
     const map = createMap(t);
     expect(map.isZooming()).toBe(false);
     map.remove();
-    t.end();
+    done();
 });
 
-test('Map#isZooming returns true during a camera zoom animation', (t) => {
+describe('Map#isZooming returns true during a camera zoom animation', done => {
     const map = createMap(t);
 
     map.on('zoomstart', () => {
@@ -26,13 +26,13 @@ test('Map#isZooming returns true during a camera zoom animation', (t) => {
     map.on('zoomend', () => {
         expect(map.isZooming()).toBe(false);
         map.remove();
-        t.end();
+        done();
     });
 
     map.zoomTo(5, {duration: 0});
 });
 
-test('Map#isZooming returns true when scroll zooming', (t) => {
+describe('Map#isZooming returns true when scroll zooming', done => {
     const map = createMap(t);
 
     map.on('zoomstart', () => {
@@ -42,7 +42,7 @@ test('Map#isZooming returns true when scroll zooming', (t) => {
     map.on('zoomend', () => {
         expect(map.isZooming()).toBe(false);
         map.remove();
-        t.end();
+        done();
     });
 
     let now = 0;
@@ -57,7 +57,7 @@ test('Map#isZooming returns true when scroll zooming', (t) => {
     }, 400);
 });
 
-test('Map#isZooming returns true when double-click zooming', (t) => {
+describe('Map#isZooming returns true when double-click zooming', done => {
     const map = createMap(t);
 
     map.on('zoomstart', () => {
@@ -67,7 +67,7 @@ test('Map#isZooming returns true when double-click zooming', (t) => {
     map.on('zoomend', () => {
         expect(map.isZooming()).toBe(false);
         map.remove();
-        t.end();
+        done();
     });
 
     let now = 0;
