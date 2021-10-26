@@ -11,7 +11,7 @@ function createMap() {
 
 test('Map#isRotating returns false by default', (t) => {
     const map = createMap(t);
-    t.equal(map.isRotating(), false);
+    expect(map.isRotating()).toBe(false);
     map.remove();
     t.end();
 });
@@ -20,11 +20,11 @@ test('Map#isRotating returns true during a camera rotate animation', (t) => {
     const map = createMap(t);
 
     map.on('rotatestart', () => {
-        t.equal(map.isRotating(), true);
+        expect(map.isRotating()).toBe(true);
     });
 
     map.on('rotateend', () => {
-        t.equal(map.isRotating(), false);
+        expect(map.isRotating()).toBe(false);
         map.remove();
         t.end();
     });
@@ -39,11 +39,11 @@ test('Map#isRotating returns true when drag rotating', (t) => {
     t.stub(browser, 'now').returns(0);
 
     map.on('rotatestart', () => {
-        t.equal(map.isRotating(), true);
+        expect(map.isRotating()).toBe(true);
     });
 
     map.on('rotateend', () => {
-        t.equal(map.isRotating(), false);
+        expect(map.isRotating()).toBe(false);
         map.remove();
         t.end();
     });
