@@ -1,16 +1,17 @@
-import {test} from '../../../util/test';
-import {createMap as globalCreateMap} from '../../../util';
+import {createMap as globalCreateMap, setWebGlContext} from '../../util/test/util';
 import VectorTileSource from '../../source/vector_tile_source';
+import Dispatcher from '../../util/dispatcher';
+import Map from '../../ui/map';
 
-function createMap(t, logoPosition, logoRequired) {
-    return globalCreateMap(t, {
+function createMap(logoPosition, logoRequired) {
+    return globalCreateMap({
         style: {
             version: 8,
             sources: {
                 'composite': createSource({
                     minzoom: 1,
                     maxzoom: 10,
-                    attribution: 'Mapbox',
+                    attribution: 'Maplibre',
                     tiles: [
                         'http://example.com/{z}/{x}/{y}.png'
                     ]
@@ -19,11 +20,23 @@ function createMap(t, logoPosition, logoRequired) {
             layers: []
         },
         logoPosition: logoPosition || undefined
-    });
+    }, undefined);
 }
 
+const wrapDispatcher = (dispatcher) => {
+    return {
+        getActor() {
+            return dispatcher;
+        }
+    } as any as Dispatcher;
+};
+
+const mockDispatcher = wrapDispatcher({
+    send () {}
+});
+
 function createSource(options, logoRequired) {
-    const source = new VectorTileSource('id', options, {send () {}});
+    const source = new VectorTileSource('id', options, mockDispatcher, undefined);
     source.onAdd({
         _requestManager: {
             _skuToken: '1234567890123',
@@ -31,7 +44,7 @@ function createSource(options, logoRequired) {
         },
         transform: {angle: 0, pitch: 0, showCollisionBoxes: false},
         _getMapId: () => 1
-    });
+    }as any as Map);
     source.on('error', (e) => {
         throw e.error;
     });
@@ -39,85 +52,91 @@ function createSource(options, logoRequired) {
     source[logoFlag] = logoRequired === undefined ? true : logoRequired;
     return source;
 }
-describe('LogoControl appears in bottom-left by default', done => {
-    const map = createMap(t);
-    map.on('load', () => {
-        expect(map.getContainer().querySelectorAll(
+
+beforeEach(() => {
+    setWebGlContext();
+    window.performance.mark = jest.fn();
+});
+
+describe('LogoControl', () => {
+    test('appears in bottom-left by default', done => {
+        const map = createMap(undefined, undefined);
+        map.on('load', () => {
+            expect(map.getContainer().querySelectorAll(
             '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-logo'
-        ).length).toBe(1);
-        done();
-    });
-});
-
-describe('LogoControl appears in the position specified by the position option', done => {
-    const map = createMap(t, 'top-left');
-    map.on('load', () => {
-        expect(map.getContainer().querySelectorAll(
-            '.maplibregl-ctrl-top-left .maplibregl-ctrl-logo'
-        ).length).toBe(1);
-        done();
-    });
-});
-
-describe('LogoControl is not displayed when the maplibreLogo property is false', done => {
-    const map = createMap(t, 'top-left', false);
-    map.on('load', () => {
-        expect(
-            map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left > .maplibregl-ctrl')[0].style.display
-        ).toBe('none');
-        done();
-    });
-});
-describe('LogoControl is not added more than once', done => {
-    const map = createMap(t);
-    const source = createSource({
-        minzoom: 1,
-        maxzoom: 10,
-        attribution: 'Mapbox',
-        tiles: [
-            'http://example.com/{z}/{x}/{y}.png'
-        ]
-    });
-    map.on('load', () => {
-        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo').length).toBe(1);
-        map.addSource('source2', source);
-        map.on('sourcedata', (e) => {
-            if (e.isSourceLoaded && e.sourceId === 'source2' && e.sourceDataType === 'metadata') {
-                expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo').length).toBe(1);
-                done();
-            }
+            ).length).toBe(1);
+            done();
         });
     });
-});
 
-describe('LogoControl appears in compact mode if container is less then 250 pixel wide', done => {
-    const map = createMap(t);
-    const container = map.getContainer();
+    test('appears in the position specified by the position option', done => {
+        const map = createMap('top-left', undefined);
+        map.on('load', () => {
+            expect(map.getContainer().querySelectorAll(
+            '.maplibregl-ctrl-top-left .maplibregl-ctrl-logo'
+            ).length).toBe(1);
+            done();
+        });
+    });
 
-    Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 255, configurable: true});
-    map.resize();
-    expect(
-        container.querySelectorAll('.maplibregl-ctrl-logo:not(.maplibregl-compact)').length
-    ).toBe(1);
+    test('is not displayed when the maplibreLogo property is false', done => {
+        const map = createMap('top-left', false);
+        map.on('load', () => {
+            const container = map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left > .maplibregl-ctrl')[0] as HTMLBaseElement;
+            const containerStyle = container.style;
+            expect(containerStyle).toHaveProperty('display', 'none');
+            done();
+        });
+    });
 
-    Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 245, configurable: true});
-    map.resize();
-    expect(
-        container.querySelectorAll('.maplibregl-ctrl-logo.maplibregl-compact').length
-    ).toBe(1);
+    test('is not added more than once', done => {
+        const map = createMap(undefined, undefined);
+        const source = createSource({
+            minzoom: 1,
+            maxzoom: 10,
+            attribution: 'Maplibre',
+            tiles: [
+                'http://example.com/{z}/{x}/{y}.png'
+            ]
+        }, undefined);
+        map.on('load', () => {
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo').length).toBe(1);
+            map.addSource('source2', source as any);
+            map.on('sourcedata', (e) => {
+                if (e.isSourceLoaded && e.sourceId === 'source2' && e.sourceDataType === 'metadata') {
+                    expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo').length).toBe(1);
+                }
+            });
+            done();
+        });
 
-    done();
-});
+    });
 
-describe('LogoControl has `rel` nooper and nofollow', done => {
-    const map = createMap(t);
-
-    map.on('load', () => {
+    test('appears in compact mode if container is less then 250 pixel wide', () => {
+        const map = createMap(undefined, undefined);
         const container = map.getContainer();
-        const logo = container.querySelector('.maplibregl-ctrl-logo');
 
-        expect(logo.rel).toBe('noopener nofollow');
+        Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 255, configurable: true});
+        map.resize();
+        expect(
+        container.querySelectorAll('.maplibregl-ctrl-logo:not(.maplibregl-compact)').length
+        ).toBe(1);
 
-        done();
+        Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 245, configurable: true});
+        map.resize();
+        expect(
+        container.querySelectorAll('.maplibregl-ctrl-logo.maplibregl-compact').length
+        ).toBe(1);
+    });
+
+    test('has `rel` nooper and nofollow', done => {
+        const map = createMap(undefined, undefined);
+
+        map.on('load', () => {
+            const container = map.getContainer();
+            const logo = container.querySelector('.maplibregl-ctrl-logo');
+            expect(logo).toHaveProperty('rel', 'noopener nofollow');
+            done();
+        });
     });
 });
