@@ -1,81 +1,89 @@
-import '../../../stub_loader';
-import {test} from '../../../util/test';
 import browser from '../../util/browser';
 import Map from '../../ui/map';
 import DOM from '../../util/dom';
-import simulate from '../../../util/simulate_interaction';
+import simulate from '../../../test/util/simulate_interaction';
+import {setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 
 function createMap() {
-    return new Map({container: DOM.create('div', '', window.document.body)});
+    return new Map({style: '', container: DOM.create('div', '', window.document.body)});
 }
 
-describe('Map#isZooming returns false by default', done => {
-    const map = createMap(t);
-    expect(map.isZooming()).toBe(false);
-    map.remove();
-    done();
+beforeEach(() => {
+    setWebGlContext();
+    setPerformance();
+    setMatchMedia();
 });
 
-describe('Map#isZooming returns true during a camera zoom animation', done => {
-    const map = createMap(t);
+describe('Map#isZooming', () => {
 
-    map.on('zoomstart', () => {
-        expect(map.isZooming()).toBe(true);
-    });
-
-    map.on('zoomend', () => {
+    test('returns false by default', done => {
+        const map = createMap();
         expect(map.isZooming()).toBe(false);
         map.remove();
         done();
     });
 
-    map.zoomTo(5, {duration: 0});
-});
+    test('returns true during a camera zoom animation', done => {
+        const map = createMap();
 
-describe('Map#isZooming returns true when scroll zooming', done => {
-    const map = createMap(t);
+        map.on('zoomstart', () => {
+            expect(map.isZooming()).toBe(true);
+        });
 
-    map.on('zoomstart', () => {
-        expect(map.isZooming()).toBe(true);
+        map.on('zoomend', () => {
+            expect(map.isZooming()).toBe(false);
+            map.remove();
+            done();
+        });
+
+        map.zoomTo(5, {duration: 0});
     });
 
-    map.on('zoomend', () => {
-        expect(map.isZooming()).toBe(false);
-        map.remove();
-        done();
-    });
+    test('returns true when scroll zooming', done => {
+        const map = createMap();
 
-    let now = 0;
-    t.stub(browser, 'now').callsFake(() => now);
+        map.on('zoomstart', () => {
+            expect(map.isZooming()).toBe(true);
+        });
 
-    simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
-    map._renderTaskQueue.run();
+        map.on('zoomend', () => {
+            expect(map.isZooming()).toBe(false);
+            map.remove();
+            done();
+        });
 
-    now += 400;
-    setTimeout(() => {
+        let now = 0;
+        jest.spyOn(browser, 'now').mockImplementation(() => { return now; });
+
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
-    }, 400);
-});
 
-describe('Map#isZooming returns true when double-click zooming', done => {
-    const map = createMap(t);
-
-    map.on('zoomstart', () => {
-        expect(map.isZooming()).toBe(true);
+        now += 400;
+        setTimeout(() => {
+            map._renderTaskQueue.run();
+        }, 400);
     });
 
-    map.on('zoomend', () => {
-        expect(map.isZooming()).toBe(false);
-        map.remove();
-        done();
+    test('returns true when double-click zooming', done => {
+        const map = createMap();
+
+        map.on('zoomstart', () => {
+            expect(map.isZooming()).toBe(true);
+        });
+
+        map.on('zoomend', () => {
+            expect(map.isZooming()).toBe(false);
+            map.remove();
+            done();
+        });
+
+        let now = 0;
+        jest.spyOn(browser, 'now').mockImplementation(() => { return now; });
+
+        simulate.dblclick(map.getCanvas());
+        map._renderTaskQueue.run();
+
+        now += 500;
+        map._renderTaskQueue.run();
     });
-
-    let now = 0;
-    t.stub(browser, 'now').callsFake(() => now);
-
-    simulate.dblclick(map.getCanvas());
-    map._renderTaskQueue.run();
-
-    now += 500;
-    map._renderTaskQueue.run();
 });
