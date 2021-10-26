@@ -3,7 +3,7 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
-- Allow maxPitch value up to 85 (#574)
+- Allow maxPitch value up to 85, use values greater than 60 at your own risk (#574)
 
 ### 🐞 Bug fixes
 
