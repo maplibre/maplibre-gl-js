@@ -25,13 +25,6 @@ afterEach(() => {
 });
 
 describe('GeolocateControl with no options', () => {
-    test('with no options', () => {
-        expect(() => {
-            const geolocate = new GeolocateControl(undefined);
-            map.addControl(geolocate);
-        }).not.toThrow();
-    });
-
     test('error event', done => {
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
