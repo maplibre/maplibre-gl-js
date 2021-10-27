@@ -3,6 +3,7 @@ import {createMap, setWebGlContext, setPerformance, setMatchMedia} from '../../u
 import GeolocateControl from './geolocate_control';
 
 geolocation.use();
+let map;
 
 // convert the coordinates of a LngLat object to a fixed number of digits
 function lngLatAsFixed(lngLat, digits) {
@@ -16,12 +17,15 @@ beforeEach(() => {
     setWebGlContext();
     setPerformance();
     setMatchMedia();
+    map = createMap(undefined, undefined);
+});
+
+afterEach(() => {
+    map.remove();
 });
 
 describe('GeolocateControl with no options', () => {
     test('with no options', () => {
-        const map = createMap(undefined, undefined);
-
         expect(() => {
             const geolocate = new GeolocateControl(undefined);
             map.addControl(geolocate);
@@ -29,7 +33,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('error event', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
 
@@ -45,7 +48,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('outofmaxbounds event in active lock state', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
         map.setMaxBounds([[0, 0], [10, 10]]);
@@ -55,7 +57,7 @@ describe('GeolocateControl with no options', () => {
 
         geolocate.on('outofmaxbounds', (position) => {
             expect(geolocate._watchState).toBe('ACTIVE_ERROR');
-            expect(position.coords.latitude).toBe(0);
+            expect(position.coords.latitude).toBe(10);
             expect(position.coords.longitude).toBe(20);
             expect(position.coords.accuracy).toBe(3);
             expect(position.timestamp).toBe(4);
@@ -66,7 +68,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('outofmaxbounds event in background state', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
         map.setMaxBounds([[0, 0], [10, 10]]);
@@ -87,7 +88,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('geolocate event', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
 
@@ -105,7 +105,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('trigger', () => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
 
@@ -122,7 +121,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('geolocate fitBoundsOptions', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             fitBoundsOptions: {
                 duration: 0,
@@ -142,8 +140,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('with removed before Geolocation callback', () => {
-        const map = createMap(undefined, undefined);
-
         expect(() => {
             const geolocate = new GeolocateControl(undefined);
             map.addControl(geolocate);
@@ -153,7 +149,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('non-zero bearing', done => {
-        const map = createMap(undefined, undefined);
         map.setBearing(45);
         const geolocate = new GeolocateControl({
             fitBoundsOptions: {
@@ -176,7 +171,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('no watching map camera on geolocation', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             fitBoundsOptions: {
                 maxZoom: 20,
@@ -215,7 +209,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('watching map updates recenter on location with dot', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
             showUserLocation: true,
@@ -256,7 +249,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('watching map background event', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
             fitBoundsOptions: {
@@ -290,7 +282,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('watching map background state', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
             fitBoundsOptions: {
@@ -328,7 +319,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('trackuserlocationstart event', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
             fitBoundsOptions: {
@@ -348,7 +338,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('does not switch to BACKGROUND and stays in ACTIVE_LOCK state on window resize', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
         });
@@ -368,7 +357,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('switches to BACKGROUND state on map manipulation', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
         });
@@ -390,7 +378,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('accuracy circle not shown if showAccuracyCircle = false', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
             showUserLocation: true,
@@ -416,7 +403,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('accuracy circle radius matches reported accuracy', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
             showUserLocation: true,
@@ -447,7 +433,6 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('shown even if trackUserLocation = false', done => {
-        const map = createMap(undefined, undefined);
         const geolocate = new GeolocateControl({
             trackUserLocation: false,
             showUserLocation: true,
