@@ -3,7 +3,11 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+<<<<<<< HEAD
 - Improve attribution controls accessibility. See [#359](https://github.com/maplibre/maplibre-gl-js/issues/359)
+=======
+- Allow maxPitch value up to 85, use values greater than 60 at your own risk (#574)
+>>>>>>> 9846cdf3c2f6fca6e81a9d1946789a8288e2b7fd
 
 ### 🐞 Bug fixes
 

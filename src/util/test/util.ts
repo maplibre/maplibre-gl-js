@@ -53,3 +53,26 @@ export function setWebGlContext () {
     }
     global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 }
+
+export function setPerformance () {
+    window.performance.mark = jest.fn();
+    window.performance.clearMeasures = jest.fn();
+    window.performance.clearMarks = jest.fn();
+}
+
+export function setMatchMedia () {
+    // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
+    Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: jest.fn().mockImplementation(query => ({
+            matches: false,
+            media: query,
+            onchange: null,
+            addListener: jest.fn(), // deprecated
+            removeListener: jest.fn(), // deprecated
+            addEventListener: jest.fn(),
+            removeEventListener: jest.fn(),
+            dispatchEvent: jest.fn(),
+        })),
+    });
+}
