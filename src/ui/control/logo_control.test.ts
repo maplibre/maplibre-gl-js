@@ -2,6 +2,8 @@ import {createMap as globalCreateMap, setWebGlContext} from '../../util/test/uti
 import VectorTileSource from '../../source/vector_tile_source';
 import Dispatcher from '../../util/dispatcher';
 import Map from '../../ui/map';
+import Actor from '../../util/actor';
+jest.mock('../../util/actor');
 
 function createMap(logoPosition, logoRequired) {
     return globalCreateMap({
@@ -23,17 +25,7 @@ function createMap(logoPosition, logoRequired) {
     }, undefined);
 }
 
-const wrapDispatcher = (dispatcher) => {
-    return {
-        getActor() {
-            return dispatcher;
-        }
-    } as any as Dispatcher;
-};
-
-const mockDispatcher = wrapDispatcher({
-    send () {}
-});
+const mockDispatcher = (Actor.prototype.send as jest.Mock).mockImplementation(() => { }) as any as Dispatcher;
 
 function createSource(options, logoRequired) {
     const source = new VectorTileSource('id', options, mockDispatcher, undefined);
