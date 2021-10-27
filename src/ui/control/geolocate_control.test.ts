@@ -36,13 +36,9 @@ describe('GeolocateControl with no options', () => {
         const click = new window.Event('click');
 
         geolocate.on('error', (error) => {
-            try {
-                expect(error.code).toBe(2);
-                expect(error.message).toBe('error message');
-                done();
-            } catch (error) {
-                done(error);
-            }
+            expect(error.code).toBe(2);
+            expect(error.message).toBe('error message');
+            done();
         });
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.sendError({code: 2, message: 'error message'});
@@ -58,16 +54,12 @@ describe('GeolocateControl with no options', () => {
         const click = new window.Event('click');
 
         geolocate.on('outofmaxbounds', (position) => {
-            try {
-                expect(geolocate._watchState).toBe('ACTIVE_ERROR');
-                expect(position.coords.latitude).toBe(10);
-                expect(position.coords.longitude).toBe(20);
-                expect(position.coords.accuracy).toBe(3);
-                expect(position.timestamp).toBe(4);
-                done();
-            } catch (error) {
-                done(error);
-            }
+            expect(geolocate._watchState).toBe('ACTIVE_ERROR');
+            expect(position.coords.latitude).toBe(0);
+            expect(position.coords.longitude).toBe(20);
+            expect(position.coords.accuracy).toBe(3);
+            expect(position.timestamp).toBe(4);
+            done();
         });
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 3, timestamp: 4});
@@ -83,16 +75,12 @@ describe('GeolocateControl with no options', () => {
         const click = new window.Event('click');
 
         geolocate.on('outofmaxbounds', (position) => {
-            try {
-                expect(geolocate._watchState).toBe('BACKGROUND_ERROR');
-                expect(position.coords.latitude).toBe(10);
-                expect(position.coords.longitude).toBe(20);
-                expect(position.coords.accuracy).toBe(3);
-                expect(position.timestamp).toBe(4);
-                done();
-            } catch (error) {
-                done(error);
-            }
+            expect(geolocate._watchState).toBe('BACKGROUND_ERROR');
+            expect(position.coords.latitude).toBe(10);
+            expect(position.coords.longitude).toBe(20);
+            expect(position.coords.accuracy).toBe(3);
+            expect(position.timestamp).toBe(4);
+            done();
         });
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 3, timestamp: 4});
@@ -106,15 +94,11 @@ describe('GeolocateControl with no options', () => {
         const click = new window.Event('click');
 
         geolocate.on('geolocate', (position) => {
-            try {
-                expect(position.coords.latitude).toBe(10);
-                expect(position.coords.longitude).toBe(20);
-                expect(position.coords.accuracy).toBe(30);
-                expect(position.timestamp).toBe(40);
-                done();
-            } catch (error) {
-                done(error);
-            }
+            expect(position.coords.latitude).toBe(10);
+            expect(position.coords.longitude).toBe(20);
+            expect(position.coords.accuracy).toBe(30);
+            expect(position.timestamp).toBe(40);
+            done();
         });
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
@@ -150,12 +134,8 @@ describe('GeolocateControl with no options', () => {
         const click = new window.Event('click');
 
         map.once('moveend', () => {
-            try {
-                expect(map.getZoom()).toBe(10);
-                done();
-            } catch (error) {
-                done(error);
-            }
+            expect(map.getZoom()).toBe(10);
+            done();
         });
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 1});
@@ -186,14 +166,10 @@ describe('GeolocateControl with no options', () => {
         const click = new window.Event('click');
 
         map.once('moveend', () => {
-            try {
-                expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '10.0000', 'lng': '20.0000'});
-                expect(map.getBearing()).toBe(45);
-                expect(map.getZoom()).toBe(10);
-                done();
-            } catch (error) {
-                done(error);
-            }
+            expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '10.0000', 'lng': '20.0000'});
+            expect(map.getBearing()).toBe(45);
+            expect(map.getZoom()).toBe(10);
+            done();
         });
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 1});
@@ -212,31 +188,27 @@ describe('GeolocateControl with no options', () => {
         const click = new window.Event('click');
 
         map.once('moveend', () => {
-            try {
-                expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '10.0000', 'lng': '20.0000'});
+            expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '10.0000', 'lng': '20.0000'});
 
-                const mapBounds = map.getBounds();
+            const mapBounds = map.getBounds();
 
-                // map bounds should contain or equal accuracy bounds, that is the ensure accuracy bounds doesn't fall outside the map bounds
-                const accuracyBounds = map.getCenter().toBounds(1000);
-                expect(accuracyBounds.getNorth().toFixed(4) <= mapBounds.getNorth().toFixed(4)).toBeTruthy();
-                expect(accuracyBounds.getSouth().toFixed(4) >= mapBounds.getSouth().toFixed(4)).toBeTruthy();
-                expect(accuracyBounds.getEast().toFixed(4) <= mapBounds.getEast().toFixed(4)).toBeTruthy();
-                expect(accuracyBounds.getWest().toFixed(4) >= mapBounds.getWest().toFixed(4)).toBeTruthy();
+            // map bounds should contain or equal accuracy bounds, that is the ensure accuracy bounds doesn't fall outside the map bounds
+            const accuracyBounds = map.getCenter().toBounds(1000);
+            expect(accuracyBounds.getNorth().toFixed(4) <= mapBounds.getNorth().toFixed(4)).toBeTruthy();
+            expect(accuracyBounds.getSouth().toFixed(4) >= mapBounds.getSouth().toFixed(4)).toBeTruthy();
+            expect(accuracyBounds.getEast().toFixed(4) <= mapBounds.getEast().toFixed(4)).toBeTruthy();
+            expect(accuracyBounds.getWest().toFixed(4) >= mapBounds.getWest().toFixed(4)).toBeTruthy();
 
-                // map bounds should not be too much bigger on all edges of the accuracy bounds (this test will only work for an orthogonal bearing),
-                // ensures map bounds does not contain buffered accuracy bounds, as if it does there is too much gap around the accuracy bounds
-                const bufferedAccuracyBounds = map.getCenter().toBounds(1100);
-                expect(
+            // map bounds should not be too much bigger on all edges of the accuracy bounds (this test will only work for an orthogonal bearing),
+            // ensures map bounds does not contain buffered accuracy bounds, as if it does there is too much gap around the accuracy bounds
+            const bufferedAccuracyBounds = map.getCenter().toBounds(1100);
+            expect(
                 (bufferedAccuracyBounds.getNorth().toFixed(4) < mapBounds.getNorth().toFixed(4)) &&
                 (bufferedAccuracyBounds.getSouth().toFixed(4) > mapBounds.getSouth().toFixed(4)) &&
                 (bufferedAccuracyBounds.getEast().toFixed(4) < mapBounds.getEast().toFixed(4)) &&
                 (bufferedAccuracyBounds.getWest().toFixed(4) > mapBounds.getWest().toFixed(4))
-                ).toBeFalsy();
-                done();
-            } catch (error) {
-                done(error);
-            }
+            ).toBeFalsy();
+            done();
         });
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 1000});
@@ -269,15 +241,11 @@ describe('GeolocateControl with no options', () => {
             map.once('moveend', () => {
                 expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '40.0000', 'lng': '50.0000'});
                 geolocate.once('error', () => {
-                    try {
-                        expect(geolocate._userLocationDotMarker._map).toBeTruthy();
-                        expect(
+                    expect(geolocate._userLocationDotMarker._map).toBeTruthy();
+                    expect(
                         geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')
-                        ).toBeTruthy();
-                        done();
-                    } catch (error) {
-                        done(error);
-                    }
+                    ).toBeTruthy();
+                    done();
                 });
                 geolocation.changeError({code: 2, message: 'position unavaliable'});
             });
@@ -306,12 +274,8 @@ describe('GeolocateControl with no options', () => {
             moveendCount++;
 
             geolocate.once('trackuserlocationend', () => {
-                try {
-                    expect(map.getCenter()).toEqual({lng: 10, lat: 5});
-                    done();
-                } catch (error) {
-                    done(error);
-                }
+                expect(map.getCenter()).toEqual({lng: 10, lat: 5});
+                done();
             });
 
             // manually pan the map away from the geolocation position which should trigger the 'trackuserlocationend' event above
@@ -345,12 +309,8 @@ describe('GeolocateControl with no options', () => {
 
             map.once('moveend', () => {
                 geolocate.once('geolocate', () => {
-                    try {
-                        expect(map.getCenter()).toEqual({lng: 10, lat: 5});
-                        done();
-                    } catch (error) {
-                        done(error);
-                    }
+                    expect(map.getCenter()).toEqual({lng: 10, lat: 5});
+                    done();
                 });
                 //  update the geolocation position, since we are in background state when 'geolocate' is triggered above, the camera shouldn't have changed
                 geolocation.change({latitude: 0, longitude: 0, accuracy: 10});
@@ -380,12 +340,8 @@ describe('GeolocateControl with no options', () => {
         const click = new window.Event('click');
 
         geolocate.once('trackuserlocationstart', () => {
-            try {
-                expect(map.getCenter()).toEqual({lng: 0, lat: 0});
-                done();
-            } catch (error) {
-                done(error);
-            }
+            expect(map.getCenter()).toEqual({lng: 0, lat: 0});
+            done();
         });
 
         geolocate._geolocateButton.dispatchEvent(click);
@@ -401,14 +357,10 @@ describe('GeolocateControl with no options', () => {
         const click = new window.Event('click');
 
         geolocate.once('geolocate', () => {
-            try {
-                expect(geolocate._watchState).toBe('ACTIVE_LOCK');
-                window.dispatchEvent(new window.Event('resize'));
-                expect(geolocate._watchState).toBe('ACTIVE_LOCK');
-                done();
-            } catch (error) {
-                done(error);
-            }
+            expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+            window.dispatchEvent(new window.Event('resize'));
+            expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+            done();
         });
 
         geolocate._geolocateButton.dispatchEvent(click);
@@ -425,16 +377,12 @@ describe('GeolocateControl with no options', () => {
         const click = new window.Event('click');
 
         geolocate.once('geolocate', () => {
-            try {
-                expect(geolocate._watchState).toBe('ACTIVE_LOCK');
-                map.jumpTo({
-                    center: [0, 0]
-                });
-                expect(geolocate._watchState).toBe('BACKGROUND');
-                done();
-            } catch (error) {
-                done(error);
-            }
+            expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+            map.jumpTo({
+                center: [0, 0]
+            });
+            expect(geolocate._watchState).toBe('BACKGROUND');
+            done();
         });
 
         geolocate._geolocateButton.dispatchEvent(click);
@@ -457,12 +405,8 @@ describe('GeolocateControl with no options', () => {
                 center: [10, 20]
             });
             map.once('zoomend', () => {
-                try {
-                    expect(!geolocate._circleElement.style.width).toBeTruthy();
-                    done();
-                } catch (error) {
-                    done(error);
-                }
+                expect(!geolocate._circleElement.style.width).toBeTruthy();
+                done();
             });
             map.zoomTo(10, {duration: 0});
         });
@@ -490,12 +434,8 @@ describe('GeolocateControl with no options', () => {
             map.once('zoomend', () => {
                 expect(geolocate._circleElement.style.width).toBe('20px'); // 700m = 20px at zoom 10
                 map.once('zoomend', () => {
-                    try {
-                        expect(geolocate._circleElement.style.width).toBe('79px'); // 700m = 79px at zoom 12
-                        done();
-                    } catch (error) {
-                        done(error);
-                    }
+                    expect(geolocate._circleElement.style.width).toBe('79px'); // 700m = 79px at zoom 12
+                    done();
                 });
                 map.zoomTo(12, {duration: 0});
             });
@@ -522,12 +462,8 @@ describe('GeolocateControl with no options', () => {
                 center: [10, 20]
             });
             map.once('zoomend', () => {
-                try {
-                    expect(geolocate._circleElement.style.width).toBeTruthy();
-                    done();
-                } catch (error) {
-                    done(error);
-                }
+                expect(geolocate._circleElement.style.width).toBeTruthy();
+                done();
             });
             map.zoomTo(10, {duration: 0});
         });
