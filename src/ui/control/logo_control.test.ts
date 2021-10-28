@@ -56,7 +56,7 @@ describe('LogoControl', () => {
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
             '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-logo'
-            ).length).toBe(1);
+            )).toHaveLength(1);
             done();
         });
     });
@@ -66,7 +66,7 @@ describe('LogoControl', () => {
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
             '.maplibregl-ctrl-top-left .maplibregl-ctrl-logo'
-            ).length).toBe(1);
+            )).toHaveLength(1);
             done();
         });
     });
@@ -92,11 +92,11 @@ describe('LogoControl', () => {
             ]
         }, undefined);
         map.on('load', () => {
-            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo').length).toBe(1);
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo')).toHaveLength(1);
             map.addSource('source2', source as any);
             map.on('sourcedata', (e) => {
                 if (e.isSourceLoaded && e.sourceId === 'source2' && e.sourceDataType === 'metadata') {
-                    expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo').length).toBe(1);
+                    expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo')).toHaveLength(1);
                 }
             });
             done();
@@ -111,14 +111,14 @@ describe('LogoControl', () => {
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 255, configurable: true});
         map.resize();
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-logo:not(.maplibregl-compact)').length
-        ).toBe(1);
+        container.querySelectorAll('.maplibregl-ctrl-logo:not(.maplibregl-compact)')
+        ).toHaveLength(1);
 
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 245, configurable: true});
         map.resize();
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-logo.maplibregl-compact').length
-        ).toBe(1);
+        container.querySelectorAll('.maplibregl-ctrl-logo.maplibregl-compact')
+        ).toHaveLength(1);
     });
 
     test('has `rel` nooper and nofollow', done => {

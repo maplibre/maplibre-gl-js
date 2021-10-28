@@ -5,7 +5,7 @@ describe('StructArray', () => {
 
     test('array constructs itself', () => {
         const array = new TestArray();
-        expect(array.length).toBe(0);
+        expect(array).toHaveLength(0);
         expect(array.arrayBuffer).toBeTruthy();
     });
 
@@ -15,7 +15,7 @@ describe('StructArray', () => {
         expect(0).toBe(array.emplaceBack(1, 7, 3));
         expect(1).toBe(array.emplaceBack(4, 2, 5));
 
-        expect(array.length).toBe(2);
+        expect(array).toHaveLength(2);
 
         expect(array.int16.slice(0, 6)).toEqual(new Int16Array([1, 7, 3, 4, 2, 5]));
     });
@@ -25,7 +25,7 @@ describe('StructArray', () => {
         // conditionally varying the number of arguments can be expensive.
         const array = new TestArray();
         expect((array as any).emplaceBack(3, 1, 4, 1, 5, 9)).toBe(0);
-        expect(array.length).toBe(1);
+        expect(array).toHaveLength(1);
         expect(array.int16.slice(0, 3)).toEqual(new Int16Array([3, 1, 4]));
     });
 
@@ -73,7 +73,7 @@ describe('FeatureIndexArray', () => {
 
     test('array constructs itself', () => {
         const array = new TestArray();
-        expect(array.length).toBe(0);
+        expect(array).toHaveLength(0);
         expect(array.arrayBuffer).toBeTruthy();
     });
 
@@ -82,7 +82,7 @@ describe('FeatureIndexArray', () => {
         expect(0).toBe(array.emplaceBack(1, 7, 3));
         expect(1).toBe(array.emplaceBack(4, 2, 5));
 
-        expect(array.length).toBe(2);
+        expect(array).toHaveLength(2);
 
         const elem0 = array.get(0);
         expect(elem0).toBeTruthy();

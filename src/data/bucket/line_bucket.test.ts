@@ -123,7 +123,7 @@ describe('LineBucket', () => {
         // first segment to include the first feature and the first polygon
         // of the second feature, and the second segment to include the
         // second polygon of the second feature.
-        expect(bucket.layoutVertexArray.length).toBe(276);
+        expect(bucket.layoutVertexArray).toHaveLength(276);
         expect(bucket.segments.get()).toEqual([{
             vertexOffset: 0,
             vertexLength: 20,
