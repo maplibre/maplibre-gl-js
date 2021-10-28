@@ -331,11 +331,11 @@ describe('transform', () => {
         transform.center = new LngLat(-170.01, 0.01);
 
         let unwrappedCoords = transform.getVisibleUnwrappedCoordinates(new CanonicalTileID(0, 0, 0));
-        expect(unwrappedCoords.length).toBe(4);
+        expect(unwrappedCoords).toHaveLength(4);
 
         //getVisibleUnwrappedCoordinates should honor _renderWorldCopies
         transform._renderWorldCopies = false;
         unwrappedCoords = transform.getVisibleUnwrappedCoordinates(new CanonicalTileID(0, 0, 0));
-        expect(unwrappedCoords.length).toBe(1);
+        expect(unwrappedCoords).toHaveLength(1);
     });
 });
