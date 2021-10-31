@@ -4,6 +4,8 @@ import DOM from '../../util/dom';
 import simulate from '../../../test/util/simulate_interaction';
 import {setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 
+let map;
+
 function createMap() {
     return new Map({style: '', container: DOM.create('div', '', window.document.body)});
 }
@@ -12,30 +14,28 @@ beforeEach(() => {
     setWebGlContext();
     setPerformance();
     setMatchMedia();
+    map = createMap();
+});
+
+afterEach(() => {
+    map.remove();
 });
 
 describe('Map#isMoving', () => {
-
     // MouseEvent.buttons
     const buttons = 1;
 
     test('returns false by default', () => {
-        const map = createMap();
-
         expect(map.isMoving()).toBe(false);
-        map.remove();
     });
 
     test('returns true during a camera zoom animation', done => {
-        const map = createMap();
-
         map.on('zoomstart', () => {
             expect(map.isMoving()).toBe(true);
         });
 
         map.on('zoomend', () => {
             expect(map.isMoving()).toBe(false);
-            map.remove();
             done();
         });
 
@@ -43,8 +43,6 @@ describe('Map#isMoving', () => {
     });
 
     test('returns true when drag panning', done => {
-        const map = createMap();
-
         map.on('movestart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -57,7 +55,6 @@ describe('Map#isMoving', () => {
         });
         map.on('moveend', () => {
             expect(map.isMoving()).toBe(false);
-            map.remove();
             done();
         });
 
@@ -72,8 +69,6 @@ describe('Map#isMoving', () => {
     });
 
     test('returns true when drag rotating', done => {
-        const map = createMap();
-
         // Prevent inertial rotation.
         jest.spyOn(browser, 'now').mockImplementation(() => { return 0; });
 
@@ -91,7 +86,6 @@ describe('Map#isMoving', () => {
 
         map.on('moveend', () => {
             expect(map.isMoving()).toBe(false);
-            map.remove();
             done();
         });
 
@@ -106,15 +100,12 @@ describe('Map#isMoving', () => {
     });
 
     test('returns true when scroll zooming', done => {
-        const map = createMap();
-
         map.on('zoomstart', () => {
             expect(map.isMoving()).toBe(true);
         });
 
         map.on('zoomend', () => {
             expect(map.isMoving()).toBe(false);
-            map.remove();
             done();
         });
 
@@ -131,8 +122,6 @@ describe('Map#isMoving', () => {
     });
 
     test('returns true when drag panning and scroll zooming interleave', done => {
-        const map = createMap();
-
         map.on('dragstart', () => {
             expect(map.isMoving()).toBe(true);
         });
@@ -152,7 +141,6 @@ describe('Map#isMoving', () => {
 
         map.on('dragend', () => {
             expect(map.isMoving()).toBe(false);
-            map.remove();
         });
 
         // The following should trigger the above events, where a zoomstart/zoomend
