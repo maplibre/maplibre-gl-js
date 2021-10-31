@@ -108,7 +108,7 @@ describe('AttributionControl', () => {
 
     });
 
-    test('AttributionControl dedupes attributions that are substrings of others', () => {
+    test('AttributionControl dedupes attributions that are substrings of others', done => {
         const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
@@ -135,12 +135,13 @@ describe('AttributionControl', () => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 if (++times === 7) {
                     expect(attribution._innerContainer.innerHTML).toBe('Hello World | Another Source | GeoJSON Source');
+                    done();
                 }
             }
         });
     });
 
-    test('AttributionControl is hidden if empty', () => {
+    test('AttributionControl is hidden if empty', done => {
         const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
@@ -172,6 +173,7 @@ describe('AttributionControl', () => {
                     checkEmptyFirst();
                 } else if (times === 2) {
                     checkNotEmptyLater();
+                    done();
                 }
             }
         });
@@ -220,7 +222,7 @@ describe('AttributionControl', () => {
         expect(attributionControl._innerContainer.innerHTML).toBe('Custom string | Another custom string | Some very long custom string');
     });
 
-    test('AttributionControl hides attributions for sources that are not currently visible', () => {
+    test('AttributionControl hides attributions for sources that are not currently visible', done => {
         const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
@@ -238,12 +240,13 @@ describe('AttributionControl', () => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 if (++times === 3) {
                     expect(attribution._innerContainer.innerHTML).toBe('Used');
+                    done();
                 }
             }
         });
     });
 
-    test('AttributionControl toggles attributions for sources whose visibility changes when zooming', () => {
+    test('AttributionControl toggles attributions for sources whose visibility changes when zooming', done => {
         const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
@@ -261,6 +264,7 @@ describe('AttributionControl', () => {
             if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
                 if (map.getZoom() === 13) {
                     expect(attribution._innerContainer.innerHTML).toBe('Used');
+                    done();
                 }
             }
         });
