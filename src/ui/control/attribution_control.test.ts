@@ -1,6 +1,8 @@
 import AttributionControl from './attribution_control';
-import {createMap as globalCreateMap, setWebGlContext} from '../../util/test/util';
+import {createMap as globalCreateMap, setWebGlContext, setPerformance} from '../../util/test/util';
 import simulate from '../../../test/util/simulate_interaction';
+
+let map;
 
 function createMap() {
 
@@ -19,12 +21,12 @@ function createMap() {
 
 beforeEach(() => {
     setWebGlContext();
-    window.performance.mark = jest.fn();
+    setPerformance();
+    map = createMap();
 });
 
 describe('AttributionControl', () => {
     test('AttributionControl appears in bottom-right by default', () => {
-        const map = createMap();
         map.addControl(new AttributionControl());
 
         expect(
@@ -33,7 +35,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl appears in the position specified by the position option', () => {
-        const map = createMap();
         map.addControl(new AttributionControl(), 'top-left');
 
         expect(
@@ -42,7 +43,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl appears in compact mode if compact option is used', () => {
-        const map = createMap();
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
 
         let attributionControl = new AttributionControl({
@@ -69,7 +69,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl appears in compact mode if container is less then 640 pixel wide', () => {
-        const map = createMap();
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
         map.addControl(new AttributionControl());
 
@@ -88,7 +87,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl compact mode control toggles attribution', () => {
-        const map = createMap();
         map.addControl(new AttributionControl({
             compact: true
         }));
@@ -109,7 +107,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl dedupes attributions that are substrings of others', done => {
-        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
@@ -142,7 +139,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl is hidden if empty', done => {
-        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
         map.on('load', () => {
@@ -180,7 +176,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl shows custom attribution if customAttribution option is provided', () => {
-        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: 'Custom string'
         });
@@ -190,7 +185,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl shows custom attribution if customAttribution option is provided, control is removed and added back', () => {
-        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: 'Custom string'
         });
@@ -202,7 +196,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl in compact mode shows custom attribution if customAttribution option is provided', () => {
-        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: 'Custom string',
             compact: true
@@ -213,7 +206,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl shows all custom attributions if customAttribution array of strings is provided', () => {
-        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: ['Some very long custom string', 'Custom string', 'Another custom string']
         });
@@ -223,7 +215,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl hides attributions for sources that are not currently visible', done => {
-        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
@@ -247,7 +238,6 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl toggles attributions for sources whose visibility changes when zooming', done => {
-        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
