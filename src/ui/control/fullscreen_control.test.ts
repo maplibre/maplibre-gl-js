@@ -16,7 +16,7 @@ describe('FullscreenControl', () => {
         const fullscreen = new FullscreenControl(undefined);
         map.addControl(fullscreen);
 
-        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen').length).toBe(1);
+        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen')).toHaveLength(1);
     });
 
     test('does not appear when fullscreen is not enabled', () => {
@@ -31,7 +31,7 @@ describe('FullscreenControl', () => {
         const fullscreen = new FullscreenControl(undefined);
         map.addControl(fullscreen);
 
-        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen').length).toBe(0);
+        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-fullscreen')).toHaveLength(0);
         expect(console.warn).toHaveBeenCalledWith('This device does not support fullscreen mode.');
     });
 

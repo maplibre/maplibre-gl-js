@@ -9,8 +9,8 @@ describe('WorkerPool', () => {
         expect(pool.workers).toBeFalsy();
         const workers1 = pool.acquire('map-1');
         const workers2 = pool.acquire('map-2');
-        expect(workers1.length).toBe(4);
-        expect(workers2.length).toBe(4);
+        expect(workers1).toHaveLength(4);
+        expect(workers2).toHaveLength(4);
 
         // check that the two different dispatchers' workers arrays correspond
         workers1.forEach((w, i) => { expect(w).toBe(workers2[i]); });

@@ -23,7 +23,7 @@ describe('querySourceFeatures', () => {
 
         result = [];
         tile.querySourceFeatures(result);
-        expect(result.length).toBe(0);
+        expect(result).toHaveLength(0);
 
         const geojsonWrapper = new GeoJSONWrapper(features);
         geojsonWrapper.name = '_geojsonTileLayer';
@@ -34,22 +34,22 @@ describe('querySourceFeatures', () => {
 
         result = [];
         tile.querySourceFeatures(result);
-        expect(result.length).toBe(1);
+        expect(result).toHaveLength(1);
         expect(result[0].geometry.coordinates[0]).toEqual([-90, 0]);
         result = [];
         tile.querySourceFeatures(result, {} as any);
-        expect(result.length).toBe(1);
+        expect(result).toHaveLength(1);
         expect(result[0].properties).toEqual(features[0].tags);
         result = [];
         tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['==', 'oneway', true]});
-        expect(result.length).toBe(1);
+        expect(result).toHaveLength(1);
         result = [];
         tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['!=', 'oneway', true]});
-        expect(result.length).toBe(0);
+        expect(result).toHaveLength(0);
         result = [];
         const polygon = {type: 'Polygon',  coordinates: [[[-91, -1], [-89, -1], [-89, 1], [-91, 1], [-91, -1]]]};
         tile.querySourceFeatures(result, {sourceLayer: undefined, filter: ['within', polygon]});
-        expect(result.length).toBe(1);
+        expect(result).toHaveLength(1);
     });
 
     test('empty geojson tile', () => {
@@ -58,14 +58,14 @@ describe('querySourceFeatures', () => {
 
         result = [];
         tile.querySourceFeatures(result);
-        expect(result.length).toBe(0);
+        expect(result).toHaveLength(0);
 
         const geojsonWrapper = new GeoJSONWrapper([]);
         geojsonWrapper.name = '_geojsonTileLayer';
 
         result = [];
         expect(() => { tile.querySourceFeatures(result); }).not.toThrow();
-        expect(result.length).toBe(0);
+        expect(result).toHaveLength(0);
     });
 
     test('vector tile', () => {
@@ -74,7 +74,7 @@ describe('querySourceFeatures', () => {
 
         result = [];
         tile.querySourceFeatures(result);
-        expect(result.length).toBe(0);
+        expect(result).toHaveLength(0);
 
         tile.loadVectorData(
             createVectorData({rawTileData: createRawTileData()}),
@@ -83,18 +83,18 @@ describe('querySourceFeatures', () => {
 
         result = [];
         tile.querySourceFeatures(result, {sourceLayer: 'does-not-exist', filter: undefined});
-        expect(result.length).toBe(0);
+        expect(result).toHaveLength(0);
 
         result = [];
         tile.querySourceFeatures(result, {sourceLayer: 'road', filter: undefined});
-        expect(result.length).toBe(3);
+        expect(result).toHaveLength(3);
 
         result = [];
         tile.querySourceFeatures(result, {sourceLayer: 'road', filter: ['==', 'class', 'main']});
-        expect(result.length).toBe(1);
+        expect(result).toHaveLength(1);
         result = [];
         tile.querySourceFeatures(result, {sourceLayer: 'road', filter: ['!=', 'class', 'main']});
-        expect(result.length).toBe(2);
+        expect(result).toHaveLength(2);
 
     });
 
@@ -124,7 +124,7 @@ describe('querySourceFeatures', () => {
 
         const features = [];
         tile.querySourceFeatures(features, {sourceLayer: 'road', filter: undefined});
-        expect(features.length).toBe(3);
+        expect(features).toHaveLength(3);
 
     });
 

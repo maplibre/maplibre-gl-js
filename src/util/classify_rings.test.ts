@@ -24,8 +24,8 @@ describe('classifyRings', () => {
             ]
         ];
         classified = classifyRings(geometry, undefined);
-        expect(classified.length).toBe(1);
-        expect(classified[0].length).toBe(1);
+        expect(classified).toHaveLength(1);
+        expect(classified[0]).toHaveLength(1);
 
         geometry = [
             [
@@ -44,9 +44,9 @@ describe('classifyRings', () => {
             ]
         ];
         classified = classifyRings(geometry, undefined);
-        expect(classified.length).toBe(2);
-        expect(classified[0].length).toBe(1);
-        expect(classified[1].length).toBe(1);
+        expect(classified).toHaveLength(2);
+        expect(classified[0]).toHaveLength(1);
+        expect(classified[1]).toHaveLength(1);
 
         geometry = [
             [
@@ -64,14 +64,14 @@ describe('classifyRings', () => {
             ]
         ];
         classified = classifyRings(geometry, undefined);
-        expect(classified.length).toBe(1);
-        expect(classified[0].length).toBe(2);
+        expect(classified).toHaveLength(1);
+        expect(classified[0]).toHaveLength(2);
 
         geometry = feature.loadGeometry();
         classified = classifyRings(geometry, undefined);
-        expect(classified.length).toBe(2);
-        expect(classified[0].length).toBe(1);
-        expect(classified[1].length).toBe(10);
+        expect(classified).toHaveLength(2);
+        expect(classified[0]).toHaveLength(1);
+        expect(classified[1]).toHaveLength(10);
     });
 });
 
@@ -96,8 +96,8 @@ describe('classifyRings + maxRings', () => {
 
     test('maxRings=undefined', () => {
         const geometry = sortRings(classifyRings(createGeometry(), undefined));
-        expect(geometry.length).toBe(1);
-        expect(geometry[0].length).toBe(3);
+        expect(geometry).toHaveLength(1);
+        expect(geometry[0]).toHaveLength(3);
         expect(geometry[0][0].area).toBe(3200);
         expect(geometry[0][1].area).toBe(100);
         expect(geometry[0][2].area).toBe(4);
@@ -106,8 +106,8 @@ describe('classifyRings + maxRings', () => {
 
     test('maxRings=2', () => {
         const geometry = sortRings(classifyRings(createGeometry(), 2));
-        expect(geometry.length).toBe(1);
-        expect(geometry[0].length).toBe(2);
+        expect(geometry).toHaveLength(1);
+        expect(geometry[0]).toHaveLength(2);
         expect(geometry[0][0].area).toBe(3200);
         expect(geometry[0][1].area).toBe(100);
 
@@ -115,8 +115,8 @@ describe('classifyRings + maxRings', () => {
 
     test('maxRings=2, reversed geometry', () => {
         const geometry = sortRings(classifyRings(createGeometry({reverse: true}), 2));
-        expect(geometry.length).toBe(1);
-        expect(geometry[0].length).toBe(2);
+        expect(geometry).toHaveLength(1);
+        expect(geometry[0]).toHaveLength(2);
         expect(geometry[0][0].area).toBe(3200);
         expect(geometry[0][1].area).toBe(100);
 
@@ -124,9 +124,9 @@ describe('classifyRings + maxRings', () => {
 
     test('maxRings=5, geometry from fixture', () => {
         const geometry = sortRings(classifyRings(feature.loadGeometry(), 5));
-        expect(geometry.length).toBe(2);
-        expect(geometry[0].length).toBe(1);
-        expect(geometry[1].length).toBe(5);
+        expect(geometry).toHaveLength(2);
+        expect(geometry[0]).toHaveLength(1);
+        expect(geometry[1]).toHaveLength(5);
 
         const areas = geometry[1].map((ring) => { return ring.area; });
         expect(areas).toEqual([2763951, 21600, 8298, 4758, 3411]);
