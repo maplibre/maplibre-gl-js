@@ -23,6 +23,7 @@ beforeEach(() => {
 });
 
 describe('AttributionControl', () => {
+    jest.setTimeout(10000);
     test('AttributionControl appears in bottom-right by default', () => {
         const map = createMap();
         map.addControl(new AttributionControl());
