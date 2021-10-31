@@ -32,7 +32,7 @@ describe('createPropertyExpression', () => {
             }
         } as StylePropertySpecification);
         expect(result).toBe('error');
-        expect((value as ParsingError[]).length).toBe(1);
+        expect((value as ParsingError[])).toHaveLength(1);
         expect(value[0].message).toBe('"interpolate" expressions cannot be used with this property');
     });
 

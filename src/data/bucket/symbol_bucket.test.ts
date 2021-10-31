@@ -216,7 +216,7 @@ describe('SymbolBucket', () => {
         rtlBucket.populate([{feature} as IndexedFeature], options, undefined);
 
         expect(rtlBucket.isEmpty()).toBeFalsy();
-        expect(rtlBucket.symbolInstances.length).toBe(0);
+        expect(rtlBucket.symbolInstances).toHaveLength(0);
     });
 
     test('SymbolBucket detects rtl text mixed with ltr text', () => {

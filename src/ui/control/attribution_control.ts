@@ -27,7 +27,7 @@ class AttributionControl implements IControl {
     _map: Map;
     _container: HTMLElement;
     _innerContainer: HTMLElement;
-    _compactButton: HTMLButtonElement;
+    _compactButton: HTMLElement;
     _editLink: HTMLAnchorElement;
     _attribHTML: string;
     styleId: string;
@@ -51,13 +51,11 @@ class AttributionControl implements IControl {
         const compact = this.options && this.options.compact;
 
         this._map = map;
-        this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib');
-        this._compactButton = DOM.create('button', 'maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button', this._container);
+        this._container = DOM.create('details', 'maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib');
+        this._compactButton = DOM.create('summary', 'maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button', this._container);
         this._compactButton.addEventListener('click', this._toggleAttribution);
-        this._compactButton.type = 'button';
         this._setElementTitle(this._compactButton, 'ToggleAttribution');
         this._innerContainer = DOM.create('div', 'maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner', this._container);
-        this._innerContainer.setAttribute('role', 'list');
 
         if (compact) {
             this._container.classList.add('maplibregl-compact', 'mapboxgl-compact');
@@ -96,10 +94,8 @@ class AttributionControl implements IControl {
     _toggleAttribution() {
         if (this._container.classList.contains('maplibregl-compact-show') || this._container.classList.contains('mapboxgl-compact-show')) {
             this._container.classList.remove('maplibregl-compact-show', 'mapboxgl-compact-show');
-            this._compactButton.setAttribute('aria-pressed', 'false');
         } else {
             this._container.classList.add('maplibregl-compact-show', 'mapboxgl-compact-show');
-            this._compactButton.setAttribute('aria-pressed', 'true');
         }
     }
 

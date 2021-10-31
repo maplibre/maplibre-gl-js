@@ -28,8 +28,8 @@ describe('AttributionControl', () => {
         map.addControl(new AttributionControl());
 
         expect(
-        map.getContainer().querySelectorAll('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib').length
-        ).toBe(1);
+        map.getContainer().querySelectorAll('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib')
+        ).toHaveLength(1);
     });
 
     test('AttributionControl appears in the position specified by the position option', () => {
@@ -37,8 +37,8 @@ describe('AttributionControl', () => {
         map.addControl(new AttributionControl(), 'top-left');
 
         expect(
-        map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left .maplibregl-ctrl-attrib').length
-        ).toBe(1);
+        map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left .maplibregl-ctrl-attrib')
+        ).toHaveLength(1);
     });
 
     test('AttributionControl appears in compact mode if compact option is used', () => {
@@ -53,8 +53,8 @@ describe('AttributionControl', () => {
         const container = map.getContainer();
 
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact').length
-        ).toBe(1);
+        container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')
+        ).toHaveLength(1);
         map.removeControl(attributionControl);
 
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 600, configurable: true});
@@ -64,8 +64,8 @@ describe('AttributionControl', () => {
 
         map.addControl(attributionControl);
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)').length
-        ).toBe(1);
+        container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)')
+        ).toHaveLength(1);
     });
 
     test('AttributionControl appears in compact mode if container is less then 640 pixel wide', () => {
@@ -76,15 +76,15 @@ describe('AttributionControl', () => {
         const container = map.getContainer();
 
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)').length
-        ).toBe(1);
+        container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)')
+        ).toHaveLength(1);
 
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 600, configurable: true});
         map.resize();
 
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact').length
-        ).toBe(1);
+        container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')
+        ).toHaveLength(1);
     });
 
     test('AttributionControl compact mode control toggles attribution', () => {
@@ -96,15 +96,15 @@ describe('AttributionControl', () => {
         const container = map.getContainer();
         const toggle = container.querySelector('.maplibregl-ctrl-attrib-button');
 
-        expect(container.querySelectorAll('.maplibregl-compact-show').length).toBe(0);
+        expect(container.querySelectorAll('.maplibregl-compact-show')).toHaveLength(0);
 
         simulate.click(toggle);
 
-        expect(container.querySelectorAll('.maplibregl-compact-show').length).toBe(1);
+        expect(container.querySelectorAll('.maplibregl-compact-show')).toHaveLength(1);
 
         simulate.click(toggle);
 
-        expect(container.querySelectorAll('.maplibregl-compact-show').length).toBe(0);
+        expect(container.querySelectorAll('.maplibregl-compact-show')).toHaveLength(0);
 
     });
 
@@ -153,7 +153,7 @@ describe('AttributionControl', () => {
 
         const checkEmptyFirst = () => {
             expect(attribution._innerContainer.innerHTML).toBe('');
-            expect(container.querySelectorAll('.maplibregl-attrib-empty').length).toBe(1);
+            expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(1);
 
             map.addSource('2', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Hello World'});
             map.addLayer({id: '2', type: 'fill', source: '2'});
@@ -161,7 +161,7 @@ describe('AttributionControl', () => {
 
         const checkNotEmptyLater = () => {
             expect(attribution._innerContainer.innerHTML).toBe('Hello World');
-            expect(container.querySelectorAll('.maplibregl-attrib-empty').length).toBe(0);
+            expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(0);
         };
 
         let times = 0;

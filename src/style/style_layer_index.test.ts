@@ -10,10 +10,10 @@ describe('StyleLayerIndex', () => {
         ]);
 
         const families = index.familiesBySource['source']['layer'];
-        expect(families.length).toBe(2);
-        expect(families[0].length).toBe(1);
+        expect(families).toHaveLength(2);
+        expect(families[0]).toHaveLength(1);
         expect(families[0][0].id).toBe('1');
-        expect(families[1].length).toBe(2);
+        expect(families[1]).toHaveLength(2);
         expect(families[1][0].id).toBe('2');
         expect(families[1][1].id).toBe('3');
 
@@ -36,10 +36,10 @@ describe('StyleLayerIndex', () => {
         ], []);
 
         const families = index.familiesBySource['bar']['layer'];
-        expect(families.length).toBe(2);
-        expect(families[0].length).toBe(1);
+        expect(families).toHaveLength(2);
+        expect(families[0]).toHaveLength(1);
         expect(families[0][0].getPaintProperty('fill-color')).toBe('cyan');
-        expect(families[1].length).toBe(2);
+        expect(families[1]).toHaveLength(2);
         expect(families[1][0].getPaintProperty('circle-color')).toBe('magenta');
         expect(families[1][0].source).toBe('bar');
         expect(families[1][1].getPaintProperty('circle-color')).toBe('yellow');
@@ -93,7 +93,7 @@ describe('StyleLayerIndex', () => {
         ]);
 
         const families = index.familiesBySource['source']['layer'];
-        expect(families[0].length).toBe(2);
+        expect(families[0]).toHaveLength(2);
 
     });
 });

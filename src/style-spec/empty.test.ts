@@ -9,6 +9,6 @@ describe('empty', () => {
 
     test('generated empty style is a valid style', () => {
         const errors = validateStyleMin(emptyStyle());
-        expect(errors.length).toBe(0);
+        expect(errors).toHaveLength(0);
     });
 });
