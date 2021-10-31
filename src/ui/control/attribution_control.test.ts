@@ -23,7 +23,6 @@ beforeEach(() => {
 });
 
 describe('AttributionControl', () => {
-    jest.setTimeout(5 * 60 * 1000);
     test('AttributionControl appears in bottom-right by default', () => {
         const map = createMap();
         map.addControl(new AttributionControl());
@@ -164,6 +163,7 @@ describe('AttributionControl', () => {
         const checkNotEmptyLater = () => {
             expect(attribution._innerContainer.innerHTML).toBe('Hello World');
             expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(0);
+            done();
         };
 
         let times = 0;
@@ -174,7 +174,6 @@ describe('AttributionControl', () => {
                     checkEmptyFirst();
                 } else if (times === 2) {
                     checkNotEmptyLater();
-                    done();
                 }
             }
         });
