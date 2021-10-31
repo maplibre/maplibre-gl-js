@@ -4,6 +4,8 @@ import simulate from '../../../test/util/simulate_interaction';
 import browser from '../../util/browser';
 import {setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 
+let map;
+
 function createMap() {
     return new Map({style: '', container: DOM.create('div', '', window.document.body)});
 }
@@ -12,26 +14,25 @@ beforeEach(() => {
     setWebGlContext();
     setPerformance();
     setMatchMedia();
+    map = createMap();
+});
+
+afterEach(() => {
+    map.remove();
 });
 
 describe('Map#isRotating', () => {
-    test('returns false by default', done => {
-        const map = createMap();
+    test('returns false by default', () => {
         expect(map.isRotating()).toBe(false);
-        map.remove();
-        done();
     });
 
     test('returns true during a camera rotate animation', done => {
-        const map = createMap();
-
         map.on('rotatestart', () => {
             expect(map.isRotating()).toBe(true);
         });
 
         map.on('rotateend', () => {
             expect(map.isRotating()).toBe(false);
-            map.remove();
             done();
         });
 
@@ -39,8 +40,6 @@ describe('Map#isRotating', () => {
     });
 
     test('returns true when drag rotating', done => {
-        const map = createMap();
-
         // Prevent inertial rotation.
         jest.spyOn(browser, 'now').mockImplementation(() => { return 0; });
 
@@ -50,7 +49,6 @@ describe('Map#isRotating', () => {
 
         map.on('rotateend', () => {
             expect(map.isRotating()).toBe(false);
-            map.remove();
             done();
         });
 
