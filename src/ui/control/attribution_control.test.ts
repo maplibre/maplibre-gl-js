@@ -131,8 +131,12 @@ describe('AttributionControl', () => {
         map.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 if (++times === 7) {
-                    expect(attribution._innerContainer.innerHTML).toBe('Hello World | Another Source | GeoJSON Source');
-                    done();
+                    try {
+                        expect(attribution._innerContainer.innerHTML).toBe('Hello World | Another Source | GeoJSON Source');
+                        done();
+                    } catch (error) {
+                        done(error);
+                    }
                 }
             }
         });
@@ -157,9 +161,14 @@ describe('AttributionControl', () => {
         };
 
         const checkNotEmptyLater = () => {
-            expect(attribution._innerContainer.innerHTML).toBe('Hello World');
-            expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(0);
-            done();
+            try {
+                expect(attribution._innerContainer.innerHTML).toBe('Hello World');
+                expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(0);
+
+                done();
+            } catch (error) {
+                done(error);
+            }
         };
 
         let times = 0;
@@ -230,8 +239,12 @@ describe('AttributionControl', () => {
         map.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 if (++times === 3) {
-                    expect(attribution._innerContainer.innerHTML).toBe('Used');
-                    done();
+                    try {
+                        expect(attribution._innerContainer.innerHTML).toBe('Used');
+                        done();
+                    } catch (error) {
+                        done(error);
+                    }
                 }
             }
         });
@@ -253,8 +266,12 @@ describe('AttributionControl', () => {
             }
             if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
                 if (map.getZoom() === 13) {
-                    expect(attribution._innerContainer.innerHTML).toBe('Used');
-                    done();
+                    try {
+                        expect(attribution._innerContainer.innerHTML).toBe('Used');
+                        done();
+                    } catch (error) {
+                        done(error);
+                    }
                 }
             }
         });
