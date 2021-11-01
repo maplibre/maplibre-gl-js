@@ -107,7 +107,7 @@
     "eslint-plugin-html": "^6.1.2",
     "eslint-plugin-import": "^2.24.2",
     "eslint-plugin-jest": "^25.2.2",
-    "eslint-plugin-jsdoc": "^36.0.8",
+    "eslint-plugin-jsdoc": "^37.0.3",
     "eslint-plugin-react": "^7.25.1",
     "gl": "^4.5.3",
     "glob": "^7.1.4",
