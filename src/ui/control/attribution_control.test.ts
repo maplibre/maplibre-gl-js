@@ -5,7 +5,6 @@ import simulate from '../../../test/util/simulate_interaction';
 let map;
 
 function createMap() {
-
     return globalCreateMap({
         attributionControl: false,
         style: {
@@ -109,6 +108,7 @@ describe('AttributionControl', () => {
     test('AttributionControl dedupes attributions that are substrings of others', done => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
+        expect.assertions(1);
 
         map.on('load', () => {
             map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'World'});
@@ -145,6 +145,8 @@ describe('AttributionControl', () => {
     test('AttributionControl is hidden if empty', done => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
+        expect.assertions(4);
+
         map.on('load', () => {
             map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
             map.addLayer({id: '1', type: 'fill', source: '1'});
@@ -164,7 +166,6 @@ describe('AttributionControl', () => {
             try {
                 expect(attribution._innerContainer.innerHTML).toBe('Hello World');
                 expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(0);
-
                 done();
             } catch (error) {
                 done(error);
@@ -226,6 +227,7 @@ describe('AttributionControl', () => {
     test('AttributionControl hides attributions for sources that are not currently visible', done => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
+        expect.assertions(1);
 
         map.on('load', () => {
             map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
@@ -253,6 +255,7 @@ describe('AttributionControl', () => {
     test('AttributionControl toggles attributions for sources whose visibility changes when zooming', done => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
+        expect.assertions(2);
 
         map.on('load', () => {
             map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
