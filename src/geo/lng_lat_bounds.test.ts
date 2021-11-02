@@ -146,7 +146,7 @@ describe('LngLatBounds', () => {
         const sw = new LngLat(0, 0);
         const ne = new LngLat(-10, 10);
         const bounds = new LngLatBounds(sw, ne);
-        expect(LngLatBounds.convert(undefined)).toBe(undefined);
+        expect(LngLatBounds.convert(undefined)).toBeUndefined();
         expect(LngLatBounds.convert(bounds)).toEqual(bounds);
         expect(LngLatBounds.convert([sw, ne])).toEqual(bounds);
         expect(
@@ -161,7 +161,7 @@ describe('LngLatBounds', () => {
 
     test('#toString', () => {
         const llb = new LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
-        expect(llb.toString()).toEqual('LngLatBounds(LngLat(-73.9876, 40.7661), LngLat(-73.9397, 40.8002))');
+        expect(llb.toString()).toBe('LngLatBounds(LngLat(-73.9876, 40.7661), LngLat(-73.9397, 40.8002))');
     });
 
     test('#isEmpty', () => {

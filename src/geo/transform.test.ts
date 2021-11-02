@@ -256,52 +256,52 @@ describe('transform', () => {
         const transform = new Transform(0, 22, 0, 60, true);
 
         transform.zoom = 0;
-        expect(transform.coveringZoomLevel(options)).toEqual(0);
+        expect(transform.coveringZoomLevel(options)).toBe(0);
 
         transform.zoom = 0.1;
-        expect(transform.coveringZoomLevel(options)).toEqual(0);
+        expect(transform.coveringZoomLevel(options)).toBe(0);
 
         transform.zoom = 1;
-        expect(transform.coveringZoomLevel(options)).toEqual(1);
+        expect(transform.coveringZoomLevel(options)).toBe(1);
 
         transform.zoom = 2.4;
-        expect(transform.coveringZoomLevel(options)).toEqual(2);
+        expect(transform.coveringZoomLevel(options)).toBe(2);
 
         transform.zoom = 10;
-        expect(transform.coveringZoomLevel(options)).toEqual(10);
+        expect(transform.coveringZoomLevel(options)).toBe(10);
 
         transform.zoom = 11;
-        expect(transform.coveringZoomLevel(options)).toEqual(11);
+        expect(transform.coveringZoomLevel(options)).toBe(11);
 
         transform.zoom = 11.5;
-        expect(transform.coveringZoomLevel(options)).toEqual(11);
+        expect(transform.coveringZoomLevel(options)).toBe(11);
 
         options.tileSize = 256;
 
         transform.zoom = 0;
-        expect(transform.coveringZoomLevel(options)).toEqual(1);
+        expect(transform.coveringZoomLevel(options)).toBe(1);
 
         transform.zoom = 0.1;
-        expect(transform.coveringZoomLevel(options)).toEqual(1);
+        expect(transform.coveringZoomLevel(options)).toBe(1);
 
         transform.zoom = 1;
-        expect(transform.coveringZoomLevel(options)).toEqual(2);
+        expect(transform.coveringZoomLevel(options)).toBe(2);
 
         transform.zoom = 2.4;
-        expect(transform.coveringZoomLevel(options)).toEqual(3);
+        expect(transform.coveringZoomLevel(options)).toBe(3);
 
         transform.zoom = 10;
-        expect(transform.coveringZoomLevel(options)).toEqual(11);
+        expect(transform.coveringZoomLevel(options)).toBe(11);
 
         transform.zoom = 11;
-        expect(transform.coveringZoomLevel(options)).toEqual(12);
+        expect(transform.coveringZoomLevel(options)).toBe(12);
 
         transform.zoom = 11.5;
-        expect(transform.coveringZoomLevel(options)).toEqual(12);
+        expect(transform.coveringZoomLevel(options)).toBe(12);
 
         options.roundZoom = true;
 
-        expect(transform.coveringZoomLevel(options)).toEqual(13);
+        expect(transform.coveringZoomLevel(options)).toBe(13);
     });
 
     test('clamps latitude', () => {

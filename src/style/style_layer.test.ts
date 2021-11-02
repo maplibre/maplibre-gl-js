@@ -25,7 +25,7 @@ describe('StyleLayer#setPaintProperty', () => {
 
         layer.setPaintProperty('background-color', 'blue');
 
-        expect(layer.getPaintProperty('background-color')).toEqual('blue');
+        expect(layer.getPaintProperty('background-color')).toBe('blue');
     });
 
     test('updates property value', () => {
@@ -39,7 +39,7 @@ describe('StyleLayer#setPaintProperty', () => {
 
         layer.setPaintProperty('background-color', 'blue');
 
-        expect(layer.getPaintProperty('background-color')).toEqual('blue');
+        expect(layer.getPaintProperty('background-color')).toBe('blue');
     });
 
     test('unsets value', () => {
@@ -57,7 +57,7 @@ describe('StyleLayer#setPaintProperty', () => {
         layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
         expect(layer.paint.get('background-color')).toEqual(new Color(0, 0, 0, 1));
-        expect(layer.getPaintProperty('background-color')).toBe(undefined);
+        expect(layer.getPaintProperty('background-color')).toBeUndefined();
         expect(layer.paint.get('background-opacity')).toBe(1);
         expect(layer.getPaintProperty('background-opacity')).toBe(1);
     });
@@ -100,7 +100,7 @@ describe('StyleLayer#setPaintProperty', () => {
         });
 
         layer.on('error', () => {
-            expect(layer.getPaintProperty('background-opacity')).toBe(undefined);
+            expect(layer.getPaintProperty('background-opacity')).toBeUndefined();
             done();
         });
 
@@ -182,7 +182,7 @@ describe('StyleLayer#setPaintProperty', () => {
 
         layer.setPaintProperty('background-color-transition', null);
 
-        expect(layer.getPaintProperty('background-color-transition')).toEqual(undefined);
+        expect(layer.getPaintProperty('background-color-transition')).toBeUndefined();
     });
 
 });
@@ -196,7 +196,7 @@ describe('StyleLayer#setLayoutProperty', () => {
 
         layer.setLayoutProperty('text-transform', 'lowercase');
 
-        expect(layer.getLayoutProperty('text-transform')).toEqual('lowercase');
+        expect(layer.getLayoutProperty('text-transform')).toBe('lowercase');
     });
 
     test('emits on an invalid property value', done => {
@@ -223,7 +223,7 @@ describe('StyleLayer#setLayoutProperty', () => {
 
         layer.setLayoutProperty('text-transform', 'lowercase');
 
-        expect(layer.getLayoutProperty('text-transform')).toEqual('lowercase');
+        expect(layer.getLayoutProperty('text-transform')).toBe('lowercase');
     });
 
     test('unsets property value', () => {
@@ -239,7 +239,7 @@ describe('StyleLayer#setLayoutProperty', () => {
         layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
         expect(layer.layout.get('text-transform').value).toEqual({kind: 'constant', value: 'none'});
-        expect(layer.getLayoutProperty('text-transform')).toBe(undefined);
+        expect(layer.getLayoutProperty('text-transform')).toBeUndefined();
     });
 });
 
@@ -311,7 +311,7 @@ describe('StyleLayer#serialize', () => {
         const layer = createStyleLayer(createSymbolLayer());
         layer.setLayoutProperty('visibility', undefined);
 
-        expect(layer.serialize().layout['visibility']).toBe(undefined);
+        expect(layer.serialize().layout['visibility']).toBeUndefined();
 
     });
 
