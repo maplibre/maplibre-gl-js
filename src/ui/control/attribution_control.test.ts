@@ -24,6 +24,10 @@ beforeEach(() => {
     map = createMap();
 });
 
+afterEach(() => {
+    map.remove();
+});
+
 describe('AttributionControl', () => {
     test('AttributionControl appears in bottom-right by default', () => {
         map.addControl(new AttributionControl());
