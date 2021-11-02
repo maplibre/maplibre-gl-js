@@ -1,10 +1,9 @@
 import AttributionControl from './attribution_control';
-import {createMap as globalCreateMap, setWebGlContext, setPerformance} from '../../util/test/util';
+import {createMap as globalCreateMap, setWebGlContext} from '../../util/test/util';
 import simulate from '../../../test/util/simulate_interaction';
 
-let map;
-
 function createMap() {
+
     return globalCreateMap({
         attributionControl: false,
         style: {
@@ -20,16 +19,12 @@ function createMap() {
 
 beforeEach(() => {
     setWebGlContext();
-    setPerformance();
-    map = createMap();
-});
-
-afterEach(() => {
-    map.remove();
+    window.performance.mark = jest.fn();
 });
 
 describe('AttributionControl', () => {
     test('AttributionControl appears in bottom-right by default', () => {
+        const map = createMap();
         map.addControl(new AttributionControl());
 
         expect(
@@ -38,6 +33,7 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl appears in the position specified by the position option', () => {
+        const map = createMap();
         map.addControl(new AttributionControl(), 'top-left');
 
         expect(
@@ -46,6 +42,7 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl appears in compact mode if compact option is used', () => {
+        const map = createMap();
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
 
         let attributionControl = new AttributionControl({
@@ -72,6 +69,7 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl appears in compact mode if container is less then 640 pixel wide', () => {
+        const map = createMap();
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
         map.addControl(new AttributionControl());
 
@@ -90,6 +88,7 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl compact mode control toggles attribution', () => {
+        const map = createMap();
         map.addControl(new AttributionControl({
             compact: true
         }));
@@ -110,9 +109,9 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl dedupes attributions that are substrings of others', done => {
+        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
-        expect.assertions(1);
 
         map.on('load', () => {
             map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'World'});
@@ -133,24 +132,19 @@ describe('AttributionControl', () => {
 
         let times = 0;
         map.on('data', (e) => {
-            if (e.dataType === 'source') {
-                if (++times === 15) {
-                    try {
-                        expect(attribution._innerContainer.innerHTML).toBe('Hello World | Another Source | GeoJSON Source');
-                        done();
-                    } catch (error) {
-                        done(error);
-                    }
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                if (++times === 7) {
+                    expect(attribution._innerContainer.innerHTML).toBe('Hello World | Another Source | GeoJSON Source');
+                    done();
                 }
             }
         });
     });
 
     test('AttributionControl is hidden if empty', done => {
+        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
-        expect.assertions(4);
-
         map.on('load', () => {
             map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
             map.addLayer({id: '1', type: 'fill', source: '1'});
@@ -167,22 +161,18 @@ describe('AttributionControl', () => {
         };
 
         const checkNotEmptyLater = () => {
-            try {
-                expect(attribution._innerContainer.innerHTML).toBe('Hello World');
-                expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(0);
-                done();
-            } catch (error) {
-                done(error);
-            }
+            expect(attribution._innerContainer.innerHTML).toBe('Hello World');
+            expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(0);
+            done();
         };
 
         let times = 0;
         map.on('data', (e) => {
-            if (e.dataType === 'source') {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 times++;
                 if (times === 1) {
                     checkEmptyFirst();
-                } else if (times === 3) {
+                } else if (times === 2) {
                     checkNotEmptyLater();
                 }
             }
@@ -190,6 +180,7 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl shows custom attribution if customAttribution option is provided', () => {
+        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: 'Custom string'
         });
@@ -199,6 +190,7 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl shows custom attribution if customAttribution option is provided, control is removed and added back', () => {
+        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: 'Custom string'
         });
@@ -210,6 +202,7 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl in compact mode shows custom attribution if customAttribution option is provided', () => {
+        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: 'Custom string',
             compact: true
@@ -220,6 +213,7 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl shows all custom attributions if customAttribution array of strings is provided', () => {
+        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: ['Some very long custom string', 'Custom string', 'Another custom string']
         });
@@ -229,9 +223,9 @@ describe('AttributionControl', () => {
     });
 
     test('AttributionControl hides attributions for sources that are not currently visible', done => {
+        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
-        expect.assertions(1);
 
         map.on('load', () => {
             map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
@@ -243,23 +237,19 @@ describe('AttributionControl', () => {
 
         let times = 0;
         map.on('data', (e) => {
-            if (e.dataType === 'source') {
-                if (++times === 7) {
-                    try {
-                        expect(attribution._innerContainer.innerHTML).toBe('Used');
-                        done();
-                    } catch (error) {
-                        done(error);
-                    }
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                if (++times === 3) {
+                    expect(attribution._innerContainer.innerHTML).toBe('Used');
+                    done();
                 }
             }
         });
     });
 
     test('AttributionControl toggles attributions for sources whose visibility changes when zooming', done => {
+        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
-        expect.assertions(2);
 
         map.on('load', () => {
             map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
@@ -273,12 +263,8 @@ describe('AttributionControl', () => {
             }
             if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
                 if (map.getZoom() === 13) {
-                    try {
-                        expect(attribution._innerContainer.innerHTML).toBe('Used');
-                        done();
-                    } catch (error) {
-                        done(error);
-                    }
+                    expect(attribution._innerContainer.innerHTML).toBe('Used');
+                    done();
                 }
             }
         });
