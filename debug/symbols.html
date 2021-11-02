@@ -124,23 +124,6 @@
                 'data': sourceData
             });
 
-            // map.addLayer({
-            //     'id': 'place_labels',
-            //     'type': 'symbol',
-            //     'source': 'places',
-            //     'layout': {
-            //         'text-allow-overlap': false,
-            //         'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
-            //         'text-field': ['get', 'name'],
-            //         'text-offset': [1.2, 1.4],
-            //         'text-size': 12
-            //     },
-            //     'paint': {
-            //         'text-halo-color': '#fff',
-            //         'text-halo-width': 2
-            //     }
-            // });
-
             map.addLayer({
                 'id': 'top_labels',
                 'type': 'symbol',
@@ -184,27 +167,6 @@
             });
 
             map.showCollisionBoxes = true;
-
-            // map.addLayer({
-            //     'id': 'labels',
-            //     'type': 'symbol',
-            //     'source': 'places',
-            //     'minzoom': 1,
-            //     'layout': {
-            //         'text-field': [
-            //             'concat',
-            //             ['get', 'name'],
-            //             ' (',
-            //             [
-            //                 'coalesce',
-            //                 ['get', 'subregion'],
-            //                 ['get', 'region']
-            //             ],
-            //             ')'
-            //         ],
-            //         'text-font': ['Open Sans Semibold']
-            //     }
-            // });
         });
 
     </script>
