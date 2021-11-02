@@ -133,8 +133,8 @@ describe('AttributionControl', () => {
 
         let times = 0;
         map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
-                if (++times === 7) {
+            if (e.dataType === 'source') {
+                if (++times === 15) {
                     try {
                         expect(attribution._innerContainer.innerHTML).toBe('Hello World | Another Source | GeoJSON Source');
                         done();
@@ -178,11 +178,11 @@ describe('AttributionControl', () => {
 
         let times = 0;
         map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+            if (e.dataType === 'source') {
                 times++;
                 if (times === 1) {
                     checkEmptyFirst();
-                } else if (times === 2) {
+                } else if (times === 3) {
                     checkNotEmptyLater();
                 }
             }
@@ -243,8 +243,8 @@ describe('AttributionControl', () => {
 
         let times = 0;
         map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
-                if (++times === 3) {
+            if (e.dataType === 'source') {
+                if (++times === 7) {
                     try {
                         expect(attribution._innerContainer.innerHTML).toBe('Used');
                         done();
