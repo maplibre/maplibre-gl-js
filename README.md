@@ -1,6 +1,6 @@
 # MapLibre GL
 
-**MapLibre GL** is a community led fork derived from [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) prior to their switch to a non-OSS license.
+**MapLibre GL** is a community-led fork derived from [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) before their switch to a non-OSS license.
 
 ### Migrating from mapbox-gl
 
@@ -27,7 +27,7 @@ Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs
 
 ### Roadmap
 
-This project's initial plans are outlined in the [Roadmap](https://github.com/maplibre/maplibre-gl-js/projects/2) project. The primary goal is consistency and backwards-compatability with previous releases and continued bug-fixes and maintenance going forward.
+This project's initial plans are outlined in the [Roadmap](https://github.com/maplibre/maplibre-gl-js/projects/2) project. The primary goal is consistency and backward compatibility with previous releases and continued bug fixes and maintenance as we advance.
 
 ### Getting Involved
 
@@ -35,11 +35,11 @@ Join the #maplibre slack channel at OSMUS: get an invite at https://osmus-slack.
 
 ### Community Leadership
 
-The official status of the backing community and steering committee can be found in the [COMMUNITY.md](COMMUNITY.md) document.
+You can find the official status of the backing community and steering committee in the [COMMUNITY.md](COMMUNITY.md) document.
 
 ### Avoid Fragmentation
 
-If you depend on a free software alternative to `mapbox-gl-js`, please consider joining our effort! Anyone with a stake in a healthy community led fork is welcome to help us figure out our next steps. We welcome contributors and leaders! MapLibre GL already represents the combined efforts of a few early fork efforts, and we all benefit from "one project" rather than "our way". If you know of other forks, please reach out to them and direct them here.
+If you depend on a free software alternative to `mapbox-gl-js`, please consider joining our effort! Anyone with a stake in a healthy community-led fork is welcome to help us figure out our next steps. We welcome contributors and leaders! MapLibre GL already represents the combined efforts of a few early fork efforts, and we all benefit from "one project" rather than "our way". If you know of other forks, please reach out to them and direct them here.
 
 ### Thank you Mapbox 🙏🏽
 
