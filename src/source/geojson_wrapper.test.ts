@@ -1,9 +1,8 @@
-import {test} from '../../util/test';
-import Wrapper from '../../../rollup/build/tsc/src/source/geojson_wrapper';
+import Wrapper from '../source/geojson_wrapper';
 
-test('geojsonwrapper', (t) => {
+describe('geojsonwrapper', () => {
 
-    t.test('linestring', (t) => {
+    test('linestring', () => {
         const features = [{
             type: 2,
             geometry: [[[0, 0], [10, 10]]],
@@ -18,10 +17,9 @@ test('geojsonwrapper', (t) => {
         expect(feature.type).toBe(2);
         expect(feature.properties).toEqual({hello:'world'});
 
-        t.end();
     });
 
-    t.test('point', (t) => {
+    test('point', () => {
         const features = [{
             type: 1,
             geometry: [[0, 1]],
@@ -31,8 +29,6 @@ test('geojsonwrapper', (t) => {
         const wrap = new Wrapper(features);
         const feature = wrap.feature(0);
         expect(feature.loadGeometry()).toEqual([[{x: 0, y: 1}]]);
-        t.end();
     });
 
-    t.end();
 });
