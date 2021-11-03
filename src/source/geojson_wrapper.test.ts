@@ -1,7 +1,7 @@
 import Wrapper from './geojson_wrapper';
 
 describe('geojsonwrapper', () => {
-    it('linestring', () => {
+    test('linestring', () => {
         const features = [{
             type: 2,
             geometry: [[[0, 0], [10, 10]]],
@@ -18,7 +18,7 @@ describe('geojsonwrapper', () => {
 
     });
 
-    it('point', () => {
+    test('point', () => {
         const features = [{
             type: 1,
             geometry: [[0, 1]],
