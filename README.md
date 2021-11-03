@@ -35,7 +35,7 @@ And replace `mapboxgl` with `maplibregl` in your JavaScript and optionally in yo
 -      rel="stylesheet"
 -    />
 
-     <!--  Use maplibre-gl@1.15.2 for backwards compatibility with mapbox-gl version 1.x. -->
+     <!--  Use maplibre-gl version 1.15.2 for backwards compatibility with mapbox-gl version 1.x. -->
 +    <script src="https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.js"></script>
 +    <link
 +      href="https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.css"
@@ -43,7 +43,7 @@ And replace `mapboxgl` with `maplibregl` in your JavaScript and optionally in yo
 +    />
 
 
-    <!-- The following code shows the change to MapLibre version 2.0.0  -->
+    <!-- The following code shows the change to maplibre-gl version 2.0.0  -->
 +    <script src="https://unpkg.com/maplibre-gl@2.0.0/dist/maplibre-gl.js"></script>
 +    <link
 +      href="https://unpkg.com/maplibre-gl@2.0.0/dist/maplibre-gl.css"
