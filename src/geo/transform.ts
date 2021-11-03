@@ -477,7 +477,7 @@ class Transform {
     getElevation(lnglat: LngLat) {
         const merc = this.locationCoordinate(lnglat), tsc = this.terrainSourceCache;
         if (!tsc.isEnabled()) return 0;
-        const maxzoom = tsc._sourceCache._source.maxzoom;
+        const maxzoom = tsc._sourceCache._source.maxzoom + tsc.deltaZoom;
         const tileZ = maxzoom < this.tileZoom ? maxzoom : this.tileZoom;
         const tileSize = tsc.tileSize, worldSize = (1 << tileZ) * tileSize;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;

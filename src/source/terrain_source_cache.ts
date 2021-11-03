@@ -286,7 +286,7 @@ class TerrainSourceCache extends Evented {
         if (!this._demMatrixCache[tileID.key]) {
             const demMatrix = new Float64Array(16) as any;
             const maxzoom = this._sourceCache._source.maxzoom;
-            const dz = Math.max(this.deltaZoom, tileID.overscaledZ - 2 - maxzoom);
+            const dz = this.deltaZoom + Math.max(0, tileID.overscaledZ - this.deltaZoom - maxzoom);
             const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
             const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
             mat4.ortho(demMatrix, 0, EXTENT << dz, 0, EXTENT << dz, 0, 1);
