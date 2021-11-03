@@ -949,7 +949,7 @@ describe('unknown function', () => {
         type: 'nonesuch', stops: [[]]
     }, {
         type: 'string'
-    })).toThrowError(/Unknown function type "nonesuch"/);
+    })).toThrow(/Unknown function type "nonesuch"/);
 });
 
 describe('kind', () => {
