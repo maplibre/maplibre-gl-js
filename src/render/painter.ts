@@ -385,6 +385,7 @@ class Painter {
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingInv: {[_: string]: {[_:string]: Array<OverscaledTileID>}} = {};
+        const coordsDescendingInvStr: {[_: string]: {[_:string]: string}} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
         for (const id in sourceCaches) {
@@ -393,13 +394,24 @@ class Painter {
             coordsDescending[id] = coordsAscending[id].slice().reverse();
             coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
             if (isTerrainEnabled) {
-               coordsDescendingInv[id] = {};
+                coordsDescendingInv[id] = {};
                 for (let c=0; c<coordsDescending[id].length; c++) {
                     const coords = this.style.terrainSourceCache.getTerrainCoords(coordsDescending[id][c]);
                     for (let key in coords) {
                         if (!coordsDescendingInv[id][key]) coordsDescendingInv[id][key] = [];
                         coordsDescendingInv[id][key].push(coords[key]);
                     }
+                }
+            }
+        }
+        // create a string representation of all to render coords for all renderToTexture layers
+        for (const id of layerIds) {
+            const layer = this.style._layers[id], source = layer.source;
+            if (renderToTexture[layer.type]) {
+                if (!coordsDescendingInvStr[source]) {
+                    coordsDescendingInvStr[source] = {};
+                    for (let key in coordsDescendingInv[source])
+                        coordsDescendingInvStr[source][key] = coordsDescendingInv[source][key].map(c => c.key).sort().join();
                 }
             }
         }
@@ -473,7 +485,15 @@ class Painter {
         let prevType = null;
         const stacks = [], rerender = {};
         const renderableTiles = this.style.terrainSourceCache.getRenderableTiles(this.transform);
-        renderableTiles.forEach(t => rerender[t.tileID.key] = !t.textures.length);
+        renderableTiles.forEach(tile => {
+            // rerender if there are more coords to render than in the last rendering
+            for (let source in coordsDescendingInvStr) {
+                const coords = coordsDescendingInvStr[source][tile.tileID.key];
+                if (coords && coords != tile.textureCoords[source]) tile.clearTextures(this);
+            }
+            // rerender if there are no previous renderings
+            rerender[tile.tileID.key] = !tile.textures.length;
+        });
 
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
@@ -501,7 +521,8 @@ class Painter {
                                 const layer = this.style._layers[layers[l]];
                                 const coords = layer.source ? coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
                                 this._renderTileClippingMasks(layer, coords);
-                                this.renderLayer(this, this.style.sourceCaches[layer.source], layer, coords)
+                                this.renderLayer(this, this.style.sourceCaches[layer.source], layer, coords);
+                                if (layer.source) tile.textureCoords[layer.source] = coordsDescendingInvStr[layer.source][tile.tileID.key];
                             }
                         }
                         drawTerrain(this, this.style.terrainSourceCache, tile);

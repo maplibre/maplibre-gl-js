@@ -44,6 +44,7 @@ function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterSty
 
         const parentTile = sourceCache.findLoadedParent(coord, 0),
             fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform);
+        if (painter.style.terrainSourceCache.isEnabled()) fade.opacity = 1;
 
         let parentScaleBy, parentTL;
 

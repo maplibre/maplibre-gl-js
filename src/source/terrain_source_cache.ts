@@ -96,13 +96,6 @@ class TerrainSourceCache extends Evented {
                         }
                     }
                     transform.updateElevation();
-                } else {
-                    for (let key in this._tiles) {
-                        const tile = this._tiles[key], coord = tile.tileID;
-                        if (coord.equals(e.coord) || coord.isChildOf(e.coord) || e.coord.isChildOf(coord)) {
-                            tile.clearTextures(this._style.map.painter);
-                        }
-                    }
                 }
             }
         });
@@ -286,7 +279,7 @@ class TerrainSourceCache extends Evented {
         if (!this._demMatrixCache[tileID.key]) {
             const demMatrix = new Float64Array(16) as any;
             const maxzoom = this._sourceCache._source.maxzoom;
-            const dz = this.deltaZoom + Math.max(0, tileID.overscaledZ - this.deltaZoom - maxzoom);
+            const dz = this.deltaZoom + Math.max(0, tileID.canonical.z - this.deltaZoom - maxzoom);
             const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
             const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
             mat4.ortho(demMatrix, 0, EXTENT << dz, 0, EXTENT << dz, 0, 1);
