@@ -5,15 +5,51 @@
 ### Migrating from mapbox-gl
 
 If you depend on mapbox-gl directly, simply replace `mapbox-gl` with `maplibre-gl` in `package.json`:
+
+Use
+
 ```diff
   "dependencies": {
 -    "mapbox-gl": "^1.13.0"
-+    "maplibre-gl": ">=1.14.0"
++    "maplibre-gl": ">=1.15.2"
   }
 ```
 
-And replace ```mapboxgl``` with ```maplibregl``` in your JavaScript and optionally in your HTML/CSS code:
+if it is important to you that the behaviour is similar to `mapbox-gl` version 1.x.
+
+If you can live with changes that integrate non-backward compatible features, ideally install `maplibre-gl` version 2:
+
 ```diff
+  "dependencies": {
+-    "mapbox-gl": "^1.13.0"
++    "maplibre-gl": ">=2.0.0"
+  }
+```
+
+And replace `mapboxgl` with `maplibregl` in your JavaScript and optionally in your HTML/CSS code:
+
+```diff
+-    <script src="https://api.mapbox.com/mapbox-gl-js/v1.13.0/mapbox-gl.js"></script>
+-    <link
+-      href="https://api.mapbox.com/mapbox-gl-js/v1.13.0/mapbox-gl.css"
+-      rel="stylesheet"
+-    />
+
+     <!--  Use maplibre-gl@1.15.2 for backwards compatibility with mapbox-gl version 1.x. -->
++    <script src="https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.js"></script>
++    <link
++      href="https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.css"
++      rel="stylesheet"
++    />
+
+
+    <!-- The following code shows the change to MapLibre version 2.0.0  -->
++    <script src="https://unpkg.com/maplibre-gl@2.0.0/dist/maplibre-gl.js"></script>
++    <link
++      href="https://unpkg.com/maplibre-gl@2.0.0/dist/maplibre-gl.css"
++      rel="stylesheet"
++    />
+
 -    var map = new mapboxgl.Map({
 +    var map = new maplibregl.Map({
 
@@ -21,13 +57,15 @@ And replace ```mapboxgl``` with ```maplibregl``` in your JavaScript and optional
 +    <button class="maplibregl-ctrl">
 ```
 
-Want an example?  Have a look at the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js-docs/example/).
+Want an example? Have a look at the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js-docs/example/).
 
 Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs/get-started/get-started#using-with-a-mapbox-gl-fork) and Angular (https://github.com/maplibre/ngx-maplibre-gl). Find more at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
 
 ### Roadmap
 
-This project's initial plans are outlined in the [Roadmap](https://github.com/maplibre/maplibre-gl-js/projects/2) project. The primary goal is consistency and backward compatibility with previous releases and continued bug fixes and maintenance as we advance.
+This project's initial plans are outlined in the [Roadmap](https://github.com/maplibre/maplibre-gl-js/projects/2) project. The primary goal is consistency and continued bug fixes and maintenance as we advance. 
+
+> **MapLibre GL** is developed following [Semantic Versioning (2.0.0)](http://semver.org/spec/v2.0.0.html).
 
 ### Getting Involved
 
@@ -49,4 +87,4 @@ Please keep in mind: Unauthorized backports are the biggest threat to the MapLib
 
 ## License
 
-MapLibre GL is licensed under the [3-Clause BSD license](./LICENSE.txt).
+**MapLibre GL** is licensed under the [3-Clause BSD license](./LICENSE.txt).
