@@ -14,6 +14,7 @@ import LngLat from './geo/lng_lat';
 import LngLatBounds from './geo/lng_lat_bounds';
 import Point from './util/point';
 import MercatorCoordinate from './geo/mercator_coordinate';
+import GeoJSONSource from './source/geojson_source';
 import {Evented} from './util/evented';
 import config from './util/config';
 import {Debug} from './util/debug';
@@ -43,6 +44,7 @@ const exported = {
     LngLatBounds,
     Point,
     MercatorCoordinate,
+    GeoJSONSource,
     Evented,
     config,
     /**
