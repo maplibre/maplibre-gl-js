@@ -430,9 +430,9 @@ describe('exponential function', () => {
             type: 'color'
         }).evaluate;
 
-        expect(f({zoom: 0}, {properties: {}})).toBe(undefined);
-        expect(f({zoom: 0.5}, {properties: {}})).toBe(undefined);
-        expect(f({zoom: 1}, {properties: {}})).toBe(undefined);
+        expect(f({zoom: 0}, {properties: {}})).toBeUndefined();
+        expect(f({zoom: 0.5}, {properties: {}})).toBeUndefined();
+        expect(f({zoom: 1}, {properties: {}})).toBeUndefined();
 
     });
 

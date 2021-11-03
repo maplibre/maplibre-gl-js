@@ -24,7 +24,7 @@ describe('VertexBuffer', () => {
             {name: 'map', components: 1, type: 'Int16', offset: 0},
             {name: 'box', components: 2, type: 'Int16', offset: 4}
         ]);
-        expect(buffer.itemSize).toEqual(6);
+        expect(buffer.itemSize).toBe(6);
         expect(buffer).toHaveLength(3);
     });
 

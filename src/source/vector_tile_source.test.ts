@@ -59,9 +59,9 @@ describe('VectorTileSource', () => {
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 expect(source.tiles).toEqual(['http://example.com/{z}/{x}/{y}.png']);
-                expect(source.minzoom).toEqual(1);
-                expect(source.maxzoom).toEqual(10);
-                expect((source as Source).attribution).toEqual('Maplibre');
+                expect(source.minzoom).toBe(1);
+                expect(source.maxzoom).toBe(10);
+                expect((source as Source).attribution).toBe('Maplibre');
                 done();
             }
         });
@@ -75,9 +75,9 @@ describe('VectorTileSource', () => {
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 expect(source.tiles).toEqual(['http://example.com/{z}/{x}/{y}.png']);
-                expect(source.minzoom).toEqual(1);
-                expect(source.maxzoom).toEqual(10);
-                expect((source as Source).attribution).toEqual('Maplibre');
+                expect(source.minzoom).toBe(1);
+                expect(source.maxzoom).toBe(10);
+                expect((source as Source).attribution).toBe('Maplibre');
                 done();
             }
         });

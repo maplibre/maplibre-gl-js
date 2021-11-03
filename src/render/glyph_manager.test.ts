@@ -79,7 +79,7 @@ describe('GlyphManager', () => {
 
         manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
             expect(err).toBeFalsy();
-            expect(glyphs['Arial Unicode MS'][0x5e73]).toBe(null); // The fixture returns a PBF without the glyph we requested
+            expect(glyphs['Arial Unicode MS'][0x5e73]).toBeNull(); // The fixture returns a PBF without the glyph we requested
             done();
         });
     });
@@ -100,7 +100,7 @@ describe('GlyphManager', () => {
         //Request char that overlaps Katakana range
         manager.getGlyphs({'Arial Unicode MS': [0x3005]}, (err, glyphs) => {
             expect(err).toBeFalsy();
-            expect(glyphs['Arial Unicode MS'][0x3005]).not.toBe(null);
+            expect(glyphs['Arial Unicode MS'][0x3005]).not.toBeNull();
             //Request char from Katakana range (te)
             manager.getGlyphs({'Arial Unicode MS': [0x30C6]}, (err, glyphs) => {
                 expect(err).toBeFalsy();

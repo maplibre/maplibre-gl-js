@@ -26,9 +26,9 @@ test('Light with options', () => {
     });
     light.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
 
-    expect(light.properties.get('anchor')).toEqual('map');
+    expect(light.properties.get('anchor')).toBe('map');
     expect(light.properties.get('position')).toEqual(sphericalToCartesian([2, 30, 30]));
-    expect(light.properties.get('intensity')).toEqual(1);
+    expect(light.properties.get('intensity')).toBe(1);
     expect(light.properties.get('color')).toEqual(Color.parse(spec.color.default));
 });
 
@@ -40,7 +40,7 @@ test('Light with stops function', () => {
     } as LightSpecification);
     light.recalculate({zoom: 16.5, zoomHistory: {}} as EvaluationParameters);
 
-    expect(light.properties.get('intensity')).toEqual(0.5);
+    expect(light.properties.get('intensity')).toBe(0.5);
 });
 
 test('Light#getLight', () => {

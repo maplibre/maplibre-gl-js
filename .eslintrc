@@ -98,7 +98,8 @@
     "jest/no-disabled-tests": "warn",
     "jest/no-focused-tests": "error",
     "jest/prefer-to-have-length": "warn",
-    "jest/valid-expect": "error"    
+    "jest/valid-expect": "error",
+    "jest/prefer-to-be": "warn"   
   },
   "settings": {
     "jsdoc":{
