@@ -13,10 +13,10 @@ test('geojsonwrapper', (t) => {
         const wrap = new Wrapper(features);
         const feature = wrap.feature(0);
 
-        t.ok(feature, 'gets a feature');
-        t.deepEqual(feature.loadGeometry(), [[{x: 0, y: 0}, {x: 10, y: 10}]]);
-        t.equal(feature.type, 2, 'type');
-        t.deepEqual(feature.properties, {hello:'world'}, 'properties');
+        expect(feature).toBeTruthy();
+        expect(feature.loadGeometry()).toEqual([[{x: 0, y: 0}, {x: 10, y: 10}]]);
+        expect(feature.type).toBe(2);
+        expect(feature.properties).toEqual({hello:'world'});
 
         t.end();
     });
@@ -30,7 +30,7 @@ test('geojsonwrapper', (t) => {
 
         const wrap = new Wrapper(features);
         const feature = wrap.feature(0);
-        t.deepEqual(feature.loadGeometry(), [[{x: 0, y: 1}]]);
+        expect(feature.loadGeometry()).toEqual([[{x: 0, y: 1}]]);
         t.end();
     });
 
