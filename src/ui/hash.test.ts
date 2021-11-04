@@ -21,11 +21,11 @@ test('hash', (t) => {
         const map = createMap(t);
         const hash = createHash();
 
-        t.notok(hash._map);
+        expect(hash._map).toBeFalsy();
 
         hash.addTo(map);
 
-        t.ok(hash._map);
+        expect(hash._map).toBeTruthy();
         t.end();
     });
 
@@ -34,11 +34,11 @@ test('hash', (t) => {
         const hash = createHash()
             .addTo(map);
 
-        t.ok(hash._map);
+        expect(hash._map).toBeTruthy();
 
         hash.remove();
 
-        t.notok(hash._map);
+        expect(hash._map).toBeFalsy();
         t.end();
     });
 
@@ -51,11 +51,11 @@ test('hash', (t) => {
 
         hash._onHashChange();
 
-        t.equal(map.getCenter().lng, -1);
-        t.equal(map.getCenter().lat, 3);
-        t.equal(map.getZoom(), 10);
-        t.equal(map.getBearing(), 0);
-        t.equal(map.getPitch(), 0);
+        expect(map.getCenter().lng).toBe(-1);
+        expect(map.getCenter().lat).toBe(3);
+        expect(map.getZoom()).toBe(10);
+        expect(map.getBearing()).toBe(0);
+        expect(map.getPitch()).toBe(0);
 
         // map is created with `interactive: false`
         // so explicitly enable rotation for this test
@@ -66,11 +66,11 @@ test('hash', (t) => {
 
         hash._onHashChange();
 
-        t.equal(map.getCenter().lng, 0.5);
-        t.equal(map.getCenter().lat, 1);
-        t.equal(map.getZoom(), 5);
-        t.equal(map.getBearing(), 30);
-        t.equal(map.getPitch(), 60);
+        expect(map.getCenter().lng).toBe(0.5);
+        expect(map.getCenter().lat).toBe(1);
+        expect(map.getZoom()).toBe(5);
+        expect(map.getBearing()).toBe(30);
+        expect(map.getPitch()).toBe(60);
 
         // disable rotation to test that updating
         // the hash's bearing won't change the map
@@ -81,11 +81,11 @@ test('hash', (t) => {
 
         hash._onHashChange();
 
-        t.equal(map.getCenter().lng, 0.5);
-        t.equal(map.getCenter().lat, 1);
-        t.equal(map.getZoom(), 5);
-        t.equal(map.getBearing(), 30);
-        t.equal(map.getPitch(), 60);
+        expect(map.getCenter().lng).toBe(0.5);
+        expect(map.getCenter().lat).toBe(1);
+        expect(map.getZoom()).toBe(5);
+        expect(map.getBearing()).toBe(30);
+        expect(map.getPitch()).toBe(60);
 
         // test that a hash with no bearing resets
         // to the previous bearing when rotation is disabled
@@ -93,19 +93,19 @@ test('hash', (t) => {
 
         hash._onHashChange();
 
-        t.equal(map.getCenter().lng, 0.5);
-        t.equal(map.getCenter().lat, 1);
-        t.equal(map.getZoom(), 5);
-        t.equal(map.getBearing(), 30);
-        t.equal(window.location.hash, '#5/1/0.5/30');
+        expect(map.getCenter().lng).toBe(0.5);
+        expect(map.getCenter().lat).toBe(1);
+        expect(map.getZoom()).toBe(5);
+        expect(map.getBearing()).toBe(30);
+        expect(window.location.hash).toBe('#5/1/0.5/30');
 
         window.location.hash = '#4/wrongly/formed/hash';
 
-        t.false(hash._onHashChange());
+        expect(hash._onHashChange()).toBeFalsy();
 
         window.location.hash = '#map=10/3.00/-1.00&foo=bar';
 
-        t.false(hash._onHashChange());
+        expect(hash._onHashChange()).toBeFalsy();
 
         window.location.hash = '';
 
@@ -121,21 +121,21 @@ test('hash', (t) => {
 
         hash._onHashChange();
 
-        t.equal(map.getCenter().lng, -1);
-        t.equal(map.getCenter().lat, 3);
-        t.equal(map.getZoom(), 10);
-        t.equal(map.getBearing(), 0);
-        t.equal(map.getPitch(), 0);
+        expect(map.getCenter().lng).toBe(-1);
+        expect(map.getCenter().lat).toBe(3);
+        expect(map.getZoom()).toBe(10);
+        expect(map.getBearing()).toBe(0);
+        expect(map.getPitch()).toBe(0);
 
         window.location.hash = '';
 
         hash._onHashChange();
 
-        t.equal(map.getCenter().lng, -1);
-        t.equal(map.getCenter().lat, 3);
-        t.equal(map.getZoom(), 10);
-        t.equal(map.getBearing(), 0);
-        t.equal(map.getPitch(), 0);
+        expect(map.getCenter().lng).toBe(-1);
+        expect(map.getCenter().lat).toBe(3);
+        expect(map.getZoom()).toBe(10);
+        expect(map.getBearing()).toBe(0);
+        expect(map.getPitch()).toBe(0);
 
         t.end();
     });
@@ -149,23 +149,23 @@ test('hash', (t) => {
 
         hash._onHashChange();
 
-        t.equal(map.getCenter().lng, -1);
-        t.equal(map.getCenter().lat, 3);
-        t.equal(map.getZoom(), 10);
-        t.equal(map.getBearing(), 0);
-        t.equal(map.getPitch(), 0);
+        expect(map.getCenter().lng).toBe(-1);
+        expect(map.getCenter().lat).toBe(3);
+        expect(map.getZoom()).toBe(10);
+        expect(map.getBearing()).toBe(0);
+        expect(map.getPitch()).toBe(0);
 
         window.location.hash = '#map&foo=bar';
 
-        t.false(hash._onHashChange());
+        expect(hash._onHashChange()).toBeFalsy();
 
         window.location.hash = '#map=4/5/baz&foo=bar';
 
-        t.false(hash._onHashChange());
+        expect(hash._onHashChange()).toBeFalsy();
 
         window.location.hash = '#5/1.00/0.50/30/60';
 
-        t.false(hash._onHashChange());
+        expect(hash._onHashChange()).toBeFalsy();
 
         window.location.hash = '';
 
@@ -181,9 +181,9 @@ test('hash', (t) => {
 
         const currentHash = hash._getCurrentHash();
 
-        t.equal(currentHash[0], '10');
-        t.equal(currentHash[1], '3.00');
-        t.equal(currentHash[2], '-1.00');
+        expect(currentHash[0]).toBe('10');
+        expect(currentHash[1]).toBe('3.00');
+        expect(currentHash[2]).toBe('-1.00');
 
         window.location.hash = '';
 
@@ -199,17 +199,17 @@ test('hash', (t) => {
 
         let currentHash = hash._getCurrentHash();
 
-        t.equal(currentHash[0], '10');
-        t.equal(currentHash[1], '3.00');
-        t.equal(currentHash[2], '-1.00');
+        expect(currentHash[0]).toBe('10');
+        expect(currentHash[1]).toBe('3.00');
+        expect(currentHash[2]).toBe('-1.00');
 
         window.location.hash = '#baz&map=10/3.00/-1.00';
 
         currentHash = hash._getCurrentHash();
 
-        t.equal(currentHash[0], '10');
-        t.equal(currentHash[1], '3.00');
-        t.equal(currentHash[2], '-1.00');
+        expect(currentHash[0]).toBe('10');
+        expect(currentHash[1]).toBe('3.00');
+        expect(currentHash[2]).toBe('-1.00');
 
         window.location.hash = '';
 
@@ -225,41 +225,41 @@ test('hash', (t) => {
         createHash()
             .addTo(map);
 
-        t.notok(window.location.hash);
+        expect(window.location.hash).toBeFalsy();
 
         map.setZoom(3);
         map.setCenter([2.0, 1.0]);
 
-        t.ok(window.location.hash);
+        expect(window.location.hash).toBeTruthy();
 
         let newHash = getHash();
 
-        t.equal(newHash.length, 3);
-        t.equal(newHash[0], '#3');
-        t.equal(newHash[1], '1');
-        t.equal(newHash[2], '2');
+        expect(newHash.length).toBe(3);
+        expect(newHash[0]).toBe('#3');
+        expect(newHash[1]).toBe('1');
+        expect(newHash[2]).toBe('2');
 
         map.setPitch(60);
 
         newHash = getHash();
 
-        t.equal(newHash.length, 5);
-        t.equal(newHash[0], '#3');
-        t.equal(newHash[1], '1');
-        t.equal(newHash[2], '2');
-        t.equal(newHash[3], '0');
-        t.equal(newHash[4], '60');
+        expect(newHash.length).toBe(5);
+        expect(newHash[0]).toBe('#3');
+        expect(newHash[1]).toBe('1');
+        expect(newHash[2]).toBe('2');
+        expect(newHash[3]).toBe('0');
+        expect(newHash[4]).toBe('60');
 
         map.setBearing(135);
 
         newHash = getHash();
 
-        t.equal(newHash.length, 5);
-        t.equal(newHash[0], '#3');
-        t.equal(newHash[1], '1');
-        t.equal(newHash[2], '2');
-        t.equal(newHash[3], '135');
-        t.equal(newHash[4], '60');
+        expect(newHash.length).toBe(5);
+        expect(newHash[0]).toBe('#3');
+        expect(newHash[1]).toBe('1');
+        expect(newHash[2]).toBe('2');
+        expect(newHash[3]).toBe('135');
+        expect(newHash[4]).toBe('60');
 
         window.location.hash = '';
 
@@ -271,34 +271,34 @@ test('hash', (t) => {
         createHash('map')
             .addTo(map);
 
-        t.notok(window.location.hash);
+        expect(window.location.hash).toBeFalsy();
 
         map.setZoom(3);
         map.setCenter([1.0, 2.0]);
 
-        t.ok(window.location.hash);
+        expect(window.location.hash).toBeTruthy();
 
-        t.equal(window.location.hash, '#map=3/2/1');
+        expect(window.location.hash).toBe('#map=3/2/1');
 
         map.setPitch(60);
 
-        t.equal(window.location.hash, '#map=3/2/1/0/60');
+        expect(window.location.hash).toBe('#map=3/2/1/0/60');
 
         map.setBearing(135);
 
-        t.equal(window.location.hash, '#map=3/2/1/135/60');
+        expect(window.location.hash).toBe('#map=3/2/1/135/60');
 
         window.location.hash += '&foo=bar';
 
         map.setZoom(7);
 
-        t.equal(window.location.hash, '#map=7/2/1/135/60&foo=bar');
+        expect(window.location.hash).toBe('#map=7/2/1/135/60&foo=bar');
 
         window.location.hash = '#baz&map=7/2/1/135/60&foo=bar';
 
         map.setCenter([2.0, 1.0]);
 
-        t.equal(window.location.hash, '#baz&map=7/1/2/135/60&foo=bar');
+        expect(window.location.hash).toBe('#baz&map=7/1/2/135/60&foo=bar');
 
         window.location.hash = '';
 
@@ -314,7 +314,7 @@ test('hash', (t) => {
 
         map.remove();
 
-        t.ok(map);
+        expect(map).toBeTruthy();
         t.end();
     });
 
