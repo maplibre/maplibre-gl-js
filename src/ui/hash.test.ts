@@ -1,9 +1,8 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import Hash from '../../../rollup/build/tsc/src/ui/hash';
+import Hash from '../ui/hash';
 import {createMap as globalCreateMap} from '../../util';
 
-test('hash', (t) => {
+describe('hash', () => {
     function createHash(name) {
         const hash = new Hash(name);
         hash._updateHash = hash._updateHashUnthrottled.bind(hash);
@@ -17,7 +16,7 @@ test('hash', (t) => {
         return globalCreateMap(t, {container});
     }
 
-    t.test('#addTo', (t) => {
+    test('#addTo', () => {
         const map = createMap(t);
         const hash = createHash();
 
@@ -26,10 +25,9 @@ test('hash', (t) => {
         hash.addTo(map);
 
         expect(hash._map).toBeTruthy();
-        t.end();
     });
 
-    t.test('#remove', (t) => {
+    test('#remove', () => {
         const map = createMap(t);
         const hash = createHash()
             .addTo(map);
@@ -39,10 +37,9 @@ test('hash', (t) => {
         hash.remove();
 
         expect(hash._map).toBeFalsy();
-        t.end();
     });
 
-    t.test('#_onHashChange', (t) => {
+    test('#_onHashChange', () => {
         const map = createMap(t);
         const hash = createHash()
             .addTo(map);
@@ -109,10 +106,9 @@ test('hash', (t) => {
 
         window.location.hash = '';
 
-        t.end();
     });
 
-    t.test('#_onHashChange empty', (t) => {
+    test('#_onHashChange empty', () => {
         const map = createMap(t);
         const hash = createHash()
             .addTo(map);
@@ -137,10 +133,9 @@ test('hash', (t) => {
         expect(map.getBearing()).toBe(0);
         expect(map.getPitch()).toBe(0);
 
-        t.end();
     });
 
-    t.test('#_onHashChange named', (t) => {
+    test('#_onHashChange named', () => {
         const map = createMap(t);
         const hash = createHash('map')
             .addTo(map);
@@ -169,10 +164,9 @@ test('hash', (t) => {
 
         window.location.hash = '';
 
-        t.end();
     });
 
-    t.test('#_getCurrentHash', (t) => {
+    test('#_getCurrentHash', () => {
         const map = createMap(t);
         const hash = createHash()
             .addTo(map);
@@ -187,10 +181,9 @@ test('hash', (t) => {
 
         window.location.hash = '';
 
-        t.end();
     });
 
-    t.test('#_getCurrentHash named', (t) => {
+    test('#_getCurrentHash named', () => {
         const map = createMap(t);
         const hash = createHash('map')
             .addTo(map);
@@ -213,10 +206,9 @@ test('hash', (t) => {
 
         window.location.hash = '';
 
-        t.end();
     });
 
-    t.test('#_updateHash', (t) => {
+    test('#_updateHash', () => {
         function getHash() {
             return window.location.hash.split('/');
         }
@@ -234,7 +226,7 @@ test('hash', (t) => {
 
         let newHash = getHash();
 
-        expect(newHash.length).toBe(3);
+        expect(newHash).toHaveLength(3);
         expect(newHash[0]).toBe('#3');
         expect(newHash[1]).toBe('1');
         expect(newHash[2]).toBe('2');
@@ -243,7 +235,7 @@ test('hash', (t) => {
 
         newHash = getHash();
 
-        expect(newHash.length).toBe(5);
+        expect(newHash).toHaveLength(5);
         expect(newHash[0]).toBe('#3');
         expect(newHash[1]).toBe('1');
         expect(newHash[2]).toBe('2');
@@ -254,7 +246,7 @@ test('hash', (t) => {
 
         newHash = getHash();
 
-        expect(newHash.length).toBe(5);
+        expect(newHash).toHaveLength(5);
         expect(newHash[0]).toBe('#3');
         expect(newHash[1]).toBe('1');
         expect(newHash[2]).toBe('2');
@@ -263,10 +255,9 @@ test('hash', (t) => {
 
         window.location.hash = '';
 
-        t.end();
     });
 
-    t.test('#_updateHash named', (t) => {
+    test('#_updateHash named', () => {
         const map = createMap(t);
         createHash('map')
             .addTo(map);
@@ -302,10 +293,9 @@ test('hash', (t) => {
 
         window.location.hash = '';
 
-        t.end();
     });
 
-    t.test('map#remove', (t) => {
+    test('map#remove', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 512});
         Object.defineProperty(container, 'clientHeight', {value: 512});
@@ -315,8 +305,6 @@ test('hash', (t) => {
         map.remove();
 
         expect(map).toBeTruthy();
-        t.end();
     });
 
-    t.end();
 });
