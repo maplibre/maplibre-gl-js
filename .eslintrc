@@ -97,6 +97,7 @@
     // Jest https://www.npmjs.com/package/eslint-plugin-jest
     "jest/no-disabled-tests": "warn",
     "jest/no-focused-tests": "error",
+    "jest/prefer-to-contain": "warn",
     "jest/prefer-to-have-length": "warn",
     "jest/valid-expect": "error",
     "jest/prefer-to-be": "warn"   
