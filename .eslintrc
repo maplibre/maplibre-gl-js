@@ -101,7 +101,8 @@
     "jest/prefer-to-contain": "warn",
     "jest/prefer-to-have-length": "warn",
     "jest/valid-expect": "error",
-    "jest/prefer-to-be": "warn"   
+    "jest/prefer-to-be": "warn",
+    "jest/no-alias-methods": "warn"
   },
   "settings": {
     "jsdoc":{
