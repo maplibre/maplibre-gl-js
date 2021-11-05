@@ -26,6 +26,27 @@ import {PerformanceUtils} from './util/performance';
 import type {RequestParameters, ResponseCallback} from './util/ajax';
 import type {Cancelable} from './types/cancelable';
 
+export type {MapOptions} from './ui/map';
+export type {LngLatBoundsLike} from './geo/lng_lat_bounds';
+export type {PointLike} from './util/point';
+export type {AnimationOptions, CameraForBoundsOptions, JumpToOptions, CameraOptions, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions} from './ui/camera';
+export {
+    Map,
+    NavigationControl,
+    GeolocateControl,
+    AttributionControl,
+    ScaleControl,
+    FullscreenControl,
+    Popup,
+    Marker,
+    Style,
+    LngLat,
+    LngLatBounds,
+    Point,
+    MercatorCoordinate,
+    Evented
+};
+
 const exported = {
     supported,
     setRTLTextPlugin,
@@ -235,6 +256,5 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
   */
 
 export default exported;
-
 // canary assert: used to confirm that asserts have been removed from production build
 assert(true, 'canary assert');

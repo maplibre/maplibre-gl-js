@@ -6,12 +6,12 @@ import LngLat from '../../geo/lng_lat';
 import Marker from '../marker';
 
 import type Map from '../map';
-import type {AnimationOptions, CameraOptions} from '../camera';
+import type {FitBoundsOptions} from '../camera';
 import type {IControl} from './control';
 
 type Options = {
   positionOptions?: PositionOptions;
-  fitBoundsOptions?: AnimationOptions & CameraOptions;
+  fitBoundsOptions?: FitBoundsOptions;
   trackUserLocation?: boolean;
   showAccuracyCircle?: boolean;
   showUserLocation?: boolean;
