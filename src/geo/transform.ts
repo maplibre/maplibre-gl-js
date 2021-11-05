@@ -211,6 +211,7 @@ class Transform {
         if (center.lat === this._center.lat && center.lng === this._center.lng) return;
         this._unmodified = false;
         this._center = center;
+        this._elevation = this.getElevation(center);
         this._constrain();
         this._calcMatrices();
     }
@@ -476,7 +477,7 @@ class Transform {
 
     getElevation(lnglat: LngLat) {
         const merc = this.locationCoordinate(lnglat), tsc = this.terrainSourceCache;
-        if (!tsc.isEnabled()) return 0;
+        if (!(tsc && tsc.isEnabled())) return 0;
         const tileSize = tsc.tileSize, worldSize = (1 << this.tileZoom) * tileSize;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
         const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
