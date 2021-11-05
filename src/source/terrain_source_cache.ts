@@ -18,6 +18,7 @@ import type Context from '../gl/context';
 import type Painter from '../render/painter';
 import type RasterDEMTileSource from '../source/raster_dem_tile_source';
 import type Framebuffer from '../gl/framebuffer';
+import { warnOnce } from '../util/util';
 
 class TerrainSourceCache extends Evented {
     _style: Style;
@@ -47,6 +48,7 @@ class TerrainSourceCache extends Evented {
     exaggeration: number;
     elevationOffset: number;
     qualityFactor: number;
+    deltaZoom: number;
 
     /**
      * @param {Style} style
@@ -69,6 +71,7 @@ class TerrainSourceCache extends Evented {
         this.exaggeration = 1.0;
         this.elevationOffset = 450; // add a global offset of 450m to put the dead-sea into positive values.
         this.qualityFactor = 2; // render more pixels per tile, value must be a power of two
+        this.deltaZoom = 1; // set to a value between 0 and 2 (load load terraintiles in less quality)
 
         // create empty DEM Obejcts
         const context = style.map.painter.context;
@@ -107,7 +110,7 @@ class TerrainSourceCache extends Evented {
      */
     enable(sourceCache: SourceCache, options?: {exaggeration: boolean; elevationOffset: number; meshSize: number}): void {
         sourceCache.usedForTerrain = true;
-        sourceCache.tileSize = this.tileSize;
+        sourceCache.tileSize = this.tileSize * 2 ** this.deltaZoom;
         this._sourceCache = sourceCache;
         ['exaggeration', 'elevationOffset', 'meshSize'].forEach(key => {
             if (options && options[key] != undefined) this[key] = options[key]
@@ -252,7 +255,8 @@ class TerrainSourceCache extends Evented {
         if (!this.isEnabled()) return null;
         if (!this._sourceTileCache[tileID.key]) {
             const maxzoom = this._sourceCache._source.maxzoom;
-            const z = Math.max(0, tileID.overscaledZ > maxzoom ? maxzoom : tileID.overscaledZ);
+            const tilezoom = tileID.overscaledZ - this.deltaZoom;
+            const z = Math.max(0, tilezoom > maxzoom ? maxzoom : tilezoom);
             this._sourceTileCache[tileID.key] = tileID.scaledTo(z).key;
         }
         return this._sourceCache.getTileByID(this._sourceTileCache[tileID.key]);
@@ -276,7 +280,14 @@ class TerrainSourceCache extends Evented {
         }
         // create matrix for lookup in dem data
         if (!this._demMatrixCache[tileID.key]) {
-            const dz = Math.max(0, tileID.canonical.z - this._sourceCache._source.maxzoom);
+            const maxzoom = this._sourceCache._source.maxzoom;
+            let dz = tileID.canonical.z - this.deltaZoom <= maxzoom
+                ? this.deltaZoom
+                : Math.max(0, tileID.canonical.z - maxzoom);
+            if (tileID.overscaledZ > tileID.canonical.z) {
+                if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
+                else warnOnce("cannot calculate elevation if elevation maxzoom > source.maxzoom")
+            }
             const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
             const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
             const demMatrix = mat4.fromScaling(new Float64Array(16) as any, [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
