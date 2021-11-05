@@ -1,6 +1,10 @@
-import '../../stub_loader';
-import Hash from '../ui/hash';
-import {createMap as globalCreateMap} from '../../util';
+import Hash from './hash';
+import {setPerformance, createMap as globalCreateMap, setWebGlContext} from '../util/test/util';
+
+beforeEach(() => {
+    setPerformance();
+    setWebGlContext();
+});
 
 describe('hash', () => {
     function createHash(name) {
@@ -9,16 +13,16 @@ describe('hash', () => {
         return hash;
     }
 
-    function createMap(t) {
+    function createMap() {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 512});
         Object.defineProperty(container, 'clientHeight', {value: 512});
-        return globalCreateMap(t, {container});
+        return globalCreateMap({container}, undefined);
     }
 
     test('#addTo', () => {
-        const map = createMap(t);
-        const hash = createHash();
+        const map = createMap();
+        const hash = createHash(undefined);
 
         expect(hash._map).toBeFalsy();
 
@@ -28,8 +32,8 @@ describe('hash', () => {
     });
 
     test('#remove', () => {
-        const map = createMap(t);
-        const hash = createHash()
+        const map = createMap();
+        const hash = createHash(undefined)
             .addTo(map);
 
         expect(hash._map).toBeTruthy();
@@ -40,8 +44,8 @@ describe('hash', () => {
     });
 
     test('#_onHashChange', () => {
-        const map = createMap(t);
-        const hash = createHash()
+        const map = createMap();
+        const hash = createHash(undefined)
             .addTo(map);
 
         window.location.hash = '#10/3.00/-1.00';
@@ -51,7 +55,7 @@ describe('hash', () => {
         expect(map.getCenter().lng).toBe(-1);
         expect(map.getCenter().lat).toBe(3);
         expect(map.getZoom()).toBe(10);
-        expect(map.getBearing()).toBe(0);
+        expect(map.getBearing() === 0 ? 0 : map.getBearing()).toBe(0);
         expect(map.getPitch()).toBe(0);
 
         // map is created with `interactive: false`
@@ -105,12 +109,11 @@ describe('hash', () => {
         expect(hash._onHashChange()).toBeFalsy();
 
         window.location.hash = '';
-
     });
 
     test('#_onHashChange empty', () => {
-        const map = createMap(t);
-        const hash = createHash()
+        const map = createMap();
+        const hash = createHash(undefined)
             .addTo(map);
 
         window.location.hash = '#10/3.00/-1.00';
@@ -120,7 +123,7 @@ describe('hash', () => {
         expect(map.getCenter().lng).toBe(-1);
         expect(map.getCenter().lat).toBe(3);
         expect(map.getZoom()).toBe(10);
-        expect(map.getBearing()).toBe(0);
+        expect(map.getBearing() === 0 ? 0 : map.getBearing()).toBe(0);
         expect(map.getPitch()).toBe(0);
 
         window.location.hash = '';
@@ -130,13 +133,12 @@ describe('hash', () => {
         expect(map.getCenter().lng).toBe(-1);
         expect(map.getCenter().lat).toBe(3);
         expect(map.getZoom()).toBe(10);
-        expect(map.getBearing()).toBe(0);
+        expect(map.getBearing() === 0 ? 0 : map.getBearing()).toBe(0);
         expect(map.getPitch()).toBe(0);
-
     });
 
     test('#_onHashChange named', () => {
-        const map = createMap(t);
+        const map = createMap();
         const hash = createHash('map')
             .addTo(map);
 
@@ -147,7 +149,7 @@ describe('hash', () => {
         expect(map.getCenter().lng).toBe(-1);
         expect(map.getCenter().lat).toBe(3);
         expect(map.getZoom()).toBe(10);
-        expect(map.getBearing()).toBe(0);
+        expect(map.getBearing() === 0 ? 0 : map.getBearing()).toBe(0);
         expect(map.getPitch()).toBe(0);
 
         window.location.hash = '#map&foo=bar';
@@ -163,12 +165,11 @@ describe('hash', () => {
         expect(hash._onHashChange()).toBeFalsy();
 
         window.location.hash = '';
-
     });
 
     test('#_getCurrentHash', () => {
-        const map = createMap(t);
-        const hash = createHash()
+        const map = createMap();
+        const hash = createHash(undefined)
             .addTo(map);
 
         window.location.hash = '#10/3.00/-1.00';
@@ -180,11 +181,10 @@ describe('hash', () => {
         expect(currentHash[2]).toBe('-1.00');
 
         window.location.hash = '';
-
     });
 
     test('#_getCurrentHash named', () => {
-        const map = createMap(t);
+        const map = createMap();
         const hash = createHash('map')
             .addTo(map);
 
@@ -205,7 +205,6 @@ describe('hash', () => {
         expect(currentHash[2]).toBe('-1.00');
 
         window.location.hash = '';
-
     });
 
     test('#_updateHash', () => {
@@ -213,8 +212,8 @@ describe('hash', () => {
             return window.location.hash.split('/');
         }
 
-        const map = createMap(t);
-        createHash()
+        const map = createMap();
+        createHash(undefined)
             .addTo(map);
 
         expect(window.location.hash).toBeFalsy();
@@ -254,11 +253,10 @@ describe('hash', () => {
         expect(newHash[4]).toBe('60');
 
         window.location.hash = '';
-
     });
 
     test('#_updateHash named', () => {
-        const map = createMap(t);
+        const map = createMap();
         createHash('map')
             .addTo(map);
 
@@ -292,7 +290,6 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#baz&map=7/1/2/135/60&foo=bar');
 
         window.location.hash = '';
-
     });
 
     test('map#remove', () => {
@@ -300,11 +297,10 @@ describe('hash', () => {
         Object.defineProperty(container, 'clientWidth', {value: 512});
         Object.defineProperty(container, 'clientHeight', {value: 512});
 
-        const map = createMap(t, {hash: true});
+        const map = createMap();
 
         map.remove();
 
         expect(map).toBeTruthy();
     });
-
 });
