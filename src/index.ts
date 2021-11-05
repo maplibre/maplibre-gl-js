@@ -26,6 +26,7 @@ import {PerformanceUtils} from './util/performance';
 import type {RequestParameters, ResponseCallback} from './util/ajax';
 import type {Cancelable} from './types/cancelable';
 
+/*
 export type {MapOptions} from './ui/map';
 export type {LngLatBoundsLike} from './geo/lng_lat_bounds';
 export type {PointLike} from './util/point';
@@ -46,7 +47,7 @@ export {
     MercatorCoordinate,
     Evented
 };
-
+*/
 const exported = {
     supported,
     setRTLTextPlugin,
