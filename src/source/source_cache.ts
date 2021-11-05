@@ -58,6 +58,7 @@ class SourceCache extends Evented {
     transform: Transform;
     used: boolean;
     usedForTerrain: boolean;
+    tileSize: number;
     _state: SourceFeatureState;
     _loadedParentTiles: {[_: string]: Tile};
 
@@ -286,6 +287,7 @@ class SourceCache extends Evented {
 
         function fillBorder(tile, borderTile) {
             tile.needsHillshadePrepare = true;
+            tile.needsTerrainPrepare = true;
             let dx = borderTile.tileID.canonical.x - tile.tileID.canonical.x;
             const dy = borderTile.tileID.canonical.y - tile.tileID.canonical.y;
             const dim = Math.pow(2, tile.tileID.canonical.z);
@@ -496,10 +498,10 @@ class SourceCache extends Evented {
                 .map((unwrapped) => new OverscaledTileID(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         } else {
             idealTileIDs = transform.coveringTiles({
-                tileSize: this._source.tileSize,
+                tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.maxzoom,
-                roundZoom: this._source.roundZoom,
+                roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled
             });
 

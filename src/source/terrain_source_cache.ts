@@ -266,12 +266,13 @@ class TerrainSourceCache extends Evented {
         if (!this.isEnabled() || !tileID) return null;
         // find covering dem tile and prepare demTexture
         const sourceTile = this.getSourceTile(tileID);
-        if (sourceTile && sourceTile.dem && !sourceTile.demTexture) {
+        if (sourceTile && sourceTile.dem && (!sourceTile.demTexture || sourceTile.needsTerrainPrepare)) {
             let context = this._style.map.painter.context;
             sourceTile.demTexture = this._style.map.painter.getTileTexture(sourceTile.dem.stride);
             if (sourceTile.demTexture) sourceTile.demTexture.update(sourceTile.dem.getPixels(), {premultiply: false});
             else sourceTile.demTexture = new Texture(context, sourceTile.dem.getPixels(), context.gl.RGBA, {premultiply: false});
             sourceTile.demTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
+            sourceTile.needsTerrainPrepare = false;
         }
         // create matrix for lookup in dem data
         if (!this._demMatrixCache[tileID.key]) {
