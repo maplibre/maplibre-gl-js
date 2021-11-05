@@ -9,6 +9,7 @@ import Style from '../style/style';
 import Texture from '../render/texture';
 import {RGBAImage} from '../util/image';
 import {PosArray, TriangleIndexArray} from '../data/array_types';
+import {number as mix} from '../style-spec/util/interpolate.js';
 import posAttributes from '../data/pos_attributes';
 import SegmentVector from '../data/segment';
 import type Transform from '../geo/transform';
@@ -37,7 +38,7 @@ class TerrainSourceCache extends Evented {
     _coordsTextureSize: number;
     _emptyDemUnpack: any;
     _emptyDemTexture: Texture;
-    _demMatrixCache: {[_: string]: mat4}
+    _demMatrixCache: {[_: string]: mat4};
     _sourceTileCache: {[_: string]: string};
     minzoom: number;
     maxzoom: number;
@@ -46,7 +47,6 @@ class TerrainSourceCache extends Evented {
     exaggeration: number;
     elevationOffset: number;
     qualityFactor: number;
-    deltaZoom: number;
 
     /**
      * @param {Style} style
@@ -69,7 +69,6 @@ class TerrainSourceCache extends Evented {
         this.exaggeration = 1.0;
         this.elevationOffset = 450; // add a global offset of 450m to put the dead-sea into positive values.
         this.qualityFactor = 2; // render more pixels per tile, value must be a power of two
-        this.deltaZoom = 1; // set to a value between 0 and 2
 
         // create empty DEM Obejcts
         const context = style.map.painter.context;
@@ -108,8 +107,7 @@ class TerrainSourceCache extends Evented {
      */
     enable(sourceCache: SourceCache, options?: {exaggeration: boolean; elevationOffset: number; meshSize: number}): void {
         sourceCache.usedForTerrain = true;
-        sourceCache._source.roundZoom = false;
-        sourceCache._source.tileSize = this.tileSize * 2 ** this.deltaZoom;
+        sourceCache.tileSize = this.tileSize;
         this._sourceCache = sourceCache;
         ['exaggeration', 'elevationOffset', 'meshSize'].forEach(key => {
             if (options && options[key] != undefined) this[key] = options[key]
@@ -254,7 +252,7 @@ class TerrainSourceCache extends Evented {
         if (!this.isEnabled()) return null;
         if (!this._sourceTileCache[tileID.key]) {
             const maxzoom = this._sourceCache._source.maxzoom;
-            const z = Math.max(0, tileID.overscaledZ - this.deltaZoom > maxzoom ? maxzoom : tileID.overscaledZ - this.deltaZoom);
+            const z = Math.max(0, tileID.overscaledZ > maxzoom ? maxzoom : tileID.overscaledZ);
             this._sourceTileCache[tileID.key] = tileID.scaledTo(z).key;
         }
         return this._sourceCache.getTileByID(this._sourceTileCache[tileID.key]);
@@ -270,26 +268,25 @@ class TerrainSourceCache extends Evented {
         const sourceTile = this.getSourceTile(tileID);
         if (sourceTile && sourceTile.dem && !sourceTile.demTexture) {
             let context = this._style.map.painter.context;
-            sourceTile.demTexture = this._style.map.painter.getTileTexture(sourceTile.dem.dim);
+            sourceTile.demTexture = this._style.map.painter.getTileTexture(sourceTile.dem.stride);
             if (sourceTile.demTexture) sourceTile.demTexture.update(sourceTile.dem.getPixels(), {premultiply: false});
             else sourceTile.demTexture = new Texture(context, sourceTile.dem.getPixels(), context.gl.RGBA, {premultiply: false});
             sourceTile.demTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
         }
         // create matrix for lookup in dem data
         if (!this._demMatrixCache[tileID.key]) {
-            const demMatrix = new Float64Array(16) as any;
-            const maxzoom = this._sourceCache._source.maxzoom;
-            const dz = this.deltaZoom + Math.max(0, tileID.canonical.z - this.deltaZoom - maxzoom);
+            const dz = Math.max(0, tileID.canonical.z - this._sourceCache._source.maxzoom);
             const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
             const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-            mat4.ortho(demMatrix, 0, EXTENT << dz, 0, EXTENT << dz, 0, 1);
+            const demMatrix = mat4.fromScaling(new Float64Array(16) as any, [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
             mat4.translate(demMatrix, demMatrix, [dx * EXTENT, dy * EXTENT, 0]);
             this._demMatrixCache[tileID.key] = demMatrix;
-        }
+         }
         // return uniform values & textures
         return {
             u_depth: 2,
             u_terrain: 3,
+            u_terrain_dim: sourceTile && sourceTile.dem && sourceTile.dem.dim || 1,
             u_terrain_matrix: this._demMatrixCache[tileID.key],
             u_terrain_unpack: sourceTile && sourceTile.dem && sourceTile.dem.getUnpackVector() || this._emptyDemUnpack,
             u_terrain_offset: this.elevationOffset,
@@ -302,10 +299,7 @@ class TerrainSourceCache extends Evented {
 
     /**
      * get the Elevation for given coordinate
-     * FIXME-3D:
-     *   - make linear interpolation
-     *   - handle negative coordinates
-     *   - interploate below ZL this.maxzoom
+     * FIXME-3D: handle coordinates outside bounds, e.g. use neighbouring tiles
      * @param {OverscaledTileID} tileID
      * @param {number} x between 0 .. EXTENT
      * @param {number} y between 0 .. EXTENT
@@ -314,15 +308,19 @@ class TerrainSourceCache extends Evented {
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number=EXTENT): number {
         if (!this.isEnabled()) return this.elevationOffset;
-        if (!(x >= 0 && x <= extent && y >= 0 && y <= extent)) return this.elevationOffset;
+        if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return this.elevationOffset;
+        let elevation = 0;
         const terrain = this.getTerrain(tileID);
-        const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
-        pos[0] = pos[0] * 0.5 + 0.5;
-        pos[1] = pos[1] * 0.5 + 0.5;
-        // get elevation from dem
-        let elevation = terrain.tile && terrain.tile.dem
-            ? terrain.tile.dem.get(Math.floor(pos[0] * terrain.tile.dem.dim), Math.floor(pos[1] * terrain.tile.dem.dim))
-            : 0;
+        if (terrain.tile && terrain.tile.dem) {
+            const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
+            const coord = [ pos[0] * terrain.tile.dem.dim, pos[1] * terrain.tile.dem.dim ];
+            const c = [ Math.floor(coord[0]), Math.floor(coord[1]) ];
+            const tl = terrain.tile.dem.get(c[0], c[1]);
+            const tr = terrain.tile.dem.get(c[0], c[1] + 1);
+            const bl = terrain.tile.dem.get(c[0] + 1, c[1]);
+            const br = terrain.tile.dem.get(c[0] + 1, c[1] + 1);
+            elevation = mix(mix(tl, tr, coord[0] - c[0]), mix(bl, br, coord[0] - c[0]), coord[1] - c[1]);
+        }
         if (elevation > 8191) elevation = 0; // REMOVEME: this hack is for MTK data, because of false nodata values
         return (elevation + this.elevationOffset);
     }

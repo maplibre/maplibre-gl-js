@@ -477,12 +477,10 @@ class Transform {
     getElevation(lnglat: LngLat) {
         const merc = this.locationCoordinate(lnglat), tsc = this.terrainSourceCache;
         if (!tsc.isEnabled()) return 0;
-        const maxzoom = tsc._sourceCache._source.maxzoom + tsc.deltaZoom;
-        const tileZ = maxzoom < this.tileZoom ? maxzoom : this.tileZoom;
-        const tileSize = tsc.tileSize, worldSize = (1 << tileZ) * tileSize;
+        const tileSize = tsc.tileSize, worldSize = (1 << this.tileZoom) * tileSize;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
         const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
-        const tileID = new OverscaledTileID(tileZ, 0, tileZ, tileX, tileY);
+        const tileID = new OverscaledTileID(this.tileZoom, 0, this.tileZoom, tileX, tileY);
         return this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize, tileSize);
     }
 

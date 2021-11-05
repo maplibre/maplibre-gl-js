@@ -76,6 +76,7 @@ vec2 get_pattern_pos(const vec2 pixel_coord_upper, const vec2 pixel_coord_lower,
 
 #ifdef TERRAIN3D
 uniform sampler2D u_terrain;
+uniform float u_terrain_dim;
 uniform mat4 u_terrain_matrix;
 uniform vec4 u_terrain_unpack;
 uniform float u_terrain_offset;
@@ -106,12 +107,27 @@ float calculate_visibility(vec4 pos) {
     #endif
 }
 
+float ele(vec2 pos) {
+    #ifdef TERRAIN3D
+        vec4 rgb = (texture2D(u_terrain, pos) * 255.0) * u_terrain_unpack;
+        return rgb.r + rgb.g + rgb.b - u_terrain_unpack.a;
+    #else
+        return 0.0;
+    #endif
+}
+
 float get_elevation(vec2 pos) {
     #ifdef TERRAIN3D
-        vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * 0.5 + 0.5;
-        vec4 rgb = (texture2D(u_terrain, coord) * 255.0) * u_terrain_unpack;
-        float ele = rgb.r + rgb.g + rgb.b - u_terrain_unpack.a;
-        return (ele + u_terrain_offset) * u_terrain_exaggeration;
+        vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 1.0;
+        vec2 f = fract(coord);
+        vec2 c = (floor(coord) + 0.5) / (u_terrain_dim + 2.0); // get the pixel center
+        float d = 1.0 / (u_terrain_dim + 2.0);
+        float tl = ele(c);
+        float tr = ele(c + vec2(d, 0.0));
+        float bl = ele(c + vec2(0.0, d));
+        float br = ele(c + vec2(d, d));
+        float elevation = mix(mix(tl, tr, f.x), mix(bl, br, f.x), f.y);
+        return (elevation + u_terrain_offset) * u_terrain_exaggeration;
     #else
         return 0.0;
     #endif
