@@ -26,11 +26,11 @@ import {PerformanceUtils} from './util/performance';
 import type {RequestParameters, ResponseCallback} from './util/ajax';
 import type {Cancelable} from './types/cancelable';
 
-/*
 export type {MapOptions} from './ui/map';
 export type {LngLatBoundsLike} from './geo/lng_lat_bounds';
 export type {PointLike} from './util/point';
 export type {AnimationOptions, CameraForBoundsOptions, JumpToOptions, CameraOptions, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions} from './ui/camera';
+/*
 export {
     Map,
     NavigationControl,
