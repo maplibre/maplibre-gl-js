@@ -30,9 +30,9 @@ export type {MapOptions} from './ui/map';
 export type {LngLatBoundsLike} from './geo/lng_lat_bounds';
 export type {PointLike} from './util/point';
 export type {AnimationOptions, CameraForBoundsOptions, JumpToOptions, CameraOptions, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions} from './ui/camera';
-/*
+
 export {
-    Map,
+//    Map,
     NavigationControl,
     GeolocateControl,
     AttributionControl,
@@ -47,7 +47,7 @@ export {
     MercatorCoordinate,
     Evented
 };
-*/
+
 const exported = {
     supported,
     setRTLTextPlugin,
