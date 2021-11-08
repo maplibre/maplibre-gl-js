@@ -1,0 +1,28 @@
+name: Fix NPM Tags
+
+on:
+  workflow_dispatch
+
+jobs:
+  fix_npm_tags:
+    name: Fix NPM Tags
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 14 x64
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          architecture: x64
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Fix tags
+        run: |
+          npm dist-tag rm maplibre-gl@2.0.0-pre.1 latest
+          npm dist-tag add maplibre-gl@1.15.2 latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
+          
