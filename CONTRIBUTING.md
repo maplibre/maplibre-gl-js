@@ -45,7 +45,6 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
 Install [Node.js](https://nodejs.org/) ^14
 ```
 nvm install 14
-nvm install --latest-npm # you need npm version 7.x
 ```
 
 Clone the repository

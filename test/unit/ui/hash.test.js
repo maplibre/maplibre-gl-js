@@ -1,6 +1,6 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import Hash from '../../../rollup/build/tsc/ui/hash';
+import Hash from '../../../rollup/build/tsc/src/ui/hash';
 import {createMap as globalCreateMap} from '../../util';
 
 test('hash', (t) => {

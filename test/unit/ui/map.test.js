@@ -1,12 +1,12 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import {extend} from '../../../rollup/build/tsc/util/util';
-import Map from '../../../rollup/build/tsc/ui/map';
+import {extend} from '../../../rollup/build/tsc/src/util/util';
+import Map from '../../../rollup/build/tsc/src/ui/map';
 import {createMap} from '../../util';
-import LngLat from '../../../rollup/build/tsc/geo/lng_lat';
-import Tile from '../../../rollup/build/tsc/source/tile';
-import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
-import {Event, ErrorEvent} from '../../../rollup/build/tsc/util/evented';
+import LngLat from '../../../rollup/build/tsc/src/geo/lng_lat';
+import Tile from '../../../rollup/build/tsc/src/source/tile';
+import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
+import {Event, ErrorEvent} from '../../../rollup/build/tsc/src/util/evented';
 import simulate from '../../util/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../util/fixed';
 
@@ -938,7 +938,7 @@ test('Map', (t) => {
     t.test('throw on maxPitch greater than valid maxPitch at init', (t) => {
         t.throws(() => {
             createMap(t, {maxPitch: 90});
-        }, new Error(`maxPitch must be less than or equal to 60`));
+        }, new Error(`maxPitch must be less than or equal to 85`));
         t.end();
     });
 
@@ -1251,7 +1251,7 @@ test('Map', (t) => {
 
             map.on('style.load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /does not exist in the map\'s style and cannot be styled/);
+                    t.match(error.message, /Cannot style non-existing layer "non-existant"./);
                     t.end();
                 });
                 map.setLayoutProperty('non-existant', 'text-transform', 'lowercase');
@@ -1422,7 +1422,7 @@ test('Map', (t) => {
 
             map.on('style.load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /does not exist in the map\'s style/);
+                    t.match(error.message, /Cannot get style of non-existing layer "non-existant"./);
                     t.end();
                 });
                 map.getLayoutProperty('non-existant', 'text-transform', 'lowercase');
@@ -1479,7 +1479,7 @@ test('Map', (t) => {
 
             map.on('style.load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /does not exist in the map\'s style and cannot be styled/);
+                    t.match(error.message, /Cannot style non-existing layer "non-existant"./);
                     t.end();
                 });
                 map.setPaintProperty('non-existant', 'background-color', 'red');

@@ -3,6 +3,8 @@
 ### Features and improvements
 
 - *...Add new stuff here...*
+- Improve attribution controls accessibility. See [#359](https://github.com/maplibre/maplibre-gl-js/issues/359)
+- Allow maxPitch value up to 85, use values greater than 60 at your own risk (#574)
 
 ### 🐞 Bug fixes
 
@@ -25,6 +27,7 @@
 - Fix warning due to strict comparison of SDF property in image sprite (#303)
 - Fix tile placeholder replacement to allow for placeholders to be in a URL more than once. (#348)
 - Fix type check for non dom environment. (#334)
+- Fix precision problem in patterns when overzoomed in OpenGL ES devices.
 
 ## 1.15.2
 

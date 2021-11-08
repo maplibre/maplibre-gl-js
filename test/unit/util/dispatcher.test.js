@@ -1,8 +1,8 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import Dispatcher from '../../../rollup/build/tsc/util/dispatcher';
-import WebWorker from '../../../rollup/build/tsc/util/web_worker';
-import WorkerPool from '../../../rollup/build/tsc/util/worker_pool';
+import Dispatcher from '../../../rollup/build/tsc/src/util/dispatcher';
+import WebWorker from '../../../rollup/build/tsc/src/util/web_worker';
+import WorkerPool from '../../../rollup/build/tsc/src/util/worker_pool';
 
 test('Dispatcher', (t) => {
     t.test('requests and releases workers from pool', (t) => {

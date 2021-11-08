@@ -9,7 +9,7 @@ const benchSrc = fs.readFileSync('bench/gl-stats.html', 'utf8');
 const {execSync} = require('child_process');
 
 const benchHTML = benchSrc
-    .replace(/<script src="..\/dist\/maplibre-gl.js"><\/script>/, `<script>${maplibreGLJSSrc}</script>`)
+    .replace(/<script src="..\/dist\/maplibre-gl.js"><\/script>/, `<script>${maplibreGLJSSrc}</script>`);
 
 function waitForConsole(page) {
     return new Promise((resolve) => {
@@ -32,8 +32,8 @@ function waitForConsole(page) {
     await page.setContent(benchHTML);
 
     const stats = JSON.parse(await waitForConsole(page));
-    stats["bundle_size"] = maplibreGLJSSrc.length + maplibreGLCSSSrc.length;
-    stats["bundle_size_gz"] = zlib.gzipSync(maplibreGLJSSrc).length + zlib.gzipSync(maplibreGLCSSSrc).length;
+    stats['bundle_size'] = maplibreGLJSSrc.length + maplibreGLCSSSrc.length;
+    stats['bundle_size_gz'] = zlib.gzipSync(maplibreGLJSSrc).length + zlib.gzipSync(maplibreGLCSSSrc).length;
     stats.dt = execSync('git show --no-patch --no-notes --pretty=\'%cI\' HEAD').toString().substring(0, 19);
     stats.commit = execSync('git rev-parse --short HEAD').toString().trim();
     stats.message = execSync('git show -s --format=%s HEAD').toString().trim();

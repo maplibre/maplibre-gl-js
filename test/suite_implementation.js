@@ -1,8 +1,8 @@
 import {PNG} from 'pngjs';
 import request from 'request';
-import maplibregl from '../rollup/build/tsc/index';
-import browser from '../rollup/build/tsc/util/browser';
-import * as rtlTextPluginModule from '../rollup/build/tsc/source/rtl_text_plugin';
+import maplibregl from '../rollup/build/tsc/src/index';
+import browser from '../rollup/build/tsc/src/util/browser';
+import * as rtlTextPluginModule from '../rollup/build/tsc/src/source/rtl_text_plugin';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import fs from 'fs';
 import path, {dirname} from 'path';

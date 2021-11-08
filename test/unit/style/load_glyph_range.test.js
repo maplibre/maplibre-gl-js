@@ -2,8 +2,8 @@ import '../../stub_loader';
 import {test} from '../../util/test';
 import fs from 'fs';
 import path, {dirname} from 'path';
-import {RequestManager} from '../../../rollup/build/tsc/util/request_manager';
-import loadGlyphRange from '../../../rollup/build/tsc/style/load_glyph_range';
+import {RequestManager} from '../../../rollup/build/tsc/src/util/request_manager';
+import loadGlyphRange from '../../../rollup/build/tsc/src/style/load_glyph_range';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

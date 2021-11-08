@@ -12,7 +12,8 @@
   "plugins": [
     "@typescript-eslint",
     "import",
-    "jsdoc"
+    "jsdoc",
+    "jest"
   ],
   "rules": {
     "no-dupe-class-members": "off",
@@ -22,6 +23,8 @@
       { "argsIgnorePattern": "^_" }
     ],
     "@typescript-eslint/member-delimiter-style": ["error"],
+    "no-useless-constructor": "off",
+    "@typescript-eslint/no-useless-constructor": ["error"],
     // Disable no-undef. It's covered by @typescript-eslint
     "no-undef": "off",
     // temporarily disabled due to https://github.com/babel/babel-eslint/issues/485
@@ -45,6 +48,8 @@
     "consistent-return": "off",
     "global-require": "off",
     "import/no-commonjs": "error",
+    // TSC throws an error on unresolved imports; eslint doesn't understand .js extension in import statement
+    "import/no-unresolved": "off",
     "key-spacing": "off",
     "no-eq-null": "off",
     "no-lonely-if": "off",
@@ -87,7 +92,18 @@
     "jsdoc/require-param-description": "warn",
     "jsdoc/require-param-name": "warn",
     "jsdoc/require-returns": "warn",
-    "jsdoc/require-returns-description": "warn"
+    "jsdoc/require-returns-description": "warn",
+    
+    // Jest https://www.npmjs.com/package/eslint-plugin-jest
+    "jest/no-commented-out-tests": "error",
+    "jest/no-disabled-tests": "warn",
+    "jest/no-focused-tests": "error",
+    "jest/prefer-to-contain": "warn",
+    "jest/prefer-to-have-length": "warn",
+    "jest/valid-expect": "error",
+    "jest/prefer-to-be": "warn",
+    "jest/no-alias-methods": "warn",
+    "jest/no-deprecated-functions": "warn"
   },
   "settings": {
     "jsdoc":{

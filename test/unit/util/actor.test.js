@@ -1,7 +1,7 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import Actor from '../../../rollup/build/tsc/util/actor';
-import workerFactory from '../../../rollup/build/tsc/util/web_worker';
+import Actor from '../../../rollup/build/tsc/src/util/actor';
+import workerFactory from '../../../rollup/build/tsc/src/util/web_worker';
 
 test('Actor', (t) => {
     t.test('forwards resopnses to correct callback', (t) => {

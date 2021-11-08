@@ -10,7 +10,7 @@ test('@mapbox/mapbox-gl-style-spec npm package', (t) => {
     t.test('build plain ES5 bundle in prepublish', (t) => {
         t.stub(console, 'warn');
         rollup.rollup({
-            input: `./rollup/build/tsc/style-spec/style-spec.js`,
+            input: `./rollup/build/tsc/src/style-spec/style-spec.js`,
             plugins: [{
                 resolveId: (id, importer) => {
                     if (

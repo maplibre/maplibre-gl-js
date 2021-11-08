@@ -1,4 +1,4 @@
-// This file was generated. Edit build/generate-style-code.js, see https://github.com/maplibre/maplibre-gl-js/issues/266.
+// This file is generated. Edit build/generate-style-code.ts, then run 'npm run codegen'.
 /* eslint-disable */
 
 import styleSpec from '../../style-spec/reference/latest';
@@ -10,7 +10,8 @@ import {
     CrossFadedDataDrivenProperty,
     CrossFadedProperty,
     ColorRampProperty,
-    PossiblyEvaluatedPropertyValue
+    PossiblyEvaluatedPropertyValue,
+    CrossFaded
 } from '../properties';
 
 import type Color from '../../style-spec/util/color';
@@ -18,14 +19,14 @@ import type Color from '../../style-spec/util/color';
 import type Formatted from '../../style-spec/expression/types/formatted';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
-import { StylePropertySpecification } from '../../style-spec/style-spec';
+import {StylePropertySpecification} from '../../style-spec/style-spec';
 
 export type LayoutProps = {
-  "fill-sort-key": DataDrivenProperty<number>
+    "fill-sort-key": DataDrivenProperty<number>,
 };
 
 export type LayoutPropsPossiblyEvaluated = {
-  "fill-sort-key": PossiblyEvaluatedPropertyValue<number>
+    "fill-sort-key": PossiblyEvaluatedPropertyValue<number>,
 };
 
 const layout: Properties<LayoutProps> = new Properties({
@@ -33,23 +34,23 @@ const layout: Properties<LayoutProps> = new Properties({
 });
 
 export type PaintProps = {
-  "fill-antialias": DataConstantProperty<boolean>,
-  "fill-opacity": DataDrivenProperty<number>,
-  "fill-color": DataDrivenProperty<Color>,
-  "fill-outline-color": DataDrivenProperty<Color>,
-  "fill-translate": DataConstantProperty<[number, number]>,
-  "fill-translate-anchor": DataConstantProperty<"map" | "viewport">,
-  "fill-pattern": CrossFadedDataDrivenProperty<ResolvedImage>
+    "fill-antialias": DataConstantProperty<boolean>,
+    "fill-opacity": DataDrivenProperty<number>,
+    "fill-color": DataDrivenProperty<Color>,
+    "fill-outline-color": DataDrivenProperty<Color>,
+    "fill-translate": DataConstantProperty<[number, number]>,
+    "fill-translate-anchor": DataConstantProperty<"map" | "viewport">,
+    "fill-pattern": CrossFadedDataDrivenProperty<ResolvedImage>,
 };
 
 export type PaintPropsPossiblyEvaluated = {
-  "fill-antialias": PossiblyEvaluatedPropertyValue<boolean>,
-  "fill-opacity": PossiblyEvaluatedPropertyValue<number>,
-  "fill-color": PossiblyEvaluatedPropertyValue<Color>,
-  "fill-outline-color": PossiblyEvaluatedPropertyValue<Color>,
-  "fill-translate": [number, number],
-  "fill-translate-anchor": "map" | "viewport",
-  "fill-pattern": PossiblyEvaluatedPropertyValue<ResolvedImage>
+    "fill-antialias": boolean,
+    "fill-opacity": PossiblyEvaluatedPropertyValue<number>,
+    "fill-color": PossiblyEvaluatedPropertyValue<Color>,
+    "fill-outline-color": PossiblyEvaluatedPropertyValue<Color>,
+    "fill-translate": [number, number],
+    "fill-translate-anchor": "map" | "viewport",
+    "fill-pattern": PossiblyEvaluatedPropertyValue<CrossFaded<ResolvedImage>>,
 };
 
 const paint: Properties<PaintProps> = new Properties({
@@ -63,6 +64,6 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint, layout } as {
-  paint: Properties<PaintProps>,
-  layout: Properties<LayoutProps>
+    paint: Properties<PaintProps>,
+    layout: Properties<LayoutProps>
 });

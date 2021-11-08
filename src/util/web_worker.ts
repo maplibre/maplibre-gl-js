@@ -60,7 +60,7 @@ class MessageBus implements WorkerInterface, WorkerGlobalScopeInterface {
     }
 
     postMessage(data: any) {
-        setImmediate(() => {
+        setTimeout(() => {
             try {
                 for (const listener of this.postListeners) {
                     listener({data, target: this.target});
@@ -68,7 +68,7 @@ class MessageBus implements WorkerInterface, WorkerGlobalScopeInterface {
             } catch (e) {
                 console.error(e);
             }
-        });
+        }, 0);
     }
 
     terminate() {

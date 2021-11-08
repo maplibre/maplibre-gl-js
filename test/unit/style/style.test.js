@@ -1,19 +1,19 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import Style from '../../../rollup/build/tsc/style/style';
-import SourceCache from '../../../rollup/build/tsc/source/source_cache';
-import StyleLayer from '../../../rollup/build/tsc/style/style_layer';
-import Transform from '../../../rollup/build/tsc/geo/transform';
-import {extend} from '../../../rollup/build/tsc/util/util';
-import {RequestManager} from '../../../rollup/build/tsc/util/request_manager';
-import {Event, Evented} from '../../../rollup/build/tsc/util/evented';
+import Style from '../../../rollup/build/tsc/src/style/style';
+import SourceCache from '../../../rollup/build/tsc/src/source/source_cache';
+import StyleLayer from '../../../rollup/build/tsc/src/style/style_layer';
+import Transform from '../../../rollup/build/tsc/src/geo/transform';
+import {extend} from '../../../rollup/build/tsc/src/util/util';
+import {RequestManager} from '../../../rollup/build/tsc/src/util/request_manager';
+import {Event, Evented} from '../../../rollup/build/tsc/src/util/evented';
 import {
     setRTLTextPlugin,
     clearRTLTextPlugin,
     evented as rtlTextPluginEvented
-} from '../../../rollup/build/tsc/source/rtl_text_plugin';
-import browser from '../../../rollup/build/tsc/util/browser';
-import {OverscaledTileID} from '../../../rollup/build/tsc/source/tile_id';
+} from '../../../rollup/build/tsc/src/source/rtl_text_plugin';
+import browser from '../../../rollup/build/tsc/src/util/browser';
+import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
 
 function createStyleJSON(properties) {
     return extend({
@@ -607,7 +607,7 @@ test('Style#addSource', (t) => {
             style.addSource('source-id', source);
             t.throws(() => {
                 style.addSource('source-id', source);
-            }, /There is already a source with this ID/);
+            }, /Source "source-id" already exists./);
             t.end();
         });
     });
@@ -1076,7 +1076,7 @@ test('Style#addLayer', (t) => {
 
         style.on('style.load', () => {
             style.on('error', (error) => {
-                t.match(error.error, /does not exist on this map/);
+                t.match(error.error, /Cannot add layer "c" before non-existing layer "z"./);
                 t.end();
             });
             style.addLayer(layer, 'z');
@@ -1166,7 +1166,7 @@ test('Style#removeLayer', (t) => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                t.match(error.message, /does not exist in the map\'s style and cannot be removed/);
+                t.match(error.message, /Cannot remove non-existing layer "background"./);
                 t.end();
             });
             style.removeLayer('background');
@@ -1663,7 +1663,7 @@ test('Style#setFilter', (t) => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                t.match(error.message, /does not exist in the map\'s style and cannot be filtered/);
+                t.match(error.message, /Cannot filter non-existing layer "non-existant"./);
                 t.end();
             });
             style.setFilter('non-existant', ['==', 'id', 1]);
@@ -1745,7 +1745,7 @@ test('Style#setLayerZoomRange', (t) => {
         const style = createStyle();
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                t.match(error.message, /does not exist in the map\'s style and cannot have zoom extent/);
+                t.match(error.message, /Cannot set the zoom range of non-existing layer "non-existant"./);
                 t.end();
             });
             style.setLayerZoomRange('non-existant', 5, 12);

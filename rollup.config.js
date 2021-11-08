@@ -19,7 +19,7 @@ export default [{
     // - rollup/build/maplibregl/shared.js: the set of modules that are dependencies of both the main module and the worker module
     //
     // This is also where we do all of our source transformations using the plugins.
-    input: ['rollup/build/tsc/index.js', 'rollup/build/tsc/source/worker.js'],
+    input: ['rollup/build/tsc/src/index.js', 'rollup/build/tsc/src/source/worker.js'],
     output: {
         dir: 'rollup/build/maplibregl',
         format: 'amd',

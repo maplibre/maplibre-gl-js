@@ -313,7 +313,11 @@ class Tile {
         }, layers, serializedLayers, sourceFeatureState);
     }
 
-    querySourceFeatures(result: Array<GeoJSONFeature>, params: any) {
+    querySourceFeatures(result: Array<GeoJSONFeature>, params?: {
+        sourceLayer: string;
+        filter: Array<any>;
+        validate?: boolean;
+    }) {
         const featureIndex = this.latestFeatureIndex;
         if (!featureIndex || !featureIndex.rawTileData) return;
 

@@ -197,7 +197,7 @@ export default class GlyphManager {
 
         return {
             id,
-            bitmap: new AlphaImage({width: 30, height: 30}, tinySDF.draw(String.fromCharCode(id))),
+            bitmap: new AlphaImage({width: 30, height: 30}, tinySDF.draw(String.fromCharCode(id)).data),
             metrics: {
                 width: 24,
                 height: 24,

@@ -316,7 +316,7 @@ class Style extends Evented {
             this.fire(new ErrorEvent(new Error(
                 `Source layer "${sourceLayer}" ` +
                 `does not exist on source "${source.id}" ` +
-                `as specified by style layer "${layer.id}"`
+                `as specified by style layer "${layer.id}".`
             )));
         }
     }
@@ -371,7 +371,7 @@ class Style extends Evented {
 
     _checkLoaded() {
         if (!this._loaded) {
-            throw new Error('Style is not done loading');
+            throw new Error('Style is not done loading.');
         }
     }
 
@@ -524,7 +524,7 @@ class Style extends Evented {
 
     addImage(id: string, image: StyleImage) {
         if (this.getImage(id)) {
-            return this.fire(new ErrorEvent(new Error('An image with this name already exists.')));
+            return this.fire(new ErrorEvent(new Error(`An image named "${id}" already exists.`)));
         }
         this.imageManager.addImage(id, image);
         this._afterImageUpdated(id);
@@ -540,7 +540,7 @@ class Style extends Evented {
 
     removeImage(id: string) {
         if (!this.getImage(id)) {
-            return this.fire(new ErrorEvent(new Error('No image with this name exists.')));
+            return this.fire(new ErrorEvent(new Error(`An image named "${id}" does not exist.`)));
         }
         this.imageManager.removeImage(id);
         this._afterImageUpdated(id);
@@ -564,7 +564,7 @@ class Style extends Evented {
         this._checkLoaded();
 
         if (this.sourceCaches[id] !== undefined) {
-            throw new Error('There is already a source with this ID');
+            throw new Error(`Source "${id}" already exists.`);
         }
 
         if (!source.type) {
@@ -656,7 +656,7 @@ class Style extends Evented {
         const id = layerObject.id;
 
         if (this.getLayer(id)) {
-            this.fire(new ErrorEvent(new Error(`Layer with id "${id}" already exists on this map`)));
+            this.fire(new ErrorEvent(new Error(`Layer "${id}" already exists on this map.`)));
             return;
         }
 
@@ -687,7 +687,7 @@ class Style extends Evented {
 
         const index = before ? this._order.indexOf(before) : this._order.length;
         if (before && index === -1) {
-            this.fire(new ErrorEvent(new Error(`Layer with id "${before}" does not exist on this map.`)));
+            this.fire(new ErrorEvent(new Error(`Cannot add layer "${id}" before non-existing layer "${before}".`)));
             return;
         }
 
@@ -745,7 +745,7 @@ class Style extends Evented {
 
         const newIndex = before ? this._order.indexOf(before) : this._order.length;
         if (before && newIndex === -1) {
-            this.fire(new ErrorEvent(new Error(`Layer with id "${before}" does not exist on this map.`)));
+            this.fire(new ErrorEvent(new Error(`Cannot move layer "${id}" before non-existing layer "${before}".`)));
             return;
         }
         this._order.splice(newIndex, 0, id);
@@ -766,7 +766,7 @@ class Style extends Evented {
 
         const layer = this._layers[id];
         if (!layer) {
-            this.fire(new ErrorEvent(new Error(`The layer '${id}' does not exist in the map's style and cannot be removed.`)));
+            this.fire(new ErrorEvent(new Error(`Cannot remove non-existing layer "${id}".`)));
             return;
         }
 
@@ -813,7 +813,7 @@ class Style extends Evented {
 
         const layer = this.getLayer(layerId);
         if (!layer) {
-            this.fire(new ErrorEvent(new Error(`The layer '${layerId}' does not exist in the map's style and cannot have zoom extent.`)));
+            this.fire(new ErrorEvent(new Error(`Cannot set the zoom range of non-existing layer "${layerId}".`)));
             return;
         }
 
@@ -833,7 +833,7 @@ class Style extends Evented {
 
         const layer = this.getLayer(layerId);
         if (!layer) {
-            this.fire(new ErrorEvent(new Error(`The layer '${layerId}' does not exist in the map's style and cannot be filtered.`)));
+            this.fire(new ErrorEvent(new Error(`Cannot filter non-existing layer "${layerId}".`)));
             return;
         }
 
@@ -869,7 +869,7 @@ class Style extends Evented {
 
         const layer = this.getLayer(layerId);
         if (!layer) {
-            this.fire(new ErrorEvent(new Error(`The layer '${layerId}' does not exist in the map's style and cannot be styled.`)));
+            this.fire(new ErrorEvent(new Error(`Cannot style non-existing layer "${layerId}".`)));
             return;
         }
 
@@ -888,7 +888,7 @@ class Style extends Evented {
     getLayoutProperty(layerId: string, name: string) {
         const layer = this.getLayer(layerId);
         if (!layer) {
-            this.fire(new ErrorEvent(new Error(`The layer '${layerId}' does not exist in the map's style.`)));
+            this.fire(new ErrorEvent(new Error(`Cannot get style of non-existing layer "${layerId}".`)));
             return;
         }
 
@@ -900,7 +900,7 @@ class Style extends Evented {
 
         const layer = this.getLayer(layerId);
         if (!layer) {
-            this.fire(new ErrorEvent(new Error(`The layer '${layerId}' does not exist in the map's style and cannot be styled.`)));
+            this.fire(new ErrorEvent(new Error(`Cannot style non-existing layer "${layerId}".`)));
             return;
         }
 
@@ -1169,7 +1169,7 @@ class Style extends Evented {
             sourceLayer: string;
             filter: Array<any>;
             validate?: boolean;
-        } | null
+        }
     ) {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);

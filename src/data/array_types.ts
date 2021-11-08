@@ -1,4 +1,5 @@
-// This file was generated. Edit build/generate-struct-arrays.js, see https://github.com/maplibre/maplibre-gl-js/issues/266.
+// This file is generated. Edit build/generate-struct-arrays.ts, then run `npm run codegen`.
+
 import assert from 'assert';
 import {Struct, StructArray} from '../util/struct_array';
 import {register} from '../util/web_worker_transfer';

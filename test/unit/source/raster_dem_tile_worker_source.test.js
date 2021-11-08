@@ -1,8 +1,8 @@
 import '../../stub_loader';
 import {test} from '../../util/test';
-import RasterDEMTileWorkerSource from '../../../rollup/build/tsc/source/raster_dem_tile_worker_source';
-import StyleLayerIndex from '../../../rollup/build/tsc/style/style_layer_index';
-import DEMData from '../../../rollup/build/tsc/data/dem_data';
+import RasterDEMTileWorkerSource from '../../../rollup/build/tsc/src/source/raster_dem_tile_worker_source';
+import StyleLayerIndex from '../../../rollup/build/tsc/src/style/style_layer_index';
+import DEMData from '../../../rollup/build/tsc/src/data/dem_data';
 
 test('loadTile', (t) => {
     t.test('loads DEM tile', (t) => {

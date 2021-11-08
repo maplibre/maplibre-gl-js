@@ -6,7 +6,6 @@
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link href='https://www.mapbox.com/base/latest/base.css' rel='stylesheet' />
     <link rel='stylesheet' href='/dist/maplibre-gl.css'/>
     <script src='https://unpkg.com/url-search-params@0.10.0/build/url-search-params.js'></script>
 </head>
@@ -15,39 +14,52 @@
     <div id="benchmarks"></div>
     <script src="/bench/benchmarks_view_generated.js"></script>
     <script>
-        const params = new URLSearchParams(location.search.slice(1));
-        Promise.resolve(params.has('compare') ?
-            params.getAll('compare').filter(Boolean) :
-            fetch('https://api.github.com/repos/mapbox/mapbox-gl-js/releases/latest')
-            .then(response => response.json())
-            .then(pkg => [pkg['tag_name'], 'main']))
-            .then(versions => {
-                return versions
-                    .map(v => `https://s3.amazonaws.com/mapbox-gl-js/${v}/benchmarks.js`)
-                    .concat('/bench/versions/benchmarks_generated.js')
-                    .reduce((p, script) => p.then(() => loadScript(script)), Promise.resolve());
-            })
-            .then(() => {
+        runComparison();
+
+        async function runComparison() {
+            try {
+                const params = new URLSearchParams(location.search.slice(1));
+                let versions = [];
+                console.log(params);
+                if (params.has('compare')) {
+                    versions = params.getAll('compare').filter(Boolean);
+                } else {
+                    const response = await fetch('https://api.github.com/repos/maplibre/maplibre-gl-js/releases/latest');
+                    const responseJson = await response.json();
+                    versions = [responseJson['tag_name'], 'main'];
+                }
+                console.log(`Comparing versions: ${versions}`);
+                const versionsScripts = versions.map(v => `https://maplibre.org/maplibre-gl-js/benchmarks/${v}/benchmarks_generated.js`)
+                    .concat('/bench/versions/benchmarks_generated.js');
+                for (const script of versionsScripts) {
+                    await loadScript(script);
+                }
                 const benchmarks = [];
 
-                for (const name in window.mapboxglBenchmarks) {
+                for (const name in window.maplibreglBenchmarks) {
                     const versions = [];
 
-                    for (const test in window.mapboxglBenchmarks[name]) {
+                    // also handle benchmarks from mapboxgl releases
+                    if (window.mapboxglBenchmarks && window.mapboxglBenchmarks[name])
+                        Object.assign(window.maplibreglBenchmarks[name], window.mapboxglBenchmarks[name]);
+
+                    for (const test in window.maplibreglBenchmarks[name]) {
                         versions.push({
                             name: test,
-                            bench: window.mapboxglBenchmarks[name][test]
+                            bench: window.maplibreglBenchmarks[name][test]
                         });
                     }
                     benchmarks.push({name, versions});
                 }
 
                 window.Benchmarks.run(benchmarks);
-            })
-            .catch(err => console.error(err));
+            } catch (ex) {
+                console.error(ex);
+            }
+        }
 
         function loadScript(src) {
-            return new Promise(function (resolve, reject) {
+            return new Promise((resolve, reject) => {
                 const s = document.createElement('script');
                 s.src = src;
                 s.onload = resolve;

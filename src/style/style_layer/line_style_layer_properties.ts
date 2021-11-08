@@ -1,4 +1,4 @@
-// This file was generated. Edit build/generate-style-code.js, see https://github.com/maplibre/maplibre-gl-js/issues/266.
+// This file is generated. Edit build/generate-style-code.ts, then run 'npm run codegen'.
 /* eslint-disable */
 
 import styleSpec from '../../style-spec/reference/latest';
@@ -19,22 +19,22 @@ import type Color from '../../style-spec/util/color';
 import type Formatted from '../../style-spec/expression/types/formatted';
 
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
-import { StylePropertySpecification } from '../../style-spec/style-spec';
+import {StylePropertySpecification} from '../../style-spec/style-spec';
 
 export type LayoutProps = {
-  "line-cap": DataConstantProperty<"butt" | "round" | "square">,
-  "line-join": DataDrivenProperty<"bevel" | "round" | "miter">,
-  "line-miter-limit": DataConstantProperty<number>,
-  "line-round-limit": DataConstantProperty<number>,
-  "line-sort-key": DataDrivenProperty<number>
+    "line-cap": DataConstantProperty<"butt" | "round" | "square">,
+    "line-join": DataDrivenProperty<"bevel" | "round" | "miter">,
+    "line-miter-limit": DataConstantProperty<number>,
+    "line-round-limit": DataConstantProperty<number>,
+    "line-sort-key": DataDrivenProperty<number>,
 };
 
 export type LayoutPropsPossiblyEvaluated = {
-  "line-cap": "butt" | "round" | "square",
-  "line-join": PossiblyEvaluatedPropertyValue<"bevel" | "round" | "miter">,
-  "line-miter-limit": number,
-  "line-round-limit": number,
-  "line-sort-key": PossiblyEvaluatedPropertyValue<number>
+    "line-cap": "butt" | "round" | "square",
+    "line-join": PossiblyEvaluatedPropertyValue<"bevel" | "round" | "miter">,
+    "line-miter-limit": number,
+    "line-round-limit": number,
+    "line-sort-key": PossiblyEvaluatedPropertyValue<number>,
 };
 
 const layout: Properties<LayoutProps> = new Properties({
@@ -46,31 +46,31 @@ const layout: Properties<LayoutProps> = new Properties({
 });
 
 export type PaintProps = {
-  "line-opacity": DataDrivenProperty<number>,
-  "line-color": DataDrivenProperty<Color>,
-  "line-translate": DataConstantProperty<[number, number]>,
-  "line-translate-anchor": DataConstantProperty<"map" | "viewport">,
-  "line-width": DataDrivenProperty<number>,
-  "line-gap-width": DataDrivenProperty<number>,
-  "line-offset": DataDrivenProperty<number>,
-  "line-blur": DataDrivenProperty<number>,
-  "line-dasharray": CrossFadedProperty<Array<number>>,
-  "line-pattern": CrossFadedDataDrivenProperty<ResolvedImage>,
-  "line-gradient": ColorRampProperty
+    "line-opacity": DataDrivenProperty<number>,
+    "line-color": DataDrivenProperty<Color>,
+    "line-translate": DataConstantProperty<[number, number]>,
+    "line-translate-anchor": DataConstantProperty<"map" | "viewport">,
+    "line-width": DataDrivenProperty<number>,
+    "line-gap-width": DataDrivenProperty<number>,
+    "line-offset": DataDrivenProperty<number>,
+    "line-blur": DataDrivenProperty<number>,
+    "line-dasharray": CrossFadedProperty<Array<number>>,
+    "line-pattern": CrossFadedDataDrivenProperty<ResolvedImage>,
+    "line-gradient": ColorRampProperty,
 };
 
 export type PaintPropsPossiblyEvaluated = {
-  "line-opacity": PossiblyEvaluatedPropertyValue<number>,
-  "line-color": PossiblyEvaluatedPropertyValue<Color>,
-  "line-translate": [number, number],
-  "line-translate-anchor": "map" | "viewport",
-  "line-width": PossiblyEvaluatedPropertyValue<number>,
-  "line-gap-width": PossiblyEvaluatedPropertyValue<number>,
-  "line-offset": PossiblyEvaluatedPropertyValue<number>,
-  "line-blur": PossiblyEvaluatedPropertyValue<number>,
-  "line-dasharray": CrossFaded<Array<number>>,
-  "line-pattern": PossiblyEvaluatedPropertyValue<CrossFaded<ResolvedImage>>,
-  "line-gradient": ColorRampProperty
+    "line-opacity": PossiblyEvaluatedPropertyValue<number>,
+    "line-color": PossiblyEvaluatedPropertyValue<Color>,
+    "line-translate": [number, number],
+    "line-translate-anchor": "map" | "viewport",
+    "line-width": PossiblyEvaluatedPropertyValue<number>,
+    "line-gap-width": PossiblyEvaluatedPropertyValue<number>,
+    "line-offset": PossiblyEvaluatedPropertyValue<number>,
+    "line-blur": PossiblyEvaluatedPropertyValue<number>,
+    "line-dasharray": CrossFaded<Array<number>>,
+    "line-pattern": PossiblyEvaluatedPropertyValue<CrossFaded<ResolvedImage>>,
+    "line-gradient": ColorRampProperty,
 };
 
 const paint: Properties<PaintProps> = new Properties({
@@ -88,6 +88,6 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint, layout } as {
-  paint: Properties<PaintProps>,
-  layout: Properties<LayoutProps>
+    paint: Properties<PaintProps>,
+    layout: Properties<LayoutProps>
 });

@@ -59,7 +59,7 @@ class Transform {
     _posMatrixCache: {[_: string]: mat4};
     _alignedPosMatrixCache: {[_: string]: mat4};
 
-    constructor(minZoom: number, maxZoom: number, minPitch: number, maxPitch: number, renderWorldCopies: boolean) {
+    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
         this.maxValidLatitude = 85.051129; // constant
 

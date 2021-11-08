@@ -1,13 +1,13 @@
 import {fileURLToPath} from 'url';
 
 import {run} from './integration/lib/expression';
-import {createPropertyExpression} from '../rollup/build/tsc/style-spec/expression';
-import {isFunction} from '../rollup/build/tsc/style-spec/function';
-import convertFunction from '../rollup/build/tsc/style-spec/function/convert';
-import {toString} from '../rollup/build/tsc/style-spec/expression/types';
+import {createPropertyExpression} from '../rollup/build/tsc/src/style-spec/expression';
+import {isFunction} from '../rollup/build/tsc/src/style-spec/function';
+import convertFunction from '../rollup/build/tsc/src/style-spec/function/convert';
+import {toString} from '../rollup/build/tsc/src/style-spec/expression/types';
 import ignores from './ignores.json';
-import {CanonicalTileID} from '../rollup/build/tsc/source/tile_id';
-import MercatorCoordinate from '../rollup/build/tsc/geo/mercator_coordinate';
+import {CanonicalTileID} from '../rollup/build/tsc/src/source/tile_id';
+import MercatorCoordinate from '../rollup/build/tsc/src/geo/mercator_coordinate';
 
 function getPoint(coord, canonical) {
     const p = canonical.getTilePoint(MercatorCoordinate.fromLngLat({lng: coord[0], lat: coord[1]}, 0));

@@ -5,7 +5,7 @@
 <script>
 // stub performance.now for deterministic rendering per-frame;
 // we'll later increment the value by 16 on every frame (16ms per frame for 60fps)
-let now = performance.now();
+const now = performance.now();
 window.performance.now = () => now;
 </script>
 <script src="../dist/maplibre-gl.js"></script>
@@ -14,7 +14,7 @@ window.performance.now = () => now;
 <script>
 maplibregl.workerCount = 1;
 
-var map = new maplibregl.Map({
+const map = new maplibregl.Map({
     container: document.getElementById('map'),
     style: 'mapbox://styles/mapbox/streets-v11',
     center: [-77.07842066675323, 38.890315130853566],
