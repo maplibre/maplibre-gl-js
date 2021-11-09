@@ -25,7 +25,7 @@ class RasterDEMTileWorkerSource {
         const dem = new DEMData(uid, imagePixels, encoding);
         this.loaded = this.loaded || {};
         this.loaded[uid] = dem;
-        callback(null, { dem: dem, mesh: null });
+        callback(null, dem);
     }
 
     getImageData(imgBitmap: ImageBitmap): RGBAImage {
