@@ -548,7 +548,7 @@ class Painter {
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
             // separate clipping masks
-            let coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
+            const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source]);
             this.renderLayer(this, sourceCache, layer, coords);

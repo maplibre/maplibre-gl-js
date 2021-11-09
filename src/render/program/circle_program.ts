@@ -30,7 +30,7 @@ const circleUniformValues = (
   painter: Painter,
   coord: OverscaledTileID,
   tile: Tile,
-  layer: CircleStyleLayer,
+  layer: CircleStyleLayer
 ): UniformValues<CircleUniformsType> => {
     const transform = painter.transform;
 

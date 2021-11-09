@@ -86,7 +86,7 @@ export class OverscaledTileID {
     }
 
     clone() {
-       return new OverscaledTileID(this.overscaledZ, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y);
+        return new OverscaledTileID(this.overscaledZ, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y);
     }
 
     equals(id: OverscaledTileID) {

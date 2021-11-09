@@ -4,7 +4,6 @@ import {
     Uniform1f,
     Uniform2f,
     Uniform3f,
-    Uniform4f,
     UniformMatrix4f
 } from '../uniform_binding';
 

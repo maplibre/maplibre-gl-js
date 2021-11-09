@@ -106,16 +106,16 @@ export type RasterSourceSpecification = {
 };
 
 export type RasterDEMSourceSpecification = {
-  "type": "raster-dem",
-  "url"?: string,
-  "tiles"?: Array<string>,
-  "bounds"?: [number, number, number, number],
-  "minzoom"?: number,
-  "maxzoom"?: number,
-  "tileSize"?: number,
-  "attribution"?: string,
-  "encoding"?: "terrarium" | "mapbox" | "mtk",
-  "volatile"?: boolean
+    "type": "raster-dem",
+    "url"?: string,
+    "tiles"?: Array<string>,
+    "bounds"?: [number, number, number, number],
+    "minzoom"?: number,
+    "maxzoom"?: number,
+    "tileSize"?: number,
+    "attribution"?: string,
+    "encoding"?: "terrarium" | "mapbox" | "mtk",
+    "volatile"?: boolean
 };
 
 export type GeoJSONSourceSpecification = {

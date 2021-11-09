@@ -35,7 +35,6 @@ class Transform {
     mercatorMatrix: mat4;
     projMatrix: mat4;
     invProjMatrix: mat4;
-    invProjMatrix2: mat4;
     alignedProjMatrix: mat4;
     pixelMatrix: mat4;
     pixelMatrix2: mat4;
@@ -834,7 +833,6 @@ class Transform {
         mat4.translate(m, m, [0, 0, -elevation]); // elevate camera over terrain
         this.projMatrix = m;
         this.pixelMatrix2 = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
-        this.invProjMatrix2 = mat4.invert(new Float64Array(16) as any, m);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional

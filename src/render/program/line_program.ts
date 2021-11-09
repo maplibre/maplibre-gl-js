@@ -95,10 +95,10 @@ const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDF
 });
 
 const lineUniformValues = (
-    painter: Painter,
-    tile: Tile,
-    layer: LineStyleLayer,
-    coord: OverscaledTileID
+  painter: Painter,
+  tile: Tile,
+  layer: LineStyleLayer,
+  coord: OverscaledTileID
 ): UniformValues<LineUniformsType> => {
     const transform = painter.transform;
 
@@ -114,11 +114,11 @@ const lineUniformValues = (
 };
 
 const lineGradientUniformValues = (
-    painter: Painter,
-    tile: Tile,
-    layer: LineStyleLayer,
-    imageHeight: number,
-    coord: OverscaledTileID
+  painter: Painter,
+  tile: Tile,
+  layer: LineStyleLayer,
+  imageHeight: number,
+  coord: OverscaledTileID
 ): UniformValues<LineGradientUniformsType> => {
     return extend(lineUniformValues(painter, tile, layer, coord), {
         'u_image': 0,
@@ -127,11 +127,11 @@ const lineGradientUniformValues = (
 };
 
 const linePatternUniformValues = (
-    painter: Painter,
-    tile: Tile,
-    layer: LineStyleLayer,
-    crossfade: CrossfadeParameters,
-    coord: OverscaledTileID
+  painter: Painter,
+  tile: Tile,
+  layer: LineStyleLayer,
+  crossfade: CrossfadeParameters,
+  coord: OverscaledTileID
 ): UniformValues<LinePatternUniformsType> => {
     const transform = painter.transform;
     const tileZoomRatio = calculateTileRatio(tile, transform);
@@ -152,12 +152,12 @@ const linePatternUniformValues = (
 };
 
 const lineSDFUniformValues = (
-    painter: Painter,
-    tile: Tile,
-    layer: LineStyleLayer,
-    dasharray: CrossFaded<Array<number>>,
-    crossfade: CrossfadeParameters,
-    coord: OverscaledTileID
+  painter: Painter,
+  tile: Tile,
+  layer: LineStyleLayer,
+  dasharray: CrossFaded<Array<number>>,
+  crossfade: CrossfadeParameters,
+  coord: OverscaledTileID
 ): UniformValues<LineSDFUniformsType> => {
     const transform = painter.transform;
     const lineAtlas = painter.lineAtlas;

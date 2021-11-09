@@ -158,7 +158,6 @@ class Style extends Evented {
         this._availableImages = [];
 
         // make elevation accessible from map.transform
-        // FIXME-3D! is this the right place to assign this?
         map.transform.terrainSourceCache = this.terrainSourceCache;
 
         this._resetUpdates();

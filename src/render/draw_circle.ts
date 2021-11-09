@@ -19,12 +19,12 @@ import type {CircleUniformsType} from './program/circle_program';
 export default drawCircles;
 
 type TileRenderState = {
-    programConfiguration: ProgramConfiguration;
-    program: Program<any>;
-    layoutVertexBuffer: VertexBuffer;
-    indexBuffer: IndexBuffer;
-    uniformValues: UniformValues<CircleUniformsType>;
-    terrain: any;
+  programConfiguration: ProgramConfiguration;
+  program: Program<any>;
+  layoutVertexBuffer: VertexBuffer;
+  indexBuffer: IndexBuffer;
+  uniformValues: UniformValues<CircleUniformsType>;
+  terrain: any;
 };
 
 type SegmentsTileRenderState = {

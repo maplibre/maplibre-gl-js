@@ -58,12 +58,12 @@ import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 
 export type SingleCollisionBox = {
-    x1: number;
-    y1: number;
-    x2: number;
-    y2: number;
-    anchorPointX: number;
-    anchorPointY: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  anchorPointX: number;
+  anchorPointY: number;
 };
 
 export type CollisionArrays = {

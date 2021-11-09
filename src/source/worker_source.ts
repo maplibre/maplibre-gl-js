@@ -6,6 +6,7 @@ import type {OverscaledTileID} from './tile_id';
 import type {Bucket} from '../data/bucket';
 import type FeatureIndex from '../data/feature_index';
 import type {CollisionBoxArray} from '../data/array_types';
+import type DEMData from '../data/dem_data';
 import type {StyleGlyph} from '../style/style_glyph';
 import type {StyleImage} from '../style/style_image';
 import type {PromoteIdSpecification} from '../style-spec/types';
@@ -60,7 +61,7 @@ export type WorkerTileResult = {
 };
 
 export type WorkerTileCallback = (error?: Error | null, result?: WorkerTileResult | null) => void;
-export type WorkerDEMTileCallback = (err?: Error | null, result?: any) => void;
+export type WorkerDEMTileCallback = (err?: Error | null, result?: DEMData | null) => void;
 
 /**
  * May be implemented by custom source types to provide code that can be run on
