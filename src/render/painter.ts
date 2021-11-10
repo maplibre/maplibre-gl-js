@@ -512,7 +512,7 @@ class Painter {
                 // render all stack-layers into a texture
                 } else if (renderToTexture[prevType] || type == "hillshade") {
                     prevType = type;
-                    const stack = stacks.length - 1, layers = stacks[stack];
+                    const stack = stacks.length - 1, layers = stacks[stack] || [];
                     for (const tile of renderableTiles) {
                         prepareTerrain(this, this.style.terrainSourceCache, tile, stack);
                         if (rerender[tile.tileID.key]) {
