@@ -39,6 +39,7 @@ class TerrainSourceCache extends Evented {
     _coordsTextureSize: number;
     _emptyDemUnpack: any;
     _emptyDemTexture: Texture;
+    _emptyDemMatrix: mat4;
     _demMatrixCache: {[_: string]: { matrix: mat4, coord: OverscaledTileID }};
     _sourceTileCache: {[_: string]: string};
     minzoom: number;
@@ -78,6 +79,7 @@ class TerrainSourceCache extends Evented {
         this._emptyDemUnpack = [0, 0, 0, 0];
         this._emptyDemTexture = new Texture(context, new RGBAImage({width: 1, height: 1}), context.gl.RGBA, {premultiply: false});
         this._emptyDemTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
+        this._emptyDemMatrix = mat4.identity([] as any);
 
         // creates an empty depth-buffer texture which is needed, during the initialisation process of the 3d mesh..
         const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4));
@@ -89,10 +91,6 @@ class TerrainSourceCache extends Evented {
             if (e.dataType == "source" && e.coord && this.isEnabled()) {
                 const transform = style.map.transform;
                 if (e.sourceId == this._sourceCache.id) {
-                    // clean demMatrixCache for all subtiles. This is needed because parent-tiles are used during child loading.
-                    for (const key in this._demMatrixCache) {
-                        if (this._demMatrixCache[key].coord.isChildOf(e.coord)) delete this._demMatrixCache[key];
-                    }
                     // redraw current and overscaled terrain-tiles
                     for (const key in this._tiles) {
                         const tile = this._tiles[key];
@@ -290,11 +288,10 @@ class TerrainSourceCache extends Evented {
             sourceTile.needsTerrainPrepare = false;
         }
         // create matrix for lookup in dem data
-        if (!this._demMatrixCache[tileID.key]) {
+        const matrixKey = sourceTile && (sourceTile + sourceTile.tileID.key) + tileID.key;
+        if (matrixKey && !this._demMatrixCache[matrixKey]) {
             const maxzoom = this._sourceCache._source.maxzoom;
-            let dz = sourceTile
-                ? tileID.canonical.z - sourceTile.tileID.canonical.z
-                : tileID.canonical.z - this.deltaZoom <= maxzoom ? this.deltaZoom : Math.max(0, tileID.canonical.z - maxzoom);
+            let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
             if (tileID.overscaledZ > tileID.canonical.z) {
                 if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
                 else warnOnce("cannot calculate elevation if elevation maxzoom > source.maxzoom")
@@ -310,7 +307,7 @@ class TerrainSourceCache extends Evented {
             u_depth: 2,
             u_terrain: 3,
             u_terrain_dim: sourceTile && sourceTile.dem && sourceTile.dem.dim || 1,
-            u_terrain_matrix: this._demMatrixCache[tileID.key].matrix,
+            u_terrain_matrix: matrixKey ? this._demMatrixCache[tileID.key].matrix : this._emptyDemMatrix,
             u_terrain_unpack: sourceTile && sourceTile.dem && sourceTile.dem.getUnpackVector() || this._emptyDemUnpack,
             u_terrain_offset: this.elevationOffset,
             u_terrain_exaggeration: this.exaggeration,
