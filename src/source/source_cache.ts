@@ -515,6 +515,18 @@ class SourceCache extends Evented {
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
         const maxCoveringZoom = Math.max(zoom + SourceCache.maxUnderzooming,  this._source.minzoom);
 
+        // When sourcecache is used for terrain also load parent tiles to avoid flickering when zooming out
+        if (this.usedForTerrain) {
+            const parents = {};
+            for (const tileID of idealTileIDs) {
+               if (tileID.canonical.z > this._source.minzoom) {
+                  const parent = tileID.scaledTo(tileID.canonical.z - 1);
+                  parents[parent.key] = parent;
+               }
+            }
+            idealTileIDs = idealTileIDs.concat(Object.values(parents));
+        }
+
         // Retain is a list of tiles that we shouldn't delete, even if they are not
         // the most ideal tile for the current viewport. This may include tiles like
         // parent or child tiles that are *already* loaded.

@@ -39,7 +39,7 @@ class TerrainSourceCache extends Evented {
     _coordsTextureSize: number;
     _emptyDemUnpack: any;
     _emptyDemTexture: Texture;
-    _demMatrixCache: {[_: string]: mat4};
+    _demMatrixCache: {[_: string]: { matrix: mat4, coord: OverscaledTileID }};
     _sourceTileCache: {[_: string]: string};
     minzoom: number;
     maxzoom: number;
@@ -70,28 +70,32 @@ class TerrainSourceCache extends Evented {
         this.meshSize = 128;
         this.exaggeration = 1.0;
         this.elevationOffset = 450; // add a global offset of 450m to put the dead-sea into positive values.
-        this.qualityFactor = 2; // render more pixels per tile, value must be a power of two
-        this.deltaZoom = 1; // set to a value between 0 and 2 (load load terraintiles in less quality)
+        this.qualityFactor = 2; // render more pixels per tile (e.g. texture is greater than tileSize), value must be a power of two.
+        this.deltaZoom = 1; // set to a value between 0 and 2. Load tiles for actual zoomlevel - deltaZoom, which leads in faster 3d rendering with less quality.
 
-        // create empty DEM Obejcts
+        // create empty DEM Obejcts. During the elevation-tiles loading use this objects.
         const context = style.map.painter.context;
         this._emptyDemUnpack = [0, 0, 0, 0];
         this._emptyDemTexture = new Texture(context, new RGBAImage({width: 1, height: 1}), context.gl.RGBA, {premultiply: false});
         this._emptyDemTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
 
-        // create empty coordsIndexTexture
+        // creates an empty depth-buffer texture which is needed, during the initialisation process of the 3d mesh..
         const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4));
         const texture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
         this._emptyDepthTexture = texture;
 
-        // rerender corresponding tiles on source-tile updates
+        // rerender corresponding tiles on terrain-dem source-tile updates
         style.on("data", e => {
             if (e.dataType == "source" && e.coord && this.isEnabled()) {
                 const transform = style.map.transform;
                 if (e.sourceId == this._sourceCache.id) {
+                    // clean demMatrixCache for all subtiles. This is needed because parent-tiles are used during child loading.
+                    for (const key in this._demMatrixCache) {
+                        if (this._demMatrixCache[key].coord.isChildOf(e.coord)) delete this._demMatrixCache[key];
+                    }
+                    // redraw current and overscaled terrain-tiles
                     for (const key in this._tiles) {
                         const tile = this._tiles[key];
-                        // redraw current and overscaled tiles
                         if (tile.tileID.equals(e.coord) || tile.tileID.isChildOf(e.coord)) {
                             tile.timeLoaded = Date.now();
                             tile.clearTextures(this._style.map.painter);
@@ -106,13 +110,13 @@ class TerrainSourceCache extends Evented {
     /**
      *
      * @param {SourceCache} sourceCache
-     * @param options Allowed options are exaggeration, elevationOffset & meshSize
+     * @param options Allowed options are exaggeration, elevationOffset
      */
-    enable(sourceCache: SourceCache, options?: {exaggeration: boolean; elevationOffset: number; meshSize: number}): void {
+    enable(sourceCache: SourceCache, options?: {exaggeration: boolean; elevationOffset: number}): void {
         sourceCache.usedForTerrain = true;
         sourceCache.tileSize = this.tileSize * 2 ** this.deltaZoom;
         this._sourceCache = sourceCache;
-        ['exaggeration', 'elevationOffset', 'meshSize'].forEach(key => {
+        ['exaggeration', 'elevationOffset'].forEach(key => {
             if (options && options[key] != undefined) this[key] = options[key]
         });
     }
@@ -249,17 +253,24 @@ class TerrainSourceCache extends Evented {
     /**
      * find the covering terrain-dem tile
      * @param {OverscaledTileID} tileID
+     * @param {boolean} searchForDEM Optinal parameter to search for (parent) souretiles with loaded dem.
      * @returns {Tile}
      */
-    getSourceTile(tileID: OverscaledTileID): Tile {
+    getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile {
         if (!this.isEnabled()) return null;
-        if (!this._sourceTileCache[tileID.key]) {
-            const maxzoom = this._sourceCache._source.maxzoom;
-            const tilezoom = tileID.overscaledZ - this.deltaZoom;
-            const z = Math.max(0, tilezoom > maxzoom ? maxzoom : tilezoom);
+        const source = this._sourceCache._source;
+        let z = tileID.overscaledZ - this.deltaZoom;
+        if (z > source.maxzoom) z = source.maxzoom;
+        if (z < source.minzoom) return null;
+        // cache for tileID to terrain-tileID
+        if (!this._sourceTileCache[tileID.key])
             this._sourceTileCache[tileID.key] = tileID.scaledTo(z).key;
-        }
-        return this._sourceCache.getTileByID(this._sourceTileCache[tileID.key]);
+        let tile = this._sourceCache.getTileByID(this._sourceTileCache[tileID.key]);
+        // during tile-loading phase look if parent tiles (with loaded dem) are available.
+        if (!(tile && tile.dem) && searchForDEM)
+            while (z > source.minzoom && !(tile && tile.dem))
+                tile = this._sourceCache.getTileByID(tileID.scaledTo(z--).key);
+        return tile;
     }
 
     /**
@@ -269,7 +280,7 @@ class TerrainSourceCache extends Evented {
     getTerrain(tileID?: OverscaledTileID): any {
         if (!this.isEnabled() || !tileID) return null;
         // find covering dem tile and prepare demTexture
-        const sourceTile = this.getSourceTile(tileID);
+        const sourceTile = this.getSourceTile(tileID, true);
         if (sourceTile && sourceTile.dem && (!sourceTile.demTexture || sourceTile.needsTerrainPrepare)) {
             let context = this._style.map.painter.context;
             sourceTile.demTexture = this._style.map.painter.getTileTexture(sourceTile.dem.stride);
@@ -281,9 +292,9 @@ class TerrainSourceCache extends Evented {
         // create matrix for lookup in dem data
         if (!this._demMatrixCache[tileID.key]) {
             const maxzoom = this._sourceCache._source.maxzoom;
-            let dz = tileID.canonical.z - this.deltaZoom <= maxzoom
-                ? this.deltaZoom
-                : Math.max(0, tileID.canonical.z - maxzoom);
+            let dz = sourceTile
+                ? tileID.canonical.z - sourceTile.tileID.canonical.z
+                : tileID.canonical.z - this.deltaZoom <= maxzoom ? this.deltaZoom : Math.max(0, tileID.canonical.z - maxzoom);
             if (tileID.overscaledZ > tileID.canonical.z) {
                 if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
                 else warnOnce("cannot calculate elevation if elevation maxzoom > source.maxzoom")
@@ -292,14 +303,14 @@ class TerrainSourceCache extends Evented {
             const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
             const demMatrix = mat4.fromScaling(new Float64Array(16) as any, [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
             mat4.translate(demMatrix, demMatrix, [dx * EXTENT, dy * EXTENT, 0]);
-            this._demMatrixCache[tileID.key] = demMatrix;
+            this._demMatrixCache[tileID.key] = { matrix: demMatrix, coord: tileID };
          }
         // return uniform values & textures
         return {
             u_depth: 2,
             u_terrain: 3,
             u_terrain_dim: sourceTile && sourceTile.dem && sourceTile.dem.dim || 1,
-            u_terrain_matrix: this._demMatrixCache[tileID.key],
+            u_terrain_matrix: this._demMatrixCache[tileID.key].matrix,
             u_terrain_unpack: sourceTile && sourceTile.dem && sourceTile.dem.getUnpackVector() || this._emptyDemUnpack,
             u_terrain_offset: this.elevationOffset,
             u_terrain_exaggeration: this.exaggeration,

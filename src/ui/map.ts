@@ -1539,12 +1539,12 @@ class Map extends Camera {
      * Loads a 3D terrain mesh, based on a "raster-dem" source.
      *
      * @param {string} id The ID of the raster-dem source to use.
-     * @param options Allowed options are exaggeration, elevationOffset & meshSize
+     * @param options Allowed options are exaggeration, elevationOffset
      * @returns {Map} `this`
      * @example
      * map.addTerrain('my-data');
      */
-    addTerrain(id: string, options?: {exaggeration: boolean; elevationOffset: number; meshSize: number}) {
+    addTerrain(id: string, options?: {exaggeration: boolean; elevationOffset: number}) {
         this.isSourceLoaded(id);
         this.style.terrainSourceCache.enable(this.style.sourceCaches[id], options);
         this.style.terrainSourceCache.update(this.transform);

@@ -23,7 +23,8 @@ var map = window.map = new maplibregl.Map({
     zoom: 12.5,
     center: [11.40416, 47.26475],
     hash: true,
-    style: "https://static.maptoolkit.net/styles/toursprung/terrain.json"
+    style: "https://static.maptoolkit.net/styles/toursprung/terrain.json",
+    maxZoom: 16
 });
 
 map.on("load", () => {
@@ -39,6 +40,8 @@ map.on("load", () => {
 map.on("click", e => {
    new maplibregl.Marker().setLngLat(e.lngLat).addTo(map);
 });
+
+map.addControl(new maplibregl.NavigationControl());
 
 </script>
 </body>
