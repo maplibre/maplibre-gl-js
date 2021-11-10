@@ -1,26 +1,23 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
 import {
     queryRenderedFeatures,
     querySourceFeatures
-} from '../../../rollup/build/tsc/src/source/query_features.js';
-import SourceCache from '../../../rollup/build/tsc/src/source/source_cache.js';
-import Transform from '../../../rollup/build/tsc/src/geo/transform.js';
+} from '../source/query_features.js';
+import SourceCache from '../source/source_cache.js';
+import Transform from '../geo/transform.js';
 
-test('QueryFeatures#rendered', (t) => {
-    t.test('returns empty object if source returns no tiles', (t) => {
+describe('QueryFeatures#rendered', () => {
+    test('returns empty object if source returns no tiles', () => {
         const mockSourceCache = {tilesIn () { return []; }};
         const transform = new Transform();
         const result = queryRenderedFeatures(mockSourceCache, {}, undefined, {}, undefined, transform);
         expect(result).toEqual([]);
-        t.end();
     });
 
-    t.end();
 });
 
-test('QueryFeatures#source', (t) => {
-    t.test('returns empty result when source has no features', (t) => {
+describe('QueryFeatures#source', () => {
+    test('returns empty result when source has no features', () => {
         const sourceCache = new SourceCache('test', {
             type: 'geojson',
             data: {type: 'FeatureCollection', features: []}
@@ -33,8 +30,6 @@ test('QueryFeatures#source', (t) => {
         });
         const result = querySourceFeatures(sourceCache, {});
         expect(result).toEqual([]);
-        t.end();
     });
 
-    t.end();
 });
