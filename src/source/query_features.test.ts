@@ -12,7 +12,7 @@ test('QueryFeatures#rendered', (t) => {
         const mockSourceCache = {tilesIn () { return []; }};
         const transform = new Transform();
         const result = queryRenderedFeatures(mockSourceCache, {}, undefined, {}, undefined, transform);
-        t.deepEqual(result, []);
+        expect(result).toEqual([]);
         t.end();
     });
 
@@ -32,7 +32,7 @@ test('QueryFeatures#source', (t) => {
             }
         });
         const result = querySourceFeatures(sourceCache, {});
-        t.deepEqual(result, []);
+        expect(result).toEqual([]);
         t.end();
     });
 
