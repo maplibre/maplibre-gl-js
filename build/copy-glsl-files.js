@@ -1,5 +1,5 @@
-import fs from 'fs';
-import glob from 'glob';
+const fs = require('fs');
+const glob = require('glob');
 
 let args = process.argv.slice(2);
 let outputBaseDir = args[0];

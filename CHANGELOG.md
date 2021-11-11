@@ -28,6 +28,7 @@
 - Fix tile placeholder replacement to allow for placeholders to be in a URL more than once. (#348)
 - Fix type check for non dom environment. (#334)
 - Fix precision problem in patterns when overzoomed in OpenGL ES devices.
+- Fix UMD export (#334)
 
 ## 1.15.2
 
