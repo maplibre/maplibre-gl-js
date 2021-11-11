@@ -11,7 +11,7 @@ describe('QueryFeatures#rendered', () => {
     test('returns empty object if source returns no tiles', () => {
         const mockSourceCache = {tilesIn () { return []; }} as any as SourceCache;
         const transform = new Transform();
-        const result = queryRenderedFeatures(mockSourceCache, {}, undefined, {} as Point[], undefined, transform);
+        const result = queryRenderedFeatures(mockSourceCache, {}, undefined, [] as Point[], undefined, transform);
         expect(result).toEqual({});
     });
 
@@ -29,11 +29,7 @@ describe('QueryFeatures#source', () => {
                 };
             }
         } as any as Dispatcher);
-        const result = querySourceFeatures(sourceCache, {} as {
-            sourceLayer: string;
-            filter: Array<any>;
-            validate?: boolean;
-        });
+        const result = querySourceFeatures(sourceCache, {} as any);
         expect(result).toEqual([]);
     });
 
