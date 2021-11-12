@@ -13,6 +13,7 @@ import type {LayoutProps, PaintProps} from './fill_style_layer_properties';
 import type EvaluationParameters from '../evaluation_parameters';
 import type Transform from '../../geo/transform';
 import type {LayerSpecification} from '../../style-spec/types';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 class FillStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<LayoutProps>;
