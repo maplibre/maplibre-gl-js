@@ -343,11 +343,14 @@ class Transform {
     ): Array<OverscaledTileID> {
         let z = this.coveringZoomLevel(options);
         const actualZ = z;
+        const tsc = this.terrainSourceCache;
 
         if (options.minzoom !== undefined && z < options.minzoom) return [];
         if (options.maxzoom !== undefined && z > options.maxzoom) z = options.maxzoom;
 
-        const centerCoord = MercatorCoordinate.fromLngLat(this.center);
+        const centerCoord = tsc.isEnabled()
+            ? this.pointCoordinate(this.getCameraPoint())
+            : MercatorCoordinate.fromLngLat(this.center);
         const numTiles = Math.pow(2, z);
         const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
         const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invProjMatrix, this.worldSize, z);
@@ -355,7 +358,7 @@ class Transform {
         // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
         let minZoom = options.minzoom || 0;
         // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
-        if (this.pitch <= 60.0 && this._edgeInsets.top < 0.1)
+        if (!tsc.isEnabled() && this.pitch <= 60.0 && this._edgeInsets.top < 0.1)
             minZoom = z;
 
         // There should always be a certain number of maximum zoom level tiles surrounding the center location
@@ -429,8 +432,8 @@ class Transform {
                 const childY = (y << 1) + (i >> 1);
                 const childZ = it.zoom + 1;
                 let quadrant = it.aabb.quadrant(i);
-                if (this.terrainSourceCache.isEnabled()) {
-                    let tile = this.terrainSourceCache.getSourceTile(new OverscaledTileID(childZ, it.wrap, childZ, childX, childY));
+                if (tsc.isEnabled()) {
+                    let tile = tsc.getSourceTile(new OverscaledTileID(childZ, it.wrap, childZ, childX, childY));
                     quadrant = new Aabb(
                         vec3.fromValues(quadrant.min[0], quadrant.min[1], tile && tile.dem ? tile.dem.min - this.elevation : -this.elevation),
                         vec3.fromValues(quadrant.max[0], quadrant.max[1], tile && tile.dem ? Math.max(0, tile.dem.max - this.elevation) : 0)
