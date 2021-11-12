@@ -387,8 +387,8 @@ class SymbolBucket implements Bucket {
         const sortKey = layout.get('symbol-sort-key');
         const zOrder = layout.get('symbol-z-order');
         this.canOverlap =
-            getOverlapMode(layout, 'text-overlap', 'text-allow-overlap') !== 'none' ||
-            getOverlapMode(layout, 'icon-overlap', 'icon-allow-overlap') !== 'none' ||
+            getOverlapMode(layout, 'text-overlap', 'text-allow-overlap') !== 'never' ||
+            getOverlapMode(layout, 'icon-overlap', 'icon-allow-overlap') !== 'never' ||
             layout.get('text-ignore-placement') ||
             layout.get('icon-ignore-placement');
         this.sortFeaturesByKey = zOrder !== 'viewport-y' && !sortKey.isConstant();

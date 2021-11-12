@@ -33,10 +33,10 @@ describe('GridIndex', () => {
         grid.insertCircle(1 as GridKey, 60, 60, 15);
         grid.insertCircle(2 as GridKey, -10, 110, 20);
 
-        expect(grid.hitTestCircle(55, 55, 2, 'none')).toBeTruthy();
-        expect(grid.hitTestCircle(10, 10, 10, 'none')).toBeFalsy();
-        expect(grid.hitTestCircle(0, 100, 10, 'none')).toBeTruthy();
-        expect(grid.hitTestCircle(80, 60, 10, 'none')).toBeTruthy();
+        expect(grid.hitTestCircle(55, 55, 2, 'never')).toBeTruthy();
+        expect(grid.hitTestCircle(10, 10, 10, 'never')).toBeFalsy();
+        expect(grid.hitTestCircle(0, 100, 10, 'never')).toBeTruthy();
+        expect(grid.hitTestCircle(80, 60, 10, 'never')).toBeTruthy();
     });
 
     test('circle-rectangle intersection', () => {
@@ -52,21 +52,21 @@ describe('GridIndex', () => {
 
     test('overlap mode', () => {
         const grid = new GridIndex(100, 100, 10);
-        grid.insert({overlapMode: 'none'}, 10, 10, 20, 20);
-        grid.insert({overlapMode: 'full'}, 30, 10, 40, 20);
+        grid.insert({overlapMode: 'never'}, 10, 10, 20, 20);
+        grid.insert({overlapMode: 'always'}, 30, 10, 40, 20);
         grid.insert({overlapMode: 'cooperative'}, 50, 10, 60, 20);
 
-        // 'none' can't overlap anything
-        expect(grid.hitTest(15, 15, 25, 25, 'none')).toBeTruthy();
-        expect(grid.hitTest(35, 15, 45, 25, 'none')).toBeTruthy();
-        expect(grid.hitTest(55, 15, 65, 25, 'none')).toBeTruthy();
+        // 'never' can't overlap anything
+        expect(grid.hitTest(15, 15, 25, 25, 'never')).toBeTruthy();
+        expect(grid.hitTest(35, 15, 45, 25, 'never')).toBeTruthy();
+        expect(grid.hitTest(55, 15, 65, 25, 'never')).toBeTruthy();
 
-        // 'full' can overlap everything
-        expect(grid.hitTest(15, 15, 25, 25, 'full')).toBeFalsy();
-        expect(grid.hitTest(35, 15, 45, 25, 'full')).toBeFalsy();
-        expect(grid.hitTest(55, 15, 65, 25, 'full')).toBeFalsy();
+        // 'always' can overlap everything
+        expect(grid.hitTest(15, 15, 25, 25, 'always')).toBeFalsy();
+        expect(grid.hitTest(35, 15, 45, 25, 'always')).toBeFalsy();
+        expect(grid.hitTest(55, 15, 65, 25, 'always')).toBeFalsy();
 
-        // 'cooperative' can overlap 'full' and 'cooperative'
+        // 'cooperative' can overlap 'always' and 'cooperative'
         expect(grid.hitTest(15, 15, 25, 25, 'cooperative')).toBeTruthy();
         expect(grid.hitTest(35, 15, 45, 25, 'cooperative')).toBeFalsy();
         expect(grid.hitTest(55, 15, 65, 25, 'cooperative')).toBeFalsy();

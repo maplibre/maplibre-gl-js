@@ -427,9 +427,9 @@ export class Placement {
         const textOptional = layout.get('text-optional');
         const iconOptional = layout.get('icon-optional');
         const textOverlapMode = getOverlapMode(layout, 'text-overlap', 'text-allow-overlap');
-        const textFullOverlap = textOverlapMode === 'full';
+        const textAlwaysOverlap = textOverlapMode === 'always';
         const iconOverlapMode = getOverlapMode(layout, 'icon-overlap', 'icon-allow-overlap');
-        const iconFullOverlap = iconOverlapMode === 'full';
+        const iconAlwaysOverlap = iconOverlapMode === 'always';
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
         const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
         const hasIconTextFit = layout.get('icon-text-fit') !== 'none';
@@ -449,8 +449,8 @@ export class Placement {
         //  This is the reverse of our normal policy of "fade in on pan", but should look like any other
         //  collision and hopefully not be too noticeable.
         // See https://github.com/mapbox/mapbox-gl-js/issues/7172
-        const alwaysShowText = textFullOverlap && (iconFullOverlap || !bucket.hasIconData() || iconOptional);
-        const alwaysShowIcon = iconFullOverlap && (textFullOverlap || !bucket.hasTextData() || textOptional);
+        const alwaysShowText = textAlwaysOverlap && (iconAlwaysOverlap || !bucket.hasIconData() || iconOptional);
+        const alwaysShowIcon = iconAlwaysOverlap && (textAlwaysOverlap || !bucket.hasTextData() || textOptional);
 
         if (!bucket.collisionArrays && collisionBoxArray) {
             bucket.deserializeCollisionBoxes(collisionBoxArray);
@@ -570,16 +570,16 @@ export class Placement {
                         const height = collisionTextBox.y2 - collisionTextBox.y1;
                         const textBoxScale = symbolInstance.textBoxScale;
 
-                        const variableIconBox = hasIconTextFit && (iconOverlapMode === 'none') ? collisionIconBox : null;
+                        const variableIconBox = hasIconTextFit && (iconOverlapMode === 'never') ? collisionIconBox : null;
 
                         let placedBox: {
                           box: Array<number>;
                           offscreen: boolean;
                         } = {box: [], offscreen: false};
-                        const placementAttempts = (textOverlapMode !== 'none') ? anchors.length * 2 : anchors.length;
+                        const placementAttempts = (textOverlapMode !== 'never') ? anchors.length * 2 : anchors.length;
                         for (let i = 0; i < placementAttempts; ++i) {
                             const anchor = anchors[i % anchors.length];
-                            const overlapMode = (i >= anchors.length) ? textOverlapMode : 'none';
+                            const overlapMode = (i >= anchors.length) ? textOverlapMode : 'never';
                             const result = this.attemptAnchorPlacement(
                                 anchor, collisionTextBox, width, height,
                                 textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, posMatrix,
@@ -661,11 +661,11 @@ export class Placement {
                     textPixelPadding);
 
                 assert(!placedGlyphCircles.circles.length || (!placedGlyphCircles.collisionDetected || showCollisionBoxes));
-                // If text-overlap is set to 'full', force "placedCircles" to true
+                // If text-overlap is set to 'always', force "placedCircles" to true
                 // In theory there should always be at least one circle placed
                 // in this case, but for now quirks in text-anchor
                 // and text-offset may prevent that from being true.
-                placeText = textFullOverlap || (placedGlyphCircles.circles.length > 0 && !placedGlyphCircles.collisionDetected);
+                placeText = textAlwaysOverlap || (placedGlyphCircles.circles.length > 0 && !placedGlyphCircles.collisionDetected);
                 offscreen = offscreen && placedGlyphCircles.offscreen;
             }
 

@@ -1168,14 +1168,14 @@
     "icon-overlap": {
       "type": "enum",
       "values": {
-        "none": {
-          "doc": "The icon will be hidden if it collides with other previously drawn symbols."
+        "never": {
+          "doc": "The icon will be hidden if it collides with any other previously drawn symbol."
         },
-        "full": {
-          "doc": "The icon will be visible even if it collides with other previously drawn symbols."
+        "always": {
+          "doc": "The icon will be visible even if it collides with any other previously drawn symbol."
         },
         "cooperative": {
-          "doc": "The icon will be hidden if it collides with other previously drawn symbols, unless those symbols are also using `cooperative` overlap."
+          "doc": "If the icon collides with another previously drawn symbol, the overlap mode for that symbol is checked. If the previous symbol was placed using `never` overlap mode, the new icon is hidden. If the previous symbol was placed using `always` or `cooperative` overlap mode, the new icon is visible."
         }
       },
       "doc": "Allows for control over whether to show an icon when it overlaps other symbols on the map. If `icon-overlap` is not set, `icon-allow-overlap` is used instead.",
@@ -2366,17 +2366,17 @@
     "text-overlap": {
       "type": "enum",
       "values": {
-        "none": {
-          "doc": "The text will be hidden if it collides with other previously drawn symbols."
+        "never": {
+          "doc": "The text will be hidden if it collides with any other previously drawn symbol."
         },
-        "full": {
-          "doc": "The text will be visible even if it collides with other previously drawn symbols."
+        "always": {
+          "doc": "The text will be visible even if it collides with any other previously drawn symbol."
         },
         "cooperative": {
-          "doc": "The text will be hidden if it collides with other previously drawn symbols, unless those symbols are also using `cooperative` overlap."
+          "doc": "If the text collides with another previously drawn symbol, the overlap mode for that symbol is checked. If the previous symbol was placed using `never` overlap mode, the new text is hidden. If the previous symbol was placed using `always` or `cooperative` overlap mode, the new text is visible."
         }
       },
-      "doc": "Allows for control over whether to show symbol text when it overlaps other symbols on the map. If `text-overlap` is not set, `text-allow-overlap` is used instead.",
+      "doc": "Allows for control over whether to show symbol text when it overlaps other symbols on the map. If `text-overlap` is not set, `text-allow-overlap` is used instead",
       "requires": [
         "text-field"
       ],

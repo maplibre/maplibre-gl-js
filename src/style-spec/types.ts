@@ -228,7 +228,7 @@ export type SymbolLayerSpecification = {
         "symbol-sort-key"?: DataDrivenPropertyValueSpecification<number>,
         "symbol-z-order"?: PropertyValueSpecification<"auto" | "viewport-y" | "source">,
         "icon-allow-overlap"?: PropertyValueSpecification<boolean>,
-        "icon-overlap"?: PropertyValueSpecification<"none" | "full" | "cooperative">,
+        "icon-overlap"?: PropertyValueSpecification<"never" | "always" | "cooperative">,
         "icon-ignore-placement"?: PropertyValueSpecification<boolean>,
         "icon-optional"?: PropertyValueSpecification<boolean>,
         "icon-rotation-alignment"?: PropertyValueSpecification<"map" | "viewport" | "auto">,
@@ -262,7 +262,7 @@ export type SymbolLayerSpecification = {
         "text-transform"?: DataDrivenPropertyValueSpecification<"none" | "uppercase" | "lowercase">,
         "text-offset"?: DataDrivenPropertyValueSpecification<[number, number]>,
         "text-allow-overlap"?: PropertyValueSpecification<boolean>,
-        "text-overlap"?: PropertyValueSpecification<"none" | "full" | "cooperative">,
+        "text-overlap"?: PropertyValueSpecification<"never" | "always" | "cooperative">,
         "text-ignore-placement"?: PropertyValueSpecification<boolean>,
         "text-optional"?: PropertyValueSpecification<boolean>,
         "visibility"?: "visible" | "none"

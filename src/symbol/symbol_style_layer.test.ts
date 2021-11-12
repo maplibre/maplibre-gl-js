@@ -107,36 +107,36 @@ describe('getOverlapMode', () => {
         const props = {};
         const layer = createSymbolLayer(props);
 
-        expect(getOverlapMode(layer.layout, 'icon-overlap', 'icon-allow-overlap')).toBe('none');
-        expect(getOverlapMode(layer.layout, 'text-overlap', 'text-allow-overlap')).toBe('none');
+        expect(getOverlapMode(layer.layout, 'icon-overlap', 'icon-allow-overlap')).toBe('never');
+        expect(getOverlapMode(layer.layout, 'text-overlap', 'text-allow-overlap')).toBe('never');
     });
 
     test('-allow-overlap set', () => {
         const props = {layout: {'icon-allow-overlap': false, 'text-allow-overlap': true}};
         const layer = createSymbolLayer(props);
 
-        expect(getOverlapMode(layer.layout, 'icon-overlap', 'icon-allow-overlap')).toBe('none');
-        expect(getOverlapMode(layer.layout, 'text-overlap', 'text-allow-overlap')).toBe('full');
+        expect(getOverlapMode(layer.layout, 'icon-overlap', 'icon-allow-overlap')).toBe('never');
+        expect(getOverlapMode(layer.layout, 'text-overlap', 'text-allow-overlap')).toBe('always');
     });
 
     test('-overlap set', () => {
-        let props = {layout: {'icon-overlap': 'none', 'text-overlap': 'full'}};
+        let props = {layout: {'icon-overlap': 'never', 'text-overlap': 'always'}};
         let layer = createSymbolLayer(props);
 
-        expect(getOverlapMode(layer.layout, 'icon-overlap', 'icon-allow-overlap')).toBe('none');
-        expect(getOverlapMode(layer.layout, 'text-overlap', 'text-allow-overlap')).toBe('full');
+        expect(getOverlapMode(layer.layout, 'icon-overlap', 'icon-allow-overlap')).toBe('never');
+        expect(getOverlapMode(layer.layout, 'text-overlap', 'text-allow-overlap')).toBe('always');
 
-        props = {layout: {'icon-overlap': 'full', 'text-overlap': 'cooperative'}};
+        props = {layout: {'icon-overlap': 'always', 'text-overlap': 'cooperative'}};
         layer = createSymbolLayer(props);
 
-        expect(getOverlapMode(layer.layout, 'icon-overlap', 'icon-allow-overlap')).toBe('full');
+        expect(getOverlapMode(layer.layout, 'icon-overlap', 'icon-allow-overlap')).toBe('always');
         expect(getOverlapMode(layer.layout, 'text-overlap', 'text-allow-overlap')).toBe('cooperative');
     });
 
     test('-overlap beats -allow-overlap', () => {
         const props = {
             layout: {
-                'icon-overlap': 'none',
+                'icon-overlap': 'never',
                 'icon-allow-overlap': true,
                 'text-overlap': 'cooperative',
                 'text-allow-overlap': false
@@ -144,7 +144,7 @@ describe('getOverlapMode', () => {
         };
         const layer = createSymbolLayer(props);
 
-        expect(getOverlapMode(layer.layout, 'icon-overlap', 'icon-allow-overlap')).toBe('none');
+        expect(getOverlapMode(layer.layout, 'icon-overlap', 'icon-allow-overlap')).toBe('never');
         expect(getOverlapMode(layer.layout, 'text-overlap', 'text-allow-overlap')).toBe('cooperative');
     });
 });

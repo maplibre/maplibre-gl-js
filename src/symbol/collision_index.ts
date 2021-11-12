@@ -90,7 +90,7 @@ class CollisionIndex {
         const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
 
         if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
-            (overlapMode !== 'full' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate))) {
+            (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate))) {
             return {
                 box: [],
                 offscreen: false
@@ -247,7 +247,7 @@ class CollisionIndex {
                     entirelyOffscreen = entirelyOffscreen && this.isOffscreen(x1, y1, x2, y2);
                     inGrid = inGrid || this.isInsideGrid(x1, y1, x2, y2);
 
-                    if (overlapMode !== 'full' && this.grid.hitTestCircle(centerX, centerY, radius, overlapMode, collisionGroupPredicate)) {
+                    if (overlapMode !== 'always' && this.grid.hitTestCircle(centerX, centerY, radius, overlapMode, collisionGroupPredicate)) {
                         // Don't early exit if we're showing the debug circles because we still want to calculate
                         // which circles are in use
                         collisionDetected = true;

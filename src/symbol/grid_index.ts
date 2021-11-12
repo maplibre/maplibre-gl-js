@@ -33,11 +33,11 @@ export type GridKey = {
 function overlapAllowed(overlapA: OverlapMode, overlapB: OverlapMode): boolean {
     let allowed = true;
 
-    if (overlapA === 'full') {
-        // symbol A using 'full' overlap - allowed to overlap anything.
-    } else if (overlapA === 'none' || overlapB === 'none') {
-        // symbol A using 'none' overlap - can't overlap anything
-        // symbol A using 'cooperative' overlap - can overlap 'full' or 'cooperative' symbol; can't overlap 'none'
+    if (overlapA === 'always') {
+        // symbol A using 'always' overlap - allowed to overlap anything.
+    } else if (overlapA === 'never' || overlapB === 'never') {
+        // symbol A using 'never' overlap - can't overlap anything
+        // symbol A using 'cooperative' overlap - can overlap 'always' or 'cooperative' symbol; can't overlap 'never'
         allowed = false;
     }
 
