@@ -74,20 +74,20 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
     speed?: number;
     screenSpeed?: number;
     maxDuration?: number;
-    padding?: PaddingOptions;
+    padding?: number | RequireAtLeastOne<PaddingOptions>;
 }
 
 export type EaseToOptions = AnimationOptions & CameraOptions & {
     delayEndEvents?: number;
-    padding?: PaddingOptions;
+    padding?: number | RequireAtLeastOne<PaddingOptions>;
 }
 
 export type FitBoundsOptions = FlyToOptions & {
     linear?: boolean;
-    padding?: number | RequireAtLeastOne<PaddingOptions>;
     offset?: PointLike;
     maxZoom?: number;
     maxDuration?: number;
+    padding?: number | RequireAtLeastOne<PaddingOptions>;
 }
 
 /**
@@ -844,7 +844,7 @@ abstract class Camera extends Evented {
         this._zooming = this._zooming || (zoom !== startZoom);
         this._rotating = this._rotating || (startBearing !== bearing);
         this._pitching = this._pitching || (pitch !== startPitch);
-        this._padding = !tr.isPaddingEqual(padding);
+        this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
@@ -860,7 +860,7 @@ abstract class Camera extends Evented {
                 tr.pitch = interpolate(startPitch, pitch, k);
             }
             if (this._padding) {
-                tr.interpolatePadding(startPadding, padding, k);
+                tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
                 // When padding is being applied, Transform#centerPoint is changing continously,
                 // thus we need to recalculate offsetPoint every frame
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
@@ -1130,7 +1130,7 @@ abstract class Camera extends Evented {
         this._zooming = true;
         this._rotating = (startBearing !== bearing);
         this._pitching = (pitch !== startPitch);
-        this._padding = !tr.isPaddingEqual(padding);
+        this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
         this._prepareEase(eventData, false);
 
@@ -1147,7 +1147,7 @@ abstract class Camera extends Evented {
                 tr.pitch = interpolate(startPitch, pitch, k);
             }
             if (this._padding) {
-                tr.interpolatePadding(startPadding, padding, k);
+                tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
                 // When padding is being applied, Transform#centerPoint is changing continously,
                 // thus we need to recalculate offsetPoint every frame
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
