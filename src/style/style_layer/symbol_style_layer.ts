@@ -3,7 +3,7 @@ import StyleLayer from '../style_layer';
 import assert from 'assert';
 import SymbolBucket from '../../data/bucket/symbol_bucket';
 import resolveTokens from '../../util/resolve_tokens';
-import properties, {LayoutPropsPossiblyEvaluated, PaintPropsPossiblyEvaluated} from './symbol_style_layer_properties';
+import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties';
 
 import {
     Transitionable,
@@ -22,7 +22,7 @@ import {
 } from '../../style-spec/expression';
 
 import type {BucketParameters} from '../../data/bucket';
-import type {LayoutProps, PaintProps} from './symbol_style_layer_properties';
+import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties';
 import type EvaluationParameters from '../evaluation_parameters';
 import type {LayerSpecification} from '../../style-spec/types';
 import type {Feature, SourceExpression, CompositeExpression} from '../../style-spec/expression';
@@ -36,12 +36,12 @@ import FormatExpression from '../../style-spec/expression/definitions/format';
 import Literal from '../../style-spec/expression/definitions/literal';
 
 class SymbolStyleLayer extends StyleLayer {
-    _unevaluatedLayout: Layout<LayoutProps>;
-    layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>;
+    _unevaluatedLayout: Layout<SymbolLayoutProps>;
+    layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
 
-    _transitionablePaint: Transitionable<PaintProps>;
-    _transitioningPaint: Transitioning<PaintProps>;
-    paint: PossiblyEvaluated<PaintProps, PaintPropsPossiblyEvaluated>;
+    _transitionablePaint: Transitionable<SymbolPaintProps>;
+    _transitioningPaint: Transitioning<SymbolPaintProps>;
+    paint: PossiblyEvaluated<SymbolPaintProps, SymbolPaintPropsPossiblyEvaluated>;
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);
@@ -119,7 +119,7 @@ class SymbolStyleLayer extends StyleLayer {
             if (!SymbolStyleLayer.hasPaintOverride(this.layout, overridable)) {
                 continue;
             }
-            const overriden = this.paint.get(overridable as keyof PaintPropsPossiblyEvaluated) as PossiblyEvaluatedPropertyValue<number>;
+            const overriden = this.paint.get(overridable as keyof SymbolPaintPropsPossiblyEvaluated) as PossiblyEvaluatedPropertyValue<number>;
             const override = new FormatSectionOverride(overriden);
             const styleExpression = new StyleExpression(override, overriden.property.specification);
             let expression = null;
@@ -144,7 +144,7 @@ class SymbolStyleLayer extends StyleLayer {
         return SymbolStyleLayer.hasPaintOverride(this.layout, name);
     }
 
-    static hasPaintOverride(layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>, propertyName: string): boolean {
+    static hasPaintOverride(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, propertyName: string): boolean {
         const textField = layout.get('text-field');
         const property = properties.paint.properties[propertyName];
         let hasOverrides = false;

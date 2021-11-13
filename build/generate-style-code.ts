@@ -4,10 +4,15 @@ import * as fs from 'fs';
 
 import spec from '../src/style-spec/reference/v8.json';
 
-function camelizeWithLeadingLowercase(str) {
+function camelCase(str: string): string {
     return str.replace(/-(.)/g, function (_, x) {
       return x.toUpperCase();
     });
+}
+
+function pascalCase(str: string): string {
+    let almostCamelized = camelCase(str);
+    return almostCamelized[0].toUpperCase() + almostCamelized.slice(1);
 }
 
 function nativeType(property) {
@@ -97,7 +102,7 @@ function runtimeType(property) {
 }
 
 function overrides(property) {
-    return `{ runtimeType: ${runtimeType(property)}, getOverride: (o) => o.${camelizeWithLeadingLowercase(property.name)}, hasOverride: (o) => !!o.${camelizeWithLeadingLowercase(property.name)} }`;
+    return `{ runtimeType: ${runtimeType(property)}, getOverride: (o) => o.${camelCase(property.name)}, hasOverride: (o) => !!o.${camelCase(property.name)} }`;
 }
 
 function propertyValue(property, type) {
@@ -146,7 +151,7 @@ const layers = Object.keys(spec.layer.type.values).map((type) => {
 
 function emitlayerProperties(locals) {
     const output = [];
-
+    const layerType = pascalCase(locals.type);
     const {
         layoutProperties,
         paintProperties
@@ -188,7 +193,7 @@ import {StylePropertySpecification} from '../../style-spec/style-spec';
 
     if (layoutProperties.length) {
         output.push(
-            'export type LayoutProps = {');
+            `export type ${layerType}LayoutProps = {`);
 
         for (const property of layoutProperties) {
             output.push(
@@ -198,7 +203,7 @@ import {StylePropertySpecification} from '../../style-spec/style-spec';
         output.push(
             `};
 
-export type LayoutPropsPossiblyEvaluated = {`);
+export type ${layerType}LayoutPropsPossiblyEvaluated = {`);
 
         for (const property of layoutProperties) {
             output.push(
@@ -208,7 +213,7 @@ export type LayoutPropsPossiblyEvaluated = {`);
         output.push(
             `};
 
-const layout: Properties<LayoutProps> = new Properties({`);
+const layout: Properties<${layerType}LayoutProps> = new Properties({`);
 
         for (const property of layoutProperties) {
             output.push(
@@ -222,7 +227,7 @@ const layout: Properties<LayoutProps> = new Properties({`);
     if (paintProperties.length) {
         output.push(
             `
-export type PaintProps = {`);
+export type ${layerType}PaintProps = {`);
 
         for (const property of paintProperties) {
             output.push(
@@ -232,7 +237,7 @@ export type PaintProps = {`);
         output.push(
             `};
 
-export type PaintPropsPossiblyEvaluated = {`);
+export type ${layerType}PaintPropsPossiblyEvaluated = {`);
 
         for (const property of paintProperties) {
             output.push(
@@ -243,12 +248,12 @@ export type PaintPropsPossiblyEvaluated = {`);
             '};');
     } else {
         output.push(
-            'export type PaintProps = {};');
+            `export type ${layerType}PaintProps = {};`);
     }
 
     output.push(
         `
-const paint: Properties<PaintProps> = new Properties({`);
+const paint: Properties<${layerType}PaintProps> = new Properties({`);
 
     for (const property of paintProperties) {
         output.push(
@@ -259,7 +264,7 @@ const paint: Properties<PaintProps> = new Properties({`);
         `});
 
 export default ({ paint${layoutProperties.length ? ', layout' : ''} } as {
-    paint: Properties<PaintProps>${layoutProperties.length ? ',\n    layout: Properties<LayoutProps>' : ''}
+    paint: Properties<${layerType}PaintProps>${layoutProperties.length ? ',\n    layout: Properties<' + layerType + 'LayoutProps>' : ''}
 });`);
 
     return output.join('\n');
