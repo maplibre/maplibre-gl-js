@@ -1,3 +1,5 @@
+import type {VectorTileFeature} from '@mapbox/vector-tile';
+
 class Feature {
     type: 'Feature';
     _geometry: GeoJSON.Geometry;

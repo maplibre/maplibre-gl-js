@@ -23,6 +23,7 @@ import type {FeatureFilter} from '../style-spec/feature_filter';
 import type Transform from '../geo/transform';
 import type {FilterSpecification, PromoteIdSpecification} from '../style-spec/types';
 import type {FeatureState} from '../style-spec/expression';
+import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 
 type QueryParameters = {
   scale: number;
@@ -291,8 +292,8 @@ class FeatureIndex {
         return false;
     }
 
-    getId(feature: VectorTileFeature, sourceLayerId: string): string | number | void {
-        let id: string | number | boolean = feature.id;
+    getId(feature: VectorTileFeature, sourceLayerId: string): string | number {
+        let id: string | number = feature.id;
         if (this.promoteId) {
             const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];
             id = feature.properties[propName];

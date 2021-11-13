@@ -26,6 +26,7 @@ import type VertexBuffer from '../../gl/vertex_buffer';
 import type Point from '../../util/point';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
+import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {
     layoutVertexArray.emplaceBack(

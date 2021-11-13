@@ -15,6 +15,7 @@ import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {LayoutProps, PaintProps} from './line_style_layer_properties';
 import type Transform from '../../geo/transform';
 import type {LayerSpecification} from '../../style-spec/types';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 class LineFloorwidthProperty extends DataDrivenProperty<number> {
     useIntegerZoom: true;
