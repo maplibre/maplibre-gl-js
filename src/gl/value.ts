@@ -16,7 +16,7 @@ import type {
     FrontFaceType,
 } from './types';
 
-export interface Value<T> {
+export interface IValue<T> {
   current: T;
   default: T;
   dirty: boolean;
@@ -25,7 +25,7 @@ export interface Value<T> {
   set(value: T): void;
 }
 
-class BaseValue<T> implements Value<T> {
+class BaseValue<T> implements IValue<T> {
     gl: WebGLRenderingContext;
     current: T;
     default: T;
@@ -314,7 +314,7 @@ export class FrontFace extends BaseValue<FrontFaceType> {
     }
 }
 
-export class Program extends BaseValue<WebGLProgram> {
+export class ProgramValue extends BaseValue<WebGLProgram> {
     getDefault(): WebGLProgram {
         return null;
     }
