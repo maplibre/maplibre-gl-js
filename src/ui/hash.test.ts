@@ -7,7 +7,7 @@ beforeEach(() => {
 });
 
 describe('hash', () => {
-    function createHash(name) {
+    function createHash(name: string = '') {
         const hash = new Hash(name);
         hash._updateHash = hash._updateHashUnthrottled.bind(hash);
         return hash;
@@ -22,7 +22,7 @@ describe('hash', () => {
 
     test('#addTo', () => {
         const map = createMap();
-        const hash = createHash(undefined);
+        const hash = createHash();
 
         expect(hash._map).toBeFalsy();
 
