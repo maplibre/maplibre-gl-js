@@ -95,11 +95,15 @@
     "jsdoc/require-returns-description": "warn",
     
     // Jest https://www.npmjs.com/package/eslint-plugin-jest
+    "jest/no-commented-out-tests": "error",
     "jest/no-disabled-tests": "warn",
     "jest/no-focused-tests": "error",
+    "jest/prefer-to-contain": "warn",
     "jest/prefer-to-have-length": "warn",
     "jest/valid-expect": "error",
-    "jest/prefer-to-be": "warn"   
+    "jest/prefer-to-be": "warn",
+    "jest/no-alias-methods": "warn",
+    "jest/no-deprecated-functions": "warn"
   },
   "settings": {
     "jsdoc":{

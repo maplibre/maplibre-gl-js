@@ -12,6 +12,7 @@ import type {BucketParameters} from '../../data/bucket';
 import type {PaintProps} from './fill_extrusion_style_layer_properties';
 import type Transform from '../../geo/transform';
 import type {LayerSpecification} from '../../style-spec/types';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class Point3D extends Point {
     z: number

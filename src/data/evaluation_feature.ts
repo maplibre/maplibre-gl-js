@@ -1,5 +1,6 @@
 import loadGeometry from './load_geometry';
 import type Point from '../util/point';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 type EvaluationFeature = {
   readonly type: 1 | 2 | 3 | 'Unknown' | 'Point' | 'MultiPoint' | 'LineString' | 'MultiLineString' | 'Polygon' | 'MultiPolygon';
