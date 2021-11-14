@@ -1,4 +1,5 @@
 import type Pbf from 'pbf';
+import type Point from '../util/point';
 
 declare module '@mapbox/vector-tile' {
     import '@mapbox/vector-tile';
