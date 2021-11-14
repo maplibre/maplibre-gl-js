@@ -32,6 +32,7 @@ import type {Cancelable} from '../types/cancelable';
 import type {FilterSpecification} from '../style-spec/types';
 import type Point from '../util/point';
 import {mat4} from 'gl-matrix';
+import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 export type TileState = // Tile data is in the process of loading.
 'loading' | // Tile data has been loaded. Tile can be rendered.
