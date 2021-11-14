@@ -52,11 +52,11 @@ describe('CanonicalTileID', () => {
         expect(new CanonicalTileID(1, 0, 0).url(['bbox={bbox-epsg-3857}'])).toBe('bbox=-20037508.342789244,0,0,20037508.342789244');
     });
 
-    test('.url replaces {r}', () => {
+    test('.url replaces {ratio}', () => {
         devicePixelRatio = 2;
-        expect(new CanonicalTileID(1, 0, 0).url(['r={r}'])).toBe('r=@2x');
+        expect(new CanonicalTileID(1, 0, 0).url(['r={ratio}'])).toBe('r=@2x');
         devicePixelRatio = 1;
-        expect(new CanonicalTileID(1, 0, 0).url(['r={r}'])).toBe('r=');
+        expect(new CanonicalTileID(1, 0, 0).url(['r={ratio}'])).toBe('r=');
     });
 
     //Tests that multiple values of the same placeholder are replaced.
