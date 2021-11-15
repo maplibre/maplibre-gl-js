@@ -3,23 +3,24 @@ import StyleLayer from '../style_layer';
 import CircleBucket from '../../data/bucket/circle_bucket';
 import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
-import properties, {LayoutPropsPossiblyEvaluated, PaintPropsPossiblyEvaluated} from './circle_style_layer_properties';
+import properties, {CircleLayoutPropsPossiblyEvaluated, CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
 import {mat4, vec4} from 'gl-matrix';
 import Point from '../../util/point';
 import type {FeatureState} from '../../style-spec/expression';
 import type Transform from '../../geo/transform';
 import type {Bucket, BucketParameters} from '../../data/bucket';
-import type {LayoutProps, PaintProps} from './circle_style_layer_properties';
+import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties';
 import type {LayerSpecification} from '../../style-spec/types';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 class CircleStyleLayer extends StyleLayer {
-    _unevaluatedLayout: Layout<LayoutProps>;
-    layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>;
+    _unevaluatedLayout: Layout<CircleLayoutProps>;
+    layout: PossiblyEvaluated<CircleLayoutProps, CircleLayoutPropsPossiblyEvaluated>;
 
-    _transitionablePaint: Transitionable<PaintProps>;
-    _transitioningPaint: Transitioning<PaintProps>;
-    paint: PossiblyEvaluated<PaintProps, PaintPropsPossiblyEvaluated>;
+    _transitionablePaint: Transitionable<CirclePaintProps>;
+    _transitioningPaint: Transitioning<CirclePaintProps>;
+    paint: PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);

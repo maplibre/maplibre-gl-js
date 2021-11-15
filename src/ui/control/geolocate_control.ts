@@ -9,7 +9,7 @@ import type Map from '../map';
 import type {FitBoundsOptions} from '../camera';
 import type {IControl} from './control';
 
-type Options = {
+type GeolocateOptions = {
   positionOptions?: PositionOptions;
   fitBoundsOptions?: FitBoundsOptions;
   trackUserLocation?: boolean;
@@ -17,7 +17,7 @@ type Options = {
   showUserLocation?: boolean;
 };
 
-const defaultOptions: Options = {
+const defaultOptions: GeolocateOptions = {
     positionOptions: {
         enableHighAccuracy: false,
         maximumAge: 0,
@@ -94,7 +94,7 @@ let noTimeout = false;
  */
 class GeolocateControl extends Evented implements IControl {
     _map: Map;
-    options: Options;
+    options: GeolocateOptions;
     _container: HTMLElement;
     _dotElement: HTMLElement;
     _circleElement: HTMLElement;
@@ -108,7 +108,7 @@ class GeolocateControl extends Evented implements IControl {
     _accuracy: number;
     _setup: boolean; // set to true once the control has been setup
 
-    constructor(options: Options) {
+    constructor(options: GeolocateOptions) {
         super();
         this.options = extend({}, defaultOptions, options);
 

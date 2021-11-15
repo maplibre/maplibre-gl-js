@@ -1,4 +1,6 @@
-class Feature {
+import type {VectorTileFeature} from '@mapbox/vector-tile';
+
+class GeoJSONFeature {
     type: 'Feature';
     _geometry: GeoJSON.Geometry;
     properties: {};
@@ -40,4 +42,4 @@ class Feature {
     }
 }
 
-export default Feature;
+export default GeoJSONFeature;

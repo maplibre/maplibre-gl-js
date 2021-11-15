@@ -3,24 +3,25 @@ import StyleLayer from '../style_layer';
 import FillExtrusionBucket from '../../data/bucket/fill_extrusion_bucket';
 import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests';
 import {translateDistance, translate} from '../query_utils';
-import properties, {PaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties';
+import properties, {FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 import {mat4, vec4} from 'gl-matrix';
 import Point from '../../util/point';
 import type {FeatureState} from '../../style-spec/expression';
 import type {BucketParameters} from '../../data/bucket';
-import type {PaintProps} from './fill_extrusion_style_layer_properties';
+import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties';
 import type Transform from '../../geo/transform';
 import type {LayerSpecification} from '../../style-spec/types';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class Point3D extends Point {
     z: number
 }
 
 class FillExtrusionStyleLayer extends StyleLayer {
-    _transitionablePaint: Transitionable<PaintProps>;
-    _transitioningPaint: Transitioning<PaintProps>;
-    paint: PossiblyEvaluated<PaintProps, PaintPropsPossiblyEvaluated>;
+    _transitionablePaint: Transitionable<FillExtrusionPaintProps>;
+    _transitioningPaint: Transitioning<FillExtrusionPaintProps>;
+    paint: PossiblyEvaluated<FillExtrusionPaintProps, FillExtrusionPaintPropsPossiblyEvaluated>;
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);

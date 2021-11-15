@@ -28,6 +28,7 @@ import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type Map from '../ui/map';
 import type {StyleSetterOptions} from './style';
 import {mat4} from 'gl-matrix';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 const TRANSITION_SUFFIX = '-transition';
 

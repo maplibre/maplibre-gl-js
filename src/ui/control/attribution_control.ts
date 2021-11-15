@@ -4,7 +4,7 @@ import {bindAll} from '../../util/util';
 import type Map from '../map';
 import type {ControlPosition, IControl} from './control';
 
-type Options = {
+type AttributionOptions = {
   compact?: boolean;
   customAttribution?: string | Array<string>;
 };
@@ -23,7 +23,7 @@ type Options = {
  *     }));
  */
 class AttributionControl implements IControl {
-    options: Options;
+    options: AttributionOptions;
     _map: Map;
     _container: HTMLElement;
     _innerContainer: HTMLElement;
@@ -33,7 +33,7 @@ class AttributionControl implements IControl {
     styleId: string;
     styleOwner: string;
 
-    constructor(options: Options = {}) {
+    constructor(options: AttributionOptions = {}) {
         this.options = options;
 
         bindAll([
@@ -59,6 +59,8 @@ class AttributionControl implements IControl {
 
         if (compact) {
             this._container.classList.add('maplibregl-compact', 'mapboxgl-compact');
+        } else {
+            this._container.setAttribute('open', '');
         }
 
         this._updateAttributions();

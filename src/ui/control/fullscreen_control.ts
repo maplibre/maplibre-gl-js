@@ -5,7 +5,7 @@ import {bindAll, warnOnce} from '../../util/util';
 import type Map from '../map';
 import type {IControl} from './control';
 
-type Options = {
+type FullscreenOptions = {
   container?: HTMLElement;
 };
 
@@ -29,7 +29,7 @@ class FullscreenControl implements IControl {
     _fullscreenButton: HTMLButtonElement;
     _container: HTMLElement;
 
-    constructor(options: Options) {
+    constructor(options: FullscreenOptions) {
         this._fullscreen = false;
         if (options && options.container) {
             if (options.container instanceof HTMLElement) {

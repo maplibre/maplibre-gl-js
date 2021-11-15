@@ -21,19 +21,19 @@ import type Formatted from '../../style-spec/expression/types/formatted';
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
 import {StylePropertySpecification} from '../../style-spec/style-spec';
 
-export type LayoutProps = {
+export type CircleLayoutProps = {
     "circle-sort-key": DataDrivenProperty<number>,
 };
 
-export type LayoutPropsPossiblyEvaluated = {
+export type CircleLayoutPropsPossiblyEvaluated = {
     "circle-sort-key": PossiblyEvaluatedPropertyValue<number>,
 };
 
-const layout: Properties<LayoutProps> = new Properties({
+const layout: Properties<CircleLayoutProps> = new Properties({
     "circle-sort-key": new DataDrivenProperty(styleSpec["layout_circle"]["circle-sort-key"] as any as StylePropertySpecification),
 });
 
-export type PaintProps = {
+export type CirclePaintProps = {
     "circle-radius": DataDrivenProperty<number>,
     "circle-color": DataDrivenProperty<Color>,
     "circle-blur": DataDrivenProperty<number>,
@@ -47,7 +47,7 @@ export type PaintProps = {
     "circle-stroke-opacity": DataDrivenProperty<number>,
 };
 
-export type PaintPropsPossiblyEvaluated = {
+export type CirclePaintPropsPossiblyEvaluated = {
     "circle-radius": PossiblyEvaluatedPropertyValue<number>,
     "circle-color": PossiblyEvaluatedPropertyValue<Color>,
     "circle-blur": PossiblyEvaluatedPropertyValue<number>,
@@ -61,7 +61,7 @@ export type PaintPropsPossiblyEvaluated = {
     "circle-stroke-opacity": PossiblyEvaluatedPropertyValue<number>,
 };
 
-const paint: Properties<PaintProps> = new Properties({
+const paint: Properties<CirclePaintProps> = new Properties({
     "circle-radius": new DataDrivenProperty(styleSpec["paint_circle"]["circle-radius"] as any as StylePropertySpecification),
     "circle-color": new DataDrivenProperty(styleSpec["paint_circle"]["circle-color"] as any as StylePropertySpecification),
     "circle-blur": new DataDrivenProperty(styleSpec["paint_circle"]["circle-blur"] as any as StylePropertySpecification),
@@ -76,6 +76,6 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint, layout } as {
-    paint: Properties<PaintProps>,
-    layout: Properties<LayoutProps>
+    paint: Properties<CirclePaintProps>,
+    layout: Properties<CircleLayoutProps>
 });

@@ -3,7 +3,7 @@ import clipLine from './clip_line';
 import PathInterpolator from './path_interpolator';
 
 import * as intersectionTests from '../util/intersection_tests';
-import Grid from './grid_index';
+import GridIndex from './grid_index';
 import {mat4, vec4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 import assert from 'assert';
@@ -38,8 +38,8 @@ const viewportPadding = 100;
  * @private
  */
 class CollisionIndex {
-    grid: Grid;
-    ignoredGrid: Grid;
+    grid: GridIndex;
+    ignoredGrid: GridIndex;
     transform: Transform;
     pitchfactor: number;
     screenRightBoundary: number;
@@ -49,8 +49,8 @@ class CollisionIndex {
 
     constructor(
         transform: Transform,
-        grid: Grid = new Grid(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
-        ignoredGrid: Grid = new Grid(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
+        grid = new GridIndex(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
+        ignoredGrid = new GridIndex(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
     ) {
         this.transform = transform;
 
