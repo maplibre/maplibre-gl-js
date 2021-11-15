@@ -1,3 +1,5 @@
+/// <reference path="./types/glsl.d.ts" />
+/// <reference path="./types/non-typed-modules.d.ts" />
 import assert from 'assert';
 import {supported} from '@mapbox/mapbox-gl-supported';
 
@@ -5,7 +7,7 @@ import Map from './ui/map';
 import NavigationControl from './ui/control/navigation_control';
 import GeolocateControl from './ui/control/geolocate_control';
 import AttributionControl from './ui/control/attribution_control';
-import ScaleControl, {Unit} from './ui/control/scale_control';
+import ScaleControl from './ui/control/scale_control';
 import FullscreenControl from './ui/control/fullscreen_control';
 import Popup from './ui/popup';
 import Marker from './ui/marker';
@@ -26,21 +28,6 @@ import {PerformanceUtils} from './util/performance';
 import type {RequestParameters, ResponseCallback} from './util/ajax';
 import type {Cancelable} from './types/cancelable';
 
-export type {MapOptions} from './ui/map';
-export type {LngLatBoundsLike} from './geo/lng_lat_bounds';
-export type {PointLike} from './util/point';
-export type {
-    AnimationOptions, 
-    CameraForBoundsOptions, 
-    JumpToOptions, 
-    CameraOptions, 
-    CenterZoomBearing, 
-    EaseToOptions, 
-    FitBoundsOptions, 
-    FlyToOptions
-} from './ui/camera';
-export * from './style-spec/types';
-export type {Map, LngLat, LngLatBounds, ScaleControl, setRTLTextPlugin, Unit};
 const exported = {
     supported,
     setRTLTextPlugin,
