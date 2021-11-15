@@ -22,7 +22,7 @@ import type ResolvedImage from '../../style-spec/expression/types/resolved_image
 import {StylePropertySpecification} from '../../style-spec/style-spec';
 
 
-export type PaintProps = {
+export type FillExtrusionPaintProps = {
     "fill-extrusion-opacity": DataConstantProperty<number>,
     "fill-extrusion-color": DataDrivenProperty<Color>,
     "fill-extrusion-translate": DataConstantProperty<[number, number]>,
@@ -33,7 +33,7 @@ export type PaintProps = {
     "fill-extrusion-vertical-gradient": DataConstantProperty<boolean>,
 };
 
-export type PaintPropsPossiblyEvaluated = {
+export type FillExtrusionPaintPropsPossiblyEvaluated = {
     "fill-extrusion-opacity": number,
     "fill-extrusion-color": PossiblyEvaluatedPropertyValue<Color>,
     "fill-extrusion-translate": [number, number],
@@ -44,7 +44,7 @@ export type PaintPropsPossiblyEvaluated = {
     "fill-extrusion-vertical-gradient": boolean,
 };
 
-const paint: Properties<PaintProps> = new Properties({
+const paint: Properties<FillExtrusionPaintProps> = new Properties({
     "fill-extrusion-opacity": new DataConstantProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-opacity"] as any as StylePropertySpecification),
     "fill-extrusion-color": new DataDrivenProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-color"] as any as StylePropertySpecification),
     "fill-extrusion-translate": new DataConstantProperty(styleSpec["paint_fill-extrusion"]["fill-extrusion-translate"] as any as StylePropertySpecification),
@@ -56,5 +56,5 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint } as {
-    paint: Properties<PaintProps>
+    paint: Properties<FillExtrusionPaintProps>
 });

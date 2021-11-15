@@ -7,7 +7,7 @@ export type Size = {
   height: number;
 };
 
-type Point = {
+type Point2D = {
   x: number;
   y: number;
 };
@@ -49,7 +49,7 @@ function resizeImage(image: any, {
     image.data = newImage.data;
 }
 
-function copyImage(srcImg: any, dstImg: any, srcPt: Point, dstPt: Point, size: Size, channels: number) {
+function copyImage(srcImg: any, dstImg: any, srcPt: Point2D, dstPt: Point2D, size: Size, channels: number) {
     if (size.width === 0 || size.height === 0) {
         return dstImg;
     }
@@ -100,7 +100,7 @@ export class AlphaImage {
         return new AlphaImage({width: this.width, height: this.height}, new Uint8Array(this.data));
     }
 
-    static copy(srcImg: AlphaImage, dstImg: AlphaImage, srcPt: Point, dstPt: Point, size: Size) {
+    static copy(srcImg: AlphaImage, dstImg: AlphaImage, srcPt: Point2D, dstPt: Point2D, size: Size) {
         copyImage(srcImg, dstImg, srcPt, dstPt, size, 1);
     }
 }
@@ -137,7 +137,7 @@ export class RGBAImage {
         return new RGBAImage({width: this.width, height: this.height}, new Uint8Array(this.data));
     }
 
-    static copy(srcImg: RGBAImage | ImageData, dstImg: RGBAImage, srcPt: Point, dstPt: Point, size: Size) {
+    static copy(srcImg: RGBAImage | ImageData, dstImg: RGBAImage, srcPt: Point2D, dstPt: Point2D, size: Size) {
         copyImage(srcImg, dstImg, srcPt, dstPt, size, 4);
     }
 }
