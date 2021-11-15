@@ -10,7 +10,7 @@ declare module 'grid-index' {
         toArrayBuffer(): ArrayBuffer;
     }
     export default GridIndex;
-} 
+}
 
 declare module '@mapbox/vector-tile' {
     import '@mapbox/vector-tile';
