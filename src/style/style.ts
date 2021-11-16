@@ -216,7 +216,7 @@ class Style extends Evented {
             if (error) {
                 this.fire(new ErrorEvent(error));
             } else if (json) {
-                this._load(json, validate);
+                this._load(json, validate, url);
             }
         });
     }
@@ -226,16 +226,16 @@ class Style extends Evented {
 
         this._request = browser.frame(() => {
             this._request = null;
-            this._load(json, options.validate !== false);
+            this._load(json, options.validate !== false, getReferrer());
         });
     }
 
     loadEmpty() {
         this.fire(new Event('dataloading', {dataType: 'style'}));
-        this._load(empty, false);
+        this._load(empty, false, getReferrer());
     }
 
-    _load(json: StyleSpecification, validate: boolean) {
+    _load(json: StyleSpecification, validate: boolean, baseUrl: string) {
         if (validate && emitValidationErrors(this, validateStyle(json))) {
             return;
         }
