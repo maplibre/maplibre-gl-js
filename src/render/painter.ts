@@ -488,7 +488,7 @@ class Painter {
         this.id = layer.id;
 
         this.gpuTimingStart(layer);
-        draw[layer.type](painter, sourceCache, layer, coords, this.style.placement.variableOffsets);
+        draw[layer.type](painter, sourceCache, layer as any, coords, this.style.placement.variableOffsets);
         this.gpuTimingEnd();
     }
 
