@@ -249,7 +249,7 @@ class Style extends Evented {
         }
 
         if (json.sprite) {
-            this._loadSprite(json.sprite);
+            this._loadSprite(this.map._requestManager.absoluteURL(json.sprite, baseUrl));
         } else {
             this.imageManager.setLoaded(true);
         }
