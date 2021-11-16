@@ -19,6 +19,6 @@ const config = (input, file, format) => ({
 });
 
 export default [
-    config('rollup/build/tsc/src/index.js', 'dist/maplibre-gl-csp.js', 'umd'),
-    config('rollup/build/tsc/src/source/worker.js', 'dist/maplibre-gl-csp-worker.js', 'iife')
+    config('src/index.ts', 'dist/maplibre-gl-csp.js', 'umd'),
+    config('src/source/worker.ts', 'dist/maplibre-gl-csp-worker.js', 'iife')
 ];

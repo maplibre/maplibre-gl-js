@@ -23,8 +23,7 @@
       "WebWorker"
     ],
     "types": ["node", "jest", "geojson", "offscreencanvas"],
-    "outDir": "rollup/build/tsc",
-    "declarationDir": "types",
+    "declarationDir": "rollup/build/maplibregl",
     "declarationMap": true
   },
   "include": [

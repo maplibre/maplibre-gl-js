@@ -1,4 +1,5 @@
 import path, {dirname} from 'path';
+import typescript from '@rollup/plugin-typescript';
 import replace from '@rollup/plugin-replace';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
@@ -9,7 +10,7 @@ import {fileURLToPath} from 'url';
 const esm = 'esm' in process.env;
 
 const config = [{
-    input: 'rollup/build/tsc/src/style-spec/style-spec.js',
+    input: 'src/style-spec/style-spec.ts',
     output: {
         name: 'maplibreGlStyleSpecification',
         file: `dist/style-spec/${esm ? 'index.mjs' : 'index.js'}`,
@@ -43,11 +44,14 @@ const config = [{
             }
         }),
         json(),
-        unassert(),
+        unassert({
+            include: ['**/*.[jt]s'],
+        }),
         resolve({
             browser: true,
             preferBuiltins: false
         }),
+        typescript(),
         commonjs()
     ]
 }];
