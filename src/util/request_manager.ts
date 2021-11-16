@@ -27,6 +27,13 @@ export class RequestManager {
         return {url};
     }
 
+    absoluteURL(url: string, base: string): string {
+        if (!/^\w+:/.test(url) && /^\w+:\/\//.test(base)) {
+            return (new URL(url, base)).toString();
+        }
+        return url;
+    }
+
     normalizeSpriteURL(url: string, format: string, extension: string): string {
         const urlObject = parseUrl(url);
         urlObject.path += `${format}${extension}`;
