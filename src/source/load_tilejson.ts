@@ -11,7 +11,7 @@ import type {Cancelable} from '../types/cancelable';
 export default function(options: any, requestManager: RequestManager, callback: Callback<TileJSON>): Cancelable {
     let tileBaseUrl;
     if (options.url && options.baseUrl)
-        tileBaseUrl = requestManager.absoluteURL(options.url, options.baseUrl)
+        tileBaseUrl = requestManager.absoluteURL(options.url, options.baseUrl);
     else
         tileBaseUrl = requestManager.absoluteURL(options.url || options.baseUrl, getReferrer());
     const loaded = function(err: Error, tileJSON: any) {
