@@ -8,6 +8,7 @@ import type {Callback} from '../types/callback';
 
 export default function loadGlyphRange(fontstack: string,
                            range: number,
+                           baseUrl: string,
                            urlTemplate: string,
                            requestManager: RequestManager,
                            callback: Callback<{
@@ -17,7 +18,7 @@ export default function loadGlyphRange(fontstack: string,
     const end = begin + 255;
 
     const request = requestManager.transformRequest(
-        urlTemplate.replace('{fontstack}', fontstack).replace('{range}', `${begin}-${end}`),
+        requestManager.absoluteURL(urlTemplate.replace('{fontstack}', fontstack).replace('{range}', `${begin}-${end}`), baseUrl),
         ResourceType.Glyphs
     );
 

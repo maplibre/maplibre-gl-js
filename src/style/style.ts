@@ -253,7 +253,7 @@ class Style extends Evented {
             this.imageManager.setLoaded(true);
         }
 
-        this.glyphManager.setURL(json.glyphs);
+        this.glyphManager.setURL(json.glyphs, baseUrl);
 
         const layers = deref(this.stylesheet.layers);
 

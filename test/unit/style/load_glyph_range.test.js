@@ -20,7 +20,7 @@ test('loadGlyphRange', (t) => {
     let request;
     XMLHttpRequest.onCreate = (req) => { request = req; };
 
-    loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager, (err, result) => {
+    loadGlyphRange('Arial Unicode MS', 0, null, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager, (err, result) => {
         t.ifError(err);
         t.ok(transform.calledOnce);
         t.deepEqual(transform.getCall(0).args, ['https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf', 'Glyphs']);

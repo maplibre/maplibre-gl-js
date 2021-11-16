@@ -11,10 +11,11 @@ for (const glyph of parseGlyphPBF(fs.readFileSync('./test/fixtures/0-255.pbf')))
 const identityTransform = ((url) => ({url})) as any as RequestManager;
 
 const createLoadGlyphRangeStub = () => {
-    return jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
+    return jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, baseUrl, urlTemplate, transform, callback) => {
         expect(stack).toBe('Arial Unicode MS');
         expect(range).toBe(0);
-        expect(urlTemplate).toBe('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
+        expect(baseUrl).toBe('https://localhost/');
+        expect(urlTemplate).toBe('/fonts/v1/{fontstack}/{range}.pbf');
         expect(transform).toBe(identityTransform);
         setTimeout(() => callback(null, glyphs), 0);
     });
@@ -28,7 +29,7 @@ const createGlyphManager = (font?) => {
         }
     };
     const manager = new GlyphManager(identityTransform, font);
-    manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
+    manager.setURL('/fonts/v1/{fontstack}/{range}.pbf', 'https://localhost/');
     return manager;
 };
 
@@ -71,7 +72,7 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager requests remote CJK PBF', done => {
-        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
+        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, baseUrl, urlTemplate, transform, callback) => {
             setTimeout(() => callback(null, glyphs), 0);
         });
 
@@ -85,7 +86,7 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager does not cache CJK chars that should be rendered locally', done => {
-        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
+        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, baseUrl, urlTemplate, transform, callback) => {
             const overlappingGlyphs = {};
             const start = range * 256;
             const end = start + 256;

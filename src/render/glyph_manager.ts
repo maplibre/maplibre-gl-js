@@ -32,6 +32,7 @@ export default class GlyphManager {
       [_: string]: Entry;
     };
     url: string;
+    baseUrl: string;
 
     // exposed as statics to enable stubbing in unit tests
     static loadGlyphRange = loadGlyphRange;
@@ -43,8 +44,9 @@ export default class GlyphManager {
         this.entries = {};
     }
 
-    setURL(url?: string | null) {
+    setURL(url?: string | null, baseUrl?: string | null) {
         this.url = url;
+        this.baseUrl = baseUrl;
     }
 
     getGlyphs(glyphs: {
@@ -103,7 +105,7 @@ export default class GlyphManager {
             let requests = entry.requests[range];
             if (!requests) {
                 requests = entry.requests[range] = [];
-                GlyphManager.loadGlyphRange(stack, range, ((this.url as any)), this.requestManager,
+                GlyphManager.loadGlyphRange(stack, range, this.baseUrl, ((this.url as any)), this.requestManager,
                     (err, response?: {
                       [_: number]: StyleGlyph | null;
                     } | null) => {
