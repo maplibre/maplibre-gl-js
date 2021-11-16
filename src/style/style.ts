@@ -94,6 +94,7 @@ export type StyleOptions = {
 
 export type StyleSetterOptions = {
   validate?: boolean;
+  baseUrl?: string;
 };
 /**
  * @private
@@ -244,7 +245,7 @@ class Style extends Evented {
         this.stylesheet = json;
 
         for (const id in json.sources) {
-            this.addSource(id, json.sources[id], {validate: false});
+            this.addSource(id, json.sources[id], {validate: false, baseUrl});
         }
 
         if (json.sprite) {
@@ -569,6 +570,7 @@ class Style extends Evented {
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
 
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
+        if (options.baseUrl) (source as any).baseUrl = options.baseUrl;
         const sourceCache = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
         sourceCache.style = this;
         sourceCache.setEventedParent(this, () => ({

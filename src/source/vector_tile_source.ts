@@ -51,6 +51,8 @@ class VectorTileSource extends Evented implements Source {
     tileSize: number;
     promoteId: PromoteIdSpecification;
 
+    baseUrl: string;
+    tileBaseUrl: string;
     _options: VectorSourceSpecification;
     _collectResourceTiming: boolean;
     dispatcher: Dispatcher;
@@ -65,6 +67,7 @@ class VectorTileSource extends Evented implements Source {
 
     constructor(id: string, options: VectorSourceSpecification & {
       collectResourceTiming: boolean;
+      baseUrl: string;
     }, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
@@ -79,7 +82,7 @@ class VectorTileSource extends Evented implements Source {
         this.isTileClipped = true;
         this._loaded = false;
 
-        extend(this, pick(options, ['url', 'scheme', 'tileSize', 'promoteId']));
+        extend(this, pick(options, ['url', 'scheme', 'tileSize', 'promoteId', 'baseUrl']));
         this._options = extend({type: 'vector'}, options);
 
         this._collectResourceTiming = options.collectResourceTiming;
@@ -178,7 +181,7 @@ class VectorTileSource extends Evented implements Source {
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
-        const url = tile.tileID.canonical.url(this.tiles, this.scheme);
+        const url = this.map._requestManager.absoluteURL(tile.tileID.canonical.url(this.tiles, this.scheme), this.tileBaseUrl);
         const params = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
             uid: tile.uid,

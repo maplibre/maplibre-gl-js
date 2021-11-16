@@ -1,6 +1,6 @@
 import {pick, extend} from '../util/util';
 
-import {getJSON, ResourceType} from '../util/ajax';
+import {getJSON, ResourceType, getReferrer} from '../util/ajax';
 import browser from '../util/browser';
 
 import type {RequestManager} from '../util/request_manager';
@@ -9,6 +9,11 @@ import type {TileJSON} from '../types/tilejson';
 import type {Cancelable} from '../types/cancelable';
 
 export default function(options: any, requestManager: RequestManager, callback: Callback<TileJSON>): Cancelable {
+    let tileBaseUrl;
+    if (options.url && options.baseUrl)
+        tileBaseUrl = requestManager.absoluteURL(options.url, options.baseUrl)
+    else
+        tileBaseUrl = requestManager.absoluteURL(options.url || options.baseUrl, getReferrer());
     const loaded = function(err: Error, tileJSON: any) {
         if (err) {
             return callback(err);
@@ -24,12 +29,14 @@ export default function(options: any, requestManager: RequestManager, callback: 
                 result.vectorLayerIds = result.vectorLayers.map((layer) => { return layer.id; });
             }
 
+            result.tileBaseUrl = tileBaseUrl;
+
             callback(null, result);
         }
     };
 
     if (options.url) {
-        return getJSON(requestManager.transformRequest(options.url, ResourceType.Source), loaded);
+        return getJSON(requestManager.transformRequest(requestManager.absoluteURL(options.url, options.baseUrl), ResourceType.Source), loaded);
     } else {
         return browser.frame(() => loaded(null, options));
     }
