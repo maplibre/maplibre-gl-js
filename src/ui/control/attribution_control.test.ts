@@ -17,15 +17,21 @@ function createMap() {
     }, undefined);
 }
 
-beforeEach(() => {
-    setWebGlContext();
-    setPerformance();
-    setMatchMedia();
-});
-
 describe('AttributionControl', () => {
+    let map;
+
+    beforeEach(() => {
+        setWebGlContext();
+        setPerformance();
+        setMatchMedia();
+        map = createMap();
+    });
+
+    afterEach(() => {
+        map.remove();
+    });
+
     test('appears in bottom-right by default', () => {
-        const map = createMap();
         map.addControl(new AttributionControl());
 
         expect(
@@ -34,7 +40,6 @@ describe('AttributionControl', () => {
     });
 
     test('appears in the position specified by the position option', () => {
-        const map = createMap();
         map.addControl(new AttributionControl(), 'top-left');
 
         expect(
@@ -43,7 +48,6 @@ describe('AttributionControl', () => {
     });
 
     test('appears in compact mode if compact option is used', () => {
-        const map = createMap();
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
 
         let attributionControl = new AttributionControl({
@@ -70,7 +74,6 @@ describe('AttributionControl', () => {
     });
 
     test('appears in compact mode if container is less then 640 pixel wide', () => {
-        const map = createMap();
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
         map.addControl(new AttributionControl());
 
@@ -89,7 +92,6 @@ describe('AttributionControl', () => {
     });
 
     test('compact mode control toggles attribution', () => {
-        const map = createMap();
         map.addControl(new AttributionControl({
             compact: true
         }));
@@ -109,7 +111,6 @@ describe('AttributionControl', () => {
     });
 
     test('dedupes attributions that are substrings of others', done => {
-        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
@@ -132,7 +133,7 @@ describe('AttributionControl', () => {
 
         let times = 0;
         map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
                 if (++times === 7) {
                     expect(attribution._innerContainer.innerHTML).toBe('Hello World | Another Source | GeoJSON Source');
                     done();
@@ -142,7 +143,6 @@ describe('AttributionControl', () => {
     });
 
     test('is hidden if empty', done => {
-        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
         map.on('load', () => {
@@ -168,7 +168,7 @@ describe('AttributionControl', () => {
 
         let times = 0;
         map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
                 times++;
                 if (times === 1) {
                     checkEmptyFirst();
@@ -180,7 +180,6 @@ describe('AttributionControl', () => {
     });
 
     test('shows custom attribution if customAttribution option is provided', () => {
-        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: 'Custom string'
         });
@@ -190,7 +189,6 @@ describe('AttributionControl', () => {
     });
 
     test('shows custom attribution if customAttribution option is provided, control is removed and added back', () => {
-        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: 'Custom string'
         });
@@ -202,7 +200,6 @@ describe('AttributionControl', () => {
     });
 
     test('in compact mode shows custom attribution if customAttribution option is provided', () => {
-        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: 'Custom string',
             compact: true
@@ -213,7 +210,6 @@ describe('AttributionControl', () => {
     });
 
     test('shows all custom attributions if customAttribution array of strings is provided', () => {
-        const map = createMap();
         const attributionControl = new AttributionControl({
             customAttribution: ['Some very long custom string', 'Custom string', 'Another custom string']
         });
@@ -223,7 +219,6 @@ describe('AttributionControl', () => {
     });
 
     test('hides attributions for sources that are not currently visible', done => {
-        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
@@ -237,7 +232,8 @@ describe('AttributionControl', () => {
 
         let times = 0;
         map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+            console.log(`${e.dataType}---${e.sourceDataType}`);
+            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
                 if (++times === 3) {
                     expect(attribution._innerContainer.innerHTML).toBe('Used');
                     done();
@@ -247,7 +243,6 @@ describe('AttributionControl', () => {
     });
 
     test('toggles attributions for sources whose visibility changes when zooming', done => {
-        const map = createMap();
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
