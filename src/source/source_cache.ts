@@ -563,6 +563,45 @@ class SourceCache extends Evented {
                     retain[id] = parentsForFading[id];
                 }
             }
+
+            // disable fading logic in renderToTexture (e.g. 3D) mode
+            // e.g. avoid rendering two tiles on the same place
+            if (this.style.terrainSourceCache && this.style.terrainSourceCache.isEnabled()) {
+                const idealRasterTileIDs: {[_: string]: OverscaledTileID} = {};
+                const missingTileIDs: {[_: string]: OverscaledTileID} = {};
+                for (const tileID of idealTileIDs) {
+                    if (this._tiles[tileID.key].hasData())
+                        idealRasterTileIDs[tileID.key] = tileID;
+                    else
+                        missingTileIDs[tileID.key] = tileID;
+                }
+                // search for a complete set of children for each missing tile
+                for (const key in missingTileIDs) {
+                    const children = missingTileIDs[key].children(this._source.maxzoom);
+                    if (this._tiles[children[0].key] && this._tiles[children[1].key] && this._tiles[children[2].key] && this._tiles[children[3].key]) {
+                        idealRasterTileIDs[children[0].key] = retain[children[0].key] = children[0];
+                        idealRasterTileIDs[children[1].key] = retain[children[1].key] = children[1];
+                        idealRasterTileIDs[children[2].key] = retain[children[2].key] = children[2];
+                        idealRasterTileIDs[children[3].key] = retain[children[3].key] = children[3];
+                        delete(missingTileIDs[key]);
+                    }
+                }
+                // search for parent for each missing tile
+                for (const key in missingTileIDs) {
+                    const parent = this.findLoadedParent(missingTileIDs[key], this._source.minzoom);
+                    if (parent) {
+                        idealRasterTileIDs[parent.tileID.key] = retain[parent.tileID.key] = parent.tileID;
+                        // remove idealTiles which would be rendered twice
+                        for (const key in idealRasterTileIDs) {
+                            if (idealRasterTileIDs[key].isChildOf(parent.tileID)) delete(idealRasterTileIDs[key]);
+                        }
+                    }
+                }
+                // cover all tiles which are not needed
+                for (const key in this._tiles) {
+                    if (!idealRasterTileIDs[key]) this._coveredTiles[key] = true;
+                }
+            }
         }
 
         for (const retainedId in retain) {

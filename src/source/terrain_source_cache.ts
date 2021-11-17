@@ -148,7 +148,6 @@ class TerrainSourceCache extends Evented {
     update(transform: Transform): void {
         if (!this.isEnabled() || !this._sourceCache._sourceLoaded) return;
         this._sourceCache.update(transform);
-        transform.updateElevation();
         this._renderableTiles = [];
         // create tiles for current view
         for (const tileID of this.getRenderableTileIds(transform)) {
