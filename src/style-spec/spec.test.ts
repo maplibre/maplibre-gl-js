@@ -1,6 +1,6 @@
 
 /* eslint-disable import/namespace */
-import * as spec from '../style-spec/style-spec';
+import * as spec from './style-spec';
 
 ['v8', 'latest'].forEach((version) => {
     ['', 'min'].forEach((kind) => {
@@ -11,14 +11,14 @@ import * as spec from '../style-spec/style-spec';
                 if (k === '$version') {
                     expect(typeof spec[v].$version).toBe('number');
                 } else {
-                    validSchema(k, t, spec[v][k], spec[v], version, kind);
+                    validSchema(k, v, spec[v][k], spec[v], version, kind);
                 }
             }
         });
     });
 });
 
-describe('v8 Spec SDK Support section', () => {
+test('v8 Spec SDK Support section', () => {
     const v = 'v8';
     const propObjs = [].concat(spec[v].paint).concat(spec[v].layout);
     propObjs.forEach((objKey) => {
@@ -46,7 +46,7 @@ describe('v8 Spec SDK Support section', () => {
         }
     });
 });
-function validSchema(k, t, obj, ref, version, kind) {
+function validSchema(k, v, obj, ref, version, kind) {
     const scalar = ['boolean', 'string', 'number'];
     const types = Object.keys(ref).concat(['boolean', 'string', 'number',
         'array', 'enum', 'color', '*',
@@ -116,8 +116,10 @@ function validSchema(k, t, obj, ref, version, kind) {
                     if (Array.isArray(obj.values) === false) { // skips $root.version
                         if (obj.values[v].doc !== undefined) {
                             expect('string').toBe(typeof obj.values[v].doc);
-                            if (kind === 'min') t.fail(`minified file should not have ${k}.doc`);
-                        } else if (t.name === 'latest') t.fail(`doc missing for ${k}`);
+                            expect(kind).not.toBe('min');
+                        } else {
+                            expect(v).not.toBe('latest');
+                        }
                     }
                 }
             }
@@ -130,7 +132,7 @@ function validSchema(k, t, obj, ref, version, kind) {
                     expect(types.indexOf(i) !== -1).toBeTruthy();
                 });
             } else if (typeof obj.value === 'object') {
-                validSchema(`${k}.value`, t, obj.value, ref);
+                validSchema(`${k}.value`, v, obj.value, ref, undefined, undefined);
             } else {
                 expect(types.indexOf(obj.value) !== -1).toBeTruthy();
             }
@@ -139,12 +141,14 @@ function validSchema(k, t, obj, ref, version, kind) {
         // schema key doc checks
         if (obj.doc !== undefined) {
             expect('string').toBe(typeof obj.doc);
-            if (kind === 'min') t.fail(`minified file should not have ${k}.doc`);
-        } else if (t.name === 'latest') t.fail(`doc missing for ${k}`);
+            expect(kind).not.toBe('min');
+        } else {
+            expect(v).not.toBe('latest');
+        }
 
         // schema key example checks
-        if (kind === 'min' && obj.example !== undefined) {
-            t.fail(`minified file should not have ${k}.example`);
+        if (kind === 'min') {
+            expect(obj.example).toBeDefined();
         }
 
         // schema key function checks
@@ -182,11 +186,11 @@ function validSchema(k, t, obj, ref, version, kind) {
     } else if (Array.isArray(obj)) {
         obj.forEach((child, j) => {
             if (typeof child === 'string' && scalar.indexOf(child) !== -1) return;
-            validSchema(`${k}[${j}]`, t,  typeof child === 'string' ? ref[child] : child, ref);
+            validSchema(`${k}[${j}]`, v, typeof child === 'string' ? ref[child] : child, ref, undefined, undefined);
         });
         // Container object.
     } else if (typeof obj === 'object') {
-        for (const j in obj) validSchema(`${k}.${j}`, t, obj[j], ref);
+        for (const j in obj) validSchema(`${k}.${j}`, v, obj[j], ref, undefined, undefined);
         // Invalid ref object.
     } else {
         expect(false).toBeTruthy();
