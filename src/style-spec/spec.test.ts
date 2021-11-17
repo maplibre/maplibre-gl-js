@@ -1,12 +1,11 @@
-import {test} from '../../util/test';
 
 /* eslint-disable import/namespace */
-import * as spec from '../../../rollup/build/tsc/src/style-spec/style-spec';
+import * as spec from '../style-spec/style-spec';
 
 ['v8', 'latest'].forEach((version) => {
     ['', 'min'].forEach((kind) => {
         const v = version + kind;
-        test(v, (t) => {
+        test(v, () => {
             for (const k in spec[v]) {
                 // Exception for version.
                 if (k === '$version') {
@@ -15,25 +14,24 @@ import * as spec from '../../../rollup/build/tsc/src/style-spec/style-spec';
                     validSchema(k, t, spec[v][k], spec[v], version, kind);
                 }
             }
-            t.end();
         });
     });
 });
 
-test(`v8 Spec SDK Support section`, (t) => {
+describe('v8 Spec SDK Support section', () => {
     const v = 'v8';
     const propObjs = [].concat(spec[v].paint).concat(spec[v].layout);
     propObjs.forEach((objKey) => {
         const props = spec[v][objKey];
         const propKeys = Object.keys(props);
         propKeys.forEach((key) => {
-            expect(props[key]["sdk-support"]).toBeTruthy();
-            if (props[key]["sdk-support"]) {
-                expect(props[key]["sdk-support"]["basic functionality"]).toBeTruthy();
-                if (props[key]["property-type"].includes("constant")) {
-                    expect(props[key]["sdk-support"]["data-driven styling"]).toBeFalsy();
+            expect(props[key]['sdk-support']).toBeTruthy();
+            if (props[key]['sdk-support']) {
+                expect(props[key]['sdk-support']['basic functionality']).toBeTruthy();
+                if (props[key]['property-type'].includes('constant')) {
+                    expect(props[key]['sdk-support']['data-driven styling']).toBeFalsy();
                 } else {
-                    expect(props[key]["sdk-support"]["data-driven styling"]).toBeTruthy();
+                    expect(props[key]['sdk-support']['data-driven styling']).toBeTruthy();
                 }
             }
         });
@@ -42,12 +40,11 @@ test(`v8 Spec SDK Support section`, (t) => {
     const expressions = spec[v].expression_name.values;
     const expressionNames = Object.keys(expressions);
     expressionNames.forEach((expr) => {
-        expect(expressions[expr]["sdk-support"]).toBeTruthy();
-        if (expressions[expr]["sdk-support"]) {
-            expect(expressions[expr]["sdk-support"]["basic functionality"]).toBeTruthy();
+        expect(expressions[expr]['sdk-support']).toBeTruthy();
+        if (expressions[expr]['sdk-support']) {
+            expect(expressions[expr]['sdk-support']['basic functionality']).toBeTruthy();
         }
     });
-    t.end();
 });
 function validSchema(k, t, obj, ref, version, kind) {
     const scalar = ['boolean', 'string', 'number'];
