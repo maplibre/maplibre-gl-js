@@ -17,7 +17,7 @@
 - ** Breaking Change ** stopped supporting IE (internet explorer)
 - ** Breaking Change ** removed all code related to `accessToken` and mapbox specific urls, including telemetry etc.  Please do not use mapbox servers with this library.
 - ** Breaking Change ** removed `baseApiUrl` as it was used only for mapbox related urls
-- ** Breaking Change ** typescript tyings have changed:
+- ** Breaking Change ** typescript typings have changed:
   - `Style` => `StypeSpecification`
   - `AnyLayer` => `LayerSpecification`
   - `AnySourceData` => `SourceSpecification`
