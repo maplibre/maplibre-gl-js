@@ -25,7 +25,7 @@
   - `MapboxOptions` => `MapOptions`
   - `MapBoxZoomEvent` => `MapLibreZoomEvent`
   - `*SourceRaw` + `*SourceOptions` => `*SourceSpecification`
-  - `*Source` (source implementation definition) was removed 
+  - `*Source` (source implementation definition) were removed 
   - `*Layer` => `*LayerSpecification` 
   - `*Paint` => `*LayerSpecification['paint']`
   - `*Layout` => `*LayerSpecification['layout']`
@@ -41,6 +41,7 @@
 - Fix tile placeholder replacement to allow for placeholders to be in a URL more than once. (#348)
 - Fix type check for non dom environment. (#334)
 - Fix precision problem in patterns when overzoomed in OpenGL ES devices.
+- Fix padding-top of the popup to improve readability of popup text (#354).
 
 ## 1.15.2
 
