@@ -12,8 +12,26 @@ If you depend on mapbox-gl directly, simply replace `mapbox-gl` with `maplibre-g
   }
 ```
 
+If you are OK with changes that integrate non-backward compatible features, ideally install `maplibre-gl` version 2:
+
+```diff
+  "dependencies": {
+-    "mapbox-gl": "^1.13.0"
++    "maplibre-gl": ">=2.0.0"
+  }
+```
+
+
 And replace ```mapboxgl``` with ```maplibregl``` in your JavaScript and optionally in your HTML/CSS code:
 ```diff
+     <!--  Use maplibre-gl version 1.15.2 for backwards compatibility with mapbox-gl version 1.x. -->
++    <script src="https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.js"></script>
++    <link
++      href="https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.css"
++      rel="stylesheet"
++    />
+
+
 -    var map = new mapboxgl.Map({
 +    var map = new maplibregl.Map({
 
