@@ -1,11 +1,6 @@
 import Hash from './hash';
 import {setPerformance, createMap as globalCreateMap, setWebGlContext} from '../util/test/util';
 
-beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
-});
-
 describe('hash', () => {
     function createHash(name: string = '') {
         const hash = new Hash(name);
@@ -20,8 +15,21 @@ describe('hash', () => {
         return globalCreateMap({container}, undefined);
     }
 
+    let map;
+
+    beforeEach(() => {
+        setWebGlContext();
+        setPerformance();
+        map = createMap();
+    });
+
+    afterEach(() => {
+        if (map.removed === false) {
+            map.remove();
+        }
+    });
+
     test('#addTo', () => {
-        const map = createMap();
         const hash = createHash();
 
         expect(hash._map).toBeFalsy();
@@ -32,7 +40,6 @@ describe('hash', () => {
     });
 
     test('#remove', () => {
-        const map = createMap();
         const hash = createHash(undefined)
             .addTo(map);
 
@@ -44,7 +51,6 @@ describe('hash', () => {
     });
 
     test('#_onHashChange', () => {
-        const map = createMap();
         const hash = createHash(undefined)
             .addTo(map);
 
@@ -112,7 +118,6 @@ describe('hash', () => {
     });
 
     test('#_onHashChange empty', () => {
-        const map = createMap();
         const hash = createHash(undefined)
             .addTo(map);
 
@@ -138,7 +143,6 @@ describe('hash', () => {
     });
 
     test('#_onHashChange named', () => {
-        const map = createMap();
         const hash = createHash('map')
             .addTo(map);
 
@@ -168,7 +172,6 @@ describe('hash', () => {
     });
 
     test('#_getCurrentHash', () => {
-        const map = createMap();
         const hash = createHash(undefined)
             .addTo(map);
 
@@ -184,7 +187,6 @@ describe('hash', () => {
     });
 
     test('#_getCurrentHash named', () => {
-        const map = createMap();
         const hash = createHash('map')
             .addTo(map);
 
@@ -212,7 +214,6 @@ describe('hash', () => {
             return window.location.hash.split('/');
         }
 
-        const map = createMap();
         createHash(undefined)
             .addTo(map);
 
@@ -256,7 +257,6 @@ describe('hash', () => {
     });
 
     test('#_updateHash named', () => {
-        const map = createMap();
         createHash('map')
             .addTo(map);
 
@@ -296,8 +296,6 @@ describe('hash', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 512});
         Object.defineProperty(container, 'clientHeight', {value: 512});
-
-        const map = createMap();
 
         map.remove();
 
