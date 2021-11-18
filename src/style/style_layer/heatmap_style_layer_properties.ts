@@ -22,7 +22,7 @@ import type ResolvedImage from '../../style-spec/expression/types/resolved_image
 import {StylePropertySpecification} from '../../style-spec/style-spec';
 
 
-export type PaintProps = {
+export type HeatmapPaintProps = {
     "heatmap-radius": DataDrivenProperty<number>,
     "heatmap-weight": DataDrivenProperty<number>,
     "heatmap-intensity": DataConstantProperty<number>,
@@ -30,7 +30,7 @@ export type PaintProps = {
     "heatmap-opacity": DataConstantProperty<number>,
 };
 
-export type PaintPropsPossiblyEvaluated = {
+export type HeatmapPaintPropsPossiblyEvaluated = {
     "heatmap-radius": PossiblyEvaluatedPropertyValue<number>,
     "heatmap-weight": PossiblyEvaluatedPropertyValue<number>,
     "heatmap-intensity": number,
@@ -38,7 +38,7 @@ export type PaintPropsPossiblyEvaluated = {
     "heatmap-opacity": number,
 };
 
-const paint: Properties<PaintProps> = new Properties({
+const paint: Properties<HeatmapPaintProps> = new Properties({
     "heatmap-radius": new DataDrivenProperty(styleSpec["paint_heatmap"]["heatmap-radius"] as any as StylePropertySpecification),
     "heatmap-weight": new DataDrivenProperty(styleSpec["paint_heatmap"]["heatmap-weight"] as any as StylePropertySpecification),
     "heatmap-intensity": new DataConstantProperty(styleSpec["paint_heatmap"]["heatmap-intensity"] as any as StylePropertySpecification),
@@ -47,5 +47,5 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint } as {
-    paint: Properties<PaintProps>
+    paint: Properties<HeatmapPaintProps>
 });

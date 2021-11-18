@@ -21,7 +21,7 @@ import type Formatted from '../../style-spec/expression/types/formatted';
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
 import {StylePropertySpecification} from '../../style-spec/style-spec';
 
-export type LayoutProps = {
+export type LineLayoutProps = {
     "line-cap": DataConstantProperty<"butt" | "round" | "square">,
     "line-join": DataDrivenProperty<"bevel" | "round" | "miter">,
     "line-miter-limit": DataConstantProperty<number>,
@@ -29,7 +29,7 @@ export type LayoutProps = {
     "line-sort-key": DataDrivenProperty<number>,
 };
 
-export type LayoutPropsPossiblyEvaluated = {
+export type LineLayoutPropsPossiblyEvaluated = {
     "line-cap": "butt" | "round" | "square",
     "line-join": PossiblyEvaluatedPropertyValue<"bevel" | "round" | "miter">,
     "line-miter-limit": number,
@@ -37,7 +37,7 @@ export type LayoutPropsPossiblyEvaluated = {
     "line-sort-key": PossiblyEvaluatedPropertyValue<number>,
 };
 
-const layout: Properties<LayoutProps> = new Properties({
+const layout: Properties<LineLayoutProps> = new Properties({
     "line-cap": new DataConstantProperty(styleSpec["layout_line"]["line-cap"] as any as StylePropertySpecification),
     "line-join": new DataDrivenProperty(styleSpec["layout_line"]["line-join"] as any as StylePropertySpecification),
     "line-miter-limit": new DataConstantProperty(styleSpec["layout_line"]["line-miter-limit"] as any as StylePropertySpecification),
@@ -45,7 +45,7 @@ const layout: Properties<LayoutProps> = new Properties({
     "line-sort-key": new DataDrivenProperty(styleSpec["layout_line"]["line-sort-key"] as any as StylePropertySpecification),
 });
 
-export type PaintProps = {
+export type LinePaintProps = {
     "line-opacity": DataDrivenProperty<number>,
     "line-color": DataDrivenProperty<Color>,
     "line-translate": DataConstantProperty<[number, number]>,
@@ -59,7 +59,7 @@ export type PaintProps = {
     "line-gradient": ColorRampProperty,
 };
 
-export type PaintPropsPossiblyEvaluated = {
+export type LinePaintPropsPossiblyEvaluated = {
     "line-opacity": PossiblyEvaluatedPropertyValue<number>,
     "line-color": PossiblyEvaluatedPropertyValue<Color>,
     "line-translate": [number, number],
@@ -73,7 +73,7 @@ export type PaintPropsPossiblyEvaluated = {
     "line-gradient": ColorRampProperty,
 };
 
-const paint: Properties<PaintProps> = new Properties({
+const paint: Properties<LinePaintProps> = new Properties({
     "line-opacity": new DataDrivenProperty(styleSpec["paint_line"]["line-opacity"] as any as StylePropertySpecification),
     "line-color": new DataDrivenProperty(styleSpec["paint_line"]["line-color"] as any as StylePropertySpecification),
     "line-translate": new DataConstantProperty(styleSpec["paint_line"]["line-translate"] as any as StylePropertySpecification),
@@ -88,6 +88,6 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint, layout } as {
-    paint: Properties<PaintProps>,
-    layout: Properties<LayoutProps>
+    paint: Properties<LinePaintProps>,
+    layout: Properties<LineLayoutProps>
 });
