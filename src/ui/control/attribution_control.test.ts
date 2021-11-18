@@ -232,7 +232,6 @@ describe('AttributionControl', () => {
 
         let times = 0;
         map.on('data', (e) => {
-            console.log(`${e.dataType}---${e.sourceDataType}`);
             if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
                 if (++times === 3) {
                     expect(attribution._innerContainer.innerHTML).toBe('Used');
@@ -263,5 +262,111 @@ describe('AttributionControl', () => {
                 }
             }
         });
+    });
+
+    test('details is set correct for compact view after map load. In particular, it should NOT contain the attribute open="".', () => {
+        const attributionControl = new AttributionControl({
+            compact: true
+        });
+        map.addControl(attributionControl);
+
+        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty"
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+    });
+
+    test('details is set correct for compact view after click on summary. In particular, it SHOULD contain the attribute open="".', () => {
+        const attributionControl = new AttributionControl({
+            compact: true
+        });
+        map.addControl(attributionControl);
+        const container = map.getContainer();
+        const toggle = container.querySelector('.maplibregl-ctrl-attrib-button');
+
+        simulate.click(toggle);
+
+        expect(container.querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact-show mapboxgl-compact-show"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+    });
+
+    test('details is set correct for compact view after two clicks on summary. In particular, it should NOT contain the attribute open="".', () => {
+        const attributionControl = new AttributionControl({
+            compact: true
+        });
+        map.addControl(attributionControl);
+        const container = map.getContainer();
+        const toggle = container.querySelector('.maplibregl-ctrl-attrib-button');
+
+        simulate.click(toggle);
+        simulate.click(toggle);
+
+        expect(container.querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty"
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+    });
+
+    test('details is set correct for default view. In particular, it SHOULD contain the attribute open="".', () => {
+        const attributionControl = new AttributionControl({
+        });
+        map.addControl(attributionControl);
+
+        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
     });
 });
