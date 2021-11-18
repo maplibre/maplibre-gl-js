@@ -2,7 +2,7 @@ import Hash from './hash';
 import {setPerformance, createMap as globalCreateMap, setWebGlContext} from '../util/test/util';
 
 describe('hash', () => {
-    function createHash(name: string = '') {
+    function createHash(name: string = undefined) {
         const hash = new Hash(name);
         hash._updateHash = hash._updateHashUnthrottled.bind(hash);
         return hash;
@@ -27,6 +27,7 @@ describe('hash', () => {
         if (map.removed === false) {
             map.remove();
         }
+        window.location.hash = '';
     });
 
     test('#addTo', () => {
@@ -40,7 +41,7 @@ describe('hash', () => {
     });
 
     test('#remove', () => {
-        const hash = createHash(undefined)
+        const hash = createHash()
             .addTo(map);
 
         expect(hash._map).toBeTruthy();
@@ -51,7 +52,7 @@ describe('hash', () => {
     });
 
     test('#_onHashChange', () => {
-        const hash = createHash(undefined)
+        const hash = createHash()
             .addTo(map);
 
         window.location.hash = '#10/3.00/-1.00';
@@ -113,12 +114,10 @@ describe('hash', () => {
         window.location.hash = '#map=10/3.00/-1.00&foo=bar';
 
         expect(hash._onHashChange()).toBeFalsy();
-
-        window.location.hash = '';
     });
 
     test('#_onHashChange empty', () => {
-        const hash = createHash(undefined)
+        const hash = createHash()
             .addTo(map);
 
         window.location.hash = '#10/3.00/-1.00';
@@ -167,12 +166,10 @@ describe('hash', () => {
         window.location.hash = '#5/1.00/0.50/30/60';
 
         expect(hash._onHashChange()).toBeFalsy();
-
-        window.location.hash = '';
     });
 
     test('#_getCurrentHash', () => {
-        const hash = createHash(undefined)
+        const hash = createHash()
             .addTo(map);
 
         window.location.hash = '#10/3.00/-1.00';
@@ -182,8 +179,6 @@ describe('hash', () => {
         expect(currentHash[0]).toBe('10');
         expect(currentHash[1]).toBe('3.00');
         expect(currentHash[2]).toBe('-1.00');
-
-        window.location.hash = '';
     });
 
     test('#_getCurrentHash named', () => {
@@ -205,8 +200,6 @@ describe('hash', () => {
         expect(currentHash[0]).toBe('10');
         expect(currentHash[1]).toBe('3.00');
         expect(currentHash[2]).toBe('-1.00');
-
-        window.location.hash = '';
     });
 
     test('#_updateHash', () => {
@@ -214,7 +207,7 @@ describe('hash', () => {
             return window.location.hash.split('/');
         }
 
-        createHash(undefined)
+        createHash()
             .addTo(map);
 
         expect(window.location.hash).toBeFalsy();
@@ -252,8 +245,6 @@ describe('hash', () => {
         expect(newHash[2]).toBe('2');
         expect(newHash[3]).toBe('135');
         expect(newHash[4]).toBe('60');
-
-        window.location.hash = '';
     });
 
     test('#_updateHash named', () => {
@@ -288,8 +279,6 @@ describe('hash', () => {
         map.setCenter([2.0, 1.0]);
 
         expect(window.location.hash).toBe('#baz&map=7/1/2/135/60&foo=bar');
-
-        window.location.hash = '';
     });
 
     test('map#remove', () => {
