@@ -12,7 +12,7 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "types": "types/src/index.d.ts",
+  "types": "dist/maplibre-gl.d.ts",
   "type": "module",
   "dependencies": {
     "@mapbox/geojson-rewind": "^0.5.0",
@@ -101,6 +101,7 @@
     "d3": "^4.12.0",
     "diff": "^4.0.1",
     "documentation": "~12.1.1",
+    "dts-bundle-generator": "^6.0.0",
     "ejs": "^3.1.6",
     "eslint": "^7.32.0",
     "eslint-config-mourner": "^3.0.0",
@@ -174,8 +175,9 @@
   "scripts": {
     "build-glsl": "node build/copy-glsl-files.js ./rollup/build/tsc/src/shaders",
     "build-glsl-min": "node build/copy-glsl-files.js ./rollup/build/tsc/src/shaders true",
-    "build-tsc": "tsc && npm run build-glsl",
-    "build-tsc-min": "tsc && npm run build-glsl-min",
+    "build-tsc": "tsc && npm run build-dts && npm run build-glsl",
+    "build-tsc-min": "tsc && npm run build-dts && npm run build-glsl-min",
+    "build-dts": "dts-bundle-generator --no-check --umd-module-name=maplibregl -o ./types/src/maplibre-gl.d.ts ./src/index.ts && awk '{gsub(/declare class/,\"export declare class\")}1' ./types/src/maplibre-gl.d.ts > ./dist/maplibre-gl.d.ts",
     "build-dev": "npm run build-tsc && rollup -c --environment BUILD:dev",
     "watch-dev": "npm run build-tsc && rollup -c --environment BUILD:dev --watch",
     "build-prod": "npm run build-tsc && rollup -c --environment BUILD:production",
@@ -214,7 +216,6 @@
     "build/",
     "dist/maplibre-gl*",
     "dist/style-spec/",
-    "types/",
     "src/"
   ]
 }
