@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "2.0.0-pre.5",
+  "version": "2.0.0-pre.6",
   "main": "dist/maplibre-gl.js",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -12,7 +12,7 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "types": "types/index.d.ts",
+  "types": "dist/maplibre-gl.d.ts",
   "type": "module",
   "dependencies": {
     "@mapbox/geojson-rewind": "^0.5.0",
@@ -101,6 +101,7 @@
     "d3": "^4.12.0",
     "diff": "^4.0.1",
     "documentation": "~12.1.1",
+    "dts-bundle-generator": "^6.0.0",
     "ejs": "^3.1.6",
     "eslint": "^7.32.0",
     "eslint-config-mourner": "^3.0.0",
@@ -172,10 +173,10 @@
     "./rollup/build/tsc/src/util/web_worker.js": "./build/web_worker_replacement.js"
   },
   "scripts": {
-    "build-glsl": "node build/copy-glsl-files.js ./rollup/build/tsc/src/shaders",
-    "build-glsl-min": "node build/copy-glsl-files.js ./rollup/build/tsc/src/shaders true",
-    "build-tsc": "tsc && npm run build-glsl",
-    "build-tsc-min": "tsc && npm run build-glsl-min",
+    "build-post-ts": "node build/post-ts-build.js ./rollup/build/tsc/src/shaders",
+    "build-post-ts-min": "node build/post-ts-build.js ./rollup/build/tsc/src/shaders true",
+    "build-tsc": "tsc && npm run build-post-ts",
+    "build-tsc-min": "tsc && npm run build-post-ts-min",
     "build-dev": "npm run build-tsc && rollup -c --environment BUILD:dev",
     "watch-dev": "npm run build-tsc && rollup -c --environment BUILD:dev --watch",
     "build-prod": "npm run build-tsc && rollup -c --environment BUILD:production",
@@ -214,7 +215,6 @@
     "build/",
     "dist/maplibre-gl*",
     "dist/style-spec/",
-    "types/",
     "src/"
   ]
 }

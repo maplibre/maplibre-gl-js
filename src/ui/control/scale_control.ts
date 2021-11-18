@@ -4,7 +4,7 @@ import {extend, bindAll} from '../../util/util';
 import type Map from '../map';
 import type {ControlPosition, IControl} from './control';
 
-type Unit = 'imperial' | 'metric' | 'nautical';
+export type Unit = 'imperial' | 'metric' | 'nautical';
 
 type ScaleOptions = {
   maxWidth?: number;

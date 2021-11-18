@@ -1,7 +1,9 @@
 import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events';
+import {Handler} from '../handler_manager';
 import type Map from '../map';
 import type Point from '../../util/point';
-export class MapEventHandler {
+
+export class MapEventHandler implements Handler {
 
     _mousedownPos: Point;
     _clickTolerance: number;
