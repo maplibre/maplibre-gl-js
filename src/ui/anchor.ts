@@ -1,7 +1,7 @@
-export type Anchor = 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+export type PositionAnchor = 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 export const anchorTranslate: {
-  [_ in Anchor]: string;
+  [_ in PositionAnchor]: string;
 } = {
     'center': 'translate(-50%,-50%)',
     'top': 'translate(-50%,0)',
@@ -14,7 +14,7 @@ export const anchorTranslate: {
     'right': 'translate(-100%,-50%)'
 };
 
-export function applyAnchorClass(element: HTMLElement, anchor: Anchor, prefix: string) {
+export function applyAnchorClass(element: HTMLElement, anchor: PositionAnchor, prefix: string) {
     const classList = element.classList;
     for (const key in anchorTranslate) {
         classList.remove(`maplibregl-${prefix}-anchor-${key}`, `mapboxgl-${prefix}-anchor-${key}`);
