@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "2.0.0-pre.5",
+  "version": "2.0.0-pre.6",
   "main": "dist/maplibre-gl.js",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -173,11 +173,10 @@
     "./rollup/build/tsc/src/util/web_worker.js": "./build/web_worker_replacement.js"
   },
   "scripts": {
-    "build-glsl": "node build/copy-glsl-files.js ./rollup/build/tsc/src/shaders",
-    "build-glsl-min": "node build/copy-glsl-files.js ./rollup/build/tsc/src/shaders true",
-    "build-tsc": "tsc && npm run build-dts && npm run build-glsl",
-    "build-tsc-min": "tsc && npm run build-dts && npm run build-glsl-min",
-    "build-dts": "dts-bundle-generator --no-check --umd-module-name=maplibregl -o ./types/src/maplibre-gl.d.ts ./src/index.ts && awk '{gsub(/declare class/,\"export declare class\")}1' ./types/src/maplibre-gl.d.ts > ./dist/maplibre-gl.d.ts",
+    "build-post-ts": "node build/post-ts-build.js ./rollup/build/tsc/src/shaders",
+    "build-post-ts-min": "node build/post-ts-build.js ./rollup/build/tsc/src/shaders true",
+    "build-tsc": "tsc && npm run build-post-ts",
+    "build-tsc-min": "tsc && npm run build-post-ts-min",
     "build-dev": "npm run build-tsc && rollup -c --environment BUILD:dev",
     "watch-dev": "npm run build-tsc && rollup -c --environment BUILD:dev --watch",
     "build-prod": "npm run build-tsc && rollup -c --environment BUILD:production",
