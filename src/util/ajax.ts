@@ -3,7 +3,6 @@ import config from './config';
 import assert from 'assert';
 import {cacheGet, cachePut} from './tile_request_cache';
 import webpSupported from './webp_supported';
-import offscreenCanvasSupported from './offscreen_canvas_supported';
 
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
@@ -323,6 +322,15 @@ function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | nu
     });
 }
 
+function arrayBufferToCanvasImageSource(data: ArrayBuffer, callback: (err?: Error | null, image?: CanvasImageSource | null) => void, cacheControl?: string | null, expires?: string | null) {
+    const imageBitmapSupported = typeof createImageBitmap === 'function';
+    if (imageBitmapSupported) {
+        arrayBufferToImageBitmap(data, callback);
+    } else {
+        arrayBufferToImage(data, callback, cacheControl, expires);
+    }
+}
+
 let imageQueue, numImageRequests;
 export const resetImageRequestQueue = () => {
     imageQueue = [];
@@ -378,11 +386,7 @@ export const getImage = function(
         if (err) {
             callback(err);
         } else if (data) {
-            if (offscreenCanvasSupported()) {
-                arrayBufferToImageBitmap(data, callback);
-            } else {
-                arrayBufferToImage(data, callback, cacheControl, expires);
-            }
+            arrayBufferToCanvasImageSource(data, callback, cacheControl, expires);
         }
     });
 
