@@ -93,15 +93,28 @@ highp float unpack(highp vec4 color) {
    return dot(color , bitShifts);
 }
 
+// calculate the opacity behind terrain, returns a value between 0 and 1.
+highp float depthOpacity(vec3 frag) {
+    #ifdef TERRAIN3D
+        // create the delta between frag.z + terrain.z.
+        highp float d = (unpack(texture2D(u_depth, frag.xy * 0.5 + 0.5)) + 0.0001 - frag.z);
+        // visibility range is between 0 and 0.002. 0 is visible, 0.002 is fully invisible.
+        return 1.0 - max(0.0, min(1.0, -d * 500.0));
+    #else
+        return 1.0;
+    #endif
+}
+
 // calculate the visibility of a coordinate in terrain and return an opacity value.
 // if a coordinate is behind the terrain reduce its opacity
 float calculate_visibility(vec4 pos) {
     #ifdef TERRAIN3D
         vec3 frag = pos.xyz / pos.w;
-        vec4 rgba = texture2D(u_depth, frag.xy * 0.5 + 0.5);
-        highp float depth = unpack(rgba);
-        if ((depth + 0.001) < frag.z) return 0.2;
-        return 1.0;
+        // check if coordingate is fully visible
+        highp float d = depthOpacity(frag);
+        if (d > 0.95) return 1.0;
+        // if not, go some pixel above and check it this point is visible
+        return (d + depthOpacity(frag + vec3(0.0, 0.01, 0.0))) / 2.0;
     #else
         return 1.0;
     #endif
