@@ -97,7 +97,7 @@ highp float unpack(highp vec4 color) {
 highp float depthOpacity(vec3 frag) {
     #ifdef TERRAIN3D
         // create the delta between frag.z + terrain.z.
-        highp float d = (unpack(texture2D(u_depth, frag.xy * 0.5 + 0.5)) + 0.0001 - frag.z);
+        highp float d = unpack(texture2D(u_depth, frag.xy * 0.5 + 0.5)) + 0.0001 - frag.z;
         // visibility range is between 0 and 0.002. 0 is visible, 0.002 is fully invisible.
         return 1.0 - max(0.0, min(1.0, -d * 500.0));
     #else
