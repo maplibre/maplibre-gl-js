@@ -1,7 +1,7 @@
 import {test} from '../../../util/test';
-import migrate from '../../../../rollup/build/tsc/src/style-spec/migrate/v9';
+import migrate from '../../style-spec/migrate/v9';
 
-test('deref layers', (t) => {
+describe('deref layers', () => {
     const input = {
         version: 8,
         sources: {
@@ -36,10 +36,9 @@ test('deref layers', (t) => {
         }]
     });
 
-    t.end();
 });
 
-test('declass style', (t) => {
+describe('declass style', () => {
     const input = {
         version: 8,
         sources: {
@@ -72,5 +71,4 @@ test('declass style', (t) => {
         }]
     });
 
-    t.end();
 });
