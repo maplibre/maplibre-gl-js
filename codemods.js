@@ -13,7 +13,7 @@ if (process.argv.length === 1) {
 
 if (automate) {
     let fileName = file.split('/').splice(-1)[0];
-    execSync(`git checkout -b ${fileName}`);
+    //execSync(`git checkout -b ${fileName}`);
     let destinationFile = file.replace('test/unit', 'src').replace('.js', '.ts');
     execSync(`git mv ${file} ${destinationFile}`);
     execSync('git commit -m "Move and rename"');

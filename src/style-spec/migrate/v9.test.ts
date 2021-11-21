@@ -1,7 +1,6 @@
-import {test} from '../../../util/test';
-import migrate from '../../style-spec/migrate/v9';
+import migrate from './v9';
 
-describe('deref layers', () => {
+test('deref layers', () => {
     const input = {
         version: 8,
         sources: {
@@ -38,7 +37,7 @@ describe('deref layers', () => {
 
 });
 
-describe('declass style', () => {
+test('declass style', () => {
     const input = {
         version: 8,
         sources: {
