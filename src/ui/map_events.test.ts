@@ -5,14 +5,14 @@ import simulate, {window} from '../../util/simulate_interaction';
 test('Map#on adds a non-delegated event listener', (t) => {
     const map = createMap(t);
     const spy = t.spy(function (e) {
-        t.equal(this, map);
-        t.equal(e.type, 'click');
+        expect(this).toBe(map);
+        expect(e.type).toBe('click');
     });
 
     map.on('click', spy);
     simulate.click(map.getCanvas());
 
-    t.ok(spy.calledOnce);
+    expect(spy.calledOnce).toBeTruthy();
     t.end();
 });
 
@@ -24,7 +24,7 @@ test('Map#off removes a non-delegated event listener', (t) => {
     map.off('click', spy);
     simulate.click(map.getCanvas());
 
-    t.ok(spy.notCalled);
+    expect(spy.notCalled).toBeTruthy();
     t.end();
 });
 
@@ -34,20 +34,20 @@ test('Map#on adds a listener for an event on a given layer', (t) => {
 
     t.stub(map, 'getLayer').returns({});
     t.stub(map, 'queryRenderedFeatures').callsFake((point, options) => {
-        t.deepEqual(options, {layers: ['layer']});
+        expect(options).toEqual({layers: ['layer']});
         return features;
     });
 
     const spy = t.spy(function (e) {
-        t.equal(this, map);
-        t.equal(e.type, 'click');
-        t.equal(e.features, features);
+        expect(this).toBe(map);
+        expect(e.type).toBe('click');
+        expect(e.features).toBe(features);
     });
 
     map.on('click', 'layer', spy);
     simulate.click(map.getCanvas());
 
-    t.ok(spy.calledOnce);
+    expect(spy.calledOnce).toBeTruthy();
     t.end();
 });
 
@@ -57,7 +57,7 @@ test('Map#on adds a listener not triggered for events not matching any features'
 
     t.stub(map, 'getLayer').returns({});
     t.stub(map, 'queryRenderedFeatures').callsFake((point, options) => {
-        t.deepEqual(options, {layers: ['layer']});
+        expect(options).toEqual({layers: ['layer']});
         return features;
     });
 
@@ -66,7 +66,7 @@ test('Map#on adds a listener not triggered for events not matching any features'
     map.on('click', 'layer', spy);
     simulate.click(map.getCanvas());
 
-    t.ok(spy.notCalled);
+    expect(spy.notCalled).toBeTruthy();
     t.end();
 });
 
@@ -80,7 +80,7 @@ test(`Map#on adds a listener not triggered when the specified layer does not exi
     map.on('click', 'layer', spy);
     simulate.click(map.getCanvas());
 
-    t.ok(spy.notCalled);
+    expect(spy.notCalled).toBeTruthy();
     t.end();
 });
 
@@ -91,19 +91,19 @@ test('Map#on distinguishes distinct event types', (t) => {
     t.stub(map, 'queryRenderedFeatures').returns([{}]);
 
     const spyDown = t.spy((e) => {
-        t.equal(e.type, 'mousedown');
+        expect(e.type).toBe('mousedown');
     });
 
     const spyUp = t.spy((e) => {
-        t.equal(e.type, 'mouseup');
+        expect(e.type).toBe('mouseup');
     });
 
     map.on('mousedown', 'layer', spyDown);
     map.on('mouseup', 'layer', spyUp);
     simulate.click(map.getCanvas());
 
-    t.ok(spyDown.calledOnce);
-    t.ok(spyUp.calledOnce);
+    expect(spyDown.calledOnce).toBeTruthy();
+    expect(spyUp.calledOnce).toBeTruthy();
     t.end();
 });
 
@@ -118,19 +118,19 @@ test('Map#on distinguishes distinct layers', (t) => {
     });
 
     const spyA = t.spy((e) => {
-        t.equal(e.features, featuresA);
+        expect(e.features).toBe(featuresA);
     });
 
     const spyB = t.spy((e) => {
-        t.equal(e.features, featuresB);
+        expect(e.features).toBe(featuresB);
     });
 
     map.on('click', 'A', spyA);
     map.on('click', 'B', spyB);
     simulate.click(map.getCanvas());
 
-    t.ok(spyA.calledOnce);
-    t.ok(spyB.calledOnce);
+    expect(spyA.calledOnce).toBeTruthy();
+    expect(spyB.calledOnce).toBeTruthy();
     t.end();
 });
 
@@ -147,8 +147,8 @@ test('Map#on distinguishes distinct listeners', (t) => {
     map.on('click', 'layer', spyB);
     simulate.click(map.getCanvas());
 
-    t.ok(spyA.calledOnce);
-    t.ok(spyB.calledOnce);
+    expect(spyA.calledOnce).toBeTruthy();
+    expect(spyB.calledOnce).toBeTruthy();
     t.end();
 });
 
@@ -164,7 +164,7 @@ test('Map#off removes a delegated event listener', (t) => {
     map.off('click', 'layer', spy);
     simulate.click(map.getCanvas());
 
-    t.ok(spy.notCalled);
+    expect(spy.notCalled).toBeTruthy();
     t.end();
 });
 
@@ -175,7 +175,7 @@ test('Map#off distinguishes distinct event types', (t) => {
     t.stub(map, 'queryRenderedFeatures').returns([{}]);
 
     const spy = t.spy((e) => {
-        t.equal(e.type, 'mousedown');
+        expect(e.type).toBe('mousedown');
     });
 
     map.on('mousedown', 'layer', spy);
@@ -183,7 +183,7 @@ test('Map#off distinguishes distinct event types', (t) => {
     map.off('mouseup', 'layer', spy);
     simulate.click(map.getCanvas());
 
-    t.ok(spy.calledOnce);
+    expect(spy.calledOnce).toBeTruthy();
     t.end();
 });
 
@@ -193,12 +193,12 @@ test('Map#off distinguishes distinct layers', (t) => {
 
     t.stub(map, 'getLayer').returns({});
     t.stub(map, 'queryRenderedFeatures').callsFake((point, options) => {
-        t.deepEqual(options, {layers: ['A']});
+        expect(options).toEqual({layers: ['A']});
         return featuresA;
     });
 
     const spy = t.spy((e) => {
-        t.equal(e.features, featuresA);
+        expect(e.features).toBe(featuresA);
     });
 
     map.on('click', 'A', spy);
@@ -206,7 +206,7 @@ test('Map#off distinguishes distinct layers', (t) => {
     map.off('click', 'B', spy);
     simulate.click(map.getCanvas());
 
-    t.ok(spy.calledOnce);
+    expect(spy.calledOnce).toBeTruthy();
     t.end();
 });
 
@@ -224,8 +224,8 @@ test('Map#off distinguishes distinct listeners', (t) => {
     map.off('click', 'layer', spyB);
     simulate.click(map.getCanvas());
 
-    t.ok(spyA.calledOnce);
-    t.ok(spyB.notCalled);
+    expect(spyA.calledOnce).toBeTruthy();
+    expect(spyB.notCalled).toBeTruthy();
     t.end();
 });
 
@@ -241,7 +241,7 @@ test('Map#off distinguishes distinct listeners', (t) => {
         simulate.mousemove(map.getCanvas());
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spy.notCalled);
+        expect(spy.notCalled).toBeTruthy();
         t.end();
     });
 
@@ -251,21 +251,21 @@ test('Map#off distinguishes distinct listeners', (t) => {
 
         t.stub(map, 'getLayer').returns({});
         t.stub(map, 'queryRenderedFeatures').callsFake((point, options) => {
-            t.deepEqual(options, {layers: ['layer']});
+            expect(options).toEqual({layers: ['layer']});
             return features;
         });
 
         const spy = t.spy(function (e) {
-            t.equal(this, map);
-            t.equal(e.type, event);
-            t.equal(e.target, map);
-            t.equal(e.features, features);
+            expect(this).toBe(map);
+            expect(e.type).toBe(event);
+            expect(e.target).toBe(map);
+            expect(e.features).toBe(features);
         });
 
         map.on(event, 'layer', spy);
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spy.calledOnce);
+        expect(spy.calledOnce).toBeTruthy();
         t.end();
     });
 
@@ -281,7 +281,7 @@ test('Map#off distinguishes distinct listeners', (t) => {
         simulate.mousemove(map.getCanvas());
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spy.calledOnce);
+        expect(spy.calledOnce).toBeTruthy();
         t.end();
     });
 
@@ -301,7 +301,7 @@ test('Map#off distinguishes distinct listeners', (t) => {
         simulate.mousemove(map.getCanvas());
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spy.calledTwice);
+        expect(spy.calledTwice).toBeTruthy();
         t.end();
     });
 
@@ -318,7 +318,7 @@ test('Map#off distinguishes distinct listeners', (t) => {
         simulate.mouseout(map.getCanvas());
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spy.calledTwice);
+        expect(spy.calledTwice).toBeTruthy();
         t.end();
     });
 
@@ -333,11 +333,11 @@ test('Map#off distinguishes distinct listeners', (t) => {
         });
 
         const spyA = t.spy((e) => {
-            t.equal(e.features, featuresA);
+            expect(e.features).toBe(featuresA);
         });
 
         const spyB = t.spy((e) => {
-            t.equal(e.features, featuresB);
+            expect(e.features).toBe(featuresB);
         });
 
         map.on(event, 'A', spyA);
@@ -346,8 +346,8 @@ test('Map#off distinguishes distinct listeners', (t) => {
         simulate.mousemove(map.getCanvas());
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spyA.calledOnce);
-        t.ok(spyB.calledOnce);
+        expect(spyA.calledOnce).toBeTruthy();
+        expect(spyB.calledOnce).toBeTruthy();
         t.end();
     });
 
@@ -364,8 +364,8 @@ test('Map#off distinguishes distinct listeners', (t) => {
         map.on(event, 'layer', spyB);
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spyA.calledOnce);
-        t.ok(spyB.calledOnce);
+        expect(spyA.calledOnce).toBeTruthy();
+        expect(spyB.calledOnce).toBeTruthy();
         t.end();
     });
 
@@ -381,7 +381,7 @@ test('Map#off distinguishes distinct listeners', (t) => {
         map.off(event, 'layer', spy);
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spy.notCalled);
+        expect(spy.notCalled).toBeTruthy();
         t.end();
     });
 
@@ -391,12 +391,12 @@ test('Map#off distinguishes distinct listeners', (t) => {
 
         t.stub(map, 'getLayer').returns({});
         t.stub(map, 'queryRenderedFeatures').callsFake((point, options) => {
-            t.deepEqual(options, {layers: ['A']});
+            expect(options).toEqual({layers: ['A']});
             return featuresA;
         });
 
         const spy = t.spy((e) => {
-            t.equal(e.features, featuresA);
+            expect(e.features).toBe(featuresA);
         });
 
         map.on(event, 'A', spy);
@@ -404,7 +404,7 @@ test('Map#off distinguishes distinct listeners', (t) => {
         map.off(event, 'B', spy);
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spy.calledOnce);
+        expect(spy.calledOnce).toBeTruthy();
         t.end();
     });
 
@@ -422,8 +422,8 @@ test('Map#off distinguishes distinct listeners', (t) => {
         map.off(event, 'layer', spyB);
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spyA.calledOnce);
-        t.ok(spyB.notCalled);
+        expect(spyA.calledOnce).toBeTruthy();
+        expect(spyB.notCalled).toBeTruthy();
         t.end();
     });
 });
@@ -440,7 +440,7 @@ test('Map#off distinguishes distinct listeners', (t) => {
         simulate.mousemove(map.getCanvas());
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spy.notCalled);
+        expect(spy.notCalled).toBeTruthy();
         t.end();
     });
 
@@ -456,7 +456,7 @@ test('Map#off distinguishes distinct listeners', (t) => {
         simulate.mousemove(map.getCanvas());
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spy.notCalled);
+        expect(spy.notCalled).toBeTruthy();
         t.end();
     });
 
@@ -469,16 +469,16 @@ test('Map#off distinguishes distinct listeners', (t) => {
             .onSecondCall().returns([]);
 
         const spy = t.spy(function (e) {
-            t.equal(this, map);
-            t.equal(e.type, event);
-            t.equal(e.features, undefined);
+            expect(this).toBe(map);
+            expect(e.type).toBe(event);
+            expect(e.features).toBe(undefined);
         });
 
         map.on(event, 'layer', spy);
         simulate.mousemove(map.getCanvas());
         simulate.mousemove(map.getCanvas());
 
-        t.ok(spy.calledOnce);
+        expect(spy.calledOnce).toBeTruthy();
         t.end();
     });
 
@@ -489,16 +489,16 @@ test('Map#off distinguishes distinct listeners', (t) => {
         t.stub(map, 'queryRenderedFeatures').returns([{}]);
 
         const spy = t.spy(function (e) {
-            t.equal(this, map);
-            t.equal(e.type, event);
-            t.equal(e.features, undefined);
+            expect(this).toBe(map);
+            expect(e.type).toBe(event);
+            expect(e.features).toBe(undefined);
         });
 
         map.on(event, 'layer', spy);
         simulate.mousemove(map.getCanvas());
         simulate.mouseout(map.getCanvas());
 
-        t.ok(spy.calledOnce);
+        expect(spy.calledOnce).toBeTruthy();
         t.end();
     });
 
@@ -518,7 +518,7 @@ test('Map#off distinguishes distinct listeners', (t) => {
         simulate.mousemove(map.getCanvas());
         simulate.mouseout(map.getCanvas());
 
-        t.ok(spy.notCalled);
+        expect(spy.notCalled).toBeTruthy();
         t.end();
     });
 });
@@ -532,7 +532,7 @@ test(`Map#on mousedown can have default behavior prevented and still fire subseq
     map.on('click', click);
 
     simulate.click(map.getCanvas());
-    t.ok(click.callCount, 1);
+    expect(click.callCount).toBeTruthy();
 
     map.remove();
     t.end();
@@ -548,7 +548,7 @@ test(`Map#on mousedown doesn't fire subsequent click event if mousepos changes`,
     const canvas = map.getCanvas();
 
     simulate.drag(canvas, {}, {clientX: 100, clientY: 100});
-    t.ok(click.notCalled);
+    expect(click.notCalled).toBeTruthy();
 
     map.remove();
     t.end();
@@ -564,7 +564,7 @@ test(`Map#on mousedown fires subsequent click event if mouse position changes le
     const canvas = map.getCanvas();
 
     simulate.drag(canvas, {clientX: 100, clientY: 100}, {clientX: 100, clientY: 103});
-    t.ok(click.called);
+    expect(click.called).toBeTruthy();
 
     map.remove();
     t.end();
@@ -580,7 +580,7 @@ test(`Map#on mousedown does not fire subsequent click event if mouse position ch
     const canvas = map.getCanvas();
 
     simulate.drag(canvas, {clientX: 100, clientY: 100}, {clientX: 100, clientY: 104});
-    t.ok(click.notCalled);
+    expect(click.notCalled).toBeTruthy();
 
     map.remove();
     t.end();
@@ -596,7 +596,7 @@ test(`Map#on click fires subsequent click event if there is no corresponding mou
     const MouseEvent = window(canvas).MouseEvent;
     const event = new MouseEvent('click', {bubbles: true, clientX: 100, clientY: 100});
     canvas.dispatchEvent(event);
-    t.ok(click.called);
+    expect(click.called).toBeTruthy();
 
     map.remove();
     t.end();
@@ -613,19 +613,19 @@ test("Map#isMoving() returns false in mousedown/mouseup/click with no movement",
     const MouseEvent = window(canvas).MouseEvent;
 
     canvas.dispatchEvent(new MouseEvent('mousedown', {bubbles: true, clientX: 100, clientY: 100}));
-    t.equal(mousedown, false);
+    expect(mousedown).toBe(false);
     map._renderTaskQueue.run();
-    t.equal(mousedown, false);
+    expect(mousedown).toBe(false);
 
     canvas.dispatchEvent(new MouseEvent('mouseup', {bubbles: true, clientX: 100, clientY: 100}));
-    t.equal(mouseup, false);
+    expect(mouseup).toBe(false);
     map._renderTaskQueue.run();
-    t.equal(mouseup, false);
+    expect(mouseup).toBe(false);
 
     canvas.dispatchEvent(new MouseEvent('click', {bubbles: true, clientX: 100, clientY: 100}));
-    t.equal(click, false);
+    expect(click).toBe(false);
     map._renderTaskQueue.run();
-    t.equal(click, false);
+    expect(click).toBe(false);
 
     map.remove();
     t.end();
