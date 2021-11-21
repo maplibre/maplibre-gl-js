@@ -3,6 +3,12 @@ import Transform from '../geo/transform';
 import TaskQueue, {TaskID} from '../util/task_queue';
 import browser from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/util/fixed';
+import {setMatchMedia} from '../util/test/util';
+
+beforeEach(() => {
+    setMatchMedia();
+    Object.defineProperty(browser, 'prefersReducedMotion', {value: false});
+});
 
 class TestCamera extends Camera {
     // eslint-disable-next-line
@@ -694,7 +700,7 @@ describe('#easeTo', () => {
         camera.easeTo({duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
-        expect(camera.getBearing()).toBe(0);
+        expect(camera.getBearing()).toBeCloseTo(0);
         done();
     });
 
@@ -703,7 +709,7 @@ describe('#easeTo', () => {
         camera.easeTo({offset: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
-        expect(camera.getBearing()).toBe(0);
+        expect(camera.getBearing()).toBeCloseTo(0);
         done();
     });
 
@@ -930,10 +936,8 @@ describe('#easeTo', () => {
 
     test('animation occurs when prefers-reduced-motion: reduce is set but overridden by essential: true', done => {
         const camera = createCamera(undefined);
-        const stubPrefersReducedMotion = jest.spyOn(browser as any, 'prefersReducedMotion') as any;
+        Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
         const stubNow = jest.spyOn(browser, 'now');
-
-        stubPrefersReducedMotion.get(() => true);
 
         // camera transition expected to take in this range when prefersReducedMotion is set and essential: true,
         // when a duration of 200 is requested
@@ -965,8 +969,7 @@ describe('#easeTo', () => {
 
     test('duration is 0 when prefers-reduced-motion: reduce is set', done => {
         const camera = createCamera(undefined);
-        const stub = jest.spyOn(browser as any, 'prefersReducedMotion') as any;
-        stub.get(() => true);
+        Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
         assertTransitionTime(done, camera, 0, 10);
         camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 1000});
     });
@@ -1089,7 +1092,7 @@ describe('#flyTo', () => {
         camera.flyTo({animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
-        expect(camera.getBearing()).toBe(0);
+        expect(camera.getBearing()).toBeCloseTo(0);
         done();
     });
 
@@ -1098,7 +1101,7 @@ describe('#flyTo', () => {
         camera.flyTo({offset: [100, 0], animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
-        expect(camera.getBearing()).toBe(0);
+        expect(camera.getBearing()).toBeCloseTo(0);
         done();
     });
 
@@ -1623,8 +1626,7 @@ describe('#flyTo', () => {
             .on('moveend', () => {
                 endTime = new Date();
                 timeDiff = endTime - startTime;
-                expect(timeDiff).toBeCloseTo(0);
-                //equalWithPrecision(t, timeDiff, 0, 1e+1);
+                expect(timeDiff / 10).toBeCloseTo(0);
                 done();
             });
 
@@ -1633,8 +1635,7 @@ describe('#flyTo', () => {
 
     test('flys instantly when prefers-reduce-motion:reduce is set', done => {
         const camera = createCamera(undefined);
-        const stub = jest.spyOn(browser as any, 'prefersReducedMotion') as any;
-        stub.get(() => true);
+        Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
         assertTransitionTime(done, camera, 0, 10);
         camera.flyTo({center: [100, 0], bearing: 90, animate: true});
     });
@@ -1973,7 +1974,7 @@ describe('#fitScreenCoordinates', () => {
         camera.fitScreenCoordinates(p0, p1, bearing, {duration:0});
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2);
-        expect(camera.getBearing()).toBe(0);
+        expect(camera.getBearing()).toBeCloseTo(0);
         done();
     });
 
@@ -1986,7 +1987,7 @@ describe('#fitScreenCoordinates', () => {
         camera.fitScreenCoordinates(p0, p1, bearing, {duration:0});
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2);
-        expect(camera.getBearing()).toBe(0);
+        expect(camera.getBearing()).toBeCloseTo(0);
         done();
     });
 });
