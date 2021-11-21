@@ -10,7 +10,7 @@ beforeEach(() => {
     Object.defineProperty(browser, 'prefersReducedMotion', {value: false});
 });
 
-class TestCamera extends Camera {
+class CameraMock extends Camera {
     // eslint-disable-next-line
     _requestRenderFrame(a: () => void): TaskID {
         return undefined;
@@ -29,13 +29,13 @@ function attachSimulateFrame(camera) {
     return camera;
 }
 
-function createCamera(options) {
+function createCamera(options?) {
     options = options || {};
 
     const transform = new Transform(0, 20, 0, 60, options.renderWorldCopies);
     transform.resize(512, 512);
 
-    const camera = attachSimulateFrame(new TestCamera(transform, {} as any))
+    const camera = attachSimulateFrame(new CameraMock(transform, {} as any))
         .jumpTo(options);
 
     camera._update = () => {};
@@ -245,7 +245,7 @@ describe('#setCenter', () => {
 });
 
 describe('#setZoom', () => {
-    const camera = createCamera(undefined);
+    const camera = createCamera();
 
     test('sets zoom', done => {
         camera.setZoom(3);
@@ -286,7 +286,7 @@ describe('#setZoom', () => {
 });
 
 describe('#setBearing', () => {
-    const camera = createCamera(undefined);
+    const camera = createCamera();
 
     test('sets bearing', done => {
         camera.setBearing(4);
@@ -328,7 +328,7 @@ describe('#setBearing', () => {
 
 describe('#setPadding', () => {
     test('sets padding', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const padding = {left: 300, top: 100, right: 50, bottom: 10};
         camera.setPadding(padding);
         expect(camera.getPadding()).toEqual(padding);
@@ -336,7 +336,7 @@ describe('#setPadding', () => {
     });
 
     test('existing padding is retained if no new values are passed in', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const padding = {left: 300, top: 100, right: 50, bottom: 10};
         camera.setPadding(padding);
         camera.setPadding({});
@@ -347,7 +347,7 @@ describe('#setPadding', () => {
     });
 
     test('doesnt change padding thats already present if new value isnt passed in', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const padding = {left: 300, top: 100, right: 50, bottom: 10};
         camera.setPadding(padding);
         const padding1 = {right: 100};
@@ -366,7 +366,7 @@ describe('#setPadding', () => {
 
 describe('#panBy', () => {
     test('pans by specified amount', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.panBy([100, 0], {duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 70.3125, lat: 0});
         done();
@@ -380,7 +380,7 @@ describe('#panBy', () => {
     });
 
     test('emits move events, preserving eventData', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         let started, moved;
         const eventData = {data: 'ok'};
 
@@ -398,7 +398,7 @@ describe('#panBy', () => {
     });
 
     test('supresses movestart if noMoveStart option is true', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         let started;
 
         // fire once in advance to satisfy assertions that moveend only comes after movestart
@@ -418,14 +418,14 @@ describe('#panBy', () => {
 
 describe('#panTo', () => {
     test('pans to specified location', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.panTo([100, 0], {duration: 0});
         expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
         done();
     });
 
     test('throws on invalid center argument', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         expect(() => {
             camera.panTo({center: 1});
         }).toThrow(Error);
@@ -433,7 +433,7 @@ describe('#panTo', () => {
     });
 
     test('pans with specified offset', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.panTo([100, 0], {offset: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
         done();
@@ -447,7 +447,7 @@ describe('#panTo', () => {
     });
 
     test('emits move events, preserving eventData', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         let started, moved;
         const eventData = {data: 'ok'};
 
@@ -465,7 +465,7 @@ describe('#panTo', () => {
     });
 
     test('supresses movestart if noMoveStart option is true', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         let started;
 
         // fire once in advance to satisfy assertions that moveend only comes after movestart
@@ -485,14 +485,14 @@ describe('#panTo', () => {
 
 describe('#zoomTo', () => {
     test('zooms to specified level', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.zoomTo(3.2, {duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         done();
     });
 
     test('zooms around specified location', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.zoomTo(3.2, {around: [5, 0], duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 4.455905897939886, lat: 0}));
@@ -500,7 +500,7 @@ describe('#zoomTo', () => {
     });
 
     test('zooms with specified offset', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.zoomTo(3.2, {offset: [100, 0], duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 62.66117668978015, lat: 0}));
@@ -516,7 +516,7 @@ describe('#zoomTo', () => {
     });
 
     test('emits move and zoom events, preserving eventData', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         let movestarted, moved, zoomstarted, zoomed;
         const eventData = {data: 'ok'};
 
@@ -548,7 +548,7 @@ describe('#zoomTo', () => {
 
 describe('#rotateTo', () => {
     test('rotates to specified bearing', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.rotateTo(90, {duration: 0});
         expect(camera.getBearing()).toBe(90);
         done();
@@ -595,7 +595,7 @@ describe('#rotateTo', () => {
     });
 
     test('emits move and rotate events, preserving eventData', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         let movestarted, moved, rotatestarted, rotated;
         const eventData = {data: 'ok'};
 
@@ -627,35 +627,35 @@ describe('#rotateTo', () => {
 
 describe('#easeTo', () => {
     test('pans to specified location', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({center: [100, 0], duration: 0});
         expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
         done();
     });
 
     test('zooms to specified level', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({zoom: 3.2, duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         done();
     });
 
     test('rotates to specified bearing', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({bearing: 90, duration: 0});
         expect(camera.getBearing()).toBe(90);
         done();
     });
 
     test('pitches to specified pitch', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({pitch: 45, duration: 0});
         expect(camera.getPitch()).toBe(45);
         done();
     });
 
     test('pans and zooms', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({center: [100, 0], zoom: 3.2, duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 100, lat: 0}));
         expect(camera.getZoom()).toBe(3.2);
@@ -663,7 +663,7 @@ describe('#easeTo', () => {
     });
 
     test('zooms around a point', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({around: [100, 0], zoom: 3, duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 87.5, lat: 0}));
         expect(camera.getZoom()).toBe(3);
@@ -671,7 +671,7 @@ describe('#easeTo', () => {
     });
 
     test('pans and rotates', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({center: [100, 0], bearing: 90, duration: 0});
         expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
         expect(camera.getBearing()).toBe(90);
@@ -679,7 +679,7 @@ describe('#easeTo', () => {
     });
 
     test('zooms and rotates', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({zoom: 3.2, bearing: 90, duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         expect(camera.getBearing()).toBe(90);
@@ -696,7 +696,7 @@ describe('#easeTo', () => {
     });
 
     test('noop', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
@@ -705,7 +705,7 @@ describe('#easeTo', () => {
     });
 
     test('noop with offset', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({offset: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
@@ -714,7 +714,7 @@ describe('#easeTo', () => {
     });
 
     test('pans with specified offset', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
         done();
@@ -728,7 +728,7 @@ describe('#easeTo', () => {
     });
 
     test('zooms with specified offset', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 62.66117668978015, lat: 0}));
@@ -744,7 +744,7 @@ describe('#easeTo', () => {
     });
 
     test('rotates with specified offset', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
         expect(camera.getBearing()).toBe(90);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 70.3125, lat: 0.000002552471840999715}));
@@ -760,7 +760,7 @@ describe('#easeTo', () => {
     });
 
     test('emits move, zoom, rotate, and pitch events, preserving eventData', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched;
         const eventData = {data: 'ok'};
 
@@ -816,7 +816,7 @@ describe('#easeTo', () => {
     });
 
     test('does not emit zoom events if not zooming', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
 
         camera
             .on('zoomstart', () => { fail(); })
@@ -828,7 +828,7 @@ describe('#easeTo', () => {
     });
 
     test('stops existing ease', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.easeTo({center: [200, 0], duration: 100});
         camera.easeTo({center: [100, 0], duration: 0});
         expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
@@ -836,7 +836,7 @@ describe('#easeTo', () => {
     });
 
     test('can be called from within a moveend event handler', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
         stub.mockImplementation(() => 0);
@@ -871,7 +871,7 @@ describe('#easeTo', () => {
     });
 
     test('pans eastward across the antimeridian', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
         camera.setCenter([170, 0]);
@@ -903,7 +903,7 @@ describe('#easeTo', () => {
     });
 
     test('pans westward across the antimeridian', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
         camera.setCenter([-170, 0]);
@@ -935,7 +935,7 @@ describe('#easeTo', () => {
     });
 
     test('animation occurs when prefers-reduced-motion: reduce is set but overridden by essential: true', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
         const stubNow = jest.spyOn(browser, 'now');
 
@@ -968,7 +968,7 @@ describe('#easeTo', () => {
     });
 
     test('duration is 0 when prefers-reduced-motion: reduce is set', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
         assertTransitionTime(done, camera, 0, 10);
         camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 1000});
@@ -978,14 +978,14 @@ describe('#easeTo', () => {
 
 describe('#flyTo', () => {
     test('pans to specified location', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({center: [100, 0], animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
         done();
     });
 
     test('throws on invalid center argument', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         expect(() => {
             camera.flyTo({center: 1});
         }).toThrow(Error);
@@ -1001,7 +1001,7 @@ describe('#flyTo', () => {
     test('does not throw when cameras current zoom is above maxzoom and an offset creates infinite zoom out factor', done => {
         const transform = new Transform(0, 20.9999, 0, 60, true);
         transform.resize(512, 512);
-        const camera = attachSimulateFrame(new TestCamera(transform, {} as any))
+        const camera = attachSimulateFrame(new CameraMock(transform, {} as any))
             .jumpTo({zoom: 21, center:[0, 0]});
         camera._update = () => {};
         expect(() => camera.flyTo({zoom:7.5, center:[0, 0], offset:[0, 70]})).not.toThrow();
@@ -1009,7 +1009,7 @@ describe('#flyTo', () => {
     });
 
     test('zooms to specified level', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({zoom: 3.2, animate: false});
         expect(fixedNum(camera.getZoom())).toBe(3.2);
         done();
@@ -1041,21 +1041,21 @@ describe('#flyTo', () => {
     });
 
     test('rotates to specified bearing', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({bearing: 90, animate: false});
         expect(camera.getBearing()).toBe(90);
         done();
     });
 
     test('tilts to specified pitch', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({pitch: 45, animate: false});
         expect(camera.getPitch()).toBe(45);
         done();
     });
 
     test('pans and zooms', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({center: [100, 0], zoom: 3.2, animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
         expect(fixedNum(camera.getZoom())).toBe(3.2);
@@ -1063,7 +1063,7 @@ describe('#flyTo', () => {
     });
 
     test('pans and rotates', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({center: [100, 0], bearing: 90, animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
         expect(camera.getBearing()).toBe(90);
@@ -1071,7 +1071,7 @@ describe('#flyTo', () => {
     });
 
     test('zooms and rotates', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({zoom: 3.2, bearing: 90, animate: false});
         expect(fixedNum(camera.getZoom())).toBe(3.2);
         expect(camera.getBearing()).toBe(90);
@@ -1079,7 +1079,7 @@ describe('#flyTo', () => {
     });
 
     test('pans, zooms, and rotates', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
         expect(fixedNum(camera.getZoom())).toBe(3.2);
@@ -1088,7 +1088,7 @@ describe('#flyTo', () => {
     });
 
     test('noop', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
@@ -1097,7 +1097,7 @@ describe('#flyTo', () => {
     });
 
     test('noop with offset', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({offset: [100, 0], animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
@@ -1106,7 +1106,7 @@ describe('#flyTo', () => {
     });
 
     test('pans with specified offset', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({center: [100, 0], offset: [100, 0], animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
         done();
@@ -1122,7 +1122,7 @@ describe('#flyTo', () => {
     test('emits move, zoom, rotate, and pitch events, preserving eventData', done => {
         expect.assertions(18);
 
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched;
         const eventData = {data: 'ok'};
 
@@ -1236,7 +1236,7 @@ describe('#flyTo', () => {
     });
 
     test('stops existing ease', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.flyTo({center: [200, 0], duration: 100});
         camera.flyTo({center: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
@@ -1244,7 +1244,7 @@ describe('#flyTo', () => {
     });
 
     test('can be called from within a moveend event handler', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
         stub.mockImplementation(() => 0);
 
@@ -1276,7 +1276,7 @@ describe('#flyTo', () => {
     });
 
     test('ascends', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.setZoom(18);
         let ascended;
 
@@ -1308,7 +1308,7 @@ describe('#flyTo', () => {
     });
 
     test('pans eastward across the prime meridian', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
         camera.setCenter([-10, 0]);
@@ -1340,7 +1340,7 @@ describe('#flyTo', () => {
     });
 
     test('pans westward across the prime meridian', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
         camera.setCenter([10, 0]);
@@ -1372,7 +1372,7 @@ describe('#flyTo', () => {
     });
 
     test('pans eastward across the antimeridian', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
         camera.setCenter([170, 0]);
@@ -1404,7 +1404,7 @@ describe('#flyTo', () => {
     });
 
     test('pans westward across the antimeridian', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
         camera.setCenter([-170, 0]);
@@ -1500,7 +1500,7 @@ describe('#flyTo', () => {
     });
 
     test('jumps back to world 0 when crossing the antimeridian', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
         camera.setCenter([-170, 0]);
@@ -1571,7 +1571,7 @@ describe('#flyTo', () => {
         const transform = new Transform(2, 10, 0, 60, false);
         transform.resize(512, 512);
 
-        const camera = attachSimulateFrame(new TestCamera(transform, {} as any));
+        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
         camera._update = () => {};
 
         camera.on('moveend', () => {
@@ -1596,7 +1596,7 @@ describe('#flyTo', () => {
         const transform = new Transform(2, 10, 0, 60, false);
         transform.resize(512, 512);
 
-        const camera = attachSimulateFrame(new TestCamera(transform, {} as any));
+        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
         camera._update = () => {};
 
         camera.on('moveend', () => {
@@ -1634,7 +1634,7 @@ describe('#flyTo', () => {
     });
 
     test('flys instantly when prefers-reduce-motion:reduce is set', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
         assertTransitionTime(done, camera, 0, 10);
         camera.flyTo({center: [100, 0], bearing: 90, animate: true});
@@ -1644,20 +1644,20 @@ describe('#flyTo', () => {
 
 describe('#isEasing', () => {
     test('returns false when not easing', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         expect(!camera.isEasing()).toBeTruthy();
         done();
     });
 
     test('returns true when panning', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.panTo([100, 0], {duration: 1});
         expect(camera.isEasing()).toBeTruthy();
         done();
     });
 
     test('returns false when done panning', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.on('moveend', () => {
             expect(!camera.isEasing()).toBeTruthy();
             done();
@@ -1672,14 +1672,14 @@ describe('#isEasing', () => {
     });
 
     test('returns true when zooming', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.zoomTo(3.2, {duration: 1});
         expect(camera.isEasing()).toBeTruthy();
         done();
     });
 
     test('returns false when done zooming', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.on('moveend', () => {
             expect(!camera.isEasing()).toBeTruthy();
             done();
@@ -1694,14 +1694,14 @@ describe('#isEasing', () => {
     });
 
     test('returns true when rotating', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.rotateTo(90, {duration: 1});
         expect(camera.isEasing()).toBeTruthy();
         done();
     });
 
     test('returns false when done rotating', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.on('moveend', () => {
             expect(!camera.isEasing()).toBeTruthy();
             done();
@@ -1719,7 +1719,7 @@ describe('#isEasing', () => {
 
 describe('#stop', () => {
     test('resets camera._zooming', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.zoomTo(3.2);
         camera.stop();
         expect(!camera._zooming).toBeTruthy();
@@ -1727,7 +1727,7 @@ describe('#stop', () => {
     });
 
     test('resets camera._rotating', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         camera.rotateTo(90);
         camera.stop();
         expect(!camera._rotating).toBeTruthy();
@@ -1735,7 +1735,7 @@ describe('#stop', () => {
     });
 
     test('emits moveend if panning, preserving eventData', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const eventData = {data: 'ok'};
 
         camera.on('moveend', (d) => {
@@ -1748,7 +1748,7 @@ describe('#stop', () => {
     });
 
     test('emits moveend if zooming, preserving eventData', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const eventData = {data: 'ok'};
 
         camera.on('moveend', (d) => {
@@ -1761,7 +1761,7 @@ describe('#stop', () => {
     });
 
     test('emits moveend if rotating, preserving eventData', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const eventData = {data: 'ok'};
 
         camera.on('moveend', (d) => {
@@ -1774,7 +1774,7 @@ describe('#stop', () => {
     });
 
     test('does not emit moveend if not moving', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const eventData = {data: 'ok'};
 
         camera.on('moveend', (d) => {
@@ -1797,7 +1797,7 @@ describe('#stop', () => {
 
 describe('#cameraForBounds', () => {
     test('no options passed', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         const transform = camera.cameraForBounds(bb);
@@ -1807,7 +1807,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('bearing positive number', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         const transform = camera.cameraForBounds(bb, {bearing: 175});
@@ -1818,7 +1818,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('bearing negative number', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         const transform = camera.cameraForBounds(bb, {bearing: -30});
@@ -1829,7 +1829,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('padding number', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         const transform = camera.cameraForBounds(bb, {padding: 15});
@@ -1839,7 +1839,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('padding object', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         const transform = camera.cameraForBounds(bb, {padding: {top: 15, right: 15, bottom: 15, left: 15}, duration: 0});
@@ -1848,7 +1848,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('asymmetrical padding', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         const transform = camera.cameraForBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
@@ -1857,7 +1857,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('bearing and asymmetrical padding', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         const transform = camera.cameraForBounds(bb, {bearing: 90, padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
@@ -1866,7 +1866,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('offset', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         const transform = camera.cameraForBounds(bb, {offset: [0, 100]});
@@ -1875,7 +1875,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('offset as object', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         const transform = camera.cameraForBounds(bb, {offset: {x: 0, y: 100}});
@@ -1884,7 +1884,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('offset and padding', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         const transform = camera.cameraForBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, offset: [0, 100]});
@@ -1893,7 +1893,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('bearing, asymmetrical padding, and offset', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         const transform = camera.cameraForBounds(bb, {bearing: 90, padding: {top: 10, right: 75, bottom: 50, left: 25}, offset: [0, 100], duration: 0});
@@ -1905,7 +1905,7 @@ describe('#cameraForBounds', () => {
 
 describe('#fitBounds', () => {
     test('no padding passed', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         camera.fitBounds(bb, {duration:0});
@@ -1915,7 +1915,7 @@ describe('#fitBounds', () => {
     });
 
     test('padding number', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         camera.fitBounds(bb, {padding: 15, duration:0});
@@ -1925,7 +1925,7 @@ describe('#fitBounds', () => {
     });
 
     test('padding object', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration:0});
@@ -1934,7 +1934,7 @@ describe('#fitBounds', () => {
     });
 
     test('padding does not get propagated to transform.padding', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
 
         camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration:0});
@@ -1952,7 +1952,7 @@ describe('#fitBounds', () => {
 
 describe('#fitScreenCoordinates', () => {
     test('bearing 225', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const p0 = [128, 128];
         const p1 = [256, 256];
         const bearing = 225;
@@ -1965,7 +1965,7 @@ describe('#fitScreenCoordinates', () => {
     });
 
     test('bearing 0', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
 
         const p0 = [128, 128];
         const p1 = [256, 256];
@@ -1979,7 +1979,7 @@ describe('#fitScreenCoordinates', () => {
     });
 
     test('inverted points', done => {
-        const camera = createCamera(undefined);
+        const camera = createCamera();
         const p1 = [128, 128];
         const p0 = [256, 256];
         const bearing = 0;
