@@ -1,7 +1,6 @@
-import {test} from '../../../util/test';
-import migrate from '../../style-spec/migrate/v8';
+import migrate from './v8';
 
-describe('split text-font', () => {
+test('split text-font', () => {
     const input = {
         'version': 7,
         'sources': {
@@ -47,7 +46,7 @@ describe('split text-font', () => {
     expect(migrate(input)).toEqual(output);
 });
 
-describe('rename symbol-min-distance', () => {
+test('rename symbol-min-distance', () => {
     const input = {
         'version': 7,
         'sources': {
@@ -91,7 +90,7 @@ describe('rename symbol-min-distance', () => {
     expect(migrate(input)).toEqual(output);
 });
 
-describe('renames urls', () => {
+test('renames urls', () => {
     const input = {
         'version': 7,
         'sources': {
@@ -117,7 +116,7 @@ describe('renames urls', () => {
     expect(migrate(input)).toEqual(output);
 });
 
-describe('not migrate interpolated functions', () => {
+test('not migrate interpolated functions', () => {
     const input = {
         'version': 7,
         'sources': {
@@ -165,7 +164,7 @@ describe('not migrate interpolated functions', () => {
     expect(migrate(input)).toEqual(output);
 });
 
-describe('not migrate piecewise-constant functions', () => {
+test('not migrate piecewise-constant functions', () => {
     const input = {
         'version': 7,
         'sources': {
@@ -211,7 +210,7 @@ describe('not migrate piecewise-constant functions', () => {
     expect(migrate(input)).toEqual(output);
 });
 
-describe('inline constants', () => {
+test('inline constants', () => {
     const input = {
         'version': 7,
         'constants': {
@@ -254,7 +253,7 @@ describe('inline constants', () => {
     expect(migrate(input)).toEqual(output);
 });
 
-describe('migrate and inline fontstack constants', () => {
+test('migrate and inline fontstack constants', () => {
     const input = {
         'version': 7,
         'constants': {
@@ -297,7 +296,7 @@ describe('migrate and inline fontstack constants', () => {
     expect(migrate(input)).toEqual(output);
 });
 
-describe('update fontstack function', () => {
+test('update fontstack function', () => {
     const input = {
         'version': 7,
         'sources': {
@@ -355,7 +354,7 @@ describe('update fontstack function', () => {
     expect(migrate(input)).toEqual(output);
 });
 
-describe('inline and migrate fontstack constant function', () => {
+test('inline and migrate fontstack constant function', () => {
     const input = {
         'version': 7,
         'constants': {
@@ -416,7 +415,7 @@ describe('inline and migrate fontstack constant function', () => {
     expect(migrate(input)).toEqual(output);
 });
 
-describe('update fontstack function constant', () => {
+test('update fontstack function constant', () => {
     const input = {
         'version': 7,
         'constants': {
@@ -472,7 +471,7 @@ describe('update fontstack function constant', () => {
     expect(migrate(input)).toEqual(output);
 });
 
-describe('migrate UNversioned fontstack urls', () => {
+test('migrate UNversioned fontstack urls', () => {
     const input = {
         'version': 7,
         'glyphs': 'mapbox://fontstack/{fontstack}/{range}.pbf',
@@ -488,7 +487,7 @@ describe('migrate UNversioned fontstack urls', () => {
     expect(migrate(input)).toEqual(output);
 });
 
-describe('migrate versioned fontstack urls', () => {
+test('migrate versioned fontstack urls', () => {
     const input = {
         'version': 7,
         'glyphs': 'mapbox://fonts/v1/boxmap/{fontstack}/{range}.pbf',
