@@ -48,56 +48,56 @@ test('camera', (t) => {
 
         t.test('sets center', (t) => {
             camera.jumpTo({center: [1, 2]});
-            t.deepEqual(camera.getCenter(), {lng: 1, lat: 2});
+            expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
             t.end();
         });
 
         t.test('throws on invalid center argument', (t) => {
-            t.throws(() => {
+            expect(() => {
                 camera.jumpTo({center: 1});
-            }, Error, 'throws with non-LngLatLike argument');
+            }).toThrowError(Error);
             t.end();
         });
 
         t.test('keeps current center if not specified', (t) => {
             camera.jumpTo({});
-            t.deepEqual(camera.getCenter(), {lng: 1, lat: 2});
+            expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
             t.end();
         });
 
         t.test('sets zoom', (t) => {
             camera.jumpTo({zoom: 3});
-            t.deepEqual(camera.getZoom(), 3);
+            expect(camera.getZoom()).toEqual(3);
             t.end();
         });
 
         t.test('keeps current zoom if not specified', (t) => {
             camera.jumpTo({});
-            t.deepEqual(camera.getZoom(), 3);
+            expect(camera.getZoom()).toEqual(3);
             t.end();
         });
 
         t.test('sets bearing', (t) => {
             camera.jumpTo({bearing: 4});
-            t.deepEqual(camera.getBearing(), 4);
+            expect(camera.getBearing()).toEqual(4);
             t.end();
         });
 
         t.test('keeps current bearing if not specified', (t) => {
             camera.jumpTo({});
-            t.deepEqual(camera.getBearing(), 4);
+            expect(camera.getBearing()).toEqual(4);
             t.end();
         });
 
         t.test('sets pitch', (t) => {
             camera.jumpTo({pitch: 45});
-            t.deepEqual(camera.getPitch(), 45);
+            expect(camera.getPitch()).toEqual(45);
             t.end();
         });
 
         t.test('keeps current pitch if not specified', (t) => {
             camera.jumpTo({});
-            t.deepEqual(camera.getPitch(), 45);
+            expect(camera.getPitch()).toEqual(45);
             t.end();
         });
 
@@ -108,10 +108,10 @@ test('camera', (t) => {
                 bearing: 180,
                 pitch: 60
             });
-            t.deepEqual(camera.getCenter(), {lng: 10, lat: 20});
-            t.deepEqual(camera.getZoom(), 10);
-            t.deepEqual(camera.getBearing(), 180);
-            t.deepEqual(camera.getPitch(), 60);
+            expect(camera.getCenter()).toEqual({lng: 10, lat: 20});
+            expect(camera.getZoom()).toEqual(10);
+            expect(camera.getBearing()).toEqual(180);
+            expect(camera.getPitch()).toEqual(60);
             t.end();
         });
 
@@ -125,9 +125,9 @@ test('camera', (t) => {
                 .on('moveend', (d) => { ended = d.data; });
 
             camera.jumpTo({center: [1, 2]}, eventData);
-            t.equal(started, 'ok');
-            t.equal(moved, 'ok');
-            t.equal(ended, 'ok');
+            expect(started).toBe('ok');
+            expect(moved).toBe('ok');
+            expect(ended).toBe('ok');
             t.end();
         });
 
@@ -141,9 +141,9 @@ test('camera', (t) => {
                 .on('zoomend', (d) => { ended = d.data; });
 
             camera.jumpTo({zoom: 3}, eventData);
-            t.equal(started, 'ok');
-            t.equal(zoomed, 'ok');
-            t.equal(ended, 'ok');
+            expect(started).toBe('ok');
+            expect(zoomed).toBe('ok');
+            expect(ended).toBe('ok');
             t.end();
         });
 
@@ -157,9 +157,9 @@ test('camera', (t) => {
                 .on('rotateend', (d) => { ended = d.data; });
 
             camera.jumpTo({bearing: 90}, eventData);
-            t.equal(started, 'ok');
-            t.equal(rotated, 'ok');
-            t.equal(ended, 'ok');
+            expect(started).toBe('ok');
+            expect(rotated).toBe('ok');
+            expect(ended).toBe('ok');
             t.end();
         });
 
@@ -173,17 +173,17 @@ test('camera', (t) => {
                 .on('pitchend', (d) => { ended = d.data; });
 
             camera.jumpTo({pitch: 10}, eventData);
-            t.equal(started, 'ok');
-            t.equal(pitched, 'ok');
-            t.equal(ended, 'ok');
+            expect(started).toBe('ok');
+            expect(pitched).toBe('ok');
+            expect(ended).toBe('ok');
             t.end();
         });
 
         t.test('cancels in-progress easing', (t) => {
             camera.panTo([3, 4]);
-            t.ok(camera.isEasing());
+            expect(camera.isEasing()).toBeTruthy();
             camera.jumpTo({center: [1, 2]});
-            t.ok(!camera.isEasing());
+            expect(!camera.isEasing()).toBeTruthy();
             t.end();
         });
 
@@ -196,14 +196,14 @@ test('camera', (t) => {
 
         t.test('sets center', (t) => {
             camera.setCenter([1, 2]);
-            t.deepEqual(camera.getCenter(), {lng: 1, lat: 2});
+            expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
             t.end();
         });
 
         t.test('throws on invalid center argument', (t) => {
-            t.throws(() => {
+            expect(() => {
                 camera.jumpTo({center: 1});
-            }, Error, 'throws with non-LngLatLike argument');
+            }).toThrowError(Error);
             t.end();
         });
 
@@ -216,17 +216,17 @@ test('camera', (t) => {
                 .on('moveend', (d) => { ended = d.data; });
 
             camera.setCenter([10, 20], eventData);
-            t.equal(started, 'ok');
-            t.equal(moved, 'ok');
-            t.equal(ended, 'ok');
+            expect(started).toBe('ok');
+            expect(moved).toBe('ok');
+            expect(ended).toBe('ok');
             t.end();
         });
 
         t.test('cancels in-progress easing', (t) => {
             camera.panTo([3, 4]);
-            t.ok(camera.isEasing());
+            expect(camera.isEasing()).toBeTruthy();
             camera.setCenter([1, 2]);
-            t.ok(!camera.isEasing());
+            expect(!camera.isEasing()).toBeTruthy();
             t.end();
         });
 
@@ -238,7 +238,7 @@ test('camera', (t) => {
 
         t.test('sets zoom', (t) => {
             camera.setZoom(3);
-            t.deepEqual(camera.getZoom(), 3);
+            expect(camera.getZoom()).toEqual(3);
             t.end();
         });
 
@@ -255,20 +255,20 @@ test('camera', (t) => {
                 .on('zoomend', (d) => { zoomended = d.data; });
 
             camera.setZoom(4, eventData);
-            t.equal(movestarted, 'ok');
-            t.equal(moved, 'ok');
-            t.equal(moveended, 'ok');
-            t.equal(zoomstarted, 'ok');
-            t.equal(zoomed, 'ok');
-            t.equal(zoomended, 'ok');
+            expect(movestarted).toBe('ok');
+            expect(moved).toBe('ok');
+            expect(moveended).toBe('ok');
+            expect(zoomstarted).toBe('ok');
+            expect(zoomed).toBe('ok');
+            expect(zoomended).toBe('ok');
             t.end();
         });
 
         t.test('cancels in-progress easing', (t) => {
             camera.panTo([3, 4]);
-            t.ok(camera.isEasing());
+            expect(camera.isEasing()).toBeTruthy();
             camera.setZoom(5);
-            t.ok(!camera.isEasing());
+            expect(!camera.isEasing()).toBeTruthy();
             t.end();
         });
 
@@ -280,7 +280,7 @@ test('camera', (t) => {
 
         t.test('sets bearing', (t) => {
             camera.setBearing(4);
-            t.deepEqual(camera.getBearing(), 4);
+            expect(camera.getBearing()).toEqual(4);
             t.end();
         });
 
@@ -297,20 +297,20 @@ test('camera', (t) => {
                 .on('rotateend', (d) => { rotateended = d.data; });
 
             camera.setBearing(5, eventData);
-            t.equal(movestarted, 'ok');
-            t.equal(moved, 'ok');
-            t.equal(moveended, 'ok');
-            t.equal(rotatestarted, 'ok');
-            t.equal(rotated, 'ok');
-            t.equal(rotateended, 'ok');
+            expect(movestarted).toBe('ok');
+            expect(moved).toBe('ok');
+            expect(moveended).toBe('ok');
+            expect(rotatestarted).toBe('ok');
+            expect(rotated).toBe('ok');
+            expect(rotateended).toBe('ok');
             t.end();
         });
 
         t.test('cancels in-progress easing', (t) => {
             camera.panTo([3, 4]);
-            t.ok(camera.isEasing());
+            expect(camera.isEasing()).toBeTruthy();
             camera.setBearing(6);
-            t.ok(!camera.isEasing());
+            expect(!camera.isEasing()).toBeTruthy();
             t.end();
         });
 
@@ -322,7 +322,7 @@ test('camera', (t) => {
             const camera = createCamera();
             const padding = {left: 300, top: 100, right: 50, bottom: 10};
             camera.setPadding(padding);
-            t.deepEqual(camera.getPadding(), padding);
+            expect(camera.getPadding()).toEqual(padding);
             t.end();
         });
 
@@ -333,7 +333,7 @@ test('camera', (t) => {
             camera.setPadding({});
 
             const currentPadding = camera.getPadding();
-            t.deepEqual(currentPadding, padding);
+            expect(currentPadding).toEqual(padding);
             t.end();
         });
 
@@ -345,11 +345,11 @@ test('camera', (t) => {
             camera.setPadding(padding1);
 
             const currentPadding = camera.getPadding();
-            t.equal(currentPadding.left, padding.left);
-            t.equal(currentPadding.top, padding.top);
+            expect(currentPadding.left).toBe(padding.left);
+            expect(currentPadding.top).toBe(padding.top);
             // padding1 here
-            t.equal(currentPadding.right, padding1.right);
-            t.equal(currentPadding.bottom, padding.bottom);
+            expect(currentPadding.right).toBe(padding1.right);
+            expect(currentPadding.bottom).toBe(padding.bottom);
             t.end();
         });
 
@@ -360,14 +360,14 @@ test('camera', (t) => {
         t.test('pans by specified amount', (t) => {
             const camera = createCamera();
             camera.panBy([100, 0], {duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 70.3125, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 70.3125, lat: 0});
             t.end();
         });
 
         t.test('pans relative to viewport on a rotated camera', (t) => {
             const camera = createCamera({bearing: 180});
             camera.panBy([100, 0], {duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: -70.3125, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -70.3125, lat: 0});
             t.end();
         });
 
@@ -380,9 +380,9 @@ test('camera', (t) => {
                 .on('movestart', (d) => { started = d.data; })
                 .on('move', (d) => { moved = d.data; })
                 .on('moveend', (d) => {
-                    t.equal(started, 'ok');
-                    t.equal(moved, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(started).toBe('ok');
+                    expect(moved).toBe('ok');
+                    expect(d.data).toBe('ok');
                     t.end();
                 });
 
@@ -399,7 +399,7 @@ test('camera', (t) => {
             camera
                 .on('movestart', () => { started = true; })
                 .on('moveend', () => {
-                    t.ok(!started);
+                    expect(!started).toBeTruthy();
                     t.end();
                 });
 
@@ -413,29 +413,29 @@ test('camera', (t) => {
         t.test('pans to specified location', (t) => {
             const camera = createCamera();
             camera.panTo([100, 0], {duration: 0});
-            t.deepEqual(camera.getCenter(), {lng: 100, lat: 0});
+            expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
             t.end();
         });
 
         t.test('throws on invalid center argument', (t) => {
             const camera = createCamera();
-            t.throws(() => {
+            expect(() => {
                 camera.panTo({center: 1});
-            }, Error, 'throws with non-LngLatLike argument');
+            }).toThrowError(Error);
             t.end();
         });
 
         t.test('pans with specified offset', (t) => {
             const camera = createCamera();
             camera.panTo([100, 0], {offset: [100, 0], duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 29.6875, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
             t.end();
         });
 
         t.test('pans with specified offset relative to viewport on a rotated camera', (t) => {
             const camera = createCamera({bearing: 180});
             camera.panTo([100, 0], {offset: [100, 0], duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 170.3125, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
             t.end();
         });
 
@@ -448,9 +448,9 @@ test('camera', (t) => {
                 .on('movestart', (d) => { started = d.data; })
                 .on('move', (d) => { moved = d.data; })
                 .on('moveend', (d) => {
-                    t.equal(started, 'ok');
-                    t.equal(moved, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(started).toBe('ok');
+                    expect(moved).toBe('ok');
+                    expect(d.data).toBe('ok');
                     t.end();
                 });
 
@@ -467,7 +467,7 @@ test('camera', (t) => {
             camera
                 .on('movestart', () => { started = true; })
                 .on('moveend', () => {
-                    t.ok(!started);
+                    expect(!started).toBeTruthy();
                     t.end();
                 });
 
@@ -481,31 +481,31 @@ test('camera', (t) => {
         t.test('zooms to specified level', (t) => {
             const camera = createCamera();
             camera.zoomTo(3.2, {duration: 0});
-            t.equal(camera.getZoom(), 3.2);
+            expect(camera.getZoom()).toBe(3.2);
             t.end();
         });
 
         t.test('zooms around specified location', (t) => {
             const camera = createCamera();
             camera.zoomTo(3.2, {around: [5, 0], duration: 0});
-            t.equal(camera.getZoom(), 3.2);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: 4.455905897939886, lat: 0}));
+            expect(camera.getZoom()).toBe(3.2);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 4.455905897939886, lat: 0}));
             t.end();
         });
 
         t.test('zooms with specified offset', (t) => {
             const camera = createCamera();
             camera.zoomTo(3.2, {offset: [100, 0], duration: 0});
-            t.equal(camera.getZoom(), 3.2);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: 62.66117668978015, lat: 0}));
+            expect(camera.getZoom()).toBe(3.2);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 62.66117668978015, lat: 0}));
             t.end();
         });
 
         t.test('zooms with specified offset relative to viewport on a rotated camera', (t) => {
             const camera = createCamera({bearing: 180});
             camera.zoomTo(3.2, {offset: [100, 0], duration: 0});
-            t.equal(camera.getZoom(), 3.2);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: -62.66117668978012, lat: 0}));
+            expect(camera.getZoom()).toBe(3.2);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -62.66117668978012, lat: 0}));
             t.end();
         });
 
@@ -514,24 +514,24 @@ test('camera', (t) => {
             let movestarted, moved, zoomstarted, zoomed;
             const eventData = {data: 'ok'};
 
-            t.plan(6);
+            expect.assertions(6);
 
             camera
                 .on('movestart', (d) => { movestarted = d.data; })
                 .on('move', (d) => { moved = d.data; })
                 .on('moveend', (d) => {
-                    t.equal(movestarted, 'ok');
-                    t.equal(moved, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(movestarted).toBe('ok');
+                    expect(moved).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera
                 .on('zoomstart', (d) => { zoomstarted = d.data; })
                 .on('zoom', (d) => { zoomed = d.data; })
                 .on('zoomend', (d) => {
-                    t.equal(zoomstarted, 'ok');
-                    t.equal(zoomed, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(zoomstarted).toBe('ok');
+                    expect(zoomed).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera.zoomTo(5, {duration: 0}, eventData);
@@ -544,47 +544,47 @@ test('camera', (t) => {
         t.test('rotates to specified bearing', (t) => {
             const camera = createCamera();
             camera.rotateTo(90, {duration: 0});
-            t.equal(camera.getBearing(), 90);
+            expect(camera.getBearing()).toBe(90);
             t.end();
         });
 
         t.test('rotates around specified location', (t) => {
             const camera = createCamera({zoom: 3});
             camera.rotateTo(90, {around: [5, 0], duration: 0});
-            t.equal(camera.getBearing(), 90);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: 4.999999999999972, lat: 4.993665859353271}));
+            expect(camera.getBearing()).toBe(90);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 4.999999999999972, lat: 4.993665859353271}));
             t.end();
         });
 
         t.test('rotates around specified location, constrained to fit the view', (t) => {
             const camera = createCamera({zoom: 0});
             camera.rotateTo(90, {around: [5, 0], duration: 0});
-            t.equal(camera.getBearing(), 90);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: 4.999999999999972, lat: 0.000002552471840999715}));
+            expect(camera.getBearing()).toBe(90);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 4.999999999999972, lat: 0.000002552471840999715}));
             t.end();
         });
 
         t.test('rotates with specified offset', (t) => {
             const camera = createCamera({zoom: 1});
             camera.rotateTo(90, {offset: [200, 0], duration: 0});
-            t.equal(camera.getBearing(), 90);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: 70.3125, lat: 57.3265212252}));
+            expect(camera.getBearing()).toBe(90);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 70.3125, lat: 57.3265212252}));
             t.end();
         });
 
         t.test('rotates with specified offset, constrained to fit the view', (t) => {
             const camera = createCamera({zoom: 0});
             camera.rotateTo(90, {offset: [100, 0], duration: 0});
-            t.equal(camera.getBearing(), 90);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: 70.3125, lat: 0.000002552471840999715}));
+            expect(camera.getBearing()).toBe(90);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 70.3125, lat: 0.000002552471840999715}));
             t.end();
         });
 
         t.test('rotates with specified offset relative to viewport on a rotated camera', (t) => {
             const camera = createCamera({bearing: 180, zoom: 1});
             camera.rotateTo(90, {offset: [200, 0], duration: 0});
-            t.equal(camera.getBearing(), 90);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: -70.3125, lat: 57.3265212252}));
+            expect(camera.getBearing()).toBe(90);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -70.3125, lat: 57.3265212252}));
             t.end();
         });
 
@@ -593,24 +593,24 @@ test('camera', (t) => {
             let movestarted, moved, rotatestarted, rotated;
             const eventData = {data: 'ok'};
 
-            t.plan(6);
+            expect.assertions(6);
 
             camera
                 .on('movestart', (d) => { movestarted = d.data; })
                 .on('move', (d) => { moved = d.data; })
                 .on('moveend', (d) => {
-                    t.equal(movestarted, 'ok');
-                    t.equal(moved, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(movestarted).toBe('ok');
+                    expect(moved).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera
                 .on('rotatestart', (d) => { rotatestarted = d.data; })
                 .on('rotate', (d) => { rotated = d.data; })
                 .on('rotateend', (d) => {
-                    t.equal(rotatestarted, 'ok');
-                    t.equal(rotated, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(rotatestarted).toBe('ok');
+                    expect(rotated).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera.rotateTo(90, {duration: 0}, eventData);
@@ -623,133 +623,133 @@ test('camera', (t) => {
         t.test('pans to specified location', (t) => {
             const camera = createCamera();
             camera.easeTo({center: [100, 0], duration: 0});
-            t.deepEqual(camera.getCenter(), {lng: 100, lat: 0});
+            expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
             t.end();
         });
 
         t.test('zooms to specified level', (t) => {
             const camera = createCamera();
             camera.easeTo({zoom: 3.2, duration: 0});
-            t.equal(camera.getZoom(), 3.2);
+            expect(camera.getZoom()).toBe(3.2);
             t.end();
         });
 
         t.test('rotates to specified bearing', (t) => {
             const camera = createCamera();
             camera.easeTo({bearing: 90, duration: 0});
-            t.equal(camera.getBearing(), 90);
+            expect(camera.getBearing()).toBe(90);
             t.end();
         });
 
         t.test('pitches to specified pitch', (t) => {
             const camera = createCamera();
             camera.easeTo({pitch: 45, duration: 0});
-            t.equal(camera.getPitch(), 45);
+            expect(camera.getPitch()).toBe(45);
             t.end();
         });
 
         t.test('pans and zooms', (t) => {
             const camera = createCamera();
             camera.easeTo({center: [100, 0], zoom: 3.2, duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: 100, lat: 0}));
-            t.equal(camera.getZoom(), 3.2);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 100, lat: 0}));
+            expect(camera.getZoom()).toBe(3.2);
             t.end();
         });
 
         t.test('zooms around a point', (t) => {
             const camera = createCamera();
             camera.easeTo({around: [100, 0], zoom: 3, duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: 87.5, lat: 0}));
-            t.equal(camera.getZoom(), 3);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 87.5, lat: 0}));
+            expect(camera.getZoom()).toBe(3);
             t.end();
         });
 
         t.test('pans and rotates', (t) => {
             const camera = createCamera();
             camera.easeTo({center: [100, 0], bearing: 90, duration: 0});
-            t.deepEqual(camera.getCenter(), {lng: 100, lat: 0});
-            t.equal(camera.getBearing(), 90);
+            expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
+            expect(camera.getBearing()).toBe(90);
             t.end();
         });
 
         t.test('zooms and rotates', (t) => {
             const camera = createCamera();
             camera.easeTo({zoom: 3.2, bearing: 90, duration: 0});
-            t.equal(camera.getZoom(), 3.2);
-            t.equal(camera.getBearing(), 90);
+            expect(camera.getZoom()).toBe(3.2);
+            expect(camera.getBearing()).toBe(90);
             t.end();
         });
 
         t.test('pans, zooms, and rotates', (t) => {
             const camera = createCamera({bearing: -90});
             camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: 100, lat: 0}));
-            t.equal(camera.getZoom(), 3.2);
-            t.equal(camera.getBearing(), 90);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 100, lat: 0}));
+            expect(camera.getZoom()).toBe(3.2);
+            expect(camera.getBearing()).toBe(90);
             t.end();
         });
 
         t.test('noop', (t) => {
             const camera = createCamera();
             camera.easeTo({duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 0, lat: 0});
-            t.equal(camera.getZoom(), 0);
-            t.equal(camera.getBearing(), 0);
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
+            expect(camera.getZoom()).toBe(0);
+            expect(camera.getBearing()).toBe(0);
             t.end();
         });
 
         t.test('noop with offset', (t) => {
             const camera = createCamera();
             camera.easeTo({offset: [100, 0], duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 0, lat: 0});
-            t.equal(camera.getZoom(), 0);
-            t.equal(camera.getBearing(), 0);
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
+            expect(camera.getZoom()).toBe(0);
+            expect(camera.getBearing()).toBe(0);
             t.end();
         });
 
         t.test('pans with specified offset', (t) => {
             const camera = createCamera();
             camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 29.6875, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
             t.end();
         });
 
         t.test('pans with specified offset relative to viewport on a rotated camera', (t) => {
             const camera = createCamera({bearing: 180});
             camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 170.3125, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
             t.end();
         });
 
         t.test('zooms with specified offset', (t) => {
             const camera = createCamera();
             camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
-            t.equal(camera.getZoom(), 3.2);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: 62.66117668978015, lat: 0}));
+            expect(camera.getZoom()).toBe(3.2);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 62.66117668978015, lat: 0}));
             t.end();
         });
 
         t.test('zooms with specified offset relative to viewport on a rotated camera', (t) => {
             const camera = createCamera({bearing: 180});
             camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
-            t.equal(camera.getZoom(), 3.2);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: -62.66117668978012, lat: 0}));
+            expect(camera.getZoom()).toBe(3.2);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -62.66117668978012, lat: 0}));
             t.end();
         });
 
         t.test('rotates with specified offset', (t) => {
             const camera = createCamera();
             camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
-            t.equal(camera.getBearing(), 90);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: 70.3125, lat: 0.000002552471840999715}));
+            expect(camera.getBearing()).toBe(90);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 70.3125, lat: 0.000002552471840999715}));
             t.end();
         });
 
         t.test('rotates with specified offset relative to viewport on a rotated camera', (t) => {
             const camera = createCamera({bearing: 180});
             camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
-            t.equal(camera.getBearing(), 90);
-            t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat({lng: -70.3125, lat: 0.000002552471840999715}));
+            expect(camera.getBearing()).toBe(90);
+            expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -70.3125, lat: 0.000002552471840999715}));
             t.end();
         });
 
@@ -758,49 +758,49 @@ test('camera', (t) => {
             let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched;
             const eventData = {data: 'ok'};
 
-            t.plan(18);
+            expect.assertions(18);
 
             camera
                 .on('movestart', (d) => { movestarted = d.data; })
                 .on('move', (d) => { moved = d.data; })
                 .on('moveend', (d) => {
-                    t.notOk(camera._zooming);
-                    t.notOk(camera._panning);
-                    t.notOk(camera._rotating);
+                    expect(camera._zooming).toBeFalsy();
+                    expect(camera._panning).toBeFalsy();
+                    expect(camera._rotating).toBeFalsy();
 
-                    t.equal(movestarted, 'ok');
-                    t.equal(moved, 'ok');
-                    t.equal(zoomed, 'ok');
-                    t.equal(rotated, 'ok');
-                    t.equal(pitched, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(movestarted).toBe('ok');
+                    expect(moved).toBe('ok');
+                    expect(zoomed).toBe('ok');
+                    expect(rotated).toBe('ok');
+                    expect(pitched).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera
                 .on('zoomstart', (d) => { zoomstarted = d.data; })
                 .on('zoom', (d) => { zoomed = d.data; })
                 .on('zoomend', (d) => {
-                    t.equal(zoomstarted, 'ok');
-                    t.equal(zoomed, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(zoomstarted).toBe('ok');
+                    expect(zoomed).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera
                 .on('rotatestart', (d) => { rotatestarted = d.data; })
                 .on('rotate', (d) => { rotated = d.data; })
                 .on('rotateend', (d) => {
-                    t.equal(rotatestarted, 'ok');
-                    t.equal(rotated, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(rotatestarted).toBe('ok');
+                    expect(rotated).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera
                 .on('pitchstart', (d) => { pitchstarted = d.data; })
                 .on('pitch', (d) => { pitched = d.data; })
                 .on('pitchend', (d) => {
-                    t.equal(pitchstarted, 'ok');
-                    t.equal(pitched, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(pitchstarted).toBe('ok');
+                    expect(pitched).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera.easeTo(
@@ -824,7 +824,7 @@ test('camera', (t) => {
             const camera = createCamera();
             camera.easeTo({center: [200, 0], duration: 100});
             camera.easeTo({center: [100, 0], duration: 0});
-            t.deepEqual(camera.getCenter(), {lng: 100, lat: 0});
+            expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
             t.end();
         });
 
@@ -877,7 +877,7 @@ test('camera', (t) => {
             });
 
             camera.on('moveend', () => {
-                t.ok(crossedAntimeridian);
+                expect(crossedAntimeridian).toBeTruthy();
                 t.end();
             });
 
@@ -909,7 +909,7 @@ test('camera', (t) => {
             });
 
             camera.on('moveend', () => {
-                t.ok(crossedAntimeridian);
+                expect(crossedAntimeridian).toBeTruthy();
                 t.end();
             });
 
@@ -945,7 +945,7 @@ test('camera', (t) => {
                 .on('moveend', () => {
                     const endTime = browser.now();
                     const timeDiff = endTime - startTime;
-                    t.ok(timeDiff >= min && timeDiff < max, `Camera transition time exceeded expected range( [${min},${max}) ) :${timeDiff}`);
+                    expect(timeDiff >= min && timeDiff < max).toBeTruthy();
                     t.end();
                 });
 
@@ -977,21 +977,21 @@ test('camera', (t) => {
         t.test('pans to specified location', (t) => {
             const camera = createCamera();
             camera.flyTo({center: [100, 0], animate: false});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 100, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
             t.end();
         });
 
         t.test('throws on invalid center argument', (t) => {
             const camera = createCamera();
-            t.throws(() => {
+            expect(() => {
                 camera.flyTo({center: 1});
-            }, Error, 'throws with non-LngLatLike argument');
+            }).toThrowError(Error);
             t.end();
         });
 
         t.test('does not throw when cameras current zoom is sufficiently greater than passed zoom option', (t) => {
             const camera = createCamera({zoom: 22, center:[0, 0]});
-            t.doesNotThrow(() => camera.flyTo({zoom:10, center:[0, 0]}));
+            expect(() => camera.flyTo({zoom:10, center:[0, 0]})).not.toThrow();
             t.end();
         });
 
@@ -1001,21 +1001,21 @@ test('camera', (t) => {
             const camera = attachSimulateFrame(new Camera(transform, {}))
                 .jumpTo({zoom: 21, center:[0, 0]});
             camera._update = () => {};
-            t.doesNotThrow(() => camera.flyTo({zoom:7.5, center:[0, 0], offset:[0, 70]}));
+            expect(() => camera.flyTo({zoom:7.5, center:[0, 0], offset:[0, 70]})).not.toThrow();
             t.end();
         });
 
         t.test('zooms to specified level', (t) => {
             const camera = createCamera();
             camera.flyTo({zoom: 3.2, animate: false});
-            t.equal(fixedNum(camera.getZoom()), 3.2);
+            expect(fixedNum(camera.getZoom())).toBe(3.2);
             t.end();
         });
 
         t.test('zooms to integer level without floating point errors', (t) => {
             const camera = createCamera({zoom: 0.6});
             camera.flyTo({zoom: 2, animate: false});
-            t.equal(camera.getZoom(), 2);
+            expect(camera.getZoom()).toBe(2);
             t.end();
         });
 
@@ -1025,8 +1025,8 @@ test('camera', (t) => {
             const stub = t.stub(browser, 'now');
 
             camera.once('zoomend', () => {
-                t.deepEqual(fixedLngLat(camera.getCenter()), fixedLngLat(pos));
-                t.equal(camera.getZoom(), 19);
+                expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat(pos));
+                expect(camera.getZoom()).toBe(19);
                 t.end();
             });
 
@@ -1040,84 +1040,84 @@ test('camera', (t) => {
         t.test('rotates to specified bearing', (t) => {
             const camera = createCamera();
             camera.flyTo({bearing: 90, animate: false});
-            t.equal(camera.getBearing(), 90);
+            expect(camera.getBearing()).toBe(90);
             t.end();
         });
 
         t.test('tilts to specified pitch', (t) => {
             const camera = createCamera();
             camera.flyTo({pitch: 45, animate: false});
-            t.equal(camera.getPitch(), 45);
+            expect(camera.getPitch()).toBe(45);
             t.end();
         });
 
         t.test('pans and zooms', (t) => {
             const camera = createCamera();
             camera.flyTo({center: [100, 0], zoom: 3.2, animate: false});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 100, lat: 0});
-            t.equal(fixedNum(camera.getZoom()), 3.2);
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
+            expect(fixedNum(camera.getZoom())).toBe(3.2);
             t.end();
         });
 
         t.test('pans and rotates', (t) => {
             const camera = createCamera();
             camera.flyTo({center: [100, 0], bearing: 90, animate: false});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 100, lat: 0});
-            t.equal(camera.getBearing(), 90);
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
+            expect(camera.getBearing()).toBe(90);
             t.end();
         });
 
         t.test('zooms and rotates', (t) => {
             const camera = createCamera();
             camera.flyTo({zoom: 3.2, bearing: 90, animate: false});
-            t.equal(fixedNum(camera.getZoom()), 3.2);
-            t.equal(camera.getBearing(), 90);
+            expect(fixedNum(camera.getZoom())).toBe(3.2);
+            expect(camera.getBearing()).toBe(90);
             t.end();
         });
 
         t.test('pans, zooms, and rotates', (t) => {
             const camera = createCamera();
             camera.flyTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, animate: false});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 100, lat: 0});
-            t.equal(fixedNum(camera.getZoom()), 3.2);
-            t.equal(camera.getBearing(), 90);
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
+            expect(fixedNum(camera.getZoom())).toBe(3.2);
+            expect(camera.getBearing()).toBe(90);
             t.end();
         });
 
         t.test('noop', (t) => {
             const camera = createCamera();
             camera.flyTo({animate: false});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 0, lat: 0});
-            t.equal(camera.getZoom(), 0);
-            t.equal(camera.getBearing(), 0);
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
+            expect(camera.getZoom()).toBe(0);
+            expect(camera.getBearing()).toBe(0);
             t.end();
         });
 
         t.test('noop with offset', (t) => {
             const camera = createCamera();
             camera.flyTo({offset: [100, 0], animate: false});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 0, lat: 0});
-            t.equal(camera.getZoom(), 0);
-            t.equal(camera.getBearing(), 0);
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
+            expect(camera.getZoom()).toBe(0);
+            expect(camera.getBearing()).toBe(0);
             t.end();
         });
 
         t.test('pans with specified offset', (t) => {
             const camera = createCamera();
             camera.flyTo({center: [100, 0], offset: [100, 0], animate: false});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 29.6875, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
             t.end();
         });
 
         t.test('pans with specified offset relative to viewport on a rotated camera', (t) => {
             const camera = createCamera({bearing: 180});
             camera.easeTo({center: [100, 0], offset: [100, 0], animate: false});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 170.3125, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
             t.end();
         });
 
         t.test('emits move, zoom, rotate, and pitch events, preserving eventData', (t) => {
-            t.plan(18);
+            expect.assertions(18);
 
             const camera = createCamera();
             let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched;
@@ -1129,43 +1129,43 @@ test('camera', (t) => {
                 .on('rotate', (d) => { rotated = d.data; })
                 .on('pitch', (d) => { pitched = d.data; })
                 .on('moveend', function(d) {
-                    t.notOk(this._zooming);
-                    t.notOk(this._panning);
-                    t.notOk(this._rotating);
+                    expect(this._zooming).toBeFalsy();
+                    expect(this._panning).toBeFalsy();
+                    expect(this._rotating).toBeFalsy();
 
-                    t.equal(movestarted, 'ok');
-                    t.equal(moved, 'ok');
-                    t.equal(zoomed, 'ok');
-                    t.equal(rotated, 'ok');
-                    t.equal(pitched, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(movestarted).toBe('ok');
+                    expect(moved).toBe('ok');
+                    expect(zoomed).toBe('ok');
+                    expect(rotated).toBe('ok');
+                    expect(pitched).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera
                 .on('zoomstart', (d) => { zoomstarted = d.data; })
                 .on('zoom', (d) => { zoomed = d.data; })
                 .on('zoomend', (d) => {
-                    t.equal(zoomstarted, 'ok');
-                    t.equal(zoomed, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(zoomstarted).toBe('ok');
+                    expect(zoomed).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera
                 .on('rotatestart', (d) => { rotatestarted = d.data; })
                 .on('rotate', (d) => { rotated = d.data; })
                 .on('rotateend', (d) => {
-                    t.equal(rotatestarted, 'ok');
-                    t.equal(rotated, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(rotatestarted).toBe('ok');
+                    expect(rotated).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera
                 .on('pitchstart', (d) => { pitchstarted = d.data; })
                 .on('pitch', (d) => { pitched = d.data; })
                 .on('pitchend', (d) => {
-                    t.equal(pitchstarted, 'ok');
-                    t.equal(pitched, 'ok');
-                    t.equal(d.data, 'ok');
+                    expect(pitchstarted).toBe('ok');
+                    expect(pitched).toBe('ok');
+                    expect(d.data).toBe('ok');
                 });
 
             camera.flyTo(
@@ -1196,22 +1196,22 @@ test('camera', (t) => {
                 .on('pitch', (d) => { pitched = d.data; })
                 .on('pitchend', (d) => { pitchended = d.data; })
                 .on('moveend', function(d) {
-                    t.notOk(this._zooming);
-                    t.notOk(this._panning);
-                    t.notOk(this._rotating);
+                    expect(this._zooming).toBeFalsy();
+                    expect(this._panning).toBeFalsy();
+                    expect(this._rotating).toBeFalsy();
 
-                    t.equal(movestarted, 'ok');
-                    t.equal(moved, 'ok');
-                    t.equal(zoomstarted, undefined);
-                    t.equal(zoomed, undefined);
-                    t.equal(zoomended, undefined);
-                    t.equal(rotatestarted, undefined);
-                    t.equal(rotated, undefined);
-                    t.equal(rotateended, undefined);
-                    t.equal(pitched, undefined);
-                    t.equal(pitchstarted, undefined);
-                    t.equal(pitchended, undefined);
-                    t.equal(d.data, 'ok');
+                    expect(movestarted).toBe('ok');
+                    expect(moved).toBe('ok');
+                    expect(zoomstarted).toBe(undefined);
+                    expect(zoomed).toBe(undefined);
+                    expect(zoomended).toBe(undefined);
+                    expect(rotatestarted).toBe(undefined);
+                    expect(rotated).toBe(undefined);
+                    expect(rotateended).toBe(undefined);
+                    expect(pitched).toBe(undefined);
+                    expect(pitchstarted).toBe(undefined);
+                    expect(pitchended).toBe(undefined);
+                    expect(d.data).toBe('ok');
                     t.end();
                 });
 
@@ -1235,7 +1235,7 @@ test('camera', (t) => {
             const camera = createCamera();
             camera.flyTo({center: [200, 0], duration: 100});
             camera.flyTo({center: [100, 0], duration: 0});
-            t.deepEqual(fixedLngLat(camera.getCenter()), {lng: 100, lat: 0});
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
             t.end();
         });
 
@@ -1283,7 +1283,7 @@ test('camera', (t) => {
             });
 
             camera.on('moveend', () => {
-                t.ok(ascended);
+                expect(ascended).toBeTruthy();
                 t.end();
             });
 
@@ -1317,7 +1317,7 @@ test('camera', (t) => {
             });
 
             camera.on('moveend', () => {
-                t.ok(crossedPrimeMeridian);
+                expect(crossedPrimeMeridian).toBeTruthy();
                 t.end();
             });
 
@@ -1349,7 +1349,7 @@ test('camera', (t) => {
             });
 
             camera.on('moveend', () => {
-                t.ok(crossedPrimeMeridian);
+                expect(crossedPrimeMeridian).toBeTruthy();
                 t.end();
             });
 
@@ -1381,7 +1381,7 @@ test('camera', (t) => {
             });
 
             camera.on('moveend', () => {
-                t.ok(crossedAntimeridian);
+                expect(crossedAntimeridian).toBeTruthy();
                 t.end();
             });
 
@@ -1413,7 +1413,7 @@ test('camera', (t) => {
             });
 
             camera.on('moveend', () => {
-                t.ok(crossedAntimeridian);
+                expect(crossedAntimeridian).toBeTruthy();
                 t.end();
             });
 
@@ -1445,7 +1445,7 @@ test('camera', (t) => {
             });
 
             camera.on('moveend', () => {
-                t.notOk(crossedAntimeridian);
+                expect(crossedAntimeridian).toBeFalsy();
                 t.end();
             });
 
@@ -1477,7 +1477,7 @@ test('camera', (t) => {
             });
 
             camera.on('moveend', () => {
-                t.notOk(crossedAntimeridian);
+                expect(crossedAntimeridian).toBeFalsy();
                 t.end();
             });
 
@@ -1508,7 +1508,7 @@ test('camera', (t) => {
             });
 
             camera.on('moveend', () => {
-                t.false(leftWorld0);
+                expect(leftWorld0).toBeFalsy();
                 t.end();
             });
 
@@ -1545,7 +1545,7 @@ test('camera', (t) => {
             });
 
             camera.on('moveend', () => {
-                t.ok(zoomed, 'zoom came within satisfactory range of minZoom provided');
+                expect(zoomed).toBeTruthy();
                 t.end();
             });
 
@@ -1645,21 +1645,21 @@ test('camera', (t) => {
     t.test('#isEasing', (t) => {
         t.test('returns false when not easing', (t) => {
             const camera = createCamera();
-            t.ok(!camera.isEasing());
+            expect(!camera.isEasing()).toBeTruthy();
             t.end();
         });
 
         t.test('returns true when panning', (t) => {
             const camera = createCamera();
             camera.panTo([100, 0], {duration: 1});
-            t.ok(camera.isEasing());
+            expect(camera.isEasing()).toBeTruthy();
             t.end();
         });
 
         t.test('returns false when done panning', (t) => {
             const camera = createCamera();
             camera.on('moveend', () => {
-                t.ok(!camera.isEasing());
+                expect(!camera.isEasing()).toBeTruthy();
                 t.end();
             });
             const stub = t.stub(browser, 'now');
@@ -1674,14 +1674,14 @@ test('camera', (t) => {
         t.test('returns true when zooming', (t) => {
             const camera = createCamera();
             camera.zoomTo(3.2, {duration: 1});
-            t.ok(camera.isEasing());
+            expect(camera.isEasing()).toBeTruthy();
             t.end();
         });
 
         t.test('returns false when done zooming', (t) => {
             const camera = createCamera();
             camera.on('moveend', () => {
-                t.ok(!camera.isEasing());
+                expect(!camera.isEasing()).toBeTruthy();
                 t.end();
             });
             const stub = t.stub(browser, 'now');
@@ -1696,14 +1696,14 @@ test('camera', (t) => {
         t.test('returns true when rotating', (t) => {
             const camera = createCamera();
             camera.rotateTo(90, {duration: 1});
-            t.ok(camera.isEasing());
+            expect(camera.isEasing()).toBeTruthy();
             t.end();
         });
 
         t.test('returns false when done rotating', (t) => {
             const camera = createCamera();
             camera.on('moveend', () => {
-                t.ok(!camera.isEasing());
+                expect(!camera.isEasing()).toBeTruthy();
                 t.end();
             });
             const stub = t.stub(browser, 'now');
@@ -1723,7 +1723,7 @@ test('camera', (t) => {
             const camera = createCamera();
             camera.zoomTo(3.2);
             camera.stop();
-            t.ok(!camera._zooming);
+            expect(!camera._zooming).toBeTruthy();
             t.end();
         });
 
@@ -1731,7 +1731,7 @@ test('camera', (t) => {
             const camera = createCamera();
             camera.rotateTo(90);
             camera.stop();
-            t.ok(!camera._rotating);
+            expect(!camera._rotating).toBeTruthy();
             t.end();
         });
 
@@ -1740,7 +1740,7 @@ test('camera', (t) => {
             const eventData = {data: 'ok'};
 
             camera.on('moveend', (d) => {
-                t.equal(d.data, 'ok');
+                expect(d.data).toBe('ok');
                 t.end();
             });
 
@@ -1753,7 +1753,7 @@ test('camera', (t) => {
             const eventData = {data: 'ok'};
 
             camera.on('moveend', (d) => {
-                t.equal(d.data, 'ok');
+                expect(d.data).toBe('ok');
                 t.end();
             });
 
@@ -1766,7 +1766,7 @@ test('camera', (t) => {
             const eventData = {data: 'ok'};
 
             camera.on('moveend', (d) => {
-                t.equal(d.data, 'ok');
+                expect(d.data).toBe('ok');
                 t.end();
             });
 
@@ -1779,7 +1779,7 @@ test('camera', (t) => {
             const eventData = {data: 'ok'};
 
             camera.on('moveend', (d) => {
-                t.equal(d.data, 'ok');
+                expect(d.data).toBe('ok');
                 camera.stop();
                 t.end(); // Fails with ".end() called twice" if we get here a second time.
             });
@@ -1803,8 +1803,8 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             const transform = camera.cameraForBounds(bb);
-            t.deepEqual(fixedLngLat(transform.center, 4), {lng: -100.5, lat: 34.7171}, 'correctly calculates coordinates for new bounds');
-            t.equal(fixedNum(transform.zoom, 3), 2.469);
+            expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
+            expect(fixedNum(transform.zoom, 3)).toBe(2.469);
             t.end();
         });
 
@@ -1813,9 +1813,9 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             const transform = camera.cameraForBounds(bb, {bearing: 175});
-            t.deepEqual(fixedLngLat(transform.center, 4), {lng: -100.5, lat: 34.7171}, 'correctly calculates coordinates for new bounds');
-            t.equal(fixedNum(transform.zoom, 3), 2.558);
-            t.equal(transform.bearing, 175);
+            expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
+            expect(fixedNum(transform.zoom, 3)).toBe(2.558);
+            expect(transform.bearing).toBe(175);
             t.end();
         });
 
@@ -1824,9 +1824,9 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             const transform = camera.cameraForBounds(bb, {bearing: -30});
-            t.deepEqual(fixedLngLat(transform.center, 4), {lng: -100.5, lat: 34.7171}, 'correctly calculates coordinates for new bounds');
-            t.equal(fixedNum(transform.zoom, 3), 2.392);
-            t.equal(transform.bearing, -30);
+            expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
+            expect(fixedNum(transform.zoom, 3)).toBe(2.392);
+            expect(transform.bearing).toBe(-30);
             t.end();
         });
 
@@ -1835,8 +1835,8 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             const transform = camera.cameraForBounds(bb, {padding: 15});
-            t.deepEqual(fixedLngLat(transform.center, 4), {lng: -100.5, lat: 34.7171}, 'correctly calculates coordinates for bounds with padding option as number applied');
-            t.equal(fixedNum(transform.zoom, 3), 2.382);
+            expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
+            expect(fixedNum(transform.zoom, 3)).toBe(2.382);
             t.end();
         });
 
@@ -1845,7 +1845,7 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             const transform = camera.cameraForBounds(bb, {padding: {top: 15, right: 15, bottom: 15, left: 15}, duration: 0});
-            t.deepEqual(fixedLngLat(transform.center, 4), {lng: -100.5, lat: 34.7171}, 'correctly calculates coordinates for bounds with padding option as object applied');
+            expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
             t.end();
         });
 
@@ -1854,7 +1854,7 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             const transform = camera.cameraForBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
-            t.deepEqual(fixedLngLat(transform.center, 4), {lng: -96.5558, lat: 32.0833}, 'correctly calculates coordinates for bounds with padding option as object applied');
+            expect(fixedLngLat(transform.center, 4)).toEqual({lng: -96.5558, lat: 32.0833});
             t.end();
         });
 
@@ -1863,7 +1863,7 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             const transform = camera.cameraForBounds(bb, {bearing: 90, padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
-            t.deepEqual(fixedLngLat(transform.center, 4), {lng: -103.3761, lat: 31.7099}, 'correctly calculates coordinates for bounds with bearing and padding option as object applied');
+            expect(fixedLngLat(transform.center, 4)).toEqual({lng: -103.3761, lat: 31.7099});
             t.end();
         });
 
@@ -1872,7 +1872,7 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             const transform = camera.cameraForBounds(bb, {offset: [0, 100]});
-            t.deepEqual(fixedLngLat(transform.center, 4), {lng: -100.5, lat: 44.4717}, 'correctly calculates coordinates for bounds with padding option as object applied');
+            expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 44.4717});
             t.end();
         });
 
@@ -1881,7 +1881,7 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             const transform = camera.cameraForBounds(bb, {offset: {x: 0, y: 100}});
-            t.deepEqual(fixedLngLat(transform.center, 4), {lng: -100.5, lat: 44.4717}, 'correctly calculates coordinates for bounds with padding option as object applied');
+            expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 44.4717});
             t.end();
         });
 
@@ -1890,7 +1890,7 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             const transform = camera.cameraForBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, offset: [0, 100]});
-            t.deepEqual(fixedLngLat(transform.center, 4), {lng: -96.5558, lat: 44.4189}, 'correctly calculates coordinates for bounds with padding option as object applied');
+            expect(fixedLngLat(transform.center, 4)).toEqual({lng: -96.5558, lat: 44.4189});
             t.end();
         });
 
@@ -1899,7 +1899,7 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             const transform = camera.cameraForBounds(bb, {bearing: 90, padding: {top: 10, right: 75, bottom: 50, left: 25}, offset: [0, 100], duration: 0});
-            t.deepEqual(fixedLngLat(transform.center, 4), {lng: -103.3761, lat: 43.0929}, 'correctly calculates coordinates for bounds with bearing, padding option as object, and offset applied');
+            expect(fixedLngLat(transform.center, 4)).toEqual({lng: -103.3761, lat: 43.0929});
             t.end();
         });
 
@@ -1912,8 +1912,8 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             camera.fitBounds(bb, {duration:0});
-            t.deepEqual(fixedLngLat(camera.getCenter(), 4), {lng: -100.5, lat: 34.7171}, 'pans to coordinates based on fitBounds');
-            t.equal(fixedNum(camera.getZoom(), 3), 2.469);
+            expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.7171});
+            expect(fixedNum(camera.getZoom(), 3)).toBe(2.469);
             t.end();
         });
 
@@ -1922,8 +1922,8 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             camera.fitBounds(bb, {padding: 15, duration:0});
-            t.deepEqual(fixedLngLat(camera.getCenter(), 4), {lng: -100.5, lat: 34.7171}, 'pans to coordinates based on fitBounds with padding option as number applied');
-            t.equal(fixedNum(camera.getZoom(), 3), 2.382);
+            expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.7171});
+            expect(fixedNum(camera.getZoom(), 3)).toBe(2.382);
             t.end();
         });
 
@@ -1932,7 +1932,7 @@ test('camera', (t) => {
             const bb = [[-133, 16], [-68, 50]];
 
             camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration:0});
-            t.deepEqual(fixedLngLat(camera.getCenter(), 4), {lng: -96.5558, lat: 32.0833}, 'pans to coordinates based on fitBounds with padding option as object applied');
+            expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -96.5558, lat: 32.0833});
             t.end();
         });
 
@@ -1942,7 +1942,7 @@ test('camera', (t) => {
 
             camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration:0});
             const padding = camera.transform.padding;
-            t.deepEqual(padding, {
+            expect(padding).toEqual({
                 left: 0,
                 right: 0,
                 top: 0,
@@ -1962,9 +1962,9 @@ test('camera', (t) => {
             const bearing = 225;
 
             camera.fitScreenCoordinates(p0, p1, bearing, {duration:0});
-            t.deepEqual(fixedLngLat(camera.getCenter(), 4), {lng: -45, lat: 40.9799}, 'centers, rotates 225 degrees, and zooms based on screen coordinates');
-            t.equal(fixedNum(camera.getZoom(), 3), 1.5);
-            t.equal(camera.getBearing(), -135);
+            expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
+            expect(fixedNum(camera.getZoom(), 3)).toBe(1.5);
+            expect(camera.getBearing()).toBe(-135);
             t.end();
         });
 
@@ -1976,9 +1976,9 @@ test('camera', (t) => {
             const bearing = 0;
 
             camera.fitScreenCoordinates(p0, p1, bearing, {duration:0});
-            t.deepEqual(fixedLngLat(camera.getCenter(), 4), {lng: -45, lat: 40.9799}, 'centers and zooms in based on screen coordinates');
-            t.equal(fixedNum(camera.getZoom(), 3), 2);
-            t.equal(camera.getBearing(), 0);
+            expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
+            expect(fixedNum(camera.getZoom(), 3)).toBe(2);
+            expect(camera.getBearing()).toBe(0);
             t.end();
         });
 
@@ -1989,9 +1989,9 @@ test('camera', (t) => {
             const bearing = 0;
 
             camera.fitScreenCoordinates(p0, p1, bearing, {duration:0});
-            t.deepEqual(fixedLngLat(camera.getCenter(), 4), {lng: -45, lat: 40.9799}, 'centers and zooms based on screen coordinates in opposite order');
-            t.equal(fixedNum(camera.getZoom(), 3), 2);
-            t.equal(camera.getBearing(), 0);
+            expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
+            expect(fixedNum(camera.getZoom(), 3)).toBe(2);
+            expect(camera.getBearing()).toBe(0);
             t.end();
         });
 
