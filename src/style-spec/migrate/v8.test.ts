@@ -6,7 +6,7 @@ describe('migrate v8', () => {
             'version': 7,
             'sources': {
                 'vector': {
-                    'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'
+                    'type': 'vector', 'url': 'http://www.example.com/example.json'
                 }
             },
             'layers': [
@@ -27,7 +27,7 @@ describe('migrate v8', () => {
             'version': 8,
             'sources': {
                 'vector': {
-                    'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'
+                    'type': 'vector', 'url': 'http://www.example.com/example.json'
                 }
             },
             'layers': [
@@ -52,7 +52,7 @@ describe('migrate v8', () => {
             'version': 7,
             'sources': {
                 'vector': {
-                    'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'
+                    'type': 'vector', 'url': 'http://www.example.com/example.json'
                 }
             },
             'layers': [
@@ -72,7 +72,7 @@ describe('migrate v8', () => {
             'version': 8,
             'sources': {
                 'vector': {
-                    'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'
+                    'type': 'vector', 'url': 'http://www.example.com/example.json'
                 }
             },
             'layers': [
@@ -123,7 +123,7 @@ describe('migrate v8', () => {
             'sources': {
                 'vector': {
                     'type': 'vector',
-                    'url': 'mapbox://mapbox.mapbox-streets-v5'
+                    'url': 'http://www.example.com/example.json'
                 }
             },
             'layers': [{
@@ -145,7 +145,7 @@ describe('migrate v8', () => {
             'sources': {
                 'vector': {
                     'type': 'vector',
-                    'url': 'mapbox://mapbox.mapbox-streets-v5'
+                    'url': 'http://www.example.com/example.json'
                 }
             },
             'layers': [{
@@ -171,7 +171,7 @@ describe('migrate v8', () => {
             'sources': {
                 'vector': {
                     'type': 'vector',
-                    'url': 'mapbox://mapbox.mapbox-streets-v5'
+                    'url': 'http://www.example.com/example.json'
                 }
             },
             'layers': [{
@@ -192,7 +192,7 @@ describe('migrate v8', () => {
             'sources': {
                 'vector': {
                     'type': 'vector',
-                    'url': 'mapbox://mapbox.mapbox-streets-v5'
+                    'url': 'http://www.example.com/example.json'
                 }
             },
             'layers': [{
@@ -218,7 +218,7 @@ describe('migrate v8', () => {
                 '@foo': 0.5
             },
             'sources': {
-                'vector': {'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'}
+                'vector': {'type': 'vector', 'url': 'http://www.example.com/example.json'}
             },
             'layers': [
                 {
@@ -236,7 +236,7 @@ describe('migrate v8', () => {
         const output = {
             'version': 8,
             'sources': {
-                'vector': {'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'}
+                'vector': {'type': 'vector', 'url': 'http://www.example.com/example.json'}
             },
             'layers': [
                 {
@@ -261,7 +261,7 @@ describe('migrate v8', () => {
                 '@foo': 'Arial Unicode,Foo Bar'
             },
             'sources': {
-                'vector': {'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'}
+                'vector': {'type': 'vector', 'url': 'http://www.example.com/example.json'}
             },
             'layers': [
                 {
@@ -279,7 +279,7 @@ describe('migrate v8', () => {
         const output = {
             'version': 8,
             'sources': {
-                'vector': {'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'}
+                'vector': {'type': 'vector', 'url': 'http://www.example.com/example.json'}
             },
             'layers': [
                 {
@@ -301,7 +301,7 @@ describe('migrate v8', () => {
         const input = {
             'version': 7,
             'sources': {
-                'vector': {'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'}
+                'vector': {'type': 'vector', 'url': 'http://www.example.com/example.json'}
             },
             'layers': [
                 {
@@ -331,7 +331,7 @@ describe('migrate v8', () => {
         const output = {
             'version': 8,
             'sources': {
-                'vector': {'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'}
+                'vector': {'type': 'vector', 'url': 'http://www.example.com/example.json'}
             },
             'layers': [
                 {
@@ -374,7 +374,7 @@ describe('migrate v8', () => {
                 }
             },
             'sources': {
-                'vector': {'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'}
+                'vector': {'type': 'vector', 'url': 'http://www.example.com/example.json'}
             },
             'layers': [
                 {
@@ -392,7 +392,7 @@ describe('migrate v8', () => {
         const output = {
             'version': 8,
             'sources': {
-                'vector': {'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'}
+                'vector': {'type': 'vector', 'url': 'http://www.example.com/example.json'}
             },
             'layers': [
                 {
@@ -424,7 +424,7 @@ describe('migrate v8', () => {
                 '@font-stack-b': 'Open Sans Semibold, Arial Unicode MS Regular'
             },
             'sources': {
-                'vector': {'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'}
+                'vector': {'type': 'vector', 'url': 'http://www.example.com/example.json'}
             },
             'layers': [
                 {
@@ -448,7 +448,7 @@ describe('migrate v8', () => {
         const output = {
             'version': 8,
             'sources': {
-                'vector': {'type': 'vector', 'url': 'mapbox://mapbox.mapbox-streets-v5'}
+                'vector': {'type': 'vector', 'url': 'http://www.example.com/example.json'}
             },
             'layers': [
                 {
