@@ -1,27 +1,15 @@
 import VideoSource from './video_source';
 import {extend} from '../util/util';
-import Dispatcher from '../util/dispatcher';
+import {getMockDispatcher} from '../util/test/util';
 
 import type {Coordinates} from './image_source';
-
-const wrapDispatcher = (dispatcher) => {
-    return {
-        getActor() {
-            return dispatcher;
-        }
-    } as any as Dispatcher;
-};
-
-const mockDispatcher = wrapDispatcher({
-    send () {}
-});
 
 function createSource(options) {
     const c = options && options.video || window.document.createElement('video');
 
     options = extend({coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]}, options);
 
-    const source = new VideoSource('id', options, mockDispatcher, options.eventedParent);
+    const source = new VideoSource('id', options, getMockDispatcher(), options.eventedParent);
 
     source.video = c;
     return source;
