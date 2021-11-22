@@ -20,12 +20,12 @@ describe('TileCache', () => {
         const cache = new TileCache(10, (removed) => {
             expect(removed).toBe('dc');
         });
-        expect(cache.getAndRemove(idC)).toBe(null);
+        expect(cache.getAndRemove(idC)).toBeNull();
         expect(cache.add(idA, tileA)).toBe(cache);
         keysExpected(cache, [idA]);
         expect(cache.has(idA)).toBe(true);
         expect(cache.getAndRemove(idA)).toBe(tileA);
-        expect(cache.getAndRemove(idA)).toBe(null);
+        expect(cache.getAndRemove(idA)).toBeNull();
         expect(cache.has(idA)).toBe(false);
         keysExpected(cache, []);
     });

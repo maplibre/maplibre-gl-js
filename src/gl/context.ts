@@ -7,7 +7,7 @@ import StencilMode from './stencil_mode';
 import ColorMode from './color_mode';
 import CullFaceMode from './cull_face_mode';
 import {deepEqual} from '../util/util';
-import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, BlendEquation, CullFace, CullFaceSide, FrontFace, Program, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArrayOES, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha, PixelStoreUnpackFlipY} from './value';
+import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, BlendEquation, CullFace, CullFaceSide, FrontFace, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArrayOES, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha, PixelStoreUnpackFlipY} from './value';
 
 import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type';
 import type {
@@ -47,7 +47,7 @@ class Context {
     cullFace: CullFace;
     cullFaceSide: CullFaceSide;
     frontFace: FrontFace;
-    program: Program;
+    program: ProgramValue;
     activeTexture: ActiveTextureUnit;
     viewport: Viewport;
     bindFramebuffer: BindFramebuffer;
@@ -89,7 +89,7 @@ class Context {
         this.cullFace = new CullFace(this);
         this.cullFaceSide = new CullFaceSide(this);
         this.frontFace = new FrontFace(this);
-        this.program = new Program(this);
+        this.program = new ProgramValue(this);
         this.activeTexture = new ActiveTextureUnit(this);
         this.viewport = new Viewport(this);
         this.bindFramebuffer = new BindFramebuffer(this);

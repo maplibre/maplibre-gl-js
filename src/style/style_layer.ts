@@ -28,6 +28,7 @@ import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type Map from '../ui/map';
 import type {StyleSetterOptions} from './style';
 import {mat4} from 'gl-matrix';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 const TRANSITION_SUFFIX = '-transition';
 
@@ -49,7 +50,7 @@ interface StyleLayer {
 abstract class StyleLayer extends Evented {
     id: string;
     metadata: unknown;
-    type: string;
+    type: LayerSpecification['type'] | CustomLayerInterface['type'];
     source: string;
     sourceLayer: string;
     minzoom: number;
@@ -216,16 +217,16 @@ abstract class StyleLayer extends Evented {
         (this as any).paint = this._transitioningPaint.possiblyEvaluate(parameters, undefined, availableImages);
     }
 
-    serialize() {
-        const output: any = {
+    serialize(): LayerSpecification {
+        const output: LayerSpecification = {
             'id': this.id,
-            'type': this.type,
+            'type': this.type as LayerSpecification['type'],
             'source': this.source,
             'source-layer': this.sourceLayer,
             'metadata': this.metadata,
             'minzoom': this.minzoom,
             'maxzoom': this.maxzoom,
-            'filter': this.filter,
+            'filter': this.filter as FilterSpecification,
             'layout': this._unevaluatedLayout && this._unevaluatedLayout.serialize(),
             'paint': this._transitionablePaint && this._transitionablePaint.serialize()
         };

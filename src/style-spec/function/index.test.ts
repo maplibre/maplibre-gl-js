@@ -430,9 +430,9 @@ describe('exponential function', () => {
             type: 'color'
         }).evaluate;
 
-        expect(f({zoom: 0}, {properties: {}})).toBe(undefined);
-        expect(f({zoom: 0.5}, {properties: {}})).toBe(undefined);
-        expect(f({zoom: 1}, {properties: {}})).toBe(undefined);
+        expect(f({zoom: 0}, {properties: {}})).toBeUndefined();
+        expect(f({zoom: 0.5}, {properties: {}})).toBeUndefined();
+        expect(f({zoom: 1}, {properties: {}})).toBeUndefined();
 
     });
 
@@ -949,7 +949,7 @@ describe('unknown function', () => {
         type: 'nonesuch', stops: [[]]
     }, {
         type: 'string'
-    })).toThrowError(/Unknown function type "nonesuch"/);
+    })).toThrow(/Unknown function type "nonesuch"/);
 });
 
 describe('kind', () => {

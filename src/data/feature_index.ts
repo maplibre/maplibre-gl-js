@@ -3,7 +3,7 @@ import loadGeometry from './load_geometry';
 import toEvaluationFeature from './evaluation_feature';
 import EXTENT from './extent';
 import featureFilter from '../style-spec/feature_filter';
-import Grid from 'grid-index';
+import TransferableGridIndex from 'grid-index';
 import DictionaryCoder from '../util/dictionary_coder';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
@@ -23,6 +23,7 @@ import type {FeatureFilter} from '../style-spec/feature_filter';
 import type Transform from '../geo/transform';
 import type {FilterSpecification, PromoteIdSpecification} from '../style-spec/types';
 import type {FeatureState} from '../style-spec/expression';
+import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 
 type QueryParameters = {
   scale: number;
@@ -44,8 +45,8 @@ class FeatureIndex {
     x: number;
     y: number;
     z: number;
-    grid: Grid;
-    grid3D: Grid;
+    grid: TransferableGridIndex;
+    grid3D: TransferableGridIndex;
     featureIndexArray: FeatureIndexArray;
     promoteId?: PromoteIdSpecification;
 
@@ -60,8 +61,8 @@ class FeatureIndex {
         this.x = tileID.canonical.x;
         this.y = tileID.canonical.y;
         this.z = tileID.canonical.z;
-        this.grid = new Grid(EXTENT, 16, 0);
-        this.grid3D = new Grid(EXTENT, 16, 0);
+        this.grid = new TransferableGridIndex(EXTENT, 16, 0);
+        this.grid3D = new TransferableGridIndex(EXTENT, 16, 0);
         this.featureIndexArray = new FeatureIndexArray();
         this.promoteId = promoteId;
     }
@@ -291,8 +292,8 @@ class FeatureIndex {
         return false;
     }
 
-    getId(feature: VectorTileFeature, sourceLayerId: string): string | number | void {
-        let id: string | number | boolean = feature.id;
+    getId(feature: VectorTileFeature, sourceLayerId: string): string | number {
+        let id: string | number = feature.id;
         if (this.promoteId) {
             const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];
             id = feature.properties[propName];

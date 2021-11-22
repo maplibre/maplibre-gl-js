@@ -145,7 +145,7 @@ describe('load worker source', () => {
 describe('set images', () => {
     test('set images', () => {
         const worker = new Worker(_self);
-        expect(worker.availableImages['0']).toEqual(undefined);
+        expect(worker.availableImages['0']).toBeUndefined();
         worker.setImages('0', ['availableImages'], () => {});
         expect(worker.availableImages['0']).toEqual(['availableImages']);
     });

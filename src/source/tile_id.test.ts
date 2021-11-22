@@ -21,10 +21,10 @@ describe('CanonicalTileID', () => {
     });
 
     test('.key', () => {
-        expect(new CanonicalTileID(0, 0, 0).key).toEqual('000');
-        expect(new CanonicalTileID(1, 0, 0).key).toEqual('011');
-        expect(new CanonicalTileID(1, 1, 0).key).toEqual('111');
-        expect(new CanonicalTileID(1, 1, 1).key).toEqual('311');
+        expect(new CanonicalTileID(0, 0, 0).key).toBe('000');
+        expect(new CanonicalTileID(1, 0, 0).key).toBe('011');
+        expect(new CanonicalTileID(1, 1, 0).key).toBe('111');
+        expect(new CanonicalTileID(1, 1, 1).key).toBe('311');
     });
 
     test('.equals', () => {
@@ -52,6 +52,13 @@ describe('CanonicalTileID', () => {
         expect(new CanonicalTileID(1, 0, 0).url(['bbox={bbox-epsg-3857}'])).toBe('bbox=-20037508.342789244,0,0,20037508.342789244');
     });
 
+    test('.url replaces {ratio}', () => {
+        devicePixelRatio = 2;
+        expect(new CanonicalTileID(1, 0, 0).url(['r={ratio}'])).toBe('r=@2x');
+        devicePixelRatio = 1;
+        expect(new CanonicalTileID(1, 0, 0).url(['r={ratio}'])).toBe('r=');
+    });
+
     //Tests that multiple values of the same placeholder are replaced.
     test('.url replaces {z}/{x}/{y}/{z}/{x}/{y}', () => {
         expect(new CanonicalTileID(2, 1, 0).url(['{z}/{x}/{y}/{z}/{x}/{y}.json'])).toBe('2/1/0/2/1/0.json');
@@ -69,15 +76,15 @@ describe('OverscaledTileID', () => {
     });
 
     test('.key', () => {
-        expect(new OverscaledTileID(0, 0, 0, 0, 0).key).toEqual('000');
-        expect(new OverscaledTileID(1, 0, 1, 0, 0).key).toEqual('011');
-        expect(new OverscaledTileID(1, 0, 1, 1, 0).key).toEqual('111');
-        expect(new OverscaledTileID(1, 0, 1, 1, 1).key).toEqual('311');
-        expect(new OverscaledTileID(1, -1, 1, 1, 1).key).toEqual('711');
+        expect(new OverscaledTileID(0, 0, 0, 0, 0).key).toBe('000');
+        expect(new OverscaledTileID(1, 0, 1, 0, 0).key).toBe('011');
+        expect(new OverscaledTileID(1, 0, 1, 1, 0).key).toBe('111');
+        expect(new OverscaledTileID(1, 0, 1, 1, 1).key).toBe('311');
+        expect(new OverscaledTileID(1, -1, 1, 1, 1).key).toBe('711');
     });
 
     test('.toString', () => {
-        expect(new OverscaledTileID(1, 0, 1, 1, 1).toString()).toEqual('1/1/1');
+        expect(new OverscaledTileID(1, 0, 1, 1, 1).toString()).toBe('1/1/1');
     });
 
     test('.children', () => {

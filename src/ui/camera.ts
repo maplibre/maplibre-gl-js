@@ -14,6 +14,8 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 
+export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
+
 /**
  * Options common to {@link Map#jumpTo}, {@link Map#easeTo}, and {@link Map#flyTo}, controlling the desired location,
  * zoom, bearing, and pitch of the camera. All properties are optional, and when a property is omitted, the current
@@ -45,16 +47,48 @@ import type {PaddingOptions} from '../geo/edge_insets';
  * @see [Fly to a location](https://maplibre.org/maplibre-gl-js-docs/example/flyto/)
  * @see [Display buildings in 3D](https://maplibre.org/maplibre-gl-js-docs/example/3d-buildings/)
  */
-export type CameraOptions = {
-  center?: LngLatLike;
-  zoom?: number;
-  bearing?: number;
+export type CameraOptions = CenterZoomBearing & {
   pitch?: number;
   around?: LngLatLike;
-  padding?: PaddingOptions;
-  maxZoom?: number;
-  offset?: PointLike;
 };
+
+export type CenterZoomBearing = {
+    center?: LngLatLike;
+    zoom?: number;
+    bearing?: number;
+}
+
+export type JumpToOptions = CameraOptions & {
+    padding?: PaddingOptions;
+}
+
+export type CameraForBoundsOptions = CameraOptions & {
+    padding?: number | RequireAtLeastOne<PaddingOptions>;
+    offset?: PointLike;
+    maxZoom?: number;
+}
+
+export type FlyToOptions = AnimationOptions & CameraOptions & {
+    curve?: number;
+    minZoom?: number;
+    speed?: number;
+    screenSpeed?: number;
+    maxDuration?: number;
+    padding?: number | RequireAtLeastOne<PaddingOptions>;
+}
+
+export type EaseToOptions = AnimationOptions & CameraOptions & {
+    delayEndEvents?: number;
+    padding?: number | RequireAtLeastOne<PaddingOptions>;
+}
+
+export type FitBoundsOptions = FlyToOptions & {
+    linear?: boolean;
+    offset?: PointLike;
+    maxZoom?: number;
+    maxDuration?: number;
+    padding?: number | RequireAtLeastOne<PaddingOptions>;
+}
 
 /**
  * Options common to map movement methods that involve animation, such as {@link Map#panBy} and
@@ -78,31 +112,6 @@ export type AnimationOptions = {
   essential?: boolean;
 };
 
-/**
- * Options for setting padding on calls to methods such as {@link Map#fitBounds}, {@link Map#fitScreenCoordinates}, and {@link Map#setPadding}. Adjust these options to set the amount of padding in pixels added to the edges of the canvas. Set a uniform padding on all edges or individual values for each edge. All properties of this object must be
- * non-negative integers.
- *
- * @typedef {Object} PaddingOptions
- * @property {number} top Padding in pixels from the top of the map canvas.
- * @property {number} bottom Padding in pixels from the bottom of the map canvas.
- * @property {number} left Padding in pixels from the left of the map canvas.
- * @property {number} right Padding in pixels from the right of the map canvas.
- *
- * @example
- * var bbox = [[-79, 43], [-73, 45]];
- * map.fitBounds(bbox, {
- *   padding: {top: 10, bottom:25, left: 15, right: 5}
- * });
- *
- * @example
- * var bbox = [[-79, 43], [-73, 45]];
- * map.fitBounds(bbox, {
- *   padding: 20
- * });
- * @see [Fit to the bounds of a LineString](https://maplibre.org/maplibre-gl-js-docs/example/zoomto-linestring/)
- * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/fitbounds/)
- */
-
 abstract class Camera extends Evented {
     transform: Transform;
     _moving: boolean;
@@ -114,8 +123,8 @@ abstract class Camera extends Evented {
     _bearingSnap: number;
     _easeStart: number;
     _easeOptions: {
-      duration: number;
-      easing: (_: number) => number;
+      duration?: number;
+      easing?: (_: number) => number;
     };
     _easeId: string | void;
 
@@ -478,15 +487,15 @@ abstract class Camera extends Evented {
      * @param {number} [options.bearing=0] Desired map bearing at end of animation, in degrees.
      * @param {PointLike} [options.offset=[0, 0]] The center of the given bounds relative to the map's center, measured in pixels.
      * @param {number} [options.maxZoom] The maximum zoom level to allow when the camera would transition to the specified bounds.
-     * @returns {CameraOptions | void} If map is able to fit to provided bounds, returns `CameraOptions` with
-     *      `center`, `zoom`, and `bearing`. If map is unable to fit, method will warn and return undefined.
+     * @returns {CenterZoomBearing} If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`.
+     *      If map is unable to fit, method will warn and return undefined.
      * @example
      * var bbox = [[-79, 43], [-73, 45]];
      * var newCameraTransform = map.cameraForBounds(bbox, {
      *   padding: {top: 10, bottom:25, left: 15, right: 5}
      * });
      */
-    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraOptions): void | CameraOptions & AnimationOptions {
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing {
         bounds = LngLatBounds.convert(bounds);
         const bearing = options && options.bearing || 0;
         return this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
@@ -504,8 +513,8 @@ abstract class Camera extends Evented {
      * @param {number | PaddingOptions} [options.padding] The amount of padding in pixels to add to the given bounds.
      * @param {PointLike} [options.offset=[0, 0]] The center of the given bounds relative to the map's center, measured in pixels.
      * @param {number} [options.maxZoom] The maximum zoom level to allow when the camera would transition to the specified bounds.
-     * @returns {CameraOptions | void} If map is able to fit to provided bounds, returns `CameraOptions` with
-     *      `center`, `zoom`, and `bearing`. If map is unable to fit, method will warn and return undefined.
+     * @returns {CenterZoomBearing} If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`.
+     *      If map is unable to fit, method will warn and return undefined.
      * @private
      * @example
      * var p0 = [-79, 43];
@@ -515,7 +524,7 @@ abstract class Camera extends Evented {
      *   padding: {top: 10, bottom:25, left: 15, right: 5}
      * });
      */
-    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraOptions): void | CameraOptions & AnimationOptions {
+    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing {
         const defaultPadding = {
             top: 0,
             bottom: 0,
@@ -538,7 +547,7 @@ abstract class Camera extends Evented {
             };
         }
 
-        options.padding = extend(defaultPadding, options.padding);
+        options.padding = extend(defaultPadding, options.padding) as PaddingOptions;
         const tr = this.transform;
         const edgePadding = tr.padding;
 
@@ -561,7 +570,7 @@ abstract class Camera extends Evented {
             warnOnce(
                 'Map cannot fit within canvas with the given bounds, padding, and/or offset.'
             );
-            return;
+            return undefined;
         }
 
         const zoom = Math.min(tr.scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
@@ -610,9 +619,9 @@ abstract class Camera extends Evented {
      * });
      * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/fitbounds/)
      */
-    fitBounds(bounds: LngLatBoundsLike, options?: AnimationOptions & CameraOptions & { linear: boolean }, eventData?: any) {
+    fitBounds(bounds: LngLatBoundsLike, options?: FitBoundsOptions, eventData?: any) {
         return this._fitInternal(
-            this.cameraForBounds(bounds, options) as AnimationOptions & CameraOptions,
+            this.cameraForBounds(bounds, options),
             options,
             eventData);
     }
@@ -646,18 +655,18 @@ abstract class Camera extends Evented {
      * });
      * @see Used by {@link BoxZoomHandler}
      */
-    fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: AnimationOptions & CameraOptions & { linear: boolean }, eventData?: any) {
+    fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any) {
         return this._fitInternal(
             this._cameraForBoxAndBearing(
                 this.transform.pointLocation(Point.convert(p0)),
                 this.transform.pointLocation(Point.convert(p1)),
                 bearing,
-                options) as CameraOptions & AnimationOptions,
+                options),
             options,
             eventData);
     }
 
-    _fitInternal(calculatedOptions?: CameraOptions & AnimationOptions, options?: AnimationOptions & CameraOptions & { linear: boolean }, eventData?: any) {
+    _fitInternal(calculatedOptions?: CenterZoomBearing, options?: FitBoundsOptions, eventData?: any) {
         // cameraForBounds warns + returns undefined if unable to fit:
         if (!calculatedOptions) return this;
 
@@ -702,7 +711,7 @@ abstract class Camera extends Evented {
      * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js-docs/example/jump-to/)
      * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js-docs/example/live-update-feature/)
      */
-    jumpTo(options: CameraOptions, eventData?: any) {
+    jumpTo(options: JumpToOptions, eventData?: any) {
         this.stop();
 
         const tr = this.transform;
@@ -783,7 +792,7 @@ abstract class Camera extends Evented {
      * @returns {Map} `this`
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
      */
-    easeTo(options: CameraOptions & AnimationOptions & {
+    easeTo(options: EaseToOptions & {
       easeId?: string;
       noMoveStart?: boolean;
     }, eventData?: any) {
@@ -835,7 +844,7 @@ abstract class Camera extends Evented {
         this._zooming = this._zooming || (zoom !== startZoom);
         this._rotating = this._rotating || (startBearing !== bearing);
         this._pitching = this._pitching || (pitch !== startPitch);
-        this._padding = !tr.isPaddingEqual(padding);
+        this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
@@ -851,9 +860,9 @@ abstract class Camera extends Evented {
                 tr.pitch = interpolate(startPitch, pitch, k);
             }
             if (this._padding) {
-                tr.interpolatePadding(startPadding, padding, k);
+                tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
                 // When padding is being applied, Transform#centerPoint is changing continously,
-                // thus we need to recalculate offsetPoint every fra,e
+                // thus we need to recalculate offsetPoint every frame
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
 
@@ -996,10 +1005,10 @@ abstract class Camera extends Evented {
      * @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js-docs/example/flyto-options/)
      * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js-docs/example/scroll-fly-to/)
      */
-    flyTo(options: any, eventData?: any) {
+    flyTo(options: FlyToOptions, eventData?: any) {
         // Fall through to jumpTo if user has set prefers-reduced-motion
         if (!options.essential && browser.prefersReducedMotion) {
-            const coercedOptions = (pick(options, ['center', 'zoom', 'bearing', 'pitch', 'around']) as CameraOptions);
+            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'around']) as CameraOptions;
             return this.jumpTo(coercedOptions, eventData);
         }
 
@@ -1121,7 +1130,7 @@ abstract class Camera extends Evented {
         this._zooming = true;
         this._rotating = (startBearing !== bearing);
         this._pitching = (pitch !== startPitch);
-        this._padding = !tr.isPaddingEqual(padding);
+        this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
         this._prepareEase(eventData, false);
 
@@ -1138,7 +1147,7 @@ abstract class Camera extends Evented {
                 tr.pitch = interpolate(startPitch, pitch, k);
             }
             if (this._padding) {
-                tr.interpolatePadding(startPadding, padding, k);
+                tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
                 // When padding is being applied, Transform#centerPoint is changing continously,
                 // thus we need to recalculate offsetPoint every frame
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
@@ -1193,9 +1202,9 @@ abstract class Camera extends Evented {
     _ease(frame: (_: number) => void,
           finish: () => void,
           options: {
-            animate: boolean;
-            duration: number;
-            easing: (_: number) => number;
+            animate?: boolean;
+            duration?: number;
+            easing?: (_: number) => number;
           }) {
         if (options.animate === false || options.duration === 0) {
             frame(1);

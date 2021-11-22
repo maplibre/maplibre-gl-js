@@ -4,9 +4,9 @@ describe('Color', () => {
     test('Color.parse', () => {
         expect(Color.parse('red')).toEqual(new Color(1, 0, 0, 1));
         expect(Color.parse('#ff00ff')).toEqual(new Color(1, 0, 1, 1));
-        expect(Color.parse('invalid')).toEqual(undefined);
-        expect(Color.parse(null)).toEqual(undefined);
-        expect(Color.parse(undefined)).toEqual(undefined);
+        expect(Color.parse('invalid')).toBeUndefined();
+        expect(Color.parse(null)).toBeUndefined();
+        expect(Color.parse(undefined)).toBeUndefined();
     });
 
     test('Color#toString', () => {

@@ -16,6 +16,7 @@ import type {
 import type Actor from '../util/actor';
 import type StyleLayerIndex from '../style/style_layer_index';
 import type {Callback} from '../types/callback';
+import type {VectorTile} from '@mapbox/vector-tile';
 
 export type LoadVectorTileResult = {
   vectorTile: VectorTile;

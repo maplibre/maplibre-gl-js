@@ -37,6 +37,7 @@ export class CanonicalTileID {
             .replace(/{z}/g, String(this.z))
             .replace(/{x}/g, String(this.x))
             .replace(/{y}/g, String(scheme === 'tms' ? (Math.pow(2, this.z) - this.y - 1) : this.y))
+            .replace(/{ratio}/g, devicePixelRatio > 1 ? '@2x' : '')
             .replace(/{quadkey}/g, quadkey)
             .replace(/{bbox-epsg-3857}/g, bbox);
     }

@@ -7,13 +7,13 @@ import {MouseRotateHandler, MousePitchHandler} from '../handler/mouse';
 import type Map from '../map';
 import type {IControl} from './control';
 
-type Options = {
+type NavigationOptions = {
   showCompass?: boolean;
   showZoom?: boolean;
   visualizePitch?: boolean;
 };
 
-const defaultOptions: Options = {
+const defaultOptions: NavigationOptions = {
     showCompass: true,
     showZoom: true,
     visualizePitch: false
@@ -35,7 +35,7 @@ const defaultOptions: Options = {
  */
 class NavigationControl implements IControl {
     _map: Map;
-    options: Options;
+    options: NavigationOptions;
     _container: HTMLElement;
     _zoomInButton: HTMLButtonElement;
     _zoomOutButton: HTMLButtonElement;
@@ -43,7 +43,7 @@ class NavigationControl implements IControl {
     _compassIcon: HTMLElement;
     _handler: MouseRotateWrapper;
 
-    constructor(options: Options) {
+    constructor(options: NavigationOptions) {
         this.options = extend({}, defaultOptions, options);
 
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group mapboxgl-ctrl mapboxgl-ctrl-group');

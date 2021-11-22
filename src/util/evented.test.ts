@@ -43,7 +43,7 @@ describe('Evented', () => {
     test('passes "type" to listeners', () => {
         const evented = new Evented();
         evented.on('a', (data) => {
-            expect(data.type).toEqual('a');
+            expect(data.type).toBe('a');
         });
         evented.fire(new Event('a'));
 
@@ -110,7 +110,7 @@ describe('Evented', () => {
         evented.on('a', listener);
         evented.fire('a' as any as Event, {foo: 'bar'});
         expect(listener).toHaveBeenCalledTimes(1);
-        expect(listener.mock.calls[0][0].foo).toEqual('bar');
+        expect(listener.mock.calls[0][0].foo).toBe('bar');
 
     });
 

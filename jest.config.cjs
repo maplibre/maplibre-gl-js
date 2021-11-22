@@ -13,6 +13,7 @@ module.exports = {
   },
   testEnvironment: "jsdom",
   transformIgnorePatterns: [
+    "/node_modules/@mapbox/jsonlint-lines-primitives/lib/jsonlint.js"
   ],
   setupFiles: ["jest-canvas-mock"],
 }

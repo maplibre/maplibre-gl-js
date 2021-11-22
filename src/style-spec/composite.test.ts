@@ -100,7 +100,7 @@ describe('composite', () => {
                     'source': 'mapbox-b'
                 }]
             });
-        }).toThrowError(/Conflicting source layer names/);
+        }).toThrow(/Conflicting source layer names/);
 
     });
 });

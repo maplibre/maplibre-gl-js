@@ -2,13 +2,13 @@ import StyleLayer from '../style_layer';
 
 import HeatmapBucket from '../../data/bucket/heatmap_bucket';
 import {RGBAImage} from '../../util/image';
-import properties, {PaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties';
+import properties, {HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties';
 import {renderColorRamp} from '../../util/color_ramp';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 
 import type Texture from '../../render/texture';
 import type Framebuffer from '../../gl/framebuffer';
-import type {PaintProps} from './heatmap_style_layer_properties';
+import type {HeatmapPaintProps} from './heatmap_style_layer_properties';
 import type {LayerSpecification} from '../../style-spec/types';
 
 class HeatmapStyleLayer extends StyleLayer {
@@ -17,9 +17,9 @@ class HeatmapStyleLayer extends StyleLayer {
     colorRamp: RGBAImage;
     colorRampTexture: Texture;
 
-    _transitionablePaint: Transitionable<PaintProps>;
-    _transitioningPaint: Transitioning<PaintProps>;
-    paint: PossiblyEvaluated<PaintProps, PaintPropsPossiblyEvaluated>;
+    _transitionablePaint: Transitionable<HeatmapPaintProps>;
+    _transitioningPaint: Transitioning<HeatmapPaintProps>;
+    paint: PossiblyEvaluated<HeatmapPaintProps, HeatmapPaintPropsPossiblyEvaluated>;
 
     createBucket(options: any) {
         return new HeatmapBucket(options);
