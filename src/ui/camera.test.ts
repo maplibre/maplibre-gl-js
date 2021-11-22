@@ -59,62 +59,53 @@ describe('#jumpTo', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     const camera = createCamera({zoom: 1});
 
-    test('sets center', done => {
+    test('sets center', () => {
         camera.jumpTo({center: [1, 2]});
         expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
-        done();
     });
 
-    test('throws on invalid center argument', done => {
+    test('throws on invalid center argument', () => {
         expect(() => {
             camera.jumpTo({center: 1});
         }).toThrow(Error);
-        done();
     });
 
-    test('keeps current center if not specified', done => {
+    test('keeps current center if not specified', () => {
         camera.jumpTo({});
         expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
-        done();
     });
 
-    test('sets zoom', done => {
+    test('sets zoom', () => {
         camera.jumpTo({zoom: 3});
         expect(camera.getZoom()).toBe(3);
-        done();
     });
 
-    test('keeps current zoom if not specified', done => {
+    test('keeps current zoom if not specified', () => {
         camera.jumpTo({});
         expect(camera.getZoom()).toBe(3);
-        done();
     });
 
-    test('sets bearing', done => {
+    test('sets bearing', () => {
         camera.jumpTo({bearing: 4});
         expect(camera.getBearing()).toBe(4);
-        done();
     });
 
-    test('keeps current bearing if not specified', done => {
+    test('keeps current bearing if not specified', () => {
         camera.jumpTo({});
         expect(camera.getBearing()).toBe(4);
-        done();
     });
 
-    test('sets pitch', done => {
+    test('sets pitch', () => {
         camera.jumpTo({pitch: 45});
         expect(camera.getPitch()).toBe(45);
-        done();
     });
 
-    test('keeps current pitch if not specified', done => {
+    test('keeps current pitch if not specified', () => {
         camera.jumpTo({});
         expect(camera.getPitch()).toBe(45);
-        done();
     });
 
-    test('sets multiple properties', done => {
+    test('sets multiple properties', () => {
         camera.jumpTo({
             center: [10, 20],
             zoom: 10,
@@ -125,7 +116,6 @@ describe('#jumpTo', () => {
         expect(camera.getZoom()).toBe(10);
         expect(camera.getBearing()).toBe(180);
         expect(camera.getPitch()).toBe(60);
-        done();
     });
 
     test('emits move events, preserving eventData', done => {
@@ -192,31 +182,27 @@ describe('#jumpTo', () => {
         done();
     });
 
-    test('cancels in-progress easing', done => {
+    test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
         expect(camera.isEasing()).toBeTruthy();
         camera.jumpTo({center: [1, 2]});
         expect(!camera.isEasing()).toBeTruthy();
-        done();
     });
-
 });
 
 describe('#setCenter', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     const camera = createCamera({zoom: 1});
 
-    test('sets center', done => {
+    test('sets center', () => {
         camera.setCenter([1, 2]);
         expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
-        done();
     });
 
-    test('throws on invalid center argument', done => {
+    test('throws on invalid center argument', () => {
         expect(() => {
             camera.jumpTo({center: 1});
         }).toThrow(Error);
-        done();
     });
 
     test('emits move events, preserving eventData', done => {
@@ -234,23 +220,20 @@ describe('#setCenter', () => {
         done();
     });
 
-    test('cancels in-progress easing', done => {
+    test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
         expect(camera.isEasing()).toBeTruthy();
         camera.setCenter([1, 2]);
         expect(!camera.isEasing()).toBeTruthy();
-        done();
     });
-
 });
 
 describe('#setZoom', () => {
     const camera = createCamera();
 
-    test('sets zoom', done => {
+    test('sets zoom', () => {
         camera.setZoom(3);
         expect(camera.getZoom()).toBe(3);
-        done();
     });
 
     test('emits move and zoom events, preserving eventData', done => {
@@ -275,23 +258,20 @@ describe('#setZoom', () => {
         done();
     });
 
-    test('cancels in-progress easing', done => {
+    test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
         expect(camera.isEasing()).toBeTruthy();
         camera.setZoom(5);
         expect(!camera.isEasing()).toBeTruthy();
-        done();
     });
-
 });
 
 describe('#setBearing', () => {
     const camera = createCamera();
 
-    test('sets bearing', done => {
+    test('sets bearing', () => {
         camera.setBearing(4);
         expect(camera.getBearing()).toBe(4);
-        done();
     });
 
     test('emits move and rotate events, preserving eventData', done => {
@@ -316,26 +296,23 @@ describe('#setBearing', () => {
         done();
     });
 
-    test('cancels in-progress easing', done => {
+    test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
         expect(camera.isEasing()).toBeTruthy();
         camera.setBearing(6);
         expect(!camera.isEasing()).toBeTruthy();
-        done();
     });
-
 });
 
 describe('#setPadding', () => {
-    test('sets padding', done => {
+    test('sets padding', () => {
         const camera = createCamera();
         const padding = {left: 300, top: 100, right: 50, bottom: 10};
         camera.setPadding(padding);
         expect(camera.getPadding()).toEqual(padding);
-        done();
     });
 
-    test('existing padding is retained if no new values are passed in', done => {
+    test('existing padding is retained if no new values are passed in', () => {
         const camera = createCamera();
         const padding = {left: 300, top: 100, right: 50, bottom: 10};
         camera.setPadding(padding);
@@ -343,10 +320,9 @@ describe('#setPadding', () => {
 
         const currentPadding = camera.getPadding();
         expect(currentPadding).toEqual(padding);
-        done();
     });
 
-    test('doesnt change padding thats already present if new value isnt passed in', done => {
+    test('doesnt change padding thats already present if new value isnt passed in', () => {
         const camera = createCamera();
         const padding = {left: 300, top: 100, right: 50, bottom: 10};
         camera.setPadding(padding);
@@ -359,24 +335,20 @@ describe('#setPadding', () => {
         // padding1 here
         expect(currentPadding.right).toBe(padding1.right);
         expect(currentPadding.bottom).toBe(padding.bottom);
-        done();
     });
-
 });
 
 describe('#panBy', () => {
-    test('pans by specified amount', done => {
+    test('pans by specified amount', () => {
         const camera = createCamera();
         camera.panBy([100, 0], {duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 70.3125, lat: 0});
-        done();
     });
 
-    test('pans relative to viewport on a rotated camera', done => {
+    test('pans relative to viewport on a rotated camera', () => {
         const camera = createCamera({bearing: 180});
         camera.panBy([100, 0], {duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: -70.3125, lat: 0});
-        done();
     });
 
     test('emits move events, preserving eventData', done => {
@@ -413,37 +385,32 @@ describe('#panBy', () => {
 
         camera.panBy([100, 0], {duration: 0, noMoveStart: true});
     });
-
 });
 
 describe('#panTo', () => {
-    test('pans to specified location', done => {
+    test('pans to specified location', () => {
         const camera = createCamera();
         camera.panTo([100, 0], {duration: 0});
         expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
-        done();
     });
 
-    test('throws on invalid center argument', done => {
+    test('throws on invalid center argument', () => {
         const camera = createCamera();
         expect(() => {
             camera.panTo({center: 1});
         }).toThrow(Error);
-        done();
     });
 
-    test('pans with specified offset', done => {
+    test('pans with specified offset', () => {
         const camera = createCamera();
         camera.panTo([100, 0], {offset: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
-        done();
     });
 
-    test('pans with specified offset relative to viewport on a rotated camera', done => {
+    test('pans with specified offset relative to viewport on a rotated camera', () => {
         const camera = createCamera({bearing: 180});
         camera.panTo([100, 0], {offset: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
-        done();
     });
 
     test('emits move events, preserving eventData', done => {
@@ -480,39 +447,34 @@ describe('#panTo', () => {
 
         camera.panTo([100, 0], {duration: 0, noMoveStart: true});
     });
-
 });
 
 describe('#zoomTo', () => {
-    test('zooms to specified level', done => {
+    test('zooms to specified level', () => {
         const camera = createCamera();
         camera.zoomTo(3.2, {duration: 0});
         expect(camera.getZoom()).toBe(3.2);
-        done();
     });
 
-    test('zooms around specified location', done => {
+    test('zooms around specified location', () => {
         const camera = createCamera();
         camera.zoomTo(3.2, {around: [5, 0], duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 4.455905897939886, lat: 0}));
-        done();
     });
 
-    test('zooms with specified offset', done => {
+    test('zooms with specified offset', () => {
         const camera = createCamera();
         camera.zoomTo(3.2, {offset: [100, 0], duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 62.66117668978015, lat: 0}));
-        done();
     });
 
-    test('zooms with specified offset relative to viewport on a rotated camera', done => {
+    test('zooms with specified offset relative to viewport on a rotated camera', () => {
         const camera = createCamera({bearing: 180});
         camera.zoomTo(3.2, {offset: [100, 0], duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -62.66117668978012, lat: 0}));
-        done();
     });
 
     test('emits move and zoom events, preserving eventData', done => {
@@ -543,55 +505,48 @@ describe('#zoomTo', () => {
         camera.zoomTo(5, {duration: 0}, eventData);
         done();
     });
-
 });
 
 describe('#rotateTo', () => {
-    test('rotates to specified bearing', done => {
+    test('rotates to specified bearing', () => {
         const camera = createCamera();
         camera.rotateTo(90, {duration: 0});
         expect(camera.getBearing()).toBe(90);
-        done();
     });
 
-    test('rotates around specified location', done => {
+    test('rotates around specified location', () => {
         const camera = createCamera({zoom: 3});
         camera.rotateTo(90, {around: [5, 0], duration: 0});
         expect(camera.getBearing()).toBe(90);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 4.999999999999972, lat: 4.993665859353271}));
-        done();
     });
 
-    test('rotates around specified location, constrained to fit the view', done => {
+    test('rotates around specified location, constrained to fit the view', () => {
         const camera = createCamera({zoom: 0});
         camera.rotateTo(90, {around: [5, 0], duration: 0});
         expect(camera.getBearing()).toBe(90);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 4.999999999999972, lat: 0.000002552471840999715}));
-        done();
     });
 
-    test('rotates with specified offset', done => {
+    test('rotates with specified offset', () => {
         const camera = createCamera({zoom: 1});
         camera.rotateTo(90, {offset: [200, 0], duration: 0});
         expect(camera.getBearing()).toBe(90);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 70.3125, lat: 57.3265212252}));
-        done();
     });
 
-    test('rotates with specified offset, constrained to fit the view', done => {
+    test('rotates with specified offset, constrained to fit the view', () => {
         const camera = createCamera({zoom: 0});
         camera.rotateTo(90, {offset: [100, 0], duration: 0});
         expect(camera.getBearing()).toBe(90);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 70.3125, lat: 0.000002552471840999715}));
-        done();
     });
 
-    test('rotates with specified offset relative to viewport on a rotated camera', done => {
+    test('rotates with specified offset relative to viewport on a rotated camera', () => {
         const camera = createCamera({bearing: 180, zoom: 1});
         camera.rotateTo(90, {offset: [200, 0], duration: 0});
         expect(camera.getBearing()).toBe(90);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -70.3125, lat: 57.3265212252}));
-        done();
     });
 
     test('emits move and rotate events, preserving eventData', done => {
@@ -622,141 +577,123 @@ describe('#rotateTo', () => {
         camera.rotateTo(90, {duration: 0}, eventData);
         done();
     });
-
 });
 
 describe('#easeTo', () => {
-    test('pans to specified location', done => {
+    test('pans to specified location', () => {
         const camera = createCamera();
         camera.easeTo({center: [100, 0], duration: 0});
         expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
-        done();
     });
 
-    test('zooms to specified level', done => {
+    test('zooms to specified level', () => {
         const camera = createCamera();
         camera.easeTo({zoom: 3.2, duration: 0});
         expect(camera.getZoom()).toBe(3.2);
-        done();
     });
 
-    test('rotates to specified bearing', done => {
+    test('rotates to specified bearing', () => {
         const camera = createCamera();
         camera.easeTo({bearing: 90, duration: 0});
         expect(camera.getBearing()).toBe(90);
-        done();
     });
 
-    test('pitches to specified pitch', done => {
+    test('pitches to specified pitch', () => {
         const camera = createCamera();
         camera.easeTo({pitch: 45, duration: 0});
         expect(camera.getPitch()).toBe(45);
-        done();
     });
 
-    test('pans and zooms', done => {
+    test('pans and zooms', () => {
         const camera = createCamera();
         camera.easeTo({center: [100, 0], zoom: 3.2, duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 100, lat: 0}));
         expect(camera.getZoom()).toBe(3.2);
-        done();
     });
 
-    test('zooms around a point', done => {
+    test('zooms around a point', () => {
         const camera = createCamera();
         camera.easeTo({around: [100, 0], zoom: 3, duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 87.5, lat: 0}));
         expect(camera.getZoom()).toBe(3);
-        done();
     });
 
-    test('pans and rotates', done => {
+    test('pans and rotates', () => {
         const camera = createCamera();
         camera.easeTo({center: [100, 0], bearing: 90, duration: 0});
         expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
         expect(camera.getBearing()).toBe(90);
-        done();
     });
 
-    test('zooms and rotates', done => {
+    test('zooms and rotates', () => {
         const camera = createCamera();
         camera.easeTo({zoom: 3.2, bearing: 90, duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         expect(camera.getBearing()).toBe(90);
-        done();
     });
 
-    test('pans, zooms, and rotates', done => {
+    test('pans, zooms, and rotates', () => {
         const camera = createCamera({bearing: -90});
         camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 100, lat: 0}));
         expect(camera.getZoom()).toBe(3.2);
         expect(camera.getBearing()).toBe(90);
-        done();
     });
 
-    test('noop', done => {
+    test('noop', () => {
         const camera = createCamera();
         camera.easeTo({duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
         expect(camera.getBearing()).toBeCloseTo(0);
-        done();
     });
 
-    test('noop with offset', done => {
+    test('noop with offset', () => {
         const camera = createCamera();
         camera.easeTo({offset: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
         expect(camera.getBearing()).toBeCloseTo(0);
-        done();
     });
 
-    test('pans with specified offset', done => {
+    test('pans with specified offset', () => {
         const camera = createCamera();
         camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
-        done();
     });
 
-    test('pans with specified offset relative to viewport on a rotated camera', done => {
+    test('pans with specified offset relative to viewport on a rotated camera', () => {
         const camera = createCamera({bearing: 180});
         camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
-        done();
     });
 
-    test('zooms with specified offset', done => {
+    test('zooms with specified offset', () => {
         const camera = createCamera();
         camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 62.66117668978015, lat: 0}));
-        done();
     });
 
-    test('zooms with specified offset relative to viewport on a rotated camera', done => {
+    test('zooms with specified offset relative to viewport on a rotated camera', () => {
         const camera = createCamera({bearing: 180});
         camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -62.66117668978012, lat: 0}));
-        done();
     });
 
-    test('rotates with specified offset', done => {
+    test('rotates with specified offset', () => {
         const camera = createCamera();
         camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
         expect(camera.getBearing()).toBe(90);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 70.3125, lat: 0.000002552471840999715}));
-        done();
     });
 
-    test('rotates with specified offset relative to viewport on a rotated camera', done => {
+    test('rotates with specified offset relative to viewport on a rotated camera', () => {
         const camera = createCamera({bearing: 180});
         camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
         expect(camera.getBearing()).toBe(90);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -70.3125, lat: 0.000002552471840999715}));
-        done();
     });
 
     test('emits move, zoom, rotate, and pitch events, preserving eventData', done => {
@@ -827,12 +764,11 @@ describe('#easeTo', () => {
         camera.easeTo({center: [100, 0], duration: 0});
     });
 
-    test('stops existing ease', done => {
+    test('stops existing ease', () => {
         const camera = createCamera();
         camera.easeTo({center: [200, 0], duration: 100});
         camera.easeTo({center: [100, 0], duration: 0});
         expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
-        done();
     });
 
     test('can be called from within a moveend event handler', done => {
@@ -973,53 +909,46 @@ describe('#easeTo', () => {
         assertTransitionTime(done, camera, 0, 10);
         camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 1000});
     });
-
 });
 
 describe('#flyTo', () => {
-    test('pans to specified location', done => {
+    test('pans to specified location', () => {
         const camera = createCamera();
         camera.flyTo({center: [100, 0], animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
-        done();
     });
 
-    test('throws on invalid center argument', done => {
+    test('throws on invalid center argument', () => {
         const camera = createCamera();
         expect(() => {
             camera.flyTo({center: 1});
         }).toThrow(Error);
-        done();
     });
 
-    test('does not throw when cameras current zoom is sufficiently greater than passed zoom option', done => {
+    test('does not throw when cameras current zoom is sufficiently greater than passed zoom option', () => {
         const camera = createCamera({zoom: 22, center:[0, 0]});
         expect(() => camera.flyTo({zoom:10, center:[0, 0]})).not.toThrow();
-        done();
     });
 
-    test('does not throw when cameras current zoom is above maxzoom and an offset creates infinite zoom out factor', done => {
+    test('does not throw when cameras current zoom is above maxzoom and an offset creates infinite zoom out factor', () => {
         const transform = new Transform(0, 20.9999, 0, 60, true);
         transform.resize(512, 512);
         const camera = attachSimulateFrame(new CameraMock(transform, {} as any))
             .jumpTo({zoom: 21, center:[0, 0]});
         camera._update = () => {};
         expect(() => camera.flyTo({zoom:7.5, center:[0, 0], offset:[0, 70]})).not.toThrow();
-        done();
     });
 
-    test('zooms to specified level', done => {
+    test('zooms to specified level', () => {
         const camera = createCamera();
         camera.flyTo({zoom: 3.2, animate: false});
         expect(fixedNum(camera.getZoom())).toBe(3.2);
-        done();
     });
 
-    test('zooms to integer level without floating point errors', done => {
+    test('zooms to integer level without floating point errors', () => {
         const camera = createCamera({zoom: 0.6});
         camera.flyTo({zoom: 2, animate: false});
         expect(camera.getZoom()).toBe(2);
-        done();
     });
 
     test('Zoom out from the same position to the same position with animation', done => {
@@ -1040,83 +969,73 @@ describe('#flyTo', () => {
         camera.simulateFrame();
     });
 
-    test('rotates to specified bearing', done => {
+    test('rotates to specified bearing', () => {
         const camera = createCamera();
         camera.flyTo({bearing: 90, animate: false});
         expect(camera.getBearing()).toBe(90);
-        done();
     });
 
-    test('tilts to specified pitch', done => {
+    test('tilts to specified pitch', () => {
         const camera = createCamera();
         camera.flyTo({pitch: 45, animate: false});
         expect(camera.getPitch()).toBe(45);
-        done();
     });
 
-    test('pans and zooms', done => {
+    test('pans and zooms', () => {
         const camera = createCamera();
         camera.flyTo({center: [100, 0], zoom: 3.2, animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
         expect(fixedNum(camera.getZoom())).toBe(3.2);
-        done();
     });
 
-    test('pans and rotates', done => {
+    test('pans and rotates', () => {
         const camera = createCamera();
         camera.flyTo({center: [100, 0], bearing: 90, animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
         expect(camera.getBearing()).toBe(90);
-        done();
     });
 
-    test('zooms and rotates', done => {
+    test('zooms and rotates', () => {
         const camera = createCamera();
         camera.flyTo({zoom: 3.2, bearing: 90, animate: false});
         expect(fixedNum(camera.getZoom())).toBe(3.2);
         expect(camera.getBearing()).toBe(90);
-        done();
     });
 
-    test('pans, zooms, and rotates', done => {
+    test('pans, zooms, and rotates', () => {
         const camera = createCamera();
         camera.flyTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
         expect(fixedNum(camera.getZoom())).toBe(3.2);
         expect(camera.getBearing()).toBe(90);
-        done();
     });
 
-    test('noop', done => {
+    test('noop', () => {
         const camera = createCamera();
         camera.flyTo({animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
         expect(camera.getBearing()).toBeCloseTo(0);
-        done();
     });
 
-    test('noop with offset', done => {
+    test('noop with offset', () => {
         const camera = createCamera();
         camera.flyTo({offset: [100, 0], animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
         expect(camera.getBearing()).toBeCloseTo(0);
-        done();
     });
 
-    test('pans with specified offset', done => {
+    test('pans with specified offset', () => {
         const camera = createCamera();
         camera.flyTo({center: [100, 0], offset: [100, 0], animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
-        done();
     });
 
-    test('pans with specified offset relative to viewport on a rotated camera', done => {
+    test('pans with specified offset relative to viewport on a rotated camera', () => {
         const camera = createCamera({bearing: 180});
         camera.easeTo({center: [100, 0], offset: [100, 0], animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
-        done();
     });
 
     test('emits move, zoom, rotate, and pitch events, preserving eventData', done => {
@@ -1639,21 +1558,18 @@ describe('#flyTo', () => {
         assertTransitionTime(done, camera, 0, 10);
         camera.flyTo({center: [100, 0], bearing: 90, animate: true});
     });
-
 });
 
 describe('#isEasing', () => {
-    test('returns false when not easing', done => {
+    test('returns false when not easing', () => {
         const camera = createCamera();
         expect(!camera.isEasing()).toBeTruthy();
-        done();
     });
 
-    test('returns true when panning', done => {
+    test('returns true when panning', () => {
         const camera = createCamera();
         camera.panTo([100, 0], {duration: 1});
         expect(camera.isEasing()).toBeTruthy();
-        done();
     });
 
     test('returns false when done panning', done => {
@@ -1671,11 +1587,11 @@ describe('#isEasing', () => {
         }, 0);
     });
 
-    test('returns true when zooming', done => {
+    test('returns true when zooming', () => {
         const camera = createCamera();
         camera.zoomTo(3.2, {duration: 1});
+
         expect(camera.isEasing()).toBeTruthy();
-        done();
     });
 
     test('returns false when done zooming', done => {
@@ -1693,11 +1609,10 @@ describe('#isEasing', () => {
         }, 0);
     });
 
-    test('returns true when rotating', done => {
+    test('returns true when rotating', () => {
         const camera = createCamera();
         camera.rotateTo(90, {duration: 1});
         expect(camera.isEasing()).toBeTruthy();
-        done();
     });
 
     test('returns false when done rotating', done => {
@@ -1714,24 +1629,21 @@ describe('#isEasing', () => {
             camera.simulateFrame();
         }, 0);
     });
-
 });
 
 describe('#stop', () => {
-    test('resets camera._zooming', done => {
+    test('resets camera._zooming', () => {
         const camera = createCamera();
         camera.zoomTo(3.2);
         camera.stop();
         expect(!camera._zooming).toBeTruthy();
-        done();
     });
 
-    test('resets camera._rotating', done => {
+    test('resets camera._rotating', () => {
         const camera = createCamera();
         camera.rotateTo(90);
         camera.stop();
         expect(!camera._rotating).toBeTruthy();
-        done();
     });
 
     test('emits moveend if panning, preserving eventData', done => {
@@ -1792,203 +1704,180 @@ describe('#stop', () => {
             camera.simulateFrame();
         }, 0);
     });
-
 });
 
 describe('#cameraForBounds', () => {
-    test('no options passed', done => {
+    test('no options passed', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         const transform = camera.cameraForBounds(bb);
+
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
         expect(fixedNum(transform.zoom, 3)).toBe(2.469);
-        done();
     });
 
-    test('bearing positive number', done => {
+    test('bearing positive number', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         const transform = camera.cameraForBounds(bb, {bearing: 175});
+
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
         expect(fixedNum(transform.zoom, 3)).toBe(2.558);
         expect(transform.bearing).toBe(175);
-        done();
     });
 
-    test('bearing negative number', done => {
+    test('bearing negative number', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         const transform = camera.cameraForBounds(bb, {bearing: -30});
+
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
         expect(fixedNum(transform.zoom, 3)).toBe(2.392);
         expect(transform.bearing).toBe(-30);
-        done();
     });
 
-    test('padding number', done => {
+    test('padding number', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         const transform = camera.cameraForBounds(bb, {padding: 15});
+
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
         expect(fixedNum(transform.zoom, 3)).toBe(2.382);
-        done();
     });
 
-    test('padding object', done => {
+    test('padding object', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         const transform = camera.cameraForBounds(bb, {padding: {top: 15, right: 15, bottom: 15, left: 15}, duration: 0});
+
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
-        done();
     });
 
-    test('asymmetrical padding', done => {
+    test('asymmetrical padding', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         const transform = camera.cameraForBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
+
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -96.5558, lat: 32.0833});
-        done();
     });
 
-    test('bearing and asymmetrical padding', done => {
+    test('bearing and asymmetrical padding', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         const transform = camera.cameraForBounds(bb, {bearing: 90, padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
+
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -103.3761, lat: 31.7099});
-        done();
     });
 
-    test('offset', done => {
+    test('offset', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         const transform = camera.cameraForBounds(bb, {offset: [0, 100]});
+
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 44.4717});
-        done();
     });
 
-    test('offset as object', done => {
+    test('offset as object', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         const transform = camera.cameraForBounds(bb, {offset: {x: 0, y: 100}});
+
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 44.4717});
-        done();
     });
 
-    test('offset and padding', done => {
+    test('offset and padding', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         const transform = camera.cameraForBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, offset: [0, 100]});
+
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -96.5558, lat: 44.4189});
-        done();
     });
 
-    test('bearing, asymmetrical padding, and offset', done => {
+    test('bearing, asymmetrical padding, and offset', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         const transform = camera.cameraForBounds(bb, {bearing: 90, padding: {top: 10, right: 75, bottom: 50, left: 25}, offset: [0, 100], duration: 0});
-        expect(fixedLngLat(transform.center, 4)).toEqual({lng: -103.3761, lat: 43.0929});
-        done();
-    });
 
+        expect(fixedLngLat(transform.center, 4)).toEqual({lng: -103.3761, lat: 43.0929});
+    });
 });
 
 describe('#fitBounds', () => {
-    test('no padding passed', done => {
+    test('no padding passed', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         camera.fitBounds(bb, {duration:0});
+
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.7171});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2.469);
-        done();
     });
 
-    test('padding number', done => {
+    test('padding number', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         camera.fitBounds(bb, {padding: 15, duration:0});
+
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.7171});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2.382);
-        done();
     });
 
-    test('padding object', done => {
+    test('padding object', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration:0});
+
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -96.5558, lat: 32.0833});
-        done();
     });
 
-    test('padding does not get propagated to transform.padding', done => {
+    test('padding does not get propagated to transform.padding', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-
         camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration:0});
         const padding = camera.transform.padding;
+
         expect(padding).toEqual({
             left: 0,
             right: 0,
             top: 0,
             bottom: 0
         });
-        done();
     });
-
 });
 
 describe('#fitScreenCoordinates', () => {
-    test('bearing 225', done => {
+    test('bearing 225', () => {
         const camera = createCamera();
         const p0 = [128, 128];
         const p1 = [256, 256];
         const bearing = 225;
-
         camera.fitScreenCoordinates(p0, p1, bearing, {duration:0});
+
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
         expect(fixedNum(camera.getZoom(), 3)).toBe(1.5);
         expect(camera.getBearing()).toBe(-135);
-        done();
     });
 
-    test('bearing 0', done => {
+    test('bearing 0', () => {
         const camera = createCamera();
-
         const p0 = [128, 128];
         const p1 = [256, 256];
         const bearing = 0;
-
         camera.fitScreenCoordinates(p0, p1, bearing, {duration:0});
+
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2);
         expect(camera.getBearing()).toBeCloseTo(0);
-        done();
     });
 
-    test('inverted points', done => {
+    test('inverted points', () => {
         const camera = createCamera();
         const p1 = [128, 128];
         const p0 = [256, 256];
         const bearing = 0;
-
         camera.fitScreenCoordinates(p0, p1, bearing, {duration:0});
+
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2);
         expect(camera.getBearing()).toBeCloseTo(0);
-        done();
     });
 });
-
