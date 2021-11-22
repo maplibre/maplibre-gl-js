@@ -187,9 +187,9 @@ class SymbolStyleLayer extends StyleLayer {
 
 export type OverlapMode = 'never' | 'always' | 'cooperative';
 
-export function getOverlapMode(layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>, overlapProp: 'icon-overlap', allowOverlapProp: 'icon-allow-overlap'): OverlapMode;
-export function getOverlapMode(layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>, overlapProp: 'text-overlap', allowOverlapProp: 'text-allow-overlap'): OverlapMode;
-export function getOverlapMode(layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>, overlapProp: 'icon-overlap' | 'text-overlap', allowOverlapProp: 'icon-allow-overlap' | 'text-allow-overlap'): OverlapMode {
+export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'icon-overlap', allowOverlapProp: 'icon-allow-overlap'): OverlapMode;
+export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'text-overlap', allowOverlapProp: 'text-allow-overlap'): OverlapMode;
+export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'icon-overlap' | 'text-overlap', allowOverlapProp: 'icon-allow-overlap' | 'text-allow-overlap'): OverlapMode {
     let result: OverlapMode = 'never';
     const overlap = layout.get(overlapProp);
 

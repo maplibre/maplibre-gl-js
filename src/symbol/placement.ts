@@ -12,7 +12,7 @@ import Point from '../util/point';
 import type Transform from '../geo/transform';
 import type StyleLayer from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';
-import type {LayoutProps, LayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties';
 import {getOverlapMode, OverlapMode} from '../style/style_layer/symbol_style_layer';
 
 import type Tile from '../source/tile';
@@ -184,7 +184,7 @@ export type VariableOffset = {
 
 type TileLayerParameters = {
   bucket: SymbolBucket;
-  layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>;
+  layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
   posMatrix: mat4;
   textLabelPlaneMatrix: mat4;
   labelToScreenMatrix: mat4;
