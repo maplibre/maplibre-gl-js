@@ -10,6 +10,8 @@ import pixelsToTileUnits from '../source/pixels_to_tile_units';
 import Point from '../util/point';
 import type Transform from '../geo/transform';
 import type StyleLayer from '../style/style_layer';
+import {PossiblyEvaluated} from '../style/properties';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties';
 
 import type Tile from '../source/tile';
 import SymbolBucket, {CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';
@@ -170,33 +172,36 @@ function shiftVariableCollisionBox(collisionBox: SingleCollisionBox,
 }
 
 export type VariableOffset = {
-  textOffset: [number, number];
-  width: number;
-  height: number;
-  anchor: TextAnchor;
-  textBoxScale: number;
-  prevAnchor?: TextAnchor;
+    textOffset: [number, number];
+    width: number;
+    height: number;
+    anchor: TextAnchor;
+    textBoxScale: number;
+    prevAnchor?: TextAnchor;
 };
 
 type TileLayerParameters = {
-  bucket: SymbolBucket;
-  layout: any;
-  posMatrix: mat4;
-  textLabelPlaneMatrix: mat4;
-  labelToScreenMatrix: mat4;
-  scale: number;
-  textPixelRatio: number;
-  holdingForFade: boolean;
-  collisionBoxArray: CollisionBoxArray;
-  partiallyEvaluatedTextSize: any;
-  collisionGroup: any;
+    bucket: SymbolBucket;
+    layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
+    posMatrix: mat4;
+    textLabelPlaneMatrix: mat4;
+    labelToScreenMatrix: mat4;
+    scale: number;
+    textPixelRatio: number;
+    holdingForFade: boolean;
+    collisionBoxArray: CollisionBoxArray;
+    partiallyEvaluatedTextSize: {
+        uSize: number;
+        uSizeT: number;
+    };
+    collisionGroup: CollisionGroup;
 };
 
 export type BucketPart = {
-  sortKey?: number | void;
-  symbolInstanceStart: number;
-  symbolInstanceEnd: number;
-  parameters: TileLayerParameters;
+    sortKey?: number | void;
+    symbolInstanceStart: number;
+    symbolInstanceEnd: number;
+    parameters: TileLayerParameters;
 };
 
 export type CrossTileID = string | number;
@@ -253,7 +258,7 @@ export class Placement {
     }
 
     getBucketParts(results: Array<BucketPart>, styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean) {
-        const symbolBucket = (tile.getBucket(styleLayer) as any as SymbolBucket);
+        const symbolBucket = (tile.getBucket(styleLayer) as SymbolBucket);
         const bucketFeatureIndex = tile.latestFeatureIndex;
         if (!symbolBucket || !bucketFeatureIndex || styleLayer.id !== symbolBucket.layerIds[0])
             return;
@@ -400,7 +405,7 @@ export class Placement {
         }
     }
 
-    placeLayerBucketPart(bucketPart: any, seenCrossTileIDs: {
+    placeLayerBucketPart(bucketPart: BucketPart, seenCrossTileIDs: {
       [k in string | number]: boolean;
     }, showCollisionBoxes: boolean) {
 
@@ -882,7 +887,7 @@ export class Placement {
     updateLayerOpacities(styleLayer: StyleLayer, tiles: Array<Tile>) {
         const seenCrossTileIDs = {};
         for (const tile of tiles) {
-            const symbolBucket = (tile.getBucket(styleLayer) as any as SymbolBucket);
+            const symbolBucket = (tile.getBucket(styleLayer) as SymbolBucket);
             if (symbolBucket && tile.latestFeatureIndex && styleLayer.id === symbolBucket.layerIds[0]) {
                 this.updateBucketOpacities(symbolBucket, seenCrossTileIDs, tile.collisionBoxArray);
             }
