@@ -174,12 +174,12 @@ function shiftVariableCollisionBox(collisionBox: SingleCollisionBox,
 }
 
 export type VariableOffset = {
-  textOffset: [number, number];
-  width: number;
-  height: number;
-  anchor: TextAnchor;
-  textBoxScale: number;
-  prevAnchor?: TextAnchor;
+    textOffset: [number, number];
+    width: number;
+    height: number;
+    anchor: TextAnchor;
+    textBoxScale: number;
+    prevAnchor?: TextAnchor;
 };
 
 type TileLayerParameters = {
@@ -200,10 +200,10 @@ type TileLayerParameters = {
 };
 
 export type BucketPart = {
-  sortKey?: number | void;
-  symbolInstanceStart: number;
-  symbolInstanceEnd: number;
-  parameters: TileLayerParameters;
+    sortKey?: number | void;
+    symbolInstanceStart: number;
+    symbolInstanceEnd: number;
+    parameters: TileLayerParameters;
 };
 
 export type CrossTileID = string | number;

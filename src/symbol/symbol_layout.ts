@@ -184,7 +184,7 @@ export function performSymbolLayout(
         layoutIconSize: unevaluatedLayoutValues['icon-size'].possiblyEvaluate(new EvaluationParameters(bucket.zoom + 1), canonical),
         layoutTextSize: unevaluatedLayoutValues['text-size'].possiblyEvaluate(new EvaluationParameters(bucket.zoom + 1), canonical),
         textMaxSize: unevaluatedLayoutValues['text-size'].possiblyEvaluate(new EvaluationParameters(18))
-    } as any;
+    } as Sizes;
 
     if (bucket.textSizeData.kind === 'composite') {
         const {minZoom, maxZoom} = bucket.textSizeData;
@@ -214,7 +214,7 @@ export function performSymbolLayout(
         const layoutIconSize = sizes.layoutIconSize.evaluate(feature, {}, canonical);
 
         const shapedTextOrientations: ShapedTextOrientations = {
-            horizontal: {} as any,
+            horizontal: {} as Record<TextJustify, Shaping>,
             vertical: undefined
         };
         const text = feature.text;
