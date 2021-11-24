@@ -258,6 +258,9 @@ class GridIndex<T> {
                 }
             }
         }
+
+        // false return to continue query
+        return false;
     }
 
     private _queryCellCircle(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: Array<boolean>, queryArgs: QueryArgs, predicate?: (key:T) => boolean): boolean {
