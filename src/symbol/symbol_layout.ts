@@ -53,6 +53,11 @@ type Sizes = {
   compositeIconSizes: [PossiblyEvaluatedPropertyValue<number>, PossiblyEvaluatedPropertyValue<number>]; // (5)
 };
 
+type ShapedTextOrientations = {
+    vertical: Shaping | false;
+    horizontal: Record<TextJustify, Shaping>;
+};
+
 export type TextAnchor = 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 // The radial offset is to the edge of the text box
@@ -172,7 +177,14 @@ export function performSymbolLayout(
     const layout = bucket.layers[0].layout;
     const unevaluatedLayoutValues = bucket.layers[0]._unevaluatedLayout._values;
 
-    const sizes: {[k: string]: any} = {};
+    const sizes: Sizes = {
+        // Filled in below, if *SizeData.kind is 'composite'
+        // compositeIconSizes: undefined,
+        // compositeTextSizes: undefined,
+        layoutIconSize: unevaluatedLayoutValues['icon-size'].possiblyEvaluate(new EvaluationParameters(bucket.zoom + 1), canonical),
+        layoutTextSize: unevaluatedLayoutValues['text-size'].possiblyEvaluate(new EvaluationParameters(bucket.zoom + 1), canonical),
+        textMaxSize: unevaluatedLayoutValues['text-size'].possiblyEvaluate(new EvaluationParameters(18))
+    } as Sizes;
 
     if (bucket.textSizeData.kind === 'composite') {
         const {minZoom, maxZoom} = bucket.textSizeData;
@@ -190,10 +202,6 @@ export function performSymbolLayout(
         ];
     }
 
-    sizes.layoutTextSize = unevaluatedLayoutValues['text-size'].possiblyEvaluate(new EvaluationParameters(bucket.zoom + 1), canonical);
-    sizes.layoutIconSize = unevaluatedLayoutValues['icon-size'].possiblyEvaluate(new EvaluationParameters(bucket.zoom + 1), canonical);
-    sizes.textMaxSize = unevaluatedLayoutValues['text-size'].possiblyEvaluate(new EvaluationParameters(18));
-
     const lineHeight = layout.get('text-line-height') * ONE_EM;
     const textAlongLine = layout.get('text-rotation-alignment') === 'map' && layout.get('symbol-placement') !== 'point';
     const keepUpright = layout.get('text-keep-upright');
@@ -205,8 +213,8 @@ export function performSymbolLayout(
         const layoutTextSize = sizes.layoutTextSize.evaluate(feature, {}, canonical);
         const layoutIconSize = sizes.layoutIconSize.evaluate(feature, {}, canonical);
 
-        const shapedTextOrientations: {[k: string]: any} = {
-            horizontal: {},
+        const shapedTextOrientations: ShapedTextOrientations = {
+            horizontal: {} as Record<TextJustify, Shaping>,
             vertical: undefined
         };
         const text = feature.text;
@@ -228,7 +236,7 @@ export function performSymbolLayout(
                     // but doesn't actually specify what happens if you use both. We go with the radial offset.
                     textOffset = evaluateVariableOffset(textAnchor, [radialOffset * ONE_EM, INVALID_TEXT_OFFSET]) as [number, number];
                 } else {
-                    textOffset = (layout.get('text-offset').evaluate(feature, {}, canonical).map(t => t * ONE_EM) as any);
+                    textOffset = (layout.get('text-offset').evaluate(feature, {}, canonical).map(t => t * ONE_EM) as [number, number]);
                 }
             }
 
@@ -326,7 +334,7 @@ export function performSymbolLayout(
         const shapedText = getDefaultHorizontalShaping(shapedTextOrientations.horizontal) || shapedTextOrientations.vertical;
         bucket.iconsInText = shapedText ? shapedText.iconsInText : false;
         if (shapedText || shapedIcon) {
-            addFeature(bucket, feature, shapedTextOrientations, shapedIcon, imageMap, sizes as Sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, canonical);
+            addFeature(bucket, feature, shapedTextOrientations, shapedIcon, imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, canonical);
         }
     }
 
@@ -359,7 +367,7 @@ export function getAnchorJustification(anchor: TextAnchor): TextJustify {
  */
 function addFeature(bucket: SymbolBucket,
                     feature: SymbolFeature,
-                    shapedTextOrientations: any,
+                    shapedTextOrientations: ShapedTextOrientations,
                     shapedIcon: PositionedIcon,
                     imageMap: {[_: string]: StyleImage},
                     sizes: Sizes,
@@ -547,9 +555,7 @@ function addTextVertices(bucket: SymbolBucket,
 }
 
 function getDefaultHorizontalShaping(
-  horizontalShaping: {
-    [_ in TextJustify]: Shaping;
-  }
+  horizontalShaping: Record<TextJustify, Shaping>
 ): Shaping | null {
     // We don't care which shaping we get because this is used for collision purposes
     // and all the justifications have the same collision box
@@ -567,7 +573,7 @@ function getDefaultHorizontalShaping(
 function addSymbol(bucket: SymbolBucket,
                    anchor: Anchor,
                    line: Array<Point>,
-                   shapedTextOrientations: any,
+                   shapedTextOrientations: ShapedTextOrientations,
                    shapedIcon: PositionedIcon | void,
                    imageMap: {[_: string]: StyleImage},
                    verticallyShapedIcon: PositionedIcon | void,
@@ -599,13 +605,13 @@ function addSymbol(bucket: SymbolBucket,
     let numVerticalGlyphVertices = 0;
     let placedIconSymbolIndex = -1;
     let verticalPlacedIconSymbolIndex = -1;
-    const placedTextSymbolIndices: {[k: string]: any} = {};
+    const placedTextSymbolIndices: {[k: string]: number} = {};
     let key = murmur3('');
 
     let textOffset0 = 0;
     let textOffset1 = 0;
     if (layer._unevaluatedLayout.getValue('text-radial-offset') === undefined) {
-        [textOffset0, textOffset1] = (layer.layout.get('text-offset').evaluate(feature, {}, canonical).map(t => t * ONE_EM) as any);
+        [textOffset0, textOffset1] = (layer.layout.get('text-offset').evaluate(feature, {}, canonical).map(t => t * ONE_EM) as [number, number]);
     } else {
         textOffset0 = layer.layout.get('text-radial-offset').evaluate(feature, {}, canonical) * ONE_EM;
         textOffset1 = INVALID_TEXT_OFFSET;
@@ -692,7 +698,8 @@ function addSymbol(bucket: SymbolBucket,
         }
     }
 
-    for (const justification in shapedTextOrientations.horizontal) {
+    const justifications = Object.keys(shapedTextOrientations.horizontal) as TextJustify[];
+    for (const justification of justifications) {
         const shaping = shapedTextOrientations.horizontal[justification];
 
         if (!textCollisionFeature) {
@@ -707,7 +714,7 @@ function addSymbol(bucket: SymbolBucket,
         numHorizontalGlyphVertices += addTextVertices(
             bucket, anchor, shaping, imageMap, layer, textAlongLine, feature, textOffset, lineArray,
             shapedTextOrientations.vertical ? WritingMode.horizontal : WritingMode.horizontalOnly,
-            singleLine ? (Object.keys(shapedTextOrientations.horizontal) as any) : [justification],
+            singleLine ? justifications : [justification],
             placedTextSymbolIndices, placedIconSymbolIndex, sizes, canonical);
 
         if (singleLine) {
@@ -793,7 +800,7 @@ function addSymbol(bucket: SymbolBucket,
         collisionCircleDiameter);
 }
 
-function anchorIsTooClose(bucket: any, text: string, repeatDistance: number, anchor: Point) {
+function anchorIsTooClose(bucket: SymbolBucket, text: string, repeatDistance: number, anchor: Point) {
     const compareText = bucket.compareText;
     if (!(text in compareText)) {
         compareText[text] = [];

@@ -103,7 +103,7 @@ export default class GlyphManager {
             let requests = entry.requests[range];
             if (!requests) {
                 requests = entry.requests[range] = [];
-                GlyphManager.loadGlyphRange(stack, range, ((this.url as any)), this.requestManager,
+                GlyphManager.loadGlyphRange(stack, range, this.url as any, this.requestManager,
                     (err, response?: {
                       [_: number]: StyleGlyph | null;
                     } | null) => {
