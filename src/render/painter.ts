@@ -31,7 +31,7 @@ import raster from './draw_raster';
 import background from './draw_background';
 import debug, {drawDebugPadding} from './draw_debug';
 import custom from './draw_custom';
-import {prepareTerrain, drawTerrain, drawTerrainCoords} from './draw_terrain';
+import {prepareTerrain, drawTerrain, updateTerrainFacilitators} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 
 const draw = {
@@ -124,13 +124,15 @@ class Painter {
     emptyTexture: Texture;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
-    coordsBuffer: { matrix: mat4; renderTime: number; };
+    // this object stores the current camera-matrix and the last render time of
+    // of the terrain-acilitators. e.g. depth & coords framebuffers
+    terrainFacilitator: { matrix: mat4; renderTime: number; };
 
     constructor(gl: WebGLRenderingContext, transform: Transform) {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
-        this.coordsBuffer = { matrix: mat4.create(), renderTime: 0 };
+        this.terrainFacilitator = { matrix: mat4.create(), renderTime: 0 };
 
         this.setup();
 
@@ -384,9 +386,12 @@ class Painter {
 
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
+        const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
+        // this is used for 3d-terrain
+        // coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
+        // e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
         const coordsDescendingInv: {[_: string]: {[_:string]: Array<OverscaledTileID>}} = {};
         const coordsDescendingInvStr: {[_: string]: {[_:string]: string}} = {};
-        const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -404,7 +409,9 @@ class Painter {
                 }
             }
         }
-        // create a string representation of all to render coords for all renderToTexture layers
+
+        // create a string representation of all to tiles rendered to render-to-texture tiles
+        // this string representation is used to check if tile should be re-rendered.
         for (const id of layerIds) {
             const layer = this.style._layers[id], source = layer.source;
             if (renderToTexture[layer.type]) {
@@ -426,14 +433,15 @@ class Painter {
         }
 
         if (isTerrainEnabled) {
+            // this is disabled, because render-to-texture is rendering all layers from bottom to top.
             this.opaquePassCutoff = 0;
 
-            // update coords/depth-framebuffer on camera movement
-            const newTiles = this.style.terrainSourceCache.tilesAfterTime(this.coordsBuffer.renderTime);
-            if (!mat4.equals(this.coordsBuffer.matrix, this.transform.projMatrix) || newTiles.length) {
-                mat4.copy(this.coordsBuffer.matrix, this.transform.projMatrix);
-                this.coordsBuffer.renderTime = Date.now();
-                drawTerrainCoords(this, this.style.terrainSourceCache);
+            // update coords/depth-framebuffer on camera movement, ore tile reloading
+            const newTiles = this.style.terrainSourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
+            if (!mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
+                mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
+                this.terrainFacilitator.renderTime = Date.now();
+                updateTerrainFacilitators(this, this.style.terrainSourceCache);
             }
         }
 
@@ -484,7 +492,7 @@ class Painter {
         // the following variables only used when terrain-3d is enabled
         let prevType = null;
         const stacks = [], rerender = {};
-        const renderableTiles = this.style.terrainSourceCache.getRenderableTiles(this.transform);
+        const renderableTiles = this.style.terrainSourceCache.getRenderableTiles();
         renderableTiles.forEach(tile => {
             // rerender if there are more coords to render than in the last rendering
             for (let source in coordsDescendingInvStr) {
@@ -501,15 +509,21 @@ class Painter {
             const type = layer.type;
 
             if (isTerrainEnabled) {
+                // due that switching textures is relatively slow, the render
+                // layer-by-layer context here is not practicable. To bypass this problem
+                // this lines of code stack all layers and later render all at once.
+                // Because of the stylesheet possibility to mixing render-to-texture layers and 'live'-layers
+                // and 'live'-layers it is necessary to create more stacks. For example
+                // a symbol-layer is in between of fill-layers.
 
-                // remember background, fill, line & raster layer to render into texture-batch
+                // remember background, fill, line & raster layer to render into a stack
                 if (renderToTexture[type]) {
                     if (!prevType || !renderToTexture[prevType]) stacks.push([]);
                     prevType = type;
                     stacks[stacks.length-1].push(layerIds[this.currentLayer]);
                     continue; // rendering is done later, all in once
 
-                // render all stack-layers into a texture
+                // in case a stack is finished render all collected stack-layers into a texture
                 } else if (renderToTexture[prevType] || type == "hillshade") {
                     prevType = type;
                     const stack = stacks.length - 1, layers = stacks[stack] || [];
@@ -528,11 +542,14 @@ class Painter {
                         drawTerrain(this, this.style.terrainSourceCache, tile);
                     }
 
+                    // the hillshading layer is a special case because it changes on every camera-movement
+                    // so rerender it in eny case.
+                    // FIXME-3D! check if rerendering is really necessary, depending on hillshade-illumination-anchor
                     if (type == "hillshade") {
                         stacks.push([layerIds[this.currentLayer]]);
                         for (const tile of renderableTiles) {
                             const coords = coordsDescendingInv[layer.source][tile.tileID.key];
-                            // FIXME! replace prepareTerrain with hillshading texture from prepareHillshading directly
+                            // FIXME-3D! replace prepareTerrain with hillshading texture from prepareHillshading directly
                             prepareTerrain(this, this.style.terrainSourceCache, tile, stacks.length - 1);
                             this.context.clear({ color: Color.transparent });
                             this._renderTileClippingMasks(layer, coords);

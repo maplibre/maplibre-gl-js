@@ -1,5 +1,3 @@
-// @flow
-
 import {OverscaledTileID} from './tile_id';
 import Tile from './tile';
 import EXTENT from '../data/extent';
@@ -19,37 +17,81 @@ import type Painter from '../render/painter';
 import type RasterDEMTileSource from '../source/raster_dem_tile_source';
 import type Framebuffer from '../gl/framebuffer';
 import { warnOnce } from '../util/util';
+import VertexBuffer from '../gl/vertex_buffer';
+import IndexBuffer from '../gl/index_buffer';
+
+
+/**
+ * This is the main class which handles most of the 3D Terrain logic. It has the follwing topics:
+ *    1) loads raster-dem tiles via the internal sourceCache this._source
+ *    2) creates a depth-framebuffer, which is used to calculate the visibility of coordinates
+ *    3) creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
+ *    4) stores all render-to-texture tiles in the this._tiles variable
+ *    5) calculates the elevation for a spezific tile-coordinate
+ *    6) creates a terrain-mesh
+ */
 
 class TerrainSourceCache extends Evented {
     _style: Style;
     _source: RasterDEMTileSource;
+    // source-cache for the raster-dem source.
     _sourceCache: SourceCache;
+    // stores all render-to-texture tiles.
     _tiles: {[_: string]: Tile};
+    // because _tiles holds, for performance, also previous rendered tiles
+    // this variable contains a list of tiles for the current scene.
     _renderableTiles: Array<string>;
-    _loadQueue: Array<any>;
+    // each time a render-to-texture tile is rendered, its tileID.key is stored into this array
+    // each time a screen is rendered, the last 100 rendered tiles will be kept in cache (e.g. this._tiles).
     _renderHistory: Array<string>;
-    _coordsFramebuffer: any;
+    // holds the framebuffer object in size of the screen to render the coords & depth into a texture.
     _fbo: any;
     _fboCoordsTexture: Texture;
     _fboDepthTexture: Texture;
     _emptyDepthTexture: Texture;
-    _mesh: any;
-    _coordsIndex: Array<any>;
+    // GL Objects for the terrain-mesh
+    // The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
+    _mesh: { indexBuffer: IndexBuffer, vertexBuffer: VertexBuffer, segments: SegmentVector };
+    // coords index contains a list of tileID.keys. This index is used to identify
+    // the tile via the alpha-cannel in the coords-texture.
+    // As the alpha-channel has 1 Byte a max of 255 tiles can rendered without an error.
+    _coordsIndex: Array<string>;
+    // tile-coords encoded in the rgb channel, _coordsIndex is in the alpha-channel.
     _coordsTexture: Texture;
+    // accuracy of the coords. 2 * tileSize should be enoughth.
     _coordsTextureSize: number;
+    // variables for an empty dem texture, which is used while the raster-dem tile is loading.
     _emptyDemUnpack: any;
     _emptyDemTexture: Texture;
     _emptyDemMatrix: mat4;
+    // as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
+    // matrices to transform from vector-tile coords to raster-dem-tile coords.
     _demMatrixCache: {[_: string]: { matrix: mat4, coord: OverscaledTileID }};
+    // because of overzooming raster-dem tiles this cache holds the corresponding
+    // raster-dem-tile for a vector-tile.
     _sourceTileCache: {[_: string]: string};
+    // minimum zoomlevel to render the terrain.
     minzoom: number;
+    // maximum zoomlevel to render the terrain.
     maxzoom: number;
+    // render-to-texture tileSize in scene.
     tileSize: number;
+    // define the meshSize per tile.
     meshSize: number;
+    // multiplicator for the elevation. Used to make terrain more "extrem".
     exaggeration: number;
+    // defines the global offset of putting negative elevations (e.g. dead-sea) into positive values.
     elevationOffset: number;
+    // to not see pixels in the render-to-texture tiles it is good to render them bigger
+    // this number is the multiplicator (must be a power of 2) for the current tileSize.
+    // So to get good results with not too much memory footprint a value of 2 should be fine.
     qualityFactor: number;
+    // loading raster-dem tiles foreach render-to-texture tile results in loading
+    // a lot of terrain-dem tiles with very low visual advantage. So with this setting
+    // the raster-dem tiles will load for the actualZoom - deltaZoom zoom-level.
     deltaZoom: number;
+    // framebuffer-object to render tiles to texture
+    rttFramebuffer: Framebuffer;
 
     /**
      * @param {Style} style
@@ -59,7 +101,6 @@ class TerrainSourceCache extends Evented {
         this._style = style;
         this._tiles = {};
         this._renderableTiles = [];
-        this._loadQueue = [];
         this._renderHistory = [];
         this._demMatrixCache = {};
         this._sourceTileCache = {};
@@ -70,11 +111,11 @@ class TerrainSourceCache extends Evented {
         this.tileSize = 512;
         this.meshSize = 128;
         this.exaggeration = 1.0;
-        this.elevationOffset = 450; // add a global offset of 450m to put the dead-sea into positive values.
-        this.qualityFactor = 2; // render more pixels per tile (e.g. texture is greater than tileSize), value must be a power of two.
-        this.deltaZoom = 1; // set to a value between 0 and 2. Load tiles for actual zoomlevel - deltaZoom, which leads in faster 3d rendering with less quality.
+        this.elevationOffset = 450; // ~ dead-sea
+        this.qualityFactor = 2;
+        this.deltaZoom = 1;
 
-        // create empty DEM Obejcts. During the elevation-tiles loading use this objects.
+        // create empty DEM Obejcts, which will used while raster-dem tiles will load.
         const context = style.map.painter.context;
         this._emptyDemUnpack = [0, 0, 0, 0];
         this._emptyDemTexture = new Texture(context, new RGBAImage({width: 1, height: 1}), context.gl.RGBA, {premultiply: false});
@@ -85,6 +126,11 @@ class TerrainSourceCache extends Evented {
         const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4));
         const texture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
         this._emptyDepthTexture = texture;
+
+        // create the render-to-texture framebuffer
+        const size = this.tileSize * this.qualityFactor;
+        this.rttFramebuffer = context.createFramebuffer(size, size, true);
+        this.rttFramebuffer.depthAttachment.set(context.createRenderbuffer(context.gl.DEPTH_COMPONENT16, size, size));
 
         // rerender corresponding tiles on terrain-dem source-tile updates
         style.on("data", e => {
@@ -106,9 +152,9 @@ class TerrainSourceCache extends Evented {
     }
 
     /**
-     *
+     * Loads a 3D terrain-mesh
      * @param {SourceCache} sourceCache
-     * @param options Allowed options are exaggeration, elevationOffset
+     * @param options Allowed options are exaggeration & elevationOffset
      */
     enable(sourceCache: SourceCache, options?: {exaggeration: boolean; elevationOffset: number}): void {
         sourceCache.usedForTerrain = true;
@@ -143,59 +189,48 @@ class TerrainSourceCache extends Evented {
     }
 
     /**
-     * Load Terrain Tiles, removes outdated Tiles and update camera elevation.
+     * Load Terrain Tiles, create internal render-to-texture tiles, free GPU memory.
+     * @param {Transform} transform
      */
     update(transform: Transform): void {
         if (!this.isEnabled() || !this._sourceCache._sourceLoaded) return;
+        // load raster-dem tiles for the current scene.
         this._sourceCache.update(transform);
         this._renderableTiles = [];
-        // create tiles for current view
-        for (const tileID of this.getRenderableTileIds(transform)) {
+        const tileIDs = {};
+        // create internal render-to-texture tiles for the current scene.
+        for (const tileID of transform.coveringTiles({
+            tileSize: this.tileSize,
+            minzoom: this.minzoom,
+            maxzoom: this.maxzoom,
+            reparseOverscaled: false
+        })) {
             this._renderableTiles.push(tileID.key);
+            tileIDs[tileID.key] = true;
             if (! this._tiles[tileID.key]) {
                 tileID.posMatrix = new Float64Array(16) as any;
                 mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
             }
         }
-        // free GPU memory from old tiles (e.g. remove )
-        this._renderHistory = this._renderHistory.filter((i, p) => this._renderHistory.indexOf(i) == p); // remove duplicates
-        while (this._renderHistory.length > 100) {
+        // remove duplicates from _renderHistory
+        this._renderHistory = this._renderHistory.filter((i, p) => this._renderHistory.indexOf(i) == p);
+        // free (GPU) memory from previously rendered not needed tiles
+        while (this._renderHistory.length > 150) {
             let tile = this._tiles[this._renderHistory.shift()];
-            if (tile) tile.clearTextures(this._style.map.painter);
+            if (tile && !tileIDs[tile.tileID.key]) {
+               tile.clearTextures(this._style.map.painter);
+               delete(this._tiles[tile.tileID.key]);
+            }
         }
     }
 
     /**
-     * get a list of tileIds, which should be rendered in the current scene
-     * @param {Transform} transform
-     * @return {Array<OverscaledTileID>}
-     */
-    getRenderableTileIds(transform: Transform): Array<OverscaledTileID> {
-        return transform.coveringTiles({
-            tileSize: this.tileSize,
-            minzoom: this.minzoom,
-            maxzoom: this.maxzoom,
-            reparseOverscaled: false
-        });
-    }
-
-    /**
      * get a list of tiles, which are loaded and should be rendered in the current scene
-     * @param {Transform} transform
      * @returns {Array<Tile>}
      */
-    getRenderableTiles(transform: Transform): Array<Tile> {
-        return this.getRenderableTileIds(transform).map(tileID => this.getTileByID(tileID.key)).filter(t => t);
-    }
-
-    /**
-     * get a list of tile-keys which are available in cache
-     * @param {Transform} transform
-     * @returns {Array<string>}
-     */
-    getRenderableIds(): Array<string> {
-        return Object.values(this._tiles).map(t => t.tileID.key);
+    getRenderableTiles(): Array<Tile> {
+        return this._renderableTiles.map(key => this.getTileByID(key));
     }
 
     /**
@@ -207,10 +242,9 @@ class TerrainSourceCache extends Evented {
     }
 
     /**
-     * searches for the corresponding terrain-tiles at a given zoomlevel
+     * searches for the corresponding current rendered terrain-tiles
      * @param {OverscaledTileID} tileID
-     * @param {number} zoom
-     * @returns {Tile}
+     * @returns {[_:string]: Tile}
      */
     getTerrainCoords(tileID: OverscaledTileID): {[_: string]: OverscaledTileID} {
         const coords = {};
@@ -248,7 +282,7 @@ class TerrainSourceCache extends Evented {
     }
 
     /**
-     * find the covering terrain-dem tile
+     * find the covering raster-dem tile
      * @param {OverscaledTileID} tileID
      * @param {boolean} searchForDEM Optinal parameter to search for (parent) souretiles with loaded dem.
      * @returns {Tile}
@@ -357,7 +391,7 @@ class TerrainSourceCache extends Evented {
     }
 
     /**
-     * store all tile-coords in a framebuffer for unprojecting pixel coordinates
+     * get a framebuffer as big as the map-div, which will be used to render depth & coords into a texture
      * @param {Painter} painter
      * @returns {Framebuffer}
      */
@@ -389,7 +423,7 @@ class TerrainSourceCache extends Evented {
     }
 
     /**
-     * get a list of tiles, loaded after a spezific time
+     * get a list of tiles, loaded after a spezific time. This is used to update depth & coords framebuffers.
      * @param {Date} time
      * @returns {Array<Tile>}
      */

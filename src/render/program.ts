@@ -156,6 +156,7 @@ class Program<Us extends UniformBindings> {
         context.setColorMode(colorMode);
         context.setCullFace(cullFaceMode);
 
+        // set varaibles used by the 3d functions defined in _prelude.vertex.glsl
         if (terrain) {
             context.activeTexture.set(gl.TEXTURE2);
             gl.bindTexture(gl.TEXTURE_2D, terrain.depthTexture);

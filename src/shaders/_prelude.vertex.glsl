@@ -120,6 +120,7 @@ float calculate_visibility(vec4 pos) {
     #endif
 }
 
+// grab an elevation value from a raster-dem texture
 float ele(vec2 pos) {
     #ifdef TERRAIN3D
         vec4 rgb = (texture2D(u_terrain, pos) * 255.0) * u_terrain_unpack;
@@ -129,6 +130,7 @@ float ele(vec2 pos) {
     #endif
 }
 
+// calculate the elevation with linear interpolation for  a coordinate
 float get_elevation(vec2 pos) {
     #ifdef TERRAIN3D
         vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 1.0;
