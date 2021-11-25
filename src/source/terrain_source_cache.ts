@@ -374,7 +374,6 @@ class TerrainSourceCache extends Evented {
             const br = terrain.tile.dem.get(c[0] + 1, c[1] + 1);
             elevation = mix(mix(tl, tr, coord[0] - c[0]), mix(bl, br, coord[0] - c[0]), coord[1] - c[1]);
         }
-        if (elevation > 8191) elevation = 0; // REMOVEME: this hack is for MTK data, because of false nodata values
         return (elevation + this.elevationOffset);
     }
 
