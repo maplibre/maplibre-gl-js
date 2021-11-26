@@ -12,7 +12,7 @@ const config = [{
     input: 'rollup/build/tsc/src/style-spec/style-spec.js',
     output: {
         name: 'maplibreGlStyleSpecification',
-        file: `dist/style-spec/${esm ? 'index.es.js' : 'index.js'}`,
+        file: `dist/style-spec/${esm ? 'index.mjs' : 'index.js'}`,
         format: esm ? 'esm' : 'umd',
         sourcemap: true
     },

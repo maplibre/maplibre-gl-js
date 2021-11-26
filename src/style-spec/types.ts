@@ -42,19 +42,19 @@ export type CompositeFunctionSpecification<T> =
     | { type: 'interval',    stops: Array<[{zoom: number, value: number}, T]>, property: string, default?: T }
     | { type: 'categorical', stops: Array<[{zoom: number, value: string | number | boolean}, T]>, property: string, default?: T };
 
-export type ExpressionSpecification = Array<unknown>;
+export type ExpressionSpecificationArray = Array<unknown>;
 
 export type PropertyValueSpecification<T> =
       T
     | CameraFunctionSpecification<T>
-    | ExpressionSpecification;
+    | ExpressionSpecificationArray;
 
 export type DataDrivenPropertyValueSpecification<T> =
       T
     | CameraFunctionSpecification<T>
     | SourceFunctionSpecification<T>
     | CompositeFunctionSpecification<T>
-    | ExpressionSpecification;
+    | ExpressionSpecificationArray;
 
 export type StyleSpecification = {
     "version": 8,
@@ -208,7 +208,7 @@ export type LineLayerSpecification = {
         "line-blur"?: DataDrivenPropertyValueSpecification<number>,
         "line-dasharray"?: PropertyValueSpecification<Array<number>>,
         "line-pattern"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>,
-        "line-gradient"?: ExpressionSpecification
+        "line-gradient"?: ExpressionSpecificationArray
     }
 };
 
@@ -327,7 +327,7 @@ export type HeatmapLayerSpecification = {
         "heatmap-radius"?: DataDrivenPropertyValueSpecification<number>,
         "heatmap-weight"?: DataDrivenPropertyValueSpecification<number>,
         "heatmap-intensity"?: PropertyValueSpecification<number>,
-        "heatmap-color"?: ExpressionSpecification,
+        "heatmap-color"?: ExpressionSpecificationArray,
         "heatmap-opacity"?: PropertyValueSpecification<number>
     }
 };

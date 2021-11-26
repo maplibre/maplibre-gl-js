@@ -4,7 +4,7 @@ import {test} from '../util/test';
 import rollupConfig from '../../rollup.config.style-spec';
 import styleSpecPackage from '../../src/style-spec/package.json';
 /* eslint-disable import/namespace */
-import * as spec from '../../dist/style-spec/index.es.js';
+import * as spec from '../../dist/style-spec/index.mjs';
 
 test('@mapbox/mapbox-gl-style-spec npm package', (t) => {
     t.test('build plain ES5 bundle in prepublish', (t) => {

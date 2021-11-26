@@ -21,19 +21,19 @@ import type Formatted from '../../style-spec/expression/types/formatted';
 import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
 import {StylePropertySpecification} from '../../style-spec/style-spec';
 
-export type LayoutProps = {
+export type FillLayoutProps = {
     "fill-sort-key": DataDrivenProperty<number>,
 };
 
-export type LayoutPropsPossiblyEvaluated = {
+export type FillLayoutPropsPossiblyEvaluated = {
     "fill-sort-key": PossiblyEvaluatedPropertyValue<number>,
 };
 
-const layout: Properties<LayoutProps> = new Properties({
+const layout: Properties<FillLayoutProps> = new Properties({
     "fill-sort-key": new DataDrivenProperty(styleSpec["layout_fill"]["fill-sort-key"] as any as StylePropertySpecification),
 });
 
-export type PaintProps = {
+export type FillPaintProps = {
     "fill-antialias": DataConstantProperty<boolean>,
     "fill-opacity": DataDrivenProperty<number>,
     "fill-color": DataDrivenProperty<Color>,
@@ -43,7 +43,7 @@ export type PaintProps = {
     "fill-pattern": CrossFadedDataDrivenProperty<ResolvedImage>,
 };
 
-export type PaintPropsPossiblyEvaluated = {
+export type FillPaintPropsPossiblyEvaluated = {
     "fill-antialias": boolean,
     "fill-opacity": PossiblyEvaluatedPropertyValue<number>,
     "fill-color": PossiblyEvaluatedPropertyValue<Color>,
@@ -53,7 +53,7 @@ export type PaintPropsPossiblyEvaluated = {
     "fill-pattern": PossiblyEvaluatedPropertyValue<CrossFaded<ResolvedImage>>,
 };
 
-const paint: Properties<PaintProps> = new Properties({
+const paint: Properties<FillPaintProps> = new Properties({
     "fill-antialias": new DataConstantProperty(styleSpec["paint_fill"]["fill-antialias"] as any as StylePropertySpecification),
     "fill-opacity": new DataDrivenProperty(styleSpec["paint_fill"]["fill-opacity"] as any as StylePropertySpecification),
     "fill-color": new DataDrivenProperty(styleSpec["paint_fill"]["fill-color"] as any as StylePropertySpecification),
@@ -64,6 +64,6 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint, layout } as {
-    paint: Properties<PaintProps>,
-    layout: Properties<LayoutProps>
+    paint: Properties<FillPaintProps>,
+    layout: Properties<FillLayoutProps>
 });

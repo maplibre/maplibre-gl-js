@@ -4,7 +4,7 @@ import StyleLayer from '../style_layer';
 import LineBucket from '../../data/bucket/line_bucket';
 import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
-import properties, {LayoutPropsPossiblyEvaluated, PaintPropsPossiblyEvaluated} from './line_style_layer_properties';
+import properties, {LineLayoutPropsPossiblyEvaluated, LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties';
 import {extend} from '../../util/util';
 import EvaluationParameters from '../evaluation_parameters';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProperty} from '../properties';
@@ -12,9 +12,10 @@ import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProp
 import Step from '../../style-spec/expression/definitions/step';
 import type {FeatureState, ZoomConstantExpression} from '../../style-spec/expression';
 import type {Bucket, BucketParameters} from '../../data/bucket';
-import type {LayoutProps, PaintProps} from './line_style_layer_properties';
+import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties';
 import type Transform from '../../geo/transform';
 import type {LayerSpecification} from '../../style-spec/types';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 class LineFloorwidthProperty extends DataDrivenProperty<number> {
     useIntegerZoom: true;
@@ -39,15 +40,15 @@ const lineFloorwidthProperty = new LineFloorwidthProperty(properties.paint.prope
 lineFloorwidthProperty.useIntegerZoom = true;
 
 class LineStyleLayer extends StyleLayer {
-    _unevaluatedLayout: Layout<LayoutProps>;
-    layout: PossiblyEvaluated<LayoutProps, LayoutPropsPossiblyEvaluated>;
+    _unevaluatedLayout: Layout<LineLayoutProps>;
+    layout: PossiblyEvaluated<LineLayoutProps, LineLayoutPropsPossiblyEvaluated>;
 
     gradientVersion: number;
     stepInterpolant: boolean;
 
-    _transitionablePaint: Transitionable<PaintProps>;
-    _transitioningPaint: Transitioning<PaintProps>;
-    paint: PossiblyEvaluated<PaintProps, PaintPropsPossiblyEvaluated>;
+    _transitionablePaint: Transitionable<LinePaintProps>;
+    _transitioningPaint: Transitioning<LinePaintProps>;
+    paint: PossiblyEvaluated<LinePaintProps, LinePaintPropsPossiblyEvaluated>;
 
     constructor(layer: LayerSpecification) {
         super(layer, properties);

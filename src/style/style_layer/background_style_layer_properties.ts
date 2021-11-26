@@ -22,24 +22,24 @@ import type ResolvedImage from '../../style-spec/expression/types/resolved_image
 import {StylePropertySpecification} from '../../style-spec/style-spec';
 
 
-export type PaintProps = {
+export type BackgroundPaintProps = {
     "background-color": DataConstantProperty<Color>,
     "background-pattern": CrossFadedProperty<ResolvedImage>,
     "background-opacity": DataConstantProperty<number>,
 };
 
-export type PaintPropsPossiblyEvaluated = {
+export type BackgroundPaintPropsPossiblyEvaluated = {
     "background-color": Color,
     "background-pattern": CrossFaded<ResolvedImage>,
     "background-opacity": number,
 };
 
-const paint: Properties<PaintProps> = new Properties({
+const paint: Properties<BackgroundPaintProps> = new Properties({
     "background-color": new DataConstantProperty(styleSpec["paint_background"]["background-color"] as any as StylePropertySpecification),
     "background-pattern": new CrossFadedProperty(styleSpec["paint_background"]["background-pattern"] as any as StylePropertySpecification),
     "background-opacity": new DataConstantProperty(styleSpec["paint_background"]["background-opacity"] as any as StylePropertySpecification),
 });
 
 export default ({ paint } as {
-    paint: Properties<PaintProps>
+    paint: Properties<BackgroundPaintProps>
 });

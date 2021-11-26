@@ -18,12 +18,13 @@ import LogoControl from './control/logo_control';
 import {supported} from '@mapbox/mapbox-gl-supported';
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
-import {MapMouseEvent} from './events';
+import {MapEventType, MapLayerEventType, MapMouseEvent} from './events';
 import TaskQueue from '../util/task_queue';
 import webpSupported from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
-
 import {setCacheLimits} from '../util/tile_request_cache';
+import {Source} from '../source/source';
+import StyleLayer from '../style/style_layer';
 
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -1012,7 +1013,7 @@ class Map extends Camera {
      * | [`sourcedataloading`](#map.event:sourcedataloading)       |                           |
      * | [`styleimagemissing`](#map.event:styleimagemissing)       |                           |
      *
-     * @param {string} layerId (optional) The ID of a style layer. Event will only be triggered if its location
+     * @param {string | Listener} layerIdOrListener The ID of a style layer or a listener if no id is provided. Event will only be triggered if its location
      * is within a visible feature in this layer. The event will have a `features` property containing
      * an array of the matching features. If `layerId` is not supplied, the event will not have a `features` property.
      * Please note that many event types are not compatible with the optional `layerId` parameter.
@@ -1054,13 +1055,19 @@ class Map extends Camera {
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
+    on<T extends keyof MapLayerEventType>(
+        type: T,
+        layer: string,
+        listener: (ev: MapLayerEventType[T] & Object) => void,
+    ): this;
+    on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     on(type: MapEvent, listener: Listener): this;
-    on(type: MapEvent, layerId: any, listener?: Listener): this {
+    on(type: MapEvent, layerIdOrListener: string | Listener, listener?: Listener): this {
         if (listener === undefined) {
-            return super.on(type, layerId);
+            return super.on(type, layerIdOrListener as Listener);
         }
 
-        const delegatedListener = this._createDelegatedListener(type, layerId, listener);
+        const delegatedListener = this._createDelegatedListener(type, layerIdOrListener, listener);
 
         this._delegatedListeners = this._delegatedListeners || {};
         this._delegatedListeners[type] = this._delegatedListeners[type] || [];
@@ -1461,7 +1468,7 @@ class Map extends Camera {
      * var styleJson = map.getStyle();
      *
      */
-    getStyle() {
+    getStyle(): StyleSpecification {
         if (this.style) {
             return this.style.serialize();
         }
@@ -1624,7 +1631,7 @@ class Map extends Camera {
      * of an image source.
      *
      * @param {string} id The ID of the source to get.
-     * @returns {?Object} The style source with the specified ID or `undefined` if the ID
+     * @returns {Source} The style source with the specified ID or `undefined` if the ID
      * corresponds to no existing sources.
      * The shape of the object varies by source type.
      * A list of options for each source type is available on the Mapbox Style Specification's
@@ -1635,7 +1642,7 @@ class Map extends Camera {
      * @see [Animate a point](https://maplibre.org/maplibre-gl-js-docs/example/animate-point-along-line/)
      * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js-docs/example/live-geojson/)
      */
-    getSource(id: string) {
+    getSource(id: string): Source {
         return this.style.getSource(id);
     }
 
@@ -2008,7 +2015,7 @@ class Map extends Camera {
      * Returns the layer with the specified ID in the map's style.
      *
      * @param {string} id The ID of the layer to get.
-     * @returns {?Object} The layer with the specified ID, or `undefined`
+     * @returns {StyleLayer} The layer with the specified ID, or `undefined`
      *   if the ID corresponds to no existing layers.
      *
      * @example
@@ -2017,7 +2024,7 @@ class Map extends Camera {
      * @see [Filter symbols by toggling a list](https://maplibre.org/maplibre-gl-js-docs/example/filter-markers/)
      * @see [Filter symbols by text input](https://maplibre.org/maplibre-gl-js-docs/example/filter-markers-by-input/)
      */
-    getLayer(id: string) {
+    getLayer(id: string): StyleLayer {
         return this.style.getLayer(id);
     }
 

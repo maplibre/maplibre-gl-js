@@ -7,7 +7,7 @@ import Point, {PointLike} from '../util/point';
 import smartWrap from '../util/smart_wrap';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 
-import type {Anchor} from './anchor';
+import type {PositionAnchor} from './anchor';
 
 import type Map from './map';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -21,7 +21,7 @@ const defaultOptions = {
 };
 
 export type Offset = number | PointLike | {
-  [_ in Anchor]: PointLike;
+  [_ in PositionAnchor]: PointLike;
 };
 
 export type PopupOptions = {
@@ -29,7 +29,7 @@ export type PopupOptions = {
   closeOnClick?: boolean;
   closeOnMove?: boolean;
   focusAfterOpen?: boolean;
-  anchor?: Anchor;
+  anchor?: PositionAnchor;
   offset?: Offset;
   className?: string;
   maxWidth?: string;
@@ -542,7 +542,7 @@ export default class Popup extends Evented {
 
         const pos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
 
-        let anchor: Anchor = this.options.anchor;
+        let anchor = this.options.anchor;
         const offset = normalizeOffset(this.options.offset);
 
         if (!anchor) {

@@ -96,11 +96,41 @@ class EdgeInsets {
     }
 }
 
+/**
+ * Options for setting padding on calls to methods such as {@link Map#fitBounds}, {@link Map#fitScreenCoordinates}, and {@link Map#setPadding}. Adjust these options to set the amount of padding in pixels added to the edges of the canvas. Set a uniform padding on all edges or individual values for each edge. All properties of this object must be
+ * non-negative integers.
+ *
+ * @example
+ * var bbox = [[-79, 43], [-73, 45]];
+ * map.fitBounds(bbox, {
+ *   padding: {top: 10, bottom:25, left: 15, right: 5}
+ * });
+ *
+ * @example
+ * var bbox = [[-79, 43], [-73, 45]];
+ * map.fitBounds(bbox, {
+ *   padding: 20
+ * });
+ * @see [Fit to the bounds of a LineString](https://maplibre.org/maplibre-gl-js-docs/example/zoomto-linestring/)
+ * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/fitbounds/)
+ */
 export type PaddingOptions = {
-  top: number;
-  bottom: number;
-  right: number;
-  left: number;
+    /**
+    * @property {number} top Padding in pixels from the top of the map canvas.
+    */
+    top: number;
+    /**
+     * @property {number} bottom Padding in pixels from the bottom of the map canvas.
+     */
+    bottom: number;
+    /**
+     * @property {number} left Padding in pixels from the left of the map canvas.
+     */
+    right: number;
+    /**
+     * @property {number} right Padding in pixels from the right of the map canvas.
+     */
+    left: number;
 };
 
 export default EdgeInsets;

@@ -20,7 +20,7 @@ import type {
     VideoSourceSpecification
 } from '../style-spec/types';
 
-type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
+export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 
 /**
  * A data source containing an image.

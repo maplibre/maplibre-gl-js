@@ -5,16 +5,10 @@ import potpack from 'potpack';
 import type {StyleImage} from '../style/style_image';
 import type ImageManager from './image_manager';
 import type Texture from './texture';
+import type {Rect} from './glyph_atlas';
 
 const IMAGE_PADDING: number = 1;
 export {IMAGE_PADDING};
-
-type Rect = {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-};
 
 export class ImagePosition {
     paddedRect: Rect;

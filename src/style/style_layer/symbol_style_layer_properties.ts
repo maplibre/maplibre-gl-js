@@ -25,7 +25,7 @@ import {
     ColorType
 } from '../../style-spec/expression/types';
 
-export type LayoutProps = {
+export type SymbolLayoutProps = {
     "symbol-placement": DataConstantProperty<"point" | "line" | "line-center">,
     "symbol-spacing": DataConstantProperty<number>,
     "symbol-avoid-edges": DataConstantProperty<boolean>,
@@ -69,7 +69,7 @@ export type LayoutProps = {
     "text-optional": DataConstantProperty<boolean>,
 };
 
-export type LayoutPropsPossiblyEvaluated = {
+export type SymbolLayoutPropsPossiblyEvaluated = {
     "symbol-placement": "point" | "line" | "line-center",
     "symbol-spacing": number,
     "symbol-avoid-edges": boolean,
@@ -113,7 +113,7 @@ export type LayoutPropsPossiblyEvaluated = {
     "text-optional": boolean,
 };
 
-const layout: Properties<LayoutProps> = new Properties({
+const layout: Properties<SymbolLayoutProps> = new Properties({
     "symbol-placement": new DataConstantProperty(styleSpec["layout_symbol"]["symbol-placement"] as any as StylePropertySpecification),
     "symbol-spacing": new DataConstantProperty(styleSpec["layout_symbol"]["symbol-spacing"] as any as StylePropertySpecification),
     "symbol-avoid-edges": new DataConstantProperty(styleSpec["layout_symbol"]["symbol-avoid-edges"] as any as StylePropertySpecification),
@@ -157,7 +157,7 @@ const layout: Properties<LayoutProps> = new Properties({
     "text-optional": new DataConstantProperty(styleSpec["layout_symbol"]["text-optional"] as any as StylePropertySpecification),
 });
 
-export type PaintProps = {
+export type SymbolPaintProps = {
     "icon-opacity": DataDrivenProperty<number>,
     "icon-color": DataDrivenProperty<Color>,
     "icon-halo-color": DataDrivenProperty<Color>,
@@ -174,7 +174,7 @@ export type PaintProps = {
     "text-translate-anchor": DataConstantProperty<"map" | "viewport">,
 };
 
-export type PaintPropsPossiblyEvaluated = {
+export type SymbolPaintPropsPossiblyEvaluated = {
     "icon-opacity": PossiblyEvaluatedPropertyValue<number>,
     "icon-color": PossiblyEvaluatedPropertyValue<Color>,
     "icon-halo-color": PossiblyEvaluatedPropertyValue<Color>,
@@ -191,7 +191,7 @@ export type PaintPropsPossiblyEvaluated = {
     "text-translate-anchor": "map" | "viewport",
 };
 
-const paint: Properties<PaintProps> = new Properties({
+const paint: Properties<SymbolPaintProps> = new Properties({
     "icon-opacity": new DataDrivenProperty(styleSpec["paint_symbol"]["icon-opacity"] as any as StylePropertySpecification),
     "icon-color": new DataDrivenProperty(styleSpec["paint_symbol"]["icon-color"] as any as StylePropertySpecification),
     "icon-halo-color": new DataDrivenProperty(styleSpec["paint_symbol"]["icon-halo-color"] as any as StylePropertySpecification),
@@ -209,6 +209,6 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint, layout } as {
-    paint: Properties<PaintProps>,
-    layout: Properties<LayoutProps>
+    paint: Properties<SymbolPaintProps>,
+    layout: Properties<SymbolLayoutProps>
 });

@@ -6,18 +6,18 @@ import LngLat from '../../geo/lng_lat';
 import Marker from '../marker';
 
 import type Map from '../map';
-import type {AnimationOptions, CameraOptions} from '../camera';
+import type {FitBoundsOptions} from '../camera';
 import type {IControl} from './control';
 
-type Options = {
+type GeolocateOptions = {
   positionOptions?: PositionOptions;
-  fitBoundsOptions?: AnimationOptions & CameraOptions;
+  fitBoundsOptions?: FitBoundsOptions;
   trackUserLocation?: boolean;
   showAccuracyCircle?: boolean;
   showUserLocation?: boolean;
 };
 
-const defaultOptions: Options = {
+const defaultOptions: GeolocateOptions = {
     positionOptions: {
         enableHighAccuracy: false,
         maximumAge: 0,
@@ -94,7 +94,7 @@ let noTimeout = false;
  */
 class GeolocateControl extends Evented implements IControl {
     _map: Map;
-    options: Options;
+    options: GeolocateOptions;
     _container: HTMLElement;
     _dotElement: HTMLElement;
     _circleElement: HTMLElement;
@@ -108,7 +108,7 @@ class GeolocateControl extends Evented implements IControl {
     _accuracy: number;
     _setup: boolean; // set to true once the control has been setup
 
-    constructor(options: Options) {
+    constructor(options: GeolocateOptions) {
         super();
         this.options = extend({}, defaultOptions, options);
 
@@ -415,7 +415,7 @@ class GeolocateControl extends Evented implements IControl {
         // when the camera is changed (and it's not as a result of the Geolocation Control) change
         // the watch mode to background watch, so that the marker is updated but not the camera.
         if (this.options.trackUserLocation) {
-            this._map.on('movestart', (event) => {
+            this._map.on('movestart', (event: any) => {
                 const fromResize = event.originalEvent && event.originalEvent.type === 'resize';
                 if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize) {
                     this._watchState = 'BACKGROUND';

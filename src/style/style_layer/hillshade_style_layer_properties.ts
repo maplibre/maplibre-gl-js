@@ -22,7 +22,7 @@ import type ResolvedImage from '../../style-spec/expression/types/resolved_image
 import {StylePropertySpecification} from '../../style-spec/style-spec';
 
 
-export type PaintProps = {
+export type HillshadePaintProps = {
     "hillshade-illumination-direction": DataConstantProperty<number>,
     "hillshade-illumination-anchor": DataConstantProperty<"map" | "viewport">,
     "hillshade-exaggeration": DataConstantProperty<number>,
@@ -31,7 +31,7 @@ export type PaintProps = {
     "hillshade-accent-color": DataConstantProperty<Color>,
 };
 
-export type PaintPropsPossiblyEvaluated = {
+export type HillshadePaintPropsPossiblyEvaluated = {
     "hillshade-illumination-direction": number,
     "hillshade-illumination-anchor": "map" | "viewport",
     "hillshade-exaggeration": number,
@@ -40,7 +40,7 @@ export type PaintPropsPossiblyEvaluated = {
     "hillshade-accent-color": Color,
 };
 
-const paint: Properties<PaintProps> = new Properties({
+const paint: Properties<HillshadePaintProps> = new Properties({
     "hillshade-illumination-direction": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-illumination-direction"] as any as StylePropertySpecification),
     "hillshade-illumination-anchor": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-illumination-anchor"] as any as StylePropertySpecification),
     "hillshade-exaggeration": new DataConstantProperty(styleSpec["paint_hillshade"]["hillshade-exaggeration"] as any as StylePropertySpecification),
@@ -50,5 +50,5 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint } as {
-    paint: Properties<PaintProps>
+    paint: Properties<HillshadePaintProps>
 });

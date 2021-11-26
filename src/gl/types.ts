@@ -28,7 +28,7 @@ export type TextureUnitType = number;
 
 export type ViewportType = [number, number, number, number];
 
-export type StencilTest = {
+export type StencilTestGL = {
   func: WebGLRenderingContext['NEVER'];
   mask: 0;
 } | {
