@@ -378,7 +378,7 @@ class TerrainSourceCache extends Evented {
      * @returns {number}
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number=EXTENT): number {
-        if (!this.isEnabled()) return this.elevationOffset;
+        if (!this.isEnabled()) return 0.0;
         if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return this.elevationOffset;
         let elevation = 0;
         const terrain = this.getTerrain(tileID);
@@ -404,6 +404,7 @@ class TerrainSourceCache extends Evented {
      * @returns {number}
      */
     getElevationWithExaggeration(tileID: OverscaledTileID, x: number, y: number, extent: number=EXTENT): number {
+        if (!this.isEnabled()) return 0.0;
         return this.getElevation(tileID, x, y, extent) * this.exaggeration;
     }
 
