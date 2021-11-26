@@ -29,6 +29,24 @@ import IndexBuffer from '../gl/index_buffer';
  *    4) stores all render-to-texture tiles in the this._tiles variable
  *    5) calculates the elevation for a spezific tile-coordinate
  *    6) creates a terrain-mesh
+ *
+ *    A note about the GPU resource-usage:
+ *    Framebuffers:
+ *       - one for the depth & coords framebuffer with the size of the map-div.
+ *       - one for rendering a tile to texture with the size of tileSize (= 512x512).
+ *    Textures:
+ *       - one texture for an empty raster-dem tile with size 1x1
+ *       - one texture for an empty depth-buffer, when terrain is disabled with size 1x1
+ *       - one texture for an each loaded raster-dem with size of the source.tileSize
+ *       - one texture for the coords-framebuffer with the size of the map-div.
+ *       - one texture for the depth-framebuffer with the size of the map-div.
+ *       - one texture for the encoded tile-coords with the size 2*tileSize (=1024x1024)
+ *       - finally for each render-to-texture tile (= this._tiles) a set of textures
+ *         for each render stack (The stack-concept is documented in painter.ts).
+ *         Normally there exists 1-3 Textures per tile, depending on the stylesheet.
+ *         Each Textures has the size 2*tileSize (= 1024x1024). Also there exists a
+ *         cache of the last 150 newest rendered tiles.
+ *
  */
 
 class TerrainSourceCache extends Evented {

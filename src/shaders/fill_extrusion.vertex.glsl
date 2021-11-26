@@ -24,7 +24,14 @@ void main() {
     vec3 normal = a_normal_ed.xyz;
 
     float ele = get_elevation(a_centroid);
-    base = max(0.0, ele + base - 10.0); // minus 10 to avoid floating buildings because centroid is used for elevation
+    #ifdef TERRAIN3D
+        // To avoid floating buildings in 3d-terrain, especially in heavy terrain,
+        // render the buildings a little below terrain. The unit is meter.
+        float baseDelta = 10.0;
+    #else
+        float baseDelta = 0.0;
+    #endif
+    base = max(0.0, ele + base - baseDelta);
     height = max(0.0, ele + height);
 
     float t = mod(normal.x, 2.0);
