@@ -172,5 +172,40 @@ test('ajax', (t) => {
         window.server.respond();
     });
 
+
+    t.test('getImage uses ImageBitmap when supported', (t) => {
+        resetImageRequestQueue();
+
+        window.server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+
+        // mock createImageBitmap support
+        global.createImageBitmap = () => Promise.resolve(new ImageBitmap());
+
+        getImage({url: ''}, (err, img) => {
+            if (err) t.fail();
+            t.ok(img instanceof ImageBitmap);
+            t.end();
+        });
+
+        window.server.respond();
+    });
+
+    t.test('getImage uses HTMLImageElement when ImageBitmap is not supported', (t) => {
+        resetImageRequestQueue();
+
+        window.server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+
+        // mock createImageBitmap not supported
+        global.createImageBitmap = undefined;
+
+        getImage({url: ''}, (err, img) => {
+            if (err) t.fail();
+            t.ok(img instanceof HTMLImageElement);
+            t.end();
+        });
+
+        window.server.respond();
+    });
+
     t.end();
 });

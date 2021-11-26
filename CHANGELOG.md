@@ -33,6 +33,7 @@
 - Added `redraw` function to map (#206)
 - Improve attribution controls accessibility. See [#359](https://github.com/maplibre/maplibre-gl-js/issues/359)
 - Allow maxPitch value up to 85, use values greater than 60 at your own risk (#574)
+- `getImage` uses createImageBitmap when supported (#650)
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes

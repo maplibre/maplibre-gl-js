@@ -25,6 +25,12 @@ import type {
 // stability, but it's expensive.
 const viewportPadding = 100;
 
+export type FeatureKey = {
+    bucketInstanceId: number;
+    featureIndex: number;
+    collisionGroupID: number;
+};
+
 /**
  * A collision index used to prevent symbols from overlapping. It keep tracks of
  * where previous symbols have been placed and is used to check if a new
@@ -38,8 +44,8 @@ const viewportPadding = 100;
  * @private
  */
 class CollisionIndex {
-    grid: GridIndex;
-    ignoredGrid: GridIndex;
+    grid: GridIndex<FeatureKey>;
+    ignoredGrid: GridIndex<FeatureKey>;
     transform: Transform;
     pitchfactor: number;
     screenRightBoundary: number;
@@ -49,8 +55,8 @@ class CollisionIndex {
 
     constructor(
         transform: Transform,
-        grid = new GridIndex(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
-        ignoredGrid = new GridIndex(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
+        grid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
+        ignoredGrid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
     ) {
         this.transform = transform;
 
@@ -69,7 +75,7 @@ class CollisionIndex {
       allowOverlap: boolean,
       textPixelRatio: number,
       posMatrix: mat4,
-      collisionGroupPredicate?: any
+      collisionGroupPredicate?: (key: FeatureKey) => boolean
     ): {
       box: Array<number>;
       offscreen: boolean;
@@ -106,7 +112,7 @@ class CollisionIndex {
       labelToScreenMatrix: mat4,
       showCollisionCircles: boolean,
       pitchWithMap: boolean,
-      collisionGroupPredicate: any,
+      collisionGroupPredicate: (key: FeatureKey) => boolean,
       circlePixelDiameter: number,
       textPixelPadding: number
     ): {
