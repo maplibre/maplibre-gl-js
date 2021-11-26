@@ -196,13 +196,13 @@ class FillExtrusionBucket implements Bucket {
 
                             addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
                             addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
-                            centroid.x += p1.x; centroid.y += p1.y; centroid.vertexCount++;
+                            centroid.x += 2 * p1.x; centroid.y += 2 * p1.y; centroid.vertexCount += 2;
 
                             edgeDistance += dist;
 
                             addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
                             addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
-                            centroid.x += p2.x; centroid.y += p2.y; centroid.vertexCount++;
+                            centroid.x += 2 * p2.x; centroid.y += 2 * p2.y; centroid.vertexCount += 2;
 
                             const bottomRight = segment.vertexLength;
 
@@ -248,7 +248,7 @@ class FillExtrusionBucket implements Bucket {
                     const p = ring[i];
 
                     addVertex(this.layoutVertexArray, p.x, p.y, 0, 0, 1, 1, 0);
-                  //   centroid.x += p.x; centroid.y += p.y; centroid.vertexCount += 1;
+                    centroid.x += p.x; centroid.y += p.y; centroid.vertexCount += 1;
 
                     flattened.push(p.x);
                     flattened.push(p.y);
