@@ -12,6 +12,16 @@ import EdgeInsets from './edge_insets';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 
+type TileParameters = {
+    overscaledZ: number;
+    wrap: number;
+    z: number;
+    x: number;
+    y: number;
+}
+
+type CacheEntry = Array<TileParameters>
+
 /**
  * A single transform, generally used for a single tile to be
  * scaled, rotated, and zoomed.
@@ -53,7 +63,7 @@ class Transform {
     _constraining: boolean;
     _posMatrixCache: {[_: string]: mat4};
     _alignedPosMatrixCache: {[_: string]: mat4};
-    _coveringTilesCache: {[_: string]: Array<any>};
+    _coveringTilesCache: {[_: string]: CacheEntry};
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
@@ -325,13 +335,13 @@ class Transform {
         reparseOverscaled?: boolean;
       }
     ): Array<OverscaledTileID> {
-        const loadCacheEntry = (cacheEntry): Array<OverscaledTileID> => {
-            return cacheEntry.map(it => new OverscaledTileID(it.overscaledZ, it.wrap, it.zoom, it.x, it.y));
+        const castToOverscaledTileIDs = (cacheEntry: CacheEntry): Array<OverscaledTileID> => {
+            return cacheEntry.map(it => new OverscaledTileID(it.overscaledZ, it.wrap, it.z, it.x, it.y));
         };
 
         const optionsKey = JSON.stringify([options, this._renderWorldCopies]);
         if (this._coveringTilesCache[optionsKey]) {
-            return loadCacheEntry(this._coveringTilesCache[optionsKey]);
+            return castToOverscaledTileIDs(this._coveringTilesCache[optionsKey]);
         }
 
         let z = this.coveringZoomLevel(options);
@@ -368,7 +378,10 @@ class Transform {
 
         // Do a depth-first traversal to find visible tiles and proper levels of detail
         const stack = [];
-        const cacheEntry = [];
+        const preCacheEntry = [] as Array<{
+            tileParameters: TileParameters;
+            distanceSq: number;
+        }>;
         const maxZoom = z;
         const overscaledZ = options.reparseOverscaled ? actualZ : z;
 
@@ -411,11 +424,11 @@ class Transform {
 
             // Have we reached the target depth or is the tile too far away to be any split further?
             if (it.zoom === maxZoom || (longestDim > distToSplit && it.zoom >= minZoom)) {
-                cacheEntry.push({
+                preCacheEntry.push({
                     tileParameters: {
                         overscaledZ: it.zoom === maxZoom ? overscaledZ : it.zoom,
                         wrap: it.wrap,
-                        zoom: it.zoom,
+                        z: it.zoom,
                         x, y
                     },
                     distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y])
@@ -431,10 +444,10 @@ class Transform {
             }
         }
 
-        const sortedCacheEntry = cacheEntry.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileParameters);
-        this._coveringTilesCache[optionsKey] = sortedCacheEntry;
+        const cacheEntry = preCacheEntry.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileParameters);
+        this._coveringTilesCache[optionsKey] = cacheEntry;
 
-        return loadCacheEntry(sortedCacheEntry);
+        return castToOverscaledTileIDs(cacheEntry);
     }
 
     resize(width: number, height: number) {
