@@ -112,7 +112,7 @@ describe('transform', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.resize(200, 200);
 
-        test('generell', () => {
+        test('general', () => {
 
             // make slightly off center so that sort order is not subject to precision issues
             transform.center = new LngLat(-0.01, 0.01);
@@ -189,6 +189,151 @@ describe('transform', () => {
             ]);
 
             transform.resize(50, 300);
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(8, 0, 8, 145, 74),
+                new OverscaledTileID(8, 0, 8, 145, 73),
+                new OverscaledTileID(8, 0, 8, 146, 74),
+                new OverscaledTileID(8, 0, 8, 146, 73)
+            ]);
+
+            transform.zoom = 2;
+            transform.pitch = 0;
+            transform.bearing = 0;
+            transform.resize(300, 300);
+        });
+
+        test('general cached', () => {
+
+            // make slightly off center so that sort order is not subject to precision issues
+            transform.center = new LngLat(-0.01, 0.01);
+
+            transform.zoom = 0;
+            expect(transform.coveringTiles(options)).toEqual([]);
+            expect(transform.coveringTiles(options)).toEqual([]);
+
+            transform.zoom = 1;
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(1, 0, 1, 0, 0),
+                new OverscaledTileID(1, 0, 1, 1, 0),
+                new OverscaledTileID(1, 0, 1, 0, 1),
+                new OverscaledTileID(1, 0, 1, 1, 1)]);
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(1, 0, 1, 0, 0),
+                new OverscaledTileID(1, 0, 1, 1, 0),
+                new OverscaledTileID(1, 0, 1, 0, 1),
+                new OverscaledTileID(1, 0, 1, 1, 1)]);
+
+            transform.zoom = 2.4;
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(2, 0, 2, 1, 1),
+                new OverscaledTileID(2, 0, 2, 2, 1),
+                new OverscaledTileID(2, 0, 2, 1, 2),
+                new OverscaledTileID(2, 0, 2, 2, 2)]);
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(2, 0, 2, 1, 1),
+                new OverscaledTileID(2, 0, 2, 2, 1),
+                new OverscaledTileID(2, 0, 2, 1, 2),
+                new OverscaledTileID(2, 0, 2, 2, 2)]);
+
+            transform.zoom = 10;
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(10, 0, 10, 511, 511),
+                new OverscaledTileID(10, 0, 10, 512, 511),
+                new OverscaledTileID(10, 0, 10, 511, 512),
+                new OverscaledTileID(10, 0, 10, 512, 512)]);
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(10, 0, 10, 511, 511),
+                new OverscaledTileID(10, 0, 10, 512, 511),
+                new OverscaledTileID(10, 0, 10, 511, 512),
+                new OverscaledTileID(10, 0, 10, 512, 512)]);
+
+            transform.zoom = 11;
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(10, 0, 10, 511, 511),
+                new OverscaledTileID(10, 0, 10, 512, 511),
+                new OverscaledTileID(10, 0, 10, 511, 512),
+                new OverscaledTileID(10, 0, 10, 512, 512)]);
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(10, 0, 10, 511, 511),
+                new OverscaledTileID(10, 0, 10, 512, 511),
+                new OverscaledTileID(10, 0, 10, 511, 512),
+                new OverscaledTileID(10, 0, 10, 512, 512)]);
+
+            transform.zoom = 5.1;
+            transform.pitch = 60.0;
+            transform.bearing = 32.0;
+            transform.center = new LngLat(56.90, 48.20);
+            transform.resize(1024, 768);
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(5, 0, 5, 21, 11),
+                new OverscaledTileID(5, 0, 5, 20, 11),
+                new OverscaledTileID(5, 0, 5, 21, 10),
+                new OverscaledTileID(5, 0, 5, 20, 10),
+                new OverscaledTileID(5, 0, 5, 21, 12),
+                new OverscaledTileID(5, 0, 5, 22, 11),
+                new OverscaledTileID(5, 0, 5, 20, 12),
+                new OverscaledTileID(5, 0, 5, 22, 10),
+                new OverscaledTileID(5, 0, 5, 21, 9),
+                new OverscaledTileID(5, 0, 5, 20, 9),
+                new OverscaledTileID(5, 0, 5, 22, 9),
+                new OverscaledTileID(5, 0, 5, 23, 10),
+                new OverscaledTileID(5, 0, 5, 21, 8),
+                new OverscaledTileID(5, 0, 5, 20, 8),
+                new OverscaledTileID(5, 0, 5, 23, 9),
+                new OverscaledTileID(5, 0, 5, 22, 8),
+                new OverscaledTileID(5, 0, 5, 23, 8),
+                new OverscaledTileID(5, 0, 5, 21, 7),
+                new OverscaledTileID(5, 0, 5, 20, 7),
+                new OverscaledTileID(5, 0, 5, 24, 9),
+                new OverscaledTileID(5, 0, 5, 22, 7)
+            ]);
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(5, 0, 5, 21, 11),
+                new OverscaledTileID(5, 0, 5, 20, 11),
+                new OverscaledTileID(5, 0, 5, 21, 10),
+                new OverscaledTileID(5, 0, 5, 20, 10),
+                new OverscaledTileID(5, 0, 5, 21, 12),
+                new OverscaledTileID(5, 0, 5, 22, 11),
+                new OverscaledTileID(5, 0, 5, 20, 12),
+                new OverscaledTileID(5, 0, 5, 22, 10),
+                new OverscaledTileID(5, 0, 5, 21, 9),
+                new OverscaledTileID(5, 0, 5, 20, 9),
+                new OverscaledTileID(5, 0, 5, 22, 9),
+                new OverscaledTileID(5, 0, 5, 23, 10),
+                new OverscaledTileID(5, 0, 5, 21, 8),
+                new OverscaledTileID(5, 0, 5, 20, 8),
+                new OverscaledTileID(5, 0, 5, 23, 9),
+                new OverscaledTileID(5, 0, 5, 22, 8),
+                new OverscaledTileID(5, 0, 5, 23, 8),
+                new OverscaledTileID(5, 0, 5, 21, 7),
+                new OverscaledTileID(5, 0, 5, 20, 7),
+                new OverscaledTileID(5, 0, 5, 24, 9),
+                new OverscaledTileID(5, 0, 5, 22, 7)
+            ]);
+
+            transform.zoom = 8;
+            transform.pitch = 60;
+            transform.bearing = 45.0;
+            transform.center = new LngLat(25.02, 60.15);
+            transform.resize(300, 50);
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(8, 0, 8, 145, 74),
+                new OverscaledTileID(8, 0, 8, 145, 73),
+                new OverscaledTileID(8, 0, 8, 146, 74)
+            ]);
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(8, 0, 8, 145, 74),
+                new OverscaledTileID(8, 0, 8, 145, 73),
+                new OverscaledTileID(8, 0, 8, 146, 74)
+            ]);
+
+            transform.resize(50, 300);
+            expect(transform.coveringTiles(options)).toEqual([
+                new OverscaledTileID(8, 0, 8, 145, 74),
+                new OverscaledTileID(8, 0, 8, 145, 73),
+                new OverscaledTileID(8, 0, 8, 146, 74),
+                new OverscaledTileID(8, 0, 8, 146, 73)
+            ]);
             expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 145, 74),
                 new OverscaledTileID(8, 0, 8, 145, 73),
