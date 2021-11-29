@@ -489,19 +489,24 @@ class Painter {
         // Translucent pass ===============================================
         // Draw all other layers bottom-to-top.
         this.renderPass = 'translucent';
+
         // the following variables only used when terrain-3d is enabled
-        let prevType = null;
-        const stacks = [], rerender = {};
-        const renderableTiles = this.style.terrainSourceCache.getRenderableTiles();
-        renderableTiles.forEach(tile => {
-            // rerender if there are more coords to render than in the last rendering
-            for (let source in coordsDescendingInvStr) {
-                const coords = coordsDescendingInvStr[source][tile.tileID.key];
-                if (coords && coords != tile.textureCoords[source]) tile.clearTextures(this);
-            }
-            // rerender if there are no previous renderings
-            rerender[tile.tileID.key] = !tile.textures.length;
-        });
+        const stacks = []; // render layers not one by one, instead group into stacks
+        let prevType = null; // remember the type of the last layer when render to a stack
+        const rerender = {}; // create a lookup which tiles should rendered to texture
+        let renderableTiles = []; // all terrain-tiles for the current scene
+        if (isTerrainEnabled) {
+            renderableTiles = this.style.terrainSourceCache.getRenderableTiles();
+            renderableTiles.forEach(tile => {
+                // rerender if there are more coords to render than in the last rendering
+                for (let source in coordsDescendingInvStr) {
+                    const coords = coordsDescendingInvStr[source][tile.tileID.key];
+                    if (coords && coords != tile.textureCoords[source]) tile.clearTextures(this);
+                }
+                // rerender if there are no previous renderings
+                rerender[tile.tileID.key] = !tile.textures.length;
+            });
+        }
 
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
