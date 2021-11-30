@@ -10,8 +10,8 @@ function createMap() {
             version: 8,
             sources: {},
             layers: [],
-            owner: 'mapbox',
-            id: 'streets-v10',
+            owner: 'mapblibre',
+            id: 'demotiles',
         },
         hash: true
     }, undefined);
@@ -346,7 +346,8 @@ NodeList [
 `);
     });
 
-    test('details is set correct for default view. In particular, it SHOULD contain the attribute open="".', () => {
+    test('details is set correct for default view. In particular, it should NOT contain the attribute open="".', () => {
+        Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 600, configurable: true});
         const attributionControl = new AttributionControl({
         });
         map.addControl(attributionControl);
@@ -355,6 +356,30 @@ NodeList [
 NodeList [
   <details
     class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+    });
+
+    test('details is set correct for default view. In particular, it SHOULD contain the attribute open="".', () => {
+        Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
+        const attributionControl = new AttributionControl({
+        });
+        map.addControl(attributionControl);
+
+        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty"
     open=""
   >
     <summary
