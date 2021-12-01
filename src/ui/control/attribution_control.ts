@@ -59,10 +59,6 @@ class AttributionControl implements IControl {
 
         if (compact) {
             this._container.classList.add('maplibregl-compact', 'mapboxgl-compact');
-        } else {
-            if (this._map.getCanvasContainer().offsetWidth > 640) {
-                this._container.setAttribute('open', '');
-            }
         }
 
         this._updateAttributions();
