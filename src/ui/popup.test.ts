@@ -1,23 +1,28 @@
-import '../../stub_loader';
-import {createMap as globalCreateMap} from '../../util';
-import Popup from '../ui/popup';
+import {createMap as globalCreateMap, setPerformance, setWebGlContext} from '../util/test/util';
+import Popup, {Offset} from '../ui/popup';
 import LngLat from '../geo/lng_lat';
 import Point from '../util/point';
-import simulate from '../../util/simulate_interaction';
+import simulate from '../../test/util/simulate_interaction';
+import {PositionAnchor} from './anchor';
 
 const containerWidth = 512;
 const containerHeight = 512;
 
-function createMap(t, options) {
+function createMap(options?) {
     options = options || {};
     const container = window.document.createElement('div');
     Object.defineProperty(container, 'clientWidth', {value: options.width || containerWidth});
     Object.defineProperty(container, 'clientHeight', {value: options.height || containerHeight});
-    return globalCreateMap(t, {container});
+    return globalCreateMap({container});
 }
 
-describe('Popup#getElement returns a .maplibregl-popup element', () => {
-    const map = createMap(t);
+beforeEach(() => {
+    setPerformance();
+    setWebGlContext();
+});
+
+test('Popup#getElement returns a .maplibregl-popup element', () => {
+    const map = createMap();
     const popup = new Popup()
         .setText('Test')
         .setLngLat([0, 0])
@@ -27,8 +32,8 @@ describe('Popup#getElement returns a .maplibregl-popup element', () => {
     expect(popup.getElement().classList.contains('maplibregl-popup')).toBeTruthy();
 });
 
-describe('Popup#addTo adds a .maplibregl-popup element', () => {
-    const map = createMap(t);
+test('Popup#addTo adds a .maplibregl-popup element', () => {
+    const map = createMap();
     const popup = new Popup()
         .setText('Test')
         .setLngLat([0, 0])
@@ -38,8 +43,8 @@ describe('Popup#addTo adds a .maplibregl-popup element', () => {
     expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(1);
 });
 
-describe('Popup closes on map click events by default', () => {
-    const map = createMap(t);
+test('Popup closes on map click events by default', () => {
+    const map = createMap();
     const popup = new Popup()
         .setText('Test')
         .setLngLat([0, 0])
@@ -50,8 +55,8 @@ describe('Popup closes on map click events by default', () => {
     expect(!popup.isOpen()).toBeTruthy();
 });
 
-describe('Popup does not close on map click events when the closeOnClick option is false', () => {
-    const map = createMap(t);
+test('Popup does not close on map click events when the closeOnClick option is false', () => {
+    const map = createMap();
     const popup = new Popup({closeOnClick: false})
         .setText('Test')
         .setLngLat([0, 0])
@@ -62,8 +67,8 @@ describe('Popup does not close on map click events when the closeOnClick option 
     expect(popup.isOpen()).toBeTruthy();
 });
 
-describe('Popup closes on close button click events', () => {
-    const map = createMap(t);
+test('Popup closes on close button click events', () => {
+    const map = createMap();
     const popup = new Popup()
         .setText('Test')
         .setLngLat([0, 0])
@@ -74,8 +79,8 @@ describe('Popup closes on close button click events', () => {
     expect(!popup.isOpen()).toBeTruthy();
 });
 
-describe('Popup has no close button if closeButton option is false', () => {
-    const map = createMap(t);
+test('Popup has no close button if closeButton option is false', () => {
+    const map = createMap();
 
     const popup = new Popup({closeButton: false})
         .setText('Test')
@@ -87,8 +92,8 @@ describe('Popup has no close button if closeButton option is false', () => {
     ).toHaveLength(0);
 });
 
-describe('Popup does not close on map move events when the closeOnMove option is false', () => {
-    const map = createMap(t);
+test('Popup does not close on map move events when the closeOnMove option is false', () => {
+    const map = createMap();
     const popup = new Popup({closeOnMove: false})
         .setText('Test')
         .setLngLat([0, 0])
@@ -99,8 +104,8 @@ describe('Popup does not close on map move events when the closeOnMove option is
     expect(popup.isOpen()).toBeTruthy();
 });
 
-describe('Popup closes on map move events when the closeOnMove option is true', () => {
-    const map = createMap(t);
+test('Popup closes on map move events when the closeOnMove option is true', () => {
+    const map = createMap();
     const popup = new Popup({closeOnMove: true})
         .setText('Test')
         .setLngLat([0, 0])
@@ -111,9 +116,9 @@ describe('Popup closes on map move events when the closeOnMove option is true', 
     expect(!popup.isOpen()).toBeTruthy();
 });
 
-describe('Popup fires close event when removed', () => {
-    const map = createMap(t);
-    const onClose = t.spy();
+test('Popup fires close event when removed', () => {
+    const map = createMap();
+    const onClose = jest.fn();
 
     new Popup()
         .setText('Test')
@@ -122,12 +127,12 @@ describe('Popup fires close event when removed', () => {
         .addTo(map)
         .remove();
 
-    expect(onClose.called).toBeTruthy();
+    expect(onClose).toHaveBeenCalled();
 });
 
-describe('Popup fires open event when added', () => {
-    const map = createMap(t);
-    const onOpen = t.spy();
+test('Popup fires open event when added', () => {
+    const map = createMap();
+    const onOpen = jest.fn();
 
     new Popup()
         .setText('Test')
@@ -135,11 +140,11 @@ describe('Popup fires open event when added', () => {
         .on('open', onOpen)
         .addTo(map);
 
-    expect(onOpen.called).toBeTruthy();
+    expect(onOpen).toHaveBeenCalled();
 });
 
-describe('Popup content can be set via setText', () => {
-    const map = createMap(t);
+test('Popup content can be set via setText', () => {
+    const map = createMap();
 
     const popup = new Popup({closeButton: false})
         .setLngLat([0, 0])
@@ -149,8 +154,8 @@ describe('Popup content can be set via setText', () => {
     expect(popup.getElement().textContent).toBe('Test');
 });
 
-describe('Popup content can be set via setHTML', () => {
-    const map = createMap(t);
+test('Popup content can be set via setHTML', () => {
+    const map = createMap();
 
     const popup = new Popup({closeButton: false})
         .setLngLat([0, 0])
@@ -160,8 +165,8 @@ describe('Popup content can be set via setHTML', () => {
     expect(popup.getElement().querySelector('.maplibregl-popup-content').innerHTML).toBe('<span>Test</span>');
 });
 
-describe('Popup width maximum defaults to 240px', () => {
-    const map = createMap(t);
+test('Popup width maximum defaults to 240px', () => {
+    const map = createMap();
 
     const popup = new Popup({closeButton: false})
         .setLngLat([0, 0])
@@ -171,8 +176,8 @@ describe('Popup width maximum defaults to 240px', () => {
     expect(popup.getMaxWidth()).toBe('240px');
 });
 
-describe('Popup width maximum can be set via using maxWidth option', () => {
-    const map = createMap(t);
+test('Popup width maximum can be set via using maxWidth option', () => {
+    const map = createMap();
 
     const popup = new Popup({closeButton: false, maxWidth: '5px'})
         .setLngLat([0, 0])
@@ -182,8 +187,8 @@ describe('Popup width maximum can be set via using maxWidth option', () => {
     expect(popup.getMaxWidth()).toBe('5px');
 });
 
-describe('Popup width maximum can be set via maxWidth', () => {
-    const map = createMap(t);
+test('Popup width maximum can be set via maxWidth', () => {
+    const map = createMap();
 
     const popup = new Popup({closeButton: false})
         .setLngLat([0, 0])
@@ -194,8 +199,8 @@ describe('Popup width maximum can be set via maxWidth', () => {
     expect(popup.getMaxWidth()).toBe('5px');
 });
 
-describe('Popup content can be set via setDOMContent', () => {
-    const map = createMap(t);
+test('Popup content can be set via setDOMContent', () => {
+    const map = createMap();
     const content = window.document.createElement('span');
 
     const popup = new Popup({closeButton: false})
@@ -206,8 +211,8 @@ describe('Popup content can be set via setDOMContent', () => {
     expect(popup.getElement().querySelector('.maplibregl-popup-content').firstChild).toBe(content);
 });
 
-describe('Popup#setText protects against XSS', () => {
-    const map = createMap(t);
+test('Popup#setText protects against XSS', () => {
+    const map = createMap();
 
     const popup = new Popup({closeButton: false})
         .setLngLat([0, 0])
@@ -217,8 +222,8 @@ describe('Popup#setText protects against XSS', () => {
     expect(popup.getElement().textContent).toBe('<script>alert(\'XSS\')</script>');
 });
 
-describe('Popup content setters overwrite previous content', () => {
-    const map = createMap(t);
+test('Popup content setters overwrite previous content', () => {
+    const map = createMap();
 
     const popup = new Popup({closeButton: false})
         .setLngLat([0, 0])
@@ -235,7 +240,7 @@ describe('Popup content setters overwrite previous content', () => {
 
 });
 
-describe('Popup provides LngLat accessors', () => {
+test('Popup provides LngLat accessors', () => {
     expect(new Popup().getLngLat()).toBeUndefined();
 
     expect(new Popup().setLngLat([1, 2]).getLngLat() instanceof LngLat).toBeTruthy();
@@ -246,8 +251,8 @@ describe('Popup provides LngLat accessors', () => {
 
 });
 
-describe('Popup is positioned at the specified LngLat in a world copy', () => {
-    const map = createMap(t, {width: 1024}); // longitude bounds: [-360, 360]
+test('Popup is positioned at the specified LngLat in a world copy', () => {
+    const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
 
     const popup = new Popup()
         .setLngLat([270, 0])
@@ -257,8 +262,8 @@ describe('Popup is positioned at the specified LngLat in a world copy', () => {
     expect(popup._pos).toEqual(map.project([270, 0]));
 });
 
-describe('Popup preserves object constancy of position after map move', () => {
-    const map = createMap(t, {width: 1024}); // longitude bounds: [-360, 360]
+test('Popup preserves object constancy of position after map move', () => {
+    const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
 
     const popup = new Popup()
         .setLngLat([270, 0])
@@ -273,8 +278,8 @@ describe('Popup preserves object constancy of position after map move', () => {
 
 });
 
-describe('Popup preserves object constancy of position after auto-wrapping center (left)', () => {
-    const map = createMap(t, {width: 1024});
+test('Popup preserves object constancy of position after auto-wrapping center (left)', () => {
+    const map = createMap({width: 1024});
     map.setCenter([-175, 0]); // longitude bounds: [-535, 185]
 
     const popup = new Popup()
@@ -287,8 +292,8 @@ describe('Popup preserves object constancy of position after auto-wrapping cente
 
 });
 
-describe('Popup preserves object constancy of position after auto-wrapping center (right)', () => {
-    const map = createMap(t, {width: 1024});
+test('Popup preserves object constancy of position after auto-wrapping center (right)', () => {
+    const map = createMap({width: 1024});
     map.setCenter([175, 0]); // longitude bounds: [-185, 535]
 
     const popup = new Popup()
@@ -301,8 +306,8 @@ describe('Popup preserves object constancy of position after auto-wrapping cente
 
 });
 
-describe('Popup wraps position after map move if it would otherwise go offscreen (right)', () => {
-    const map = createMap(t, {width: 1024}); // longitude bounds: [-360, 360]
+test('Popup wraps position after map move if it would otherwise go offscreen (right)', () => {
+    const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
 
     const popup = new Popup()
         .setLngLat([-355, 0])
@@ -313,8 +318,8 @@ describe('Popup wraps position after map move if it would otherwise go offscreen
     expect(popup._pos).toEqual(map.project([5, 0]));
 });
 
-describe('Popup wraps position after map move if it would otherwise go offscreen (right)', () => {
-    const map = createMap(t, {width: 1024}); // longitude bounds: [-360, 360]
+test('Popup wraps position after map move if it would otherwise go offscreen (right)', () => {
+    const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
 
     const popup = new Popup()
         .setLngLat([355, 0])
@@ -325,8 +330,8 @@ describe('Popup wraps position after map move if it would otherwise go offscreen
     expect(popup._pos).toEqual(map.project([-5, 0]));
 });
 
-describe('Popup is repositioned at the specified LngLat', () => {
-    const map = createMap(t, {width: 1024}); // longitude bounds: [-360, 360]
+test('Popup is repositioned at the specified LngLat', () => {
+    const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
 
     const popup = new Popup()
         .setLngLat([270, 0])
@@ -337,8 +342,8 @@ describe('Popup is repositioned at the specified LngLat', () => {
     expect(popup._pos).toEqual(map.project([0, 0]));
 });
 
-describe('Popup anchors as specified by the anchor option', () => {
-    const map = createMap(t);
+test('Popup anchors as specified by the anchor option', () => {
+    const map = createMap();
     const popup = new Popup({anchor: 'top-left'})
         .setLngLat([0, 0])
         .setText('Test')
@@ -347,7 +352,7 @@ describe('Popup anchors as specified by the anchor option', () => {
     expect(popup.getElement().classList.contains('maplibregl-popup-anchor-top-left')).toBeTruthy();
 });
 
-[
+([
     ['top-left',     new Point(10, 10),                                     'translate(0,0) translate(7px,7px)'],
     ['top',          new Point(containerWidth / 2, 10),                     'translate(-50%,0) translate(0px,10px)'],
     ['top-right',    new Point(containerWidth - 10, 10),                    'translate(-100%,0) translate(-7px,7px)'],
@@ -357,13 +362,13 @@ describe('Popup anchors as specified by the anchor option', () => {
     ['bottom-left',  new Point(10, containerHeight - 10),                   'translate(0,-100%) translate(7px,-7px)'],
     ['left',         new Point(10, containerHeight / 2),                    'translate(0,-50%) translate(10px,0px)'],
     ['bottom',       new Point(containerWidth / 2, containerHeight / 2),    'translate(-50%,-100%) translate(0px,-10px)']
-].forEach((args) => {
+] as [PositionAnchor, Point, string][]).forEach((args) => {
     const anchor = args[0];
     const point = args[1];
     const transform = args[2];
 
     test(`Popup automatically anchors to ${anchor}`, () => {
-        const map = createMap(t);
+        const map = createMap();
         const popup = new Popup()
             .setLngLat([0, 0])
             .setText('Test')
@@ -372,15 +377,15 @@ describe('Popup anchors as specified by the anchor option', () => {
         Object.defineProperty(popup.getElement(), 'offsetWidth', {value: 100});
         Object.defineProperty(popup.getElement(), 'offsetHeight', {value: 100});
 
-        t.stub(map, 'project').returns(point);
+        jest.spyOn(map, 'project').mockReturnValue(point);
         popup.setLngLat([0, 0]);
 
         expect(popup.getElement().classList.contains(`maplibregl-popup-anchor-${anchor}`)).toBeTruthy();
     });
 
     test(`Popup translation reflects offset and ${anchor} anchor`, () => {
-        const map = createMap(t);
-        t.stub(map, 'project').returns(new Point(0, 0));
+        const map = createMap();
+        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
         const popup = new Popup({anchor, offset: 10})
             .setLngLat([0, 0])
@@ -391,13 +396,13 @@ describe('Popup anchors as specified by the anchor option', () => {
     });
 });
 
-describe('Popup automatically anchors to top if its bottom offset would push it off-screen', () => {
-    const map = createMap(t);
+test('Popup automatically anchors to top if its bottom offset would push it off-screen', () => {
+    const map = createMap();
     const point = new Point(containerWidth / 2, containerHeight / 2);
     const options = {offset: {
         'bottom': [0, -25],
         'top': [0, 0]
-    }};
+    } as Offset};
     const popup = new Popup(options)
         .setLngLat([0, 0])
         .setText('Test')
@@ -406,15 +411,15 @@ describe('Popup automatically anchors to top if its bottom offset would push it 
     Object.defineProperty(popup.getElement(), 'offsetWidth', {value: containerWidth / 2});
     Object.defineProperty(popup.getElement(), 'offsetHeight', {value: containerHeight / 2});
 
-    t.stub(map, 'project').returns(point);
+    jest.spyOn(map, 'project').mockReturnValue(point);
     popup.setLngLat([0, 0]);
 
     expect(popup.getElement().classList.contains('maplibregl-popup-anchor-top')).toBeTruthy();
 });
 
-describe('Popup is offset via a PointLike offset option', () => {
-    const map = createMap(t);
-    t.stub(map, 'project').returns(new Point(0, 0));
+test('Popup is offset via a PointLike offset option', () => {
+    const map = createMap();
+    jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
     const popup = new Popup({anchor: 'top-left', offset: [5, 10]})
         .setLngLat([0, 0])
@@ -424,11 +429,11 @@ describe('Popup is offset via a PointLike offset option', () => {
     expect(popup.getElement().style.transform).toBe('translate(0,0) translate(5px,10px)');
 });
 
-describe('Popup is offset via an object offset option', () => {
-    const map = createMap(t);
-    t.stub(map, 'project').returns(new Point(0, 0));
+test('Popup is offset via an object offset option', () => {
+    const map = createMap();
+    jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
-    const popup = new Popup({anchor: 'top-left', offset: {'top-left': [5, 10]}})
+    const popup = new Popup({anchor: 'top-left', offset: {'top-left': [5, 10]} as Offset})
         .setLngLat([0, 0])
         .setText('Test')
         .addTo(map);
@@ -436,11 +441,11 @@ describe('Popup is offset via an object offset option', () => {
     expect(popup.getElement().style.transform).toBe('translate(0,0) translate(5px,10px)');
 });
 
-describe('Popup is offset via an incomplete object offset option', () => {
-    const map = createMap(t);
-    t.stub(map, 'project').returns(new Point(0, 0));
+test('Popup is offset via an incomplete object offset option', () => {
+    const map = createMap();
+    jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
-    const popup = new Popup({anchor: 'top-right', offset: {'top-left': [5, 10]}})
+    const popup = new Popup({anchor: 'top-right', offset: {'top-left': [5, 10]} as Offset})
         .setLngLat([0, 0])
         .setText('Test')
         .addTo(map);
@@ -448,8 +453,8 @@ describe('Popup is offset via an incomplete object offset option', () => {
     expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(0px,0px)');
 });
 
-describe('Popup offset can be set via setOffset', () => {
-    const map = createMap(t);
+test('Popup offset can be set via setOffset', () => {
+    const map = createMap();
 
     const popup = new Popup({offset: 5})
         .setLngLat([0, 0])
@@ -463,8 +468,8 @@ describe('Popup offset can be set via setOffset', () => {
     expect(popup.options.offset).toBe(10);
 });
 
-describe('Popup can be removed and added again (#1477)', () => {
-    const map = createMap(t);
+test('Popup can be removed and added again (#1477)', () => {
+    const map = createMap();
 
     new Popup()
         .setText('Test')
@@ -476,8 +481,8 @@ describe('Popup can be removed and added again (#1477)', () => {
     expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(1);
 });
 
-describe('Popup#addTo is idempotent (#1811)', () => {
-    const map = createMap(t);
+test('Popup#addTo is idempotent (#1811)', () => {
+    const map = createMap();
 
     const popup = new Popup({closeButton: false})
         .setText('Test')
@@ -488,8 +493,8 @@ describe('Popup#addTo is idempotent (#1811)', () => {
     expect(popup.getElement().querySelector('.maplibregl-popup-content').textContent).toBe('Test');
 });
 
-describe('Popup#remove is idempotent (#2395)', () => {
-    const map = createMap(t);
+test('Popup#remove is idempotent (#2395)', () => {
+    const map = createMap();
 
     new Popup({closeButton: false})
         .setText('Test')
@@ -501,8 +506,8 @@ describe('Popup#remove is idempotent (#2395)', () => {
     expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(0);
 });
 
-describe('Popup adds classes from className option, methods for class manipulations works properly', () => {
-    const map = createMap(t);
+test('Popup adds classes from className option, methods for class manipulations works properly', () => {
+    const map = createMap();
     const popup = new Popup({className: 'some classes'})
         .setText('Test')
         .setLngLat([0, 0])
@@ -534,8 +539,8 @@ describe('Popup adds classes from className option, methods for class manipulati
 
 });
 
-describe('Cursor-tracked popup disappears on mouseout', () => {
-    const map = createMap(t);
+test('Cursor-tracked popup disappears on mouseout', () => {
+    const map = createMap();
 
     const popup = new Popup()
         .setText('Test')
@@ -545,8 +550,8 @@ describe('Cursor-tracked popup disappears on mouseout', () => {
     expect(popup._trackPointer).toBe(true);
 });
 
-describe('Pointer-tracked popup is tagged with right class', () => {
-    const map = createMap(t);
+test('Pointer-tracked popup is tagged with right class', () => {
+    const map = createMap();
     const popup = new Popup()
         .setText('Test')
         .trackPointer()
@@ -557,8 +562,8 @@ describe('Pointer-tracked popup is tagged with right class', () => {
     ).toContain('maplibregl-popup-track-pointer');
 });
 
-describe('Pointer-tracked popup with content set later is tagged with right class ', () => {
-    const map = createMap(t);
+test('Pointer-tracked popup with content set later is tagged with right class ', () => {
+    const map = createMap();
     const popup = new Popup()
         .trackPointer()
         .addTo(map);
@@ -570,8 +575,8 @@ describe('Pointer-tracked popup with content set later is tagged with right clas
     ).toContain('maplibregl-popup-track-pointer');
 });
 
-describe('Pointer-tracked popup that is set afterwards is tagged with right class ', () => {
-    const map = createMap(t);
+test('Pointer-tracked popup that is set afterwards is tagged with right class ', () => {
+    const map = createMap();
     const popup = new Popup()
         .addTo(map);
 
@@ -583,8 +588,8 @@ describe('Pointer-tracked popup that is set afterwards is tagged with right clas
     ).toContain('maplibregl-popup-track-pointer');
 });
 
-describe('Pointer-tracked popup can be repositioned with setLngLat', () => {
-    const map = createMap(t);
+test('Pointer-tracked popup can be repositioned with setLngLat', () => {
+    const map = createMap();
     const popup = new Popup()
         .setText('Test')
         .trackPointer()
@@ -597,8 +602,8 @@ describe('Pointer-tracked popup can be repositioned with setLngLat', () => {
     ).not.toContain('maplibregl-popup-track-pointer');
 });
 
-describe('Positioned popup lacks pointer-tracking class', () => {
-    const map = createMap(t);
+test('Positioned popup lacks pointer-tracking class', () => {
+    const map = createMap();
     const popup = new Popup()
         .setText('Test')
         .setLngLat([0, 0])
@@ -609,8 +614,8 @@ describe('Positioned popup lacks pointer-tracking class', () => {
     ).not.toContain('maplibregl-popup-track-pointer');
 });
 
-describe('Positioned popup can be set to track pointer', () => {
-    const map = createMap(t);
+test('Positioned popup can be set to track pointer', () => {
+    const map = createMap();
     const popup = new Popup()
         .setText('Test')
         .setLngLat([0, 0])
@@ -621,8 +626,8 @@ describe('Positioned popup can be set to track pointer', () => {
     expect(popup._pos).toEqual({x:0, y:0});
 });
 
-describe('Popup closes on Map#remove', () => {
-    const map = createMap(t);
+test('Popup closes on Map#remove', () => {
+    const map = createMap();
     const popup = new Popup()
         .setText('Test')
         .setLngLat([0, 0])
@@ -633,38 +638,38 @@ describe('Popup closes on Map#remove', () => {
     expect(!popup.isOpen()).toBeTruthy();
 });
 
-describe('Adding popup with no focusable content (Popup#setText) does not change the active element', () => {
+test('Adding popup with no focusable content (Popup#setText) does not change the active element', () => {
     const dummyFocusedEl = window.document.createElement('button');
     dummyFocusedEl.focus();
 
     new Popup({closeButton: false})
         .setText('Test')
         .setLngLat([0, 0])
-        .addTo(createMap(t));
+        .addTo(createMap());
 
     expect(window.document.activeElement).toBe(dummyFocusedEl);
 });
 
-describe('Adding popup with no focusable content (Popup#setHTML) does not change the active element', () => {
+test('Adding popup with no focusable content (Popup#setHTML) does not change the active element', () => {
     const dummyFocusedEl = window.document.createElement('button');
     dummyFocusedEl.focus();
 
     new Popup({closeButton: false})
         .setHTML('<span>Test</span>')
         .setLngLat([0, 0])
-        .addTo(createMap(t));
+        .addTo(createMap());
 
     expect(window.document.activeElement).toBe(dummyFocusedEl);
 });
 
-describe('Close button is focused if it is the only focusable element', () => {
+test('Close button is focused if it is the only focusable element', () => {
     const dummyFocusedEl = window.document.createElement('button');
     dummyFocusedEl.focus();
 
     const popup = new Popup({closeButton: true})
         .setHTML('<span>Test</span>')
         .setLngLat([0, 0])
-        .addTo(createMap(t));
+        .addTo(createMap());
 
     // Suboptimal because the string matching is case-sensitive
     const closeButton = popup._container.querySelector('[aria-label^=\'Close\']');
@@ -672,22 +677,22 @@ describe('Close button is focused if it is the only focusable element', () => {
     expect(window.document.activeElement).toBe(closeButton);
 });
 
-describe('If popup content contains a focusable element it is focused', () => {
+test('If popup content contains a focusable element it is focused', () => {
     const popup = new Popup({closeButton: true})
         .setHTML('<span tabindex="0" data-testid="abc">Test</span>')
         .setLngLat([0, 0])
-        .addTo(createMap(t));
+        .addTo(createMap());
 
     const focusableEl = popup._container.querySelector('[data-testid=\'abc\']');
 
     expect(window.document.activeElement).toBe(focusableEl);
 });
 
-describe('Element with tabindex="-1" is not focused', () => {
+test('Element with tabindex="-1" is not focused', () => {
     const popup = new Popup({closeButton: true})
         .setHTML('<span tabindex="-1" data-testid="abc">Test</span>')
         .setLngLat([0, 0])
-        .addTo(createMap(t));
+        .addTo(createMap());
 
     const nonFocusableEl = popup._container.querySelector('[data-testid=\'abc\']');
     const closeButton = popup._container.querySelector('button[aria-label=\'Close popup\']');
@@ -696,7 +701,7 @@ describe('Element with tabindex="-1" is not focused', () => {
     expect(window.document.activeElement).toBe(closeButton);
 });
 
-describe('If popup contains a disabled button and a focusable element then the latter is focused', () => {
+test('If popup contains a disabled button and a focusable element then the latter is focused', () => {
     const popup = new Popup({closeButton: true})
         .setHTML(`
             <button disabled>No focus here</button>
@@ -706,21 +711,21 @@ describe('If popup contains a disabled button and a focusable element then the l
             </select>
         `)
         .setLngLat([0, 0])
-        .addTo(createMap(t));
+        .addTo(createMap());
 
     const focusableEl = popup._container.querySelector('[data-testid=\'abc\']');
 
     expect(window.document.activeElement).toBe(focusableEl);
 });
 
-describe('Popup with disabled focusing does not change the active element', () => {
+test('Popup with disabled focusing does not change the active element', () => {
     const dummyFocusedEl = window.document.createElement('button');
     dummyFocusedEl.focus();
 
     new Popup({closeButton: false, focusAfterOpen: false})
         .setHTML('<span tabindex="0" data-testid="abc">Test</span>')
         .setLngLat([0, 0])
-        .addTo(createMap(t));
+        .addTo(createMap());
 
     expect(window.document.activeElement).toBe(dummyFocusedEl);
 });
