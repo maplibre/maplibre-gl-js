@@ -347,7 +347,10 @@ class Transform {
         let z = this.coveringZoomLevel(options);
         const actualZ = z;
 
-        if (options.minzoom !== undefined && z < options.minzoom) return [];
+        if (options.minzoom !== undefined && z < options.minzoom) {
+            this._coveringTilesCache[optionsKey] = [];
+            return [];
+        }
         if (options.maxzoom !== undefined && z > options.maxzoom) z = options.maxzoom;
 
         const centerCoord = MercatorCoordinate.fromLngLat(this.center);

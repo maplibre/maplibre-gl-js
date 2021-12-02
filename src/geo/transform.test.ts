@@ -203,13 +203,16 @@ describe('transform', () => {
         });
 
         test('general cached', () => {
+            const spy = jest.spyOn(transform, 'coveringZoomLevel');
 
             // make slightly off center so that sort order is not subject to precision issues
             transform.center = new LngLat(-0.01, 0.01);
 
             transform.zoom = 0;
             expect(transform.coveringTiles(options)).toEqual([]);
+            expect(spy).toHaveBeenCalledTimes(1);
             expect(transform.coveringTiles(options)).toEqual([]);
+            expect(spy).toHaveBeenCalledTimes(1);
 
             transform.zoom = 1;
             expect(transform.coveringTiles(options)).toEqual([
@@ -217,11 +220,13 @@ describe('transform', () => {
                 new OverscaledTileID(1, 0, 1, 1, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1),
                 new OverscaledTileID(1, 0, 1, 1, 1)]);
+            expect(spy).toHaveBeenCalledTimes(2);
             expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 1, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1),
                 new OverscaledTileID(1, 0, 1, 1, 1)]);
+            expect(spy).toHaveBeenCalledTimes(2);
 
             transform.zoom = 2.4;
             expect(transform.coveringTiles(options)).toEqual([
@@ -229,11 +234,13 @@ describe('transform', () => {
                 new OverscaledTileID(2, 0, 2, 2, 1),
                 new OverscaledTileID(2, 0, 2, 1, 2),
                 new OverscaledTileID(2, 0, 2, 2, 2)]);
+            expect(spy).toHaveBeenCalledTimes(3);
             expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(2, 0, 2, 1, 1),
                 new OverscaledTileID(2, 0, 2, 2, 1),
                 new OverscaledTileID(2, 0, 2, 1, 2),
                 new OverscaledTileID(2, 0, 2, 2, 2)]);
+            expect(spy).toHaveBeenCalledTimes(3);
 
             transform.zoom = 10;
             expect(transform.coveringTiles(options)).toEqual([
@@ -241,11 +248,13 @@ describe('transform', () => {
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
+            expect(spy).toHaveBeenCalledTimes(4);
             expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
+            expect(spy).toHaveBeenCalledTimes(4);
 
             transform.zoom = 11;
             expect(transform.coveringTiles(options)).toEqual([
@@ -253,11 +262,13 @@ describe('transform', () => {
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
+            expect(spy).toHaveBeenCalledTimes(5);
             expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
+            expect(spy).toHaveBeenCalledTimes(5);
 
             transform.zoom = 5.1;
             transform.pitch = 60.0;
@@ -287,6 +298,7 @@ describe('transform', () => {
                 new OverscaledTileID(5, 0, 5, 24, 9),
                 new OverscaledTileID(5, 0, 5, 22, 7)
             ]);
+            expect(spy).toHaveBeenCalledTimes(6);
             expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(5, 0, 5, 21, 11),
                 new OverscaledTileID(5, 0, 5, 20, 11),
@@ -310,6 +322,7 @@ describe('transform', () => {
                 new OverscaledTileID(5, 0, 5, 24, 9),
                 new OverscaledTileID(5, 0, 5, 22, 7)
             ]);
+            expect(spy).toHaveBeenCalledTimes(6);
 
             transform.zoom = 8;
             transform.pitch = 60;
@@ -321,11 +334,13 @@ describe('transform', () => {
                 new OverscaledTileID(8, 0, 8, 145, 73),
                 new OverscaledTileID(8, 0, 8, 146, 74)
             ]);
+            expect(spy).toHaveBeenCalledTimes(7);
             expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 145, 74),
                 new OverscaledTileID(8, 0, 8, 145, 73),
                 new OverscaledTileID(8, 0, 8, 146, 74)
             ]);
+            expect(spy).toHaveBeenCalledTimes(7);
 
             transform.resize(50, 300);
             expect(transform.coveringTiles(options)).toEqual([
@@ -334,12 +349,14 @@ describe('transform', () => {
                 new OverscaledTileID(8, 0, 8, 146, 74),
                 new OverscaledTileID(8, 0, 8, 146, 73)
             ]);
+            expect(spy).toHaveBeenCalledTimes(8);
             expect(transform.coveringTiles(options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 145, 74),
                 new OverscaledTileID(8, 0, 8, 145, 73),
                 new OverscaledTileID(8, 0, 8, 146, 74),
                 new OverscaledTileID(8, 0, 8, 146, 73)
             ]);
+            expect(spy).toHaveBeenCalledTimes(8);
 
             transform.zoom = 2;
             transform.pitch = 0;
