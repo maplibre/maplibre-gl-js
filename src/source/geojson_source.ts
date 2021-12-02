@@ -75,7 +75,7 @@ class GeoJSONSource extends Evented implements Source {
     workerOptions: any;
     map: Map;
     actor: Actor;
-    _loaded: boolean;
+    _pendingLoads: number;
     _collectResourceTiming: boolean;
     _resourceTiming: Array<PerformanceResourceTiming>;
     _removed: boolean;
@@ -101,7 +101,7 @@ class GeoJSONSource extends Evented implements Source {
         this.isTileClipped = true;
         this.reparseOverscaled = true;
         this._removed = false;
-        this._loaded = false;
+        this._pendingLoads = 0;
 
         this.actor = dispatcher.getActor();
         this.setEventedParent(eventedParent);
@@ -265,7 +265,6 @@ class GeoJSONSource extends Evented implements Source {
      * using geojson-vt or supercluster as appropriate.
      */
     _updateWorkerData(callback: Callback<void>) {
-        this._loaded = false;
         const options = extend({}, this.workerOptions);
         const data = this._data;
         if (typeof data === 'string') {
@@ -275,15 +274,17 @@ class GeoJSONSource extends Evented implements Source {
             options.data = JSON.stringify(data);
         }
 
+        this._pendingLoads++;
+
         // target {this.type}.loadData rather than literally geojson.loadData,
         // so that other geojson-like source types can easily reuse this
         // implementation
         this.actor.send(`${this.type}.loadData`, options, (err, result) => {
+            this._pendingLoads--;
+
             if (this._removed || (result && result.abandoned)) {
                 return;
             }
-
-            this._loaded = true;
 
             if (result && result.resourceTiming && result.resourceTiming[this.id])
                 this._resourceTiming = result.resourceTiming[this.id].slice(0);
@@ -300,7 +301,7 @@ class GeoJSONSource extends Evented implements Source {
     }
 
     loaded(): boolean {
-        return this._loaded;
+        return this._pendingLoads === 0;
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
