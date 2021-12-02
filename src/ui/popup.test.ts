@@ -24,8 +24,8 @@ test('Popup#getElement returns a .maplibregl-popup element', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.ok(popup.isOpen());
-    t.ok(popup.getElement().classList.contains('maplibregl-popup'));
+    expect(popup.isOpen()).toBeTruthy();
+    expect(popup.getElement().classList.contains('maplibregl-popup')).toBeTruthy();
     t.end();
 });
 
@@ -36,8 +36,8 @@ test('Popup#addTo adds a .maplibregl-popup element', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.ok(popup.isOpen());
-    t.equal(map.getContainer().querySelectorAll('.maplibregl-popup').length, 1);
+    expect(popup.isOpen()).toBeTruthy();
+    expect(map.getContainer().querySelectorAll('.maplibregl-popup').length).toBe(1);
     t.end();
 });
 
@@ -50,7 +50,7 @@ test('Popup closes on map click events by default', (t) => {
 
     simulate.click(map.getCanvas());
 
-    t.ok(!popup.isOpen());
+    expect(!popup.isOpen()).toBeTruthy();
     t.end();
 });
 
@@ -63,7 +63,7 @@ test('Popup does not close on map click events when the closeOnClick option is f
 
     simulate.click(map.getCanvas());
 
-    t.ok(popup.isOpen());
+    expect(popup.isOpen()).toBeTruthy();
     t.end();
 });
 
@@ -76,7 +76,7 @@ test('Popup closes on close button click events', (t) => {
 
     simulate.click(map.getContainer().querySelector('.maplibregl-popup-close-button'));
 
-    t.ok(!popup.isOpen());
+    expect(!popup.isOpen()).toBeTruthy();
     t.end();
 });
 
@@ -88,7 +88,9 @@ test('Popup has no close button if closeButton option is false', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.equal(popup.getElement().querySelectorAll('.maplibregl-popup-close-button').length, 0);
+    expect(
+        popup.getElement().querySelectorAll('.maplibregl-popup-close-button').length
+    ).toBe(0);
     t.end();
 });
 
@@ -101,7 +103,7 @@ test('Popup does not close on map move events when the closeOnMove option is fal
 
     map.setCenter([-10, 0]); // longitude bounds: [-370, 350]
 
-    t.ok(popup.isOpen());
+    expect(popup.isOpen()).toBeTruthy();
     t.end();
 });
 
@@ -114,7 +116,7 @@ test('Popup closes on map move events when the closeOnMove option is true', (t) 
 
     map.setCenter([-10, 0]); // longitude bounds: [-370, 350]
 
-    t.ok(!popup.isOpen());
+    expect(!popup.isOpen()).toBeTruthy();
     t.end();
 });
 
@@ -129,7 +131,7 @@ test('Popup fires close event when removed', (t) => {
         .addTo(map)
         .remove();
 
-    t.ok(onClose.called);
+    expect(onClose.called).toBeTruthy();
     t.end();
 });
 
@@ -143,7 +145,7 @@ test('Popup fires open event when added', (t) => {
         .on('open', onOpen)
         .addTo(map);
 
-    t.ok(onOpen.called);
+    expect(onOpen.called).toBeTruthy();
     t.end();
 });
 
@@ -155,7 +157,7 @@ test('Popup content can be set via setText', (t) => {
         .addTo(map)
         .setText('Test');
 
-    t.equal(popup.getElement().textContent, 'Test');
+    expect(popup.getElement().textContent).toBe('Test');
     t.end();
 });
 
@@ -167,7 +169,7 @@ test('Popup content can be set via setHTML', (t) => {
         .addTo(map)
         .setHTML("<span>Test</span>");
 
-    t.equal(popup.getElement().querySelector('.maplibregl-popup-content').innerHTML, "<span>Test</span>");
+    expect(popup.getElement().querySelector('.maplibregl-popup-content').innerHTML).toBe("<span>Test</span>");
     t.end();
 });
 
@@ -179,7 +181,7 @@ test('Popup width maximum defaults to 240px', (t) => {
         .addTo(map)
         .setHTML("<span>Test</span>");
 
-    t.equal(popup.getMaxWidth(), '240px');
+    expect(popup.getMaxWidth()).toBe('240px');
     t.end();
 });
 
@@ -191,7 +193,7 @@ test('Popup width maximum can be set via using maxWidth option', (t) => {
         .addTo(map)
         .setHTML("<span>Test</span>");
 
-    t.equal(popup.getMaxWidth(), '5px');
+    expect(popup.getMaxWidth()).toBe('5px');
     t.end();
 });
 
@@ -204,7 +206,7 @@ test('Popup width maximum can be set via maxWidth', (t) => {
         .setMaxWidth('5px')
         .addTo(map);
 
-    t.equal(popup.getMaxWidth(), '5px');
+    expect(popup.getMaxWidth()).toBe('5px');
     t.end();
 });
 
@@ -217,7 +219,7 @@ test('Popup content can be set via setDOMContent', (t) => {
         .addTo(map)
         .setDOMContent(content);
 
-    t.equal(popup.getElement().querySelector('.maplibregl-popup-content').firstChild, content);
+    expect(popup.getElement().querySelector('.maplibregl-popup-content').firstChild).toBe(content);
     t.end();
 });
 
@@ -229,7 +231,7 @@ test('Popup#setText protects against XSS', (t) => {
         .addTo(map)
         .setText("<script>alert('XSS')</script>");
 
-    t.equal(popup.getElement().textContent, "<script>alert('XSS')</script>");
+    expect(popup.getElement().textContent).toBe("<script>alert('XSS')</script>");
     t.end();
 });
 
@@ -241,25 +243,25 @@ test('Popup content setters overwrite previous content', (t) => {
         .addTo(map);
 
     popup.setText('Test 1');
-    t.equal(popup.getElement().textContent, 'Test 1');
+    expect(popup.getElement().textContent).toBe('Test 1');
 
     popup.setHTML('Test 2');
-    t.equal(popup.getElement().textContent, 'Test 2');
+    expect(popup.getElement().textContent).toBe('Test 2');
 
     popup.setDOMContent(window.document.createTextNode('Test 3'));
-    t.equal(popup.getElement().textContent, 'Test 3');
+    expect(popup.getElement().textContent).toBe('Test 3');
 
     t.end();
 });
 
 test('Popup provides LngLat accessors', (t) => {
-    t.equal(new Popup().getLngLat(), undefined);
+    expect(new Popup().getLngLat()).toBe(undefined);
 
-    t.ok(new Popup().setLngLat([1, 2]).getLngLat() instanceof LngLat);
-    t.deepEqual(new Popup().setLngLat([1, 2]).getLngLat(), new LngLat(1, 2));
+    expect(new Popup().setLngLat([1, 2]).getLngLat() instanceof LngLat).toBeTruthy();
+    expect(new Popup().setLngLat([1, 2]).getLngLat()).toEqual(new LngLat(1, 2));
 
-    t.ok(new Popup().setLngLat(new LngLat(1, 2)).getLngLat() instanceof LngLat);
-    t.deepEqual(new Popup().setLngLat(new LngLat(1, 2)).getLngLat(), new LngLat(1, 2));
+    expect(new Popup().setLngLat(new LngLat(1, 2)).getLngLat() instanceof LngLat).toBeTruthy();
+    expect(new Popup().setLngLat(new LngLat(1, 2)).getLngLat()).toEqual(new LngLat(1, 2));
 
     t.end();
 });
@@ -272,7 +274,7 @@ test('Popup is positioned at the specified LngLat in a world copy', (t) => {
         .setText('Test')
         .addTo(map);
 
-    t.deepEqual(popup._pos, map.project([270, 0]));
+    expect(popup._pos).toEqual(map.project([270, 0]));
     t.end();
 });
 
@@ -285,10 +287,10 @@ test('Popup preserves object constancy of position after map move', (t) => {
         .addTo(map);
 
     map.setCenter([-10, 0]); // longitude bounds: [-370, 350]
-    t.deepEqual(popup._pos, map.project([270, 0]));
+    expect(popup._pos).toEqual(map.project([270, 0]));
 
     map.setCenter([-20, 0]); // longitude bounds: [-380, 340]
-    t.deepEqual(popup._pos, map.project([270, 0]));
+    expect(popup._pos).toEqual(map.project([270, 0]));
 
     t.end();
 });
@@ -303,7 +305,7 @@ test('Popup preserves object constancy of position after auto-wrapping center (l
         .addTo(map);
 
     map.setCenter([175, 0]); // longitude bounds: [-185, 535]
-    t.deepEqual(popup._pos, map.project([360, 0]));
+    expect(popup._pos).toEqual(map.project([360, 0]));
 
     t.end();
 });
@@ -318,7 +320,7 @@ test('Popup preserves object constancy of position after auto-wrapping center (r
         .addTo(map);
 
     map.setCenter([-175, 0]); // longitude bounds: [-185, 535]
-    t.deepEqual(popup._pos, map.project([-360, 0]));
+    expect(popup._pos).toEqual(map.project([-360, 0]));
 
     t.end();
 });
@@ -332,7 +334,7 @@ test('Popup wraps position after map move if it would otherwise go offscreen (ri
         .addTo(map);
 
     map.setCenter([10, 0]); // longitude bounds: [-350, 370]
-    t.deepEqual(popup._pos, map.project([5, 0]));
+    expect(popup._pos).toEqual(map.project([5, 0]));
     t.end();
 });
 
@@ -345,7 +347,7 @@ test('Popup wraps position after map move if it would otherwise go offscreen (ri
         .addTo(map);
 
     map.setCenter([-10, 0]); // longitude bounds: [-370, 350]
-    t.deepEqual(popup._pos, map.project([-5, 0]));
+    expect(popup._pos).toEqual(map.project([-5, 0]));
     t.end();
 });
 
@@ -358,7 +360,7 @@ test('Popup is repositioned at the specified LngLat', (t) => {
         .addTo(map)
         .setLngLat([0, 0]);
 
-    t.deepEqual(popup._pos, map.project([0, 0]));
+    expect(popup._pos).toEqual(map.project([0, 0]));
     t.end();
 });
 
@@ -369,7 +371,7 @@ test('Popup anchors as specified by the anchor option', (t) => {
         .setText('Test')
         .addTo(map);
 
-    t.ok(popup.getElement().classList.contains('maplibregl-popup-anchor-top-left'));
+    expect(popup.getElement().classList.contains('maplibregl-popup-anchor-top-left')).toBeTruthy();
     t.end();
 });
 
@@ -401,7 +403,7 @@ test('Popup anchors as specified by the anchor option', (t) => {
         t.stub(map, 'project').returns(point);
         popup.setLngLat([0, 0]);
 
-        t.ok(popup.getElement().classList.contains(`maplibregl-popup-anchor-${anchor}`));
+        expect(popup.getElement().classList.contains(`maplibregl-popup-anchor-${anchor}`)).toBeTruthy();
         t.end();
     });
 
@@ -414,7 +416,7 @@ test('Popup anchors as specified by the anchor option', (t) => {
             .setText('Test')
             .addTo(map);
 
-        t.equal(popup.getElement().style.transform, transform);
+        expect(popup.getElement().style.transform).toBe(transform);
         t.end();
     });
 });
@@ -437,7 +439,7 @@ test('Popup automatically anchors to top if its bottom offset would push it off-
     t.stub(map, 'project').returns(point);
     popup.setLngLat([0, 0]);
 
-    t.ok(popup.getElement().classList.contains('maplibregl-popup-anchor-top'));
+    expect(popup.getElement().classList.contains('maplibregl-popup-anchor-top')).toBeTruthy();
     t.end();
 });
 
@@ -450,7 +452,7 @@ test('Popup is offset via a PointLike offset option', (t) => {
         .setText('Test')
         .addTo(map);
 
-    t.equal(popup.getElement().style.transform, 'translate(0,0) translate(5px,10px)');
+    expect(popup.getElement().style.transform).toBe('translate(0,0) translate(5px,10px)');
     t.end();
 });
 
@@ -463,7 +465,7 @@ test('Popup is offset via an object offset option', (t) => {
         .setText('Test')
         .addTo(map);
 
-    t.equal(popup.getElement().style.transform, 'translate(0,0) translate(5px,10px)');
+    expect(popup.getElement().style.transform).toBe('translate(0,0) translate(5px,10px)');
     t.end();
 });
 
@@ -476,7 +478,7 @@ test('Popup is offset via an incomplete object offset option', (t) => {
         .setText('Test')
         .addTo(map);
 
-    t.equal(popup.getElement().style.transform, 'translate(-100%,0) translate(0px,0px)');
+    expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(0px,0px)');
     t.end();
 });
 
@@ -488,11 +490,11 @@ test('Popup offset can be set via setOffset', (t) => {
         .setText('Test')
         .addTo(map);
 
-    t.equal(popup.options.offset, 5);
+    expect(popup.options.offset).toBe(5);
 
     popup.setOffset(10);
 
-    t.equal(popup.options.offset, 10);
+    expect(popup.options.offset).toBe(10);
     t.end();
 });
 
@@ -506,7 +508,7 @@ test('Popup can be removed and added again (#1477)', (t) => {
         .remove()
         .addTo(map);
 
-    t.equal(map.getContainer().querySelectorAll('.maplibregl-popup').length, 1);
+    expect(map.getContainer().querySelectorAll('.maplibregl-popup').length).toBe(1);
     t.end();
 });
 
@@ -519,7 +521,7 @@ test('Popup#addTo is idempotent (#1811)', (t) => {
         .addTo(map)
         .addTo(map);
 
-    t.equal(popup.getElement().querySelector('.maplibregl-popup-content').textContent, 'Test');
+    expect(popup.getElement().querySelector('.maplibregl-popup-content').textContent).toBe('Test');
     t.end();
 });
 
@@ -533,7 +535,7 @@ test('Popup#remove is idempotent (#2395)', (t) => {
         .remove()
         .remove();
 
-    t.equal(map.getContainer().querySelectorAll('.maplibregl-popup').length, 0);
+    expect(map.getContainer().querySelectorAll('.maplibregl-popup').length).toBe(0);
     t.end();
 });
 
@@ -545,28 +547,28 @@ test('Popup adds classes from className option, methods for class manipulations 
         .addTo(map);
 
     const popupContainer = popup.getElement();
-    t.ok(popupContainer.classList.contains('some'));
-    t.ok(popupContainer.classList.contains('classes'));
+    expect(popupContainer.classList.contains('some')).toBeTruthy();
+    expect(popupContainer.classList.contains('classes')).toBeTruthy();
 
     popup.addClassName('addedClass');
-    t.ok(popupContainer.classList.contains('addedClass'));
+    expect(popupContainer.classList.contains('addedClass')).toBeTruthy();
 
     popup.removeClassName('addedClass');
-    t.ok(!popupContainer.classList.contains('addedClass'));
+    expect(!popupContainer.classList.contains('addedClass')).toBeTruthy();
 
     popup.toggleClassName('toggle');
-    t.ok(popupContainer.classList.contains('toggle'));
+    expect(popupContainer.classList.contains('toggle')).toBeTruthy();
 
     popup.toggleClassName('toggle');
-    t.ok(!popupContainer.classList.contains('toggle'));
+    expect(!popupContainer.classList.contains('toggle')).toBeTruthy();
 
-    t.throws(() => popup.addClassName('should throw exception'), window.DOMException);
-    t.throws(() => popup.removeClassName('should throw exception'), window.DOMException);
-    t.throws(() => popup.toggleClassName('should throw exception'), window.DOMException);
+    expect(() => popup.addClassName('should throw exception')).toThrowError(window.DOMException);
+    expect(() => popup.removeClassName('should throw exception')).toThrowError(window.DOMException);
+    expect(() => popup.toggleClassName('should throw exception')).toThrowError(window.DOMException);
 
-    t.throws(() => popup.addClassName(''), window.DOMException);
-    t.throws(() => popup.removeClassName(''), window.DOMException);
-    t.throws(() => popup.toggleClassName(''), window.DOMException);
+    expect(() => popup.addClassName('')).toThrowError(window.DOMException);
+    expect(() => popup.removeClassName('')).toThrowError(window.DOMException);
+    expect(() => popup.toggleClassName('')).toThrowError(window.DOMException);
 
     t.end();
 });
@@ -579,7 +581,7 @@ test('Cursor-tracked popup disappears on mouseout', (t) => {
         .trackPointer()
         .addTo(map);
 
-    t.equal(popup._trackPointer, true);
+    expect(popup._trackPointer).toBe(true);
     t.end();
 });
 
@@ -590,7 +592,9 @@ test('Pointer-tracked popup is tagged with right class', (t) => {
         .trackPointer()
         .addTo(map);
 
-    t.equal(popup._container.classList.value.includes('maplibregl-popup-track-pointer'), true);
+    expect(
+        popup._container.classList.value.includes('maplibregl-popup-track-pointer')
+    ).toBe(true);
     t.end();
 });
 
@@ -602,7 +606,9 @@ test('Pointer-tracked popup with content set later is tagged with right class ',
 
     popup.setText("Test");
 
-    t.equal(popup._container.classList.value.includes('maplibregl-popup-track-pointer'), true);
+    expect(
+        popup._container.classList.value.includes('maplibregl-popup-track-pointer')
+    ).toBe(true);
     t.end();
 });
 
@@ -614,7 +620,9 @@ test('Pointer-tracked popup that is set afterwards is tagged with right class ',
     popup.setText("Test");
     popup.trackPointer();
 
-    t.equal(popup._container.classList.value.includes('maplibregl-popup-track-pointer'), true);
+    expect(
+        popup._container.classList.value.includes('maplibregl-popup-track-pointer')
+    ).toBe(true);
     t.end();
 });
 
@@ -626,8 +634,10 @@ test('Pointer-tracked popup can be repositioned with setLngLat', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.deepEqual(popup._pos, map.project([0, 0]));
-    t.equal(popup._container.classList.value.includes('maplibregl-popup-track-pointer'), false);
+    expect(popup._pos).toEqual(map.project([0, 0]));
+    expect(
+        popup._container.classList.value.includes('maplibregl-popup-track-pointer')
+    ).toBe(false);
     t.end();
 });
 
@@ -638,7 +648,9 @@ test('Positioned popup lacks pointer-tracking class', (t) => {
         .setLngLat([0, 0])
         .addTo(map);
 
-    t.equal(popup._container.classList.value.includes('maplibregl-popup-track-pointer'), false);
+    expect(
+        popup._container.classList.value.includes('maplibregl-popup-track-pointer')
+    ).toBe(false);
     t.end();
 });
 
@@ -651,7 +663,7 @@ test('Positioned popup can be set to track pointer', (t) => {
         .addTo(map);
 
     simulate.mousemove(map.getCanvas(), {screenX:0, screenY:0});
-    t.deepEqual(popup._pos, {x:0, y:0});
+    expect(popup._pos).toEqual({x:0, y:0});
     t.end();
 });
 
@@ -664,7 +676,7 @@ test('Popup closes on Map#remove', (t) => {
 
     map.remove();
 
-    t.ok(!popup.isOpen());
+    expect(!popup.isOpen()).toBeTruthy();
     t.end();
 });
 
@@ -677,7 +689,7 @@ test('Adding popup with no focusable content (Popup#setText) does not change the
         .setLngLat([0, 0])
         .addTo(createMap(t));
 
-    t.equal(window.document.activeElement, dummyFocusedEl);
+    expect(window.document.activeElement).toBe(dummyFocusedEl);
     t.end();
 });
 
@@ -690,7 +702,7 @@ test('Adding popup with no focusable content (Popup#setHTML) does not change the
         .setLngLat([0, 0])
         .addTo(createMap(t));
 
-    t.equal(window.document.activeElement, dummyFocusedEl);
+    expect(window.document.activeElement).toBe(dummyFocusedEl);
     t.end();
 });
 
@@ -706,7 +718,7 @@ test('Close button is focused if it is the only focusable element', (t) => {
     // Suboptimal because the string matching is case-sensitive
     const closeButton = popup._container.querySelector("[aria-label^='Close']");
 
-    t.equal(window.document.activeElement, closeButton);
+    expect(window.document.activeElement).toBe(closeButton);
     t.end();
 });
 
@@ -718,7 +730,7 @@ test('If popup content contains a focusable element it is focused', (t) => {
 
     const focusableEl = popup._container.querySelector("[data-testid='abc']");
 
-    t.equal(window.document.activeElement, focusableEl);
+    expect(window.document.activeElement).toBe(focusableEl);
     t.end();
 });
 
@@ -731,8 +743,8 @@ test('Element with tabindex="-1" is not focused', (t) => {
     const nonFocusableEl = popup._container.querySelector("[data-testid='abc']");
     const closeButton = popup._container.querySelector("button[aria-label='Close popup']");
 
-    t.notEqual(window.document.activeElement, nonFocusableEl);
-    t.equal(window.document.activeElement, closeButton);
+    expect(window.document.activeElement).not.toBe(nonFocusableEl);
+    expect(window.document.activeElement).toBe(closeButton);
     t.end();
 });
 
@@ -750,7 +762,7 @@ test('If popup contains a disabled button and a focusable element then the latte
 
     const focusableEl = popup._container.querySelector("[data-testid='abc']");
 
-    t.equal(window.document.activeElement, focusableEl);
+    expect(window.document.activeElement).toBe(focusableEl);
     t.end();
 });
 
@@ -763,6 +775,6 @@ test('Popup with disabled focusing does not change the active element', (t) => {
         .setLngLat([0, 0])
         .addTo(createMap(t));
 
-    t.equal(window.document.activeElement, dummyFocusedEl);
+    expect(window.document.activeElement).toBe(dummyFocusedEl);
     t.end();
 });
