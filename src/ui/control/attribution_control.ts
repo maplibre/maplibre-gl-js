@@ -53,12 +53,20 @@ class AttributionControl implements IControl {
         this._map = map;
         this._container = DOM.create('details', 'maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib');
         this._compactButton = DOM.create('summary', 'maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button', this._container);
-        this._compactButton.addEventListener('click', this._toggleAttribution);
+
+        if (compact !== false) {
+            this._compactButton.addEventListener('click', this._toggleAttribution);
+        }
+
         this._setElementTitle(this._compactButton, 'ToggleAttribution');
         this._innerContainer = DOM.create('div', 'maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner', this._container);
 
         if (compact) {
             this._container.classList.add('maplibregl-compact', 'mapboxgl-compact');
+        }
+
+        if (!compact) {
+            this._container.setAttribute('open', '');
         }
 
         this._updateAttributions();
@@ -167,6 +175,7 @@ class AttributionControl implements IControl {
     _updateCompact() {
         if (this._map.getCanvasContainer().offsetWidth <= 640) {
             this._container.classList.add('maplibregl-compact', 'mapboxgl-compact');
+            this._container.removeAttribute('open');
         } else {
             this._container.setAttribute('open', '');
             this._container.classList.remove('maplibregl-compact', 'maplibregl-compact-show', 'mapboxgl-compact', 'mapboxgl-compact-show');
