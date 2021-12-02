@@ -3,7 +3,7 @@ import {extend} from '../../util/util';
 import Dispatcher from '../../util/dispatcher';
 import gl from 'gl';
 
-export function createMap(options, callback) {
+export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
     const defaultOptions = {
         container,

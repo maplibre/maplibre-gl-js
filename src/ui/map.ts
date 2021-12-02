@@ -1009,10 +1009,10 @@ class Map extends Camera {
      * | [`sourcedataloading`](#map.event:sourcedataloading)       |                           |
      * | [`styleimagemissing`](#map.event:styleimagemissing)       |                           |
      *
-     * @param {string | Listener} layerIdOrListener The ID of a style layer or a listener if no id is provided. Event will only be triggered if its location
+     * @param {string | Listener} layerIdOrListener The ID of a style layer or a listener if no ID is provided. Event will only be triggered if its location
      * is within a visible feature in this layer. The event will have a `features` property containing
-     * an array of the matching features. If `layerId` is not supplied, the event will not have a `features` property.
-     * Please note that many event types are not compatible with the optional `layerId` parameter.
+     * an array of the matching features. If `layerIdOrListener` is not supplied, the event will not have a `features` property.
+     * Please note that many event types are not compatible with the optional `layerIdOrListener` parameter.
      * @param {Function} listener The function to be called when the event is fired.
      * @returns {Map} `this`
      * @example
@@ -1099,20 +1099,26 @@ class Map extends Camera {
      * a visible portion of the specified layer from outside that layer or outside the map canvas. `mouseleave`
      * and `mouseout` events are triggered when the cursor leaves a visible portion of the specified layer, or leaves
      * the map canvas.
-     * @param {string} layerId The ID of a style layer. Only events whose location is within a visible
+     * @param {string} layerIdOrListener The ID of a style layer or a listener if no ID is provided. Only events whose location is within a visible
      * feature in this layer will trigger the listener. The event will have a `features` property containing
      * an array of the matching features.
      * @param {Function} listener The function to be called when the event is fired.
      * @returns {Map} `this`
      */
+    once<T extends keyof MapLayerEventType>(
+        type: T,
+        layer: string,
+        listener: (ev: MapLayerEventType[T] & Object) => void,
+    ): this;
+    once<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     once(type: MapEvent, listener: Listener): this;
-    once(type: MapEvent, layerId: any, listener?: Listener): this {
+    once(type: MapEvent, layerIdOrListener: string | Listener, listener?: Listener): this {
 
         if (listener === undefined) {
-            return super.once(type, layerId);
+            return super.once(type, layerIdOrListener as Listener);
         }
 
-        const delegatedListener = this._createDelegatedListener(type, layerId, listener);
+        const delegatedListener = this._createDelegatedListener(type, layerIdOrListener, listener);
 
         for (const event in delegatedListener.delegates) {
             this.once(event as any, delegatedListener.delegates[event]);
@@ -1137,21 +1143,27 @@ class Map extends Camera {
      * Removes an event listener for layer-specific events previously added with `Map#on`.
      *
      * @param {string} type The event type previously used to install the listener.
-     * @param {string} layerId The layer ID previously used to install the listener.
+     * @param {string} layerIdOrListener The layer ID or listener previously used to install the listener.
      * @param {Function} listener The function previously installed as a listener.
      * @returns {Map} `this`
      */
+    off<T extends keyof MapLayerEventType>(
+        type: T,
+        layer: string,
+        listener: (ev: MapLayerEventType[T] & Object) => void,
+    ): this;
+    off<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     off(type: MapEvent, listener: Listener): this;
-    off(type: MapEvent, layerId: any, listener?: Listener): this {
+    off(type: MapEvent, layerIdOrListener: string | Listener, listener?: Listener): this {
         if (listener === undefined) {
-            return super.off(type, layerId);
+            return super.off(type, layerIdOrListener as Listener);
         }
 
         const removeDelegatedListener = (delegatedListeners) => {
             const listeners = delegatedListeners[type];
             for (let i = 0; i < listeners.length; i++) {
                 const delegatedListener = listeners[i];
-                if (delegatedListener.layer === layerId && delegatedListener.listener === listener) {
+                if (delegatedListener.layer === layerIdOrListener && delegatedListener.listener === listener) {
                     for (const event in delegatedListener.delegates) {
                         this.off(((event as any)), delegatedListener.delegates[event]);
                     }
