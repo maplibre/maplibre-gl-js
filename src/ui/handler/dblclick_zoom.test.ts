@@ -1,11 +1,9 @@
-import '../../../stub_loader';
-import {test} from '../../../util/test';
-import Map from '../../ui/map';
-import DOM from '../../util/dom';
-import simulate from '../../../util/simulate_interaction';
+import simulate from '../../../test/util/simulate_interaction';
+import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
+import Map, {MapOptions} from '../map';
 
 function createMap() {
-    return new Map({container: DOM.create('div', '', window.document.body)});
+    return new Map({container: window.document.createElement('div')} as any as MapOptions);
 }
 
 function simulateDoubleTap(map, delay = 100) {
@@ -17,51 +15,55 @@ function simulateDoubleTap(map, delay = 100) {
             simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
             simulate.touchend(canvas);
             map._renderTaskQueue.run();
-            resolve();
+            resolve(undefined);
         }, delay);
     });
 }
 
-describe('DoubleClickZoomHandler zooms on dblclick event', done => {
-    const map = createMap(t);
+beforeEach(() => {
+    setPerformance();
+    setWebGlContext();
+    setMatchMedia();
+});
 
-    const zoom = t.spy();
+test('DoubleClickZoomHandler zooms on dblclick event', () => {
+    const map = createMap();
+
+    const zoom = jest.fn();
     map.on('zoomstart', zoom);
 
     simulate.dblclick(map.getCanvas());
     map._renderTaskQueue.run();
 
-    expect(zoom.called).toBeTruthy();
+    expect(zoom).toHaveBeenCalled();
 
     map.remove();
-    done();
 });
 
-describe('DoubleClickZoomHandler does not zoom if preventDefault is called on the dblclick event', done => {
-    const map = createMap(t);
+test('DoubleClickZoomHandler does not zoom if preventDefault is called on the dblclick event', () => {
+    const map = createMap();
 
     map.on('dblclick', e => e.preventDefault());
 
-    const zoom = t.spy();
+    const zoom = jest.fn();
     map.on('zoomstart', zoom);
 
     simulate.dblclick(map.getCanvas());
     map._renderTaskQueue.run();
 
-    expect(zoom.callCount).toBe(0);
+    expect(zoom).not.toHaveBeenCalled();
 
     map.remove();
-    done();
 });
 
-describe('DoubleClickZoomHandler zooms on double tap if touchstart events are < 300ms apart', done => {
-    const map = createMap(t);
+test('DoubleClickZoomHandler zooms on double tap if touchstart events are < 300ms apart', done => {
+    const map = createMap();
 
-    const zoom = t.spy();
+    const zoom = jest.fn();
     map.on('zoomstart', zoom);
 
     simulateDoubleTap(map, 100).then(() => {
-        expect(zoom.called).toBeTruthy();
+        expect(zoom).toHaveBeenCalled();
 
         map.remove();
         done();
@@ -69,14 +71,14 @@ describe('DoubleClickZoomHandler zooms on double tap if touchstart events are < 
 
 });
 
-describe('DoubleClickZoomHandler does not zoom on double tap if touchstart events are > 500ms apart', done => {
-    const map = createMap(t);
+test('DoubleClickZoomHandler does not zoom on double tap if touchstart events are > 500ms apart', done => {
+    const map = createMap();
 
-    const zoom = t.spy();
+    const zoom = jest.fn();
     map.on('zoom', zoom);
 
     simulateDoubleTap(map, 500).then(() => {
-        expect(zoom.callCount).toBe(0);
+        expect(zoom).not.toHaveBeenCalled();
 
         map.remove();
         done();
@@ -84,10 +86,10 @@ describe('DoubleClickZoomHandler does not zoom on double tap if touchstart event
 
 });
 
-describe('DoubleClickZoomHandler does not zoom on double tap if touchstart events are in different locations', done => {
-    const map = createMap(t);
+test('DoubleClickZoomHandler does not zoom on double tap if touchstart events are in different locations', done => {
+    const map = createMap();
 
-    const zoom = t.spy();
+    const zoom = jest.fn();
     map.on('zoom', zoom);
 
     const canvas = map.getCanvas();
@@ -100,13 +102,13 @@ describe('DoubleClickZoomHandler does not zoom on double tap if touchstart event
                 simulate.touchstart(canvas, {touches: [{clientX: 30.5, clientY: 30.5}]});
                 simulate.touchend(canvas);
                 map._renderTaskQueue.run();
-                resolve();
+                resolve(undefined);
             }, 100);
         });
     };
 
     simulateTwoDifferentTaps().then(() => {
-        expect(zoom.callCount).toBe(0);
+        expect(zoom).not.toHaveBeenCalled();
 
         map.remove();
         done();
@@ -114,10 +116,10 @@ describe('DoubleClickZoomHandler does not zoom on double tap if touchstart event
 
 });
 
-describe('DoubleClickZoomHandler zooms on the second touchend event of a double tap', done => {
-    const map = createMap(t);
+test('DoubleClickZoomHandler zooms on the second touchend event of a double tap', () => {
+    const map = createMap();
 
-    const zoom = t.spy();
+    const zoom = jest.fn();
     map.on('zoomstart', zoom);
 
     const canvas = map.getCanvas();
@@ -128,31 +130,30 @@ describe('DoubleClickZoomHandler zooms on the second touchend event of a double 
     simulate.touchstart(canvas, touchOptions);
     map._renderTaskQueue.run();
     map._renderTaskQueue.run();
-    expect(zoom.called).toBeFalsy();
+    expect(zoom).not.toHaveBeenCalled();
 
     simulate.touchcancel(canvas);
     simulate.touchend(canvas);
     map._renderTaskQueue.run();
-    expect(zoom.called).toBeFalsy();
+    expect(zoom).not.toHaveBeenCalled();
 
     simulate.touchstart(canvas, touchOptions);
     simulate.touchend(canvas);
     simulate.touchstart(canvas, touchOptions);
     map._renderTaskQueue.run();
-    expect(zoom.called).toBeFalsy();
+    expect(zoom).not.toHaveBeenCalled();
 
     simulate.touchend(canvas);
     map._renderTaskQueue.run();
 
-    expect(zoom.called).toBeTruthy();
+    expect(zoom).toHaveBeenCalled();
 
-    done();
 });
 
-describe('DoubleClickZoomHandler does not zoom on double tap if second touchend is >300ms after first touchstart', done => {
-    const map = createMap(t);
+test('DoubleClickZoomHandler does not zoom on double tap if second touchend is >300ms after first touchstart', done => {
+    const map = createMap();
 
-    const zoom = t.spy();
+    const zoom = jest.fn();
     map.on('zoom', zoom);
 
     const canvas = map.getCanvas();
@@ -165,13 +166,13 @@ describe('DoubleClickZoomHandler does not zoom on double tap if second touchend 
             setTimeout(() => {
                 simulate.touchend(canvas);
                 map._renderTaskQueue.run();
-                resolve();
+                resolve(undefined);
             }, 300);
         });
     };
 
     simulateSlowSecondTap().then(() => {
-        expect(zoom.called).toBeFalsy();
+        expect(zoom).not.toHaveBeenCalled();
 
         done();
     });
