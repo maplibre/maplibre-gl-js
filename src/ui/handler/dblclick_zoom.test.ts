@@ -1,7 +1,7 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import Map from '../../../../rollup/build/tsc/src/ui/map';
-import DOM from '../../../../rollup/build/tsc/src/util/dom';
+import Map from '../../ui/map';
+import DOM from '../../util/dom';
 import simulate from '../../../util/simulate_interaction';
 
 function createMap() {
@@ -22,7 +22,7 @@ function simulateDoubleTap(map, delay = 100) {
     });
 }
 
-test('DoubleClickZoomHandler zooms on dblclick event', (t) => {
+describe('DoubleClickZoomHandler zooms on dblclick event', done => {
     const map = createMap(t);
 
     const zoom = t.spy();
@@ -34,10 +34,10 @@ test('DoubleClickZoomHandler zooms on dblclick event', (t) => {
     expect(zoom.called).toBeTruthy();
 
     map.remove();
-    t.end();
+    done();
 });
 
-test('DoubleClickZoomHandler does not zoom if preventDefault is called on the dblclick event', (t) => {
+describe('DoubleClickZoomHandler does not zoom if preventDefault is called on the dblclick event', done => {
     const map = createMap(t);
 
     map.on('dblclick', e => e.preventDefault());
@@ -51,10 +51,10 @@ test('DoubleClickZoomHandler does not zoom if preventDefault is called on the db
     expect(zoom.callCount).toBe(0);
 
     map.remove();
-    t.end();
+    done();
 });
 
-test('DoubleClickZoomHandler zooms on double tap if touchstart events are < 300ms apart', (t) => {
+describe('DoubleClickZoomHandler zooms on double tap if touchstart events are < 300ms apart', done => {
     const map = createMap(t);
 
     const zoom = t.spy();
@@ -64,12 +64,12 @@ test('DoubleClickZoomHandler zooms on double tap if touchstart events are < 300m
         expect(zoom.called).toBeTruthy();
 
         map.remove();
-        t.end();
+        done();
     });
 
 });
 
-test('DoubleClickZoomHandler does not zoom on double tap if touchstart events are > 500ms apart', (t) => {
+describe('DoubleClickZoomHandler does not zoom on double tap if touchstart events are > 500ms apart', done => {
     const map = createMap(t);
 
     const zoom = t.spy();
@@ -79,12 +79,12 @@ test('DoubleClickZoomHandler does not zoom on double tap if touchstart events ar
         expect(zoom.callCount).toBe(0);
 
         map.remove();
-        t.end();
+        done();
     });
 
 });
 
-test('DoubleClickZoomHandler does not zoom on double tap if touchstart events are in different locations', (t) => {
+describe('DoubleClickZoomHandler does not zoom on double tap if touchstart events are in different locations', done => {
     const map = createMap(t);
 
     const zoom = t.spy();
@@ -109,12 +109,12 @@ test('DoubleClickZoomHandler does not zoom on double tap if touchstart events ar
         expect(zoom.callCount).toBe(0);
 
         map.remove();
-        t.end();
+        done();
     });
 
 });
 
-test('DoubleClickZoomHandler zooms on the second touchend event of a double tap', (t) => {
+describe('DoubleClickZoomHandler zooms on the second touchend event of a double tap', done => {
     const map = createMap(t);
 
     const zoom = t.spy();
@@ -146,10 +146,10 @@ test('DoubleClickZoomHandler zooms on the second touchend event of a double tap'
 
     expect(zoom.called).toBeTruthy();
 
-    t.end();
+    done();
 });
 
-test('DoubleClickZoomHandler does not zoom on double tap if second touchend is >300ms after first touchstart', (t) => {
+describe('DoubleClickZoomHandler does not zoom on double tap if second touchend is >300ms after first touchstart', done => {
     const map = createMap(t);
 
     const zoom = t.spy();
@@ -173,6 +173,6 @@ test('DoubleClickZoomHandler does not zoom on double tap if second touchend is >
     simulateSlowSecondTap().then(() => {
         expect(zoom.called).toBeFalsy();
 
-        t.end();
+        done();
     });
 });
