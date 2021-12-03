@@ -1,31 +1,31 @@
-import '../../stub_loader';
-import {createMap as globalCreateMap} from '../../util';
-import Marker from '../ui/marker';
-import Popup from '../ui/popup';
+import {createMap as globalCreateMap} from '../util/test/util';
+import Marker from './marker';
+import Popup from './popup';
 import LngLat from '../geo/lng_lat';
 import Point from '../util/point';
-import simulate from '../../util/simulate_interaction';
+import simulate from '../../test/util/simulate_interaction';
 
-function createMap(t, options = {}) {
+function createMap(options = {}) {
     const container = window.document.createElement('div');
+    window.document.body.appendChild(container);
     Object.defineProperty(container, 'clientWidth', {value: 512});
     Object.defineProperty(container, 'clientHeight', {value: 512});
-    return globalCreateMap(t, {container, ...options});
+    return globalCreateMap({container, ...options});
 }
 
-describe('Marker uses a default marker element with an appropriate offset', () => {
+test('Marker uses a default marker element with an appropriate offset', () => {
     const marker = new Marker();
     expect(marker.getElement()).toBeTruthy();
     expect(marker.getOffset().equals(new Point(0, -14))).toBeTruthy();
 });
 
-describe('Marker uses a default marker element with custom color', () => {
+test('Marker uses a default marker element with custom color', () => {
     const marker = new Marker({color: '#123456'});
     expect(marker.getElement().innerHTML.includes('#123456')).toBeTruthy();
 });
 
-describe('Marker uses a default marker element with custom scale', () => {
-    const map = createMap(t);
+test('Marker uses a default marker element with custom scale', () => {
+    const map = createMap();
     const defaultMarker = new Marker()
         .setLngLat([0, 0])
         .addTo(map);
@@ -58,20 +58,20 @@ describe('Marker uses a default marker element with custom scale', () => {
 
 });
 
-describe('Marker uses a default marker with custom offset', () => {
+test('Marker uses a default marker with custom offset', () => {
     const marker = new Marker({offset: [1, 2]});
     expect(marker.getElement()).toBeTruthy();
     expect(marker.getOffset().equals(new Point(1, 2))).toBeTruthy();
 });
 
-describe('Marker uses the provided element', () => {
+test('Marker uses the provided element', () => {
     const element = window.document.createElement('div');
     const marker = new Marker({element});
     expect(marker.getElement()).toBe(element);
 });
 
-describe('Marker#addTo adds the marker element to the canvas container', () => {
-    const map = createMap(t);
+test('Marker#addTo adds the marker element to the canvas container', () => {
+    const map = createMap();
     new Marker()
         .setLngLat([-77.01866, 38.888])
         .addTo(map);
@@ -81,7 +81,7 @@ describe('Marker#addTo adds the marker element to the canvas container', () => {
     map.remove();
 });
 
-describe('Marker provides LngLat accessors', () => {
+test('Marker provides LngLat accessors', () => {
     expect(new Marker().getLngLat()).toBeUndefined();
 
     expect(new Marker().setLngLat([1, 2]).getLngLat() instanceof LngLat).toBeTruthy();
@@ -92,7 +92,7 @@ describe('Marker provides LngLat accessors', () => {
 
 });
 
-describe('Marker provides offset accessors', () => {
+test('Marker provides offset accessors', () => {
     expect(new Marker().setOffset([1, 2]).getOffset() instanceof Point).toBeTruthy();
     expect(new Marker().setOffset([1, 2]).getOffset()).toEqual(new Point(1, 2));
 
@@ -101,22 +101,22 @@ describe('Marker provides offset accessors', () => {
 
 });
 
-describe('Marker#setPopup binds a popup', () => {
+test('Marker#setPopup binds a popup', () => {
     const popup = new Popup();
     const marker = new Marker()
         .setPopup(popup);
     expect(marker.getPopup()).toBe(popup);
 });
 
-describe('Marker#setPopup unbinds a popup', () => {
+test('Marker#setPopup unbinds a popup', () => {
     const marker = new Marker()
         .setPopup(new Popup())
         .setPopup();
     expect(!marker.getPopup()).toBeTruthy();
 });
 
-describe('Marker#togglePopup opens a popup that was closed', () => {
-    const map = createMap(t);
+test('Marker#togglePopup opens a popup that was closed', () => {
+    const map = createMap();
     const marker = new Marker()
         .setLngLat([0, 0])
         .addTo(map)
@@ -128,8 +128,8 @@ describe('Marker#togglePopup opens a popup that was closed', () => {
     map.remove();
 });
 
-describe('Marker#togglePopup closes a popup that was open', () => {
-    const map = createMap(t);
+test('Marker#togglePopup closes a popup that was open', () => {
+    const map = createMap();
     const marker = new Marker()
         .setLngLat([0, 0])
         .addTo(map)
@@ -142,8 +142,8 @@ describe('Marker#togglePopup closes a popup that was open', () => {
     map.remove();
 });
 
-describe('Enter key on Marker opens a popup that was closed', () => {
-    const map = createMap(t);
+test('Enter key on Marker opens a popup that was closed', () => {
+    const map = createMap();
     const marker = new Marker()
         .setLngLat([0, 0])
         .addTo(map)
@@ -160,8 +160,8 @@ describe('Enter key on Marker opens a popup that was closed', () => {
     map.remove();
 });
 
-describe('Space key on Marker opens a popup that was closed', () => {
-    const map = createMap(t);
+test('Space key on Marker opens a popup that was closed', () => {
+    const map = createMap();
     const marker = new Marker()
         .setLngLat([0, 0])
         .addTo(map)
@@ -178,14 +178,14 @@ describe('Space key on Marker opens a popup that was closed', () => {
     map.remove();
 });
 
-describe('Marker#setPopup sets a tabindex', () => {
+test('Marker#setPopup sets a tabindex', () => {
     const popup = new Popup();
     const marker = new Marker()
         .setPopup(popup);
     expect(marker.getElement().getAttribute('tabindex')).toBe('0');
 });
 
-describe('Marker#setPopup removes tabindex when unset', () => {
+test('Marker#setPopup removes tabindex when unset', () => {
     const popup = new Popup();
     const marker = new Marker()
         .setPopup(popup)
@@ -193,7 +193,7 @@ describe('Marker#setPopup removes tabindex when unset', () => {
     expect(marker.getElement().getAttribute('tabindex')).toBeFalsy();
 });
 
-describe('Marker#setPopup does not replace existing tabindex', () => {
+test('Marker#setPopup does not replace existing tabindex', () => {
     const element = window.document.createElement('div');
     element.setAttribute('tabindex', '5');
     const popup = new Popup();
@@ -202,31 +202,31 @@ describe('Marker#setPopup does not replace existing tabindex', () => {
     expect(marker.getElement().getAttribute('tabindex')).toBe('5');
 });
 
-describe('Marker anchor defaults to center', () => {
-    const map = createMap(t);
+test('Marker anchor defaults to center', () => {
+    const map = createMap();
     const marker = new Marker()
         .setLngLat([0, 0])
         .addTo(map);
 
     expect(marker.getElement().classList.contains('maplibregl-marker-anchor-center')).toBeTruthy();
-    t.match(marker.getElement().style.transform, /translate\(-50%,-50%\)/);
+    expect(marker.getElement().style.transform).toMatch(/translate\(-50%,-50%\)/);
 
     map.remove();
 });
 
-describe('Marker anchors as specified by the anchor option', () => {
-    const map = createMap(t);
+test('Marker anchors as specified by the anchor option', () => {
+    const map = createMap();
     const marker = new Marker({anchor: 'top'})
         .setLngLat([0, 0])
         .addTo(map);
 
     expect(marker.getElement().classList.contains('maplibregl-marker-anchor-top')).toBeTruthy();
-    t.match(marker.getElement().style.transform, /translate\(-50%,0\)/);
+    expect(marker.getElement().style.transform).toMatch(/translate\(-50%,0\)/);
 
     map.remove();
 });
 
-describe('Marker accepts backward-compatible constructor parameters', () => {
+test('Marker accepts backward-compatible constructor parameters', () => {
     const element = window.document.createElement('div');
 
     const m1 = new Marker(element);
@@ -237,8 +237,8 @@ describe('Marker accepts backward-compatible constructor parameters', () => {
     expect(m2.getOffset().equals(new Point(1, 2))).toBeTruthy();
 });
 
-describe('Popup offsets around default Marker', () => {
-    const map = createMap(t);
+test('Popup offsets around default Marker', () => {
+    const map = createMap();
 
     const marker = new Marker()
         .setLngLat([0, 0])
@@ -260,8 +260,8 @@ describe('Popup offsets around default Marker', () => {
 
 });
 
-describe('Popup anchors around default Marker', () => {
-    const map = createMap(t);
+test('Popup anchors around default Marker', () => {
+    const map = createMap();
 
     const marker = new Marker()
         .setLngLat([0, 0])
@@ -328,8 +328,8 @@ describe('Popup anchors around default Marker', () => {
 
 });
 
-describe('Marker drag functionality can be added with drag option', () => {
-    const map = createMap(t);
+test('Marker drag functionality can be added with drag option', () => {
+    const map = createMap();
     const marker = new Marker({draggable: true})
         .setLngLat([0, 0])
         .addTo(map);
@@ -339,8 +339,8 @@ describe('Marker drag functionality can be added with drag option', () => {
     map.remove();
 });
 
-describe('Marker#setDraggable adds drag functionality', () => {
-    const map = createMap(t);
+test('Marker#setDraggable adds drag functionality', () => {
+    const map = createMap();
     const marker = new Marker()
         .setLngLat([0, 0])
         .setDraggable(true)
@@ -351,8 +351,8 @@ describe('Marker#setDraggable adds drag functionality', () => {
     map.remove();
 });
 
-describe('Marker#setDraggable turns off drag functionality', () => {
-    const map = createMap(t);
+test('Marker#setDraggable turns off drag functionality', () => {
+    const map = createMap();
     const marker = new Marker({draggable: true})
         .setLngLat([0, 0])
         .addTo(map);
@@ -366,270 +366,270 @@ describe('Marker#setDraggable turns off drag functionality', () => {
     map.remove();
 });
 
-describe('Marker with draggable:true fires dragstart, drag, and dragend events at appropriate times in response to mouse-triggered drag with map-inherited clickTolerance', () => {
-    const map = createMap(t);
+test('Marker with draggable:true fires dragstart, drag, and dragend events at appropriate times in response to mouse-triggered drag with map-inherited clickTolerance', () => {
+    const map = createMap();
     const marker = new Marker({draggable: true})
         .setLngLat([0, 0])
         .addTo(map);
     const el = marker.getElement();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     marker.on('dragstart', dragstart);
     marker.on('drag',      drag);
     marker.on('dragend',   dragend);
 
     simulate.mousedown(el, {clientX: 0, clientY: 0});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('');
 
     simulate.mousemove(el, {clientX: 2.9, clientY: 0});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('');
 
     // above map's click tolerance
     simulate.mousemove(el, {clientX: 3.1, clientY: 0});
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('none');
 
     simulate.mousemove(el, {clientX: 0, clientY: 0});
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('none');
 
     simulate.mouseup(el);
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(1);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).toHaveBeenCalledTimes(1);
     expect(el.style.pointerEvents).toBe('auto');
 
     map.remove();
 });
 
-describe('Marker with draggable:true fires dragstart, drag, and dragend events at appropriate times in response to mouse-triggered drag with marker-specific clickTolerance', () => {
-    const map = createMap(t);
+test('Marker with draggable:true fires dragstart, drag, and dragend events at appropriate times in response to mouse-triggered drag with marker-specific clickTolerance', () => {
+    const map = createMap();
     const marker = new Marker({draggable: true, clickTolerance: 4})
         .setLngLat([0, 0])
         .addTo(map);
     const el = marker.getElement();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     marker.on('dragstart', dragstart);
     marker.on('drag',      drag);
     marker.on('dragend',   dragend);
 
     simulate.mousedown(el, {clientX: 0, clientY: 0});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('');
 
     simulate.mousemove(el, {clientX: 3.9, clientY: 0});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('');
 
     // above map's click tolerance
     simulate.mousemove(el, {clientX: 4.1, clientY: 0});
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('none');
 
     simulate.mousemove(el, {clientX: 0, clientY: 0});
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('none');
 
     simulate.mouseup(el);
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(1);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).toHaveBeenCalledTimes(1);
     expect(el.style.pointerEvents).toBe('auto');
 
     map.remove();
 });
 
-describe('Marker with draggable:false does not fire dragstart, drag, and dragend events in response to a mouse-triggered drag', () => {
-    const map = createMap(t);
+test('Marker with draggable:false does not fire dragstart, drag, and dragend events in response to a mouse-triggered drag', () => {
+    const map = createMap();
     const marker = new Marker({})
         .setLngLat([0, 0])
         .addTo(map);
     const el = marker.getElement();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     marker.on('dragstart', dragstart);
     marker.on('drag',      drag);
     marker.on('dragend',   dragend);
 
     simulate.mousedown(el, {clientX: 0, clientY: 0});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
 
     simulate.mousemove(el, {clientX: 3, clientY: 1});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
 
     simulate.mouseup(el);
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
 
     map.remove();
 });
 
-describe('Marker with draggable:true fires dragstart, drag, and dragend events at appropriate times in response to a touch-triggered drag with map-inherited clickTolerance', () => {
-    const map = createMap(t);
+test('Marker with draggable:true fires dragstart, drag, and dragend events at appropriate times in response to a touch-triggered drag with map-inherited clickTolerance', () => {
+    const map = createMap();
     const marker = new Marker({draggable: true})
         .setLngLat([0, 0])
         .addTo(map);
     const el = marker.getElement();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     marker.on('dragstart', dragstart);
     marker.on('drag',      drag);
     marker.on('dragend',   dragend);
 
     simulate.touchstart(el, {touches: [{clientX: 0, clientY: 0}]});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('');
 
     simulate.touchmove(el, {touches: [{clientX: 2.9, clientY: 0}]});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('');
 
     // above map's click tolerance
     simulate.touchmove(el, {touches: [{clientX: 3.1, clientY: 0}]});
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('none');
 
     simulate.touchmove(el, {touches: [{clientX: 0, clientY: 0}]});
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('none');
 
     simulate.touchend(el);
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(1);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).toHaveBeenCalledTimes(1);
     expect(el.style.pointerEvents).toBe('auto');
 
     map.remove();
 });
 
-describe('Marker with draggable:true fires dragstart, drag, and dragend events at appropriate times in response to a touch-triggered drag with marker-specific clickTolerance', () => {
-    const map = createMap(t);
+test('Marker with draggable:true fires dragstart, drag, and dragend events at appropriate times in response to a touch-triggered drag with marker-specific clickTolerance', () => {
+    const map = createMap();
     const marker = new Marker({draggable: true, clickTolerance: 4})
         .setLngLat([0, 0])
         .addTo(map);
     const el = marker.getElement();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     marker.on('dragstart', dragstart);
     marker.on('drag',      drag);
     marker.on('dragend',   dragend);
 
     simulate.touchstart(el, {touches: [{clientX: 0, clientY: 0}]});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('');
 
     simulate.touchmove(el, {touches: [{clientX: 3.9, clientY: 0}]});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('');
 
     // above map's click tolerance
     simulate.touchmove(el, {touches: [{clientX: 4.1, clientY: 0}]});
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('none');
 
     simulate.touchmove(el, {touches: [{clientX: 0, clientY: 0}]});
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).not.toHaveBeenCalled();
     expect(el.style.pointerEvents).toBe('none');
 
     simulate.touchend(el);
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(1);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).toHaveBeenCalledTimes(1);
     expect(el.style.pointerEvents).toBe('auto');
 
     map.remove();
 });
 
-describe('Marker with draggable:false does not fire dragstart, drag, and dragend events in response to a touch-triggered drag', () => {
-    const map = createMap(t);
+test('Marker with draggable:false does not fire dragstart, drag, and dragend events in response to a touch-triggered drag', () => {
+    const map = createMap();
     const marker = new Marker({})
         .setLngLat([0, 0])
         .addTo(map);
     const el = marker.getElement();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     marker.on('dragstart', dragstart);
     marker.on('drag',      drag);
     marker.on('dragend',   dragend);
 
     simulate.touchstart(el, {touches: [{clientX: 0, clientY: 0}]});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
 
     simulate.touchmove(el, {touches: [{clientX: 0, clientY: 0}]});
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
 
     simulate.touchend(el);
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).not.toHaveBeenCalled();
+    expect(drag).not.toHaveBeenCalled();
+    expect(dragend).not.toHaveBeenCalled();
 
     map.remove();
 });
 
-describe('Marker with draggable:true moves to new position in response to a mouse-triggered drag', () => {
-    const map = createMap(t);
+test('Marker with draggable:true moves to new position in response to a mouse-triggered drag', () => {
+    const map = createMap();
     const marker = new Marker({draggable: true})
         .setLngLat([0, 0])
         .addTo(map);
@@ -646,8 +646,8 @@ describe('Marker with draggable:true moves to new position in response to a mous
     map.remove();
 });
 
-describe('Marker with draggable:false does not move to new position in response to a mouse-triggered drag', () => {
-    const map = createMap(t);
+test('Marker with draggable:false does not move to new position in response to a mouse-triggered drag', () => {
+    const map = createMap();
     const marker = new Marker({})
         .setLngLat([0, 0])
         .addTo(map);
@@ -666,8 +666,8 @@ describe('Marker with draggable:false does not move to new position in response 
     map.remove();
 });
 
-describe('Marker with draggable:true does not error if removed on mousedown', () => {
-    const map = createMap(t);
+test('Marker with draggable:true does not error if removed on mousedown', () => {
+    const map = createMap();
     const marker = new Marker({draggable: true})
         .setLngLat([0, 0])
         .addTo(map);
@@ -679,8 +679,8 @@ describe('Marker with draggable:true does not error if removed on mousedown', ()
     expect(map.fire('mouseup')).toBeTruthy();
 });
 
-describe('Marker can set rotationAlignment and pitchAlignment', () => {
-    const map = createMap(t);
+test('Marker can set rotationAlignment and pitchAlignment', () => {
+    const map = createMap();
     const marker = new Marker({rotationAlignment: 'map', pitchAlignment: 'map'})
         .setLngLat([0, 0])
         .addTo(map);
@@ -691,8 +691,8 @@ describe('Marker can set rotationAlignment and pitchAlignment', () => {
     map.remove();
 });
 
-describe('Marker can set and update rotation', () => {
-    const map = createMap(t);
+test('Marker can set and update rotation', () => {
+    const map = createMap();
     const marker = new Marker({rotation: 45})
         .setLngLat([0, 0])
         .addTo(map);
@@ -705,8 +705,8 @@ describe('Marker can set and update rotation', () => {
     map.remove();
 });
 
-describe('Marker transforms rotation with the map', () => {
-    const map = createMap(t);
+test('Marker transforms rotation with the map', () => {
+    const map = createMap();
     const marker = new Marker({rotationAlignment: 'map'})
         .setLngLat([0, 0])
         .addTo(map);
@@ -722,8 +722,8 @@ describe('Marker transforms rotation with the map', () => {
     map.remove();
 });
 
-describe('Marker transforms pitch with the map', () => {
-    const map = createMap(t);
+test('Marker transforms pitch with the map', () => {
+    const map = createMap();
     const marker = new Marker({pitchAlignment: 'map'})
         .setLngLat([0, 0])
         .addTo(map);
@@ -741,8 +741,8 @@ describe('Marker transforms pitch with the map', () => {
     map.remove();
 });
 
-describe('Marker pitchAlignment when set to auto defaults to rotationAlignment', () => {
-    const map = createMap(t);
+test('Marker pitchAlignment when set to auto defaults to rotationAlignment', () => {
+    const map = createMap();
     const marker = new Marker({rotationAlignment: 'map', pitchAlignment: 'auto'})
         .setLngLat([0, 0])
         .addTo(map);
@@ -752,8 +752,8 @@ describe('Marker pitchAlignment when set to auto defaults to rotationAlignment',
     map.remove();
 });
 
-describe('Marker pitchAlignment when set to auto defaults to rotationAlignment (setter/getter)', () => {
-    const map = createMap(t);
+test('Marker pitchAlignment when set to auto defaults to rotationAlignment (setter/getter)', () => {
+    const map = createMap();
     const marker = new Marker({pitchAlignment: 'map'})
         .setLngLat([0, 0])
         .addTo(map);
