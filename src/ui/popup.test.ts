@@ -11,6 +11,7 @@ const containerHeight = 512;
 function createMap(options?) {
     options = options || {};
     const container = window.document.createElement('div');
+    window.document.body.appendChild(container);
     Object.defineProperty(container, 'clientWidth', {value: options.width || containerWidth});
     Object.defineProperty(container, 'clientHeight', {value: options.height || containerHeight});
     return globalCreateMap({container});
@@ -640,6 +641,7 @@ test('Popup closes on Map#remove', () => {
 
 test('Adding popup with no focusable content (Popup#setText) does not change the active element', () => {
     const dummyFocusedEl = window.document.createElement('button');
+    window.document.body.appendChild(dummyFocusedEl);
     dummyFocusedEl.focus();
 
     new Popup({closeButton: false})
@@ -652,6 +654,7 @@ test('Adding popup with no focusable content (Popup#setText) does not change the
 
 test('Adding popup with no focusable content (Popup#setHTML) does not change the active element', () => {
     const dummyFocusedEl = window.document.createElement('button');
+    window.document.body.appendChild(dummyFocusedEl);
     dummyFocusedEl.focus();
 
     new Popup({closeButton: false})
@@ -664,6 +667,7 @@ test('Adding popup with no focusable content (Popup#setHTML) does not change the
 
 test('Close button is focused if it is the only focusable element', () => {
     const dummyFocusedEl = window.document.createElement('button');
+    window.document.body.appendChild(dummyFocusedEl);
     dummyFocusedEl.focus();
 
     const popup = new Popup({closeButton: true})
@@ -720,6 +724,7 @@ test('If popup contains a disabled button and a focusable element then the latte
 
 test('Popup with disabled focusing does not change the active element', () => {
     const dummyFocusedEl = window.document.createElement('button');
+    window.document.body.appendChild(dummyFocusedEl);
     dummyFocusedEl.focus();
 
     new Popup({closeButton: false, focusAfterOpen: false})
