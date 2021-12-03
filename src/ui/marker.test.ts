@@ -1,4 +1,4 @@
-import {createMap as globalCreateMap} from '../util/test/util';
+import {createMap as globalCreateMap, setPerformance, setWebGlContext} from '../util/test/util';
 import Marker from './marker';
 import Popup from './popup';
 import LngLat from '../geo/lng_lat';
@@ -12,6 +12,11 @@ function createMap(options = {}) {
     Object.defineProperty(container, 'clientHeight', {value: 512});
     return globalCreateMap({container, ...options});
 }
+
+beforeEach(() => {
+    setWebGlContext();
+    setPerformance();
+});
 
 test('Marker uses a default marker element with an appropriate offset', () => {
     const marker = new Marker();
@@ -40,21 +45,21 @@ test('Marker uses a default marker element with custom scale', () => {
 
     // initial dimensions of svg element
     expect(
-        defaultMarker.getElement().firstChild.getAttribute('height').includes('41')
+        defaultMarker.getElement().children[0].getAttribute('height').includes('41')
     ).toBeTruthy();
-    expect(defaultMarker.getElement().firstChild.getAttribute('width').includes('27')).toBeTruthy();
+    expect(defaultMarker.getElement().children[0].getAttribute('width').includes('27')).toBeTruthy();
 
     // (41 * 0.8) = 32.8, (27 * 0.8) = 21.6
     expect(
-        smallerMarker.getElement().firstChild.getAttribute('height').includes('32.8')
+        smallerMarker.getElement().children[0].getAttribute('height').includes('32.8')
     ).toBeTruthy();
     expect(
-        smallerMarker.getElement().firstChild.getAttribute('width').includes('21.6')
+        smallerMarker.getElement().children[0].getAttribute('width').includes('21.6')
     ).toBeTruthy();
 
     // (41 * 2) = 82, (27 * 2) = 54
-    expect(largerMarker.getElement().firstChild.getAttribute('height').includes('82')).toBeTruthy();
-    expect(largerMarker.getElement().firstChild.getAttribute('width').includes('54')).toBeTruthy();
+    expect(largerMarker.getElement().children[0].getAttribute('height').includes('82')).toBeTruthy();
+    expect(largerMarker.getElement().children[0].getAttribute('width').includes('54')).toBeTruthy();
 
 });
 
@@ -245,10 +250,10 @@ test('Popup offsets around default Marker', () => {
         .setPopup(new Popup().setText('Test'))
         .addTo(map);
 
-    expect(marker.getPopup().options.offset.bottom[1] < 0).toBeTruthy();
-    expect(marker.getPopup().options.offset.top[1] === 0).toBeTruthy();
-    expect(marker.getPopup().options.offset.left[0] > 0).toBeTruthy();
-    expect(marker.getPopup().options.offset.right[0] < 0).toBeTruthy();
+    expect(marker.getPopup().options.offset['bottom'][1] < 0).toBeTruthy();
+    expect(marker.getPopup().options.offset['top'][1] === 0).toBeTruthy();
+    expect(marker.getPopup().options.offset['left'][0] > 0).toBeTruthy();
+    expect(marker.getPopup().options.offset['right'][0] < 0).toBeTruthy();
 
     expect(marker.getPopup().options.offset['bottom-left'][0] > 0).toBeTruthy();
     expect(marker.getPopup().options.offset['bottom-left'][1] < 0).toBeTruthy();
@@ -272,8 +277,8 @@ test('Popup anchors around default Marker', () => {
     marker.togglePopup();
 
     const mapHeight = map.getContainer().clientHeight;
-    const markerTop = -marker.getPopup().options.offset.bottom[1]; // vertical distance from tip of marker to the top in pixels
-    const markerRight = -marker.getPopup().options.offset.right[0]; // horizontal distance from the tip of the marker to the right in pixels
+    const markerTop = -marker.getPopup().options.offset['bottom'][1]; // vertical distance from tip of marker to the top in pixels
+    const markerRight = -marker.getPopup().options.offset['right'][0]; // horizontal distance from the tip of the marker to the right in pixels
 
     // give the popup some height
     Object.defineProperty(marker.getPopup()._container, 'offsetWidth', {value: 100});
