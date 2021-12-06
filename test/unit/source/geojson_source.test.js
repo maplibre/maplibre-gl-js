@@ -135,21 +135,6 @@ test('GeoJSONSource#setData', (t) => {
         source.setData({});
     });
 
-    t.test('marks source as loaded when "dataloading" event handler throws', (t) => {
-        const source = createSource();
-        const error = new Error();
-        source.once('dataloading', () => {
-            throw error;
-        });
-        try {
-            source.setData({});
-        } catch (err) {
-            t.same(err, error);
-            t.ok(source.loaded());
-            t.end();
-        }
-    });
-
     t.end();
 });
 

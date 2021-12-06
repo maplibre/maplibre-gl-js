@@ -246,12 +246,7 @@ class GeoJSONSource extends Evented implements Source {
         }
 
         this._pendingLoads++;
-        try {
-            this.fire(new Event('dataloading', {dataType: 'source'}));
-        } catch (err) {
-            this._pendingLoads--;
-            throw err;
-        }
+        this.fire(new Event('dataloading', {dataType: 'source'}));
 
         // target {this.type}.loadData rather than literally geojson.loadData,
         // so that other geojson-like source types can easily reuse this
