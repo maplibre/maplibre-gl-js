@@ -1,5 +1,5 @@
 import {createMap as globalCreateMap, setPerformance, setWebGlContext} from '../util/test/util';
-import Popup, {Offset} from '../ui/popup';
+import Popup, {Offset} from './popup';
 import LngLat from '../geo/lng_lat';
 import Point from '../util/point';
 import simulate from '../../test/util/simulate_interaction';
