@@ -1,26 +1,31 @@
-import '../../../stub_loader';
-import {test} from '../../../util/test';
-import Map from '../../ui/map';
 import DOM from '../../util/dom';
-import simulate from '../../../util/simulate_interaction';
+import simulate from '../../../test/util/simulate_interaction';
+import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
+import Map, {MapOptions} from '../map';
 
-function createMap(clickTolerance, dragPan) {
+function createMap(clickTolerance?, dragPan?) {
     return new Map({
         container: DOM.create('div', '', window.document.body),
         clickTolerance: clickTolerance || 0,
-        dragPan: dragPan || true
-    });
+        dragPan: dragPan || true,
+    } as any as MapOptions);
 }
+
+beforeEach(() => {
+    setPerformance();
+    setWebGlContext();
+    setMatchMedia();
+});
 
 // MouseEvent.buttons = 1 // left button
 const buttons = 1;
 
-describe('DragPanHandler fires dragstart, drag, and dragend events at appropriate times in response to a mouse-triggered drag', done => {
+test('DragPanHandler fires dragstart, drag, and dragend events at appropriate times in response to a mouse-triggered drag', () => {
     const map = createMap();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     map.on('dragstart', dragstart);
     map.on('drag',      drag);
@@ -28,32 +33,31 @@ describe('DragPanHandler fires dragstart, drag, and dragend events at appropriat
 
     simulate.mousedown(map.getCanvas());
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(0);
+    expect(drag).toHaveBeenCalledTimes(0);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas());
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(1);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    done();
 });
 
-describe('DragPanHandler captures mousemove events during a mouse-triggered drag (receives them even if they occur outside the map)', done => {
+test('DragPanHandler captures mousemove events during a mouse-triggered drag (receives them even if they occur outside the map)', () => {
     const map = createMap();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     map.on('dragstart', dragstart);
     map.on('drag',      drag);
@@ -61,33 +65,32 @@ describe('DragPanHandler captures mousemove events during a mouse-triggered drag
 
     simulate.mousedown(map.getCanvas());
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(0);
+    expect(drag).toHaveBeenCalledTimes(0);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(window.document.body, {buttons, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas());
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(1);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    done();
 });
 
-describe('DragPanHandler fires dragstart, drag, and dragend events at appropriate times in response to a touch-triggered drag', done => {
+test('DragPanHandler fires dragstart, drag, and dragend events at appropriate times in response to a touch-triggered drag', () => {
     const map = createMap();
     const target = map.getCanvas();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     map.on('dragstart', dragstart);
     map.on('drag',      drag);
@@ -95,30 +98,29 @@ describe('DragPanHandler fires dragstart, drag, and dragend events at appropriat
 
     simulate.touchstart(map.getCanvas(), {touches: [{target, clientX: 0, clientY: 0}]});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(0);
+    expect(drag).toHaveBeenCalledTimes(0);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, clientX: 10, clientY: 10}]});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.touchend(map.getCanvas());
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(1);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    done();
 });
 
-describe('DragPanHandler prevents mousemove events from firing during a drag (#1555)', done => {
+test('DragPanHandler prevents mousemove events from firing during a drag (#1555)', () => {
     const map = createMap();
 
-    const mousemove = t.spy();
+    const mousemove = jest.fn();
     map.on('mousemove', mousemove);
 
     simulate.mousedown(map.getCanvasContainer());
@@ -130,16 +132,15 @@ describe('DragPanHandler prevents mousemove events from firing during a drag (#1
     simulate.mouseup(map.getCanvasContainer());
     map._renderTaskQueue.run();
 
-    expect(mousemove.notCalled).toBeTruthy();
+    expect(mousemove).not.toHaveBeenCalled();
 
     map.remove();
-    done();
 });
 
-describe('DragPanHandler ends a mouse-triggered drag if the window blurs', done => {
+test('DragPanHandler ends a mouse-triggered drag if the window blurs', () => {
     const map = createMap();
 
-    const dragend = t.spy();
+    const dragend = jest.fn();
     map.on('dragend', dragend);
 
     simulate.mousedown(map.getCanvas());
@@ -149,17 +150,16 @@ describe('DragPanHandler ends a mouse-triggered drag if the window blurs', done 
     map._renderTaskQueue.run();
 
     simulate.blur(window);
-    expect(dragend.callCount).toBe(1);
+    expect(dragend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    done();
 });
 
-describe('DragPanHandler ends a touch-triggered drag if the window blurs', done => {
+test('DragPanHandler ends a touch-triggered drag if the window blurs', () => {
     const map = createMap();
     const target = map.getCanvas();
 
-    const dragend = t.spy();
+    const dragend = jest.fn();
     map.on('dragend', dragend);
 
     simulate.touchstart(map.getCanvas(), {touches: [{target, clientX: 0, clientY: 0}]});
@@ -169,38 +169,36 @@ describe('DragPanHandler ends a touch-triggered drag if the window blurs', done 
     map._renderTaskQueue.run();
 
     simulate.blur(window);
-    expect(dragend.callCount).toBe(1);
+    expect(dragend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    done();
 });
 
-describe('DragPanHandler requests a new render frame after each mousemove event', done => {
+test('DragPanHandler requests a new render frame after each mousemove event', () => {
     const map = createMap();
-    const requestFrame = t.spy(map.handlers, '_requestFrame');
+    const requestFrame = jest.spyOn(map.handlers, '_requestFrame');
 
     simulate.mousedown(map.getCanvas());
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
-    expect(requestFrame.callCount > 0).toBeTruthy();
+    expect(requestFrame).toHaveBeenCalled();
 
     map._renderTaskQueue.run();
 
     // https://github.com/mapbox/mapbox-gl-js/issues/6063
-    requestFrame.resetHistory();
+    requestFrame.mockReset();
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 20, clientY: 20});
-    expect(requestFrame.callCount).toBe(1);
+    expect(requestFrame).toHaveBeenCalledTimes(1);
 
     map.remove();
-    done();
 });
 
-describe('DragPanHandler can interleave with another handler', done => {
+test('DragPanHandler can interleave with another handler', () => {
     // https://github.com/mapbox/mapbox-gl-js/issues/6106
     const map = createMap();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     map.on('dragstart', dragstart);
     map.on('drag',      drag);
@@ -208,47 +206,46 @@ describe('DragPanHandler can interleave with another handler', done => {
 
     simulate.mousedown(map.getCanvas());
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(0);
+    expect(drag).toHaveBeenCalledTimes(0);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     // simulate a scroll zoom
     simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 20, clientY: 20});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas());
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(1);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    done();
 });
 
 ['ctrl', 'shift'].forEach((modifier) => {
-    test(`DragPanHandler does not begin a drag if the ${modifier} key is down on mousedown`, done => {
+    test(`DragPanHandler does not begin a drag if the ${modifier} key is down on mousedown`, () => {
         const map = createMap();
         expect(map.dragRotate.isEnabled()).toBeTruthy();
 
-        const dragstart = t.spy();
-        const drag      = t.spy();
-        const dragend   = t.spy();
+        const dragstart = jest.fn();
+        const drag      = jest.fn();
+        const dragend   = jest.fn();
 
         map.on('dragstart', dragstart);
         map.on('drag',      drag);
@@ -256,33 +253,32 @@ describe('DragPanHandler can interleave with another handler', done => {
 
         simulate.mousedown(map.getCanvas(), {buttons, [`${modifier}Key`]: true});
         map._renderTaskQueue.run();
-        expect(dragstart.callCount).toBe(0);
-        expect(drag.callCount).toBe(0);
-        expect(dragend.callCount).toBe(0);
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
         simulate.mousemove(map.getCanvas(), {buttons, [`${modifier}Key`]: true, clientX: 10, clientY: 10});
         map._renderTaskQueue.run();
-        expect(dragstart.callCount).toBe(0);
-        expect(drag.callCount).toBe(0);
-        expect(dragend.callCount).toBe(0);
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
         simulate.mouseup(map.getCanvas(), {[`${modifier}Key`]: true});
         map._renderTaskQueue.run();
-        expect(dragstart.callCount).toBe(0);
-        expect(drag.callCount).toBe(0);
-        expect(dragend.callCount).toBe(0);
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
         map.remove();
-        done();
     });
 
-    test(`DragPanHandler still ends a drag if the ${modifier} key is down on mouseup`, done => {
+    test(`DragPanHandler still ends a drag if the ${modifier} key is down on mouseup`, () => {
         const map = createMap();
         expect(map.dragRotate.isEnabled()).toBeTruthy();
 
-        const dragstart = t.spy();
-        const drag      = t.spy();
-        const dragend   = t.spy();
+        const dragstart = jest.fn();
+        const drag      = jest.fn();
+        const dragend   = jest.fn();
 
         map.on('dragstart', dragstart);
         map.on('drag',      drag);
@@ -290,34 +286,33 @@ describe('DragPanHandler can interleave with another handler', done => {
 
         simulate.mousedown(map.getCanvas());
         map._renderTaskQueue.run();
-        expect(dragstart.callCount).toBe(0);
-        expect(drag.callCount).toBe(0);
-        expect(dragend.callCount).toBe(0);
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
         simulate.mouseup(map.getCanvas(), {[`${modifier}Key`]: true});
         map._renderTaskQueue.run();
-        expect(dragstart.callCount).toBe(0);
-        expect(drag.callCount).toBe(0);
-        expect(dragend.callCount).toBe(0);
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
         simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
         map._renderTaskQueue.run();
-        expect(dragstart.callCount).toBe(0);
-        expect(drag.callCount).toBe(0);
-        expect(dragend.callCount).toBe(0);
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
         map.remove();
-        done();
     });
 });
 
-describe('DragPanHandler does not begin a drag on right button mousedown', done => {
+test('DragPanHandler does not begin a drag on right button mousedown', () => {
     const map = createMap();
     map.dragRotate.disable();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     map.on('dragstart', dragstart);
     map.on('drag',      drag);
@@ -325,33 +320,32 @@ describe('DragPanHandler does not begin a drag on right button mousedown', done 
 
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(0);
+    expect(drag).toHaveBeenCalledTimes(0);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(0);
+    expect(drag).toHaveBeenCalledTimes(0);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(0);
+    expect(drag).toHaveBeenCalledTimes(0);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     map.remove();
-    done();
 });
 
-describe('DragPanHandler does not end a drag on right button mouseup', done => {
+test('DragPanHandler does not end a drag on right button mouseup', () => {
     const map = createMap();
     map.dragRotate.disable();
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     map.on('dragstart', dragstart);
     map.on('drag',      drag);
@@ -359,52 +353,51 @@ describe('DragPanHandler does not end a drag on right button mouseup', done => {
 
     simulate.mousedown(map.getCanvas());
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(0);
+    expect(drag).toHaveBeenCalledTimes(0);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mousedown(map.getCanvas(), {buttons: buttons + 2, button: 2});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas(), {buttons, button: 2});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(1);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(1);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons, clientX: 20, clientY: 20});
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas());
     map._renderTaskQueue.run();
-    expect(dragstart.callCount).toBe(1);
-    expect(drag.callCount).toBe(2);
-    expect(dragend.callCount).toBe(1);
+    expect(dragstart).toHaveBeenCalledTimes(1);
+    expect(drag).toHaveBeenCalledTimes(2);
+    expect(dragend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    done();
 });
 
-describe('DragPanHandler does not begin a drag if preventDefault is called on the mousedown event', done => {
+test('DragPanHandler does not begin a drag if preventDefault is called on the mousedown event', () => {
     const map = createMap();
 
     map.on('mousedown', e => e.preventDefault());
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     map.on('dragstart', dragstart);
     map.on('drag',      drag);
@@ -419,23 +412,22 @@ describe('DragPanHandler does not begin a drag if preventDefault is called on th
     simulate.mouseup(map.getCanvas());
     map._renderTaskQueue.run();
 
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(0);
+    expect(drag).toHaveBeenCalledTimes(0);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     map.remove();
-    done();
 });
 
-describe('DragPanHandler does not begin a drag if preventDefault is called on the touchstart event', done => {
+test('DragPanHandler does not begin a drag if preventDefault is called on the touchstart event', () => {
     const map = createMap();
     const target = map.getCanvas();
 
     map.on('touchstart', e => e.preventDefault());
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     map.on('dragstart', dragstart);
     map.on('drag',      drag);
@@ -450,30 +442,27 @@ describe('DragPanHandler does not begin a drag if preventDefault is called on th
     simulate.touchend(map.getCanvas());
     map._renderTaskQueue.run();
 
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(0);
+    expect(drag).toHaveBeenCalledTimes(0);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     map.remove();
-    done();
 });
 
-describe('DragPanHandler does not begin a drag if preventDefault is called on the touchstart event (delegated)', done => {
+test('DragPanHandler does not begin a drag if preventDefault is called on the touchstart event (delegated)', () => {
     const map = createMap();
     const target = map.getCanvas();
 
-    t.stub(map, 'getLayer')
-        .callsFake(() => true);
-    t.stub(map, 'queryRenderedFeatures')
-        .callsFake(() => [{}]);
+    jest.spyOn(map, 'getLayer').mockReturnValue(true as any);
+    jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
 
     map.on('touchstart', 'point', (e) => {
         e.preventDefault();
     });
 
-    const dragstart = t.spy();
-    const drag      = t.spy();
-    const dragend   = t.spy();
+    const dragstart = jest.fn();
+    const drag      = jest.fn();
+    const dragend   = jest.fn();
 
     map.on('dragstart', dragstart);
     map.on('drag',      drag);
@@ -488,10 +477,9 @@ describe('DragPanHandler does not begin a drag if preventDefault is called on th
     simulate.touchend(map.getCanvas());
     map._renderTaskQueue.run();
 
-    expect(dragstart.callCount).toBe(0);
-    expect(drag.callCount).toBe(0);
-    expect(dragend.callCount).toBe(0);
+    expect(dragstart).toHaveBeenCalledTimes(0);
+    expect(drag).toHaveBeenCalledTimes(0);
+    expect(dragend).toHaveBeenCalledTimes(0);
 
     map.remove();
-    done();
 });
