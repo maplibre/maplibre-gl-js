@@ -12,6 +12,7 @@ import type Tile from './tile';
 import type Actor from '../util/actor';
 import type {Callback} from '../types/callback';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types';
+import type {MapSourceDataType} from '../ui/events';
 
 /**
  * A source containing GeoJSON.
@@ -235,7 +236,7 @@ class GeoJSONSource extends Evented implements Source {
      * handles loading the geojson data and preparing to serve it up as tiles,
      * using geojson-vt or supercluster as appropriate.
      */
-    _updateWorkerData(sourceDataType: string) {
+    _updateWorkerData(sourceDataType: MapSourceDataType) {
         const options = extend({}, this.workerOptions);
         const data = this._data;
         if (typeof data === 'string') {
@@ -277,7 +278,7 @@ class GeoJSONSource extends Evented implements Source {
 
             const data: any = {dataType: 'source', sourceDataType};
             if (this._collectResourceTiming && resourceTiming && resourceTiming.length > 0)
-                data.resourceTiming = resourceTiming;
+                extend(data, {resourceTiming});
 
             this.fire(new Event('data', data));
         });
