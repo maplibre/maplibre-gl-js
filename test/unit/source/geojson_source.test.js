@@ -117,6 +117,24 @@ test('GeoJSONSource#setData', (t) => {
         source.setData({});
     });
 
+    t.test('marks source as not loaded before firing "dataloading" event', (t) => {
+        const source = createSource();
+        source.once('dataloading', () => {
+            t.notOk(source.loaded());
+            t.end();
+        });
+        source.setData({});
+    });
+
+    t.test('marks source as loaded before firing "data" event', (t) => {
+        const source = createSource();
+        source.once('data', () => {
+            t.ok(source.loaded());
+            t.end();
+        });
+        source.setData({});
+    });
+
     t.end();
 });
 
