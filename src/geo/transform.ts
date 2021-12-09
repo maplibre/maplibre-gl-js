@@ -42,6 +42,7 @@ class Transform {
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
     terrainSourceCache: TerrainSourceCache;
+    freezeElevation: boolean;
     _fov: number;
     _pitch: number;
     _zoom: number;
@@ -61,6 +62,7 @@ class Transform {
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
         this.maxValidLatitude = 85.051129; // constant
+        this.freezeElevation = false;
 
         this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
         this._minZoom = minZoom || 0;
@@ -210,13 +212,13 @@ class Transform {
         if (center.lat === this._center.lat && center.lng === this._center.lng) return;
         this._unmodified = false;
         this._center = center;
-        this._elevation = this.getElevation(center);
         this._constrain();
         this._calcMatrices();
     }
 
     get elevation(): number { return this._elevation; }
     set elevation(elevation: number) {
+        if (this.freezeElevation) return;
         if (elevation === this._elevation) return;
         this._unmodified = false;
         this._elevation = elevation;
@@ -474,7 +476,7 @@ class Transform {
     get point(): Point { return this.project(this.center); }
 
     updateElevation() {
-       this.elevation = this.getElevation(this._center);
+        this.elevation = this.getElevation(this._center);
     }
 
     getElevation(lnglat: LngLat) {
@@ -485,6 +487,30 @@ class Transform {
         const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
         const tileID = new OverscaledTileID(this.tileZoom, 0, this.tileZoom, tileX, tileY);
         return this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize, tileSize);
+    }
+
+    // this method only works in combination with freezeElevation, because in this case
+    // this.elevation holds the old elevation value.
+    // FIMXE! currently this logic only works for camera pitch = 0
+    recalculateZoom() {
+       const elevation = this.getElevation(this.center);
+       const deltaElevation = + this.elevation - elevation;
+       if (!deltaElevation) return;
+
+       const mercatorZPerMeter = mercatorZfromAltitude(1, this.center.lat);
+       // to calculate the elevation in meters for the current zoomlevel the formular from
+       // https://github.com/mapbox/mapbox-gl-js/pull/8830/files is used
+       const zoomElevation = this.cameraToCenterDistance / this.worldSize / mercatorZPerMeter;
+       // calculate the current total height of the camera, e.g. zoom-elevation + terrain-elevation in meters
+       //   elevation1 = zoomElevation + this.elevation
+       // to get the same total camera height for a different terrain-elevation do
+       //   elevation2 = cameraToCenterDistance / (2^zoom * tilesize) / mercatorZPerMeter
+       // now do
+       //   elevation1 = elevation2
+       // then solve the formular for zoom
+       const zoom = this.scaleZoom(this.cameraToCenterDistance / (zoomElevation + deltaElevation) / mercatorZPerMeter / this.tileSize);
+       this._elevation = elevation;
+       this.zoom = zoom;
     }
 
     setLocationAtPoint(lnglat: LngLat, point: Point) {
