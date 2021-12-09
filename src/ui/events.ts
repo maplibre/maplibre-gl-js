@@ -12,6 +12,8 @@ export type MapLayerMouseEvent = MapMouseEvent & { features?: GeoJSON.Feature[] 
 
 export type MapLayerTouchEvent = MapTouchEvent & { features?: GeoJSON.Feature[] };
 
+export type MapSourceDataType = 'content' | 'metadata';
+
 export type MapLayerEventType = {
      click: MapLayerMouseEvent;
      dblclick: MapLayerMouseEvent;
@@ -44,7 +46,7 @@ export interface MapSourceDataEvent extends MapLibreEvent {
      isSourceLoaded: boolean;
      source: SourceSpecification;
      sourceId: string;
-     sourceDataType: 'metadata' | 'content';
+     sourceDataType: MapSourceDataType;
      tile: any;
  }
 /**
