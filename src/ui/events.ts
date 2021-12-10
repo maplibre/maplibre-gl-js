@@ -315,6 +315,11 @@ export type MapContextEvent = {
   originalEvent: WebGLContextEvent;
 };
 
+export interface MapStyleImageMissingEvent extends MapLibreEvent {
+     type: 'styleimagemissing';
+     id: string;
+}
+
 /**
 * MapEventType - a mapping between the event name and the event value
 */
@@ -337,6 +342,7 @@ export type MapEventType = {
      styledataloading: MapStyleDataEvent;
      sourcedata: MapSourceDataEvent;
      styledata: MapStyleDataEvent;
+     styleimagemissing: MapStyleImageMissingEvent;
 
      boxzoomcancel: MapLibreZoomEvent;
      boxzoomstart: MapLibreZoomEvent;
