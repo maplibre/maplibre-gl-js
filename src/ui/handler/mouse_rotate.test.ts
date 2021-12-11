@@ -16,19 +16,19 @@ test('MouseRotateHandler#isActive', (t) => {
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
-    t.equal(mouseRotate.isActive(), false);
+    expect(mouseRotate.isActive()).toBe(false);
 
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
     map._renderTaskQueue.run();
-    t.equal(mouseRotate.isActive(), false);
+    expect(mouseRotate.isActive()).toBe(false);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    t.equal(mouseRotate.isActive(), true);
+    expect(mouseRotate.isActive()).toBe(true);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
-    t.equal(mouseRotate.isActive(), false);
+    expect(mouseRotate.isActive()).toBe(false);
 
     map.remove();
     t.end();
@@ -41,18 +41,18 @@ test('MouseRotateHandler#isActive #4622 regression test', (t) => {
     // Prevent inertial rotation.
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
     map._renderTaskQueue.run();
-    t.equal(mouseRotate.isActive(), false);
+    expect(mouseRotate.isActive()).toBe(false);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    t.equal(mouseRotate.isActive(), true);
+    expect(mouseRotate.isActive()).toBe(true);
 
     // Some browsers don't fire mouseup when it happens outside the window.
     // Make the handler in active when it encounters a mousemove without the button pressed.
 
     simulate.mousemove(map.getCanvas(), {buttons: 0, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    t.equal(mouseRotate.isActive(), false);
+    expect(mouseRotate.isActive()).toBe(false);
 
     map.remove();
     t.end();
