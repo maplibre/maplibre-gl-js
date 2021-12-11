@@ -1,16 +1,16 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import {extend} from '../../../../rollup/build/tsc/src/util/util';
-import Map from '../../../../rollup/build/tsc/src/ui/map';
-import DOM from '../../../../rollup/build/tsc/src/util/dom';
+import {extend} from '../../util/util';
+import Map from '../../ui/map';
+import DOM from '../../util/dom';
 import simulate from '../../../util/simulate_interaction';
-import browser from '../../../../rollup/build/tsc/src/util/browser';
+import browser from '../../util/browser';
 
 function createMap(options) {
     return new Map(extend({container: DOM.create('div', '', window.document.body)}, options));
 }
 
-test('DragRotateHandler#isActive', (t) => {
+describe('DragRotateHandler#isActive', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
@@ -31,18 +31,17 @@ test('DragRotateHandler#isActive', (t) => {
     expect(map.dragRotate.isActive()).toBe(false);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a right-click drag', (t) => {
+describe('DragRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a right-click drag', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -50,33 +49,32 @@ test('DragRotateHandler fires rotatestart, rotate, and rotateend events at appro
 
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(1);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler stops firing events after mouseup', (t) => {
+describe('DragRotateHandler stops firing events after mouseup', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const spy = t.spy();
+    const spy = jest.fn();
     map.on('rotatestart', spy);
     map.on('rotate',      spy);
     map.on('rotateend',   spy);
@@ -86,26 +84,25 @@ test('DragRotateHandler stops firing events after mouseup', (t) => {
     map._renderTaskQueue.run();
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
-    expect(spy.callCount).toBe(3);
+    expect(spy).toHaveBeenCalledTimes(3);
 
     spy.resetHistory();
     simulate.mousemove(map.getCanvas(), {buttons: 0, clientX: 20, clientY: 20});
     map._renderTaskQueue.run();
-    expect(spy.callCount).toBe(0);
+    expect(spy).toHaveBeenCalledTimes(0);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a control-left-click drag', (t) => {
+describe('DragRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a control-left-click drag', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -113,35 +110,34 @@ test('DragRotateHandler fires rotatestart, rotate, and rotateend events at appro
 
     simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, ctrlKey: true});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 1,            ctrlKey: true, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 0, ctrlKey: true});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(1);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler pitches in response to a right-click drag by default', (t) => {
+describe('DragRotateHandler pitches in response to a right-click drag by default', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const pitchstart = t.spy();
-    const pitch      = t.spy();
-    const pitchend   = t.spy();
+    const pitchstart = jest.fn();
+    const pitch      = jest.fn();
+    const pitchend   = jest.fn();
 
     map.on('pitchstart', pitchstart);
     map.on('pitch',      pitch);
@@ -150,26 +146,25 @@ test('DragRotateHandler pitches in response to a right-click drag by default', (
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: -10});
     map._renderTaskQueue.run();
-    expect(pitchstart.callCount).toBe(1);
-    expect(pitch.callCount).toBe(1);
+    expect(pitchstart).toHaveBeenCalledTimes(1);
+    expect(pitch).toHaveBeenCalledTimes(1);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
-    expect(pitchend.callCount).toBe(1);
+    expect(pitchend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler doesn\'t fire pitch event when rotating only', (t) => {
+describe('DragRotateHandler doesn\'t fire pitch event when rotating only', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const pitchstart = t.spy();
-    const pitch      = t.spy();
-    const pitchend   = t.spy();
+    const pitchstart = jest.fn();
+    const pitch      = jest.fn();
+    const pitchend   = jest.fn();
 
     map.on('pitchstart', pitchstart);
     map.on('pitch',      pitch);
@@ -178,25 +173,24 @@ test('DragRotateHandler doesn\'t fire pitch event when rotating only', (t) => {
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 0, clientY: 10});
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(pitchstart.callCount).toBe(0);
-    expect(pitch.callCount).toBe(0);
+    expect(pitchstart).toHaveBeenCalledTimes(0);
+    expect(pitch).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
-    expect(pitchend.callCount).toBe(0);
+    expect(pitchend).toHaveBeenCalledTimes(0);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler pitches in response to a control-left-click drag', (t) => {
+describe('DragRotateHandler pitches in response to a control-left-click drag', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const pitchstart = t.spy();
-    const pitch      = t.spy();
-    const pitchend   = t.spy();
+    const pitchstart = jest.fn();
+    const pitch      = jest.fn();
+    const pitchend   = jest.fn();
 
     map.on('pitchstart', pitchstart);
     map.on('pitch',      pitch);
@@ -205,21 +199,20 @@ test('DragRotateHandler pitches in response to a control-left-click drag', (t) =
     simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, ctrlKey: true});
     simulate.mousemove(map.getCanvas(), {buttons: 1,            ctrlKey: true, clientX: 10, clientY: -10});
     map._renderTaskQueue.run();
-    expect(pitchstart.callCount).toBe(1);
-    expect(pitch.callCount).toBe(1);
+    expect(pitchstart).toHaveBeenCalledTimes(1);
+    expect(pitch).toHaveBeenCalledTimes(1);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 0, ctrlKey: true});
     map._renderTaskQueue.run();
-    expect(pitchend.callCount).toBe(1);
+    expect(pitchend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler does not pitch if given pitchWithRotate: false', (t) => {
+describe('DragRotateHandler does not pitch if given pitchWithRotate: false', () => {
     const map = createMap({pitchWithRotate: false});
 
-    const spy = t.spy();
+    const spy = jest.fn();
 
     map.on('pitchstart',  spy);
     map.on('pitch',       spy);
@@ -235,18 +228,17 @@ test('DragRotateHandler does not pitch if given pitchWithRotate: false', (t) => 
     map._renderTaskQueue.run();
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 0, ctrlKey: true});
 
-    expect(spy.notCalled).toBeTruthy();
+    expect(spy).not.toHaveBeenCalled();
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler does not rotate or pitch when disabled', (t) => {
+describe('DragRotateHandler does not rotate or pitch when disabled', () => {
     const map = createMap();
 
     map.dragRotate.disable();
 
-    const spy = t.spy();
+    const spy = jest.fn();
 
     map.on('rotatestart', spy);
     map.on('rotate',      spy);
@@ -260,13 +252,12 @@ test('DragRotateHandler does not rotate or pitch when disabled', (t) => {
     map._renderTaskQueue.run();
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
 
-    expect(spy.notCalled).toBeTruthy();
+    expect(spy).not.toHaveBeenCalled();
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler ensures that map.isMoving() returns true during drag', (t) => {
+describe('DragRotateHandler ensures that map.isMoving() returns true during drag', () => {
     // The bearingSnap option here ensures that the moveend event is sent synchronously.
     const map = createMap({bearingSnap: 0});
 
@@ -280,19 +271,18 @@ test('DragRotateHandler ensures that map.isMoving() returns true during drag', (
     expect(!map.isMoving()).toBeTruthy();
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler fires move events', (t) => {
+describe('DragRotateHandler fires move events', () => {
     // The bearingSnap option here ensures that the moveend event is sent synchronously.
     const map = createMap({bearingSnap: 0});
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const movestart = t.spy();
-    const move      = t.spy();
-    const moveend   = t.spy();
+    const movestart = jest.fn();
+    const move      = jest.fn();
+    const moveend   = jest.fn();
 
     map.on('movestart', movestart);
     map.on('move',      move);
@@ -301,28 +291,27 @@ test('DragRotateHandler fires move events', (t) => {
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(movestart.callCount).toBe(1);
-    expect(move.callCount).toBe(1);
+    expect(movestart).toHaveBeenCalledTimes(1);
+    expect(move).toHaveBeenCalledTimes(1);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
-    expect(moveend.callCount).toBe(1);
+    expect(moveend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler doesn\'t fire rotate event when pitching only', (t) => {
+describe('DragRotateHandler doesn\'t fire rotate event when pitching only', () => {
     // The bearingSnap option here ensures that the moveend event is sent synchronously.
     const map = createMap({bearingSnap: 0});
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const pitch       = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const pitch       = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',    rotate);
@@ -332,41 +321,40 @@ test('DragRotateHandler doesn\'t fire rotate event when pitching only', (t) => {
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 0, clientY: 0});
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 0, clientY: -10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(pitch.callCount).toBe(1);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(pitch).toHaveBeenCalledTimes(1);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
-    expect(rotateend.callCount).toBe(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler includes originalEvent property in triggered events', (t) => {
+describe('DragRotateHandler includes originalEvent property in triggered events', () => {
     // The bearingSnap option here ensures that the moveend event is sent synchronously.
     const map = createMap({bearingSnap: 0});
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
     map.on('rotateend',   rotateend);
 
-    const pitchstart = t.spy();
-    const pitch      = t.spy();
-    const pitchend   = t.spy();
+    const pitchstart = jest.fn();
+    const pitch      = jest.fn();
+    const pitchend   = jest.fn();
     map.on('pitchstart', pitchstart);
     map.on('pitch',      pitch);
     map.on('pitchend',   pitchend);
 
-    const movestart = t.spy();
-    const move      = t.spy();
-    const moveend   = t.spy();
+    const movestart = jest.fn();
+    const move      = jest.fn();
+    const moveend   = jest.fn();
     map.on('movestart', movestart);
     map.on('move',      move);
     map.on('moveend',   moveend);
@@ -390,18 +378,17 @@ test('DragRotateHandler includes originalEvent property in triggered events', (t
     expect(moveend.firstCall.args[0].originalEvent.type).toBeTruthy();
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler responds to events on the canvas container (#1301)', (t) => {
+describe('DragRotateHandler responds to events on the canvas container (#1301)', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -410,24 +397,23 @@ test('DragRotateHandler responds to events on the canvas container (#1301)', (t)
     simulate.mousedown(map.getCanvasContainer(), {buttons: 2, button: 2});
     simulate.mousemove(map.getCanvasContainer(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
 
     simulate.mouseup(map.getCanvasContainer(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
-    expect(rotateend.callCount).toBe(1);
+    expect(rotateend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler prevents mousemove events from firing during a drag (#1555)', (t) => {
+describe('DragRotateHandler prevents mousemove events from firing during a drag (#1555)', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const mousemove = t.spy();
+    const mousemove = jest.fn();
     map.on('mousemove', mousemove);
 
     simulate.mousedown(map.getCanvasContainer(), {buttons: 2, button: 2});
@@ -435,21 +421,20 @@ test('DragRotateHandler prevents mousemove events from firing during a drag (#15
     map._renderTaskQueue.run();
     simulate.mouseup(map.getCanvasContainer(),   {buttons: 0, button: 2});
 
-    expect(mousemove.notCalled).toBeTruthy();
+    expect(mousemove).not.toHaveBeenCalled();
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler ends a control-left-click drag on mouseup even when the control key was previously released (#1888)', (t) => {
+describe('DragRotateHandler ends a control-left-click drag on mouseup even when the control key was previously released (#1888)', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -458,26 +443,25 @@ test('DragRotateHandler ends a control-left-click drag on mouseup even when the 
     simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, ctrlKey: true});
     simulate.mousemove(map.getCanvas(), {buttons: 1,            ctrlKey: true, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 0, ctrlKey: false});
     map._renderTaskQueue.run();
-    expect(rotateend.callCount).toBe(1);
+    expect(rotateend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler ends rotation if the window blurs (#3389)', (t) => {
+describe('DragRotateHandler ends rotation if the window blurs (#3389)', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -486,19 +470,18 @@ test('DragRotateHandler ends rotation if the window blurs (#3389)', (t) => {
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
 
     simulate.blur(window);
-    expect(rotateend.callCount).toBe(1);
+    expect(rotateend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler requests a new render frame after each mousemove event', (t) => {
+describe('DragRotateHandler requests a new render frame after each mousemove event', () => {
     const map = createMap();
-    const requestRenderFrame = t.spy(map.handlers, '_requestFrame');
+    const requestRenderFrame = jest.spyOn(map.handlers, '_requestFrame');
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
@@ -512,22 +495,21 @@ test('DragRotateHandler requests a new render frame after each mousemove event',
     // https://github.com/mapbox/mapbox-gl-js/issues/6063
     requestRenderFrame.resetHistory();
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 20, clientY: 20});
-    expect(requestRenderFrame.callCount).toBe(1);
+    expect(requestRenderFrame).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler can interleave with another handler', (t) => {
+describe('DragRotateHandler can interleave with another handler', () => {
     // https://github.com/mapbox/mapbox-gl-js/issues/6106
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -535,47 +517,46 @@ test('DragRotateHandler can interleave with another handler', (t) => {
 
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     // simulates another handler taking over
     // simulate a scroll zoom
     simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 20, clientY: 20});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(2);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(2);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
     // Ignore second rotatestart triggered by inertia
-    expect(rotate.callCount).toBe(2);
-    expect(rotateend.callCount).toBe(1);
+    expect(rotate).toHaveBeenCalledTimes(2);
+    expect(rotateend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler does not begin a drag on left-button mousedown without the control key', (t) => {
+describe('DragRotateHandler does not begin a drag on left-button mousedown without the control key', () => {
     const map = createMap();
     map.dragPan.disable();
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -583,36 +564,35 @@ test('DragRotateHandler does not begin a drag on left-button mousedown without t
 
     simulate.mousedown(map.getCanvas());
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas());
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler does not end a right-button drag on left-button mouseup', (t) => {
+describe('DragRotateHandler does not end a right-button drag on left-button mouseup', () => {
     const map = createMap();
     map.dragPan.disable();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -620,54 +600,53 @@ test('DragRotateHandler does not end a right-button drag on left-button mouseup'
 
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousedown(map.getCanvas(), {buttons: 3, button: 0});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 2, button: 0});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 20, clientY: 20});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(2);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(2);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
     // Ignore second rotatestart triggered by inertia
-    expect(rotate.callCount).toBe(2);
-    expect(rotateend.callCount).toBe(1);
+    expect(rotate).toHaveBeenCalledTimes(2);
+    expect(rotateend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler does not end a control-left-button drag on right-button mouseup', (t) => {
+describe('DragRotateHandler does not end a control-left-button drag on right-button mouseup', () => {
     const map = createMap();
     map.dragPan.disable();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -675,52 +654,51 @@ test('DragRotateHandler does not end a control-left-button drag on right-button 
 
     simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, ctrlKey: true});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 1,            ctrlKey: true, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousedown(map.getCanvas(), {buttons: 3, button: 2, ctrlKey: true});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 1, button: 2, ctrlKey: true});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 1,            ctrlKey: true, clientX: 20, clientY: 20});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(2);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(2);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 0, ctrlKey: true});
     map._renderTaskQueue.run();
     // Ignore second rotatestart triggered by inertia
-    expect(rotate.callCount).toBe(2);
-    expect(rotateend.callCount).toBe(1);
+    expect(rotate).toHaveBeenCalledTimes(2);
+    expect(rotateend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler does not begin a drag if preventDefault is called on the mousedown event', (t) => {
+describe('DragRotateHandler does not begin a drag if preventDefault is called on the mousedown event', () => {
     const map = createMap();
 
     map.on('mousedown', e => e.preventDefault());
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -735,23 +713,22 @@ test('DragRotateHandler does not begin a drag if preventDefault is called on the
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
 
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     map.remove();
-    t.end();
 });
 
-test(`DragRotateHandler can be disabled after mousedown (#2419)`, (t) => {
+describe('DragRotateHandler can be disabled after mousedown (#2419)', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -765,31 +742,30 @@ test(`DragRotateHandler can be disabled after mousedown (#2419)`, (t) => {
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
 
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
     expect(map.isMoving()).toBe(false);
     expect(map.dragRotate.isEnabled()).toBe(false);
 
     simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2});
     map._renderTaskQueue.run();
 
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
     expect(map.isMoving()).toBe(false);
     expect(map.dragRotate.isEnabled()).toBe(false);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler does not begin rotation on spurious mousemove events', (t) => {
+describe('DragRotateHandler does not begin rotation on spurious mousemove events', () => {
     const map = createMap();
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -797,38 +773,37 @@ test('DragRotateHandler does not begin rotation on spurious mousemove events', (
 
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     map.remove();
-    t.end();
 });
 
-test('DragRotateHandler does not begin a mouse drag if moved less than click tolerance', (t) => {
+describe('DragRotateHandler does not begin a mouse drag if moved less than click tolerance', () => {
     const map = createMap({clickTolerance: 4});
 
     // Prevent inertial rotation.
     t.stub(browser, 'now').returns(0);
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
-    const pitchstart  = t.spy();
-    const pitch       = t.spy();
-    const pitchend    = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
+    const pitchstart  = jest.fn();
+    const pitch       = jest.fn();
+    const pitchend    = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -839,40 +814,39 @@ test('DragRotateHandler does not begin a mouse drag if moved less than click tol
 
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 10, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
-    expect(pitchstart.callCount).toBe(0);
-    expect(pitch.callCount).toBe(0);
-    expect(pitchend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
+    expect(pitchstart).toHaveBeenCalledTimes(0);
+    expect(pitch).toHaveBeenCalledTimes(0);
+    expect(pitchend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 13, clientY: 10});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
-    expect(pitchstart.callCount).toBe(0);
-    expect(pitch.callCount).toBe(0);
-    expect(pitchend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
+    expect(pitchstart).toHaveBeenCalledTimes(0);
+    expect(pitch).toHaveBeenCalledTimes(0);
+    expect(pitchend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 13});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
-    expect(pitchstart.callCount).toBe(0);
-    expect(pitch.callCount).toBe(0);
-    expect(pitchend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
+    expect(pitchstart).toHaveBeenCalledTimes(0);
+    expect(pitch).toHaveBeenCalledTimes(0);
+    expect(pitchend).toHaveBeenCalledTimes(0);
 
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 14, clientY: 10 - 4});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
-    expect(pitchstart.callCount).toBe(1);
-    expect(pitch.callCount).toBe(1);
-    expect(pitchend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
+    expect(pitchstart).toHaveBeenCalledTimes(1);
+    expect(pitch).toHaveBeenCalledTimes(1);
+    expect(pitchend).toHaveBeenCalledTimes(0);
 
     map.remove();
-    t.end();
 });
