@@ -1,16 +1,16 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import {extend} from '../../../../rollup/build/tsc/src/util/util';
-import Map from '../../../../rollup/build/tsc/src/ui/map';
-import DOM from '../../../../rollup/build/tsc/src/util/dom';
+import {extend} from '../../util/util';
+import Map from '../../ui/map';
+import DOM from '../../util/dom';
 import simulate from '../../../util/simulate_interaction';
-import browser from '../../../../rollup/build/tsc/src/util/browser';
+import browser from '../../util/browser';
 
 function createMap(options) {
     return new Map(extend({container: DOM.create('div', '', window.document.body)}, options));
 }
 
-test('MouseRotateHandler#isActive', (t) => {
+describe('MouseRotateHandler#isActive', () => {
     const map = createMap();
     const mouseRotate = map.handlers._handlersById.mouseRotate;
 
@@ -31,10 +31,9 @@ test('MouseRotateHandler#isActive', (t) => {
     expect(mouseRotate.isActive()).toBe(false);
 
     map.remove();
-    t.end();
 });
 
-test('MouseRotateHandler#isActive #4622 regression test', (t) => {
+describe('MouseRotateHandler#isActive #4622 regression test', () => {
     const map = createMap();
     const mouseRotate = map.handlers._handlersById.mouseRotate;
 
@@ -55,5 +54,4 @@ test('MouseRotateHandler#isActive #4622 regression test', (t) => {
     expect(mouseRotate.isActive()).toBe(false);
 
     map.remove();
-    t.end();
 });
