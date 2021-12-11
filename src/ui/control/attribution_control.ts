@@ -48,36 +48,19 @@ class AttributionControl implements IControl {
     }
 
     onAdd(map: Map) {
-        const compact = this.options && this.options.compact;
-
         this._map = map;
         this._container = DOM.create('details', 'maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib');
         this._compactButton = DOM.create('summary', 'maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button', this._container);
-
-        if (compact !== false) {
-            this._compactButton.addEventListener('click', this._toggleAttribution);
-        }
-
+        this._compactButton.addEventListener('click', this._toggleAttribution);
         this._setElementTitle(this._compactButton, 'ToggleAttribution');
         this._innerContainer = DOM.create('div', 'maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner', this._container);
-
-        if (compact) {
-            this._container.classList.add('maplibregl-compact', 'mapboxgl-compact');
-        }
-
-        if (!compact) {
-            this._container.setAttribute('open', '');
-        }
-
+        
+        this._updateCompact();
         this._updateAttributions();
 
         this._map.on('styledata', this._updateData);
         this._map.on('sourcedata', this._updateData);
-
-        if (compact === undefined) {
-            this._map.on('resize', this._updateCompact);
-            this._updateCompact();
-        }
+        this._map.on('resize', this._updateCompact);
 
         return this._container;
     }
