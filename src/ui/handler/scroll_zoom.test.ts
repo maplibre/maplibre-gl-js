@@ -109,7 +109,7 @@ test('ScrollZoomHandler', (t) => {
         now += 400;
         map._renderTaskQueue.run();
 
-        t.equal(map.getZoom() - startZoom, 0.0);
+        expect(map.getZoom() - startZoom).toBe(0.0);
 
         t.end();
     });
@@ -143,7 +143,7 @@ test('ScrollZoomHandler', (t) => {
         now += 400;
         map._renderTaskQueue.run();
 
-        t.equal(map.getZoom(), 0);
+        expect(map.getZoom()).toBe(0);
 
         map.remove();
         t.end();
@@ -187,8 +187,8 @@ test('ScrollZoomHandler', (t) => {
 
         map._renderTaskQueue.run();
 
-        t.equal(startCount, 1);
-        t.equal(endCount, 1);
+        expect(startCount).toBe(1);
+        expect(endCount).toBe(1);
 
         clock.restore();
 
@@ -232,8 +232,8 @@ test('ScrollZoomHandler', (t) => {
         clock.tick(200);
         map._renderTaskQueue.run();
 
-        t.equal(startCount, 1);
-        t.equal(endCount, 1);
+        expect(startCount).toBe(1);
+        expect(endCount).toBe(1);
 
         clock.restore();
 
