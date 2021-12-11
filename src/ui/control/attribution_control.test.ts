@@ -10,27 +10,27 @@ function createMap() {
             version: 8,
             sources: {},
             layers: [],
-            owner: 'mapbox',
-            id: 'streets-v10',
+            owner: 'mapblibre',
+            id: 'demotiles',
         },
         hash: true
     }, undefined);
 }
 
+let map;
+
+beforeEach(() => {
+    setWebGlContext();
+    setPerformance();
+    setMatchMedia();
+    map = createMap();
+});
+
+afterEach(() => {
+    map.remove();
+});
+
 describe('AttributionControl', () => {
-    let map;
-
-    beforeEach(() => {
-        setWebGlContext();
-        setPerformance();
-        setMatchMedia();
-        map = createMap();
-    });
-
-    afterEach(() => {
-        map.remove();
-    });
-
     test('appears in bottom-right by default', () => {
         map.addControl(new AttributionControl());
 
@@ -264,13 +264,17 @@ describe('AttributionControl', () => {
         });
     });
 
-    test('details is set correct for compact view after map load. In particular, it should NOT contain the attribute open="".', () => {
-        const attributionControl = new AttributionControl({
-            compact: true
-        });
-        map.addControl(attributionControl);
+});
 
-        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+describe('AttributionControl Snapshot Tests', () => {
+    describe('Details is set correct for compact view', () => {
+        test('It should NOT contain the attribute open="" on first load.', () => {
+            const attributionControl = new AttributionControl({
+                compact: true
+            });
+            map.addControl(attributionControl);
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
     class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty"
@@ -286,19 +290,19 @@ NodeList [
   </details>,
 ]
 `);
-    });
-
-    test('details is set correct for compact view after click on summary. In particular, it SHOULD contain the attribute open="".', () => {
-        const attributionControl = new AttributionControl({
-            compact: true
         });
-        map.addControl(attributionControl);
-        const container = map.getContainer();
-        const toggle = container.querySelector('.maplibregl-ctrl-attrib-button');
 
-        simulate.click(toggle);
+        test('It SHOULD contain the attribute open="" after click on summary.', () => {
+            const attributionControl = new AttributionControl({
+                compact: true
+            });
+            map.addControl(attributionControl);
+            const container = map.getContainer();
+            const toggle = container.querySelector('.maplibregl-ctrl-attrib-button');
 
-        expect(container.querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+            simulate.click(toggle);
+
+            expect(container.querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
     class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact-show mapboxgl-compact-show"
@@ -315,20 +319,20 @@ NodeList [
   </details>,
 ]
 `);
-    });
-
-    test('details is set correct for compact view after two clicks on summary. In particular, it should NOT contain the attribute open="".', () => {
-        const attributionControl = new AttributionControl({
-            compact: true
         });
-        map.addControl(attributionControl);
-        const container = map.getContainer();
-        const toggle = container.querySelector('.maplibregl-ctrl-attrib-button');
 
-        simulate.click(toggle);
-        simulate.click(toggle);
+        test('It should NOT contain the attribute open="" after two clicks on summary.', () => {
+            const attributionControl = new AttributionControl({
+                compact: true
+            });
+            map.addControl(attributionControl);
+            const container = map.getContainer();
+            const toggle = container.querySelector('.maplibregl-ctrl-attrib-button');
 
-        expect(container.querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+            simulate.click(toggle);
+            simulate.click(toggle);
+
+            expect(container.querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
     class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty"
@@ -344,17 +348,44 @@ NodeList [
   </details>,
 ]
 `);
+        });
     });
 
-    test('details is set correct for default view. In particular, it SHOULD contain the attribute open="".', () => {
-        const attributionControl = new AttributionControl({
-        });
-        map.addControl(attributionControl);
+    describe('Details is set correct for default view (compact === undefined)', () => {
+        test('It should NOT contain the attribute open="" if offsetWidth <= 640.', () => {
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
+            const attributionControl = new AttributionControl({
+            });
+            map.addControl(attributionControl);
 
-        expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
     class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+        });
+
+        test('It SHOULD contain the attribute open="" if offsetWidth > 640.', () => {
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 641, configurable: true});
+            const attributionControl = new AttributionControl({
+            });
+            map.addControl(attributionControl);
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty"
     open=""
   >
     <summary
@@ -368,5 +399,393 @@ NodeList [
   </details>,
 ]
 `);
+        });
+
+        test('The attribute open="" SHOULD change on resize from size > 640 to <= 640 and and vice versa.', () => {
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
+            const attributionControl = new AttributionControl({
+            });
+            map.addControl(attributionControl);
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 641, configurable: true});
+            map.resize();
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
+            map.resize();
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+        });
+
+        test('The attribute open="" should NOT change on resize from > 640 to another > 640.', () => {
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 641, configurable: true});
+            const attributionControl = new AttributionControl({
+            });
+            map.addControl(attributionControl);
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 650, configurable: true});
+            map.resize();
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 641, configurable: true});
+            map.resize();
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+        });
+
+        test('The attribute open="" should NOT change on resize from <= 640 to another <= 640 if it is closed.', () => {
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
+            const attributionControl = new AttributionControl({
+            });
+            map.addControl(attributionControl);
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 630, configurable: true});
+            map.resize();
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
+            map.resize();
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+        });
+
+        test('The attribute open="" should NOT change on resize from <= 640 to another <= 640 if it is open.', () => {
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
+            const attributionControl = new AttributionControl({
+            });
+            map.addControl(attributionControl);
+            const toggle = map.getContainer().querySelector('.maplibregl-ctrl-attrib-button');
+            simulate.click(toggle);
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact maplibregl-compact-show mapboxgl-compact-show"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 630, configurable: true});
+            map.resize();
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact maplibregl-compact-show mapboxgl-compact-show"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
+            map.resize();
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact maplibregl-compact-show mapboxgl-compact-show"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+        });
+    });
+
+    describe('Details is set correct for default view (compact === false)', () => {
+        test('It SHOULD contain the attribute open="" if offsetWidth <= 640.', () => {
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
+            const attributionControl = new AttributionControl({
+                compact: false
+            });
+            map.addControl(attributionControl);
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+        });
+
+        test('It SHOULD contain the attribute open="" if offsetWidth > 640.', () => {
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 641, configurable: true});
+            const attributionControl = new AttributionControl({
+                compact: false
+            });
+            map.addControl(attributionControl);
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+        });
+
+        test('The attribute open="" should NOT change on resize.', () => {
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
+            const attributionControl = new AttributionControl({
+                compact: false
+            });
+            map.addControl(attributionControl);
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 641, configurable: true});
+            map.resize();
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
+            map.resize();
+
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
+NodeList [
+  <details
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty"
+    open=""
+  >
+    <summary
+      aria-label="Toggle attribution"
+      class="maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button"
+      title="Toggle attribution"
+    />
+    <div
+      class="maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner"
+    />
+  </details>,
+]
+`);
+        });
     });
 });
