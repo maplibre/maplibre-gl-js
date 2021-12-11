@@ -15,48 +15,50 @@ beforeEach(() => {
     setMatchMedia();
 });
 
-test('MouseRotateHandler#isActive', () => {
-    const map = createMap();
-    const mouseRotate = map.handlers._handlersById.mouseRotate;
+describe('mouse rotate', () => {
+    test('MouseRotateHandler#isActive', () => {
+        const map = createMap();
+        const mouseRotate = map.handlers._handlersById.mouseRotate;
 
-    // Prevent inertial rotation.
-    jest.spyOn(browser, 'now').mockReturnValue(0);
-    expect(mouseRotate.isActive()).toBe(false);
+        // Prevent inertial rotation.
+        jest.spyOn(browser, 'now').mockReturnValue(0);
+        expect(mouseRotate.isActive()).toBe(false);
 
-    simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
-    map._renderTaskQueue.run();
-    expect(mouseRotate.isActive()).toBe(false);
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
+        map._renderTaskQueue.run();
+        expect(mouseRotate.isActive()).toBe(false);
 
-    simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
-    map._renderTaskQueue.run();
-    expect(mouseRotate.isActive()).toBe(true);
+        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        expect(mouseRotate.isActive()).toBe(true);
 
-    simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
-    map._renderTaskQueue.run();
-    expect(mouseRotate.isActive()).toBe(false);
+        simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
+        map._renderTaskQueue.run();
+        expect(mouseRotate.isActive()).toBe(false);
 
-    map.remove();
-});
+        map.remove();
+    });
 
-test('MouseRotateHandler#isActive #4622 regression test', () => {
-    const map = createMap();
-    const mouseRotate = map.handlers._handlersById.mouseRotate;
+    test('MouseRotateHandler#isActive #4622 regression test', () => {
+        const map = createMap();
+        const mouseRotate = map.handlers._handlersById.mouseRotate;
 
-    // Prevent inertial rotation.
-    simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
-    map._renderTaskQueue.run();
-    expect(mouseRotate.isActive()).toBe(false);
+        // Prevent inertial rotation.
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
+        map._renderTaskQueue.run();
+        expect(mouseRotate.isActive()).toBe(false);
 
-    simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
-    map._renderTaskQueue.run();
-    expect(mouseRotate.isActive()).toBe(true);
+        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        expect(mouseRotate.isActive()).toBe(true);
 
-    // Some browsers don't fire mouseup when it happens outside the window.
-    // Make the handler in active when it encounters a mousemove without the button pressed.
+        // Some browsers don't fire mouseup when it happens outside the window.
+        // Make the handler in active when it encounters a mousemove without the button pressed.
 
-    simulate.mousemove(map.getCanvas(), {buttons: 0, clientX: 10, clientY: 10});
-    map._renderTaskQueue.run();
-    expect(mouseRotate.isActive()).toBe(false);
+        simulate.mousemove(map.getCanvas(), {buttons: 0, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        expect(mouseRotate.isActive()).toBe(false);
 
-    map.remove();
+        map.remove();
+    });
 });
