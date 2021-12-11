@@ -1,15 +1,20 @@
-import '../../../stub_loader';
-import {test} from '../../../util/test';
-import Map from '../../ui/map';
+import Map, {MapOptions} from '../map';
 import DOM from '../../util/dom';
-import simulate from '../../../util/simulate_interaction';
+import simulate from '../../../test/util/simulate_interaction';
+import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
 
 function createMap() {
-    return new Map({interactive: false, container: DOM.create('div', '', window.document.body)});
+    return new Map({interactive: false, container: DOM.create('div', '', window.document.body)} as any as MapOptions);
 }
 
-describe('MapEvent handler fires touch events with correct values', () => {
-    const map = createMap(t);
+beforeEach(() => {
+    setPerformance();
+    setWebGlContext();
+    setMatchMedia();
+});
+
+test('MapEvent handler fires touch events with correct values', () => {
+    const map = createMap();
     const target = map.getCanvas();
 
     const touchstart = jest.fn();
@@ -26,27 +31,27 @@ describe('MapEvent handler fires touch events with correct values', () => {
 
     simulate.touchstart(map.getCanvas(), {touches: touchesStart, targetTouches: touchesStart});
     expect(touchstart).toHaveBeenCalledTimes(1);
-    expect(touchstart.getCall(0).args[0].point).toEqual({x: 0, y: 50});
+    expect(touchstart.mock.calls[0][0].point).toEqual({x: 0, y: 50});
     expect(touchmove).toHaveBeenCalledTimes(0);
     expect(touchend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: touchesMove, targetTouches: touchesMove});
     expect(touchstart).toHaveBeenCalledTimes(1);
     expect(touchmove).toHaveBeenCalledTimes(1);
-    expect(touchmove.getCall(0).args[0].point).toEqual({x: 0, y: 60});
+    expect(touchmove.mock.calls[0][0].point).toEqual({x: 0, y: 60});
     expect(touchend).toHaveBeenCalledTimes(0);
 
     simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touchesEnd});
     expect(touchstart).toHaveBeenCalledTimes(1);
     expect(touchmove).toHaveBeenCalledTimes(1);
     expect(touchend).toHaveBeenCalledTimes(1);
-    expect(touchend.getCall(0).args[0].point).toEqual({x: 0, y: 60});
+    expect(touchend.mock.calls[0][0].point).toEqual({x: 0, y: 60});
 
     map.remove();
 });
 
-describe('MapEvent handler fires touchmove even while drag handler is active', () => {
-    const map = createMap(t);
+test('MapEvent handler fires touchmove even while drag handler is active', () => {
+    const map = createMap();
     const target = map.getCanvas();
     map.dragPan.enable();
 
@@ -66,21 +71,21 @@ describe('MapEvent handler fires touchmove even while drag handler is active', (
 
     simulate.touchstart(map.getCanvas(), {touches: touchesStart, targetTouches: touchesStart});
     expect(touchstart).toHaveBeenCalledTimes(1);
-    expect(touchstart.getCall(0).args[0].point).toEqual({x: 0, y: 50});
+    expect(touchstart.mock.calls[0][0].point).toEqual({x: 0, y: 50});
     expect(touchmove).toHaveBeenCalledTimes(0);
     expect(touchend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: touchesMove, targetTouches: touchesMove});
     expect(touchstart).toHaveBeenCalledTimes(1);
     expect(touchmove).toHaveBeenCalledTimes(1);
-    expect(touchmove.getCall(0).args[0].point).toEqual({x: 0, y: 60});
+    expect(touchmove.mock.calls[0][0].point).toEqual({x: 0, y: 60});
     expect(touchend).toHaveBeenCalledTimes(0);
 
     simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touchesEnd});
     expect(touchstart).toHaveBeenCalledTimes(1);
     expect(touchmove).toHaveBeenCalledTimes(1);
     expect(touchend).toHaveBeenCalledTimes(1);
-    expect(touchend.getCall(0).args[0].point).toEqual({x: 0, y: 60});
+    expect(touchend.mock.calls[0][0].point).toEqual({x: 0, y: 60});
 
     map._renderTaskQueue.run();
     expect(drag).toHaveBeenCalledTimes(1);
