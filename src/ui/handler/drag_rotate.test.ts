@@ -1,20 +1,26 @@
-import '../../../stub_loader';
-import {test} from '../../../util/test';
 import {extend} from '../../util/util';
-import Map from '../../ui/map';
+import Map from '../map';
 import DOM from '../../util/dom';
-import simulate from '../../../util/simulate_interaction';
+import simulate from '../../../test/util/simulate_interaction';
 import browser from '../../util/browser';
 
-function createMap(options) {
+import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
+
+function createMap(options?) {
     return new Map(extend({container: DOM.create('div', '', window.document.body)}, options));
 }
 
-describe('DragRotateHandler#isActive', () => {
+beforeEach(() => {
+    setPerformance();
+    setWebGlContext();
+    setMatchMedia();
+});
+
+test('DragRotateHandler#isActive', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     expect(map.dragRotate.isActive()).toBe(false);
 
@@ -33,11 +39,11 @@ describe('DragRotateHandler#isActive', () => {
     map.remove();
 });
 
-describe('DragRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a right-click drag', () => {
+test('DragRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a right-click drag', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
@@ -68,11 +74,11 @@ describe('DragRotateHandler fires rotatestart, rotate, and rotateend events at a
     map.remove();
 });
 
-describe('DragRotateHandler stops firing events after mouseup', () => {
+test('DragRotateHandler stops firing events after mouseup', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const spy = jest.fn();
     map.on('rotatestart', spy);
@@ -86,7 +92,7 @@ describe('DragRotateHandler stops firing events after mouseup', () => {
     map._renderTaskQueue.run();
     expect(spy).toHaveBeenCalledTimes(3);
 
-    spy.resetHistory();
+    spy.mockReset();
     simulate.mousemove(map.getCanvas(), {buttons: 0, clientX: 20, clientY: 20});
     map._renderTaskQueue.run();
     expect(spy).toHaveBeenCalledTimes(0);
@@ -94,11 +100,11 @@ describe('DragRotateHandler stops firing events after mouseup', () => {
     map.remove();
 });
 
-describe('DragRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a control-left-click drag', () => {
+test('DragRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a control-left-click drag', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
@@ -129,11 +135,11 @@ describe('DragRotateHandler fires rotatestart, rotate, and rotateend events at a
     map.remove();
 });
 
-describe('DragRotateHandler pitches in response to a right-click drag by default', () => {
+test('DragRotateHandler pitches in response to a right-click drag by default', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const pitchstart = jest.fn();
     const pitch      = jest.fn();
@@ -156,11 +162,11 @@ describe('DragRotateHandler pitches in response to a right-click drag by default
     map.remove();
 });
 
-describe('DragRotateHandler doesn\'t fire pitch event when rotating only', () => {
+test('DragRotateHandler doesn\'t fire pitch event when rotating only', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const pitchstart = jest.fn();
     const pitch      = jest.fn();
@@ -182,11 +188,11 @@ describe('DragRotateHandler doesn\'t fire pitch event when rotating only', () =>
     map.remove();
 });
 
-describe('DragRotateHandler pitches in response to a control-left-click drag', () => {
+test('DragRotateHandler pitches in response to a control-left-click drag', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const pitchstart = jest.fn();
     const pitch      = jest.fn();
@@ -209,7 +215,7 @@ describe('DragRotateHandler pitches in response to a control-left-click drag', (
     map.remove();
 });
 
-describe('DragRotateHandler does not pitch if given pitchWithRotate: false', () => {
+test('DragRotateHandler does not pitch if given pitchWithRotate: false', () => {
     const map = createMap({pitchWithRotate: false});
 
     const spy = jest.fn();
@@ -233,7 +239,7 @@ describe('DragRotateHandler does not pitch if given pitchWithRotate: false', () 
     map.remove();
 });
 
-describe('DragRotateHandler does not rotate or pitch when disabled', () => {
+test('DragRotateHandler does not rotate or pitch when disabled', () => {
     const map = createMap();
 
     map.dragRotate.disable();
@@ -257,7 +263,7 @@ describe('DragRotateHandler does not rotate or pitch when disabled', () => {
     map.remove();
 });
 
-describe('DragRotateHandler ensures that map.isMoving() returns true during drag', () => {
+test('DragRotateHandler ensures that map.isMoving() returns true during drag', () => {
     // The bearingSnap option here ensures that the moveend event is sent synchronously.
     const map = createMap({bearingSnap: 0});
 
@@ -273,12 +279,12 @@ describe('DragRotateHandler ensures that map.isMoving() returns true during drag
     map.remove();
 });
 
-describe('DragRotateHandler fires move events', () => {
+test('DragRotateHandler fires move events', () => {
     // The bearingSnap option here ensures that the moveend event is sent synchronously.
     const map = createMap({bearingSnap: 0});
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const movestart = jest.fn();
     const move      = jest.fn();
@@ -301,12 +307,12 @@ describe('DragRotateHandler fires move events', () => {
     map.remove();
 });
 
-describe('DragRotateHandler doesn\'t fire rotate event when pitching only', () => {
+test('DragRotateHandler doesn\'t fire rotate event when pitching only', () => {
     // The bearingSnap option here ensures that the moveend event is sent synchronously.
     const map = createMap({bearingSnap: 0});
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
@@ -331,12 +337,12 @@ describe('DragRotateHandler doesn\'t fire rotate event when pitching only', () =
     map.remove();
 });
 
-describe('DragRotateHandler includes originalEvent property in triggered events', () => {
+test('DragRotateHandler includes originalEvent property in triggered events', () => {
     // The bearingSnap option here ensures that the moveend event is sent synchronously.
     const map = createMap({bearingSnap: 0});
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
@@ -365,26 +371,26 @@ describe('DragRotateHandler includes originalEvent property in triggered events'
     simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
     map._renderTaskQueue.run();
 
-    expect(rotatestart.firstCall.args[0].originalEvent.type).toBeTruthy();
-    expect(pitchstart.firstCall.args[0].originalEvent.type).toBeTruthy();
-    expect(movestart.firstCall.args[0].originalEvent.type).toBeTruthy();
+    expect(rotatestart.mock.calls[0][0].originalEvent.type).toBeTruthy();
+    expect(pitchstart.mock.calls[0][0].originalEvent.type).toBeTruthy();
+    expect(movestart.mock.calls[0][0].originalEvent.type).toBeTruthy();
 
-    expect(rotate.firstCall.args[0].originalEvent.type).toBeTruthy();
-    expect(pitch.firstCall.args[0].originalEvent.type).toBeTruthy();
-    expect(move.firstCall.args[0].originalEvent.type).toBeTruthy();
+    expect(rotate.mock.calls[0][0].originalEvent.type).toBeTruthy();
+    expect(pitch.mock.calls[0][0].originalEvent.type).toBeTruthy();
+    expect(move.mock.calls[0][0].originalEvent.type).toBeTruthy();
 
-    expect(rotateend.firstCall.args[0].originalEvent.type).toBeTruthy();
-    expect(pitchend.firstCall.args[0].originalEvent.type).toBeTruthy();
-    expect(moveend.firstCall.args[0].originalEvent.type).toBeTruthy();
+    expect(rotateend.mock.calls[0][0].originalEvent.type).toBeTruthy();
+    expect(pitchend.mock.calls[0][0].originalEvent.type).toBeTruthy();
+    expect(moveend.mock.calls[0][0].originalEvent.type).toBeTruthy();
 
     map.remove();
 });
 
-describe('DragRotateHandler responds to events on the canvas container (#1301)', () => {
+test('DragRotateHandler responds to events on the canvas container (#1301)', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
@@ -407,11 +413,11 @@ describe('DragRotateHandler responds to events on the canvas container (#1301)',
     map.remove();
 });
 
-describe('DragRotateHandler prevents mousemove events from firing during a drag (#1555)', () => {
+test('DragRotateHandler prevents mousemove events from firing during a drag (#1555)', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const mousemove = jest.fn();
     map.on('mousemove', mousemove);
@@ -426,11 +432,11 @@ describe('DragRotateHandler prevents mousemove events from firing during a drag 
     map.remove();
 });
 
-describe('DragRotateHandler ends a control-left-click drag on mouseup even when the control key was previously released (#1888)', () => {
+test('DragRotateHandler ends a control-left-click drag on mouseup even when the control key was previously released (#1888)', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
@@ -453,11 +459,11 @@ describe('DragRotateHandler ends a control-left-click drag on mouseup even when 
     map.remove();
 });
 
-describe('DragRotateHandler ends rotation if the window blurs (#3389)', () => {
+test('DragRotateHandler ends rotation if the window blurs (#3389)', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
@@ -479,33 +485,33 @@ describe('DragRotateHandler ends rotation if the window blurs (#3389)', () => {
     map.remove();
 });
 
-describe('DragRotateHandler requests a new render frame after each mousemove event', () => {
+test('DragRotateHandler requests a new render frame after each mousemove event', () => {
     const map = createMap();
     const requestRenderFrame = jest.spyOn(map.handlers, '_requestFrame');
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
-    expect(requestRenderFrame.callCount > 0).toBeTruthy();
+    expect(requestRenderFrame).toHaveBeenCalled();
 
     map._renderTaskQueue.run();
 
     // https://github.com/mapbox/mapbox-gl-js/issues/6063
-    requestRenderFrame.resetHistory();
+    requestRenderFrame.mockReset();
     simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 20, clientY: 20});
     expect(requestRenderFrame).toHaveBeenCalledTimes(1);
 
     map.remove();
 });
 
-describe('DragRotateHandler can interleave with another handler', () => {
+test('DragRotateHandler can interleave with another handler', () => {
     // https://github.com/mapbox/mapbox-gl-js/issues/6106
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
@@ -550,7 +556,7 @@ describe('DragRotateHandler can interleave with another handler', () => {
     map.remove();
 });
 
-describe('DragRotateHandler does not begin a drag on left-button mousedown without the control key', () => {
+test('DragRotateHandler does not begin a drag on left-button mousedown without the control key', () => {
     const map = createMap();
     map.dragPan.disable();
 
@@ -583,12 +589,12 @@ describe('DragRotateHandler does not begin a drag on left-button mousedown witho
     map.remove();
 });
 
-describe('DragRotateHandler does not end a right-button drag on left-button mouseup', () => {
+test('DragRotateHandler does not end a right-button drag on left-button mouseup', () => {
     const map = createMap();
     map.dragPan.disable();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
@@ -637,12 +643,12 @@ describe('DragRotateHandler does not end a right-button drag on left-button mous
     map.remove();
 });
 
-describe('DragRotateHandler does not end a control-left-button drag on right-button mouseup', () => {
+test('DragRotateHandler does not end a control-left-button drag on right-button mouseup', () => {
     const map = createMap();
     map.dragPan.disable();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
@@ -691,7 +697,7 @@ describe('DragRotateHandler does not end a control-left-button drag on right-but
     map.remove();
 });
 
-describe('DragRotateHandler does not begin a drag if preventDefault is called on the mousedown event', () => {
+test('DragRotateHandler does not begin a drag if preventDefault is called on the mousedown event', () => {
     const map = createMap();
 
     map.on('mousedown', e => e.preventDefault());
@@ -720,11 +726,11 @@ describe('DragRotateHandler does not begin a drag if preventDefault is called on
     map.remove();
 });
 
-describe('DragRotateHandler can be disabled after mousedown (#2419)', () => {
+test('DragRotateHandler can be disabled after mousedown (#2419)', () => {
     const map = createMap();
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
@@ -760,7 +766,7 @@ describe('DragRotateHandler can be disabled after mousedown (#2419)', () => {
     map.remove();
 });
 
-describe('DragRotateHandler does not begin rotation on spurious mousemove events', () => {
+test('DragRotateHandler does not begin rotation on spurious mousemove events', () => {
     const map = createMap();
 
     const rotatestart = jest.fn();
@@ -792,11 +798,11 @@ describe('DragRotateHandler does not begin rotation on spurious mousemove events
     map.remove();
 });
 
-describe('DragRotateHandler does not begin a mouse drag if moved less than click tolerance', () => {
+test('DragRotateHandler does not begin a mouse drag if moved less than click tolerance', () => {
     const map = createMap({clickTolerance: 4});
 
     // Prevent inertial rotation.
-    t.stub(browser, 'now').returns(0);
+    jest.spyOn(browser, 'now').mockReturnValue(0);
 
     const rotatestart = jest.fn();
     const rotate      = jest.fn();
