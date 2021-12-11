@@ -1,8 +1,8 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import browser from '../../../../rollup/build/tsc/src/util/browser';
-import Map from '../../../../rollup/build/tsc/src/ui/map';
-import DOM from '../../../../rollup/build/tsc/src/util/dom';
+import browser from '../../util/browser';
+import Map from '../../ui/map';
+import DOM from '../../util/dom';
 import simulate from '../../../util/simulate_interaction';
 import {equalWithPrecision} from '../../../util';
 import sinon from 'sinon';
@@ -11,19 +11,19 @@ function createMap() {
     return new Map({
         container: DOM.create('div', '', window.document.body),
         style: {
-            "version": 8,
-            "sources": {},
-            "layers": []
+            'version': 8,
+            'sources': {},
+            'layers': []
         }
     });
 }
 
-test('ScrollZoomHandler', (t) => {
+describe('ScrollZoomHandler', () => {
     const browserNow = t.stub(browser, 'now');
     let now = 1555555555555;
     browserNow.callsFake(() => now);
 
-    t.test('Zooms for single mouse wheel tick', (t) => {
+    test('Zooms for single mouse wheel tick', () => {
         const map = createMap(t);
         map._renderTaskQueue.run();
 
@@ -39,10 +39,9 @@ test('ScrollZoomHandler', (t) => {
         equalWithPrecision(t, map.getZoom() - startZoom,  0.0285, 0.001);
 
         map.remove();
-        t.end();
     });
 
-    t.test('Zooms for single mouse wheel tick with non-magical deltaY', (t) => {
+    test('Zooms for single mouse wheel tick with non-magical deltaY', () => {
         const map = createMap(t);
         map._renderTaskQueue.run();
 
@@ -52,11 +51,10 @@ test('ScrollZoomHandler', (t) => {
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -20});
         map.on('zoomstart', () => {
             map.remove();
-            t.end();
         });
     });
 
-    t.test('Zooms for multiple mouse wheel ticks', (t) => {
+    test('Zooms for multiple mouse wheel ticks', () => {
         const map = createMap(t);
 
         map._renderTaskQueue.run();
@@ -91,10 +89,9 @@ test('ScrollZoomHandler', (t) => {
         equalWithPrecision(t, map.getZoom() - startZoom,  1.944, 0.001);
 
         map.remove();
-        t.end();
     });
 
-    t.test('Gracefully ignores wheel events with deltaY: 0', (t) => {
+    test('Gracefully ignores wheel events with deltaY: 0', () => {
         const map = createMap(t);
         map._renderTaskQueue.run();
 
@@ -111,10 +108,9 @@ test('ScrollZoomHandler', (t) => {
 
         expect(map.getZoom() - startZoom).toBe(0.0);
 
-        t.end();
     });
 
-    t.test('Gracefully handle wheel events that cancel each other out before the first scroll frame', (t) => {
+    test('Gracefully handle wheel events that cancel each other out before the first scroll frame', () => {
         // See also https://github.com/mapbox/mapbox-gl-js/issues/6782
         const map = createMap(t);
         map._renderTaskQueue.run();
@@ -129,10 +125,9 @@ test('ScrollZoomHandler', (t) => {
         now += 400;
         map._renderTaskQueue.run();
 
-        t.end();
     });
 
-    t.test('does not zoom if preventDefault is called on the wheel event', (t) => {
+    test('does not zoom if preventDefault is called on the wheel event', () => {
         const map = createMap(t);
 
         map.on('wheel', e => e.preventDefault());
@@ -146,10 +141,9 @@ test('ScrollZoomHandler', (t) => {
         expect(map.getZoom()).toBe(0);
 
         map.remove();
-        t.end();
     });
 
-    t.test('emits one movestart event and one moveend event while zooming', (t) => {
+    test('emits one movestart event and one moveend event while zooming', () => {
         const clock = sinon.useFakeTimers(now);
         const map = createMap(t);
 
@@ -192,10 +186,9 @@ test('ScrollZoomHandler', (t) => {
 
         clock.restore();
 
-        t.end();
     });
 
-    t.test('emits one zoomstart event and one zoomend event while zooming', (t) => {
+    test('emits one zoomstart event and one zoomend event while zooming', () => {
         const clock = sinon.useFakeTimers(now);
         const map = createMap(t);
 
@@ -237,8 +230,6 @@ test('ScrollZoomHandler', (t) => {
 
         clock.restore();
 
-        t.end();
     });
 
-    t.end();
 });
