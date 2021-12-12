@@ -159,8 +159,8 @@ class AttributionControl implements IControl {
         const compact = this.options && this.options.compact;
         if (this._map.getCanvasContainer().offsetWidth <= 640 || compact) {
             if (compact !== false) {
-                this._container.removeAttribute('open');
                 if (!this._container.classList.contains('maplibregl-compact')) {
+                    this._container.removeAttribute('open');
                     this._container.classList.add('maplibregl-compact', 'mapboxgl-compact');
                 }
             } else {
