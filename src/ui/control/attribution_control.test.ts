@@ -361,7 +361,7 @@ NodeList [
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
-    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty"
   >
     <summary
       aria-label="Toggle attribution"
@@ -410,7 +410,7 @@ NodeList [
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
-    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty"
   >
     <summary
       aria-label="Toggle attribution"
@@ -542,7 +542,7 @@ NodeList [
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
-    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty"
   >
     <summary
       aria-label="Toggle attribution"
@@ -562,7 +562,7 @@ NodeList [
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
-    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty"
   >
     <summary
       aria-label="Toggle attribution"
@@ -582,7 +582,7 @@ NodeList [
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
-    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact"
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty"
   >
     <summary
       aria-label="Toggle attribution"
@@ -608,7 +608,7 @@ NodeList [
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
-    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact maplibregl-compact-show mapboxgl-compact-show"
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact-show mapboxgl-compact-show"
     open=""
   >
     <summary
@@ -629,7 +629,7 @@ NodeList [
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
-    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact maplibregl-compact-show mapboxgl-compact-show"
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact-show mapboxgl-compact-show"
     open=""
   >
     <summary
@@ -650,7 +650,7 @@ NodeList [
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')).toMatchInlineSnapshot(`
 NodeList [
   <details
-    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact mapboxgl-compact maplibregl-compact-show mapboxgl-compact-show"
+    class="maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib maplibregl-compact mapboxgl-compact maplibregl-attrib-empty mapboxgl-attrib-empty maplibregl-compact-show mapboxgl-compact-show"
     open=""
   >
     <summary
