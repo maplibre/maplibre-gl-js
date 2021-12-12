@@ -168,7 +168,9 @@ class AttributionControl implements IControl {
             }
         } else {
             this._container.setAttribute('open', '');
-            this._container.classList.remove('maplibregl-compact', 'maplibregl-compact-show', 'mapboxgl-compact', 'mapboxgl-compact-show');
+            if (this._container.classList.contains('maplibregl-compact')) {
+                this._container.classList.remove('maplibregl-compact', 'maplibregl-compact-show', 'mapboxgl-compact', 'mapboxgl-compact-show');
+            }
         }
     }
 
