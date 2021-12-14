@@ -1,0 +1,65 @@
+{
+  "diamond": {
+    "height": 28,
+    "pixelRatio": 2,
+    "width": 28,
+    "x": 237,
+    "y": 0
+  },
+  "oneway": {
+    "height": 23,
+    "pixelRatio": 2,
+    "width": 44,
+    "x": 265,
+    "y": 0
+  },
+  "shield40_us_interstate": {
+    "height": 80,
+    "pixelRatio": 2,
+    "width": 80,
+    "x": 0,
+    "y": 0
+  },
+  "shield40_us_pa": {
+    "height": 65,
+    "pixelRatio": 2,
+    "width": 80,
+    "x": 79,
+    "y": 80
+  },
+  "shield40_us_pa_belt_red": {
+    "height": 80,
+    "pixelRatio": 2,
+    "width": 80,
+    "x": 80,
+    "y": 0
+  },
+  "shield40_us_pa_belt_red_2": {
+    "height": 79,
+    "pixelRatio": 2,
+    "width": 79,
+    "x": 0,
+    "y": 80
+  },
+  "shield40_us_pa_turnpike": {
+    "height": 63,
+    "pixelRatio": 2,
+    "width": 77,
+    "x": 239,
+    "y": 80
+  },
+  "shield40_us_pa_turnpike_noref": {
+    "height": 63,
+    "pixelRatio": 2,
+    "width": 77,
+    "x": 160,
+    "y": 0
+  },
+  "shield40_us_us": {
+    "height": 64,
+    "pixelRatio": 2,
+    "width": 80,
+    "x": 159,
+    "y": 80
+  }
+}
