@@ -15,7 +15,6 @@ Use
   }
 ```
 
-<<<<<<< HEAD
 If you are OK with changes that integrate non-backward compatible features, ideally install `maplibre-gl` version 2:
 
 ```diff
@@ -25,10 +24,8 @@ If you are OK with changes that integrate non-backward compatible features, idea
   }
 ```
 
-
 And replace ```mapboxgl``` with ```maplibregl``` in your JavaScript and optionally in your HTML/CSS code:
 ```diff
-=======
 if it is important to you that the behaviour is similar to `mapbox-gl` version 1.x.
 
 And replace `mapboxgl` with `maplibregl` in your JavaScript and optionally in your HTML/CSS code:
@@ -42,7 +39,6 @@ And replace `mapboxgl` with `maplibregl` in your JavaScript and optionally in yo
 -      rel="stylesheet"
 -    />
 
->>>>>>> d00f75420c8b15f75e53d0ee13f5c9171adb34f0
      <!--  Use maplibre-gl version 1.15.2 for backwards compatibility with mapbox-gl version 1.x. -->
 +    <script src="https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.js"></script>
 +    <link
@@ -50,10 +46,6 @@ And replace `mapboxgl` with `maplibregl` in your JavaScript and optionally in yo
 +      rel="stylesheet"
 +    />
 
-<<<<<<< HEAD
-
-=======
->>>>>>> d00f75420c8b15f75e53d0ee13f5c9171adb34f0
 -    var map = new mapboxgl.Map({
 +    var map = new maplibregl.Map({
 
