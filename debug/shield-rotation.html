@@ -28,8 +28,8 @@
     <script>
         function loadShield(ctx, shield) {
 
-            var scaleCanvas = document.createElement("canvas");
-            var scaleCtx = scaleCanvas.getContext("2d");
+            var scaleCanvas = document.createElement('canvas');
+            var scaleCtx = scaleCanvas.getContext('2d');
             var imgData = scaleCtx.createImageData(shield.data.width, shield.data.height);
 
             for (i = 0; i < shield.data.data.length; i++) {
@@ -52,9 +52,9 @@
         function initShields(map) {
             shieldImages = map.style.imageManager.images;
 
-            shields["US:I"] = {
+            shields['US:I'] = {
                 backgroundImage: shieldImages.shield40_us_interstate,
-                textColor: "white",
+                textColor: 'white',
                 padding: {
                     left: 10,
                     right: 10,
@@ -63,9 +63,9 @@
                 },
             };
 
-            shields["US:US"] = {
+            shields['US:US'] = {
                 backgroundImage: shieldImages.shield40_us_us,
-                textColor: "black",
+                textColor: 'black',
                 padding: {
                     left: 10,
                     right: 10,
@@ -74,21 +74,21 @@
                 },
             };
 
-            shields["US:US:Historic"] = {
+            shields['US:US:Historic'] = {
                 backgroundImage: shieldImages.shield40_us_us,
-                textColor: "black",
+                textColor: 'black',
                 padding: {
                     left: 10,
                     right: 10,
                     top: 0,
                     bottom: 10
                 },
-                colorLighten: "#613214",
+                colorLighten: '#613214',
             };
 
-            shields["US:PA"] = {
+            shields['US:PA'] = {
                 backgroundImage: shieldImages.shield40_us_pa,
-                textColor: "black",
+                textColor: 'black',
                 padding: {
                     left: 10,
                     right: 10,
@@ -97,9 +97,9 @@
                 },
             };
 
-            shields["US:PA:Turnpike"] = {
+            shields['US:PA:Turnpike'] = {
                 backgroundImage: shieldImages.shield40_us_pa_turnpike,
-                textColor: "white",
+                textColor: 'white',
                 padding: {
                     left: 10,
                     right: 10,
@@ -108,7 +108,7 @@
                 },
             };
 
-            shields["US:PA:Belt"] = {
+            shields['US:PA:Belt'] = {
                 notext: true,
             };
         }
@@ -117,7 +117,7 @@
 
             var id = e.id;
 
-            if (id == "shield_") {
+            if (id === 'shield_') {
                 return;
             }
 
@@ -126,58 +126,58 @@
                 shieldsLoaded = true;
             }
 
-            var network_ref = id.split("_")[1];
-            var network_ref_parts = network_ref.split("=");
-            var network = network_ref_parts[0];
-            var ref = network_ref_parts[1];
+            var networkRef = id.split('_')[1];
+            var networkRefParts = networkRef.split('=');
+            var network = networkRefParts[0];
+            var ref = networkRefParts[1];
 
             var width = 20;
             var height = 20;
             var colorLighten = null;
 
-            var c = document.createElement("canvas");
+            var c = document.createElement('canvas');
             c.width = 80;
             c.height = 80;
 
             var scaleH = height / c.height;
             var scaleW = width / c.width;
 
-            var ctx = c.getContext("2d");
-            ctx.imageSmoothingQuality = "high";
+            var ctx = c.getContext('2d');
+            ctx.imageSmoothingQuality = 'high';
             ctx.mozImageSmoothingEnabled = true;
             ctx.webkitImageSmoothingEnabled = true;
             ctx.msImageSmoothingEnabled = true;
             ctx.imageSmoothingEnabled = true;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "top";
-            ctx.font = "bold 16px Arial";
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.font = 'bold 16px Arial';
 
-            if (shields[network] != null) {
+            if (shields[network] !== null) {
                 var shieldDef = shields[network];
                 var shield = shieldDef.backgroundImage;
                 colorLighten = shieldDef.colorLighten;
 
-                if (network == "US:PA:Turnpike" && ref == "") {
+                if (network === 'US:PA:Turnpike' && ref === '') {
                     shield = shieldImages.shield40_us_pa_turnpike_noref;
                 }
 
-                if (network == "US:PA:Belt") {
+                if (network === 'US:PA:Belt') {
                     switch (ref) {
-                        case "Red Belt":
-                        default:
-                            shield = shieldImages.shield40_us_pa_belt_red_2;
-                            break;
+                    case 'Red Belt':
+                    default:
+                        shield = shieldImages.shield40_us_pa_belt_red_2;
+                        break;
                     }
                 }
 
-                if (shield == null) {
-                    console.log("No shield defined for: " + network + "=" + ref);
+                if (shield === null) {
+                    console.log('No shield defined for: ' + network + '=' + ref);
                     return;
                 }
 
                 loadShield(ctx, shield);
 
-                if (shieldDef.notext != true) {
+                if (shieldDef.notext !== true) {
                     ctx.fillStyle = shieldDef.textColor;
 
                     var padding = shieldDef.padding || {};
@@ -211,38 +211,38 @@
                         80);
                     ctx.scale(1 / scaleWidth, 1 / scaleHeight);
                 }
-            } else if (ref == "") {
+            } else if (ref === '') {
                 return;
             } else {
                 switch (network) {
-                    default: {
-                        ctx.fillStyle = "white";
-                        ctx.fillRect(0, 0, 80, 80);
-                        ctx.lineWidth = 8;
-                        ctx.strokeStyle = "black";
-                        ctx.strokeRect(0, 0, 80, 80);
-                        //        ctx.fillText(ref, width * 0.5, height * 0.58, width);
-                    }
+                default: {
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, 80, 80);
+                    ctx.lineWidth = 8;
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(0, 0, 80, 80);
+                    //        ctx.fillText(ref, width * 0.5, height * 0.58, width);
+                }
                 }
             }
 
-            var scaleCanvas = document.createElement("canvas");
-            var scaleCtx = scaleCanvas.getContext("2d");
+            var scaleCanvas = document.createElement('canvas');
+            var scaleCtx = scaleCanvas.getContext('2d');
             scaleCtx.scale(scaleH, scaleW);
             scaleCtx.drawImage(c, 0, 0);
 
-            if (colorLighten != null) {
-                scaleCtx.globalCompositeOperation = "lighten";
+            if (colorLighten !== null) {
+                scaleCtx.globalCompositeOperation = 'lighten';
                 scaleCtx.fillStyle = colorLighten;
                 scaleCtx.fillRect(0, 0, width * scaleW, height * scaleH);
-                scaleCtx.globalCompositeOperation = "destination-atop";
+                scaleCtx.globalCompositeOperation = 'destination-atop';
                 scaleCtx.drawImage(c, 0, 0);
             }
 
             var imgData = scaleCtx.getImageData(0, 0, width, height);
 
             map.addImage(id, {
-                width: width,
+                width,
                 height: width,
                 data: imgData.data,
             });
@@ -253,82 +253,82 @@
             zoom: 10,
             center: [-86.0879, 39.8087],
             style: {
-                "id": "streets",
-                "name": "Americana",
-                "zoom": 1,
-                "pitch": 0,
-                "center": [
+                'id': 'streets',
+                'name': 'Americana',
+                'zoom': 1,
+                'pitch': 0,
+                'center': [
                     0,
                     0
                 ],
-                "glyphs": "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
-                "layers": [
+                'glyphs': 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+                'layers': [
                     {
-                        "id": "road_motorway",
-                        "type": "line",
-                        "filter": [
-                            "all",
+                        'id': 'road_motorway',
+                        'type': 'line',
+                        'filter': [
+                            'all',
                             [
-                                "==",
-                                "class",
-                                "motorway"
+                                '==',
+                                'class',
+                                'motorway'
                             ]
                         ],
-                        "source": "openmaptiles",
-                        "source-layer": "transportation"
+                        'source': 'openmaptiles',
+                        'source-layer': 'transportation'
                     },
                     {
-                        "id": "road_label",
-                        "type": "symbol",
-                        "filter": [
-                            "all",
+                        'id': 'road_label',
+                        'type': 'symbol',
+                        'filter': [
+                            'all',
                             [
-                                "==",
-                                "class",
-                                "motorway"
+                                '==',
+                                'class',
+                                'motorway'
                             ]
                         ],
-                        "layout": {
-                            "text-font": [
-                                "Metropolis Light"
+                        'layout': {
+                            'text-font': [
+                                'Metropolis Light'
                             ],
-                            "text-size": 20,
-                            "text-field": [
-                                "format",
+                            'text-size': 20,
+                            'text-field': [
+                                'format',
                                 [
-                                    "image",
-                                    "shield_US:I=70"
+                                    'image',
+                                    'shield_US:I=70'
                                 ],
-                                " ",
+                                ' ',
                                 [
-                                    "image",
-                                    "shield_US:US=35"
+                                    'image',
+                                    'shield_US:US=35'
                                 ]
                             ],
-                            "text-anchor": "center",
-                            "symbol-placement": "line"
+                            'text-anchor': 'center',
+                            'symbol-placement': 'line'
                         },
-                        "source": "openmaptiles",
-                        "metadata": {},
-                        "source-layer": "transportation"
+                        'source': 'openmaptiles',
+                        'metadata': {},
+                        'source-layer': 'transportation'
                     }
                 ],
-                "sprite": "http://0.0.0.0:9966/debug/sprites/shield-rotation/sprite",
-                "bearing": 0,
-                "sources": {
-                    "openmaptiles": {
-                        "url": "https://api.maptiler.com/tiles/v3/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
-                        "type": "vector"
+                'sprite': 'http://0.0.0.0:9966/debug/sprites/shield-rotation/sprite',
+                'bearing': 0,
+                'sources': {
+                    'openmaptiles': {
+                        'url': 'https://api.maptiler.com/tiles/v3/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                        'type': 'vector'
                     },
                 },
-                "version": 8
+                'version': 8
             },
             hash: true
         });
 
         map.addControl(new maplibregl.NavigationControl());
 
-        map.on("styleimagemissing", function (e) {
+        map.on('styleimagemissing', function (e) {
             missingIconLoader(map, e);
         });
 
