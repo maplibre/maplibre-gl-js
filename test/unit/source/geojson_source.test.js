@@ -104,6 +104,37 @@ test('GeoJSONSource#setData', (t) => {
         source.setData('http://localhost/nonexistent');
     });
 
+    t.test('only marks source as loaded when there are no pending loads', (t) => {
+        const source = createSource();
+        source.once('data', () => {
+            t.notOk(source.loaded());
+            source.once('data', () => {
+                t.ok(source.loaded());
+                t.end();
+            });
+        });
+        source.setData({});
+        source.setData({});
+    });
+
+    t.test('marks source as not loaded before firing "dataloading" event', (t) => {
+        const source = createSource();
+        source.once('dataloading', () => {
+            t.notOk(source.loaded());
+            t.end();
+        });
+        source.setData({});
+    });
+
+    t.test('marks source as loaded before firing "data" event', (t) => {
+        const source = createSource();
+        source.once('data', () => {
+            t.ok(source.loaded());
+            t.end();
+        });
+        source.setData({});
+    });
+
     t.end();
 });
 

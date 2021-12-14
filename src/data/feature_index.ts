@@ -3,7 +3,7 @@ import loadGeometry from './load_geometry';
 import toEvaluationFeature from './evaluation_feature';
 import EXTENT from './extent';
 import featureFilter from '../style-spec/feature_filter';
-import Grid from 'grid-index';
+import TransferableGridIndex from 'grid-index';
 import DictionaryCoder from '../util/dictionary_coder';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
@@ -45,8 +45,8 @@ class FeatureIndex {
     x: number;
     y: number;
     z: number;
-    grid: Grid;
-    grid3D: Grid;
+    grid: TransferableGridIndex;
+    grid3D: TransferableGridIndex;
     featureIndexArray: FeatureIndexArray;
     promoteId?: PromoteIdSpecification;
 
@@ -61,8 +61,8 @@ class FeatureIndex {
         this.x = tileID.canonical.x;
         this.y = tileID.canonical.y;
         this.z = tileID.canonical.z;
-        this.grid = new Grid(EXTENT, 16, 0);
-        this.grid3D = new Grid(EXTENT, 16, 0);
+        this.grid = new TransferableGridIndex(EXTENT, 16, 0);
+        this.grid3D = new TransferableGridIndex(EXTENT, 16, 0);
         this.featureIndexArray = new FeatureIndexArray();
         this.promoteId = promoteId;
     }

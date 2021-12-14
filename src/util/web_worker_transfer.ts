@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import Grid from 'grid-index';
+import TransferableGridIndex from 'grid-index';
 import Color from '../style-spec/util/color';
 import {StylePropertyFunction, StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '../style-spec/expression';
 import CompoundExpression from '../style-spec/expression/compound_expression';
@@ -68,7 +68,7 @@ type SerializedGrid = {
   buffer: ArrayBuffer;
 };
 
-Grid.serialize = function serialize(grid: Grid, transferables?: Array<Transferable>): SerializedGrid {
+TransferableGridIndex.serialize = function serialize(grid: TransferableGridIndex, transferables?: Array<Transferable>): SerializedGrid {
     const buffer = grid.toArrayBuffer();
     if (transferables) {
         transferables.push(buffer);
@@ -76,10 +76,10 @@ Grid.serialize = function serialize(grid: Grid, transferables?: Array<Transferab
     return {buffer};
 };
 
-Grid.deserialize = function deserialize(serialized: SerializedGrid): Grid {
-    return new Grid(serialized.buffer);
+TransferableGridIndex.deserialize = function deserialize(serialized: SerializedGrid): TransferableGridIndex {
+    return new TransferableGridIndex(serialized.buffer);
 };
-register('Grid', Grid);
+register('TransferableGridIndex', TransferableGridIndex);
 
 register('Color', Color);
 register('Error', Error);
