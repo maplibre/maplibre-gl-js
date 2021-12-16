@@ -2224,6 +2224,35 @@
       },
       "property-type": "data-constant"
     },
+    "text-rotate-to-line": {
+      "type": "boolean",
+      "default": true,
+      "doc": "If true, the text rotates to the orientation of the line.",
+      "requires": [
+        "text-field",
+        {
+          "text-rotation-alignment": "map"
+        },
+        {
+          "symbol-placement": [
+            "line",
+            "line-center"
+          ]
+        }
+      ],
+      "sdk-support": {
+        "basic functionality": {
+          "js": "2.x.x"
+        }
+      },
+      "expression": {
+        "interpolated": false,
+        "parameters": [
+          "zoom"
+        ]
+      },
+      "property-type": "data-constant"
+    },
     "text-transform": {
       "type": "enum",
       "values": {

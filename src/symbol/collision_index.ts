@@ -145,7 +145,8 @@ class CollisionIndex {
             symbol,
             lineVertexArray,
             labelPlaneMatrix,
-            projectionCache);
+            projectionCache,
+            false);
 
         let collisionDetected = false;
         let inGrid = false;

@@ -258,6 +258,7 @@ export type SymbolLayerSpecification = {
         "text-rotate"?: DataDrivenPropertyValueSpecification<number>,
         "text-padding"?: PropertyValueSpecification<number>,
         "text-keep-upright"?: PropertyValueSpecification<boolean>,
+        "text-rotate-to-line"?: PropertyValueSpecification<boolean>,
         "text-transform"?: DataDrivenPropertyValueSpecification<"none" | "uppercase" | "lowercase">,
         "text-offset"?: DataDrivenPropertyValueSpecification<[number, number]>,
         "text-allow-overlap"?: PropertyValueSpecification<boolean>,
