@@ -55,7 +55,12 @@ const hillshadePrepareUniforms = (context: Context, locations: UniformLocations)
     'u_unpack': new Uniform4f(context, locations.u_unpack)
 });
 
-const hillshadeUniformValues = (painter: Painter, tile: Tile, layer: HillshadeStyleLayer): UniformValues<HillshadeUniformsType> => {
+const hillshadeUniformValues = (
+    painter: Painter,
+    tile: Tile,
+    layer: HillshadeStyleLayer,
+    coord: OverscaledTileID
+): UniformValues<HillshadeUniformsType> => {
     const shadow = layer.paint.get('hillshade-shadow-color');
     const highlight = layer.paint.get('hillshade-highlight-color');
     const accent = layer.paint.get('hillshade-accent-color');
@@ -67,7 +72,7 @@ const hillshadeUniformValues = (painter: Painter, tile: Tile, layer: HillshadeSt
     }
     const align = !painter.options.moving;
     return {
-        'u_matrix': painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align),
+        'u_matrix': coord ? coord.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align),
         'u_image': 0,
         'u_latrange': getTileLatRange(painter, tile.tileID),
         'u_light': [layer.paint.get('hillshade-exaggeration'), azimuthal],
@@ -90,7 +95,7 @@ const hillshadeUniformPrepareValues = (tileID: OverscaledTileID, dem: DEMData): 
         'u_image': 1,
         'u_dimension': [stride, stride],
         'u_zoom': tileID.overscaledZ,
-        'u_unpack': dem.getUnpackVector()
+        'u_unpack': dem.getHillshadingUnpackVector()
     };
 };
 

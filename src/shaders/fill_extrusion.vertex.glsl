@@ -7,6 +7,7 @@ uniform lowp float u_opacity;
 
 attribute vec2 a_pos;
 attribute vec4 a_normal_ed;
+attribute vec2 a_centroid;
 
 varying vec4 v_color;
 
@@ -22,8 +23,16 @@ void main() {
 
     vec3 normal = a_normal_ed.xyz;
 
-    base = max(0.0, base);
-    height = max(0.0, height);
+    float ele = get_elevation(a_centroid);
+    #ifdef TERRAIN3D
+        // To avoid floating buildings in 3d-terrain, especially in heavy terrain,
+        // render the buildings a little below terrain. The unit is meter.
+        float baseDelta = 10.0;
+    #else
+        float baseDelta = 0.0;
+    #endif
+    base = max(0.0, ele + base - baseDelta);
+    height = max(0.0, ele + height);
 
     float t = mod(normal.x, 2.0);
 

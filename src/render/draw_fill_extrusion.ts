@@ -58,6 +58,7 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
         const bucket: FillExtrusionBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
+        const terrain = painter.style.terrainSourceCache.getTerrain(coord);
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration);
 
@@ -86,8 +87,8 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
             fillExtrusionUniformValues(matrix, painter, shouldUseVerticalGradient, opacity);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
-            uniformValues, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
+            uniformValues, terrain, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
             bucket.segments, layer.paint, painter.transform.zoom,
-            programConfiguration);
+            programConfiguration, bucket.centroidVertexBuffer);
     }
 }

@@ -30,29 +30,30 @@ function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: Hillsh
         if (tile.needsHillshadePrepare && painter.renderPass === 'offscreen') {
             prepareHillshade(painter, tile, layer, depthMode, StencilMode.disabled, colorMode);
         } else if (painter.renderPass === 'translucent') {
-            renderHillshade(painter, tile, layer, depthMode, stencilModes[coord.overscaledZ], colorMode);
+            renderHillshade(painter, coord, tile, layer, depthMode, stencilModes[coord.overscaledZ], colorMode);
         }
     }
 
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
 
-function renderHillshade(painter, tile, layer, depthMode, stencilMode, colorMode) {
+function renderHillshade(painter, coord, tile, layer, depthMode, stencilMode, colorMode) {
     const context = painter.context;
     const gl = context.gl;
     const fbo = tile.fbo;
     if (!fbo) return;
 
     const program = painter.useProgram('hillshade');
+    const terrain = painter.style.terrainSourceCache.getTerrain(coord);
 
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
-    const uniformValues = hillshadeUniformValues(painter, tile, layer);
-
+    const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        uniformValues, layer.id, painter.rasterBoundsBuffer,
+        hillshadeUniformValues(painter, tile, layer, terrainCoord), terrain, layer.id, painter.rasterBoundsBuffer,
         painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
+
 }
 
 // hillshade rendering is done in two steps. the prepare step first calculates the slope of the terrain in the x and y
@@ -61,6 +62,7 @@ function prepareHillshade(painter, tile, layer, depthMode, stencilMode, colorMod
     const context = painter.context;
     const gl = context.gl;
     const dem = tile.dem;
+    const terrain = painter.style.terrainSourceCache.getTerrain();
     if (dem && dem.data) {
         const tileSize = dem.dim;
         const textureStride = dem.stride;
@@ -97,7 +99,7 @@ function prepareHillshade(painter, tile, layer, depthMode, stencilMode, colorMod
         painter.useProgram('hillshadePrepare').draw(context, gl.TRIANGLES,
             depthMode, stencilMode, colorMode, CullFaceMode.disabled,
             hillshadeUniformPrepareValues(tile.tileID, dem),
-            layer.id, painter.rasterBoundsBuffer,
+            terrain, layer.id, painter.rasterBoundsBuffer,
             painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
 
         tile.needsHillshadePrepare = false;

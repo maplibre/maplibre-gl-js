@@ -73,6 +73,7 @@ export default class Marker extends Evented {
     _pitchAlignment: string;
     _rotationAlignment: string;
     _originalTabIndex: string; // original tabindex of _element
+    _opacityTimeout: any;
 
     constructor(options?: MarkerOptions, legacyOptions?: MarkerOptions) {
         super();
@@ -468,6 +469,15 @@ export default class Marker extends Evented {
         }
 
         DOM.setTransform(this._element, `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`);
+
+        // in case of 3D, ask the the terrain coords-framebuffer for this pos and check if the marker is visible
+        const tsc = this._map.style.terrainSourceCache;
+        if (tsc && tsc.isEnabled() && !this._opacityTimeout) this._opacityTimeout = setTimeout(() => {
+            const lnglat = this._map.unproject(this._pos);
+            const metresPerPixel = 40075016.686 * Math.abs(Math.cos(this._lngLat.lat * Math.PI/180)) / Math.pow(2, this._map.transform.tileZoom+8);
+            this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? "0.2" : "1.0";
+            this._opacityTimeout = null;
+        }, 100);
     }
 
     /**

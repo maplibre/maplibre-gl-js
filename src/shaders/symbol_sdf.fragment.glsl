@@ -8,6 +8,7 @@ uniform bool u_is_text;
 
 varying vec2 v_data0;
 varying vec3 v_data1;
+varying float v_visibility;
 
 #pragma mapbox: define highp vec4 fill_color
 #pragma mapbox: define highp vec4 halo_color

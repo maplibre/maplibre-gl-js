@@ -1,6 +1,5 @@
-import {FillExtrusionLayoutArray} from '../array_types';
-
-import {members as layoutAttributes} from './fill_extrusion_attributes';
+import {FillExtrusionLayoutArray, PosArray} from '../array_types';
+import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes';
 import SegmentVector from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
@@ -63,6 +62,9 @@ class FillExtrusionBucket implements Bucket {
     layoutVertexArray: FillExtrusionLayoutArray;
     layoutVertexBuffer: VertexBuffer;
 
+    centroidVertexArray: PosArray;
+    centroidVertexBuffer: VertexBuffer;
+
     indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
 
@@ -81,11 +83,11 @@ class FillExtrusionBucket implements Bucket {
         this.hasPattern = false;
 
         this.layoutVertexArray = new FillExtrusionLayoutArray();
+        this.centroidVertexArray = new PosArray();
         this.indexArray = new TriangleIndexArray();
         this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
         this.segments = new SegmentVector();
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
-
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
@@ -131,7 +133,7 @@ class FillExtrusionBucket implements Bucket {
     }
 
     isEmpty() {
-        return this.layoutVertexArray.length === 0;
+        return this.layoutVertexArray.length === 0 && this.centroidVertexArray.length === 0;
     }
 
     uploadPending() {
@@ -141,6 +143,7 @@ class FillExtrusionBucket implements Bucket {
     upload(context: Context) {
         if (!this.uploaded) {
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
+            this.centroidVertexBuffer = context.createVertexBuffer(this.centroidVertexArray, centroidAttributes.members, true);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
         }
         this.programConfigurations.upload(context);
@@ -153,9 +156,11 @@ class FillExtrusionBucket implements Bucket {
         this.indexBuffer.destroy();
         this.programConfigurations.destroy();
         this.segments.destroy();
+        this.centroidVertexBuffer.destroy();
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
+        const centroid = { x: 0, y: 0, vertexCount: 0 };
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             let numVertices = 0;
             for (const ring of polygon) {
@@ -191,11 +196,13 @@ class FillExtrusionBucket implements Bucket {
 
                             addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
                             addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
+                            centroid.x += 2 * p1.x; centroid.y += 2 * p1.y; centroid.vertexCount += 2;
 
                             edgeDistance += dist;
 
                             addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
                             addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
+                            centroid.x += 2 * p2.x; centroid.y += 2 * p2.y; centroid.vertexCount += 2;
 
                             const bottomRight = segment.vertexLength;
 
@@ -212,6 +219,7 @@ class FillExtrusionBucket implements Bucket {
                         }
                     }
                 }
+
             }
 
             if (segment.vertexLength + numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
@@ -240,10 +248,12 @@ class FillExtrusionBucket implements Bucket {
                     const p = ring[i];
 
                     addVertex(this.layoutVertexArray, p.x, p.y, 0, 0, 1, 1, 0);
+                    centroid.x += p.x; centroid.y += p.y; centroid.vertexCount += 1;
 
                     flattened.push(p.x);
                     flattened.push(p.y);
                 }
+
             }
 
             const indices = earcut(flattened, holeIndices);
@@ -260,6 +270,12 @@ class FillExtrusionBucket implements Bucket {
             segment.primitiveLength += indices.length / 3;
             segment.vertexLength += numVertices;
         }
+
+        // remember polygon centroid to calculate elevation in GPU
+        for (let i=0; i<centroid.vertexCount; i++) this.centroidVertexArray.emplaceBack(
+            Math.floor(centroid.x / centroid.vertexCount),
+            Math.floor(centroid.y / centroid.vertexCount)
+        );
 
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }

@@ -1,3 +1,4 @@
+// FIXME-3D! use 3d coordinates
 attribute vec2 a_pos;
 attribute vec2 a_anchor_pos;
 attribute vec2 a_extrude;

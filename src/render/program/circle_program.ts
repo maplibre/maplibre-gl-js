@@ -1,4 +1,4 @@
-import {Uniform1i, Uniform1f, Uniform2f, UniformMatrix4f} from '../uniform_binding';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform4f, UniformMatrix4f} from '../uniform_binding';
 import pixelsToTileUnits from '../../source/pixels_to_tile_units';
 
 import type Context from '../../gl/context';

@@ -17,6 +17,7 @@ import {getType as getSourceType, setType as setSourceType, Source} from '../sou
 import type {SourceClass} from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import SourceCache from '../source/source_cache';
+import TerrainSourceCache from '../source/terrain_source_cache';
 import GeoJSONSource from '../source/geojson_source';
 import styleSpec from '../style-spec/reference/latest';
 import getWorkerPool from '../util/global_worker_pool';
@@ -113,6 +114,7 @@ class Style extends Evented {
     _serializedLayers: {[_: string]: any};
     _order: Array<string>;
     sourceCaches: {[_: string]: SourceCache};
+    terrainSourceCache: TerrainSourceCache;
     zoomHistory: ZoomHistory;
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
@@ -150,9 +152,13 @@ class Style extends Evented {
         this._serializedLayers = {};
         this._order  = [];
         this.sourceCaches = {};
+        this.terrainSourceCache = new TerrainSourceCache(this);
         this.zoomHistory = new ZoomHistory();
         this._loaded = false;
         this._availableImages = [];
+
+        // make elevation accessible from map.transform
+        map.transform.terrainSourceCache = this.terrainSourceCache;
 
         this._resetUpdates();
 
@@ -1264,6 +1270,7 @@ class Style extends Evented {
     }
 
     _updateSources(transform: Transform) {
+        this.terrainSourceCache.update(transform);
         for (const id in this.sourceCaches) {
             this.sourceCaches[id].update(transform);
         }

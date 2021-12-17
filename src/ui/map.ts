@@ -116,7 +116,7 @@ const defaultMaxZoom = 22;
 
 // the default values, but also the valid range
 const defaultMinPitch = 0;
-const defaultMaxPitch = 60;
+const defaultMaxPitch = 75;
 
 // use this variable to check maxPitch for validity
 const maxPitchThreshold = 85;
@@ -855,7 +855,9 @@ class Map extends Camera {
      * var point = map.project(coordinate);
      */
     project(lnglat: LngLatLike) {
-        return this.transform.locationPoint(LngLat.convert(lnglat));
+        return this.style && this.style.terrainSourceCache.isEnabled()
+            ? this.transform.locationPoint3D(LngLat.convert(lnglat))
+            : this.transform.locationPoint(LngLat.convert(lnglat));
     }
 
     /**
@@ -871,7 +873,9 @@ class Map extends Camera {
      * });
      */
     unproject(point: PointLike) {
-        return this.transform.pointLocation(Point.convert(point));
+        return this.style && this.style.terrainSourceCache.isEnabled()
+            ? this.transform.pointLocation3D(Point.convert(point))
+            : this.transform.pointLocation(Point.convert(point));
     }
 
     /**
@@ -1551,6 +1555,39 @@ class Map extends Camera {
     }
 
     /**
+     * Loads a 3D terrain mesh, based on a "raster-dem" source.
+     *
+     * @param {string} id The ID of the raster-dem source to use.
+     * @param options Allowed options are exaggeration, elevationOffset
+     * @returns {Map} `this`
+     * @example
+     * map.addTerrain('my-data');
+     */
+    addTerrain(id: string, options?: {exaggeration: boolean; elevationOffset: number}) {
+        this.isSourceLoaded(id);
+        this.style.terrainSourceCache.enable(this.style.sourceCaches[id], options);
+        this.style.terrainSourceCache.update(this.transform);
+        this._sourcesDirty = true;
+        this._styleDirty = true;
+        this.triggerRepaint();
+        return this;
+    }
+
+    /**
+     * Removes the 3D terrain mesh from the map.
+     *
+     * @returns {Map} `this`
+     * @example
+     * map.removeTerrain();
+     */
+    removeTerrain() {
+        this.style.terrainSourceCache.disable();
+        this.transform.updateElevation();
+        this.triggerRepaint();
+        return this;
+    }
+
+    /**
      * Returns a Boolean indicating whether all tiles in the viewport from all sources on
      * the style are loaded.
      *
@@ -1558,7 +1595,6 @@ class Map extends Camera {
      * @example
      * var tilesLoaded = map.areTilesLoaded();
      */
-
     areTilesLoaded() {
         const sources = this.style && this.style.sourceCaches;
         for (const id in sources) {

@@ -81,6 +81,7 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(programName, programConfiguration);
+        const terrain = painter.style.terrainSourceCache.getTerrain(coord);
 
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);
@@ -96,7 +97,9 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const tileMatrix = painter.translatePosMatrix(coord.posMatrix, tile,
+        const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
+        let posMatrix = terrainCoord ? terrainCoord.posMatrix : coord.posMatrix;
+        const tileMatrix = painter.translatePosMatrix(posMatrix, tile,
             layer.paint.get('fill-translate'), layer.paint.get('fill-translate-anchor'));
 
         if (!isOutline) {
@@ -115,7 +118,7 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
         }
 
         program.draw(painter.context, drawMode, depthMode,
-            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues,
+            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrain,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }

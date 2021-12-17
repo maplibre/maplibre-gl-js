@@ -57,6 +57,8 @@ class SourceCache extends Evented {
     _coveredTiles: {[_: string]: boolean};
     transform: Transform;
     used: boolean;
+    usedForTerrain: boolean;
+    tileSize: number;
     _state: SourceFeatureState;
     _loadedParentTiles: {[_: string]: Tile};
 
@@ -285,6 +287,7 @@ class SourceCache extends Evented {
 
         function fillBorder(tile, borderTile) {
             tile.needsHillshadePrepare = true;
+            tile.needsTerrainPrepare = true;
             let dx = borderTile.tileID.canonical.x - tile.tileID.canonical.x;
             const dy = borderTile.tileID.canonical.y - tile.tileID.canonical.y;
             const dim = Math.pow(2, tile.tileID.canonical.z);
@@ -488,17 +491,17 @@ class SourceCache extends Evented {
         this._coveredTiles = {};
 
         let idealTileIDs;
-        if (!this.used) {
+        if (!this.used && !this.usedForTerrain) {
             idealTileIDs = [];
         } else if (this._source.tileID) {
             idealTileIDs = transform.getVisibleUnwrappedCoordinates(this._source.tileID)
                 .map((unwrapped) => new OverscaledTileID(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         } else {
             idealTileIDs = transform.coveringTiles({
-                tileSize: this._source.tileSize,
+                tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.maxzoom,
-                roundZoom: this._source.roundZoom,
+                roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled
             });
 
@@ -511,6 +514,18 @@ class SourceCache extends Evented {
         const zoom = transform.coveringZoomLevel(this._source);
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
         const maxCoveringZoom = Math.max(zoom + SourceCache.maxUnderzooming,  this._source.minzoom);
+
+        // When sourcecache is used for terrain also load parent tiles to avoid flickering when zooming out
+        if (this.usedForTerrain) {
+            const parents = {};
+            for (const tileID of idealTileIDs) {
+               if (tileID.canonical.z > this._source.minzoom) {
+                  const parent = tileID.scaledTo(tileID.canonical.z - 1);
+                  parents[parent.key] = parent;
+               }
+            }
+            idealTileIDs = idealTileIDs.concat(Object.values(parents));
+        }
 
         // Retain is a list of tiles that we shouldn't delete, even if they are not
         // the most ideal tile for the current viewport. This may include tiles like
@@ -546,6 +561,45 @@ class SourceCache extends Evented {
                     // If a tile is only needed for fading, mark it as covered so that it isn't rendered on it's own.
                     this._coveredTiles[id] = true;
                     retain[id] = parentsForFading[id];
+                }
+            }
+
+            // disable fading logic in renderToTexture (e.g. 3D) mode
+            // e.g. avoid rendering two tiles on the same place
+            if (this.style.terrainSourceCache && this.style.terrainSourceCache.isEnabled()) {
+                const idealRasterTileIDs: {[_: string]: OverscaledTileID} = {};
+                const missingTileIDs: {[_: string]: OverscaledTileID} = {};
+                for (const tileID of idealTileIDs) {
+                    if (this._tiles[tileID.key].hasData())
+                        idealRasterTileIDs[tileID.key] = tileID;
+                    else
+                        missingTileIDs[tileID.key] = tileID;
+                }
+                // search for a complete set of children for each missing tile
+                for (const key in missingTileIDs) {
+                    const children = missingTileIDs[key].children(this._source.maxzoom);
+                    if (this._tiles[children[0].key] && this._tiles[children[1].key] && this._tiles[children[2].key] && this._tiles[children[3].key]) {
+                        idealRasterTileIDs[children[0].key] = retain[children[0].key] = children[0];
+                        idealRasterTileIDs[children[1].key] = retain[children[1].key] = children[1];
+                        idealRasterTileIDs[children[2].key] = retain[children[2].key] = children[2];
+                        idealRasterTileIDs[children[3].key] = retain[children[3].key] = children[3];
+                        delete(missingTileIDs[key]);
+                    }
+                }
+                // search for parent for each missing tile
+                for (const key in missingTileIDs) {
+                    const parent = this.findLoadedParent(missingTileIDs[key], this._source.minzoom);
+                    if (parent) {
+                        idealRasterTileIDs[parent.tileID.key] = retain[parent.tileID.key] = parent.tileID;
+                        // remove idealTiles which would be rendered twice
+                        for (const key in idealRasterTileIDs) {
+                            if (idealRasterTileIDs[key].isChildOf(parent.tileID)) delete(idealRasterTileIDs[key]);
+                        }
+                    }
+                }
+                // cover all tiles which are not needed
+                for (const key in this._tiles) {
+                    if (!idealRasterTileIDs[key]) this._coveredTiles[key] = true;
                 }
             }
         }

@@ -53,6 +53,10 @@ import symbolSDFFrag from './symbol_sdf.fragment.glsl';
 import symbolSDFVert from './symbol_sdf.vertex.glsl';
 import symbolTextAndIconFrag from './symbol_text_and_icon.fragment.glsl';
 import symbolTextAndIconVert from './symbol_text_and_icon.vertex.glsl';
+import terrainDepthFrag from './terrain_depth.fragment.glsl';
+import terrainCoordsFrag from './terrain_coords.fragment.glsl';
+import terrainFrag from './terrain.fragment.glsl';
+import terrainVert from './terrain.vertex.glsl';
 
 export default {
     prelude: compile(preludeFrag, preludeVert),
@@ -80,7 +84,10 @@ export default {
     raster: compile(rasterFrag, rasterVert),
     symbolIcon: compile(symbolIconFrag, symbolIconVert),
     symbolSDF: compile(symbolSDFFrag, symbolSDFVert),
-    symbolTextAndIcon: compile(symbolTextAndIconFrag, symbolTextAndIconVert)
+    symbolTextAndIcon: compile(symbolTextAndIconFrag, symbolTextAndIconVert),
+    terrain: compile(terrainFrag, terrainVert),
+    terrainDepth: compile(terrainDepthFrag, terrainVert),
+    terrainCoords: compile(terrainCoordsFrag, terrainVert)
 };
 
 // Expand #pragmas to #ifdefs.

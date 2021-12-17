@@ -64,6 +64,7 @@ class Tile {
     expiredRequestCount: number;
     state: TileState;
     timeAdded: any;
+    timeLoaded: any;
     fadeEndTime: any;
     collisionBoxArray: CollisionBoxArray;
     redoWhenDone: boolean;
@@ -74,8 +75,10 @@ class Tile {
 
     neighboringTiles: any;
     dem: DEMData;
+    demMatrix: mat4;
     aborted: boolean;
     needsHillshadePrepare: boolean;
+    needsTerrainPrepare: boolean;
     request: Cancelable;
     texture: any;
     fbo: Framebuffer;
@@ -89,6 +92,8 @@ class Tile {
     hasSymbolBuckets: boolean;
     hasRTLText: boolean;
     dependencies: any;
+    textures: Array<Texture>;
+    textureCoords: {[_: string]: string}; // remeber all coords rendered to textures
 
     /**
      * @param {OverscaledTileID} tileID
@@ -106,6 +111,8 @@ class Tile {
         this.hasSymbolBuckets = false;
         this.hasRTLText = false;
         this.dependencies = {};
+        this.textures = [];
+        this.textureCoords = {};
 
         // Counts the number of times a response was already expired when
         // received. We're using this to add a delay when making a new request
@@ -126,6 +133,14 @@ class Tile {
 
     wasRequested() {
         return this.state === 'errored' || this.state === 'loaded' || this.state === 'reloading';
+    }
+
+    clearTextures(painter: any) {
+        this.demTexture && painter.saveTileTexture(this.demTexture);
+        this.textures.forEach(t => painter.saveTileTexture(t));
+        this.demTexture = null;
+        this.textures = [];
+        this.textureCoords = {};
     }
 
     /**

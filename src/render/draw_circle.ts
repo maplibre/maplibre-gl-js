@@ -24,6 +24,7 @@ type TileRenderState = {
   layoutVertexBuffer: VertexBuffer;
   indexBuffer: IndexBuffer;
   uniformValues: UniformValues<CircleUniformsType>;
+  terrain: any;
 };
 
 type SegmentsTileRenderState = {
@@ -66,6 +67,7 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
         const program = painter.useProgram('circle', programConfiguration);
         const layoutVertexBuffer = bucket.layoutVertexBuffer;
         const indexBuffer = bucket.indexBuffer;
+        const terrain = painter.style.terrainSourceCache.getTerrain(coord);
         const uniformValues = circleUniformValues(painter, coord, tile, layer);
 
         const state: TileRenderState = {
@@ -74,6 +76,7 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
             layoutVertexBuffer,
             indexBuffer,
             uniformValues,
+            terrain
         };
 
         if (sortFeaturesByKey) {
@@ -100,11 +103,11 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
     }
 
     for (const segmentsState of segmentsRenderStates) {
-        const {programConfiguration, program, layoutVertexBuffer, indexBuffer, uniformValues} = segmentsState.state;
+        const {programConfiguration, program, layoutVertexBuffer, indexBuffer, uniformValues, terrain} = segmentsState.state;
         const segments = segmentsState.segments;
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-            uniformValues, layer.id,
+            uniformValues, terrain, layer.id,
             layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }

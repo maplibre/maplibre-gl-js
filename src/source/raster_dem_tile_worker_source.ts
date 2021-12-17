@@ -1,6 +1,5 @@
 import DEMData from '../data/dem_data';
 import {RGBAImage} from '../util/image';
-
 import type Actor from '../util/actor';
 import type {
     WorkerDEMTileParameters,

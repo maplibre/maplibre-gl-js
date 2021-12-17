@@ -9,10 +9,11 @@ import {
 import type Painter from './painter';
 import type SourceCache from '../source/source_cache';
 import type BackgroundStyleLayer from '../style/style_layer/background_style_layer';
+import { OverscaledTileID } from '../source/tile_id';
 
 export default drawBackground;
 
-function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer) {
+function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer, coords?: Array<OverscaledTileID>) {
     const color = layer.paint.get('background-color');
     const opacity = layer.paint.get('background-opacity');
 
@@ -31,10 +32,8 @@ function drawBackground(painter: Painter, sourceCache: SourceCache, layer: Backg
     const stencilMode = StencilMode.disabled;
     const depthMode = painter.depthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
-
     const program = painter.useProgram(image ? 'backgroundPattern' : 'background');
-
-    const tileIDs = transform.coveringTiles({tileSize});
+    const tileIDs = coords ? coords : transform.coveringTiles({tileSize});
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);
@@ -43,13 +42,14 @@ function drawBackground(painter: Painter, sourceCache: SourceCache, layer: Backg
 
     const crossfade = layer.getCrossfadeParameters();
     for (const tileID of tileIDs) {
-        const matrix = painter.transform.calculatePosMatrix(tileID.toUnwrapped());
+        const matrix = coords ? tileID.posMatrix : painter.transform.calculatePosMatrix(tileID.toUnwrapped());
         const uniformValues = image ?
             backgroundPatternUniformValues(matrix, opacity, painter, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(matrix, opacity, color);
+        const terrain = painter.style.terrainSourceCache.getTerrain(tileID);
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-            uniformValues, layer.id, painter.tileExtentBuffer,
+            uniformValues, terrain, layer.id, painter.tileExtentBuffer,
             painter.quadTriangleIndexBuffer, painter.tileExtentSegments);
     }
 }
