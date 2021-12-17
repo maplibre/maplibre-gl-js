@@ -25,30 +25,30 @@ test('TouchZoomRotateHandler fires zoomstart, zoom, and zoomend events at approp
 
     simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -50}, {target, identifier: 2, clientX: 0, clientY: 50}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 0);
-    t.equal(zoom.callCount, 0);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(0);
+    expect(zoom.callCount).toBe(0);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -100}, {target, identifier: 2, clientX: 0, clientY: 100}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 1);
-    t.equal(zoom.callCount, 1);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(1);
+    expect(zoom.callCount).toBe(1);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -60}, {target, identifier: 2, clientX: 0, clientY: 60}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 1);
-    t.equal(zoom.callCount, 2);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(1);
+    expect(zoom.callCount).toBe(2);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
 
     // incremented because inertia starts a second zoom
-    t.equal(zoomstart.callCount, 2);
+    expect(zoomstart.callCount).toBe(2);
     map._renderTaskQueue.run();
-    t.equal(zoom.callCount, 3);
-    t.equal(zoomend.callCount, 1);
+    expect(zoom.callCount).toBe(3);
+    expect(zoomend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -68,27 +68,27 @@ test('TouchZoomRotateHandler fires rotatestart, rotate, and rotateend events at 
 
     simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}]});
     map._renderTaskQueue.run();
-    t.equal(rotatestart.callCount, 0);
-    t.equal(rotate.callCount, 0);
-    t.equal(rotateend.callCount, 0);
+    expect(rotatestart.callCount).toBe(0);
+    expect(rotate.callCount).toBe(0);
+    expect(rotateend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: -50, clientY: 0}, {target, identifier: 1, clientX: 50, clientY: 0}]});
     map._renderTaskQueue.run();
-    t.equal(rotatestart.callCount, 1);
-    t.equal(rotate.callCount, 1);
-    t.equal(rotateend.callCount, 0);
+    expect(rotatestart.callCount).toBe(1);
+    expect(rotate.callCount).toBe(1);
+    expect(rotateend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}]});
     map._renderTaskQueue.run();
-    t.equal(rotatestart.callCount, 1);
-    t.equal(rotate.callCount, 2);
-    t.equal(rotateend.callCount, 0);
+    expect(rotatestart.callCount).toBe(1);
+    expect(rotate.callCount).toBe(2);
+    expect(rotateend.callCount).toBe(0);
 
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
-    t.equal(rotatestart.callCount, 1);
-    t.equal(rotate.callCount, 2);
-    t.equal(rotateend.callCount, 1);
+    expect(rotatestart.callCount).toBe(1);
+    expect(rotate.callCount).toBe(2);
+    expect(rotateend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -112,7 +112,7 @@ test('TouchZoomRotateHandler does not begin a gesture if preventDefault is calle
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
 
-    t.equal(move.callCount, 0);
+    expect(move.callCount).toBe(0);
 
     map.remove();
     t.end();
@@ -134,29 +134,29 @@ test('TouchZoomRotateHandler starts zoom immediately when rotation disabled', (t
 
     simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 5}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 0);
-    t.equal(zoom.callCount, 0);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(0);
+    expect(zoom.callCount).toBe(0);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 6}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 1);
-    t.equal(zoom.callCount, 1);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(1);
+    expect(zoom.callCount).toBe(1);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 4}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 1);
-    t.equal(zoom.callCount, 2);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(1);
+    expect(zoom.callCount).toBe(2);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
     // incremented because inertia starts a second zoom
-    t.equal(zoomstart.callCount, 2);
+    expect(zoomstart.callCount).toBe(2);
     map._renderTaskQueue.run();
-    t.equal(zoom.callCount, 3);
-    t.equal(zoomend.callCount, 1);
+    expect(zoom.callCount).toBe(3);
+    expect(zoomend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -166,11 +166,11 @@ test('TouchZoomRotateHandler adds css class used for disabling default touch beh
     const map = createMap(t);
 
     const className = 'maplibregl-touch-zoom-rotate';
-    t.ok(map.getCanvasContainer().classList.contains(className));
+    expect(map.getCanvasContainer().classList.contains(className)).toBeTruthy();
     map.touchZoomRotate.disable();
-    t.notOk(map.getCanvasContainer().classList.contains(className));
+    expect(map.getCanvasContainer().classList.contains(className)).toBeFalsy();
     map.touchZoomRotate.enable();
-    t.ok(map.getCanvasContainer().classList.contains(className));
+    expect(map.getCanvasContainer().classList.contains(className)).toBeTruthy();
     t.end();
 });
 
@@ -199,30 +199,30 @@ test('TouchZoomRotateHandler zooms when touching two markers on the same map', (
     simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}]});
     simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}, {target: target2, identifier: 2, clientX: 0, clientY: 50}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 0);
-    t.equal(zoom.callCount, 0);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(0);
+    expect(zoom.callCount).toBe(0);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -100}, {target: target2, identifier: 2, clientX: 0, clientY: 100}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 1);
-    t.equal(zoom.callCount, 1);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(1);
+    expect(zoom.callCount).toBe(1);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -60}, {target: target2, identifier: 2, clientX: 0, clientY: 60}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 1);
-    t.equal(zoom.callCount, 2);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(1);
+    expect(zoom.callCount).toBe(2);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
 
     // incremented because inertia starts a second zoom
-    t.equal(zoomstart.callCount, 2);
+    expect(zoomstart.callCount).toBe(2);
     map._renderTaskQueue.run();
-    t.equal(zoom.callCount, 3);
-    t.equal(zoomend.callCount, 1);
+    expect(zoom.callCount).toBe(3);
+    expect(zoomend.callCount).toBe(1);
 
     map.remove();
     t.end();
@@ -254,30 +254,30 @@ test('TouchZoomRotateHandler does not zoom when touching an element not on the m
     simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}]});
     simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}, {target: target2, identifier: 2, clientX: 0, clientY: 50}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 0);
-    t.equal(zoom.callCount, 0);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(0);
+    expect(zoom.callCount).toBe(0);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -100}, {target: target2, identifier: 2, clientX: 0, clientY: 100}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 0);
-    t.equal(zoom.callCount, 0);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(0);
+    expect(zoom.callCount).toBe(0);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -60}, {target: target2, identifier: 2, clientX: 0, clientY: 60}]});
     map._renderTaskQueue.run();
-    t.equal(zoomstart.callCount, 0);
-    t.equal(zoom.callCount, 0);
-    t.equal(zoomend.callCount, 0);
+    expect(zoomstart.callCount).toBe(0);
+    expect(zoom.callCount).toBe(0);
+    expect(zoomend.callCount).toBe(0);
 
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
 
     // incremented because inertia starts a second zoom
-    t.equal(zoomstart.callCount, 0);
+    expect(zoomstart.callCount).toBe(0);
     map._renderTaskQueue.run();
-    t.equal(zoom.callCount, 0);
-    t.equal(zoomend.callCount, 0);
+    expect(zoom.callCount).toBe(0);
+    expect(zoomend.callCount).toBe(0);
 
     map.remove();
     t.end();
