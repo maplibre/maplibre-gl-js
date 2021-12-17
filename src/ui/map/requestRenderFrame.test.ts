@@ -2,34 +2,34 @@ import '../../../stub_loader';
 import {test} from '../../../util/test';
 import {createMap} from '../../../util';
 
-test('Map#_requestRenderFrame schedules a new render frame if necessary', (t) => {
+describe('Map#_requestRenderFrame schedules a new render frame if necessary', done => {
     const map = createMap(t);
     t.stub(map, 'triggerRepaint');
     map._requestRenderFrame(() => {});
-    expect(map.triggerRepaint.callCount).toBe(1);
+    expect(map.triggerRepaint).toHaveBeenCalledTimes(1);
     map.remove();
-    t.end();
+    done();
 });
 
-test('Map#_requestRenderFrame queues a task for the next render frame', (t) => {
+describe('Map#_requestRenderFrame queues a task for the next render frame', done => {
     const map = createMap(t);
-    const cb = t.spy();
+    const cb = jest.fn();
     map._requestRenderFrame(cb);
     map.once('render', () => {
-        expect(cb.callCount).toBe(1);
+        expect(cb).toHaveBeenCalledTimes(1);
         map.remove();
-        t.end();
+        done();
     });
 });
 
-test('Map#_cancelRenderFrame cancels a queued task', (t) => {
+describe('Map#_cancelRenderFrame cancels a queued task', done => {
     const map = createMap(t);
-    const cb = t.spy();
+    const cb = jest.fn();
     const id = map._requestRenderFrame(cb);
     map._cancelRenderFrame(id);
     map.once('render', () => {
-        expect(cb.callCount).toBe(0);
+        expect(cb).toHaveBeenCalledTimes(0);
         map.remove();
-        t.end();
+        done();
     });
 });
