@@ -1,18 +1,21 @@
-import '../../../stub_loader';
-import {test} from '../../../util/test';
-import {createMap} from '../../../util';
+import {createMap, setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
 
-describe('Map#_requestRenderFrame schedules a new render frame if necessary', done => {
-    const map = createMap(t);
-    t.stub(map, 'triggerRepaint');
-    map._requestRenderFrame(() => {});
-    expect(map.triggerRepaint).toHaveBeenCalledTimes(1);
-    map.remove();
-    done();
+beforeEach(() => {
+    setPerformance();
+    setWebGlContext();
+    setMatchMedia();
 });
 
-describe('Map#_requestRenderFrame queues a task for the next render frame', done => {
-    const map = createMap(t);
+test('Map#_requestRenderFrame schedules a new render frame if necessary', () => {
+    const map = createMap();
+    const spy = jest.spyOn(map, 'triggerRepaint');
+    map._requestRenderFrame(() => {});
+    expect(spy).toHaveBeenCalledTimes(1);
+    map.remove();
+});
+
+test('Map#_requestRenderFrame queues a task for the next render frame', done => {
+    const map = createMap();
     const cb = jest.fn();
     map._requestRenderFrame(cb);
     map.once('render', () => {
@@ -22,8 +25,8 @@ describe('Map#_requestRenderFrame queues a task for the next render frame', done
     });
 });
 
-describe('Map#_cancelRenderFrame cancels a queued task', done => {
-    const map = createMap(t);
+test('Map#_cancelRenderFrame cancels a queued task', done => {
+    const map = createMap();
     const cb = jest.fn();
     const id = map._requestRenderFrame(cb);
     map._cancelRenderFrame(id);
