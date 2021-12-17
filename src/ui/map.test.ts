@@ -33,20 +33,22 @@ test('Map', (t) => {
 
     t.test('constructor', (t) => {
         const map = createMap(t, {interactive: true, style: null});
-        t.ok(map.getContainer());
-        t.equal(map.getStyle(), undefined);
-        t.ok(map.boxZoom.isEnabled());
-        t.ok(map.doubleClickZoom.isEnabled());
-        t.ok(map.dragPan.isEnabled());
-        t.ok(map.dragRotate.isEnabled());
-        t.ok(map.keyboard.isEnabled());
-        t.ok(map.scrollZoom.isEnabled());
-        t.ok(map.touchZoomRotate.isEnabled());
-        t.throws(() => {
+        expect(map.getContainer()).toBeTruthy();
+        expect(map.getStyle()).toBe(undefined);
+        expect(map.boxZoom.isEnabled()).toBeTruthy();
+        expect(map.doubleClickZoom.isEnabled()).toBeTruthy();
+        expect(map.dragPan.isEnabled()).toBeTruthy();
+        expect(map.dragRotate.isEnabled()).toBeTruthy();
+        expect(map.keyboard.isEnabled()).toBeTruthy();
+        expect(map.scrollZoom.isEnabled()).toBeTruthy();
+        expect(map.touchZoomRotate.isEnabled()).toBeTruthy();
+        expect(() => {
             new Map({
                 container: 'anElementIdWhichDoesNotExistInTheDocument'
             });
-        }, new Error("Container 'anElementIdWhichDoesNotExistInTheDocument' not found"), 'throws on invalid map container id');
+        }).toThrowError(
+            new Error("Container 'anElementIdWhichDoesNotExistInTheDocument' not found")
+        );
         t.end();
     });
 
@@ -67,8 +69,8 @@ test('Map', (t) => {
         const bounds = [[-133, 16], [-68, 50]];
         const map = createMap(t, {container, bounds});
 
-        t.deepEqual(fixedLngLat(map.getCenter(), 4), {lng: -100.5, lat: 34.7171});
-        t.equal(fixedNum(map.getZoom(), 3), 2.113);
+        expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.7171});
+        expect(fixedNum(map.getZoom(), 3)).toBe(2.113);
 
         t.end();
     });
@@ -86,7 +88,7 @@ test('Map', (t) => {
         const unpadded = map(undefined, false);
         const padded = map({padding: 100}, true);
 
-        t.ok(unpadded.getZoom() > padded.getZoom());
+        expect(unpadded.getZoom() > padded.getZoom()).toBeTruthy();
 
         t.end();
     });
@@ -95,13 +97,13 @@ test('Map', (t) => {
         t.test('disables all handlers', (t) => {
             const map = createMap(t, {interactive: false});
 
-            t.notOk(map.boxZoom.isEnabled());
-            t.notOk(map.doubleClickZoom.isEnabled());
-            t.notOk(map.dragPan.isEnabled());
-            t.notOk(map.dragRotate.isEnabled());
-            t.notOk(map.keyboard.isEnabled());
-            t.notOk(map.scrollZoom.isEnabled());
-            t.notOk(map.touchZoomRotate.isEnabled());
+            expect(map.boxZoom.isEnabled()).toBeFalsy();
+            expect(map.doubleClickZoom.isEnabled()).toBeFalsy();
+            expect(map.dragPan.isEnabled()).toBeFalsy();
+            expect(map.dragRotate.isEnabled()).toBeFalsy();
+            expect(map.keyboard.isEnabled()).toBeFalsy();
+            expect(map.scrollZoom.isEnabled()).toBeFalsy();
+            expect(map.touchZoomRotate.isEnabled()).toBeFalsy();
 
             t.end();
         });
@@ -121,7 +123,7 @@ test('Map', (t) => {
                 options[handlerName] = false;
                 const map = createMap(t, options);
 
-                t.notOk(map[handlerName].isEnabled());
+                expect(map[handlerName].isEnabled()).toBeFalsy();
 
                 t.end();
             });
@@ -141,24 +143,24 @@ test('Map', (t) => {
             map.setStyle(createStyle());
         }, 1);
 
-        function fail() { t.ok(false); }
+        function fail() { expect(false).toBeTruthy(); }
         function pass() { t.end(); }
     });
 
     t.test('#setStyle', (t) => {
         t.test('returns self', (t) => {
             const map = new Map({container: window.document.createElement('div')});
-            t.equal(map.setStyle({
+            expect(map.setStyle({
                 version: 8,
                 sources: {},
                 layers: []
-            }), map);
+            })).toBe(map);
             t.end();
         });
 
         t.test('sets up event forwarding', (t) => {
             createMap(t, {}, (error, map) => {
-                t.error(error);
+                expect(error).toBeFalsy();
 
                 const events = [];
                 function recordEvent(event) { events.push(event.type); }
@@ -171,7 +173,7 @@ test('Map', (t) => {
                 map.style.fire(new Event('data'));
                 map.style.fire(new Event('dataloading'));
 
-                t.deepEqual(events, [
+                expect(events).toEqual([
                     'error',
                     'data',
                     'dataloading',
@@ -183,7 +185,7 @@ test('Map', (t) => {
 
         t.test('fires *data and *dataloading events', (t) => {
             createMap(t, {}, (error, map) => {
-                t.error(error);
+                expect(error).toBeFalsy();
 
                 const events = [];
                 function recordEvent(event) { events.push(event.type); }
@@ -202,7 +204,7 @@ test('Map', (t) => {
                 map.style.fire(new Event('data', {dataType: 'tile'}));
                 map.style.fire(new Event('dataloading', {dataType: 'tile'}));
 
-                t.deepEqual(events, [
+                expect(events).toEqual([
                     'styledata',
                     'styledataloading',
                     'sourcedata',
@@ -229,43 +231,43 @@ test('Map', (t) => {
             map.transform.lngRange = [-120, 140];
             map.transform.latRange = [-60, 80];
             map.transform.resize(600, 400);
-            t.equal(map.transform.zoom, 0.6983039737971012, 'map transform is constrained');
-            t.ok(map.transform.unmodified, 'map transform is not modified');
+            expect(map.transform.zoom).toBe(0.6983039737971012);
+            expect(map.transform.unmodified).toBeTruthy();
             map.setStyle(createStyle());
             map.on('style.load', () => {
-                t.deepEqual(fixedLngLat(map.transform.center), fixedLngLat({lng: -73.9749, lat: 40.7736}));
-                t.equal(fixedNum(map.transform.zoom), 12.5);
-                t.equal(fixedNum(map.transform.bearing), 29);
-                t.equal(fixedNum(map.transform.pitch), 50);
+                expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -73.9749, lat: 40.7736}));
+                expect(fixedNum(map.transform.zoom)).toBe(12.5);
+                expect(fixedNum(map.transform.bearing)).toBe(29);
+                expect(fixedNum(map.transform.pitch)).toBe(50);
                 t.end();
             });
         });
 
         t.test('style transform does not override map transform modified via options', (t) => {
             const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]});
-            t.notOk(map.transform.unmodified, 'map transform is modified by options');
+            expect(map.transform.unmodified).toBeFalsy();
             map.setStyle(createStyle());
             map.on('style.load', () => {
-                t.deepEqual(fixedLngLat(map.transform.center), fixedLngLat({lng: -77.0186, lat: 38.8888}));
-                t.equal(fixedNum(map.transform.zoom), 10);
-                t.equal(fixedNum(map.transform.bearing), 0);
-                t.equal(fixedNum(map.transform.pitch), 0);
+                expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
+                expect(fixedNum(map.transform.zoom)).toBe(10);
+                expect(fixedNum(map.transform.bearing)).toBe(0);
+                expect(fixedNum(map.transform.pitch)).toBe(0);
                 t.end();
             });
         });
 
         t.test('style transform does not override map transform modified via setters', (t) => {
             const map = new Map({container: window.document.createElement('div')});
-            t.ok(map.transform.unmodified);
+            expect(map.transform.unmodified).toBeTruthy();
             map.setZoom(10);
             map.setCenter([-77.0186, 38.8888]);
-            t.notOk(map.transform.unmodified, 'map transform is modified via setters');
+            expect(map.transform.unmodified).toBeFalsy();
             map.setStyle(createStyle());
             map.on('style.load', () => {
-                t.deepEqual(fixedLngLat(map.transform.center), fixedLngLat({lng: -77.0186, lat: 38.8888}));
-                t.equal(fixedNum(map.transform.zoom), 10);
-                t.equal(fixedNum(map.transform.bearing), 0);
-                t.equal(fixedNum(map.transform.pitch), 0);
+                expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
+                expect(fixedNum(map.transform.zoom)).toBe(10);
+                expect(fixedNum(map.transform.bearing)).toBe(0);
+                expect(fixedNum(map.transform.pitch)).toBe(0);
                 t.end();
             });
         });
@@ -273,10 +275,10 @@ test('Map', (t) => {
         t.test('passing null removes style', (t) => {
             const map = createMap(t);
             const style = map.style;
-            t.ok(style);
+            expect(style).toBeTruthy();
             t.spy(style, '_remove');
             map.setStyle(null);
-            t.equal(style._remove.callCount, 1);
+            expect(style._remove.callCount).toBe(1);
             t.end();
         });
 
@@ -287,8 +289,8 @@ test('Map', (t) => {
         t.test('returns self', (t) => {
             const transformRequest = () => { };
             const map = new Map({container: window.document.createElement('div')});
-            t.equal(map.setTransformRequest(transformRequest), map);
-            t.equal(map._requestManager._transformRequestFn, transformRequest);
+            expect(map.setTransformRequest(transformRequest)).toBe(map);
+            expect(map._requestManager._transformRequestFn).toBe(transformRequest);
             t.end();
         });
 
@@ -314,12 +316,12 @@ test('Map', (t) => {
             map.on('load', () => {
                 map.on('data', (e) => {
                     if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
-                        t.equal(map.isSourceLoaded('geojson'), true, 'true when loaded');
+                        expect(map.isSourceLoaded('geojson')).toBe(true);
                         t.end();
                     }
                 });
                 map.addSource('geojson', createStyleSource());
-                t.equal(map.isSourceLoaded('geojson'), false, 'false before loaded');
+                expect(map.isSourceLoaded('geojson')).toBe(false);
             });
         });
 
@@ -327,9 +329,9 @@ test('Map', (t) => {
             const style = createStyle();
             const map = createMap(t, {style});
 
-            t.equal(map.isStyleLoaded(), false, 'false before style has loaded');
+            expect(map.isStyleLoaded()).toBe(false);
             map.on('load', () => {
-                t.equal(map.isStyleLoaded(), true, 'true when style is loaded');
+                expect(map.isStyleLoaded()).toBe(true);
                 t.end();
             });
         });
@@ -337,14 +339,14 @@ test('Map', (t) => {
         t.test('Map#areTilesLoaded', (t) => {
             const style = createStyle();
             const map = createMap(t, {style});
-            t.equal(map.areTilesLoaded(), true, 'returns true if there are no sources on the map');
+            expect(map.areTilesLoaded()).toBe(true);
             map.on('load', () => {
                 const fakeTileId = new OverscaledTileID(0, 0, 0, 0, 0);
                 map.addSource('geojson', createStyleSource());
                 map.style.sourceCaches.geojson._tiles[fakeTileId.key] = new Tile(fakeTileId);
-                t.equal(map.areTilesLoaded(), false, 'returns false if tiles are loading');
+                expect(map.areTilesLoaded()).toBe(false);
                 map.style.sourceCaches.geojson._tiles[fakeTileId.key].state = 'loaded';
-                t.equal(map.areTilesLoaded(), true, 'returns true if tiles are loaded');
+                expect(map.areTilesLoaded()).toBe(true);
                 t.end();
             });
         });
@@ -357,7 +359,7 @@ test('Map', (t) => {
             const map = createMap(t, {style});
 
             map.on('load', () => {
-                t.deepEqual(map.getStyle(), style);
+                expect(map.getStyle()).toEqual(style);
                 t.end();
             });
         });
@@ -368,7 +370,7 @@ test('Map', (t) => {
 
             map.on('load', () => {
                 map.addSource('geojson', createStyleSource());
-                t.deepEqual(map.getStyle(), extend(createStyle(), {
+                expect(map.getStyle()).toEqual(extend(createStyle(), {
                     sources: {geojson: createStyleSource()}
                 }));
                 t.end();
@@ -398,7 +400,7 @@ test('Map', (t) => {
 
             map.on('load', () => {
                 map.addLayer(layer);
-                t.deepEqual(map.getStyle(), extend(createStyle(), {
+                expect(map.getStyle()).toEqual(extend(createStyle(), {
                     layers: [layer]
                 }));
                 t.end();
@@ -435,7 +437,7 @@ test('Map', (t) => {
             map.on('load', () => {
                 map.addSource('fill', source);
                 map.addLayer(layer);
-                t.deepEqual(map.getStyle(), extend(createStyle(), {
+                expect(map.getStyle()).toEqual(extend(createStyle(), {
                     sources: {fill: source},
                     layers: [layer]
                 }));
@@ -453,7 +455,7 @@ test('Map', (t) => {
 
             const previousStyle = map.style;
             map.setStyle(style);
-            t.ok(map.style && map.style !== previousStyle);
+            expect(map.style && map.style !== previousStyle).toBeTruthy();
             t.end();
         });
 
@@ -466,7 +468,7 @@ test('Map', (t) => {
 
             const previousStyle = map.style;
             map.setStyle(style, {diff: false});
-            t.ok(map.style && map.style !== previousStyle);
+            expect(map.style && map.style !== previousStyle).toBeTruthy();
             t.end();
         });
 
@@ -500,8 +502,8 @@ test('Map', (t) => {
 
         map.once('render', () => {
             map.moveLayer('layerId1', 'layerId2');
-            t.equal(map.getLayer('layerId1').id, 'layerId1');
-            t.equal(map.getLayer('layerId2').id, 'layerId2');
+            expect(map.getLayer('layerId1').id).toBe('layerId1');
+            expect(map.getLayer('layerId2').id).toBe('layerId2');
             t.end();
         });
     });
@@ -529,9 +531,9 @@ test('Map', (t) => {
 
         map.once('render', () => {
             const mapLayer = map.getLayer('layerId');
-            t.equal(mapLayer.id, layer.id);
-            t.equal(mapLayer.type, layer.type);
-            t.equal(mapLayer.source, layer.source);
+            expect(mapLayer.id).toBe(layer.id);
+            expect(mapLayer.type).toBe(layer.type);
+            expect(mapLayer.source).toBe(layer.source);
             t.end();
         });
     });
@@ -545,8 +547,8 @@ test('Map', (t) => {
             Object.defineProperty(container, 'clientHeight', {value: 250});
             map.resize();
 
-            t.equal(map.transform.width, 250);
-            t.equal(map.transform.height, 250);
+            expect(map.transform.width).toBe(250);
+            expect(map.transform.height).toBe(250);
 
             t.end();
         });
@@ -562,7 +564,7 @@ test('Map', (t) => {
             });
 
             map.resize();
-            t.deepEqual(events, ['movestart', 'move', 'resize', 'moveend']);
+            expect(events).toEqual(['movestart', 'move', 'resize', 'moveend']);
 
             t.end();
         });
@@ -590,9 +592,9 @@ test('Map', (t) => {
 
             map._onWindowResize();
 
-            t.notOk(map.stop.called);
-            t.notOk(map._update.called);
-            t.notOk(map.resize.called);
+            expect(map.stop.called).toBeFalsy();
+            expect(map._update.called).toBeFalsy();
+            expect(map.resize.called).toBeFalsy();
 
             t.end();
         });
@@ -605,8 +607,8 @@ test('Map', (t) => {
 
             map._onWindowResize();
 
-            t.ok(map._update.called);
-            t.ok(map.resize.called);
+            expect(map._update.called).toBeTruthy();
+            expect(map.resize.called).toBeTruthy();
 
             t.end();
         });
@@ -616,25 +618,23 @@ test('Map', (t) => {
 
     t.test('#getBounds', (t) => {
         const map = createMap(t, {zoom: 0});
-        t.deepEqual(parseFloat(map.getBounds().getCenter().lng.toFixed(10)), 0, 'getBounds');
-        t.deepEqual(parseFloat(map.getBounds().getCenter().lat.toFixed(10)), 0, 'getBounds');
+        expect(parseFloat(map.getBounds().getCenter().lng.toFixed(10))).toEqual(0);
+        expect(parseFloat(map.getBounds().getCenter().lat.toFixed(10))).toEqual(0);
 
-        t.deepEqual(toFixed(map.getBounds().toArray()), toFixed([
+        expect(toFixed(map.getBounds().toArray())).toEqual(toFixed([
             [ -70.31249999999976, -57.326521225216965 ],
             [ 70.31249999999977, 57.32652122521695 ] ]));
 
         t.test('rotated bounds', (t) => {
             const map = createMap(t, {zoom: 1, bearing: 45});
-            t.deepEqual(
-                toFixed([[-49.718445552178764, -44.44541580601936], [49.7184455522, 44.445415806019355]]),
-                toFixed(map.getBounds().toArray())
-            );
+            expect(
+                toFixed([[-49.718445552178764, -44.44541580601936], [49.7184455522, 44.445415806019355]])
+            ).toEqual(toFixed(map.getBounds().toArray()));
 
             map.setBearing(135);
-            t.deepEqual(
-                toFixed([[-49.718445552178764, -44.44541580601936], [49.7184455522, 44.445415806019355]]),
-                toFixed(map.getBounds().toArray())
-            );
+            expect(
+                toFixed([[-49.718445552178764, -44.44541580601936], [49.7184455522, 44.445415806019355]])
+            ).toEqual(toFixed(map.getBounds().toArray()));
 
             t.end();
         });
@@ -659,38 +659,36 @@ test('Map', (t) => {
         t.test('constrains map bounds', (t) => {
             const map = createMap(t, {zoom:0});
             map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
-            t.deepEqual(
-                toFixed([[-130.4297000000, 7.0136641176], [-61.5234400000, 60.2398142283]]),
-                toFixed(map.getBounds().toArray())
-            );
+            expect(
+                toFixed([[-130.4297000000, 7.0136641176], [-61.5234400000, 60.2398142283]])
+            ).toEqual(toFixed(map.getBounds().toArray()));
             t.end();
         });
 
         t.test('when no argument is passed, map bounds constraints are removed', (t) => {
             const map = createMap(t, {zoom:0});
             map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
-            t.deepEqual(
-                toFixed([[-166.28906999999964, -27.6835270554], [-25.664070000000066, 73.8248206697]]),
-                toFixed(map.setMaxBounds(null).setZoom(0).getBounds().toArray())
-            );
+            expect(
+                toFixed([[-166.28906999999964, -27.6835270554], [-25.664070000000066, 73.8248206697]])
+            ).toEqual(toFixed(map.setMaxBounds(null).setZoom(0).getBounds().toArray()));
             t.end();
         });
 
         t.test('should not zoom out farther than bounds', (t) => {
             const map = createMap(t);
             map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
-            t.notEqual(map.setZoom(0).getZoom(), 0);
+            expect(map.setZoom(0).getZoom()).not.toBe(0);
             t.end();
         });
 
         t.test('throws on invalid bounds', (t) => {
             const map = createMap(t, {zoom:0});
-            t.throws(() => {
+            expect(() => {
                 map.setMaxBounds([-130.4297, 50.0642], [-61.52344, 24.20688]);
-            }, Error, 'throws on two decoupled array coordinate arguments');
-            t.throws(() => {
+            }).toThrowError(Error);
+            expect(() => {
                 map.setMaxBounds(-130.4297, 50.0642, -61.52344, 24.20688);
-            }, Error, 'throws on individual coordinate arguments');
+            }).toThrowError(Error);
             t.end();
         });
 
@@ -708,7 +706,7 @@ test('Map', (t) => {
     t.test('#getMaxBounds', (t) => {
         t.test('returns null when no bounds set', (t) => {
             const map = createMap(t, {zoom:0});
-            t.equal(map.getMaxBounds(), null);
+            expect(map.getMaxBounds()).toBe(null);
             t.end();
         });
 
@@ -716,7 +714,7 @@ test('Map', (t) => {
             const map = createMap(t, {zoom:0});
             const bounds = [[-130.4297, 50.0642], [-61.52344, 24.20688]];
             map.setMaxBounds(bounds);
-            t.deepEqual(map.getMaxBounds().toArray(), bounds);
+            expect(map.getMaxBounds().toArray()).toEqual(bounds);
             t.end();
         });
 
@@ -726,13 +724,13 @@ test('Map', (t) => {
     t.test('#getRenderWorldCopies', (t) => {
         t.test('initially false', (t) => {
             const map = createMap(t, {renderWorldCopies: false});
-            t.equal(map.getRenderWorldCopies(), false);
+            expect(map.getRenderWorldCopies()).toBe(false);
             t.end();
         });
 
         t.test('initially true', (t) => {
             const map = createMap(t, {renderWorldCopies: true});
-            t.equal(map.getRenderWorldCopies(), true);
+            expect(map.getRenderWorldCopies()).toBe(true);
             t.end();
         });
 
@@ -743,28 +741,28 @@ test('Map', (t) => {
         t.test('initially false', (t) => {
             const map = createMap(t, {renderWorldCopies: false});
             map.setRenderWorldCopies(true);
-            t.equal(map.getRenderWorldCopies(), true);
+            expect(map.getRenderWorldCopies()).toBe(true);
             t.end();
         });
 
         t.test('initially true', (t) => {
             const map = createMap(t, {renderWorldCopies: true});
             map.setRenderWorldCopies(false);
-            t.equal(map.getRenderWorldCopies(), false);
+            expect(map.getRenderWorldCopies()).toBe(false);
             t.end();
         });
 
         t.test('undefined', (t) => {
             const map = createMap(t, {renderWorldCopies: false});
             map.setRenderWorldCopies(undefined);
-            t.equal(map.getRenderWorldCopies(), true);
+            expect(map.getRenderWorldCopies()).toBe(true);
             t.end();
         });
 
         t.test('null', (t) => {
             const map = createMap(t, {renderWorldCopies: true});
             map.setRenderWorldCopies(null);
-            t.equal(map.getRenderWorldCopies(), false);
+            expect(map.getRenderWorldCopies()).toBe(false);
             t.end();
         });
 
@@ -775,7 +773,7 @@ test('Map', (t) => {
         const map = createMap(t, {zoom:5});
         map.setMinZoom(3.5);
         map.setZoom(1);
-        t.equal(map.getZoom(), 3.5);
+        expect(map.getZoom()).toBe(3.5);
         t.end();
     });
 
@@ -783,25 +781,25 @@ test('Map', (t) => {
         const map = createMap(t, {minZoom:5});
         map.setMinZoom(null);
         map.setZoom(1);
-        t.equal(map.getZoom(), 1);
+        expect(map.getZoom()).toBe(1);
         t.end();
     });
 
     t.test('#getMinZoom', (t) => {
         const map = createMap(t, {zoom: 0});
-        t.equal(map.getMinZoom(), -2, 'returns default value');
+        expect(map.getMinZoom()).toBe(-2);
         map.setMinZoom(10);
-        t.equal(map.getMinZoom(), 10, 'returns custom value');
+        expect(map.getMinZoom()).toBe(10);
         t.end();
     });
 
     t.test('ignore minZooms over maxZoom', (t) => {
         const map = createMap(t, {zoom:2, maxZoom:5});
-        t.throws(() => {
+        expect(() => {
             map.setMinZoom(6);
-        });
+        }).toThrow();
         map.setZoom(0);
-        t.equal(map.getZoom(), 0);
+        expect(map.getZoom()).toBe(0);
         t.end();
     });
 
@@ -809,7 +807,7 @@ test('Map', (t) => {
         const map = createMap(t, {zoom:0});
         map.setMaxZoom(3.5);
         map.setZoom(4);
-        t.equal(map.getZoom(), 3.5);
+        expect(map.getZoom()).toBe(3.5);
         t.end();
     });
 
@@ -817,39 +815,39 @@ test('Map', (t) => {
         const map = createMap(t, {maxZoom:5});
         map.setMaxZoom(null);
         map.setZoom(6);
-        t.equal(map.getZoom(), 6);
+        expect(map.getZoom()).toBe(6);
         t.end();
     });
 
     t.test('#getMaxZoom', (t) => {
         const map = createMap(t, {zoom: 0});
-        t.equal(map.getMaxZoom(), 22, 'returns default value');
+        expect(map.getMaxZoom()).toBe(22);
         map.setMaxZoom(10);
-        t.equal(map.getMaxZoom(), 10, 'returns custom value');
+        expect(map.getMaxZoom()).toBe(10);
         t.end();
     });
 
     t.test('ignore maxZooms over minZoom', (t) => {
         const map = createMap(t, {minZoom:5});
-        t.throws(() => {
+        expect(() => {
             map.setMaxZoom(4);
-        });
+        }).toThrow();
         map.setZoom(5);
-        t.equal(map.getZoom(), 5);
+        expect(map.getZoom()).toBe(5);
         t.end();
     });
 
     t.test('throw on maxZoom smaller than minZoom at init', (t) => {
-        t.throws(() => {
+        expect(() => {
             createMap(t, {minZoom:10, maxZoom:5});
-        }, new Error(`maxZoom must be greater than or equal to minZoom`));
+        }).toThrowError(new Error(`maxZoom must be greater than or equal to minZoom`));
         t.end();
     });
 
     t.test('throw on maxZoom smaller than minZoom at init with falsey maxZoom', (t) => {
-        t.throws(() => {
+        expect(() => {
             createMap(t, {minZoom:1, maxZoom:0});
-        }, new Error(`maxZoom must be greater than or equal to minZoom`));
+        }).toThrowError(new Error(`maxZoom must be greater than or equal to minZoom`));
         t.end();
     });
 
@@ -857,7 +855,7 @@ test('Map', (t) => {
         const map = createMap(t, {pitch: 20});
         map.setMinPitch(10);
         map.setPitch(0);
-        t.equal(map.getPitch(), 10);
+        expect(map.getPitch()).toBe(10);
         t.end();
     });
 
@@ -865,25 +863,25 @@ test('Map', (t) => {
         const map = createMap(t, {minPitch: 20});
         map.setMinPitch(null);
         map.setPitch(0);
-        t.equal(map.getPitch(), 0);
+        expect(map.getPitch()).toBe(0);
         t.end();
     });
 
     t.test('#getMinPitch', (t) => {
         const map = createMap(t, {pitch: 0});
-        t.equal(map.getMinPitch(), 0, 'returns default value');
+        expect(map.getMinPitch()).toBe(0);
         map.setMinPitch(10);
-        t.equal(map.getMinPitch(), 10, 'returns custom value');
+        expect(map.getMinPitch()).toBe(10);
         t.end();
     });
 
     t.test('ignore minPitchs over maxPitch', (t) => {
         const map = createMap(t, {pitch: 0, maxPitch: 10});
-        t.throws(() => {
+        expect(() => {
             map.setMinPitch(20);
-        });
+        }).toThrow();
         map.setPitch(0);
-        t.equal(map.getPitch(), 0);
+        expect(map.getPitch()).toBe(0);
         t.end();
     });
 
@@ -891,7 +889,7 @@ test('Map', (t) => {
         const map = createMap(t, {pitch: 0});
         map.setMaxPitch(10);
         map.setPitch(20);
-        t.equal(map.getPitch(), 10);
+        expect(map.getPitch()).toBe(10);
         t.end();
     });
 
@@ -899,61 +897,61 @@ test('Map', (t) => {
         const map = createMap(t, {maxPitch:10});
         map.setMaxPitch(null);
         map.setPitch(20);
-        t.equal(map.getPitch(), 20);
+        expect(map.getPitch()).toBe(20);
         t.end();
     });
 
     t.test('#getMaxPitch', (t) => {
         const map = createMap(t, {pitch: 0});
-        t.equal(map.getMaxPitch(), 60, 'returns default value');
+        expect(map.getMaxPitch()).toBe(60);
         map.setMaxPitch(10);
-        t.equal(map.getMaxPitch(), 10, 'returns custom value');
+        expect(map.getMaxPitch()).toBe(10);
         t.end();
     });
 
     t.test('ignore maxPitchs over minPitch', (t) => {
         const map = createMap(t, {minPitch:10});
-        t.throws(() => {
+        expect(() => {
             map.setMaxPitch(0);
-        });
+        }).toThrow();
         map.setPitch(10);
-        t.equal(map.getPitch(), 10);
+        expect(map.getPitch()).toBe(10);
         t.end();
     });
 
     t.test('throw on maxPitch smaller than minPitch at init', (t) => {
-        t.throws(() => {
+        expect(() => {
             createMap(t, {minPitch: 10, maxPitch: 5});
-        }, new Error(`maxPitch must be greater than or equal to minPitch`));
+        }).toThrowError(new Error(`maxPitch must be greater than or equal to minPitch`));
         t.end();
     });
 
     t.test('throw on maxPitch smaller than minPitch at init with falsey maxPitch', (t) => {
-        t.throws(() => {
+        expect(() => {
             createMap(t, {minPitch: 1, maxPitch: 0});
-        }, new Error(`maxPitch must be greater than or equal to minPitch`));
+        }).toThrowError(new Error(`maxPitch must be greater than or equal to minPitch`));
         t.end();
     });
 
     t.test('throw on maxPitch greater than valid maxPitch at init', (t) => {
-        t.throws(() => {
+        expect(() => {
             createMap(t, {maxPitch: 90});
-        }, new Error(`maxPitch must be less than or equal to 85`));
+        }).toThrowError(new Error(`maxPitch must be less than or equal to 85`));
         t.end();
     });
 
     t.test('throw on minPitch less than valid minPitch at init', (t) => {
-        t.throws(() => {
+        expect(() => {
             createMap(t, {minPitch: -10});
-        }, new Error(`minPitch must be greater than or equal to 0`));
+        }).toThrowError(new Error(`minPitch must be greater than or equal to 0`));
         t.end();
     });
 
     t.test('#remove', (t) => {
         const map = createMap(t);
-        t.equal(map.getContainer().childNodes.length, 2);
+        expect(map.getContainer().childNodes.length).toBe(2);
         map.remove();
-        t.equal(map.getContainer().childNodes.length, 0);
+        expect(map.getContainer().childNodes.length).toBe(0);
         t.end();
     });
 
@@ -967,7 +965,7 @@ test('Map', (t) => {
         };
         map.addControl(control);
         map.remove();
-        t.ok(control.onRemove.calledOnce);
+        expect(control.onRemove.calledOnce).toBeTruthy();
         t.end();
     });
 
@@ -978,7 +976,7 @@ test('Map', (t) => {
         const control = {
             onRemove(map) {
                 onRemoveCalled++;
-                t.deepEqual(map.getStyle(), style);
+                expect(map.getStyle()).toEqual(style);
             },
             onAdd (_) {
                 return window.document.createElement('div');
@@ -990,7 +988,7 @@ test('Map', (t) => {
         map.on('style.load', () => {
             style = map.getStyle();
             map.remove();
-            t.equal(onRemoveCalled, 1);
+            expect(onRemoveCalled).toBe(1);
             t.end();
         });
     });
@@ -1036,12 +1034,12 @@ test('Map', (t) => {
         const map = createMap(t);
         const control = {
             onAdd(_) {
-                t.equal(map, _, 'addTo() called with map');
+                expect(map).toBe(_);
                 return window.document.createElement('div');
             }
         };
         map.addControl(control);
-        t.equal(map._controls[1], control, "saves reference to added controls");
+        expect(map._controls[1]).toBe(control);
         t.end();
     });
 
@@ -1052,7 +1050,7 @@ test('Map', (t) => {
 
         map.addControl(control);
         map.removeControl(control);
-        t.ok(stub.calledTwice);
+        expect(stub.calledTwice).toBeTruthy();
         t.end();
 
     });
@@ -1064,12 +1062,12 @@ test('Map', (t) => {
                 return window.document.createElement('div');
             },
             onRemove(_) {
-                t.equal(map, _, 'onRemove() called with map');
+                expect(map).toBe(_);
             }
         };
         map.addControl(control);
         map.removeControl(control);
-        t.equal(map._controls.length, 1, "removes removed controls from map's control array");
+        expect(map._controls.length).toBe(1);
         t.end();
 
     });
@@ -1084,21 +1082,21 @@ test('Map', (t) => {
         };
 
         const control = new Ctrl();
-        t.equal(map.hasControl(control), false, 'Reference to control is not found');
+        expect(map.hasControl(control)).toBe(false);
         map.addControl(control);
-        t.equal(map.hasControl(control), true, 'Reference to control is found');
+        expect(map.hasControl(control)).toBe(true);
         t.end();
     });
 
     t.test('#project', (t) => {
         const map = createMap(t);
-        t.deepEqual(map.project([0, 0]), {x: 100, y: 100});
+        expect(map.project([0, 0])).toEqual({x: 100, y: 100});
         t.end();
     });
 
     t.test('#unproject', (t) => {
         const map = createMap(t);
-        t.deepEqual(fixedLngLat(map.unproject([100, 100])), {lng: 0, lat: 0});
+        expect(fixedLngLat(map.unproject([100, 100]))).toEqual({lng: 0, lat: 0});
         t.end();
     });
 
@@ -1106,22 +1104,22 @@ test('Map', (t) => {
         const map = createMap(t);
 
         map.on('load', () => {
-            t.equals(map.listImages().length, 0);
+            expect(map.listImages().length).toBe(0);
 
             map.addImage('img', {width: 1, height: 1, data: new Uint8Array(4)});
 
             const images = map.listImages();
-            t.equals(images.length, 1);
-            t.equals(images[0], 'img');
+            expect(images.length).toBe(1);
+            expect(images[0]).toBe('img');
             t.end();
         });
     });
 
     t.test('#listImages throws an error if called before "load"', (t) => {
         const map = createMap(t);
-        t.throws(() => {
+        expect(() => {
             map.listImages();
-        }, Error);
+        }).toThrowError(Error);
         t.end();
     });
 
@@ -1129,15 +1127,15 @@ test('Map', (t) => {
 
         t.test('if no arguments provided', (t) => {
             createMap(t, {}, (err, map) => {
-                t.error(err);
+                expect(err).toBeFalsy();
                 t.spy(map.style, 'queryRenderedFeatures');
 
                 const output = map.queryRenderedFeatures();
 
                 const args = map.style.queryRenderedFeatures.getCall(0).args;
-                t.ok(args[0]);
-                t.deepEqual(args[1], {availableImages: []});
-                t.deepEqual(output, []);
+                expect(args[0]).toBeTruthy();
+                expect(args[1]).toEqual({availableImages: []});
+                expect(output).toEqual([]);
 
                 t.end();
             });
@@ -1145,16 +1143,16 @@ test('Map', (t) => {
 
         t.test('if only "geometry" provided', (t) => {
             createMap(t, {}, (err, map) => {
-                t.error(err);
+                expect(err).toBeFalsy();
                 t.spy(map.style, 'queryRenderedFeatures');
 
                 const output = map.queryRenderedFeatures(map.project(new LngLat(0, 0)));
 
                 const args = map.style.queryRenderedFeatures.getCall(0).args;
-                t.deepEqual(args[0], [{x: 100, y: 100}]); // query geometry
-                t.deepEqual(args[1], {availableImages: []}); // params
-                t.deepEqual(args[2], map.transform); // transform
-                t.deepEqual(output, []);
+                expect(args[0]).toEqual([{x: 100, y: 100}]); // query geometry
+                expect(args[1]).toEqual({availableImages: []}); // params
+                expect(args[2]).toEqual(map.transform); // transform
+                expect(output).toEqual([]);
 
                 t.end();
             });
@@ -1162,15 +1160,15 @@ test('Map', (t) => {
 
         t.test('if only "params" provided', (t) => {
             createMap(t, {}, (err, map) => {
-                t.error(err);
+                expect(err).toBeFalsy();
                 t.spy(map.style, 'queryRenderedFeatures');
 
                 const output = map.queryRenderedFeatures({filter: ['all']});
 
                 const args = map.style.queryRenderedFeatures.getCall(0).args;
-                t.ok(args[0]);
-                t.deepEqual(args[1], {availableImages: [], filter: ['all']});
-                t.deepEqual(output, []);
+                expect(args[0]).toBeTruthy();
+                expect(args[1]).toEqual({availableImages: [], filter: ['all']});
+                expect(output).toEqual([]);
 
                 t.end();
             });
@@ -1178,15 +1176,15 @@ test('Map', (t) => {
 
         t.test('if both "geometry" and "params" provided', (t) => {
             createMap(t, {}, (err, map) => {
-                t.error(err);
+                expect(err).toBeFalsy();
                 t.spy(map.style, 'queryRenderedFeatures');
 
                 const output = map.queryRenderedFeatures({filter: ['all']});
 
                 const args = map.style.queryRenderedFeatures.getCall(0).args;
-                t.ok(args[0]);
-                t.deepEqual(args[1], {availableImages: [], filter: ['all']});
-                t.deepEqual(output, []);
+                expect(args[0]).toBeTruthy();
+                expect(args[1]).toEqual({availableImages: [], filter: ['all']});
+                expect(output).toEqual([]);
 
                 t.end();
             });
@@ -1194,19 +1192,19 @@ test('Map', (t) => {
 
         t.test('if "geometry" with unwrapped coords provided', (t) => {
             createMap(t, {}, (err, map) => {
-                t.error(err);
+                expect(err).toBeFalsy();
                 t.spy(map.style, 'queryRenderedFeatures');
 
                 map.queryRenderedFeatures(map.project(new LngLat(360, 0)));
 
-                t.deepEqual(map.style.queryRenderedFeatures.getCall(0).args[0], [{x: 612, y: 100}]);
+                expect(map.style.queryRenderedFeatures.getCall(0).args[0]).toEqual([{x: 612, y: 100}]);
                 t.end();
             });
         });
 
         t.test('returns an empty array when no style is loaded', (t) => {
             const map = createMap(t, {style: undefined});
-            t.deepEqual(map.queryRenderedFeatures(), []);
+            expect(map.queryRenderedFeatures()).toEqual([]);
             t.end();
         });
 
@@ -1240,13 +1238,13 @@ test('Map', (t) => {
 
             map.on('style.load', () => {
                 map.style.dispatcher.broadcast = function(key, value) {
-                    t.equal(key, 'updateLayers');
-                    t.deepEqual(value.layers.map((layer) => { return layer.id; }), ['symbol']);
+                    expect(key).toBe('updateLayers');
+                    expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
                 };
 
                 map.setLayoutProperty('symbol', 'text-transform', 'lowercase');
                 map.style.update({});
-                t.deepEqual(map.getLayoutProperty('symbol', 'text-transform'), 'lowercase');
+                expect(map.getLayoutProperty('symbol', 'text-transform')).toEqual('lowercase');
                 t.end();
             });
         });
@@ -1260,9 +1258,9 @@ test('Map', (t) => {
                 }
             });
 
-            t.throws(() => {
+            expect(() => {
                 map.setLayoutProperty('symbol', 'text-transform', 'lowercase');
-            }, Error, /load/i);
+            }).toThrowError(Error);
 
             t.end();
         });
@@ -1330,7 +1328,7 @@ test('Map', (t) => {
 
             map.on('style.load', () => {
                 map.setLayoutProperty('background', 'visibility', 'visible');
-                t.deepEqual(map.getLayoutProperty('background', 'visibility'), 'visible');
+                expect(map.getLayoutProperty('background', 'visibility')).toEqual('visible');
                 t.end();
             });
         });
@@ -1361,7 +1359,7 @@ test('Map', (t) => {
 
             map.on('style.load', () => {
                 map.setLayoutProperty('satellite', 'visibility', 'visible');
-                t.deepEqual(map.getLayoutProperty('satellite', 'visibility'), 'visible');
+                expect(map.getLayoutProperty('satellite', 'visibility')).toEqual('visible');
                 t.end();
             });
         });
@@ -1395,7 +1393,7 @@ test('Map', (t) => {
 
             map.on('style.load', () => {
                 map.setLayoutProperty('shore', 'visibility', 'visible');
-                t.deepEqual(map.getLayoutProperty('shore', 'visibility'), 'visible');
+                expect(map.getLayoutProperty('shore', 'visibility')).toEqual('visible');
                 t.end();
             });
         });
@@ -1429,7 +1427,7 @@ test('Map', (t) => {
 
             map.on('style.load', () => {
                 map.setLayoutProperty('image', 'visibility', 'visible');
-                t.deepEqual(map.getLayoutProperty('image', 'visibility'), 'visible');
+                expect(map.getLayoutProperty('image', 'visibility')).toEqual('visible');
                 t.end();
             });
         });
@@ -1474,7 +1472,7 @@ test('Map', (t) => {
 
             map.on('style.load', () => {
                 map.setPaintProperty('background', 'background-color', 'red');
-                t.deepEqual(map.getPaintProperty('background', 'background-color'), 'red');
+                expect(map.getPaintProperty('background', 'background-color')).toEqual('red');
                 t.end();
             });
         });
@@ -1488,9 +1486,9 @@ test('Map', (t) => {
                 }
             });
 
-            t.throws(() => {
+            expect(() => {
                 map.setPaintProperty('background', 'background-color', 'red');
-            }, Error, /load/i);
+            }).toThrowError(Error);
 
             t.end();
         });
@@ -1530,7 +1528,7 @@ test('Map', (t) => {
             map.on('load', () => {
                 map.setFeatureState({source: 'geojson', id: 12345}, {'hover': true});
                 const fState = map.getFeatureState({source: 'geojson', id: 12345});
-                t.equal(fState.hover, true);
+                expect(fState.hover).toBe(true);
                 t.end();
             });
         });
@@ -1547,7 +1545,7 @@ test('Map', (t) => {
             map.on('load', () => {
                 map.setFeatureState({source: 'geojson', id: 'foo'}, {'hover': true});
                 const fState = map.getFeatureState({source: 'geojson', id: 'foo'});
-                t.equal(fState.hover, true);
+                expect(fState.hover).toBe(true);
                 t.end();
             });
         });
@@ -1564,7 +1562,7 @@ test('Map', (t) => {
             map.on('load', () => {
                 map.setFeatureState({source: 'geojson', id: '12345'}, {'hover': true});
                 const fState = map.getFeatureState({source: 'geojson', id: 12345});
-                t.equal(fState.hover, true);
+                expect(fState.hover).toBe(true);
                 t.end();
             });
         });
@@ -1578,9 +1576,9 @@ test('Map', (t) => {
                     "layers": []
                 }
             });
-            t.throws(() => {
+            expect(() => {
                 map.setFeatureState({source: 'geojson', id: 12345}, {'hover': true});
-            }, Error, /load/i);
+            }).toThrowError(Error);
 
             t.end();
         });
@@ -1663,8 +1661,8 @@ test('Map', (t) => {
                 map.setFeatureState({source: 'geojson', id: 0}, {'hover': true, 'click': true});
                 map.removeFeatureState({source: 'geojson', id: 0}, 'hover');
                 const fState = map.getFeatureState({source: 'geojson', id: 0});
-                t.equal(fState.hover, undefined);
-                t.equal(fState.click, true);
+                expect(fState.hover).toBe(undefined);
+                expect(fState.click).toBe(true);
                 t.end();
             });
         });
@@ -1682,8 +1680,8 @@ test('Map', (t) => {
                 map.setFeatureState({source: 'geojson', id: 'foo'}, {'hover': true, 'click': true});
                 map.removeFeatureState({source: 'geojson', id: 'foo'}, 'hover');
                 const fState = map.getFeatureState({source: 'geojson', id: 'foo'});
-                t.equal(fState.hover, undefined);
-                t.equal(fState.click, true);
+                expect(fState.hover).toBe(undefined);
+                expect(fState.click).toBe(true);
                 t.end();
             });
         });
@@ -1701,7 +1699,7 @@ test('Map', (t) => {
                 map.setFeatureState({source: 'geojson', id: 12345}, {'hover': true});
                 map.removeFeatureState({source: 'geojson', id: 12345}, 'hover');
                 const fState = map.getFeatureState({source: 'geojson', id: 12345});
-                t.equal(fState.hover, undefined);
+                expect(fState.hover).toBe(undefined);
                 t.end();
             });
         });
@@ -1720,8 +1718,8 @@ test('Map', (t) => {
                 map.removeFeatureState({source: 'geojson', id: 1});
 
                 const fState = map.getFeatureState({source: 'geojson', id: 1});
-                t.equal(fState.hover, undefined);
-                t.equal(fState.foo, undefined);
+                expect(fState.hover).toBe(undefined);
+                expect(fState.foo).toBe(undefined);
 
                 t.end();
             });
@@ -1741,8 +1739,8 @@ test('Map', (t) => {
                 map.removeFeatureState({source: 'geojson', id: 0});
 
                 const fState = map.getFeatureState({source: 'geojson', id: 0});
-                t.equal(fState.hover, undefined);
-                t.equal(fState.foo, undefined);
+                expect(fState.hover).toBe(undefined);
+                expect(fState.foo).toBe(undefined);
 
                 t.end();
             });
@@ -1762,7 +1760,7 @@ test('Map', (t) => {
                 map.removeFeatureState({source: 'geojson', id: 1}, 'hover');
 
                 const fState = map.getFeatureState({source: 'geojson', id: 1});
-                t.equal(fState.foo, true);
+                expect(fState.foo).toBe(true);
 
                 t.end();
             });
@@ -1784,12 +1782,12 @@ test('Map', (t) => {
                 map.removeFeatureState({source: 'geojson'});
 
                 const fState1 = map.getFeatureState({source: 'geojson', id: 1});
-                t.equal(fState1.hover, undefined);
-                t.equal(fState1.foo, undefined);
+                expect(fState1.hover).toBe(undefined);
+                expect(fState1.foo).toBe(undefined);
 
                 const fState2 = map.getFeatureState({source: 'geojson', id: 2});
-                t.equal(fState2.hover, undefined);
-                t.equal(fState2.foo, undefined);
+                expect(fState2.hover).toBe(undefined);
+                expect(fState2.foo).toBe(undefined);
 
                 t.end();
             });
@@ -1812,21 +1810,21 @@ test('Map', (t) => {
                 map.removeFeatureState({source: 'geojson', id: 1}, 'foo');
 
                 const fState1 = map.getFeatureState({source: 'geojson', id: 1});
-                t.equal(fState1.hover, undefined);
+                expect(fState1.hover).toBe(undefined);
 
                 map.setFeatureState({source: 'geojson', id: 1}, {'hover': true, 'foo': true});
                 map.removeFeatureState({source: 'geojson'});
                 map.removeFeatureState({source: 'geojson', id: 1}, 'foo');
 
                 const fState2 = map.getFeatureState({source: 'geojson', id: 2});
-                t.equal(fState2.hover, undefined);
+                expect(fState2.hover).toBe(undefined);
 
                 map.setFeatureState({source: 'geojson', id: 2}, {'hover': true, 'foo': true});
                 map.removeFeatureState({source: 'geojson'});
                 map.removeFeatureState({source: 'geojson', id: 2}, 'foo');
 
                 const fState3 = map.getFeatureState({source: 'geojson', id: 2});
-                t.equal(fState3.hover, undefined);
+                expect(fState3.hover).toBe(undefined);
 
                 t.end();
             });
@@ -1848,12 +1846,12 @@ test('Map', (t) => {
                 map.setFeatureState({source: 'geojson', id: 12345}, {'hover': true});
 
                 const fState1 = map.getFeatureState({source: 'geojson', id: 12345});
-                t.equal(fState1.hover, true);
+                expect(fState1.hover).toBe(true);
 
                 map.removeFeatureState({source: 'geojson', id: 12345});
 
                 const fState2 = map.getFeatureState({source: 'geojson', id: 12345});
-                t.equal(fState2.hover, undefined);
+                expect(fState2.hover).toBe(undefined);
 
                 t.end();
             });
@@ -1868,9 +1866,9 @@ test('Map', (t) => {
                     "layers": []
                 }
             });
-            t.throws(() => {
+            expect(() => {
                 map.removeFeatureState({source: 'geojson', id: 12345}, {'hover': true});
-            }, Error, /load/i);
+            }).toThrowError(Error);
 
             t.end();
         });
@@ -1943,8 +1941,8 @@ test('Map', (t) => {
             const stub = t.stub(console, 'error');
             const error = new Error('test');
             map.fire(new ErrorEvent(error));
-            t.ok(stub.calledOnce);
-            t.equal(stub.getCall(0).args[0], error);
+            expect(stub.calledOnce).toBeTruthy();
+            expect(stub.getCall(0).args[0]).toBe(error);
             t.end();
         });
 
@@ -1952,7 +1950,7 @@ test('Map', (t) => {
             const map = createMap(t);
             const error = new Error('test');
             map.on('error', (event) => {
-                t.equal(event.error, error);
+                expect(event.error).toBe(error);
                 t.end();
             });
             map.fire(new ErrorEvent(error));
@@ -1983,7 +1981,7 @@ test('Map', (t) => {
             timer = setTimeout(() => {
                 map.off('render');
                 map.on('render', t.fail);
-                t.notOk(map._frameId, 'no rerender scheduled');
+                expect(map._frameId).toBeFalsy();
                 t.end();
             }, 100);
         });
@@ -2005,9 +2003,9 @@ test('Map', (t) => {
         const map = createMap(t, {style, fadeDuration: 0});
         map.once('idle', () => {
             map.zoomTo(0.5, {duration: 100});
-            t.ok(map.isMoving(), "map starts moving immediately after zoomTo");
+            expect(map.isMoving()).toBeTruthy();
             map.once('idle', () => {
-                t.ok(!map.isMoving(), "map stops moving before firing idle event");
+                expect(!map.isMoving()).toBeTruthy();
                 t.end();
             });
         });
@@ -2049,7 +2047,7 @@ test('Map', (t) => {
         map.flyTo({center: [200, 0], duration: 100});
 
         simulate.mousedown(map.getCanvasContainer());
-        t.equal(map.isEasing(), false);
+        expect(map.isEasing()).toBe(false);
 
         map.remove();
         t.end();
@@ -2060,7 +2058,7 @@ test('Map', (t) => {
         map.flyTo({center: [200, 0], duration: 100});
 
         simulate.mousedown(map.getCanvasContainer());
-        t.equal(map.isEasing(), true);
+        expect(map.isEasing()).toBe(true);
 
         map.remove();
         t.end();
@@ -2071,7 +2069,7 @@ test('Map', (t) => {
         map.flyTo({center: [200, 0], duration: 100});
 
         simulate.touchstart(map.getCanvasContainer(), {touches: [{target: map.getCanvas(), clientX: 0, clientY: 0}]});
-        t.equal(map.isEasing(), false);
+        expect(map.isEasing()).toBe(false);
 
         map.remove();
         t.end();
@@ -2082,7 +2080,7 @@ test('Map', (t) => {
         map.flyTo({center: [200, 0], duration: 100});
 
         simulate.touchstart(map.getCanvasContainer());
-        t.equal(map.isEasing(), true);
+        expect(map.isEasing()).toBe(true);
 
         map.remove();
         t.end();
@@ -2098,7 +2096,7 @@ test('Map', (t) => {
         Object.defineProperty(container, 'clientHeight', {value: 250});
         map.resize();
 
-        t.ok(map.isMoving(), 'map is still moving after resize due to camera animation');
+        expect(map.isMoving()).toBeTruthy();
 
         t.end();
     });
@@ -2114,11 +2112,11 @@ test('Map', (t) => {
             called = e.id;
         });
 
-        t.notok(map.hasImage(id));
+        expect(map.hasImage(id)).toBeFalsy();
 
         map.style.imageManager.getImages([id], () => {
-            t.equals(called, id);
-            t.ok(map.hasImage(id));
+            expect(called).toBe(id);
+            expect(map.hasImage(id)).toBeTruthy();
             t.end();
         });
     });
