@@ -55,7 +55,7 @@ test('Map', (t) => {
         Object.defineProperty(container, 'offsetWidth', {value: 512});
         Object.defineProperty(container, 'offsetHeight', {value: 512});
         createMap(t);
-        t.error();
+        //t.error();
         t.end();
     });
 
