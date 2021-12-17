@@ -99,7 +99,7 @@ export class Evented {
         return this;
     }
 
-    fire(event: Event, properties?: any) {
+    fire(event: Event | string, properties?: any) {
         // Compatibility with (type: string, properties: Object) signature from previous versions.
         // See https://github.com/mapbox/mapbox-gl-js/issues/6522,
         //     https://github.com/mapbox/mapbox-gl-draw/issues/766
