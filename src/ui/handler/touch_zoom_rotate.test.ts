@@ -1,21 +1,21 @@
 import '../../../stub_loader';
 import {test} from '../../../util/test';
-import Map from '../../../../rollup/build/tsc/src/ui/map';
-import Marker from '../../../../rollup/build/tsc/src/ui/marker';
-import DOM from '../../../../rollup/build/tsc/src/util/dom';
+import Map from '../../ui/map';
+import Marker from '../../ui/marker';
+import DOM from '../../util/dom';
 import simulate from '../../../util/simulate_interaction';
 
 function createMap() {
     return new Map({container: DOM.create('div', '', window.document.body)});
 }
 
-test('TouchZoomRotateHandler fires zoomstart, zoom, and zoomend events at appropriate times in response to a pinch-zoom gesture', (t) => {
+describe('TouchZoomRotateHandler fires zoomstart, zoom, and zoomend events at appropriate times in response to a pinch-zoom gesture', () => {
     const map = createMap(t);
     const target = map.getCanvas();
 
-    const zoomstart = t.spy();
-    const zoom      = t.spy();
-    const zoomend   = t.spy();
+    const zoomstart = jest.fn();
+    const zoom      = jest.fn();
+    const zoomend   = jest.fn();
 
     map.handlers._handlersById.tapZoom.disable();
     map.touchPitch.disable();
@@ -25,42 +25,41 @@ test('TouchZoomRotateHandler fires zoomstart, zoom, and zoomend events at approp
 
     simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -50}, {target, identifier: 2, clientX: 0, clientY: 50}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(0);
-    expect(zoom.callCount).toBe(0);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(0);
+    expect(zoom).toHaveBeenCalledTimes(0);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -100}, {target, identifier: 2, clientX: 0, clientY: 100}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(1);
-    expect(zoom.callCount).toBe(1);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(1);
+    expect(zoom).toHaveBeenCalledTimes(1);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -60}, {target, identifier: 2, clientX: 0, clientY: 60}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(1);
-    expect(zoom.callCount).toBe(2);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(1);
+    expect(zoom).toHaveBeenCalledTimes(2);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
 
     // incremented because inertia starts a second zoom
-    expect(zoomstart.callCount).toBe(2);
+    expect(zoomstart).toHaveBeenCalledTimes(2);
     map._renderTaskQueue.run();
-    expect(zoom.callCount).toBe(3);
-    expect(zoomend.callCount).toBe(1);
+    expect(zoom).toHaveBeenCalledTimes(3);
+    expect(zoomend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('TouchZoomRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a pinch-rotate gesture', (t) => {
+describe('TouchZoomRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a pinch-rotate gesture', () => {
     const map = createMap(t);
     const target = map.getCanvas();
 
-    const rotatestart = t.spy();
-    const rotate      = t.spy();
-    const rotateend   = t.spy();
+    const rotatestart = jest.fn();
+    const rotate      = jest.fn();
+    const rotateend   = jest.fn();
 
     map.on('rotatestart', rotatestart);
     map.on('rotate',      rotate);
@@ -68,39 +67,38 @@ test('TouchZoomRotateHandler fires rotatestart, rotate, and rotateend events at 
 
     simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}]});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(0);
-    expect(rotate.callCount).toBe(0);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(0);
+    expect(rotate).toHaveBeenCalledTimes(0);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: -50, clientY: 0}, {target, identifier: 1, clientX: 50, clientY: 0}]});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(1);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(1);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}]});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(2);
-    expect(rotateend.callCount).toBe(0);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(2);
+    expect(rotateend).toHaveBeenCalledTimes(0);
 
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
-    expect(rotatestart.callCount).toBe(1);
-    expect(rotate.callCount).toBe(2);
-    expect(rotateend.callCount).toBe(1);
+    expect(rotatestart).toHaveBeenCalledTimes(1);
+    expect(rotate).toHaveBeenCalledTimes(2);
+    expect(rotateend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('TouchZoomRotateHandler does not begin a gesture if preventDefault is called on the touchstart event', (t) => {
+describe('TouchZoomRotateHandler does not begin a gesture if preventDefault is called on the touchstart event', () => {
     const map = createMap(t);
     const target = map.getCanvas();
 
     map.on('touchstart', e => e.preventDefault());
 
-    const move = t.spy();
+    const move = jest.fn();
     map.on('move', move);
 
     simulate.touchstart(map.getCanvas(), {touches: [{target, clientX: 0, clientY: 0}, {target, clientX: 5, clientY: 0}]});
@@ -112,21 +110,20 @@ test('TouchZoomRotateHandler does not begin a gesture if preventDefault is calle
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
 
-    expect(move.callCount).toBe(0);
+    expect(move).toHaveBeenCalledTimes(0);
 
     map.remove();
-    t.end();
 });
 
-test('TouchZoomRotateHandler starts zoom immediately when rotation disabled', (t) => {
+describe('TouchZoomRotateHandler starts zoom immediately when rotation disabled', () => {
     const map = createMap(t);
     const target = map.getCanvas();
     map.touchZoomRotate.disableRotation();
     map.handlers._handlersById.tapZoom.disable();
 
-    const zoomstart = t.spy();
-    const zoom      = t.spy();
-    const zoomend   = t.spy();
+    const zoomstart = jest.fn();
+    const zoom      = jest.fn();
+    const zoomend   = jest.fn();
 
     map.on('zoomstart', zoomstart);
     map.on('zoom',      zoom);
@@ -134,35 +131,34 @@ test('TouchZoomRotateHandler starts zoom immediately when rotation disabled', (t
 
     simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 5}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(0);
-    expect(zoom.callCount).toBe(0);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(0);
+    expect(zoom).toHaveBeenCalledTimes(0);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 6}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(1);
-    expect(zoom.callCount).toBe(1);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(1);
+    expect(zoom).toHaveBeenCalledTimes(1);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -5}, {target, identifier: 2, clientX: 0, clientY: 4}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(1);
-    expect(zoom.callCount).toBe(2);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(1);
+    expect(zoom).toHaveBeenCalledTimes(2);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
     // incremented because inertia starts a second zoom
-    expect(zoomstart.callCount).toBe(2);
+    expect(zoomstart).toHaveBeenCalledTimes(2);
     map._renderTaskQueue.run();
-    expect(zoom.callCount).toBe(3);
-    expect(zoomend.callCount).toBe(1);
+    expect(zoom).toHaveBeenCalledTimes(3);
+    expect(zoomend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('TouchZoomRotateHandler adds css class used for disabling default touch behavior in some browsers', (t) => {
+describe('TouchZoomRotateHandler adds css class used for disabling default touch behavior in some browsers', () => {
     const map = createMap(t);
 
     const className = 'maplibregl-touch-zoom-rotate';
@@ -171,10 +167,9 @@ test('TouchZoomRotateHandler adds css class used for disabling default touch beh
     expect(map.getCanvasContainer().classList.contains(className)).toBeFalsy();
     map.touchZoomRotate.enable();
     expect(map.getCanvasContainer().classList.contains(className)).toBeTruthy();
-    t.end();
 });
 
-test('TouchZoomRotateHandler zooms when touching two markers on the same map', (t) => {
+describe('TouchZoomRotateHandler zooms when touching two markers on the same map', () => {
     const map = createMap(t);
 
     const marker1 = new Marker()
@@ -186,9 +181,9 @@ test('TouchZoomRotateHandler zooms when touching two markers on the same map', (
     const target1 = marker1.getElement();
     const target2 = marker2.getElement();
 
-    const zoomstart = t.spy();
-    const zoom      = t.spy();
-    const zoomend   = t.spy();
+    const zoomstart = jest.fn();
+    const zoom      = jest.fn();
+    const zoomend   = jest.fn();
 
     map.handlers._handlersById.tapZoom.disable();
     map.touchPitch.disable();
@@ -199,36 +194,35 @@ test('TouchZoomRotateHandler zooms when touching two markers on the same map', (
     simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}]});
     simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}, {target: target2, identifier: 2, clientX: 0, clientY: 50}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(0);
-    expect(zoom.callCount).toBe(0);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(0);
+    expect(zoom).toHaveBeenCalledTimes(0);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -100}, {target: target2, identifier: 2, clientX: 0, clientY: 100}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(1);
-    expect(zoom.callCount).toBe(1);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(1);
+    expect(zoom).toHaveBeenCalledTimes(1);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -60}, {target: target2, identifier: 2, clientX: 0, clientY: 60}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(1);
-    expect(zoom.callCount).toBe(2);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(1);
+    expect(zoom).toHaveBeenCalledTimes(2);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
 
     // incremented because inertia starts a second zoom
-    expect(zoomstart.callCount).toBe(2);
+    expect(zoomstart).toHaveBeenCalledTimes(2);
     map._renderTaskQueue.run();
-    expect(zoom.callCount).toBe(3);
-    expect(zoomend.callCount).toBe(1);
+    expect(zoom).toHaveBeenCalledTimes(3);
+    expect(zoomend).toHaveBeenCalledTimes(1);
 
     map.remove();
-    t.end();
 });
 
-test('TouchZoomRotateHandler does not zoom when touching an element not on the map', (t) => {
+describe('TouchZoomRotateHandler does not zoom when touching an element not on the map', () => {
     const map = createMap(t);
 
     const marker1 = new Marker()
@@ -240,9 +234,9 @@ test('TouchZoomRotateHandler does not zoom when touching an element not on the m
     const target1 = marker1.getElement(); // on map
     const target2 = marker2.getElement(); // not on map
 
-    const zoomstart = t.spy();
-    const zoom      = t.spy();
-    const zoomend   = t.spy();
+    const zoomstart = jest.fn();
+    const zoom      = jest.fn();
+    const zoomend   = jest.fn();
 
     map.handlers._handlersById.tapZoom.disable();
     map.touchPitch.disable();
@@ -254,32 +248,31 @@ test('TouchZoomRotateHandler does not zoom when touching an element not on the m
     simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}]});
     simulate.touchstart(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -50}, {target: target2, identifier: 2, clientX: 0, clientY: 50}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(0);
-    expect(zoom.callCount).toBe(0);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(0);
+    expect(zoom).toHaveBeenCalledTimes(0);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -100}, {target: target2, identifier: 2, clientX: 0, clientY: 100}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(0);
-    expect(zoom.callCount).toBe(0);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(0);
+    expect(zoom).toHaveBeenCalledTimes(0);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchmove(map.getCanvas(), {touches: [{target: target1, identifier: 1, clientX: 0, clientY: -60}, {target: target2, identifier: 2, clientX: 0, clientY: 60}]});
     map._renderTaskQueue.run();
-    expect(zoomstart.callCount).toBe(0);
-    expect(zoom.callCount).toBe(0);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(0);
+    expect(zoom).toHaveBeenCalledTimes(0);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
 
     // incremented because inertia starts a second zoom
-    expect(zoomstart.callCount).toBe(0);
+    expect(zoomstart).toHaveBeenCalledTimes(0);
     map._renderTaskQueue.run();
-    expect(zoom.callCount).toBe(0);
-    expect(zoomend.callCount).toBe(0);
+    expect(zoom).toHaveBeenCalledTimes(0);
+    expect(zoomend).toHaveBeenCalledTimes(0);
 
     map.remove();
-    t.end();
 });
 
