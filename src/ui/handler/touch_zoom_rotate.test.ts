@@ -1,16 +1,21 @@
-import '../../../stub_loader';
-import {test} from '../../../util/test';
-import Map from '../../ui/map';
-import Marker from '../../ui/marker';
+import Map, {MapOptions} from '../map';
+import Marker from '../marker';
 import DOM from '../../util/dom';
-import simulate from '../../../util/simulate_interaction';
+import simulate from '../../../test/util/simulate_interaction';
+import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
 
 function createMap() {
-    return new Map({container: DOM.create('div', '', window.document.body)});
+    return new Map({container: DOM.create('div', '', window.document.body)} as any as MapOptions);
 }
 
-describe('TouchZoomRotateHandler fires zoomstart, zoom, and zoomend events at appropriate times in response to a pinch-zoom gesture', () => {
-    const map = createMap(t);
+beforeEach(() => {
+    setPerformance();
+    setWebGlContext();
+    setMatchMedia();
+});
+
+test('TouchZoomRotateHandler fires zoomstart, zoom, and zoomend events at appropriate times in response to a pinch-zoom gesture', () => {
+    const map = createMap();
     const target = map.getCanvas();
 
     const zoomstart = jest.fn();
@@ -53,8 +58,8 @@ describe('TouchZoomRotateHandler fires zoomstart, zoom, and zoomend events at ap
     map.remove();
 });
 
-describe('TouchZoomRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a pinch-rotate gesture', () => {
-    const map = createMap(t);
+test('TouchZoomRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a pinch-rotate gesture', () => {
+    const map = createMap();
     const target = map.getCanvas();
 
     const rotatestart = jest.fn();
@@ -92,8 +97,8 @@ describe('TouchZoomRotateHandler fires rotatestart, rotate, and rotateend events
     map.remove();
 });
 
-describe('TouchZoomRotateHandler does not begin a gesture if preventDefault is called on the touchstart event', () => {
-    const map = createMap(t);
+test('TouchZoomRotateHandler does not begin a gesture if preventDefault is called on the touchstart event', () => {
+    const map = createMap();
     const target = map.getCanvas();
 
     map.on('touchstart', e => e.preventDefault());
@@ -115,8 +120,8 @@ describe('TouchZoomRotateHandler does not begin a gesture if preventDefault is c
     map.remove();
 });
 
-describe('TouchZoomRotateHandler starts zoom immediately when rotation disabled', () => {
-    const map = createMap(t);
+test('TouchZoomRotateHandler starts zoom immediately when rotation disabled', () => {
+    const map = createMap();
     const target = map.getCanvas();
     map.touchZoomRotate.disableRotation();
     map.handlers._handlersById.tapZoom.disable();
@@ -158,8 +163,8 @@ describe('TouchZoomRotateHandler starts zoom immediately when rotation disabled'
     map.remove();
 });
 
-describe('TouchZoomRotateHandler adds css class used for disabling default touch behavior in some browsers', () => {
-    const map = createMap(t);
+test('TouchZoomRotateHandler adds css class used for disabling default touch behavior in some browsers', () => {
+    const map = createMap();
 
     const className = 'maplibregl-touch-zoom-rotate';
     expect(map.getCanvasContainer().classList.contains(className)).toBeTruthy();
@@ -169,8 +174,8 @@ describe('TouchZoomRotateHandler adds css class used for disabling default touch
     expect(map.getCanvasContainer().classList.contains(className)).toBeTruthy();
 });
 
-describe('TouchZoomRotateHandler zooms when touching two markers on the same map', () => {
-    const map = createMap(t);
+test('TouchZoomRotateHandler zooms when touching two markers on the same map', () => {
+    const map = createMap();
 
     const marker1 = new Marker()
         .setLngLat([0, 0])
@@ -222,8 +227,8 @@ describe('TouchZoomRotateHandler zooms when touching two markers on the same map
     map.remove();
 });
 
-describe('TouchZoomRotateHandler does not zoom when touching an element not on the map', () => {
-    const map = createMap(t);
+test('TouchZoomRotateHandler does not zoom when touching an element not on the map', () => {
+    const map = createMap();
 
     const marker1 = new Marker()
         .setLngLat([0, 0])
