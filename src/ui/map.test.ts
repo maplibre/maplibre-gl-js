@@ -1,13 +1,17 @@
-import '../../stub_loader';
-import {extend} from '../util/util';
-import Map from '../ui/map';
-import {createMap} from '../../util';
+import Map, {MapOptions} from './map';
+import {createMap, setMatchMedia, setPerformance, setWebGlContext} from '../util/test/util';
 import LngLat from '../geo/lng_lat';
 import Tile from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
 import {Event, ErrorEvent} from '../util/evented';
-import simulate from '../../util/simulate_interaction';
-import {fixedLngLat, fixedNum} from '../../util/fixed';
+import simulate from '../../test/util/simulate_interaction';
+import {fixedLngLat, fixedNum} from '../../test/util/fixed';
+import {LayerSpecification, SourceSpecification, StyleSpecification} from '../style-spec/types';
+import {RequestTransformFunction} from '../util/request_manager';
+import {extend} from '../util/util';
+import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
+import {IControl} from './control/control';
+import EvaluationParameters from '../style/evaluation_parameters';
 
 function createStyleSource() {
     return {
@@ -16,22 +20,27 @@ function createStyleSource() {
             type: 'FeatureCollection',
             features: []
         }
-    };
+    } as SourceSpecification;
 }
 
-describe('Map', done => {
-    t.beforeEach((callback) => {
-        window.useFakeXMLHttpRequest();
-        callback();
-    });
+beforeEach(() => {
+    setPerformance();
+    setWebGlContext();
+    setMatchMedia();
+});
 
-    t.afterEach((callback) => {
-        window.clearFakeXMLHttpRequest();
-        callback();
-    });
+describe('Map', () => {
 
-    test('constructor', done => {
-        const map = createMap(t, {interactive: true, style: null});
+    jest.spyOn(global, 'XMLHttpRequest').mockReturnValue({
+        open: jest.fn(),
+        send: jest.fn(),
+        setRequestHeader: jest.fn()
+    } as any as XMLHttpRequest);
+
+    global.fetch = undefined;
+
+    test('constructor', () => {
+        const map = createMap({interactive: true, style: null});
         expect(map.getContainer()).toBeTruthy();
         expect(map.getStyle()).toBeUndefined();
         expect(map.boxZoom.isEnabled()).toBeTruthy();
@@ -44,57 +53,51 @@ describe('Map', done => {
         expect(() => {
             new Map({
                 container: 'anElementIdWhichDoesNotExistInTheDocument'
-            });
+            } as any as MapOptions);
         }).toThrow(
-            new Error('Container \'anElementIdWhichDoesNotExistInTheDocument\' not found')
+            new Error('Container \'anElementIdWhichDoesNotExistInTheDocument\' not found.')
         );
-        done();
     });
 
-    test('bad map-specific token breaks map', done => {
+    test('bad map-specific token breaks map', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'offsetWidth', {value: 512});
         Object.defineProperty(container, 'offsetHeight', {value: 512});
-        createMap(t);
+        createMap();
         //t.error();
-        done();
     });
 
-    test('initial bounds in constructor options', done => {
+    test('initial bounds in constructor options', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'offsetWidth', {value: 512});
         Object.defineProperty(container, 'offsetHeight', {value: 512});
 
         const bounds = [[-133, 16], [-68, 50]];
-        const map = createMap(t, {container, bounds});
+        const map = createMap({container, bounds});
 
         expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.7171});
         expect(fixedNum(map.getZoom(), 3)).toBe(2.113);
-
-        done();
     });
 
-    test('initial bounds options in constructor options', done => {
+    test('initial bounds options in constructor options', () => {
         const bounds = [[-133, 16], [-68, 50]];
 
         const map = (fitBoundsOptions) => {
             const container = window.document.createElement('div');
             Object.defineProperty(container, 'offsetWidth', {value: 512});
             Object.defineProperty(container, 'offsetHeight', {value: 512});
-            return createMap(t, {container, bounds, fitBoundsOptions});
+            return createMap({container, bounds, fitBoundsOptions});
         };
 
-        const unpadded = map(undefined, false);
-        const padded = map({padding: 100}, true);
+        const unpadded = map(undefined);
+        const padded = map({padding: 100});
 
         expect(unpadded.getZoom() > padded.getZoom()).toBeTruthy();
-
-        done();
     });
 
-    test('disables handlers', done => {
-        test('disables all handlers', done => {
-            const map = createMap(t, {interactive: false});
+    describe('disables handlers', () => {
+        test('disables all handlers', () => {
+            const map = createMap({interactive: false});
 
             expect(map.boxZoom.isEnabled()).toBeFalsy();
             expect(map.doubleClickZoom.isEnabled()).toBeFalsy();
@@ -103,8 +106,6 @@ describe('Map', done => {
             expect(map.keyboard.isEnabled()).toBeFalsy();
             expect(map.scrollZoom.isEnabled()).toBeFalsy();
             expect(map.touchZoomRotate.isEnabled()).toBeFalsy();
-
-            done();
         });
 
         const handlerNames = [
@@ -117,48 +118,44 @@ describe('Map', done => {
             'touchZoomRotate'
         ];
         handlerNames.forEach((handlerName) => {
-            test(`disables "${handlerName}" handler`, done => {
+            test(`disables "${handlerName}" handler`, () => {
                 const options = {};
                 options[handlerName] = false;
-                const map = createMap(t, options);
+                const map = createMap(options);
 
                 expect(map[handlerName].isEnabled()).toBeFalsy();
 
-                done();
             });
         });
 
-        done();
     });
 
     test('emits load event after a style is set', done => {
-        const map = new Map({container: window.document.createElement('div')});
+        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
 
-        map.on('load', fail);
+        map.on('load', done.fail);
 
         setTimeout(() => {
-            map.off('load', fail);
+            map.off('load', done.fail);
             map.on('load', pass);
             map.setStyle(createStyle());
         }, 1);
 
-        function fail() { expect(false).toBeTruthy(); }
-        function pass() { t.end(); }
+        function pass() { done(); }
     });
 
-    test('#setStyle', done => {
-        test('returns self', done => {
-            const map = new Map({container: window.document.createElement('div')});
+    describe('#setStyle', () => {
+        test('returns self', () => {
+            const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
             expect(map.setStyle({
                 version: 8,
                 sources: {},
                 layers: []
             })).toBe(map);
-            done();
         });
 
-        test('sets up event forwarding', done => {
-            createMap(t, {}, (error, map) => {
+        test('sets up event forwarding', () => {
+            createMap({}, (error, map) => {
                 expect(error).toBeFalsy();
 
                 const events = [];
@@ -178,12 +175,11 @@ describe('Map', done => {
                     'dataloading',
                 ]);
 
-                done();
             });
         });
 
-        test('fires *data and *dataloading events', done => {
-            createMap(t, {}, (error, map) => {
+        test('fires *data and *dataloading events', () => {
+            createMap({}, (error, map) => {
                 expect(error).toBeFalsy();
 
                 const events = [];
@@ -212,21 +208,19 @@ describe('Map', done => {
                     'tiledataloading'
                 ]);
 
-                done();
             });
         });
 
-        test('can be called more than once', done => {
-            const map = createMap(t);
+        test('can be called more than once', () => {
+            const map = createMap();
 
             map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
             map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
 
-            done();
         });
 
         test('style transform overrides unmodified map transform', done => {
-            const map = new Map({container: window.document.createElement('div')});
+            const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
             map.transform.lngRange = [-120, 140];
             map.transform.latRange = [-60, 80];
             map.transform.resize(600, 400);
@@ -243,7 +237,7 @@ describe('Map', done => {
         });
 
         test('style transform does not override map transform modified via options', done => {
-            const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]});
+            const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]} as any as MapOptions);
             expect(map.transform.unmodified).toBeFalsy();
             map.setStyle(createStyle());
             map.on('style.load', () => {
@@ -256,7 +250,7 @@ describe('Map', done => {
         });
 
         test('style transform does not override map transform modified via setters', done => {
-            const map = new Map({container: window.document.createElement('div')});
+            const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
             expect(map.transform.unmodified).toBeTruthy();
             map.setZoom(10);
             map.setCenter([-77.0186, 38.8888]);
@@ -271,50 +265,42 @@ describe('Map', done => {
             });
         });
 
-        test('passing null removes style', done => {
-            const map = createMap(t);
+        test('passing null removes style', () => {
+            const map = createMap();
             const style = map.style;
             expect(style).toBeTruthy();
             jest.spyOn(style, '_remove');
             map.setStyle(null);
             expect(style._remove).toHaveBeenCalledTimes(1);
-            done();
         });
-
-        done();
     });
 
-    test('#setTransformRequest', done => {
-        test('returns self', done => {
-            const transformRequest = () => { };
-            const map = new Map({container: window.document.createElement('div')});
+    describe('#setTransformRequest', () => {
+        test('returns self', () => {
+            const transformRequest  = (() => { }) as any as RequestTransformFunction;
+            const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
             expect(map.setTransformRequest(transformRequest)).toBe(map);
             expect(map._requestManager._transformRequestFn).toBe(transformRequest);
-            done();
         });
 
-        test('can be called more than once', done => {
-            const map = createMap(t);
+        test('can be called more than once', () => {
+            const map = createMap();
 
-            const transformRequest = () => { };
+            const transformRequest = (() => { }) as any as RequestTransformFunction;
             map.setTransformRequest(transformRequest);
             map.setTransformRequest(transformRequest);
-
-            done();
         });
-
-        done();
     });
 
-    test('#is_Loaded', done => {
+    describe('#is_Loaded', () => {
 
         test('Map#isSourceLoaded', done => {
             const style = createStyle();
-            const map = createMap(t, {style});
+            const map = createMap({style});
 
             map.on('load', () => {
                 map.on('data', (e) => {
-                    if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                    if (e.dataType === 'source' && (e as any).sourceDataType === 'metadata') {
                         expect(map.isSourceLoaded('geojson')).toBe(true);
                         done();
                     }
@@ -326,7 +312,7 @@ describe('Map', done => {
 
         test('Map#isStyleLoaded', done => {
             const style = createStyle();
-            const map = createMap(t, {style});
+            const map = createMap({style});
 
             expect(map.isStyleLoaded()).toBe(false);
             map.on('load', () => {
@@ -337,25 +323,24 @@ describe('Map', done => {
 
         test('Map#areTilesLoaded', done => {
             const style = createStyle();
-            const map = createMap(t, {style});
+            const map = createMap({style});
             expect(map.areTilesLoaded()).toBe(true);
             map.on('load', () => {
                 const fakeTileId = new OverscaledTileID(0, 0, 0, 0, 0);
                 map.addSource('geojson', createStyleSource());
-                map.style.sourceCaches.geojson._tiles[fakeTileId.key] = new Tile(fakeTileId);
+                map.style.sourceCaches.geojson._tiles[fakeTileId.key] = new Tile(fakeTileId, undefined);
                 expect(map.areTilesLoaded()).toBe(false);
                 map.style.sourceCaches.geojson._tiles[fakeTileId.key].state = 'loaded';
                 expect(map.areTilesLoaded()).toBe(true);
                 done();
             });
         });
-        done();
     });
 
-    test('#getStyle', done => {
+    describe('#getStyle', () => {
         test('returns the style', done => {
             const style = createStyle();
-            const map = createMap(t, {style});
+            const map = createMap({style});
 
             map.on('load', () => {
                 expect(map.getStyle()).toEqual(style);
@@ -365,7 +350,7 @@ describe('Map', done => {
 
         test('returns the style with added sources', done => {
             const style = createStyle();
-            const map = createMap(t, {style});
+            const map = createMap({style});
 
             map.on('load', () => {
                 map.addSource('geojson', createStyleSource());
@@ -378,11 +363,11 @@ describe('Map', done => {
 
         test('fires an error on checking if non-existant source is loaded', done => {
             const style = createStyle();
-            const map = createMap(t, {style});
+            const map = createMap({style});
 
             map.on('load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /There is no source with ID/);
+                    expect(error.message).toMatch(/There is no source with ID/);
                     done();
                 });
                 map.isSourceLoaded('geojson');
@@ -391,11 +376,11 @@ describe('Map', done => {
 
         test('returns the style with added layers', done => {
             const style = createStyle();
-            const map = createMap(t, {style});
+            const map = createMap({style});
             const layer = {
                 id: 'background',
                 type: 'background'
-            };
+            } as LayerSpecification;
 
             map.on('load', () => {
                 map.addLayer(layer);
@@ -406,32 +391,30 @@ describe('Map', done => {
             });
         });
 
-        test('a layer can be added even if a map is created without a style', done => {
-            const map = createMap(t, {deleteStyle: true});
+        test('a layer can be added even if a map is created without a style', () => {
+            const map = createMap({deleteStyle: true});
             const layer = {
                 id: 'background',
                 type: 'background'
-            };
+            } as LayerSpecification;
             map.addLayer(layer);
-            done();
         });
 
-        test('a source can be added even if a map is created without a style', done => {
-            const map = createMap(t, {deleteStyle: true});
+        test('a source can be added even if a map is created without a style', () => {
+            const map = createMap({deleteStyle: true});
             const source = createStyleSource();
             map.addSource('fill', source);
-            done();
         });
 
         test('returns the style with added source and layer', done => {
             const style = createStyle();
-            const map = createMap(t, {style});
+            const map = createMap({style});
             const source = createStyleSource();
             const layer = {
                 id: 'fill',
                 type: 'fill',
                 source: 'fill'
-            };
+            } as LayerSpecification;
 
             map.on('load', () => {
                 map.addSource('fill', source);
@@ -444,38 +427,34 @@ describe('Map', done => {
             });
         });
 
-        test('creates a new Style if diff fails', done => {
+        test('creates a new Style if diff fails', () => {
             const style = createStyle();
-            const map = createMap(t, {style});
-            t.stub(map.style, 'setState').callsFake(() => {
+            const map = createMap({style});
+            jest.spyOn(map.style, 'setState').mockImplementation(() => {
                 throw new Error('Dummy error');
             });
-            t.stub(console, 'warn');
+            jest.spyOn(console, 'warn');
 
             const previousStyle = map.style;
             map.setStyle(style);
             expect(map.style && map.style !== previousStyle).toBeTruthy();
-            done();
         });
 
-        test('creates a new Style if diff option is false', done => {
+        test('creates a new Style if diff option is false', () => {
             const style = createStyle();
-            const map = createMap(t, {style});
-            t.stub(map.style, 'setState').callsFake(() => {
-                t.fail();
-            });
+            const map = createMap({style});
+            const spy = jest.spyOn(map.style, 'setState');
 
             const previousStyle = map.style;
             map.setStyle(style, {diff: false});
             expect(map.style && map.style !== previousStyle).toBeTruthy();
-            done();
+            expect(spy).not.toHaveBeenCalled();
         });
 
-        done();
     });
 
     test('#moveLayer', done => {
-        const map = createMap(t, {
+        const map = createMap({
             style: extend(createStyle(), {
                 sources: {
                     mapbox: {
@@ -514,7 +493,7 @@ describe('Map', done => {
             source: 'mapbox',
             'source-layer': 'sourceLayer'
         };
-        const map = createMap(t, {
+        const map = createMap({
             style: extend(createStyle(), {
                 sources: {
                     mapbox: {
@@ -537,9 +516,9 @@ describe('Map', done => {
         });
     });
 
-    test('#resize', done => {
-        test('sets width and height from container clients', done => {
-            const map = createMap(t),
+    describe('#resize', () => {
+        test('sets width and height from container clients', () => {
+            const map = createMap(),
                 container = map.getContainer();
 
             Object.defineProperty(container, 'clientWidth', {value: 250});
@@ -549,14 +528,13 @@ describe('Map', done => {
             expect(map.transform.width).toBe(250);
             expect(map.transform.height).toBe(250);
 
-            done();
         });
 
-        test('fires movestart, move, resize, and moveend events', done => {
-            const map = createMap(t),
+        test('fires movestart, move, resize, and moveend events', () => {
+            const map = createMap(),
                 events = [];
 
-            ['movestart', 'move', 'resize', 'moveend'].forEach((event) => {
+            (['movestart', 'move', 'resize', 'moveend'] as any).forEach((event) => {
                 map.on(event, (e) => {
                     events.push(e.type);
                 });
@@ -565,7 +543,6 @@ describe('Map', done => {
             map.resize();
             expect(events).toEqual(['movestart', 'move', 'resize', 'moveend']);
 
-            done();
         });
 
         test('listen to window resize event', done => {
@@ -579,53 +556,51 @@ describe('Map', done => {
                 }
             };
 
-            createMap(t);
+            createMap();
         });
 
-        test('do not resize if trackResize is false', done => {
-            const map = createMap(t, {trackResize: false});
+        test('do not resize if trackResize is false', () => {
+            const map = createMap({trackResize: false});
 
-            jest.spyOn(map, 'stop');
-            jest.spyOn(map, '_update');
-            jest.spyOn(map, 'resize');
+            const spyA = jest.spyOn(map, 'stop');
+            const spyB = jest.spyOn(map, '_update');
+            const spyC = jest.spyOn(map, 'resize');
 
-            map._onWindowResize();
+            map._onWindowResize(undefined);
 
-            expect(map.stop.called).toBeFalsy();
-            expect(map._update.called).toBeFalsy();
-            expect(map.resize.called).toBeFalsy();
-
-            done();
+            expect(spyA).not.toHaveBeenCalled();
+            expect(spyB).not.toHaveBeenCalled();
+            expect(spyC).not.toHaveBeenCalled();
         });
 
-        test('do resize if trackResize is true (default)', done => {
-            const map = createMap(t);
+        test('do resize if trackResize is true (default)', () => {
+            const map = createMap();
 
-            jest.spyOn(map, '_update');
-            jest.spyOn(map, 'resize');
+            const spyA = jest.spyOn(map, '_update');
+            const spyB = jest.spyOn(map, 'resize');
 
-            map._onWindowResize();
+            map._onWindowResize(undefined);
 
-            expect(map._update.called).toBeTruthy();
-            expect(map.resize.called).toBeTruthy();
-
-            done();
+            expect(spyA).toHaveBeenCalled();
+            expect(spyB).toHaveBeenCalled();
         });
 
-        done();
     });
 
-    test('#getBounds', done => {
-        const map = createMap(t, {zoom: 0});
-        expect(parseFloat(map.getBounds().getCenter().lng.toFixed(10))).toBe(0);
-        expect(parseFloat(map.getBounds().getCenter().lat.toFixed(10))).toBe(0);
+    describe('#getBounds', () => {
 
-        expect(toFixed(map.getBounds().toArray())).toEqual(toFixed([
-            [ -70.31249999999976, -57.326521225216965 ],
-            [ 70.31249999999977, 57.32652122521695 ] ]));
+        test('getBounds', () => {
+            const map = createMap({zoom: 0});
+            expect(parseFloat(map.getBounds().getCenter().lng.toFixed(10))).toBe(-0);
+            expect(parseFloat(map.getBounds().getCenter().lat.toFixed(10))).toBe(0);
 
-        test('rotated bounds', done => {
-            const map = createMap(t, {zoom: 1, bearing: 45});
+            expect(toFixed(map.getBounds().toArray())).toEqual(toFixed([
+                [ -70.31249999999976, -57.326521225216965 ],
+                [ 70.31249999999977, 57.32652122521695 ] ]));
+        });
+
+        test('rotated bounds', () => {
+            const map = createMap({zoom: 1, bearing: 45});
             expect(
                 toFixed([[-49.718445552178764, -44.44541580601936], [49.7184455522, 44.445415806019355]])
             ).toEqual(toFixed(map.getBounds().toArray()));
@@ -635,10 +610,7 @@ describe('Map', done => {
                 toFixed([[-49.718445552178764, -44.44541580601936], [49.7184455522, 44.445415806019355]])
             ).toEqual(toFixed(map.getBounds().toArray()));
 
-            done();
         });
-
-        done();
 
         function toFixed(bounds) {
             const n = 10;
@@ -654,41 +626,37 @@ describe('Map', done => {
         }
     });
 
-    test('#setMaxBounds', done => {
-        test('constrains map bounds', done => {
-            const map = createMap(t, {zoom:0});
+    describe('#setMaxBounds', () => {
+        test('constrains map bounds', () => {
+            const map = createMap({zoom:0});
             map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
             expect(
                 toFixed([[-130.4297000000, 7.0136641176], [-61.5234400000, 60.2398142283]])
             ).toEqual(toFixed(map.getBounds().toArray()));
-            done();
         });
 
-        test('when no argument is passed, map bounds constraints are removed', done => {
-            const map = createMap(t, {zoom:0});
+        test('when no argument is passed, map bounds constraints are removed', () => {
+            const map = createMap({zoom:0});
             map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
             expect(
                 toFixed([[-166.28906999999964, -27.6835270554], [-25.664070000000066, 73.8248206697]])
             ).toEqual(toFixed(map.setMaxBounds(null).setZoom(0).getBounds().toArray()));
-            done();
         });
 
-        test('should not zoom out farther than bounds', done => {
-            const map = createMap(t);
+        test('should not zoom out farther than bounds', () => {
+            const map = createMap();
             map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
             expect(map.setZoom(0).getZoom()).not.toBe(0);
-            done();
         });
 
-        test('throws on invalid bounds', done => {
-            const map = createMap(t, {zoom:0});
+        test('throws on invalid bounds', () => {
+            const map = createMap({zoom:0});
             expect(() => {
-                map.setMaxBounds([-130.4297, 50.0642], [-61.52344, 24.20688]);
+                (map as any).setMaxBounds([-130.4297, 50.0642], [-61.52344, 24.20688]);
             }).toThrow(Error);
             expect(() => {
-                map.setMaxBounds(-130.4297, 50.0642, -61.52344, 24.20688);
+                (map as any).setMaxBounds(-130.4297, 50.0642, -61.52344, 24.20688);
             }).toThrow(Error);
-            done();
         });
 
         function toFixed(bounds) {
@@ -699,263 +667,228 @@ describe('Map', done => {
             ];
         }
 
-        done();
     });
 
-    test('#getMaxBounds', done => {
-        test('returns null when no bounds set', done => {
-            const map = createMap(t, {zoom:0});
+    describe('#getMaxBounds', () => {
+        test('returns null when no bounds set', () => {
+            const map = createMap({zoom:0});
             expect(map.getMaxBounds()).toBeNull();
-            done();
         });
 
-        test('returns bounds', done => {
-            const map = createMap(t, {zoom:0});
-            const bounds = [[-130.4297, 50.0642], [-61.52344, 24.20688]];
+        test('returns bounds', () => {
+            const map = createMap({zoom:0});
+            const bounds = [[-130.4297, 50.0642], [-61.52344, 24.20688]] as LngLatBoundsLike;
             map.setMaxBounds(bounds);
             expect(map.getMaxBounds().toArray()).toEqual(bounds);
-            done();
         });
 
-        done();
     });
 
-    test('#getRenderWorldCopies', done => {
-        test('initially false', done => {
-            const map = createMap(t, {renderWorldCopies: false});
+    describe('#getRenderWorldCopies', () => {
+        test('initially false', () => {
+            const map = createMap({renderWorldCopies: false});
             expect(map.getRenderWorldCopies()).toBe(false);
-            done();
         });
 
-        test('initially true', done => {
-            const map = createMap(t, {renderWorldCopies: true});
+        test('initially true', () => {
+            const map = createMap({renderWorldCopies: true});
             expect(map.getRenderWorldCopies()).toBe(true);
-            done();
         });
 
-        done();
     });
 
-    test('#setRenderWorldCopies', done => {
-        test('initially false', done => {
-            const map = createMap(t, {renderWorldCopies: false});
+    describe('#setRenderWorldCopies', () => {
+        test('initially false', () => {
+            const map = createMap({renderWorldCopies: false});
             map.setRenderWorldCopies(true);
             expect(map.getRenderWorldCopies()).toBe(true);
-            done();
         });
 
-        test('initially true', done => {
-            const map = createMap(t, {renderWorldCopies: true});
+        test('initially true', () => {
+            const map = createMap({renderWorldCopies: true});
             map.setRenderWorldCopies(false);
             expect(map.getRenderWorldCopies()).toBe(false);
-            done();
         });
 
-        test('undefined', done => {
-            const map = createMap(t, {renderWorldCopies: false});
+        test('undefined', () => {
+            const map = createMap({renderWorldCopies: false});
             map.setRenderWorldCopies(undefined);
             expect(map.getRenderWorldCopies()).toBe(true);
-            done();
         });
 
-        test('null', done => {
-            const map = createMap(t, {renderWorldCopies: true});
+        test('null', () => {
+            const map = createMap({renderWorldCopies: true});
             map.setRenderWorldCopies(null);
             expect(map.getRenderWorldCopies()).toBe(false);
-            done();
         });
 
-        done();
     });
 
-    test('#setMinZoom', done => {
-        const map = createMap(t, {zoom:5});
+    test('#setMinZoom', () => {
+        const map = createMap({zoom:5});
         map.setMinZoom(3.5);
         map.setZoom(1);
         expect(map.getZoom()).toBe(3.5);
-        done();
     });
 
-    test('unset minZoom', done => {
-        const map = createMap(t, {minZoom:5});
+    test('unset minZoom', () => {
+        const map = createMap({minZoom:5});
         map.setMinZoom(null);
         map.setZoom(1);
         expect(map.getZoom()).toBe(1);
-        done();
     });
 
-    test('#getMinZoom', done => {
-        const map = createMap(t, {zoom: 0});
+    test('#getMinZoom', () => {
+        const map = createMap({zoom: 0});
         expect(map.getMinZoom()).toBe(-2);
         map.setMinZoom(10);
         expect(map.getMinZoom()).toBe(10);
-        done();
     });
 
-    test('ignore minZooms over maxZoom', done => {
-        const map = createMap(t, {zoom:2, maxZoom:5});
+    test('ignore minZooms over maxZoom', () => {
+        const map = createMap({zoom:2, maxZoom:5});
         expect(() => {
             map.setMinZoom(6);
         }).toThrow();
         map.setZoom(0);
         expect(map.getZoom()).toBe(0);
-        done();
     });
 
-    test('#setMaxZoom', done => {
-        const map = createMap(t, {zoom:0});
+    test('#setMaxZoom', () => {
+        const map = createMap({zoom:0});
         map.setMaxZoom(3.5);
         map.setZoom(4);
         expect(map.getZoom()).toBe(3.5);
-        done();
     });
 
-    test('unset maxZoom', done => {
-        const map = createMap(t, {maxZoom:5});
+    test('unset maxZoom', () => {
+        const map = createMap({maxZoom:5});
         map.setMaxZoom(null);
         map.setZoom(6);
         expect(map.getZoom()).toBe(6);
-        done();
     });
 
-    test('#getMaxZoom', done => {
-        const map = createMap(t, {zoom: 0});
+    test('#getMaxZoom', () => {
+        const map = createMap({zoom: 0});
         expect(map.getMaxZoom()).toBe(22);
         map.setMaxZoom(10);
         expect(map.getMaxZoom()).toBe(10);
-        done();
     });
 
-    test('ignore maxZooms over minZoom', done => {
-        const map = createMap(t, {minZoom:5});
+    test('ignore maxZooms over minZoom', () => {
+        const map = createMap({minZoom:5});
         expect(() => {
             map.setMaxZoom(4);
         }).toThrow();
         map.setZoom(5);
         expect(map.getZoom()).toBe(5);
-        done();
     });
 
-    test('throw on maxZoom smaller than minZoom at init', done => {
+    test('throw on maxZoom smaller than minZoom at init', () => {
         expect(() => {
-            createMap(t, {minZoom:10, maxZoom:5});
+            createMap({minZoom:10, maxZoom:5});
         }).toThrow(new Error('maxZoom must be greater than or equal to minZoom'));
-        done();
     });
 
-    test('throw on maxZoom smaller than minZoom at init with falsey maxZoom', done => {
+    test('throw on maxZoom smaller than minZoom at init with falsey maxZoom', () => {
         expect(() => {
-            createMap(t, {minZoom:1, maxZoom:0});
+            createMap({minZoom:1, maxZoom:0});
         }).toThrow(new Error('maxZoom must be greater than or equal to minZoom'));
-        done();
     });
 
-    test('#setMinPitch', done => {
-        const map = createMap(t, {pitch: 20});
+    test('#setMinPitch', () => {
+        const map = createMap({pitch: 20});
         map.setMinPitch(10);
         map.setPitch(0);
         expect(map.getPitch()).toBe(10);
-        done();
     });
 
-    test('unset minPitch', done => {
-        const map = createMap(t, {minPitch: 20});
+    test('unset minPitch', () => {
+        const map = createMap({minPitch: 20});
         map.setMinPitch(null);
         map.setPitch(0);
         expect(map.getPitch()).toBe(0);
-        done();
     });
 
-    test('#getMinPitch', done => {
-        const map = createMap(t, {pitch: 0});
+    test('#getMinPitch', () => {
+        const map = createMap({pitch: 0});
         expect(map.getMinPitch()).toBe(0);
         map.setMinPitch(10);
         expect(map.getMinPitch()).toBe(10);
-        done();
     });
 
-    test('ignore minPitchs over maxPitch', done => {
-        const map = createMap(t, {pitch: 0, maxPitch: 10});
+    test('ignore minPitchs over maxPitch', () => {
+        const map = createMap({pitch: 0, maxPitch: 10});
         expect(() => {
             map.setMinPitch(20);
         }).toThrow();
         map.setPitch(0);
         expect(map.getPitch()).toBe(0);
-        done();
     });
 
-    test('#setMaxPitch', done => {
-        const map = createMap(t, {pitch: 0});
+    test('#setMaxPitch', () => {
+        const map = createMap({pitch: 0});
         map.setMaxPitch(10);
         map.setPitch(20);
         expect(map.getPitch()).toBe(10);
-        done();
     });
 
-    test('unset maxPitch', done => {
-        const map = createMap(t, {maxPitch:10});
+    test('unset maxPitch', () => {
+        const map = createMap({maxPitch:10});
         map.setMaxPitch(null);
         map.setPitch(20);
         expect(map.getPitch()).toBe(20);
-        done();
     });
 
-    test('#getMaxPitch', done => {
-        const map = createMap(t, {pitch: 0});
+    test('#getMaxPitch', () => {
+        const map = createMap({pitch: 0});
         expect(map.getMaxPitch()).toBe(60);
         map.setMaxPitch(10);
         expect(map.getMaxPitch()).toBe(10);
-        done();
     });
 
-    test('ignore maxPitchs over minPitch', done => {
-        const map = createMap(t, {minPitch:10});
+    test('ignore maxPitchs over minPitch', () => {
+        const map = createMap({minPitch:10});
         expect(() => {
             map.setMaxPitch(0);
         }).toThrow();
         map.setPitch(10);
         expect(map.getPitch()).toBe(10);
-        done();
     });
 
-    test('throw on maxPitch smaller than minPitch at init', done => {
+    test('throw on maxPitch smaller than minPitch at init', () => {
         expect(() => {
-            createMap(t, {minPitch: 10, maxPitch: 5});
+            createMap({minPitch: 10, maxPitch: 5});
         }).toThrow(new Error('maxPitch must be greater than or equal to minPitch'));
-        done();
     });
 
-    test('throw on maxPitch smaller than minPitch at init with falsey maxPitch', done => {
+    test('throw on maxPitch smaller than minPitch at init with falsey maxPitch', () => {
         expect(() => {
-            createMap(t, {minPitch: 1, maxPitch: 0});
+            createMap({minPitch: 1, maxPitch: 0});
         }).toThrow(new Error('maxPitch must be greater than or equal to minPitch'));
-        done();
     });
 
-    test('throw on maxPitch greater than valid maxPitch at init', done => {
+    test('throw on maxPitch greater than valid maxPitch at init', () => {
         expect(() => {
-            createMap(t, {maxPitch: 90});
+            createMap({maxPitch: 90});
         }).toThrow(new Error('maxPitch must be less than or equal to 85'));
-        done();
     });
 
-    test('throw on minPitch less than valid minPitch at init', done => {
+    test('throw on minPitch less than valid minPitch at init', () => {
         expect(() => {
-            createMap(t, {minPitch: -10});
+            createMap({minPitch: -10});
         }).toThrow(new Error('minPitch must be greater than or equal to 0'));
-        done();
     });
 
-    test('#remove', done => {
-        const map = createMap(t);
+    test('#remove', () => {
+        const map = createMap();
         expect(map.getContainer().childNodes).toHaveLength(2);
         map.remove();
         expect(map.getContainer().childNodes).toHaveLength(0);
-        done();
     });
 
-    test('#remove calls onRemove on added controls', done => {
-        const map = createMap(t);
+    test('#remove calls onRemove on added controls', () => {
+        const map = createMap();
         const control = {
             onRemove: jest.fn(),
             onAdd (_) {
@@ -964,12 +897,11 @@ describe('Map', done => {
         };
         map.addControl(control);
         map.remove();
-        expect(control.onRemove.calledOnce).toBeTruthy();
-        done();
+        expect(control.onRemove).toHaveBeenCalledTimes(1);
     });
 
     test('#remove calls onRemove on added controls before style is destroyed', done => {
-        const map = createMap(t);
+        const map = createMap();
         let onRemoveCalled = 0;
         let style;
         const control = {
@@ -1020,42 +952,40 @@ describe('Map', done => {
     });
 
     test('#redraw', done => {
-        const map = createMap(t);
+        const map = createMap();
 
         map.once('idle', () => {
-            map.once('render', () => t.end());
+            map.once('render', () => done());
 
             map.redraw();
         });
     });
 
-    test('#addControl', done => {
-        const map = createMap(t);
+    test('#addControl', () => {
+        const map = createMap();
         const control = {
             onAdd(_) {
                 expect(map).toBe(_);
                 return window.document.createElement('div');
             }
-        };
+        } as any as IControl;
         map.addControl(control);
         expect(map._controls[1]).toBe(control);
-        done();
     });
 
-    test('#removeControl errors on invalid arguments', done => {
-        const map = createMap(t);
-        const control = {};
-        const stub = t.stub(console, 'error');
+    test('#removeControl errors on invalid arguments', () => {
+        const map = createMap();
+        const control = {} as any as IControl;
+        const stub = jest.spyOn(console, 'error');
 
         map.addControl(control);
         map.removeControl(control);
-        expect(stub.calledTwice).toBeTruthy();
-        done();
+        expect(stub).toHaveBeenCalledTimes(2);
 
     });
 
-    test('#removeControl', done => {
-        const map = createMap(t);
+    test('#removeControl', () => {
+        const map = createMap();
         const control = {
             onAdd() {
                 return window.document.createElement('div');
@@ -1067,12 +997,11 @@ describe('Map', done => {
         map.addControl(control);
         map.removeControl(control);
         expect(map._controls).toHaveLength(1);
-        done();
 
     });
 
-    test('#hasControl', done => {
-        const map = createMap(t);
+    test('#hasControl', () => {
+        const map = createMap();
         function Ctrl() {}
         Ctrl.prototype = {
             onAdd(_) {
@@ -1084,23 +1013,20 @@ describe('Map', done => {
         expect(map.hasControl(control)).toBe(false);
         map.addControl(control);
         expect(map.hasControl(control)).toBe(true);
-        done();
     });
 
-    test('#project', done => {
-        const map = createMap(t);
+    test('#project', () => {
+        const map = createMap();
         expect(map.project([0, 0])).toEqual({x: 100, y: 100});
-        done();
     });
 
-    test('#unproject', done => {
-        const map = createMap(t);
+    test('#unproject', () => {
+        const map = createMap();
         expect(fixedLngLat(map.unproject([100, 100]))).toEqual({lng: 0, lat: 0});
-        done();
     });
 
     test('#listImages', done => {
-        const map = createMap(t);
+        const map = createMap();
 
         map.on('load', () => {
             expect(map.listImages()).toHaveLength(0);
@@ -1114,24 +1040,23 @@ describe('Map', done => {
         });
     });
 
-    test('#listImages throws an error if called before "load"', done => {
-        const map = createMap(t);
+    test('#listImages throws an error if called before "load"', () => {
+        const map = createMap();
         expect(() => {
             map.listImages();
         }).toThrow(Error);
-        done();
     });
 
-    test('#queryRenderedFeatures', done => {
+    describe('#queryRenderedFeatures', () => {
 
         test('if no arguments provided', done => {
-            createMap(t, {}, (err, map) => {
+            createMap({}, (err, map) => {
                 expect(err).toBeFalsy();
-                jest.spyOn(map.style, 'queryRenderedFeatures');
+                const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
 
                 const output = map.queryRenderedFeatures();
 
-                const args = map.style.queryRenderedFeatures.getCall(0).args;
+                const args = spy.mock.calls[0];
                 expect(args[0]).toBeTruthy();
                 expect(args[1]).toEqual({availableImages: []});
                 expect(output).toEqual([]);
@@ -1141,13 +1066,13 @@ describe('Map', done => {
         });
 
         test('if only "geometry" provided', done => {
-            createMap(t, {}, (err, map) => {
+            createMap({}, (err, map) => {
                 expect(err).toBeFalsy();
-                jest.spyOn(map.style, 'queryRenderedFeatures');
+                const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
 
                 const output = map.queryRenderedFeatures(map.project(new LngLat(0, 0)));
 
-                const args = map.style.queryRenderedFeatures.getCall(0).args;
+                const args = spy.mock.calls[0];
                 expect(args[0]).toEqual([{x: 100, y: 100}]); // query geometry
                 expect(args[1]).toEqual({availableImages: []}); // params
                 expect(args[2]).toEqual(map.transform); // transform
@@ -1158,13 +1083,13 @@ describe('Map', done => {
         });
 
         test('if only "params" provided', done => {
-            createMap(t, {}, (err, map) => {
+            createMap({}, (err, map) => {
                 expect(err).toBeFalsy();
-                jest.spyOn(map.style, 'queryRenderedFeatures');
+                const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
 
                 const output = map.queryRenderedFeatures({filter: ['all']});
 
-                const args = map.style.queryRenderedFeatures.getCall(0).args;
+                const args = spy.mock.calls[0];
                 expect(args[0]).toBeTruthy();
                 expect(args[1]).toEqual({availableImages: [], filter: ['all']});
                 expect(output).toEqual([]);
@@ -1174,13 +1099,13 @@ describe('Map', done => {
         });
 
         test('if both "geometry" and "params" provided', done => {
-            createMap(t, {}, (err, map) => {
+            createMap({}, (err, map) => {
                 expect(err).toBeFalsy();
-                jest.spyOn(map.style, 'queryRenderedFeatures');
+                const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
 
                 const output = map.queryRenderedFeatures({filter: ['all']});
 
-                const args = map.style.queryRenderedFeatures.getCall(0).args;
+                const args = spy.mock.calls[0];
                 expect(args[0]).toBeTruthy();
                 expect(args[1]).toEqual({availableImages: [], filter: ['all']});
                 expect(output).toEqual([]);
@@ -1190,29 +1115,27 @@ describe('Map', done => {
         });
 
         test('if "geometry" with unwrapped coords provided', done => {
-            createMap(t, {}, (err, map) => {
+            createMap({}, (err, map) => {
                 expect(err).toBeFalsy();
-                jest.spyOn(map.style, 'queryRenderedFeatures');
+                const spy = jest.spyOn(map.style, 'queryRenderedFeatures');
 
                 map.queryRenderedFeatures(map.project(new LngLat(360, 0)));
 
-                expect(map.style.queryRenderedFeatures.getCall(0).args[0]).toEqual([{x: 612, y: 100}]);
+                expect(spy.mock.calls[0][0]).toEqual([{x: 612, y: 100}]);
                 done();
             });
         });
 
-        test('returns an empty array when no style is loaded', done => {
-            const map = createMap(t, {style: undefined});
+        test('returns an empty array when no style is loaded', () => {
+            const map = createMap({style: undefined});
             expect(map.queryRenderedFeatures()).toEqual([]);
-            done();
         });
 
-        done();
     });
 
-    test('#setLayoutProperty', done => {
+    describe('#setLayoutProperty', () => {
         test('sets property', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1236,20 +1159,20 @@ describe('Map', done => {
             });
 
             map.on('style.load', () => {
-                map.style.dispatcher.broadcast = function(key, value) {
+                map.style.dispatcher.broadcast = function(key, value: any) {
                     expect(key).toBe('updateLayers');
                     expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
                 };
 
                 map.setLayoutProperty('symbol', 'text-transform', 'lowercase');
-                map.style.update({});
+                map.style.update({} as EvaluationParameters);
                 expect(map.getLayoutProperty('symbol', 'text-transform')).toBe('lowercase');
                 done();
             });
         });
 
-        test('throw before loaded', done => {
-            const map = createMap(t, {
+        test('throw before loaded', () => {
+            const map = createMap({
                 style: {
                     version: 8,
                     sources: {},
@@ -1261,11 +1184,10 @@ describe('Map', done => {
                 map.setLayoutProperty('symbol', 'text-transform', 'lowercase');
             }).toThrow(Error);
 
-            done();
         });
 
         test('fires an error if layer not found', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     version: 8,
                     sources: {},
@@ -1275,7 +1197,7 @@ describe('Map', done => {
 
             map.on('style.load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /Cannot style non-existing layer "non-existant"./);
+                    expect(error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
                     done();
                 });
                 map.setLayoutProperty('non-existant', 'text-transform', 'lowercase');
@@ -1284,7 +1206,7 @@ describe('Map', done => {
 
         test('fires a data event', done => {
             // background layers do not have a source
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {},
@@ -1311,7 +1233,7 @@ describe('Map', done => {
 
         test('sets visibility on background layer', done => {
             // background layers do not have a source
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {},
@@ -1333,7 +1255,7 @@ describe('Map', done => {
         });
 
         test('sets visibility on raster layer', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1364,7 +1286,7 @@ describe('Map', done => {
         });
 
         test('sets visibility on video layer', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1398,7 +1320,7 @@ describe('Map', done => {
         });
 
         test('sets visibility on image layer', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1431,12 +1353,11 @@ describe('Map', done => {
             });
         });
 
-        done();
     });
 
-    test('#getLayoutProperty', done => {
+    describe('#getLayoutProperty', () => {
         test('fires an error if layer not found', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     version: 8,
                     sources: {},
@@ -1446,19 +1367,18 @@ describe('Map', done => {
 
             map.on('style.load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /Cannot get style of non-existing layer "non-existant"./);
+                    expect(error.message).toMatch(/Cannot get style of non-existing layer "non-existant"./);
                     done();
                 });
-                map.getLayoutProperty('non-existant', 'text-transform', 'lowercase');
+                (map as any).getLayoutProperty('non-existant', 'text-transform', 'lowercase');
             });
         });
 
-        done();
     });
 
-    test('#setPaintProperty', done => {
+    describe('#setPaintProperty', () => {
         test('sets property', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {},
@@ -1476,8 +1396,8 @@ describe('Map', done => {
             });
         });
 
-        test('throw before loaded', done => {
-            const map = createMap(t, {
+        test('throw before loaded', () => {
+            const map = createMap({
                 style: {
                     version: 8,
                     sources: {},
@@ -1489,11 +1409,10 @@ describe('Map', done => {
                 map.setPaintProperty('background', 'background-color', 'red');
             }).toThrow(Error);
 
-            done();
         });
 
         test('fires an error if layer not found', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     version: 8,
                     sources: {},
@@ -1503,19 +1422,18 @@ describe('Map', done => {
 
             map.on('style.load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /Cannot style non-existing layer "non-existant"./);
+                    expect(error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
                     done();
                 });
                 map.setPaintProperty('non-existant', 'background-color', 'red');
             });
         });
 
-        done();
     });
 
-    test('#setFeatureState', done => {
+    describe('#setFeatureState', () => {
         test('sets state', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1532,7 +1450,7 @@ describe('Map', done => {
             });
         });
         test('works with string ids', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1549,7 +1467,7 @@ describe('Map', done => {
             });
         });
         test('parses feature id as an int', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1566,7 +1484,7 @@ describe('Map', done => {
             });
         });
         test('throw before loaded', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1582,7 +1500,7 @@ describe('Map', done => {
             done();
         });
         test('fires an error if source not found', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1593,14 +1511,14 @@ describe('Map', done => {
             });
             map.on('load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /source/);
+                    expect(error.message).toMatch(/source/);
                     done();
                 });
                 map.setFeatureState({source: 'vector', id: 12345}, {'hover': true});
             });
         });
         test('fires an error if sourceLayer not provided for a vector source', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1614,14 +1532,14 @@ describe('Map', done => {
             });
             map.on('load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /sourceLayer/);
+                    expect(error.message).toMatch(/sourceLayer/);
                     done();
                 });
-                map.setFeatureState({source: 'vector', sourceLayer: 0, id: 12345}, {'hover': true});
+                (map as any).setFeatureState({source: 'vector', sourceLayer: 0, id: 12345}, {'hover': true});
             });
         });
         test('fires an error if id not provided', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1635,19 +1553,18 @@ describe('Map', done => {
             });
             map.on('load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /id/);
+                    expect(error.message).toMatch(/id/);
                     done();
                 });
-                map.setFeatureState({source: 'vector', sourceLayer: '1'}, {'hover': true});
+                (map as any).setFeatureState({source: 'vector', sourceLayer: '1'}, {'hover': true});
             });
         });
-        done();
     });
 
-    test('#removeFeatureState', done => {
+    describe('#removeFeatureState', () => {
 
         test('accepts "0" id', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1666,7 +1583,7 @@ describe('Map', done => {
             });
         });
         test('accepts string id', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1685,7 +1602,7 @@ describe('Map', done => {
             });
         });
         test('remove specific state property', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1703,7 +1620,7 @@ describe('Map', done => {
             });
         });
         test('remove all state properties of one feature', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1724,7 +1641,7 @@ describe('Map', done => {
             });
         });
         test('remove properties for zero-based feature IDs.', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1745,7 +1662,7 @@ describe('Map', done => {
             });
         });
         test('other properties persist when removing specific property', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1765,7 +1682,7 @@ describe('Map', done => {
             });
         });
         test('remove all state properties of all features in source', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1792,7 +1709,7 @@ describe('Map', done => {
             });
         });
         test('specific state deletion should not interfere with broader state deletion', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1829,7 +1746,7 @@ describe('Map', done => {
             });
         });
         test('add/remove and remove/add state', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1856,7 +1773,7 @@ describe('Map', done => {
             });
         });
         test('throw before loaded', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1866,13 +1783,13 @@ describe('Map', done => {
                 }
             });
             expect(() => {
-                map.removeFeatureState({source: 'geojson', id: 12345}, {'hover': true});
+                (map as any).removeFeatureState({source: 'geojson', id: 12345}, {'hover': true});
             }).toThrow(Error);
 
             done();
         });
         test('fires an error if source not found', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1883,14 +1800,14 @@ describe('Map', done => {
             });
             map.on('load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /source/);
+                    expect(error.message).toMatch(/source/);
                     done();
                 });
-                map.removeFeatureState({source: 'vector', id: 12345}, {'hover': true});
+                (map as any).removeFeatureState({source: 'vector', id: 12345}, {'hover': true});
             });
         });
         test('fires an error if sourceLayer not provided for a vector source', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1904,14 +1821,14 @@ describe('Map', done => {
             });
             map.on('load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /sourceLayer/);
+                    expect(error.message).toMatch(/sourceLayer/);
                     done();
                 });
-                map.removeFeatureState({source: 'vector', sourceLayer: 0, id: 12345}, {'hover': true});
+                (map as any).removeFeatureState({source: 'vector', sourceLayer: 0, id: 12345}, {'hover': true});
             });
         });
         test('fires an error if state property is provided without a feature id', done => {
-            const map = createMap(t, {
+            const map = createMap({
                 style: {
                     'version': 8,
                     'sources': {
@@ -1925,28 +1842,27 @@ describe('Map', done => {
             });
             map.on('load', () => {
                 map.on('error', ({error}) => {
-                    t.match(error.message, /id/);
+                    expect(error.message).toMatch(/id/);
                     done();
                 });
-                map.removeFeatureState({source: 'vector', sourceLayer: '1'}, {'hover': true});
+                (map as any).removeFeatureState({source: 'vector', sourceLayer: '1'}, {'hover': true});
             });
         });
-        done();
     });
 
-    test('error event', done => {
-        test('logs errors to console when it has NO listeners', done => {
-            const map = createMap(t);
-            const stub = t.stub(console, 'error');
+    describe('error event', () => {
+        test('logs errors to console when it has NO listeners', () => {
+            const map = createMap();
+            const stub = jest.spyOn(console, 'error');
+            stub.mockReset();
             const error = new Error('test');
             map.fire(new ErrorEvent(error));
-            expect(stub.calledOnce).toBeTruthy();
-            expect(stub.getCall(0).args[0]).toBe(error);
-            done();
+            expect(stub).toHaveBeenCalledTimes(1);
+            expect(stub.mock.calls[0][0]).toBe(error);
         });
 
         test('calls listeners', done => {
-            const map = createMap(t);
+            const map = createMap();
             const error = new Error('test');
             map.on('error', (event) => {
                 expect(event.error).toBe(error);
@@ -1955,7 +1871,6 @@ describe('Map', done => {
             map.fire(new ErrorEvent(error));
         });
 
-        done();
     });
 
     test('render stabilizes', done => {
@@ -1974,13 +1889,13 @@ describe('Map', done => {
         });
 
         let timer;
-        const map = createMap(t, {style});
+        const map = createMap({style});
         map.on('render', () => {
             if (timer) clearTimeout(timer);
             timer = setTimeout(() => {
-                map.off('render');
-                map.on('render', t.fail);
-                expect(map._frameId).toBeFalsy();
+                map.off('render', undefined);
+                map.on('render', done.fail);
+                expect((map as any)._frameId).toBeFalsy();
                 done();
             }, 100);
         });
@@ -1988,9 +1903,9 @@ describe('Map', done => {
 
     test('no render after idle event', done => {
         const style = createStyle();
-        const map = createMap(t, {style});
+        const map = createMap({style});
         map.on('idle', () => {
-            map.on('render', t.fail);
+            map.on('render', done.fail);
             setTimeout(() => {
                 done();
             }, 100);
@@ -1999,7 +1914,7 @@ describe('Map', done => {
 
     test('no idle event during move', done => {
         const style = createStyle();
-        const map = createMap(t, {style, fadeDuration: 0});
+        const map = createMap({style, fadeDuration: 0});
         map.once('idle', () => {
             map.zoomTo(0.5, {duration: 100});
             expect(map.isMoving()).toBeTruthy();
@@ -2011,7 +1926,7 @@ describe('Map', done => {
     });
 
     test('#removeLayer restores Map#loaded() to true', done => {
-        const map = createMap(t, {
+        const map = createMap({
             style: extend(createStyle(), {
                 sources: {
                     mapbox: {
@@ -2041,52 +1956,48 @@ describe('Map', done => {
         });
     });
 
-    test('stops camera animation on mousedown when interactive', done => {
-        const map = createMap(t, {interactive: true});
+    test('stops camera animation on mousedown when interactive', () => {
+        const map = createMap({interactive: true});
         map.flyTo({center: [200, 0], duration: 100});
 
         simulate.mousedown(map.getCanvasContainer());
         expect(map.isEasing()).toBe(false);
 
         map.remove();
-        done();
     });
 
-    test('continues camera animation on mousedown when non-interactive', done => {
-        const map = createMap(t, {interactive: false});
+    test('continues camera animation on mousedown when non-interactive', () => {
+        const map = createMap({interactive: false});
         map.flyTo({center: [200, 0], duration: 100});
 
         simulate.mousedown(map.getCanvasContainer());
         expect(map.isEasing()).toBe(true);
 
         map.remove();
-        done();
     });
 
-    test('stops camera animation on touchstart when interactive', done => {
-        const map = createMap(t, {interactive: true});
+    test('stops camera animation on touchstart when interactive', () => {
+        const map = createMap({interactive: true});
         map.flyTo({center: [200, 0], duration: 100});
 
         simulate.touchstart(map.getCanvasContainer(), {touches: [{target: map.getCanvas(), clientX: 0, clientY: 0}]});
         expect(map.isEasing()).toBe(false);
 
         map.remove();
-        done();
     });
 
-    test('continues camera animation on touchstart when non-interactive', done => {
-        const map = createMap(t, {interactive: false});
+    test('continues camera animation on touchstart when non-interactive', () => {
+        const map = createMap({interactive: false});
         map.flyTo({center: [200, 0], duration: 100});
 
         simulate.touchstart(map.getCanvasContainer());
         expect(map.isEasing()).toBe(true);
 
         map.remove();
-        done();
     });
 
-    test('continues camera animation on resize', done => {
-        const map = createMap(t),
+    test('continues camera animation on resize', () => {
+        const map = createMap(),
             container = map.getContainer();
 
         map.flyTo({center: [200, 0], duration: 100});
@@ -2097,11 +2008,10 @@ describe('Map', done => {
 
         expect(map.isMoving()).toBeTruthy();
 
-        done();
     });
 
     test('map fires `styleimagemissing` for missing icons', done => {
-        const map = createMap(t);
+        const map = createMap();
 
         const id = 'missing-image';
 
@@ -2121,7 +2031,7 @@ describe('Map', done => {
     });
 
     test('map does not fire `styleimagemissing` for empty icon values', done => {
-        const map = createMap(t);
+        const map = createMap();
 
         map.on('load', () => {
             map.on('idle', () => {
@@ -2142,12 +2052,11 @@ describe('Map', done => {
             });
 
             map.on('styleimagemissing', ({id}) => {
-                t.fail(`styleimagemissing fired for value ${id}`);
+                done.fail(`styleimagemissing fired for value ${id}`);
             });
         });
     });
 
-    done();
 });
 
 function createStyle() {
@@ -2159,5 +2068,5 @@ function createStyle() {
         pitch: 50,
         sources: {},
         layers: []
-    };
+    } as StyleSpecification;
 }
