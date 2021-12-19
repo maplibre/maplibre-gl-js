@@ -319,14 +319,14 @@
     #stroke { display: none; }
 }
 
+@svg-load ctrl-terrain-enabled url(svg/maplibregl-ctrl-terrain.svg) {
+    fill: #33b5e5;
+    #stroke { display: none; }
+}
+
 .maplibregl-ctrl button.maplibregl-ctrl-terrain .maplibregl-ctrl-icon,
 .mapboxgl-ctrl button.mapboxgl-ctrl-terrain .mapboxgl-ctrl-icon {
     background-image: svg-inline(ctrl-terrain);
-}
-
-@svg-load ctrl-terrain-enabled url(svg/maplibregl-ctrl-terrain-enabled.svg) {
-    fill: #333;
-    #stroke { display: none; }
 }
 
 .maplibregl-ctrl button.maplibregl-ctrl-terrain-enabled .maplibregl-ctrl-icon,
