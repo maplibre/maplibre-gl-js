@@ -6,7 +6,7 @@ import type {ControlPosition, IControl} from './control';
 
 type TerrainOptions = {
   id?: string;
-  options?: {exaggeration: boolean; elevationOffset: number}
+  options?: {exaggeration: number; elevationOffset: number}
 };
 
 /**
@@ -15,7 +15,7 @@ type TerrainOptions = {
  * @implements {IControl}
  * @param {Object} [options]
  * @param {string} [options.id] The ID of the raster-dem source to use.
- * @param {exaggeration: boolean; elevationOffset: number} [options.options] Allowed options are exaggeration: boolean; elevationOffset: number
+ * @param {exaggeration: number; elevationOffset: number} [options.options] Allowed options are exaggeration: number; elevationOffset: number
  * @example
  * var map = new maplibregl.Map({TerrainControl: false})
  *     .addControl(new maplibregl.TerrainControl({

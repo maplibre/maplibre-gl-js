@@ -37,6 +37,10 @@ map.on("load", () => {
   map.addControl(
     new maplibregl.TerrainControl({
       id: "terrain"
+      options: {
+        exaggeration: 2,
+        elevationOffset: 0
+      }
     })
   );
 });

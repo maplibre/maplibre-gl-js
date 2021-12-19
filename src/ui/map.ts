@@ -1563,7 +1563,7 @@ class Map extends Camera {
      * @example
      * map.addTerrain('my-data');
      */
-    addTerrain(id: string, options?: {exaggeration: boolean; elevationOffset: number}) {
+    addTerrain(id: string, options?: {exaggeration: number; elevationOffset: number}) {
         this.isSourceLoaded(id);
         this.style.terrainSourceCache.enable(this.style.sourceCaches[id], options);
         this.style.terrainSourceCache.update(this.transform);
