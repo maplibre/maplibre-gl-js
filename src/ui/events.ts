@@ -7,6 +7,7 @@ import {extend} from '../util/util';
 import type Map from './map';
 import type LngLat from '../geo/lng_lat';
 import {SourceSpecification} from '../style-spec/types';
+import {Coordinates} from '../source/image_source';
 
 export type MapLayerMouseEvent = MapMouseEvent & { features?: GeoJSON.Feature[] };
 
@@ -294,7 +295,7 @@ export type MapLibreZoomEvent = {
  * that internal data has been received or changed. Possible values are `metadata`, `content` and `visibility`.
  * @property {Object} [tile] The tile being loaded or changed, if the event has a `dataType` of `source` and
  * the event is related to loading of a tile.
- * @property {Coordinate} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
+ * @property {Coordinates} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
  * the event is related to loading of a tile.
  * @example
  * // The sourcedata event is an example of MapDataEvent.
@@ -308,6 +309,11 @@ export type MapLibreZoomEvent = {
 export type MapDataEvent = {
   type: string;
   dataType: string;
+  isSourceLoaded?: boolean;
+  source?: Object;
+  sourceDataType?: string;
+  tile?: Object;
+  coord?: Coordinates;
 };
 
 export type MapContextEvent = {

@@ -12,6 +12,7 @@ import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import {IControl} from './control/control';
 import EvaluationParameters from '../style/evaluation_parameters';
+import {fakeServer, SinonFakeServer} from 'sinon';
 
 function createStyleSource() {
     return {
@@ -23,21 +24,21 @@ function createStyleSource() {
     } as SourceSpecification;
 }
 
+let server: SinonFakeServer;
+
 beforeEach(() => {
     setPerformance();
     setWebGlContext();
     setMatchMedia();
+    global.fetch = null;
+    server = fakeServer.create();
+});
+
+afterEach(() => {
+    server.restore();
 });
 
 describe('Map', () => {
-
-    jest.spyOn(global, 'XMLHttpRequest').mockReturnValue({
-        open: jest.fn(),
-        send: jest.fn(),
-        setRequestHeader: jest.fn()
-    } as any as XMLHttpRequest);
-
-    global.fetch = undefined;
 
     test('constructor', () => {
         const map = createMap({interactive: true, style: null});
@@ -137,11 +138,11 @@ describe('Map', () => {
 
         setTimeout(() => {
             map.off('load', done.fail);
-            map.on('load', pass);
+            map.on('load', () => {
+                done();
+            });
             map.setStyle(createStyle());
         }, 1);
-
-        function pass() { done(); }
     });
 
     describe('#setStyle', () => {
@@ -300,7 +301,7 @@ describe('Map', () => {
 
             map.on('load', () => {
                 map.on('data', (e) => {
-                    if (e.dataType === 'source' && (e as any).sourceDataType === 'metadata') {
+                    if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                         expect(map.isSourceLoaded('geojson')).toBe(true);
                         done();
                     }
@@ -647,16 +648,6 @@ describe('Map', () => {
             const map = createMap();
             map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
             expect(map.setZoom(0).getZoom()).not.toBe(0);
-        });
-
-        test('throws on invalid bounds', () => {
-            const map = createMap({zoom:0});
-            expect(() => {
-                (map as any).setMaxBounds([-130.4297, 50.0642], [-61.52344, 24.20688]);
-            }).toThrow(Error);
-            expect(() => {
-                (map as any).setMaxBounds(-130.4297, 50.0642, -61.52344, 24.20688);
-            }).toThrow(Error);
         });
 
         function toFixed(bounds) {
