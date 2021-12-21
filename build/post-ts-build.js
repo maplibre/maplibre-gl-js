@@ -1,6 +1,7 @@
 import fs from 'fs';
 import glob from 'glob';
 import child_process from 'child_process';
+import glsl_to_js from './glsl_to_js.js';
 
 let args = process.argv.slice(2);
 let outputBaseDir = args[0];
@@ -19,17 +20,7 @@ console.log(`Copying glsl files to ${outputBaseDir}, minify: ${minify}`);
 glob("./src/**/*.glsl", null, (err, files) => {
     for (let file of files) {
         let code = fs.readFileSync(file, 'utf8');
-
-        if (minify) {
-            code = code.trim() // strip whitespace at the start/end
-                .replace(/\s*\/\/[^\n]*\n/g, '\n') // strip double-slash comments
-                .replace(/\n+/g, '\n') // collapse multi line breaks
-                .replace(/\n\s+/g, '\n') // strip identation
-                .replace(/\s?([+-\/*=,])\s?/g, '$1') // strip whitespace around operators
-                .replace(/([;\(\),\{\}])\n(?=[^#])/g, '$1'); // strip more line breaks
-
-        }
-        let content = `export default ${JSON.stringify(code)};`
+        let content = glsl_to_js(code, minify);
         let fileName = outputBaseDir + '/' + file.split('/').splice(-1) + ".js";
         fs.writeFileSync(fileName, content);
     }
