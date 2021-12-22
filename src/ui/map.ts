@@ -1607,7 +1607,7 @@ class Map extends Camera {
      * of an image source.
      *
      * @param {string} id The ID of the source to get.
-     * @returns {Source} The style source with the specified ID or `undefined` if the ID
+     * @returns {Source | undefined} The style source with the specified ID or `undefined` if the ID
      * corresponds to no existing sources.
      * The shape of the object varies by source type.
      * A list of options for each source type is available on the Mapbox Style Specification's
@@ -1618,7 +1618,7 @@ class Map extends Camera {
      * @see [Animate a point](https://maplibre.org/maplibre-gl-js-docs/example/animate-point-along-line/)
      * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js-docs/example/live-geojson/)
      */
-    getSource(id: string): Source {
+    getSource(id: string): Source | undefined {
         return this.style.getSource(id);
     }
 
