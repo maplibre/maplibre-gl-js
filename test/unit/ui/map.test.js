@@ -995,6 +995,22 @@ test('Map', (t) => {
         });
     });
 
+    t.test('does not fire "webglcontextrestored" after #remove has been called', (t) => {
+        const map = createMap(t);
+        const canvas = map.getCanvas();
+
+        map.once('webglcontextlost', () => {
+            map.once('webglcontextrestored', () => t.fail('"webglcontextrestored" fired after #remove has been called'));
+            map.remove();
+            canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+            t.end();
+        });
+
+        // Dispatch the event manually because at the time of this writing, gl does not support
+        // the WEBGL_lose_context extension.
+        canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    });
+
     t.test('#redraw', (t) => {
         const map = createMap(t);
 
