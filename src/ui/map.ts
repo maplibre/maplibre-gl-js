@@ -2678,6 +2678,7 @@ class Map extends Camera {
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension) extension.loseContext();
         this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
+        this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
         this._container.classList.remove('maplibregl-map', 'mapboxgl-map');
