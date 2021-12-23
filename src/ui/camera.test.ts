@@ -1545,7 +1545,7 @@ describe('#flyTo', () => {
             .on('moveend', () => {
                 endTime = new Date();
                 timeDiff = endTime - startTime;
-                expect(timeDiff / 10).toBeCloseTo(0, 1);
+                expect(timeDiff).toBeLessThan(10);
                 done();
             });
 

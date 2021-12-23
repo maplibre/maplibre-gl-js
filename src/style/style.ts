@@ -635,9 +635,9 @@ class Style extends Evented {
     /**
      * Get a source by id.
      * @param {string} id id of the desired source
-     * @returns {Object} source
+     * @returns {Source | undefined} source
      */
-    getSource(id: string): Source {
+    getSource(id: string): Source | undefined {
         return this.sourceCaches[id] && this.sourceCaches[id].getSource();
     }
 

@@ -43,6 +43,9 @@
 - Fix type check for non dom environment. (#334)
 - Fix precision problem in patterns when overzoomed in OpenGL ES devices.
 - Fix padding-top of the popup to improve readability of popup text (#354).
+- Fix GeoJSONSource#loaded sometimes returning true while there are still pending loads (#669)
+- Fix MapDataEvent#isSourceLoaded being true in GeoJSONSource "dataloading" event handlers (#694)
+- Fix events being fired after Map#remove has been called when the WebGL context is lost and restored (#726)
 
 ## 1.15.2
 
