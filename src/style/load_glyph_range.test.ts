@@ -2,9 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
 import loadGlyphRange from './load_glyph_range';
-import {getSinonXMLHttpRequest} from '../util/test/util';
+import {useFakeXMLHttpRequest} from 'sinon';
 
 test('loadGlyphRange', done => {
+    global.fetch = null;
+
     const transform = jest.fn().mockImplementation((url) => {
         return {url};
     });
@@ -12,7 +14,7 @@ test('loadGlyphRange', done => {
     const manager = new RequestManager(transform);
 
     let request;
-    getSinonXMLHttpRequest().onCreate = (req) => { request = req; };
+    useFakeXMLHttpRequest().onCreate = (req) => { request = req; };
 
     loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager, (err, result) => {
         expect(err).toBeFalsy();
