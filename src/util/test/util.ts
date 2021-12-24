@@ -2,6 +2,7 @@ import Map from '../../ui/map';
 import {extend} from '../../util/util';
 import Dispatcher from '../../util/dispatcher';
 import gl from 'gl';
+import {useFakeXMLHttpRequest} from 'sinon';
 
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
@@ -78,7 +79,7 @@ export function setMatchMedia () {
     });
 }
 
-export function getWrapDispatcher () {
+export function getWrapDispatcher() {
     const wrapDispatcher = (dispatcher) => {
         return {
             getActor() {
@@ -90,7 +91,7 @@ export function getWrapDispatcher () {
     return wrapDispatcher;
 }
 
-export function getMockDispatcher () {
+export function getMockDispatcher() {
     const wrapDispatcher = getWrapDispatcher();
 
     const mockDispatcher = wrapDispatcher({
@@ -98,4 +99,9 @@ export function getMockDispatcher () {
     });
 
     return mockDispatcher;
+}
+
+export function getSinonXMLHttpRequest() {
+    global.fetch = null;
+    return useFakeXMLHttpRequest();
 }
