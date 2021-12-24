@@ -1,13 +1,12 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
 import fs from 'fs';
 import path, {dirname} from 'path';
-import {RequestManager} from '../../../rollup/build/tsc/src/util/request_manager';
-import loadGlyphRange from '../../../rollup/build/tsc/src/style/load_glyph_range';
+import {RequestManager} from '../util/request_manager';
+import loadGlyphRange from '../style/load_glyph_range';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-test('loadGlyphRange', (t) => {
+describe('loadGlyphRange', () => {
     window.useFakeXMLHttpRequest();
 
     t.tearDown(() => {
@@ -27,7 +26,7 @@ test('loadGlyphRange', (t) => {
 
         if (!result) return t.fail(); // appease flow
 
-        expect(Object.keys(result).length).toBe(223);
+        expect(Object.keys(result)).toHaveLength(223);
         for (const key in result) {
             const id = Number(key);
             const glyph = result[id];
@@ -39,7 +38,6 @@ test('loadGlyphRange', (t) => {
             expect(typeof glyph.metrics.top).toBe('number');
             expect(typeof glyph.metrics.advance).toBe('number');
         }
-        t.end();
     });
 
     if (!request) return t.fail(); // appease flow
