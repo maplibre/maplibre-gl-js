@@ -21,30 +21,30 @@ test('loadGlyphRange', (t) => {
     XMLHttpRequest.onCreate = (req) => { request = req; };
 
     loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager, (err, result) => {
-        t.ifError(err);
-        t.ok(transform.calledOnce);
-        t.deepEqual(transform.getCall(0).args, ['https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf', 'Glyphs']);
+        expect(err).toBeFalsy();
+        expect(transform.calledOnce).toBeTruthy();
+        expect(transform.getCall(0).args).toEqual(['https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf', 'Glyphs']);
 
         if (!result) return t.fail(); // appease flow
 
-        t.equal(Object.keys(result).length, 223);
+        expect(Object.keys(result).length).toBe(223);
         for (const key in result) {
             const id = Number(key);
             const glyph = result[id];
             if (!glyph) return t.fail(); // appease flow
-            t.equal(glyph.id, Number(id));
-            t.ok(glyph.metrics);
-            t.equal(typeof glyph.metrics.width, 'number');
-            t.equal(typeof glyph.metrics.height, 'number');
-            t.equal(typeof glyph.metrics.top, 'number');
-            t.equal(typeof glyph.metrics.advance, 'number');
+            expect(glyph.id).toBe(Number(id));
+            expect(glyph.metrics).toBeTruthy();
+            expect(typeof glyph.metrics.width).toBe('number');
+            expect(typeof glyph.metrics.height).toBe('number');
+            expect(typeof glyph.metrics.top).toBe('number');
+            expect(typeof glyph.metrics.advance).toBe('number');
         }
         t.end();
     });
 
     if (!request) return t.fail(); // appease flow
 
-    t.equal(request.url, 'https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
+    expect(request.url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
     request.setStatus(200);
     request.response = fs.readFileSync(path.join(__dirname, '../../fixtures/0-255.pbf'));
     request.onload();
