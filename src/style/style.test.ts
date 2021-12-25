@@ -69,13 +69,13 @@ test('Style', (t) => {
         t.spy(Style, 'registerForPluginStateChange');
         const style = new Style(new StubMap());
         t.spy(style.dispatcher, 'broadcast');
-        t.ok(Style.registerForPluginStateChange.calledOnce);
+        expect(Style.registerForPluginStateChange.calledOnce).toBeTruthy();
 
         setRTLTextPlugin("/plugin.js",);
-        t.ok(style.dispatcher.broadcast.calledWith('syncRTLPluginState', {
+        expect(style.dispatcher.broadcast.calledWith('syncRTLPluginState', {
             pluginStatus: 'deferred',
             pluginURL: "/plugin.js"
-        }));
+        })).toBeTruthy();
         window.clearFakeWorkerPresence();
         t.end();
     });
@@ -90,7 +90,7 @@ test('Style', (t) => {
             // Getting this error message shows the bogus URL was succesfully passed to the worker
             // We'll get the error from all workers, only pay attention to the first one
             if (firstError) {
-                t.equals(error.message, 'RTL Text Plugin failed to import scripts from /plugin.js');
+                expect(error.message).toBe('RTL Text Plugin failed to import scripts from /plugin.js');
                 t.end();
                 window.clearFakeWorkerPresence();
                 window.clearFakeXMLHttpRequest();
@@ -122,9 +122,9 @@ test('Style#loadURL', (t) => {
         style.on('dataloading', spy);
         style.loadURL('style.json');
 
-        t.ok(spy.calledOnce);
-        t.equal(spy.getCall(0).args[0].target, style);
-        t.equal(spy.getCall(0).args[0].dataType, 'style');
+        expect(spy.calledOnce).toBeTruthy();
+        expect(spy.getCall(0).args[0].target).toBe(style);
+        expect(spy.getCall(0).args[0].dataType).toBe('style');
         t.end();
     });
 
@@ -135,9 +135,9 @@ test('Style#loadURL', (t) => {
         const style = new Style(map);
         style.loadURL('style.json');
 
-        t.ok(spy.calledOnce);
-        t.equal(spy.getCall(0).args[0], 'style.json');
-        t.equal(spy.getCall(0).args[1], 'Style');
+        expect(spy.calledOnce).toBeTruthy();
+        expect(spy.getCall(0).args[0]).toBe('style.json');
+        expect(spy.getCall(0).args[1]).toBe('Style');
         t.end();
     });
 
@@ -145,7 +145,7 @@ test('Style#loadURL', (t) => {
         const style = new Style(new StubMap());
 
         style.on('error', ({error}) => {
-            t.ok(error);
+            expect(error).toBeTruthy();
             t.match(error.message, /version/);
             t.end();
         });
@@ -159,7 +159,7 @@ test('Style#loadURL', (t) => {
         const style = new Style(new StubMap());
         style.loadURL('style.json');
         style._remove();
-        t.equal(window.server.lastRequest.aborted, true);
+        expect(window.server.lastRequest.aborted).toBe(true);
         t.end();
     });
 
@@ -179,9 +179,9 @@ test('Style#loadJSON', (t) => {
         style.on('dataloading', spy);
         style.loadJSON(createStyleJSON());
 
-        t.ok(spy.calledOnce);
-        t.equal(spy.getCall(0).args[0].target, style);
-        t.equal(spy.getCall(0).args[0].dataType, 'style');
+        expect(spy.calledOnce).toBeTruthy();
+        expect(spy.getCall(0).args[0].target).toBe(style);
+        expect(spy.getCall(0).args[0].dataType).toBe('style');
         t.end();
     });
 
@@ -191,8 +191,8 @@ test('Style#loadJSON', (t) => {
         style.loadJSON(createStyleJSON());
 
         style.on('data', (e) => {
-            t.equal(e.target, style);
-            t.equal(e.dataType, 'style');
+            expect(e.target).toBe(style);
+            expect(e.dataType).toBe('style');
             t.end();
         });
     });
@@ -232,15 +232,15 @@ test('Style#loadJSON', (t) => {
             "sprite": "http://example.com/sprite"
         });
 
-        style.once('error', (e) => t.error(e));
+        style.once('error', (e) => expect(e).toBeFalsy());
 
         style.once('data', (e) => {
-            t.equal(e.target, style);
-            t.equal(e.dataType, 'style');
+            expect(e.target).toBe(style);
+            expect(e.dataType).toBe('style');
 
             style.once('data', (e) => {
-                t.equal(e.target, style);
-                t.equal(e.dataType, 'style');
+                expect(e.target).toBe(style);
+                expect(e.dataType).toBe('style');
                 t.end();
             });
 
@@ -252,7 +252,7 @@ test('Style#loadJSON', (t) => {
         const style = new Style(new StubMap());
 
         style.on('error', ({error}) => {
-            t.ok(error);
+            expect(error).toBeTruthy();
             t.match(error.message, /version/);
             t.end();
         });
@@ -264,7 +264,7 @@ test('Style#loadJSON', (t) => {
         const style = new Style(new StubMap());
 
         style.on('style.load', () => {
-            t.ok(style.sourceCaches['mapbox'] instanceof SourceCache);
+            expect(style.sourceCaches['mapbox'] instanceof SourceCache).toBeTruthy();
             t.end();
         });
 
@@ -282,7 +282,7 @@ test('Style#loadJSON', (t) => {
         const style = new Style(new StubMap());
 
         style.on('style.load', () => {
-            t.ok(style.getLayer('fill') instanceof StyleLayer);
+            expect(style.getLayer('fill') instanceof StyleLayer).toBeTruthy();
             t.end();
         });
 
@@ -310,11 +310,11 @@ test('Style#loadJSON', (t) => {
         const style = new Style(map);
 
         style.on('style.load', () => {
-            t.equal(transformSpy.callCount, 2);
-            t.equal(transformSpy.getCall(0).args[0], 'http://example.com/sprites/bright-v8.json');
-            t.equal(transformSpy.getCall(0).args[1], 'SpriteJSON');
-            t.equal(transformSpy.getCall(1).args[0], 'http://example.com/sprites/bright-v8.png');
-            t.equal(transformSpy.getCall(1).args[1], 'SpriteImage');
+            expect(transformSpy.callCount).toBe(2);
+            expect(transformSpy.getCall(0).args[0]).toBe('http://example.com/sprites/bright-v8.json');
+            expect(transformSpy.getCall(0).args[1]).toBe('SpriteJSON');
+            expect(transformSpy.getCall(1).args[0]).toBe('http://example.com/sprites/bright-v8.png');
+            expect(transformSpy.getCall(1).args[1]).toBe('SpriteImage');
             t.end();
         });
 
@@ -349,10 +349,10 @@ test('Style#loadJSON', (t) => {
 
         style.on('error', (event) => {
             const err = event.error;
-            t.ok(err);
-            t.ok(err.toString().indexOf('-source-layer-') !== -1);
-            t.ok(err.toString().indexOf('-source-id-') !== -1);
-            t.ok(err.toString().indexOf('-layer-id-') !== -1);
+            expect(err).toBeTruthy();
+            expect(err.toString().indexOf('-source-layer-') !== -1).toBeTruthy();
+            expect(err.toString().indexOf('-source-id-') !== -1).toBeTruthy();
+            expect(err.toString().indexOf('-layer-id-') !== -1).toBeTruthy();
 
             t.end();
         });
@@ -368,8 +368,8 @@ test('Style#loadJSON', (t) => {
         }));
 
         style.on('error', (e) => {
-            t.deepEqual(e.layer, {id: 'background'});
-            t.ok(e.mapbox);
+            expect(e.layer).toEqual({id: 'background'});
+            expect(e.mapbox).toBeTruthy();
             t.end();
         });
 
@@ -392,7 +392,7 @@ test('Style#_remove', (t) => {
             const sourceCache = style.sourceCaches['source-id'];
             t.spy(sourceCache, 'clearTiles');
             style._remove();
-            t.ok(sourceCache.clearTiles.calledOnce);
+            expect(sourceCache.clearTiles.calledOnce).toBeTruthy();
             t.end();
         });
     });
@@ -406,7 +406,7 @@ test('Style#_remove', (t) => {
             style._remove();
 
             rtlTextPluginEvented.fire(new Event('pluginStateChange'));
-            t.notOk(style.dispatcher.broadcast.calledWith('syncRTLPluginState'));
+            expect(style.dispatcher.broadcast.calledWith('syncRTLPluginState')).toBeFalsy();
             t.end();
         });
     });
@@ -431,7 +431,7 @@ test('Style#update', (t) => {
         }]
     });
 
-    style.on('error', (error) => { t.error(error); });
+    style.on('error', (error) => { expect(error).toBeFalsy(); });
 
     style.on('style.load', () => {
         style.addLayer({id: 'first', source: 'source', type: 'fill', 'source-layer': 'source-layer'}, 'second');
@@ -439,9 +439,9 @@ test('Style#update', (t) => {
         style.removeLayer('second');
 
         style.dispatcher.broadcast = function(key, value) {
-            t.equal(key, 'updateLayers');
-            t.deepEqual(value.layers.map((layer) => { return layer.id; }), ['first', 'third']);
-            t.deepEqual(value.removedIds, ['second']);
+            expect(key).toBe('updateLayers');
+            expect(value.layers.map((layer) => { return layer.id; })).toEqual(['first', 'third']);
+            expect(value.removedIds).toEqual(['second']);
             t.end();
         };
 
@@ -452,7 +452,7 @@ test('Style#update', (t) => {
 test('Style#setState', (t) => {
     t.test('throw before loaded', (t) => {
         const style = new Style(new StubMap());
-        t.throws(() => style.setState(createStyleJSON()), /load/i);
+        expect(() => style.setState(createStyleJSON())).toThrowError(/load/i);
         t.end();
     });
 
@@ -473,7 +473,7 @@ test('Style#setState', (t) => {
         ].forEach((method) => t.stub(style, method).callsFake(() => t.fail(`${method} called`)));
         style.on('style.load', () => {
             const didChange = style.setState(createStyleJSON());
-            t.notOk(didChange, 'return false');
+            expect(didChange).toBeFalsy();
             t.end();
         });
     });
@@ -515,8 +515,8 @@ test('Style#setState', (t) => {
         style.loadJSON(initialState);
         style.on('style.load', () => {
             const didChange = style.setState(nextState);
-            t.ok(didChange);
-            t.same(style.stylesheet, nextState);
+            expect(didChange).toBeTruthy();
+            expect(style.stylesheet).toEqual(nextState);
             t.end();
         });
     });
@@ -557,10 +557,10 @@ test('Style#setState', (t) => {
             t.spy(geoJSONSource, 'setData');
             const didChange = style.setState(nextState);
 
-            t.ok(style.setGeoJSONSourceData.calledWith('source-id', geoJSONSourceData));
-            t.ok(geoJSONSource.setData.calledWith(geoJSONSourceData));
-            t.ok(didChange);
-            t.same(style.stylesheet, nextState);
+            expect(style.setGeoJSONSourceData.calledWith('source-id', geoJSONSourceData)).toBeTruthy();
+            expect(geoJSONSource.setData.calledWith(geoJSONSourceData)).toBeTruthy();
+            expect(didChange).toBeTruthy();
+            expect(style.stylesheet).toEqual(nextState);
             t.end();
         });
     });
@@ -571,7 +571,7 @@ test('Style#setState', (t) => {
 test('Style#addSource', (t) => {
     t.test('throw before loaded', (t) => {
         const style = new Style(new StubMap());
-        t.throws(() => style.addSource('source-id', createSource()), /load/i);
+        expect(() => style.addSource('source-id', createSource())).toThrowError(/load/i);
         t.end();
     });
 
@@ -583,7 +583,7 @@ test('Style#addSource', (t) => {
         delete source.type;
 
         style.on('style.load', () => {
-            t.throws(() => style.addSource('source-id', source), /type/i);
+            expect(() => style.addSource('source-id', source)).toThrowError(/type/i);
             t.end();
         });
     });
@@ -605,9 +605,9 @@ test('Style#addSource', (t) => {
         const source = createSource();
         style.on('style.load', () => {
             style.addSource('source-id', source);
-            t.throws(() => {
+            expect(() => {
                 style.addSource('source-id', source);
-            }, /Source "source-id" already exists./);
+            }).toThrowError(/Source "source-id" already exists./);
             t.end();
         });
     });
@@ -617,7 +617,7 @@ test('Style#addSource', (t) => {
         style.loadJSON(createStyleJSON());
         style.on('style.load', () => {
             style.on('error', () => {
-                t.notOk(style.sourceCaches['source-id']);
+                expect(style.sourceCaches['source-id']).toBeFalsy();
                 t.end();
             });
             style.addSource('source-id', {
@@ -641,16 +641,16 @@ test('Style#addSource', (t) => {
         const source = createSource();
 
         style.on('style.load', () => {
-            t.plan(4);
+            expect.assertions(4);
 
-            style.on('error', () => { t.ok(true); });
+            style.on('error', () => { expect(true).toBeTruthy(); });
             style.on('data', (e) => {
                 if (e.sourceDataType === 'metadata' && e.dataType === 'source') {
-                    t.ok(true);
+                    expect(true).toBeTruthy();
                 } else if (e.sourceDataType === 'content' && e.dataType === 'source') {
-                    t.ok(true);
+                    expect(true).toBeTruthy();
                 } else {
-                    t.ok(true);
+                    expect(true).toBeTruthy();
                 }
             });
 
@@ -666,7 +666,7 @@ test('Style#addSource', (t) => {
 test('Style#removeSource', (t) => {
     t.test('throw before loaded', (t) => {
         const style = new Style(new StubMap());
-        t.throws(() => style.removeSource('source-id'), /load/i);
+        expect(() => style.removeSource('source-id')).toThrowError(/load/i);
         t.end();
     });
 
@@ -692,7 +692,7 @@ test('Style#removeSource', (t) => {
             const sourceCache = style.sourceCaches['source-id'];
             t.spy(sourceCache, 'clearTiles');
             style.removeSource('source-id');
-            t.ok(sourceCache.clearTiles.calledOnce);
+            expect(sourceCache.clearTiles.calledOnce).toBeTruthy();
             t.end();
         });
     });
@@ -701,9 +701,9 @@ test('Style#removeSource', (t) => {
         const style = new Style(new StubMap());
         style.loadJSON(createStyleJSON());
         style.on('style.load', () => {
-            t.throws(() => {
+            expect(() => {
                 style.removeSource('source-id');
-            }, /There is no source with this ID/);
+            }).toThrowError(/There is no source with this ID/);
             t.end();
         });
     });
@@ -731,8 +731,8 @@ test('Style#removeSource', (t) => {
     t.test('throws if source is in use', (t) => {
         createStyle((style) => {
             style.on('error', (event) => {
-                t.ok(event.error.message.includes('"mapbox-source"'));
-                t.ok(event.error.message.includes('"mapbox-layer"'));
+                expect(event.error.message.includes('"mapbox-source"')).toBeTruthy();
+                expect(event.error.message.includes('"mapbox-layer"')).toBeTruthy();
                 t.end();
             });
             style.removeSource('mapbox-source');
@@ -764,8 +764,8 @@ test('Style#removeSource', (t) => {
             // Suppress error reporting
             source.on('error', () => {});
 
-            style.on('data', () => { t.ok(false); });
-            style.on('error', () => { t.ok(false); });
+            style.on('data', () => { expect(false).toBeTruthy(); });
+            style.on('error', () => { expect(false).toBeTruthy(); });
             source.fire(new Event('data'));
             source.fire(new Event('error'));
 
@@ -781,7 +781,7 @@ test('Style#setGeoJSONSourceData', (t) => {
 
     t.test('throws before loaded', (t) => {
         const style = new Style(new StubMap());
-        t.throws(() => style.setGeoJSONSourceData('source-id', geoJSON), /load/i);
+        expect(() => style.setGeoJSONSourceData('source-id', geoJSON)).toThrowError(/load/i);
         t.end();
     });
 
@@ -789,7 +789,7 @@ test('Style#setGeoJSONSourceData', (t) => {
         const style = new Style(new StubMap());
         style.loadJSON(createStyleJSON());
         style.on('style.load', () => {
-            t.throws(() => style.setGeoJSONSourceData('source-id', geoJSON), /There is no source with this ID/);
+            expect(() => style.setGeoJSONSourceData('source-id', geoJSON)).toThrowError(/There is no source with this ID/);
             t.end();
         });
     });
@@ -800,7 +800,7 @@ test('Style#setGeoJSONSourceData', (t) => {
 test('Style#addLayer', (t) => {
     t.test('throw before loaded', (t) => {
         const style = new Style(new StubMap());
-        t.throws(() => style.addLayer({id: 'background', type: 'background'}), /load/i);
+        expect(() => style.addLayer({id: 'background', type: 'background'})).toThrowError(/load/i);
         t.end();
     });
 
@@ -809,8 +809,8 @@ test('Style#addLayer', (t) => {
         style.loadJSON(createStyleJSON());
 
         style.on('error', (e) => {
-            t.deepEqual(e.layer, {id: 'background'});
-            t.ok(e.mapbox);
+            expect(e.layer).toEqual({id: 'background'});
+            expect(e.mapbox).toBeTruthy();
             t.end();
         });
 
@@ -847,10 +847,10 @@ test('Style#addLayer', (t) => {
         style.on('error', (event) => {
             const err = event.error;
 
-            t.ok(err);
-            t.ok(err.toString().indexOf('-source-layer-') !== -1);
-            t.ok(err.toString().indexOf('-source-id-') !== -1);
-            t.ok(err.toString().indexOf('-layer-id-') !== -1);
+            expect(err).toBeTruthy();
+            expect(err.toString().indexOf('-source-layer-') !== -1).toBeTruthy();
+            expect(err.toString().indexOf('-source-id-') !== -1).toBeTruthy();
+            expect(err.toString().indexOf('-layer-id-') !== -1).toBeTruthy();
 
             t.end();
         });
@@ -861,7 +861,7 @@ test('Style#addLayer', (t) => {
         style.loadJSON(createStyleJSON());
         style.on('style.load', () => {
             style.on('error', () => {
-                t.notOk(style.getLayer('background'));
+                expect(style.getLayer('background')).toBeFalsy();
                 t.end();
             });
             style.addLayer({
@@ -887,7 +887,7 @@ test('Style#addLayer', (t) => {
             };
             const layer = {id: 'inline-source-layer', type: 'circle', source};
             style.addLayer(layer);
-            t.deepEqual(layer.source, source);
+            expect(layer.source).toEqual(source);
             t.end();
         });
     });
@@ -1036,7 +1036,7 @@ test('Style#addLayer', (t) => {
 
         style.on('style.load', () => {
             style.addLayer(layer);
-            t.deepEqual(style._order, ['a', 'b', 'c']);
+            expect(style._order).toEqual(['a', 'b', 'c']);
             t.end();
         });
     });
@@ -1056,7 +1056,7 @@ test('Style#addLayer', (t) => {
 
         style.on('style.load', () => {
             style.addLayer(layer, 'a');
-            t.deepEqual(style._order, ['c', 'a', 'b']);
+            expect(style._order).toEqual(['c', 'a', 'b']);
             t.end();
         });
     });
@@ -1117,7 +1117,7 @@ test('Style#addLayer', (t) => {
 test('Style#removeLayer', (t) => {
     t.test('throw before loaded', (t) => {
         const style = new Style(new StubMap());
-        t.throws(() => style.removeLayer('background'), /load/i);
+        expect(() => style.removeLayer('background')).toThrowError(/load/i);
         t.end();
     });
 
@@ -1187,7 +1187,7 @@ test('Style#removeLayer', (t) => {
 
         style.on('style.load', () => {
             style.removeLayer('a');
-            t.deepEqual(style._order, ['b']);
+            expect(style._order).toEqual(['b']);
             t.end();
         });
     });
@@ -1206,8 +1206,8 @@ test('Style#removeLayer', (t) => {
 
         style.on('style.load', () => {
             style.removeLayer('a');
-            t.equal(style.getLayer('a'), undefined);
-            t.notEqual(style.getLayer('b'), undefined);
+            expect(style.getLayer('a')).toBe(undefined);
+            expect(style.getLayer('b')).not.toBe(undefined);
             t.end();
         });
     });
@@ -1218,7 +1218,7 @@ test('Style#removeLayer', (t) => {
 test('Style#moveLayer', (t) => {
     t.test('throw before loaded', (t) => {
         const style = new Style(new StubMap());
-        t.throws(() => style.moveLayer('background'), /load/i);
+        expect(() => style.moveLayer('background')).toThrowError(/load/i);
         t.end();
     });
 
@@ -1261,7 +1261,7 @@ test('Style#moveLayer', (t) => {
 
         style.on('style.load', () => {
             style.moveLayer('a', 'c');
-            t.deepEqual(style._order, ['b', 'a', 'c']);
+            expect(style._order).toEqual(['b', 'a', 'c']);
             t.end();
         });
     });
@@ -1278,7 +1278,7 @@ test('Style#moveLayer', (t) => {
 
         style.on('style.load', () => {
             style.moveLayer('b', 'b');
-            t.deepEqual(style._order, ['a', 'b', 'c']);
+            expect(style._order).toEqual(['a', 'b', 'c']);
             t.end();
         });
     });
@@ -1320,7 +1320,7 @@ test('Style#setPaintProperty', (t) => {
                 if (!begun && sourceCache.loaded()) {
                     begun = true;
                     t.stub(sourceCache, 'reload').callsFake(() => {
-                        t.ok(styleUpdateCalled, 'loadTile called before layer data broadcast');
+                        expect(styleUpdateCalled).toBeTruthy();
                         t.end();
                     });
 
@@ -1358,15 +1358,15 @@ test('Style#setPaintProperty', (t) => {
         style.on('style.load', () => {
             const value = {stops: [[0, 'red'], [10, 'blue']]};
             style.setPaintProperty('background', 'background-color', value);
-            t.notEqual(style.getPaintProperty('background', 'background-color'), value);
-            t.ok(style._changed);
+            expect(style.getPaintProperty('background', 'background-color')).not.toBe(value);
+            expect(style._changed).toBeTruthy();
 
             style.update({});
-            t.notOk(style._changed);
+            expect(style._changed).toBeFalsy();
 
             value.stops[0][0] = 1;
             style.setPaintProperty('background', 'background-color', value);
-            t.ok(style._changed);
+            expect(style._changed).toBeTruthy();
 
             t.end();
         });
@@ -1391,15 +1391,15 @@ test('Style#setPaintProperty', (t) => {
             const validate = t.spy(backgroundLayer, '_validate');
 
             style.setPaintProperty('background', 'background-color', 'notacolor', {validate: false});
-            t.deepEqual(validate.args[0][4], {validate: false});
-            t.ok(console.error.notCalled);
+            expect(validate.args[0][4]).toEqual({validate: false});
+            expect(console.error.notCalled).toBeTruthy();
 
-            t.ok(style._changed);
+            expect(style._changed).toBeTruthy();
             style.update({});
 
             style.setPaintProperty('background', 'background-color', 'alsonotacolor');
-            t.ok(console.error.calledOnce, 'validates input by default');
-            t.deepEqual(validate.args[1][4], {});
+            expect(console.error.calledOnce).toBeTruthy();
+            expect(validate.args[1][4]).toEqual({});
 
             t.end();
         });
@@ -1425,12 +1425,12 @@ test('Style#getPaintProperty', (t) => {
         style.on('style.load', () => {
             style.setPaintProperty('background', 'background-color', {stops: [[0, 'red'], [10, 'blue']]});
             style.update({});
-            t.notOk(style._changed);
+            expect(style._changed).toBeFalsy();
 
             const value = style.getPaintProperty('background', 'background-color');
             value.stops[0][0] = 1;
             style.setPaintProperty('background', 'background-color', value);
-            t.ok(style._changed);
+            expect(style._changed).toBeTruthy();
 
             t.end();
         });
@@ -1465,15 +1465,15 @@ test('Style#setLayoutProperty', (t) => {
         style.on('style.load', () => {
             const value = {stops: [[0, 'butt'], [10, 'round']]};
             style.setLayoutProperty('line', 'line-cap', value);
-            t.notEqual(style.getLayoutProperty('line', 'line-cap'), value);
-            t.ok(style._changed);
+            expect(style.getLayoutProperty('line', 'line-cap')).not.toBe(value);
+            expect(style._changed).toBeTruthy();
 
             style.update({});
-            t.notOk(style._changed);
+            expect(style._changed).toBeFalsy();
 
             value.stops[0][0] = 1;
             style.setLayoutProperty('line', 'line-cap', value);
-            t.ok(style._changed);
+            expect(style._changed).toBeTruthy();
 
             t.end();
         });
@@ -1507,14 +1507,14 @@ test('Style#setLayoutProperty', (t) => {
             const validate = t.spy(lineLayer, '_validate');
 
             style.setLayoutProperty('line', 'line-cap', 'invalidcap', {validate: false});
-            t.deepEqual(validate.args[0][4], {validate: false});
-            t.ok(console.error.notCalled);
-            t.ok(style._changed);
+            expect(validate.args[0][4]).toEqual({validate: false});
+            expect(console.error.notCalled).toBeTruthy();
+            expect(style._changed).toBeTruthy();
             style.update({});
 
             style.setLayoutProperty('line', 'line-cap', 'differentinvalidcap');
-            t.ok(console.error.calledOnce, 'validates input by default');
-            t.deepEqual(validate.args[1][4], {});
+            expect(console.error.calledOnce).toBeTruthy();
+            expect(validate.args[1][4]).toEqual({});
 
             t.end();
         });
@@ -1549,12 +1549,12 @@ test('Style#getLayoutProperty', (t) => {
         style.on('style.load', () => {
             style.setLayoutProperty('line', 'line-cap', {stops: [[0, 'butt'], [10, 'round']]});
             style.update({});
-            t.notOk(style._changed);
+            expect(style._changed).toBeFalsy();
 
             const value = style.getLayoutProperty('line', 'line-cap');
             value.stops[0][0] = 1;
             style.setLayoutProperty('line', 'line-cap', value);
-            t.ok(style._changed);
+            expect(style._changed).toBeTruthy();
 
             t.end();
         });
@@ -1566,7 +1566,7 @@ test('Style#getLayoutProperty', (t) => {
 test('Style#setFilter', (t) => {
     t.test('throws if style is not loaded', (t) => {
         const style = new Style(new StubMap());
-        t.throws(() => style.setFilter('symbol', ['==', 'id', 1]), /load/i);
+        expect(() => style.setFilter('symbol', ['==', 'id', 1])).toThrowError(/load/i);
         t.end();
     });
 
@@ -1589,14 +1589,14 @@ test('Style#setFilter', (t) => {
 
         style.on('style.load', () => {
             style.dispatcher.broadcast = function(key, value) {
-                t.equal(key, 'updateLayers');
-                t.deepEqual(value.layers[0].id, 'symbol');
-                t.deepEqual(value.layers[0].filter, ['==', 'id', 1]);
+                expect(key).toBe('updateLayers');
+                expect(value.layers[0].id).toEqual('symbol');
+                expect(value.layers[0].filter).toEqual(['==', 'id', 1]);
                 t.end();
             };
 
             style.setFilter('symbol', ['==', 'id', 1]);
-            t.deepEqual(style.getFilter('symbol'), ['==', 'id', 1]);
+            expect(style.getFilter('symbol')).toEqual(['==', 'id', 1]);
             style.update({}); // trigger dispatcher broadcast
         });
     });
@@ -1610,9 +1610,9 @@ test('Style#setFilter', (t) => {
             const filter2 = style.getFilter('symbol');
             const filter3 = style.getLayer('symbol').filter;
 
-            t.notEqual(filter1, filter2);
-            t.notEqual(filter1, filter3);
-            t.notEqual(filter2, filter3);
+            expect(filter1).not.toBe(filter2);
+            expect(filter1).not.toBe(filter3);
+            expect(filter2).not.toBe(filter3);
 
             t.end();
         });
@@ -1627,9 +1627,9 @@ test('Style#setFilter', (t) => {
             style.update({}); // flush pending operations
 
             style.dispatcher.broadcast = function(key, value) {
-                t.equal(key, 'updateLayers');
-                t.deepEqual(value.layers[0].id, 'symbol');
-                t.deepEqual(value.layers[0].filter, ['==', 'id', 2]);
+                expect(key).toBe('updateLayers');
+                expect(value.layers[0].id).toEqual('symbol');
+                expect(value.layers[0].filter).toEqual(['==', 'id', 2]);
                 t.end();
             };
             filter[2] = 2;
@@ -1642,7 +1642,7 @@ test('Style#setFilter', (t) => {
         const style = createStyle();
         style.on('style.load', () => {
             style.setFilter('symbol', null);
-            t.equal(style.getLayer('symbol').serialize().filter, undefined);
+            expect(style.getLayer('symbol').serialize().filter).toBe(undefined);
             t.end();
         });
     });
@@ -1651,7 +1651,7 @@ test('Style#setFilter', (t) => {
         const style = createStyle();
         style.on('style.load', () => {
             style.on('error', () => {
-                t.deepEqual(style.getLayer('symbol').serialize().filter, ['==', 'id', 0]);
+                expect(style.getLayer('symbol').serialize().filter).toEqual(['==', 'id', 0]);
                 t.end();
             });
             style.setFilter('symbol', ['==', '$type', 1]);
@@ -1675,8 +1675,8 @@ test('Style#setFilter', (t) => {
         t.stub(console, 'error');
         style.on('style.load', () => {
             style.setFilter('symbol', 'notafilter');
-            t.deepEqual(style.getFilter('symbol'), ['==', 'id', 0]);
-            t.ok(console.error.calledOnce);
+            expect(style.getFilter('symbol')).toEqual(['==', 'id', 0]);
+            expect(console.error.calledOnce).toBeTruthy();
             style.update({}); // trigger dispatcher broadcast
             t.end();
         });
@@ -1687,14 +1687,14 @@ test('Style#setFilter', (t) => {
 
         style.on('style.load', () => {
             style.dispatcher.broadcast = function(key, value) {
-                t.equal(key, 'updateLayers');
-                t.deepEqual(value.layers[0].id, 'symbol');
-                t.deepEqual(value.layers[0].filter, 'notafilter');
+                expect(key).toBe('updateLayers');
+                expect(value.layers[0].id).toEqual('symbol');
+                expect(value.layers[0].filter).toEqual('notafilter');
                 t.end();
             };
 
             style.setFilter('symbol', 'notafilter', {validate: false});
-            t.deepEqual(style.getFilter('symbol'), 'notafilter');
+            expect(style.getFilter('symbol')).toEqual('notafilter');
             style.update({}); // trigger dispatcher broadcast
         });
     });
@@ -1705,7 +1705,7 @@ test('Style#setFilter', (t) => {
 test('Style#setLayerZoomRange', (t) => {
     t.test('throw before loaded', (t) => {
         const style = new Style(new StubMap());
-        t.throws(() => style.setLayerZoomRange('symbol', 5, 12), /load/i);
+        expect(() => style.setLayerZoomRange('symbol', 5, 12)).toThrowError(/load/i);
         t.end();
     });
 
@@ -1730,13 +1730,13 @@ test('Style#setLayerZoomRange', (t) => {
 
         style.on('style.load', () => {
             style.dispatcher.broadcast = function(key, value) {
-                t.equal(key, 'updateLayers');
-                t.deepEqual(value.map((layer) => { return layer.id; }), ['symbol']);
+                expect(key).toBe('updateLayers');
+                expect(value.map((layer) => { return layer.id; })).toEqual(['symbol']);
             };
 
             style.setLayerZoomRange('symbol', 5, 12);
-            t.equal(style.getLayer('symbol').minzoom, 5, 'set minzoom');
-            t.equal(style.getLayer('symbol').maxzoom, 12, 'set maxzoom');
+            expect(style.getLayer('symbol').minzoom).toBe(5);
+            expect(style.getLayer('symbol').maxzoom).toBe(12);
             t.end();
         });
     });
@@ -1774,7 +1774,7 @@ test('Style#setLayerZoomRange', (t) => {
 
             style.setLayerZoomRange('raster', 5, 12);
             style.update(0);
-            t.notOk(style._reloadSource.called, '_reloadSource should not be called for raster source');
+            expect(style._reloadSource.called).toBeFalsy();
             t.end();
         });
     });
@@ -1898,13 +1898,13 @@ test('Style#queryRenderedFeatures', (t) => {
 
         t.test('returns feature type', (t) => {
             const results = style.queryRenderedFeatures([{x: 0, y: 0}], {}, transform);
-            t.equal(results[0].geometry.type, 'Line');
+            expect(results[0].geometry.type).toBe('Line');
             t.end();
         });
 
         t.test('filters by `layers` option', (t) => {
             const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['land']}, transform);
-            t.equal(results.length, 2);
+            expect(results.length).toBe(2);
             t.end();
         });
 
@@ -1914,20 +1914,20 @@ test('Style#queryRenderedFeatures', (t) => {
                 if (event.error && event.error.message.includes('parameters.layers must be an Array.')) errors++;
             });
             style.queryRenderedFeatures([{x: 0, y: 0}], {layers:'string'}, transform);
-            t.equals(errors, 1);
+            expect(errors).toBe(1);
             t.end();
         });
 
         t.test('includes layout properties', (t) => {
             const results = style.queryRenderedFeatures([{x: 0, y: 0}], {}, transform);
             const layout = results[0].layer.layout;
-            t.deepEqual(layout['line-cap'], 'round');
+            expect(layout['line-cap']).toEqual('round');
             t.end();
         });
 
         t.test('includes paint properties', (t) => {
             const results = style.queryRenderedFeatures([{x: 0, y: 0}], {}, transform);
-            t.deepEqual(results[2].layer.paint['line-color'], 'red');
+            expect(results[2].layer.paint['line-color']).toEqual('red');
             t.end();
         });
 
@@ -1935,14 +1935,14 @@ test('Style#queryRenderedFeatures', (t) => {
             const results = style.queryRenderedFeatures([{x: 0, y: 0}], {}, transform);
 
             const layer = results[1].layer;
-            t.equal(layer.metadata.something, 'else');
+            expect(layer.metadata.something).toBe('else');
 
             t.end();
         });
 
         t.test('include multiple layers', (t) => {
             const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['land', 'landref']}, transform);
-            t.equals(results.length, 3);
+            expect(results.length).toBe(3);
             t.end();
         });
 
@@ -1958,8 +1958,8 @@ test('Style#queryRenderedFeatures', (t) => {
                 if (event.error && event.error.message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
             });
             const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers:['merp']}, transform);
-            t.equals(errors, 1);
-            t.equals(results.length, 0);
+            expect(errors).toBe(1);
+            expect(results.length).toBe(0);
             t.end();
         });
 
@@ -1991,21 +1991,21 @@ test('Style defers expensive methods', (t) => {
         style.setPaintProperty('first', 'text-color', 'black');
         style.setPaintProperty('first', 'text-halo-color', 'white');
 
-        t.notOk(style.fire.called, 'fire is deferred');
-        t.notOk(style._reloadSource.called, '_reloadSource is deferred');
-        t.notOk(style._updateWorkerLayers.called, '_updateWorkerLayers is deferred');
+        expect(style.fire.called).toBeFalsy();
+        expect(style._reloadSource.called).toBeFalsy();
+        expect(style._updateWorkerLayers.called).toBeFalsy();
 
         style.update({});
 
-        t.equal(style.fire.args[0][0].type, 'data', 'a data event was fired');
+        expect(style.fire.args[0][0].type).toBe('data');
 
         // called per source
-        t.ok(style._reloadSource.calledTwice, '_reloadSource is called per source');
-        t.ok(style._reloadSource.calledWith('streets'), '_reloadSource is called for streets');
-        t.ok(style._reloadSource.calledWith('terrain'), '_reloadSource is called for terrain');
+        expect(style._reloadSource.calledTwice).toBeTruthy();
+        expect(style._reloadSource.calledWith('streets')).toBeTruthy();
+        expect(style._reloadSource.calledWith('terrain')).toBeTruthy();
 
         // called once
-        t.ok(style._updateWorkerLayers.calledOnce, '_updateWorkerLayers is called once');
+        expect(style._updateWorkerLayers.calledOnce).toBeTruthy();
 
         t.end();
     });
@@ -2045,13 +2045,13 @@ test('Style#query*Features', (t) => {
     });
 
     t.test('querySourceFeatures emits an error on incorrect filter', (t) => {
-        t.deepEqual(style.querySourceFeatures([10, 100], {filter: 7}, transform), []);
+        expect(style.querySourceFeatures([10, 100], {filter: 7}, transform)).toEqual([]);
         t.match(onError.args[0][0].error.message, /querySourceFeatures\.filter/);
         t.end();
     });
 
     t.test('queryRenderedFeatures emits an error on incorrect filter', (t) => {
-        t.deepEqual(style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 7}, transform), []);
+        expect(style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 7}, transform)).toEqual([]);
         t.match(onError.args[0][0].error.message, /queryRenderedFeatures\.filter/);
         t.end();
     });
@@ -2065,7 +2065,7 @@ test('Style#query*Features', (t) => {
             }
         });
         style.queryRenderedFeatures([{x: 0, y: 0}], {filter: "invalidFilter", validate: false}, transform);
-        t.equals(errors, 0);
+        expect(errors).toBe(0);
         t.end();
     });
 
@@ -2075,7 +2075,7 @@ test('Style#query*Features', (t) => {
             if (event.error) errors++;
         });
         style.querySourceFeatures([{x: 0, y: 0}], {filter: "invalidFilter", validate: false}, transform);
-        t.equals(errors, 0);
+        expect(errors).toBe(0);
         t.end();
     });
 
@@ -2102,7 +2102,7 @@ test('Style#addSourceType', (t) => {
         };
 
         style.addSourceType('foo', SourceType, () => {
-            t.equal(_types['foo'], SourceType);
+            expect(_types['foo']).toBe(SourceType);
             t.end();
         });
     });
@@ -2114,20 +2114,20 @@ test('Style#addSourceType', (t) => {
 
         style.dispatcher.broadcast = function (type, params) {
             if (type === 'loadWorkerSource') {
-                t.equal(_types['bar'], SourceType);
-                t.equal(params.name, 'bar');
-                t.equal(params.url, 'worker-source.js');
+                expect(_types['bar']).toBe(SourceType);
+                expect(params.name).toBe('bar');
+                expect(params.url).toBe('worker-source.js');
                 t.end();
             }
         };
 
-        style.addSourceType('bar', SourceType, (err) => { t.error(err); });
+        style.addSourceType('bar', SourceType, (err) => { expect(err).toBeFalsy(); });
     });
 
     t.test('refuses to add new type over existing name', (t) => {
         const style = new Style(new StubMap());
         style.addSourceType('existing', () => {}, (err) => {
-            t.ok(err);
+            expect(err).toBeTruthy();
             t.end();
         });
     });
@@ -2138,7 +2138,7 @@ test('Style#addSourceType', (t) => {
 test('Style#hasTransitions', (t) => {
     t.test('returns false when the style is loading', (t) => {
         const style = new Style(new StubMap());
-        t.equal(style.hasTransitions(), false);
+        expect(style.hasTransitions()).toBe(false);
         t.end();
     });
 
@@ -2156,7 +2156,7 @@ test('Style#hasTransitions', (t) => {
         style.on('style.load', () => {
             style.setPaintProperty("background", "background-color", "blue");
             style.update({transition: {duration: 300, delay: 0}});
-            t.equal(style.hasTransitions(), true);
+            expect(style.hasTransitions()).toBe(true);
             t.end();
         });
     });
@@ -2175,7 +2175,7 @@ test('Style#hasTransitions', (t) => {
         style.on('style.load', () => {
             style.setPaintProperty("background", "background-color", "blue");
             style.update({transition: {duration: 0, delay: 0}});
-            t.equal(style.hasTransitions(), false);
+            expect(style.hasTransitions()).toBe(false);
             t.end();
         });
     });
