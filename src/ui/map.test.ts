@@ -434,7 +434,7 @@ describe('Map', () => {
             jest.spyOn(map.style, 'setState').mockImplementation(() => {
                 throw new Error('Dummy error');
             });
-            jest.spyOn(console, 'warn');
+            jest.spyOn(console, 'warn').mockImplementation(() => {});
 
             const previousStyle = map.style;
             map.setStyle(style);
@@ -967,7 +967,7 @@ describe('Map', () => {
     test('#removeControl errors on invalid arguments', () => {
         const map = createMap();
         const control = {} as any as IControl;
-        const stub = jest.spyOn(console, 'error');
+        const stub = jest.spyOn(console, 'error').mockImplementation(() => {});
 
         map.addControl(control);
         map.removeControl(control);
@@ -1844,7 +1844,7 @@ describe('Map', () => {
     describe('error event', () => {
         test('logs errors to console when it has NO listeners', () => {
             const map = createMap();
-            const stub = jest.spyOn(console, 'error');
+            const stub = jest.spyOn(console, 'error').mockImplementation(() => {});
             stub.mockReset();
             const error = new Error('test');
             map.fire(new ErrorEvent(error));
