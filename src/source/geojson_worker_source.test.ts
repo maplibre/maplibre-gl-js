@@ -1,14 +1,13 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import GeoJSONWorkerSource from '../../../rollup/build/tsc/src/source/geojson_worker_source';
-import StyleLayerIndex from '../../../rollup/build/tsc/src/style/style_layer_index';
-import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
-import perf from '../../../rollup/build/tsc/src/util/performance';
+import GeoJSONWorkerSource from '../source/geojson_worker_source';
+import StyleLayerIndex from '../style/style_layer_index';
+import {OverscaledTileID} from '../source/tile_id';
+import perf from '../util/performance';
 
 const actor = {send: () => {}};
 
-test('reloadTile', (t) => {
-    t.test('does not rebuild vector data unless data has changed', (t) => {
+describe('reloadTile', done => {
+    test('does not rebuild vector data unless data has changed', done => {
         const layers = [
             {
                 id: 'mylayer',
@@ -25,10 +24,10 @@ test('reloadTile', (t) => {
             return originalLoadVectorData.call(this, params, callback);
         };
         const geoJson = {
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0, 0]
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [0, 0]
             }
         };
         const tileParams = {
@@ -41,14 +40,14 @@ test('reloadTile', (t) => {
         function addData(callback) {
             source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)}, (err) => {
                 source.coalesce({source: 'sourceId'});
-                expect(err).toBe(null);
+                expect(err).toBeNull();
                 callback();
             });
         }
 
         function reloadTile(callback) {
             source.reloadTile(tileParams, (err, data) => {
-                expect(err).toBe(null);
+                expect(err).toBeNull();
                 return callback(data);
             });
         }
@@ -79,15 +78,15 @@ test('reloadTile', (t) => {
                     expect(data).toEqual(firstData);
                 });
                 expect(loadVectorCallCount).toBe(2);
-                t.end();
+                done();
             });
         });
     });
 
-    t.end();
+    done();
 });
 
-test('resourceTiming', (t) => {
+describe('resourceTiming', done => {
 
     const layers = [
         {
@@ -97,14 +96,14 @@ test('resourceTiming', (t) => {
         }
     ];
     const geoJson = {
-        "type": "Feature",
-        "geometry": {
-            "type": "Point",
-            "coordinates": [0, 0]
+        'type': 'Feature',
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [0, 0]
         }
     };
 
-    t.test('loadData - url', (t) => {
+    test('loadData - url', done => {
         const exampleResourceTiming = {
             connectEnd: 473,
             connectStart: 473,
@@ -113,11 +112,11 @@ test('resourceTiming', (t) => {
             domainLookupStart: 473,
             duration: 341,
             encodedBodySize: 52528,
-            entryType: "resource",
+            entryType: 'resource',
             fetchStart: 473.5,
-            initiatorType: "xmlhttprequest",
-            name: "http://localhost:2900/fake.geojson",
-            nextHopProtocol: "http/1.1",
+            initiatorType: 'xmlhttprequest',
+            name: 'http://localhost:2900/fake.geojson',
+            nextHopProtocol: 'http/1.1',
             redirectEnd: 0,
             redirectStart: 0,
             requestStart: 477,
@@ -132,13 +131,13 @@ test('resourceTiming', (t) => {
         const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => { return callback(null, geoJson); });
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}}, (err, result) => {
-            expect(err).toBe(null);
+            expect(err).toBeNull();
             expect(result.resourceTiming.testSource).toEqual([ exampleResourceTiming ]);
-            t.end();
+            done();
         });
     });
 
-    t.test('loadData - url (resourceTiming fallback method)', (t) => {
+    test('loadData - url (resourceTiming fallback method)', done => {
         const sampleMarks = [100, 350];
         const marks = {};
         const measures = {};
@@ -164,29 +163,29 @@ test('resourceTiming', (t) => {
         const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => { return callback(null, geoJson); });
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}}, (err, result) => {
-            expect(err).toBe(null);
+            expect(err).toBeNull();
             expect(result.resourceTiming.testSource).toEqual(
-                [{"duration": 250, "entryType": "measure", "name": "http://localhost/nonexistent", "startTime": 100}]
+                [{'duration': 250, 'entryType': 'measure', 'name': 'http://localhost/nonexistent', 'startTime': 100}]
             );
-            t.end();
+            done();
         });
     });
 
-    t.test('loadData - data', (t) => {
+    test('loadData - data', done => {
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
 
         source.loadData({source: 'testSource', data: JSON.stringify(geoJson)}, (err, result) => {
-            expect(err).toBe(null);
-            expect(result.resourceTiming).toBe(undefined);
-            t.end();
+            expect(err).toBeNull();
+            expect(result.resourceTiming).toBeUndefined();
+            done();
         });
     });
 
-    t.end();
+    done();
 });
 
-test('loadData', (t) => {
+describe('loadData', done => {
     const layers = [
         {
             id: 'layer1',
@@ -201,10 +200,10 @@ test('loadData', (t) => {
     ];
 
     const geoJson = {
-        "type": "Feature",
-        "geometry": {
-            "type": "Point",
-            "coordinates": [0, 0]
+        'type': 'Feature',
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [0, 0]
         }
     };
 
@@ -224,29 +223,29 @@ test('loadData', (t) => {
         return worker;
     }
 
-    t.test('abandons coalesced callbacks', (t) => {
+    test('abandons coalesced callbacks', done => {
         // Expect first call to run, second to be abandoned,
         // and third to run in response to coalesce
         const worker = createWorker();
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
-            expect(err).toBe(null);
+            expect(err).toBeNull();
             expect(result && result.abandoned).toBeFalsy();
             worker.coalesce({source: 'source1'});
         });
 
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
-            expect(err).toBe(null);
+            expect(err).toBeNull();
             expect(result && result.abandoned).toBeTruthy();
         });
 
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
-            expect(err).toBe(null);
+            expect(err).toBeNull();
             expect(result && result.abandoned).toBeFalsy();
-            t.end();
+            done();
         });
     });
 
-    t.test('removeSource aborts callbacks', (t) => {
+    test('removeSource aborts callbacks', done => {
         // Expect:
         // First loadData starts running before removeSource arrives
         // Second loadData is pending when removeSource arrives, gets cancelled
@@ -254,13 +253,13 @@ test('loadData', (t) => {
         // First loadData finishes running, sends results back to foreground
         const worker = createWorker();
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
-            expect(err).toBe(null);
+            expect(err).toBeNull();
             expect(result && result.abandoned).toBeFalsy();
-            t.end();
+            done();
         });
 
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
-            expect(err).toBe(null);
+            expect(err).toBeNull();
             expect(result && result.abandoned).toBeTruthy();
         });
 
@@ -270,5 +269,5 @@ test('loadData', (t) => {
 
     });
 
-    t.end();
+    done();
 });
