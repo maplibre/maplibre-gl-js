@@ -14,6 +14,11 @@ import type {Callback} from '../types/callback';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types';
 import type {MapSourceDataType} from '../ui/events';
 
+export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
+    workerOptions?: any;
+    collectResourceTiming: boolean;
+  }
+
 /**
  * A source containing GeoJSON.
  * (See the [Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/#sources-geojson) for detailed documentation of options.)
@@ -83,10 +88,7 @@ class GeoJSONSource extends Evented implements Source {
     /**
      * @private
      */
-    constructor(id: string, options: GeoJSONSourceSpecification & {
-      workerOptions?: any;
-      collectResourceTiming: boolean;
-    }, dispatcher: Dispatcher, eventedParent: Evented) {
+    constructor(id: string, options: GeoJSONSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
 
         this.id = id;
