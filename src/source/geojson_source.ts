@@ -17,7 +17,7 @@ import type {MapSourceDataType} from '../ui/events';
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: any;
     collectResourceTiming: boolean;
-  }
+}
 
 /**
  * A source containing GeoJSON.
