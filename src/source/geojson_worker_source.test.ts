@@ -1,12 +1,19 @@
-import '../../stub_loader';
-import GeoJSONWorkerSource from '../source/geojson_worker_source';
+import GeoJSONWorkerSource, {LoadGeoJSONParameters} from './geojson_worker_source';
 import StyleLayerIndex from '../style/style_layer_index';
-import {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID} from './tile_id';
 import perf from '../util/performance';
+import {LayerSpecification} from '../style-spec/types';
+import Actor from '../util/actor';
+import {WorkerTileParameters} from './worker_source';
+import {setPerformance} from '../util/test/util';
 
-const actor = {send: () => {}};
+const actor = {send: () => {}} as any as Actor;
 
-describe('reloadTile', done => {
+beforeEach(() => {
+    setPerformance();
+});
+
+describe('reloadTile', () => {
     test('does not rebuild vector data unless data has changed', done => {
         const layers = [
             {
@@ -14,7 +21,7 @@ describe('reloadTile', done => {
                 source: 'sourceId',
                 type: 'symbol',
             }
-        ];
+        ] as LayerSpecification[];
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
         const originalLoadVectorData = source.loadVectorData;
@@ -38,15 +45,15 @@ describe('reloadTile', done => {
         };
 
         function addData(callback) {
-            source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)}, (err) => {
-                source.coalesce({source: 'sourceId'});
+            source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err) => {
+                source.coalesce();
                 expect(err).toBeNull();
                 callback();
             });
         }
 
         function reloadTile(callback) {
-            source.reloadTile(tileParams, (err, data) => {
+            source.reloadTile(tileParams as any as WorkerTileParameters, (err, data) => {
                 expect(err).toBeNull();
                 return callback(data);
             });
@@ -83,10 +90,9 @@ describe('reloadTile', done => {
         });
     });
 
-    done();
 });
 
-describe('resourceTiming', done => {
+describe('resourceTiming', () => {
 
     const layers = [
         {
@@ -94,14 +100,14 @@ describe('resourceTiming', done => {
             source: 'sourceId',
             type: 'symbol',
         }
-    ];
+    ] as LayerSpecification[];
     const geoJson = {
         'type': 'Feature',
         'geometry': {
             'type': 'Point',
             'coordinates': [0, 0]
         }
-    };
+    } as GeoJSON.GeoJSON;
 
     test('loadData - url', done => {
         const exampleResourceTiming = {
@@ -123,14 +129,14 @@ describe('resourceTiming', done => {
             responseEnd: 815,
             responseStart: 672,
             secureConnectionStart: 0
-        };
+        } as any as PerformanceEntry;
 
-        t.stub(perf, 'getEntriesByName').callsFake(() => { return [ exampleResourceTiming ]; });
+        window.performance.getEntriesByName = jest.fn().mockReturnValue([ exampleResourceTiming ]);
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => { return callback(null, geoJson); });
 
-        source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}}, (err, result) => {
+        source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
             expect(result.resourceTiming.testSource).toEqual([ exampleResourceTiming ]);
             done();
@@ -141,12 +147,12 @@ describe('resourceTiming', done => {
         const sampleMarks = [100, 350];
         const marks = {};
         const measures = {};
-        t.stub(perf, 'getEntriesByName').callsFake((name) => { return measures[name] || []; });
-        t.stub(perf, 'mark').callsFake((name) => {
+        window.performance.getEntriesByName = jest.fn().mockImplementation((name) => { return measures[name] || []; });
+        jest.spyOn(perf, 'mark').mockImplementation((name) => {
             marks[name] = sampleMarks.shift();
             return null;
         });
-        t.stub(perf, 'measure').callsFake((name, start, end) => {
+        window.performance.measure = jest.fn().mockImplementation((name, start, end) => {
             measures[name] = measures[name] || [];
             measures[name].push({
                 duration: marks[end] - marks[start],
@@ -156,13 +162,13 @@ describe('resourceTiming', done => {
             });
             return null;
         });
-        t.stub(perf, 'clearMarks').callsFake(() => { return null; });
-        t.stub(perf, 'clearMeasures').callsFake(() => { return null; });
+        jest.spyOn(perf, 'clearMarks').mockImplementation(() => { return null; });
+        jest.spyOn(perf, 'clearMeasures').mockImplementation(() => { return null; });
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => { return callback(null, geoJson); });
 
-        source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}}, (err, result) => {
+        source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
             expect(result.resourceTiming.testSource).toEqual(
                 [{'duration': 250, 'entryType': 'measure', 'name': 'http://localhost/nonexistent', 'startTime': 100}]
@@ -175,17 +181,16 @@ describe('resourceTiming', done => {
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
 
-        source.loadData({source: 'testSource', data: JSON.stringify(geoJson)}, (err, result) => {
+        source.loadData({source: 'testSource', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
             expect(result.resourceTiming).toBeUndefined();
             done();
         });
     });
 
-    done();
 });
 
-describe('loadData', done => {
+describe('loadData', () => {
     const layers = [
         {
             id: 'layer1',
@@ -197,7 +202,7 @@ describe('loadData', done => {
             source: 'source2',
             type: 'symbol',
         }
-    ];
+    ] as LayerSpecification[];
 
     const geoJson = {
         'type': 'Feature',
@@ -205,7 +210,7 @@ describe('loadData', done => {
             'type': 'Point',
             'coordinates': [0, 0]
         }
-    };
+    } as GeoJSON.GeoJSON;
 
     const layerIndex = new StyleLayerIndex(layers);
     function createWorker() {
@@ -227,18 +232,18 @@ describe('loadData', done => {
         // Expect first call to run, second to be abandoned,
         // and third to run in response to coalesce
         const worker = createWorker();
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
+        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
             expect(result && result.abandoned).toBeFalsy();
-            worker.coalesce({source: 'source1'});
+            worker.coalesce();
         });
 
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
+        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
             expect(result && result.abandoned).toBeTruthy();
         });
 
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
+        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
             expect(result && result.abandoned).toBeFalsy();
             done();
@@ -252,13 +257,13 @@ describe('loadData', done => {
         // removeSource is executed immediately
         // First loadData finishes running, sends results back to foreground
         const worker = createWorker();
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
+        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
             expect(result && result.abandoned).toBeFalsy();
             done();
         });
 
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)}, (err, result) => {
+        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
             expect(result && result.abandoned).toBeTruthy();
         });
@@ -269,5 +274,4 @@ describe('loadData', done => {
 
     });
 
-    done();
 });
