@@ -21,8 +21,6 @@ test('loadGlyphRange', done => {
         expect(transform).toHaveBeenCalledTimes(1);
         expect(transform).toHaveBeenCalledWith('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf', 'Glyphs');
 
-        if (!result) return done.fail(); // appease flow
-
         expect(Object.keys(result)).toHaveLength(223);
         for (const key in result) {
             const id = Number(key);
@@ -39,8 +37,6 @@ test('loadGlyphRange', done => {
         }
         done();
     });
-
-    if (!request) return done.fail(); // appease flow
 
     expect(request.url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
     request.setStatus(200);
