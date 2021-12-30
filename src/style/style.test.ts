@@ -474,38 +474,6 @@ describe('Style#setState', () => {
         const style = new Style(new StubMap() as any);
         style.loadJSON(createStyleJSON(undefined));
 
-        /*      [
-            'addLayer',
-            'removeLayer',
-            'setPaintProperty',
-            'setLayoutProperty',
-            'setFilter',
-            'addSource',
-            'removeSource',
-            'setGeoJSONSourceData',
-            'setLayerZoomRange',
-            'setLight'               // Why not setTransition as is in the supportedDiffOperations of style.ts?
-        ].forEach((method) => console.log(method));
-
-        // Why does jest.spyOn(style, method) not work?
-        ].forEach((method) => jest.spyOn(style, method).mockImplementation(() => done.fail(`${method} called`)));
-
-        ---
-        // done.fail leads to the message "TypeError: done.fail is not a function", if I use the following code.
-        jest.spyOn(style, 'addLayer').mockImplementation(() => done.fail());
-        TypeError: done.fail is not a function
-        const source = {
-            'type': 'geojson',
-            'data': {
-                'type': 'Point',
-                'coordinates': [ 0, 0]
-            }
-        };
-        const layer = {id: 'inline-source-layer', type: 'circle', source} as any;
-        style.addLayer(layer);
-        ---
-*/
-
         jest.spyOn(style, 'addLayer').mockImplementation(() => done.fail());
         jest.spyOn(style, 'removeLayer').mockImplementation(() => done.fail());
         jest.spyOn(style, 'setPaintProperty').mockImplementation(() => done.fail());
