@@ -629,23 +629,6 @@ describe('Style#addSource', () => {
         });
     });
 
-    /*   test('emits on invalid source', done => {
-        style.loadJSON(createStyleJSON(undefined));
-        style.on('style.load', () => {
-            style.on('error', () => {
-                expect(style.sourceCaches['source-id']).toBeFalsy();
-                done();
-            });
-            style.addSource('source-id', {
-                type: 'vector',
-                minzoom: 1,
-                maxzoom: 10,
-                attribution: 'MapLibre',
-                tiles: ['http://example.com/{z}/{x}/{y}.png']
-            });
-        });
-    });*/
-
     /*   test('sets up source event forwarding', () => {
         expect.assertions(4);
         style.loadJSON(createStyleJSON({
