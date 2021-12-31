@@ -1628,11 +1628,11 @@ describe('Style#setFilter', () => {
 
     test('validates filter by default', done => {
         const style = createStyle();
-        //const mockConsoleWarn = jest.spyOn(console, 'warn');
+        const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
         style.on('style.load', () => {
             style.setFilter('symbol', 'notafilter' as any as FilterSpecification);
             expect(style.getFilter('symbol')).toEqual(['==', 'id', 0]);
-            // expect(mockConsoleWarn).toHaveBeenCalledTimes(1); // THIS FAILS - WARNCONSOLE IS NOT CALLED ??
+            expect(mockConsoleError).toHaveBeenCalled();
             style.update({} as EvaluationParameters); // trigger dispatcher broadcast
             done();
         });
