@@ -476,16 +476,16 @@ describe('Style#setState', () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
 
-        jest.spyOn(style, 'addLayer').mockImplementation(() => done.fail());
-        jest.spyOn(style, 'removeLayer').mockImplementation(() => done.fail());
-        jest.spyOn(style, 'setPaintProperty').mockImplementation(() => done.fail());
-        jest.spyOn(style, 'setLayoutProperty').mockImplementation(() => done.fail());
-        jest.spyOn(style, 'setFilter').mockImplementation(() => done.fail());
-        jest.spyOn(style, 'addSource').mockImplementation(() => done.fail());
-        jest.spyOn(style, 'removeSource').mockImplementation(() => done.fail());
-        jest.spyOn(style, 'setGeoJSONSourceData').mockImplementation(() => done.fail());
-        jest.spyOn(style, 'setLayerZoomRange').mockImplementation(() => done.fail());
-        jest.spyOn(style, 'setLight').mockImplementation(() => done.fail());
+        jest.spyOn(style, 'addLayer').mockImplementation(() => done('test failed'));
+        jest.spyOn(style, 'removeLayer').mockImplementation(() => done('test failed'));
+        jest.spyOn(style, 'setPaintProperty').mockImplementation(() => done('test failed'));
+        jest.spyOn(style, 'setLayoutProperty').mockImplementation(() => done('test failed'));
+        jest.spyOn(style, 'setFilter').mockImplementation(() => done('test failed'));
+        jest.spyOn(style, 'addSource').mockImplementation(() => done('test failed'));
+        jest.spyOn(style, 'removeSource').mockImplementation(() => done('test failed'));
+        jest.spyOn(style, 'setGeoJSONSourceData').mockImplementation(() => done('test failed'));
+        jest.spyOn(style, 'setLayerZoomRange').mockImplementation(() => done('test failed'));
+        jest.spyOn(style, 'setLight').mockImplementation(() => done('test failed'));
 
         style.on('style.load', () => {
             const didChange = style.setState(createStyleJSON());
@@ -506,8 +506,8 @@ describe('Style#setState', () => {
         const style = new Style(getStubMap());
         style.loadJSON(initial);
         style.on('style.load', () => {
-            jest.spyOn(style, 'removeSource').mockImplementation(() => done.fail('removeSource called'));
-            jest.spyOn(style, 'addSource').mockImplementation(() => done.fail('addSource called'));
+            jest.spyOn(style, 'removeSource').mockImplementation(() => done('test failed: removeSource called'));
+            jest.spyOn(style, 'addSource').mockImplementation(() => done('test failed: addSource called'));
             style.setState(initial);
             expect(false).toBeFalsy();
             done();
@@ -745,7 +745,7 @@ describe('Style#removeSource', () => {
     test('does not throw if source is not in use', done => {
         createStyle((style) => {
             style.on('error', () => {
-                done.fail();
+                done('test failed');
             });
             style.removeLayer('mapLibre-layer');
             style.removeSource('mapLibre-source');
@@ -941,7 +941,7 @@ describe('Style#addLayer', () => {
         style.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
                 style.sourceCaches['mapLibre'].reload = function() { done(); };
-                style.sourceCaches['mapLibre'].clearTiles = function() { done.fail(); };
+                style.sourceCaches['mapLibre'].clearTiles = function() { done('test failed'); };
                 style.removeLayer('my-layer');
                 style.addLayer(layer);
                 style.update({} as EvaluationParameters);
@@ -975,7 +975,7 @@ describe('Style#addLayer', () => {
         } as LayerSpecification;
         style.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
-                style.sourceCaches['mapLibre'].reload = function() { done.fail(); };
+                style.sourceCaches['mapLibre'].reload = function() { done('test failed'); };
                 style.sourceCaches['mapLibre'].clearTiles = function() { done(); };
                 style.removeLayer('my-layer');
                 style.addLayer(layer);
@@ -1133,7 +1133,7 @@ describe('Style#removeLayer', () => {
         }));
 
         style.on('error', () => {
-            done.fail();
+            done('test failed');
         });
 
         style.on('style.load', () => {
@@ -2058,7 +2058,7 @@ describe('Style#addSourceType', () => {
         // expect no call to load worker source
         style.dispatcher.broadcast = function (type) {
             if (type === 'loadWorkerSource') {
-                done.fail();
+                done('test failed');
             }
         };
 
