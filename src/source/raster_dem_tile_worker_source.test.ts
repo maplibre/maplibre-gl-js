@@ -1,11 +1,10 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import RasterDEMTileWorkerSource from '../../../rollup/build/tsc/src/source/raster_dem_tile_worker_source';
-import StyleLayerIndex from '../../../rollup/build/tsc/src/style/style_layer_index';
-import DEMData from '../../../rollup/build/tsc/src/data/dem_data';
+import RasterDEMTileWorkerSource from '../source/raster_dem_tile_worker_source';
+import StyleLayerIndex from '../style/style_layer_index';
+import DEMData from '../data/dem_data';
 
-test('loadTile', (t) => {
-    t.test('loads DEM tile', (t) => {
+describe('loadTile', done => {
+    test('loads DEM tile', done => {
         const source = new RasterDEMTileWorkerSource(null, new StyleLayerIndex());
 
         source.loadTile({
@@ -18,15 +17,15 @@ test('loadTile', (t) => {
             expect(Object.keys(source.loaded)).toEqual([0]);
             expect(data instanceof DEMData).toBeTruthy();
 
-            t.end();
+            done();
         });
     });
 
-    t.end();
+    done();
 });
 
-test('removeTile', (t) => {
-    t.test('removes loaded tile', (t) => {
+describe('removeTile', done => {
+    test('removes loaded tile', done => {
         const source = new RasterDEMTileWorkerSource(null, new StyleLayerIndex());
 
         source.loaded = {
@@ -39,8 +38,8 @@ test('removeTile', (t) => {
         });
 
         expect(source.loaded).toEqual({});
-        t.end();
+        done();
     });
 
-    t.end();
+    done();
 });
