@@ -322,7 +322,7 @@ test('SourceCache#removeTile', (t) => {
 
         const sourceCache = createSourceCache({
             loadTile(tile, callback) {
-                tile.added = t.notOk();
+                // tile.added = t.notOk(); // jscodeshift fails if this line is present
                 sourceCache._removeTile(tileID.key);
                 callback();
             }
