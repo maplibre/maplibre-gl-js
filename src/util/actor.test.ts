@@ -1,50 +1,56 @@
-import '../../stub_loader';
-import Actor from '../util/actor';
-import workerFactory from '../util/web_worker';
+import Actor from './actor';
+import workerFactory from './web_worker';
 
-describe('Actor', done => {
-    test('forwards resopnses to correct callback', done => {
-        t.stub(workerFactory, 'Worker').callsFake(function Worker(self) {
+describe('Actor', () => {
+    test('forwards responses to correct callback', done => {
+        jest.spyOn(workerFactory, 'Worker').mockImplementation(function Worker(self) {
             this.self = self;
             this.actor = new Actor(self, this);
             this.test = function (mapId, params, callback) {
                 setTimeout(callback, 0, null, params);
             };
-        });
+        } as any);
 
         const worker = workerFactory();
 
         const m1 = new Actor(worker, {}, 1);
         const m2 = new Actor(worker, {}, 2);
 
-        expect.assertions(4);
+        let assertionCount = 0;
         m1.send('test', {value: 1729}, (err, response) => {
             expect(err).toBeFalsy();
             expect(response).toEqual({value: 1729});
+            assertionCount += 2;
+            if (assertionCount === 4) {
+                done();
+            }
         });
         m2.send('test', {value: 4104}, (err, response) => {
             expect(err).toBeFalsy();
             expect(response).toEqual({value: 4104});
+            assertionCount += 2;
+            if (assertionCount === 4) {
+                done();
+            }
         });
     });
 
     test('targets worker-initiated messages to correct map instance', done => {
         let workerActor;
 
-        t.stub(workerFactory, 'Worker').callsFake(function Worker(self) {
+        jest.spyOn(workerFactory, 'Worker').mockImplementation(function Worker(self) {
             this.self = self;
             this.actor = workerActor = new Actor(self, this);
-        });
+        } as any);
 
         const worker = workerFactory();
 
         new Actor(worker, {
-            test () { t.end(); }
+            test () { done(); }
         }, 1);
         new Actor(worker, {
             test () {
-                t.fail();
-                done();
+                done('test failed');
             }
         }, 2);
 
@@ -64,5 +70,4 @@ describe('Actor', done => {
         actor.remove();
     });
 
-    done();
 });
