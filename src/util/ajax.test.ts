@@ -1,38 +1,37 @@
-import '../../stub_loader';
 import {
     getArrayBuffer,
     getJSON,
     postData,
     getImage,
     resetImageRequestQueue
-} from '../util/ajax';
-import config from '../util/config';
-import webpSupported from '../util/webp_supported';
+} from './ajax';
+import config from './config';
+import webpSupported from './webp_supported';
+import {fakeServer, SinonFakeServer} from 'sinon';
 
-describe('ajax', done => {
-    t.beforeEach(callback => {
-        window.useFakeXMLHttpRequest();
-        callback();
+describe('ajax', () => {
+    let server: SinonFakeServer;
+    beforeEach(() => {
+        global.fetch = null;
+        server = fakeServer.create();
     });
-
-    t.afterEach(callback => {
-        window.clearFakeXMLHttpRequest();
-        callback();
+    afterEach(() => {
+        server.restore();
     });
 
     test('getArrayBuffer, 404', done => {
-        window.server.respondWith(request => {
-            request.respond(404);
+        server.respondWith(request => {
+            request.respond(404, undefined, undefined);
         });
         getArrayBuffer({url:''}, (error) => {
-            expect(error.status).toBe(404);
+            expect((error as any).status).toBe(404);
             done();
         });
-        window.server.respond();
+        server.respond();
     });
 
     test('getJSON', done => {
-        window.server.respondWith(request => {
+        server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
         });
         getJSON({url:''}, (error, body) => {
@@ -40,85 +39,85 @@ describe('ajax', done => {
             expect(body).toEqual({foo: 'bar'});
             done();
         });
-        window.server.respond();
+        server.respond();
     });
 
     test('getJSON, invalid syntax', done => {
-        window.server.respondWith(request => {
+        server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
         });
         getJSON({url:''}, (error) => {
             expect(error).toBeTruthy();
             done();
         });
-        window.server.respond();
+        server.respond();
     });
 
     test('getJSON, 404', done => {
-        window.server.respondWith(request => {
-            request.respond(404);
+        server.respondWith(request => {
+            request.respond(404, undefined, undefined);
         });
         getJSON({url:''}, (error) => {
-            expect(error.status).toBe(404);
+            expect((error as any).status).toBe(404);
             done();
         });
-        window.server.respond();
+        server.respond();
     });
 
     test('getJSON, 401: non-Mapbox domain', done => {
-        window.server.respondWith(request => {
-            request.respond(401);
+        server.respondWith(request => {
+            request.respond(401, undefined, undefined);
         });
         getJSON({url:''}, (error) => {
-            expect(error.status).toBe(401);
+            expect((error as any).status).toBe(401);
             expect(error.message).toBe('Unauthorized');
             done();
         });
-        window.server.respond();
+        server.respond();
     });
 
     test('postData, 204(no content): no error', done => {
-        window.server.respondWith(request => {
-            request.respond(204);
+        server.respondWith(request => {
+            request.respond(204, undefined, undefined);
         });
         postData({url:'api.mapbox.com'}, (error) => {
             expect(error).toBeNull();
             done();
         });
-        window.server.respond();
+        server.respond();
     });
 
     test('getImage respects maxParallelImageRequests', done => {
-        window.server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
         function callback(err) {
             if (err) return;
             // last request is only added after we got a response from one of the previous ones
-            expect(window.server.requests).toHaveLength(maxRequests + 1);
+            expect(server.requests).toHaveLength(maxRequests + 1);
             done();
         }
 
         for (let i = 0; i < maxRequests + 1; i++) {
             getImage({url: ''}, callback);
         }
-        expect(window.server.requests).toHaveLength(maxRequests);
+        expect(server.requests).toHaveLength(maxRequests);
 
-        window.server.requests[0].respond();
+        server.requests[0].respond(undefined, undefined, undefined);
     });
 
     test('getImage cancelling frees up request for maxParallelImageRequests', done => {
         resetImageRequestQueue();
 
-        window.server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
         for (let i = 0; i < maxRequests + 1; i++) {
-            getImage({url: ''}, () => t.fail).cancel();
+            getImage({url: ''}, () => done('test failed: getImage callback was called')).cancel();
         }
-        expect(window.server.requests).toHaveLength(maxRequests + 1);
+        expect(server.requests).toHaveLength(maxRequests + 1);
         done();
     });
 
@@ -133,24 +132,24 @@ describe('ajax', done => {
         }
 
         // the limit of allowed requests is reached
-        expect(window.server.requests).toHaveLength(maxRequests);
+        expect(server.requests).toHaveLength(maxRequests);
 
         const queuedURL = 'this-is-the-queued-request';
-        const queued = getImage({url: queuedURL}, () => t.fail());
+        const queued = getImage({url: queuedURL}, () => done('test failed: getImage callback was called'));
 
         // the new requests is queued because the limit is reached
-        expect(window.server.requests).toHaveLength(maxRequests);
+        expect(server.requests).toHaveLength(maxRequests);
 
         // cancel the first request to let the queued request start
         requests[0].cancel();
-        expect(window.server.requests).toHaveLength(maxRequests + 1);
+        expect(server.requests).toHaveLength(maxRequests + 1);
 
         // abort the previously queued request and confirm that it is aborted
-        const queuedRequest = window.server.requests[window.server.requests.length - 1];
+        const queuedRequest = server.requests[server.requests.length - 1];
         expect(queuedRequest.url).toBe(queuedURL);
-        expect(queuedRequest.aborted).toBeUndefined();
+        expect((queuedRequest as any).aborted).toBeUndefined();
         queued.cancel();
-        expect(queuedRequest.aborted).toBe(true);
+        expect((queuedRequest as any).aborted).toBe(true);
 
         done();
     });
@@ -158,7 +157,7 @@ describe('ajax', done => {
     test('getImage sends accept/webp when supported', done => {
         resetImageRequestQueue();
 
-        window.server.respondWith((request) => {
+        server.respondWith((request) => {
             expect(request.requestHeaders.accept.includes('image/webp')).toBeTruthy();
             request.respond(200, {'Content-Type': 'image/webp'}, '');
         });
@@ -166,44 +165,51 @@ describe('ajax', done => {
         // mock webp support
         webpSupported.supported = true;
 
-        getImage({url: ''}, () => { t.end(); });
+        getImage({url: ''}, () => { done(); });
 
-        window.server.respond();
+        server.respond();
     });
 
     test('getImage uses ImageBitmap when supported', done => {
         resetImageRequestQueue();
 
-        window.server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
         // mock createImageBitmap support
         global.createImageBitmap = () => Promise.resolve(new ImageBitmap());
 
         getImage({url: ''}, (err, img) => {
-            if (err) t.fail();
-            expect(img instanceof ImageBitmap).toBeTruthy();
+            if (err) done(err);
+            expect(img).toBeInstanceOf(ImageBitmap);
             done();
         });
 
-        window.server.respond();
+        server.respond();
     });
 
     test('getImage uses HTMLImageElement when ImageBitmap is not supported', done => {
         resetImageRequestQueue();
 
-        window.server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
         // mock createImageBitmap not supported
         global.createImageBitmap = undefined;
 
+        global.URL.revokeObjectURL = () => {};
+        // eslint-disable-next-line accessor-pairs
+        Object.defineProperty(global.Image.prototype, 'src', {
+            set(_) {
+                this.onload();
+            }
+        });
+
         getImage({url: ''}, (err, img) => {
-            if (err) t.fail();
-            expect(img instanceof HTMLImageElement).toBeTruthy();
+            if (err) done(`get image failed with error ${err.message}`);
+            expect(img).toBeInstanceOf(HTMLImageElement);
             done();
         });
 
-        window.server.respond();
+        server.respond();
     });
 
-    done();
 });
