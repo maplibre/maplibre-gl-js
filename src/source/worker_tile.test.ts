@@ -1,9 +1,8 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import WorkerTile from '../../../rollup/build/tsc/src/source/worker_tile';
-import Wrapper from '../../../rollup/build/tsc/src/source/geojson_wrapper';
-import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
-import StyleLayerIndex from '../../../rollup/build/tsc/src/style/style_layer_index';
+import WorkerTile from '../source/worker_tile';
+import Wrapper from '../source/geojson_wrapper';
+import {OverscaledTileID} from '../source/tile_id';
+import StyleLayerIndex from '../style/style_layer_index';
 
 function createWorkerTile() {
     return new WorkerTile({
@@ -25,7 +24,7 @@ function createWrapper() {
     }]);
 }
 
-test('WorkerTile#parse', (t) => {
+describe('WorkerTile#parse', done => {
     const layerIndex = new StyleLayerIndex([{
         id: 'test',
         source: 'source',
@@ -36,11 +35,11 @@ test('WorkerTile#parse', (t) => {
     tile.parse(createWrapper(), layerIndex, [], {}, (err, result) => {
         expect(err).toBeFalsy();
         expect(result.buckets[0]).toBeTruthy();
-        t.end();
+        done();
     });
 });
 
-test('WorkerTile#parse skips hidden layers', (t) => {
+describe('WorkerTile#parse skips hidden layers', done => {
     const layerIndex = new StyleLayerIndex([{
         id: 'test-hidden',
         source: 'source',
@@ -51,12 +50,12 @@ test('WorkerTile#parse skips hidden layers', (t) => {
     const tile = createWorkerTile();
     tile.parse(createWrapper(), layerIndex, [], {}, (err, result) => {
         expect(err).toBeFalsy();
-        expect(result.buckets.length).toBe(0);
-        t.end();
+        expect(result.buckets).toHaveLength(0);
+        done();
     });
 });
 
-test('WorkerTile#parse skips layers without a corresponding source layer', (t) => {
+describe('WorkerTile#parse skips layers without a corresponding source layer', done => {
     const layerIndex = new StyleLayerIndex([{
         id: 'test',
         source: 'source',
@@ -67,12 +66,12 @@ test('WorkerTile#parse skips layers without a corresponding source layer', (t) =
     const tile = createWorkerTile();
     tile.parse({layers: {}}, layerIndex, [], {}, (err, result) => {
         expect(err).toBeFalsy();
-        expect(result.buckets.length).toBe(0);
-        t.end();
+        expect(result.buckets).toHaveLength(0);
+        done();
     });
 });
 
-test('WorkerTile#parse warns once when encountering a v1 vector tile layer', (t) => {
+describe('WorkerTile#parse warns once when encountering a v1 vector tile layer', done => {
     const layerIndex = new StyleLayerIndex([{
         id: 'test',
         source: 'source',
@@ -94,6 +93,6 @@ test('WorkerTile#parse warns once when encountering a v1 vector tile layer', (t)
     tile.parse(data, layerIndex, [], {}, (err) => {
         expect(err).toBeFalsy();
         expect(console.warn.calledWithMatch(/does not use vector tile spec v2/)).toBeTruthy();
-        t.end();
+        done();
     });
 });
