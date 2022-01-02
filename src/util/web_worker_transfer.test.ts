@@ -1,7 +1,6 @@
-import '../../stub_loader';
-import {register, serialize, deserialize} from '../util/web_worker_transfer';
+import {register, serialize, deserialize} from './web_worker_transfer';
 
-describe('round trip', done => {
+test('round trip', () => {
     class Foo {
         n;
         buffer;
@@ -32,25 +31,23 @@ describe('round trip', done => {
 
     expect(foo !== bar).toBeTruthy();
     expect(bar.constructor === Foo).toBeTruthy();
-    expect(bar.n === 10).toBeTruthy();
-    expect(bar.buffer === foo.buffer).toBeTruthy();
+    expect((bar as any).n === 10).toBeTruthy();
+    expect((bar as any).buffer === foo.buffer).toBeTruthy();
     expect(transferables[0] === foo.buffer).toBeTruthy();
-    expect(bar._cached === undefined).toBeTruthy();
-    expect(bar.squared() === 100).toBeTruthy();
-    done();
+    expect((bar as any)._cached === undefined).toBeTruthy();
+    expect((bar as any).squared() === 100).toBeTruthy();
 });
 
-describe('anonymous class', done => {
+test('anonymous class', () => {
     const Klass = (() => (class {}))();
     expect(!Klass.name).toBeTruthy();
     register('Anon', Klass);
     const x = new Klass();
     const deserialized = deserialize(serialize(x));
     expect(deserialized instanceof Klass).toBeTruthy();
-    done();
 });
 
-describe('custom serialization', done => {
+test('custom serialization', () => {
     class Bar {
         id;
         _deserialized;
@@ -78,8 +75,7 @@ describe('custom serialization', done => {
     const deserialized = deserialize(serialize(bar));
     expect(deserialized instanceof Bar).toBeTruthy();
     const bar2 = deserialized;
-    expect(bar2.id).toBe(bar.id);
-    expect(bar2._deserialized).toBeTruthy();
-    done();
+    expect((bar2 as any).id).toBe(bar.id);
+    expect((bar2 as any)._deserialized).toBeTruthy();
 });
 
