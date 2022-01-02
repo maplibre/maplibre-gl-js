@@ -1359,65 +1359,69 @@ describe('SourceCache#tilesIn', () => {
     });
 });
 
-test('SourceCache#loaded (no errors)', done => {
-    const sourceCache = createSourceCache({
-        loadTile(tile, callback) {
-            tile.state = 'loaded';
-            callback();
-        }
+describe('source cache loaded', () => {
+    test('SourceCache#loaded (no errors)', done => {
+        const sourceCache = createSourceCache({
+            loadTile(tile, callback) {
+                tile.state = 'loaded';
+                callback();
+            }
+        });
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                const coord = new OverscaledTileID(0, 0, 0, 0, 0);
+                sourceCache._addTile(coord);
+
+                expect(sourceCache.loaded()).toBeTruthy();
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
     });
 
-    sourceCache.on('data', (e) => {
-        if (e.sourceDataType === 'metadata') {
-            const coord = new OverscaledTileID(0, 0, 0, 0, 0);
-            sourceCache._addTile(coord);
+    test('SourceCache#loaded (with errors)', done => {
+        const sourceCache = createSourceCache({
+            loadTile(tile) {
+                tile.state = 'errored';
+            }
+        });
 
-            expect(sourceCache.loaded()).toBeTruthy();
-            done();
-        }
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                const coord = new OverscaledTileID(0, 0, 0, 0, 0);
+                sourceCache._addTile(coord);
+
+                expect(sourceCache.loaded()).toBeTruthy();
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
     });
-    sourceCache.onAdd(undefined);
 });
 
-test('SourceCache#loaded (with errors)', done => {
-    const sourceCache = createSourceCache({
-        loadTile(tile) {
-            tile.state = 'errored';
+describe('souce cache get ids', () => {
+    test('SourceCache#getIds (ascending order by zoom level)', done => {
+        const ids = [
+            new OverscaledTileID(0, 0, 0, 0, 0),
+            new OverscaledTileID(3, 0, 3, 0, 0),
+            new OverscaledTileID(1, 0, 1, 0, 0),
+            new OverscaledTileID(2, 0, 2, 0, 0)
+        ];
+
+        const sourceCache = createSourceCache({});
+        sourceCache.transform = new Transform();
+        for (let i = 0; i < ids.length; i++) {
+            sourceCache._tiles[ids[i].key] = {tileID: ids[i]} as any as Tile;
         }
+        expect(sourceCache.getIds()).toEqual([
+            new OverscaledTileID(0, 0, 0, 0, 0).key,
+            new OverscaledTileID(1, 0, 1, 0, 0).key,
+            new OverscaledTileID(2, 0, 2, 0, 0).key,
+            new OverscaledTileID(3, 0, 3, 0, 0).key
+        ]);
+        done();
     });
-
-    sourceCache.on('data', (e) => {
-        if (e.sourceDataType === 'metadata') {
-            const coord = new OverscaledTileID(0, 0, 0, 0, 0);
-            sourceCache._addTile(coord);
-
-            expect(sourceCache.loaded()).toBeTruthy();
-            done();
-        }
-    });
-    sourceCache.onAdd(undefined);
-});
-
-test('SourceCache#getIds (ascending order by zoom level)', done => {
-    const ids = [
-        new OverscaledTileID(0, 0, 0, 0, 0),
-        new OverscaledTileID(3, 0, 3, 0, 0),
-        new OverscaledTileID(1, 0, 1, 0, 0),
-        new OverscaledTileID(2, 0, 2, 0, 0)
-    ];
-
-    const sourceCache = createSourceCache({});
-    sourceCache.transform = new Transform();
-    for (let i = 0; i < ids.length; i++) {
-        sourceCache._tiles[ids[i].key] = {tileID: ids[i]} as any as Tile;
-    }
-    expect(sourceCache.getIds()).toEqual([
-        new OverscaledTileID(0, 0, 0, 0, 0).key,
-        new OverscaledTileID(1, 0, 1, 0, 0).key,
-        new OverscaledTileID(2, 0, 2, 0, 0).key,
-        new OverscaledTileID(3, 0, 3, 0, 0).key
-    ]);
-    done();
 });
 
 describe('SourceCache#findLoadedParent', () => {
