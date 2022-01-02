@@ -18,14 +18,14 @@ test('Actor', (t) => {
         const m1 = new Actor(worker, {}, 1);
         const m2 = new Actor(worker, {}, 2);
 
-        t.plan(4);
+        expect.assertions(4);
         m1.send('test', {value: 1729}, (err, response) => {
-            t.error(err);
-            t.same(response, {value: 1729});
+            expect(err).toBeFalsy();
+            expect(response).toEqual({value: 1729});
         });
         m2.send('test', {value: 4104}, (err, response) => {
-            t.error(err);
-            t.same(response, {value: 4104});
+            expect(err).toBeFalsy();
+            expect(response).toEqual({value: 4104});
         });
     });
 
@@ -58,7 +58,7 @@ test('Actor', (t) => {
                 this._addEventListenerArgs = [type, callback, useCapture];
             },
             removeEventListener (type, callback, useCapture) {
-                t.same([type, callback, useCapture], this._addEventListenerArgs, 'listener removed');
+                expect([type, callback, useCapture]).toEqual(this._addEventListenerArgs);
                 t.end();
             }
         }, {}, null);
