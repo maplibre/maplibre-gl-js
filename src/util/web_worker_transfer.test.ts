@@ -1,7 +1,8 @@
 import {register, serialize, deserialize} from './web_worker_transfer';
 
-test('round trip', () => {
-    class Foo {
+describe('web worker transfer', () => {
+    test('round trip', () => {
+        class Foo {
         n;
         buffer;
         _cached;
@@ -19,36 +20,36 @@ test('round trip', () => {
             this._cached = this.n * this.n;
             return this._cached;
         }
-    }
+        }
 
-    register('Foo', Foo, {omit: ['_cached']});
+        register('Foo', Foo, {omit: ['_cached']});
 
-    const foo = new Foo(10);
-    const transferables = [];
-    const deserialized = deserialize(serialize(foo, transferables));
-    expect(deserialized instanceof Foo).toBeTruthy();
-    const bar = deserialized;
+        const foo = new Foo(10);
+        const transferables = [];
+        const deserialized = deserialize(serialize(foo, transferables));
+        expect(deserialized instanceof Foo).toBeTruthy();
+        const bar = deserialized;
 
-    expect(foo !== bar).toBeTruthy();
-    expect(bar.constructor === Foo).toBeTruthy();
-    expect((bar as any).n === 10).toBeTruthy();
-    expect((bar as any).buffer === foo.buffer).toBeTruthy();
-    expect(transferables[0] === foo.buffer).toBeTruthy();
-    expect((bar as any)._cached === undefined).toBeTruthy();
-    expect((bar as any).squared() === 100).toBeTruthy();
-});
+        expect(foo !== bar).toBeTruthy();
+        expect(bar.constructor === Foo).toBeTruthy();
+        expect((bar as any).n === 10).toBeTruthy();
+        expect((bar as any).buffer === foo.buffer).toBeTruthy();
+        expect(transferables[0] === foo.buffer).toBeTruthy();
+        expect((bar as any)._cached === undefined).toBeTruthy();
+        expect((bar as any).squared() === 100).toBeTruthy();
+    });
 
-test('anonymous class', () => {
-    const Klass = (() => (class {}))();
-    expect(!Klass.name).toBeTruthy();
-    register('Anon', Klass);
-    const x = new Klass();
-    const deserialized = deserialize(serialize(x));
-    expect(deserialized instanceof Klass).toBeTruthy();
-});
+    test('anonymous class', () => {
+        const Klass = (() => (class {}))();
+        expect(!Klass.name).toBeTruthy();
+        register('Anon', Klass);
+        const x = new Klass();
+        const deserialized = deserialize(serialize(x));
+        expect(deserialized instanceof Klass).toBeTruthy();
+    });
 
-test('custom serialization', () => {
-    class Bar {
+    test('custom serialization', () => {
+        class Bar {
         id;
         _deserialized;
         constructor(id) {
@@ -65,17 +66,17 @@ test('custom serialization', () => {
             b._deserialized = true;
             return b;
         }
-    }
+        }
 
-    register('Bar', Bar);
+        register('Bar', Bar);
 
-    const bar = new Bar('a');
-    expect(!bar._deserialized).toBeTruthy();
+        const bar = new Bar('a');
+        expect(!bar._deserialized).toBeTruthy();
 
-    const deserialized = deserialize(serialize(bar));
-    expect(deserialized instanceof Bar).toBeTruthy();
-    const bar2 = deserialized;
-    expect((bar2 as any).id).toBe(bar.id);
-    expect((bar2 as any)._deserialized).toBeTruthy();
+        const deserialized = deserialize(serialize(bar));
+        expect(deserialized instanceof Bar).toBeTruthy();
+        const bar2 = deserialized;
+        expect((bar2 as any).id).toBe(bar.id);
+        expect((bar2 as any)._deserialized).toBeTruthy();
+    });
 });
-
