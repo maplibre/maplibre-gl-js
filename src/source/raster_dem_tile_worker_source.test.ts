@@ -15,8 +15,8 @@ test('loadTile', (t) => {
             dim: 256
         }, (err, data) => {
             if (err) t.fail();
-            t.deepEqual(Object.keys(source.loaded), [0]);
-            t.ok(data instanceof DEMData, 'returns DEM data');
+            expect(Object.keys(source.loaded)).toEqual([0]);
+            expect(data instanceof DEMData).toBeTruthy();
 
             t.end();
         });
@@ -38,7 +38,7 @@ test('removeTile', (t) => {
             uid: 0
         });
 
-        t.deepEqual(source.loaded, {});
+        expect(source.loaded).toEqual({});
         t.end();
     });
 
