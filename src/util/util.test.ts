@@ -4,16 +4,16 @@ import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAl
 import Point from '../../../rollup/build/tsc/src/util/point';
 
 test('util', (t) => {
-    t.equal(easeCubicInOut(0), 0, 'easeCubicInOut=0');
-    t.equal(easeCubicInOut(0.2), 0.03200000000000001);
-    t.equal(easeCubicInOut(0.5), 0.5, 'easeCubicInOut=0.5');
-    t.equal(easeCubicInOut(1), 1, 'easeCubicInOut=1');
-    t.deepEqual(keysDifference({a:1}, {}), ['a'], 'keysDifference');
-    t.deepEqual(keysDifference({a:1}, {a:1}), [], 'keysDifference');
-    t.deepEqual(extend({a:1}, {b:2}), {a:1, b:2}, 'extend');
-    t.deepEqual(pick({a:1, b:2, c:3}, ['a', 'c']), {a:1, c:3}, 'pick');
-    t.deepEqual(pick({a:1, b:2, c:3}, ['a', 'c', 'd']), {a:1, c:3}, 'pick');
-    t.ok(typeof uniqueId() === 'number', 'uniqueId');
+    expect(easeCubicInOut(0)).toBe(0);
+    expect(easeCubicInOut(0.2)).toBe(0.03200000000000001);
+    expect(easeCubicInOut(0.5)).toBe(0.5);
+    expect(easeCubicInOut(1)).toBe(1);
+    expect(keysDifference({a:1}, {})).toEqual(['a']);
+    expect(keysDifference({a:1}, {a:1})).toEqual([]);
+    expect(extend({a:1}, {b:2})).toEqual({a:1, b:2});
+    expect(pick({a:1, b:2, c:3}, ['a', 'c'])).toEqual({a:1, c:3});
+    expect(pick({a:1, b:2, c:3}, ['a', 'c', 'd'])).toEqual({a:1, c:3});
+    expect(typeof uniqueId() === 'number').toBeTruthy();
 
     t.test('bindAll', (t) => {
         function MyClass() {
@@ -21,7 +21,7 @@ test('util', (t) => {
             this.name = 'Tom';
         }
         MyClass.prototype.ontimer = function() {
-            t.equal(this.name, 'Tom');
+            expect(this.name).toBe('Tom');
             t.end();
         };
         const my = new MyClass();
@@ -29,115 +29,115 @@ test('util', (t) => {
     });
 
     t.test('asyncAll - sync', (t) => {
-        t.equal(asyncAll([0, 1, 2], (data, callback) => {
+        expect(asyncAll([0, 1, 2], (data, callback) => {
             callback(null, data);
         }, (err, results) => {
-            t.ifError(err);
-            t.deepEqual(results, [0, 1, 2]);
-        }), undefined);
+            expect(err).toBeFalsy();
+            expect(results).toEqual([0, 1, 2]);
+        })).toBeUndefined();
         t.end();
     });
 
     t.test('asyncAll - async', (t) => {
-        t.equal(asyncAll([4, 0, 1, 2], (data, callback) => {
+        expect(asyncAll([4, 0, 1, 2], (data, callback) => {
             setTimeout(() => {
                 callback(null, data);
             }, data);
         }, (err, results) => {
-            t.ifError(err);
-            t.deepEqual(results, [4, 0, 1, 2]);
+            expect(err).toBeFalsy();
+            expect(results).toEqual([4, 0, 1, 2]);
             t.end();
-        }), undefined);
+        })).toBeUndefined();
     });
 
     t.test('asyncAll - error', (t) => {
-        t.equal(asyncAll([4, 0, 1, 2], (data, callback) => {
+        expect(asyncAll([4, 0, 1, 2], (data, callback) => {
             setTimeout(() => {
                 callback(new Error('hi'), data);
             }, data);
         }, (err, results) => {
-            t.equal(err && err.message, 'hi');
-            t.deepEqual(results, [4, 0, 1, 2]);
+            expect(err && err.message).toBe('hi');
+            expect(results).toEqual([4, 0, 1, 2]);
             t.end();
-        }), undefined);
+        })).toBeUndefined();
     });
 
     t.test('asyncAll - empty', (t) => {
-        t.equal(asyncAll([], (data, callback) => {
+        expect(asyncAll([], (data, callback) => {
             callback(null, 'foo');
         }, (err, results) => {
-            t.ifError(err);
-            t.deepEqual(results, []);
-        }), undefined);
+            expect(err).toBeFalsy();
+            expect(results).toEqual([]);
+        })).toBeUndefined();
         t.end();
     });
 
     t.test('isPowerOfTwo', (t) => {
-        t.equal(isPowerOfTwo(1), true);
-        t.equal(isPowerOfTwo(2), true);
-        t.equal(isPowerOfTwo(256), true);
-        t.equal(isPowerOfTwo(-256), false);
-        t.equal(isPowerOfTwo(0), false);
-        t.equal(isPowerOfTwo(-42), false);
-        t.equal(isPowerOfTwo(42), false);
+        expect(isPowerOfTwo(1)).toBe(true);
+        expect(isPowerOfTwo(2)).toBe(true);
+        expect(isPowerOfTwo(256)).toBe(true);
+        expect(isPowerOfTwo(-256)).toBe(false);
+        expect(isPowerOfTwo(0)).toBe(false);
+        expect(isPowerOfTwo(-42)).toBe(false);
+        expect(isPowerOfTwo(42)).toBe(false);
         t.end();
     });
 
     t.test('nextPowerOfTwo', (t) => {
-        t.equal(nextPowerOfTwo(1), 1);
-        t.equal(nextPowerOfTwo(2), 2);
-        t.equal(nextPowerOfTwo(256), 256);
-        t.equal(nextPowerOfTwo(-256), 1);
-        t.equal(nextPowerOfTwo(0), 1);
-        t.equal(nextPowerOfTwo(-42), 1);
-        t.equal(nextPowerOfTwo(42), 64);
+        expect(nextPowerOfTwo(1)).toBe(1);
+        expect(nextPowerOfTwo(2)).toBe(2);
+        expect(nextPowerOfTwo(256)).toBe(256);
+        expect(nextPowerOfTwo(-256)).toBe(1);
+        expect(nextPowerOfTwo(0)).toBe(1);
+        expect(nextPowerOfTwo(-42)).toBe(1);
+        expect(nextPowerOfTwo(42)).toBe(64);
         t.end();
     });
 
     t.test('nextPowerOfTwo', (t) => {
-        t.equal(isPowerOfTwo(nextPowerOfTwo(1)), true);
-        t.equal(isPowerOfTwo(nextPowerOfTwo(2)), true);
-        t.equal(isPowerOfTwo(nextPowerOfTwo(256)), true);
-        t.equal(isPowerOfTwo(nextPowerOfTwo(-256)), true);
-        t.equal(isPowerOfTwo(nextPowerOfTwo(0)), true);
-        t.equal(isPowerOfTwo(nextPowerOfTwo(-42)), true);
-        t.equal(isPowerOfTwo(nextPowerOfTwo(42)), true);
+        expect(isPowerOfTwo(nextPowerOfTwo(1))).toBe(true);
+        expect(isPowerOfTwo(nextPowerOfTwo(2))).toBe(true);
+        expect(isPowerOfTwo(nextPowerOfTwo(256))).toBe(true);
+        expect(isPowerOfTwo(nextPowerOfTwo(-256))).toBe(true);
+        expect(isPowerOfTwo(nextPowerOfTwo(0))).toBe(true);
+        expect(isPowerOfTwo(nextPowerOfTwo(-42))).toBe(true);
+        expect(isPowerOfTwo(nextPowerOfTwo(42))).toBe(true);
         t.end();
     });
 
     t.test('clamp', (t) => {
-        t.equal(clamp(0, 0, 1), 0);
-        t.equal(clamp(1, 0, 1), 1);
-        t.equal(clamp(200, 0, 180), 180);
-        t.equal(clamp(-200, 0, 180), 0);
+        expect(clamp(0, 0, 1)).toBe(0);
+        expect(clamp(1, 0, 1)).toBe(1);
+        expect(clamp(200, 0, 180)).toBe(180);
+        expect(clamp(-200, 0, 180)).toBe(0);
         t.end();
     });
 
     t.test('wrap', (t) => {
-        t.equal(wrap(0, 0, 1), 1);
-        t.equal(wrap(1, 0, 1), 1);
-        t.equal(wrap(200, 0, 180), 20);
-        t.equal(wrap(-200, 0, 180), 160);
+        expect(wrap(0, 0, 1)).toBe(1);
+        expect(wrap(1, 0, 1)).toBe(1);
+        expect(wrap(200, 0, 180)).toBe(20);
+        expect(wrap(-200, 0, 180)).toBe(160);
         t.end();
     });
 
     t.test('bezier', (t) => {
         const curve = bezier(0, 0, 0.25, 1);
-        t.ok(curve instanceof Function, 'returns a function');
-        t.equal(curve(0), 0);
-        t.equal(curve(1), 1);
-        t.equal(curve(0.5), 0.8230854638965502);
+        expect(curve instanceof Function).toBeTruthy();
+        expect(curve(0)).toBe(0);
+        expect(curve(1)).toBe(1);
+        expect(curve(0.5)).toBe(0.8230854638965502);
         t.end();
     });
 
     t.test('asyncAll', (t) => {
         let expect = 1;
         asyncAll([], (callback) => { callback(); }, () => {
-            t.ok('immediate callback');
+            expect('immediate callback').toBeTruthy();
         });
         asyncAll([1, 2, 3], (number, callback) => {
-            t.equal(number, expect++);
-            t.ok(callback instanceof Function);
+            expect(number).toBe(expect++);
+            expect(callback instanceof Function).toBeTruthy();
             callback(null, 0);
         }, () => {
             t.end();
@@ -145,32 +145,32 @@ test('util', (t) => {
     });
 
     t.test('mapObject', (t) => {
-        t.plan(6);
-        t.deepEqual(mapObject({}, () => { t.ok(false); }), {});
+        expect.assertions(6);
+        expect(mapObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
         const that = {};
-        t.deepEqual(mapObject({map: 'box'}, function(value, key, object) {
-            t.equal(value, 'box');
-            t.equal(key, 'map');
-            t.deepEqual(object, {map: 'box'});
-            t.equal(this, that);
+        expect(mapObject({map: 'box'}, function(value, key, object) {
+            expect(value).toBe('box');
+            expect(key).toBe('map');
+            expect(object).toEqual({map: 'box'});
+            expect(this).toBe(that);
             return 'BOX';
-        }, that), {map: 'BOX'});
+        }, that)).toEqual({map: 'BOX'});
     });
 
     t.test('filterObject', (t) => {
-        t.plan(6);
-        t.deepEqual(filterObject({}, () => { t.ok(false); }), {});
+        expect.assertions(6);
+        expect(filterObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
         const that = {};
         filterObject({map: 'box'}, function(value, key, object) {
-            t.equal(value, 'box');
-            t.equal(key, 'map');
-            t.deepEqual(object, {map: 'box'});
-            t.equal(this, that);
+            expect(value).toBe('box');
+            expect(key).toBe('map');
+            expect(object).toEqual({map: 'box'});
+            expect(this).toBe(that);
             return true;
         }, that);
-        t.deepEqual(filterObject({map: 'box', box: 'map'}, (value) => {
+        expect(filterObject({map: 'box', box: 'map'}, (value) => {
             return value === 'box';
-        }), {map: 'box'});
+        })).toEqual({map: 'box'});
         t.end();
     });
 
@@ -179,18 +179,18 @@ test('util', (t) => {
             foo: 'bar',
             bar: {
                 baz: 5,
-                lol: ["cat", 2]
+                lol: ['cat', 2]
             }
         };
         const b = JSON.parse(JSON.stringify(a));
         const c = JSON.parse(JSON.stringify(a));
-        c.bar.lol[0] = "z";
+        c.bar.lol[0] = 'z';
 
-        t.ok(deepEqual(a, b));
-        t.notOk(deepEqual(a, c));
-        t.notOk(deepEqual(a, null));
-        t.notOk(deepEqual(null, c));
-        t.ok(deepEqual(null, null));
+        expect(deepEqual(a, b)).toBeTruthy();
+        expect(deepEqual(a, c)).toBeFalsy();
+        expect(deepEqual(a, null)).toBeFalsy();
+        expect(deepEqual(null, c)).toBeFalsy();
+        expect(deepEqual(null, null)).toBeTruthy();
 
         t.end();
     });
@@ -199,32 +199,32 @@ test('util', (t) => {
         t.test('array', (t) => {
             const input = [false, 1, 'two'];
             const output = clone(input);
-            t.notEqual(input, output);
-            t.deepEqual(input, output);
+            expect(input).not.toBe(output);
+            expect(input).toEqual(output);
             t.end();
         });
 
         t.test('object', (t) => {
             const input = {a: false, b: 1, c: 'two'};
             const output = clone(input);
-            t.notEqual(input, output);
-            t.deepEqual(input, output);
+            expect(input).not.toBe(output);
+            expect(input).toEqual(output);
             t.end();
         });
 
         t.test('deep object', (t) => {
             const input = {object: {a: false, b: 1, c: 'two'}};
             const output = clone(input);
-            t.notEqual(input.object, output.object);
-            t.deepEqual(input.object, output.object);
+            expect(input.object).not.toBe(output.object);
+            expect(input.object).toEqual(output.object);
             t.end();
         });
 
         t.test('deep array', (t) => {
             const input = {array: [false, 1, 'two']};
             const output = clone(input);
-            t.notEqual(input.array, output.array);
-            t.deepEqual(input.array, output.array);
+            expect(input.array).not.toBe(output.array);
+            expect(input.array).toEqual(output.array);
             t.end();
         });
 
@@ -233,18 +233,18 @@ test('util', (t) => {
 
     t.test('arraysIntersect', (t) => {
         t.test('intersection', (t) => {
-            const a = ["1", "2", "3"];
-            const b = ["5", "4", "3"];
+            const a = ['1', '2', '3'];
+            const b = ['5', '4', '3'];
 
-            t.equal(arraysIntersect(a, b), true);
+            expect(arraysIntersect(a, b)).toBe(true);
             t.end();
         });
 
         t.test('no intersection', (t) => {
-            const a = ["1", "2", "3"];
-            const b = ["4", "5", "6"];
+            const a = ['1', '2', '3'];
+            const b = ['4', '5', '6'];
 
-            t.equal(arraysIntersect(a, b), false);
+            expect(arraysIntersect(a, b)).toBe(false);
             t.end();
         });
 
@@ -257,7 +257,7 @@ test('util', (t) => {
             const b = new Point(1, 0);
             const c = new Point(1, 1);
 
-            t.equal(isCounterClockwise(a, b, c), true);
+            expect(isCounterClockwise(a, b, c)).toBe(true);
             t.end();
         });
 
@@ -266,7 +266,7 @@ test('util', (t) => {
             const b = new Point(1, 0);
             const c = new Point(1, 1);
 
-            t.equal(isCounterClockwise(c, b, a), false);
+            expect(isCounterClockwise(c, b, a)).toBe(false);
             t.end();
         });
 
@@ -277,21 +277,21 @@ test('util', (t) => {
         t.test('not enough points', (t) => {
             const polygon = [new Point(0, 0), new Point(1, 0), new Point(0, 1)];
 
-            t.equal(isClosedPolygon(polygon), false);
+            expect(isClosedPolygon(polygon)).toBe(false);
             t.end();
         });
 
         t.test('not equal first + last point', (t) => {
             const polygon = [new Point(0, 0), new Point(1, 0), new Point(0, 1), new Point(1, 1)];
 
-            t.equal(isClosedPolygon(polygon), false);
+            expect(isClosedPolygon(polygon)).toBe(false);
             t.end();
         });
 
         t.test('closed polygon', (t) => {
             const polygon = [new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point(0, 0)];
 
-            t.equal(isClosedPolygon(polygon), true);
+            expect(isClosedPolygon(polygon)).toBe(true);
             t.end();
         });
 
@@ -300,15 +300,15 @@ test('util', (t) => {
 
     t.test('parseCacheControl', (t) => {
         t.test('max-age', (t) => {
-            t.deepEqual(parseCacheControl('max-age=123456789'), {
+            expect(parseCacheControl('max-age=123456789')).toEqual({
                 'max-age': 123456789
-            }, 'returns valid max-age header');
+            });
 
-            t.deepEqual(parseCacheControl('max-age=1000'), {
+            expect(parseCacheControl('max-age=1000')).toEqual({
                 'max-age': 1000
-            }, 'returns valid max-age header');
+            });
 
-            t.deepEqual(parseCacheControl('max-age=null'), {}, 'does not return invalid max-age header');
+            expect(parseCacheControl('max-age=null')).toEqual({});
 
             t.end();
         });
