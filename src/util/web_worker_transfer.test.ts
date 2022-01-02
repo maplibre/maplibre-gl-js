@@ -1,8 +1,7 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import {register, serialize, deserialize} from '../../../rollup/build/tsc/src/util/web_worker_transfer';
+import {register, serialize, deserialize} from '../util/web_worker_transfer';
 
-test('round trip', (t) => {
+describe('round trip', done => {
     class Foo {
         n;
         buffer;
@@ -38,20 +37,20 @@ test('round trip', (t) => {
     expect(transferables[0] === foo.buffer).toBeTruthy();
     expect(bar._cached === undefined).toBeTruthy();
     expect(bar.squared() === 100).toBeTruthy();
-    t.end();
+    done();
 });
 
-test('anonymous class', (t) => {
+describe('anonymous class', done => {
     const Klass = (() => (class {}))();
     expect(!Klass.name).toBeTruthy();
     register('Anon', Klass);
     const x = new Klass();
     const deserialized = deserialize(serialize(x));
     expect(deserialized instanceof Klass).toBeTruthy();
-    t.end();
+    done();
 });
 
-test('custom serialization', (t) => {
+describe('custom serialization', done => {
     class Bar {
         id;
         _deserialized;
@@ -81,6 +80,6 @@ test('custom serialization', (t) => {
     const bar2 = deserialized;
     expect(bar2.id).toBe(bar.id);
     expect(bar2._deserialized).toBeTruthy();
-    t.end();
+    done();
 });
 
