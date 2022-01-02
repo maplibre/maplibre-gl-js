@@ -1,17 +1,19 @@
-import '../../stub_loader';
-import {cacheGet, cachePut, cacheClose} from '../util/tile_request_cache';
-import sinon from 'sinon';
+import {cacheGet, cachePut, cacheClose} from './tile_request_cache';
 
-describe('tile_request_cache', done => {
-    t.beforeEach(callback => {
+describe('tile_request_cache', () => {
+    beforeEach(() => {
         cacheClose();
-        global.caches = sinon.stub();
-        callback();
+        global.caches = {
+            delete: jest.fn(),
+            has: jest.fn(),
+            keys: jest.fn(),
+            match: jest.fn(),
+            open: jest.fn(),
+        };
     });
 
-    t.afterEach(callback => {
+    afterEach(() => {
         delete global.caches;
-        callback();
     });
 
     test('cachePut, no caches', done => {
@@ -19,8 +21,7 @@ describe('tile_request_cache', done => {
 
         let result;
         try {
-            result = cachePut({url:''});
-            t.pass('should return successfully');
+            result = cachePut({url:''} as Request, undefined, undefined);
             expect(result).toBeFalsy();
         } catch (e) {
             expect(e).toBeFalsy();
@@ -31,7 +32,7 @@ describe('tile_request_cache', done => {
     test('cacheGet, no caches', done => {
         delete global.caches;
 
-        cacheGet({url:''}, (result) => {
+        cacheGet({url:''} as Request, (result) => {
             expect(result).toBeFalsy();
             expect(result).toBeNull();
             done();
@@ -39,9 +40,9 @@ describe('tile_request_cache', done => {
     });
 
     test('cacheGet, cache open error', done => {
-        global.caches.open = sinon.stub().rejects(new Error('The operation is insecure'));
+        global.caches.open = jest.fn().mockRejectedValue(new Error('The operation is insecure'));
 
-        cacheGet({url:''}, (error) => {
+        cacheGet({url:''} as Request, (error) => {
             expect(error).toBeTruthy();
             expect(error.message).toBe('The operation is insecure');
             done();
@@ -49,11 +50,12 @@ describe('tile_request_cache', done => {
     });
 
     test('cacheGet, cache match error', done => {
-        const fakeCache = sinon.stub();
-        fakeCache.match = sinon.stub().withArgs('someurl').rejects(new Error('ohno'));
-        global.caches.open = sinon.stub().resolves(fakeCache);
+        const fakeCache = {
+            match: jest.fn().mockRejectedValue(new Error('ohno')),
+        };
+        global.caches.open = jest.fn().mockResolvedValue(fakeCache);
 
-        cacheGet({url:'someurl'}, (error) => {
+        cacheGet({url:'someurl'} as Request, (error) => {
             expect(error).toBeTruthy();
             expect(error.message).toBe('ohno');
             done();
@@ -62,32 +64,38 @@ describe('tile_request_cache', done => {
 
     test('cacheGet, happy path', done => {
         const fakeResponse = {
-            headers: {get: sinon.stub()},
-            clone: sinon.stub(),
+            headers: {
+                get: jest.fn().mockImplementation(arg => {
+                    if (arg === 'Expires') {
+                        return '2300-01-01';
+                    }
+                    if (arg === 'Cache-Control') {
+                        return null;
+                    }
+                })
+            },
+            clone: jest.fn(),
             body: 'yay'
         };
-        fakeResponse.headers.get.withArgs('Expires').returns('2300-01-01');
-        fakeResponse.headers.get.withArgs('Cache-Control').returns(null);
-        fakeResponse.clone.returns(fakeResponse);
+        fakeResponse.clone.mockReturnValue(fakeResponse);
 
-        const fakeCache = sinon.stub();
-        fakeCache.match = sinon.stub().withArgs('someurl').resolves(fakeResponse);
-        fakeCache.delete = sinon.stub();
-        fakeCache.put = sinon.stub();
+        const fakeCache = {
+            match: jest.fn().mockResolvedValue(fakeResponse),
+            delete: jest.fn(),
+            put: jest.fn(),
+        };
+        global.caches.open = jest.fn().mockResolvedValue(fakeCache);
 
-        global.caches.open = sinon.stub().resolves(fakeCache);
-
-        cacheGet({url:'someurl'}, (error, response, fresh) => {
+        cacheGet({url:'someurl'} as Request, (error, response, fresh) => {
             expect(error).toBeFalsy();
-            expect(fakeCache.match.calledWith('someurl')).toBeTruthy();
-            expect(fakeCache.delete.calledWith('someurl')).toBeTruthy();
+            expect(fakeCache.match).toHaveBeenCalledWith('someurl');
+            expect(fakeCache.delete).toHaveBeenCalledWith('someurl');
             expect(response).toBeTruthy();
             expect(response.body).toBe('yay');
             expect(fresh).toBeTruthy();
-            expect(fakeCache.put.calledWith('someurl', fakeResponse)).toBeTruthy();
+            expect(fakeCache.put).toHaveBeenCalledWith('someurl', fakeResponse);
             done();
         });
     });
 
-    done();
 });
