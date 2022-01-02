@@ -3,15 +3,14 @@ import fs from 'fs';
 import path, {dirname} from 'path';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import {test} from '../../util/test';
-import VectorTileWorkerSource from '../../../rollup/build/tsc/src/source/vector_tile_worker_source';
-import StyleLayerIndex from '../../../rollup/build/tsc/src/style/style_layer_index';
-import perf from '../../../rollup/build/tsc/src/util/performance';
+import VectorTileWorkerSource from '../source/vector_tile_worker_source';
+import StyleLayerIndex from '../style/style_layer_index';
+import perf from '../util/performance';
 import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const actor = {send: () => {}};
-test('VectorTileWorkerSource#abortTile aborts pending request', (t) => {
+describe('VectorTileWorkerSource#abortTile aborts pending request', done => {
     window.useFakeXMLHttpRequest();
     const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
@@ -35,10 +34,10 @@ test('VectorTileWorkerSource#abortTile aborts pending request', (t) => {
 
     expect(source.loading).toEqual({});
     window.clearFakeXMLHttpRequest();
-    t.end();
+    done();
 });
 
-test('VectorTileWorkerSource#removeTile removes loaded tile', (t) => {
+describe('VectorTileWorkerSource#removeTile removes loaded tile', done => {
     const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
     source.loaded = {
@@ -54,12 +53,12 @@ test('VectorTileWorkerSource#removeTile removes loaded tile', (t) => {
     });
 
     expect(source.loaded).toEqual({});
-    t.end();
+    done();
 });
 
-test('VectorTileWorkerSource#reloadTile reloads a previously-loaded tile', (t) => {
+describe('VectorTileWorkerSource#reloadTile reloads a previously-loaded tile', done => {
     const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-    const parse = t.spy();
+    const parse = jest.fn();
 
     source.loaded = {
         '0': {
@@ -69,19 +68,19 @@ test('VectorTileWorkerSource#reloadTile reloads a previously-loaded tile', (t) =
         }
     };
 
-    const callback = t.spy();
+    const callback = jest.fn();
     source.reloadTile({uid: 0}, callback);
-    expect(parse.callCount).toBe(1);
+    expect(parse).toHaveBeenCalledTimes(1);
 
     parse.firstCall.args[4]();
-    expect(callback.callCount).toBe(1);
+    expect(callback).toHaveBeenCalledTimes(1);
 
-    t.end();
+    done();
 });
 
-test('VectorTileWorkerSource#reloadTile queues a reload when parsing is in progress', (t) => {
+describe('VectorTileWorkerSource#reloadTile queues a reload when parsing is in progress', done => {
     const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-    const parse = t.spy();
+    const parse = jest.fn();
 
     source.loaded = {
         '0': {
@@ -91,31 +90,31 @@ test('VectorTileWorkerSource#reloadTile queues a reload when parsing is in progr
         }
     };
 
-    const callback1 = t.spy();
-    const callback2 = t.spy();
+    const callback1 = jest.fn();
+    const callback2 = jest.fn();
     source.reloadTile({uid: 0}, callback1);
-    expect(parse.callCount).toBe(1);
+    expect(parse).toHaveBeenCalledTimes(1);
 
     source.loaded[0].status = 'parsing';
     source.reloadTile({uid: 0}, callback2);
-    expect(parse.callCount).toBe(1);
+    expect(parse).toHaveBeenCalledTimes(1);
 
     parse.firstCall.args[4]();
-    expect(parse.callCount).toBe(2);
-    expect(callback1.callCount).toBe(1);
-    expect(callback2.callCount).toBe(0);
+    expect(parse).toHaveBeenCalledTimes(2);
+    expect(callback1).toHaveBeenCalledTimes(1);
+    expect(callback2).toHaveBeenCalledTimes(0);
 
     parse.secondCall.args[4]();
-    expect(callback1.callCount).toBe(1);
-    expect(callback2.callCount).toBe(1);
+    expect(callback1).toHaveBeenCalledTimes(1);
+    expect(callback2).toHaveBeenCalledTimes(1);
 
-    t.end();
+    done();
 });
 
-test('VectorTileWorkerSource#reloadTile handles multiple pending reloads', (t) => {
+describe('VectorTileWorkerSource#reloadTile handles multiple pending reloads', done => {
     // https://github.com/mapbox/mapbox-gl-js/issues/6308
     const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-    const parse = t.spy();
+    const parse = jest.fn();
 
     source.loaded = {
         '0': {
@@ -125,45 +124,45 @@ test('VectorTileWorkerSource#reloadTile handles multiple pending reloads', (t) =
         }
     };
 
-    const callback1 = t.spy();
-    const callback2 = t.spy();
-    const callback3 = t.spy();
+    const callback1 = jest.fn();
+    const callback2 = jest.fn();
+    const callback3 = jest.fn();
     source.reloadTile({uid: 0}, callback1);
-    expect(parse.callCount).toBe(1);
+    expect(parse).toHaveBeenCalledTimes(1);
 
     source.loaded[0].status = 'parsing';
     source.reloadTile({uid: 0}, callback2);
-    expect(parse.callCount).toBe(1);
+    expect(parse).toHaveBeenCalledTimes(1);
 
     parse.firstCall.args[4]();
-    expect(parse.callCount).toBe(2);
-    expect(callback1.callCount).toBe(1);
-    expect(callback2.callCount).toBe(0);
-    expect(callback3.callCount).toBe(0);
+    expect(parse).toHaveBeenCalledTimes(2);
+    expect(callback1).toHaveBeenCalledTimes(1);
+    expect(callback2).toHaveBeenCalledTimes(0);
+    expect(callback3).toHaveBeenCalledTimes(0);
 
     source.reloadTile({uid: 0}, callback3);
-    expect(parse.callCount).toBe(2);
-    expect(callback1.callCount).toBe(1);
-    expect(callback2.callCount).toBe(0);
-    expect(callback3.callCount).toBe(0);
+    expect(parse).toHaveBeenCalledTimes(2);
+    expect(callback1).toHaveBeenCalledTimes(1);
+    expect(callback2).toHaveBeenCalledTimes(0);
+    expect(callback3).toHaveBeenCalledTimes(0);
 
     parse.secondCall.args[4]();
-    expect(parse.callCount).toBe(3);
-    expect(callback1.callCount).toBe(1);
-    expect(callback2.callCount).toBe(1);
-    expect(callback3.callCount).toBe(0);
+    expect(parse).toHaveBeenCalledTimes(3);
+    expect(callback1).toHaveBeenCalledTimes(1);
+    expect(callback2).toHaveBeenCalledTimes(1);
+    expect(callback3).toHaveBeenCalledTimes(0);
 
     parse.thirdCall.args[4]();
-    expect(callback1.callCount).toBe(1);
-    expect(callback2.callCount).toBe(1);
-    expect(callback3.callCount).toBe(1);
+    expect(callback1).toHaveBeenCalledTimes(1);
+    expect(callback2).toHaveBeenCalledTimes(1);
+    expect(callback3).toHaveBeenCalledTimes(1);
 
-    t.end();
+    done();
 });
 
-test('VectorTileWorkerSource#reloadTile does not reparse tiles with no vectorTile data but does call callback', (t) => {
+describe('VectorTileWorkerSource#reloadTile does not reparse tiles with no vectorTile data but does call callback', done => {
     const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-    const parse = t.spy();
+    const parse = jest.fn();
 
     source.loaded = {
         '0': {
@@ -172,16 +171,16 @@ test('VectorTileWorkerSource#reloadTile does not reparse tiles with no vectorTil
         }
     };
 
-    const callback = t.spy();
+    const callback = jest.fn();
 
     source.reloadTile({uid: 0}, callback);
-    expect(parse.notCalled).toBeTruthy();
+    expect(parse).not.toHaveBeenCalled();
     expect(callback.calledOnce).toBeTruthy();
 
-    t.end();
+    done();
 });
 
-test('VectorTileWorkerSource provides resource timing information', (t) => {
+describe('VectorTileWorkerSource provides resource timing information', done => {
     const rawTileData = fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'));
 
     function loadVectorData(params, callback) {
@@ -201,11 +200,11 @@ test('VectorTileWorkerSource provides resource timing information', (t) => {
         domainLookupStart: 473,
         duration: 341,
         encodedBodySize: 52528,
-        entryType: "resource",
+        entryType: 'resource',
         fetchStart: 473.5,
-        initiatorType: "xmlhttprequest",
-        name: "http://localhost:2900/faketile.pbf",
-        nextHopProtocol: "http/1.1",
+        initiatorType: 'xmlhttprequest',
+        name: 'http://localhost:2900/faketile.pbf',
+        nextHopProtocol: 'http/1.1',
         redirectEnd: 0,
         redirectStart: 0,
         requestStart: 477,
@@ -233,11 +232,11 @@ test('VectorTileWorkerSource provides resource timing information', (t) => {
     }, (err, res) => {
         expect(err).toBeFalsy();
         expect(res.resourceTiming[0]).toEqual(exampleResourceTiming);
-        t.end();
+        done();
     });
 });
 
-test('VectorTileWorkerSource provides resource timing information (fallback method)', (t) => {
+describe('VectorTileWorkerSource provides resource timing information (fallback method)', done => {
     const rawTileData = fs.readFileSync(path.join(__dirname, '/../../fixtures/mbsv5-6-18-23.vector.pbf'));
 
     function loadVectorData(params, callback) {
@@ -287,9 +286,9 @@ test('VectorTileWorkerSource provides resource timing information (fallback meth
     }, (err, res) => {
         expect(err).toBeFalsy();
         expect(res.resourceTiming[0]).toEqual(
-            {"duration": 250, "entryType": "measure", "name": "http://localhost:2900/faketile.pbf", "startTime": 100}
+            {'duration': 250, 'entryType': 'measure', 'name': 'http://localhost:2900/faketile.pbf', 'startTime': 100}
         );
-        t.end();
+        done();
     });
 });
 
