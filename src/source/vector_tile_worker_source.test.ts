@@ -21,6 +21,7 @@ describe('vector tile worker source', () => {
 
     afterEach(() => {
         server.restore();
+        jest.clearAllMocks();
     });
     test('VectorTileWorkerSource#abortTile aborts pending request', () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
