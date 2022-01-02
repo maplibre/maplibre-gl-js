@@ -28,26 +28,26 @@ test('round trip', (t) => {
     const foo = new Foo(10);
     const transferables = [];
     const deserialized = deserialize(serialize(foo, transferables));
-    t.assert(deserialized instanceof Foo);
+    expect(deserialized instanceof Foo).toBeTruthy();
     const bar = deserialized;
 
-    t.assert(foo !== bar);
-    t.assert(bar.constructor === Foo);
-    t.assert(bar.n === 10);
-    t.assert(bar.buffer === foo.buffer);
-    t.assert(transferables[0] === foo.buffer);
-    t.assert(bar._cached === undefined);
-    t.assert(bar.squared() === 100);
+    expect(foo !== bar).toBeTruthy();
+    expect(bar.constructor === Foo).toBeTruthy();
+    expect(bar.n === 10).toBeTruthy();
+    expect(bar.buffer === foo.buffer).toBeTruthy();
+    expect(transferables[0] === foo.buffer).toBeTruthy();
+    expect(bar._cached === undefined).toBeTruthy();
+    expect(bar.squared() === 100).toBeTruthy();
     t.end();
 });
 
 test('anonymous class', (t) => {
-    const Klass = (() => class {})();
-    t.assert(!Klass.name);
+    const Klass = (() => (class {}))();
+    expect(!Klass.name).toBeTruthy();
     register('Anon', Klass);
     const x = new Klass();
     const deserialized = deserialize(serialize(x));
-    t.assert(deserialized instanceof Klass);
+    expect(deserialized instanceof Klass).toBeTruthy();
     t.end();
 });
 
@@ -74,13 +74,13 @@ test('custom serialization', (t) => {
     register('Bar', Bar);
 
     const bar = new Bar('a');
-    t.assert(!bar._deserialized);
+    expect(!bar._deserialized).toBeTruthy();
 
     const deserialized = deserialize(serialize(bar));
-    t.assert(deserialized instanceof Bar);
+    expect(deserialized instanceof Bar).toBeTruthy();
     const bar2 = deserialized;
-    t.equal(bar2.id, bar.id);
-    t.assert(bar2._deserialized);
+    expect(bar2.id).toBe(bar.id);
+    expect(bar2._deserialized).toBeTruthy();
     t.end();
 });
 
