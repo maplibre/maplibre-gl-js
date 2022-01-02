@@ -1,10 +1,9 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import Actor from '../../../rollup/build/tsc/src/util/actor';
-import workerFactory from '../../../rollup/build/tsc/src/util/web_worker';
+import Actor from '../util/actor';
+import workerFactory from '../util/web_worker';
 
-test('Actor', (t) => {
-    t.test('forwards resopnses to correct callback', (t) => {
+describe('Actor', done => {
+    test('forwards resopnses to correct callback', done => {
         t.stub(workerFactory, 'Worker').callsFake(function Worker(self) {
             this.self = self;
             this.actor = new Actor(self, this);
@@ -29,7 +28,7 @@ test('Actor', (t) => {
         });
     });
 
-    t.test('targets worker-initiated messages to correct map instance', (t) => {
+    test('targets worker-initiated messages to correct map instance', done => {
         let workerActor;
 
         t.stub(workerFactory, 'Worker').callsFake(function Worker(self) {
@@ -45,25 +44,25 @@ test('Actor', (t) => {
         new Actor(worker, {
             test () {
                 t.fail();
-                t.end();
+                done();
             }
         }, 2);
 
         workerActor.send('test', {}, () => {}, 1);
     });
 
-    t.test('#remove unbinds event listener', (t) => {
+    test('#remove unbinds event listener', done => {
         const actor = new Actor({
             addEventListener (type, callback, useCapture) {
                 this._addEventListenerArgs = [type, callback, useCapture];
             },
             removeEventListener (type, callback, useCapture) {
                 expect([type, callback, useCapture]).toEqual(this._addEventListenerArgs);
-                t.end();
+                done();
             }
         }, {}, null);
         actor.remove();
     });
 
-    t.end();
+    done();
 });
