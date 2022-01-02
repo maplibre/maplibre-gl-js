@@ -19,16 +19,18 @@ describe('Actor', () => {
         let assertionCount = 0;
         m1.send('test', {value: 1729}, (err, response) => {
             expect(err).toBeFalsy();
+            assertionCount++;
             expect(response).toEqual({value: 1729});
-            assertionCount += 2;
+            assertionCount++;
             if (assertionCount === 4) {
                 done();
             }
         });
         m2.send('test', {value: 4104}, (err, response) => {
             expect(err).toBeFalsy();
+            assertionCount++;
             expect(response).toEqual({value: 4104});
-            assertionCount += 2;
+            assertionCount++;
             if (assertionCount === 4) {
                 done();
             }
