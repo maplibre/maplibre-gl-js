@@ -35,7 +35,7 @@ describe('RasterTileSource', () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'MapLibre',
             tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
             bounds: [-47, -7, -45, -5]
         }));
@@ -55,7 +55,7 @@ describe('RasterTileSource', () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'MapLibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
@@ -84,7 +84,7 @@ describe('RasterTileSource', () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'MapLibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
         const source = createSource({url: '/source.json'});
@@ -120,7 +120,7 @@ describe('RasterTileSource', () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'MapLibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
         const source = createSource({url: '/source.json'});
