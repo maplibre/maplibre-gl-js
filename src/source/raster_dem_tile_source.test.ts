@@ -45,8 +45,8 @@ test('RasterTileSource', (t) => {
         createSource({url: "/source.json"}, transformSpy);
         window.server.respond();
 
-        t.equal(transformSpy.getCall(0).args[0], '/source.json');
-        t.equal(transformSpy.getCall(0).args[1], 'Source');
+        expect(transformSpy.getCall(0).args[0]).toBe('/source.json');
+        expect(transformSpy.getCall(0).args[1]).toBe('Source');
         t.end();
     });
 
@@ -70,9 +70,9 @@ test('RasterTileSource', (t) => {
                 };
                 source.loadTile(tile, () => {});
 
-                t.ok(transformSpy.calledOnce);
-                t.equal(transformSpy.getCall(0).args[0], 'http://example.com/10/5/5.png');
-                t.equal(transformSpy.getCall(0).args[1], 'Tile');
+                expect(transformSpy.calledOnce).toBeTruthy();
+                expect(transformSpy.getCall(0).args[0]).toBe('http://example.com/10/5/5.png');
+                expect(transformSpy.getCall(0).args[1]).toBe('Tile');
                 t.end();
 
             }
@@ -97,7 +97,7 @@ test('RasterTileSource', (t) => {
                 };
                 source.loadTile(tile, () => {});
 
-                t.deepEqual(Object.keys(tile.neighboringTiles), [
+                expect(Object.keys(tile.neighboringTiles)).toEqual([
                     new OverscaledTileID(10, 0, 10, 4, 5).key,
                     new OverscaledTileID(10, 0, 10, 6, 5).key,
                     new OverscaledTileID(10, 0, 10, 4, 4).key,
@@ -133,7 +133,7 @@ test('RasterTileSource', (t) => {
                 };
                 source.loadTile(tile, () => {});
 
-                t.deepEqual(Object.keys(tile.neighboringTiles), [
+                expect(Object.keys(tile.neighboringTiles)).toEqual([
                     new OverscaledTileID(5, 0, 5, 30, 6).key,
                     new OverscaledTileID(5, 0, 5, 31, 6).key,
                     new OverscaledTileID(5, 0, 5, 30, 5).key,
