@@ -34,7 +34,7 @@ test('util', (t) => {
         }, (err, results) => {
             t.ifError(err);
             t.deepEqual(results, [0, 1, 2]);
-        }));
+        }), undefined);
         t.end();
     });
 
@@ -47,7 +47,7 @@ test('util', (t) => {
             t.ifError(err);
             t.deepEqual(results, [4, 0, 1, 2]);
             t.end();
-        }));
+        }), undefined);
     });
 
     t.test('asyncAll - error', (t) => {
@@ -59,7 +59,7 @@ test('util', (t) => {
             t.equal(err && err.message, 'hi');
             t.deepEqual(results, [4, 0, 1, 2]);
             t.end();
-        }));
+        }), undefined);
     });
 
     t.test('asyncAll - empty', (t) => {
@@ -68,7 +68,7 @@ test('util', (t) => {
         }, (err, results) => {
             t.ifError(err);
             t.deepEqual(results, []);
-        }));
+        }), undefined);
         t.end();
     });
 
