@@ -34,8 +34,8 @@ test('WorkerTile#parse', (t) => {
 
     const tile = createWorkerTile();
     tile.parse(createWrapper(), layerIndex, [], {}, (err, result) => {
-        t.ifError(err);
-        t.ok(result.buckets[0]);
+        expect(err).toBeFalsy();
+        expect(result.buckets[0]).toBeTruthy();
         t.end();
     });
 });
@@ -50,8 +50,8 @@ test('WorkerTile#parse skips hidden layers', (t) => {
 
     const tile = createWorkerTile();
     tile.parse(createWrapper(), layerIndex, [], {}, (err, result) => {
-        t.ifError(err);
-        t.equal(result.buckets.length, 0);
+        expect(err).toBeFalsy();
+        expect(result.buckets.length).toBe(0);
         t.end();
     });
 });
@@ -66,8 +66,8 @@ test('WorkerTile#parse skips layers without a corresponding source layer', (t) =
 
     const tile = createWorkerTile();
     tile.parse({layers: {}}, layerIndex, [], {}, (err, result) => {
-        t.ifError(err);
-        t.equal(result.buckets.length, 0);
+        expect(err).toBeFalsy();
+        expect(result.buckets.length).toBe(0);
         t.end();
     });
 });
@@ -92,8 +92,8 @@ test('WorkerTile#parse warns once when encountering a v1 vector tile layer', (t)
 
     const tile = createWorkerTile();
     tile.parse(data, layerIndex, [], {}, (err) => {
-        t.ifError(err);
-        t.ok(console.warn.calledWithMatch(/does not use vector tile spec v2/));
+        expect(err).toBeFalsy();
+        expect(console.warn.calledWithMatch(/does not use vector tile spec v2/)).toBeTruthy();
         t.end();
     });
 });
