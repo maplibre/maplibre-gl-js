@@ -1,15 +1,17 @@
-import '../../stub_loader';
-import RasterTileSource from '../source/raster_tile_source';
-import {OverscaledTileID} from '../source/tile_id';
+import RasterTileSource from './raster_tile_source';
+import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
+import Dispatcher from '../util/dispatcher';
+import {fakeServer, SinonFakeServer} from 'sinon';
+import Tile from './tile';
 
-function createSource(options, transformCallback) {
-    const source = new RasterTileSource('id', options, {send() {}}, options.eventedParent);
+function createSource(options, transformCallback?) {
+    const source = new RasterTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);
     source.onAdd({
         transform: {angle: 0, pitch: 0, showCollisionBoxes: false},
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback)
-    });
+    } as any);
 
     source.on('error', (e) => {
         throw e.error;
@@ -18,42 +20,41 @@ function createSource(options, transformCallback) {
     return source;
 }
 
-describe('RasterTileSource', done => {
-    t.beforeEach((callback) => {
-        window.useFakeXMLHttpRequest();
-        callback();
+describe('RasterTileSource', () => {
+    let server: SinonFakeServer;
+    beforeEach(() => {
+        global.fetch = null;
+        server = fakeServer.create();
     });
 
-    t.afterEach((callback) => {
-        window.clearFakeXMLHttpRequest();
-        callback();
+    afterEach(() => {
+        server.restore();
     });
 
-    test('transforms request for TileJSON URL', done => {
-        window.server.respondWith('/source.json', JSON.stringify({
+    test('transforms request for TileJSON URL', () => {
+        server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'MapLibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        const transformSpy = jest.spyOn((url) => {
+        const transformSpy = jest.fn().mockImplementation((url) => {
             return {url};
         });
 
         createSource({url: '/source.json'}, transformSpy);
-        window.server.respond();
+        server.respond();
 
-        expect(transformSpy.getCall(0).args[0]).toBe('/source.json');
-        expect(transformSpy.getCall(0).args[1]).toBe('Source');
-        done();
+        expect(transformSpy.mock.calls[0][0]).toBe('/source.json');
+        expect(transformSpy.mock.calls[0][1]).toBe('Source');
     });
 
     test('respects TileJSON.bounds', done => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'MapLibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         });
@@ -70,7 +71,7 @@ describe('RasterTileSource', done => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'MapLibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, 91]
         });
@@ -84,10 +85,10 @@ describe('RasterTileSource', done => {
     });
 
     test('respects TileJSON.bounds when loaded from TileJSON', done => {
-        window.server.respondWith('/source.json', JSON.stringify({
+        server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'MapLibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
@@ -100,14 +101,14 @@ describe('RasterTileSource', done => {
                 done();
             }
         });
-        window.server.respond();
+        server.respond();
     });
 
     test('transforms tile urls before requesting', done => {
-        window.server.respondWith('/source.json', JSON.stringify({
+        server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: 'Mapbox',
+            attribution: 'MapLibre',
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
@@ -120,23 +121,21 @@ describe('RasterTileSource', done => {
                     state: 'loading',
                     loadVectorData () {},
                     setExpiryData() {}
-                };
+                } as any as Tile;
                 source.loadTile(tile, () => {});
-                expect(transformSpy.calledOnce).toBeTruthy();
-                expect(transformSpy.getCall(0).args[0]).toBe('http://example.com/10/5/5.png');
-                expect(transformSpy.getCall(0).args[1]).toBe('Tile');
+                expect(transformSpy).toHaveBeenCalledTimes(1);
+                expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/10/5/5.png');
+                expect(transformSpy.mock.calls[0][1]).toBe('Tile');
                 done();
             }
         });
-        window.server.respond();
+        server.respond();
     });
 
-    test('cancels TileJSON request if removed', done => {
+    test('cancels TileJSON request if removed', () => {
         const source = createSource({url: '/source.json'});
         source.onRemove();
-        expect(window.server.lastRequest.aborted).toBe(true);
-        done();
+        expect((server.requests.pop() as any).aborted).toBe(true);
     });
 
-    done();
 });
