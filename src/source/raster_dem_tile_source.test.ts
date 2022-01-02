@@ -1,15 +1,17 @@
-import '../../stub_loader';
-import RasterDEMTileSource from '../source/raster_dem_tile_source';
-import {OverscaledTileID} from '../source/tile_id';
+import {fakeServer, SinonFakeServer} from 'sinon';
+import RasterDEMTileSource from './raster_dem_tile_source';
+import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
+import Dispatcher from '../util/dispatcher';
+import Tile from './tile';
 
-function createSource(options, transformCallback) {
-    const source = new RasterDEMTileSource('id', options, {send() {}}, options.eventedParent);
+function createSource(options, transformCallback?) {
+    const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);
     source.onAdd({
         transform: {angle: 0, pitch: 0, showCollisionBoxes: false},
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback)
-    });
+    } as any);
 
     source.on('error', (e) => {
         throw e.error;
@@ -18,39 +20,39 @@ function createSource(options, transformCallback) {
     return source;
 }
 
-describe('RasterTileSource', done => {
-    t.beforeEach((callback) => {
-        window.useFakeXMLHttpRequest();
-        callback();
+describe('RasterTileSource', () => {
+    let server: SinonFakeServer;
+    beforeEach(() => {
+        global.fetch = null;
+        server = fakeServer.create();
     });
 
-    t.afterEach((callback) => {
-        window.clearFakeXMLHttpRequest();
-        callback();
+    afterEach(() => {
+        server.restore();
     });
 
     test('transforms request for TileJSON URL', done => {
-        window.server.respondWith('/source.json', JSON.stringify({
+        server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
             attribution: 'Mapbox',
             tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
             bounds: [-47, -7, -45, -5]
         }));
-        const transformSpy = jest.spyOn((url) => {
+        const transformSpy = jest.fn().mockImplementation((url) => {
             return {url};
         });
 
         createSource({url: '/source.json'}, transformSpy);
-        window.server.respond();
+        server.respond();
 
-        expect(transformSpy.getCall(0).args[0]).toBe('/source.json');
-        expect(transformSpy.getCall(0).args[1]).toBe('Source');
+        expect(transformSpy.mock.calls[0][0]).toBe('/source.json');
+        expect(transformSpy.mock.calls[0][1]).toBe('Source');
         done();
     });
 
     test('transforms tile urls before requesting', done => {
-        window.server.respondWith('/source.json', JSON.stringify({
+        server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
             attribution: 'Mapbox',
@@ -66,20 +68,20 @@ describe('RasterTileSource', done => {
                     state: 'loading',
                     loadVectorData () {},
                     setExpiryData() {}
-                };
+                } as any as Tile;
                 source.loadTile(tile, () => {});
 
-                expect(transformSpy.calledOnce).toBeTruthy();
-                expect(transformSpy.getCall(0).args[0]).toBe('http://example.com/10/5/5.png');
-                expect(transformSpy.getCall(0).args[1]).toBe('Tile');
+                expect(transformSpy).toHaveBeenCalledTimes(1);
+                expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/10/5/5.png');
+                expect(transformSpy.mock.calls[0][1]).toBe('Tile');
                 done();
 
             }
         });
-        window.server.respond();
+        server.respond();
     });
     test('populates neighboringTiles', done => {
-        window.server.respondWith('/source.json', JSON.stringify({
+        server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
             attribution: 'Mapbox',
@@ -93,7 +95,7 @@ describe('RasterTileSource', done => {
                     state: 'loading',
                     loadVectorData () {},
                     setExpiryData() {}
-                };
+                } as any as Tile;
                 source.loadTile(tile, () => {});
 
                 expect(Object.keys(tile.neighboringTiles)).toEqual([
@@ -111,11 +113,11 @@ describe('RasterTileSource', done => {
 
             }
         });
-        window.server.respond();
+        server.respond();
     });
 
     test('populates neighboringTiles with wrapped tiles', done => {
-        window.server.respondWith('/source.json', JSON.stringify({
+        server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
             attribution: 'Mapbox',
@@ -129,7 +131,7 @@ describe('RasterTileSource', done => {
                     state: 'loading',
                     loadVectorData () {},
                     setExpiryData() {}
-                };
+                } as any as Tile;
                 source.loadTile(tile, () => {});
 
                 expect(Object.keys(tile.neighboringTiles)).toEqual([
@@ -145,8 +147,6 @@ describe('RasterTileSource', done => {
                 done();
             }
         });
-        window.server.respond();
+        server.respond();
     });
-    done();
-
 });
