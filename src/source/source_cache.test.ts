@@ -73,8 +73,8 @@ test('SourceCache#addTile', (t) => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const sourceCache = createSourceCache({
             loadTile(tile) {
-                t.deepEqual(tile.tileID, tileID);
-                t.equal(tile.uses, 0);
+                expect(tile.tileID).toEqual(tileID);
+                expect(tile.uses).toBe(0);
                 t.end();
             }
         });
@@ -85,8 +85,8 @@ test('SourceCache#addTile', (t) => {
     t.test('adds tile when uncached', (t) => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const sourceCache = createSourceCache({}).on('dataloading', (data) => {
-            t.deepEqual(data.tile.tileID, tileID);
-            t.equal(data.tile.uses, 1);
+            expect(data.tile.tileID).toEqual(tileID);
+            expect(data.tile.uses).toBe(1);
             t.end();
         });
         sourceCache.onAdd();
@@ -99,7 +99,7 @@ test('SourceCache#addTile', (t) => {
         const sourceCache = createSourceCache({
             loadTile(tile, callback) {
                 sourceCache.on('data', () => {
-                    t.equal(updateFeaturesSpy.getCalls().length, 1);
+                    expect(updateFeaturesSpy.getCalls().length).toBe(1);
                     t.end();
                 });
                 updateFeaturesSpy = t.spy(tile, 'setFeatureState');
@@ -132,8 +132,8 @@ test('SourceCache#addTile', (t) => {
         sourceCache._removeTile(tileID.key);
         sourceCache._addTile(tileID);
 
-        t.equal(load, 1);
-        t.equal(add, 1);
+        expect(load).toBe(1);
+        expect(add).toBe(1);
 
         t.end();
     });
@@ -159,7 +159,7 @@ test('SourceCache#addTile', (t) => {
         sourceCache._removeTile(tileID.key);
         sourceCache._addTile(tileID);
 
-        t.equal(updateFeaturesSpy.getCalls().length, 1);
+        expect(updateFeaturesSpy.getCalls().length).toBe(1);
 
         t.end();
     });
@@ -186,23 +186,23 @@ test('SourceCache#addTile', (t) => {
         sourceCache.updateCacheSize(tr);
 
         const id = tileID.key;
-        t.notOk(sourceCache._timers[id]);
-        t.notOk(sourceCache._cache.has(tileID));
+        expect(sourceCache._timers[id]).toBeFalsy();
+        expect(sourceCache._cache.has(tileID)).toBeFalsy();
 
         sourceCache._addTile(tileID);
 
-        t.ok(sourceCache._timers[id]);
-        t.notOk(sourceCache._cache.has(tileID));
+        expect(sourceCache._timers[id]).toBeTruthy();
+        expect(sourceCache._cache.has(tileID)).toBeFalsy();
 
         sourceCache._removeTile(tileID.key);
 
-        t.notOk(sourceCache._timers[id]);
-        t.ok(sourceCache._cache.has(tileID));
+        expect(sourceCache._timers[id]).toBeFalsy();
+        expect(sourceCache._cache.has(tileID)).toBeTruthy();
 
         sourceCache._addTile(tileID);
 
-        t.ok(sourceCache._timers[id]);
-        t.notOk(sourceCache._cache.has(tileID));
+        expect(sourceCache._timers[id]).toBeTruthy();
+        expect(sourceCache._cache.has(tileID)).toBeFalsy();
 
         t.end();
     });
@@ -223,9 +223,9 @@ test('SourceCache#addTile', (t) => {
         const t1 = sourceCache._addTile(tileID);
         const t2 = sourceCache._addTile(new OverscaledTileID(0, 1, 0, 0, 0));
 
-        t.equal(load, 2);
-        t.equal(add, 2);
-        t.notEqual(t1, t2);
+        expect(load).toBe(2);
+        expect(add).toBe(2);
+        expect(t1).not.toBe(t2);
 
         t.end();
     });
@@ -248,8 +248,8 @@ test('SourceCache#addTile', (t) => {
             const id = tileIDs[i];
             const key = id.key;
 
-            t.ok(sourceCache._tiles[key]);
-            t.deepEqual(sourceCache._tiles[key].tileID, id);
+            expect(sourceCache._tiles[key]).toBeTruthy();
+            expect(sourceCache._tiles[key].tileID).toEqual(id);
         }
 
         t.end();
@@ -265,7 +265,7 @@ test('SourceCache#removeTile', (t) => {
         sourceCache._addTile(tileID);
         sourceCache.on('data', () => {
             sourceCache._removeTile(tileID.key);
-            t.notOk(sourceCache._tiles[tileID.key]);
+            expect(sourceCache._tiles[tileID.key]).toBeFalsy();
             t.end();
         });
     });
@@ -299,11 +299,11 @@ test('SourceCache#removeTile', (t) => {
 
         const sourceCache = createSourceCache({
             abortTile(tile) {
-                t.deepEqual(tile.tileID, tileID);
+                expect(tile.tileID).toEqual(tileID);
                 abort++;
             },
             unloadTile(tile) {
-                t.deepEqual(tile.tileID, tileID);
+                expect(tile.tileID).toEqual(tileID);
                 unload++;
             }
         });
@@ -311,8 +311,8 @@ test('SourceCache#removeTile', (t) => {
         sourceCache._addTile(tileID);
         sourceCache._removeTile(tileID.key);
 
-        t.equal(abort, 1);
-        t.equal(unload, 1);
+        expect(abort).toBe(1);
+        expect(unload).toBe(1);
 
         t.end();
     });
@@ -362,7 +362,7 @@ test('SourceCache / Source lifecycle', (t) => {
 
     t.test('forward error event', (t) => {
         const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', (err) => {
-            t.equal(err.error, 'Error loading source');
+            expect(err.error).toBe('Error loading source');
             t.end();
         });
         sourceCache.onAdd();
@@ -377,7 +377,7 @@ test('SourceCache / Source lifecycle', (t) => {
 
     t.test('loaded() true after source error', (t) => {
         const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', () => {
-            t.ok(sourceCache.loaded());
+            expect(sourceCache.loaded()).toBeTruthy();
             t.end();
         });
         sourceCache.onAdd();
@@ -396,7 +396,7 @@ test('SourceCache / Source lifecycle', (t) => {
                 sourceCache.update(transform);
             }
         }).on('error', () => {
-            t.true(sourceCache.loaded());
+            expect(sourceCache.loaded()).toBeTruthy();
             t.end();
         });
 
@@ -409,11 +409,11 @@ test('SourceCache / Source lifecycle', (t) => {
         transform.zoom = 0;
 
         const expected = [ new OverscaledTileID(0, 0, 0, 0, 0).key, new OverscaledTileID(0, 0, 0, 0, 0).key ];
-        t.plan(expected.length);
+        expect.assertions(expected.length);
 
         const sourceCache = createSourceCache({
             loadTile (tile, callback) {
-                t.equal(tile.tileID.key, expected.shift());
+                expect(tile.tileID.key).toBe(expected.shift());
                 tile.loaded = true;
                 callback();
             }
@@ -452,8 +452,8 @@ test('SourceCache / Source lifecycle', (t) => {
         });
         sourceCache.onAdd();
         // we expect the source cache to have five tiles, but only to have reloaded one
-        t.equal(Object.keys(sourceCache._tiles).length, 5);
-        t.ok(reloadTileSpy.calledOnce);
+        expect(Object.keys(sourceCache._tiles).length).toBe(5);
+        expect(reloadTileSpy.calledOnce).toBeTruthy();
 
         t.end();
     });
@@ -471,7 +471,7 @@ test('SourceCache#update', (t) => {
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
-                t.deepEqual(sourceCache.getIds(), []);
+                expect(sourceCache.getIds()).toEqual([]);
                 t.end();
             }
         });
@@ -487,7 +487,7 @@ test('SourceCache#update', (t) => {
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
-                t.deepEqual(sourceCache.getIds(), [new OverscaledTileID(0, 0, 0, 0, 0).key]);
+                expect(sourceCache.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
                 t.end();
             }
         });
@@ -505,7 +505,7 @@ test('SourceCache#update', (t) => {
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
-                t.deepEqual(sourceCache.getIds().sort(), [
+                expect(sourceCache.getIds().sort()).toEqual([
                     new OverscaledTileID(1, 0, 1, 1, 0).key,
                     new OverscaledTileID(1, 0, 1, 1, 1).key
                 ].sort());
@@ -530,12 +530,12 @@ test('SourceCache#update', (t) => {
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
-                t.deepEqual(sourceCache.getIds(), [new OverscaledTileID(0, 0, 0, 0, 0).key]);
+                expect(sourceCache.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
 
                 transform.zoom = 1;
                 sourceCache.update(transform);
 
-                t.deepEqual(sourceCache.getIds(), [
+                expect(sourceCache.getIds()).toEqual([
                     new OverscaledTileID(1, 0, 1, 1, 1).key,
                     new OverscaledTileID(1, 0, 1, 0, 1).key,
                     new OverscaledTileID(1, 0, 1, 1, 0).key,
@@ -564,12 +564,12 @@ test('SourceCache#update', (t) => {
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
-                t.deepEqual(sourceCache.getIds(), [new OverscaledTileID(0, 0, 0, 0, 0).key]);
+                expect(sourceCache.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
 
                 transform.zoom = 1;
                 sourceCache.update(transform);
 
-                t.deepEqual(sourceCache.getIds(), [
+                expect(sourceCache.getIds()).toEqual([
                     new OverscaledTileID(0, 0, 0, 0, 0).key,
                     new OverscaledTileID(1, 0, 1, 1, 1).key,
                     new OverscaledTileID(1, 0, 1, 0, 1).key,
@@ -598,12 +598,12 @@ test('SourceCache#update', (t) => {
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
-                t.deepEqual(sourceCache.getIds(), [new OverscaledTileID(0, 1, 0, 0, 0).key]);
+                expect(sourceCache.getIds()).toEqual([new OverscaledTileID(0, 1, 0, 0, 0).key]);
 
                 transform.zoom = 1;
                 sourceCache.update(transform);
 
-                t.deepEqual(sourceCache.getIds(), [
+                expect(sourceCache.getIds()).toEqual([
                     new OverscaledTileID(0, 1, 0, 0, 0).key,
                     new OverscaledTileID(1, 1, 1, 1, 1).key,
                     new OverscaledTileID(1, 1, 1, 0, 1).key,
@@ -635,7 +635,7 @@ test('SourceCache#update', (t) => {
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
-                t.deepEqual(sourceCache.getIds(), [
+                expect(sourceCache.getIds()).toEqual([
                     new OverscaledTileID(2, 0, 2, 2, 2).key,
                     new OverscaledTileID(2, 0, 2, 1, 2).key,
                     new OverscaledTileID(2, 0, 2, 2, 1).key,
@@ -645,7 +645,7 @@ test('SourceCache#update', (t) => {
                 transform.zoom = 0;
                 sourceCache.update(transform);
 
-                t.deepEqual(sourceCache.getRenderableIds().length, 5);
+                expect(sourceCache.getRenderableIds().length).toEqual(5);
                 t.end();
             }
         });
@@ -678,7 +678,7 @@ test('SourceCache#update', (t) => {
                 transform.zoom = 1;
                 sourceCache.update(transform);
 
-                t.equal(sourceCache._coveredTiles[(new OverscaledTileID(0, 0, 0, 0, 0).key)], true);
+                expect(sourceCache._coveredTiles[(new OverscaledTileID(0, 0, 0, 0, 0).key)]).toBe(true);
                 t.end();
             }
         });
@@ -707,7 +707,7 @@ test('SourceCache#update', (t) => {
                 transform.zoom = 0;
                 sourceCache.update(transform);
 
-                t.equal(sourceCache.getRenderableIds().length, 5, 'retains 0/0/0 and its four children');
+                expect(sourceCache.getRenderableIds().length).toBe(5);
                 t.end();
             }
         });
@@ -744,15 +744,15 @@ test('SourceCache#update', (t) => {
                 transform.zoom = 0;
                 sourceCache.update(transform);
 
-                t.equal(sourceCache.getRenderableIds().length, 5, 'retains 0/0/0 and its four children');
+                expect(sourceCache.getRenderableIds().length).toBe(5);
 
                 time = start + 98;
                 sourceCache.update(transform);
-                t.equal(sourceCache.getRenderableIds().length, 5, 'retains 0/0/0 and its four children');
+                expect(sourceCache.getRenderableIds().length).toBe(5);
 
                 time = start + fadeTime + 1;
                 sourceCache.update(transform);
-                t.equal(sourceCache.getRenderableIds().length, 1, 'drops children after fading is complete');
+                expect(sourceCache.getRenderableIds().length).toBe(1);
                 t.end();
             }
         });
@@ -779,7 +779,7 @@ test('SourceCache#update', (t) => {
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
-                t.deepEqual(sourceCache.getRenderableIds(), [
+                expect(sourceCache.getRenderableIds()).toEqual([
                     new OverscaledTileID(16, 0, 14, 8192, 8192).key,
                     new OverscaledTileID(16, 0, 14, 8191, 8192).key,
                     new OverscaledTileID(16, 0, 14, 8192, 8191).key,
@@ -789,7 +789,7 @@ test('SourceCache#update', (t) => {
                 transform.zoom = 15;
                 sourceCache.update(transform);
 
-                t.deepEqual(sourceCache.getRenderableIds(), [
+                expect(sourceCache.getRenderableIds()).toEqual([
                     new OverscaledTileID(16, 0, 14, 8192, 8192).key,
                     new OverscaledTileID(16, 0, 14, 8191, 8192).key,
                     new OverscaledTileID(16, 0, 14, 8192, 8191).key,
@@ -813,14 +813,14 @@ test('SourceCache#update', (t) => {
                 transform.center = new LngLat(360, 0);
                 const tileID = new OverscaledTileID(0, 1, 0, 0, 0);
                 sourceCache.update(transform);
-                t.deepEqual(sourceCache.getIds(), [tileID.key]);
+                expect(sourceCache.getIds()).toEqual([tileID.key]);
                 const tile = sourceCache.getTile(tileID);
 
                 transform.center = new LngLat(0, 0);
                 const wrappedTileID = new OverscaledTileID(0, 0, 0, 0, 0);
                 sourceCache.update(transform);
-                t.deepEqual(sourceCache.getIds(), [wrappedTileID.key]);
-                t.equal(sourceCache.getTile(wrappedTileID), tile);
+                expect(sourceCache.getIds()).toEqual([wrappedTileID.key]);
+                expect(sourceCache.getTile(wrappedTileID)).toBe(tile);
                 t.end();
             }
         });
@@ -845,8 +845,8 @@ test('SourceCache#_updateRetainedTiles', (t) => {
         const idealTile = new OverscaledTileID(1, 0, 1, 1, 1);
         stateCache[idealTile.key] = 'loaded';
         sourceCache._updateRetainedTiles([idealTile], 1);
-        t.ok(getTileSpy.notCalled);
-        t.deepEqual(sourceCache.getIds(), [idealTile.key]);
+        expect(getTileSpy.notCalled).toBeTruthy();
+        expect(sourceCache.getIds()).toEqual([idealTile.key]);
         t.end();
     });
 
@@ -878,7 +878,7 @@ test('SourceCache#_updateRetainedTiles', (t) => {
         }
 
         const retained = sourceCache._updateRetainedTiles([idealTile], 3);
-        t.deepEqual(Object.keys(retained).sort(), [
+        expect(Object.keys(retained).sort()).toEqual([
             // parents are requested because ideal ideal tile is not completely covered by
             // loaded child tiles
             new OverscaledTileID(0, 0, 0, 0, 0),
@@ -905,14 +905,14 @@ test('SourceCache#_updateRetainedTiles', (t) => {
         const idealTiles = [new OverscaledTileID(1, 0, 1, 1, 1), new OverscaledTileID(1, 0, 1, 0, 1)];
         stateCache[idealTiles[0].key] = 'loaded';
         const retained = sourceCache._updateRetainedTiles(idealTiles, 1);
-        t.deepEqual(getTileSpy.getCalls().map((c) => { return c.args[0]; }), [
+        expect(getTileSpy.getCalls().map((c) => { return c.args[0]; })).toEqual([
             // when child tiles aren't found, check and request parent tile
             new OverscaledTileID(0, 0, 0, 0, 0)
         ]);
 
         // retained tiles include all ideal tiles and any parents that were loaded to cover
         // non-existant tiles
-        t.deepEqual(retained, {
+        expect(retained).toEqual({
             // 1/0/1
             '211': new OverscaledTileID(1, 0, 1, 0, 1),
             // 1/1/1
@@ -944,13 +944,13 @@ test('SourceCache#_updateRetainedTiles', (t) => {
         const getTileSpy = t.spy(sourceCache, 'getTile');
 
         sourceCache._updateRetainedTiles([idealTile], 2);
-        t.deepEqual(getTileSpy.getCalls().map((c) => { return c.args[0]; }), [
+        expect(getTileSpy.getCalls().map((c) => { return c.args[0]; })).toEqual([
             // parents
             new OverscaledTileID(1, 0, 1, 0, 0), // not found
             new OverscaledTileID(0, 0, 0, 0, 0)  // not found
         ]);
 
-        t.deepEqual(addTileSpy.getCalls().map((c) => { return c.args[0]; }), [
+        expect(addTileSpy.getCalls().map((c) => { return c.args[0]; })).toEqual([
             // ideal tile
             new OverscaledTileID(2, 0, 2, 0, 0),
             // parents
@@ -982,17 +982,17 @@ test('SourceCache#_updateRetainedTiles', (t) => {
 
         const retained = sourceCache._updateRetainedTiles([idealTile], 1);
 
-        t.deepEqual(getTileSpy.getCalls().map((c) => { return c.args[0]; }), [
+        expect(getTileSpy.getCalls().map((c) => { return c.args[0]; })).toEqual([
             // parents
             new OverscaledTileID(0, 0, 0, 0, 0), // found
         ]);
 
-        t.deepEqual(retained, {
+        expect(retained).toEqual({
             // parent of ideal tile 0/0/0
             '000' : new OverscaledTileID(0, 0, 0, 0, 0),
             // ideal tile id 1/0/1
             '211' : new OverscaledTileID(1, 0, 1, 0, 1)
-        }, 'retain ideal and parent tile when ideal tiles aren\'t loaded');
+        });
 
         addTileSpy.resetHistory();
         getTileSpy.resetHistory();
@@ -1001,11 +1001,11 @@ test('SourceCache#_updateRetainedTiles', (t) => {
         sourceCache._tiles[idealTile.key].state = 'loaded';
         const retainedLoaded = sourceCache._updateRetainedTiles([idealTile], 1);
 
-        t.ok(getTileSpy.notCalled);
-        t.deepEqual(retainedLoaded, {
+        expect(getTileSpy.notCalled).toBeTruthy();
+        expect(retainedLoaded).toEqual({
             // only ideal tile retained
             '211' : new OverscaledTileID(1, 0, 1, 0, 1)
-        }, 'only retain ideal tiles when they\'re all loaded');
+        });
 
         addTileSpy.restore();
         getTileSpy.restore();
@@ -1031,8 +1031,8 @@ test('SourceCache#_updateRetainedTiles', (t) => {
         const getTileSpy = t.spy(sourceCache, 'getTile');
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
         // parent tile isn't requested because all covering children are loaded
-        t.deepEqual(getTileSpy.getCalls(), []);
-        t.deepEqual(Object.keys(retained), [idealTile.key].concat(loadedTiles.map(t => t.key)));
+        expect(getTileSpy.getCalls()).toEqual([]);
+        expect(Object.keys(retained)).toEqual([idealTile.key].concat(loadedTiles.map(t => t.key)));
         t.end();
 
     });
@@ -1053,12 +1053,12 @@ test('SourceCache#_updateRetainedTiles', (t) => {
 
         const getTileSpy = t.spy(sourceCache, 'getTile');
         let retained = sourceCache._updateRetainedTiles([idealTile], 1);
-        t.deepEqual(getTileSpy.getCalls().map((c) => { return c.args[0]; }), [
+        expect(getTileSpy.getCalls().map((c) => { return c.args[0]; })).toEqual([
             // parent
             new OverscaledTileID(0, 0, 0, 0, 0)
         ]);
 
-        t.deepEqual(retained, {
+        expect(retained).toEqual({
             // parent of ideal tile (0, 0, 0) (only partially covered by loaded child
             // tiles, so we still need to load the parent)
             '000' : new OverscaledTileID(0, 0, 0, 0, 0),
@@ -1066,20 +1066,20 @@ test('SourceCache#_updateRetainedTiles', (t) => {
             '011' : new OverscaledTileID(1, 0, 1, 0, 0),
             // loaded child tile (2, 0, 0)
             '022': new OverscaledTileID(2, 0, 2, 0, 0)
-        }, 'retains children and parent when ideal tile is partially covered by a loaded child tile');
+        });
 
         getTileSpy.restore();
         // remove child tile and check that it only uses parent tile
         delete sourceCache._tiles['022'];
         retained = sourceCache._updateRetainedTiles([idealTile], 1);
 
-        t.deepEqual(retained, {
+        expect(retained).toEqual({
             // parent of ideal tile (0, 0, 0) (only partially covered by loaded child
             // tiles, so we still need to load the parent)
             '000' : new OverscaledTileID(0, 0, 0, 0, 0),
             // ideal tile id (1, 0, 0)
             '011' : new OverscaledTileID(1, 0, 1, 0, 0)
-        }, 'only retains parent tile if no child tiles are loaded');
+        });
 
         t.end();
     });
@@ -1102,12 +1102,12 @@ test('SourceCache#_updateRetainedTiles', (t) => {
         const getTileSpy = t.spy(sourceCache, 'getTile');
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
 
-        t.deepEqual(getTileSpy.getCalls().map((c) => { return c.args[0]; }), [], 'doesn\'t request parent tiles bc they are lower than minzoom');
+        expect(getTileSpy.getCalls().map((c) => { return c.args[0]; })).toEqual([]);
 
-        t.deepEqual(retained, {
+        expect(retained).toEqual({
             // ideal tile id (2, 0, 0)
             '022' : new OverscaledTileID(2, 0, 2, 0, 0)
-        }, 'doesn\'t retain parent tiles below minzoom');
+        });
 
         getTileSpy.restore();
         t.end();
@@ -1126,18 +1126,18 @@ test('SourceCache#_updateRetainedTiles', (t) => {
         const getTileSpy = t.spy(sourceCache, 'getTile');
         const retained = sourceCache._updateRetainedTiles([idealTile], 2);
 
-        t.deepEqual(getTileSpy.getCalls().map((c) => { return c.args[0]; }), [
+        expect(getTileSpy.getCalls().map((c) => { return c.args[0]; })).toEqual([
             // overzoomed child
             new OverscaledTileID(3, 0, 2, 0, 0),
             // parents
             new OverscaledTileID(1, 0, 1, 0, 0),
             new OverscaledTileID(0, 0, 0, 0, 0)
-        ], 'doesn\'t request childtiles above maxzoom');
+        ]);
 
-        t.deepEqual(retained, {
+        expect(retained).toEqual({
             // ideal tile id (2, 0, 0)
             '022' : new OverscaledTileID(2, 0, 2, 0, 0)
-        }, 'doesn\'t retain child tiles above maxzoom');
+        });
 
         getTileSpy.restore();
         t.end();
@@ -1154,7 +1154,7 @@ test('SourceCache#_updateRetainedTiles', (t) => {
 
         const getTileSpy = t.spy(sourceCache, 'getTile');
         sourceCache._updateRetainedTiles(idealTiles, 8);
-        t.deepEqual(getTileSpy.getCalls().map((c) => { return c.args[0]; }), [
+        expect(getTileSpy.getCalls().map((c) => { return c.args[0]; })).toEqual([
             // parent tile ascent
             new OverscaledTileID(7, 0, 7, 0, 0),
             new OverscaledTileID(6, 0, 6, 0, 0),
@@ -1164,7 +1164,7 @@ test('SourceCache#_updateRetainedTiles', (t) => {
             new OverscaledTileID(2, 0, 2, 0, 0),
             new OverscaledTileID(1, 0, 1, 0, 0),
             new OverscaledTileID(0, 0, 0, 0, 0),
-        ], 'only ascends up a tile pyramid once');
+        ]);
 
         getTileSpy.resetHistory();
 
@@ -1175,13 +1175,13 @@ test('SourceCache#_updateRetainedTiles', (t) => {
         });
 
         sourceCache._updateRetainedTiles(idealTiles, 8);
-        t.deepEqual(getTileSpy.getCalls().map((c) => { return c.args[0]; }), [
+        expect(getTileSpy.getCalls().map((c) => { return c.args[0]; })).toEqual([
             // parent tile ascent
             new OverscaledTileID(7, 0, 7, 0, 0),
             new OverscaledTileID(6, 0, 6, 0, 0),
             new OverscaledTileID(5, 0, 5, 0, 0),
             new OverscaledTileID(4, 0, 4, 0, 0), // tile is loaded, stops ascent
-        ], 'ascent stops if a loaded parent tile is found');
+        ]);
 
         getTileSpy.restore();
         t.end();
@@ -1204,7 +1204,7 @@ test('SourceCache#_updateRetainedTiles', (t) => {
         const idealTiles = [new OverscaledTileID(8, 0, 7, 0, 0), new OverscaledTileID(8, 0, 7, 1, 0)];
         const retained = sourceCache._updateRetainedTiles(idealTiles, 8);
 
-        t.deepEqual(Object.keys(retained), [
+        expect(Object.keys(retained)).toEqual([
             new OverscaledTileID(7, 0, 7, 1, 0).key,
             new OverscaledTileID(8, 0, 7, 1, 0).key,
             new OverscaledTileID(8, 0, 7, 0, 0).key,
@@ -1225,11 +1225,11 @@ test('SourceCache#clearTiles', (t) => {
 
         const sourceCache = createSourceCache({
             abortTile(tile) {
-                t.deepEqual(tile.tileID, coord);
+                expect(tile.tileID).toEqual(coord);
                 abort++;
             },
             unloadTile(tile) {
-                t.deepEqual(tile.tileID, coord);
+                expect(tile.tileID).toEqual(coord);
                 unload++;
             }
         });
@@ -1238,8 +1238,8 @@ test('SourceCache#clearTiles', (t) => {
         sourceCache._addTile(coord);
         sourceCache.clearTiles();
 
-        t.equal(abort, 1);
-        t.equal(unload, 1);
+        expect(abort).toBe(1);
+        expect(unload).toBe(1);
 
         t.end();
     });
@@ -1256,10 +1256,10 @@ test('SourceCache#tilesIn', (t) => {
         const sourceCache = createSourceCache({noLoad: true});
         sourceCache.transform = tr;
         sourceCache.onAdd();
-        t.same(sourceCache.tilesIn([
+        expect(sourceCache.tilesIn([
             new Point(0, 0),
             new Point(512, 256)
-        ], 10, tr), []);
+        ], 10, tr)).toEqual([]);
 
         t.end();
     });
@@ -1288,7 +1288,7 @@ test('SourceCache#tilesIn', (t) => {
             if (e.sourceDataType === 'metadata') {
                 sourceCache.update(transform);
 
-                t.deepEqual(sourceCache.getIds(), [
+                expect(sourceCache.getIds()).toEqual([
                     new OverscaledTileID(1, 0, 1, 1, 1).key,
                     new OverscaledTileID(1, 0, 1, 0, 1).key,
                     new OverscaledTileID(1, 0, 1, 1, 0).key,
@@ -1304,15 +1304,15 @@ test('SourceCache#tilesIn', (t) => {
                 tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
                 tiles.forEach((result) => { delete result.tile.uid; });
 
-                t.equal(tiles[0].tile.tileID.key, "011");
-                t.equal(tiles[0].tile.tileSize, 512);
-                t.equal(tiles[0].scale, 1);
-                t.deepEqual(round(tiles[0].queryGeometry), [{x: 4096, y: 4050}, {x:12288, y: 8146}]);
+                expect(tiles[0].tile.tileID.key).toBe("011");
+                expect(tiles[0].tile.tileSize).toBe(512);
+                expect(tiles[0].scale).toBe(1);
+                expect(round(tiles[0].queryGeometry)).toEqual([{x: 4096, y: 4050}, {x:12288, y: 8146}]);
 
-                t.equal(tiles[1].tile.tileID.key, "111");
-                t.equal(tiles[1].tile.tileSize, 512);
-                t.equal(tiles[1].scale, 1);
-                t.deepEqual(round(tiles[1].queryGeometry), [{x: -4096, y: 4050}, {x: 4096, y: 8146}]);
+                expect(tiles[1].tile.tileID.key).toBe("111");
+                expect(tiles[1].tile.tileSize).toBe(512);
+                expect(tiles[1].scale).toBe(1);
+                expect(round(tiles[1].queryGeometry)).toEqual([{x: -4096, y: 4050}, {x: 4096, y: 8146}]);
 
                 t.end();
             }
@@ -1341,7 +1341,7 @@ test('SourceCache#tilesIn', (t) => {
                 transform.center = new LngLat(0, 1);
                 sourceCache.update(transform);
 
-                t.deepEqual(sourceCache.getIds(), [
+                expect(sourceCache.getIds()).toEqual([
                     new OverscaledTileID(2, 0, 1, 1, 1).key,
                     new OverscaledTileID(2, 0, 1, 0, 1).key,
                     new OverscaledTileID(2, 0, 1, 1, 0).key,
@@ -1356,15 +1356,15 @@ test('SourceCache#tilesIn', (t) => {
                 tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
                 tiles.forEach((result) => { delete result.tile.uid; });
 
-                t.equal(tiles[0].tile.tileID.key, "012");
-                t.equal(tiles[0].tile.tileSize, 1024);
-                t.equal(tiles[0].scale, 1);
-                t.deepEqual(round(tiles[0].queryGeometry), [{x: 4096, y: 4050}, {x:12288, y: 8146}]);
+                expect(tiles[0].tile.tileID.key).toBe("012");
+                expect(tiles[0].tile.tileSize).toBe(1024);
+                expect(tiles[0].scale).toBe(1);
+                expect(round(tiles[0].queryGeometry)).toEqual([{x: 4096, y: 4050}, {x:12288, y: 8146}]);
 
-                t.equal(tiles[1].tile.tileID.key, "112");
-                t.equal(tiles[1].tile.tileSize, 1024);
-                t.equal(tiles[1].scale, 1);
-                t.deepEqual(round(tiles[1].queryGeometry), [{x: -4096, y: 4050}, {x: 4096, y: 8146}]);
+                expect(tiles[1].tile.tileID.key).toBe("112");
+                expect(tiles[1].tile.tileSize).toBe(1024);
+                expect(tiles[1].scale).toBe(1);
+                expect(round(tiles[1].queryGeometry)).toEqual([{x: -4096, y: 4050}, {x: 4096, y: 8146}]);
 
                 t.end();
             }
@@ -1410,7 +1410,7 @@ test('SourceCache#loaded (no errors)', (t) => {
             const coord = new OverscaledTileID(0, 0, 0, 0, 0);
             sourceCache._addTile(coord);
 
-            t.ok(sourceCache.loaded());
+            expect(sourceCache.loaded()).toBeTruthy();
             t.end();
         }
     });
@@ -1429,7 +1429,7 @@ test('SourceCache#loaded (with errors)', (t) => {
             const coord = new OverscaledTileID(0, 0, 0, 0, 0);
             sourceCache._addTile(coord);
 
-            t.ok(sourceCache.loaded());
+            expect(sourceCache.loaded()).toBeTruthy();
             t.end();
         }
     });
@@ -1449,7 +1449,7 @@ test('SourceCache#getIds (ascending order by zoom level)', (t) => {
     for (let i = 0; i < ids.length; i++) {
         sourceCache._tiles[ids[i].key] = {tileID: ids[i]};
     }
-    t.deepEqual(sourceCache.getIds(), [
+    expect(sourceCache.getIds()).toEqual([
         new OverscaledTileID(0, 0, 0, 0, 0).key,
         new OverscaledTileID(1, 0, 1, 0, 0).key,
         new OverscaledTileID(2, 0, 2, 0, 0).key,
@@ -1476,8 +1476,8 @@ test('SourceCache#findLoadedParent', (t) => {
 
         sourceCache._tiles[tile.tileID.key] = tile;
 
-        t.equal(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 3, 3), 0), undefined);
-        t.deepEqual(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 0, 0), 0), tile);
+        expect(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 3, 3), 0)).toBe(undefined);
+        expect(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 0, 0), 0)).toEqual(tile);
         t.end();
     });
 
@@ -1492,9 +1492,9 @@ test('SourceCache#findLoadedParent', (t) => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512, 22);
         sourceCache._cache.add(tile.tileID, tile);
 
-        t.equal(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 3, 3), 0), undefined);
-        t.equal(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 0, 0), 0), tile);
-        t.equal(sourceCache._cache.order.length, 1);
+        expect(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 3, 3), 0)).toBe(undefined);
+        expect(sourceCache.findLoadedParent(new OverscaledTileID(2, 0, 2, 0, 0), 0)).toBe(tile);
+        expect(sourceCache._cache.order.length).toBe(1);
 
         t.end();
     });
@@ -1528,19 +1528,19 @@ test('SourceCache#findLoadedParent', (t) => {
         sourceCache._updateLoadedParentTileCache();
 
         // Loaded tiles excluding the root should be in the cache
-        t.equal(sourceCache.findLoadedParent(tiles[0], 0), undefined);
-        t.equal(sourceCache.findLoadedParent(tiles[1], 0).tileID, tiles[0]);
-        t.equal(sourceCache.findLoadedParent(tiles[2], 0).tileID, tiles[0]);
-        t.equal(sourceCache.findLoadedParent(tiles[3], 0).tileID, tiles[0]);
-        t.equal(sourceCache.findLoadedParent(tiles[4], 0).tileID, tiles[1]);
-        t.equal(sourceCache.findLoadedParent(tiles[5], 0).tileID, tiles[0]);
+        expect(sourceCache.findLoadedParent(tiles[0], 0)).toBe(undefined);
+        expect(sourceCache.findLoadedParent(tiles[1], 0).tileID).toBe(tiles[0]);
+        expect(sourceCache.findLoadedParent(tiles[2], 0).tileID).toBe(tiles[0]);
+        expect(sourceCache.findLoadedParent(tiles[3], 0).tileID).toBe(tiles[0]);
+        expect(sourceCache.findLoadedParent(tiles[4], 0).tileID).toBe(tiles[1]);
+        expect(sourceCache.findLoadedParent(tiles[5], 0).tileID).toBe(tiles[0]);
 
-        t.equal(tiles[0].key in sourceCache._loadedParentTiles, false);
-        t.equal(tiles[1].key in sourceCache._loadedParentTiles, true);
-        t.equal(tiles[2].key in sourceCache._loadedParentTiles, true);
-        t.equal(tiles[3].key in sourceCache._loadedParentTiles, true);
-        t.equal(tiles[4].key in sourceCache._loadedParentTiles, true);
-        t.equal(tiles[5].key in sourceCache._loadedParentTiles, true);
+        expect(tiles[0].key in sourceCache._loadedParentTiles).toBe(false);
+        expect(tiles[1].key in sourceCache._loadedParentTiles).toBe(true);
+        expect(tiles[2].key in sourceCache._loadedParentTiles).toBe(true);
+        expect(tiles[3].key in sourceCache._loadedParentTiles).toBe(true);
+        expect(tiles[4].key in sourceCache._loadedParentTiles).toBe(true);
+        expect(tiles[5].key in sourceCache._loadedParentTiles).toBe(true);
 
         // Arbitray tiles should not in the cache
         const notLoadedTiles = [
@@ -1550,15 +1550,15 @@ test('SourceCache#findLoadedParent', (t) => {
             new OverscaledTileID(3, 0, 3, 2, 1)
         ];
 
-        t.equal(sourceCache.findLoadedParent(notLoadedTiles[0], 0), undefined);
-        t.equal(sourceCache.findLoadedParent(notLoadedTiles[1], 0).tileID, tiles[1]);
-        t.equal(sourceCache.findLoadedParent(notLoadedTiles[2], 0).tileID, tiles[0]);
-        t.equal(sourceCache.findLoadedParent(notLoadedTiles[3], 0).tileID, tiles[3]);
+        expect(sourceCache.findLoadedParent(notLoadedTiles[0], 0)).toBe(undefined);
+        expect(sourceCache.findLoadedParent(notLoadedTiles[1], 0).tileID).toBe(tiles[1]);
+        expect(sourceCache.findLoadedParent(notLoadedTiles[2], 0).tileID).toBe(tiles[0]);
+        expect(sourceCache.findLoadedParent(notLoadedTiles[3], 0).tileID).toBe(tiles[3]);
 
-        t.equal(notLoadedTiles[0].key in sourceCache._loadedParentTiles, false);
-        t.equal(notLoadedTiles[1].key in sourceCache._loadedParentTiles, false);
-        t.equal(notLoadedTiles[2].key in sourceCache._loadedParentTiles, false);
-        t.equal(notLoadedTiles[3].key in sourceCache._loadedParentTiles, false);
+        expect(notLoadedTiles[0].key in sourceCache._loadedParentTiles).toBe(false);
+        expect(notLoadedTiles[1].key in sourceCache._loadedParentTiles).toBe(false);
+        expect(notLoadedTiles[2].key in sourceCache._loadedParentTiles).toBe(false);
+        expect(notLoadedTiles[3].key in sourceCache._loadedParentTiles).toBe(false);
 
         t.end();
     });
@@ -1571,9 +1571,9 @@ test('SourceCache#reload', (t) => {
         const sourceCache = createSourceCache({noLoad: true});
         sourceCache.onAdd();
 
-        t.doesNotThrow(() => {
+        expect(() => {
             sourceCache.reload();
-        }, null, 'reload ignored gracefully');
+        }).not.toThrowError(null);
 
         t.end();
     });
@@ -1590,7 +1590,7 @@ test('SourceCache reloads expiring tiles', (t) => {
         const sourceCache = createSourceCache({expires: expiryDate});
 
         sourceCache._reloadTile = (id, state) => {
-            t.equal(state, 'expired');
+            expect(state).toBe('expired');
             t.end();
         };
 
@@ -1612,7 +1612,7 @@ test('SourceCache sets max cache size correctly', (t) => {
         sourceCache.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 3 * 3 * 5
-        t.equal(sourceCache._cache.max, 45);
+        expect(sourceCache._cache.max).toBe(45);
         t.end();
     });
 
@@ -1627,7 +1627,7 @@ test('SourceCache sets max cache size correctly', (t) => {
         sourceCache.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 2 * 2 * 5
-        t.equal(sourceCache._cache.max, 20);
+        expect(sourceCache._cache.max).toBe(20);
         t.end();
     });
 
