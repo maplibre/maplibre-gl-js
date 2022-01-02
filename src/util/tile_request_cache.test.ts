@@ -1,9 +1,8 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import {cacheGet, cachePut, cacheClose} from '../../../rollup/build/tsc/src/util/tile_request_cache';
+import {cacheGet, cachePut, cacheClose} from '../util/tile_request_cache';
 import sinon from 'sinon';
 
-test('tile_request_cache', (t) => {
+describe('tile_request_cache', done => {
     t.beforeEach(callback => {
         cacheClose();
         global.caches = sinon.stub();
@@ -15,7 +14,7 @@ test('tile_request_cache', (t) => {
         callback();
     });
 
-    t.test('cachePut, no caches', (t) => {
+    test('cachePut, no caches', done => {
         delete global.caches;
 
         let result;
@@ -26,30 +25,30 @@ test('tile_request_cache', (t) => {
         } catch (e) {
             expect(e).toBeFalsy();
         }
-        t.end();
+        done();
     });
 
-    t.test('cacheGet, no caches', (t) => {
+    test('cacheGet, no caches', done => {
         delete global.caches;
 
         cacheGet({url:''}, (result) => {
             expect(result).toBeFalsy();
-            expect(result).toBe(null);
-            t.end();
+            expect(result).toBeNull();
+            done();
         });
     });
 
-    t.test('cacheGet, cache open error', (t) => {
+    test('cacheGet, cache open error', done => {
         global.caches.open = sinon.stub().rejects(new Error('The operation is insecure'));
 
         cacheGet({url:''}, (error) => {
             expect(error).toBeTruthy();
             expect(error.message).toBe('The operation is insecure');
-            t.end();
+            done();
         });
     });
 
-    t.test('cacheGet, cache match error', (t) => {
+    test('cacheGet, cache match error', done => {
         const fakeCache = sinon.stub();
         fakeCache.match = sinon.stub().withArgs('someurl').rejects(new Error('ohno'));
         global.caches.open = sinon.stub().resolves(fakeCache);
@@ -57,11 +56,11 @@ test('tile_request_cache', (t) => {
         cacheGet({url:'someurl'}, (error) => {
             expect(error).toBeTruthy();
             expect(error.message).toBe('ohno');
-            t.end();
+            done();
         });
     });
 
-    t.test('cacheGet, happy path', (t) => {
+    test('cacheGet, happy path', done => {
         const fakeResponse = {
             headers: {get: sinon.stub()},
             clone: sinon.stub(),
@@ -86,9 +85,9 @@ test('tile_request_cache', (t) => {
             expect(response.body).toBe('yay');
             expect(fresh).toBeTruthy();
             expect(fakeCache.put.calledWith('someurl', fakeResponse)).toBeTruthy();
-            t.end();
+            done();
         });
     });
 
-    t.end();
+    done();
 });
