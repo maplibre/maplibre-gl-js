@@ -1,16 +1,15 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
 import {
     getArrayBuffer,
     getJSON,
     postData,
     getImage,
     resetImageRequestQueue
-} from '../../../rollup/build/tsc/src/util/ajax';
-import config from '../../../rollup/build/tsc/src/util/config';
-import webpSupported from '../../../rollup/build/tsc/src/util/webp_supported';
+} from '../util/ajax';
+import config from '../util/config';
+import webpSupported from '../util/webp_supported';
 
-test('ajax', (t) => {
+describe('ajax', done => {
     t.beforeEach(callback => {
         window.useFakeXMLHttpRequest();
         callback();
@@ -21,75 +20,75 @@ test('ajax', (t) => {
         callback();
     });
 
-    t.test('getArrayBuffer, 404', (t) => {
+    test('getArrayBuffer, 404', done => {
         window.server.respondWith(request => {
             request.respond(404);
         });
         getArrayBuffer({url:''}, (error) => {
             expect(error.status).toBe(404);
-            t.end();
+            done();
         });
         window.server.respond();
     });
 
-    t.test('getJSON', (t) => {
+    test('getJSON', done => {
         window.server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
         });
         getJSON({url:''}, (error, body) => {
             expect(error).toBeFalsy();
             expect(body).toEqual({foo: 'bar'});
-            t.end();
+            done();
         });
         window.server.respond();
     });
 
-    t.test('getJSON, invalid syntax', (t) => {
+    test('getJSON, invalid syntax', done => {
         window.server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
         });
         getJSON({url:''}, (error) => {
             expect(error).toBeTruthy();
-            t.end();
+            done();
         });
         window.server.respond();
     });
 
-    t.test('getJSON, 404', (t) => {
+    test('getJSON, 404', done => {
         window.server.respondWith(request => {
             request.respond(404);
         });
         getJSON({url:''}, (error) => {
             expect(error.status).toBe(404);
-            t.end();
+            done();
         });
         window.server.respond();
     });
 
-    t.test('getJSON, 401: non-Mapbox domain', (t) => {
+    test('getJSON, 401: non-Mapbox domain', done => {
         window.server.respondWith(request => {
             request.respond(401);
         });
         getJSON({url:''}, (error) => {
             expect(error.status).toBe(401);
-            expect(error.message).toBe("Unauthorized");
-            t.end();
+            expect(error.message).toBe('Unauthorized');
+            done();
         });
         window.server.respond();
     });
 
-    t.test('postData, 204(no content): no error', (t) => {
+    test('postData, 204(no content): no error', done => {
         window.server.respondWith(request => {
             request.respond(204);
         });
         postData({url:'api.mapbox.com'}, (error) => {
-            expect(error).toBe(null);
-            t.end();
+            expect(error).toBeNull();
+            done();
         });
         window.server.respond();
     });
 
-    t.test('getImage respects maxParallelImageRequests', (t) => {
+    test('getImage respects maxParallelImageRequests', done => {
         window.server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
@@ -97,19 +96,19 @@ test('ajax', (t) => {
         function callback(err) {
             if (err) return;
             // last request is only added after we got a response from one of the previous ones
-            expect(window.server.requests.length).toBe(maxRequests + 1);
-            t.end();
+            expect(window.server.requests).toHaveLength(maxRequests + 1);
+            done();
         }
 
         for (let i = 0; i < maxRequests + 1; i++) {
             getImage({url: ''}, callback);
         }
-        expect(window.server.requests.length).toBe(maxRequests);
+        expect(window.server.requests).toHaveLength(maxRequests);
 
         window.server.requests[0].respond();
     });
 
-    t.test('getImage cancelling frees up request for maxParallelImageRequests', (t) => {
+    test('getImage cancelling frees up request for maxParallelImageRequests', done => {
         resetImageRequestQueue();
 
         window.server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
@@ -119,11 +118,11 @@ test('ajax', (t) => {
         for (let i = 0; i < maxRequests + 1; i++) {
             getImage({url: ''}, () => t.fail).cancel();
         }
-        expect(window.server.requests.length).toBe(maxRequests + 1);
-        t.end();
+        expect(window.server.requests).toHaveLength(maxRequests + 1);
+        done();
     });
 
-    t.test('getImage requests that were once queued are still abortable', (t) => {
+    test('getImage requests that were once queued are still abortable', done => {
         resetImageRequestQueue();
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
@@ -134,29 +133,29 @@ test('ajax', (t) => {
         }
 
         // the limit of allowed requests is reached
-        expect(window.server.requests.length).toBe(maxRequests);
+        expect(window.server.requests).toHaveLength(maxRequests);
 
         const queuedURL = 'this-is-the-queued-request';
         const queued = getImage({url: queuedURL}, () => t.fail());
 
         // the new requests is queued because the limit is reached
-        expect(window.server.requests.length).toBe(maxRequests);
+        expect(window.server.requests).toHaveLength(maxRequests);
 
         // cancel the first request to let the queued request start
         requests[0].cancel();
-        expect(window.server.requests.length).toBe(maxRequests + 1);
+        expect(window.server.requests).toHaveLength(maxRequests + 1);
 
         // abort the previously queued request and confirm that it is aborted
         const queuedRequest = window.server.requests[window.server.requests.length - 1];
         expect(queuedRequest.url).toBe(queuedURL);
-        expect(queuedRequest.aborted).toBe(undefined);
+        expect(queuedRequest.aborted).toBeUndefined();
         queued.cancel();
         expect(queuedRequest.aborted).toBe(true);
 
-        t.end();
+        done();
     });
 
-    t.test('getImage sends accept/webp when supported', (t) => {
+    test('getImage sends accept/webp when supported', done => {
         resetImageRequestQueue();
 
         window.server.respondWith((request) => {
@@ -172,8 +171,7 @@ test('ajax', (t) => {
         window.server.respond();
     });
 
-
-    t.test('getImage uses ImageBitmap when supported', (t) => {
+    test('getImage uses ImageBitmap when supported', done => {
         resetImageRequestQueue();
 
         window.server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
@@ -184,13 +182,13 @@ test('ajax', (t) => {
         getImage({url: ''}, (err, img) => {
             if (err) t.fail();
             expect(img instanceof ImageBitmap).toBeTruthy();
-            t.end();
+            done();
         });
 
         window.server.respond();
     });
 
-    t.test('getImage uses HTMLImageElement when ImageBitmap is not supported', (t) => {
+    test('getImage uses HTMLImageElement when ImageBitmap is not supported', done => {
         resetImageRequestQueue();
 
         window.server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
@@ -201,11 +199,11 @@ test('ajax', (t) => {
         getImage({url: ''}, (err, img) => {
             if (err) t.fail();
             expect(img instanceof HTMLImageElement).toBeTruthy();
-            t.end();
+            done();
         });
 
         window.server.respond();
     });
 
-    t.end();
+    done();
 });
