@@ -1,8 +1,7 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import RasterDEMTileSource from '../../../rollup/build/tsc/src/source/raster_dem_tile_source';
-import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
-import {RequestManager} from '../../../rollup/build/tsc/src/util/request_manager';
+import RasterDEMTileSource from '../source/raster_dem_tile_source';
+import {OverscaledTileID} from '../source/tile_id';
+import {RequestManager} from '../util/request_manager';
 
 function createSource(options, transformCallback) {
     const source = new RasterDEMTileSource('id', options, {send() {}}, options.eventedParent);
@@ -19,7 +18,7 @@ function createSource(options, transformCallback) {
     return source;
 }
 
-test('RasterTileSource', (t) => {
+describe('RasterTileSource', done => {
     t.beforeEach((callback) => {
         window.useFakeXMLHttpRequest();
         callback();
@@ -30,36 +29,36 @@ test('RasterTileSource', (t) => {
         callback();
     });
 
-    t.test('transforms request for TileJSON URL', (t) => {
+    test('transforms request for TileJSON URL', done => {
         window.server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.pngraw"],
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
             bounds: [-47, -7, -45, -5]
         }));
-        const transformSpy = t.spy((url) => {
+        const transformSpy = jest.spyOn((url) => {
             return {url};
         });
 
-        createSource({url: "/source.json"}, transformSpy);
+        createSource({url: '/source.json'}, transformSpy);
         window.server.respond();
 
         expect(transformSpy.getCall(0).args[0]).toBe('/source.json');
         expect(transformSpy.getCall(0).args[1]).toBe('Source');
-        t.end();
+        done();
     });
 
-    t.test('transforms tile urls before requesting', (t) => {
+    test('transforms tile urls before requesting', done => {
         window.server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"],
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        const source = createSource({url: "/source.json"});
-        const transformSpy = t.spy(source.map._requestManager, 'transformRequest');
+        const source = createSource({url: '/source.json'});
+        const transformSpy = jest.spyOn(source.map._requestManager, 'transformRequest');
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const tile = {
@@ -73,20 +72,20 @@ test('RasterTileSource', (t) => {
                 expect(transformSpy.calledOnce).toBeTruthy();
                 expect(transformSpy.getCall(0).args[0]).toBe('http://example.com/10/5/5.png');
                 expect(transformSpy.getCall(0).args[1]).toBe('Tile');
-                t.end();
+                done();
 
             }
         });
         window.server.respond();
     });
-    t.test('populates neighboringTiles', (t) => {
+    test('populates neighboringTiles', done => {
         window.server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"]
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
-        const source = createSource({url: "/source.json"});
+        const source = createSource({url: '/source.json'});
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const tile = {
@@ -108,21 +107,21 @@ test('RasterTileSource', (t) => {
                     new OverscaledTileID(10, 0, 10, 6, 6).key
                 ]);
 
-                t.end();
+                done();
 
             }
         });
         window.server.respond();
     });
 
-    t.test('populates neighboringTiles with wrapped tiles', (t) => {
+    test('populates neighboringTiles with wrapped tiles', done => {
         window.server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"]
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
-        const source = createSource({url: "/source.json"});
+        const source = createSource({url: '/source.json'});
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const tile = {
@@ -143,11 +142,11 @@ test('RasterTileSource', (t) => {
                     new OverscaledTileID(5, 1, 5, 0,  4).key,
                     new OverscaledTileID(5, 1, 5, 0,  6).key
                 ]);
-                t.end();
+                done();
             }
         });
         window.server.respond();
     });
-    t.end();
+    done();
 
 });
