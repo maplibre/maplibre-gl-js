@@ -1,9 +1,7 @@
-import {test} from '../../util/test';
+import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, nextPowerOfTwo, isPowerOfTwo} from './util';
+import Point from './point';
 
-import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, nextPowerOfTwo, isPowerOfTwo} from '../../../rollup/build/tsc/src/util/util';
-import Point from '../../../rollup/build/tsc/src/util/point';
-
-test('util', (t) => {
+describe('util', () => {
     expect(easeCubicInOut(0)).toBe(0);
     expect(easeCubicInOut(0.2)).toBe(0.03200000000000001);
     expect(easeCubicInOut(0.5)).toBe(0.5);
@@ -15,30 +13,30 @@ test('util', (t) => {
     expect(pick({a:1, b:2, c:3}, ['a', 'c', 'd'])).toEqual({a:1, c:3});
     expect(typeof uniqueId() === 'number').toBeTruthy();
 
-    t.test('bindAll', (t) => {
+    test('bindAll', done => {
         function MyClass() {
             bindAll(['ontimer'], this);
             this.name = 'Tom';
         }
         MyClass.prototype.ontimer = function() {
             expect(this.name).toBe('Tom');
-            t.end();
+            done();
         };
         const my = new MyClass();
         setTimeout(my.ontimer, 0);
     });
 
-    t.test('asyncAll - sync', (t) => {
+    test('asyncAll - sync', done => {
         expect(asyncAll([0, 1, 2], (data, callback) => {
             callback(null, data);
         }, (err, results) => {
             expect(err).toBeFalsy();
             expect(results).toEqual([0, 1, 2]);
         })).toBeUndefined();
-        t.end();
+        done();
     });
 
-    t.test('asyncAll - async', (t) => {
+    test('asyncAll - async', done => {
         expect(asyncAll([4, 0, 1, 2], (data, callback) => {
             setTimeout(() => {
                 callback(null, data);
@@ -46,11 +44,11 @@ test('util', (t) => {
         }, (err, results) => {
             expect(err).toBeFalsy();
             expect(results).toEqual([4, 0, 1, 2]);
-            t.end();
+            done();
         })).toBeUndefined();
     });
 
-    t.test('asyncAll - error', (t) => {
+    test('asyncAll - error', done => {
         expect(asyncAll([4, 0, 1, 2], (data, callback) => {
             setTimeout(() => {
                 callback(new Error('hi'), data);
@@ -58,21 +56,21 @@ test('util', (t) => {
         }, (err, results) => {
             expect(err && err.message).toBe('hi');
             expect(results).toEqual([4, 0, 1, 2]);
-            t.end();
+            done();
         })).toBeUndefined();
     });
 
-    t.test('asyncAll - empty', (t) => {
+    test('asyncAll - empty', done => {
         expect(asyncAll([], (data, callback) => {
             callback(null, 'foo');
         }, (err, results) => {
             expect(err).toBeFalsy();
             expect(results).toEqual([]);
         })).toBeUndefined();
-        t.end();
+        done();
     });
 
-    t.test('isPowerOfTwo', (t) => {
+    test('isPowerOfTwo', done => {
         expect(isPowerOfTwo(1)).toBe(true);
         expect(isPowerOfTwo(2)).toBe(true);
         expect(isPowerOfTwo(256)).toBe(true);
@@ -80,10 +78,10 @@ test('util', (t) => {
         expect(isPowerOfTwo(0)).toBe(false);
         expect(isPowerOfTwo(-42)).toBe(false);
         expect(isPowerOfTwo(42)).toBe(false);
-        t.end();
+        done();
     });
 
-    t.test('nextPowerOfTwo', (t) => {
+    test('nextPowerOfTwo', done => {
         expect(nextPowerOfTwo(1)).toBe(1);
         expect(nextPowerOfTwo(2)).toBe(2);
         expect(nextPowerOfTwo(256)).toBe(256);
@@ -91,10 +89,10 @@ test('util', (t) => {
         expect(nextPowerOfTwo(0)).toBe(1);
         expect(nextPowerOfTwo(-42)).toBe(1);
         expect(nextPowerOfTwo(42)).toBe(64);
-        t.end();
+        done();
     });
 
-    t.test('nextPowerOfTwo', (t) => {
+    test('nextPowerOfTwo', done => {
         expect(isPowerOfTwo(nextPowerOfTwo(1))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(2))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(256))).toBe(true);
@@ -102,49 +100,49 @@ test('util', (t) => {
         expect(isPowerOfTwo(nextPowerOfTwo(0))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(-42))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(42))).toBe(true);
-        t.end();
+        done();
     });
 
-    t.test('clamp', (t) => {
+    test('clamp', done => {
         expect(clamp(0, 0, 1)).toBe(0);
         expect(clamp(1, 0, 1)).toBe(1);
         expect(clamp(200, 0, 180)).toBe(180);
         expect(clamp(-200, 0, 180)).toBe(0);
-        t.end();
+        done();
     });
 
-    t.test('wrap', (t) => {
+    test('wrap', done => {
         expect(wrap(0, 0, 1)).toBe(1);
         expect(wrap(1, 0, 1)).toBe(1);
         expect(wrap(200, 0, 180)).toBe(20);
         expect(wrap(-200, 0, 180)).toBe(160);
-        t.end();
+        done();
     });
 
-    t.test('bezier', (t) => {
+    test('bezier', done => {
         const curve = bezier(0, 0, 0.25, 1);
         expect(curve instanceof Function).toBeTruthy();
         expect(curve(0)).toBe(0);
         expect(curve(1)).toBe(1);
         expect(curve(0.5)).toBe(0.8230854638965502);
-        t.end();
+        done();
     });
 
-    t.test('asyncAll', (t) => {
-        let expect = 1;
+    test('asyncAll', done => {
+        let expectedValue = 1;
         asyncAll([], (callback) => { callback(); }, () => {
             expect('immediate callback').toBeTruthy();
         });
         asyncAll([1, 2, 3], (number, callback) => {
-            expect(number).toBe(expect++);
+            expect(number).toBe(expectedValue++);
             expect(callback instanceof Function).toBeTruthy();
             callback(null, 0);
         }, () => {
-            t.end();
+            done();
         });
     });
 
-    t.test('mapObject', (t) => {
+    test('mapObject', () => {
         expect.assertions(6);
         expect(mapObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
         const that = {};
@@ -157,7 +155,7 @@ test('util', (t) => {
         }, that)).toEqual({map: 'BOX'});
     });
 
-    t.test('filterObject', (t) => {
+    test('filterObject', done => {
         expect.assertions(6);
         expect(filterObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
         const that = {};
@@ -171,10 +169,10 @@ test('util', (t) => {
         expect(filterObject({map: 'box', box: 'map'}, (value) => {
             return value === 'box';
         })).toEqual({map: 'box'});
-        t.end();
+        done();
     });
 
-    t.test('deepEqual', (t) => {
+    test('deepEqual', done => {
         const a = {
             foo: 'bar',
             bar: {
@@ -192,114 +190,114 @@ test('util', (t) => {
         expect(deepEqual(null, c)).toBeFalsy();
         expect(deepEqual(null, null)).toBeTruthy();
 
-        t.end();
+        done();
     });
 
-    t.test('clone', (t) => {
-        t.test('array', (t) => {
+    test('clone', done => {
+        test('array', done => {
             const input = [false, 1, 'two'];
             const output = clone(input);
             expect(input).not.toBe(output);
             expect(input).toEqual(output);
-            t.end();
+            done();
         });
 
-        t.test('object', (t) => {
+        test('object', done => {
             const input = {a: false, b: 1, c: 'two'};
             const output = clone(input);
             expect(input).not.toBe(output);
             expect(input).toEqual(output);
-            t.end();
+            done();
         });
 
-        t.test('deep object', (t) => {
+        test('deep object', done => {
             const input = {object: {a: false, b: 1, c: 'two'}};
             const output = clone(input);
             expect(input.object).not.toBe(output.object);
             expect(input.object).toEqual(output.object);
-            t.end();
+            done();
         });
 
-        t.test('deep array', (t) => {
+        test('deep array', done => {
             const input = {array: [false, 1, 'two']};
             const output = clone(input);
             expect(input.array).not.toBe(output.array);
             expect(input.array).toEqual(output.array);
-            t.end();
+            done();
         });
 
-        t.end();
+        done();
     });
 
-    t.test('arraysIntersect', (t) => {
-        t.test('intersection', (t) => {
+    test('arraysIntersect', done => {
+        test('intersection', done => {
             const a = ['1', '2', '3'];
             const b = ['5', '4', '3'];
 
             expect(arraysIntersect(a, b)).toBe(true);
-            t.end();
+            done();
         });
 
-        t.test('no intersection', (t) => {
+        test('no intersection', done => {
             const a = ['1', '2', '3'];
             const b = ['4', '5', '6'];
 
             expect(arraysIntersect(a, b)).toBe(false);
-            t.end();
+            done();
         });
 
-        t.end();
+        done();
     });
 
-    t.test('isCounterClockwise ', (t) => {
-        t.test('counter clockwise', (t) => {
+    test('isCounterClockwise ', done => {
+        test('counter clockwise', done => {
             const a = new Point(0, 0);
             const b = new Point(1, 0);
             const c = new Point(1, 1);
 
             expect(isCounterClockwise(a, b, c)).toBe(true);
-            t.end();
+            done();
         });
 
-        t.test('clockwise', (t) => {
+        test('clockwise', done => {
             const a = new Point(0, 0);
             const b = new Point(1, 0);
             const c = new Point(1, 1);
 
             expect(isCounterClockwise(c, b, a)).toBe(false);
-            t.end();
+            done();
         });
 
-        t.end();
+        done();
     });
 
-    t.test('isClosedPolygon', (t) => {
-        t.test('not enough points', (t) => {
+    test('isClosedPolygon', done => {
+        test('not enough points', done => {
             const polygon = [new Point(0, 0), new Point(1, 0), new Point(0, 1)];
 
             expect(isClosedPolygon(polygon)).toBe(false);
-            t.end();
+            done();
         });
 
-        t.test('not equal first + last point', (t) => {
+        test('not equal first + last point', done => {
             const polygon = [new Point(0, 0), new Point(1, 0), new Point(0, 1), new Point(1, 1)];
 
             expect(isClosedPolygon(polygon)).toBe(false);
-            t.end();
+            done();
         });
 
-        t.test('closed polygon', (t) => {
+        test('closed polygon', done => {
             const polygon = [new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point(0, 0)];
 
             expect(isClosedPolygon(polygon)).toBe(true);
-            t.end();
+            done();
         });
 
-        t.end();
+        done();
     });
 
-    t.test('parseCacheControl', (t) => {
-        t.test('max-age', (t) => {
+    test('parseCacheControl', done => {
+        test('max-age', done => {
             expect(parseCacheControl('max-age=123456789')).toEqual({
                 'max-age': 123456789
             });
@@ -310,11 +308,10 @@ test('util', (t) => {
 
             expect(parseCacheControl('max-age=null')).toEqual({});
 
-            t.end();
+            done();
         });
 
-        t.end();
+        done();
     });
 
-    t.end();
 });
