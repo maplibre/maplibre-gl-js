@@ -1,45 +1,38 @@
-import '../../stub_loader';
-import RasterDEMTileWorkerSource from '../source/raster_dem_tile_worker_source';
-import StyleLayerIndex from '../style/style_layer_index';
+import RasterDEMTileWorkerSource from './raster_dem_tile_worker_source';
 import DEMData from '../data/dem_data';
+import {WorkerDEMTileParameters} from './worker_source';
 
-describe('loadTile', done => {
+describe('loadTile', () => {
     test('loads DEM tile', done => {
-        const source = new RasterDEMTileWorkerSource(null, new StyleLayerIndex());
+        const source = new RasterDEMTileWorkerSource();
 
         source.loadTile({
             source: 'source',
-            uid: 0,
+            uid: '0',
             rawImageData: {data: new Uint8ClampedArray(256), height: 8, width: 8},
             dim: 256
-        }, (err, data) => {
-            if (err) t.fail();
-            expect(Object.keys(source.loaded)).toEqual([0]);
+        } as any as WorkerDEMTileParameters, (err, data) => {
+            if (err) done(err);
+            expect(Object.keys(source.loaded)).toEqual(['0']);
             expect(data instanceof DEMData).toBeTruthy();
-
             done();
         });
     });
-
-    done();
 });
 
-describe('removeTile', done => {
-    test('removes loaded tile', done => {
-        const source = new RasterDEMTileWorkerSource(null, new StyleLayerIndex());
+describe('removeTile', () => {
+    test('removes loaded tile', () => {
+        const source = new RasterDEMTileWorkerSource();
 
         source.loaded = {
-            '0': {}
+            '0': {} as DEMData
         };
 
         source.removeTile({
             source: 'source',
-            uid: 0
+            uid: '0'
         });
 
         expect(source.loaded).toEqual({});
-        done();
     });
-
-    done();
 });
