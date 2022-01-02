@@ -1,8 +1,7 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import RasterTileSource from '../../../rollup/build/tsc/src/source/raster_tile_source';
-import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
-import {RequestManager} from '../../../rollup/build/tsc/src/util/request_manager';
+import RasterTileSource from '../source/raster_tile_source';
+import {OverscaledTileID} from '../source/tile_id';
+import {RequestManager} from '../util/request_manager';
 
 function createSource(options, transformCallback) {
     const source = new RasterTileSource('id', options, {send() {}}, options.eventedParent);
@@ -19,7 +18,7 @@ function createSource(options, transformCallback) {
     return source;
 }
 
-test('RasterTileSource', (t) => {
+describe('RasterTileSource', done => {
     t.beforeEach((callback) => {
         window.useFakeXMLHttpRequest();
         callback();
@@ -30,90 +29,90 @@ test('RasterTileSource', (t) => {
         callback();
     });
 
-    t.test('transforms request for TileJSON URL', (t) => {
+    test('transforms request for TileJSON URL', done => {
         window.server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"],
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        const transformSpy = t.spy((url) => {
+        const transformSpy = jest.spyOn((url) => {
             return {url};
         });
 
-        createSource({url: "/source.json"}, transformSpy);
+        createSource({url: '/source.json'}, transformSpy);
         window.server.respond();
 
         expect(transformSpy.getCall(0).args[0]).toBe('/source.json');
         expect(transformSpy.getCall(0).args[1]).toBe('Source');
-        t.end();
+        done();
     });
 
-    t.test('respects TileJSON.bounds', (t) => {
+    test('respects TileJSON.bounds', done => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"],
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         });
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 expect(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132))).toBeFalsy();
                 expect(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132))).toBeTruthy();
-                t.end();
+                done();
             }
         });
     });
 
-    t.test('does not error on invalid bounds', (t) => {
+    test('does not error on invalid bounds', done => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"],
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, 91]
         });
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 expect(source.tileBounds.bounds).toEqual({_sw:{lng: -47, lat: -7}, _ne:{lng: -45, lat: 90}});
-                t.end();
+                done();
             }
         });
     });
 
-    t.test('respects TileJSON.bounds when loaded from TileJSON', (t) => {
+    test('respects TileJSON.bounds when loaded from TileJSON', done => {
         window.server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"],
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        const source = createSource({url: "/source.json"});
+        const source = createSource({url: '/source.json'});
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 expect(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132))).toBeFalsy();
                 expect(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132))).toBeTruthy();
-                t.end();
+                done();
             }
         });
         window.server.respond();
     });
 
-    t.test('transforms tile urls before requesting', (t) => {
+    test('transforms tile urls before requesting', done => {
         window.server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"],
+            attribution: 'Mapbox',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        const source = createSource({url: "/source.json"});
-        const transformSpy = t.spy(source.map._requestManager, 'transformRequest');
+        const source = createSource({url: '/source.json'});
+        const transformSpy = jest.spyOn(source.map._requestManager, 'transformRequest');
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const tile = {
@@ -126,18 +125,18 @@ test('RasterTileSource', (t) => {
                 expect(transformSpy.calledOnce).toBeTruthy();
                 expect(transformSpy.getCall(0).args[0]).toBe('http://example.com/10/5/5.png');
                 expect(transformSpy.getCall(0).args[1]).toBe('Tile');
-                t.end();
+                done();
             }
         });
         window.server.respond();
     });
 
-    t.test('cancels TileJSON request if removed', (t) => {
-        const source = createSource({url: "/source.json"});
+    test('cancels TileJSON request if removed', done => {
+        const source = createSource({url: '/source.json'});
         source.onRemove();
         expect(window.server.lastRequest.aborted).toBe(true);
-        t.end();
+        done();
     });
 
-    t.end();
+    done();
 });
