@@ -192,124 +192,116 @@ describe('util', () => {
 
         done();
     });
+});
 
-    test('clone', done => {
-        test('array', done => {
-            const input = [false, 1, 'two'];
-            const output = clone(input);
-            expect(input).not.toBe(output);
-            expect(input).toEqual(output);
-            done();
-        });
-
-        test('object', done => {
-            const input = {a: false, b: 1, c: 'two'};
-            const output = clone(input);
-            expect(input).not.toBe(output);
-            expect(input).toEqual(output);
-            done();
-        });
-
-        test('deep object', done => {
-            const input = {object: {a: false, b: 1, c: 'two'}};
-            const output = clone(input);
-            expect(input.object).not.toBe(output.object);
-            expect(input.object).toEqual(output.object);
-            done();
-        });
-
-        test('deep array', done => {
-            const input = {array: [false, 1, 'two']};
-            const output = clone(input);
-            expect(input.array).not.toBe(output.array);
-            expect(input.array).toEqual(output.array);
-            done();
-        });
-
+describe('util clone', () => {
+    test('array', done => {
+        const input = [false, 1, 'two'];
+        const output = clone(input);
+        expect(input).not.toBe(output);
+        expect(input).toEqual(output);
         done();
     });
 
-    test('arraysIntersect', done => {
-        test('intersection', done => {
-            const a = ['1', '2', '3'];
-            const b = ['5', '4', '3'];
-
-            expect(arraysIntersect(a, b)).toBe(true);
-            done();
-        });
-
-        test('no intersection', done => {
-            const a = ['1', '2', '3'];
-            const b = ['4', '5', '6'];
-
-            expect(arraysIntersect(a, b)).toBe(false);
-            done();
-        });
-
+    test('object', done => {
+        const input = {a: false, b: 1, c: 'two'};
+        const output = clone(input);
+        expect(input).not.toBe(output);
+        expect(input).toEqual(output);
         done();
     });
 
-    test('isCounterClockwise ', done => {
-        test('counter clockwise', done => {
-            const a = new Point(0, 0);
-            const b = new Point(1, 0);
-            const c = new Point(1, 1);
-
-            expect(isCounterClockwise(a, b, c)).toBe(true);
-            done();
-        });
-
-        test('clockwise', done => {
-            const a = new Point(0, 0);
-            const b = new Point(1, 0);
-            const c = new Point(1, 1);
-
-            expect(isCounterClockwise(c, b, a)).toBe(false);
-            done();
-        });
-
+    test('deep object', done => {
+        const input = {object: {a: false, b: 1, c: 'two'}};
+        const output = clone(input);
+        expect(input.object).not.toBe(output.object);
+        expect(input.object).toEqual(output.object);
         done();
     });
 
-    test('isClosedPolygon', done => {
-        test('not enough points', done => {
-            const polygon = [new Point(0, 0), new Point(1, 0), new Point(0, 1)];
+    test('deep array', done => {
+        const input = {array: [false, 1, 'two']};
+        const output = clone(input);
+        expect(input.array).not.toBe(output.array);
+        expect(input.array).toEqual(output.array);
+        done();
+    });
+});
 
-            expect(isClosedPolygon(polygon)).toBe(false);
-            done();
-        });
+describe('util arraysIntersect', () => {
+    test('intersection', done => {
+        const a = ['1', '2', '3'];
+        const b = ['5', '4', '3'];
 
-        test('not equal first + last point', done => {
-            const polygon = [new Point(0, 0), new Point(1, 0), new Point(0, 1), new Point(1, 1)];
-
-            expect(isClosedPolygon(polygon)).toBe(false);
-            done();
-        });
-
-        test('closed polygon', done => {
-            const polygon = [new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point(0, 0)];
-
-            expect(isClosedPolygon(polygon)).toBe(true);
-            done();
-        });
-
+        expect(arraysIntersect(a, b)).toBe(true);
         done();
     });
 
-    test('parseCacheControl', done => {
-        test('max-age', done => {
-            expect(parseCacheControl('max-age=123456789')).toEqual({
-                'max-age': 123456789
-            });
+    test('no intersection', done => {
+        const a = ['1', '2', '3'];
+        const b = ['4', '5', '6'];
 
-            expect(parseCacheControl('max-age=1000')).toEqual({
-                'max-age': 1000
-            });
+        expect(arraysIntersect(a, b)).toBe(false);
+        done();
+    });
 
-            expect(parseCacheControl('max-age=null')).toEqual({});
+});
 
-            done();
+describe('util isCounterClockwise', () => {
+    test('counter clockwise', done => {
+        const a = new Point(0, 0);
+        const b = new Point(1, 0);
+        const c = new Point(1, 1);
+
+        expect(isCounterClockwise(a, b, c)).toBe(true);
+        done();
+    });
+
+    test('clockwise', done => {
+        const a = new Point(0, 0);
+        const b = new Point(1, 0);
+        const c = new Point(1, 1);
+
+        expect(isCounterClockwise(c, b, a)).toBe(false);
+        done();
+    });
+});
+
+describe('util isClosedPolygon', () => {
+    test('not enough points', done => {
+        const polygon = [new Point(0, 0), new Point(1, 0), new Point(0, 1)];
+
+        expect(isClosedPolygon(polygon)).toBe(false);
+        done();
+    });
+
+    test('not equal first + last point', done => {
+        const polygon = [new Point(0, 0), new Point(1, 0), new Point(0, 1), new Point(1, 1)];
+
+        expect(isClosedPolygon(polygon)).toBe(false);
+        done();
+    });
+
+    test('closed polygon', done => {
+        const polygon = [new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point(0, 0)];
+
+        expect(isClosedPolygon(polygon)).toBe(true);
+        done();
+    });
+
+});
+
+describe('util parseCacheControl', () => {
+    test('max-age', done => {
+        expect(parseCacheControl('max-age=123456789')).toEqual({
+            'max-age': 123456789
         });
+
+        expect(parseCacheControl('max-age=1000')).toEqual({
+            'max-age': 1000
+        });
+
+        expect(parseCacheControl('max-age=null')).toEqual({});
 
         done();
     });
