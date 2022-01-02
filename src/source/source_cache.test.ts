@@ -9,52 +9,56 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
+import {Callback} from '../types/callback';
+
+class SourceMock extends Evented {
+    id: string;
+    minzoom: number;
+    maxzoom: number;
+    hasTile: (tileID: OverscaledTileID) => boolean
+    sourceOptions: any;
+
+    constructor(id: string, sourceOptions: any, _dispatcher, eventedParent: Evented) {
+        super();
+        this.id = id;
+        this.minzoom = 0;
+        this.maxzoom = 22;
+        extend(this, sourceOptions);
+        this.sourceOptions = sourceOptions;
+        this.setEventedParent(eventedParent);
+        if (sourceOptions.hasTile) {
+            this.hasTile = sourceOptions.hasTile;
+        }
+    }
+    loadTile(tile: Tile, callback: Callback<void>) {
+        if (this.sourceOptions.expires) {
+            tile.setExpiryData({
+                expires: this.sourceOptions.expires
+            });
+        }
+        setTimeout(callback, 0);
+    }
+    loaded() {
+        return true;
+    }
+    onAdd() {
+        if (this.sourceOptions.noLoad) return;
+        if (this.sourceOptions.error) {
+            this.fire(new ErrorEvent(this.sourceOptions.error));
+        } else {
+            this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
+        }
+    }
+    abortTile() {}
+    unloadTile() {}
+    serialize() {}
+}
 
 // Add a mocked source type for use in these tests
-function MockSourceType(id, sourceOptions, _dispatcher, eventedParent) {
+function MockSourceType(id: string, sourceOptions: any, _dispatcher: any, eventedParent: Evented) {
     // allow tests to override mocked methods/properties by providing
     // them in the source definition object that's given to Source.create()
-    class SourceMock extends Evented {
-        id: any;
-        minzoom: number;
-        maxzoom: number;
-        hasTile: any;
-
-        constructor() {
-            super();
-            this.id = id;
-            this.minzoom = 0;
-            this.maxzoom = 22;
-            extend(this, sourceOptions);
-            this.setEventedParent(eventedParent);
-            if (sourceOptions.hasTile) {
-                this.hasTile = sourceOptions.hasTile;
-            }
-        }
-        loadTile(tile, callback) {
-            if (sourceOptions.expires) {
-                tile.setExpiryData({
-                    expires: sourceOptions.expires
-                });
-            }
-            setTimeout(callback, 0);
-        }
-        loaded() {
-            return true;
-        }
-        onAdd() {
-            if (sourceOptions.noLoad) return;
-            if (sourceOptions.error) {
-                this.fire(new ErrorEvent(sourceOptions.error));
-            } else {
-                this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
-            }
-        }
-        abortTile() {}
-        unloadTile() {}
-        serialize() {}
-    }
-    const source = new SourceMock();
+    const source = new SourceMock(id, sourceOptions, _dispatcher, eventedParent);
 
     return source;
 }
@@ -67,7 +71,7 @@ function createSourceCache(options?, used?) {
         minzoom: 0,
         maxzoom: 14,
         type: 'mock-source-type'
-    }, options), /* dispatcher */ {} as Dispatcher);
+    }, options), {} as Dispatcher);
     sc.used = typeof used === 'boolean' ? used : true;
     return sc;
 }
@@ -1225,7 +1229,7 @@ describe('SourceCache#tilesIn', () => {
         expect(sourceCache.tilesIn([
             new Point(0, 0),
             new Point(512, 256)
-        ], 10, tr as any as boolean)).toEqual([]);
+        ], 10, true)).toEqual([]);
 
     });
 
@@ -1264,7 +1268,7 @@ describe('SourceCache#tilesIn', () => {
                 const tiles = sourceCache.tilesIn([
                     new Point(0, 0),
                     new Point(512, 256)
-                ], 1, transform as any as boolean);
+                ], 1, true);
 
                 tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
                 tiles.forEach((result) => { delete result.tile.uid; });
@@ -1316,7 +1320,7 @@ describe('SourceCache#tilesIn', () => {
                 const tiles = sourceCache.tilesIn([
                     new Point(0, 0),
                     new Point(1024, 512)
-                ], 1, transform as any as boolean);
+                ], 1, true);
 
                 tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
                 tiles.forEach((result) => { delete result.tile.uid; });
