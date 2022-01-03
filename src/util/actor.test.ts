@@ -16,22 +16,20 @@ describe('Actor', () => {
         const m1 = new Actor(worker, {}, 1);
         const m2 = new Actor(worker, {}, 2);
 
-        let assertionCount = 0;
+        let callbackCount = 0;
         m1.send('test', {value: 1729}, (err, response) => {
             expect(err).toBeFalsy();
-            assertionCount++;
             expect(response).toEqual({value: 1729});
-            assertionCount++;
-            if (assertionCount === 4) {
+            callbackCount++;
+            if (callbackCount === 2) {
                 done();
             }
         });
         m2.send('test', {value: 4104}, (err, response) => {
             expect(err).toBeFalsy();
-            assertionCount++;
             expect(response).toEqual({value: 4104});
-            assertionCount++;
-            if (assertionCount === 4) {
+            callbackCount++;
+            if (callbackCount === 2) {
                 done();
             }
         });
