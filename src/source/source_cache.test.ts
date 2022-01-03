@@ -55,7 +55,7 @@ class SourceMock extends Evented {
 }
 
 // Add a mocked source type for use in these tests
-function MockSourceType(id: string, sourceOptions: any, _dispatcher: any, eventedParent: Evented) {
+function createSource(id: string, sourceOptions: any, _dispatcher: any, eventedParent: Evented) {
     // allow tests to override mocked methods/properties by providing
     // them in the source definition object that's given to Source.create()
     const source = new SourceMock(id, sourceOptions, _dispatcher, eventedParent);
@@ -63,7 +63,7 @@ function MockSourceType(id: string, sourceOptions: any, _dispatcher: any, evente
     return source;
 }
 
-setType('mock-source-type', MockSourceType as any);
+setType('mock-source-type', createSource as any);
 
 function createSourceCache(options?, used?) {
     const sc = new SourceCache('id', extend({
