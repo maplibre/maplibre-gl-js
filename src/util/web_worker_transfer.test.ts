@@ -24,19 +24,18 @@ describe('web worker transfer', () => {
 
         register('SerializableMock', SerializableMock, {omit: ['_cached']});
 
-        const foo = new SerializableMock(10);
+        const serializableMock = new SerializableMock(10);
         const transferables = [];
-        const deserialized = deserialize(serialize(foo, transferables));
-        expect(deserialized instanceof SerializableMock).toBeTruthy();
-        const bar = deserialized as SerializableMock;
+        const deserialized = deserialize(serialize(serializableMock, transferables)) as SerializableMock;
+        expect(deserialize(serialize(serializableMock, transferables)) instanceof SerializableMock).toBeTruthy();
 
-        expect(foo !== bar).toBeTruthy();
-        expect(bar.constructor === SerializableMock).toBeTruthy();
-        expect(bar.n === 10).toBeTruthy();
-        expect(bar.buffer === foo.buffer).toBeTruthy();
-        expect(transferables[0] === foo.buffer).toBeTruthy();
-        expect(bar._cached === undefined).toBeTruthy();
-        expect(bar.squared() === 100).toBeTruthy();
+        expect(serializableMock !== deserialized).toBeTruthy();
+        expect(deserialized.constructor === SerializableMock).toBeTruthy();
+        expect(deserialized.n === 10).toBeTruthy();
+        expect(deserialized.buffer === serializableMock.buffer).toBeTruthy();
+        expect(transferables[0] === serializableMock.buffer).toBeTruthy();
+        expect(deserialized._cached === undefined).toBeTruthy();
+        expect(deserialized.squared() === 100).toBeTruthy();
     });
 
     test('anonymous class', () => {
@@ -49,7 +48,7 @@ describe('web worker transfer', () => {
     });
 
     test('custom serialization', () => {
-        class Bar {
+        class CustomSerialization {
             id;
             _deserialized;
             constructor(id) {
@@ -58,25 +57,24 @@ describe('web worker transfer', () => {
             }
 
             static serialize(b) {
-                return {foo: `custom serialization,${b.id}`};
+                return {custom: `custom serialization,${b.id}`};
             }
 
             static deserialize(input) {
-                const b = new Bar(input.foo.split(',')[1]);
+                const b = new CustomSerialization(input.custom.split(',')[1]);
                 b._deserialized = true;
                 return b;
             }
         }
 
-        register('Bar', Bar);
+        register('CustomSerialization', CustomSerialization);
 
-        const bar = new Bar('a');
-        expect(!bar._deserialized).toBeTruthy();
+        const customSerialization = new CustomSerialization('a');
+        expect(!customSerialization._deserialized).toBeTruthy();
 
-        const deserialized = deserialize(serialize(bar));
-        expect(deserialized instanceof Bar).toBeTruthy();
-        const bar2 = deserialized;
-        expect((bar2 as any).id).toBe(bar.id);
-        expect((bar2 as any)._deserialized).toBeTruthy();
+        const deserialized = deserialize(serialize(customSerialization)) as CustomSerialization;
+        expect(deserialize(serialize(customSerialization)) instanceof CustomSerialization).toBeTruthy();
+        expect(deserialized.id).toBe(customSerialization.id);
+        expect(deserialized._deserialized).toBeTruthy();
     });
 });
