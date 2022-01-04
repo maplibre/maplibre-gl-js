@@ -13,10 +13,7 @@ const run = async name => {
 
     const webPage = await browser.newPage();
 
-    await webPage.goto(url, {
-        waitUntil: 'networkidle0',
-        timeout: 0
-    });
+    await webPage.goto(url);
 
     await webPage.waitForFunction(
         'document.querySelector("body").innerText.includes("Finished")',
