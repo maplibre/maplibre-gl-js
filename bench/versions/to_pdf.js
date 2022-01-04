@@ -7,7 +7,8 @@ const run = async name => {
     const url = `http://localhost:9966/bench/versions?compare=main#${name}`;
 
     const browser = await puppeteer.launch({
-        headless: true
+        headless: true,
+        args: ['--use-gl=egl']
     });
 
     const webPage = await browser.newPage();
