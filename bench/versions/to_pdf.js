@@ -11,30 +11,33 @@ const run = async name => {
         args: ['--use-gl=egl']
     });
 
-    const webPage = await browser.newPage();
+    try {
+        const webPage = await browser.newPage();
 
-    await webPage.goto(url);
+        await webPage.goto(url);
 
-    await webPage.waitForFunction(
-        'document.querySelector("body").innerText.includes("Finished")',
-        {
-            timeout: 0
-        }
-    );
+        await webPage.waitForFunction(
+            'document.querySelector("body").innerText.includes("Finished")',
+            {
+                timeout: 0
+            }
+        );
 
-    await webPage.pdf({
-        format: 'A4',
-        path: `${name}.pdf`,
-        printBackground: true,
-        margin: {
-            top: '1cm',
-            bottom: '1cm',
-            left: '1cm',
-            right: '1cm'
-        }
-    });
-
-    await browser.close();
+        await webPage.pdf({
+            format: 'A4',
+            path: `${name}.pdf`,
+            printBackground: true,
+            margin: {
+                top: '1cm',
+                bottom: '1cm',
+                left: '1cm',
+                right: '1cm'
+            }
+        });
+    }
+    finally {
+        await browser.close();
+    }
 };
 
 const names = process.argv.length > 2 ? process.argv.slice(2) : [
@@ -82,4 +85,9 @@ names.reduce(async (carry, name) => {
     const merger = new PDFMerger();
     names.map(name => merger.add(`${name}.pdf`));
     await merger.save('benchmarks.pdf');
+}).catch((error) => {
+    console.log(error);
+    if (error.message.startsWith('net::ERR_CONNECTION_REFUSED')) {
+        console.log("Could not connect to server. Please run 'npm run start-bench'.")
+    }
 });
