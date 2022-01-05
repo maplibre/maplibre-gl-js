@@ -2,6 +2,7 @@ import Actor from '../util/actor';
 
 import StyleLayerIndex from '../style/style_layer_index';
 import VectorTileWorkerSource from './vector_tile_worker_source';
+import TemporalGridTileWorkerSource from './temporalgrid_tile_worker_source';
 import RasterDEMTileWorkerSource from './raster_dem_tile_worker_source';
 import GeoJSONWorkerSource from './geojson_worker_source';
 import assert from 'assert';
@@ -58,6 +59,7 @@ export default class Worker {
 
         this.workerSourceTypes = {
             vector: VectorTileWorkerSource,
+            temporalgrid: TemporalGridTileWorkerSource,
             geojson: GeoJSONWorkerSource
         };
 

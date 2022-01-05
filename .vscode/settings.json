@@ -1,0 +1,8 @@
+{
+    "eslint.enable": false,
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {},
+    // "javascript.validate.enable": false,
+    "prettier.semi": true,
+    "prettier.tabWidth": 4
+}
