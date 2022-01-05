@@ -52,7 +52,15 @@
                     benchmarks.push({name, versions});
                 }
 
-                window.Benchmarks.run(benchmarks);
+                const results = await window.Benchmarks.run(benchmarks);
+                window.maplibreglBenchmarkResults = {};
+                for (const result of results) {
+                    window.maplibreglBenchmarkResults[result.name] = {};
+                    for (const version of result.versions) {
+                        window.maplibreglBenchmarkResults[result.name][version.name] = {name: version.name, summary: version.summary, regression: version.regression};
+                    }
+                }
+                window.maplibreglBenchmarkFinished = true;
             } catch (ex) {
                 console.error(ex);
             }

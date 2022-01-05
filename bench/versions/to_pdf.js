@@ -1,10 +1,14 @@
 import puppeteer from 'puppeteer';
 import PDFMerger from 'pdf-merger-js';
 
+const formatTime = (v) => v.toFixed(4) + " ms";
+const formatRegression = (v) => v.correlation < 0.9 ? '\u2620\uFE0F' : v.correlation < 0.99 ? '\u26A0\uFE0F' : ' ';
+
 const run = async name => {
-    console.log(`Running ${name}...`);
 
     const url = `http://localhost:9966/bench/versions?compare=main#${name}`;
+
+    process.stdout.write(name.padStart(30));
 
     const browser = await puppeteer.launch({
         headless: true,
@@ -17,10 +21,20 @@ const run = async name => {
         await webPage.goto(url);
 
         await webPage.waitForFunction(
-            'document.querySelector("body").innerText.includes("Finished")',
+            () => window.maplibreglBenchmarkFinished,
             {
+                polling: 200,
                 timeout: 0
             }
+        );
+
+        const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
+        const [main, current] = Object.values(results);
+        const delta = current.summary.trimmedMean - main.summary.trimmedMean;
+        console.log(
+            formatTime(   main.summary.trimmedMean).padStart(15), formatRegression(   main.regression),
+            formatTime(current.summary.trimmedMean).padStart(15), formatRegression(current.regression),
+            ((delta > 0 ? '+' : '') + formatTime(delta)).padStart(15),
         );
 
         await webPage.pdf({
