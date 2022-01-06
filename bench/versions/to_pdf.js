@@ -1,8 +1,14 @@
+import fs from 'fs';
 import puppeteer from 'puppeteer';
 import PDFMerger from 'pdf-merger-js';
 
 const formatTime = (v) => v.toFixed(4) + " ms";
 const formatRegression = (v) => v.correlation < 0.9 ? '\u2620\uFE0F' : v.correlation < 0.99 ? '\u26A0\uFE0F' : ' ';
+
+const dir = './bench/results';
+if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+}
 
 const run = async name => {
 
@@ -39,7 +45,7 @@ const run = async name => {
 
         await webPage.pdf({
             format: 'A4',
-            path: `${name}.pdf`,
+            path: `${dir}/${name}.pdf`,
             printBackground: true,
             margin: {
                 top: '1cm',
@@ -97,8 +103,8 @@ names.reduce(async (carry, name) => {
     ];
 }, Promise.resolve([])).then(async () => {
     const merger = new PDFMerger();
-    names.map(name => merger.add(`${name}.pdf`));
-    await merger.save('benchmarks.pdf');
+    names.map(name => merger.add(`${dir}/${name}.pdf`));
+    await merger.save(`${dir}/all.pdf`);
 }).catch((error) => {
     console.log(error);
     if (error.message.startsWith('net::ERR_CONNECTION_REFUSED')) {
