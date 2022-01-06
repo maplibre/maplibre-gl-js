@@ -18,15 +18,15 @@
 - ** Breaking Change ** removed all code related to `accessToken` and mapbox specific urls, including telemetry etc.  Please do not use mapbox servers with this library.
 - ** Breaking Change ** removed `baseApiUrl` as it was used only for mapbox related urls
 - ** Breaking Change ** typescript typings have changed:
-  - `Style` => `StypeSpecification`
+  - `Style` => `StyleSpecification`
   - `AnyLayer` => `LayerSpecification`
   - `AnySourceData` => `SourceSpecification`
   - `MapboxEvent` => `MapLibreEvent`
   - `MapboxOptions` => `MapOptions`
   - `MapBoxZoomEvent` => `MapLibreZoomEvent`
   - `*SourceRaw` + `*SourceOptions` => `*SourceSpecification`
-  - `*Source` (source implementation definition) were removed 
-  - `*Layer` => `*LayerSpecification` 
+  - `*Source` (source implementation definition) were removed
+  - `*Layer` => `*LayerSpecification`
   - `*Paint` => `*LayerSpecification['paint']`
   - `*Layout` => `*LayerSpecification['layout']`
   - `MapboxGeoJSONFeature` => `GeoJSONFeature`
@@ -46,6 +46,7 @@
 - Fix GeoJSONSource#loaded sometimes returning true while there are still pending loads (#669)
 - Fix MapDataEvent#isSourceLoaded being true in GeoJSONSource "dataloading" event handlers (#694)
 - Fix events being fired after Map#remove has been called when the WebGL context is lost and restored (#726)
+- Fix nested expressions types definition [#757](https://github.com/maplibre/maplibre-gl-js/pull/757)
 
 ## 1.15.2
 
