@@ -289,7 +289,11 @@ export class SourceCache extends Evented {
         this._state.initializeTileState(tile, this.map ? this.map.painter : null);
 
         if (!tile.aborted) {
-            this._source.fire(new Event('data', {dataType: 'source', tile, coord: tile.tileID}));
+            this._source.fire(new Event('data', {dataType: 'source', tile, coord: tile.tileID, previousState}));
+        }
+
+        if (this.loaded()) {
+            this._source.fire(new Event('data', {dataType: 'sourcetiles', sourceId: this._source.id}));
         }
     }
 

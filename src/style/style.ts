@@ -1140,7 +1140,7 @@ export class Style extends Evented {
             this.fire(new ErrorEvent(new Error('GeoJSON sources cannot have a sourceLayer parameter.')));
             return;
         }
-        if (sourceType === 'vector' && !sourceLayer) {
+        if ((sourceType === 'vector' || sourceType === 'temporalgrid') && !sourceLayer) {
             this.fire(new ErrorEvent(new Error('The sourceLayer parameter must be provided for vector source types.')));
             return;
         }
@@ -1162,9 +1162,9 @@ export class Style extends Evented {
         }
 
         const sourceType = sourceCache.getSource().type;
-        const sourceLayer = sourceType === 'vector' ? target.sourceLayer : undefined;
+        const sourceLayer = (sourceType === 'vector' || sourceType === 'temporalgrid') ? target.sourceLayer : undefined;
 
-        if (sourceType === 'vector' && !sourceLayer) {
+        if ((sourceType === 'vector' || sourceType === 'temporalgrid') && !sourceLayer) {
             this.fire(new ErrorEvent(new Error('The sourceLayer parameter must be provided for vector source types.')));
             return;
         }
@@ -1188,7 +1188,7 @@ export class Style extends Evented {
             return;
         }
         const sourceType = sourceCache.getSource().type;
-        if (sourceType === 'vector' && !sourceLayer) {
+        if ((sourceType === 'vector' || sourceType === 'temporalgrid') && !sourceLayer) {
             this.fire(new ErrorEvent(new Error('The sourceLayer parameter must be provided for vector source types.')));
             return;
         }

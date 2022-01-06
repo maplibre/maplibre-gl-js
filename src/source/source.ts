@@ -1,4 +1,5 @@
 import {VectorTileSource} from '../source/vector_tile_source';
+import {TemporalGridVectorTileSource} from '../source/temporalgrid_tile_source';
 import {RasterTileSource} from '../source/raster_tile_source';
 import {RasterDEMTileSource} from '../source/raster_dem_tile_source';
 import {GeoJSONSource} from '../source/geojson_source';
@@ -122,6 +123,8 @@ export const getSourceType = (name: string): SourceClass => {
             return RasterDEMTileSource;
         case 'vector':
             return VectorTileSource;
+        case 'temporalgrid':
+            return TemporalGridVectorTileSource;
         case 'video':
             return VideoSource;
         case 'canvas':

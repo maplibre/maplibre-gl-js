@@ -19,7 +19,7 @@ export type Feature = {
     geometry: Array<Array<[number, number]>>;
 };
 
-class FeatureWrapper implements VectorTileFeature {
+export class FeatureWrapper implements VectorTileFeature {
     _feature: Feature;
 
     extent: number;
@@ -27,10 +27,10 @@ class FeatureWrapper implements VectorTileFeature {
     id: number;
     properties: {[_: string]: string | number | boolean};
 
-    constructor(feature: Feature) {
+    constructor(feature: Feature, extent = EXTENT) {
         this._feature = feature;
 
-        this.extent = EXTENT;
+        this.extent = extent;
         this.type = feature.type;
         this.properties = feature.tags;
 
@@ -70,6 +70,11 @@ class FeatureWrapper implements VectorTileFeature {
     }
 }
 
+export type GeojsonWrapperOptions = {
+    name?: string;
+    extent?: number;
+};
+
 export class GeoJSONWrapper implements VectorTile, VectorTileLayer {
     layers: {[_: string]: VectorTileLayer};
     name: string;
@@ -77,15 +82,16 @@ export class GeoJSONWrapper implements VectorTile, VectorTileLayer {
     length: number;
     _features: Array<Feature>;
 
-    constructor(features: Array<Feature>) {
-        this.layers = {'_geojsonTileLayer': this};
-        this.name = '_geojsonTileLayer';
-        this.extent = EXTENT;
+    constructor(features: Array<Feature>, options?: GeojsonWrapperOptions) {
+        const {name = '_geojsonTileLayer', extent = EXTENT} = options || {};
+        this.layers = {[name]: this};
+        this.name = name;
+        this.extent = extent;
         this.length = features.length;
         this._features = features;
     }
 
     feature(i: number): VectorTileFeature {
-        return new FeatureWrapper(this._features[i]);
+        return new FeatureWrapper(this._features[i], this.extent);
     }
 }

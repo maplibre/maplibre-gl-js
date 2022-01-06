@@ -1,5 +1,5 @@
 {
-  "name": "maplibre-gl",
+  "name": "@globalfishingwatch/maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
   "version": "3.3.1",
   "main": "dist/maplibre-gl.js",
@@ -12,10 +12,15 @@
   },
   "types": "dist/maplibre-gl.d.ts",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@mapbox/geojson-rewind": "^0.5.2",
     "@mapbox/jsonlint-lines-primitives": "^2.0.2",
     "@mapbox/point-geometry": "^0.1.0",
+    "@globalfishingwatch/fourwings-aggregate": "4.0.1",
+    "@mapbox/tilebelt": "^1.0.2",
     "@mapbox/tiny-sdf": "^2.0.6",
     "@mapbox/unitbezier": "^0.0.1",
     "@mapbox/vector-tile": "^1.3.1",
