@@ -2,7 +2,7 @@ import fs from 'fs';
 import puppeteer from 'puppeteer';
 import PDFMerger from 'pdf-merger-js';
 
-const formatTime = (v) => v.toFixed(4) + " ms";
+const formatTime = (v) => `${v.toFixed(4)} ms`;
 const formatRegression = (v) => v.correlation < 0.9 ? '\u2620\uFE0F' : v.correlation < 0.99 ? '\u26A0\uFE0F' : ' ';
 
 const dir = './bench/results';
@@ -50,7 +50,7 @@ try {
         const [main, current] = Object.values(results);
         const delta = current.summary.trimmedMean - main.summary.trimmedMean;
         console.log(
-            formatTime(   main.summary.trimmedMean).padStart(timewidth), formatRegression(   main.regression),
+            formatTime(main.summary.trimmedMean).padStart(timewidth), formatRegression(main.regression),
             formatTime(current.summary.trimmedMean).padStart(timewidth), formatRegression(current.regression),
             ((delta > 0 ? '+' : '') + formatTime(delta)).padStart(15),
         );
@@ -66,16 +66,14 @@ try {
                 right: '1cm'
             }
         }));
-    };
+    }
 
     await merger.save(`${dir}/all.pdf`);
-}
-catch(error) {
+} catch (error) {
     console.log(error);
     if (error.message.startsWith('net::ERR_CONNECTION_REFUSED')) {
-        console.log("Could not connect to server. Please run 'npm run start-bench'.")
+        console.log('Could not connect to server. Please run \'npm run start-bench\'.');
     }
-}
-finally {
+} finally {
     browser.close();
 }
