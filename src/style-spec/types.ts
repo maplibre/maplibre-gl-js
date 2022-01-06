@@ -15,7 +15,7 @@ export type FilterSpecification =
     | ['at', number, (number |string)[]]
     | ['get', string, Record<string, unknown>?]
     | ['has', string, Record<string, unknown>?]
-    | ['in', FilterSpecificationInputType, FilterSpecificationInputType | FilterSpecificationInputType[]]
+    | ['in', ...FilterSpecificationInputType[], FilterSpecificationInputType | FilterSpecificationInputType[]]
     | ['index-of', FilterSpecificationInputType, FilterSpecificationInputType | FilterSpecificationInputType[]]
     | ['length', string | string[]]
     | ['slice', string | string[], number]
@@ -37,6 +37,8 @@ export type FilterSpecification =
     | ["!in", ...FilterSpecification[], FilterSpecificationInputType]
     | ["!has", ...FilterSpecification[], FilterSpecificationInputType]
     | ["none", ...FilterSpecification[], FilterSpecificationInputType]
+    // Fallbak for others
+    | Array<string | FilterSpecification>
 
 export type TransitionSpecification = {
     duration?: number,
