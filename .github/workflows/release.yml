@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: main
+          ref: temporalgrid
 
       - name: Use Node.js 18 x64
         uses: actions/setup-node@v3.6.0
@@ -30,12 +30,6 @@ jobs:
 
       # - name: Check tag does not exist yet
       #   run: if git rev-list v${{ steps.package-version.outputs.current-version }}; then echo "Tag already exists. Aborting the release process."; exit 1; fi
-
-      - name: Tag commit and push
-        uses: mathieudutour/github-tag-action@v6.1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: ${{ steps.package-version.outputs.current-version }}
 
       - name: Install
         run: npm ci
@@ -55,6 +49,12 @@ jobs:
           npm run build-css
           npm run build-benchmarks
           npm run generate-typings
+
+      - name: Tag commit and push
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{ steps.package-version.outputs.current-version }}
 
       - name: Create Archive
         run: |
