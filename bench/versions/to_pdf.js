@@ -10,21 +10,33 @@ if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
 }
 
-const run = async name => {
+const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--use-gl=egl']
+});
 
-    const url = `http://localhost:9966/bench/versions?compare=main#${name}`;
+try {
+    const webPage = await browser.newPage();
 
-    process.stdout.write(name.padStart(30));
+    await webPage.goto('http://localhost:9966/bench/versions?compare=main#NONE');
+    const allnames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
+    const [main, current] = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allnames[0]);
 
-    const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--use-gl=egl']
-    });
+    const torun = process.argv.length > 2 ? process.argv.slice(2) : allnames;
 
-    try {
-        const webPage = await browser.newPage();
+    const namewidth = Math.max(...torun.map(v => v.length)) + 1;
+    const timewidth = Math.max(main.length, current.length, 16);
+
+    console.log(''.padStart(namewidth), main.padStart(timewidth), ' ', current.padStart(timewidth), ' ');
+
+    const merger = new PDFMerger();
+    for (const name of torun) {
+        const url = `http://localhost:9966/bench/versions?compare=main#${name}`;
+
+        process.stdout.write(name.padStart(namewidth));
 
         await webPage.goto(url);
+        await webPage.reload();
 
         await webPage.waitForFunction(
             () => window.maplibreglBenchmarkFinished,
@@ -38,12 +50,12 @@ const run = async name => {
         const [main, current] = Object.values(results);
         const delta = current.summary.trimmedMean - main.summary.trimmedMean;
         console.log(
-            formatTime(   main.summary.trimmedMean).padStart(15), formatRegression(   main.regression),
-            formatTime(current.summary.trimmedMean).padStart(15), formatRegression(current.regression),
+            formatTime(   main.summary.trimmedMean).padStart(timewidth), formatRegression(   main.regression),
+            formatTime(current.summary.trimmedMean).padStart(timewidth), formatRegression(current.regression),
             ((delta > 0 ? '+' : '') + formatTime(delta)).padStart(15),
         );
 
-        await webPage.pdf({
+        merger.add(await webPage.pdf({
             format: 'A4',
             path: `${dir}/${name}.pdf`,
             printBackground: true,
@@ -53,61 +65,17 @@ const run = async name => {
                 left: '1cm',
                 right: '1cm'
             }
-        });
-    }
-    finally {
-        await browser.close();
-    }
-};
+        }));
+    };
 
-const names = process.argv.length > 2 ? process.argv.slice(2) : [
-    'Paint',
-    'QueryPoint',
-    'QueryBox',
-    'Layout',
-    'Placement',
-    'Validate',
-    'StyleLayerCreate',
-    'FunctionCreate',
-    'FunctionEvaluate',
-    'ExpressionCreate',
-    'ExpressionEvaluate',
-    'WorkerTransfer',
-    'PaintStates',
-    'PropertyLevelRemove',
-    'FeatureLevelRemove',
-    'SourceLevelRemove',
-    'LayerBackground',
-    'LayerCircle',
-    'LayerFill',
-    'LayerFillExtrusion',
-    'LayerHeatmap',
-    'LayerHillshade',
-    'LayerLine',
-    'LayerRaster',
-    'LayerSymbol',
-    'LayerSymbolWithIcons',
-    'LayerTextWithVariableAnchor',
-    'LayerSymbolWithSortKey',
-    'Load',
-    'SymbolLayout',
-    'FilterCreate',
-    'FilterEvaluate',
-    'HillshadeLoad'
-];
-
-names.reduce(async (carry, name) => {
-    return [
-        ...(await carry),
-        await run(name)
-    ];
-}, Promise.resolve([])).then(async () => {
-    const merger = new PDFMerger();
-    names.map(name => merger.add(`${dir}/${name}.pdf`));
     await merger.save(`${dir}/all.pdf`);
-}).catch((error) => {
+}
+catch(error) {
     console.log(error);
     if (error.message.startsWith('net::ERR_CONNECTION_REFUSED')) {
         console.log("Could not connect to server. Please run 'npm run start-bench'.")
     }
-});
+}
+finally {
+    browser.close();
+}
