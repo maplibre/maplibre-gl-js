@@ -33,6 +33,10 @@ export type FilterSpecification =
     | ["coalesce", ...FilterSpecification[], FilterSpecificationInputType]
     | ["match", ...FilterSpecification[], FilterSpecificationInputType]
     | ["within", ...FilterSpecification[], FilterSpecificationInputType]
+    // Used in convert.ts
+    | ["!in", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["!has", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["none", ...FilterSpecification[], FilterSpecificationInputType]
 
 export type TransitionSpecification = {
     duration?: number,
