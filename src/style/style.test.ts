@@ -66,6 +66,7 @@ const getStubMap = () => new StubMap() as any;
 let sinonFakeXMLServer;
 let sinonFakeServer;
 let _self;
+let mockConsoleError;
 
 beforeEach(() => {
     global.fetch = null;
@@ -76,6 +77,8 @@ beforeEach(() => {
         addEventListener() {}
     } as any as WorkerGlobalScopeInterface & typeof globalThis;
     global.self = _self;
+
+    mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
 });
 
 afterEach(() => {
@@ -83,6 +86,8 @@ afterEach(() => {
     sinonFakeServer.restore();
 
     global.self = undefined;
+
+    mockConsoleError.mockRestore();
 });
 
 describe('Style', () => {
@@ -1346,18 +1351,17 @@ describe('Style#setPaintProperty', () => {
 
         style.on('style.load', () => {
             const backgroundLayer = style.getLayer('background');
-            jest.spyOn(console, 'error');
             const validate = jest.spyOn(backgroundLayer, '_validate');
 
             style.setPaintProperty('background', 'background-color', 'notacolor', {validate: false});
             expect(validate.mock.calls[0][4]).toEqual({validate: false});
-            expect(console.error).not.toHaveBeenCalled();
+            expect(mockConsoleError).not.toHaveBeenCalled();
 
             expect(style._changed).toBeTruthy();
             style.update({} as EvaluationParameters);
 
             style.setPaintProperty('background', 'background-color', 'alsonotacolor');
-            expect(console.error).toHaveBeenCalledTimes(1);
+            expect(mockConsoleError).toHaveBeenCalledTimes(1);
             expect(validate.mock.calls[1][4]).toEqual({});
 
             done();
@@ -1458,8 +1462,6 @@ describe('Style#setLayoutProperty', () => {
 
         style.on('style.load', () => {
             const lineLayer = style.getLayer('line');
-            const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
-            mockConsoleError.mockRestore();
             const validate = jest.spyOn(lineLayer, '_validate');
 
             style.setLayoutProperty('line', 'line-cap', 'invalidcap', {validate: false});
@@ -1469,7 +1471,7 @@ describe('Style#setLayoutProperty', () => {
             style.update({} as EvaluationParameters);
 
             style.setLayoutProperty('line', 'line-cap', 'differentinvalidcap');
-            // expect(mockConsoleError).toHaveBeenCalledTimes(1);
+            expect(mockConsoleError).toHaveBeenCalledTimes(1);
             expect(validate.mock.calls[1][4]).toEqual({});
 
             done();
@@ -1623,7 +1625,6 @@ describe('Style#setFilter', () => {
 
     test('validates filter by default', done => {
         const style = createStyle();
-        const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
         style.on('style.load', () => {
             style.setFilter('symbol', 'notafilter' as any as FilterSpecification);
             expect(style.getFilter('symbol')).toEqual(['==', 'id', 0]);
