@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import Protobuf from 'pbf';
 import vtpbf from 'vt-pbf';
 import geojsonVt from 'geojson-vt';
@@ -7,6 +8,7 @@ import {getArrayBuffer} from '../util/ajax';
 import {aggregateTile} from '@globalfishingwatch/fourwings-aggregate';
 import tilebelt from '@mapbox/tilebelt';
 import {WorkerTileParameters} from './worker_source';
+import {extend} from '../util/util';
 
 const objectEntries =
     Object.entries ||
@@ -83,7 +85,7 @@ const getAggregationParams = (params) => {
             new Array(finalParams.sublayerCount).fill(true)
     };
     return objectFromEntries(
-        objectEntries(aggregationParams).filter(([key, value]) => {
+        objectEntries(aggregationParams).filter(([_, value]) => {
             return value !== undefined && value !== null;
         })
     );
@@ -110,7 +112,7 @@ const getFinalurl = (originalUrlString, {singleFrame, interval}: FinalUrlParams)
         'comparison-range': decodeURI(searchParams.get('comparison-range'))
     };
     const finalUrlParamsArr = objectEntries(finalUrlParams)
-        .filter(([key, value]) => {
+        .filter(([_, value]) => {
             return value !== undefined && value !== null && value !== 'undefined' && value !== 'null';
         })
         .map(([key, value]) => {
@@ -162,7 +164,7 @@ const getTile = (data, options) => {
     };
     if (options.interactive === true) {
         const interactiveTile = geoJSONtoVectorTile(aggregated.interactive, options);
-        // eslint-disable-next-line camelcase
+
         sourceLayers.temporalgrid_interactive = interactiveTile;
     }
     const geojsonWrapper = new MultiSourceLayerGeoJSONWrapper(sourceLayers as any, {
@@ -186,7 +188,7 @@ const loadVectorData = (params: WorkerTileParameters, callback: LoadVectorDataCa
     const aggregationParams = getAggregationParams(params);
     const url = getFinalurl(params.request.url, aggregationParams as FinalUrlParams);
     // console.log(url)
-    const requestParams = {...params.request, url};
+    const requestParams = extend(params.request, {url});
     const request = getArrayBuffer(
         requestParams,
         (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
