@@ -63,20 +63,29 @@ class StubMap extends Evented {
 
 const getStubMap = () => new StubMap() as any;
 
+let sinonFakeXMLServer;
+let sinonFakeServer;
+
+beforeEach(() => {
+    global.fetch = null;
+    sinonFakeServer = fakeServer.create();
+    sinonFakeXMLServer = useFakeXMLHttpRequest();
+});
+
+afterEach(() => {
+    sinonFakeXMLServer.restore();
+    sinonFakeServer.restore();
+});
+
 describe('Style', () => {
-    let sinonFakeServer;
     let _self;
 
-    afterEach((callback) => {
-        sinonFakeServer.restore();
+    afterEach(() => {
         global.self = undefined;
-        callback();
     });
 
     test('registers plugin state change listener', () => {
         clearRTLTextPlugin();
-        global.fetch = null;
-        sinonFakeServer = fakeServer.create();
         _self = {
             addEventListener() {}
         } as any as WorkerGlobalScopeInterface;
@@ -98,8 +107,6 @@ describe('Style', () => {
 
     test('loads plugin immediately if already registered', done => {
         clearRTLTextPlugin();
-        global.fetch = null;
-        const sinonFakeServer = fakeServer.create();
         _self = {
             addEventListener() {}
         } as any as WorkerGlobalScopeInterface & typeof globalThis;
@@ -114,7 +121,6 @@ describe('Style', () => {
                 expect(error).toMatch(/Cannot set the state of the rtl-text-plugin when not in the web-worker context/);
                 done();
                 global.self = undefined;
-                sinonFakeServer.restore();
                 firstError = false;
             }
         });
@@ -124,19 +130,6 @@ describe('Style', () => {
 });
 
 describe('Style#loadURL', () => {
-    let sinonFakeServer;
-
-    beforeEach((callback) => {
-        global.fetch = null;
-        sinonFakeServer = fakeServer.create();
-        callback();
-    });
-
-    afterEach((callback) => {
-        sinonFakeServer.restore();
-        callback();
-    });
-
     test('fires "dataloading"', () => {
         const style = new Style(getStubMap());
         const spy = jest.fn();
@@ -184,18 +177,6 @@ describe('Style#loadURL', () => {
 });
 
 describe('Style#loadJSON', () => {
-    let sinonFakeServer;
-
-    beforeEach(() => {
-        global.fetch = null;
-        sinonFakeServer = useFakeXMLHttpRequest();
-    });
-
-    afterEach((callback) => {
-        sinonFakeServer.restore();
-        callback();
-    });
-
     test('fires "dataloading" (synchronously)', () => {
         const style = new Style(getStubMap());
         const spy = jest.fn();
@@ -231,7 +212,7 @@ describe('Style#loadJSON', () => {
         // fake the image request (sinon doesn't allow non-string data for
         // server.respondWith, so we do so manually)
         const requests = [];
-        sinonFakeServer.onCreate = req => { requests.push(req); };
+        sinonFakeXMLServer.onCreate = req => { requests.push(req); };
         const respond = () => {
             let req = requests.find(req => req.url === 'http://example.com/sprite.png');
             req.setStatus(200);
@@ -493,8 +474,6 @@ describe('Style#setState', () => {
     });
 
     test('Issue #3893: compare new source options against originally provided options rather than normalized properties', done => {
-        global.fetch = null;
-        const sinonFakeServer = fakeServer.create();
         sinonFakeServer.respondWith('/tilejson.json', JSON.stringify({
             tiles: ['http://tiles.server']
         }));
@@ -509,7 +488,6 @@ describe('Style#setState', () => {
             jest.spyOn(style, 'removeSource').mockImplementation(() => done('test failed: removeSource called'));
             jest.spyOn(style, 'addSource').mockImplementation(() => done('test failed: addSource called'));
             style.setState(initial);
-            sinonFakeServer.restore();
             done();
         });
         sinonFakeServer.respond();
