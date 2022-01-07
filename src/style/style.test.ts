@@ -65,31 +65,29 @@ const getStubMap = () => new StubMap() as any;
 
 let sinonFakeXMLServer;
 let sinonFakeServer;
+let _self;
 
 beforeEach(() => {
     global.fetch = null;
     sinonFakeServer = fakeServer.create();
     sinonFakeXMLServer = useFakeXMLHttpRequest();
+
+    _self = {
+        addEventListener() {}
+    } as any as WorkerGlobalScopeInterface & typeof globalThis;
+    global.self = _self;
 });
 
 afterEach(() => {
     sinonFakeXMLServer.restore();
     sinonFakeServer.restore();
+
+    global.self = undefined;
 });
 
 describe('Style', () => {
-    let _self;
-
-    afterEach(() => {
-        global.self = undefined;
-    });
-
     test('registers plugin state change listener', () => {
         clearRTLTextPlugin();
-        _self = {
-            addEventListener() {}
-        } as any as WorkerGlobalScopeInterface;
-        global.self = _self;
 
         jest.spyOn(Style, 'registerForPluginStateChange');
         const style = new Style(getStubMap());
@@ -102,16 +100,10 @@ describe('Style', () => {
             pluginStatus: 'deferred',
             pluginURL: 'http://localhost/plugin.js',
         });
-        global.self = undefined;
     });
 
     test('loads plugin immediately if already registered', done => {
         clearRTLTextPlugin();
-        _self = {
-            addEventListener() {}
-        } as any as WorkerGlobalScopeInterface & typeof globalThis;
-        global.self = _self;
-
         sinonFakeServer.respondWith('/plugin.js', 'doesn\'t matter');
         let firstError = true;
         setRTLTextPlugin('/plugin.js', (error) => {
