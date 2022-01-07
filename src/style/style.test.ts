@@ -73,7 +73,7 @@ describe('Style', () => {
         callback();
     });
 
-    test('registers plugin state change listener', done => {
+    test('registers plugin state change listener', () => {
         clearRTLTextPlugin();
         global.fetch = null;
         sinonFakeServer = fakeServer.create();
@@ -94,7 +94,6 @@ describe('Style', () => {
             pluginURL: 'http://localhost/plugin.js',
         });
         global.self = undefined;
-        done();
     });
 
     test('loads plugin immediately if already registered', done => {
@@ -138,7 +137,7 @@ describe('Style#loadURL', () => {
         callback();
     });
 
-    test('fires "dataloading"', done => {
+    test('fires "dataloading"', () => {
         const style = new Style(getStubMap());
         const spy = jest.fn();
 
@@ -148,10 +147,9 @@ describe('Style#loadURL', () => {
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].target).toBe(style);
         expect(spy.mock.calls[0][0].dataType).toBe('style');
-        done();
     });
 
-    test('transforms style URL before request', done => {
+    test('transforms style URL before request', () => {
         const map = getStubMap();
         const spy = jest.spyOn(map._requestManager, 'transformRequest');
 
@@ -161,7 +159,6 @@ describe('Style#loadURL', () => {
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0]).toBe('style.json');
         expect(spy.mock.calls[0][1]).toBe('Style');
-        done();
     });
 
     test('validates the style', done => {
@@ -178,12 +175,11 @@ describe('Style#loadURL', () => {
         sinonFakeServer.respond();
     });
 
-    test('cancels pending requests if removed', done => {
+    test('cancels pending requests if removed', () => {
         const style = new Style(getStubMap());
         style.loadURL('style.json');
         style._remove();
         expect(sinonFakeServer.lastRequest.aborted).toBe(true);
-        done();
     });
 });
 
@@ -200,7 +196,7 @@ describe('Style#loadJSON', () => {
         callback();
     });
 
-    test('fires "dataloading" (synchronously)', done => {
+    test('fires "dataloading" (synchronously)', () => {
         const style = new Style(getStubMap());
         const spy = jest.fn();
 
@@ -210,7 +206,6 @@ describe('Style#loadJSON', () => {
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].target).toBe(style);
         expect(spy.mock.calls[0][0].dataType).toBe('style');
-        done();
     });
 
     test('fires "data" (asynchronously)', done => {
@@ -472,10 +467,9 @@ describe('Style#update', () => {
 });
 
 describe('Style#setState', () => {
-    test('throw before loaded', done => {
+    test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.setState(createStyleJSON())).toThrow(/load/i);
-        done();
     });
 
     test('do nothing if there are no changes', done => {
@@ -588,10 +582,9 @@ describe('Style#setState', () => {
 });
 
 describe('Style#addSource', () => {
-    test('throw before loaded', done => {
+    test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.addSource('source-id', createSource())).toThrow(/load/i);
-        done();
     });
 
     test('throw if missing source type', done => {
@@ -676,10 +669,9 @@ describe('Style#addSource', () => {
 });
 
 describe('Style#removeSource', () => {
-    test('throw before loaded', done => {
+    test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.removeSource('source-id')).toThrow(/load/i);
-        done();
     });
 
     test('fires "data" event', done => {
@@ -789,10 +781,9 @@ describe('Style#removeSource', () => {
 describe('Style#setGeoJSONSourceData', () => {
     const geoJSON = {type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON;
 
-    test('throws before loaded', done => {
+    test('throws before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.setGeoJSONSourceData('source-id', geoJSON)).toThrow(/load/i);
-        done();
     });
 
     test('throws on non-existence', done => {
@@ -806,10 +797,9 @@ describe('Style#setGeoJSONSourceData', () => {
 });
 
 describe('Style#addLayer', () => {
-    test('throw before loaded', done => {
+    test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.addLayer({id: 'background', type: 'background'})).toThrow(/load/i);
-        done();
     });
 
     test('sets up layer event forwarding', done => {
@@ -1110,7 +1100,8 @@ describe('Style#addLayer', () => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                expect(error.message).toMatch(/does not exist on source/);                done();
+                expect(error.message).toMatch(/does not exist on source/);                
+                done();
             });
             style.addLayer(layer);
         });
@@ -1119,10 +1110,9 @@ describe('Style#addLayer', () => {
 });
 
 describe('Style#removeLayer', () => {
-    test('throw before loaded', done => {
+    test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.removeLayer('background')).toThrow(/load/i);
-        done();
     });
 
     test('fires "data" event', done => {
@@ -1170,7 +1160,8 @@ describe('Style#removeLayer', () => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                expect(error.message).toMatch(/Cannot remove non-existing layer "background"./);                done();
+                expect(error.message).toMatch(/Cannot remove non-existing layer "background"./);                
+                done();
             });
             style.removeLayer('background');
         });
@@ -1217,10 +1208,9 @@ describe('Style#removeLayer', () => {
 });
 
 describe('Style#moveLayer', () => {
-    test('throw before loaded', done => {
+    test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.moveLayer('background')).toThrow(/load/i);
-        done();
     });
 
     test('fires "data" event', done => {
@@ -1243,7 +1233,8 @@ describe('Style#moveLayer', () => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                expect(error.message).toMatch(/does not exist in the map\'s style and cannot be moved/);                done();
+                expect(error.message).toMatch(/does not exist in the map\'s style and cannot be moved/);                
+                done();
             });
             style.moveLayer('background');
         });
@@ -1555,10 +1546,9 @@ describe('Style#getLayoutProperty', () => {
 });
 
 describe('Style#setFilter', () => {
-    test('throws if style is not loaded', done => {
+    test('throws if style is not loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.setFilter('symbol', ['==', 'id', 1])).toThrow(/load/i);
-        done();
     });
 
     function createStyle() {
@@ -1654,7 +1644,8 @@ describe('Style#setFilter', () => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                expect(error.message).toMatch(/Cannot filter non-existing layer "non-existant"./);                done();
+                expect(error.message).toMatch(/Cannot filter non-existing layer "non-existant"./);                
+                done();
             });
             style.setFilter('non-existant', ['==', 'id', 1]);
         });
@@ -1691,10 +1682,9 @@ describe('Style#setFilter', () => {
 });
 
 describe('Style#setLayerZoomRange', () => {
-    test('throw before loaded', done => {
+    test('throw before loaded', () => {
         const style = new Style(getStubMap());
         expect(() => style.setLayerZoomRange('symbol', 5, 12)).toThrow(/load/i);
-        done();
     });
 
     function createStyle() {
@@ -1733,7 +1723,8 @@ describe('Style#setLayerZoomRange', () => {
         const style = createStyle();
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                expect(error.message).toMatch(/Cannot set the zoom range of non-existing layer "non-existant"./);                done();
+                expect(error.message).toMatch(/Cannot set the zoom range of non-existing layer "non-existant"./);                
+                done();
             });
             style.setLayerZoomRange('non-existant', 5, 12);
         });
@@ -2033,18 +2024,17 @@ describe('Style#query*Features', () => {
             });
     });
 
-    test('querySourceFeatures emits an error on incorrect filter', done => {
+    test('querySourceFeatures emits an error on incorrect filter', () => {
         expect(style.querySourceFeatures([10, 100], {filter: 7}, transform)).toEqual([]);
-        expect(onError.mock.calls[0][0].error.message).toMatch(/querySourceFeatures\.filter/);        done();
+        expect(onError.mock.calls[0][0].error.message).toMatch(/querySourceFeatures\.filter/);        
     });
 
-    test('queryRenderedFeatures emits an error on incorrect filter', done => {
+    test('queryRenderedFeatures emits an error on incorrect filter', () => {
         expect(style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 7}, transform)).toEqual([]);
         expect(onError.mock.calls[0][0].error.message).toMatch(/queryRenderedFeatures\.filter/);
-        done();
     });
 
-    test('querySourceFeatures not raise validation errors if validation was disabled', done => {
+    test('querySourceFeatures not raise validation errors if validation was disabled', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['type'] === 'error') {
@@ -2053,17 +2043,15 @@ describe('Style#query*Features', () => {
         });
         style.queryRenderedFeatures([{x: 0, y: 0}], {filter: 'invalidFilter', validate: false}, transform);
         expect(errors).toBe(0);
-        done();
     });
 
-    test('querySourceFeatures not raise validation errors if validation was disabled', done => {
+    test('querySourceFeatures not raise validation errors if validation was disabled', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['type'] === 'error') errors++;
         });
         style.querySourceFeatures([{x: 0, y: 0}], {filter: 'invalidFilter', validate: false}, transform);
         expect(errors).toBe(0);
-        done();
     });
 });
 
@@ -2120,10 +2108,9 @@ describe('Style#addSourceType', () => {
 });
 
 describe('Style#hasTransitions', () => {
-    test('returns false when the style is loading', done => {
+    test('returns false when the style is loading', () => {
         const style = new Style(getStubMap());
         expect(style.hasTransitions()).toBe(false);
-        done();
     });
 
     test('returns true when a property is transitioning', done => {
@@ -2164,4 +2151,3 @@ describe('Style#hasTransitions', () => {
         });
     });
 });
-
