@@ -110,16 +110,11 @@ describe('Style', () => {
     test('loads plugin immediately if already registered', done => {
         clearRTLTextPlugin();
         sinonFakeServer.respondWith('/plugin.js', 'doesn\'t matter');
-        let firstError = true;
         setRTLTextPlugin('/plugin.js', (error) => {
             // Getting this error message shows the bogus URL was succesfully passed to the worker
             // We'll get the error from all workers, only pay attention to the first one
-            if (firstError) {
                 expect(error).toMatch(/Cannot set the state of the rtl-text-plugin when not in the web-worker context/);
                 done();
-                global.self = undefined;
-                firstError = false;
-            }
         });
         sinonFakeServer.respond();
         new Style(createStyleJSON());
