@@ -308,7 +308,7 @@ export type MapLibreZoomEvent = {
 export type MapDataEvent = {
   type: string;
   dataType: string;
-  sourceDataType: string;
+  sourceDataType: MapSourceDataType;
 };
 
 export type MapContextEvent = {
