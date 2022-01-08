@@ -7,7 +7,6 @@ import {extend} from '../util/util';
 import type Map from './map';
 import type LngLat from '../geo/lng_lat';
 import {SourceSpecification} from '../style-spec/types';
-import type {Coordinates} from '../source/image_source';
 
 export type MapLayerMouseEvent = MapMouseEvent & { features?: GeoJSON.Feature[] };
 
@@ -309,11 +308,7 @@ export type MapLibreZoomEvent = {
 export type MapDataEvent = {
   type: string;
   dataType: string;
-  isSourceLoaded?: boolean;
-  source?: Object;
-  sourceDataType?: string;
-  tile?: Object;
-  coord?: Coordinates;
+  sourceDataType: string;
 };
 
 export type MapContextEvent = {
