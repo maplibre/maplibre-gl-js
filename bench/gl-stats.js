@@ -22,10 +22,10 @@ function waitForConsole(page) {
     });
 }
 
-(async () => {
-    const browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+const browser = await puppeteer.launch({
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+});
+try {
     const page = await browser.newPage();
 
     console.log('collecting stats...');
@@ -43,5 +43,6 @@ function waitForConsole(page) {
     fs.writeFileSync('data.json.gz', zlib.gzipSync(JSON.stringify(stats)));
 
     await page.close();
+} finally {
     await browser.close();
-})();
+}
