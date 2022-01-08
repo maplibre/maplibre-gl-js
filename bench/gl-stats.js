@@ -1,12 +1,13 @@
 /* eslint-disable import/no-commonjs */
 
-const puppeteer = require('puppeteer');
-const fs = require('fs');
-const zlib = require('zlib');
+import puppeteer from 'puppeteer';
+import fs from 'fs';
+import zlib from 'zlib';
+
 const maplibreGLJSSrc = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 const maplibreGLCSSSrc = fs.readFileSync('dist/maplibre-gl.css', 'utf8');
 const benchSrc = fs.readFileSync('bench/gl-stats.html', 'utf8');
-const {execSync} = require('child_process');
+import {execSync} from 'child_process';
 
 const benchHTML = benchSrc
     .replace(/<script src="..\/dist\/maplibre-gl.js"><\/script>/, `<script>${maplibreGLJSSrc}</script>`);
