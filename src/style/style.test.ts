@@ -401,40 +401,38 @@ describe('Style#_remove', () => {
     });
 });
 
-describe('Style#update', () => {
-    test('on error', done => {
-        const style = new Style(getStubMap());
-        style.loadJSON({
-            'version': 8,
-            'sources': {
-                'source': {
-                    'type': 'vector'
-                }
-            },
-            'layers': [{
-                'id': 'second',
-                'source': 'source',
-                'source-layer': 'source-layer',
-                'type': 'fill'
-            }]
-        });
+test('on error', done => {
+    const style = new Style(getStubMap());
+    style.loadJSON({
+        'version': 8,
+        'sources': {
+            'source': {
+                'type': 'vector'
+            }
+        },
+        'layers': [{
+            'id': 'second',
+            'source': 'source',
+            'source-layer': 'source-layer',
+            'type': 'fill'
+        }]
+    });
 
-        style.on('error', (error) => { expect(error).toBeFalsy(); });
+    style.on('error', (error) => { expect(error).toBeFalsy(); });
 
-        style.on('style.load', () => {
-            style.addLayer({id: 'first', source: 'source', type: 'fill', 'source-layer': 'source-layer'}, 'second');
-            style.addLayer({id: 'third', source: 'source', type: 'fill', 'source-layer': 'source-layer'});
-            style.removeLayer('second');
+    style.on('style.load', () => {
+        style.addLayer({id: 'first', source: 'source', type: 'fill', 'source-layer': 'source-layer'}, 'second');
+        style.addLayer({id: 'third', source: 'source', type: 'fill', 'source-layer': 'source-layer'});
+        style.removeLayer('second');
 
-            style.dispatcher.broadcast = function(key, value) {
-                expect(key).toBe('updateLayers');
-                expect(value['layers'].map((layer) => { return layer.id; })).toEqual(['first', 'third']);
-                expect(value['removedIds']).toEqual(['second']);
-                done();
-            };
+        style.dispatcher.broadcast = function(key, value) {
+            expect(key).toBe('updateLayers');
+            expect(value['layers'].map((layer) => { return layer.id; })).toEqual(['first', 'third']);
+            expect(value['removedIds']).toEqual(['second']);
+            done();
+        };
 
-            style.update({} as EvaluationParameters);
-        });
+        style.update({} as EvaluationParameters);
     });
 });
 
@@ -1724,7 +1722,7 @@ describe('Style#setLayerZoomRange', () => {
     });
 });
 
-describe('Style#queryRenderedFeatures', () => {
+test('Style#queryRenderedFeatures', () => {
 
     let style;
     let transform;
