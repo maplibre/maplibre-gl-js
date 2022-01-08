@@ -113,7 +113,7 @@
     "is-builtin-module": "^3.0.0",
     "jest": "^27.2.4",
     "jest-canvas-mock": "^2.3.1",
-    "jest-codemods": "^0.24.0",
+    "jest-codemods": "^0.25.0",
     "jest-raw-loader": "^1.0.1",
     "jscodeshift": "^0.13.0",
     "jsdom": "^13.0.0",
