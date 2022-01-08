@@ -113,8 +113,8 @@ describe('Style', () => {
         setRTLTextPlugin('/plugin.js', (error) => {
             // Getting this error message shows the bogus URL was succesfully passed to the worker
             // We'll get the error from all workers, only pay attention to the first one
-                expect(error).toMatch(/Cannot set the state of the rtl-text-plugin when not in the web-worker context/);
-                done();
+            expect(error).toMatch(/Cannot set the state of the rtl-text-plugin when not in the web-worker context/);
+            done();
         });
         sinonFakeServer.respond();
         new Style(createStyleJSON());
@@ -1070,7 +1070,7 @@ describe('Style#addLayer', () => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                expect(error.message).toMatch(/does not exist on source/);                
+                expect(error.message).toMatch(/does not exist on source/);
                 done();
             });
             style.addLayer(layer);
@@ -1130,7 +1130,7 @@ describe('Style#removeLayer', () => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                expect(error.message).toMatch(/Cannot remove non-existing layer "background"./);                
+                expect(error.message).toMatch(/Cannot remove non-existing layer "background"./);
                 done();
             });
             style.removeLayer('background');
@@ -1203,7 +1203,7 @@ describe('Style#moveLayer', () => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                expect(error.message).toMatch(/does not exist in the map\'s style and cannot be moved/);                
+                expect(error.message).toMatch(/does not exist in the map\'s style and cannot be moved/);
                 done();
             });
             style.moveLayer('background');
@@ -1611,7 +1611,7 @@ describe('Style#setFilter', () => {
 
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                expect(error.message).toMatch(/Cannot filter non-existing layer "non-existant"./);                
+                expect(error.message).toMatch(/Cannot filter non-existing layer "non-existant"./);
                 done();
             });
             style.setFilter('non-existant', ['==', 'id', 1]);
@@ -1689,7 +1689,7 @@ describe('Style#setLayerZoomRange', () => {
         const style = createStyle();
         style.on('style.load', () => {
             style.on('error', ({error}) => {
-                expect(error.message).toMatch(/Cannot set the zoom range of non-existing layer "non-existant"./);                
+                expect(error.message).toMatch(/Cannot set the zoom range of non-existing layer "non-existant"./);
                 done();
             });
             style.setLayerZoomRange('non-existant', 5, 12);
@@ -1992,7 +1992,7 @@ describe('Style#query*Features', () => {
 
     test('querySourceFeatures emits an error on incorrect filter', () => {
         expect(style.querySourceFeatures([10, 100], {filter: 7}, transform)).toEqual([]);
-        expect(onError.mock.calls[0][0].error.message).toMatch(/querySourceFeatures\.filter/);        
+        expect(onError.mock.calls[0][0].error.message).toMatch(/querySourceFeatures\.filter/);
     });
 
     test('queryRenderedFeatures emits an error on incorrect filter', () => {
