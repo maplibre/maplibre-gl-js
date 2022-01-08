@@ -17,6 +17,7 @@ import {WorkerGlobalScopeInterface} from '../util/web_worker';
 import EvaluationParameters from './evaluation_parameters';
 import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '../style-spec/types';
 import {SourceClass} from '../source/source';
+import GeoJSONSource from '../source/geojson_source';
 
 function createStyleJSON(properties?) {
     return extend({
@@ -535,7 +536,7 @@ describe('Style#setState', () => {
         style.loadJSON(initialState);
 
         style.on('style.load', () => {
-            const geoJSONSource = style.sourceCaches['source-id'].getSource() as any;
+            const geoJSONSource = style.sourceCaches['source-id'].getSource() as GeoJSONSource;
             const mockStyleSetGeoJSONSourceDate = jest.spyOn(style, 'setGeoJSONSourceData');
             const mockGeoJSONSourceSetData = jest.spyOn(geoJSONSource, 'setData');
             const didChange = style.setState(nextState);
