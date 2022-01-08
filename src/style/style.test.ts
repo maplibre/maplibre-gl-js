@@ -111,8 +111,6 @@ describe('Style', () => {
         clearRTLTextPlugin();
         sinonFakeServer.respondWith('/plugin.js', 'doesn\'t matter');
         setRTLTextPlugin('/plugin.js', (error) => {
-            // Getting this error message shows the bogus URL was succesfully passed to the worker
-            // We'll get the error from all workers, only pay attention to the first one
             expect(error).toMatch(/Cannot set the state of the rtl-text-plugin when not in the web-worker context/);
             done();
         });
