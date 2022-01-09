@@ -1,5 +1,3 @@
-/* eslint-disable import/no-commonjs */
-
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 import zlib from 'zlib';
