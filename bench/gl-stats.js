@@ -1,11 +1,11 @@
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 import zlib from 'zlib';
+import {execSync} from 'child_process';
 
 const maplibreGLJSSrc = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 const maplibreGLCSSSrc = fs.readFileSync('dist/maplibre-gl.css', 'utf8');
 const benchSrc = fs.readFileSync('bench/gl-stats.html', 'utf8');
-import {execSync} from 'child_process';
 
 const benchHTML = benchSrc
     .replace(/<script src="..\/dist\/maplibre-gl.js"><\/script>/, `<script>${maplibreGLJSSrc}</script>`);
