@@ -13,15 +13,18 @@ import {setPerformance} from '../util/test/util';
 describe('vector tile worker source', () => {
     const actor = {send: () => {}} as any as Actor;
     let server: SinonFakeServer;
+    let originalGetEntriesByName;
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();
         setPerformance();
+        originalGetEntriesByName = window.performance.getEntriesByName;
     });
 
     afterEach(() => {
         server.restore();
         jest.clearAllMocks();
+        window.performance.getEntriesByName = originalGetEntriesByName;
     });
     test('VectorTileWorkerSource#abortTile aborts pending request', () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
