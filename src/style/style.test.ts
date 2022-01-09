@@ -2029,7 +2029,7 @@ describe('Style#addSourceType', () => {
 
     test('adds factory function', done => {
         const style = new Style(getStubMap());
-        const SourceType = function () {} as any as SourceClass;
+        const sourceType = function () {} as any as SourceClass;
 
         // expect no call to load worker source
         style.dispatcher.broadcast = function (type) {
@@ -2038,33 +2038,33 @@ describe('Style#addSourceType', () => {
             }
         };
 
-        style.addSourceType('foo', SourceType, () => {
-            expect(_types['foo']).toBe(SourceType);
+        style.addSourceType('foo', sourceType, () => {
+            expect(_types['foo']).toBe(sourceType);
             done();
         });
     });
 
     test('triggers workers to load worker source code', done => {
         const style = new Style(getStubMap());
-        const SourceType = function () {} as any as SourceClass;
-        SourceType.workerSourceURL = 'worker-source.js' as any as URL;
+        const sourceType = function () {} as any as SourceClass;
+        sourceType.workerSourceURL = 'worker-source.js' as any as URL;
 
         style.dispatcher.broadcast = function (type, params) {
             if (type === 'loadWorkerSource') {
-                expect(_types['bar']).toBe(SourceType);
+                expect(_types['bar']).toBe(sourceType);
                 expect(params['name']).toBe('bar');
                 expect(params['url']).toBe('worker-source.js');
                 done();
             }
         };
 
-        style.addSourceType('bar', SourceType, (err) => { expect(err).toBeFalsy(); });
+        style.addSourceType('bar', sourceType, (err) => { expect(err).toBeFalsy(); });
     });
 
     test('refuses to add new type over existing name', done => {
         const style = new Style(getStubMap());
-        const SourceType = function () {} as any as SourceClass;
-        style.addSourceType('existing', SourceType, (err) => {
+        const sourceType = function () {} as any as SourceClass;
+        style.addSourceType('existing', sourceType, (err) => {
             expect(err).toBeTruthy();
             done();
         });
