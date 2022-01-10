@@ -1863,7 +1863,7 @@ describe('Style#queryRenderedFeatures', () => {
     test('checks type of `layers` option', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['type'] === 'error' && event['error'].message.includes('parameters.layers must be an Array.')) {
+            if (event['error'] && event['error'].message.includes('parameters.layers must be an Array.')) {
                 errors++;
             }
         });
@@ -1903,7 +1903,7 @@ describe('Style#queryRenderedFeatures', () => {
     test('fires an error if layer included in params does not exist on the style', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['type'] === 'error' && event['error'].message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
+            if (event['error'] && event['error'].message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
         });
         const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers:['merp']}, transform);
         expect(errors).toBe(1);
@@ -2003,7 +2003,7 @@ describe('Style#query*Features', () => {
     test('querySourceFeatures not raise validation errors if validation was disabled', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['type'] === 'error') {
+            if (event['error']) {
                 errors++;
             }
         });
@@ -2014,7 +2014,7 @@ describe('Style#query*Features', () => {
     test('querySourceFeatures not raise validation errors if validation was disabled', () => {
         let errors = 0;
         jest.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['type'] === 'error') errors++;
+            if (event['error']) errors++;
         });
         style.querySourceFeatures([{x: 0, y: 0}], {filter: 'invalidFilter', validate: false}, transform);
         expect(errors).toBe(0);
