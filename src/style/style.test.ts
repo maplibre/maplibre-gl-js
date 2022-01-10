@@ -1676,12 +1676,12 @@ describe('Style#setLayerZoomRange', () => {
             style.dispatcher.broadcast = function(key, value) {
                 expect(key).toBe('updateLayers');
                 expect(value['layers'].map((layer) => { return layer.id; })).toEqual(['symbol']);
+                done();
             };
-
             style.setLayerZoomRange('symbol', 5, 12);
             expect(style.getLayer('symbol').minzoom).toBe(5);
             expect(style.getLayer('symbol').maxzoom).toBe(12);
-            done();
+            style.update({} as EvaluationParameters); // trigger dispatcher broadcast
         });
     });
 
