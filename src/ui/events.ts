@@ -294,7 +294,7 @@ export type MapLibreZoomEvent = {
  * that internal data has been received or changed. Possible values are `metadata`, `content` and `visibility`.
  * @property {Object} [tile] The tile being loaded or changed, if the event has a `dataType` of `source` and
  * the event is related to loading of a tile.
- * @property {Coordinate} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
+ * @property {Coordinates} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
  * the event is related to loading of a tile.
  * @example
  * // The sourcedata event is an example of MapDataEvent.
@@ -308,6 +308,7 @@ export type MapLibreZoomEvent = {
 export type MapDataEvent = {
   type: string;
   dataType: string;
+  sourceDataType: MapSourceDataType;
 };
 
 export type MapContextEvent = {
