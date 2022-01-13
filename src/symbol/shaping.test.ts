@@ -80,7 +80,7 @@ describe('shaping', () => {
     if (UPDATE) fs.writeFileSync(path.resolve(__dirname, '../../test/expected/text-shaping-newlines-in-middle.json'), JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(expectedNewLinesInMiddle);
 
-    // Prefer zero width spaces when breaking lines. Zero width spaces are used by Mapbox data sources as a hint that
+    // Prefer zero width spaces when breaking lines. Zero width spaces are used by MapLibre data sources as a hint that
     // a position is ideal for breaking.
     const expectedZeroWidthSpaceBreak = require('../../test/expected/text-shaping-zero-width-space.json');
 

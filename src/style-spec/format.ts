@@ -18,7 +18,7 @@ function sortKeysBy(obj, reference) {
 }
 
 /**
- * Format a Mapbox GL Style.  Returns a stringified style with its keys
+ * Format a MapLibre GL Style.  Returns a stringified style with its keys
  * sorted in the same order as the reference style.
  *
  * The optional `space` argument is passed to
@@ -28,7 +28,7 @@ function sortKeysBy(obj, reference) {
  * If `space` is unspecified, a default of `2` spaces will be used.
  *
  * @private
- * @param {Object} style a Mapbox GL Style
+ * @param {Object} style a MapLibre GL Style
  * @param {number} [space] space argument to pass to `JSON.stringify`
  * @returns {string} stringified formatted JSON
  * @example

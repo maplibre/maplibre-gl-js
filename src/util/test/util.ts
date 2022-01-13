@@ -39,7 +39,7 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
 }
 
 // Add webgl context with the supplied GL
-export function setWebGlContext () {
+export function setWebGlContext() {
     const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
 
     function imitateWebGlGetContext(type, attributes) {
@@ -55,13 +55,13 @@ export function setWebGlContext () {
     global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 }
 
-export function setPerformance () {
+export function setPerformance() {
     window.performance.mark = jest.fn();
     window.performance.clearMeasures = jest.fn();
     window.performance.clearMarks = jest.fn();
 }
 
-export function setMatchMedia () {
+export function setMatchMedia() {
     // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
     Object.defineProperty(window, 'matchMedia', {
         writable: true,
@@ -78,7 +78,7 @@ export function setMatchMedia () {
     });
 }
 
-export function getWrapDispatcher () {
+export function getWrapDispatcher() {
     const wrapDispatcher = (dispatcher) => {
         return {
             getActor() {
@@ -90,11 +90,11 @@ export function getWrapDispatcher () {
     return wrapDispatcher;
 }
 
-export function getMockDispatcher () {
+export function getMockDispatcher() {
     const wrapDispatcher = getWrapDispatcher();
 
     const mockDispatcher = wrapDispatcher({
-        send () {}
+        send() {}
     });
 
     return mockDispatcher;

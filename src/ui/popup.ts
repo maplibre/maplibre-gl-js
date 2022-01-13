@@ -116,7 +116,7 @@ export default class Popup extends Evented {
     /**
      * Adds the popup to a map.
      *
-     * @param {Map} map The Mapbox GL JS map to add the popup to.
+     * @param {Map} map The MapLibre GL JS map to add the popup to.
      * @returns {Popup} `this`
      * @example
      * new maplibregl.Popup()
