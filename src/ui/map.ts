@@ -116,7 +116,7 @@ const defaultMaxZoom = 22;
 
 // the default values, but also the valid range
 const defaultMinPitch = 0;
-const defaultMaxPitch = 75;
+const defaultMaxPitch = 65;
 
 // use this variable to check maxPitch for validity
 const maxPitchThreshold = 85;
