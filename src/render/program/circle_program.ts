@@ -53,7 +53,7 @@ const circleUniformValues = (
             layer.paint.get('circle-translate'),
             layer.paint.get('circle-translate-anchor')),
         'u_pitch_with_map': +(pitchWithMap),
-        'u_device_pixel_ratio': devicePixelRatio,
+        'u_device_pixel_ratio': painter.pixelRatio,
         'u_extrude_scale': extrudeScale
     };
 };

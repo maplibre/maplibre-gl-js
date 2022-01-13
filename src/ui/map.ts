@@ -101,6 +101,7 @@ export type MapOptions = {
   localIdeographFontFamily?: string;
   style: StyleSpecification | string;
   pitchWithRotate?: boolean;
+  pixelRatio?: number;
 };
 
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
@@ -252,6 +253,7 @@ const defaultOptions = {
  * @param {number} [options.fadeDuration=300] Controls the duration of the fade-in/fade-out animation for label collisions, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
  * @param {boolean} [options.crossSourceCollisions=true] If `true`, symbols from multiple sources can collide with each other during collision detection. If `false`, collision detection is run separately for the symbols in each source.
  * @param {Object} [options.locale=null] A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
+ * @param {number} [options.pixelRatio] The pixel ratio. The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
  * @example
  * var map = new maplibregl.Map({
  *   container: 'map',
@@ -315,6 +317,7 @@ class Map extends Camera {
     _locale: any;
     _removed: boolean;
     _clickTolerance: number;
+    _pixelRatio: number;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -406,6 +409,7 @@ class Map extends Camera {
         this._mapId = uniqueId();
         this._locale = extend({}, defaultLocale, options.locale);
         this._clickTolerance = options.clickTolerance;
+        this._pixelRatio = options.pixelRatio ?? devicePixelRatio;
 
         this._requestManager = new RequestManager(options.transformRequest);
 
@@ -601,9 +605,9 @@ class Map extends Camera {
         const width = dimensions[0];
         const height = dimensions[1];
 
-        this._resizeCanvas(width, height);
+        this._resizeCanvas(width, height, this.getPixelRatio());
         this.transform.resize(width, height);
-        this.painter.resize(width, height);
+        this.painter.resize(width, height, this.getPixelRatio());
 
         const fireMoving = !this._moving;
         if (fireMoving) {
@@ -617,6 +621,29 @@ class Map extends Camera {
         if (fireMoving) this.fire(new Event('moveend', eventData));
 
         return this;
+    }
+
+    /**
+     * Returns the map's pixel ratio.
+     * @returns {number} The pixel ratio.
+     */
+    getPixelRatio() {
+        return this._pixelRatio;
+    }
+
+    /**
+     * Sets the map's pixel ratio. This allows to override `devicePixelRatio`.
+     * After this call, the canvas' `width` attribute will be `container.clientWidth * pixelRatio`
+     * and its height attribute will be `container.clientHeight * pixelRatio`.
+     * @param pixelRatio {number} The pixel ratio.
+     */
+    setPixelRatio(pixelRatio: number) {
+        const [width, height] = this._containerDimensions();
+
+        this._pixelRatio = pixelRatio;
+
+        this._resizeCanvas(width, height, pixelRatio);
+        this.painter.resize(width, height, pixelRatio);
     }
 
     /**
@@ -2368,7 +2395,7 @@ class Map extends Camera {
         this._canvas.setAttribute('role', 'region');
 
         const dimensions = this._containerDimensions();
-        this._resizeCanvas(dimensions[0], dimensions[1]);
+        this._resizeCanvas(dimensions[0], dimensions[1], this.getPixelRatio());
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container mapboxgl-control-container', container);
         const positions = this._controlPositions = {};
@@ -2379,9 +2406,7 @@ class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _resizeCanvas(width: number, height: number) {
-        const pixelRatio = devicePixelRatio || 1;
-
+    _resizeCanvas(width: number, height: number, pixelRatio: number) {
         // Request the required canvas size taking the pixelratio into account.
         this._canvas.width = pixelRatio * width;
         this._canvas.height = pixelRatio * height;
