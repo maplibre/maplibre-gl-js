@@ -6,7 +6,7 @@ import type Map from '../map';
  * an exported method or class.
  *
  * Controls must implement `onAdd` and `onRemove`, and must own an
- * element, which is often a `div` element. To use Mapbox GL JS's
+ * element, which is often a `div` element. To use MapLibre GL JS's
  * default control styling, add the `maplibregl-ctrl` class to your control's
  * node.
  *
