@@ -1250,7 +1250,7 @@ describe('Map', () => {
                 style: {
                     'version': 8,
                     'sources': {
-                        'mapbox://mapbox.satellite': {
+                        'maplibre-satellite': {
                             'type': 'raster',
                             'tiles': ['http://example.com/{z}/{x}/{y}.png']
                         }
@@ -1258,7 +1258,7 @@ describe('Map', () => {
                     'layers': [{
                         'id': 'satellite',
                         'type': 'raster',
-                        'source': 'mapbox://mapbox.satellite',
+                        'source': 'maplibre-satellite',
                         'layout': {
                             'visibility': 'none'
                         }
