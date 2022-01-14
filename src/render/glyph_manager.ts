@@ -198,13 +198,13 @@ export default class GlyphManager {
         const char = tinySDF.draw(String.fromCharCode(id));
         return {
             id,
-            bitmap: new AlphaImage({width: char.width, height: char.height}, char.data),
+            bitmap: new AlphaImage({width: char.width || 30, height: char.height || 30}, char.data),
             metrics: {
-                width: char.glyphWidth,
-                height: char.glyphHeight,
-                left: char.glyphLeft,
-                top: char.glyphTop,
-                advance: char.glyphAdvance
+                width: char.glyphWidth || 24,
+                height: char.glyphHeight || 24,
+                left: char.glyphLeft || 0,
+                top: char.glyphTop || -8,
+                advance: char.glyphAdvance || 24
             }
         };
     }
