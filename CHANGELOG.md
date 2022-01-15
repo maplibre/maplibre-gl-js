@@ -8,6 +8,12 @@
 
 - *...Add new stuff here...*
 
+## 2.0.1
+
+### 🐞 Bug fixes
+
+- Fix documentation of `addProtocol` and `removeProtocol`.
+
 ## 2.0.0
 
 ### Features and improvements
