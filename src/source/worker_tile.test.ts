@@ -88,7 +88,7 @@ describe('worker tile', () => {
                     version: 1
                 }
             }
-        } as VectorTile;
+        } as any as VectorTile;
 
         const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
