@@ -5,45 +5,20 @@ import Map from '../../ui/map';
 import Actor from '../../util/actor';
 jest.mock('../../util/actor');
 
-function createMap(logoPosition, logoRequired) {
+
+function createMap(logoPosition, maplibreLogo) {
     return globalCreateMap({
+        logoPosition: logoPosition,
+        maplibreLogo: maplibreLogo,
         style: {
             version: 8,
-            sources: {
-                'composite': createSource({
-                    minzoom: 1,
-                    maxzoom: 10,
-                    attribution: 'Maplibre',
-                    tiles: [
-                        'http://example.com/{z}/{x}/{y}.png'
-                    ]
-                }, logoRequired)
-            },
+            sources: {},
             layers: []
-        },
-        logoPosition: logoPosition || undefined
+        }
     }, undefined);
 }
 
 const mockDispatcher = (Actor.prototype.send as jest.Mock).mockImplementation(() => { }) as any as Dispatcher;
-
-function createSource(options, logoRequired) {
-    const source = new VectorTileSource('id', options, mockDispatcher, undefined);
-    source.onAdd({
-        _requestManager: {
-            _skuToken: '1234567890123',
-            canonicalizeTileset: tileJSON => tileJSON.tiles
-        },
-        transform: {angle: 0, pitch: 0, showCollisionBoxes: false},
-        _getMapId: () => 1
-    }as any as Map);
-    source.on('error', (e) => {
-        throw e.error;
-    });
-    const logoFlag = 'maplibreLogo';
-    source[logoFlag] = logoRequired === undefined ? true : logoRequired;
-    return source;
-}
 
 beforeEach(() => {
     setWebGlContext();
@@ -79,29 +54,6 @@ describe('LogoControl', () => {
             expect(containerStyle).toHaveProperty('display', 'none');
             done();
         });
-    });
-
-    test('is not added more than once', done => {
-        const map = createMap(undefined, undefined);
-        const source = createSource({
-            minzoom: 1,
-            maxzoom: 10,
-            attribution: 'Maplibre',
-            tiles: [
-                'http://example.com/{z}/{x}/{y}.png'
-            ]
-        }, undefined);
-        map.on('load', () => {
-            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo')).toHaveLength(1);
-            map.addSource('source2', source as any);
-            map.on('sourcedata', (e) => {
-                if (e.isSourceLoaded && e.sourceId === 'source2' && e.sourceDataType === 'metadata') {
-                    expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo')).toHaveLength(1);
-                }
-            });
-            done();
-        });
-
     });
 
     test('appears in compact mode if container is less then 250 pixel wide', () => {
