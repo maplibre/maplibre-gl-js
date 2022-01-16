@@ -33,7 +33,7 @@ if (!fs.existsSync("dist")) {
 
 console.log(`Starting bundling types`);
 const outputFile = "./dist/maplibre-gl.d.ts";
-child_process.execSync(`dts-bundle-generator --umd-module-name=maplibregl -o ${outputFile} ./src/index.ts`);
+child_process.execSync(`dts-bundle-generator --no-check --umd-module-name=maplibregl -o ${outputFile} ./src/index.ts`);
 let types = fs.readFileSync(outputFile, 'utf8');
 types = types.replace(/declare class/g, "export declare class");
 fs.writeFileSync(outputFile, types);
