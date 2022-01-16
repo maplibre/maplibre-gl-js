@@ -21,7 +21,8 @@
       "DOM.Iterable",
       "WebWorker"
     ],
-    "types": ["node", "jest", "geojson", "offscreencanvas"]
+    "typeRoots": ["./src/types/packages-types", "node_modules/@types"],
+    "types": ["node", "jest", "geojson", "offscreencanvas", "grid-index", "vector-tile"]
   },
   "include": [
     "src/**/*.ts",

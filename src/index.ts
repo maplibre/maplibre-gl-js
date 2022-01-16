@@ -1,5 +1,4 @@
 /// <reference path="./types/glsl.d.ts" />
-/// <reference path="./types/non-typed-modules.d.ts" />
 import assert from 'assert';
 import {supported} from '@mapbox/mapbox-gl-supported';
 
