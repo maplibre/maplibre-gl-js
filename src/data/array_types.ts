@@ -1072,6 +1072,5 @@ export {
     StructArrayLayout1ul2ui8,
     StructArrayLayout2ui4,
     StructArrayLayout1ui2,
-    StructArrayLayout4f16,
-    
+    StructArrayLayout4f16
 };

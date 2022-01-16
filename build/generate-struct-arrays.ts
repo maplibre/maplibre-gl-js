@@ -434,7 +434,6 @@ ${layouts.map(emitStructArrayLayout).join('\n')}
 ${arraysWithStructAccessors.map(emitStructArray).join('\n')}
 ${[...arrayTypeEntries].join('\n')}
 export {
-    ${layouts.map(layout => layout.className).join(',\n    ')},
-    
+    ${layouts.map(layout => layout.className).join(',\n    ')}
 };
 `);
