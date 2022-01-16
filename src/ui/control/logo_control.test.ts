@@ -1,12 +1,10 @@
 import {createMap as globalCreateMap, setWebGlContext} from '../../util/test/util';
-import Dispatcher from '../../util/dispatcher';
-import Actor from '../../util/actor';
 jest.mock('../../util/actor');
 
 function createMap(logoPosition, maplibreLogo) {
     return globalCreateMap({
-        logoPosition: logoPosition,
-        maplibreLogo: maplibreLogo,
+        logoPosition,
+        maplibreLogo,
         style: {
             version: 8,
             sources: {},
