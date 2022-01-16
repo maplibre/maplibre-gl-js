@@ -1031,6 +1031,25 @@ export class FeatureIndexArray extends StructArrayLayout1ul2ui8 {
 
 register('FeatureIndexArray', FeatureIndexArray);
 
+export class PosArray extends StructArrayLayout2i4 {}
+export class RasterBoundsArray extends StructArrayLayout4i8 {}
+export class CircleLayoutArray extends StructArrayLayout2i4 {}
+export class FillLayoutArray extends StructArrayLayout2i4 {}
+export class FillExtrusionLayoutArray extends StructArrayLayout2i4i12 {}
+export class HeatmapLayoutArray extends StructArrayLayout2i4 {}
+export class LineLayoutArray extends StructArrayLayout2i4ub8 {}
+export class LineExtLayoutArray extends StructArrayLayout2f8 {}
+export class PatternLayoutArray extends StructArrayLayout10ui20 {}
+export class SymbolLayoutArray extends StructArrayLayout4i4ui4i24 {}
+export class SymbolDynamicLayoutArray extends StructArrayLayout3f12 {}
+export class SymbolOpacityArray extends StructArrayLayout1ul4 {}
+export class CollisionBoxLayoutArray extends StructArrayLayout2i2i2i12 {}
+export class CollisionCircleLayoutArray extends StructArrayLayout2f1f2i16 {}
+export class CollisionVertexArray extends StructArrayLayout2ub2f12 {}
+export class QuadTriangleArray extends StructArrayLayout3ui6 {}
+export class TriangleIndexArray extends StructArrayLayout3ui6 {}
+export class LineIndexArray extends StructArrayLayout2ui4 {}
+export class LineStripIndexArray extends StructArrayLayout1ui2 {}
 export {
     StructArrayLayout2i4,
     StructArrayLayout4i8,
@@ -1054,23 +1073,5 @@ export {
     StructArrayLayout2ui4,
     StructArrayLayout1ui2,
     StructArrayLayout4f16,
-    StructArrayLayout2i4 as PosArray,
-    StructArrayLayout4i8 as RasterBoundsArray,
-    StructArrayLayout2i4 as CircleLayoutArray,
-    StructArrayLayout2i4 as FillLayoutArray,
-    StructArrayLayout2i4i12 as FillExtrusionLayoutArray,
-    StructArrayLayout2i4 as HeatmapLayoutArray,
-    StructArrayLayout2i4ub8 as LineLayoutArray,
-    StructArrayLayout2f8 as LineExtLayoutArray,
-    StructArrayLayout10ui20 as PatternLayoutArray,
-    StructArrayLayout4i4ui4i24 as SymbolLayoutArray,
-    StructArrayLayout3f12 as SymbolDynamicLayoutArray,
-    StructArrayLayout1ul4 as SymbolOpacityArray,
-    StructArrayLayout2i2i2i12 as CollisionBoxLayoutArray,
-    StructArrayLayout2f1f2i16 as CollisionCircleLayoutArray,
-    StructArrayLayout2ub2f12 as CollisionVertexArray,
-    StructArrayLayout3ui6 as QuadTriangleArray,
-    StructArrayLayout3ui6 as TriangleIndexArray,
-    StructArrayLayout2ui4 as LineIndexArray,
-    StructArrayLayout1ui2 as LineStripIndexArray
+    
 };
