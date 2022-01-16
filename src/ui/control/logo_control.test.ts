@@ -1,5 +1,4 @@
 import {createMap as globalCreateMap, setWebGlContext, setPerformance} from '../../util/test/util';
-jest.mock('../../util/actor');
 
 function createMap(logoPosition, maplibreLogo) {
     return globalCreateMap({

@@ -5,10 +5,6 @@ import {bindAll} from '../../util/util';
 import type Map from '../map';
 import type {ControlPosition, IControl} from './control';
 
-type LogoOptions = {
-  maplibreLogo?: boolean;
-};
-
 /**
  * A `LogoControl` is a control that adds the watermark.
  *
@@ -17,12 +13,10 @@ type LogoOptions = {
 **/
 
 class LogoControl implements IControl {
-    options: LogoOptions;
     _map: Map;
     _container: HTMLElement;
 
-    constructor(options: LogoOptions = {}) {
-        this.options = options;
+    constructor() {
         bindAll(['_updateLogo'], this);
         bindAll(['_updateCompact'], this);
     }
@@ -37,9 +31,7 @@ class LogoControl implements IControl {
         anchor.setAttribute('aria-label', this._map._getUIString('LogoControl.Title'));
         anchor.setAttribute('rel', 'noopener nofollow');
         this._container.appendChild(anchor);
-        this._container.style.display = 'none';
-
-        this._updateLogo();
+        this._container.style.display = 'block';
 
         this._map.on('resize', this._updateCompact);
         this._updateCompact();
@@ -49,24 +41,11 @@ class LogoControl implements IControl {
 
     onRemove() {
         DOM.remove(this._container);
-        this._map.off('sourcedata', this._updateLogo);
         this._map.off('resize', this._updateCompact);
     }
 
     getDefaultPosition(): ControlPosition {
         return 'bottom-left';
-    }
-
-    _updateLogo() {
-        this._container.style.display = this._logoRequired() ? 'block' : 'none';
-    }
-
-    _logoRequired() {
-        const maplibreLogo = this.options && this.options.maplibreLogo;
-        if (maplibreLogo === false) {
-            return false;
-        }
-        return true;
     }
 
     _updateCompact() {
