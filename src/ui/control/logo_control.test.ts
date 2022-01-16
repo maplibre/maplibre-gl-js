@@ -1,4 +1,4 @@
-import {createMap as globalCreateMap, setWebGlContext} from '../../util/test/util';
+import {createMap as globalCreateMap, setWebGlContext, setPerformance} from '../../util/test/util';
 jest.mock('../../util/actor');
 
 function createMap(logoPosition, maplibreLogo) {
@@ -15,7 +15,7 @@ function createMap(logoPosition, maplibreLogo) {
 
 beforeEach(() => {
     setWebGlContext();
-    window.performance.mark = jest.fn();
+    setPerformance();
 });
 
 describe('LogoControl', () => {
