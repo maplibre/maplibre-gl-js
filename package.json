@@ -26,7 +26,6 @@
     "earcut": "^2.2.2",
     "geojson-vt": "^3.2.1",
     "gl-matrix": "^3.2.1",
-    "grid-index": "^1.1.0",
     "murmurhash-js": "^1.0.0",
     "pbf": "^3.2.1",
     "potpack": "^1.0.1",

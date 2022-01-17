@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import TransferableGridIndex from 'grid-index';
+import TransferableGridIndex from './transferable_grid_index';
 import Color from '../style-spec/util/color';
 import {StylePropertyFunction, StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '../style-spec/expression';
 import CompoundExpression from '../style-spec/expression/compound_expression';

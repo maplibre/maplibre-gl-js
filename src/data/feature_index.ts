@@ -3,7 +3,7 @@ import loadGeometry from './load_geometry';
 import toEvaluationFeature from './evaluation_feature';
 import EXTENT from './extent';
 import featureFilter from '../style-spec/feature_filter';
-import TransferableGridIndex from 'grid-index';
+import TransferableGridIndex from '../util/transferable_grid_index';
 import DictionaryCoder from '../util/dictionary_coder';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
