@@ -25,6 +25,7 @@ type AttributionOptions = {
 class AttributionControl implements IControl {
     options: AttributionOptions;
     _map: Map;
+    _compact: boolean;
     _container: HTMLElement;
     _innerContainer: HTMLElement;
     _compactButton: HTMLElement;
@@ -39,7 +40,8 @@ class AttributionControl implements IControl {
         bindAll([
             '_toggleAttribution',
             '_updateData',
-            '_updateCompact'
+            '_updateCompact',
+            '_updateCompactMinimize'
         ], this);
     }
 
@@ -49,6 +51,7 @@ class AttributionControl implements IControl {
 
     onAdd(map: Map) {
         this._map = map;
+        this._compact = this.options && this.options.compact;
         this._container = DOM.create('details', 'maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib');
         this._compactButton = DOM.create('summary', 'maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button', this._container);
         this._compactButton.addEventListener('click', this._toggleAttribution);
@@ -61,6 +64,7 @@ class AttributionControl implements IControl {
         this._map.on('styledata', this._updateData);
         this._map.on('sourcedata', this._updateData);
         this._map.on('resize', this._updateCompact);
+        this._map.on('drag', this._updateCompactMinimize);
 
         return this._container;
     }
@@ -71,8 +75,10 @@ class AttributionControl implements IControl {
         this._map.off('styledata', this._updateData);
         this._map.off('sourcedata', this._updateData);
         this._map.off('resize', this._updateCompact);
+        this._map.off('drag', this._updateCompactMinimize);
 
         this._map = undefined;
+        this._compact = undefined;
         this._attribHTML = undefined;
     }
 
@@ -83,10 +89,14 @@ class AttributionControl implements IControl {
     }
 
     _toggleAttribution() {
-        if (this._container.classList.contains('maplibregl-compact-show') || this._container.classList.contains('mapboxgl-compact-show')) {
-            this._container.classList.remove('maplibregl-compact-show', 'mapboxgl-compact-show');
-        } else {
-            this._container.classList.add('maplibregl-compact-show', 'mapboxgl-compact-show');
+        if (this._container.classList.contains('maplibregl-compact')) {
+            if (this._container.classList.contains('maplibregl-compact-show')) {
+                this._container.setAttribute('open', '');
+                this._container.classList.remove('maplibregl-compact-show', 'mapboxgl-compact-show');
+            }else{
+                this._container.removeAttribute('open');
+                this._container.classList.add('maplibregl-compact-show', 'mapboxgl-compact-show');
+            }
         }
     }
 
@@ -98,7 +108,7 @@ class AttributionControl implements IControl {
 
     _updateAttributions() {
         if (!this._map.style) return;
-        let attributions: Array<string> = [];
+        let attributions: Array<string> = ['OpenMapTiles'];
         if (this.options.customAttribution) {
             if (Array.isArray(this.options.customAttribution)) {
                 attributions = attributions.concat(
@@ -156,20 +166,23 @@ class AttributionControl implements IControl {
     }
 
     _updateCompact() {
-        const compact = this.options && this.options.compact;
-        if (this._map.getCanvasContainer().offsetWidth <= 640 || compact) {
-            if (compact === false) {
-                this._container.setAttribute('open', '');
-            } else {
-                if (!this._container.classList.contains('maplibregl-compact')) {
-                    this._container.removeAttribute('open');
-                    this._container.classList.add('maplibregl-compact', 'mapboxgl-compact');
-                }
+        this._container.setAttribute('open', '');
+        if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
+            if (this._compact !== false && !this._container.classList.contains('maplibregl-compact')) {
+                this._container.classList.add('maplibregl-compact', 'mapboxgl-compact', 'maplibregl-compact-show', 'mapboxgl-compact-show');
             }
         } else {
-            this._container.setAttribute('open', '');
             if (this._container.classList.contains('maplibregl-compact')) {
                 this._container.classList.remove('maplibregl-compact', 'maplibregl-compact-show', 'mapboxgl-compact', 'mapboxgl-compact-show');
+            }
+        }
+    }
+
+    _updateCompactMinimize() {
+        if (this._container.classList.contains('maplibregl-compact')) {
+            if (this._container.classList.contains('maplibregl-compact-show')) {
+                this._container.removeAttribute('open');
+                this._container.classList.remove('maplibregl-compact-show', 'mapboxgl-compact-show');
             }
         }
     }
