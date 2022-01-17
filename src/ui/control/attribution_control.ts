@@ -139,10 +139,8 @@ class AttributionControl implements IControl {
             }
         }
 
-        // trim whitespace 
-        attributions = attributions.filter(function(e) {
-            return String(e).trim();
-        });
+        // remove any entries that are whitespace 
+        attributions = attributions.filter(e => String(e).trim());
 
         // remove any entries that are substrings of another entry.
         // first sort by length so that substrings come first
