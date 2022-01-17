@@ -58,8 +58,8 @@ class AttributionControl implements IControl {
         this._setElementTitle(this._compactButton, 'ToggleAttribution');
         this._innerContainer = DOM.create('div', 'maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner', this._container);
 
-        this._updateCompact();
         this._updateAttributions();
+        this._updateCompact();
 
         this._map.on('styledata', this._updateData);
         this._map.on('sourcedata', this._updateData);
@@ -139,6 +139,11 @@ class AttributionControl implements IControl {
             }
         }
 
+        // trim whitespace 
+        attributions = attributions.filter(function(e) {
+            return String(e).trim();
+        });
+
         // remove any entries that are substrings of another entry.
         // first sort by length so that substrings come first
         attributions.sort((a, b) => a.length - b.length);
@@ -161,6 +166,7 @@ class AttributionControl implements IControl {
         } else {
             this._container.classList.add('maplibregl-attrib-empty', 'mapboxgl-attrib-empty');
         }
+        this._updateCompact();
         // remove old DOM node from _editLink
         this._editLink = null;
     }
@@ -168,7 +174,7 @@ class AttributionControl implements IControl {
     _updateCompact() {
         this._container.setAttribute('open', '');
         if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
-            if (this._compact !== false && !this._container.classList.contains('maplibregl-compact')) {
+            if (this._compact !== false && !this._container.classList.contains('maplibregl-compact') && !this._container.classList.contains('maplibregl-attrib-empty')) {
                 this._container.classList.add('maplibregl-compact', 'mapboxgl-compact', 'maplibregl-compact-show', 'mapboxgl-compact-show');
             }
         } else {
