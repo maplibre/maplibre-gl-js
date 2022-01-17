@@ -94,8 +94,8 @@ class AttributionControl implements IControl {
                 this._container.setAttribute('open', '');
                 this._container.classList.remove('maplibregl-compact-show', 'mapboxgl-compact-show');
             }else{
-                this._container.removeAttribute('open');
                 this._container.classList.add('maplibregl-compact-show', 'mapboxgl-compact-show');
+                this._container.removeAttribute('open');
             }
         }
     }
@@ -170,13 +170,16 @@ class AttributionControl implements IControl {
     }
 
     _updateCompact() {
-        this._container.setAttribute('open', '');
         if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
-            if (this._compact !== false && !this._container.classList.contains('maplibregl-compact') && !this._container.classList.contains('maplibregl-attrib-empty')) {
+            if (this._compact === false) { 
+                this._container.setAttribute('open', '');
+            }else if (!this._container.classList.contains('maplibregl-compact') && !this._container.classList.contains('maplibregl-attrib-empty')) {
+                this._container.setAttribute('open', '');
                 this._container.classList.add('maplibregl-compact', 'mapboxgl-compact', 'maplibregl-compact-show', 'mapboxgl-compact-show');
             }
         } else {
             if (this._container.classList.contains('maplibregl-compact')) {
+                this._container.setAttribute('open', '');
                 this._container.classList.remove('maplibregl-compact', 'maplibregl-compact-show', 'mapboxgl-compact', 'mapboxgl-compact-show');
             }
         }
@@ -185,7 +188,6 @@ class AttributionControl implements IControl {
     _updateCompactMinimize() {
         if (this._container.classList.contains('maplibregl-compact')) {
             if (this._container.classList.contains('maplibregl-compact-show')) {
-                this._container.removeAttribute('open');
                 this._container.classList.remove('maplibregl-compact-show', 'mapboxgl-compact-show');
             }
         }
