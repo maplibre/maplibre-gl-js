@@ -1,15 +1,18 @@
 import {createMap as globalCreateMap, setWebGlContext, setPerformance} from '../../util/test/util';
 
 function createMap(logoPosition, maplibreLogo) {
-    return globalCreateMap({
-        logoPosition,
-        maplibreLogo,
+
+    const mapobj = {
+        ...logoPosition !== undefined && {logoPosition},
+        ...maplibreLogo !== undefined && {maplibreLogo},
         style: {
             version: 8,
             sources: {},
             layers: []
         }
-    }, undefined);
+    }
+
+    return globalCreateMap(mapobj, undefined);
 }
 
 beforeEach(() => {
@@ -41,9 +44,9 @@ describe('LogoControl', () => {
     test('is not displayed when the maplibreLogo property is false', done => {
         const map = createMap('top-left', false);
         map.on('load', () => {
-            const container = map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left > .maplibregl-ctrl')[0] as HTMLBaseElement;
-            const containerStyle = container.style;
-            expect(containerStyle).toHaveProperty('display', 'none');
+            expect(map.getContainer().querySelectorAll(
+            '.maplibregl-ctrl-logo'
+            )).toHaveLength(0);
             done();
         });
     });
