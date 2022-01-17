@@ -108,7 +108,7 @@ class AttributionControl implements IControl {
 
     _updateAttributions() {
         if (!this._map.style) return;
-        let attributions: Array<string> = ['OpenMapTiles'];
+        let attributions: Array<string> = [];
         if (this.options.customAttribution) {
             if (Array.isArray(this.options.customAttribution)) {
                 attributions = attributions.concat(
