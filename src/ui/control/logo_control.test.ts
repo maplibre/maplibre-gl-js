@@ -51,17 +51,17 @@ describe('LogoControl', () => {
         });
     });
 
-    test('appears in compact mode if container is less then 250 pixel wide', () => {
+    test('appears in compact mode if container is less then 640 pixel wide', () => {
         const map = createMap(undefined, undefined);
         const container = map.getContainer();
 
-        Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 255, configurable: true});
+        Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 645, configurable: true});
         map.resize();
         expect(
         container.querySelectorAll('.maplibregl-ctrl-logo:not(.maplibregl-compact)')
         ).toHaveLength(1);
 
-        Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 245, configurable: true});
+        Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 635, configurable: true});
         map.resize();
         expect(
         container.querySelectorAll('.maplibregl-ctrl-logo.maplibregl-compact')
