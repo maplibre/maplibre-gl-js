@@ -10,7 +10,7 @@ function createMap(logoPosition, maplibreLogo) {
             sources: {},
             layers: []
         }
-    }
+    };
 
     return globalCreateMap(mapobj, undefined);
 }
