@@ -1,7 +1,6 @@
 declare module '@mapbox/vector-tile' {
     import '@mapbox/vector-tile';
     import type Pbf from 'pbf';
-    import type Point from '@mapbox/point-geometry';
 
     export class VectorTileLayer {
         version?: number;
