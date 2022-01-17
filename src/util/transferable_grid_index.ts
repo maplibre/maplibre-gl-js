@@ -19,23 +19,25 @@ THIS SOFTWARE.
 
 const NUM_PARAMS = 3;
 
+export type SerializedGrid = {
+    buffer: ArrayBuffer;
+};
+
 class TransferableGridIndex {
-    cells: any;
+    cells: number[][];
     arrayBuffer: ArrayBuffer;
-    d: any;
-    keys: any;
-    bboxes: any;
+    d: number;
+    keys: number[];
+    bboxes: number[];
     n: number;
-    extent: any;
+    extent: number;
     padding: number;
     scale: any;
-    uid: any;
-    min: any;
-    max: any;
+    uid: number;
+    min: number;
+    max: number;
 
-    constructor(arrayBuffer: ArrayBuffer);
-    constructor(extent: number, n: number, padding: number);
-    constructor(extent, n?, padding?) {
+    constructor(extent: number | ArrayBuffer, n?: number, padding?: number) {
         const cells = this.cells = [];
 
         if (extent instanceof ArrayBuffer) {
@@ -53,8 +55,8 @@ class TransferableGridIndex {
             }
             const keysOffset = array[NUM_PARAMS + cells.length];
             const bboxesOffset = array[NUM_PARAMS + cells.length + 1];
-            this.keys = array.subarray(keysOffset, bboxesOffset);
-            this.bboxes = array.subarray(bboxesOffset);
+            this.keys = array.subarray(keysOffset, bboxesOffset) as any as number[];
+            this.bboxes = array.subarray(bboxesOffset) as any as number[];
 
             this.insert = this._insertReadonly;
 
@@ -91,7 +93,7 @@ class TransferableGridIndex {
         throw new Error('Cannot insert into a GridIndex created from an ArrayBuffer.');
     }
 
-    _insertCell(x1, y1, x2, y2, cellIndex, uid) {
+    _insertCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, uid: number) {
         this.cells[cellIndex].push(uid);
     }
 
@@ -112,7 +114,7 @@ class TransferableGridIndex {
         }
     }
 
-    _queryCell(x1, y1, x2, y2, cellIndex, result, seenUids, intersectionTest) {
+    _queryCell(x1: number, y1: number, x2: number, y2:number, cellIndex:number, result, seenUids, intersectionTest: Function) {
         const cell = this.cells[cellIndex];
         if (cell !== null) {
             const keys = this.keys;
@@ -137,7 +139,7 @@ class TransferableGridIndex {
         }
     }
 
-    _forEachCell(x1, y1, x2, y2, fn, arg1, arg2, intersectionTest) {
+    _forEachCell(x1: number, y1: number, x2:number, y2:number, fn: Function, arg1, arg2, intersectionTest) {
         const cx1 = this._convertToCellCoord(x1);
         const cy1 = this._convertToCellCoord(y1);
         const cx2 = this._convertToCellCoord(x2);
@@ -198,6 +200,17 @@ class TransferableGridIndex {
         return array.buffer;
     }
 
+    public static serialize(grid: TransferableGridIndex, transferables?: Array<Transferable>): SerializedGrid {
+        const buffer = grid.toArrayBuffer();
+        if (transferables) {
+            transferables.push(buffer);
+        }
+        return {buffer};
+    }
+
+    public static deserialize(serialized: SerializedGrid): TransferableGridIndex {
+        return new TransferableGridIndex(serialized.buffer);
+    }
 }
 
 export default TransferableGridIndex;

@@ -63,22 +63,6 @@ export function register<T extends any>(
 }
 
 register('Object', Object);
-
-type SerializedGrid = {
-  buffer: ArrayBuffer;
-};
-
-(TransferableGridIndex as any).serialize = function serialize(grid: TransferableGridIndex, transferables?: Array<Transferable>): SerializedGrid {
-    const buffer = grid.toArrayBuffer();
-    if (transferables) {
-        transferables.push(buffer);
-    }
-    return {buffer};
-};
-
-(TransferableGridIndex as any).deserialize = function deserialize(serialized: SerializedGrid): TransferableGridIndex {
-    return new TransferableGridIndex(serialized.buffer);
-};
 register('TransferableGridIndex', TransferableGridIndex);
 
 register('Color', Color);
