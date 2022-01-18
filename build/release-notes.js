@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const execSync = require('child_process').execSync;
-const ejs = require('ejs');
-const _ = require('lodash');
-const semver = require('semver');
+import * as fs from 'fs';
+import {execSync} from 'child_process';
+import * as ejs from 'ejs';
+import _ from 'lodash';
+import semver from 'semver';
 
 const changelogPath = 'CHANGELOG.md';
 const changelog = fs.readFileSync(changelogPath, 'utf8');
@@ -36,6 +36,7 @@ let previousVersion = semver.maxSatisfying(gitTags, "<" + currentVersion, { incl
 const regex = /^## (\d+\.\d+\.\d+).*?\n(.+?)(?=\n^## \d+\.\d+\.\d+.*?\n)/gms;
 
 let releaseNotes = [];
+let match;
 // eslint-disable-next-line no-cond-assign
 while (match = regex.exec(changelog)) {
     releaseNotes.push({

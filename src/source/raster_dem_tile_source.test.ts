@@ -1,16 +1,17 @@
-import '../../stub_loader';
-import {test} from '../../util/test';
-import RasterDEMTileSource from '../../../rollup/build/tsc/src/source/raster_dem_tile_source';
-import {OverscaledTileID} from '../../../rollup/build/tsc/src/source/tile_id';
-import {RequestManager} from '../../../rollup/build/tsc/src/util/request_manager';
+import {fakeServer, SinonFakeServer} from 'sinon';
+import RasterDEMTileSource from './raster_dem_tile_source';
+import {OverscaledTileID} from './tile_id';
+import {RequestManager} from '../util/request_manager';
+import Dispatcher from '../util/dispatcher';
+import Tile from './tile';
 
-function createSource(options, transformCallback) {
-    const source = new RasterDEMTileSource('id', options, {send() {}}, options.eventedParent);
+function createSource(options, transformCallback?) {
+    const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);
     source.onAdd({
         transform: {angle: 0, pitch: 0, showCollisionBoxes: false},
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback)
-    });
+    } as any);
 
     source.on('error', (e) => {
         throw e.error;
@@ -19,47 +20,47 @@ function createSource(options, transformCallback) {
     return source;
 }
 
-test('RasterTileSource', (t) => {
-    t.beforeEach((callback) => {
-        window.useFakeXMLHttpRequest();
-        callback();
+describe('RasterTileSource', () => {
+    let server: SinonFakeServer;
+    beforeEach(() => {
+        global.fetch = null;
+        server = fakeServer.create();
     });
 
-    t.afterEach((callback) => {
-        window.clearFakeXMLHttpRequest();
-        callback();
+    afterEach(() => {
+        server.restore();
     });
 
-    t.test('transforms request for TileJSON URL', (t) => {
-        window.server.respondWith('/source.json', JSON.stringify({
+    test('transforms request for TileJSON URL', done => {
+        server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.pngraw"],
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
             bounds: [-47, -7, -45, -5]
         }));
-        const transformSpy = t.spy((url) => {
+        const transformSpy = jest.fn().mockImplementation((url) => {
             return {url};
         });
 
-        createSource({url: "/source.json"}, transformSpy);
-        window.server.respond();
+        createSource({url: '/source.json'}, transformSpy);
+        server.respond();
 
-        t.equal(transformSpy.getCall(0).args[0], '/source.json');
-        t.equal(transformSpy.getCall(0).args[1], 'Source');
-        t.end();
+        expect(transformSpy.mock.calls[0][0]).toBe('/source.json');
+        expect(transformSpy.mock.calls[0][1]).toBe('Source');
+        done();
     });
 
-    t.test('transforms tile urls before requesting', (t) => {
-        window.server.respondWith('/source.json', JSON.stringify({
+    test('transforms tile urls before requesting', done => {
+        server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"],
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        const source = createSource({url: "/source.json"});
-        const transformSpy = t.spy(source.map._requestManager, 'transformRequest');
+        const source = createSource({url: '/source.json'});
+        const transformSpy = jest.spyOn(source.map._requestManager, 'transformRequest');
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const tile = {
@@ -67,26 +68,26 @@ test('RasterTileSource', (t) => {
                     state: 'loading',
                     loadVectorData () {},
                     setExpiryData() {}
-                };
+                } as any as Tile;
                 source.loadTile(tile, () => {});
 
-                t.ok(transformSpy.calledOnce);
-                t.equal(transformSpy.getCall(0).args[0], 'http://example.com/10/5/5.png');
-                t.equal(transformSpy.getCall(0).args[1], 'Tile');
-                t.end();
+                expect(transformSpy).toHaveBeenCalledTimes(1);
+                expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/10/5/5.png');
+                expect(transformSpy.mock.calls[0][1]).toBe('Tile');
+                done();
 
             }
         });
-        window.server.respond();
+        server.respond();
     });
-    t.test('populates neighboringTiles', (t) => {
-        window.server.respondWith('/source.json', JSON.stringify({
+    test('populates neighboringTiles', done => {
+        server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"]
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
-        const source = createSource({url: "/source.json"});
+        const source = createSource({url: '/source.json'});
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const tile = {
@@ -94,10 +95,10 @@ test('RasterTileSource', (t) => {
                     state: 'loading',
                     loadVectorData () {},
                     setExpiryData() {}
-                };
+                } as any as Tile;
                 source.loadTile(tile, () => {});
 
-                t.deepEqual(Object.keys(tile.neighboringTiles), [
+                expect(Object.keys(tile.neighboringTiles)).toEqual([
                     new OverscaledTileID(10, 0, 10, 4, 5).key,
                     new OverscaledTileID(10, 0, 10, 6, 5).key,
                     new OverscaledTileID(10, 0, 10, 4, 4).key,
@@ -108,21 +109,21 @@ test('RasterTileSource', (t) => {
                     new OverscaledTileID(10, 0, 10, 6, 6).key
                 ]);
 
-                t.end();
+                done();
 
             }
         });
-        window.server.respond();
+        server.respond();
     });
 
-    t.test('populates neighboringTiles with wrapped tiles', (t) => {
-        window.server.respondWith('/source.json', JSON.stringify({
+    test('populates neighboringTiles with wrapped tiles', done => {
+        server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
-            attribution: "Mapbox",
-            tiles: ["http://example.com/{z}/{x}/{y}.png"]
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
-        const source = createSource({url: "/source.json"});
+        const source = createSource({url: '/source.json'});
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const tile = {
@@ -130,10 +131,10 @@ test('RasterTileSource', (t) => {
                     state: 'loading',
                     loadVectorData () {},
                     setExpiryData() {}
-                };
+                } as any as Tile;
                 source.loadTile(tile, () => {});
 
-                t.deepEqual(Object.keys(tile.neighboringTiles), [
+                expect(Object.keys(tile.neighboringTiles)).toEqual([
                     new OverscaledTileID(5, 0, 5, 30, 6).key,
                     new OverscaledTileID(5, 0, 5, 31, 6).key,
                     new OverscaledTileID(5, 0, 5, 30, 5).key,
@@ -143,11 +144,9 @@ test('RasterTileSource', (t) => {
                     new OverscaledTileID(5, 1, 5, 0,  4).key,
                     new OverscaledTileID(5, 1, 5, 0,  6).key
                 ]);
-                t.end();
+                done();
             }
         });
-        window.server.respond();
+        server.respond();
     });
-    t.end();
-
 });

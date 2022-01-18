@@ -17,6 +17,15 @@ Use
 
 if it is important to you that the behaviour is similar to `mapbox-gl` version 1.x.
 
+If you are OK with changes that integrate non-backward compatible features, install `maplibre-gl` version 2:
+
+```diff
+  "dependencies": {
+-    "mapbox-gl": "^1.13.0"
++    "maplibre-gl": ">=2.0.0"
+  }
+```
+
 And replace `mapboxgl` with `maplibregl` in your JavaScript and optionally in your HTML/CSS code:
 
 > MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more informations please see [MapLibre GL is on unpkg.com](./docs/README-unpkg.md#maplibre-gl-on-unpkgcom).
@@ -66,7 +75,7 @@ If you depend on a free software alternative to `mapbox-gl-js`, please consider 
 
 ### Thank you Mapbox 🙏🏽
 
-We'd like to acknowledge the amazing work Mapbox has contributed to open source. The open source community is sad to part ways with them, but we simultaneously feel grateful for everything they already contributed. `mapbox-gl-js` 1.x is an open source achievment which now lives on as `maplibre-gl`. We're proud to develop on the shoulders of giants, thank you Mapbox 🙇🏽‍♀️.
+We'd like to acknowledge the amazing work Mapbox has contributed to open source. The open source community is sad to part ways with them, but we simultaneously feel grateful for everything they already contributed. `mapbox-gl-js` 1.x is an open source achievement which now lives on as `maplibre-gl`. We're proud to develop on the shoulders of giants, thank you Mapbox 🙇🏽‍♀️.
 
 Please keep in mind: Unauthorized backports are the biggest threat to the MapLibre project. It is unacceptable to backport code from mapbox-gl-js, which is not covered by the former BSD-3 license. If you are unsure about this issue, [please ask](https://github.com/maplibre/maplibre-gl-js/discussions)!
 

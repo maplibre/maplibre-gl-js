@@ -36,7 +36,7 @@ export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Pa
  * // set the map's initial perspective with CameraOptions
  * var map = new maplibregl.Map({
  *   container: 'map',
- *   style: 'mapbox://styles/mapbox/streets-v11',
+ *   style: 'https://demotiles.maplibre.org/style.json',
  *   center: [-73.5804, 45.53483],
  *   pitch: 60,
  *   bearing: -60,
@@ -159,7 +159,6 @@ abstract class Camera extends Evented {
      * var center = map.getCenter();
      * // access longitude and latitude values directly
      * var {lng, lat} = map.getCenter();
-     * @see Tutorial: [Use Mapbox GL JS in a React app](https://docs.mapbox.com/help/tutorials/use-mapbox-gl-js-with-react/#store-the-new-coordinates)
      */
     getCenter(): LngLat { return new LngLat(this.transform.center.lng, this.transform.center.lat); }
 

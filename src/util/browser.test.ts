@@ -14,7 +14,7 @@ describe('browser', () => {
 
     test('frame', done => {
         const frame = browser.frame(() => {
-            done.fail();
+            done('test failed: browser.frame callback was called');
         });
         frame.cancel();
         done();

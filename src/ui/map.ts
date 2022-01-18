@@ -168,37 +168,20 @@ const defaultOptions = {
  * and fires events as users interact with it.
  *
  * You create a `Map` by specifying a `container` and other options.
- * Then Mapbox GL JS initializes the map on the page and returns your `Map`
+ * Then MapLibre GL JS initializes the map on the page and returns your `Map`
  * object.
  *
  * @extends Evented
  * @param {Object} options
- * @param {HTMLElement|string} options.container The HTML element in which Mapbox GL JS will render the map, or the element's string `id`. The specified element must have no children.
+ * @param {HTMLElement|string} options.container The HTML element in which MapLibre GL JS will render the map, or the element's string `id`. The specified element must have no children.
  * @param {number} [options.minZoom=0] The minimum zoom level of the map (0-24).
  * @param {number} [options.maxZoom=22] The maximum zoom level of the map (0-24).
  * @param {number} [options.minPitch=0] The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
  * @param {number} [options.maxPitch=60] The maximum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
- * @param {Object|string} [options.style] The map's Mapbox style. This must be an a JSON object conforming to
- * the schema described in the [Mapbox Style Specification](https://mapbox.com/mapbox-gl-style-spec/), or a URL to
+ * @param {Object|string} [options.style] The map's MapLibre style. This must be an a JSON object conforming to
+ * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/), or a URL to
  * such JSON.
  *
- * To load a style from the Mapbox API, you can use a URL of the form `mapbox://styles/:owner/:style`,
- * where `:owner` is your Mapbox account name and `:style` is the style ID. Or you can use one of the following
- * [the predefined Mapbox styles](https://www.mapbox.com/maps/):
- *
- *  * `mapbox://styles/mapbox/streets-v11`
- *  * `mapbox://styles/mapbox/outdoors-v11`
- *  * `mapbox://styles/mapbox/light-v10`
- *  * `mapbox://styles/mapbox/dark-v10`
- *  * `mapbox://styles/mapbox/satellite-v9`
- *  * `mapbox://styles/mapbox/satellite-streets-v11`
- *  * `mapbox://styles/mapbox/navigation-preview-day-v4`
- *  * `mapbox://styles/mapbox/navigation-preview-night-v4`
- *  * `mapbox://styles/mapbox/navigation-guidance-day-v4`
- *  * `mapbox://styles/mapbox/navigation-guidance-night-v4`
- *
- * Tilesets hosted with Mapbox can be style-optimized if you append `?optimize=true` to the end of your style URL, like `mapbox://styles/mapbox/streets-v11?optimize=true`.
- * Learn more about style-optimized vector tiles in our [API documentation](https://www.mapbox.com/api-documentation/maps/#retrieve-tiles).
  *
  * @param {(boolean|string)} [options.hash=false] If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
  *   For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
@@ -213,8 +196,8 @@ const defaultOptions = {
  * @param {number} [options.clickTolerance=3] The max number of pixels a user can shift the mouse pointer during a click for it to be considered a valid click (as opposed to a mouse drag).
  * @param {boolean} [options.attributionControl=true] If `true`, an {@link AttributionControl} will be added to the map.
  * @param {string | Array<string>} [options.customAttribution] String or strings to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
- * @param {string} [options.logoPosition='bottom-left'] A string representing the position of the Mapbox wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
- * @param {boolean} [options.failIfMajorPerformanceCaveat=false] If `true`, map creation will fail if the performance of Mapbox
+ * @param {string} [options.logoPosition='bottom-left'] A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
+ * @param {boolean} [options.failIfMajorPerformanceCaveat=false] If `true`, map creation will fail if the performance of MapLibre
  *   GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
  * @param {boolean} [options.preserveDrawingBuffer=false] If `true`, the map's canvas can be exported to a PNG using `map.getCanvas().toDataURL()`. This is `false` by default as a performance optimization.
  * @param {boolean} [options.antialias] If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. this is `false` by default as a performance optimization.
@@ -229,9 +212,9 @@ const defaultOptions = {
  * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TouchZoomRotateHandler#enable}.
  * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TouchPitchHandler#enable}.
  * @param {boolean} [options.trackResize=true]  If `true`, the map will automatically resize when the browser window resizes.
- * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: Mapbox GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
- * @param {number} [options.zoom=0] The initial zoom level of the map. If `zoom` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
- * @param {number} [options.bearing=0] The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, Mapbox GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+ * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
+ * @param {number} [options.zoom=0] The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+ * @param {number} [options.bearing=0] The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
  * @param {number} [options.pitch=0] The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-85). If `pitch` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`. Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
  * @param {LngLatBoundsLike} [options.bounds] The initial bounds of the map. If `bounds` is specified, it overrides `center` and `zoom` constructor options.
  * @param {Object} [options.fitBoundsOptions] A {@link Map#fitBounds} options object to use _only_ when fitting the initial `bounds` provided above.
@@ -244,7 +227,7 @@ const defaultOptions = {
  * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
  *   font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
  *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
- *   Set to `false`, to enable font settings from the map's style for these glyph ranges.  Note that [Mapbox Studio](https://studio.mapbox.com/) sets this value to `false` by default.
+ *   Set to `false`, to enable font settings from the map's style for these glyph ranges.
  *   The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js-docs/example/local-ideographs).)
  * @param {RequestTransformFunction} [options.transformRequest=null] A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
  *   Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
@@ -269,7 +252,7 @@ const defaultOptions = {
  *     }
  *   }
  * });
- * @see [Display a map](https://www.mapbox.com/mapbox-gl-js/examples/)
+ * @see [Display a map](https://maplibre.org/maplibre-gl-js-docs/example/simple-map/)
  */
 class Map extends Camera {
     style: Style;
@@ -1025,15 +1008,15 @@ class Map extends Camera {
      *     id: 'points-of-interest',
      *     source: {
      *       type: 'vector',
-     *       url: 'mapbox://mapbox.mapbox-streets-v8'
+     *       url: 'https://maplibre.org/maplibre-gl-js-docs/style-spec/'
      *     },
      *     'source-layer': 'poi_label',
      *     type: 'circle',
      *     paint: {
-     *       // Mapbox Style Specification paint properties
+     *       // MapLibre Style Specification paint properties
      *     },
      *     layout: {
-     *       // Mapbox Style Specification layout properties
+     *       // MapLibre Style Specification layout properties
      *     }
      *   });
      * });
@@ -1191,11 +1174,11 @@ class Map extends Camera {
      * or with only a `options` argument) is equivalent to passing a bounding box encompassing the entire
      * map viewport.
      * @param {Object} [options] Options object.
-     * @param {Array<string>} [options.layers] An array of [style layer IDs](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layer-id) for the query to inspect.
+     * @param {Array<string>} [options.layers] An array of [style layer IDs](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-id) for the query to inspect.
      *   Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
-     * @param {Array} [options.filter] A [filter](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#filter)
+     * @param {Array} [options.filter] A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
      *   to limit query results.
-     * @param {boolean} [options.validate=true] Whether to check if the [options.filter] conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
      * @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
      * [feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
@@ -1298,11 +1281,11 @@ class Map extends Camera {
      *
      * @param {string} sourceId The ID of the vector tile or GeoJSON source to query.
      * @param {Object} [parameters] Options object.
-     * @param {string} [parameters.sourceLayer] The name of the [source layer](https://docs.mapbox.com/help/glossary/source-layer/)
+     * @param {string} [parameters.sourceLayer] The name of the source layer
      *   to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
-     * @param {Array} [parameters.filter] A [filter](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#filter)
+     * @param {Array} [parameters.filter] A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
      *   to limit query results.
-     * @param {boolean} [parameters.validate=true] Whether to check if the [parameters.filter] conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [parameters.validate=true] Whether to check if the [parameters.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
      * @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
      * [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
@@ -1336,7 +1319,7 @@ class Map extends Camera {
     }
 
     /**
-     * Updates the map's Mapbox style object with a new value.
+     * Updates the map's MapLibre style object with a new value.
      *
      * If a style is already set when this is used and options.diff is set to true, the map renderer will attempt to compare the given style
      * against the map's current state and perform only the changes necessary to make the map style match the desired state. Changes in sprites
@@ -1346,7 +1329,7 @@ class Map extends Camera {
      *
      *
      * @param style A JSON object conforming to the schema described in the
-     *   [Mapbox Style Specification](https://mapbox.com/mapbox-gl-style-spec/), or a URL to such JSON.
+     *   [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/), or a URL to such JSON.
      * @param {Object} [options] Options object.
      * @param {boolean} [options.diff=true] If false, force a 'full' update, removing the current style
      *   and building the given one instead of attempting a diff-based update.
@@ -1358,7 +1341,7 @@ class Map extends Camera {
      * @returns {Map} `this`
      *
      * @example
-     * map.setStyle("mapbox://styles/mapbox/streets-v11");
+     * map.setStyle("https://demotiles.maplibre.org/style.json");
      *
      */
     setStyle(style: StyleSpecification | string | null, options?: {
@@ -1468,7 +1451,7 @@ class Map extends Camera {
     }
 
     /**
-     * Returns the map's Mapbox [style](https://docs.mapbox.com/help/glossary/style/) object, a JSON object which can be used to recreate the map's style.
+     * Returns the map's MapLibre style object, a JSON object which can be used to recreate the map's style.
      *
      * @returns {Object} The map's style JSON object.
      *
@@ -1500,14 +1483,14 @@ class Map extends Camera {
      *
      * @param {string} id The ID of the source to add. Must not conflict with existing sources.
      * @param {Object} source The source object, conforming to the
-     * Mapbox Style Specification's [source definition](https://www.mapbox.com/mapbox-gl-style-spec/#sources) or
+     * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources) or
      * {@link CanvasSourceOptions}.
      * @fires source.add
      * @returns {Map} `this`
      * @example
      * map.addSource('my-data', {
      *   type: 'vector',
-     *   url: 'mapbox://myusername.tilesetid'
+     *   url: 'https://demotiles.maplibre.org/tiles/tiles.json'
      * });
      * @example
      * map.addSource('my-data', {
@@ -1607,29 +1590,29 @@ class Map extends Camera {
      * of an image source.
      *
      * @param {string} id The ID of the source to get.
-     * @returns {Source} The style source with the specified ID or `undefined` if the ID
+     * @returns {Source | undefined} The style source with the specified ID or `undefined` if the ID
      * corresponds to no existing sources.
      * The shape of the object varies by source type.
-     * A list of options for each source type is available on the Mapbox Style Specification's
-     * [Sources](https://docs.mapbox.com/mapbox-gl-js/style-spec/sources/) page.
+     * A list of options for each source type is available on the MapLibre Style Specification's
+     * [Sources](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/) page.
      * @example
      * var sourceObject = map.getSource('points');
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      * @see [Animate a point](https://maplibre.org/maplibre-gl-js-docs/example/animate-point-along-line/)
      * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js-docs/example/live-geojson/)
      */
-    getSource(id: string): Source {
+    getSource(id: string): Source | undefined {
         return this.style.getSource(id);
     }
 
     // eslint-disable-next-line jsdoc/require-returns
     /**
      * Add an image to the style. This image can be displayed on the map like any other icon in the style's
-     * [sprite](https://docs.mapbox.com/help/glossary/sprite/) using the image's ID with
-     * [`icon-image`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layout-symbol-icon-image),
-     * [`background-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-background-background-pattern),
-     * [`fill-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-fill-fill-pattern),
-     * or [`line-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-line-line-pattern).
+     * sprite using the image's ID with
+     * [`icon-image`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layout-symbol-icon-image),
+     * [`background-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-background-background-pattern),
+     * [`fill-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-fill-fill-pattern),
+     * or [`line-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-line-line-pattern).
      * A {@link Map.event:error} event will be fired if there is not enough space in the sprite to add this image.
      *
      * @param id The ID of the image.
@@ -1715,11 +1698,11 @@ class Map extends Camera {
     // eslint-disable-next-line jsdoc/require-returns
     /**
      * Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
-     * [sprite](https://docs.mapbox.com/help/glossary/sprite/) using the image's ID with
-     * [`icon-image`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layout-symbol-icon-image),
-     * [`background-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-background-background-pattern),
-     * [`fill-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-fill-fill-pattern),
-     * or [`line-pattern`](https://docs.mapbox.com/mapbox-gl-js/style-spec/#paint-line-line-pattern).
+     * sprite using the image's ID with
+     * [`icon-image`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layout-symbol-icon-image),
+     * [`background-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-background-background-pattern),
+     * [`fill-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-fill-fill-pattern),
+     * or [`line-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-line-line-pattern).
      *
      * @param id The ID of the image.
      * @param image The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
@@ -1766,7 +1749,7 @@ class Map extends Camera {
 
     /**
      * Check whether or not an image with a specific ID exists in the style. This checks both images
-     * in the style's original [sprite](https://docs.mapbox.com/help/glossary/sprite/) and any images
+     * in the style's original sprite and any images
      * that have been added at runtime using {@link Map#addImage}.
      *
      * @param id The ID of the image.
@@ -1788,7 +1771,7 @@ class Map extends Camera {
 
     /**
      * Remove an image from a style. This can be an image from the style's original
-     * [sprite](https://docs.mapbox.com/help/glossary/sprite/) or any images
+     * sprite or any images
      * that have been added at runtime using {@link Map#addImage}.
      *
      * @param id The ID of the image.
@@ -1825,7 +1808,7 @@ class Map extends Camera {
 
     /**
     * Returns an Array of strings containing the IDs of all images currently available in the map.
-    * This includes both images from the style's original [sprite](https://docs.mapbox.com/help/glossary/sprite/)
+    * This includes both images from the style's original sprite
     * and any images that have been added at runtime using {@link Map#addImage}.
     *
     * @returns {Array<string>} An Array of strings containing the names of all sprites/images currently available in the map.
@@ -1839,38 +1822,38 @@ class Map extends Camera {
     }
 
     /**
-     * Adds a [Mapbox style layer](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layers)
+     * Adds a [MapLibre style layer](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layers)
      * to the map's style.
      *
      * A layer defines how data from a specified source will be styled. Read more about layer types
-     * and available paint and layout properties in the [Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layers).
+     * and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layers).
      *
-     * @param {Object | CustomLayerInterface} layer The layer to add, conforming to either the Mapbox Style Specification's [layer definition](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layers) or, less commonly, the {@link CustomLayerInterface} specification.
-     * The Mapbox Style Specification's layer definition is appropriate for most layers.
+     * @param {Object | CustomLayerInterface} layer The layer to add, conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layers) or, less commonly, the {@link CustomLayerInterface} specification.
+     * The MapLibre Style Specification's layer definition is appropriate for most layers.
      *
      * @param {string} layer.id A unique identifer that you define.
      * @param {string} layer.type The type of layer (for example `fill` or `symbol`).
-     * A list of layer types is available in the [Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#type).
+     * A list of layer types is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#type).
      *
      * (This can also be `custom`. For more information, see {@link CustomLayerInterface}.)
      * @param {string | Object} [layer.source] The data source for the layer.
      * Reference a source that has _already been defined_ using the source's unique id.
-     * Reference a _new source_ using a source object (as defined in the [Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/sources/)) directly.
+     * Reference a _new source_ using a source object (as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/)) directly.
      * This is **required** for all `layer.type` options _except_ for `custom`.
-     * @param {string} [layer.sourceLayer] (optional) The name of the [source layer](https://docs.mapbox.com/help/glossary/source-layer/) within the specified `layer.source` to use for this style layer.
+     * @param {string} [layer.sourceLayer] (optional) The name of the source layer within the specified `layer.source` to use for this style layer.
      * This is only applicable for vector tile sources and is **required** when `layer.source` is of the type `vector`.
      * @param {array} [layer.filter] (optional) An expression specifying conditions on source features.
      * Only features that match the filter are displayed.
-     * The Mapbox Style Specification includes more information on the limitations of the [`filter`](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#filter) parameter
-     * and a complete list of available [expressions](https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions/).
+     * The MapLibre Style Specification includes more information on the limitations of the [`filter`](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter) parameter
+     * and a complete list of available [expressions](https://maplibre.org/maplibre-gl-js-docs/style-spec/expressions/).
      * If no filter is provided, all features in the source (or source layer for vector tilesets) will be displayed.
      * @param {Object} [layer.paint] (optional) Paint properties for the layer.
      * Available paint properties vary by `layer.type`.
-     * A full list of paint properties for each layer type is available in the [Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/).
+     * A full list of paint properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/).
      * If no paint properties are specified, default values will be used.
      * @param {Object} [layer.layout] (optional) Layout properties for the layer.
      * Available layout properties vary by `layer.type`.
-     * A full list of layout properties for each layer type is available in the [Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/).
+     * A full list of layout properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/).
      * If no layout properties are specified, default values will be used.
      * @param {number} [layer.maxzoom] (optional) The maximum zoom level for the layer.
      * At zoom levels equal to or greater than the maxzoom, the layer will be hidden.
@@ -1896,15 +1879,15 @@ class Map extends Camera {
      *   id: 'points-of-interest',
      *   source: {
      *     type: 'vector',
-     *     url: 'mapbox://mapbox.mapbox-streets-v8'
+     *     url: 'https://demotiles.maplibre.org/tiles/tiles.json'
      *   },
      *   'source-layer': 'poi_label',
      *   type: 'circle',
      *   paint: {
-     *     // Mapbox Style Specification paint properties
+     *     // MapLibre Style Specification paint properties
      *   },
      *   layout: {
-     *     // Mapbox Style Specification layout properties
+     *     // MapLibre Style Specification layout properties
      *   }
      * });
      *
@@ -2006,8 +1989,8 @@ class Map extends Camera {
 
     /**
      * Sets the zoom extent for the specified style layer. The zoom extent includes the
-     * [minimum zoom level](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layer-minzoom)
-     * and [maximum zoom level](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layer-maxzoom))
+     * [minimum zoom level](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-minzoom)
+     * and [maximum zoom level](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-maxzoom))
      * at which the layer will be rendered.
      *
      * Note: For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
@@ -2041,10 +2024,10 @@ class Map extends Camera {
      * To clear the filter, pass `null` or `undefined` as the second parameter.
      *
      * @param {string} layerId The ID of the layer to which the filter will be applied.
-     * @param {Array | null | undefined} filter The filter, conforming to the Mapbox Style Specification's
-     *   [filter definition](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
+     * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
+     *   [filter definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
      * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      *
      * @example
@@ -2058,7 +2041,6 @@ class Map extends Camera {
      * map.setFilter('bike-docks', null);
      *
      * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js-docs/example/timeline-animation/)
-     * @see Tutorial: [Show changes over time](https://docs.mapbox.com/help/tutorials/show-changes-over-time/)
      */
     setFilter(layerId: string, filter?: FilterSpecification | null,  options: StyleSetterOptions = {}) {
         this.style.setFilter(layerId, filter, options);
@@ -2081,9 +2063,9 @@ class Map extends Camera {
      * @param {string} layerId The ID of the layer to set the paint property in.
      * @param {string} name The name of the paint property to set.
      * @param {*} value The value of the paint property to set.
-     *   Must be of a type appropriate for the property, as defined in the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/).
+     *   Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/).
      * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
      * map.setPaintProperty('my-layer', 'fill-color', '#faafee');
@@ -2111,9 +2093,9 @@ class Map extends Camera {
      *
      * @param {string} layerId The ID of the layer to set the layout property in.
      * @param {string} name The name of the layout property to set.
-     * @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/).
+     * @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/).
      * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
@@ -2137,9 +2119,9 @@ class Map extends Camera {
     /**
      * Sets the any combination of light values.
      *
-     * @param light Light properties to set. Must conform to the [Mapbox Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/#light).
+     * @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#light).
      * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the Mapbox GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
      * var layerVisibility = map.getLayoutProperty('my-layer', 'visibility');
@@ -2168,10 +2150,10 @@ class Map extends Camera {
      *
      * This method can only be used with sources that have a `feature.id` attribute. The `feature.id` attribute can be defined in three ways:
      * - For vector or GeoJSON sources, including an `id` attribute in the original data file.
-     * - For vector or GeoJSON sources, using the [`promoteId`](https://docs.mapbox.com/mapbox-gl-js/style-spec/sources/#vector-promoteId) option at the time the source is defined.
-     * - For GeoJSON sources, using the [`generateId`](https://docs.mapbox.com/mapbox-gl-js/style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
+     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/#vector-promoteId) option at the time the source is defined.
+     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
      *
-     * _Note: You can use the [`feature-state` expression](https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
+     * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-gl-js-docs/style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
      *
      * @param {Object} feature Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
@@ -2196,7 +2178,6 @@ class Map extends Camera {
      * });
      *
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
-     * @see Tutorial: [Create interactive hover effects with Mapbox GL JS](https://docs.mapbox.com/help/tutorials/create-interactive-hover-effects-with-mapbox-gl-js/)
      */
     setFeatureState(feature: {
       source: string;
@@ -2268,7 +2249,7 @@ class Map extends Camera {
      * A feature's `state` is a set of user-defined key-value pairs that are assigned to a feature at runtime.
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
-     * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions/#feature-state)._
+     * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-gl-js-docs/style-spec/expressions/#feature-state)._
      *
      * @param {Object} feature Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
@@ -2677,6 +2658,8 @@ class Map extends Camera {
 
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension) extension.loseContext();
+        this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
+        this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
         this._container.classList.remove('maplibregl-map', 'mapboxgl-map');

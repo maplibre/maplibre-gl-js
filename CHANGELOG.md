@@ -8,6 +8,12 @@
 
 - *...Add new stuff here...*
 
+## 2.0.1
+
+### 🐞 Bug fixes
+
+- Fix documentation of `addProtocol` and `removeProtocol`.
+
 ## 2.0.0
 
 ### Features and improvements
@@ -15,18 +21,19 @@
 - Migrated the production code to typescript
 - ** Breaking Change ** removed `version` from the public API
 - ** Breaking Change ** stopped supporting IE (internet explorer)
-- ** Breaking Change ** removed all code related to `accessToken` and mapbox specific urls, including telemetry etc.  Please do not use mapbox servers with this library.
-- ** Breaking Change ** removed `baseApiUrl` as it was used only for mapbox related urls
+- ** Breaking Change ** stopped supporting Chrome 49-65. Chrome 66+ required. For Chrome 49-65 support use version 1.15.2.
+- ** Breaking Change ** removed all code related to `accessToken` and Mapbox specific urls starting with `mapbox://`. Telemetry and tracking code was removed.
+- ** Breaking Change ** removed `baseApiUrl` as it was used only for Mapbox related urls
 - ** Breaking Change ** typescript typings have changed:
-  - `Style` => `StypeSpecification`
+  - `Style` => `StyleSpecification`
   - `AnyLayer` => `LayerSpecification`
   - `AnySourceData` => `SourceSpecification`
   - `MapboxEvent` => `MapLibreEvent`
   - `MapboxOptions` => `MapOptions`
   - `MapBoxZoomEvent` => `MapLibreZoomEvent`
   - `*SourceRaw` + `*SourceOptions` => `*SourceSpecification`
-  - `*Source` (source implementation definition) were removed 
-  - `*Layer` => `*LayerSpecification` 
+  - `*Source` (source implementation definition) were removed
+  - `*Layer` => `*LayerSpecification`
   - `*Paint` => `*LayerSpecification['paint']`
   - `*Layout` => `*LayerSpecification['layout']`
   - `MapboxGeoJSONFeature` => `GeoJSONFeature`
@@ -34,7 +41,6 @@
 - Improve attribution controls accessibility. See [#359](https://github.com/maplibre/maplibre-gl-js/issues/359)
 - Allow maxPitch value up to 85, use values greater than 60 at your own risk (#574)
 - `getImage` uses createImageBitmap when supported (#650)
-- *...Add new stuff here...*
 
 ### 🐞 Bug fixes
 
@@ -44,6 +50,9 @@
 - Fix precision problem in patterns when overzoomed in OpenGL ES devices.
 - Fix padding-top of the popup to improve readability of popup text (#354).
 - Fix GeoJSONSource#loaded sometimes returning true while there are still pending loads (#669)
+- Fix MapDataEvent#isSourceLoaded being true in GeoJSONSource "dataloading" event handlers (#694)
+- Fix events being fired after Map#remove has been called when the WebGL context is lost and restored (#726)
+- Fix nested expressions types definition [#757](https://github.com/maplibre/maplibre-gl-js/pull/757)
 
 ## 1.15.2
 

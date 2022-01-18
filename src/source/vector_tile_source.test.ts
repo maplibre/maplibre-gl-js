@@ -103,7 +103,7 @@ describe('VectorTileSource', () => {
         const source = createSource({url: '/source.json', eventedParent: evented});
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                if (!dataloadingFired) done.fail();
+                if (!dataloadingFired) done('test failed: dataloading not fired');
                 done();
             }
         });

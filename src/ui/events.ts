@@ -12,6 +12,8 @@ export type MapLayerMouseEvent = MapMouseEvent & { features?: GeoJSON.Feature[] 
 
 export type MapLayerTouchEvent = MapTouchEvent & { features?: GeoJSON.Feature[] };
 
+export type MapSourceDataType = 'content' | 'metadata';
+
 export type MapLayerEventType = {
      click: MapLayerMouseEvent;
      dblclick: MapLayerMouseEvent;
@@ -44,7 +46,7 @@ export interface MapSourceDataEvent extends MapLibreEvent {
      isSourceLoaded: boolean;
      source: SourceSpecification;
      sourceId: string;
-     sourceDataType: 'metadata' | 'content';
+     sourceDataType: MapSourceDataType;
      tile: any;
  }
 /**
@@ -281,18 +283,18 @@ export type MapLibreZoomEvent = {
  * `dataType`s are:
  *
  * - `'source'`: The non-tile data associated with any source
- * - `'style'`: The [style](https://www.mapbox.com/mapbox-gl-style-spec/) used by the map
+ * - `'style'`: The [style](https://maplibre.org/maplibre-gl-js-docs/style-spec/) used by the map
  *
  * @typedef {Object} MapDataEvent
  * @property {string} type The event type.
  * @property {string} dataType The type of data that has changed. One of `'source'`, `'style'`.
  * @property {boolean} [isSourceLoaded] True if the event has a `dataType` of `source` and the source has no outstanding network requests.
- * @property {Object} [source] The [style spec representation of the source](https://www.mapbox.com/mapbox-gl-style-spec/#sources) if the event has a `dataType` of `source`.
+ * @property {Object} [source] The [style spec representation of the source](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources) if the event has a `dataType` of `source`.
  * @property {string} [sourceDataType] Included if the event has a `dataType` of `source` and the event signals
  * that internal data has been received or changed. Possible values are `metadata`, `content` and `visibility`.
  * @property {Object} [tile] The tile being loaded or changed, if the event has a `dataType` of `source` and
  * the event is related to loading of a tile.
- * @property {Coordinate} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
+ * @property {Coordinates} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
  * the event is related to loading of a tile.
  * @example
  * // The sourcedata event is an example of MapDataEvent.
@@ -306,12 +308,18 @@ export type MapLibreZoomEvent = {
 export type MapDataEvent = {
   type: string;
   dataType: string;
+  sourceDataType: MapSourceDataType;
 };
 
 export type MapContextEvent = {
   type: 'webglcontextlost' | 'webglcontextrestored';
   originalEvent: WebGLContextEvent;
 };
+
+export interface MapStyleImageMissingEvent extends MapLibreEvent {
+     type: 'styleimagemissing';
+     id: string;
+}
 
 /**
 * MapEventType - a mapping between the event name and the event value
@@ -335,6 +343,7 @@ export type MapEventType = {
      styledataloading: MapStyleDataEvent;
      sourcedata: MapSourceDataEvent;
      styledata: MapStyleDataEvent;
+     styleimagemissing: MapStyleImageMissingEvent;
 
      boxzoomcancel: MapLibreZoomEvent;
      boxzoomstart: MapLibreZoomEvent;
@@ -1324,7 +1333,7 @@ export type MapEvent = /**
      * map.on('styleimagemissing', function() {
      *   console.log('A styleimagemissing event occurred.');
      * });
-     * @see [Generate and add a missing icon to the map](https://mapbox.com/mapbox-gl-js/example/add-image-missing-generated/)
+     * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-missing-generated/)
      */ | 'styleimagemissing'
 
 /**

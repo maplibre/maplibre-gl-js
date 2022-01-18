@@ -107,7 +107,7 @@ export default class Popup extends Evented {
     _trackPointer: boolean;
     _pos: Point;
 
-    constructor(options: PopupOptions) {
+    constructor(options?: PopupOptions) {
         super();
         this.options = extend(Object.create(defaultOptions), options);
         bindAll(['_update', '_onClose', 'remove', '_onMouseMove', '_onMouseUp', '_onDrag'], this);
@@ -116,7 +116,7 @@ export default class Popup extends Evented {
     /**
      * Adds the popup to a map.
      *
-     * @param {Map} map The Mapbox GL JS map to add the popup to.
+     * @param {Map} map The MapLibre GL JS map to add the popup to.
      * @returns {Popup} `this`
      * @example
      * new maplibregl.Popup()
