@@ -1,9 +1,12 @@
 import DOM from '../../util/dom';
-
 import {bindAll} from '../../util/util';
 
 import type Map from '../map';
 import type {ControlPosition, IControl} from './control';
+
+type LogoOptions = {
+  compact?: boolean;
+};
 
 /**
  * A `LogoControl` is a control that adds the watermark.
@@ -13,16 +16,20 @@ import type {ControlPosition, IControl} from './control';
 **/
 
 class LogoControl implements IControl {
+    options: LogoOptions;
     _map: Map;
+    _compact: boolean;
     _container: HTMLElement;
 
-    constructor() {
+    constructor(options: LogoOptions = {}) {
+        this.options = options;
         bindAll(['_updateLogo'], this);
         bindAll(['_updateCompact'], this);
     }
 
     onAdd(map: Map) {
         this._map = map;
+        this._compact = this.options && this.options.compact;
         this._container = DOM.create('div', 'maplibregl-ctrl mapboxgl-ctrl');
         const anchor = DOM.create('a', 'maplibregl-ctrl-logo mapboxgl-ctrl-logo');
         anchor.target = '_blank';
@@ -42,6 +49,8 @@ class LogoControl implements IControl {
     onRemove() {
         DOM.remove(this._container);
         this._map.off('resize', this._updateCompact);
+        this._map = undefined;
+        this._compact = undefined;
     }
 
     getDefaultPosition(): ControlPosition {
@@ -52,7 +61,7 @@ class LogoControl implements IControl {
         const containerChildren = this._container.children;
         if (containerChildren.length) {
             const anchor = containerChildren[0];
-            if (this._map.getCanvasContainer().offsetWidth <= 640) {
+            if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
                 anchor.classList.add('maplibregl-compact', 'mapboxgl-compact');
             } else {
                 anchor.classList.remove('maplibregl-compact', 'mapboxgl-compact');
