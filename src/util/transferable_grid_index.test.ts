@@ -42,4 +42,15 @@ describe('TransferableGridIndex', () => {
         expect(() => grid.insert(3, 0, 0, 0, 0)).toThrow();
     });
 
+    test('serialize round trip', () => {
+        const grid = new TransferableGridIndex(100, 4, 0);
+        const key = 123;
+        grid.insert(key, 3, 3, 4, 4);
+        grid.insert(key, 13, 13, 14, 14);
+        grid.insert(key, 23, 23, 24, 24);
+        const serializedGrid = TransferableGridIndex.serialize(grid);
+        const deserializedGrid = TransferableGridIndex.deserialize(serializedGrid);
+        expect(deserializedGrid.query(0, 0, 30, 30)).toEqual([key, key, key]);
+    });
+
 });
