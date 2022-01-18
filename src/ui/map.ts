@@ -150,7 +150,7 @@ const defaultOptions = {
 
     hash: false,
     attributionControl: true,
-    maplibreLogo: true,
+    maplibreLogo: false,
 
     failIfMajorPerformanceCaveat: false,
     preserveDrawingBuffer: false,
