@@ -1,6 +1,6 @@
 import type {Cancelable} from '../types/cancelable';
 
-const now = performance && performance.now ?
+const now = typeof window !== "undefined" && performance && performance.now ?
     performance.now.bind(performance) :
     Date.now.bind(Date);
 
