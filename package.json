@@ -213,7 +213,7 @@
     "test-cov": "nyc --reporter=text-summary --reporter=lcov --cache run-s test-unit test-expressions test-query test-render",
     "test-jest": "jest",
     "codegen": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-code.ts && node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-struct-arrays.ts && node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-spec.ts",
-    "gl-stats": "npm run build-prod-min && node bench/gl-stats.js"
+    "gl-stats": "node bench/gl-stats.js"
   },
   "files": [
     "build/",
