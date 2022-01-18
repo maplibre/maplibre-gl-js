@@ -714,6 +714,9 @@ export type MapDataEvent = {
      *  Included if the event has a `dataType` of `source` and the event signals that internal data has been received or changed. Possible values are `metadata`, `content`, `visibility` and `idle`.
      */
     sourceDataType: MapSourceDataType;
+    // Custom props for sourcetiles event
+    sourceId?: string;
+    error?: string;
 };
 
 /**
