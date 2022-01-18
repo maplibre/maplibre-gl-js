@@ -2,6 +2,7 @@
 
 ### Features and improvements
 
+* Remove node package chalk from devDependencies (#789).
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
