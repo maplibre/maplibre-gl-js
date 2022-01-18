@@ -62,7 +62,9 @@ class LogoControl implements IControl {
         if (containerChildren.length) {
             const anchor = containerChildren[0];
             if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
-                anchor.classList.add('maplibregl-compact', 'mapboxgl-compact');
+                if (this._compact !== false) { 
+                    anchor.classList.add('maplibregl-compact', 'mapboxgl-compact');
+                }
             } else {
                 anchor.classList.remove('maplibregl-compact', 'mapboxgl-compact');
             }
