@@ -8,6 +8,12 @@
 
 - *...Add new stuff here...*
 
+## 2.0.2
+
+### 🐞 Bug fixes
+
+- Fix typescript generated file (#776).
+
 ## 2.0.1
 
 ### 🐞 Bug fixes
