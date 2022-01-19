@@ -3,8 +3,8 @@ import {createMap as globalCreateMap, setWebGlContext, setPerformance} from '../
 function createMap(logoPosition, maplibreLogo) {
 
     const mapobj = {
-        ...logoPosition !== undefined && {logoPosition},
-        ...maplibreLogo !== undefined && {maplibreLogo},
+        logoPosition,
+        maplibreLogo,
         style: {
             version: 8,
             sources: {},
@@ -21,8 +21,29 @@ beforeEach(() => {
 });
 
 describe('LogoControl', () => {
-    test('appears in bottom-left by default', done => {
+    test('does not appear by default', done => {
         const map = createMap(undefined, undefined);
+        map.on('load', () => {
+            expect(map.getContainer().querySelectorAll(
+            '.maplibregl-ctrl-logo'
+            )).toHaveLength(0);
+            done();
+        });
+    });
+
+    test('is not displayed when the maplibreLogo property is false', done => {
+        const map = createMap(undefined, false);
+        map.on('load', () => {
+            expect(map.getContainer().querySelectorAll(
+            '.maplibregl-ctrl-logo'
+            )).toHaveLength(0);
+            done();
+        });
+    });
+
+
+    test('appears in bottom-left by when maplibreLogo is true and logoPosition is undefined', done => {
+        const map = createMap(undefined, true);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
             '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-logo'
@@ -32,27 +53,18 @@ describe('LogoControl', () => {
     });
 
     test('appears in the position specified by the position option', done => {
-        const map = createMap('top-left', undefined);
+        const map = createMap('top-left', true);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
             '.maplibregl-ctrl-top-left .maplibregl-ctrl-logo'
             )).toHaveLength(1);
             done();
-        });
+        });	
     });
 
-    test('is not displayed when the maplibreLogo property is false', done => {
-        const map = createMap('top-left', false);
-        map.on('load', () => {
-            expect(map.getContainer().querySelectorAll(
-            '.maplibregl-ctrl-logo'
-            )).toHaveLength(0);
-            done();
-        });
-    });
 
     test('appears in compact mode if container is less then 640 pixel wide', () => {
-        const map = createMap(undefined, undefined);
+        const map = createMap(undefined, true);
         const container = map.getContainer();
 
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 645, configurable: true});
@@ -69,7 +81,7 @@ describe('LogoControl', () => {
     });
 
     test('has `rel` nooper and nofollow', done => {
-        const map = createMap(undefined, undefined);
+        const map = createMap(undefined, true);
 
         map.on('load', () => {
             const container = map.getContainer();
