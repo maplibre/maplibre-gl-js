@@ -174,7 +174,7 @@ class TerrainSourceCache extends Evented {
      * @param {SourceCache} sourceCache
      * @param options Allowed options are exaggeration & elevationOffset
      */
-    enable(sourceCache: SourceCache, options?: {exaggeration: boolean; elevationOffset: number}): void {
+    enable(sourceCache: SourceCache, options?: {exaggeration: number; elevationOffset: number}): void {
         sourceCache.usedForTerrain = true;
         sourceCache.tileSize = this.tileSize * 2 ** this.deltaZoom;
         this._sourceCache = sourceCache;
