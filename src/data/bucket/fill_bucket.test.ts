@@ -42,7 +42,7 @@ test('FillBucket', () => {
             new Point(10, 20)
         ]], undefined, undefined, undefined);
 
-        bucket.addFeature(feature, feature.loadGeometry(), undefined, undefined, undefined);
+        bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined);
     }).not.toThrow();
 });
 
