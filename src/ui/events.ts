@@ -311,6 +311,10 @@ export type MapDataEvent = {
   sourceDataType: MapSourceDataType;
 };
 
+export type MapTerrainEvent = {
+   type: 'terrain';
+};
+
 export type MapContextEvent = {
   type: 'webglcontextlost' | 'webglcontextrestored';
   originalEvent: WebGLContextEvent;
@@ -384,6 +388,8 @@ export type MapEventType = {
      pitchend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
 
      wheel: MapWheelEvent;
+
+     terrain: MapTerrainEvent;
 };
 
 export type MapEvent = /**
@@ -1341,4 +1347,10 @@ export type MapEvent = /**
      * @memberof Map
      * @instance
      * @private
-     */ | 'style.load';
+     */ | 'style.load'
+/**
+     * @event terrain
+     * @memberof Map
+     * @instance
+     * @private
+     */ | 'terrain';
