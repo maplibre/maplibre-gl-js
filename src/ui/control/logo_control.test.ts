@@ -41,8 +41,7 @@ describe('LogoControl', () => {
         });
     });
 
-
-    test('appears in bottom-left by when maplibreLogo is true and logoPosition is undefined', done => {
+    test('appears in bottom-left when maplibreLogo is true and logoPosition is undefined', done => {
         const map = createMap(undefined, true);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
@@ -59,9 +58,8 @@ describe('LogoControl', () => {
             '.maplibregl-ctrl-top-left .maplibregl-ctrl-logo'
             )).toHaveLength(1);
             done();
-        });	
+        });
     });
-
 
     test('appears in compact mode if container is less then 640 pixel wide', () => {
         const map = createMap(undefined, true);
