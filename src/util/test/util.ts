@@ -9,6 +9,7 @@ export function createMap(options?, callback?) {
         container,
         interactive: false,
         attributionControl: false,
+        maplibreLogo: false,
         trackResize: true,
         style: {
             'version': 8,
