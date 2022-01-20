@@ -27,6 +27,12 @@ To run a specific benchmark, add its name to the url hash, for example [`http://
 
 By default, the style benchmark page will run its benchmarks against `https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL`. `Layout` and `Paint` styles will run one instance of the test for each tile/location in an internal list of tiles. This behavior helps visualize the ways in which a style performs given various conditions present in each tile (CJK text, dense urban areas, rural areas, etc). `QueryBox` and `QueryPoint` use the internal list of tiles but otherwise run the same as their non-style benchmark equivalents. `StyleLayerCreate` and `StyleValidate` are not tile/location dependent and run the same way as their non-style benchmark equivalents. All other benchmark tests from the non-style suite are not used when benchmarking styles.
 
+## Generating gl statistics
+
+Build minimized production maplibre-gl-js with `npm run build-prod-min`.
+
+Gather and output gl statistics from headless chromium with `npm run gl-stats`. The results are output to the terminal and saved in data.json.gz.
+
 ## Writing a Benchmark
 
 Good benchmarks

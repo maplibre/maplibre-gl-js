@@ -3,7 +3,7 @@ import loadGeometry from './load_geometry';
 import toEvaluationFeature from './evaluation_feature';
 import EXTENT from './extent';
 import featureFilter from '../style-spec/feature_filter';
-import TransferableGridIndex from 'grid-index';
+import TransferableGridIndex from '../util/transferable_grid_index';
 import DictionaryCoder from '../util/dictionary_coder';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
@@ -296,7 +296,7 @@ class FeatureIndex {
         let id: string | number = feature.id;
         if (this.promoteId) {
             const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];
-            id = feature.properties[propName];
+            id = feature.properties[propName] as string | number;
             if (typeof id === 'boolean') id = Number(id);
         }
         return id;

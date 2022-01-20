@@ -1,12 +1,11 @@
-/* eslint-disable import/no-commonjs */
+import puppeteer from 'puppeteer';
+import fs from 'fs';
+import zlib from 'zlib';
+import {execSync} from 'child_process';
 
-const puppeteer = require('puppeteer');
-const fs = require('fs');
-const zlib = require('zlib');
 const maplibreGLJSSrc = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 const maplibreGLCSSSrc = fs.readFileSync('dist/maplibre-gl.css', 'utf8');
 const benchSrc = fs.readFileSync('bench/gl-stats.html', 'utf8');
-const {execSync} = require('child_process');
 
 const benchHTML = benchSrc
     .replace(/<script src="..\/dist\/maplibre-gl.js"><\/script>/, `<script>${maplibreGLJSSrc}</script>`);
@@ -21,10 +20,10 @@ function waitForConsole(page) {
     });
 }
 
-(async () => {
-    const browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+const browser = await puppeteer.launch({
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+});
+try {
     const page = await browser.newPage();
 
     console.log('collecting stats...');
@@ -42,5 +41,6 @@ function waitForConsole(page) {
     fs.writeFileSync('data.json.gz', zlib.gzipSync(JSON.stringify(stats)));
 
     await page.close();
+} finally {
     await browser.close();
-})();
+}

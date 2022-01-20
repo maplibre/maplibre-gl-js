@@ -117,11 +117,11 @@ export const create = function(id: string, specification: SourceSpecification, d
     return source;
 };
 
-export const getType = function (name: string) {
+export const getSourceType = function (name: string) {
     return sourceTypes[name];
 };
 
-export const setType = function (name: string, type: {
+export const setSourceType = function (name: string, type: {
   new (...args: any): Source;
 }) {
     sourceTypes[name] = type;

@@ -32,21 +32,6 @@ import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 const TRANSITION_SUFFIX = '-transition';
 
-// this interface is used to allow optional overload for this methods in the derived classes.
-interface StyleLayer {
-    queryRadius?(bucket: Bucket): number;
-    queryIntersectsFeature?(
-      queryGeometry: Array<Point>,
-      feature: VectorTileFeature,
-      featureState: FeatureState,
-      geometry: Array<Array<Point>>,
-      zoom: number,
-      transform: Transform,
-      pixelsToTileUnits: number,
-      pixelPosMatrix: mat4
-    ): boolean | number;
-}
-
 abstract class StyleLayer extends Evented {
     id: string;
     metadata: unknown;
@@ -70,6 +55,18 @@ abstract class StyleLayer extends Evented {
 
     readonly onAdd: ((map: Map) => void);
     readonly onRemove: ((map: Map) => void);
+
+    queryRadius?(bucket: Bucket): number;
+    queryIntersectsFeature?(
+      queryGeometry: Array<Point>,
+      feature: VectorTileFeature,
+      featureState: FeatureState,
+      geometry: Array<Array<Point>>,
+      zoom: number,
+      transform: Transform,
+      pixelsToTileUnits: number,
+      pixelPosMatrix: mat4
+    ): boolean | number;
 
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
       layout?: Properties<any>;

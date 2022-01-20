@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "main": "dist/maplibre-gl.js",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -22,11 +22,11 @@
     "@mapbox/unitbezier": "^0.0.1",
     "@mapbox/vector-tile": "^1.3.1",
     "@mapbox/whoots-js": "^3.1.0",
+    "@types/pbf": "^3.0.2",
     "csscolorparser": "~1.0.3",
     "earcut": "^2.2.2",
     "geojson-vt": "^3.2.1",
     "gl-matrix": "^3.2.1",
-    "grid-index": "^1.1.0",
     "murmurhash-js": "^1.0.0",
     "pbf": "^3.2.1",
     "potpack": "^1.0.1",
@@ -69,7 +69,6 @@
     "@types/node-notifier": "^8.0.0",
     "@types/npm-packlist": "^1.1.1",
     "@types/offscreencanvas": "^2019.6.3",
-    "@types/pbf": "^3.0.2",
     "@types/pixelmatch": "^5.2.2",
     "@types/pngjs": "^6.0.1",
     "@types/puppeteer": "^5.4.4",
@@ -84,15 +83,20 @@
     "@types/supercluster": "^5.0.2",
     "@types/tape": "^4.13.2",
     "@types/window-or-global": "^1.0.4",
-    "@typescript-eslint/eslint-plugin": "^4.30.0",
-    "@typescript-eslint/parser": "^4.30.0",
+    "@typescript-eslint/eslint-plugin": "^5.9.1",
+    "@typescript-eslint/parser": "^5.9.1",
     "address": "^1.1.2",
     "babel-eslint": "^10.0.1",
     "babel-jest": "^27.2.5",
     "babelify": "^10.0.0",
     "benchmark": "^2.1.4",
     "browserify": "^17.0.0",
+<<<<<<< HEAD
     "canvas": "^2.6.1",
+=======
+    "canvas": "^2.9.0",
+    "chalk": "^4.1.2",
+>>>>>>> 6aff99dcd111767005e00be6195f186f7e9b5975
     "chokidar": "^3.0.2",
     "cssnano": "^5.0.8",
     "d3": "^4.12.0",
@@ -107,7 +111,7 @@
     "eslint-plugin-jest": "^25.2.2",
     "eslint-plugin-jsdoc": "^37.0.3",
     "eslint-plugin-react": "^7.25.1",
-    "gl": "^4.5.3",
+    "gl": "^5.0.0",
     "glob": "^7.1.4",
     "is-builtin-module": "^3.0.0",
     "jest": "^27.2.4",
@@ -168,7 +172,7 @@
     "testem": "^3.5.0",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.1",
-    "typescript": "^4.4.2"
+    "typescript": "^4.5.4"
   },
   "browser": {
     "./rollup/build/tsc/src/util/web_worker.js": "./build/web_worker_replacement.js"
@@ -211,7 +215,8 @@
     "test-expressions": "node --experimental-specifier-resolution=node test/expression.test.js",
     "test-cov": "nyc --reporter=text-summary --reporter=lcov --cache run-s test-unit test-expressions test-query test-render",
     "test-jest": "jest",
-    "codegen": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-code.ts && node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-struct-arrays.ts && node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-spec.ts"
+    "codegen": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-code.ts && node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-struct-arrays.ts && node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-spec.ts",
+    "gl-stats": "node bench/gl-stats.js"
   },
   "files": [
     "build/",
