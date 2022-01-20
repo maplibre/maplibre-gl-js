@@ -351,10 +351,12 @@ class Transform {
         if (options.minzoom !== undefined && z < options.minzoom) return [];
         if (options.maxzoom !== undefined && z > options.maxzoom) z = options.maxzoom;
 
-        const centerCoord = tsc.isEnabled()
+        const cameraCoord = tsc.isEnabled()
             ? this.pointCoordinate(this.getCameraPoint())
             : MercatorCoordinate.fromLngLat(this.center);
+        const centerCoord = MercatorCoordinate.fromLngLat(this.center);
         const numTiles = Math.pow(2, z);
+        const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
         const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
         const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invProjMatrix, this.worldSize, z);
 
@@ -410,8 +412,8 @@ class Transform {
                 fullyVisible = intersectResult === 2;
             }
 
-            const distanceX = it.aabb.distanceX(centerPoint);
-            const distanceY = it.aabb.distanceY(centerPoint);
+            const distanceX = it.aabb.distanceX(cameraPoint);
+            const distanceY = it.aabb.distanceY(cameraPoint);
             const longestDim = Math.max(Math.abs(distanceX), Math.abs(distanceY));
 
             // We're using distance based heuristics to determine if a tile should be split into quadrants or not.
