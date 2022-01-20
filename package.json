@@ -92,7 +92,6 @@
     "benchmark": "^2.1.4",
     "browserify": "^17.0.0",
     "canvas": "^2.9.0",
-    "chalk": "^4.1.2",
     "chokidar": "^3.0.2",
     "cssnano": "^5.0.8",
     "d3": "^4.12.0",
