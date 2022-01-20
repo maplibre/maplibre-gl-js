@@ -821,17 +821,19 @@ class Transform {
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
+        this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
         const groundAngle = Math.PI / 2 + this._pitch;
         const fovAboveCenter = this._fov * (0.5 + offset.y / this.height);
-        const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * this.cameraToCenterDistance / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
+        const cameraAltitude = Math.cos(this._pitch) * this.cameraToCenterDistance / this._pixelPerMeter;
+        const cameraToCenterDistance = (cameraAltitude + elevation) * this._pixelPerMeter / Math.cos(this._pitch);
+        const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * cameraToCenterDistance / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
         const point = this.point;
         const x = point.x, y = point.y;
-        this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
 
         // Calculate z distance of the farthest fragment that should be rendered.
-        const furthestDistance = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistance + this.cameraToCenterDistance;
+        const furthestDistance = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistance + cameraToCenterDistance;
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
-        const farZ = (furthestDistance + elevation * this._pixelPerMeter / Math.cos(this._pitch)) * 1.01;
+        const farZ = furthestDistance * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
