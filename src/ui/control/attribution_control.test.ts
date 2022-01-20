@@ -51,7 +51,8 @@ describe('AttributionControl', () => {
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
 
         let attributionControl = new AttributionControl({
-            compact: true
+            compact: true,
+            customAttribution: 'MapLibre'
         });
         map.addControl(attributionControl);
 
@@ -73,7 +74,32 @@ describe('AttributionControl', () => {
         ).toHaveLength(1);
     });
 
-    test('appears in compact mode if container is less then 640 pixel wide', () => {
+    test('appears in compact mode if container is less then 640 pixel wide and attributions are not empty', () => {
+        Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
+        const attributionControl = new AttributionControl({
+            customAttribution: 'MapLibre'
+        });
+        map.addControl(attributionControl);
+
+        const container = map.getContainer();
+
+        expect(
+        container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)')
+        ).toHaveLength(1);
+
+        Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 600, configurable: true});
+        map.resize();
+
+        expect(
+        container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')
+        ).toHaveLength(1);
+
+        expect(
+        container.querySelectorAll('.maplibregl-attrib-empty')
+        ).toHaveLength(0);
+    });
+
+    test('does not appear in compact mode if container is less then 640 pixel wide and attributions are empty', () => {
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
         map.addControl(new AttributionControl());
 
@@ -88,26 +114,31 @@ describe('AttributionControl', () => {
 
         expect(
         container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')
+        ).toHaveLength(0);
+
+        expect(
+        container.querySelectorAll('.maplibregl-attrib-empty')
         ).toHaveLength(1);
     });
 
     test('compact mode control toggles attribution', () => {
         map.addControl(new AttributionControl({
-            compact: true
+            compact: true,
+            customAttribution: 'MapLibre'
         }));
 
         const container = map.getContainer();
         const toggle = container.querySelector('.maplibregl-ctrl-attrib-button');
-
-        expect(container.querySelectorAll('.maplibregl-compact-show')).toHaveLength(0);
-
-        simulate.click(toggle);
 
         expect(container.querySelectorAll('.maplibregl-compact-show')).toHaveLength(1);
 
         simulate.click(toggle);
 
         expect(container.querySelectorAll('.maplibregl-compact-show')).toHaveLength(0);
+
+        simulate.click(toggle);
+
+        expect(container.querySelectorAll('.maplibregl-compact-show')).toHaveLength(1);
     });
 
     test('dedupes attributions that are substrings of others', done => {
@@ -325,23 +356,27 @@ describe('AttributionControl test regarding the HTML elements details and summar
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBe('');
         });
 
-        test('The attribute open="" SHOULD change on resize from size > 640 to <= 640 and and vice versa.', () => {
+        test('The attribute open="" SHOULD exist after resize from size > 640 to <= 640 and and vice versa.', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
             const attributionControl = new AttributionControl({
+                customAttribution: 'MapLibre'
             });
             map.addControl(attributionControl);
 
-            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBeNull();
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')).toHaveLength(1);
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBe('');
 
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 641, configurable: true});
             map.resize();
 
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)')).toHaveLength(1);
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBe('');
 
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
             map.resize();
 
-            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBeNull();
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')).toHaveLength(1);
+            expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBe('');
         });
 
         test('The attribute open="" should NOT change on resize from > 640 to another > 640.', () => {
