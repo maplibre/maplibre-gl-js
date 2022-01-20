@@ -93,7 +93,7 @@ class AttributionControl implements IControl {
             if (this._container.classList.contains('maplibregl-compact-show')) {
                 this._container.setAttribute('open', '');
                 this._container.classList.remove('maplibregl-compact-show', 'mapboxgl-compact-show');
-            }else{
+            } else {
                 this._container.classList.add('maplibregl-compact-show', 'mapboxgl-compact-show');
                 this._container.removeAttribute('open');
             }
@@ -139,7 +139,7 @@ class AttributionControl implements IControl {
             }
         }
 
-        // remove any entries that are whitespace 
+        // remove any entries that are whitespace
         attributions = attributions.filter(e => String(e).trim());
 
         // remove any entries that are substrings of another entry.
@@ -171,9 +171,9 @@ class AttributionControl implements IControl {
 
     _updateCompact() {
         if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
-            if (this._compact === false) { 
+            if (this._compact === false) {
                 this._container.setAttribute('open', '');
-            }else if (!this._container.classList.contains('maplibregl-compact') && !this._container.classList.contains('maplibregl-attrib-empty')) {
+            } else if (!this._container.classList.contains('maplibregl-compact') && !this._container.classList.contains('maplibregl-attrib-empty')) {
                 this._container.setAttribute('open', '');
                 this._container.classList.add('maplibregl-compact', 'mapboxgl-compact', 'maplibregl-compact-show', 'mapboxgl-compact-show');
             }
