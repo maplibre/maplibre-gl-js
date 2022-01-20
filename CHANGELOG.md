@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 
+- Fix max cluster zoom in geojson source (#61)
 - *...Add new stuff here...*
 
 ## 2.0.2
