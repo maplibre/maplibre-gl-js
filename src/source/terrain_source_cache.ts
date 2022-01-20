@@ -213,6 +213,7 @@ class TerrainSourceCache extends Evented {
     update(transform: Transform): void {
         if (!this.isEnabled() || !this._sourceCache._sourceLoaded) return;
         // load raster-dem tiles for the current scene.
+        transform.updateElevation();
         this._sourceCache.update(transform);
         this._renderableTiles = [];
         const tileIDs = {};
