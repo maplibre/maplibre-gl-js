@@ -15,7 +15,7 @@ glob.sync(`${__dirname}/fixture/*.input.json`).forEach((file) => {
         const result = validate(style);
         if (UPDATE) fs.writeFileSync(outputfile, JSON.stringify(result, null, 2));
         const expect = JSON.parse(fs.readFileSync(outputfile));
-        t.deepEqual(result, expect);
+        expect(result).toEqual(expect);
         t.end();
     });
 });
@@ -25,23 +25,23 @@ const style = JSON.parse(fs.readFileSync(fixtures[0]));
 import reference from '../../../rollup/build/tsc/src/style-spec/reference/latest';
 
 test('validate.parsed exists', (t) => {
-    t.equal(typeof validate.parsed, 'function');
+    expect(typeof validate.parsed).toBe('function');
     t.end();
 });
 
 test('errors from validate.parsed do not contain line numbers', (t) => {
     const result = validate.parsed(style, reference);
-    t.equal(result[0].line, undefined);
+    expect(result[0].line).toBe(undefined);
     t.end();
 });
 
 test('validate.latest exists', (t) => {
-    t.equal(typeof validate.latest, 'function');
+    expect(typeof validate.latest).toBe('function');
     t.end();
 });
 
 test('errors from validate.latest do not contain line numbers', (t) => {
     const result = validate.latest(style);
-    t.equal(result[0].line, undefined);
+    expect(result[0].line).toBe(undefined);
     t.end();
 });
