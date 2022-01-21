@@ -2,6 +2,7 @@ import glob from 'glob';
 import fs from 'fs';
 import path from 'path';
 import validate from '../style-spec/validate_style';
+import reference from './reference/latest';
 
 const UPDATE = !!process.env.UPDATE;
 
@@ -16,4 +17,13 @@ describe('validate_spec', () => {
             expect(result).toEqual(expectedOutput);
         });
     });
+
+    test('errors from validate do not contain line numbers', () => {
+        const fixtures = glob.sync('src/style-spec/fixture/*.input.json');
+        const style = JSON.parse(fs.readFileSync(fixtures[0]).toString());
+
+        const result = validate(style, reference);
+        expect(result[0].line).toBeUndefined();
+    });
+
 });
