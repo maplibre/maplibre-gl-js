@@ -307,10 +307,10 @@ export function getGlyphQuads(
                 const yImageOffsetCorrection = positionedGlyph.imageName ? xHalfWidthOffsetCorrection : 0.0;
                 const halfWidthOffsetCorrection = new Point(5 - SHAPING_DEFAULT_OFFSET - xHalfWidthOffsetCorrection, -yImageOffsetCorrection);
                 const verticalOffsetCorrection = new Point(...verticalizedLabelOffset);
-                tl.rotateAround(verticalRotation, center).add(halfWidthOffsetCorrection).add(verticalOffsetCorrection);
-                tr.rotateAround(verticalRotation, center).add(halfWidthOffsetCorrection).add(verticalOffsetCorrection);
-                bl.rotateAround(verticalRotation, center).add(halfWidthOffsetCorrection).add(verticalOffsetCorrection);
-                br.rotateAround(verticalRotation, center).add(halfWidthOffsetCorrection).add(verticalOffsetCorrection);
+                tl._rotateAround(verticalRotation, center)._add(halfWidthOffsetCorrection)._add(verticalOffsetCorrection);
+                tr._rotateAround(verticalRotation, center)._add(halfWidthOffsetCorrection)._add(verticalOffsetCorrection);
+                bl._rotateAround(verticalRotation, center)._add(halfWidthOffsetCorrection)._add(verticalOffsetCorrection);
+                br._rotateAround(verticalRotation, center)._add(halfWidthOffsetCorrection)._add(verticalOffsetCorrection);
             }
 
             if (textRotate) {
