@@ -1,6 +1,6 @@
 import {getTileBBox} from '@mapbox/whoots-js';
 import EXTENT from '../data/extent';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../geo/mercator_coordinate';
 
 import assert from 'assert';

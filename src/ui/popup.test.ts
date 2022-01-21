@@ -1,7 +1,7 @@
 import {createMap as globalCreateMap, setPerformance, setWebGlContext} from '../util/test/util';
 import Popup, {Offset} from './popup';
 import LngLat from '../geo/lng_lat';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import simulate from '../../test/util/simulate_interaction';
 import {PositionAnchor} from './anchor';
 

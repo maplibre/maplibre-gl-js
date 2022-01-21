@@ -37,15 +37,6 @@ child_process.execSync(`dts-bundle-generator --no-check --umd-module-name=maplib
 let types = fs.readFileSync(outputFile, 'utf8');
 // Classes are not exported but should be since this is exported as UMD - fixing...
 types = types.replace(/declare class/g, "export declare class");
-// Missing vector-tile types that are added to this file too
-let file = fs.readFileSync("./src/types/packages-types/vector-tile/index.d.ts", 'utf8');
-let lines = file.split("\n").filter(Boolean);
-lines.pop(); // last } is removed too.
-types = lines.join("\n") + "\n" + types;
-// remove imports of vector-tile and declare module lines
-types = types.split("\n")
-    .filter(l => !l.includes("@mapbox/vector-tile"))
-    .join("\n");
 fs.writeFileSync(outputFile, types);
 console.log(`Finished bundling types`);
 

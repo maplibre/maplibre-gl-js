@@ -13,7 +13,7 @@ import {supportsPropertyExpression} from '../style-spec/util/properties';
 
 import type {FeatureState} from '../style-spec/expression';
 import type {Bucket} from '../data/bucket';
-import type Point from '../util/point';
+import type Point from '@mapbox/point-geometry';
 import type {FeatureFilter} from '../style-spec/feature_filter';
 import type {TransitionParameters, PropertyValue} from './properties';
 import EvaluationParameters from './evaluation_parameters';

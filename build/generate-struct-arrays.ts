@@ -428,7 +428,7 @@ fs.writeFileSync('src/data/array_types.ts',
 import assert from 'assert';
 import {Struct, StructArray} from '../util/struct_array';
 import {register} from '../util/web_worker_transfer';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 
 ${layouts.map(emitStructArrayLayout).join('\n')}
 ${arraysWithStructAccessors.map(emitStructArray).join('\n')}

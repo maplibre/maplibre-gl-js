@@ -1,4 +1,4 @@
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 
 import StyleLayer from '../style_layer';
 import LineBucket from '../../data/bucket/line_bucket';
