@@ -11,7 +11,7 @@ glob.sync('src/style-spec/fixture/*.input.json').forEach((file) => {
         const style = fs.readFileSync(file);
         const result = validate(style);
         if (UPDATE) fs.writeFileSync(outputfile, JSON.stringify(result, null, 2));
-        const expect = JSON.parse(fs.readFileSync(outputfile).toString());
-        expect(result).toEqual(expect);
+        const expectedOutput = JSON.parse(fs.readFileSync(outputfile).toString());
+        expect(result).toEqual(expectedOutput);
     });
 });
