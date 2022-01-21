@@ -1,5 +1,7 @@
 import migrate from '../style-spec/migrate';
 import * as spec from '../style-spec/style-spec';
+import v8 from './reference/v8.json';
+import validate from './validate_style';
 
 describe('migrate', () => {
     test('does not migrate from version 5', () => {
@@ -105,5 +107,6 @@ describe('migrate', () => {
             'some-icon',
             ''
         ]);
+        expect(validate(migrated, v8)).toEqual([]);
     });
 });
