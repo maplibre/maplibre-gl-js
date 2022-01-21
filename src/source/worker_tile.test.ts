@@ -4,6 +4,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import StyleLayerIndex from '../style/style_layer_index';
 import {WorkerTileParameters} from './worker_source';
 import Actor from '../util/actor';
+import {VectorTile} from '@mapbox/vector-tile';
 
 function createWorkerTile() {
     return new WorkerTile({
@@ -87,7 +88,7 @@ describe('worker tile', () => {
                     version: 1
                 }
             }
-        };
+        } as any as VectorTile;
 
         const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 

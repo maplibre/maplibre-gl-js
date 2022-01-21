@@ -101,7 +101,7 @@ const sourceTypes = {
  *
  * @param id
  * @param {Object} source A source definition object compliant with
- * [`mapbox-gl-style-spec`](https://www.mapbox.com/mapbox-gl-style-spec/#sources) or, for a third-party source type,
+ * [`maplibre-gl-style-spec`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources) or, for a third-party source type,
   * with that type's requirements.
  * @param {Dispatcher} dispatcher
  * @returns {Source}
@@ -117,11 +117,11 @@ export const create = function(id: string, specification: SourceSpecification, d
     return source;
 };
 
-export const getType = function (name: string) {
+export const getSourceType = function (name: string) {
     return sourceTypes[name];
 };
 
-export const setType = function (name: string, type: {
+export const setSourceType = function (name: string, type: {
   new (...args: any): Source;
 }) {
     sourceTypes[name] = type;

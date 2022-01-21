@@ -21,7 +21,7 @@ export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
 
 /**
  * A source containing GeoJSON.
- * (See the [Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/#sources-geojson) for detailed documentation of options.)
+ * (See the [Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources-geojson) for detailed documentation of options.)
  *
  * @example
  * map.addSource('some id', {
@@ -136,9 +136,7 @@ class GeoJSONSource extends Evented implements Source {
                 generateId: options.generateId || false
             },
             superclusterOptions: {
-                maxZoom: options.clusterMaxZoom !== undefined ?
-                    Math.min(options.clusterMaxZoom, this.maxzoom - 1) :
-                    (this.maxzoom - 1),
+                maxZoom: options.clusterMaxZoom !== undefined ? options.clusterMaxZoom : this.maxzoom - 1,
                 minPoints: Math.max(2, options.clusterMinPoints || 2),
                 extent: EXTENT,
                 radius: (options.clusterRadius || 50) * scale,

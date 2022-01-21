@@ -4,7 +4,6 @@ import fs from 'fs';
 import glob from 'glob';
 import shuffleSeed from 'shuffle-seed';
 import d3 from 'd3';
-import colors from 'chalk';
 import template from 'lodash.template';
 import createServer from './server';
 import {fileURLToPath} from 'url';
@@ -49,12 +48,12 @@ export default function (directory, implementation, options, run) {
             }
 
             if (implementation === 'native' && process.env.BUILDTYPE !== 'Debug' && test.id.match(/^debug\//)) {
-                console.log(colors.gray(`* skipped ${test.id}`));
+                console.log(`* skipped ${test.id}`);
                 return false;
             }
 
             if (/^skip/.test(test.ignored)) {
-                console.log(colors.gray(`* skipped ${test.id} (${test.ignored})`));
+                console.log(`* skipped ${test.id} (${test.ignored})`);
                 return false;
             }
 
@@ -62,7 +61,7 @@ export default function (directory, implementation, options, run) {
         });
 
     if (options.shuffle) {
-        console.log(colors.white(`* shuffle seed: `) + colors.bold(`${options.seed}`));
+        console.log(`* shuffle seed: ${options.seed}`);
         sequence = shuffle(sequence, options.seed);
     }
 
@@ -86,23 +85,23 @@ export default function (directory, implementation, options, run) {
                 if (test.ignored && !test.ok) {
                     test.color = '#9E9E9E';
                     test.status = 'ignored failed';
-                    console.log(colors.white(`* ignore ${test.id} (${test.ignored})`));
+                    console.log(`* ignore ${test.id} (${test.ignored})`);
                 } else if (test.ignored) {
                     test.color = '#E8A408';
                     test.status = 'ignored passed';
-                    console.log(colors.yellow(`* ignore ${test.id} (${test.ignored})`));
+                    console.log(`* ignore ${test.id} (${test.ignored})`);
                 } else if (test.error) {
                     test.color = 'red';
                     test.status = 'errored';
-                    console.log(colors.red(`* errored ${test.id}`));
+                    console.log(`* errored ${test.id}`);
                 } else if (!test.ok) {
                     test.color = 'red';
                     test.status = 'failed';
-                    console.log(colors.red(`* failed ${test.id}`));
+                    console.log(`* failed ${test.id}`);
                 } else {
                     test.color = 'green';
                     test.status = 'passed';
-                    console.log(colors.green(`* passed ${test.id}`));
+                    console.log(`* passed ${test.id}`);
                 }
 
                 callback(null, test);
@@ -149,27 +148,27 @@ export default function (directory, implementation, options, run) {
         const totalCount = passedCount + ignorePassCount + ignoreCount + failedCount + erroredCount;
 
         if (passedCount > 0) {
-            console.log(colors.green('%d passed (%s%)'),
+            console.log(`%d passed (%s%)`,
                 passedCount, (100 * passedCount / totalCount).toFixed(1));
         }
 
         if (ignorePassCount > 0) {
-            console.log(colors.yellow('%d passed but were ignored (%s%)'),
+            console.log(`%d passed but were ignored (%s%)`,
                 ignorePassCount, (100 * ignorePassCount / totalCount).toFixed(1));
         }
 
         if (ignoreCount > 0) {
-            console.log(colors.white('%d ignored (%s%)'),
+            console.log(`%d ignored (%s%)`,
                 ignoreCount, (100 * ignoreCount / totalCount).toFixed(1));
         }
 
         if (failedCount > 0) {
-            console.log(colors.red('%d failed (%s%)'),
+            console.log(`%d failed (%s%)`,
                 failedCount, (100 * failedCount / totalCount).toFixed(1));
         }
 
         if (erroredCount > 0) {
-            console.log(colors.red('%d errored (%s%)'),
+            console.log(`%d errored (%s%)`,
                 erroredCount, (100 * erroredCount / totalCount).toFixed(1));
         }
 

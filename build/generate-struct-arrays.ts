@@ -87,7 +87,7 @@ function createStructArrayType(name: string, layout: StructArrayLayout, includeS
             includeStructAccessors
         });
     } else {
-        arrayTypeEntries.add(`${layoutClass} as ${arrayClass}`);
+        arrayTypeEntries.add(`export class ${arrayClass} extends ${layoutClass} {}`);
     }
 }
 
@@ -432,8 +432,8 @@ import Point from '../util/point';
 
 ${layouts.map(emitStructArrayLayout).join('\n')}
 ${arraysWithStructAccessors.map(emitStructArray).join('\n')}
+${[...arrayTypeEntries].join('\n')}
 export {
-    ${layouts.map(layout => layout.className).join(',\n    ')},
-    ${[...arrayTypeEntries].join(',\n    ')}
+    ${layouts.map(layout => layout.className).join(',\n    ')}
 };
 `);
