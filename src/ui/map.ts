@@ -301,7 +301,6 @@ class Map extends Camera {
     _removed: boolean;
     _clickTolerance: number;
     _pixelRatio: number;
-    _styleSpec: StyleSpecification | string;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -619,7 +618,6 @@ class Map extends Camera {
      * Sets the map's pixel ratio. This allows to override `devicePixelRatio`.
      * After this call, the canvas' `width` attribute will be `container.clientWidth * pixelRatio`
      * and its height attribute will be `container.clientHeight * pixelRatio`.
-     * This method reloads the style.
      * @param pixelRatio {number} The pixel ratio.
      */
     setPixelRatio(pixelRatio: number) {
@@ -629,8 +627,6 @@ class Map extends Camera {
 
         this._resizeCanvas(width, height, pixelRatio);
         this.painter.resize(width, height, pixelRatio);
-
-        this._reloadStyle(); // Reload sprites and re-render.
     }
 
     /**
@@ -1378,7 +1374,6 @@ class Map extends Camera {
     setStyle(style: StyleSpecification | string | null, options?: {
       diff?: boolean;
     } & StyleOptions) {
-        this._styleSpec = style;
         options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {
@@ -1439,11 +1434,6 @@ class Map extends Camera {
         }
 
         return this;
-    }
-
-    _reloadStyle() {
-        const style = this.style._loaded ? this.style.serialize() : this._styleSpec;
-        if (style) this._updateStyle(style);
     }
 
     _lazyInitEmptyStyle() {
