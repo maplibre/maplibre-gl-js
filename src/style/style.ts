@@ -13,7 +13,7 @@ import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
-import {getType as getSourceType, setType as setSourceType, Source} from '../source/source';
+import {getSourceType, setSourceType, Source} from '../source/source';
 import type {SourceClass} from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import SourceCache from '../source/source_cache';

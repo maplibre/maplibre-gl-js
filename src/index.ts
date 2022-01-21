@@ -1,5 +1,4 @@
 /// <reference path="./types/glsl.d.ts" />
-/// <reference path="./types/non-typed-modules.d.ts" />
 import assert from 'assert';
 import {supported} from '@mapbox/mapbox-gl-supported';
 
@@ -144,6 +143,8 @@ const exported = {
      * The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
      * The function passed will receive the request parameters and should call the callback with the resulting request,
      * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
+     *
+     * @function addProtocol
      * @param {string} customProtocol - the protocol to hook, for example 'custom'
      * @param {Function} loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
@@ -176,6 +177,8 @@ const exported = {
 
     /**
      * Removes a previusly added protocol
+     *
+     * @function removeProtocol
      * @param {string} customProtocol - the custom protocol to remove registration for
      * @example
      * maplibregl.removeProtocol('custom');
@@ -187,13 +190,6 @@ const exported = {
 
 //This gets automatically stripped out in production builds.
 Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
-
-/**
- * The version of MapLibre GL JS in use as specified in `package.json`,
- * `CHANGELOG.md`, and the GitHub release.
- *
- * @var {string} version
- */
 
 /**
  * Test whether the browser supports MapLibre GL JS.
