@@ -8,7 +8,7 @@ import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../prope
 
 import type {FeatureState} from '../../style-spec/expression';
 import type {BucketParameters} from '../../data/bucket';
-import type Point from '../../util/point';
+import type Point from '@mapbox/point-geometry';
 import type {FillLayoutProps, FillPaintProps} from './fill_style_layer_properties';
 import type EvaluationParameters from '../evaluation_parameters';
 import type Transform from '../../geo/transform';

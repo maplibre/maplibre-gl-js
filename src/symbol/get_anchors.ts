@@ -3,7 +3,7 @@ import {number as interpolate} from '../style-spec/util/interpolate';
 import Anchor from '../symbol/anchor';
 import checkMaxAngle from './check_max_angle';
 
-import type Point from '../util/point';
+import type Point from '@mapbox/point-geometry';
 import type {Shaping, PositionedIcon} from './shaping';
 
 export {getAnchors, getCenterAnchor};

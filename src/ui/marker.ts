@@ -1,6 +1,6 @@
 import DOM from '../util/dom';
 import LngLat from '../geo/lng_lat';
-import Point, {PointLike} from '../util/point';
+import Point from '@mapbox/point-geometry';
 import smartWrap from '../util/smart_wrap';
 import {bindAll, extend} from '../util/util';
 import {anchorTranslate, applyAnchorClass} from './anchor';
@@ -10,6 +10,7 @@ import type Map from './map';
 import Popup, {Offset} from './popup';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
+import type {PointLike} from './camera';
 
 type MarkerOptions = {
   element?: HTMLElement;

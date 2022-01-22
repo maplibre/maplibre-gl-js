@@ -12,7 +12,7 @@ import HandlerManager from './handler_manager';
 import Camera from './camera';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
-import Point, {PointLike} from '../util/point';
+import Point from '@mapbox/point-geometry';
 import AttributionControl from './control/attribution_control';
 import LogoControl from './control/logo_control';
 import {supported} from '@mapbox/mapbox-gl-supported';
@@ -33,7 +33,7 @@ import type {StyleOptions, StyleSetterOptions} from '../style/style';
 import type {MapEvent, MapDataEvent} from './events';
 import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer';
 import type {StyleImageInterface, StyleImageMetadata} from '../style/style_image';
-
+import type {PointLike} from './camera';
 import type ScrollZoomHandler from './handler/scroll_zoom';
 import type BoxZoomHandler from './handler/box_zoom';
 import type {TouchPitchHandler} from './handler/touch_zoom_rotate';
