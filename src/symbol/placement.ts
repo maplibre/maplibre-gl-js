@@ -7,7 +7,7 @@ import {getAnchorAlignment, WritingMode} from './shaping';
 import {mat4} from 'gl-matrix';
 import assert from 'assert';
 import pixelsToTileUnits from '../source/pixels_to_tile_units';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import type Transform from '../geo/transform';
 import type StyleLayer from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';

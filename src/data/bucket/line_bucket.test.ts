@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 import segment from '../segment';
 import LineBucket from './line_bucket';
 import LineStyleLayer from '../../style/style_layer/line_style_layer';
