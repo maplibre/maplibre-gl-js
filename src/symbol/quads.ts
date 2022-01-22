@@ -1,4 +1,4 @@
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
 

@@ -17,7 +17,7 @@ import DragPanHandler from './handler/shim/drag_pan';
 import DragRotateHandler from './handler/shim/drag_rotate';
 import TouchZoomRotateHandler from './handler/shim/touch_zoom_rotate';
 import {bindAll, extend} from '../util/util';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import assert from 'assert';
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
