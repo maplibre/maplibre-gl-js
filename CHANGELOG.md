@@ -1,14 +1,20 @@
 ## main
 
 ### Features and improvements
+- *...Add new stuff here...*
+
+### 🐞 Bug fixes
+- *...Add new stuff here...*
+
+## 2.0.3
+### Features and improvements
 
 * Remove node package chalk from devDependencies (#789).
-- *...Add new stuff here...*
+* Remove vector-tile module declaration and revert to using point from @mapbox/point-geometry (#788, #800)
 
 ### 🐞 Bug fixes
 
 - Fix max cluster zoom in geojson source (#61)
-- *...Add new stuff here...*
 
 ## 2.0.2
 
