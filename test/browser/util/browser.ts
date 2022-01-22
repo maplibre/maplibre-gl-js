@@ -45,7 +45,7 @@ async function getMapCanvas(url) {
         if (map.loaded()) {
             callback();
         } else {
-            map.once("load", () => callback());
+            map.once('load', () => callback());
         }
     });
 
@@ -68,11 +68,11 @@ tap.test('start server', t => {
     });
 });
 
-tap.test("start browser", async t => {
+tap.test('start browser', async t => {
     try {
         // eslint-disable-next-line require-atomic-updates
         browser.driver = await new Builder()
-            .forBrowser("chrome")
+            .forBrowser('chrome')
             .setChromeOptions(chromeOptions)
             .setFirefoxOptions(firefoxOptions)
             .setSafariOptions(safariOptions)

@@ -3,10 +3,10 @@ import browser from './util/browser';
 import {Origin} from 'selenium-webdriver';
 import {equalWithPrecision} from '../util';
 
-test("dragging", async t => {
+test('dragging', async t => {
     const {driver} = browser;
 
-    await t.test("drag to the left", async t => {
+    await t.test('drag to the left', async t => {
         const canvas = await browser.getMapCanvas(`${browser.basePath}/test/browser/fixtures/land.html`);
 
         // Perform drag action, wait a bit the end to avoid the momentum mode.
