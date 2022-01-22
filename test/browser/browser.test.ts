@@ -59,7 +59,7 @@ let server = null;
 describe('drag and zoom', () => {
 
     // start server
-    beforeEach((done) => {
+    beforeAll((done) => {
         server = http.createServer(
         st(process.cwd())
         ).listen(port, ip, () => {
@@ -68,7 +68,7 @@ describe('drag and zoom', () => {
     });
 
     // start browser
-    beforeEach(async () => {
+    beforeAll(async () => {
         try {
         // eslint-disable-next-line require-atomic-updates
             browser.driver = await new Builder()
@@ -149,7 +149,7 @@ describe('drag and zoom', () => {
         expect(zoom).toBe(2);
     });
 
-    afterEach(async () => {
+    afterAll(async () => {
         if (browser.driver) {
             await browser.driver.quit();
         }
