@@ -1,5 +1,5 @@
-import migrate from '../style-spec/migrate';
-import * as spec from '../style-spec/style-spec';
+import migrate from './migrate';
+import * as spec from './style-spec';
 import v8 from './reference/v8.json';
 import validate from './validate_style';
 
