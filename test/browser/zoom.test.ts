@@ -16,6 +16,6 @@ test("zooming", async t => {
             map.once('idle', () => callback(map.getZoom()));
         });
 
-        t.equals(zoom, 2, 'zoomed in by 1 zoom level');
+        expect(zoom).toBe(2);
     });
 });
