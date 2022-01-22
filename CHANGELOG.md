@@ -11,6 +11,7 @@
 
 * Remove node package chalk from devDependencies (#789).
 * Remove vector-tile module declaration and revert to using point from @mapbox/point-geometry (#788, #800)
+* Moved development environemnt to use NodeJs 16 (#781, #806)
 
 ### 🐞 Bug fixes
 
