@@ -64,7 +64,7 @@ tap.test('start server', t => {
         } else {
             expect(true).toBeTruthy();
         }
-        t.end();
+        done();
     });
 });
 

@@ -1,10 +1,10 @@
 import {test} from '../util/test';
 import browser from './util/browser';
 
-test('zooming', async t => {
+describe('zooming', async t => {
     const {driver} = browser;
 
-    await t.test('double click at the center', async t => {
+    await test('double click at the center', async t => {
         const canvas = await browser.getMapCanvas(`${browser.basePath}/test/browser/fixtures/land.html`);
 
         // Double-click on the center of the map.
