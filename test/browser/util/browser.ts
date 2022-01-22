@@ -1,4 +1,3 @@
-import tap from 'tap';
 import address from 'address';
 import st from 'st';
 import http from 'http';
@@ -60,10 +59,10 @@ tap.test('start server', t => {
         st(process.cwd())
     ).listen(port, ip, err => {
         if (err) {
-            t.error(err);
+            expect(err).toBeFalsy();
             t.bailout();
         } else {
-            t.ok(true, `Listening at ${ip}:${port}`);
+            expect(true).toBeTruthy();
         }
         t.end();
     });
@@ -79,14 +78,14 @@ tap.test("start browser", async t => {
             .setSafariOptions(safariOptions)
             .build();
     } catch (err) {
-        t.error(err);
+        expect(err).toBeFalsy();
         t.bailout();
     }
 
     const capabilities = await browser.driver.getCapabilities();
-    t.ok(true, `platform: ${capabilities.getPlatform()}`);
-    t.ok(true, `browser: ${capabilities.getBrowserName()}`);
-    t.ok(true, `version: ${capabilities.getBrowserVersion()}`);
+    expect(true).toBeTruthy();
+    expect(true).toBeTruthy();
+    expect(true).toBeTruthy();
 
     if (capabilities.getBrowserName() === 'Safari') {
         browser.scaleFactor = 2;
