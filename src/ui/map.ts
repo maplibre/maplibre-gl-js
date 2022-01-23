@@ -828,11 +828,11 @@ class Map extends Camera {
     }
 
     /**
-     * Returns a {@link Point} representing pixel coordinates, relative to the map's `container`,
+     * Returns a [Point](https://github.com/mapbox/point-geometry) representing pixel coordinates, relative to the map's `container`,
      * that correspond to the specified geographical location.
      *
      * @param {LngLatLike} lnglat The geographical location to project.
-     * @returns {Point} The {@link Point} corresponding to `lnglat`, relative to the map's `container`.
+     * @returns {Point} The [Point](https://github.com/mapbox/point-geometry) corresponding to `lnglat`, relative to the map's `container`.
      * @example
      * var coordinate = [-122.420679, 37.772537];
      * var point = map.project(coordinate);
