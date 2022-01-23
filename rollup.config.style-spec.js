@@ -25,7 +25,8 @@ const config = [{
                 // This check will cause the build to fail on CI allowing these issues to be caught.
                 if (importer && !importer.includes('node_modules')) {
                     const resolvedPath = path.join(importer, source);
-                    const fromRoot = path.relative(dirname(fileURLToPath(import.meta.url)), resolvedPath);
+                    const importMetaUrl = require('url').pathToFileURL(__filename).toString();
+                    const fromRoot = path.relative(dirname(fileURLToPath(importMetaUrl)), resolvedPath);
                     if (fromRoot.length > 2 && fromRoot.slice(0, 2) === '..') {
                         throw new Error(`Module ${importer} imports ${source} from outside the style-spec package root directory.`);
                     }
