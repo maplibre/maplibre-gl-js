@@ -1,14 +1,15 @@
 import isBuiltin from 'is-builtin-module';
 import * as rollup from 'rollup';
-import {test} from '../util/test';
+// import {test} from '../util/test';
 import rollupConfig from '../../rollup.config.style-spec';
 import styleSpecPackage from '../../src/style-spec/package.json';
 /* eslint-disable import/namespace */
 import {RollupOptions} from 'rollup';
 
 describe('@mapbox/mapbox-gl-style-spec npm package', () => {
-    test('build plain ES5 bundle in prepublish', () => {
-        rollup.rollup({
+    test('build plain ES5 bundle in prepublish', async () => {
+        jest.spyOn(console, 'warn').mockImplementation(() => {});
+        await rollup.rollup({
             input: './rollup/build/tsc/src/style-spec/style-spec.js',
             plugins: [{
                 name: 'tset-checker',
