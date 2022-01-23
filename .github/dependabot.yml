@@ -13,6 +13,7 @@ updates:
       - dependency-name: "@types/d3"
       - dependency-name: "@types/diff"
       - dependency-name: "d3"
+      - dependency-name: "documentation"
       - dependency-name: "diff"
       - dependency-name: "jsdom"
       - dependency-name: "tap"

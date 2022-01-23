@@ -100,7 +100,7 @@
     "cssnano": "^5.0.8",
     "d3": "^4.12.0",
     "diff": "^4.0.1",
-    "documentation": "^13.2.5",
+    "documentation": "^12.3.0",
     "dts-bundle-generator": "^6.0.0",
     "ejs": "^3.1.6",
     "eslint": "^7.32.0",
