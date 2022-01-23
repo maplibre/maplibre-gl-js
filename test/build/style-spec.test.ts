@@ -2,6 +2,8 @@ import isBuiltin from 'is-builtin-module';
 import * as rollup from 'rollup';
 import rollupConfig from '../../rollup.config.style-spec';
 import styleSpecPackage from '../../src/style-spec/package.json';
+import * as spec from '../../dist/style-spec/index.js';
+
 /* eslint-disable import/namespace */
 import {RollupOptions} from 'rollup';
 
@@ -30,4 +32,12 @@ describe('@maplibre/maplibre-gl-style-spec npm package', () => {
             expect(e).toBeFalsy();
         });
     });
+
+    test('exports components directly, not behind `default` - https://github.com/mapbox/mapbox-gl-js/issues/6601', () => {
+        // @ts-ignore
+        expect(spec.default && spec.default.validate).toBeFalsy();
+        // @ts-ignore
+        expect(spec.validate).toBeTruthy();
+    });
+
 });
