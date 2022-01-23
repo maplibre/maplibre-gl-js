@@ -1,6 +1,6 @@
 import {isCounterClockwise} from './util';
 
-import Point from './point';
+import Point from '@mapbox/point-geometry';
 
 export {polygonIntersectsBufferedPoint, polygonIntersectsMultiPolygon, polygonIntersectsBufferedMultiLine, polygonIntersectsPolygon, distToSegmentSquared, polygonIntersectsBox};
 

@@ -1,5 +1,5 @@
 import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, nextPowerOfTwo, isPowerOfTwo} from './util';
-import Point from './point';
+import Point from '@mapbox/point-geometry';
 
 describe('util', () => {
     expect(easeCubicInOut(0)).toBe(0);

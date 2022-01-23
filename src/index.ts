@@ -1,5 +1,4 @@
 /// <reference path="./types/glsl.d.ts" />
-/// <reference path="./types/non-typed-modules.d.ts" />
 import assert from 'assert';
 import {supported} from '@mapbox/mapbox-gl-supported';
 
@@ -14,7 +13,7 @@ import Marker from './ui/marker';
 import Style from './style/style';
 import LngLat from './geo/lng_lat';
 import LngLatBounds from './geo/lng_lat_bounds';
-import Point from './util/point';
+import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from './geo/mercator_coordinate';
 import {Evented} from './util/evented';
 import config from './util/config';

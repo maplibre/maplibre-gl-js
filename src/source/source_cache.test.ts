@@ -1,10 +1,10 @@
 import SourceCache from './source_cache';
-import {setType} from './source';
+import {setSourceType} from './source';
 import Tile from './tile';
 import {OverscaledTileID} from './tile_id';
 import Transform from '../geo/transform';
 import LngLat from '../geo/lng_lat';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import browser from '../util/browser';
@@ -63,7 +63,7 @@ function createSource(id: string, sourceOptions: any, _dispatcher: any, eventedP
     return source;
 }
 
-setType('mock-source-type', createSource as any);
+setSourceType('mock-source-type', createSource as any);
 
 function createSourceCache(options?, used?) {
     const sc = new SourceCache('id', extend({

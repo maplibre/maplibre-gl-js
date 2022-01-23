@@ -87,7 +87,7 @@ function createStructArrayType(name: string, layout: StructArrayLayout, includeS
             includeStructAccessors
         });
     } else {
-        arrayTypeEntries.add(`${layoutClass} as ${arrayClass}`);
+        arrayTypeEntries.add(`export class ${arrayClass} extends ${layoutClass} {}`);
     }
 }
 
@@ -428,12 +428,12 @@ fs.writeFileSync('src/data/array_types.ts',
 import assert from 'assert';
 import {Struct, StructArray} from '../util/struct_array';
 import {register} from '../util/web_worker_transfer';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 
 ${layouts.map(emitStructArrayLayout).join('\n')}
 ${arraysWithStructAccessors.map(emitStructArray).join('\n')}
+${[...arrayTypeEntries].join('\n')}
 export {
-    ${layouts.map(layout => layout.className).join(',\n    ')},
-    ${[...arrayTypeEntries].join(',\n    ')}
+    ${layouts.map(layout => layout.className).join(',\n    ')}
 };
 `);
