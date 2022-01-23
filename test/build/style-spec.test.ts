@@ -21,20 +21,20 @@ test('@mapbox/mapbox-gl-style-spec npm package', (t) => {
                         return null;
                     }
 
-                    t.ok(styleSpecPackage.dependencies[id], `External dependency ${id} (imported from ${importer}) declared in style-spec's package.json`);
+                    expect(styleSpecPackage.dependencies[id]).toBeTruthy();
                     return false;
                 }
             }].concat(rollupConfig[0].plugins)
         }).then(() => {
             t.end();
         }).catch(e => {
-            t.error(e);
+            expect(e).toBeFalsy();
         });
     });
 
     t.test('exports components directly, not behind `default` - https://github.com/mapbox/mapbox-gl-js/issues/6601', (t) => {
-        t.notOk(spec.default && spec.default.validate);
-        t.ok(spec.validate);
+        expect(spec.default && spec.default.validate).toBeFalsy();
+        expect(spec.validate).toBeTruthy();
         t.end();
     });
 
