@@ -83,7 +83,7 @@
     "@types/selenium-webdriver": "^4.0.16",
     "@types/shuffle-seed": "^1.1.0",
     "@types/sinon": "^10.0.2",
-    "@types/stylelint": "^13.13.2",
+    "@types/stylelint": "^14.0.0",
     "@types/supercluster": "^5.0.2",
     "@types/tape": "^4.13.2",
     "@types/window-or-global": "^1.0.4",
