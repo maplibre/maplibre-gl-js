@@ -1,10 +1,9 @@
 import '../../stub_loader';
-import {test} from '../../util/test';
-import ImageSource from '../../../rollup/build/tsc/src/source/image_source';
-import {Evented} from '../../../rollup/build/tsc/src/util/evented';
-import Transform from '../../../rollup/build/tsc/src/geo/transform';
-import {extend} from '../../../rollup/build/tsc/src/util/util';
-import browser from '../../../rollup/build/tsc/src/util/browser';
+import ImageSource from '../source/image_source';
+import {Evented} from '../util/evented';
+import Transform from '../geo/transform';
+import {extend} from '../util/util';
+import browser from '../util/browser';
 
 function createSource(options) {
     options = extend({
@@ -27,7 +26,7 @@ class StubMap extends Evented {
     }
 }
 
-test('ImageSource', (t) => {
+describe('ImageSource', done => {
     window.useFakeXMLHttpRequest();
     // https://github.com/jsdom/jsdom/commit/58a7028d0d5b6aacc5b435daee9fd8f9eacbb14c
     // fake the image request (sinon doesn't allow non-string data for
@@ -42,16 +41,16 @@ test('ImageSource', (t) => {
     };
     t.stub(browser, 'getImageData').callsFake(() => new ArrayBuffer(1));
 
-    t.test('constructor', (t) => {
+    test('constructor', done => {
         const source = createSource({url : '/image.png'});
 
         expect(source.minzoom).toBe(0);
         expect(source.maxzoom).toBe(22);
         expect(source.tileSize).toBe(512);
-        t.end();
+        done();
     });
 
-    t.test('fires dataloading event', (t) => {
+    test('fires dataloading event', done => {
         const source = createSource({url : '/image.png'});
         source.on('dataloading', (e) => {
             expect(e.dataType).toBe('source');
@@ -59,25 +58,25 @@ test('ImageSource', (t) => {
         source.onAdd(new StubMap());
         respond();
         expect(source.image).toBeTruthy();
-        t.end();
+        done();
     });
 
-    t.test('transforms url request', (t) => {
+    test('transforms url request', done => {
         const source = createSource({url : '/image.png'});
         const map = new StubMap();
-        const spy = t.spy(map._requestManager, 'transformRequest');
+        const spy = jest.spyOn(map._requestManager, 'transformRequest');
         source.onAdd(map);
         respond();
         expect(spy.calledOnce).toBeTruthy();
         expect(spy.getCall(0).args[0]).toBe('/image.png');
         expect(spy.getCall(0).args[1]).toBe('Image');
-        t.end();
+        done();
     });
 
-    t.test('updates url from updateImage', (t) => {
+    test('updates url from updateImage', done => {
         const source = createSource({url : '/image.png'});
         const map = new StubMap();
-        const spy = t.spy(map._requestManager, 'transformRequest');
+        const spy = jest.spyOn(map._requestManager, 'transformRequest');
         source.onAdd(map);
         respond();
         expect(spy.calledOnce).toBeTruthy();
@@ -88,10 +87,10 @@ test('ImageSource', (t) => {
         expect(spy.calledTwice).toBeTruthy();
         expect(spy.getCall(1).args[0]).toBe('/image2.png');
         expect(spy.getCall(1).args[1]).toBe('Image');
-        t.end();
+        done();
     });
 
-    t.test('sets coordinates', (t) => {
+    test('sets coordinates', done => {
         const source = createSource({url : '/image.png'});
         const map = new StubMap();
         source.onAdd(map);
@@ -101,10 +100,10 @@ test('ImageSource', (t) => {
         source.setCoordinates([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
         const afterSerialized = source.serialize();
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
-        t.end();
+        done();
     });
 
-    t.test('sets coordinates via updateImage', (t) => {
+    test('sets coordinates via updateImage', done => {
         const source = createSource({url : '/image.png'});
         const map = new StubMap();
         source.onAdd(map);
@@ -118,33 +117,33 @@ test('ImageSource', (t) => {
         respond();
         const afterSerialized = source.serialize();
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
-        t.end();
+        done();
     });
 
-    t.test('fires data event when content is loaded', (t) => {
+    test('fires data event when content is loaded', done => {
         const source = createSource({url : '/image.png'});
         source.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
                 expect(typeof source.tileID == 'object').toBeTruthy();
-                t.end();
+                done();
             }
         });
         source.onAdd(new StubMap());
         respond();
     });
 
-    t.test('fires data event when metadata is loaded', (t) => {
+    test('fires data event when metadata is loaded', done => {
         const source = createSource({url : '/image.png'});
         source.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
-                t.end();
+                done();
             }
         });
         source.onAdd(new StubMap());
         respond();
     });
 
-    t.test('serialize url and coordinates', (t) => {
+    test('serialize url and coordinates', done => {
         const source = createSource({url: '/image.png'});
 
         const serialized = source.serialize();
@@ -152,8 +151,8 @@ test('ImageSource', (t) => {
         expect(serialized.url).toBe('/image.png');
         expect(serialized.coordinates).toEqual([[0, 0], [1, 0], [1, 1], [0, 1]]);
 
-        t.end();
+        done();
     });
 
-    t.end();
+    done();
 });
