@@ -1,13 +1,11 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import replace from 'rollup-plugin-replace';
+import replace from '@rollup/plugin-replace';
 import {plugins} from '../build/rollup_plugins';
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
-import buble from 'rollup-plugin-buble';
+import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import buble from '@rollup/plugin-buble';
 import typescript from '@rollup/plugin-typescript';
-
-let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
 if (process.env.MAPLIBRE_STYLES) {
     styles = process.env.MAPLIBRE_STYLES
