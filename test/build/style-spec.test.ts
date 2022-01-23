@@ -6,11 +6,11 @@ import styleSpecPackage from '../../src/style-spec/package.json';
 /* eslint-disable import/namespace */
 import * as spec from '../../dist/style-spec/index.mjs';
 
-test('@mapbox/mapbox-gl-style-spec npm package', (t) => {
-    t.test('build plain ES5 bundle in prepublish', (t) => {
+describe('@mapbox/mapbox-gl-style-spec npm package', () => {
+    test('build plain ES5 bundle in prepublish', () => {
         t.stub(console, 'warn');
         rollup.rollup({
-            input: `./rollup/build/tsc/src/style-spec/style-spec.js`,
+            input: './rollup/build/tsc/src/style-spec/style-spec.js',
             plugins: [{
                 resolveId: (id, importer) => {
                     if (
@@ -26,17 +26,14 @@ test('@mapbox/mapbox-gl-style-spec npm package', (t) => {
                 }
             }].concat(rollupConfig[0].plugins)
         }).then(() => {
-            t.end();
         }).catch(e => {
             expect(e).toBeFalsy();
         });
     });
 
-    t.test('exports components directly, not behind `default` - https://github.com/mapbox/mapbox-gl-js/issues/6601', (t) => {
+    test('exports components directly, not behind `default` - https://github.com/mapbox/mapbox-gl-js/issues/6601', () => {
         expect(spec.default && spec.default.validate).toBeFalsy();
         expect(spec.validate).toBeTruthy();
-        t.end();
     });
 
-    t.end();
 });
