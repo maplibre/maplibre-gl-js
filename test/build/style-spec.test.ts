@@ -5,7 +5,7 @@ import styleSpecPackage from '../../src/style-spec/package.json';
 /* eslint-disable import/namespace */
 import {RollupOptions} from 'rollup';
 
-describe('@mapbox/mapbox-gl-style-spec npm package', () => {
+describe('@maplibre/maplibre-gl-style-spec npm package', () => {
     test('build plain ES5 bundle in prepublish', async () => {
         jest.spyOn(console, 'warn').mockImplementation(() => {});
         await rollup.rollup({
