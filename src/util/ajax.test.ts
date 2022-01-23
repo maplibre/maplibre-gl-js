@@ -8,6 +8,7 @@ import {
 import config from './config';
 import webpSupported from './webp_supported';
 import {fakeServer, SinonFakeServer} from 'sinon';
+import {stubAjaxGetImage} from './test/util';
 
 describe('ajax', () => {
     let server: SinonFakeServer;
@@ -175,8 +176,7 @@ describe('ajax', () => {
 
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
-        // mock createImageBitmap support
-        global.createImageBitmap = () => Promise.resolve(new ImageBitmap());
+        stubAjaxGetImage(() => Promise.resolve(new ImageBitmap()));
 
         getImage({url: ''}, (err, img) => {
             if (err) done(err);
@@ -192,16 +192,7 @@ describe('ajax', () => {
 
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
-        // mock createImageBitmap not supported
-        global.createImageBitmap = undefined;
-
-        global.URL.revokeObjectURL = () => {};
-        // eslint-disable-next-line accessor-pairs
-        Object.defineProperty(global.Image.prototype, 'src', {
-            set(_) {
-                this.onload();
-            }
-        });
+        stubAjaxGetImage(undefined);
 
         getImage({url: ''}, (err, img) => {
             if (err) done(`get image failed with error ${err.message}`);
