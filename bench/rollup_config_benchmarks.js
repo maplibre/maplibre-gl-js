@@ -7,6 +7,9 @@ import commonjs from '@rollup/plugin-commonjs';
 import buble from '@rollup/plugin-buble';
 import typescript from '@rollup/plugin-typescript';
 
+let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
+
+
 if (process.env.MAPLIBRE_STYLES) {
     styles = process.env.MAPLIBRE_STYLES
         .split(',')
