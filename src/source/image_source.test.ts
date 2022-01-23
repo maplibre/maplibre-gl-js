@@ -45,20 +45,20 @@ test('ImageSource', (t) => {
     t.test('constructor', (t) => {
         const source = createSource({url : '/image.png'});
 
-        t.equal(source.minzoom, 0);
-        t.equal(source.maxzoom, 22);
-        t.equal(source.tileSize, 512);
+        expect(source.minzoom).toBe(0);
+        expect(source.maxzoom).toBe(22);
+        expect(source.tileSize).toBe(512);
         t.end();
     });
 
     t.test('fires dataloading event', (t) => {
         const source = createSource({url : '/image.png'});
         source.on('dataloading', (e) => {
-            t.equal(e.dataType, 'source');
+            expect(e.dataType).toBe('source');
         });
         source.onAdd(new StubMap());
         respond();
-        t.ok(source.image);
+        expect(source.image).toBeTruthy();
         t.end();
     });
 
@@ -68,9 +68,9 @@ test('ImageSource', (t) => {
         const spy = t.spy(map._requestManager, 'transformRequest');
         source.onAdd(map);
         respond();
-        t.ok(spy.calledOnce);
-        t.equal(spy.getCall(0).args[0], '/image.png');
-        t.equal(spy.getCall(0).args[1], 'Image');
+        expect(spy.calledOnce).toBeTruthy();
+        expect(spy.getCall(0).args[0]).toBe('/image.png');
+        expect(spy.getCall(0).args[1]).toBe('Image');
         t.end();
     });
 
@@ -80,14 +80,14 @@ test('ImageSource', (t) => {
         const spy = t.spy(map._requestManager, 'transformRequest');
         source.onAdd(map);
         respond();
-        t.ok(spy.calledOnce);
-        t.equal(spy.getCall(0).args[0], '/image.png');
-        t.equal(spy.getCall(0).args[1], 'Image');
+        expect(spy.calledOnce).toBeTruthy();
+        expect(spy.getCall(0).args[0]).toBe('/image.png');
+        expect(spy.getCall(0).args[1]).toBe('Image');
         source.updateImage({url: '/image2.png'});
         respond();
-        t.ok(spy.calledTwice);
-        t.equal(spy.getCall(1).args[0], '/image2.png');
-        t.equal(spy.getCall(1).args[1], 'Image');
+        expect(spy.calledTwice).toBeTruthy();
+        expect(spy.getCall(1).args[0]).toBe('/image2.png');
+        expect(spy.getCall(1).args[1]).toBe('Image');
         t.end();
     });
 
@@ -97,10 +97,10 @@ test('ImageSource', (t) => {
         source.onAdd(map);
         respond();
         const beforeSerialized = source.serialize();
-        t.deepEqual(beforeSerialized.coordinates, [[0, 0], [1, 0], [1, 1], [0, 1]]);
+        expect(beforeSerialized.coordinates).toEqual([[0, 0], [1, 0], [1, 1], [0, 1]]);
         source.setCoordinates([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
         const afterSerialized = source.serialize();
-        t.deepEqual(afterSerialized.coordinates, [[0, 0], [-1, 0], [-1, -1], [0, -1]]);
+        expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
         t.end();
     });
 
@@ -110,14 +110,14 @@ test('ImageSource', (t) => {
         source.onAdd(map);
         respond();
         const beforeSerialized = source.serialize();
-        t.deepEqual(beforeSerialized.coordinates, [[0, 0], [1, 0], [1, 1], [0, 1]]);
+        expect(beforeSerialized.coordinates).toEqual([[0, 0], [1, 0], [1, 1], [0, 1]]);
         source.updateImage({
             url: '/image2.png',
             coordinates: [[0, 0], [-1, 0], [-1, -1], [0, -1]]
         });
         respond();
         const afterSerialized = source.serialize();
-        t.deepEqual(afterSerialized.coordinates, [[0, 0], [-1, 0], [-1, -1], [0, -1]]);
+        expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
         t.end();
     });
 
@@ -125,7 +125,7 @@ test('ImageSource', (t) => {
         const source = createSource({url : '/image.png'});
         source.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
-                t.ok(typeof source.tileID == 'object');
+                expect(typeof source.tileID == 'object').toBeTruthy();
                 t.end();
             }
         });
@@ -148,9 +148,9 @@ test('ImageSource', (t) => {
         const source = createSource({url: '/image.png'});
 
         const serialized = source.serialize();
-        t.equal(serialized.type, 'image');
-        t.equal(serialized.url, '/image.png');
-        t.deepEqual(serialized.coordinates, [[0, 0], [1, 0], [1, 1], [0, 1]]);
+        expect(serialized.type).toBe('image');
+        expect(serialized.url).toBe('/image.png');
+        expect(serialized.coordinates).toEqual([[0, 0], [1, 0], [1, 1], [0, 1]]);
 
         t.end();
     });
