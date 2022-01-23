@@ -1,11 +1,11 @@
 import fs from 'fs';
-import path, {dirname} from 'path';
+import path from 'path';
 import reference from '../../rollup/build/tsc/src/style-spec/reference/latest';
 import packageJson from '../../package.json';
 import browserify from 'browserify';
-import {fileURLToPath} from 'url';
+// import {fileURLToPath} from 'url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+// const __dirname = dirname(fileURLToPath(import.meta.url));
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 
 describe('test min build', () => {
@@ -30,28 +30,15 @@ describe('test min build', () => {
         done();
     });
 
-    test('can be browserified', done => {
-        browserify(path.join(__dirname, 'browserify-test-fixture.js')).bundle((err) => {
-            expect(err).toBeFalsy();
-            done();
-        });
-    });
+    test('evaluates without errors', async () => {
 
-    test('evaluates without errors', async done => {
-        global.window = {
-            URL: {
-                createObjectURL: () => {}
-            }
-        };
-        global.Blob = function() {};
-        global.performance = {};
-        global.navigator = {};
+        global.URL.createObjectURL = () => 'placeholder';
+
         try {
             await import('../../dist/maplibre-gl.js');
         } catch (e) {
             expect(e).toBeFalsy();
         }
-        done();
     });
 
 });
