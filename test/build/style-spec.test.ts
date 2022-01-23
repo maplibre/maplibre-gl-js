@@ -1,6 +1,5 @@
 import isBuiltin from 'is-builtin-module';
 import * as rollup from 'rollup';
-// import {test} from '../util/test';
 import rollupConfig from '../../rollup.config.style-spec';
 import styleSpecPackage from '../../src/style-spec/package.json';
 /* eslint-disable import/namespace */
