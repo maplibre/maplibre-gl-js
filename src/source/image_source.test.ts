@@ -2,10 +2,24 @@ import ImageSource from './image_source';
 import {Evented} from '../util/evented';
 import Transform from '../geo/transform';
 import {extend} from '../util/util';
-import browser from '../util/browser';
 import {useFakeXMLHttpRequest} from 'sinon';
 import {RequestManager} from '../util/request_manager';
 import Dispatcher from '../util/dispatcher';
+
+const stubAjaxGetImage = () => {
+    // mock createImageBitmap not supported
+    global.createImageBitmap = undefined;
+
+    global.URL.revokeObjectURL = () => {};
+    global.URL.createObjectURL = (_) => { return null; };
+
+    // eslint-disable-next-line accessor-pairs
+    Object.defineProperty(global.Image.prototype, 'src', {
+        set(_) {
+            this.onload();
+        }
+    });
+};
 
 function createSource(options) {
     options = extend({
@@ -31,28 +45,12 @@ class StubMap extends Evented {
     }
 }
 
-const getStubMap = () => {
-    return new StubMap() as any;
-};
-
 describe('ImageSource', () => {
     const requests = [];
     useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
+    stubAjaxGetImage();
     beforeEach(() => {
         global.fetch = null;
-    });
-
-    // mock createImageBitmap not supported
-    global.createImageBitmap = undefined;
-
-    global.URL.revokeObjectURL = () => {};
-    global.URL.createObjectURL = (_) => { return null; };
-
-    // eslint-disable-next-line accessor-pairs
-    Object.defineProperty(global.Image.prototype, 'src', {
-        set(_) {
-            this.onload();
-        }
     });
 
     const respond = () => {
@@ -61,7 +59,6 @@ describe('ImageSource', () => {
         req.response = new ArrayBuffer(1);
         req.onload();
     };
-    jest.spyOn(browser, 'getImageData').mockImplementation(() => new ArrayBuffer(1) as any as ImageData);
 
     test('constructor', () => {
         const source = createSource({url : '/image.png'});
@@ -76,14 +73,14 @@ describe('ImageSource', () => {
         source.on('dataloading', (e) => {
             expect(e.dataType).toBe('source');
         });
-        source.onAdd(getStubMap());
+        source.onAdd(new StubMap() as any);
         respond();
         expect(source.image).toBeTruthy();
     });
 
     test('transforms url request', () => {
         const source = createSource({url : '/image.png'});
-        const map = getStubMap();
+        const map = new StubMap() as any;
         const spy = jest.spyOn(map._requestManager, 'transformRequest');
         source.onAdd(map);
         respond();
@@ -94,7 +91,7 @@ describe('ImageSource', () => {
 
     test('updates url from updateImage', () => {
         const source = createSource({url : '/image.png'});
-        const map = getStubMap();
+        const map = new StubMap() as any;
         const spy = jest.spyOn(map._requestManager, 'transformRequest');
         source.onAdd(map);
         respond();
@@ -110,7 +107,7 @@ describe('ImageSource', () => {
 
     test('sets coordinates', () => {
         const source = createSource({url : '/image.png'});
-        const map = getStubMap();
+        const map = new StubMap() as any;
         source.onAdd(map);
         respond();
         const beforeSerialized = source.serialize();
@@ -122,7 +119,7 @@ describe('ImageSource', () => {
 
     test('sets coordinates via updateImage', () => {
         const source = createSource({url : '/image.png'});
-        const map = getStubMap();
+        const map = new StubMap() as any;
         source.onAdd(map);
         respond();
         const beforeSerialized = source.serialize();
@@ -144,7 +141,7 @@ describe('ImageSource', () => {
                 done();
             }
         });
-        source.onAdd(getStubMap());
+        source.onAdd(new StubMap() as any);
         respond();
     });
 
@@ -155,7 +152,7 @@ describe('ImageSource', () => {
                 done();
             }
         });
-        source.onAdd(getStubMap());
+        source.onAdd(new StubMap() as any);
         respond();
     });
 
