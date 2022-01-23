@@ -9,35 +9,35 @@ import {fileURLToPath} from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 
-test('production build removes asserts', (t) => {
+describe('production build removes asserts', done => {
     expect(minBundle.indexOf('canary assert') === -1).toBeTruthy();
     expect(minBundle.indexOf('canary debug run') === -1).toBeTruthy();
-    t.end();
+    done();
 });
 
-test('trims package.json assets', (t) => {
+describe('trims package.json assets', done => {
     // confirm that the entire package.json isn't present by asserting
     // the absence of each of our script strings
     for (const name in packageJson.scripts) {
         expect(minBundle.indexOf(packageJson.scripts[name]) === -1).toBeTruthy();
     }
-    t.end();
+    done();
 });
 
-test('trims reference.json fields', (t) => {
+describe('trims reference.json fields', done => {
     expect(reference.$root.version.doc).toBeTruthy();
     expect(minBundle.indexOf(reference.$root.version.doc) === -1).toBeTruthy();
-    t.end();
+    done();
 });
 
-test('can be browserified', (t) => {
+describe('can be browserified', done => {
     browserify(path.join(__dirname, 'browserify-test-fixture.js')).bundle((err) => {
         expect(err).toBeFalsy();
-        t.end();
+        done();
     });
 });
 
-test('evaluates without errors', async (t) => {
+describe('evaluates without errors', async done => {
     global.window = {
         URL: {
             createObjectURL: () => {}
@@ -51,6 +51,6 @@ test('evaluates without errors', async (t) => {
     } catch (e) {
         expect(e).toBeFalsy();
     }
-    t.end();
+    done();
 });
 
