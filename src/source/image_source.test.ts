@@ -5,21 +5,7 @@ import {extend} from '../util/util';
 import {useFakeXMLHttpRequest} from 'sinon';
 import {RequestManager} from '../util/request_manager';
 import Dispatcher from '../util/dispatcher';
-
-const stubAjaxGetImage = () => {
-    // mock createImageBitmap not supported
-    global.createImageBitmap = undefined;
-
-    global.URL.revokeObjectURL = () => {};
-    global.URL.createObjectURL = (_) => { return null; };
-
-    // eslint-disable-next-line accessor-pairs
-    Object.defineProperty(global.Image.prototype, 'src', {
-        set(_) {
-            this.onload();
-        }
-    });
-};
+import {stubAjaxGetImage} from '../util/test/util';
 
 function createSource(options) {
     options = extend({
@@ -48,7 +34,7 @@ class StubMap extends Evented {
 describe('ImageSource', () => {
     const requests = [];
     useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
-    stubAjaxGetImage();
+    stubAjaxGetImage(undefined);
     beforeEach(() => {
         global.fetch = null;
     });
