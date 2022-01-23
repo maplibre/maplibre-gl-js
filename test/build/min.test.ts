@@ -1,33 +1,26 @@
 import fs from 'fs';
-import path from 'path';
 import reference from '../../rollup/build/tsc/src/style-spec/reference/latest';
 import packageJson from '../../package.json';
-import browserify from 'browserify';
-// import {fileURLToPath} from 'url';
 
-// const __dirname = dirname(fileURLToPath(import.meta.url));
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 
 describe('test min build', () => {
-    test('production build removes asserts', done => {
-        expect(minBundle.indexOf('canary assert') === -1).toBeTruthy();
-        expect(minBundle.indexOf('canary debug run') === -1).toBeTruthy();
-        done();
+    test('production build removes asserts', () => {
+        expect(minBundle.includes('canary assert')).toBeFalsy();
+        expect(minBundle.includes('canary debug run')).toBeFalsy();
     });
 
-    test('trims package.json assets', done => {
+    test('trims package.json assets', () => {
     // confirm that the entire package.json isn't present by asserting
     // the absence of each of our script strings
         for (const name in packageJson.scripts) {
-            expect(minBundle.indexOf(packageJson.scripts[name]) === -1).toBeTruthy();
+            expect(minBundle.includes(packageJson.scripts[name])).toBeFalsy();
         }
-        done();
     });
 
-    test('trims reference.json fields', done => {
+    test('trims reference.json fields', () => {
         expect(reference.$root.version.doc).toBeTruthy();
-        expect(minBundle.indexOf(reference.$root.version.doc) === -1).toBeTruthy();
-        done();
+        expect(minBundle.includes(reference.$root.version.doc)).toBeFalsy();
     });
 
     test('evaluates without errors', async () => {
