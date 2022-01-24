@@ -6,6 +6,10 @@
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
 
+## 2.0.5
+### 🐞 Bug fixes
+- Remove list of node versions allowed to install the package.
+
 ## 2.0.4
 ### 🐞 Bug fixes
 - Missing package.json file in version 2.0.3 dist in npm (#811) - this causes webpack to fail
