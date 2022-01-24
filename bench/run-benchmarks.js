@@ -12,7 +12,7 @@ if (!fs.existsSync(dir)) {
 
 const browser = await puppeteer.launch({
     headless: true,
-    args: ['--use-gl=egl', '--no-sandbox', '--disable-setuid-sandbox']
+    args: ['--use-gl=angle', '--no-sandbox', '--disable-setuid-sandbox']
 });
 
 try {
