@@ -15,7 +15,7 @@ import type {LayerSpecification} from '../../style-spec/types';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class Point3D extends Point {
-    z: number
+    z: number;
 }
 
 class FillExtrusionStyleLayer extends StyleLayer {

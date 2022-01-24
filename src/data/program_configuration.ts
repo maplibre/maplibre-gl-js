@@ -129,7 +129,7 @@ class ConstantBinder implements UniformBinder {
 
 class CrossFadedConstantBinder implements UniformBinder {
     uniformNames: Array<string>;
-    patternFrom: Array<number> ;
+    patternFrom: Array<number>;
     patternTo: Array<number>;
     pixelRatioFrom: number;
     pixelRatioTo: number;

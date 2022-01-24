@@ -213,13 +213,13 @@ class CustomStyleLayer extends StyleLayer {
         if (this.implementation.onAdd) {
             this.implementation.onAdd(map, map.painter.context.gl);
         }
-    }
+    };
 
     onRemove = (map: Map) => {
         if (this.implementation.onRemove) {
             this.implementation.onRemove(map, map.painter.context.gl);
         }
-    }
+    };
 }
 
 export default CustomStyleLayer;
