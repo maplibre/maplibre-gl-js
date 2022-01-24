@@ -9,9 +9,6 @@
     "type": "git",
     "url": "git://github.com/maplibre/maplibre-gl-js.git"
   },
-  "engines": {
-    "node": ">=16.0.0"
-  },
   "types": "dist/maplibre-gl.d.ts",
   "type": "module",
   "dependencies": {
