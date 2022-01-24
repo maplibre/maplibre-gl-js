@@ -1,14 +1,29 @@
 ## main
 
 ### Features and improvements
+- *...Add new stuff here...*
+
+### 🐞 Bug fixes
+- *...Add new stuff here...*
+
+## 2.0.5
+### 🐞 Bug fixes
+- Remove list of node versions allowed to install the package.
+
+## 2.0.4
+### 🐞 Bug fixes
+- Missing package.json file in version 2.0.3 dist in npm (#811) - this causes webpack to fail
+
+## 2.0.3
+### Features and improvements
 
 * Remove node package chalk from devDependencies (#789).
-- *...Add new stuff here...*
+* Remove vector-tile module declaration and revert to using point from @mapbox/point-geometry (#788, #800)
+* Moved development environemnt to use NodeJs 16 (#781, #806)
 
 ### 🐞 Bug fixes
 
 - Fix max cluster zoom in geojson source (#61)
-- *...Add new stuff here...*
 
 ## 2.0.2
 

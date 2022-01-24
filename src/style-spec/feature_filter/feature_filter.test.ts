@@ -1,7 +1,7 @@
 import {default as createFilter, isExpressionFilter} from '.';
 
 import convertFilter from './convert';
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../../geo/mercator_coordinate';
 import EXTENT from '../../data/extent';
 import {CanonicalTileID} from '../../source/tile_id';

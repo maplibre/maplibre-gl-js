@@ -1,27 +1,11 @@
 #!/usr/bin/env node
 
 import * as fs from 'fs';
-import {execSync} from 'child_process';
 import * as ejs from 'ejs';
-import _ from 'lodash';
 import semver from 'semver';
 
 const changelogPath = 'CHANGELOG.md';
 const changelog = fs.readFileSync(changelogPath, 'utf8');
-
-let currentVersion = execSync('git describe --tags --match=v*.*.* --abbrev=0')
-    .toString()
-    .trim()
-    .replace('v', '');
-
-let gitTags = execSync('git tag --list v*.*.*')
-    .toString()
-    .split('\n')
-    .map(function(tag) {
-        tag = tag.replace('v', '').trim();
-        return semver.clean(tag);
-    });
-let previousVersion = semver.maxSatisfying(gitTags, "<" + currentVersion, { includePrerelease: false });
 
 /*
   Parse the raw changelog text and split it into individual releases.
@@ -33,7 +17,7 @@ let previousVersion = semver.maxSatisfying(gitTags, "<" + currentVersion, { incl
     - Groups the changelog content.
     - Ends when another "## x.x.x" is found.
 */
-const regex = /^## (\d+\.\d+\.\d+).*?\n(.+?)(?=\n^## \d+\.\d+\.\d+.*?\n)/gms;
+const regex = /^## (\d+\.\d+\.\d+.*?)\n(.+?)(?=\n^## \d+\.\d+\.\d+.*?\n)/gms;
 
 let releaseNotes = [];
 let match;
@@ -45,17 +29,8 @@ while (match = regex.exec(changelog)) {
     });
 }
 
-/*
-  Match the current tag with the most appropriate release notes.
-*/
-const versionsInReleaseNotes = _.map(releaseNotes, 'version');
-const bestReleaseNotesForCurrentVersion = semver.minSatisfying(versionsInReleaseNotes, ">=" + currentVersion);
-const currentReleaseNotes = _.find(releaseNotes, { version: bestReleaseNotesForCurrentVersion });
-
-if (!currentReleaseNotes) {
-    console.error('Could not find a release section satisfying %s in %s — did you forget to rename the "main" section to %s?', currentVersion, changelogPath, currentVersion.split("-")[0]);
-    process.exit(1); // eslint-disable-line no-process-exit
-}
+const latest = releaseNotes[0];
+const previous = releaseNotes[1];
 
 /*
   Fill and print the release notes template.
@@ -63,10 +38,10 @@ if (!currentReleaseNotes) {
 let templatedReleaseNotes;
 
 templatedReleaseNotes = ejs.render(fs.readFileSync('build/release-notes.md.ejs', 'utf8'), {
-    'CURRENTVERSION': currentVersion,
-    'PREVIOUSVERSION': previousVersion,
-    'CHANGELOG': currentReleaseNotes.changelog,
-    'isPrerelease': semver.prerelease(currentVersion)
+    'CURRENTVERSION': latest.version,
+    'PREVIOUSVERSION': previous.version,
+    'CHANGELOG': latest.changelog,
+    'isPrerelease': semver.prerelease(latest.version)
 });
 templatedReleaseNotes = templatedReleaseNotes.trimEnd();
 

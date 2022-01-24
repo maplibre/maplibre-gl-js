@@ -4,7 +4,7 @@ import Tile from './tile';
 import {OverscaledTileID} from './tile_id';
 import Transform from '../geo/transform';
 import LngLat from '../geo/lng_lat';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import browser from '../util/browser';
