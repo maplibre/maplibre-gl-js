@@ -97,6 +97,7 @@
     "chromedriver": "^97.0.0",
     "cssnano": "^5.0.8",
     "d3": "^7.3.0",
+    "d3-queue": "^3.0.7",
     "diff": "^4.0.1",
     "documentation": "^12.3.0",
     "dts-bundle-generator": "^6.0.0",
