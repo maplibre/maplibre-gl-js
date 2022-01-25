@@ -25,6 +25,7 @@ import type {
     WorkerTileCallback,
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '../style-spec/types';
+import type {VectorTile} from '@mapbox/vector-tile';
 
 class WorkerTile {
     tileID: OverscaledTileID;

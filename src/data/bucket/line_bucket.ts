@@ -23,7 +23,7 @@ import type {
     PopulateParameters
 } from '../bucket';
 import type LineStyleLayer from '../../style/style_layer/line_style_layer';
-import type Point from '../../util/point';
+import type Point from '@mapbox/point-geometry';
 import type {Segment} from '../segment';
 import {RGBAImage} from '../../util/image';
 import type Context from '../../gl/context';
@@ -32,6 +32,7 @@ import type IndexBuffer from '../../gl/index_buffer';
 import type VertexBuffer from '../../gl/vertex_buffer';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
+import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 // NOTE ON EXTRUDE SCALE:
 // scale the extrusion vector so that the normal length is this value.

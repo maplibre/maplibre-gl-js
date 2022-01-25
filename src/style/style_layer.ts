@@ -13,7 +13,7 @@ import {supportsPropertyExpression} from '../style-spec/util/properties';
 
 import type {FeatureState} from '../style-spec/expression';
 import type {Bucket} from '../data/bucket';
-import type Point from '../util/point';
+import type Point from '@mapbox/point-geometry';
 import type {FeatureFilter} from '../style-spec/feature_filter';
 import type {TransitionParameters, PropertyValue} from './properties';
 import EvaluationParameters from './evaluation_parameters';
@@ -28,28 +28,14 @@ import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type Map from '../ui/map';
 import type {StyleSetterOptions} from './style';
 import {mat4} from 'gl-matrix';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 const TRANSITION_SUFFIX = '-transition';
-
-// this interface is used to allow optional overload for this methods in the derived classes.
-interface StyleLayer {
-    queryRadius?(bucket: Bucket): number;
-    queryIntersectsFeature?(
-      queryGeometry: Array<Point>,
-      feature: VectorTileFeature,
-      featureState: FeatureState,
-      geometry: Array<Array<Point>>,
-      zoom: number,
-      transform: Transform,
-      pixelsToTileUnits: number,
-      pixelPosMatrix: mat4
-    ): boolean | number;
-}
 
 abstract class StyleLayer extends Evented {
     id: string;
     metadata: unknown;
-    type: string;
+    type: LayerSpecification['type'] | CustomLayerInterface['type'];
     source: string;
     sourceLayer: string;
     minzoom: number;
@@ -69,6 +55,18 @@ abstract class StyleLayer extends Evented {
 
     readonly onAdd: ((map: Map) => void);
     readonly onRemove: ((map: Map) => void);
+
+    queryRadius?(bucket: Bucket): number;
+    queryIntersectsFeature?(
+      queryGeometry: Array<Point>,
+      feature: VectorTileFeature,
+      featureState: FeatureState,
+      geometry: Array<Array<Point>>,
+      zoom: number,
+      transform: Transform,
+      pixelsToTileUnits: number,
+      pixelPosMatrix: mat4
+    ): boolean | number;
 
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
       layout?: Properties<any>;
@@ -216,16 +214,16 @@ abstract class StyleLayer extends Evented {
         (this as any).paint = this._transitioningPaint.possiblyEvaluate(parameters, undefined, availableImages);
     }
 
-    serialize() {
-        const output: any = {
+    serialize(): LayerSpecification {
+        const output: LayerSpecification = {
             'id': this.id,
-            'type': this.type,
+            'type': this.type as LayerSpecification['type'],
             'source': this.source,
             'source-layer': this.sourceLayer,
             'metadata': this.metadata,
             'minzoom': this.minzoom,
             'maxzoom': this.maxzoom,
-            'filter': this.filter,
+            'filter': this.filter as FilterSpecification,
             'layout': this._unevaluatedLayout && this._unevaluatedLayout.serialize(),
             'paint': this._transitionablePaint && this._transitionablePaint.serialize()
         };

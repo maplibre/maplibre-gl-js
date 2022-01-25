@@ -1,6 +1,5 @@
 import path, {dirname} from 'path';
 import fs from 'fs';
-import colors from 'chalk';
 import {fileURLToPath} from 'url';
 import {createRequire} from 'module';
 
@@ -28,14 +27,14 @@ export default function localizeURLs(style, port) {
                         styleJSON = fs.readFileSync(path.join(__dirname, '..', relativePath));
                     }
                 } catch (error) {
-                    console.log(colors.blue(`* ${error}`));
+                    console.log(`* ${error}`);
                     return;
                 }
 
                 try {
                     styleJSON = JSON.parse(styleJSON);
                 } catch (error) {
-                    console.log(colors.blue(`* Error while parsing ${op[1]}: ${error}`));
+                    console.log(`* Error while parsing ${op[1]}: ${error}`);
                     return;
                 }
 

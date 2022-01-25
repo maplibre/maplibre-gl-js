@@ -20,17 +20,17 @@ import type {
     VideoSourceSpecification
 } from '../style-spec/types';
 
-type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
+export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 
 /**
  * A data source containing an image.
- * (See the [Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/#sources-image) for detailed documentation of options.)
+ * (See the [Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources-image) for detailed documentation of options.)
  *
  * @example
  * // add to map
  * map.addSource('some id', {
  *    type: 'image',
- *    url: 'https://www.mapbox.com/images/foo.png',
+ *    url: 'https://www.maplibre.org/images/foo.png',
  *    coordinates: [
  *        [-76.54, 39.18],
  *        [-76.52, 39.18],
@@ -50,7 +50,7 @@ type Coordinates = [[number, number], [number, number], [number, number], [numbe
  *
  * // update url and coordinates simultaneously
  * mySource.updateImage({
- *    url: 'https://www.mapbox.com/images/bar.png',
+ *    url: 'https://www.maplibre.org/images/bar.png',
  *    coordinates: [
  *        [-76.54335737228394, 39.18579907229748],
  *        [-76.52803659439087, 39.1838364847587],

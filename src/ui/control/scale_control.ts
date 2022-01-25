@@ -4,14 +4,14 @@ import {extend, bindAll} from '../../util/util';
 import type Map from '../map';
 import type {ControlPosition, IControl} from './control';
 
-type Unit = 'imperial' | 'metric' | 'nautical';
+export type Unit = 'imperial' | 'metric' | 'nautical';
 
-type Options = {
+type ScaleOptions = {
   maxWidth?: number;
   unit?: Unit;
 };
 
-const defaultOptions: Options = {
+const defaultOptions: ScaleOptions = {
     maxWidth: 100,
     unit: 'metric'
 };
@@ -35,9 +35,9 @@ const defaultOptions: Options = {
 class ScaleControl implements IControl {
     _map: Map;
     _container: HTMLElement;
-    options: Options;
+    options: ScaleOptions;
 
-    constructor(options: Options) {
+    constructor(options: ScaleOptions) {
         this.options = extend({}, defaultOptions, options);
 
         bindAll([

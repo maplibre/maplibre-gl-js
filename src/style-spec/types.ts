@@ -9,16 +9,36 @@ export type ResolvedImageSpecification = string;
 
 export type PromoteIdSpecification = {[_: string]: string} | string;
 
+export type FilterSpecificationInputType = string | number | boolean;
 export type FilterSpecification =
-      ['has', string]
-    | ['!has', string]
-    | ['==', string, string | number | boolean]
-    | ['!=', string, string | number | boolean]
-    | ['>', string, string | number | boolean]
-    | ['>=', string, string | number | boolean]
-    | ['<', string, string | number | boolean]
-    | ['<=', string, string | number | boolean]
-    | Array<string | FilterSpecification>; // Can't type in, !in, all, any, none -- https://github.com/facebook/flow/issues/2443
+    // Lookup
+    | ['at', number, (number |string)[]]
+    | ['get', string, Record<string, unknown>?]
+    | ['has', string, Record<string, unknown>?]
+    | ['in', ...FilterSpecificationInputType[], FilterSpecificationInputType | FilterSpecificationInputType[]]
+    | ['index-of', FilterSpecificationInputType, FilterSpecificationInputType | FilterSpecificationInputType[]]
+    | ['length', string | string[]]
+    | ['slice', string | string[], number]
+    // Decision
+    | ['!', FilterSpecification]
+    | ['!=', string | FilterSpecification, FilterSpecificationInputType]
+    | ['<', string | FilterSpecification, FilterSpecificationInputType]
+    | ['<=', string | FilterSpecification, FilterSpecificationInputType]
+    | ['==', string | FilterSpecification, FilterSpecificationInputType]
+    | ['>', string | FilterSpecification, FilterSpecificationInputType]
+    | ['>=', string | FilterSpecification, FilterSpecificationInputType]
+    | ["all", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["any", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["case", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["coalesce", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["match", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["within", ...FilterSpecification[], FilterSpecificationInputType]
+    // Used in convert.ts
+    | ["!in", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["!has", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["none", ...FilterSpecification[], FilterSpecificationInputType]
+    // Fallbak for others
+    | Array<string | FilterSpecification>
 
 export type TransitionSpecification = {
     duration?: number,
@@ -42,19 +62,19 @@ export type CompositeFunctionSpecification<T> =
     | { type: 'interval',    stops: Array<[{zoom: number, value: number}, T]>, property: string, default?: T }
     | { type: 'categorical', stops: Array<[{zoom: number, value: string | number | boolean}, T]>, property: string, default?: T };
 
-export type ExpressionSpecification = Array<unknown>;
+export type ExpressionSpecificationArray = Array<unknown>;
 
 export type PropertyValueSpecification<T> =
       T
     | CameraFunctionSpecification<T>
-    | ExpressionSpecification;
+    | ExpressionSpecificationArray;
 
 export type DataDrivenPropertyValueSpecification<T> =
       T
     | CameraFunctionSpecification<T>
     | SourceFunctionSpecification<T>
     | CompositeFunctionSpecification<T>
-    | ExpressionSpecification;
+    | ExpressionSpecificationArray;
 
 export type StyleSpecification = {
     "version": 8,
@@ -208,7 +228,7 @@ export type LineLayerSpecification = {
         "line-blur"?: DataDrivenPropertyValueSpecification<number>,
         "line-dasharray"?: PropertyValueSpecification<Array<number>>,
         "line-pattern"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>,
-        "line-gradient"?: ExpressionSpecification
+        "line-gradient"?: ExpressionSpecificationArray
     }
 };
 
@@ -327,7 +347,7 @@ export type HeatmapLayerSpecification = {
         "heatmap-radius"?: DataDrivenPropertyValueSpecification<number>,
         "heatmap-weight"?: DataDrivenPropertyValueSpecification<number>,
         "heatmap-intensity"?: PropertyValueSpecification<number>,
-        "heatmap-color"?: ExpressionSpecification,
+        "heatmap-color"?: ExpressionSpecificationArray,
         "heatmap-opacity"?: PropertyValueSpecification<number>
     }
 };

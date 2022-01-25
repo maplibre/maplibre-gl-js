@@ -10,11 +10,11 @@ import {warnOnce} from '../util/util';
 
 import type {StyleImage} from '../style/style_image';
 import type Context from '../gl/context';
-import type {Bin} from 'potpack';
+import type {PotpackBox} from 'potpack';
 import type {Callback} from '../types/callback';
 
 type Pattern = {
-  bin: Bin;
+  bin: PotpackBox;
   position: ImagePosition;
 };
 

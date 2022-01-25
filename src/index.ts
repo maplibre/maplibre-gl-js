@@ -1,3 +1,4 @@
+/// <reference path="./types/glsl.d.ts" />
 import assert from 'assert';
 import {supported} from '@mapbox/mapbox-gl-supported';
 
@@ -12,7 +13,7 @@ import Marker from './ui/marker';
 import Style from './style/style';
 import LngLat from './geo/lng_lat';
 import LngLatBounds from './geo/lng_lat_bounds';
-import Point from './util/point';
+import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from './geo/mercator_coordinate';
 import {Evented} from './util/evented';
 import config from './util/config';
@@ -115,7 +116,7 @@ const exported = {
     },
 
     /**
-     * Clears browser storage used by this library. Using this method flushes the Mapbox tile
+     * Clears browser storage used by this library. Using this method flushes the MapLibre tile
      * cache that is managed by this library. Tiles may still be cached by the browser
      * in some cases.
      *
@@ -142,6 +143,8 @@ const exported = {
      * The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
      * The function passed will receive the request parameters and should call the callback with the resulting request,
      * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
+     *
+     * @function addProtocol
      * @param {string} customProtocol - the protocol to hook, for example 'custom'
      * @param {Function} loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
@@ -174,6 +177,8 @@ const exported = {
 
     /**
      * Removes a previusly added protocol
+     *
+     * @function removeProtocol
      * @param {string} customProtocol - the custom protocol to remove registration for
      * @example
      * maplibregl.removeProtocol('custom');
@@ -187,32 +192,25 @@ const exported = {
 Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
 
 /**
- * The version of Mapbox GL JS in use as specified in `package.json`,
- * `CHANGELOG.md`, and the GitHub release.
- *
- * @var {string} version
- */
-
-/**
- * Test whether the browser [supports Mapbox GL JS](https://www.mapbox.com/help/mapbox-browser-support/#mapbox-gl-js).
+ * Test whether the browser supports MapLibre GL JS.
  *
  * @function supported
  * @param {Object} [options]
  * @param {boolean} [options.failIfMajorPerformanceCaveat=false] If `true`,
- *   the function will return `false` if the performance of Mapbox GL JS would
+ *   the function will return `false` if the performance of MapLibre GL JS would
  *   be dramatically worse than expected (e.g. a software WebGL renderer would be used).
  * @return {boolean}
  * @example
- * // Show an alert if the browser does not support Mapbox GL
+ * // Show an alert if the browser does not support MapLibre GL
  * if (!maplibregl.supported()) {
- *   alert('Your browser does not support Mapbox GL');
+ *   alert('Your browser does not support MapLibre GL');
  * }
  * @see [Check for browser support](https://maplibre.org/maplibre-gl-js-docs/example/check-for-support/)
  */
 
 /**
  * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
- * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left. Mapbox Studio loads this plugin by default.
+ * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
  *
  * @function setRTLTextPlugin
  * @param {string} pluginURL URL pointing to the Mapbox RTL text plugin source.
@@ -235,6 +233,5 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
   */
 
 export default exported;
-
 // canary assert: used to confirm that asserts have been removed from production build
 assert(true, 'canary assert');

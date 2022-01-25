@@ -6,7 +6,7 @@ import type {StyleGlyph} from './style_glyph';
 import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 
-export default function (fontstack: string,
+export default function loadGlyphRange(fontstack: string,
                            range: number,
                            urlTemplate: string,
                            requestManager: RequestManager,

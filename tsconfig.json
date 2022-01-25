@@ -3,7 +3,6 @@
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
     "checkJs": false,
-    "declaration": true,
     "esModuleInterop": true,
     "importHelpers": false,
     "isolatedModules": true,
@@ -22,9 +21,7 @@
       "DOM.Iterable",
       "WebWorker"
     ],
-    "outDir": "rollup/build/tsc",
-    "declarationDir": "types",
-    "declarationMap": true
+    "types": ["node", "jest", "geojson", "offscreencanvas"]
   },
   "include": [
     "src/**/*.ts",

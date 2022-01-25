@@ -4,7 +4,7 @@ import type CollisionIndex from '../symbol/collision_index';
 import type Transform from '../geo/transform';
 import type {RetainedQueryData} from '../symbol/placement';
 import type {FilterSpecification} from '../style-spec/types';
-import type Point from '../util/point';
+import type Point from '@mapbox/point-geometry';
 import assert from 'assert';
 import {mat4} from 'gl-matrix';
 
@@ -168,7 +168,11 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     return result;
 }
 
-export function querySourceFeatures(sourceCache: SourceCache, params: any) {
+export function querySourceFeatures(sourceCache: SourceCache, params: {
+    sourceLayer: string;
+    filter: Array<any>;
+    validate?: boolean;
+}) {
     const tiles = sourceCache.getRenderableIds().map((id) => {
         return sourceCache.getTileByID(id);
     });

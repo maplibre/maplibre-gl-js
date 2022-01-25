@@ -4,7 +4,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
 import json from '@rollup/plugin-json';
-import {fileURLToPath} from 'url';
+import {fileURLToPath, pathToFileURL} from 'url';
 
 const esm = 'esm' in process.env;
 
@@ -12,7 +12,7 @@ const config = [{
     input: 'rollup/build/tsc/src/style-spec/style-spec.js',
     output: {
         name: 'maplibreGlStyleSpecification',
-        file: `dist/style-spec/${esm ? 'index.es.js' : 'index.js'}`,
+        file: `dist/style-spec/${esm ? 'index.mjs' : 'index.js'}`,
         format: esm ? 'esm' : 'umd',
         sourcemap: true
     },
@@ -25,7 +25,8 @@ const config = [{
                 // This check will cause the build to fail on CI allowing these issues to be caught.
                 if (importer && !importer.includes('node_modules')) {
                     const resolvedPath = path.join(importer, source);
-                    const fromRoot = path.relative(dirname(fileURLToPath(import.meta.url)), resolvedPath);
+                    const importMetaUrl = pathToFileURL(__filename).toString();
+                    const fromRoot = path.relative(dirname(fileURLToPath(importMetaUrl)), resolvedPath);
                     if (fromRoot.length > 2 && fromRoot.slice(0, 2) === '..') {
                         throw new Error(`Module ${importer} imports ${source} from outside the style-spec package root directory.`);
                     }

@@ -115,6 +115,3 @@ export {
     validate,
     visit
 };
-
-(validate as any).parsed = validate;
-(validate as any).latest = validate;

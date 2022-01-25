@@ -28,6 +28,7 @@ import type {
 } from '../style-spec/expression';
 import type {FeatureStates} from '../source/source_state';
 import type {FormattedSection} from '../style-spec/expression/types/formatted';
+import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 export type BinderUniform = {
   name: string;
@@ -128,7 +129,7 @@ class ConstantBinder implements UniformBinder {
 
 class CrossFadedConstantBinder implements UniformBinder {
     uniformNames: Array<string>;
-    patternFrom: Array<number> ;
+    patternFrom: Array<number>;
     patternTo: Array<number>;
     pixelRatioFrom: number;
     pixelRatioTo: number;

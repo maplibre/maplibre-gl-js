@@ -30,8 +30,9 @@ import type Transform from '../geo/transform';
 import type {LayerFeatureStates} from './source_state';
 import type {Cancelable} from '../types/cancelable';
 import type {FilterSpecification} from '../style-spec/types';
-import type Point from '../util/point';
+import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
+import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 export type TileState = // Tile data is in the process of loading.
 'loading' | // Tile data has been loaded. Tile can be rendered.
@@ -297,7 +298,11 @@ class Tile {
         }, layers, serializedLayers, sourceFeatureState);
     }
 
-    querySourceFeatures(result: Array<GeoJSONFeature>, params: any) {
+    querySourceFeatures(result: Array<GeoJSONFeature>, params?: {
+        sourceLayer: string;
+        filter: Array<any>;
+        validate?: boolean;
+    }) {
         const featureIndex = this.latestFeatureIndex;
         if (!featureIndex || !featureIndex.rawTileData) return;
 

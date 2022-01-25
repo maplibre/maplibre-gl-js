@@ -16,7 +16,7 @@ import {SymbolLayoutArray,
     SymbolLineVertexArray
 } from '../array_types';
 
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 import SegmentVector from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray, LineIndexArray} from '../index_array_type';
@@ -56,6 +56,7 @@ import type {SymbolQuad} from '../../symbol/quads';
 import type {SizeData} from '../../symbol/symbol_size';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
+import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 export type SingleCollisionBox = {
   x1: number;

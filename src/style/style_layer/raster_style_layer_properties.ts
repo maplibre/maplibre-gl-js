@@ -22,7 +22,7 @@ import type ResolvedImage from '../../style-spec/expression/types/resolved_image
 import {StylePropertySpecification} from '../../style-spec/style-spec';
 
 
-export type PaintProps = {
+export type RasterPaintProps = {
     "raster-opacity": DataConstantProperty<number>,
     "raster-hue-rotate": DataConstantProperty<number>,
     "raster-brightness-min": DataConstantProperty<number>,
@@ -33,7 +33,7 @@ export type PaintProps = {
     "raster-fade-duration": DataConstantProperty<number>,
 };
 
-export type PaintPropsPossiblyEvaluated = {
+export type RasterPaintPropsPossiblyEvaluated = {
     "raster-opacity": number,
     "raster-hue-rotate": number,
     "raster-brightness-min": number,
@@ -44,7 +44,7 @@ export type PaintPropsPossiblyEvaluated = {
     "raster-fade-duration": number,
 };
 
-const paint: Properties<PaintProps> = new Properties({
+const paint: Properties<RasterPaintProps> = new Properties({
     "raster-opacity": new DataConstantProperty(styleSpec["paint_raster"]["raster-opacity"] as any as StylePropertySpecification),
     "raster-hue-rotate": new DataConstantProperty(styleSpec["paint_raster"]["raster-hue-rotate"] as any as StylePropertySpecification),
     "raster-brightness-min": new DataConstantProperty(styleSpec["paint_raster"]["raster-brightness-min"] as any as StylePropertySpecification),
@@ -56,5 +56,5 @@ const paint: Properties<PaintProps> = new Properties({
 });
 
 export default ({ paint } as {
-    paint: Properties<PaintProps>
+    paint: Properties<RasterPaintProps>
 });

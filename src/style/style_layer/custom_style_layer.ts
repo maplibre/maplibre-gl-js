@@ -2,6 +2,7 @@ import StyleLayer from '../style_layer';
 import type Map from '../../ui/map';
 import assert from 'assert';
 import {mat4} from 'gl-matrix';
+import {LayerSpecification} from '../../style-spec/types';
 
 type CustomRenderMethod = (gl: WebGLRenderingContext, matrix: mat4) => void;
 
@@ -204,7 +205,7 @@ class CustomStyleLayer extends StyleLayer {
     updateTransitions() {}
     hasTransition() { return false; }
 
-    serialize() {
+    serialize(): LayerSpecification {
         assert(false, 'Custom layers cannot be serialized');
     }
 
@@ -212,13 +213,13 @@ class CustomStyleLayer extends StyleLayer {
         if (this.implementation.onAdd) {
             this.implementation.onAdd(map, map.painter.context.gl);
         }
-    }
+    };
 
     onRemove = (map: Map) => {
         if (this.implementation.onRemove) {
             this.implementation.onRemove(map, map.painter.context.gl);
         }
-    }
+    };
 }
 
 export default CustomStyleLayer;

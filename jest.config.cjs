@@ -1,6 +1,8 @@
 module.exports = {
   "roots": [
-    "<rootDir>/src"
+    "<rootDir>/src",
+    "<rootDir>/test/browser",
+    "<rootDir>/test/build",
   ],
   "testMatch": [
     "**/__tests__/**/*.+(ts|tsx|js)",
@@ -13,6 +15,7 @@ module.exports = {
   },
   testEnvironment: "jsdom",
   transformIgnorePatterns: [
+    "/node_modules/@mapbox/jsonlint-lines-primitives/lib/jsonlint.js"
   ],
   setupFiles: ["jest-canvas-mock"],
 }

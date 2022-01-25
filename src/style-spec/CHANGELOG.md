@@ -1,3 +1,9 @@
+## 15.0.0
+
+### Breaking changes
+
+* The migration to TypeScript [#209](https://github.com/maplibre/maplibre-gl-js/pull/209) removed support for the `mapbox://` protocol.
+
 ## 14.0.2
 
 ### ✨ Features and improvements

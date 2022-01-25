@@ -1,20 +1,21 @@
 import DOM from '../util/dom';
 import LngLat from '../geo/lng_lat';
-import Point, {PointLike} from '../util/point';
+import Point from '@mapbox/point-geometry';
 import smartWrap from '../util/smart_wrap';
 import {bindAll, extend} from '../util/util';
 import {anchorTranslate, applyAnchorClass} from './anchor';
-import type {Anchor} from './anchor';
+import type {PositionAnchor} from './anchor';
 import {Event, Evented} from '../util/evented';
 import type Map from './map';
 import Popup, {Offset} from './popup';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
+import type {PointLike} from './camera';
 
-type Options = {
+type MarkerOptions = {
   element?: HTMLElement;
   offset?: PointLike;
-  anchor?: Anchor;
+  anchor?: PositionAnchor;
   color?: string;
   scale?: number;
   draggable?: boolean;
@@ -54,7 +55,7 @@ type Options = {
  */
 export default class Marker extends Evented {
     _map: Map;
-    _anchor: Anchor;
+    _anchor: PositionAnchor;
     _offset: Point;
     _element: HTMLElement;
     _popup: Popup;
@@ -74,7 +75,7 @@ export default class Marker extends Evented {
     _rotationAlignment: string;
     _originalTabIndex: string; // original tabindex of _element
 
-    constructor(options?: Options, legacyOptions?: Options) {
+    constructor(options?: MarkerOptions, legacyOptions?: MarkerOptions) {
         super();
         // For backward compatibility -- the constructor used to accept the element as a
         // required first argument, before it was made optional.
@@ -231,7 +232,7 @@ export default class Marker extends Evented {
 
     /**
      * Attaches the `Marker` to a `Map` object.
-     * @param {Map} map The Mapbox GL JS map to add the marker to.
+     * @param {Map} map The MapLibre GL JS map to add the marker to.
      * @returns {Marker} `this`
      * @example
      * var marker = new maplibregl.Marker()

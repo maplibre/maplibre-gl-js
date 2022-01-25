@@ -13,7 +13,7 @@ import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
-import {getType as getSourceType, setType as setSourceType} from '../source/source';
+import {getSourceType, setSourceType, Source} from '../source/source';
 import type {SourceClass} from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import SourceCache from '../source/source_cache';
@@ -331,7 +331,7 @@ class Style extends Evented {
         return true;
     }
 
-    _serializeLayers(ids: Array<string>): Array<any> {
+    _serializeLayers(ids: Array<string>): Array<LayerSpecification> {
         const serializedLayers = [];
         for (const id of ids) {
             const layer = this._layers[id];
@@ -629,9 +629,9 @@ class Style extends Evented {
     /**
      * Get a source by id.
      * @param {string} id id of the desired source
-     * @returns {Object} source
+     * @returns {Source | undefined} source
      */
-    getSource(id: string): any {
+    getSource(id: string): Source | undefined {
         return this.sourceCaches[id] && this.sourceCaches[id].getSource();
     }
 
@@ -787,7 +787,7 @@ class Style extends Evented {
      * @param {string} id - id of the desired layer
      * @returns {?Object} a layer, if one with the given `id` exists
      */
-    getLayer(id: string): any {
+    getLayer(id: string): StyleLayer {
         return this._layers[id];
     }
 
@@ -1002,7 +1002,7 @@ class Style extends Evented {
         return extend({duration: 300, delay: 0}, this.stylesheet && this.stylesheet.transition);
     }
 
-    serialize() {
+    serialize(): StyleSpecification {
         return filterObject({
             version: this.stylesheet.version,
             name: this.stylesheet.name,
@@ -1162,7 +1162,7 @@ class Style extends Evented {
             sourceLayer: string;
             filter: Array<any>;
             validate?: boolean;
-        } | null
+        }
     ) {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);

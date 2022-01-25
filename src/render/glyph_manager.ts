@@ -103,7 +103,7 @@ export default class GlyphManager {
             let requests = entry.requests[range];
             if (!requests) {
                 requests = entry.requests[range] = [];
-                GlyphManager.loadGlyphRange(stack, range, ((this.url as any)), this.requestManager,
+                GlyphManager.loadGlyphRange(stack, range, this.url as any, this.requestManager,
                     (err, response?: {
                       [_: number]: StyleGlyph | null;
                     } | null) => {
@@ -197,7 +197,7 @@ export default class GlyphManager {
 
         return {
             id,
-            bitmap: new AlphaImage({width: 30, height: 30}, tinySDF.draw(String.fromCharCode(id))),
+            bitmap: new AlphaImage({width: 30, height: 30}, tinySDF.draw(String.fromCharCode(id)).data),
             metrics: {
                 width: 24,
                 height: 24,

@@ -1,15 +1,57 @@
 import {Event} from '../util/evented';
 
 import DOM from '../util/dom';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import {extend} from '../util/util';
 
 import type Map from './map';
 import type LngLat from '../geo/lng_lat';
+import {SourceSpecification} from '../style-spec/types';
 
+export type MapLayerMouseEvent = MapMouseEvent & { features?: GeoJSON.Feature[] };
+
+export type MapLayerTouchEvent = MapTouchEvent & { features?: GeoJSON.Feature[] };
+
+export type MapSourceDataType = 'content' | 'metadata';
+
+export type MapLayerEventType = {
+     click: MapLayerMouseEvent;
+     dblclick: MapLayerMouseEvent;
+     mousedown: MapLayerMouseEvent;
+     mouseup: MapLayerMouseEvent;
+     mousemove: MapLayerMouseEvent;
+     mouseenter: MapLayerMouseEvent;
+     mouseleave: MapLayerMouseEvent;
+     mouseover: MapLayerMouseEvent;
+     mouseout: MapLayerMouseEvent;
+     contextmenu: MapLayerMouseEvent;
+
+     touchstart: MapLayerTouchEvent;
+     touchend: MapLayerTouchEvent;
+     touchcancel: MapLayerTouchEvent;
+ };
+
+export interface MapLibreEvent<TOrig = undefined> {
+     type: string;
+     target: Map;
+     originalEvent: TOrig;
+ }
+
+export interface MapStyleDataEvent extends MapLibreEvent {
+     dataType: 'style';
+ }
+
+export interface MapSourceDataEvent extends MapLibreEvent {
+     dataType: 'source';
+     isSourceLoaded: boolean;
+     source: SourceSpecification;
+     sourceId: string;
+     sourceDataType: MapSourceDataType;
+     tile: any;
+ }
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
- * @extends {Object}
+ * @extends {Event}
  * @example
  * // The `click` event is an example of a `MapMouseEvent`.
  * // Set up an event listener on the map.
@@ -19,7 +61,7 @@ import type LngLat from '../geo/lng_lat';
  *   console.log('A click event has occurred at ' + e.lngLat);
  * });
  */
-export class MapMouseEvent extends Event {
+export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
     /**
      * The event type (one of {@link Map.event:mousedown},
      * {@link Map.event:mouseup},
@@ -93,9 +135,9 @@ export class MapMouseEvent extends Event {
 
 /**
  * `MapTouchEvent` is the event type for touch-related map events.
- * @extends {Object}
+ * @extends {Event}
  */
-export class MapTouchEvent extends Event {
+export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
     /**
      * The event type.
      */
@@ -222,14 +264,14 @@ export class MapWheelEvent extends Event {
 }
 
 /**
- * A `MapBoxZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
+ * A `MapLibreZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
  *
- * @typedef {Object} MapBoxZoomEvent
+ * @typedef {Object} MapLibreZoomEvent
  * @property {MouseEvent} originalEvent The DOM event that triggered the boxzoom event. Can be a `MouseEvent` or `KeyboardEvent`
  * @property {string} type The type of boxzoom event. One of `boxzoomstart`, `boxzoomend` or `boxzoomcancel`
  * @property {Map} target The `Map` instance that triggerred the event
  */
-export type MapBoxZoomEvent = {
+export type MapLibreZoomEvent = {
   type: 'boxzoomstart' | 'boxzoomend' | 'boxzoomcancel';
   target: Map;
   originalEvent: MouseEvent;
@@ -241,18 +283,18 @@ export type MapBoxZoomEvent = {
  * `dataType`s are:
  *
  * - `'source'`: The non-tile data associated with any source
- * - `'style'`: The [style](https://www.mapbox.com/mapbox-gl-style-spec/) used by the map
+ * - `'style'`: The [style](https://maplibre.org/maplibre-gl-js-docs/style-spec/) used by the map
  *
  * @typedef {Object} MapDataEvent
  * @property {string} type The event type.
  * @property {string} dataType The type of data that has changed. One of `'source'`, `'style'`.
  * @property {boolean} [isSourceLoaded] True if the event has a `dataType` of `source` and the source has no outstanding network requests.
- * @property {Object} [source] The [style spec representation of the source](https://www.mapbox.com/mapbox-gl-style-spec/#sources) if the event has a `dataType` of `source`.
+ * @property {Object} [source] The [style spec representation of the source](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources) if the event has a `dataType` of `source`.
  * @property {string} [sourceDataType] Included if the event has a `dataType` of `source` and the event signals
  * that internal data has been received or changed. Possible values are `metadata`, `content` and `visibility`.
  * @property {Object} [tile] The tile being loaded or changed, if the event has a `dataType` of `source` and
  * the event is related to loading of a tile.
- * @property {Coordinate} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
+ * @property {Coordinates} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
  * the event is related to loading of a tile.
  * @example
  * // The sourcedata event is an example of MapDataEvent.
@@ -266,11 +308,82 @@ export type MapBoxZoomEvent = {
 export type MapDataEvent = {
   type: string;
   dataType: string;
+  sourceDataType: MapSourceDataType;
 };
 
 export type MapContextEvent = {
   type: 'webglcontextlost' | 'webglcontextrestored';
   originalEvent: WebGLContextEvent;
+};
+
+export interface MapStyleImageMissingEvent extends MapLibreEvent {
+     type: 'styleimagemissing';
+     id: string;
+}
+
+/**
+* MapEventType - a mapping between the event name and the event value
+*/
+export type MapEventType = {
+     error: ErrorEvent;
+
+     load: MapLibreEvent;
+     idle: MapLibreEvent;
+     remove: MapLibreEvent;
+     render: MapLibreEvent;
+     resize: MapLibreEvent;
+
+     webglcontextlost: MapContextEvent;
+     webglcontextrestored: MapContextEvent;
+
+     dataloading: MapDataEvent;
+     data: MapDataEvent;
+     tiledataloading: MapDataEvent;
+     sourcedataloading: MapSourceDataEvent;
+     styledataloading: MapStyleDataEvent;
+     sourcedata: MapSourceDataEvent;
+     styledata: MapStyleDataEvent;
+     styleimagemissing: MapStyleImageMissingEvent;
+
+     boxzoomcancel: MapLibreZoomEvent;
+     boxzoomstart: MapLibreZoomEvent;
+     boxzoomend: MapLibreZoomEvent;
+
+     touchcancel: MapTouchEvent;
+     touchmove: MapTouchEvent;
+     touchend: MapTouchEvent;
+     touchstart: MapTouchEvent;
+
+     click: MapMouseEvent;
+     contextmenu: MapMouseEvent;
+     dblclick: MapMouseEvent;
+     mousemove: MapMouseEvent;
+     mouseup: MapMouseEvent;
+     mousedown: MapMouseEvent;
+     mouseout: MapMouseEvent;
+     mouseover: MapMouseEvent;
+
+     movestart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+     move: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+     moveend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+
+     zoomstart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+     zoom: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+     zoomend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+
+     rotatestart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+     rotate: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+     rotateend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+
+     dragstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+     drag: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+     dragend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+
+     pitchstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+     pitch: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+     pitchend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+
+     wheel: MapWheelEvent;
 };
 
 export type MapEvent = /**
@@ -894,7 +1007,7 @@ export type MapEvent = /**
      * @event boxzoomstart
      * @memberof Map
      * @instance
-     * @property {MapBoxZoomEvent} data
+     * @property {MapLibreZoomEvent} data
      * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
@@ -912,7 +1025,7 @@ export type MapEvent = /**
      * @memberof Map
      * @instance
      * @type {Object}
-     * @property {MapBoxZoomEvent} data
+     * @property {MapLibreZoomEvent} data
      * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
@@ -930,7 +1043,7 @@ export type MapEvent = /**
      * @event boxzoomcancel
      * @memberof Map
      * @instance
-     * @property {MapBoxZoomEvent} data
+     * @property {MapLibreZoomEvent} data
      * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
@@ -1220,7 +1333,7 @@ export type MapEvent = /**
      * map.on('styleimagemissing', function() {
      *   console.log('A styleimagemissing event occurred.');
      * });
-     * @see [Generate and add a missing icon to the map](https://mapbox.com/mapbox-gl-js/example/add-image-missing-generated/)
+     * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-missing-generated/)
      */ | 'styleimagemissing'
 
 /**
