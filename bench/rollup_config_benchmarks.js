@@ -61,7 +61,7 @@ const viewConfig = {
         sourcemap: false
     },
     plugins: [
-        buble({transforms: {dangerousForOf: true}, objectAssign: true}),
+        buble({transforms: {generator: false, dangerousForOf: true}, objectAssign: true}),
         resolve({browser: true, preferBuiltins: false}),
         watch ? typescript() : false,
         commonjs(),
