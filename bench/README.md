@@ -12,6 +12,8 @@ To run a specific benchmark, add its name to the url hash, for example [`http://
 
 By default, the benchmark page will compare the local branch against `main` and the latest release. To change this, include one or more `compare` query parameters in the URL: E.g., [localhost:9966/bench/versions?compare=main](http://localhost:9966/bench/versions?compare=main) or [localhost:9966/bench/versions?compare=main#Layout](http://localhost:9966/bench/versions?compare=main#Layout) to compare only to main, or [localhost:9966/bench/versions?compare=v1.13.1](http://localhost:9966/bench/versions?compare=v1.13.1) to compare to `v1.13.1` (but not `main`).  Versions available for comparison are the ones stored in the `gh-pages` branch, see [here](https://github.com/maplibre/maplibre-gl-js/tree/gh-pages/benchmarks).
 
+To run all benchmarks in headless chromium use `npm run benchmark`.
+
 ## Running Style Benchmarks
 
 Start the benchmark server
@@ -72,6 +74,8 @@ minimum and maximum sample, and sample values at the first quartile, second quar
 
 We recommend installing a browser extension that can take full-page snapshots, e.g.
 [FireShot](https://chrome.google.com/webstore/detail/take-webpage-screenshots/mcbpblocgmgfnpjjppndjkmgjaogfceg).
+
+Alternatively there is a suitable pdf at `bench/results/all.pdf` after a successful run of `npm run benchmark`.
 
 ## GitHub Pages and the benchmarks
 
