@@ -70,8 +70,6 @@ describe('drag and zoom', () => {
     // start browser
     beforeAll(async () => {
 
-        jest.setTimeout(20000);
-
         try {
         // eslint-disable-next-line require-atomic-updates
             browser.driver = await new Builder()
@@ -108,7 +106,7 @@ describe('drag and zoom', () => {
             width: metrics.width,
             height: metrics.height
         });
-    });
+    }, 20000);
 
     test('Drag: To the left', async () => {
         const {driver} = browser;
@@ -132,7 +130,7 @@ describe('drag and zoom', () => {
         });
         expect(center.lng).toBeCloseTo(-35.15625, 4);
         expect(center.lat).toBeCloseTo(0, 7);
-    });
+    }, 20000);
 
     test('Zoom: Double click at the center', async () => {
         const {driver} = browser;
@@ -150,7 +148,7 @@ describe('drag and zoom', () => {
         });
 
         expect(zoom).toBe(2);
-    });
+    }, 20000);
 
     afterAll(async () => {
         if (browser.driver) {
