@@ -3,13 +3,14 @@ import path, {dirname} from 'path';
 import fs from 'fs';
 import glob from 'glob';
 import shuffleSeed from 'shuffle-seed';
-import {queue} from 'd3-queue';
+import d3 from 'd3';
 import template from 'lodash.template';
 import createServer from './server';
 import {fileURLToPath} from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const {queue} = d3;
 const {shuffle} = shuffleSeed;
 
 export default function (directory, implementation, options, run) {
@@ -147,27 +148,27 @@ export default function (directory, implementation, options, run) {
         const totalCount = passedCount + ignorePassCount + ignoreCount + failedCount + erroredCount;
 
         if (passedCount > 0) {
-            console.log('%d passed (%s%)',
+            console.log(`%d passed (%s%)`,
                 passedCount, (100 * passedCount / totalCount).toFixed(1));
         }
 
         if (ignorePassCount > 0) {
-            console.log('%d passed but were ignored (%s%)',
+            console.log(`%d passed but were ignored (%s%)`,
                 ignorePassCount, (100 * ignorePassCount / totalCount).toFixed(1));
         }
 
         if (ignoreCount > 0) {
-            console.log('%d ignored (%s%)',
+            console.log(`%d ignored (%s%)`,
                 ignoreCount, (100 * ignoreCount / totalCount).toFixed(1));
         }
 
         if (failedCount > 0) {
-            console.log('%d failed (%s%)',
+            console.log(`%d failed (%s%)`,
                 failedCount, (100 * failedCount / totalCount).toFixed(1));
         }
 
         if (erroredCount > 0) {
-            console.log('%d errored (%s%)',
+            console.log(`%d errored (%s%)`,
                 erroredCount, (100 * erroredCount / totalCount).toFixed(1));
         }
 
