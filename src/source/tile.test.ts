@@ -1,4 +1,4 @@
-import {createSymbolBucket} from '../../test/util/create_symbol_layer_jest';
+import {createSymbolBucket} from '../../test/util/create_symbol_layer';
 import Tile from '../source/tile';
 import GeoJSONWrapper, {Feature} from '../source/geojson_wrapper';
 import {OverscaledTileID} from '../source/tile_id';
