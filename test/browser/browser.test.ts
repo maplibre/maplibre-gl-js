@@ -69,6 +69,7 @@ describe('drag and zoom', () => {
 
     // start browser
     beforeAll(async () => {
+
         try {
         // eslint-disable-next-line require-atomic-updates
             browser.driver = await new Builder()
@@ -105,7 +106,7 @@ describe('drag and zoom', () => {
             width: metrics.width,
             height: metrics.height
         });
-    });
+    }, 30000);
 
     test('Drag: To the left', async () => {
         const {driver} = browser;
@@ -129,7 +130,7 @@ describe('drag and zoom', () => {
         });
         expect(center.lng).toBeCloseTo(-35.15625, 4);
         expect(center.lat).toBeCloseTo(0, 7);
-    });
+    }, 10000);
 
     test('Zoom: Double click at the center', async () => {
         const {driver} = browser;
@@ -147,7 +148,7 @@ describe('drag and zoom', () => {
         });
 
         expect(zoom).toBe(2);
-    });
+    }, 10000);
 
     afterAll(async () => {
         if (browser.driver) {
