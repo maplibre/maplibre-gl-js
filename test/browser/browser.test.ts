@@ -69,6 +69,9 @@ describe('drag and zoom', () => {
 
     // start browser
     beforeAll(async () => {
+
+        jest.setTimeout(20000);
+
         try {
         // eslint-disable-next-line require-atomic-updates
             browser.driver = await new Builder()
