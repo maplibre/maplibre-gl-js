@@ -2,9 +2,14 @@ import fs from 'fs';
 import reference from '../../rollup/build/tsc/src/style-spec/reference/latest';
 import packageJson from '../../package.json';
 
-const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
+let minBundle;
 
 describe('test min build', () => {
+
+    beforeAll(() => {
+        minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
+    });
+
     test('production build removes asserts', () => {
         expect(minBundle.includes('canary assert')).toBeFalsy();
         expect(minBundle.includes('canary debug run')).toBeFalsy();
@@ -28,7 +33,7 @@ describe('test min build', () => {
         global.URL.createObjectURL = () => 'placeholder';
 
         try {
-            await import('../../dist/maplibre-gl.js');
+            eval(minBundle);
         } catch (e) {
             expect(e).toBeFalsy();
         }
