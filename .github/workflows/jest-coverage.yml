@@ -13,3 +13,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           annotations: none
+          working-directory: src
