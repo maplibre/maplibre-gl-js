@@ -65,7 +65,6 @@
     "@types/minimist": "^1.2.1",
     "@types/murmurhash-js": "^1.0.3",
     "@types/node-notifier": "^8.0.0",
-    "@types/npm-packlist": "^1.1.1",
     "@types/offscreencanvas": "^2019.6.3",
     "@types/pbf": "^3.0.2",
     "@types/pixelmatch": "^5.2.2",
