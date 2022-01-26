@@ -52,7 +52,17 @@
                     benchmarks.push({name, versions});
                 }
 
-                window.Benchmarks.run(benchmarks);
+                const results = await window.Benchmarks.run(benchmarks);
+                // eslint-disable-next-line require-atomic-updates
+                window.maplibreglBenchmarkResults = {};
+                for (const result of results) {
+                    window.maplibreglBenchmarkResults[result.name] = {};
+                    for (const version of result.versions) {
+                        window.maplibreglBenchmarkResults[result.name][version.name] = {name: version.name, summary: version.summary, regression: version.regression};
+                    }
+                }
+                // eslint-disable-next-line require-atomic-updates
+                window.maplibreglBenchmarkFinished = true;
             } catch (ex) {
                 console.error(ex);
             }

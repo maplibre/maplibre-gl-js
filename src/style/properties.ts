@@ -730,7 +730,7 @@ export class Properties<Props> {
     defaultPropertyValues: {[K in keyof Props]: PropertyValue<unknown, any>};
     defaultTransitionablePropertyValues: {[K in keyof Props]: TransitionablePropertyValue<unknown, unknown>};
     defaultTransitioningPropertyValues: {[K in keyof Props]: TransitioningPropertyValue<unknown, unknown>};
-    defaultPossiblyEvaluatedValues: {[K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>};;
+    defaultPossiblyEvaluatedValues: {[K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>};
     overridableProperties: Array<string>;
 
     constructor(properties: Props) {

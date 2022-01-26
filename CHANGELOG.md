@@ -3,7 +3,11 @@
 ### Features and improvements
 - *...Add new stuff here...*
 
+* Remove node package chalk from devDependencies (#789).
+- Allow setting a custom pixel ratio by adding a `MapOptions#pixelRatio` property and a `Map#setPixelRatio` method (#769)
+
 ### 🐞 Bug fixes
+
 - *...Add new stuff here...*
 
 ## 2.1.0
@@ -11,6 +15,10 @@
 ### ✨ Features and improvements
 * Add `icon-overlap` and `text-overlap` symbol layout properties [#347](https://github.com/maplibre/maplibre-gl-js/pull/347)
 * Deprecate `icon-allow-overlap` and `text-allow-overlap` symbol layout properties. `icon-overlap` and `text-overlap` are their replacements.
+
+## 2.0.5
+### 🐞 Bug fixes
+- Remove list of node versions allowed to install the package.
 
 ## 2.0.4
 ### 🐞 Bug fixes

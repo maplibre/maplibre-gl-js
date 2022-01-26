@@ -15,7 +15,7 @@ class SourceMock extends Evented {
     id: string;
     minzoom: number;
     maxzoom: number;
-    hasTile: (tileID: OverscaledTileID) => boolean
+    hasTile: (tileID: OverscaledTileID) => boolean;
     sourceOptions: any;
 
     constructor(id: string, sourceOptions: any, _dispatcher, eventedParent: Evented) {
