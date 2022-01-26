@@ -33,35 +33,33 @@ describe('CanonicalTileID', () => {
     });
 
     test('.url replaces {z}/{x}/{y}', () => {
-        expect(new CanonicalTileID(2, 1, 0).url(['{z}/{x}/{y}.json'])).toBe('2/1/0.json');
+        expect(new CanonicalTileID(2, 1, 0).url(['{z}/{x}/{y}.json'], 1)).toBe('2/1/0.json');
     });
 
     test('.url replaces {quadkey}', () => {
-        expect(new CanonicalTileID(1, 0, 0).url(['quadkey={quadkey}'])).toBe('quadkey=0');
-        expect(new CanonicalTileID(2, 0, 0).url(['quadkey={quadkey}'])).toBe('quadkey=00');
-        expect(new CanonicalTileID(2, 1, 1).url(['quadkey={quadkey}'])).toBe('quadkey=03');
-        expect(new CanonicalTileID(17, 22914, 52870).url(['quadkey={quadkey}'])).toBe('quadkey=02301322130000230');
+        expect(new CanonicalTileID(1, 0, 0).url(['quadkey={quadkey}'], 1)).toBe('quadkey=0');
+        expect(new CanonicalTileID(2, 0, 0).url(['quadkey={quadkey}'], 1)).toBe('quadkey=00');
+        expect(new CanonicalTileID(2, 1, 1).url(['quadkey={quadkey}'], 1)).toBe('quadkey=03');
+        expect(new CanonicalTileID(17, 22914, 52870).url(['quadkey={quadkey}'], 1)).toBe('quadkey=02301322130000230');
 
         // Test case confirmed by quadkeytools package
         // https://bitbucket.org/steele/quadkeytools/rollup/build/tsc/src/master/test/quadkey.js?fileviewer=file-view-default#quadkey.js-57
-        expect(new CanonicalTileID(6, 29, 3).url(['quadkey={quadkey}'])).toBe('quadkey=011123');
+        expect(new CanonicalTileID(6, 29, 3).url(['quadkey={quadkey}'], 1)).toBe('quadkey=011123');
 
     });
 
     test('.url replaces {bbox-epsg-3857}', () => {
-        expect(new CanonicalTileID(1, 0, 0).url(['bbox={bbox-epsg-3857}'])).toBe('bbox=-20037508.342789244,0,0,20037508.342789244');
+        expect(new CanonicalTileID(1, 0, 0).url(['bbox={bbox-epsg-3857}'], 1)).toBe('bbox=-20037508.342789244,0,0,20037508.342789244');
     });
 
     test('.url replaces {ratio}', () => {
-        devicePixelRatio = 2;
-        expect(new CanonicalTileID(1, 0, 0).url(['r={ratio}'])).toBe('r=@2x');
-        devicePixelRatio = 1;
-        expect(new CanonicalTileID(1, 0, 0).url(['r={ratio}'])).toBe('r=');
+        expect(new CanonicalTileID(1, 0, 0).url(['r={ratio}'], 2)).toBe('r=@2x');
+        expect(new CanonicalTileID(1, 0, 0).url(['r={ratio}'], 1)).toBe('r=');
     });
 
     //Tests that multiple values of the same placeholder are replaced.
     test('.url replaces {z}/{x}/{y}/{z}/{x}/{y}', () => {
-        expect(new CanonicalTileID(2, 1, 0).url(['{z}/{x}/{y}/{z}/{x}/{y}.json'])).toBe('2/1/0/2/1/0.json');
+        expect(new CanonicalTileID(2, 1, 0).url(['{z}/{x}/{y}/{z}/{x}/{y}.json'], 1)).toBe('2/1/0/2/1/0.json');
     });
 
 });

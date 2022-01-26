@@ -60,6 +60,10 @@ class StubMap extends Evented {
     _getMapId() {
         return 1;
     }
+
+    getPixelRatio() {
+        return 1;
+    }
 }
 
 const getStubMap = () => new StubMap() as any;

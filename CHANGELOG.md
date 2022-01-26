@@ -3,7 +3,11 @@
 ### Features and improvements
 - *...Add new stuff here...*
 
+* Remove node package chalk from devDependencies (#789).
+- Allow setting a custom pixel ratio by adding a `MapOptions#pixelRatio` property and a `Map#setPixelRatio` method (#769)
+
 ### 🐞 Bug fixes
+
 - *...Add new stuff here...*
 
 ## 2.0.5

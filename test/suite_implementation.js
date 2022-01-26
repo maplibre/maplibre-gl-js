@@ -50,7 +50,6 @@ export default function(style, options, _callback) {
         }
     }
 
-    global.devicePixelRatio = options.pixelRatio;
     window.useFakeXMLHttpRequest();
     XMLHttpRequest.onCreate = req => {
         setTimeout(() => {
@@ -81,6 +80,7 @@ export default function(style, options, _callback) {
         classes: options.classes,
         interactive: false,
         attributionControl: false,
+        pixelRatio: options.pixelRatio,
         preserveDrawingBuffer: true,
         axonometric: options.axonometric || false,
         skew: options.skew || [0, 0],
