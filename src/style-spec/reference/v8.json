@@ -1184,7 +1184,7 @@
       ],
       "sdk-support": {
         "basic functionality": {
-          "js": "2.0.0"
+          "js": "2.1.0"
         }
       },
       "expression": {
@@ -2382,7 +2382,7 @@
       ],
       "sdk-support": {
         "basic functionality": {
-          "js": "2.0.0"
+          "js": "2.1.0"
         }
       },
       "expression": {
