@@ -51,7 +51,7 @@ const splitConfig = (name) => [{
 }];
 
 const viewConfig = {
-    input: `${srcDir}bench/benchmarks_view.${inputExt}x`,
+    input: `${srcDir}bench/benchmarks_view.${inputExt}${watch ? 'x' : ''}`,
     output: {
         name: 'Benchmarks',
         file: 'bench/benchmarks_view_generated.js',
