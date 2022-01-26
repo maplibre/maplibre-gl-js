@@ -24,8 +24,6 @@ function testFunc(t) {
     const options = style.metadata.test;
     const skipLayerDelete = style.metadata.skipLayerDelete;
 
-    window.devicePixelRatio = options.pixelRatio;
-
     //1. Create and position the container, floating at the bottom right
     const container = document.createElement('div');
     container.style.position = 'fixed';
@@ -42,6 +40,7 @@ function testFunc(t) {
         classes: options.classes,
         interactive: false,
         attributionControl: false,
+        pixelRatio: options.pixelRatio,
         preserveDrawingBuffer: true,
         axonometric: options.axonometric || false,
         skew: options.skew || [0, 0],

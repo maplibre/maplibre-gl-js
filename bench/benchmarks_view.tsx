@@ -593,5 +593,8 @@ export function run(benchmarks) {
 
     promise = promise.then(() => {
         updateUI(benchmarks, true);
+        return benchmarks;
     });
+
+    return promise;
 }

@@ -318,7 +318,8 @@ describe('GeoJSONSource#update', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = {
-            transform: {} as Transform
+            transform: {} as Transform,
+            getPixelRatio() { return 1; }
         } as any;
 
         source.on('data', (e) => {

@@ -299,7 +299,7 @@ class GeoJSONSource extends Evented implements Source {
             maxZoom: this.maxzoom,
             tileSize: this.tileSize,
             source: this.id,
-            pixelRatio: devicePixelRatio,
+            pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId
         };

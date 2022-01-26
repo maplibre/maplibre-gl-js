@@ -8,6 +8,13 @@
     "selector-class-pattern": "map(box|libre)gl-[a-z-]+",
     "at-rule-no-unknown": [true, {
       "ignoreAtRules": ["svg-load"]
-    }]
+    }],
+
+    "at-rule-no-vendor-prefix": null,
+    "color-function-notation": null,
+    "function-url-quotes": null,
+    "property-no-vendor-prefix": null,
+    "selector-no-vendor-prefix": null,
+    "value-no-vendor-prefix": null
   }
 }

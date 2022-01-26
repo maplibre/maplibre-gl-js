@@ -14,6 +14,14 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 
+/**
+ * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
+ *
+ * @typedef {(Point | [number, number])} PointLike
+ * @example
+ * var p1 = new Point(-77, 38); // a PointLike which is a Point
+ * var p2 = [-77, 38]; // a PointLike which is an array of two numbers
+ */
 export type PointLike = Point | [number, number];
 
 export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
