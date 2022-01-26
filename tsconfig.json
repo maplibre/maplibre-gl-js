@@ -7,7 +7,7 @@
     "importHelpers": false,
     "isolatedModules": true,
     //"importsNotUsedAsValues": "preserve",
-    "jsx": "preserve",
+    "jsx": "react",
     "module": "ES6",
     "moduleResolution": "Node",
     "resolveJsonModule": true,

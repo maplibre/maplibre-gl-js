@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "main": "dist/maplibre-gl.js",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -37,7 +37,6 @@
     "@mapbox/gazetteer": "^5.1.0",
     "@mapbox/mapbox-gl-rtl-text": "^0.2.1",
     "@mapbox/mvt-fixtures": "^3.6.0",
-    "@rollup/plugin-buble": "^0.21.3",
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.1.3",
