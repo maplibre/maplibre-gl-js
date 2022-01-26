@@ -10,8 +10,6 @@
       "ignoreAtRules": ["svg-load"]
     }],
 
-
-    "alpha-value-notation": null,
     "at-rule-no-vendor-prefix": null,
     "color-function-notation": null,
     "function-url-quotes": null,
