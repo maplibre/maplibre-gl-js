@@ -4,7 +4,7 @@
 - *...Add new stuff here...*
 
 * Remove node package chalk from devDependencies (#789).
-- Allow setting a custom pixel ratio by adding a `MapOptions#pixelRatio` property and a `Map#setPixelRatio` method (#769)
+- Allow setting a custom pixel ratio by adding a `MapOptions#pixelRatio` property and a `Map#setPixelRatio` method. Since a high `devicePixelRatio` value can lead to performance and display problems, it is done at your own risk. (#769)
 
 ### 🐞 Bug fixes
 
