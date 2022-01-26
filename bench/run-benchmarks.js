@@ -3,7 +3,7 @@ import puppeteer from 'puppeteer';
 import PDFMerger from 'pdf-merger-js';
 import minimist from 'minimist';
 
-let argv = minimist(process.argv.slice(2));
+const argv = minimist(process.argv.slice(2));
 
 const formatTime = (v) => `${v.toFixed(4)} ms`;
 const formatRegression = (v) => v.correlation < 0.9 ? '\u2620\uFE0F' : v.correlation < 0.99 ? '\u26A0\uFE0F' : ' ';
@@ -15,7 +15,7 @@ if (!fs.existsSync(dir)) {
 
 const url = new URL('http://localhost:9966/bench/versions/');
 
-for (let compare of [].concat(argv.compare).filter(Boolean))
+for (const compare of [].concat(argv.compare).filter(Boolean))
     url.searchParams.append('compare', compare);
 
 const browser = await puppeteer.launch({
@@ -37,7 +37,7 @@ try {
     const namewidth = Math.max(...torun.map(v => v.length)) + 1;
     const timewidth = Math.max(...versions.map(v => v.length), 16);
 
-    console.log(''.padStart(namewidth), ...versions.map(v =>  v.padStart(timewidth) + ' '));
+    console.log(''.padStart(namewidth), ...versions.map(v =>  `${v.padStart(timewidth)} `));
 
     const merger = new PDFMerger();
     for (const name of torun) {
@@ -56,8 +56,8 @@ try {
         );
 
         const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
-        let output = versions.map((v) => formatTime(results[v].summary.trimmedMean).padStart(timewidth) + formatRegression(results[v].regression));
-        if (versions.length == 2) {
+        const output = versions.map((v) => formatTime(results[v].summary.trimmedMean).padStart(timewidth) + formatRegression(results[v].regression));
+        if (versions.length === 2) {
             const [main, current] = versions;
             const delta = results[current].summary.trimmedMean - results[main].summary.trimmedMean;
             output.push(((delta > 0 ? '+' : '') + formatTime(delta)).padStart(15));
