@@ -618,7 +618,7 @@ class Map extends Camera {
      * Sets the map's pixel ratio. This allows to override `devicePixelRatio`.
      * After this call, the canvas' `width` attribute will be `container.clientWidth * pixelRatio`
      * and its height attribute will be `container.clientHeight * pixelRatio`.
-     * @param pixelRatio {number} The pixel ratio.
+     * @param {number} pixelRatio The pixel ratio.
      */
     setPixelRatio(pixelRatio: number) {
         const [width, height] = this._containerDimensions();
