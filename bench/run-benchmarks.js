@@ -29,19 +29,19 @@ try {
     url.hash = 'NONE';
     await webPage.goto(url);
     await webPage.waitForFunction(() => window.maplibreglBenchmarkFinished);
-    const allnames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
-    const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allnames[0]);
+    const allNames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
+    const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allNames[0]);
 
-    const torun = argv._.length > 0 ? argv._ : allnames;
+    const toRun = argv._.length > 0 ? argv._ : allNames;
 
-    const namewidth = Math.max(...torun.map(v => v.length)) + 1;
-    const timewidth = Math.max(...versions.map(v => v.length), 16);
+    const nameWidth = Math.max(...toRun.map(v => v.length)) + 1;
+    const timeWidth = Math.max(...versions.map(v => v.length), 16);
 
-    console.log(''.padStart(namewidth), ...versions.map(v =>  `${v.padStart(timewidth)} `));
+    console.log(''.padStart(nameWidth), ...versions.map(v =>  `${v.padStart(timeWidth)} `));
 
     const merger = new PDFMerger();
-    for (const name of torun) {
-        process.stdout.write(name.padStart(namewidth));
+    for (const name of toRun) {
+        process.stdout.write(name.padStart(nameWidth));
 
         url.hash = name;
         await webPage.goto(url);
@@ -56,7 +56,7 @@ try {
         );
 
         const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
-        const output = versions.map((v) => formatTime(results[v].summary.trimmedMean).padStart(timewidth) + formatRegression(results[v].regression));
+        const output = versions.map((v) => formatTime(results[v].summary.trimmedMean).padStart(timeWidth) + formatRegression(results[v].regression));
         if (versions.length === 2) {
             const [main, current] = versions;
             const delta = results[current].summary.trimmedMean - results[main].summary.trimmedMean;
