@@ -1,6 +1,9 @@
 import fs from 'fs';
 import puppeteer from 'puppeteer';
 import PDFMerger from 'pdf-merger-js';
+import minimist from 'minimist';
+
+const argv = minimist(process.argv.slice(2));
 
 const formatTime = (v) => `${v.toFixed(4)} ms`;
 const formatRegression = (v) => v.correlation < 0.9 ? '\u2620\uFE0F' : v.correlation < 0.99 ? '\u26A0\uFE0F' : ' ';
@@ -10,6 +13,11 @@ if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
 }
 
+const url = new URL('http://localhost:9966/bench/versions/');
+
+for (const compare of [].concat(argv.compare).filter(Boolean))
+    url.searchParams.append('compare', compare);
+
 const browser = await puppeteer.launch({
     headless: true,
     args: ['--use-gl=angle', '--no-sandbox', '--disable-setuid-sandbox']
@@ -18,23 +26,24 @@ const browser = await puppeteer.launch({
 try {
     const webPage = await browser.newPage();
 
-    await webPage.goto('http://localhost:9966/bench/versions?compare=main#NONE');
-    const allnames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
-    const [main, current] = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allnames[0]);
+    url.hash = 'NONE';
+    await webPage.goto(url);
+    await webPage.waitForFunction(() => window.maplibreglBenchmarkFinished);
+    const allNames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
+    const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allNames[0]);
 
-    const torun = process.argv.length > 2 ? process.argv.slice(2) : allnames;
+    const toRun = argv._.length > 0 ? argv._ : allNames;
 
-    const namewidth = Math.max(...torun.map(v => v.length)) + 1;
-    const timewidth = Math.max(main.length, current.length, 16);
+    const nameWidth = Math.max(...toRun.map(v => v.length)) + 1;
+    const timeWidth = Math.max(...versions.map(v => v.length), 16);
 
-    console.log(''.padStart(namewidth), main.padStart(timewidth), ' ', current.padStart(timewidth), ' ');
+    console.log(''.padStart(nameWidth), ...versions.map(v =>  `${v.padStart(timeWidth)} `));
 
     const merger = new PDFMerger();
-    for (const name of torun) {
-        const url = `http://localhost:9966/bench/versions?compare=main#${name}`;
+    for (const name of toRun) {
+        process.stdout.write(name.padStart(nameWidth));
 
-        process.stdout.write(name.padStart(namewidth));
-
+        url.hash = name;
         await webPage.goto(url);
         await webPage.reload();
 
@@ -47,13 +56,13 @@ try {
         );
 
         const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
-        const [main, current] = Object.values(results);
-        const delta = current.summary.trimmedMean - main.summary.trimmedMean;
-        console.log(
-            formatTime(main.summary.trimmedMean).padStart(timewidth), formatRegression(main.regression),
-            formatTime(current.summary.trimmedMean).padStart(timewidth), formatRegression(current.regression),
-            ((delta > 0 ? '+' : '') + formatTime(delta)).padStart(15),
-        );
+        const output = versions.map((v) => formatTime(results[v].summary.trimmedMean).padStart(timeWidth) + formatRegression(results[v].regression));
+        if (versions.length === 2) {
+            const [main, current] = versions;
+            const delta = results[current].summary.trimmedMean - results[main].summary.trimmedMean;
+            output.push(((delta > 0 ? '+' : '') + formatTime(delta)).padStart(15));
+        }
+        console.log(...output);
 
         merger.add(await webPage.pdf({
             format: 'A4',
