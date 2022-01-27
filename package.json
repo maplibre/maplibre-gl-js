@@ -94,7 +94,7 @@
     "d3": "^7.3.0",
     "d3-queue": "^3.0.7",
     "diff": "^5.0.0",
-    "documentation": "^13.0.2",
+    "documentation": "13.0.2",
     "dts-bundle-generator": "^6.0.0",
     "ejs": "^3.1.6",
     "eslint": "^8.7.0",
