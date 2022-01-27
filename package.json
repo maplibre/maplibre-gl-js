@@ -191,7 +191,7 @@
     "test-query": "testem ci -f test/integration/testem.cjs -R xunit > test/integration/query-tests/test-results.xml",
     "test-expressions": "node --experimental-specifier-resolution=node test/expression.test.js",
     "test-cov": "nyc --reporter=text-summary --reporter=lcov --cache run-s test-unit test-expressions test-query test-render",
-    "test-unit": "jest ./src/source/tile_cache.test.ts",
+    "test-unit": "jest ./src",
     "codegen": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-code.ts && node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-struct-arrays.ts && node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-spec.ts",
     "benchmark": "node bench/run-benchmarks.js",
     "gl-stats": "node bench/gl-stats.js"
