@@ -1,7 +1,7 @@
-import diff from 'diff';
+import {diffJson} from 'diff';
 
 export function generateDiffLog(expected, actual) {
-    return diff.diffJson(expected, actual).map((hunk) => {
+    return diffJson(expected, actual).map((hunk) => {
         if (hunk.added) {
             return `+ ${hunk.value}`;
         } else if (hunk.removed) {

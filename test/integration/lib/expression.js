@@ -1,5 +1,5 @@
 import path, {dirname} from 'path';
-import * as diff from 'diff';
+import {diffJson as libDiffJson} from 'diff';
 import fs from 'fs';
 import harness from './harness';
 import compactStringify from 'json-stringify-pretty-compact';
@@ -132,7 +132,7 @@ export function run(implementation, options, runExpressionTest) {
             const diffJson = (label, expectedJson, actualJson) => {
                 let text = '';
                 let html = '';
-                diff.diffJson(expectedJson, actualJson)
+                libDiffJson(expectedJson, actualJson)
                     .forEach((hunk) => {
                         if (hunk.added) {
                             text += `+ ${hunk.value}`;
