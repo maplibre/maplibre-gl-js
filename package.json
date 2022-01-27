@@ -12,7 +12,7 @@
   "types": "dist/maplibre-gl.d.ts",
   "type": "module",
   "dependencies": {
-    "@mapbox/geojson-rewind": "^0.5.0",
+    "@mapbox/geojson-rewind": "^0.5.1",
     "@mapbox/jsonlint-lines-primitives": "^2.0.2",
     "@mapbox/mapbox-gl-supported": "^2.0.1",
     "@mapbox/point-geometry": "^0.1.0",
@@ -35,7 +35,7 @@
   "devDependencies": {
     "@babel/core": "^7.16.0",
     "@mapbox/gazetteer": "^5.1.0",
-    "@mapbox/mapbox-gl-rtl-text": "^0.2.1",
+    "@mapbox/mapbox-gl-rtl-text": "^0.2.3",
     "@mapbox/mvt-fixtures": "^3.6.0",
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-json": "^4.1.0",
