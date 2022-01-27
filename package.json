@@ -43,7 +43,7 @@
     "@rollup/plugin-replace": "^3.0.1",
     "@rollup/plugin-strip": "^2.1.0",
     "@rollup/plugin-typescript": "^8.3.0",
-    "@swc/core": "^1.2.133",
+    "@swc/core": "^1.2.135",
     "@swc/jest": "^0.2.17",
     "@types/babel__core": "^7.1.12",
     "@types/babelify": "^7.3.6",
