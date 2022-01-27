@@ -4,7 +4,6 @@ import fs from 'fs';
 import glob from 'glob';
 import shuffleSeed from 'shuffle-seed';
 import {queue} from 'd3-queue';
-import template from 'lodash.template';
 import createServer from './server';
 import {fileURLToPath} from 'url';
 
@@ -171,8 +170,8 @@ export default function (directory, implementation, options, run) {
                 erroredCount, (100 * erroredCount / totalCount).toFixed(1));
         }
 
-        const resultsTemplate = template(fs.readFileSync(path.join(__dirname, '..', 'results.html.tmpl'), 'utf8'));
-        const itemTemplate = template(fs.readFileSync(path.join(directory, 'result_item.html.tmpl'), 'utf8'));
+        const resultsTemplate = import(path.join(__dirname, '..', 'resultsTemplate.js'));
+        const itemTemplate = import(path.join(directory, 'resultItemTemplate.js'));
 
         const stats = {};
         for (const test of tests) {
