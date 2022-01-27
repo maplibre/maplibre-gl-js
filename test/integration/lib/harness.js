@@ -170,8 +170,8 @@ export default function (directory, implementation, options, run) {
                 erroredCount, (100 * erroredCount / totalCount).toFixed(1));
         }
 
-        const resultsTemplate = import(path.join(__dirname, '..', 'resultsTemplate.js'));
-        const itemTemplate = import(path.join(directory, 'resultItemTemplate.js'));
+        const resultsTemplate = eval(fs.readFileSync(path.join(__dirname, '..', 'resultsTemplate.js'), 'utf8'));
+        const itemTemplate = eval(fs.readFileSync(path.join(directory, 'resultItemTemplate.js'), 'utf8'));
 
         const stats = {};
         for (const test of tests) {

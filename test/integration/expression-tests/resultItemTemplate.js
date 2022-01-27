@@ -1,4 +1,4 @@
-export default (meta) => `<div class="test ${meta.r.status} ${(meta.hasFailedTests && /passed/.test(r.status) || /ignored/.test(r.status)) ? 'hide' : ''}">
+(meta) => `<div class="test ${meta.r.status} ${(meta.hasFailedTests && /passed/.test(meta.r.status) || /ignored/.test(meta.r.status)) ? 'hide' : ''}">
     <h2><span class="label" style="background: ${meta.r.color}">${meta.r.status}</span> ${meta.r.id}</h2>
     <pre>${meta.r.expression}</pre>
 

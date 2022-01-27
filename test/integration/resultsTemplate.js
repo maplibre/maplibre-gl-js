@@ -1,4 +1,4 @@
-export default (meta) => `<style>
+(meta) => `<style>
 body { font: 18px/1.2 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 10px; }
 h1 { font-size: 32px; margin-bottom: 0; }
 button { vertical-align: middle; }
@@ -23,7 +23,7 @@ ${meta.unsuccessful.length ?
     <button id='toggle-ignored'>Toggle ignored tests</button>
 </h1>
 
-<p class="stats">${Object.keys(r.stats).map(status => `${stats[status]} ${status}`).join(', ')}.</p>
+<p class="stats">${Object.keys(meta.stats).map(status => `${meta.stats[status]} ${status}`).join(', ')}.</p>
 
 <div id='test-sequence' class='hide'>
     ${meta.unsuccessful.length ? `<p><strong>Failed tests:</strong>
