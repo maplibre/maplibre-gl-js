@@ -26,8 +26,6 @@ test('loadGlyphRange', done => {
             const id = Number(key);
             const glyph = result[id];
 
-            if (!glyph) return done.fail(); // appease flow
-
             expect(glyph.id).toBe(Number(id));
             expect(glyph.metrics).toBeTruthy();
             expect(typeof glyph.metrics.width).toBe('number');

@@ -37,6 +37,7 @@ const config = [{
         },
         // https://github.com/zaach/jison/issues/351
         replace({
+            preventAssignment: true,
             include: /\/jsonlint-lines-primitives\/lib\/jsonlint.js/,
             delimiters: ['', ''],
             values: {

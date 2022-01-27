@@ -10,9 +10,4 @@ updates:
     schedule:
       interval: "monthly"
     ignore:
-      - dependency-name: "@types/d3"
-      - dependency-name: "@types/diff"
-      - dependency-name: "d3"
       - dependency-name: "documentation"
-      - dependency-name: "diff"
-      - dependency-name: "@mapbox/mapbox-gl-supported"
