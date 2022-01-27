@@ -15,6 +15,7 @@ if (process.env.MAPLIBRE_STYLES) {
 }
 
 const replaceConfig = {
+    preventAssignment: true,
     'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION),
     'process.env.MAPLIBRE_STYLES': JSON.stringify(styles),
     'process.env.NODE_ENV': JSON.stringify('production')
