@@ -106,7 +106,7 @@ describe('drag and zoom', () => {
             width: metrics.width,
             height: metrics.height
         });
-    }, 30000);
+    }, 50000);
 
     test('Drag: To the left', async () => {
         const {driver} = browser;
