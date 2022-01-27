@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+
 import {BenchmarksTable} from './components/BenchmarkTable';
 import {summaryStatistics, regression} from './lib/statistics';
 
@@ -7,7 +8,7 @@ function updateUI(benchmarks, finished?) {
     finished = !!finished;
 
     ReactDOM.render(
-        <BenchmarksTable benchmarks={benchmarks} finished={finished}/>,
+      <BenchmarksTable benchmarks={benchmarks} finished={finished}/>,
         document.getElementById('benchmarks')
     );
 }

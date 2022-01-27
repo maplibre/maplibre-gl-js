@@ -1,5 +1,5 @@
-import React from 'react';
 import {Version} from './util';
+import React from 'react';
 
 type BenchmarkStatisticProps = {
   status: string;
@@ -8,18 +8,18 @@ type BenchmarkStatisticProps = {
   version: Version;
 }
 
-export class BenchmarkStatistic extends React.Component<BenchmarkStatisticProps, {}> {
-    render() {
-        switch (this.props.status) {
-        case 'waiting':
-            return <p className="quiet"></p>;
-        case 'running':
-            return <p>Running...</p>;
-        case 'error':
-        case 'errored':
-            return <p>{this.props.error.message}</p>;
-        default:
-            return this.props.statistic(this.props.version);
-        }
+export const BenchmarkStatistic = (props: BenchmarkStatisticProps) => {
+
+    switch (props.status) {
+    case 'waiting':
+        return <p className="quiet"></p>;
+    case 'running':
+        return <p>Running...</p>;
+    case 'error':
+    case 'errored':
+        return <p>{props.error.message}</p>;
+    default:
+        return props.statistic(props.version);
     }
-}
+
+};
