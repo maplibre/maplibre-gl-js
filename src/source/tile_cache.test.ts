@@ -32,7 +32,7 @@ describe('TileCache', () => {
 
     test('get without removing', () => {
         const cache = new TileCache(10, () => {
-            fail();
+            done('test "get without removing" failed');
         });
         expect(cache.add(idA, tileA)).toBe(cache);
         expect(cache.get(idA)).toBe(tileA);
@@ -42,7 +42,7 @@ describe('TileCache', () => {
 
     test('duplicate add', () => {
         const cache = new TileCache(10, () => {
-            fail();
+            done('test "duplicate add" failed');
         });
 
         cache.add(idA, tileA);
