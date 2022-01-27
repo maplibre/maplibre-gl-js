@@ -1,6 +1,6 @@
 import path, {dirname} from 'path';
 import fs from 'fs';
-import * as diff from 'diff';
+import {diffJson} from 'diff';
 import {PNG} from 'pngjs';
 import harness from './harness';
 import {fileURLToPath} from 'url';
@@ -62,7 +62,7 @@ export function run(implementation, options, query) {
             params.ok = deepEqual(results, expected);
 
             if (!params.ok) {
-                const msg = diff.diffJson(expected, results)
+                const msg = diffJson(expected, results)
                     .map((hunk) => {
                         if (hunk.added) {
                             return `+ ${hunk.value}`;
