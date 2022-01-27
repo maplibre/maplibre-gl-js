@@ -1,28 +1,23 @@
 /* eslint-disable import/no-commonjs */
 /* eslint-env browser */
 const Parser = require('tap-parser');
-const {template} = require('lodash');
 
-const generateResultHTML = template(`
-<div class="test <%- r.status %>">
-    <h2><span class="label" style="background: <%- r.color %>"><%- r.status %></span> <%- r.name %></h2>
-    <% if (r.status !== 'errored') { %>
-        <img src="<%- r.actual %>">
-    <% } %>
-    <% if (r.error) { %><p style="color: red"><strong>Error:</strong> <%- r.error.message %></p><% } %>
-    <% if (r.difference) { %>
-        <pre><%- r.difference.trim() %></pre>
-    <% } %>
-</div>`);
+const generateResultHTML = meta => `
+<div class="test ${meta.status}">
+    <h2><span class="label" style="background: ${meta.color}">${meta.status}</span> ${meta.name}</h2>
+    ${meta.status !== 'errored' ? `<img src="${meta.actual}">` : ''}
+    ${meta.error ? `<p style="color: red"><strong>Error:</strong> ${meta.error.message}</p>` : ''}
+    ${meta.difference ? `<pre>${meta.difference.trim()}</pre>` : ''}
+</div>`;
 
-const generateStatsHTML = template(`
+const generateStatsHTML = meta => `
 <h1 style="color: red;">
-<%- failedTests %> tests failed.
+${meta.failedTests} tests failed.
 </h1>
 <h1 style="color: green;">
-<%- passedTests %> tests passed.
+${meta.passedTests} tests passed.
 </h1>
-`);
+`;
 
 const pageCss = `
 body { font: 18px/1.2 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 10px; }
@@ -86,10 +81,10 @@ class TapHtmlGenerator {
         this.stats.passedTests++;
 
         const metaData = JSON.parse(assert.name);
-        metaData["status"] = "passed";
-        metaData["color"] = "green";
+        metaData['status'] = 'passed';
+        metaData['color'] = 'green';
 
-        this.resultsContainer.innerHTML += generateResultHTML({r: metaData});
+        this.resultsContainer.innerHTML += generateResultHTML(metaData);
         this._updateStatsContainer();
     }
 
@@ -97,10 +92,10 @@ class TapHtmlGenerator {
         this.stats.failedTests++;
 
         const metaData = JSON.parse(assert.name);
-        metaData["status"] = "failed";
-        metaData["color"] = "red";
+        metaData['status'] = 'failed';
+        metaData['color'] = 'red';
 
-        this.resultsContainer.innerHTML += generateResultHTML({r: metaData});
+        this.resultsContainer.innerHTML += generateResultHTML(metaData);
         this._updateStatsContainer();
     }
 

@@ -1,4 +1,4 @@
-<style>
+(meta) => `<style>
 body { font: 18px/1.2 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 10px; }
 h1 { font-size: 32px; margin-bottom: 0; }
 button { vertical-align: middle; }
@@ -14,30 +14,26 @@ img { margin: 0 10px 10px 0; border: 1px dotted #ccc; }
 .hide { display: none; }
 </style>
 
-<% if (unsuccessful.length) { %>
-<h1 style="color: red;">
-    <%- unsuccessful.length %> tests failed.
-<% } else { %>
-<h1 style="color: green;">
-    All tests passed!
-<% } %>
+${meta.unsuccessful.length ?
+        `<h1 style="color: red;">${meta.unsuccessful.length} tests failed.` :
+        '<h1 style="color: green;">All tests passed!'}
+
     <button id='toggle-sequence'>Toggle test sequence</button>
     <button id='toggle-passed'>Toggle passed tests</button>
     <button id='toggle-ignored'>Toggle ignored tests</button>
 </h1>
 
-<p class="stats"><%- Object.keys(stats).map(status => stats[status] + ' ' + status).join(', ') + '.' %></p>
+<p class="stats">${Object.keys(meta.stats).map(status => `${meta.stats[status]} ${status}`).join(', ')}.</p>
 
 <div id='test-sequence' class='hide'>
-    <% if (unsuccessful.length) { %>
-    <p><strong>Failed tests:</strong>
-    <% for (const r of unsuccessful) { %><%- r.id %> <% } %></p>
-    <% } %>
+    ${meta.unsuccessful.length ? `<p><strong>Failed tests:</strong>
+      ${meta.unsuccessful.map(failedTest => failedTest.id)}
+      </p>` : ''}
 
     <p><strong>Test sequence:</strong>
-    <% for (const s of tests) { %><%- s.id %> <% } %></p>
+    ${meta.tests.map(sequence => sequence.id)}
 
-    <% if (shuffle) { %><p><strong>Shuffle seed</strong>: <%- seed %></p><% } %>
+    ${meta.shuffle ? `<p><strong>Shuffle seed</strong>: ${meta.seed}</p>` : ''}
 </div>
 
 <script>
@@ -70,4 +66,4 @@ document.getElementById('toggle-sequence').addEventListener('click', function (e
 
 <div class="tests">
 <!-- results go here -->
-</div>
+</div>`;
