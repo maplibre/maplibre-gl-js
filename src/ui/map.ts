@@ -491,8 +491,8 @@ class Map extends Camera {
     /**
      * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
      *
-     * @param {IControl} control The {@link IControl} to add.
-     * @param {string} [position] position on the map to which the control will be added.
+     * @param control The {@link IControl} to add.
+     * @param [position] position on the map to which the control will be added.
      * Valid values are `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`. Defaults to `'top-right'`.
      * @returns {Map} `this`
      * @example
@@ -527,7 +527,7 @@ class Map extends Camera {
     /**
      * Removes the control from the map.
      *
-     * @param {IControl} control The {@link IControl} to remove.
+     * @param control The {@link IControl} to remove.
      * @returns {Map} `this`
      * @example
      * // Define a new navigation control.
@@ -551,7 +551,7 @@ class Map extends Camera {
     /**
      * Checks if a control exists on the map.
      *
-     * @param {IControl} control The {@link IControl} to check.
+     * @param control The {@link IControl} to check.
      * @returns {boolean} True if map contains control.
      * @example
      * // Define a new navigation control.
@@ -660,7 +660,7 @@ class Map extends Camera {
      * as close as possible to the operation's request while still
      * remaining within the bounds.
      *
-     * @param {LngLatBoundsLike | null | undefined} bounds The maximum bounds to set. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
+     * @param bounds The maximum bounds to set. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
      * @returns {Map} `this`
      * @example
      * // Define bounds that conform to the `LngLatBoundsLike` object.
@@ -686,7 +686,7 @@ class Map extends Camera {
      * if the map is 512px tall it will not be possible to zoom below zoom 0
      * no matter what the `minZoom` is set to.
      *
-     * @param {number | null | undefined} minZoom The minimum zoom level to set (-2 - 24).
+     * @param minZoom The minimum zoom level to set (-2 - 24).
      *   If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
      * @returns {Map} `this`
      * @example
@@ -721,7 +721,7 @@ class Map extends Camera {
      * If the map's current zoom level is higher than the new maximum,
      * the map will zoom to the new maximum.
      *
-     * @param {number | null | undefined} maxZoom The maximum zoom level to set.
+     * @param maxZoom The maximum zoom level to set.
      *   If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
      * @returns {Map} `this`
      * @example
@@ -756,7 +756,7 @@ class Map extends Camera {
      * If the map's current pitch is lower than the new minimum,
      * the map will pitch to the new minimum.
      *
-     * @param {number | null | undefined} minPitch The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * @param minPitch The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      *   If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
      * @returns {Map} `this`
      */
@@ -791,7 +791,7 @@ class Map extends Camera {
      * If the map's current pitch is higher than the new maximum,
      * the map will pitch to the new maximum.
      *
-     * @param {number | null | undefined} maxPitch The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * @param maxPitch The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      *   If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
      * @returns {Map} `this`
      */
@@ -837,11 +837,11 @@ class Map extends Camera {
     /**
      * Sets the state of `renderWorldCopies`.
      *
-     * @param {boolean} renderWorldCopies If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
+     * @param renderWorldCopies If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
      * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
-     * container, there will be blank space beyond 180 and -180 degrees longitude.
+     *   container, there will be blank space beyond 180 and -180 degrees longitude.
      * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
-     * map and the other on the left edge of the map) at every zoom level.
+     *   map and the other on the left edge of the map) at every zoom level.
      *
      * `undefined` is treated as `true`, `null` is treated as `false`.
      * @returns {Map} `this`
@@ -858,7 +858,7 @@ class Map extends Camera {
      * Returns a [Point](https://github.com/mapbox/point-geometry) representing pixel coordinates, relative to the map's `container`,
      * that correspond to the specified geographical location.
      *
-     * @param {LngLatLike} lnglat The geographical location to project.
+     * @param lnglat The geographical location to project.
      * @returns {Point} The [Point](https://github.com/mapbox/point-geometry) corresponding to `lnglat`, relative to the map's `container`.
      * @example
      * var coordinate = [-122.420679, 37.772537];
@@ -872,7 +872,7 @@ class Map extends Camera {
      * Returns a {@link LngLat} representing geographical coordinates that correspond
      * to the specified pixel coordinates.
      *
-     * @param {PointLike} point The pixel coordinates to unproject.
+     * @param point The pixel coordinates to unproject.
      * @returns {LngLat} The {@link LngLat} corresponding to `point`.
      * @example
      * map.on('click', function(e) {
@@ -1508,8 +1508,8 @@ class Map extends Camera {
     /**
      * Adds a source to the map's style.
      *
-     * @param {string} id The ID of the source to add. Must not conflict with existing sources.
-     * @param {Object} source The source object, conforming to the
+     * @param id The ID of the source to add. Must not conflict with existing sources.
+     * @param source The source object, conforming to the
      * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources) or
      * {@link CanvasSourceOptions}.
      * @fires source.add
@@ -1546,7 +1546,7 @@ class Map extends Camera {
      * Returns a Boolean indicating whether the source is loaded. Returns `true` if the source with
      * the given ID in the map's style has no outstanding network requests, otherwise `false`.
      *
-     * @param {string} id The ID of the source to be checked.
+     * @param id The ID of the source to be checked.
      * @returns {boolean} A Boolean indicating whether the source is loaded.
      * @example
      * var sourceLoaded = map.isSourceLoaded('bathymetry-data');
@@ -1586,9 +1586,9 @@ class Map extends Camera {
      * Adds a [custom source type](#Custom Sources), making it available for use with
      * {@link Map#addSource}.
      * @private
-     * @param {string} name The name of the source type; source definition objects use this name in the `{type: ...}` field.
+     * @param name The name of the source type; source definition objects use this name in the `{type: ...}` field.
      * @param {Function} SourceType A {@link Source} constructor.
-     * @param {Callback<void>} callback Called when the source type is ready or with an error argument if there is an error.
+     * @param callback Called when the source type is ready or with an error argument if there is an error.
      */
     addSourceType(name: string, SourceType: any, callback: Callback<void>) {
         this._lazyInitEmptyStyle();
@@ -1598,7 +1598,7 @@ class Map extends Camera {
     /**
      * Removes a source from the map's style.
      *
-     * @param {string} id The ID of the source to remove.
+     * @param id The ID of the source to remove.
      * @returns {Map} `this`
      * @example
      * map.removeSource('bathymetry-data');
@@ -1616,7 +1616,7 @@ class Map extends Camera {
      * For example, setting the `data` for a GeoJSON source or updating the `url` and `coordinates`
      * of an image source.
      *
-     * @param {string} id The ID of the source to get.
+     * @param id The ID of the source to get.
      * @returns {Source | undefined} The style source with the specified ID or `undefined` if the ID
      * corresponds to no existing sources.
      * The shape of the object varies by source type.
@@ -1816,8 +1816,8 @@ class Map extends Camera {
      * Load an image from an external URL to be used with {@link Map#addImage}. External
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
-     * @param {string} url The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @param {Callback<HTMLImageElement | ImageBitmap>} callback Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
+     * @param url The URL of the image file. Image file must be in png, webp, or jpg format.
+     * @param callback Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
      *
      * @example
      * // Load an image from an external URL.
@@ -1966,8 +1966,8 @@ class Map extends Camera {
     /**
      * Moves a layer to a different z-position.
      *
-     * @param {string} id The ID of the layer to move.
-     * @param {string} [beforeId] The ID of an existing layer to insert the new layer before. When viewing the map, the `id` layer will appear beneath the `beforeId` layer. If `beforeId` is omitted, the layer will be appended to the end of the layers array and appear above all other layers on the map.
+     * @param id The ID of the layer to move.
+     * @param [beforeId] The ID of an existing layer to insert the new layer before. When viewing the map, the `id` layer will appear beneath the `beforeId` layer. If `beforeId` is omitted, the layer will be appended to the end of the layers array and appear above all other layers on the map.
      * @returns {Map} `this`
      *
      * @example
@@ -1985,7 +1985,7 @@ class Map extends Camera {
      *
      * If no such layer exists, an `error` event is fired.
      *
-     * @param {string} id id of the layer to remove
+     * @param id id of the layer to remove
      * @fires error
      *
      * @example
@@ -2000,7 +2000,7 @@ class Map extends Camera {
     /**
      * Returns the layer with the specified ID in the map's style.
      *
-     * @param {string} id The ID of the layer to get.
+     * @param id The ID of the layer to get.
      * @returns {StyleLayer} The layer with the specified ID, or `undefined`
      *   if the ID corresponds to no existing layers.
      *
@@ -2025,9 +2025,9 @@ class Map extends Camera {
      * zoom level of the source layer is higher than the minimum zoom level defined in the style layer, the style
      * layer will not be rendered at all zoom levels in the zoom range.
      *
-     * @param {string} layerId The ID of the layer to which the zoom extent will be applied.
-     * @param {number} minzoom The minimum zoom to set (0-24).
-     * @param {number} maxzoom The maximum zoom to set (0-24).
+     * @param layerId The ID of the layer to which the zoom extent will be applied.
+     * @param minzoom The minimum zoom to set (0-24).
+     * @param maxzoom The maximum zoom to set (0-24).
      * @returns {Map} `this`
      *
      * @example
@@ -2050,7 +2050,7 @@ class Map extends Camera {
      *
      * To clear the filter, pass `null` or `undefined` as the second parameter.
      *
-     * @param {string} layerId The ID of the layer to which the filter will be applied.
+     * @param layerId The ID of the layer to which the filter will be applied.
      * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
      *   [filter definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
      * @param {Object} [options] Options object.
@@ -2077,7 +2077,7 @@ class Map extends Camera {
     /**
      * Returns the filter applied to the specified style layer.
      *
-     * @param {string} layerId The ID of the style layer whose filter to get.
+     * @param layerId The ID of the style layer whose filter to get.
      * @returns {Array} The layer's filter.
      */
     getFilter(layerId: string) {
@@ -2087,8 +2087,8 @@ class Map extends Camera {
     /**
      * Sets the value of a paint property in the specified style layer.
      *
-     * @param {string} layerId The ID of the layer to set the paint property in.
-     * @param {string} name The name of the paint property to set.
+     * @param layerId The ID of the layer to set the paint property in.
+     * @param name The name of the paint property to set.
      * @param {*} value The value of the paint property to set.
      *   Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/).
      * @param {Object} [options] Options object.
@@ -2107,8 +2107,8 @@ class Map extends Camera {
     /**
      * Returns the value of a paint property in the specified style layer.
      *
-     * @param {string} layerId The ID of the layer to get the paint property from.
-     * @param {string} name The name of a paint property to get.
+     * @param layerId The ID of the layer to get the paint property from.
+     * @param name The name of a paint property to get.
      * @returns {*} The value of the specified paint property.
      */
     getPaintProperty(layerId: string, name: string) {
@@ -2118,8 +2118,8 @@ class Map extends Camera {
     /**
      * Sets the value of a layout property in the specified style layer.
      *
-     * @param {string} layerId The ID of the layer to set the layout property in.
-     * @param {string} name The name of the layout property to set.
+     * @param layerId The ID of the layer to set the layout property in.
+     * @param name The name of the layout property to set.
      * @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/).
      * @param {Object} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
@@ -2135,8 +2135,8 @@ class Map extends Camera {
     /**
      * Returns the value of a layout property in the specified style layer.
      *
-     * @param {string} layerId The ID of the layer to get the layout property from.
-     * @param {string} name The name of the layout property to get.
+     * @param layerId The ID of the layer to get the layout property from.
+     * @param name The name of the layout property to get.
      * @returns {*} The value of the specified layout property.
      */
     getLayoutProperty(layerId: string, name: string) {
@@ -2495,7 +2495,7 @@ class Map extends Camera {
      * - The map has is moving (or just finished moving)
      * - A transition is in progress
      *
-     * @param {number} paintStartTimeStamp  The time when the animation frame began executing.
+     * @param paintStartTimeStamp  The time when the animation frame began executing.
      *
      * @returns {Map} this
      * @private
