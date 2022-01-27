@@ -130,7 +130,7 @@ describe('drag and zoom', () => {
         });
         expect(center.lng).toBeCloseTo(-35.15625, 4);
         expect(center.lat).toBeCloseTo(0, 7);
-    }, 10000);
+    }, 20000);
 
     test('Zoom: Double click at the center', async () => {
         const {driver} = browser;
@@ -148,7 +148,7 @@ describe('drag and zoom', () => {
         });
 
         expect(zoom).toBe(2);
-    }, 10000);
+    }, 20000);
 
     afterAll(async () => {
         if (browser.driver) {
