@@ -6,6 +6,8 @@
 
 ### 🐞 Bug fixes
 
+- *...Add new stuff here...*
+
 ## 2.1.1
 
 ### 🐞 Bug fixes
