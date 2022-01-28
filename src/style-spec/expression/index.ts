@@ -23,7 +23,7 @@ import type {Result} from '../util/result';
 import type {InterpolationType} from './definitions/interpolate';
 import type {PropertyValueSpecification} from '../types';
 import type {FormattedSection} from './types/formatted';
-import type Point from '../../util/point';
+import type Point from '@mapbox/point-geometry';
 import type {CanonicalTileID} from '../../source/tile_id';
 
 export type Feature = {

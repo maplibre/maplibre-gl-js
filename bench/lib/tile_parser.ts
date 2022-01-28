@@ -22,6 +22,10 @@ class StubMap extends Evented {
         super();
         this._requestManager = new RequestManager();
     }
+
+    getPixelRatio() {
+        return devicePixelRatio;
+    }
 }
 
 const mapStub = new StubMap() as any as Map;
@@ -104,7 +108,7 @@ export default class TileParser {
     }
 
     fetchTile(tileID: OverscaledTileID) {
-        return fetch(tileID.canonical.url(this.tileJSON.tiles))
+        return fetch(tileID.canonical.url(this.tileJSON.tiles, devicePixelRatio))
             .then(response => response.arrayBuffer())
             .then(buffer => ({tileID, buffer}));
     }

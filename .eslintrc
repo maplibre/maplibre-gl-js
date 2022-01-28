@@ -93,7 +93,7 @@
     "jsdoc/require-param-name": "warn",
     "jsdoc/require-returns": "warn",
     "jsdoc/require-returns-description": "warn",
-    
+
     // Jest https://www.npmjs.com/package/eslint-plugin-jest
     "jest/no-commented-out-tests": "error",
     "jest/no-disabled-tests": "warn",

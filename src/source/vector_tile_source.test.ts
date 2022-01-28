@@ -15,7 +15,8 @@ function createSource(options, transformCallback?) {
         transform: {showCollisionBoxes: false},
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
-        style: {sourceCaches: {id: {clearTiles: () => {}}}}
+        style: {sourceCaches: {id: {clearTiles: () => {}}}},
+        getPixelRatio() { return 1; }
     } as any as Map);
 
     source.on('error', (e) => {

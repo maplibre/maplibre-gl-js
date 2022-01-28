@@ -1777,14 +1777,6 @@ describe('#cameraForBounds', () => {
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 44.4717});
     });
 
-    test('offset as object', () => {
-        const camera = createCamera();
-        const bb = [[-133, 16], [-68, 50]];
-        const transform = camera.cameraForBounds(bb, {offset: {x: 0, y: 100}});
-
-        expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 44.4717});
-    });
-
     test('offset and padding', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];

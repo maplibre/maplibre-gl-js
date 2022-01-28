@@ -9,16 +9,36 @@ export type ResolvedImageSpecification = string;
 
 export type PromoteIdSpecification = {[_: string]: string} | string;
 
+export type FilterSpecificationInputType = string | number | boolean;
 export type FilterSpecification =
-      ['has', string]
-    | ['!has', string]
-    | ['==', string, string | number | boolean]
-    | ['!=', string, string | number | boolean]
-    | ['>', string, string | number | boolean]
-    | ['>=', string, string | number | boolean]
-    | ['<', string, string | number | boolean]
-    | ['<=', string, string | number | boolean]
-    | Array<string | FilterSpecification>; // Can't type in, !in, all, any, none -- https://github.com/facebook/flow/issues/2443
+    // Lookup
+    | ['at', number, (number |string)[]]
+    | ['get', string, Record<string, unknown>?]
+    | ['has', string, Record<string, unknown>?]
+    | ['in', ...FilterSpecificationInputType[], FilterSpecificationInputType | FilterSpecificationInputType[]]
+    | ['index-of', FilterSpecificationInputType, FilterSpecificationInputType | FilterSpecificationInputType[]]
+    | ['length', string | string[]]
+    | ['slice', string | string[], number]
+    // Decision
+    | ['!', FilterSpecification]
+    | ['!=', string | FilterSpecification, FilterSpecificationInputType]
+    | ['<', string | FilterSpecification, FilterSpecificationInputType]
+    | ['<=', string | FilterSpecification, FilterSpecificationInputType]
+    | ['==', string | FilterSpecification, FilterSpecificationInputType]
+    | ['>', string | FilterSpecification, FilterSpecificationInputType]
+    | ['>=', string | FilterSpecification, FilterSpecificationInputType]
+    | ["all", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["any", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["case", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["coalesce", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["match", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["within", ...FilterSpecification[], FilterSpecificationInputType]
+    // Used in convert.ts
+    | ["!in", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["!has", ...FilterSpecification[], FilterSpecificationInputType]
+    | ["none", ...FilterSpecification[], FilterSpecificationInputType]
+    // Fallbak for others
+    | Array<string | FilterSpecification>
 
 export type TransitionSpecification = {
     duration?: number,
@@ -228,6 +248,7 @@ export type SymbolLayerSpecification = {
         "symbol-sort-key"?: DataDrivenPropertyValueSpecification<number>,
         "symbol-z-order"?: PropertyValueSpecification<"auto" | "viewport-y" | "source">,
         "icon-allow-overlap"?: PropertyValueSpecification<boolean>,
+        "icon-overlap"?: PropertyValueSpecification<"never" | "always" | "cooperative">,
         "icon-ignore-placement"?: PropertyValueSpecification<boolean>,
         "icon-optional"?: PropertyValueSpecification<boolean>,
         "icon-rotation-alignment"?: PropertyValueSpecification<"map" | "viewport" | "auto">,
@@ -262,6 +283,7 @@ export type SymbolLayerSpecification = {
         "text-transform"?: DataDrivenPropertyValueSpecification<"none" | "uppercase" | "lowercase">,
         "text-offset"?: DataDrivenPropertyValueSpecification<[number, number]>,
         "text-allow-overlap"?: PropertyValueSpecification<boolean>,
+        "text-overlap"?: PropertyValueSpecification<"never" | "always" | "cooperative">,
         "text-ignore-placement"?: PropertyValueSpecification<boolean>,
         "text-optional"?: PropertyValueSpecification<boolean>,
         "visibility"?: "visible" | "none"

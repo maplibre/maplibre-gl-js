@@ -6,7 +6,7 @@ import {translateDistance, translate} from '../query_utils';
 import properties, {FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 import {mat4, vec4} from 'gl-matrix';
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 import type {FeatureState} from '../../style-spec/expression';
 import type {BucketParameters} from '../../data/bucket';
 import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties';
@@ -15,7 +15,7 @@ import type {LayerSpecification} from '../../style-spec/types';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class Point3D extends Point {
-    z: number
+    z: number;
 }
 
 class FillExtrusionStyleLayer extends StyleLayer {

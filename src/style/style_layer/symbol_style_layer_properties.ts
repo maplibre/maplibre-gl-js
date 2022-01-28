@@ -32,6 +32,7 @@ export type SymbolLayoutProps = {
     "symbol-sort-key": DataDrivenProperty<number>,
     "symbol-z-order": DataConstantProperty<"auto" | "viewport-y" | "source">,
     "icon-allow-overlap": DataConstantProperty<boolean>,
+    "icon-overlap": DataConstantProperty<"never" | "always" | "cooperative">,
     "icon-ignore-placement": DataConstantProperty<boolean>,
     "icon-optional": DataConstantProperty<boolean>,
     "icon-rotation-alignment": DataConstantProperty<"map" | "viewport" | "auto">,
@@ -66,6 +67,7 @@ export type SymbolLayoutProps = {
     "text-transform": DataDrivenProperty<"none" | "uppercase" | "lowercase">,
     "text-offset": DataDrivenProperty<[number, number]>,
     "text-allow-overlap": DataConstantProperty<boolean>,
+    "text-overlap": DataConstantProperty<"never" | "always" | "cooperative">,
     "text-ignore-placement": DataConstantProperty<boolean>,
     "text-optional": DataConstantProperty<boolean>,
 };
@@ -77,6 +79,7 @@ export type SymbolLayoutPropsPossiblyEvaluated = {
     "symbol-sort-key": PossiblyEvaluatedPropertyValue<number>,
     "symbol-z-order": "auto" | "viewport-y" | "source",
     "icon-allow-overlap": boolean,
+    "icon-overlap": "never" | "always" | "cooperative",
     "icon-ignore-placement": boolean,
     "icon-optional": boolean,
     "icon-rotation-alignment": "map" | "viewport" | "auto",
@@ -111,6 +114,7 @@ export type SymbolLayoutPropsPossiblyEvaluated = {
     "text-transform": PossiblyEvaluatedPropertyValue<"none" | "uppercase" | "lowercase">,
     "text-offset": PossiblyEvaluatedPropertyValue<[number, number]>,
     "text-allow-overlap": boolean,
+    "text-overlap": "never" | "always" | "cooperative",
     "text-ignore-placement": boolean,
     "text-optional": boolean,
 };
@@ -122,6 +126,7 @@ const layout: Properties<SymbolLayoutProps> = new Properties({
     "symbol-sort-key": new DataDrivenProperty(styleSpec["layout_symbol"]["symbol-sort-key"] as any as StylePropertySpecification),
     "symbol-z-order": new DataConstantProperty(styleSpec["layout_symbol"]["symbol-z-order"] as any as StylePropertySpecification),
     "icon-allow-overlap": new DataConstantProperty(styleSpec["layout_symbol"]["icon-allow-overlap"] as any as StylePropertySpecification),
+    "icon-overlap": new DataConstantProperty(styleSpec["layout_symbol"]["icon-overlap"] as any as StylePropertySpecification),
     "icon-ignore-placement": new DataConstantProperty(styleSpec["layout_symbol"]["icon-ignore-placement"] as any as StylePropertySpecification),
     "icon-optional": new DataConstantProperty(styleSpec["layout_symbol"]["icon-optional"] as any as StylePropertySpecification),
     "icon-rotation-alignment": new DataConstantProperty(styleSpec["layout_symbol"]["icon-rotation-alignment"] as any as StylePropertySpecification),
@@ -156,6 +161,7 @@ const layout: Properties<SymbolLayoutProps> = new Properties({
     "text-transform": new DataDrivenProperty(styleSpec["layout_symbol"]["text-transform"] as any as StylePropertySpecification),
     "text-offset": new DataDrivenProperty(styleSpec["layout_symbol"]["text-offset"] as any as StylePropertySpecification),
     "text-allow-overlap": new DataConstantProperty(styleSpec["layout_symbol"]["text-allow-overlap"] as any as StylePropertySpecification),
+    "text-overlap": new DataConstantProperty(styleSpec["layout_symbol"]["text-overlap"] as any as StylePropertySpecification),
     "text-ignore-placement": new DataConstantProperty(styleSpec["layout_symbol"]["text-ignore-placement"] as any as StylePropertySpecification),
     "text-optional": new DataConstantProperty(styleSpec["layout_symbol"]["text-optional"] as any as StylePropertySpecification),
 });

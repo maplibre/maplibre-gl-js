@@ -17,6 +17,15 @@ Use
 
 if it is important to you that the behaviour is similar to `mapbox-gl` version 1.x.
 
+If you are OK with changes that integrate non-backward compatible features, install `maplibre-gl` version 2:
+
+```diff
+  "dependencies": {
+-    "mapbox-gl": "^1.13.0"
++    "maplibre-gl": ">=2.0.0"
+  }
+```
+
 And replace `mapboxgl` with `maplibregl` in your JavaScript and optionally in your HTML/CSS code:
 
 > MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more informations please see [MapLibre GL is on unpkg.com](./docs/README-unpkg.md#maplibre-gl-on-unpkgcom).

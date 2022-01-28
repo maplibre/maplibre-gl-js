@@ -104,7 +104,7 @@ class RasterTileSource extends Evented implements Source {
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
-        const url = tile.tileID.canonical.url(this.tiles, this.scheme);
+        const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         tile.request = getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), (err, img) => {
             delete tile.request;
 

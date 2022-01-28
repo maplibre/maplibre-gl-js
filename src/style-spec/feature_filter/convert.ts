@@ -78,29 +78,29 @@ function _convertFilter(filter: FilterSpecification, expectedTypes: ExpectedType
         op === '<=' ||
         op === '>='
     ) {
-        const [, property, value] = (filter as any);
-        converted = convertComparisonOp(property, value, op, expectedTypes);
+        const [, property, value] = filter;
+        converted = convertComparisonOp(property as string, value, op, expectedTypes);
     } else if (op === 'any') {
-        const children = (filter as any).slice(1).map(f => {
+        const children = (filter).slice(1).map((f: FilterSpecification) => {
             const types = {};
             const child = _convertFilter(f, types);
             const typechecks = runtimeTypeChecks(types);
             return typechecks === true ? child : ['case', typechecks, child, false];
         });
-        return ['any'].concat(children);
+        return ['any'].concat(children as string[]);
     } else if (op === 'all') {
-        const children = (filter as any).slice(1).map(f => _convertFilter(f, expectedTypes));
-        return children.length > 1 ? ['all'].concat(children) : [].concat(...children);
+        const children = (filter).slice(1).map(f => _convertFilter(f as FilterSpecification, expectedTypes));
+        return children.length > 1 ? ['all'].concat(children as string[]) : [].concat(...children);
     } else if (op === 'none') {
-        return ['!', _convertFilter(['any'].concat(filter.slice(1) as any), {})];
+        return ['!', _convertFilter(['any'].concat(filter.slice(1) as string[]) as string[], {})];
     } else if (op === 'in') {
-        converted = convertInOp(filter[1] as any, filter.slice(2));
+        converted = convertInOp(filter[1] as string, filter.slice(2));
     } else if (op === '!in') {
-        converted = convertInOp(filter[1] as any, filter.slice(2), true);
+        converted = convertInOp(filter[1] as string, filter.slice(2), true);
     } else if (op === 'has') {
-        converted = convertHasOp(filter[1] as any);
+        converted = convertHasOp(filter[1] as string);
     } else if (op === '!has') {
-        converted = ['!', convertHasOp(filter[1] as any)];
+        converted = ['!', convertHasOp(filter[1] as string)];
     } else {
         converted = true;
     }

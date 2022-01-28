@@ -1,7 +1,7 @@
 import {default as createFilter, isExpressionFilter} from '.';
 
 import convertFilter from './convert';
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../../geo/mercator_coordinate';
 import EXTENT from '../../data/extent';
 import {CanonicalTileID} from '../../source/tile_id';
@@ -156,7 +156,7 @@ describe('convert legacy filters to expressions', () => {
     });
 
     test('flattens nested, single child all expressions', () => {
-        const filter = [
+        const filter: FilterSpecification = [
             'all',
             [
                 'in',
@@ -171,7 +171,7 @@ describe('convert legacy filters to expressions', () => {
             ]
         ];
 
-        const expected = [
+        const expected: FilterSpecification = [
             'all',
             [
                 'match',
@@ -179,14 +179,14 @@ describe('convert legacy filters to expressions', () => {
                 ['LineString', 'Point', 'Polygon'],
                 true,
                 false
-            ],
+            ] as FilterSpecification,
             [
                 'match',
                 ['get', 'type'],
                 ['island'],
                 true,
                 false
-            ]
+            ] as FilterSpecification
         ];
 
         const converted = convertFilter(filter);

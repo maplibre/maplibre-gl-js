@@ -46,7 +46,7 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
-    test('Zooms for single mouse wheel tick with non-magical deltaY', () => {
+    test('Zooms for single mouse wheel tick with non-magical deltaY', done => {
         const browserNow = jest.spyOn(browser, 'now');
         const now = 1555555555555;
         browserNow.mockReturnValue(now);
@@ -60,6 +60,7 @@ describe('ScrollZoomHandler', () => {
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -20});
         map.on('zoomstart', () => {
             map.remove();
+            done();
         });
     });
 

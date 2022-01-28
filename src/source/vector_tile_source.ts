@@ -17,12 +17,12 @@ import type {VectorSourceSpecification, PromoteIdSpecification} from '../style-s
 
 /**
  * A source containing vector tiles in [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
- * (See the [Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/sources/#vector) for detailed documentation of options.)
+ * (See the [Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/) for detailed documentation of options.)
  *
  * @example
  * map.addSource('some id', {
  *     type: 'vector',
- *     url: 'mapbox://mapbox.mapbox-streets-v6'
+ *     url: 'https://demotiles.maplibre.org/tiles/tiles.json'
  * });
  *
  * @example
@@ -34,7 +34,7 @@ import type {VectorSourceSpecification, PromoteIdSpecification} from '../style-s
  * });
  *
  * @example
- * map.getSource('some id').setUrl("mapbox://mapbox.mapbox-streets-v6");
+ * map.getSource('some id').setUrl("https://demotiles.maplibre.org/tiles/tiles.json");
  *
  * @example
  * map.getSource('some id').setTiles(['https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt']);
@@ -154,7 +154,7 @@ class VectorTileSource extends Evented implements Source {
     /**
      * Sets the source `url` property and re-renders the map.
      *
-     * @param {string} url A URL to a TileJSON resource. Supported protocols are `http:`, `https:`, and `mapbox://<Tileset ID>`.
+     * @param {string} url A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
      * @returns {VectorTileSource} this
      */
     setUrl(url: string) {
@@ -178,7 +178,7 @@ class VectorTileSource extends Evented implements Source {
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
-        const url = tile.tileID.canonical.url(this.tiles, this.scheme);
+        const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
             uid: tile.uid,
@@ -187,7 +187,7 @@ class VectorTileSource extends Evented implements Source {
             tileSize: this.tileSize * tile.tileID.overscaleFactor(),
             type: this.type,
             source: this.id,
-            pixelRatio: devicePixelRatio,
+            pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId
         };

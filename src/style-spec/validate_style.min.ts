@@ -12,7 +12,7 @@ import validatePaintProperty from './validate/validate_paint_property';
 import validateLayoutProperty from './validate/validate_layout_property';
 
 /**
- * Validate a Mapbox GL style against the style specification. This entrypoint,
+ * Validate a MapLibre GL style against the style specification. This entrypoint,
  * `maplibre-gl-style-spec/lib/validate_style.min`, is designed to produce as
  * small a browserify bundle as possible by omitting unnecessary functionality
  * and legacy style specifications.

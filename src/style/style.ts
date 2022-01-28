@@ -13,7 +13,7 @@ import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
-import {getType as getSourceType, setType as setSourceType, Source} from '../source/source';
+import {getSourceType, setSourceType, Source} from '../source/source';
 import type {SourceClass} from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import SourceCache from '../source/source_cache';
@@ -276,7 +276,7 @@ class Style extends Evented {
     }
 
     _loadSprite(url: string) {
-        this._spriteRequest = loadSprite(url, this.map._requestManager, (err, images) => {
+        this._spriteRequest = loadSprite(url, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
             this._spriteRequest = null;
             if (err) {
                 this.fire(new ErrorEvent(err));

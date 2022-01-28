@@ -1,4 +1,4 @@
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import clipLine from './clip_line';
 import PathInterpolator from './path_interpolator';
 
@@ -16,6 +16,7 @@ import type {
     GlyphOffsetArray,
     SymbolLineVertexArray
 } from '../data/array_types';
+import type {OverlapMode} from '../style/style_layer/symbol_style_layer';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -29,6 +30,7 @@ export type FeatureKey = {
     bucketInstanceId: number;
     featureIndex: number;
     collisionGroupID: number;
+    overlapMode: OverlapMode;
 };
 
 /**
@@ -72,7 +74,7 @@ class CollisionIndex {
 
     placeCollisionBox(
       collisionBox: SingleCollisionBox,
-      allowOverlap: boolean,
+      overlapMode: OverlapMode,
       textPixelRatio: number,
       posMatrix: mat4,
       collisionGroupPredicate?: (key: FeatureKey) => boolean
@@ -88,7 +90,7 @@ class CollisionIndex {
         const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
 
         if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
-            (!allowOverlap && this.grid.hitTest(tlX, tlY, brX, brY, collisionGroupPredicate))) {
+            (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate))) {
             return {
                 box: [],
                 offscreen: false
@@ -102,7 +104,7 @@ class CollisionIndex {
     }
 
     placeCollisionCircles(
-      allowOverlap: boolean,
+      overlapMode: OverlapMode,
       symbol: any,
       lineVertexArray: SymbolLineVertexArray,
       glyphOffsetArray: GlyphOffsetArray,
@@ -246,18 +248,16 @@ class CollisionIndex {
                     entirelyOffscreen = entirelyOffscreen && this.isOffscreen(x1, y1, x2, y2);
                     inGrid = inGrid || this.isInsideGrid(x1, y1, x2, y2);
 
-                    if (!allowOverlap) {
-                        if (this.grid.hitTestCircle(centerX, centerY, radius, collisionGroupPredicate)) {
-                            // Don't early exit if we're showing the debug circles because we still want to calculate
-                            // which circles are in use
-                            collisionDetected = true;
-                            if (!showCollisionCircles) {
-                                return {
-                                    circles: [],
-                                    offscreen: false,
-                                    collisionDetected
-                                };
-                            }
+                    if (overlapMode !== 'always' && this.grid.hitTestCircle(centerX, centerY, radius, overlapMode, collisionGroupPredicate)) {
+                        // Don't early exit if we're showing the debug circles because we still want to calculate
+                        // which circles are in use
+                        collisionDetected = true;
+                        if (!showCollisionCircles) {
+                            return {
+                                circles: [],
+                                offscreen: false,
+                                collisionDetected
+                            };
                         }
                     }
                 }
@@ -338,17 +338,17 @@ class CollisionIndex {
         return result;
     }
 
-    insertCollisionBox(collisionBox: Array<number>, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
+    insertCollisionBox(collisionBox: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
         const grid = ignorePlacement ? this.ignoredGrid : this.grid;
 
-        const key = {bucketInstanceId, featureIndex, collisionGroupID};
+        const key = {bucketInstanceId, featureIndex, collisionGroupID, overlapMode};
         grid.insert(key, collisionBox[0], collisionBox[1], collisionBox[2], collisionBox[3]);
     }
 
-    insertCollisionCircles(collisionCircles: Array<number>, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
+    insertCollisionCircles(collisionCircles: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
         const grid = ignorePlacement ? this.ignoredGrid : this.grid;
 
-        const key = {bucketInstanceId, featureIndex, collisionGroupID};
+        const key = {bucketInstanceId, featureIndex, collisionGroupID, overlapMode};
         for (let k = 0; k < collisionCircles.length; k += 4) {
             grid.insertCircle(key, collisionCircles[k], collisionCircles[k + 1], collisionCircles[k + 2]);
         }

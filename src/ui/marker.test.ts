@@ -2,7 +2,7 @@ import {createMap as globalCreateMap, setPerformance, setWebGlContext} from '../
 import Marker from './marker';
 import Popup from './popup';
 import LngLat from '../geo/lng_lat';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import simulate from '../../test/util/simulate_interaction';
 
 function createMap(options = {}) {

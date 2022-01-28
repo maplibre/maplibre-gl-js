@@ -3,7 +3,7 @@ import {number as interpolate} from '../style-spec/util/interpolate';
 import browser from '../util/browser';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
-import Point, {PointLike} from '../util/point';
+import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
 import assert from 'assert';
 import {Debug} from '../util/debug';
@@ -13,6 +13,16 @@ import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
+
+/**
+ * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
+ *
+ * @typedef {(Point | [number, number])} PointLike
+ * @example
+ * var p1 = new Point(-77, 38); // a PointLike which is a Point
+ * var p2 = [-77, 38]; // a PointLike which is an array of two numbers
+ */
+export type PointLike = Point | [number, number];
 
 export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
 
@@ -36,7 +46,7 @@ export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Pa
  * // set the map's initial perspective with CameraOptions
  * var map = new maplibregl.Map({
  *   container: 'map',
- *   style: 'mapbox://styles/mapbox/streets-v11',
+ *   style: 'https://demotiles.maplibre.org/style.json',
  *   center: [-73.5804, 45.53483],
  *   pitch: 60,
  *   bearing: -60,
@@ -159,7 +169,6 @@ abstract class Camera extends Evented {
      * var center = map.getCenter();
      * // access longitude and latitude values directly
      * var {lng, lat} = map.getCenter();
-     * @see Tutorial: [Use Mapbox GL JS in a React app](https://docs.mapbox.com/help/tutorials/use-mapbox-gl-js-with-react/#store-the-new-coordinates)
      */
     getCenter(): LngLat { return new LngLat(this.transform.center.lng, this.transform.center.lat); }
 
@@ -600,7 +609,7 @@ abstract class Camera extends Evented {
      * @memberof Map#
      * @param bounds Center these bounds in the viewport and use the highest
      *      zoom level up to and including `Map#getMaxZoom()` that fits them in the viewport.
-     * @param {Object} [options] Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
+     * @param {FitBoundsOptions} [options] Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
      * @param {number | PaddingOptions} [options.padding] The amount of padding in pixels to add to the given bounds.
      * @param {boolean} [options.linear=false] If `true`, the map transitions using
      *     {@link Map#easeTo}. If `false`, the map transitions using {@link Map#flyTo}. See
@@ -956,7 +965,7 @@ abstract class Camera extends Evented {
      * unless 'options' includes `essential: true`.
      *
      * @memberof Map#
-     * @param {Object} options Options describing the destination and animation of the transition.
+     * @param {FlyToOptions} options Options describing the destination and animation of the transition.
      *     Accepts {@link CameraOptions}, {@link AnimationOptions},
      *     and the following additional options.
      * @param {number} [options.curve=1.42] The zooming "curve" that will occur along the

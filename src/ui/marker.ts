@@ -1,6 +1,6 @@
 import DOM from '../util/dom';
 import LngLat from '../geo/lng_lat';
-import Point, {PointLike} from '../util/point';
+import Point from '@mapbox/point-geometry';
 import smartWrap from '../util/smart_wrap';
 import {bindAll, extend} from '../util/util';
 import {anchorTranslate, applyAnchorClass} from './anchor';
@@ -10,6 +10,7 @@ import type Map from './map';
 import Popup, {Offset} from './popup';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
+import type {PointLike} from './camera';
 
 type MarkerOptions = {
   element?: HTMLElement;
@@ -231,7 +232,7 @@ export default class Marker extends Evented {
 
     /**
      * Attaches the `Marker` to a `Map` object.
-     * @param {Map} map The Mapbox GL JS map to add the marker to.
+     * @param {Map} map The MapLibre GL JS map to add the marker to.
      * @returns {Marker} `this`
      * @example
      * var marker = new maplibregl.Marker()
