@@ -134,12 +134,8 @@ describe('Map', () => {
     test('emits load event after a style is set', done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
 
-        const fail = function fail() {
-            done('test failed');
-        };
-        const pass = function pass() {
-            done();
-        };
+        const fail = () => done('test failed');
+        const pass = () => done();
 
         map.on('load', fail);
 
