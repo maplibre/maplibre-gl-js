@@ -34,6 +34,7 @@ function createSource(options, logoRequired) {
             _skuToken: '1234567890123',
             canonicalizeTileset: tileJSON => tileJSON.tiles
         },
+        style: {sourceCaches: {id: {clearTiles() {}}}},
         transform: {angle: 0, pitch: 0, showCollisionBoxes: false},
         _getMapId: () => 1
     }as any as Map);
