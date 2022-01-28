@@ -50,6 +50,7 @@ jobs:
         run: |
           npm run build-prod-min
           npm run build-css
+          npm run build-benchmarks
 
       - name: Create Archive
         run: |
@@ -109,6 +110,19 @@ jobs:
           asset_path: ./dist.zip
           asset_name: dist.zip
           asset_content_type: application/zip
+
+      - name: Copy benchmarks_generated.js
+        run: |
+          mkdir tmp
+          cp bench/versions/benchmarks_generated.js tmp
+          cp bench/versions/benchmarks_generated.js.map tmp
+
+      - name: Upload Benchmarks to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: tmp
+          destination_dir: benchmarks/${{ steps.prepare_release.outputs.version_tag }}
 
       - name: Clean up
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
