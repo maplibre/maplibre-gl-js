@@ -756,9 +756,9 @@ describe('#easeTo', () => {
         const camera = createCamera();
 
         camera
-            .on('zoomstart', () => { fail(); })
-            .on('zoom', () => { fail(); })
-            .on('zoomend', () => { fail(); })
+            .on('zoomstart', () => { done('zoomstart failed'); })
+            .on('zoom', () => { done('zoom failed'); })
+            .on('zoomend', () => { done('zoomend failed'); })
             .on('moveend', () => { done(); });
 
         camera.easeTo({center: [100, 0], duration: 0});
