@@ -97,10 +97,10 @@ class VectorTileSource extends Evented implements Source {
         this._tileJSONRequest = loadTileJSON(this._options, this.map._requestManager, (err, tileJSON) => {
             this._tileJSONRequest = null;
             this._loaded = true;
+            this.map.style.sourceCaches[this.id].clearTiles();
             if (err) {
                 this.fire(new ErrorEvent(err));
             } else if (tileJSON) {
-                this.map.style.sourceCaches[this.id].clearTiles();
                 extend(this, tileJSON);
                 if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
 
