@@ -9,13 +9,13 @@ import fixturesSource from '../../test/fixtures/source.json';
 import {getMockDispatcher, getWrapDispatcher} from '../util/test/util';
 import Map from '../ui/map';
 
-function createSource(options, transformCallback?) {
+function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
     source.onAdd({
         transform: {showCollisionBoxes: false},
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
-        style: {sourceCaches: {id: {clearTiles: () => {}}}},
+        style: {sourceCaches: {id: {clearTiles}}},
         getPixelRatio() { return 1; }
     } as any as Map);
 
@@ -341,6 +341,17 @@ describe('VectorTileSource', () => {
             maxzoom: 10,
             attribution: 'Maplibre',
             tiles: ['http://example2.com/{z}/{x}/{y}.png']
+        });
+    });
+
+    test('setTiles only clears the cache once the TileJSON has reloaded', done => {
+        const clearTiles = jest.fn();
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']}, undefined, clearTiles);
+        source.setTiles(['http://example2.com/{z}/{x}/{y}.pbf']);
+        expect(clearTiles.mock.calls).toHaveLength(0);
+        source.once('data', () => {
+            expect(clearTiles.mock.calls).toHaveLength(1);
+            done();
         });
     });
 });
