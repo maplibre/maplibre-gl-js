@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 
+- Fix stale tiles being shown when calling VectorTileSource#setTiles while the map is moving.
 - *...Add new stuff here...*
 
 ## 2.1.0
