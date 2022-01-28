@@ -43,7 +43,6 @@ export const RegressionPlot = (props: RegressionPlotProps) => {
             width="100%"
             height={height + margin.top + margin.bottom}
             style={{overflow: 'visible'}}
-            // Old API that is not advised anymore
             ref={svgElement}>
             <g transform={`translate(${margin.left},${margin.top})`}>
                 <Axis orientation="bottom" scale={x} transform={`translate(0,${height})`}>
