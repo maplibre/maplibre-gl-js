@@ -142,7 +142,7 @@ describe('GlyphManager', () => {
     test('GlyphManager caches locally generated glyphs', done => {
 
         const manager = createGlyphManager('sans-serif');
-        let drawSpy = GlyphManager.TinySDF.prototype.draw = jest.fn().mockImplementation(() => {
+        const drawSpy = GlyphManager.TinySDF.prototype.draw = jest.fn().mockImplementation(() => {
             return {data: new Uint8ClampedArray(900)} as any;
         });
 
