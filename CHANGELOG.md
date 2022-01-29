@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 
+- Throw error mismatched image size, when text-field is chinese (#718)
 - *...Add new stuff here...*
 
 ## 2.1.1
