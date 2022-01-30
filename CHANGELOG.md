@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 
+- Fix error mismatched image size for CJK characters (#718)
 - *...Add new stuff here...*
 
 ## 2.1.1

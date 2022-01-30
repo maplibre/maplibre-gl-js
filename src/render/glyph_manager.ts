@@ -195,15 +195,16 @@ export default class GlyphManager {
             });
         }
 
+        const char = tinySDF.draw(String.fromCharCode(id));
         return {
             id,
-            bitmap: new AlphaImage({width: 30, height: 30}, tinySDF.draw(String.fromCharCode(id)).data),
+            bitmap: new AlphaImage({width: char.width || 30, height: char.height || 30}, char.data),
             metrics: {
-                width: 24,
-                height: 24,
-                left: 0,
-                top: -8,
-                advance: 24
+                width: char.glyphWidth || 24,
+                height: char.glyphHeight || 24,
+                left: char.glyphLeft || 0,
+                top: char.glyphTop || -8,
+                advance: char.glyphAdvance || 24
             }
         };
     }

@@ -21,7 +21,7 @@ function createImage(image: any, {
     } else if (data instanceof Uint8ClampedArray) {
         data = new Uint8Array(data.buffer);
     } else if (data.length !== width * height * channels) {
-        throw new RangeError('mismatched image size');
+        throw new RangeError(`mismatched image size. expected: ${data.length} but got: ${width * height * channels}`);
     }
     image.width = width;
     image.height = height;
