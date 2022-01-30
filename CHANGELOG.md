@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- Throw error mismatched image size, when text-field is chinese (#718)
+- Fix error mismatched image size for CJK characters (#718)
 - *...Add new stuff here...*
 
 ## 2.1.1
