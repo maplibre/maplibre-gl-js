@@ -15,13 +15,13 @@ if (process.env.MAPLIBRE_STYLES) {
         .map(style => style.match(/\.json$/) ? require(style) : style);
 }
 
-const gitdesc = execSync('git describe --all --always --dirty').toString().trim();
-const gitref = execSync('git rev-parse --short=7 HEAD').toString().trim();
-const gitversion = gitdesc.replace(/^(heads|tags)\//, '') + (gitdesc.match(/heads\//) ? ` gitref` : '');
+const gitDesc = execSync('git describe --all --always --dirty').toString().trim();
+const gitRef = execSync('git rev-parse --short=7 HEAD').toString().trim();
+const defaultBenchmarkVersion = gitDesc.replace(/^(heads|tags)\//, '') + (gitDesc.match(/^heads\//) ? ` ${gitRef}` : '');
 
 const replaceConfig = {
     preventAssignment: true,
-    'process.env.BENCHMARK_VERSION': JSON.stringify(gitversion),
+    'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION || defaultBenchmarkVersion),
     'process.env.MAPLIBRE_STYLES': JSON.stringify(styles),
     'process.env.NODE_ENV': JSON.stringify('production')
 };
