@@ -51,6 +51,7 @@ jobs:
           npm run build-prod-min
           npm run build-css
           npm run build-benchmarks
+          npm run generate-typings
 
       - name: Create Archive
         run: |
