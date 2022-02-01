@@ -2115,6 +2115,12 @@ describe('Map', () => {
         expect(map.painter.height).toBe(1024);
     });
 
+    test('fires sourcedataabort event on dataabort event with dataType of "source"', done => {
+        const map = createMap();
+        map.once('sourcedataabort', () => done());
+        map.fire(new Event('dataabort', {dataType: 'source'}));
+    });
+
 });
 
 function createStyle() {
