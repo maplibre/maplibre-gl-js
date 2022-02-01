@@ -160,7 +160,9 @@ class SourceCache extends Evented {
 
     _abortTile(tile: Tile) {
         if (this._source.abortTile)
-            return this._source.abortTile(tile, () => {});
+            this._source.abortTile(tile, () => {});
+
+        this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
     }
 
     serialize() {
@@ -775,7 +777,6 @@ class SourceCache extends Evented {
             tile.aborted = true;
             this._abortTile(tile);
             this._unloadTile(tile);
-            this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
         }
     }
 
