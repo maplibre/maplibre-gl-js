@@ -336,6 +336,38 @@ describe('SourceCache#removeTile', () => {
         sourceCache._addTile(tileID);
     });
 
+    test('fires dataabort event', done => {
+        const sourceCache = createSourceCache({
+            loadTile() {
+                // Do not call back in order to make sure the tile is removed before it is loaded.
+            }
+        });
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const tile = sourceCache._addTile(tileID);
+        sourceCache.once('dataabort', event => {
+            expect(event.dataType).toBe('source');
+            expect(event.tile).toBe(tile);
+            expect(event.coord).toBe(tileID);
+            done();
+        });
+        sourceCache._removeTile(tileID.key);
+    });
+
+    test('does not fire dataabort event when the tile has already been loaded', () => {
+        const sourceCache = createSourceCache({
+            loadTile(tile, callback) {
+                tile.state = 'loaded';
+                callback();
+            }
+        });
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        sourceCache._addTile(tileID);
+        const onAbort = jest.fn();
+        sourceCache.once('dataabort', onAbort);
+        sourceCache._removeTile(tileID.key);
+        expect(onAbort).toHaveBeenCalledTimes(0);
+    });
+
 });
 
 describe('SourceCache / Source lifecycle', () => {

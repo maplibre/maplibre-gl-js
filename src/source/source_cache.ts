@@ -775,6 +775,7 @@ class SourceCache extends Evented {
             tile.aborted = true;
             this._abortTile(tile);
             this._unloadTile(tile);
+            this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
         }
     }
 

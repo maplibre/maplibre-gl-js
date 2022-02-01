@@ -476,6 +476,9 @@ class Map extends Camera {
         this.on('dataloading', (event: MapDataEvent) => {
             this.fire(new Event(`${event.dataType}dataloading`, event));
         });
+        this.on('dataabort', (event: MapDataEvent) => {
+            this.fire(new Event(`${event.dataType}dataabort`, event));
+        });
     }
 
     /*
@@ -1018,6 +1021,8 @@ class Map extends Camera {
      * | [`styledataloading`](#map.event:styledataloading)         |                           |
      * | [`sourcedataloading`](#map.event:sourcedataloading)       |                           |
      * | [`styleimagemissing`](#map.event:styleimagemissing)       |                           |
+     * | [`dataabort`](#map.event:dataabort)                       |                           |
+     * | [`sourcedataabort`](#map.event:sourcedataabort)           |                           |
      *
      * @param {string | Listener} layerIdOrListener The ID of a style layer or a listener if no ID is provided. Event will only be triggered if its location
      * is within a visible feature in this layer. The event will have a `features` property containing

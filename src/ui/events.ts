@@ -344,6 +344,8 @@ export type MapEventType = {
      sourcedata: MapSourceDataEvent;
      styledata: MapStyleDataEvent;
      styleimagemissing: MapStyleImageMissingEvent;
+     dataabort: MapDataEvent;
+     sourcedataabort: MapSourceDataEvent;
 
      boxzoomcancel: MapLibreZoomEvent;
      boxzoomstart: MapLibreZoomEvent;
@@ -1258,8 +1260,8 @@ export type MapEvent = /**
 
 /**
      * Fired when any map data (style, source, tile, etc) begins loading or
-     * changing asyncronously. All `dataloading` events are followed by a `data`
-     * or `error` event. See {@link MapDataEvent} for more information.
+     * changing asyncronously. All `dataloading` events are followed by a `data`,
+     * `dataabort` or `error` event. See {@link MapDataEvent} for more information.
      *
      * @event dataloading
      * @memberof Map
@@ -1298,7 +1300,7 @@ export type MapEvent = /**
 
 /**
      * Fired when one of the map's sources begins loading or changing asyncronously.
-     * All `sourcedataloading` events are followed by a `sourcedata` or `error` event.
+     * All `sourcedataloading` events are followed by a `sourcedata`, `sourcedataabort` or `error` event.
      * See {@link MapDataEvent} for more information.
      *
      * @event sourcedataloading
@@ -1341,4 +1343,40 @@ export type MapEvent = /**
      * @memberof Map
      * @instance
      * @private
-     */ | 'style.load';
+     */ | 'style.load'
+
+/**
+     * Fired when a request for one of the map's sources' tiles is aborted.
+     * See {@link MapDataEvent} for more information.
+     *
+     * @event dataabort
+     * @memberof Map
+     * @instance
+     * @property {MapDataEvent} data
+     * @example
+     * // Initialize the map
+     * var map = new maplibregl.Map({ // map options });
+     * // Set an event listener that fires
+     * // when a request for one of the map's sources' tiles is aborted.
+     * map.on('dataabort', function() {
+     *   console.log('A dataabort event occurred.');
+     * });
+     */ | 'dataabort'
+
+/**
+     * Fired when a request for one of the map's sources' tiles is aborted.
+     * See {@link MapDataEvent} for more information.
+     *
+     * @event sourcedataabort
+     * @memberof Map
+     * @instance
+     * @property {MapDataEvent} data
+     * @example
+     * // Initialize the map
+     * var map = new maplibregl.Map({ // map options });
+     * // Set an event listener that fires
+     * // when a request for one of the map's sources' tiles is aborted.
+     * map.on('sourcedataabort', function() {
+     *   console.log('A sourcedataabort event occurred.');
+     * });
+     */ | 'sourcedataabort';
