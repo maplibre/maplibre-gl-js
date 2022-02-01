@@ -7,7 +7,7 @@
 ### 🐞 Bug fixes
 
 - Fix error mismatched image size for CJK characters (#718)
-- Fire `dataabort` event when a tile request is aborted (#794)
+- Fire `dataabort` and `sourcedataabort` events when a tile request is aborted (#794)
 - *...Add new stuff here...*
 
 ## 2.1.1
