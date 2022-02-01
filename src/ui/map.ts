@@ -477,7 +477,7 @@ class Map extends Camera {
             this.fire(new Event(`${event.dataType}dataloading`, event));
         });
         this.on('dataabort', (event: MapDataEvent) => {
-            this.fire(new Event(`${event.dataType}dataabort`, event));
+            this.fire(new Event('sourcedataabort', event));
         });
     }
 
