@@ -268,20 +268,20 @@ class Tile {
     // Queries non-symbol features rendered for this tile.
     // Symbol features are queried globally
     queryRenderedFeatures(
-      layers: {[_: string]: StyleLayer},
-      serializedLayers: {[_: string]: any},
-      sourceFeatureState: SourceFeatureState,
-      queryGeometry: Array<Point>,
-      cameraQueryGeometry: Array<Point>,
-      scale: number,
-      params: {
-        filter: FilterSpecification;
-        layers: Array<string>;
-        availableImages: Array<string>;
-      },
-      transform: Transform,
-      maxPitchScaleFactor: number,
-      pixelPosMatrix: mat4
+        layers: {[_: string]: StyleLayer},
+        serializedLayers: {[_: string]: any},
+        sourceFeatureState: SourceFeatureState,
+        queryGeometry: Array<Point>,
+        cameraQueryGeometry: Array<Point>,
+        scale: number,
+        params: {
+            filter: FilterSpecification;
+            layers: Array<string>;
+            availableImages: Array<string>;
+        },
+        transform: Transform,
+        maxPitchScaleFactor: number,
+        pixelPosMatrix: mat4
     ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {
         if (!this.latestFeatureIndex || !this.latestFeatureIndex.rawTileData)
             return {};

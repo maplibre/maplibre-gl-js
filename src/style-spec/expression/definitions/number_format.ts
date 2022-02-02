@@ -6,9 +6,9 @@ import type ParsingContext from '../parsing_context';
 import type {Type} from '../types';
 
 declare let Intl: {
-  NumberFormat: {
-    new (...args: any): Intl$NumberFormat;
-  };
+    NumberFormat: {
+        new (...args: any): Intl$NumberFormat;
+    };
 };
 
 declare class Intl$NumberFormat {
@@ -18,10 +18,10 @@ declare class Intl$NumberFormat {
 }
 
 type NumberFormatOptions = {
-  style?: 'decimal' | 'currency' | 'percent';
-  currency?: null | string;
-  minimumFractionDigits?: null | string;
-  maximumFractionDigits?: null | string;
+    style?: 'decimal' | 'currency' | 'percent';
+    currency?: null | string;
+    minimumFractionDigits?: null | string;
+    maximumFractionDigits?: null | string;
 };
 
 export default class NumberFormat implements Expression {
@@ -33,10 +33,10 @@ export default class NumberFormat implements Expression {
     maxFractionDigits: Expression | null; // Default 3
 
     constructor(number: Expression,
-                locale: Expression | null,
-                currency: Expression | null,
-                minFractionDigits: Expression | null,
-                maxFractionDigits: Expression | null) {
+        locale: Expression | null,
+        currency: Expression | null,
+        minFractionDigits: Expression | null,
+        maxFractionDigits: Expression | null) {
         this.type = StringType;
         this.number = number;
         this.locale = locale;

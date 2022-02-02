@@ -59,49 +59,49 @@ import type {ControlPosition, IControl} from './control/control';
 /* eslint-enable no-use-before-define */
 
 export type MapOptions = {
-  hash?: boolean | string;
-  interactive?: boolean;
-  container: HTMLElement | string;
-  bearingSnap?: number;
-  attributionControl?: boolean;
-  customAttribution?: string | Array<string>;
-  logoPosition?: ControlPosition;
-  failIfMajorPerformanceCaveat?: boolean;
-  preserveDrawingBuffer?: boolean;
-  antialias?: boolean;
-  refreshExpiredTiles?: boolean;
-  maxBounds?: LngLatBoundsLike;
-  scrollZoom?: boolean;
-  minZoom?: number | null;
-  maxZoom?: number | null;
-  minPitch?: number | null;
-  maxPitch?: number | null;
-  boxZoom?: boolean;
-  dragRotate?: boolean;
-  dragPan?: DragPanOptions | boolean;
-  keyboard?: boolean;
-  doubleClickZoom?: boolean;
-  touchZoomRotate?: boolean;
-  touchPitch?: boolean;
-  trackResize?: boolean;
-  center?: LngLatLike;
-  zoom?: number;
-  bearing?: number;
-  pitch?: number;
-  renderWorldCopies?: boolean;
-  maxTileCacheSize?: number;
-  transformRequest?: RequestTransformFunction;
-  locale?: any;
-  fadeDuration?: number;
-  crossSourceCollisions?: boolean;
-  collectResourceTiming?: boolean;
-  clickTolerance?: number;
-  bounds?: LngLatBoundsLike;
-  fitBoundsOptions?: Object;
-  localIdeographFontFamily?: string;
-  style: StyleSpecification | string;
-  pitchWithRotate?: boolean;
-  pixelRatio?: number;
+    hash?: boolean | string;
+    interactive?: boolean;
+    container: HTMLElement | string;
+    bearingSnap?: number;
+    attributionControl?: boolean;
+    customAttribution?: string | Array<string>;
+    logoPosition?: ControlPosition;
+    failIfMajorPerformanceCaveat?: boolean;
+    preserveDrawingBuffer?: boolean;
+    antialias?: boolean;
+    refreshExpiredTiles?: boolean;
+    maxBounds?: LngLatBoundsLike;
+    scrollZoom?: boolean;
+    minZoom?: number | null;
+    maxZoom?: number | null;
+    minPitch?: number | null;
+    maxPitch?: number | null;
+    boxZoom?: boolean;
+    dragRotate?: boolean;
+    dragPan?: DragPanOptions | boolean;
+    keyboard?: boolean;
+    doubleClickZoom?: boolean;
+    touchZoomRotate?: boolean;
+    touchPitch?: boolean;
+    trackResize?: boolean;
+    center?: LngLatLike;
+    zoom?: number;
+    bearing?: number;
+    pitch?: number;
+    renderWorldCopies?: boolean;
+    maxTileCacheSize?: number;
+    transformRequest?: RequestTransformFunction;
+    locale?: any;
+    fadeDuration?: number;
+    crossSourceCollisions?: boolean;
+    collectResourceTiming?: boolean;
+    clickTolerance?: number;
+    bounds?: LngLatBoundsLike;
+    fitBoundsOptions?: Object;
+    localIdeographFontFamily?: string;
+    style: StyleSpecification | string;
+    pitchWithRotate?: boolean;
+    pixelRatio?: number;
 };
 
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
@@ -1343,9 +1343,9 @@ class Map extends Camera {
      *
      */
     querySourceFeatures(sourceId: string, parameters?: {
-      sourceLayer: string;
-      filter: Array<any>;
-      validate?: boolean;
+        sourceLayer: string;
+        filter: Array<any>;
+        validate?: boolean;
     } | null) {
         return this.style.querySourceFeatures(sourceId, parameters);
     }
@@ -1377,7 +1377,7 @@ class Map extends Camera {
      *
      */
     setStyle(style: StyleSpecification | string | null, options?: {
-      diff?: boolean;
+        diff?: boolean;
     } & StyleOptions) {
         options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
 
@@ -1416,7 +1416,7 @@ class Map extends Camera {
     }
 
     _updateStyle(style: StyleSpecification | string | null,  options?: {
-      diff?: boolean;
+        diff?: boolean;
     } & StyleOptions) {
         if (this.style) {
             this.style.setEventedParent(null);
@@ -1450,7 +1450,7 @@ class Map extends Camera {
     }
 
     _diffStyle(style: StyleSpecification | string,  options?: {
-      diff?: boolean;
+        diff?: boolean;
     } & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
@@ -1468,7 +1468,7 @@ class Map extends Camera {
     }
 
     _updateDiff(style: StyleSpecification,  options?: {
-      diff?: boolean;
+        diff?: boolean;
     } & StyleOptions) {
         try {
             if (this.style.setState(style)) {
@@ -1684,18 +1684,18 @@ class Map extends Camera {
      * @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-generated/)
      */
     addImage(id: string,
-             image: HTMLImageElement | ImageBitmap | ImageData | {
-               width: number;
-               height: number;
-               data: Uint8Array | Uint8ClampedArray;
-             } | StyleImageInterface,
-             {
-                 pixelRatio = 1,
-                 sdf = false,
-                 stretchX,
-                 stretchY,
-                 content
-             }: Partial<StyleImageMetadata> = {}) {
+        image: HTMLImageElement | ImageBitmap | ImageData | {
+            width: number;
+            height: number;
+            data: Uint8Array | Uint8ClampedArray;
+        } | StyleImageInterface,
+        {
+            pixelRatio = 1,
+            sdf = false,
+            stretchX,
+            stretchY,
+            content
+        }: Partial<StyleImageMetadata> = {}) {
         this._lazyInitEmptyStyle();
         const version = 0;
 
@@ -1747,9 +1747,9 @@ class Map extends Camera {
      */
     updateImage(id: string,
         image: HTMLImageElement | ImageBitmap | ImageData | {
-          width: number;
-          height: number;
-          data: Uint8Array | Uint8ClampedArray;
+            width: number;
+            height: number;
+            data: Uint8Array | Uint8ClampedArray;
         } | StyleImageInterface) {
 
         const existingImage = this.style.getImage(id);
@@ -2212,9 +2212,9 @@ class Map extends Camera {
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      */
     setFeatureState(feature: {
-      source: string;
-      sourceLayer?: string;
-      id: string | number;
+        source: string;
+        sourceLayer?: string;
+        id: string | number;
     }, state: any) {
         this.style.setFeatureState(feature, state);
         return this._update();
@@ -2268,9 +2268,9 @@ class Map extends Camera {
      *
     */
     removeFeatureState(target: {
-      source: string;
-      sourceLayer?: string;
-      id?: string | number;
+        source: string;
+        sourceLayer?: string;
+        id?: string | number;
     }, key?: string) {
         this.style.removeFeatureState(target, key);
         return this._update();
@@ -2306,11 +2306,11 @@ class Map extends Camera {
      *
      */
     getFeatureState(
-      feature: {
-        source: string;
-        sourceLayer?: string;
-        id: string | number;
-      }
+        feature: {
+            source: string;
+            sourceLayer?: string;
+            id: string | number;
+        }
     ): any {
         return this.style.getFeatureState(feature);
     }

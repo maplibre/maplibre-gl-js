@@ -65,14 +65,14 @@ import type {RGBAImage} from '../util/image';
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
 type PainterOptions = {
-  showOverdrawInspector: boolean;
-  showTileBoundaries: boolean;
-  showPadding: boolean;
-  rotating: boolean;
-  zooming: boolean;
-  moving: boolean;
-  gpuTiming: boolean;
-  fadeDuration: number;
+    showOverdrawInspector: boolean;
+    showTileBoundaries: boolean;
+    showPadding: boolean;
+    rotating: boolean;
+    zooming: boolean;
+    moving: boolean;
+    gpuTiming: boolean;
+    fadeDuration: number;
 };
 
 /**
@@ -85,7 +85,7 @@ class Painter {
     context: Context;
     transform: Transform;
     _tileTextures: {
-      [_: number]: Array<Texture>;
+        [_: number]: Array<Texture>;
     };
     numSublayers: number;
     depthEpsilon: number;
@@ -305,7 +305,7 @@ class Painter {
      * Returns [StencilMode for tile overscaleZ map, sortedCoords].
      */
     stencilConfigForOverlap(tileIDs: Array<OverscaledTileID>): [{
-      [_: number]: Readonly<StencilMode>;
+        [_: number]: Readonly<StencilMode>;
     }, Array<OverscaledTileID>] {
         const gl = this.context.gl;
         const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);

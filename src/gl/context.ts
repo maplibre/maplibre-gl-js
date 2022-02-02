@@ -17,9 +17,9 @@ import type {
 import type Color from '../style-spec/util/color';
 
 type ClearArgs = {
-  color?: Color;
-  depth?: number;
-  stencil?: number;
+    color?: Color;
+    depth?: number;
+    stencil?: number;
 };
 
 class Context {

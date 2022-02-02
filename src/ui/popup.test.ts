@@ -91,7 +91,7 @@ describe('popup', () => {
             .addTo(map);
 
         expect(
-        popup.getElement().querySelectorAll('.maplibregl-popup-close-button')
+            popup.getElement().querySelectorAll('.maplibregl-popup-close-button')
         ).toHaveLength(0);
     });
 
@@ -561,7 +561,7 @@ describe('popup', () => {
             .addTo(map);
 
         expect(
-        popup._container.classList.value
+            popup._container.classList.value
         ).toContain('maplibregl-popup-track-pointer');
     });
 
@@ -574,7 +574,7 @@ describe('popup', () => {
         popup.setText('Test');
 
         expect(
-        popup._container.classList.value
+            popup._container.classList.value
         ).toContain('maplibregl-popup-track-pointer');
     });
 
@@ -587,7 +587,7 @@ describe('popup', () => {
         popup.trackPointer();
 
         expect(
-        popup._container.classList.value
+            popup._container.classList.value
         ).toContain('maplibregl-popup-track-pointer');
     });
 
@@ -601,7 +601,7 @@ describe('popup', () => {
 
         expect(popup._pos).toEqual(map.project([0, 0]));
         expect(
-        popup._container.classList.value
+            popup._container.classList.value
         ).not.toContain('maplibregl-popup-track-pointer');
     });
 
@@ -613,7 +613,7 @@ describe('popup', () => {
             .addTo(map);
 
         expect(
-        popup._container.classList.value
+            popup._container.classList.value
         ).not.toContain('maplibregl-popup-track-pointer');
     });
 

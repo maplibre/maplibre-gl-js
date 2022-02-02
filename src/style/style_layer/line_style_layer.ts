@@ -88,13 +88,13 @@ class LineStyleLayer extends StyleLayer {
     }
 
     queryIntersectsFeature(
-      queryGeometry: Array<Point>,
-      feature: VectorTileFeature,
-      featureState: FeatureState,
-      geometry: Array<Array<Point>>,
-      zoom: number,
-      transform: Transform,
-      pixelsToTileUnits: number
+        queryGeometry: Array<Point>,
+        feature: VectorTileFeature,
+        featureState: FeatureState,
+        geometry: Array<Array<Point>>,
+        zoom: number,
+        transform: Transform,
+        pixelsToTileUnits: number
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('line-translate'),

@@ -45,7 +45,7 @@ import type Map from '../map';
  * };
  */
 export interface IControl {
-  /**
+    /**
    * Register a control on the map and give it a chance to register event listeners
    * and resources. This method is called by {@link Map#addControl}
    * internally.
@@ -61,7 +61,7 @@ export interface IControl {
    * as necessary.
    */
     onAdd(map: Map): HTMLElement;
-  /**
+    /**
    * Unregister a control on the map and give it a chance to detach event listeners
    * and resources. This method is called by {@link Map#removeControl}
    * internally.
@@ -74,7 +74,7 @@ export interface IControl {
    * @returns {undefined} there is no required return value for this method
    */
     onRemove(map: Map): void;
-  /**
+    /**
    * Optionally provide a default position for this control. If this method
    * is implemented and {@link Map#addControl} is called without the `position`
    * parameter, the value returned by getDefaultPosition will be used as the
@@ -86,5 +86,5 @@ export interface IControl {
    * @name getDefaultPosition
    * @returns {ControlPosition} a control position, one of the values valid in addControl.
    */
-  readonly getDefaultPosition?: () => ControlPosition;
+    readonly getDefaultPosition?: () => ControlPosition;
 }

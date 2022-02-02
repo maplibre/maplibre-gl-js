@@ -61,7 +61,7 @@ describe('drag and zoom', () => {
     // start server
     beforeAll((done) => {
         server = http.createServer(
-        st(process.cwd())
+            st(process.cwd())
         ).listen(port, ip, () => {
             done();
         });

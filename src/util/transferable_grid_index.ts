@@ -148,10 +148,10 @@ class TransferableGridIndex {
             for (let y = cy1; y <= cy2; y++) {
                 const cellIndex = this.d * y + x;
                 if (intersectionTest && !intersectionTest(
-                            this._convertFromCellCoord(x),
-                            this._convertFromCellCoord(y),
-                            this._convertFromCellCoord(x + 1),
-                            this._convertFromCellCoord(y + 1))) continue;
+                    this._convertFromCellCoord(x),
+                    this._convertFromCellCoord(y),
+                    this._convertFromCellCoord(x + 1),
+                    this._convertFromCellCoord(y + 1))) continue;
                 if (fn.call(this, x1, y1, x2, y2, cellIndex, arg1, arg2, intersectionTest)) return;
             }
         }

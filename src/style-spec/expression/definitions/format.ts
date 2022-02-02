@@ -16,12 +16,12 @@ import type ParsingContext from '../parsing_context';
 import type {Type} from '../types';
 
 type FormattedSectionExpression = {
-  // Content of a section may be Image expression or other
-  // type of expression that is coercable to 'string'.
-  content: Expression;
-  scale: Expression | null;
-  font: Expression | null;
-  textColor: Expression | null;
+    // Content of a section may be Image expression or other
+    // type of expression that is coercable to 'string'.
+    content: Expression;
+    scale: Expression | null;
+    font: Expression | null;
+    textColor: Expression | null;
 };
 
 export default class FormatExpression implements Expression {
@@ -97,11 +97,11 @@ export default class FormatExpression implements Expression {
             }
 
             return new FormattedSection(
-                    toString(evaluatedContent),
-                    null,
-                    section.scale ? section.scale.evaluate(ctx) : null,
-                    section.font ? section.font.evaluate(ctx).join(',') : null,
-                    section.textColor ? section.textColor.evaluate(ctx) : null
+                toString(evaluatedContent),
+                null,
+                section.scale ? section.scale.evaluate(ctx) : null,
+                section.font ? section.font.evaluate(ctx).join(',') : null,
+                section.textColor ? section.textColor.evaluate(ctx) : null
             );
         };
 

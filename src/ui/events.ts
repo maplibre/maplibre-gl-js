@@ -15,40 +15,40 @@ export type MapLayerTouchEvent = MapTouchEvent & { features?: GeoJSON.Feature[] 
 export type MapSourceDataType = 'content' | 'metadata';
 
 export type MapLayerEventType = {
-     click: MapLayerMouseEvent;
-     dblclick: MapLayerMouseEvent;
-     mousedown: MapLayerMouseEvent;
-     mouseup: MapLayerMouseEvent;
-     mousemove: MapLayerMouseEvent;
-     mouseenter: MapLayerMouseEvent;
-     mouseleave: MapLayerMouseEvent;
-     mouseover: MapLayerMouseEvent;
-     mouseout: MapLayerMouseEvent;
-     contextmenu: MapLayerMouseEvent;
+    click: MapLayerMouseEvent;
+    dblclick: MapLayerMouseEvent;
+    mousedown: MapLayerMouseEvent;
+    mouseup: MapLayerMouseEvent;
+    mousemove: MapLayerMouseEvent;
+    mouseenter: MapLayerMouseEvent;
+    mouseleave: MapLayerMouseEvent;
+    mouseover: MapLayerMouseEvent;
+    mouseout: MapLayerMouseEvent;
+    contextmenu: MapLayerMouseEvent;
 
-     touchstart: MapLayerTouchEvent;
-     touchend: MapLayerTouchEvent;
-     touchcancel: MapLayerTouchEvent;
- };
+    touchstart: MapLayerTouchEvent;
+    touchend: MapLayerTouchEvent;
+    touchcancel: MapLayerTouchEvent;
+};
 
 export interface MapLibreEvent<TOrig = undefined> {
-     type: string;
-     target: Map;
-     originalEvent: TOrig;
- }
+    type: string;
+    target: Map;
+    originalEvent: TOrig;
+}
 
 export interface MapStyleDataEvent extends MapLibreEvent {
-     dataType: 'style';
- }
+    dataType: 'style';
+}
 
 export interface MapSourceDataEvent extends MapLibreEvent {
-     dataType: 'source';
-     isSourceLoaded: boolean;
-     source: SourceSpecification;
-     sourceId: string;
-     sourceDataType: MapSourceDataType;
-     tile: any;
- }
+    dataType: 'source';
+    isSourceLoaded: boolean;
+    source: SourceSpecification;
+    sourceId: string;
+    sourceDataType: MapSourceDataType;
+    tile: any;
+}
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
  * @extends {Event}
@@ -272,9 +272,9 @@ export class MapWheelEvent extends Event {
  * @property {Map} target The `Map` instance that triggerred the event
  */
 export type MapLibreZoomEvent = {
-  type: 'boxzoomstart' | 'boxzoomend' | 'boxzoomcancel';
-  target: Map;
-  originalEvent: MouseEvent;
+    type: 'boxzoomstart' | 'boxzoomend' | 'boxzoomcancel';
+    target: Map;
+    originalEvent: MouseEvent;
 };
 
 /**
@@ -306,86 +306,86 @@ export type MapLibreZoomEvent = {
  * });
  */
 export type MapDataEvent = {
-  type: string;
-  dataType: string;
-  sourceDataType: MapSourceDataType;
+    type: string;
+    dataType: string;
+    sourceDataType: MapSourceDataType;
 };
 
 export type MapContextEvent = {
-  type: 'webglcontextlost' | 'webglcontextrestored';
-  originalEvent: WebGLContextEvent;
+    type: 'webglcontextlost' | 'webglcontextrestored';
+    originalEvent: WebGLContextEvent;
 };
 
 export interface MapStyleImageMissingEvent extends MapLibreEvent {
-     type: 'styleimagemissing';
-     id: string;
+    type: 'styleimagemissing';
+    id: string;
 }
 
 /**
 * MapEventType - a mapping between the event name and the event value
 */
 export type MapEventType = {
-     error: ErrorEvent;
+    error: ErrorEvent;
 
-     load: MapLibreEvent;
-     idle: MapLibreEvent;
-     remove: MapLibreEvent;
-     render: MapLibreEvent;
-     resize: MapLibreEvent;
+    load: MapLibreEvent;
+    idle: MapLibreEvent;
+    remove: MapLibreEvent;
+    render: MapLibreEvent;
+    resize: MapLibreEvent;
 
-     webglcontextlost: MapContextEvent;
-     webglcontextrestored: MapContextEvent;
+    webglcontextlost: MapContextEvent;
+    webglcontextrestored: MapContextEvent;
 
-     dataloading: MapDataEvent;
-     data: MapDataEvent;
-     tiledataloading: MapDataEvent;
-     sourcedataloading: MapSourceDataEvent;
-     styledataloading: MapStyleDataEvent;
-     sourcedata: MapSourceDataEvent;
-     styledata: MapStyleDataEvent;
-     styleimagemissing: MapStyleImageMissingEvent;
-     dataabort: MapDataEvent;
-     sourcedataabort: MapSourceDataEvent;
+    dataloading: MapDataEvent;
+    data: MapDataEvent;
+    tiledataloading: MapDataEvent;
+    sourcedataloading: MapSourceDataEvent;
+    styledataloading: MapStyleDataEvent;
+    sourcedata: MapSourceDataEvent;
+    styledata: MapStyleDataEvent;
+    styleimagemissing: MapStyleImageMissingEvent;
+    dataabort: MapDataEvent;
+    sourcedataabort: MapSourceDataEvent;
 
-     boxzoomcancel: MapLibreZoomEvent;
-     boxzoomstart: MapLibreZoomEvent;
-     boxzoomend: MapLibreZoomEvent;
+    boxzoomcancel: MapLibreZoomEvent;
+    boxzoomstart: MapLibreZoomEvent;
+    boxzoomend: MapLibreZoomEvent;
 
-     touchcancel: MapTouchEvent;
-     touchmove: MapTouchEvent;
-     touchend: MapTouchEvent;
-     touchstart: MapTouchEvent;
+    touchcancel: MapTouchEvent;
+    touchmove: MapTouchEvent;
+    touchend: MapTouchEvent;
+    touchstart: MapTouchEvent;
 
-     click: MapMouseEvent;
-     contextmenu: MapMouseEvent;
-     dblclick: MapMouseEvent;
-     mousemove: MapMouseEvent;
-     mouseup: MapMouseEvent;
-     mousedown: MapMouseEvent;
-     mouseout: MapMouseEvent;
-     mouseover: MapMouseEvent;
+    click: MapMouseEvent;
+    contextmenu: MapMouseEvent;
+    dblclick: MapMouseEvent;
+    mousemove: MapMouseEvent;
+    mouseup: MapMouseEvent;
+    mousedown: MapMouseEvent;
+    mouseout: MapMouseEvent;
+    mouseover: MapMouseEvent;
 
-     movestart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
-     move: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
-     moveend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    movestart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    move: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    moveend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
 
-     zoomstart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
-     zoom: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
-     zoomend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    zoomstart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    zoom: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    zoomend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
 
-     rotatestart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-     rotate: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-     rotateend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    rotatestart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    rotate: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    rotateend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
 
-     dragstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-     drag: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-     dragend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    dragstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    drag: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    dragend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
 
-     pitchstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-     pitch: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-     pitchend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    pitchstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    pitch: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    pitchend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
 
-     wheel: MapWheelEvent;
+    wheel: MapWheelEvent;
 };
 
 export type MapEvent = /**

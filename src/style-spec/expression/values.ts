@@ -28,7 +28,7 @@ export function validateRGBA(r: unknown, g: unknown, b: unknown, a?: unknown): s
 }
 
 export type Value = null | string | boolean | number | Color | Collator | Formatted | ResolvedImage | ReadonlyArray<Value> | {
-  readonly [x: string]: Value;
+    readonly [x: string]: Value;
 };
 
 export function isValue(mixed: unknown): boolean {

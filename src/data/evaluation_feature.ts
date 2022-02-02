@@ -3,17 +3,17 @@ import type Point from '@mapbox/point-geometry';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 type EvaluationFeature = {
-  readonly type: 1 | 2 | 3 | 'Unknown' | 'Point' | 'MultiPoint' | 'LineString' | 'MultiLineString' | 'Polygon' | 'MultiPolygon';
-  readonly id?: any;
-  readonly properties: {[_: string]: any};
-  readonly patterns?: {
-    [_: string]: {
-      'min': string;
-      'mid': string;
-      'max': string;
+    readonly type: 1 | 2 | 3 | 'Unknown' | 'Point' | 'MultiPoint' | 'LineString' | 'MultiLineString' | 'Polygon' | 'MultiPolygon';
+    readonly id?: any;
+    readonly properties: {[_: string]: any};
+    readonly patterns?: {
+        [_: string]: {
+            'min': string;
+            'mid': string;
+            'max': string;
+        };
     };
-  };
-  geometry: Array<Array<Point>>;
+    geometry: Array<Array<Point>>;
 };
 
 /**

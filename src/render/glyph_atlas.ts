@@ -7,21 +7,21 @@ import type {GlyphMetrics, StyleGlyph} from '../style/style_glyph';
 const padding = 1;
 
 export type Rect = {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
 };
 
 export type GlyphPosition = {
-  rect: Rect;
-  metrics: GlyphMetrics;
+    rect: Rect;
+    metrics: GlyphMetrics;
 };
 
 export type GlyphPositions = {
-  [_: string]: {
-    [_: number]: GlyphPosition;
-  };
+    [_: string]: {
+        [_: number]: GlyphPosition;
+    };
 };
 
 export default class GlyphAtlas {
@@ -29,9 +29,9 @@ export default class GlyphAtlas {
     positions: GlyphPositions;
 
     constructor(stacks: {
-      [_: string]: {
-        [_: number]: StyleGlyph;
-      };
+        [_: string]: {
+            [_: number]: StyleGlyph;
+        };
     }) {
         const positions = {};
         const bins = [];

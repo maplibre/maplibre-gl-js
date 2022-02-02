@@ -127,13 +127,13 @@ class SymbolStyleLayer extends StyleLayer {
                 expression = (new ZoomConstantExpression('source', styleExpression) as SourceExpression);
             } else {
                 expression = (new ZoomDependentExpression('composite',
-                                                          styleExpression,
-                                                          overriden.value.zoomStops,
-                                                          (overriden.value as any)._interpolationType) as CompositeExpression);
+                    styleExpression,
+                    overriden.value.zoomStops,
+                    (overriden.value as any)._interpolationType) as CompositeExpression);
             }
             this.paint._values[overridable] = new PossiblyEvaluatedPropertyValue(overriden.property,
-                                                                                 expression,
-                                                                                 overriden.parameters);
+                expression,
+                overriden.parameters);
         }
     }
 

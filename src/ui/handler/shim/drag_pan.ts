@@ -2,10 +2,10 @@ import type {MousePanHandler} from '../mouse';
 import type TouchPanHandler from './../touch_pan';
 
 export type DragPanOptions = {
-  linearity?: number;
-  easing?: (t: number) => number;
-  deceleration?: number;
-  maxSpeed?: number;
+    linearity?: number;
+    easing?: (t: number) => number;
+    deceleration?: number;
+    maxSpeed?: number;
 };
 
 /**

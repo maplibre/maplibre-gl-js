@@ -18,28 +18,28 @@ function propertyType(property) {
 
     const baseType = (() => {
         switch (property.type) {
-        case 'string':
-        case 'number':
-        case 'boolean':
-            return property.type;
-        case 'enum':
-            return unionType(property.values);
-        case 'array': {
-            const elementType = propertyType(typeof property.value === 'string' ? {type: property.value, values: property.values} : property.value);
-            if (property.length) {
-                return `[${Array(property.length).fill(elementType).join(', ')}]`;
-            } else {
-                return `Array<${elementType}>`;
+            case 'string':
+            case 'number':
+            case 'boolean':
+                return property.type;
+            case 'enum':
+                return unionType(property.values);
+            case 'array': {
+                const elementType = propertyType(typeof property.value === 'string' ? {type: property.value, values: property.values} : property.value);
+                if (property.length) {
+                    return `[${Array(property.length).fill(elementType).join(', ')}]`;
+                } else {
+                    return `Array<${elementType}>`;
+                }
             }
-        }
-        case 'light':
-            return 'LightSpecification';
-        case 'sources':
-            return '{[_: string]: SourceSpecification}';
-        case '*':
-            return 'unknown';
-        default:
-            return `${property.type.slice(0, 1).toUpperCase()}${property.type.slice(1)}Specification`;
+            case 'light':
+                return 'LightSpecification';
+            case 'sources':
+                return '{[_: string]: SourceSpecification}';
+            case '*':
+                return 'unknown';
+            default:
+                return `${property.type.slice(0, 1).toUpperCase()}${property.type.slice(1)}Specification`;
         }
     })();
 
@@ -115,7 +115,7 @@ function layerType(key) {
 const layerTypes = Object.keys(spec.layer.type.values);
 
 fs.writeFileSync('src/style-spec/types.ts',
-`// Generated code; do not edit. Edit build/generate-style-spec.ts instead.
+    `// Generated code; do not edit. Edit build/generate-style-spec.ts instead.
 /* eslint-disable */
 
 export type ColorSpecification = string;

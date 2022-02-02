@@ -6,12 +6,12 @@ import type VertexArrayObject from '../render/vertex_array_object';
 import type {StructArray} from '../util/struct_array';
 
 export type Segment = {
-  sortKey?: number;
-  vertexOffset: number;
-  primitiveOffset: number;
-  vertexLength: number;
-  primitiveLength: number;
-  vaos: {[_: string]: VertexArrayObject};
+    sortKey?: number;
+    vertexOffset: number;
+    primitiveOffset: number;
+    vertexLength: number;
+    primitiveLength: number;
+    vaos: {[_: string]: VertexArrayObject};
 };
 
 class SegmentVector {
@@ -23,10 +23,10 @@ class SegmentVector {
     }
 
     prepareSegment(
-      numVertices: number,
-      layoutVertexArray: StructArray,
-      indexArray: StructArray,
-      sortKey?: number
+        numVertices: number,
+        layoutVertexArray: StructArray,
+        indexArray: StructArray,
+        sortKey?: number
     ): Segment {
         let segment: Segment = this.segments[this.segments.length - 1];
         if (numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) warnOnce(`Max vertices per segment is ${SegmentVector.MAX_VERTEX_ARRAY_LENGTH}: bucket requested ${numVertices}`);
@@ -56,10 +56,10 @@ class SegmentVector {
     }
 
     static simpleSegment(
-      vertexOffset: number,
-      primitiveOffset: number,
-      vertexLength: number,
-      primitiveLength: number
+        vertexOffset: number,
+        primitiveOffset: number,
+        vertexLength: number,
+        primitiveLength: number
     ): SegmentVector {
         return new SegmentVector([{
             vertexOffset,

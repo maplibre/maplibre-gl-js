@@ -1,10 +1,10 @@
 import type {RequestParameters} from '../util/ajax';
 
 export type PerformanceMetrics = {
-  loadTime: number;
-  fullLoadTime: number;
-  fps: number;
-  percentDroppedFrames: number;
+    loadTime: number;
+    fullLoadTime: number;
+    fps: number;
+    percentDroppedFrames: number;
 };
 
 export enum PerformanceMarkers {
@@ -76,9 +76,9 @@ export const PerformanceUtils = {
  */
 export class RequestPerformance {
     _marks: {
-      start: string;
-      end: string;
-      measure: string;
+        start: string;
+        end: string;
+        measure: string;
     };
 
     constructor (request: RequestParameters) {

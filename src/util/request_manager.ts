@@ -6,10 +6,10 @@ type ResourceTypeEnum = keyof IResourceType;
 export type RequestTransformFunction = (url: string, resourceType?: ResourceTypeEnum) => RequestParameters;
 
 type UrlObject = {
-  protocol: string;
-  authority: string;
-  path: string;
-  params: Array<string>;
+    protocol: string;
+    authority: string;
+    path: string;
+    params: Array<string>;
 };
 
 export class RequestManager {

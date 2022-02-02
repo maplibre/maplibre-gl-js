@@ -58,19 +58,19 @@ abstract class StyleLayer extends Evented {
 
     queryRadius?(bucket: Bucket): number;
     queryIntersectsFeature?(
-      queryGeometry: Array<Point>,
-      feature: VectorTileFeature,
-      featureState: FeatureState,
-      geometry: Array<Array<Point>>,
-      zoom: number,
-      transform: Transform,
-      pixelsToTileUnits: number,
-      pixelPosMatrix: mat4
+        queryGeometry: Array<Point>,
+        feature: VectorTileFeature,
+        featureState: FeatureState,
+        geometry: Array<Array<Point>>,
+        zoom: number,
+        transform: Transform,
+        pixelsToTileUnits: number,
+        pixelPosMatrix: mat4
     ): boolean | number;
 
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
-      layout?: Properties<any>;
-      paint?: Properties<any>;
+        layout?: Properties<any>;
+        paint?: Properties<any>;
     }>) {
         super();
 

@@ -2,9 +2,9 @@
 // https://github.com/facebook/flow/issues/1270
 
 declare let Intl: {
-  Collator: {
-    new (...args: any): Intl$Collator;
-  };
+    Collator: {
+        new (...args: any): Intl$Collator;
+    };
 };
 
 declare class Intl$Collator {
@@ -14,12 +14,12 @@ declare class Intl$Collator {
 }
 
 type CollatorOptions = {
-  localeMatcher?: 'lookup' | 'best fit';
-  usage?: 'sort' | 'search';
-  sensitivity?: 'base' | 'accent' | 'case' | 'variant';
-  ignorePunctuation?: boolean;
-  numeric?: boolean;
-  caseFirst?: 'upper' | 'lower' | 'false';
+    localeMatcher?: 'lookup' | 'best fit';
+    usage?: 'sort' | 'search';
+    sensitivity?: 'base' | 'accent' | 'case' | 'variant';
+    ignorePunctuation?: boolean;
+    numeric?: boolean;
+    caseFirst?: 'upper' | 'lower' | 'false';
 };
 
 export default class Collator {

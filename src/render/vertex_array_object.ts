@@ -27,13 +27,13 @@ class VertexArrayObject {
     }
 
     bind(context: Context,
-         program: Program<any>,
-         layoutVertexBuffer: VertexBuffer,
-         paintVertexBuffers: Array<VertexBuffer>,
-         indexBuffer?: IndexBuffer | null,
-         vertexOffset?: number | null,
-         dynamicVertexBuffer?: VertexBuffer | null,
-         dynamicVertexBuffer2?: VertexBuffer | null) {
+        program: Program<any>,
+        layoutVertexBuffer: VertexBuffer,
+        paintVertexBuffers: Array<VertexBuffer>,
+        indexBuffer?: IndexBuffer | null,
+        vertexOffset?: number | null,
+        dynamicVertexBuffer?: VertexBuffer | null,
+        dynamicVertexBuffer2?: VertexBuffer | null) {
 
         this.context = context;
 
@@ -76,12 +76,12 @@ class VertexArrayObject {
     }
 
     freshBind(program: Program<any>,
-              layoutVertexBuffer: VertexBuffer,
-              paintVertexBuffers: Array<VertexBuffer>,
-              indexBuffer?: IndexBuffer | null,
-              vertexOffset?: number | null,
-              dynamicVertexBuffer?: VertexBuffer | null,
-              dynamicVertexBuffer2?: VertexBuffer | null) {
+        layoutVertexBuffer: VertexBuffer,
+        paintVertexBuffers: Array<VertexBuffer>,
+        indexBuffer?: IndexBuffer | null,
+        vertexOffset?: number | null,
+        dynamicVertexBuffer?: VertexBuffer | null,
+        dynamicVertexBuffer2?: VertexBuffer | null) {
         let numPrevAttributes;
         const numNextAttributes = program.numAttributes;
 

@@ -95,21 +95,21 @@ export default class DEMData {
             yMax = dy * this.dim + this.dim;
 
         switch (dx) {
-        case -1:
-            xMin = xMax - 1;
-            break;
-        case 1:
-            xMax = xMin + 1;
-            break;
+            case -1:
+                xMin = xMax - 1;
+                break;
+            case 1:
+                xMax = xMin + 1;
+                break;
         }
 
         switch (dy) {
-        case -1:
-            yMin = yMax - 1;
-            break;
-        case 1:
-            yMax = yMin + 1;
-            break;
+            case -1:
+                yMin = yMax - 1;
+                break;
+            case 1:
+                yMax = yMin + 1;
+                break;
         }
 
         const ox = -dx * this.dim;
