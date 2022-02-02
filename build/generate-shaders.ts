@@ -1,7 +1,7 @@
-import fs from 'fs'
-import glob from 'glob'
+import fs from 'fs';
+import glob from 'glob';
 
-console.log('Generating shaders')
+console.log('Generating shaders');
 
 /**
  * This script is intended to copy the glsl file to the compilation output folder,
@@ -12,24 +12,24 @@ console.log('Generating shaders')
  */
 
 glob('./src/shaders/*.glsl', null, (_err, files) => {
-  for (let file of files) {
-    let code = fs.readFileSync(file, 'utf8')
-    let content = glsl_to_ts(code)
-    let fileName = './src/shaders/' + file.split('/').splice(-1) + '.g.ts'
-    fs.writeFileSync(fileName, content)
-  }
-  console.log(`Finished converting ${files.length} glsl files`)
-})
+    for (const file of files) {
+        const code = fs.readFileSync(file, 'utf8');
+        const content = glslToTs(code);
+        const fileName = `./src/shaders/${file.split('/').splice(-1)}.g.ts`;
+        fs.writeFileSync(fileName, content);
+    }
+    console.log(`Finished converting ${files.length} glsl files`);
+});
 
-function glsl_to_ts(code: string): string {
-  code = code
-    .trim() // strip whitespace at the start/end
-    .replace(/\s*\/\/[^\n]*\n/g, '\n') // strip double-slash comments
-    .replace(/\n+/g, '\n') // collapse multi line breaks
-    .replace(/\n\s+/g, '\n') // strip identation
-    .replace(/\s?([+-\/*=,])\s?/g, '$1') // strip whitespace around operators
-    .replace(/([;\(\),\{\}])\n(?=[^#])/g, '$1') // strip more line breaks
+function glslToTs(code: string): string {
+    code = code
+        .trim() // strip whitespace at the start/end
+        .replace(/\s*\/\/[^\n]*\n/g, '\n') // strip double-slash comments
+        .replace(/\n+/g, '\n') // collapse multi line breaks
+        .replace(/\n\s+/g, '\n') // strip identation
+        .replace(/\s?([+-\/*=,])\s?/g, '$1') // strip whitespace around operators
+        .replace(/([;\(\),\{\}])\n(?=[^#])/g, '$1'); // strip more line breaks
 
-  return `// This file is generated. Edit build/generate-shaders.ts, then run \`npm run codegen\`.
-export default ${JSON.stringify(code).replaceAll('"', '\'')};\n`
+    return `// This file is generated. Edit build/generate-shaders.ts, then run \`npm run codegen\`.
+export default ${JSON.stringify(code).replaceAll('"', '\'')};\n`;
 }

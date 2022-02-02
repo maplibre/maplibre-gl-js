@@ -13,8 +13,8 @@ module.exports = function(filepath, data, callback) {
             callback();
         }
     };
-    xhttp.open("POST", "/write-file", true);
-    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.open('POST', '/write-file', true);
+    xhttp.setRequestHeader('Content-type', 'application/json');
 
     const postData = {
         filePath: filepath,

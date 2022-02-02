@@ -26,10 +26,10 @@ export function createSymbolIconBucket(layerId, iconProperty, collisionBoxArray)
     const layer = new SymbolStyleLayer({
         id: layerId,
         type: 'symbol',
-        layout: { 'icon-image': ['get', iconProperty] },
+        layout: {'icon-image': ['get', iconProperty]},
         filter: featureFilter(undefined)
     } as any as LayerSpecification);
-    layer.recalculate({ zoom: 0, zoomHistory: {} } as EvaluationParameters, undefined);
+    layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
     return new SymbolBucket({
         overscaling: 1,

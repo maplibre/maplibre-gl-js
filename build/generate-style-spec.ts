@@ -18,27 +18,28 @@ function propertyType(property) {
 
     const baseType = (() => {
         switch (property.type) {
-            case 'string':
-            case 'number':
-            case 'boolean':
-                return property.type;
-            case 'enum':
-                return unionType(property.values);
-            case 'array':
-                const elementType = propertyType(typeof property.value === 'string' ? {type: property.value, values: property.values} : property.value)
-                if (property.length) {
-                    return `[${Array(property.length).fill(elementType).join(', ')}]`;
-                } else {
-                    return `Array<${elementType}>`;
-                }
-            case 'light':
-                return 'LightSpecification';
-            case 'sources':
-                return '{[_: string]: SourceSpecification}';
-            case '*':
-                return 'unknown';
-            default:
-                return `${property.type.slice(0, 1).toUpperCase()}${property.type.slice(1)}Specification`;
+        case 'string':
+        case 'number':
+        case 'boolean':
+            return property.type;
+        case 'enum':
+            return unionType(property.values);
+        case 'array': {
+            const elementType = propertyType(typeof property.value === 'string' ? {type: property.value, values: property.values} : property.value);
+            if (property.length) {
+                return `[${Array(property.length).fill(elementType).join(', ')}]`;
+            } else {
+                return `Array<${elementType}>`;
+            }
+        }
+        case 'light':
+            return 'LightSpecification';
+        case 'sources':
+            return '{[_: string]: SourceSpecification}';
+        case '*':
+            return 'unknown';
+        default:
+            return `${property.type.slice(0, 1).toUpperCase()}${property.type.slice(1)}Specification`;
         }
     })();
 
@@ -67,7 +68,7 @@ ${Object.keys(properties)
         .filter(k => k !== '*')
         .map(k => `    ${indent}${propertyDeclaration(k, properties[k])}`)
         .join(',\n')}
-${indent}}`
+${indent}}`;
 }
 
 function sourceTypeName(key) {

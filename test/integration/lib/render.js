@@ -45,7 +45,7 @@ export default function run(implementation, ignores, render) {
     // https://stackoverflow.com/a/1349426/229714
     function makeHash() {
         const array = [];
-        const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
         for (let i = 0; i < 10; ++i)
             array.push(possible.charAt(Math.floor(Math.random() * possible.length)));
