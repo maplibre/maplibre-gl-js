@@ -5,6 +5,7 @@ import {plugins} from '../build/rollup_plugins';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
+import {execSync} from 'child_process';
 
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
@@ -14,9 +15,13 @@ if (process.env.MAPLIBRE_STYLES) {
         .map(style => style.match(/\.json$/) ? require(style) : style);
 }
 
+const gitDesc = execSync('git describe --all --always --dirty').toString().trim();
+const gitRef = execSync('git rev-parse --short=7 HEAD').toString().trim();
+const defaultBenchmarkVersion = gitDesc.replace(/^(heads|tags)\//, '') + (gitDesc.match(/^heads\//) ? ` ${gitRef}` : '');
+
 const replaceConfig = {
     preventAssignment: true,
-    'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION),
+    'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION || defaultBenchmarkVersion),
     'process.env.MAPLIBRE_STYLES': JSON.stringify(styles),
     'process.env.NODE_ENV': JSON.stringify('production')
 };

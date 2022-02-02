@@ -123,6 +123,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: tmp
           destination_dir: benchmarks/${{ steps.prepare_release.outputs.version_tag }}
+          commit_message: 'deploy: ${{ steps.prepare_release.outputs.version_tag }}'
 
       - name: Clean up
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
