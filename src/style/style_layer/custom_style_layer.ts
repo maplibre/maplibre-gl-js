@@ -144,16 +144,16 @@ export interface CustomLayerInterface {
      */
     onAdd(map: Map, gl: WebGLRenderingContext): void;
     /**
-    * Optional method called when the layer has been removed from the Map with {@link Map#removeLayer}. This
-    * gives the layer a chance to clean up gl resources and event listeners.
-    *
-    * @function
-    * @memberof CustomLayerInterface
-    * @instance
-    * @name onRemove
-    * @param {Map} map The Map this custom layer was just added to.
-    * @param {WebGLRenderingContext} gl The gl context for the map.
-    */
+     * Optional method called when the layer has been removed from the Map with {@link Map#removeLayer}. This
+     * gives the layer a chance to clean up gl resources and event listeners.
+     *
+     * @function
+     * @memberof CustomLayerInterface
+     * @instance
+     * @name onRemove
+     * @param {Map} map The Map this custom layer was just added to.
+     * @param {WebGLRenderingContext} gl The gl context for the map.
+     */
     onRemove(map: Map, gl: WebGLRenderingContext): void;
 }
 
