@@ -322,8 +322,8 @@ export interface MapStyleImageMissingEvent extends MapLibreEvent {
 }
 
 /**
-* MapEventType - a mapping between the event name and the event value
-*/
+ * MapEventType - a mapping between the event name and the event value
+ */
 export type MapEventType = {
     error: ErrorEvent;
 

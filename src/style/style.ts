@@ -611,10 +611,10 @@ class Style extends Evented {
     }
 
     /**
-    * Set the data of a GeoJSON source, given its id.
-    * @param {string} id id of the source
-    * @param {GeoJSON|string} data GeoJSON source
-    */
+     * Set the data of a GeoJSON source, given its id.
+     * @param {string} id id of the source
+     * @param {GeoJSON|string} data GeoJSON source
+     */
     setGeoJSONSourceData(id: string, data: GeoJSON.GeoJSON | string) {
         this._checkLoaded();
 
@@ -716,7 +716,7 @@ class Style extends Evented {
     /**
      * Moves a layer to a different z-position. The layer will be inserted before the layer with
      * ID `before`, or appended if `before` is omitted.
-     * @param {string} id  ID of the layer to move
+     * @param {string} id ID of the layer to move
      * @param {string} [before] ID of an existing layer to insert before
      */
     moveLayer(id: string, before?: string) {
