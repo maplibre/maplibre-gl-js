@@ -10,9 +10,9 @@ export function createMap(t, options, callback) {
         attributionControl: false,
         trackResize: true,
         style: {
-            "version": 8,
-            "sources": {},
-            "layers": []
+            'version': 8,
+            'sources': {},
+            'layers': []
         }
     };
 

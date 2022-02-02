@@ -3,7 +3,7 @@ export function fixedNum(n, precision) {
     const fixedNum = parseFloat(n.toFixed(precision), 10);
 
     // Support signed zero
-    if (fixedNum === 0) { 
+    if (fixedNum === 0) {
         return 0;
     } else {
         return fixedNum;

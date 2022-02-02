@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-expressions
 (meta) => `<style>
 body { font: 18px/1.2 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 10px; }
 h1 { font-size: 32px; margin-bottom: 0; }
