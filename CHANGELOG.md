@@ -2,6 +2,7 @@
 
 ### Features and improvements
 
+- Make `AJAXError` public so network errors can be handled differently from other errors.
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes

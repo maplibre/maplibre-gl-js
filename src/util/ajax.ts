@@ -80,17 +80,38 @@ export type ResponseCallback<T> = (
   expires?: string | null
 ) => void;
 
-class AJAXError extends Error {
+/**
+ * An error thrown when a HTTP request results in an error response.
+ * @extends Error
+ * @param {number} status The response's HTTP status code.
+ * @param {string} statusText The response's HTTP status text.
+ * @param {string} url The request's URL.
+ */
+export class AJAXError extends Error {
+    /**
+     * The response's HTTP status code.
+     */
     status: number;
+
+    /**
+     * The response's HTTP status text.
+     */
+    statusText: string;
+
+    /**
+     * The request's URL.
+     */
     url: string;
-    constructor(message: string, status: number, url: string) {
-        super(message);
+
+    constructor(status: number, statusText: string, url: string) {
+        super(statusText);
         this.status = status;
+        this.statusText = statusText;
         this.url = url;
 
         // work around for https://github.com/Rich-Harris/buble/issues/40
         this.name = this.constructor.name;
-        this.message = message;
+        this.message = statusText;
     }
 
     toString() {
@@ -159,7 +180,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
                 return finishRequest(response, cacheableResponse, requestTime);
 
             } else {
-                return callback(new AJAXError(response.statusText, response.status, requestParameters.url));
+                return callback(new AJAXError(response.status, response.statusText, requestParameters.url));
             }
         }).catch(error => {
             if (error.code === 20) {
@@ -235,7 +256,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
             }
             callback(null, data, xhr.getResponseHeader('Cache-Control'), xhr.getResponseHeader('Expires'));
         } else {
-            callback(new AJAXError(xhr.statusText, xhr.status, requestParameters.url));
+            callback(new AJAXError(xhr.status, xhr.statusText, requestParameters.url));
         }
     };
     xhr.send(requestParameters.body);
