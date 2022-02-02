@@ -114,6 +114,7 @@
     "mapbox-gl-styles": "^2.0.2",
     "minimist": "^1.2.5",
     "mock-geolocation": "^1.0.11",
+    "nise": "^5.1.1",
     "node-notifier": "^10.0.0",
     "node-plantuml": "^0.9.0",
     "npm-font-open-sans": "^1.1.0",
