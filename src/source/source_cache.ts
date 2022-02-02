@@ -46,10 +46,10 @@ class SourceCache extends Evented {
     _prevLng: number;
     _cache: TileCache;
     _timers: {
-      [_ in any]: ReturnType<typeof setTimeout>;
+        [_ in any]: ReturnType<typeof setTimeout>;
     };
     _cacheTimers: {
-      [_ in any]: ReturnType<typeof setTimeout>;
+        [_ in any]: ReturnType<typeof setTimeout>;
     };
     _maxTileCacheSize: number;
     _paused: boolean;
@@ -333,12 +333,12 @@ class SourceCache extends Evented {
      */
     _retainLoadedChildren(
         idealTiles: {
-          [_ in any]: OverscaledTileID;
+            [_ in any]: OverscaledTileID;
         },
         zoom: number,
         maxCoveringZoom: number,
         retain: {
-          [_ in any]: OverscaledTileID;
+            [_ in any]: OverscaledTileID;
         }
     ) {
         for (const id in this._tiles) {

@@ -6,19 +6,19 @@ import type RasterStyleLayer from '../../style/style_layer/raster_style_layer';
 import {mat4} from 'gl-matrix';
 
 export type RasterUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_tl_parent': Uniform2f;
-  'u_scale_parent': Uniform1f;
-  'u_buffer_scale': Uniform1f;
-  'u_fade_t': Uniform1f;
-  'u_opacity': Uniform1f;
-  'u_image0': Uniform1i;
-  'u_image1': Uniform1i;
-  'u_brightness_low': Uniform1f;
-  'u_brightness_high': Uniform1f;
-  'u_saturation_factor': Uniform1f;
-  'u_contrast_factor': Uniform1f;
-  'u_spin_weights': Uniform3f;
+    'u_matrix': UniformMatrix4f;
+    'u_tl_parent': Uniform2f;
+    'u_scale_parent': Uniform1f;
+    'u_buffer_scale': Uniform1f;
+    'u_fade_t': Uniform1f;
+    'u_opacity': Uniform1f;
+    'u_image0': Uniform1i;
+    'u_image1': Uniform1i;
+    'u_brightness_low': Uniform1f;
+    'u_brightness_high': Uniform1f;
+    'u_saturation_factor': Uniform1f;
+    'u_contrast_factor': Uniform1f;
+    'u_spin_weights': Uniform3f;
 };
 
 const rasterUniforms = (context: Context, locations: UniformLocations): RasterUniformsType => ({
@@ -38,14 +38,14 @@ const rasterUniforms = (context: Context, locations: UniformLocations): RasterUn
 });
 
 const rasterUniformValues = (
-  matrix: mat4,
-  parentTL: [number, number],
-  parentScaleBy: number,
-  fade: {
-    mix: number;
-    opacity: number;
-  },
-  layer: RasterStyleLayer
+    matrix: mat4,
+    parentTL: [number, number],
+    parentScaleBy: number,
+    fade: {
+        mix: number;
+        opacity: number;
+    },
+    layer: RasterStyleLayer
 ): UniformValues<RasterUniformsType> => ({
     'u_matrix': matrix,
     'u_tl_parent': parentTL,

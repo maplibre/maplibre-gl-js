@@ -12,7 +12,7 @@ describe('ScaleControl', () => {
         map.addControl(new ScaleControl(undefined));
 
         expect(
-        map.getContainer().querySelectorAll('.maplibregl-ctrl-bottom-left .maplibregl-ctrl-scale')
+            map.getContainer().querySelectorAll('.maplibregl-ctrl-bottom-left .maplibregl-ctrl-scale')
         ).toHaveLength(1);
     });
 
@@ -21,7 +21,7 @@ describe('ScaleControl', () => {
         map.addControl(new ScaleControl(undefined), 'top-left');
 
         expect(
-        map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left .maplibregl-ctrl-scale')
+            map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left .maplibregl-ctrl-scale')
         ).toHaveLength(1);
     });
 

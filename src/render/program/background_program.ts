@@ -19,29 +19,29 @@ import type ResolvedImage from '../../style-spec/expression/types/resolved_image
 import {mat4} from 'gl-matrix';
 
 export type BackgroundUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_opacity': Uniform1f;
-  'u_color': UniformColor;
+    'u_matrix': UniformMatrix4f;
+    'u_opacity': Uniform1f;
+    'u_color': UniformColor;
 };
 
 export type BackgroundPatternUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_opacity': Uniform1f;
-  // pattern uniforms:
-  'u_image': Uniform1i;
-  'u_pattern_tl_a': Uniform2f;
-  'u_pattern_br_a': Uniform2f;
-  'u_pattern_tl_b': Uniform2f;
-  'u_pattern_br_b': Uniform2f;
-  'u_texsize': Uniform2f;
-  'u_mix': Uniform1f;
-  'u_pattern_size_a': Uniform2f;
-  'u_pattern_size_b': Uniform2f;
-  'u_scale_a': Uniform1f;
-  'u_scale_b': Uniform1f;
-  'u_pixel_coord_upper': Uniform2f;
-  'u_pixel_coord_lower': Uniform2f;
-  'u_tile_units_to_pixels': Uniform1f;
+    'u_matrix': UniformMatrix4f;
+    'u_opacity': Uniform1f;
+    // pattern uniforms:
+    'u_image': Uniform1i;
+    'u_pattern_tl_a': Uniform2f;
+    'u_pattern_br_a': Uniform2f;
+    'u_pattern_tl_b': Uniform2f;
+    'u_pattern_br_b': Uniform2f;
+    'u_texsize': Uniform2f;
+    'u_mix': Uniform1f;
+    'u_pattern_size_a': Uniform2f;
+    'u_pattern_size_b': Uniform2f;
+    'u_scale_a': Uniform1f;
+    'u_scale_b': Uniform1f;
+    'u_pixel_coord_upper': Uniform2f;
+    'u_pixel_coord_lower': Uniform2f;
+    'u_tile_units_to_pixels': Uniform1f;
 };
 
 const backgroundUniforms = (context: Context, locations: UniformLocations): BackgroundUniformsType => ({
@@ -76,15 +76,15 @@ const backgroundUniformValues = (matrix: mat4, opacity: number, color: Color): U
 });
 
 const backgroundPatternUniformValues = (
-  matrix: mat4,
-  opacity: number,
-  painter: Painter,
-  image: CrossFaded<ResolvedImage>,
-  tile: {
-    tileID: OverscaledTileID;
-    tileSize: number;
-  },
-  crossfade: CrossfadeParameters
+    matrix: mat4,
+    opacity: number,
+    painter: Painter,
+    image: CrossFaded<ResolvedImage>,
+    tile: {
+        tileID: OverscaledTileID;
+        tileSize: number;
+    },
+    crossfade: CrossfadeParameters
 ): UniformValues<BackgroundPatternUniformsType> => extend(
     bgPatternUniformValues(image, crossfade, painter, tile),
     {

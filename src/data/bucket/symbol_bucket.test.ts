@@ -139,12 +139,12 @@ describe('SymbolBucket', () => {
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
         bucket.populate(
-        [
-            createIndexedFeature(0, 0, 'a'),
-            createIndexedFeature(1, 1, 'b'),
-            createIndexedFeature(2, 2, 'a')
-        ] as any as IndexedFeature[],
-        options, undefined
+            [
+                createIndexedFeature(0, 0, 'a'),
+                createIndexedFeature(1, 1, 'b'),
+                createIndexedFeature(2, 2, 'a')
+            ] as any as IndexedFeature[],
+            options, undefined
         );
 
         const icons = options.iconDependencies as any;
@@ -179,12 +179,12 @@ describe('SymbolBucket', () => {
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
         bucket.populate(
-        [
-            createIndexedFeature(0, 0, 'a'),
-            createIndexedFeature(1, 1, 'b'),
-            createIndexedFeature(2, 2, 'a')
-        ] as any as IndexedFeature[],
-        options, undefined
+            [
+                createIndexedFeature(0, 0, 'a'),
+                createIndexedFeature(1, 1, 'b'),
+                createIndexedFeature(2, 2, 'a')
+            ] as any as IndexedFeature[],
+            options, undefined
         );
 
         const icons = options.iconDependencies as any;

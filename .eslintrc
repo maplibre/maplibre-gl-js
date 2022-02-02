@@ -72,18 +72,9 @@
     "space-before-function-paren": "off",
     "template-curly-spacing": "error",
     "no-useless-escape": "off",
-    "indent": ["error", 4, {
-      "flatTernaryExpressions": true,
-      "CallExpression": {
-        "arguments": "off"
-      },
-      "FunctionDeclaration": {
-        "parameters": "off"
-      },
-      "FunctionExpression": {
-        "parameters": "off"
-      }
-    }],
+    // @typescript-eslint/indent requires standard indent rule to be turned off
+    "indent": "off",
+    "@typescript-eslint/indent": ["error"],
     "no-multiple-empty-lines": [ "error", {
         "max": 1
     }],

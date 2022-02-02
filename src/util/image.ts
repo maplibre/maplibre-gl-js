@@ -3,13 +3,13 @@ import assert from 'assert';
 import {register} from './web_worker_transfer';
 
 export type Size = {
-  width: number;
-  height: number;
+    width: number;
+    height: number;
 };
 
 type Point2D = {
-  x: number;
-  y: number;
+    x: number;
+    y: number;
 };
 
 function createImage(image: any, {

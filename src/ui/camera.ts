@@ -58,8 +58,8 @@ export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Pa
  * @see [Display buildings in 3D](https://maplibre.org/maplibre-gl-js-docs/example/3d-buildings/)
  */
 export type CameraOptions = CenterZoomBearing & {
-  pitch?: number;
-  around?: LngLatLike;
+    pitch?: number;
+    around?: LngLatLike;
 };
 
 export type CenterZoomBearing = {
@@ -115,11 +115,11 @@ export type FitBoundsOptions = FlyToOptions & {
  *   [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
  */
 export type AnimationOptions = {
-  duration?: number;
-  easing?: (_: number) => number;
-  offset?: PointLike;
-  animate?: boolean;
-  essential?: boolean;
+    duration?: number;
+    easing?: (_: number) => number;
+    offset?: PointLike;
+    animate?: boolean;
+    essential?: boolean;
 };
 
 abstract class Camera extends Evented {
@@ -133,8 +133,8 @@ abstract class Camera extends Evented {
     _bearingSnap: number;
     _easeStart: number;
     _easeOptions: {
-      duration?: number;
-      easing?: (_: number) => number;
+        duration?: number;
+        easing?: (_: number) => number;
     };
     _easeId: string | void;
 
@@ -146,7 +146,7 @@ abstract class Camera extends Evented {
     abstract _cancelRenderFrame(_: TaskID): void;
 
     constructor(transform: Transform, options: {
-      bearingSnap: number;
+        bearingSnap: number;
     }) {
         super();
         this._moving = false;
@@ -802,8 +802,8 @@ abstract class Camera extends Evented {
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
      */
     easeTo(options: EaseToOptions & {
-      easeId?: string;
-      noMoveStart?: boolean;
+        easeId?: string;
+        noMoveStart?: boolean;
     }, eventData?: any) {
         this._stop(false, options.easeId);
 
@@ -1209,12 +1209,12 @@ abstract class Camera extends Evented {
     }
 
     _ease(frame: (_: number) => void,
-          finish: () => void,
-          options: {
+        finish: () => void,
+        options: {
             animate?: boolean;
             duration?: number;
             easing?: (_: number) => number;
-          }) {
+        }) {
         if (options.animate === false || options.duration === 0) {
             frame(1);
             finish();
@@ -1256,7 +1256,7 @@ abstract class Camera extends Evented {
         const delta = center.lng - tr.center.lng;
         center.lng +=
             delta > 180 ? -360 :
-            delta < -180 ? 360 : 0;
+                delta < -180 ? 360 : 0;
     }
 }
 

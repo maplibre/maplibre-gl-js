@@ -13,16 +13,16 @@ import type {MapMouseEvent, MapTouchEvent} from './events';
 import type {PointLike} from './camera';
 
 type MarkerOptions = {
-  element?: HTMLElement;
-  offset?: PointLike;
-  anchor?: PositionAnchor;
-  color?: string;
-  scale?: number;
-  draggable?: boolean;
-  clickTolerance?: number;
-  rotation?: number;
-  rotationAlignment?: string;
-  pitchAlignment?: string;
+    element?: HTMLElement;
+    offset?: PointLike;
+    anchor?: PositionAnchor;
+    color?: string;
+    scale?: number;
+    draggable?: boolean;
+    clickTolerance?: number;
+    rotation?: number;
+    rotationAlignment?: string;
+    pitchAlignment?: string;
 };
 
 /**
@@ -437,7 +437,7 @@ export default class Marker extends Evented {
     }
 
     _update(e?: {
-      type: 'move' | 'moveend';
+        type: 'move' | 'moveend';
     }) {
         if (!this._map) return;
 

@@ -3,9 +3,9 @@ import assert from 'assert';
 export type TaskID = number; // can't mark opaque due to https://github.com/flowtype/flow-remove-types/pull/61
 
 type Task = {
-  callback: (timeStamp: number) => void;
-  id: TaskID;
-  cancelled: boolean;
+    callback: (timeStamp: number) => void;
+    id: TaskID;
+    cancelled: boolean;
 };
 
 class TaskQueue {

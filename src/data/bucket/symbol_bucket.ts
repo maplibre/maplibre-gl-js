@@ -59,41 +59,41 @@ import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 export type SingleCollisionBox = {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  anchorPointX: number;
-  anchorPointY: number;
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    anchorPointX: number;
+    anchorPointY: number;
 };
 
 export type CollisionArrays = {
-  textBox?: SingleCollisionBox;
-  verticalTextBox?: SingleCollisionBox;
-  iconBox?: SingleCollisionBox;
-  verticalIconBox?: SingleCollisionBox;
-  textFeatureIndex?: number;
-  verticalTextFeatureIndex?: number;
-  iconFeatureIndex?: number;
-  verticalIconFeatureIndex?: number;
+    textBox?: SingleCollisionBox;
+    verticalTextBox?: SingleCollisionBox;
+    iconBox?: SingleCollisionBox;
+    verticalIconBox?: SingleCollisionBox;
+    textFeatureIndex?: number;
+    verticalTextFeatureIndex?: number;
+    iconFeatureIndex?: number;
+    verticalIconFeatureIndex?: number;
 };
 
 export type SymbolFeature = {
-  sortKey: number | void;
-  text: Formatted | void;
-  icon: ResolvedImage;
-  index: number;
-  sourceLayerIndex: number;
-  geometry: Array<Array<Point>>;
-  properties: any;
-  type: 'Point' | 'LineString' | 'Polygon';
-  id?: any;
+    sortKey: number | void;
+    text: Formatted | void;
+    icon: ResolvedImage;
+    index: number;
+    sourceLayerIndex: number;
+    geometry: Array<Array<Point>>;
+    properties: any;
+    type: 'Point' | 'LineString' | 'Polygon';
+    id?: any;
 };
 
 export type SortKeyRange = {
-  sortKey: number;
-  symbolInstanceStart: number;
-  symbolInstanceEnd: number;
+    sortKey: number;
+    symbolInstanceStart: number;
+    symbolInstanceEnd: number;
 };
 
 // Opacity arrays are frequently updated but don't contain a lot of information, so we pack them
@@ -244,12 +244,12 @@ class CollisionBuffers {
     collisionVertexBuffer: VertexBuffer;
 
     constructor(LayoutArray: {
-      new (...args: any): StructArray;
+        new (...args: any): StructArray;
     },
-                layoutAttributes: Array<StructArrayMember>,
-                IndexArray: {
-                  new (...args: any): TriangleIndexArray | LineIndexArray;
-                }) {
+    layoutAttributes: Array<StructArrayMember>,
+    IndexArray: {
+        new (...args: any): TriangleIndexArray | LineIndexArray;
+    }) {
         this.layoutVertexArray = new LayoutArray();
         this.layoutAttributes = layoutAttributes;
         this.indexArray = new IndexArray();
@@ -624,17 +624,17 @@ class SymbolBucket implements Bucket {
     }
 
     addSymbols(arrays: SymbolBuffers,
-               quads: Array<SymbolQuad>,
-               sizeVertex: any,
-               lineOffset: [number, number],
-               alongLine: boolean,
-               feature: SymbolFeature,
-               writingMode: WritingMode,
-               labelAnchor: Anchor,
-               lineStartIndex: number,
-               lineLength: number,
-               associatedIconIndex: number,
-               canonical: CanonicalTileID) {
+        quads: Array<SymbolQuad>,
+        sizeVertex: any,
+        lineOffset: [number, number],
+        alongLine: boolean,
+        feature: SymbolFeature,
+        writingMode: WritingMode,
+        labelAnchor: Anchor,
+        lineStartIndex: number,
+        lineLength: number,
+        associatedIconIndex: number,
+        canonical: CanonicalTileID) {
         const indexArray = arrays.indexArray;
         const layoutVertexArray = arrays.layoutVertexArray;
 
@@ -766,15 +766,15 @@ class SymbolBucket implements Bucket {
     // These flat arrays are meant to be quicker to iterate over than the source
     // CollisionBoxArray
     _deserializeCollisionBoxesForSymbol(
-      collisionBoxArray: CollisionBoxArray,
-      textStartIndex: number,
-      textEndIndex: number,
-      verticalTextStartIndex: number,
-      verticalTextEndIndex: number,
-      iconStartIndex: number,
-      iconEndIndex: number,
-      verticalIconStartIndex: number,
-      verticalIconEndIndex: number
+        collisionBoxArray: CollisionBoxArray,
+        textStartIndex: number,
+        textEndIndex: number,
+        verticalTextStartIndex: number,
+        verticalTextEndIndex: number,
+        iconStartIndex: number,
+        iconEndIndex: number,
+        verticalIconStartIndex: number,
+        verticalIconEndIndex: number
     ): CollisionArrays {
 
         const collisionArrays = {} as CollisionArrays;

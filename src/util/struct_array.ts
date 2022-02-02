@@ -47,21 +47,21 @@ const DEFAULT_CAPACITY = 128;
 const RESIZE_MULTIPLIER = 5;
 
 export type StructArrayMember = {
-  name: string;
-  type: ViewType;
-  components: number;
-  offset: number;
+    name: string;
+    type: ViewType;
+    components: number;
+    offset: number;
 };
 
 export type StructArrayLayout = {
-  members: Array<StructArrayMember>;
-  size: number;
-  alignment: number;
+    members: Array<StructArrayMember>;
+    size: number;
+    alignment: number;
 };
 
 export type SerializedStructArray = {
-  length: number;
-  arrayBuffer: ArrayBuffer;
+    length: number;
+    arrayBuffer: ArrayBuffer;
 };
 
 /**
@@ -198,12 +198,12 @@ abstract class StructArray {
  * @private
  */
 function createLayout(
-  members: Array<{
-    name: string;
-    type: ViewType;
-    readonly components?: number;
-  }>,
-  alignment: number = 1
+    members: Array<{
+        name: string;
+        type: ViewType;
+        readonly components?: number;
+    }>,
+    alignment: number = 1
 ): StructArrayLayout {
 
     let offset = 0;

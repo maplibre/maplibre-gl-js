@@ -70,7 +70,7 @@ class TwoTouchHandler {
     }
 
     enable(options?: {
-      around?: 'center';
+        around?: 'center';
     } | null) {
         this._enabled = true;
         this._aroundCenter = !!options && options.around === 'center';
