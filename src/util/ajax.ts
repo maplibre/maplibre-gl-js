@@ -110,19 +110,11 @@ export class AJAXError extends Error {
     body: Blob;
 
     constructor(status: number, statusText: string, url: string, body: Blob) {
-        super(statusText);
+        super(`AJAXError: ${statusText} (${status}): ${url}`);
         this.status = status;
         this.statusText = statusText;
         this.url = url;
         this.body = body;
-
-        // work around for https://github.com/Rich-Harris/buble/issues/40
-        this.name = this.constructor.name;
-        this.message = statusText;
-    }
-
-    toString() {
-        return `${this.name}: ${this.message} (${this.status}): ${this.url}`;
     }
 }
 
