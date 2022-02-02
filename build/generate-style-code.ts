@@ -271,5 +271,5 @@ export default ({ paint${layoutProperties.length ? ', layout' : ''} } as {
 }
 
 for (const layer of layers) {
-    fs.writeFileSync(`src/style/style_layer/${layer.type.replace('-', '_')}_style_layer_properties.ts`, emitlayerProperties(layer))
+    fs.writeFileSync(`src/style/style_layer/${layer.type.replace('-', '_')}_style_layer_properties.g.ts`, emitlayerProperties(layer))
 }

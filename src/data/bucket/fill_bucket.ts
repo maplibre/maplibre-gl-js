@@ -1,4 +1,4 @@
-import {FillLayoutArray} from '../array_types';
+import {FillLayoutArray} from '../array_types.g';
 
 import {members as layoutAttributes} from './fill_attributes';
 import SegmentVector from '../segment';

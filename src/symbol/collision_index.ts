@@ -15,7 +15,7 @@ import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
 import type {
     GlyphOffsetArray,
     SymbolLineVertexArray
-} from '../data/array_types';
+} from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/symbol_style_layer';
 
 // When a symbol crosses the edge that causes it to be included in

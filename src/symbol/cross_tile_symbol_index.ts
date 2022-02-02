@@ -1,8 +1,8 @@
 import EXTENT from '../data/extent';
 
-import {SymbolInstanceArray} from '../data/array_types';
+import {SymbolInstanceArray} from '../data/array_types.g';
 
-import type {SymbolInstance} from '../data/array_types';
+import type {SymbolInstance} from '../data/array_types.g';
 import type {OverscaledTileID} from '../source/tile_id';
 import type SymbolBucket from '../data/bucket/symbol_bucket';
 import type StyleLayer from '../style/style_layer';

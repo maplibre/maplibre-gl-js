@@ -3,7 +3,7 @@ import StyleLayer from '../style_layer';
 import assert from 'assert';
 import SymbolBucket from '../../data/bucket/symbol_bucket';
 import resolveTokens from '../../util/resolve_tokens';
-import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties';
+import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
 
 import {
     Transitionable,
@@ -22,7 +22,7 @@ import {
 } from '../../style-spec/expression';
 
 import type {BucketParameters} from '../../data/bucket';
-import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties';
+import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
 import type EvaluationParameters from '../evaluation_parameters';
 import type {LayerSpecification} from '../../style-spec/types';
 import type {Feature, SourceExpression, CompositeExpression} from '../../style-spec/expression';

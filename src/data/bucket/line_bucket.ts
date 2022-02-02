@@ -1,4 +1,4 @@
-import {LineLayoutArray, LineExtLayoutArray} from '../array_types';
+import {LineLayoutArray, LineExtLayoutArray} from '../array_types.g';
 
 import {members as layoutAttributes} from './line_attributes';
 import {members as layoutAttributesExt} from './line_attributes_ext';

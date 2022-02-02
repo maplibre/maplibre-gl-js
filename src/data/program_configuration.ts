@@ -3,7 +3,7 @@ import Color from '../style-spec/util/color';
 import {supportsPropertyExpression} from '../style-spec/util/properties';
 import {register} from '../util/web_worker_transfer';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties';
-import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types';
+import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types.g';
 import {clamp} from '../util/util';
 import patternAttributes from './bucket/pattern_attributes';
 import EvaluationParameters from '../style/evaluation_parameters';
