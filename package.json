@@ -19,7 +19,7 @@
     "@mapbox/geojson-rewind": "^0.5.2",
     "@mapbox/jsonlint-lines-primitives": "^2.0.2",
     "@mapbox/point-geometry": "^0.1.0",
-    "@globalfishingwatch/fourwings-aggregate": "4.0.1",
+    "@globalfishingwatch/fourwings-aggregate": "4.1.0",
     "@mapbox/tilebelt": "^1.0.2",
     "@mapbox/tiny-sdf": "^2.0.6",
     "@mapbox/unitbezier": "^0.0.1",
