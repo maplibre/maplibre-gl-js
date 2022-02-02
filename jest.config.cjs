@@ -11,7 +11,6 @@ module.exports = {
   "transform": {
     "^.+\\.(ts|tsx)$": "ts-jest",
     "^.+\\.(js)$": "babel-jest",
-    "^.+\\.(glsl)$": "jest-raw-loader",
   },
   testEnvironment: "jsdom",
   transformIgnorePatterns: [
