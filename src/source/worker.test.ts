@@ -1,4 +1,4 @@
-import {fakeServer} from 'sinon';
+import {fakeServer} from 'nise';
 import Worker from './worker';
 import {LayerSpecification} from '../style-spec/types';
 import {Cancelable} from '../types/cancelable';

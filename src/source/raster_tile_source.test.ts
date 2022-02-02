@@ -2,7 +2,7 @@ import RasterTileSource from './raster_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
 import Dispatcher from '../util/dispatcher';
-import {fakeServer, SinonFakeServer} from 'sinon';
+import {fakeServer, FakeServer} from 'nise';
 import Tile from './tile';
 
 function createSource(options, transformCallback?) {
@@ -22,7 +22,7 @@ function createSource(options, transformCallback?) {
 }
 
 describe('RasterTileSource', () => {
-    let server: SinonFakeServer;
+    let server: FakeServer;
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();

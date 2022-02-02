@@ -12,7 +12,7 @@ import {
 } from '../source/rtl_text_plugin';
 import browser from '../util/browser';
 import {OverscaledTileID} from '../source/tile_id';
-import {useFakeXMLHttpRequest, fakeServer} from 'sinon';
+import {fakeXhr, fakeServer} from 'nise';
 import {WorkerGlobalScopeInterface} from '../util/web_worker';
 import EvaluationParameters from './evaluation_parameters';
 import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '../style-spec/types';
@@ -83,7 +83,7 @@ let mockConsoleError;
 beforeEach(() => {
     global.fetch = null;
     sinonFakeServer = fakeServer.create();
-    sinonFakeXMLServer = useFakeXMLHttpRequest();
+    sinonFakeXMLServer = fakeXhr.useFakeXMLHttpRequest();
 
     _self = {
         addEventListener() {}

@@ -1,4 +1,4 @@
-import {fakeServer, SinonFakeServer} from 'sinon';
+import {fakeServer, FakeServer} from 'nise';
 import RasterDEMTileSource from './raster_dem_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
@@ -22,7 +22,7 @@ function createSource(options, transformCallback?) {
 }
 
 describe('RasterTileSource', () => {
-    let server: SinonFakeServer;
+    let server: FakeServer;
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();

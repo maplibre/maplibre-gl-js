@@ -1,4 +1,4 @@
-import {fakeServer, SinonFakeServer} from 'sinon';
+import {fakeServer, FakeServer} from 'nise';
 import {Source} from './source';
 import VectorTileSource from './vector_tile_source';
 import Tile from './tile';
@@ -27,7 +27,7 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
 }
 
 describe('VectorTileSource', () => {
-    let server: SinonFakeServer;
+    let server: FakeServer;
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();
