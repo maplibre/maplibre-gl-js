@@ -1,8 +1,8 @@
 import gl from 'gl';
-import {JSDOM, VirtualConsole} from "jsdom";
+import {JSDOM, VirtualConsole} from 'jsdom';
 import {PNG} from 'pngjs';
 import request from 'request';
-import sinon from 'sinon';
+import {fakeServer} from 'nise';
 
 let lastDataFromUrl = null;
 
@@ -46,7 +46,7 @@ Object.defineProperty(global.Image.prototype, 'src', {
             const base64 = src.replace(/data:.*;base64,/, '');
             const buff = Buffer.from(base64, 'base64');
             new PNG().parse(buff, (err, png) => {
-                if (err) throw new Error("Couldn't parse PNG");
+                if (err) throw new Error('Couldn\'t parse PNG');
                 this.data = png.data;
                 this.height = png.height;
                 this.width = png.width;
@@ -71,7 +71,7 @@ Object.defineProperty(global.Image.prototype, 'src', {
         reader.onload = (_) => {
             const dataUrl = reader.result;
             new PNG().parse(dataUrl, (err, png) => {
-                if (err) throw new Error("Couldn't parse PNG");
+                if (err) throw new Error('Couldn\'t parse PNG');
                 this.data = png.data;
                 this.height = png.height;
                 this.width = png.width;
@@ -93,7 +93,7 @@ HTMLVideoElement.prototype.appendChild = function(s) {
     request({url: s.src, encoding: null}, (error, response, body) => {
         if (!error && response.statusCode >= 200 && response.statusCode < 300) {
             new PNG().parse(body, (_, png) => {
-                Object.defineProperty(this, 'readyState', { get: () => 4}); // HAVE_ENOUGH_DATA
+                Object.defineProperty(this, 'readyState', {get: () => 4}); // HAVE_ENOUGH_DATA
                 this.addEventListener = () => {};
                 this.play = () => {};
                 this.width = png.width;
@@ -103,7 +103,7 @@ HTMLVideoElement.prototype.appendChild = function(s) {
             });
         }
     });
-}
+};
 
 // Delete local and session storage from JSDOM and stub them out with a warning log
 // Accessing these properties during extend() produces an error in Node environments
@@ -135,8 +135,7 @@ function imitateWebGlGetContext(type, attributes) {
 global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 
 window.useFakeXMLHttpRequest = () => {
-    sinon.xhr.supportsCORS = true;
-    window.server = sinon.fakeServer.create();
+    window.server = fakeServer.create();
     global.XMLHttpRequest = window.server.xhr;
 };
 
