@@ -14,7 +14,7 @@ import {SymbolLayoutArray,
     SymbolInstanceArray,
     GlyphOffsetArray,
     SymbolLineVertexArray
-} from '../array_types';
+} from '../array_types.g';
 
 import Point from '@mapbox/point-geometry';
 import SegmentVector from '../segment';
@@ -46,7 +46,7 @@ import type {
     IndexedFeature,
     PopulateParameters
 } from '../bucket';
-import type {CollisionBoxArray, CollisionBox, SymbolInstance} from '../array_types';
+import type {CollisionBoxArray, CollisionBox, SymbolInstance} from '../array_types.g';
 import type {StructArray, StructArrayMember, ViewType} from '../../util/struct_array';
 import SymbolStyleLayer, {getOverlapMode} from '../../style/style_layer/symbol_style_layer';
 import type Context from '../../gl/context';

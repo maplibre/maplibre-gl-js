@@ -5,7 +5,7 @@ import type FeatureIndex from '../data/feature_index';
 import GeoJSONFeature from '../util/vectortile_to_geojson';
 import featureFilter from '../style-spec/feature_filter';
 import SymbolBucket from '../data/bucket/symbol_bucket';
-import {CollisionBoxArray} from '../data/array_types';
+import {CollisionBoxArray} from '../data/array_types.g';
 import Texture from '../render/texture';
 import browser from '../util/browser';
 import toEvaluationFeature from '../data/evaluation_feature';

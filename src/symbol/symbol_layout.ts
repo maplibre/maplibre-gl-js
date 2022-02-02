@@ -19,7 +19,7 @@ import {SIZE_PACK_FACTOR} from './symbol_size';
 import ONE_EM from './one_em';
 import type {CanonicalTileID} from '../source/tile_id';
 import type {Shaping, PositionedIcon, TextJustify} from './shaping';
-import type {CollisionBoxArray} from '../data/array_types';
+import type {CollisionBoxArray} from '../data/array_types.g';
 import type {SymbolFeature} from '../data/bucket/symbol_bucket';
 import type {StyleImage} from '../style/style_image';
 import type {StyleGlyph} from '../style/style_glyph';

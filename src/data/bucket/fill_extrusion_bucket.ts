@@ -1,4 +1,4 @@
-import {FillExtrusionLayoutArray} from '../array_types';
+import {FillExtrusionLayoutArray} from '../array_types.g';
 
 import {members as layoutAttributes} from './fill_extrusion_attributes';
 import SegmentVector from '../segment';

@@ -3,7 +3,7 @@ import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import SymbolBucket from './symbol_bucket';
-import {CollisionBoxArray} from '../../data/array_types';
+import {CollisionBoxArray} from '../../data/array_types.g';
 import {performSymbolLayout} from '../../symbol/symbol_layout';
 import {Placement} from '../../symbol/placement';
 import Transform from '../../geo/transform';

@@ -422,7 +422,7 @@ register('${structArrayClass}', ${structArrayClass});
     return output.join('\n');
 }
 
-fs.writeFileSync('src/data/array_types.ts',
+fs.writeFileSync('src/data/array_types.g.ts',
     `// This file is generated. Edit build/generate-struct-arrays.ts, then run \`npm run codegen\`.
 
 import assert from 'assert';

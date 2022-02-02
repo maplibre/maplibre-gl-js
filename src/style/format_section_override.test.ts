@@ -1,6 +1,6 @@
 import {createExpression, StyleExpression, ZoomConstantExpression} from '../style-spec/expression';
 import EvaluationContext from '../style-spec/expression/evaluation_context';
-import properties from './style_layer/symbol_style_layer_properties';
+import properties from './style_layer/symbol_style_layer_properties.g';
 import {PossiblyEvaluatedPropertyValue} from './properties';
 import FormatSectionOverride from './format_section_override';
 import EvaluationParameters from './evaluation_parameters';

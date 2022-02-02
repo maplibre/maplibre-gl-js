@@ -1,7 +1,7 @@
 import CollisionFeature from './collision_feature';
 import Anchor from './anchor';
 import Point from '@mapbox/point-geometry';
-import {CollisionBoxArray} from '../data/array_types';
+import {CollisionBoxArray} from '../data/array_types.g';
 
 describe('CollisionFeature', () => {
 
