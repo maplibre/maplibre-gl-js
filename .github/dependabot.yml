@@ -8,6 +8,6 @@ updates:
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "monthly"
+      interval: "daily"
     ignore:
       - dependency-name: "documentation"
