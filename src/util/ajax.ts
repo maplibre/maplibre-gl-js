@@ -86,6 +86,7 @@ export type ResponseCallback<T> = (
  * @param {number} status The response's HTTP status code.
  * @param {string} statusText The response's HTTP status text.
  * @param {string} url The request's URL.
+ * @param {Blob} body The response's body.
  */
 export class AJAXError extends Error {
     /**
@@ -103,11 +104,17 @@ export class AJAXError extends Error {
      */
     url: string;
 
-    constructor(status: number, statusText: string, url: string) {
+    /**
+     * The response's body.
+     */
+    body: Blob;
+
+    constructor(status: number, statusText: string, url: string, body: Blob) {
         super(statusText);
         this.status = status;
         this.statusText = statusText;
         this.url = url;
+        this.body = body;
 
         // work around for https://github.com/Rich-Harris/buble/issues/40
         this.name = this.constructor.name;
@@ -180,7 +187,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
                 return finishRequest(response, cacheableResponse, requestTime);
 
             } else {
-                return callback(new AJAXError(response.status, response.statusText, requestParameters.url));
+                return response.blob().then(body => callback(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
             }
         }).catch(error => {
             if (error.code === 20) {
@@ -256,7 +263,8 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
             }
             callback(null, data, xhr.getResponseHeader('Cache-Control'), xhr.getResponseHeader('Expires'));
         } else {
-            callback(new AJAXError(xhr.status, xhr.statusText, requestParameters.url));
+            const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
+            callback(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
         }
     };
     xhr.send(requestParameters.body);
