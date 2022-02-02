@@ -15,7 +15,7 @@ type SerializedObject = {
   [_: string]: Serialized;
 }; // eslint-disable-line
 
-export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Array<Serialized> | SerializedObject;
+export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Blob | Array<Serialized> | SerializedObject;
 
 type Registry = {
   [_: string]: {
@@ -111,7 +111,8 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         input instanceof Number ||
         input instanceof String ||
         input instanceof Date ||
-        input instanceof RegExp) {
+        input instanceof RegExp ||
+        input instanceof Blob) {
         return input;
     }
 
@@ -212,6 +213,7 @@ export function deserialize(input: Serialized): unknown {
         input instanceof String ||
         input instanceof Date ||
         input instanceof RegExp ||
+        input instanceof Blob ||
         isArrayBuffer(input) ||
         isImageBitmap(input) ||
         ArrayBuffer.isView(input) ||
