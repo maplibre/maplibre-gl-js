@@ -71,6 +71,7 @@ function getGeometry(feature, geometry, canonical) {
 
 let tests;
 
+// @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 
 if (process.argv[1] === __filename && process.argv.length > 2) {
@@ -115,7 +116,11 @@ run('js', {ignores, tests}, (fixture) => {
 
         for (const input of fixture.inputs || []) {
             try {
-                const feature = {properties: input[1].properties || {}};
+                const feature: {
+                    properties: any;
+                    id?: any;
+                    type?: any;
+                } = {properties: input[1].properties || {}};
                 availableImages = input[0].availableImages || [];
                 if ('canonicalID' in input[0]) {
                     const id = input[0].canonicalID;
@@ -155,7 +160,13 @@ run('js', {ignores, tests}, (fixture) => {
         }
     };
 
-    const result = {compiled: {}, recompiled: {}};
+    const result: {
+        compiled: any;
+        recompiled: any;
+        outputs?: any;
+        serialized?: any;
+        roundTripOutputs?: any;
+    } = {compiled: {}, recompiled: {}};
     const expression = (() => {
         if (isFunction(fixture.expression)) {
             return createPropertyExpression(convertFunction(fixture.expression, spec), spec);
@@ -164,7 +175,7 @@ run('js', {ignores, tests}, (fixture) => {
         }
     })();
 
-    result.outputs = evaluateExpression(expression, result.compiled, {}, availableImages);
+    result.outputs = evaluateExpression(expression, result.compiled);
     if (expression.result === 'success') {
         result.serialized = expression.value._styleExpression.expression.serialize();
         result.roundTripOutputs = evaluateExpression(
