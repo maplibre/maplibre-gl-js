@@ -5,33 +5,9 @@ import {PNG} from 'pngjs';
 import harness from './harness';
 import {fileURLToPath} from 'url';
 import {createRequire} from 'module';
-
+import {deepEqual} from './json-diff';
 const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-function deepEqual(a, b) {
-    if (typeof a !== typeof b)
-        return false;
-    if (typeof a === 'number')
-        return Math.abs(a - b) < 1e-10;
-    if (a === null || typeof a !== 'object')
-        return a === b;
-
-    const ka = Object.keys(a);
-    const kb = Object.keys(b);
-
-    if (ka.length !== kb.length)
-        return false;
-
-    ka.sort();
-    kb.sort();
-
-    for (let i = 0; i < ka.length; i++)
-        if (ka[i] !== kb[i] || !deepEqual(a[ka[i]], b[ka[i]]))
-            return false;
-
-    return true;
-}
 
 /**
  * Run the query suite.

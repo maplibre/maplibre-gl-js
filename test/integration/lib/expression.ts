@@ -4,6 +4,7 @@ import fs from 'fs';
 import harness from './harness';
 import compactStringify from 'json-stringify-pretty-compact';
 import {fileURLToPath} from 'url';
+import {deepEqual} from './json-diff';
 
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -51,31 +52,6 @@ function stripPrecision(x) {
         }
         return stripped;
     }
-}
-
-function deepEqual(a, b) {
-    if (typeof a !== typeof b)
-        return false;
-    if (typeof a === 'number') {
-        return stripPrecision(a) === stripPrecision(b);
-    }
-    if (a === null || b === null || typeof a !== 'object')
-        return a === b;
-
-    const ka = Object.keys(a);
-    const kb = Object.keys(b);
-
-    if (ka.length !== kb.length)
-        return false;
-
-    ka.sort();
-    kb.sort();
-
-    for (let i = 0; i < ka.length; i++)
-        if (ka[i] !== kb[i] || !deepEqual(a[ka[i]], b[ka[i]]))
-            return false;
-
-    return true;
 }
 
 /**

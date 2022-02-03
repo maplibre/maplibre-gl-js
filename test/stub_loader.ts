@@ -34,6 +34,8 @@ global.Blob = window.Blob;
 global.URL = window.URL;
 global.fetch = window.fetch;
 global.document = window.document;
+
+// @ts-ignore
 global.window = window;
 // stubbing image load as it is not implemented in jsdom
 // eslint-disable-next-line accessor-pairs
@@ -70,6 +72,7 @@ Object.defineProperty(global.Image.prototype, 'src', {
         const reader = new window.FileReader();
         reader.onload = (_) => {
             const dataUrl = reader.result;
+            // @ts-ignore
             new PNG().parse(dataUrl, (err, png) => {
                 if (err) throw new Error('Couldn\'t parse PNG');
                 this.data = png.data;
@@ -86,10 +89,12 @@ Object.defineProperty(global.Image.prototype, 'src', {
 // At this time the fake code will go to the server and get the "video".
 // Hack: since node doesn't have any good video codec modules, just grab a png with
 // the first frame and fake the video API.
+// @ts-ignore
 HTMLVideoElement.prototype.appendChild = function(s) {
     if (!this.onloadstart) {
         return;
     }
+    // @ts-ignore
     request({url: s.src, encoding: null}, (error, response, body) => {
         if (!error && response.statusCode >= 200 && response.statusCode < 300) {
             new PNG().parse(body, (_, png) => {
@@ -108,15 +113,20 @@ HTMLVideoElement.prototype.appendChild = function(s) {
 // Delete local and session storage from JSDOM and stub them out with a warning log
 // Accessing these properties during extend() produces an error in Node environments
 // See https://github.com/mapbox/mapbox-gl-js/pull/7455 for discussion
+// @ts-ignore
 delete window.localStorage;
+// @ts-ignore
 delete window.sessionStorage;
+// @ts-ignore
 window.localStorage = window.sessionStorage = () => console.log('Local and session storage not available in Node. Use a stub implementation if needed for testing.');
 
+// @ts-ignore
 window.devicePixelRatio = 1;
-
+// @ts-ignore
 global.requestAnimationFrame = window.requestAnimationFrame = (callback) => {
     return setImmediate(callback, 0);
 };
+// @ts-ignore
 global.cancelAnimationFrame = clearImmediate;
 
 // Add webgl context with the supplied GL
@@ -162,8 +172,11 @@ window.clearFakeWorkerPresence = () => {
     global.self = undefined;
 };
 
+// @ts-ignore
 window.performance.getEntriesByName = () => { };
+// @ts-ignore
 window.performance.mark = () => { };
+// @ts-ignore
 window.performance.measure = () => { };
 window.performance.clearMarks = () => { };
 window.performance.clearMeasures = () => { };
