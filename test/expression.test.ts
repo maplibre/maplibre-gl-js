@@ -1,13 +1,13 @@
 import {fileURLToPath} from 'url';
 
 import {run} from './integration/lib/expression';
-import {createPropertyExpression} from '../rollup/build/tsc/src/style-spec/expression';
-import {isFunction} from '../rollup/build/tsc/src/style-spec/function';
-import convertFunction from '../rollup/build/tsc/src/style-spec/function/convert';
-import {toString} from '../rollup/build/tsc/src/style-spec/expression/types';
+import {createPropertyExpression} from '../src/style-spec/expression';
+import {isFunction} from '../src/style-spec/function';
+import convertFunction from '../src/style-spec/function/convert';
+import {toString} from '../src/style-spec/expression/types';
 import ignores from './ignores.json';
-import {CanonicalTileID} from '../rollup/build/tsc/src/source/tile_id';
-import MercatorCoordinate from '../rollup/build/tsc/src/geo/mercator_coordinate';
+import {CanonicalTileID} from '../src/source/tile_id';
+import MercatorCoordinate from '../src/geo/mercator_coordinate';
 
 function getPoint(coord, canonical) {
     const p = canonical.getTilePoint(MercatorCoordinate.fromLngLat({lng: coord[0], lat: coord[1]}, 0));
@@ -71,6 +71,7 @@ function getGeometry(feature, geometry, canonical) {
 
 let tests;
 
+// @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 
 if (process.argv[1] === __filename && process.argv.length > 2) {
@@ -115,7 +116,11 @@ run('js', {ignores, tests}, (fixture) => {
 
         for (const input of fixture.inputs || []) {
             try {
-                const feature = {properties: input[1].properties || {}};
+                const feature: {
+                    properties: any;
+                    id?: any;
+                    type?: any;
+                } = {properties: input[1].properties || {}};
                 availableImages = input[0].availableImages || [];
                 if ('canonicalID' in input[0]) {
                     const id = input[0].canonicalID;
@@ -155,7 +160,13 @@ run('js', {ignores, tests}, (fixture) => {
         }
     };
 
-    const result = {compiled: {}, recompiled: {}};
+    const result: {
+        compiled: any;
+        recompiled: any;
+        outputs?: any;
+        serialized?: any;
+        roundTripOutputs?: any;
+    } = {compiled: {}, recompiled: {}};
     const expression = (() => {
         if (isFunction(fixture.expression)) {
             return createPropertyExpression(convertFunction(fixture.expression, spec), spec);
@@ -164,8 +175,9 @@ run('js', {ignores, tests}, (fixture) => {
         }
     })();
 
-    result.outputs = evaluateExpression(expression, result.compiled, {}, availableImages);
+    result.outputs = evaluateExpression(expression, result.compiled);
     if (expression.result === 'success') {
+        // @ts-ignore
         result.serialized = expression.value._styleExpression.expression.serialize();
         result.roundTripOutputs = evaluateExpression(
             createPropertyExpression(result.serialized, spec),
