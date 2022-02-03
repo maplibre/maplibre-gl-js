@@ -6,6 +6,7 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import glob from 'glob';
 
+// @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -28,18 +29,18 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * If all the tests are successful, this function exits the process with exit code 0. Otherwise
  * it exits with 1. If an unexpected error occurs, it exits with -1.
  *
- * @param {string} implementation - identify the implementation under test; used to
+ * @param implementation - identify the implementation under test; used to
  * deal with implementation-specific test exclusions and fudge-factors
- * @param {Object<string>} [ignores] - map of test names to disable. A key is the relative
+ * @param ignores - map of test names to disable. A key is the relative
  * path to a test directory, e.g. `"render-tests/background-color/default"`. A value is a string
  * that by convention links to an issue that explains why the test is currently disabled. By default,
  * disabled tests will be run, but not fail the test run if the result does not match the expected
  * result. If the value begins with "skip", the test will not be run at all -- use this for tests
  * that would crash the test harness entirely if they were run.
- * @param {renderFn} render - a function that performs the rendering
+ * @param render - a function that performs the rendering
  * @returns {undefined} terminates the process when testing is complete
  */
-export default function run(implementation, ignores, render) {
+export function run(implementation: string, ignores: any, render: any) {
     const options = {ignores, tests:[], shuffle:false, recycleMap:false, seed:makeHash()};
 
     // https://stackoverflow.com/a/1349426/229714
@@ -89,6 +90,7 @@ export default function run(implementation, ignores, render) {
             let stats;
             const dir = path.join(directory, params.id);
             try {
+                // @ts-ignore
                 stats = fs.statSync(dir, fs.R_OK | fs.W_OK);
                 if (!stats.isDirectory()) throw new Error();
             } catch (e) {

@@ -9,6 +9,7 @@ import path, {dirname} from 'path';
 import customLayerImplementations from './integration/custom_layer_implementations';
 import {fileURLToPath} from 'url';
 
+// @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let now = 0;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
@@ -18,6 +19,7 @@ rtlTextPlugin['processBidirectionalText'] = rtlText.processBidirectionalText;
 rtlTextPlugin['processStyledBidirectionalText'] = rtlText.processStyledBidirectionalText;
 
 // replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
+// @ts-ignore
 browser.getImageData = function (img, padding = 0) {
     if (!img.data) {
         return {width: 1, height: 1, data: new Uint8Array(1)};
@@ -50,10 +52,13 @@ export default function(style, options, _callback) {
         }
     }
 
+    // @ts-ignore
     window.useFakeXMLHttpRequest();
+    // @ts-ignore
     XMLHttpRequest.onCreate = req => {
         setTimeout(() => {
             let reqObj = req.url;
+
             if (req.responseType === 'arraybuffer') {
                 reqObj = {url: req.url, encoding: null};
             }
@@ -120,12 +125,12 @@ export default function(style, options, _callback) {
             gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
             // eslint-disable-next-line new-cap
-            const data = new Buffer.from(pixels);
+            const data = Buffer.from(pixels);
 
             // Flip the scanlines.
             const stride = w * 4;
             // eslint-disable-next-line new-cap
-            const tmp = new Buffer.alloc(stride);
+            const tmp = Buffer.alloc(stride);
             for (let i = 0, j = h - 1; i < j; i++, j--) {
                 const start = i * stride;
                 const end = j * stride;
