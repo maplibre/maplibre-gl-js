@@ -53,16 +53,11 @@ describe('query tests', () => {
             const options = style.metadata.test;
 
             await page.evaluate((options) => {
-                const container = document.querySelector('#map');
-                // @ts-ignore
+                const container: HTMLDivElement = document.querySelector('#map');
                 container.style.position = 'fixed';
-                // @ts-ignore
                 container.style.bottom = '10px';
-                // @ts-ignore
                 container.style.right = '10px';
-                // @ts-ignore
                 container.style.width = `${options.width}px`;
-                // @ts-ignore
                 container.style.height = `${options.height}px`;
             }, options);
 
