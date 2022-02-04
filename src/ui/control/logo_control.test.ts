@@ -25,7 +25,7 @@ describe('LogoControl', () => {
         const map = createMap(undefined, undefined);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
-            '.maplibregl-ctrl-logo'
+                '.maplibregl-ctrl-logo'
             )).toHaveLength(0);
             done();
         });
@@ -35,7 +35,7 @@ describe('LogoControl', () => {
         const map = createMap(undefined, false);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
-            '.maplibregl-ctrl-logo'
+                '.maplibregl-ctrl-logo'
             )).toHaveLength(0);
             done();
         });
@@ -45,7 +45,7 @@ describe('LogoControl', () => {
         const map = createMap(undefined, true);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
-            '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-logo'
+                '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-logo'
             )).toHaveLength(1);
             done();
         });
@@ -55,7 +55,7 @@ describe('LogoControl', () => {
         const map = createMap('top-left', true);
         map.on('load', () => {
             expect(map.getContainer().querySelectorAll(
-            '.maplibregl-ctrl-top-left .maplibregl-ctrl-logo'
+                '.maplibregl-ctrl-top-left .maplibregl-ctrl-logo'
             )).toHaveLength(1);
             done();
         });
@@ -68,13 +68,13 @@ describe('LogoControl', () => {
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 645, configurable: true});
         map.resize();
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-logo:not(.maplibregl-compact)')
+            container.querySelectorAll('.maplibregl-ctrl-logo:not(.maplibregl-compact)')
         ).toHaveLength(1);
 
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 635, configurable: true});
         map.resize();
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-logo.maplibregl-compact')
+            container.querySelectorAll('.maplibregl-ctrl-logo.maplibregl-compact')
         ).toHaveLength(1);
     });
 
