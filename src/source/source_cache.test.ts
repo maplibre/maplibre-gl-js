@@ -1,10 +1,10 @@
 import SourceCache from './source_cache';
-import {setType} from './source';
+import {setSourceType} from './source';
 import Tile from './tile';
 import {OverscaledTileID} from './tile_id';
 import Transform from '../geo/transform';
 import LngLat from '../geo/lng_lat';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import browser from '../util/browser';
@@ -15,7 +15,7 @@ class SourceMock extends Evented {
     id: string;
     minzoom: number;
     maxzoom: number;
-    hasTile: (tileID: OverscaledTileID) => boolean
+    hasTile: (tileID: OverscaledTileID) => boolean;
     sourceOptions: any;
 
     constructor(id: string, sourceOptions: any, _dispatcher, eventedParent: Evented) {
@@ -63,7 +63,7 @@ function createSource(id: string, sourceOptions: any, _dispatcher: any, eventedP
     return source;
 }
 
-setType('mock-source-type', createSource as any);
+setSourceType('mock-source-type', createSource as any);
 
 function createSourceCache(options?, used?) {
     const sc = new SourceCache('id', extend({
@@ -334,6 +334,38 @@ describe('SourceCache#removeTile', () => {
         sourceCache.map = {painter: {crossTileSymbolIndex: '', tileExtentVAO: {}}} as any;
 
         sourceCache._addTile(tileID);
+    });
+
+    test('fires dataabort event', done => {
+        const sourceCache = createSourceCache({
+            loadTile() {
+                // Do not call back in order to make sure the tile is removed before it is loaded.
+            }
+        });
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const tile = sourceCache._addTile(tileID);
+        sourceCache.once('dataabort', event => {
+            expect(event.dataType).toBe('source');
+            expect(event.tile).toBe(tile);
+            expect(event.coord).toBe(tileID);
+            done();
+        });
+        sourceCache._removeTile(tileID.key);
+    });
+
+    test('does not fire dataabort event when the tile has already been loaded', () => {
+        const sourceCache = createSourceCache({
+            loadTile(tile, callback) {
+                tile.state = 'loaded';
+                callback();
+            }
+        });
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        sourceCache._addTile(tileID);
+        const onAbort = jest.fn();
+        sourceCache.once('dataabort', onAbort);
+        sourceCache._removeTile(tileID.key);
+        expect(onAbort).toHaveBeenCalledTimes(0);
     });
 
 });

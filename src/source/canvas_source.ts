@@ -11,10 +11,10 @@ import type Dispatcher from '../util/dispatcher';
 import type {Evented} from '../util/evented';
 
 export type CanvasSourceSpecification = {
-  'type': 'canvas';
-  'coordinates': [[number, number], [number, number], [number, number], [number, number]];
-  'animate'?: boolean;
-  'canvas': string | HTMLCanvasElement;
+    'type': 'canvas';
+    'coordinates': [[number, number], [number, number], [number, number], [number, number]];
+    'animate'?: boolean;
+    'canvas': string | HTMLCanvasElement;
 };
 
 /**

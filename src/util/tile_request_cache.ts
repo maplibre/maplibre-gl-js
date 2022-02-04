@@ -9,9 +9,9 @@ let cacheCheckThreshold = 50;
 const MIN_TIME_UNTIL_EXPIRY = 1000 * 60 * 7; // 7 minutes. Skip caching tiles with a short enough max age.
 
 export type ResponseOptions = {
-  status: number;
-  statusText: string;
-  headers: Headers;
+    status: number;
+    statusText: string;
+    headers: Headers;
 };
 
 // We're using a global shared cache object. Normally, requesting ad-hoc Cache objects is fine, but

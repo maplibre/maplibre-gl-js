@@ -3,7 +3,7 @@ import StyleLayer from '../style_layer';
 import assert from 'assert';
 import SymbolBucket from '../../data/bucket/symbol_bucket';
 import resolveTokens from '../../util/resolve_tokens';
-import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties';
+import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
 
 import {
     Transitionable,
@@ -22,7 +22,7 @@ import {
 } from '../../style-spec/expression';
 
 import type {BucketParameters} from '../../data/bucket';
-import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties';
+import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
 import type EvaluationParameters from '../evaluation_parameters';
 import type {LayerSpecification} from '../../style-spec/types';
 import type {Feature, SourceExpression, CompositeExpression} from '../../style-spec/expression';
@@ -127,13 +127,13 @@ class SymbolStyleLayer extends StyleLayer {
                 expression = (new ZoomConstantExpression('source', styleExpression) as SourceExpression);
             } else {
                 expression = (new ZoomDependentExpression('composite',
-                                                          styleExpression,
-                                                          overriden.value.zoomStops,
-                                                          (overriden.value as any)._interpolationType) as CompositeExpression);
+                    styleExpression,
+                    overriden.value.zoomStops,
+                    (overriden.value as any)._interpolationType) as CompositeExpression);
             }
             this.paint._values[overridable] = new PossiblyEvaluatedPropertyValue(overriden.property,
-                                                                                 expression,
-                                                                                 overriden.parameters);
+                expression,
+                overriden.parameters);
         }
     }
 
@@ -183,6 +183,25 @@ class SymbolStyleLayer extends StyleLayer {
 
         return hasOverrides;
     }
+}
+
+export type OverlapMode = 'never' | 'always' | 'cooperative';
+
+export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'icon-overlap', allowOverlapProp: 'icon-allow-overlap'): OverlapMode;
+export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'text-overlap', allowOverlapProp: 'text-allow-overlap'): OverlapMode;
+export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'icon-overlap' | 'text-overlap', allowOverlapProp: 'icon-allow-overlap' | 'text-allow-overlap'): OverlapMode {
+    let result: OverlapMode = 'never';
+    const overlap = layout.get(overlapProp);
+
+    if (overlap) {
+        // if -overlap is set, use it
+        result = overlap;
+    } else if (layout.get(allowOverlapProp)) {
+        // fall back to -allow-overlap, with false='never', true='always'
+        result = 'always';
+    }
+
+    return result;
 }
 
 export default SymbolStyleLayer;

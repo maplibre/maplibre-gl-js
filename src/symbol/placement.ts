@@ -1,4 +1,5 @@
 import CollisionIndex from './collision_index';
+import type {FeatureKey} from './collision_index';
 import EXTENT from '../data/extent';
 import * as symbolSize from './symbol_size';
 import * as projection from './projection';
@@ -7,16 +8,17 @@ import {getAnchorAlignment, WritingMode} from './shaping';
 import {mat4} from 'gl-matrix';
 import assert from 'assert';
 import pixelsToTileUnits from '../source/pixels_to_tile_units';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import type Transform from '../geo/transform';
 import type StyleLayer from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';
-import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
+import {getOverlapMode, OverlapMode} from '../style/style_layer/symbol_style_layer';
 
 import type Tile from '../source/tile';
 import SymbolBucket, {CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';
 
-import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance} from '../data/array_types';
+import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance} from '../data/array_types.g';
 import type FeatureIndex from '../data/feature_index';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {TextAnchor} from './symbol_layout';
@@ -85,10 +87,10 @@ export class RetainedQueryData {
     tileID: OverscaledTileID;
     featureSortOrder: Array<number>;
     constructor(bucketInstanceId: number,
-                featureIndex: FeatureIndex,
-                sourceLayerIndex: number,
-                bucketIndex: number,
-                tileID: OverscaledTileID) {
+        featureIndex: FeatureIndex,
+        sourceLayerIndex: number,
+        bucketIndex: number,
+        tileID: OverscaledTileID) {
         this.bucketInstanceId = bucketInstanceId;
         this.featureIndex = featureIndex;
         this.sourceLayerIndex = sourceLayerIndex;
@@ -98,8 +100,8 @@ export class RetainedQueryData {
 }
 
 type CollisionGroup = {
-  ID: number;
-  predicate?: any;
+    ID: number;
+    predicate?: (key: FeatureKey) => boolean;
 };
 
 class CollisionGroups {
@@ -135,11 +137,11 @@ class CollisionGroups {
 }
 
 function calculateVariableLayoutShift(
-  anchor: TextAnchor,
-  width: number,
-  height: number,
-  textOffset: [number, number],
-  textBoxScale: number
+    anchor: TextAnchor,
+    width: number,
+    height: number,
+    textOffset: [number, number],
+    textBoxScale: number
 ): Point {
     const {horizontalAlign, verticalAlign} = getAnchorAlignment(anchor);
     const shiftX = -(horizontalAlign - 0.5) * width;
@@ -152,9 +154,9 @@ function calculateVariableLayoutShift(
 }
 
 function shiftVariableCollisionBox(collisionBox: SingleCollisionBox,
-                                  shiftX: number, shiftY: number,
-                                  rotateWithMap: boolean, pitchWithMap: boolean,
-                                  angle: number) {
+    shiftX: number, shiftY: number,
+    rotateWithMap: boolean, pitchWithMap: boolean,
+    angle: number) {
     const {x1, x2, y1, y2, anchorPointX, anchorPointY} = collisionBox;
     const rotatedOffset = new Point(shiftX, shiftY);
     if (rotateWithMap) {
@@ -210,16 +212,16 @@ export class Placement {
     transform: Transform;
     collisionIndex: CollisionIndex;
     placements: {
-      [_ in CrossTileID]: JointPlacement;
+        [_ in CrossTileID]: JointPlacement;
     };
     opacities: {
-      [_ in CrossTileID]: JointOpacityState;
+        [_ in CrossTileID]: JointOpacityState;
     };
     variableOffsets: {
-      [_ in CrossTileID]: VariableOffset;
+        [_ in CrossTileID]: VariableOffset;
     };
     placedOrientations: {
-      [_ in CrossTileID]: number;
+        [_ in CrossTileID]: number;
     };
     commitTime: number;
     prevZoomAdjustment: number;
@@ -227,13 +229,13 @@ export class Placement {
     stale: boolean;
     fadeDuration: number;
     retainedQueryData: {
-      [_: number]: RetainedQueryData;
+        [_: number]: RetainedQueryData;
     };
     collisionGroups: CollisionGroups;
     prevPlacement: Placement;
     zoomAtLastRecencyCheck: number;
     collisionCircleArrays: {
-      [k in any]: CollisionCircleArray;
+        [k in any]: CollisionCircleArray;
     };
 
     constructor(transform: Transform, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
@@ -277,10 +279,10 @@ export class Placement {
         const pixelsToTiles = pixelsToTileUnits(tile, 1, this.transform.zoom);
 
         const textLabelPlaneMatrix = projection.getLabelPlaneMatrix(posMatrix,
-                pitchWithMap,
-                rotateWithMap,
-                this.transform,
-                pixelsToTiles);
+            pitchWithMap,
+            rotateWithMap,
+            this.transform,
+            pixelsToTiles);
 
         let labelToScreenMatrix = null;
 
@@ -334,28 +336,28 @@ export class Placement {
     }
 
     attemptAnchorPlacement(
-      anchor: TextAnchor,
-      textBox: SingleCollisionBox,
-      width: number,
-      height: number,
-      textBoxScale: number,
-      rotateWithMap: boolean,
-      pitchWithMap: boolean,
-      textPixelRatio: number,
-      posMatrix: mat4,
-      collisionGroup: CollisionGroup,
-      textAllowOverlap: boolean,
-      symbolInstance: SymbolInstance,
-      bucket: SymbolBucket,
-      orientation: number,
-      iconBox?: SingleCollisionBox | null
+        anchor: TextAnchor,
+        textBox: SingleCollisionBox,
+        width: number,
+        height: number,
+        textBoxScale: number,
+        rotateWithMap: boolean,
+        pitchWithMap: boolean,
+        textPixelRatio: number,
+        posMatrix: mat4,
+        collisionGroup: CollisionGroup,
+        textOverlapMode: OverlapMode,
+        symbolInstance: SymbolInstance,
+        bucket: SymbolBucket,
+        orientation: number,
+        iconBox?: SingleCollisionBox | null
     ): {
-      shift: Point;
-      placedGlyphBoxes: {
-        box: Array<number>;
-        offscreen: boolean;
-      };
-    } {
+            shift: Point;
+            placedGlyphBoxes: {
+                box: Array<number>;
+                offscreen: boolean;
+            };
+        } {
 
         const textOffset = [symbolInstance.textOffset0, symbolInstance.textOffset1] as [number, number];
         const shift = calculateVariableLayoutShift(anchor, width, height, textOffset, textBoxScale);
@@ -364,14 +366,14 @@ export class Placement {
             shiftVariableCollisionBox(
                 textBox, shift.x, shift.y,
                 rotateWithMap, pitchWithMap, this.transform.angle),
-            textAllowOverlap, textPixelRatio, posMatrix, collisionGroup.predicate);
+            textOverlapMode, textPixelRatio, posMatrix, collisionGroup.predicate);
 
         if (iconBox) {
             const placedIconBoxes = this.collisionIndex.placeCollisionBox(
                 shiftVariableCollisionBox(
                     iconBox, shift.x, shift.y,
                     rotateWithMap, pitchWithMap, this.transform.angle),
-                textAllowOverlap, textPixelRatio, posMatrix, collisionGroup.predicate);
+                textOverlapMode, textPixelRatio, posMatrix, collisionGroup.predicate);
             if (placedIconBoxes.box.length === 0) return;
         }
 
@@ -406,7 +408,7 @@ export class Placement {
     }
 
     placeLayerBucketPart(bucketPart: BucketPart, seenCrossTileIDs: {
-      [k in string | number]: boolean;
+        [k in string | number]: boolean;
     }, showCollisionBoxes: boolean) {
 
         const {
@@ -424,8 +426,10 @@ export class Placement {
 
         const textOptional = layout.get('text-optional');
         const iconOptional = layout.get('icon-optional');
-        const textAllowOverlap = layout.get('text-allow-overlap');
-        const iconAllowOverlap = layout.get('icon-allow-overlap');
+        const textOverlapMode = getOverlapMode(layout, 'text-overlap', 'text-allow-overlap');
+        const textAlwaysOverlap = textOverlapMode === 'always';
+        const iconOverlapMode = getOverlapMode(layout, 'icon-overlap', 'icon-allow-overlap');
+        const iconAlwaysOverlap = iconOverlapMode === 'always';
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
         const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
         const hasIconTextFit = layout.get('icon-text-fit') !== 'none';
@@ -445,8 +449,8 @@ export class Placement {
         //  This is the reverse of our normal policy of "fade in on pan", but should look like any other
         //  collision and hopefully not be too noticeable.
         // See https://github.com/mapbox/mapbox-gl-js/issues/7172
-        const alwaysShowText = textAllowOverlap && (iconAllowOverlap || !bucket.hasIconData() || iconOptional);
-        const alwaysShowIcon = iconAllowOverlap && (textAllowOverlap || !bucket.hasTextData() || textOptional);
+        const alwaysShowText = textAlwaysOverlap && (iconAlwaysOverlap || !bucket.hasIconData() || iconOptional);
+        const alwaysShowIcon = iconAlwaysOverlap && (textAlwaysOverlap || !bucket.hasTextData() || textOptional);
 
         if (!bucket.collisionArrays && collisionBoxArray) {
             bucket.deserializeCollisionBoxes(collisionBoxArray);
@@ -519,8 +523,12 @@ export class Placement {
 
                 if (!layout.get('text-variable-anchor')) {
                     const placeBox = (collisionTextBox, orientation) => {
-                        const placedFeature = this.collisionIndex.placeCollisionBox(collisionTextBox, textAllowOverlap,
-                                                                                  textPixelRatio, posMatrix, collisionGroup.predicate);
+                        const placedFeature = this.collisionIndex.placeCollisionBox(
+                            collisionTextBox,
+                            textOverlapMode,
+                            textPixelRatio,
+                            posMatrix,
+                            collisionGroup.predicate);
                         if (placedFeature && placedFeature.box && placedFeature.box.length) {
                             this.markUsedOrientation(bucket, orientation, symbolInstance);
                             this.placedOrientations[symbolInstance.crossTileID] = orientation;
@@ -562,20 +570,20 @@ export class Placement {
                         const height = collisionTextBox.y2 - collisionTextBox.y1;
                         const textBoxScale = symbolInstance.textBoxScale;
 
-                        const variableIconBox = hasIconTextFit && !iconAllowOverlap ? collisionIconBox : null;
+                        const variableIconBox = hasIconTextFit && (iconOverlapMode === 'never') ? collisionIconBox : null;
 
                         let placedBox: {
-                          box: Array<number>;
-                          offscreen: boolean;
+                            box: Array<number>;
+                            offscreen: boolean;
                         } = {box: [], offscreen: false};
-                        const placementAttempts = textAllowOverlap ? anchors.length * 2 : anchors.length;
+                        const placementAttempts = (textOverlapMode !== 'never') ? anchors.length * 2 : anchors.length;
                         for (let i = 0; i < placementAttempts; ++i) {
                             const anchor = anchors[i % anchors.length];
-                            const allowOverlap = (i >= anchors.length);
+                            const overlapMode = (i >= anchors.length) ? textOverlapMode : 'never';
                             const result = this.attemptAnchorPlacement(
                                 anchor, collisionTextBox, width, height,
                                 textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, posMatrix,
-                                collisionGroup, allowOverlap, symbolInstance, bucket, orientation, variableIconBox);
+                                collisionGroup, overlapMode, symbolInstance, bucket, orientation, variableIconBox);
 
                             if (result) {
                                 placedBox = result.placedGlyphBoxes;
@@ -637,26 +645,27 @@ export class Placement {
                 const textPixelPadding = layout.get('text-padding');
                 const circlePixelDiameter = symbolInstance.collisionCircleDiameter;
 
-                placedGlyphCircles = this.collisionIndex.placeCollisionCircles(textAllowOverlap,
-                        placedSymbol,
-                        bucket.lineVertexArray,
-                        bucket.glyphOffsetArray,
-                        fontSize,
-                        posMatrix,
-                        textLabelPlaneMatrix,
-                        labelToScreenMatrix,
-                        showCollisionBoxes,
-                        pitchWithMap,
-                        collisionGroup.predicate,
-                        circlePixelDiameter,
-                        textPixelPadding);
+                placedGlyphCircles = this.collisionIndex.placeCollisionCircles(
+                    textOverlapMode,
+                    placedSymbol,
+                    bucket.lineVertexArray,
+                    bucket.glyphOffsetArray,
+                    fontSize,
+                    posMatrix,
+                    textLabelPlaneMatrix,
+                    labelToScreenMatrix,
+                    showCollisionBoxes,
+                    pitchWithMap,
+                    collisionGroup.predicate,
+                    circlePixelDiameter,
+                    textPixelPadding);
 
                 assert(!placedGlyphCircles.circles.length || (!placedGlyphCircles.collisionDetected || showCollisionBoxes));
-                // If text-allow-overlap is set, force "placedCircles" to true
+                // If text-overlap is set to 'always', force "placedCircles" to true
                 // In theory there should always be at least one circle placed
                 // in this case, but for now quirks in text-anchor
                 // and text-offset may prevent that from being true.
-                placeText = textAllowOverlap || (placedGlyphCircles.circles.length > 0 && !placedGlyphCircles.collisionDetected);
+                placeText = textAlwaysOverlap || (placedGlyphCircles.circles.length > 0 && !placedGlyphCircles.collisionDetected);
                 offscreen = offscreen && placedGlyphCircles.offscreen;
             }
 
@@ -673,7 +682,7 @@ export class Placement {
                             rotateWithMap, pitchWithMap, this.transform.angle) :
                         iconBox;
                     return this.collisionIndex.placeCollisionBox(shiftedIconBox,
-                        iconAllowOverlap, textPixelRatio, posMatrix, collisionGroup.predicate);
+                        iconOverlapMode, textPixelRatio, posMatrix, collisionGroup.predicate);
                 };
 
                 if (placedVerticalText && placedVerticalText.box && placedVerticalText.box.length && collisionArrays.verticalIconBox) {
@@ -701,22 +710,42 @@ export class Placement {
 
             if (placeText && placedGlyphBoxes && placedGlyphBoxes.box) {
                 if (placedVerticalText && placedVerticalText.box && verticalTextFeatureIndex) {
-                    this.collisionIndex.insertCollisionBox(placedGlyphBoxes.box, layout.get('text-ignore-placement'),
-                        bucket.bucketInstanceId, verticalTextFeatureIndex, collisionGroup.ID);
+                    this.collisionIndex.insertCollisionBox(
+                        placedGlyphBoxes.box,
+                        textOverlapMode,
+                        layout.get('text-ignore-placement'),
+                        bucket.bucketInstanceId,
+                        verticalTextFeatureIndex,
+                        collisionGroup.ID);
                 } else {
-                    this.collisionIndex.insertCollisionBox(placedGlyphBoxes.box, layout.get('text-ignore-placement'),
-                        bucket.bucketInstanceId, textFeatureIndex, collisionGroup.ID);
+                    this.collisionIndex.insertCollisionBox(
+                        placedGlyphBoxes.box,
+                        textOverlapMode,
+                        layout.get('text-ignore-placement'),
+                        bucket.bucketInstanceId,
+                        textFeatureIndex,
+                        collisionGroup.ID);
                 }
 
             }
             if (placeIcon && placedIconBoxes) {
-                this.collisionIndex.insertCollisionBox(placedIconBoxes.box, layout.get('icon-ignore-placement'),
-                        bucket.bucketInstanceId, iconFeatureIndex, collisionGroup.ID);
+                this.collisionIndex.insertCollisionBox(
+                    placedIconBoxes.box,
+                    iconOverlapMode,
+                    layout.get('icon-ignore-placement'),
+                    bucket.bucketInstanceId,
+                    iconFeatureIndex,
+                    collisionGroup.ID);
             }
             if (placedGlyphCircles) {
                 if (placeText) {
-                    this.collisionIndex.insertCollisionCircles(placedGlyphCircles.circles, layout.get('text-ignore-placement'),
-                        bucket.bucketInstanceId, textFeatureIndex, collisionGroup.ID);
+                    this.collisionIndex.insertCollisionCircles(
+                        placedGlyphCircles.circles,
+                        textOverlapMode,
+                        layout.get('text-ignore-placement'),
+                        bucket.bucketInstanceId,
+                        textFeatureIndex,
+                        collisionGroup.ID);
                 }
 
                 if (showCollisionBoxes) {
@@ -887,7 +916,7 @@ export class Placement {
     updateLayerOpacities(styleLayer: StyleLayer, tiles: Array<Tile>) {
         const seenCrossTileIDs = {};
         for (const tile of tiles) {
-            const symbolBucket = (tile.getBucket(styleLayer) as SymbolBucket);
+            const symbolBucket = tile.getBucket(styleLayer) as SymbolBucket;
             if (symbolBucket && tile.latestFeatureIndex && styleLayer.id === symbolBucket.layerIds[0]) {
                 this.updateBucketOpacities(symbolBucket, seenCrossTileIDs, tile.collisionBoxArray);
             }
@@ -895,7 +924,7 @@ export class Placement {
     }
 
     updateBucketOpacities(bucket: SymbolBucket, seenCrossTileIDs: {
-      [k in string | number]: boolean;
+        [k in string | number]: boolean;
     }, collisionBoxArray?: CollisionBoxArray | null) {
         if (bucket.hasTextData()) bucket.text.opacityVertexArray.clear();
         if (bucket.hasIconData()) bucket.icon.opacityVertexArray.clear();
@@ -915,9 +944,9 @@ export class Placement {
         // with allow-overlap: false.
         // See https://github.com/mapbox/mapbox-gl-js/issues/7032
         const defaultOpacityState = new JointOpacityState(null, 0,
-                textAllowOverlap && (iconAllowOverlap || !bucket.hasIconData() || layout.get('icon-optional')),
-                iconAllowOverlap && (textAllowOverlap || !bucket.hasTextData() || layout.get('text-optional')),
-                true);
+            textAllowOverlap && (iconAllowOverlap || !bucket.hasIconData() || layout.get('icon-optional')),
+            iconAllowOverlap && (textAllowOverlap || !bucket.hasTextData() || layout.get('text-optional')),
+            true);
 
         if (!bucket.collisionArrays && collisionBoxArray && ((bucket.hasIconCollisionBoxData() || bucket.hasTextCollisionBoxData()))) {
             bucket.deserializeCollisionBoxes(collisionBoxArray);
@@ -1031,10 +1060,10 @@ export class Placement {
                                 // just made the symbol disappear, and the most likely place for the
                                 // symbol to come back)
                                 shift = calculateVariableLayoutShift(variableOffset.anchor,
-                                   variableOffset.width,
-                                   variableOffset.height,
-                                   variableOffset.textOffset,
-                                   variableOffset.textBoxScale);
+                                    variableOffset.width,
+                                    variableOffset.height,
+                                    variableOffset.textOffset,
+                                    variableOffset.textBoxScale);
                                 if (rotateWithMap) {
                                     shift._rotate(pitchWithMap ? this.transform.angle : -this.transform.angle);
                                 }

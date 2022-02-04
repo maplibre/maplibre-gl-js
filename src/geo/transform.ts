@@ -1,7 +1,7 @@
 import LngLat from './lng_lat';
 import LngLatBounds from './lng_lat_bounds';
 import MercatorCoordinate, {mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from './mercator_coordinate';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import {wrap, clamp} from '../util/util';
 import {number as interpolate} from '../style-spec/util/interpolate';
 import EXTENT from '../data/extent';
@@ -262,8 +262,8 @@ class Transform {
      * @returns {number} zoom level An integer zoom level at which all tiles will be visible.
      */
     coveringZoomLevel(options: {
-      roundZoom?: boolean;
-      tileSize: number;
+        roundZoom?: boolean;
+        tileSize: number;
     }) {
         const z = (options.roundZoom ? Math.round : Math.floor)(
             this.zoom + this.scaleZoom(this.tileSize / options.tileSize)
@@ -315,14 +315,14 @@ class Transform {
      * @private
      */
     coveringTiles(
-      options: {
-        tileSize: number;
-        minzoom?: number;
-        maxzoom?: number;
-        roundZoom?: boolean;
-        reparseOverscaled?: boolean;
-        renderWorldCopies?: boolean;
-      }
+        options: {
+            tileSize: number;
+            minzoom?: number;
+            maxzoom?: number;
+            roundZoom?: boolean;
+            reparseOverscaled?: boolean;
+            renderWorldCopies?: boolean;
+        }
     ): Array<OverscaledTileID> {
         let z = this.coveringZoomLevel(options);
         const actualZ = z;
@@ -436,8 +436,8 @@ class Transform {
     project(lnglat: LngLat) {
         const lat = clamp(lnglat.lat, -this.maxValidLatitude, this.maxValidLatitude);
         return new Point(
-                mercatorXfromLng(lnglat.lng) * this.worldSize,
-                mercatorYfromLat(lat) * this.worldSize);
+            mercatorXfromLng(lnglat.lng) * this.worldSize,
+            mercatorYfromLat(lat) * this.worldSize);
     }
 
     unproject(point: Point): LngLat {
@@ -451,8 +451,8 @@ class Transform {
         const b = this.pointCoordinate(this.centerPoint);
         const loc = this.locationCoordinate(lnglat);
         const newCenter = new MercatorCoordinate(
-                loc.x - (a.x - b.x),
-                loc.y - (a.y - b.y));
+            loc.x - (a.x - b.x),
+            loc.y - (a.y - b.y));
         this.center = this.coordinateLocation(newCenter);
         if (this._renderWorldCopies) {
             this.center = this.center.wrap();

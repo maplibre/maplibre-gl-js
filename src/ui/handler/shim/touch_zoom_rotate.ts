@@ -41,7 +41,7 @@ export default class TouchZoomRotateHandler {
      *   map.touchZoomRotate.enable({ around: 'center' });
      */
     enable(options?: {
-      around?: 'center';
+        around?: 'center';
     } | null) {
         this._touchZoom.enable(options);
         if (!this._rotationDisabled) this._touchRotate.enable(options);

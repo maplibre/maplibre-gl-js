@@ -87,7 +87,7 @@ function createStructArrayType(name: string, layout: StructArrayLayout, includeS
             includeStructAccessors
         });
     } else {
-        arrayTypeEntries.add(`${layoutClass} as ${arrayClass}`);
+        arrayTypeEntries.add(`export class ${arrayClass} extends ${layoutClass} {}`);
     }
 }
 
@@ -166,26 +166,26 @@ createStructArrayType('symbol_line_vertex', lineVertex, true);
 // feature index array
 createStructArrayType('feature_index', createLayout([
     // the index of the feature in the original vectortile
-    { type: 'Uint32', name: 'featureIndex' },
+    {type: 'Uint32', name: 'featureIndex'},
     // the source layer the feature appears in
-    { type: 'Uint16', name: 'sourceLayerIndex' },
+    {type: 'Uint16', name: 'sourceLayerIndex'},
     // the bucket the feature appears in
-    { type: 'Uint16', name: 'bucketIndex' }
+    {type: 'Uint16', name: 'bucketIndex'}
 ]), true);
 
 // triangle index array
 createStructArrayType('triangle_index', createLayout([
-    { type: 'Uint16', name: 'vertices', components: 3 }
+    {type: 'Uint16', name: 'vertices', components: 3}
 ]));
 
 // line index array
 createStructArrayType('line_index', createLayout([
-    { type: 'Uint16', name: 'vertices', components: 2 }
+    {type: 'Uint16', name: 'vertices', components: 2}
 ]));
 
 // line strip index array
 createStructArrayType('line_strip_index', createLayout([
-    { type: 'Uint16', name: 'vertices', components: 1 }
+    {type: 'Uint16', name: 'vertices', components: 1}
 ]));
 
 // paint vertex arrays
@@ -422,18 +422,18 @@ register('${structArrayClass}', ${structArrayClass});
     return output.join('\n');
 }
 
-fs.writeFileSync('src/data/array_types.ts',
+fs.writeFileSync('src/data/array_types.g.ts',
     `// This file is generated. Edit build/generate-struct-arrays.ts, then run \`npm run codegen\`.
 
 import assert from 'assert';
 import {Struct, StructArray} from '../util/struct_array';
 import {register} from '../util/web_worker_transfer';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 
 ${layouts.map(emitStructArrayLayout).join('\n')}
 ${arraysWithStructAccessors.map(emitStructArray).join('\n')}
+${[...arrayTypeEntries].join('\n')}
 export {
-    ${layouts.map(layout => layout.className).join(',\n    ')},
-    ${[...arrayTypeEntries].join(',\n    ')}
+    ${layouts.map(layout => layout.className).join(',\n    ')}
 };
 `);

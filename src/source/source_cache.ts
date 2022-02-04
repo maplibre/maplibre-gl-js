@@ -7,7 +7,7 @@ import MercatorCoordinate from '../geo/mercator_coordinate';
 import {keysDifference} from '../util/util';
 import EXTENT from '../data/extent';
 import Context from '../gl/context';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import browser from '../util/browser';
 import {OverscaledTileID} from './tile_id';
 import assert from 'assert';
@@ -46,10 +46,10 @@ class SourceCache extends Evented {
     _prevLng: number;
     _cache: TileCache;
     _timers: {
-      [_ in any]: ReturnType<typeof setTimeout>;
+        [_ in any]: ReturnType<typeof setTimeout>;
     };
     _cacheTimers: {
-      [_ in any]: ReturnType<typeof setTimeout>;
+        [_ in any]: ReturnType<typeof setTimeout>;
     };
     _maxTileCacheSize: number;
     _paused: boolean;
@@ -160,7 +160,9 @@ class SourceCache extends Evented {
 
     _abortTile(tile: Tile) {
         if (this._source.abortTile)
-            return this._source.abortTile(tile, () => {});
+            this._source.abortTile(tile, () => {});
+
+        this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
     }
 
     serialize() {
@@ -331,12 +333,12 @@ class SourceCache extends Evented {
      */
     _retainLoadedChildren(
         idealTiles: {
-          [_ in any]: OverscaledTileID;
+            [_ in any]: OverscaledTileID;
         },
         zoom: number,
         maxCoveringZoom: number,
         retain: {
-          [_ in any]: OverscaledTileID;
+            [_ in any]: OverscaledTileID;
         }
     ) {
         for (const id in this._tiles) {

@@ -1,3 +1,3 @@
 export type Cancelable = {
-  cancel: () => void;
+    cancel: () => void;
 };

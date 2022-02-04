@@ -1,0 +1,10 @@
+{
+  "exclude": [".*generated.js$", ".*generated.js.map$"],
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "tsx": true
+    },
+    "target": "es2015"
+  }
+}

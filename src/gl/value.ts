@@ -17,12 +17,12 @@ import type {
 } from './types';
 
 export interface IValue<T> {
-  current: T;
-  default: T;
-  dirty: boolean;
-  get(): T;
-  setDefault(): void;
-  set(value: T): void;
+    current: T;
+    default: T;
+    dirty: boolean;
+    get(): T;
+    setDefault(): void;
+    set(value: T): void;
 }
 
 class BaseValue<T> implements IValue<T> {

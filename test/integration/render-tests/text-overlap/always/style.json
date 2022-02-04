@@ -1,0 +1,97 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [{
+          "type": "Feature",
+          "properties": { "class": "A" },
+          "geometry": { "type": "Point", "coordinates": [0, 0] }
+         }, {
+          "type": "Feature",
+          "properties": { "class": "A" },
+          "geometry": { "type": "Point", "coordinates": [15, 15] }
+         }, {
+          "type": "Feature",
+          "properties": { "class": "A" },
+          "geometry": { "type": "Point", "coordinates": [-15, -15] }
+         }, {
+          "type": "Feature",
+          "properties": { "class": "B" },
+          "geometry": { "type": "Point", "coordinates": [8, 8] }
+         }, {
+          "type": "Feature",
+          "properties": { "class": "B" },
+          "geometry": { "type": "Point", "coordinates": [-8, -8] }
+         }, {
+          "type": "Feature",
+          "properties": { "class": "C" },
+          "geometry": { "type": "Point", "coordinates": [4, 4] }
+         }
+        ]
+      }
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [{
+      "id": "symbolA",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": ["==", ["get", "class"], "A"],
+      "layout": {
+        "text-overlap": "always",
+        "text-field": "A",
+        "text-padding": 0,
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      },
+      "paint": {
+        "text-color": "red"
+      }
+    }, {
+      "id": "symbolB",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": ["==", ["get", "class"], "B"],
+      "layout": {
+        "text-overlap": "always",
+        "text-field": "B",
+        "text-padding": 0,
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      },
+      "paint": {
+        "text-color": "blue"
+      }
+    }, {
+      "id": "symbolC",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": ["==", ["get", "class"], "C"],
+      "layout": {
+        "text-overlap": "always",
+        "text-field": "C",
+        "text-padding": 0,
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      },
+      "paint": {
+        "text-color": "green"
+      }
+    }
+  ]
+}

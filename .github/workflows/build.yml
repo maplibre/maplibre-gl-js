@@ -11,12 +11,13 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 14 x64
+      - name: Use Node.js 16 x64
         uses: actions/setup-node@v2-beta
         with:
-          node-version: 14
+          node-version: 16
           architecture: x64
       - run: npm ci
+      - run: npm run generate-typings
       - run: npm run build-prod-min
       - run: npm run build-prod
       - run: npm run build-csp

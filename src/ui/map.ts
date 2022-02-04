@@ -12,7 +12,7 @@ import HandlerManager from './handler_manager';
 import Camera from './camera';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
-import Point, {PointLike} from '../util/point';
+import Point from '@mapbox/point-geometry';
 import AttributionControl from './control/attribution_control';
 import LogoControl from './control/logo_control';
 import {supported} from '@mapbox/mapbox-gl-supported';
@@ -33,7 +33,7 @@ import type {StyleOptions, StyleSetterOptions} from '../style/style';
 import type {MapEvent, MapDataEvent} from './events';
 import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer';
 import type {StyleImageInterface, StyleImageMetadata} from '../style/style_image';
-
+import type {PointLike} from './camera';
 import type ScrollZoomHandler from './handler/scroll_zoom';
 import type BoxZoomHandler from './handler/box_zoom';
 import type {TouchPitchHandler} from './handler/touch_zoom_rotate';
@@ -59,49 +59,50 @@ import type {ControlPosition, IControl} from './control/control';
 /* eslint-enable no-use-before-define */
 
 export type MapOptions = {
-  hash?: boolean | string;
-  interactive?: boolean;
-  container: HTMLElement | string;
-  bearingSnap?: number;
-  attributionControl?: boolean;
-  customAttribution?: string | Array<string>;
-  maplibreLogo?: boolean;
-  logoPosition?: ControlPosition;
-  failIfMajorPerformanceCaveat?: boolean;
-  preserveDrawingBuffer?: boolean;
-  antialias?: boolean;
-  refreshExpiredTiles?: boolean;
-  maxBounds?: LngLatBoundsLike;
-  scrollZoom?: boolean;
-  minZoom?: number | null;
-  maxZoom?: number | null;
-  minPitch?: number | null;
-  maxPitch?: number | null;
-  boxZoom?: boolean;
-  dragRotate?: boolean;
-  dragPan?: DragPanOptions | boolean;
-  keyboard?: boolean;
-  doubleClickZoom?: boolean;
-  touchZoomRotate?: boolean;
-  touchPitch?: boolean;
-  trackResize?: boolean;
-  center?: LngLatLike;
-  zoom?: number;
-  bearing?: number;
-  pitch?: number;
-  renderWorldCopies?: boolean;
-  maxTileCacheSize?: number;
-  transformRequest?: RequestTransformFunction;
-  locale?: any;
-  fadeDuration?: number;
-  crossSourceCollisions?: boolean;
-  collectResourceTiming?: boolean;
-  clickTolerance?: number;
-  bounds?: LngLatBoundsLike;
-  fitBoundsOptions?: Object;
-  localIdeographFontFamily?: string;
-  style: StyleSpecification | string;
-  pitchWithRotate?: boolean;
+    hash?: boolean | string;
+    interactive?: boolean;
+    container: HTMLElement | string;
+    bearingSnap?: number;
+    attributionControl?: boolean;
+    customAttribution?: string | Array<string>;
+    maplibreLogo?: boolean;
+    logoPosition?: ControlPosition;
+    failIfMajorPerformanceCaveat?: boolean;
+    preserveDrawingBuffer?: boolean;
+    antialias?: boolean;
+    refreshExpiredTiles?: boolean;
+    maxBounds?: LngLatBoundsLike;
+    scrollZoom?: boolean;
+    minZoom?: number | null;
+    maxZoom?: number | null;
+    minPitch?: number | null;
+    maxPitch?: number | null;
+    boxZoom?: boolean;
+    dragRotate?: boolean;
+    dragPan?: DragPanOptions | boolean;
+    keyboard?: boolean;
+    doubleClickZoom?: boolean;
+    touchZoomRotate?: boolean;
+    touchPitch?: boolean;
+    trackResize?: boolean;
+    center?: LngLatLike;
+    zoom?: number;
+    bearing?: number;
+    pitch?: number;
+    renderWorldCopies?: boolean;
+    maxTileCacheSize?: number;
+    transformRequest?: RequestTransformFunction;
+    locale?: any;
+    fadeDuration?: number;
+    crossSourceCollisions?: boolean;
+    collectResourceTiming?: boolean;
+    clickTolerance?: number;
+    bounds?: LngLatBoundsLike;
+    fitBoundsOptions?: Object;
+    localIdeographFontFamily?: string;
+    style: StyleSpecification | string;
+    pitchWithRotate?: boolean;
+    pixelRatio?: number;
 };
 
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
@@ -214,19 +215,19 @@ const defaultOptions = {
  * @param {boolean} [options.doubleClickZoom=true] If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
  * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TouchZoomRotateHandler#enable}.
  * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TouchPitchHandler#enable}.
- * @param {boolean} [options.trackResize=true]  If `true`, the map will automatically resize when the browser window resizes.
+ * @param {boolean} [options.trackResize=true] If `true`, the map will automatically resize when the browser window resizes.
  * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
  * @param {number} [options.zoom=0] The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
  * @param {number} [options.bearing=0] The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
  * @param {number} [options.pitch=0] The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-85). If `pitch` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`. Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
  * @param {LngLatBoundsLike} [options.bounds] The initial bounds of the map. If `bounds` is specified, it overrides `center` and `zoom` constructor options.
  * @param {Object} [options.fitBoundsOptions] A {@link Map#fitBounds} options object to use _only_ when fitting the initial `bounds` provided above.
- * @param {boolean} [options.renderWorldCopies=true]  If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
+ * @param {boolean} [options.renderWorldCopies=true] If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
  * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
  * container, there will be blank space beyond 180 and -180 degrees longitude.
  * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
  * map and the other on the left edge of the map) at every zoom level.
- * @param {number} [options.maxTileCacheSize=null]  The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport.
+ * @param {number} [options.maxTileCacheSize=null] The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport.
  * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
  *   font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
  *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
@@ -238,6 +239,7 @@ const defaultOptions = {
  * @param {number} [options.fadeDuration=300] Controls the duration of the fade-in/fade-out animation for label collisions, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
  * @param {boolean} [options.crossSourceCollisions=true] If `true`, symbols from multiple sources can collide with each other during collision detection. If `false`, collision detection is run separately for the symbols in each source.
  * @param {Object} [options.locale=null] A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
+ * @param {number} [options.pixelRatio] The pixel ratio. The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
  * @example
  * var map = new maplibregl.Map({
  *   container: 'map',
@@ -301,6 +303,7 @@ class Map extends Camera {
     _locale: any;
     _removed: boolean;
     _clickTolerance: number;
+    _pixelRatio: number;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -392,6 +395,7 @@ class Map extends Camera {
         this._mapId = uniqueId();
         this._locale = extend({}, defaultLocale, options.locale);
         this._clickTolerance = options.clickTolerance;
+        this._pixelRatio = options.pixelRatio ?? devicePixelRatio;
 
         this._requestManager = new RequestManager(options.transformRequest);
 
@@ -475,6 +479,9 @@ class Map extends Camera {
         });
         this.on('dataloading', (event: MapDataEvent) => {
             this.fire(new Event(`${event.dataType}dataloading`, event));
+        });
+        this.on('dataabort', (event: MapDataEvent) => {
+            this.fire(new Event('sourcedataabort', event));
         });
     }
 
@@ -588,9 +595,9 @@ class Map extends Camera {
         const width = dimensions[0];
         const height = dimensions[1];
 
-        this._resizeCanvas(width, height);
+        this._resizeCanvas(width, height, this.getPixelRatio());
         this.transform.resize(width, height);
-        this.painter.resize(width, height);
+        this.painter.resize(width, height, this.getPixelRatio());
 
         const fireMoving = !this._moving;
         if (fireMoving) {
@@ -604,6 +611,29 @@ class Map extends Camera {
         if (fireMoving) this.fire(new Event('moveend', eventData));
 
         return this;
+    }
+
+    /**
+     * Returns the map's pixel ratio.
+     * @returns {number} The pixel ratio.
+     */
+    getPixelRatio() {
+        return this._pixelRatio;
+    }
+
+    /**
+     * Sets the map's pixel ratio. This allows to override `devicePixelRatio`.
+     * After this call, the canvas' `width` attribute will be `container.clientWidth * pixelRatio`
+     * and its height attribute will be `container.clientHeight * pixelRatio`.
+     * @param {number} pixelRatio The pixel ratio.
+     */
+    setPixelRatio(pixelRatio: number) {
+        const [width, height] = this._containerDimensions();
+
+        this._pixelRatio = pixelRatio;
+
+        this._resizeCanvas(width, height, pixelRatio);
+        this.painter.resize(width, height, pixelRatio);
     }
 
     /**
@@ -832,11 +862,11 @@ class Map extends Camera {
     }
 
     /**
-     * Returns a {@link Point} representing pixel coordinates, relative to the map's `container`,
+     * Returns a [Point](https://github.com/mapbox/point-geometry) representing pixel coordinates, relative to the map's `container`,
      * that correspond to the specified geographical location.
      *
      * @param {LngLatLike} lnglat The geographical location to project.
-     * @returns {Point} The {@link Point} corresponding to `lnglat`, relative to the map's `container`.
+     * @returns {Point} The [Point](https://github.com/mapbox/point-geometry) corresponding to `lnglat`, relative to the map's `container`.
      * @example
      * var coordinate = [-122.420679, 37.772537];
      * var point = map.project(coordinate);
@@ -995,6 +1025,8 @@ class Map extends Camera {
      * | [`styledataloading`](#map.event:styledataloading)         |                           |
      * | [`sourcedataloading`](#map.event:sourcedataloading)       |                           |
      * | [`styleimagemissing`](#map.event:styleimagemissing)       |                           |
+     * | [`dataabort`](#map.event:dataabort)                       |                           |
+     * | [`sourcedataabort`](#map.event:sourcedataabort)           |                           |
      *
      * @param {string | Listener} layerIdOrListener The ID of a style layer or a listener if no ID is provided. Event will only be triggered if its location
      * is within a visible feature in this layer. The event will have a `features` property containing
@@ -1315,9 +1347,9 @@ class Map extends Camera {
      *
      */
     querySourceFeatures(sourceId: string, parameters?: {
-      sourceLayer: string;
-      filter: Array<any>;
-      validate?: boolean;
+        sourceLayer: string;
+        filter: Array<any>;
+        validate?: boolean;
     } | null) {
         return this.style.querySourceFeatures(sourceId, parameters);
     }
@@ -1349,7 +1381,7 @@ class Map extends Camera {
      *
      */
     setStyle(style: StyleSpecification | string | null, options?: {
-      diff?: boolean;
+        diff?: boolean;
     } & StyleOptions) {
         options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
 
@@ -1365,10 +1397,10 @@ class Map extends Camera {
     /**
      *  Updates the requestManager's transform request with a new function
      *
-     *  @param transformRequest A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
+     * @param transformRequest A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
      *    Expected to return an object with a `url` property and optionally `headers` and `credentials` properties
      *
-     *  @returns {Map} `this`
+     * @returns {Map} `this`
      *
      *  @example
      *  map.setTransformRequest((url: string, resourceType: string) => {});
@@ -1388,7 +1420,7 @@ class Map extends Camera {
     }
 
     _updateStyle(style: StyleSpecification | string | null,  options?: {
-      diff?: boolean;
+        diff?: boolean;
     } & StyleOptions) {
         if (this.style) {
             this.style.setEventedParent(null);
@@ -1422,7 +1454,7 @@ class Map extends Camera {
     }
 
     _diffStyle(style: StyleSpecification | string,  options?: {
-      diff?: boolean;
+        diff?: boolean;
     } & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
@@ -1440,7 +1472,7 @@ class Map extends Camera {
     }
 
     _updateDiff(style: StyleSpecification,  options?: {
-      diff?: boolean;
+        diff?: boolean;
     } & StyleOptions) {
         try {
             if (this.style.setState(style)) {
@@ -1625,9 +1657,9 @@ class Map extends Camera {
      * @param options Options object.
      * @param options.pixelRatio The ratio of pixels in the image to physical pixels on the screen
      * @param options.sdf Whether the image should be interpreted as an SDF image
-     * @param options.content  `[x1, y1, x2, y2]`  If `icon-text-fit` is used in a layer with this image, this option defines the part of the image that can be covered by the content in `text-field`.
-     * @param options.stretchX  `[[x1, x2], ...]` If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched horizontally.
-     * @param options.stretchY  `[[y1, y2], ...]` If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched vertically.
+     * @param options.content `[x1, y1, x2, y2]`  If `icon-text-fit` is used in a layer with this image, this option defines the part of the image that can be covered by the content in `text-field`.
+     * @param options.stretchX `[[x1, x2], ...]` If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched horizontally.
+     * @param options.stretchY `[[y1, y2], ...]` If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched vertically.
      *
      * @example
      * // If the style's sprite does not already contain an image with ID 'cat',
@@ -1656,18 +1688,18 @@ class Map extends Camera {
      * @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-generated/)
      */
     addImage(id: string,
-             image: HTMLImageElement | ImageBitmap | ImageData | {
-               width: number;
-               height: number;
-               data: Uint8Array | Uint8ClampedArray;
-             } | StyleImageInterface,
-             {
-                 pixelRatio = 1,
-                 sdf = false,
-                 stretchX,
-                 stretchY,
-                 content
-             }: Partial<StyleImageMetadata> = {}) {
+        image: HTMLImageElement | ImageBitmap | ImageData | {
+            width: number;
+            height: number;
+            data: Uint8Array | Uint8ClampedArray;
+        } | StyleImageInterface,
+        {
+            pixelRatio = 1,
+            sdf = false,
+            stretchX,
+            stretchY,
+            content
+        }: Partial<StyleImageMetadata> = {}) {
         this._lazyInitEmptyStyle();
         const version = 0;
 
@@ -1719,9 +1751,9 @@ class Map extends Camera {
      */
     updateImage(id: string,
         image: HTMLImageElement | ImageBitmap | ImageData | {
-          width: number;
-          height: number;
-          data: Uint8Array | Uint8ClampedArray;
+            width: number;
+            height: number;
+            data: Uint8Array | Uint8ClampedArray;
         } | StyleImageInterface) {
 
         const existingImage = this.style.getImage(id);
@@ -1758,7 +1790,7 @@ class Map extends Camera {
      *
      * @param id The ID of the image.
      *
-     * @returns {boolean}  A Boolean indicating whether the image exists.
+     * @returns {boolean} A Boolean indicating whether the image exists.
      * @example
      * // Check if an image with the ID 'cat' exists in
      * // the style's sprite.
@@ -1811,16 +1843,16 @@ class Map extends Camera {
     }
 
     /**
-    * Returns an Array of strings containing the IDs of all images currently available in the map.
-    * This includes both images from the style's original sprite
-    * and any images that have been added at runtime using {@link Map#addImage}.
-    *
-    * @returns {Array<string>} An Array of strings containing the names of all sprites/images currently available in the map.
-    *
-    * @example
-    * var allImages = map.listImages();
-    *
-    */
+     * Returns an Array of strings containing the IDs of all images currently available in the map.
+     * This includes both images from the style's original sprite
+     * and any images that have been added at runtime using {@link Map#addImage}.
+     *
+     * @returns {Array<string>} An Array of strings containing the names of all sprites/images currently available in the map.
+     *
+     * @example
+     * var allImages = map.listImages();
+     *
+     */
     listImages() {
         return this.style.listImages();
     }
@@ -2184,9 +2216,9 @@ class Map extends Camera {
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      */
     setFeatureState(feature: {
-      source: string;
-      sourceLayer?: string;
-      id: string | number;
+        source: string;
+        sourceLayer?: string;
+        id: string | number;
     }, state: any) {
         this.style.setFeatureState(feature, state);
         return this._update();
@@ -2238,11 +2270,11 @@ class Map extends Camera {
      *   }, 'hover');
      * });
      *
-    */
+     */
     removeFeatureState(target: {
-      source: string;
-      sourceLayer?: string;
-      id?: string | number;
+        source: string;
+        sourceLayer?: string;
+        id?: string | number;
     }, key?: string) {
         this.style.removeFeatureState(target, key);
         return this._update();
@@ -2278,11 +2310,11 @@ class Map extends Camera {
      *
      */
     getFeatureState(
-      feature: {
-        source: string;
-        sourceLayer?: string;
-        id: string | number;
-      }
+        feature: {
+            source: string;
+            sourceLayer?: string;
+            id: string | number;
+        }
     ): any {
         return this.style.getFeatureState(feature);
     }
@@ -2353,7 +2385,7 @@ class Map extends Camera {
         this._canvas.setAttribute('role', 'region');
 
         const dimensions = this._containerDimensions();
-        this._resizeCanvas(dimensions[0], dimensions[1]);
+        this._resizeCanvas(dimensions[0], dimensions[1], this.getPixelRatio());
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container mapboxgl-control-container', container);
         const positions = this._controlPositions = {};
@@ -2364,9 +2396,7 @@ class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _resizeCanvas(width: number, height: number) {
-        const pixelRatio = devicePixelRatio || 1;
-
+    _resizeCanvas(width: number, height: number, pixelRatio: number) {
         // Request the required canvas size taking the pixelratio into account.
         this._canvas.width = pixelRatio * width;
         this._canvas.height = pixelRatio * height;
@@ -2613,11 +2643,11 @@ class Map extends Camera {
     }
 
     /**
-    * Force a synchronous redraw of the map.
-    * @example
-    * map.redraw();
-    * @returns {Map} `this`
-    */
+     * Force a synchronous redraw of the map.
+     * @example
+     * map.redraw();
+     * @returns {Map} `this`
+     */
     redraw(): Map {
         if (this.style) {
             // cancel the scheduled update

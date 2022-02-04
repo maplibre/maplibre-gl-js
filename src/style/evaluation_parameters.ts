@@ -5,9 +5,9 @@ import {plugin as rtlTextPlugin} from '../source/rtl_text_plugin';
 import type {TransitionSpecification} from '../style-spec/types';
 
 export type CrossfadeParameters = {
-  fromScale: number;
-  toScale: number;
-  t: number;
+    fromScale: number;
+    toScale: number;
+    t: number;
 };
 
 class EvaluationParameters {

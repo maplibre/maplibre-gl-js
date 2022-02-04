@@ -1,15 +1,15 @@
 module.exports = {
   "roots": [
-    "<rootDir>/src"
+    "<rootDir>/src",
+    "<rootDir>/test/browser",
+    "<rootDir>/test/build",
   ],
   "testMatch": [
     "**/__tests__/**/*.+(ts|tsx|js)",
     "**/?(*.)+(spec|test).+(ts|tsx|js)"
   ],
   "transform": {
-    "^.+\\.(ts|tsx)$": "ts-jest",
-    "^.+\\.(js)$": "babel-jest",
-    "^.+\\.(glsl)$": "jest-raw-loader",
+    '^.+\\.(t|j)sx?$': '@swc/jest',
   },
   testEnvironment: "jsdom",
   transformIgnorePatterns: [

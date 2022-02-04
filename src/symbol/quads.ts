@@ -1,4 +1,4 @@
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
 
@@ -26,24 +26,24 @@ import {Rect} from '../render/glyph_atlas';
  * @private
  */
 export type SymbolQuad = {
-  tl: Point;
-  tr: Point;
-  bl: Point;
-  br: Point;
-  tex: {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-  };
-  pixelOffsetTL: Point;
-  pixelOffsetBR: Point;
-  writingMode: any | void;
-  glyphOffset: [number, number];
-  sectionIndex: number;
-  isSDF: boolean;
-  minFontScaleX: number;
-  minFontScaleY: number;
+    tl: Point;
+    tr: Point;
+    bl: Point;
+    br: Point;
+    tex: {
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+    };
+    pixelOffsetTL: Point;
+    pixelOffsetBR: Point;
+    writingMode: any | void;
+    glyphOffset: [number, number];
+    sectionIndex: number;
+    isSDF: boolean;
+    minFontScaleX: number;
+    minFontScaleY: number;
 };
 
 // If you have a 10px icon that isn't perfectly aligned to the pixel grid it will cover 11 actual
@@ -56,10 +56,10 @@ const border = IMAGE_PADDING;
  * @private
  */
 export function getIconQuads(
-  shapedIcon: PositionedIcon,
-  iconRotate: number,
-  isSDFIcon: boolean,
-  hasIconTextFit: boolean
+    shapedIcon: PositionedIcon,
+    iconRotate: number,
+    isSDFIcon: boolean,
+    hasIconTextFit: boolean
 ): Array<SymbolQuad> {
     const quads = [];
 
@@ -220,14 +220,14 @@ function getPxOffset(fixedOffset, fixedSize, stretchOffset, stretchSize) {
  * @private
  */
 export function getGlyphQuads(
-  anchor: Anchor,
-  shaping: Shaping,
-  textOffset: [number, number],
-  layer: SymbolStyleLayer,
-  alongLine: boolean,
-  feature: Feature,
-  imageMap: {[_: string]: StyleImage},
-  allowVerticalPlacement: boolean
+    anchor: Anchor,
+    shaping: Shaping,
+    textOffset: [number, number],
+    layer: SymbolStyleLayer,
+    alongLine: boolean,
+    feature: Feature,
+    imageMap: {[_: string]: StyleImage},
+    allowVerticalPlacement: boolean
 ): Array<SymbolQuad> {
 
     const textRotate = layer.layout.get('text-rotate').evaluate(feature, {}) * Math.PI / 180;

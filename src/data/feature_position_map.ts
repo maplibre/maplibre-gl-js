@@ -3,14 +3,14 @@ import {register} from '../util/web_worker_transfer';
 import assert from 'assert';
 
 type SerializedFeaturePositionMap = {
-  ids: Float64Array;
-  positions: Uint32Array;
+    ids: Float64Array;
+    positions: Uint32Array;
 };
 
 type FeaturePosition = {
-  index: number;
-  start: number;
-  end: number;
+    index: number;
+    start: number;
+    end: number;
 };
 
 // A transferable data structure that maps feature ids to their indices and buffer offsets

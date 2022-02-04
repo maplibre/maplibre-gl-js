@@ -100,3 +100,17 @@ export function getMockDispatcher() {
 
     return mockDispatcher;
 }
+
+export function stubAjaxGetImage(createImageBitmap) {
+    global.createImageBitmap = createImageBitmap;
+
+    global.URL.revokeObjectURL = () => {};
+    global.URL.createObjectURL = (_) => { return null; };
+
+    // eslint-disable-next-line accessor-pairs
+    Object.defineProperty(global.Image.prototype, 'src', {
+        set(_) {
+            this.onload();
+        }
+    });
+}

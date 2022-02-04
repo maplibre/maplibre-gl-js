@@ -5,7 +5,7 @@ import type {UniformValues, UniformLocations} from '../uniform_binding';
 import {mat4} from 'gl-matrix';
 
 export type ClippingMaskUniformsType = {
-  'u_matrix': UniformMatrix4f;
+    'u_matrix': UniformMatrix4f;
 };
 
 const clippingMaskUniforms = (context: Context, locations: UniformLocations): ClippingMaskUniformsType => ({

@@ -1,6 +1,6 @@
 import {getTileBBox} from '@mapbox/whoots-js';
 import EXTENT from '../data/extent';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../geo/mercator_coordinate';
 
 import assert from 'assert';
@@ -28,7 +28,7 @@ export class CanonicalTileID {
     }
 
     // given a list of urls, choose a url template and return a tile URL
-    url(urls: Array<string>, scheme?: string | null) {
+    url(urls: Array<string>, pixelRatio: number, scheme?: string | null) {
         const bbox = getTileBBox(this.x, this.y, this.z);
         const quadkey = getQuadkey(this.z, this.x, this.y);
 
@@ -37,7 +37,7 @@ export class CanonicalTileID {
             .replace(/{z}/g, String(this.z))
             .replace(/{x}/g, String(this.x))
             .replace(/{y}/g, String(scheme === 'tms' ? (Math.pow(2, this.z) - this.y - 1) : this.y))
-            .replace(/{ratio}/g, devicePixelRatio > 1 ? '@2x' : '')
+            .replace(/{ratio}/g, pixelRatio > 1 ? '@2x' : '')
             .replace(/{quadkey}/g, quadkey)
             .replace(/{bbox-epsg-3857}/g, bbox);
     }

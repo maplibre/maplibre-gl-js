@@ -1,4 +1,4 @@
-import {createSymbolBucket} from '../../test/util/create_symbol_layer_jest';
+import {createSymbolBucket} from '../../test/util/create_symbol_layer';
 import Tile from '../source/tile';
 import GeoJSONWrapper, {Feature} from '../source/geojson_wrapper';
 import {OverscaledTileID} from '../source/tile_id';
@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import vtpbf from 'vt-pbf';
 import FeatureIndex from '../data/feature_index';
-import {CollisionBoxArray} from '../data/array_types';
+import {CollisionBoxArray} from '../data/array_types.g';
 import {extend} from '../util/util';
 import {serialize, deserialize} from '../util/web_worker_transfer';
 

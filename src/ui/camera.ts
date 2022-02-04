@@ -3,7 +3,7 @@ import {number as interpolate} from '../style-spec/util/interpolate';
 import browser from '../util/browser';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
-import Point, {PointLike} from '../util/point';
+import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
 import assert from 'assert';
 import {Debug} from '../util/debug';
@@ -13,6 +13,16 @@ import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
+
+/**
+ * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
+ *
+ * @typedef {(Point | [number, number])} PointLike
+ * @example
+ * var p1 = new Point(-77, 38); // a PointLike which is a Point
+ * var p2 = [-77, 38]; // a PointLike which is an array of two numbers
+ */
+export type PointLike = Point | [number, number];
 
 export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
 
@@ -48,8 +58,8 @@ export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Pa
  * @see [Display buildings in 3D](https://maplibre.org/maplibre-gl-js-docs/example/3d-buildings/)
  */
 export type CameraOptions = CenterZoomBearing & {
-  pitch?: number;
-  around?: LngLatLike;
+    pitch?: number;
+    around?: LngLatLike;
 };
 
 export type CenterZoomBearing = {
@@ -105,11 +115,11 @@ export type FitBoundsOptions = FlyToOptions & {
  *   [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
  */
 export type AnimationOptions = {
-  duration?: number;
-  easing?: (_: number) => number;
-  offset?: PointLike;
-  animate?: boolean;
-  essential?: boolean;
+    duration?: number;
+    easing?: (_: number) => number;
+    offset?: PointLike;
+    animate?: boolean;
+    essential?: boolean;
 };
 
 abstract class Camera extends Evented {
@@ -123,8 +133,8 @@ abstract class Camera extends Evented {
     _bearingSnap: number;
     _easeStart: number;
     _easeOptions: {
-      duration?: number;
-      easing?: (_: number) => number;
+        duration?: number;
+        easing?: (_: number) => number;
     };
     _easeId: string | void;
 
@@ -136,7 +146,7 @@ abstract class Camera extends Evented {
     abstract _cancelRenderFrame(_: TaskID): void;
 
     constructor(transform: Transform, options: {
-      bearingSnap: number;
+        bearingSnap: number;
     }) {
         super();
         this._moving = false;
@@ -599,7 +609,7 @@ abstract class Camera extends Evented {
      * @memberof Map#
      * @param bounds Center these bounds in the viewport and use the highest
      *      zoom level up to and including `Map#getMaxZoom()` that fits them in the viewport.
-     * @param {Object} [options] Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
+     * @param {FitBoundsOptions} [options] Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
      * @param {number | PaddingOptions} [options.padding] The amount of padding in pixels to add to the given bounds.
      * @param {boolean} [options.linear=false] If `true`, the map transitions using
      *     {@link Map#easeTo}. If `false`, the map transitions using {@link Map#flyTo}. See
@@ -611,7 +621,7 @@ abstract class Camera extends Evented {
      * @fires movestart
      * @fires moveend
      * @returns {Map} `this`
-	 * @example
+     * @example
      * var bbox = [[-79, 43], [-73, 45]];
      * map.fitBounds(bbox, {
      *   padding: {top: 10, bottom:25, left: 15, right: 5}
@@ -646,7 +656,7 @@ abstract class Camera extends Evented {
      * @fires movestart
      * @fires moveend
      * @returns {Map} `this`
-	 * @example
+     * @example
      * var p0 = [220, 400];
      * var p1 = [500, 900];
      * map.fitScreenCoordinates(p0, p1, map.getBearing(), {
@@ -792,8 +802,8 @@ abstract class Camera extends Evented {
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
      */
     easeTo(options: EaseToOptions & {
-      easeId?: string;
-      noMoveStart?: boolean;
+        easeId?: string;
+        noMoveStart?: boolean;
     }, eventData?: any) {
         this._stop(false, options.easeId);
 
@@ -955,7 +965,7 @@ abstract class Camera extends Evented {
      * unless 'options' includes `essential: true`.
      *
      * @memberof Map#
-     * @param {Object} options Options describing the destination and animation of the transition.
+     * @param {FlyToOptions} options Options describing the destination and animation of the transition.
      *     Accepts {@link CameraOptions}, {@link AnimationOptions},
      *     and the following additional options.
      * @param {number} [options.curve=1.42] The zooming "curve" that will occur along the
@@ -1199,12 +1209,12 @@ abstract class Camera extends Evented {
     }
 
     _ease(frame: (_: number) => void,
-          finish: () => void,
-          options: {
+        finish: () => void,
+        options: {
             animate?: boolean;
             duration?: number;
             easing?: (_: number) => number;
-          }) {
+        }) {
         if (options.animate === false || options.duration === 0) {
             frame(1);
             finish();
@@ -1246,7 +1256,7 @@ abstract class Camera extends Evented {
         const delta = center.lng - tr.center.lng;
         center.lng +=
             delta > 180 ? -360 :
-            delta < -180 ? 360 : 0;
+                delta < -180 ? 360 : 0;
     }
 }
 

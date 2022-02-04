@@ -18,29 +18,29 @@ import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type Tile from '../../source/tile';
 
 export type FillExtrusionUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_lightpos': Uniform3f;
-  'u_lightintensity': Uniform1f;
-  'u_lightcolor': Uniform3f;
-  'u_vertical_gradient': Uniform1f;
-  'u_opacity': Uniform1f;
+    'u_matrix': UniformMatrix4f;
+    'u_lightpos': Uniform3f;
+    'u_lightintensity': Uniform1f;
+    'u_lightcolor': Uniform3f;
+    'u_vertical_gradient': Uniform1f;
+    'u_opacity': Uniform1f;
 };
 
 export type FillExtrusionPatternUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_lightpos': Uniform3f;
-  'u_lightintensity': Uniform1f;
-  'u_lightcolor': Uniform3f;
-  'u_height_factor': Uniform1f;
-  'u_vertical_gradient': Uniform1f;
-  // pattern uniforms:
-  'u_texsize': Uniform2f;
-  'u_image': Uniform1i;
-  'u_pixel_coord_upper': Uniform2f;
-  'u_pixel_coord_lower': Uniform2f;
-  'u_scale': Uniform3f;
-  'u_fade': Uniform1f;
-  'u_opacity': Uniform1f;
+    'u_matrix': UniformMatrix4f;
+    'u_lightpos': Uniform3f;
+    'u_lightintensity': Uniform1f;
+    'u_lightcolor': Uniform3f;
+    'u_height_factor': Uniform1f;
+    'u_vertical_gradient': Uniform1f;
+    // pattern uniforms:
+    'u_texsize': Uniform2f;
+    'u_image': Uniform1i;
+    'u_pixel_coord_upper': Uniform2f;
+    'u_pixel_coord_lower': Uniform2f;
+    'u_scale': Uniform3f;
+    'u_fade': Uniform1f;
+    'u_opacity': Uniform1f;
 };
 
 const fillExtrusionUniforms = (context: Context, locations: UniformLocations): FillExtrusionUniformsType => ({
@@ -70,10 +70,10 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
 });
 
 const fillExtrusionUniformValues = (
-  matrix: mat4,
-  painter: Painter,
-  shouldUseVerticalGradient: boolean,
-  opacity: number
+    matrix: mat4,
+    painter: Painter,
+    shouldUseVerticalGradient: boolean,
+    opacity: number
 ): UniformValues<FillExtrusionUniformsType> => {
     const light = painter.style.light;
     const _lp = light.properties.get('position');
@@ -97,13 +97,13 @@ const fillExtrusionUniformValues = (
 };
 
 const fillExtrusionPatternUniformValues = (
-  matrix: mat4,
-  painter: Painter,
-  shouldUseVerticalGradient: boolean,
-  opacity: number,
-  coord: OverscaledTileID,
-  crossfade: CrossfadeParameters,
-  tile: Tile
+    matrix: mat4,
+    painter: Painter,
+    shouldUseVerticalGradient: boolean,
+    opacity: number,
+    coord: OverscaledTileID,
+    crossfade: CrossfadeParameters,
+    tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
     return extend(fillExtrusionUniformValues(matrix, painter, shouldUseVerticalGradient, opacity),
         patternUniformValues(crossfade, painter, tile),

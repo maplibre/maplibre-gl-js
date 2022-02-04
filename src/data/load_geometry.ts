@@ -2,7 +2,7 @@ import {warnOnce, clamp} from '../util/util';
 
 import EXTENT from './extent';
 
-import type Point from '../util/point';
+import type Point from '@mapbox/point-geometry';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 // These bounds define the minimum and maximum supported coordinate values.
