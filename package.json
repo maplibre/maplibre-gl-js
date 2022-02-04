@@ -174,7 +174,7 @@
     "test-build": "jest ./test/build",
     "test-browser": "jest ./test/browser",
     "test-render": "node --loader ts-node/esm --experimental-specifier-resolution=node --experimental-json-modules --max-old-space-size=2048 test/render.test.ts",
-    "test-query-jest": "jest test/integration/lib/query-browser-jest.test.ts",
+    "test-query": "jest test/integration/lib/query.test.ts",
     "test-expressions": "node --loader ts-node/esm --experimental-specifier-resolution=node test/expression.test.ts",
     "test-unit": "jest ./src",
     "codegen": "npm run generate-style-code && npm run generate-struct-arrays && npm run generate-style-spec && npm run generate-shaders",
