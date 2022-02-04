@@ -86,13 +86,13 @@ In test/integration/lib/query-browser-jest.test.ts a web server is automatically
 npx st  -l --port 7357 -d test/integration -co
 ```
 
-We currently run each test in a new tap. Alterantively we might gain some speed by clearing the webgl context instead, and running everything in one tap.
+We currently run each test in a new tab. Alterantively we might gain some speed by clearing the webgl context instead, and running everything in one tab.
 
 ```
 delete map.painter.context.gl;
 ```
 
-The ouput for each test is a true/false, regarding whether the expected and actual output has deep equality. To get a better test output, we can use:
+The output for each test is a true/false, regarding whether the expected and actual output has deep equality. To get a better test output, we can use:
 
 ```
 generateDiffLog(fixture.expected, actual);
