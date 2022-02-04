@@ -1,4 +1,4 @@
-import {LineLayoutArray, LineExtLayoutArray} from '../array_types';
+import {LineLayoutArray, LineExtLayoutArray} from '../array_types.g';
 
 import {members as layoutAttributes} from './line_attributes';
 import {members as layoutAttributesExt} from './line_attributes_ext';
@@ -71,14 +71,14 @@ const LINE_DISTANCE_SCALE = 1 / 2;
 const MAX_LINE_DISTANCE = Math.pow(2, LINE_DISTANCE_BUFFER_BITS - 1) / LINE_DISTANCE_SCALE;
 
 type LineClips = {
-  start: number;
-  end: number;
+    start: number;
+    end: number;
 };
 
 type GradientTexture = {
-  texture?: Texture;
-  gradient?: RGBAImage;
-  version?: number;
+    texture?: Texture;
+    gradient?: RGBAImage;
+    version?: number;
 };
 
 /**

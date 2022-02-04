@@ -5,6 +5,7 @@ import harness from './harness';
 import compactStringify from 'json-stringify-pretty-compact';
 import {fileURLToPath} from 'url';
 
+// @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // we have to handle this edge case here because we have test fixtures for this
@@ -31,7 +32,7 @@ function stripPrecision(x) {
 
         const multiplier = Math.pow(10,
             Math.max(0,
-                     decimalSigFigs - Math.ceil(Math.log10(Math.abs(x)))));
+                decimalSigFigs - Math.ceil(Math.log10(Math.abs(x)))));
 
         // We strip precision twice in a row here to avoid cases where
         // stripping an already stripped number will modify its value
@@ -80,15 +81,17 @@ function deepEqual(a, b) {
 /**
  * Run the expression suite.
  *
- * @param {string} implementation - identify the implementation under test; used to
+ * @param implementation - identify the implementation under test; used to
  * deal with implementation-specific test exclusions and fudge-factors
- * @param {Object} options
- * @param {Array<string>} [options.tests] - array of test names to run; tests not in the array will be skipped
- * @param {Array<string>} [options.ignores] - array of test names to ignore.
- * @param {} runExpressionTest - a function that runs a single expression test fixture
- * @returns {undefined} terminates the process when testing is complete
+ * @param options
+ * @param options.tests - array of test names to run; tests not in the array will be skipped
+ * @param options.ignores - array of test names to ignore.
+ * @param runExpressionTest - a function that runs a single expression test fixture
+ * @returns terminates the process when testing is complete
  */
-export function run(implementation, options, runExpressionTest) {
+export function run(implementation: string, options: {
+    tests?: any; ignores?: any; fixtureFilename?: any;
+}, runExpressionTest) {
     const directory = path.join(__dirname, '../expression-tests');
     options.fixtureFilename = 'test.json';
     harness(directory, implementation, options, (fixture, params, done) => {
@@ -105,7 +108,7 @@ export function run(implementation, options, runExpressionTest) {
 
                 delete fixture.metadata;
 
-                fs.writeFile(path.join(dir, 'test.json'), `${stringify(fixture, null, 2)}\n`, done);
+                fs.writeFile(path.join(dir, 'test.json'), `${stringify(fixture)}\n`, done);
                 return;
             }
 

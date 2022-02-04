@@ -91,18 +91,18 @@ export function queryRenderedFeatures(
 }
 
 export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
-                            serializedLayers: {[_: string]: StyleLayer},
-                            sourceCaches: {[_: string]: SourceCache},
-                            queryGeometry: Array<Point>,
-                            params: {
-                              filter: FilterSpecification;
-                              layers: Array<string>;
-                              availableImages: Array<string>;
-                            },
-                            collisionIndex: CollisionIndex,
-                            retainedQueryData: {
-                              [_: number]: RetainedQueryData;
-                            }) {
+    serializedLayers: {[_: string]: StyleLayer},
+    sourceCaches: {[_: string]: SourceCache},
+    queryGeometry: Array<Point>,
+    params: {
+        filter: FilterSpecification;
+        layers: Array<string>;
+        availableImages: Array<string>;
+    },
+    collisionIndex: CollisionIndex,
+    retainedQueryData: {
+        [_: number]: RetainedQueryData;
+    }) {
     const result = {};
     const renderedSymbols = collisionIndex.queryRenderedSymbols(queryGeometry);
     const bucketQueryData = [];
@@ -113,14 +113,14 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
 
     for (const queryData of bucketQueryData) {
         const bucketSymbols = queryData.featureIndex.lookupSymbolFeatures(
-                renderedSymbols[queryData.bucketInstanceId],
-                serializedLayers,
-                queryData.bucketIndex,
-                queryData.sourceLayerIndex,
-                params.filter,
-                params.layers,
-                params.availableImages,
-                styleLayers);
+            renderedSymbols[queryData.bucketInstanceId],
+            serializedLayers,
+            queryData.bucketIndex,
+            queryData.sourceLayerIndex,
+            params.filter,
+            params.layers,
+            params.availableImages,
+            styleLayers);
 
         for (const layerID in bucketSymbols) {
             const resultFeatures = result[layerID] = result[layerID] || [];

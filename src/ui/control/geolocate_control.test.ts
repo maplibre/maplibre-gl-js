@@ -222,7 +222,7 @@ describe('GeolocateControl with no options', () => {
             expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '10.0000', 'lng': '20.0000'});
             expect(geolocate._userLocationDotMarker._map).toBeTruthy();
             expect(
-            geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')
+                geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')
             ).toBeFalsy();
             map.once('moveend', () => {
                 expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '40.0000', 'lng': '50.0000'});

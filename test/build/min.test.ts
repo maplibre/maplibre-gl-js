@@ -28,7 +28,7 @@ describe('test min build', () => {
         global.URL.createObjectURL = () => 'placeholder';
 
         try {
-            await import('../../dist/maplibre-gl.js');
+            eval(minBundle);
         } catch (e) {
             expect(e).toBeFalsy();
         }

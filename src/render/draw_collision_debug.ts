@@ -8,7 +8,7 @@ import StencilMode from '../gl/stencil_mode';
 import CullFaceMode from '../gl/cull_face_mode';
 import {collisionUniformValues, collisionCircleUniformValues} from './program/collision_program';
 
-import {QuadTriangleArray, CollisionCircleLayoutArray} from '../data/array_types';
+import {QuadTriangleArray, CollisionCircleLayoutArray} from '../data/array_types.g';
 import {collisionCircleLayout} from '../data/bucket/symbol_attributes';
 import SegmentVector from '../data/segment';
 import {mat4} from 'gl-matrix';
@@ -18,10 +18,10 @@ import IndexBuffer from '../gl/index_buffer';
 export default drawCollisionDebug;
 
 type TileBatch = {
-  circleArray: Array<number>;
-  circleOffset: number;
-  transform: mat4;
-  invTransform: mat4;
+    circleArray: Array<number>;
+    circleOffset: number;
+    transform: mat4;
+    invTransform: mat4;
 };
 
 let quadTriangles: QuadTriangleArray;

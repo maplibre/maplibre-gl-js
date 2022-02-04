@@ -12,7 +12,7 @@ import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import {IControl} from './control/control';
 import EvaluationParameters from '../style/evaluation_parameters';
-import {fakeServer, SinonFakeServer} from 'sinon';
+import {fakeServer, FakeServer} from 'nise';
 
 function createStyleSource() {
     return {
@@ -24,7 +24,7 @@ function createStyleSource() {
     } as SourceSpecification;
 }
 
-let server: SinonFakeServer;
+let server: FakeServer;
 
 beforeEach(() => {
     setPerformance();
@@ -2113,6 +2113,12 @@ describe('Map', () => {
         expect(map.painter.pixelRatio).toBe(2);
         expect(map.painter.width).toBe(1024);
         expect(map.painter.height).toBe(1024);
+    });
+
+    test('fires sourcedataabort event on dataabort event', done => {
+        const map = createMap();
+        map.once('sourcedataabort', () => done());
+        map.fire(new Event('dataabort'));
     });
 
 });

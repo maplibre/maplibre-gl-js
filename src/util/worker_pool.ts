@@ -12,7 +12,7 @@ export default class WorkerPool {
     static workerCount: number;
 
     active: {
-      [_ in number | string]: boolean;
+        [_ in number | string]: boolean;
     };
     workers: Array<WorkerInterface>;
 

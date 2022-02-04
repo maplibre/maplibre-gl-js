@@ -1,35 +1,35 @@
 export type NullTypeT = {
-  kind: 'null';
+    kind: 'null';
 };
 export type NumberTypeT = {
-  kind: 'number';
+    kind: 'number';
 };
 export type StringTypeT = {
-  kind: 'string';
+    kind: 'string';
 };
 export type BooleanTypeT = {
-  kind: 'boolean';
+    kind: 'boolean';
 };
 export type ColorTypeT = {
-  kind: 'color';
+    kind: 'color';
 };
 export type ObjectTypeT = {
-  kind: 'object';
+    kind: 'object';
 };
 export type ValueTypeT = {
-  kind: 'value';
+    kind: 'value';
 };
 export type ErrorTypeT = {
-  kind: 'error';
+    kind: 'error';
 };
 export type CollatorTypeT = {
-  kind: 'collator';
+    kind: 'collator';
 };
 export type FormattedTypeT = {
-  kind: 'formatted';
+    kind: 'formatted';
 };
 export type ResolvedImageTypeT = {
-  kind: 'resolvedImage';
+    kind: 'resolvedImage';
 };
 
 export type EvaluationKind = 'constant' | 'source' | 'camera' | 'composite';
@@ -38,9 +38,9 @@ export type Type = NullTypeT | NumberTypeT | StringTypeT | BooleanTypeT | ColorT
 ArrayType | ErrorTypeT | CollatorTypeT | FormattedTypeT | ResolvedImageTypeT;
 
 export type ArrayType = {
-  kind: 'array';
-  itemType: Type;
-  N: number;
+    kind: 'array';
+    itemType: Type;
+    N: number;
 };
 
 export type NativeType = 'number' | 'string' | 'boolean' | 'null' | 'array' | 'object';

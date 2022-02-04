@@ -1,4 +1,4 @@
-import {StructArrayLayout3i6, FeatureIndexArray} from '../data/array_types';
+import {StructArrayLayout3i6, FeatureIndexArray} from '../data/array_types.g';
 
 describe('StructArray', () => {
     class TestArray extends StructArrayLayout3i6 {}

@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
 import loadGlyphRange from './load_glyph_range';
-import {useFakeXMLHttpRequest} from 'sinon';
+import {fakeXhr} from 'nise';
 
 test('loadGlyphRange', done => {
     global.fetch = null;
@@ -14,7 +14,7 @@ test('loadGlyphRange', done => {
     const manager = new RequestManager(transform);
 
     let request;
-    useFakeXMLHttpRequest().onCreate = (req) => { request = req; };
+    fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { request = req; };
 
     loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager, (err, result) => {
         expect(err).toBeFalsy();

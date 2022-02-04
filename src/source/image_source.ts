@@ -2,7 +2,7 @@ import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {getImage, ResourceType} from '../util/ajax';
 import EXTENT from '../data/extent';
-import {RasterBoundsArray} from '../data/array_types';
+import {RasterBoundsArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import SegmentVector from '../data/segment';
 import Texture from '../render/texture';
@@ -143,8 +143,8 @@ class ImageSource extends Evented implements Source {
      * @returns {ImageSource} this
      */
     updateImage(options: {
-      url: string;
-      coordinates?: Coordinates;
+        url: string;
+        coordinates?: Coordinates;
     }) {
         if (!this.image || !options.url) {
             return this;
@@ -299,9 +299,9 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
     const tilesAtZoom = Math.pow(2, zoom);
 
     return new CanonicalTileID(
-            zoom,
-            Math.floor((minX + maxX) / 2 * tilesAtZoom),
-            Math.floor((minY + maxY) / 2 * tilesAtZoom));
+        zoom,
+        Math.floor((minX + maxX) / 2 * tilesAtZoom),
+        Math.floor((minY + maxY) / 2 * tilesAtZoom));
 }
 
 export default ImageSource;

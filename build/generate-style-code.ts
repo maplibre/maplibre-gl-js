@@ -5,13 +5,13 @@ import * as fs from 'fs';
 import spec from '../src/style-spec/reference/v8.json';
 
 function camelCase(str: string): string {
-    return str.replace(/-(.)/g, function (_, x) {
-      return x.toUpperCase();
+    return str.replace(/-(.)/g, (_, x) => {
+        return x.toUpperCase();
     });
 }
 
 function pascalCase(str: string): string {
-    let almostCamelized = camelCase(str);
+    const almostCamelized = camelCase(str);
     return almostCamelized[0].toUpperCase() + almostCamelized.slice(1);
 }
 
@@ -37,7 +37,7 @@ function nativeType(property) {
             } else {
                 return `Array<${nativeType({type: property.value, values: property.values})}>`;
             }
-        default: throw new Error(`unknown type for ${property.name}`)
+        default: throw new Error(`unknown type for ${property.name}`);
     }
 }
 
@@ -97,7 +97,7 @@ function runtimeType(property) {
             } else {
                 return `array(${runtimeType({type: property.value})})`;
             }
-        default: throw new Error(`unknown type for ${property.name}`)
+        default: throw new Error(`unknown type for ${property.name}`);
     }
 }
 
@@ -146,7 +146,7 @@ const layers = Object.keys(spec.layer.type.values).map((type) => {
         return memo;
     }, []);
 
-    return { type, layoutProperties, paintProperties };
+    return {type, layoutProperties, paintProperties};
 });
 
 function emitlayerProperties(locals) {
@@ -264,12 +264,12 @@ const paint: Properties<${layerType}PaintProps> = new Properties({`);
         `});
 
 export default ({ paint${layoutProperties.length ? ', layout' : ''} } as {
-    paint: Properties<${layerType}PaintProps>${layoutProperties.length ? ',\n    layout: Properties<' + layerType + 'LayoutProps>' : ''}
+    paint: Properties<${layerType}PaintProps>${layoutProperties.length ? `,\n    layout: Properties<${layerType}LayoutProps>` : ''}
 });`);
 
     return output.join('\n');
 }
 
 for (const layer of layers) {
-    fs.writeFileSync(`src/style/style_layer/${layer.type.replace('-', '_')}_style_layer_properties.ts`, emitlayerProperties(layer))
+    fs.writeFileSync(`src/style/style_layer/${layer.type.replace('-', '_')}_style_layer_properties.g.ts`, emitlayerProperties(layer));
 }

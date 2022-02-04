@@ -2,7 +2,7 @@ import ImageSource from './image_source';
 import {Evented} from '../util/evented';
 import Transform from '../geo/transform';
 import {extend} from '../util/util';
-import {useFakeXMLHttpRequest} from 'sinon';
+import {fakeXhr} from 'nise';
 import {RequestManager} from '../util/request_manager';
 import Dispatcher from '../util/dispatcher';
 import {stubAjaxGetImage} from '../util/test/util';
@@ -33,7 +33,7 @@ class StubMap extends Evented {
 
 describe('ImageSource', () => {
     const requests = [];
-    useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
+    fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
     stubAjaxGetImage(undefined);
     beforeEach(() => {
         global.fetch = null;

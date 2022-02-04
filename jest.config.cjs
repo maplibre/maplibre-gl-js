@@ -9,9 +9,7 @@ module.exports = {
     "**/?(*.)+(spec|test).+(ts|tsx|js)"
   ],
   "transform": {
-    "^.+\\.(ts|tsx)$": "ts-jest",
-    "^.+\\.(js)$": "babel-jest",
-    "^.+\\.(glsl)$": "jest-raw-loader",
+    '^.+\\.(t|j)sx?$': '@swc/jest',
   },
   testEnvironment: "jsdom",
   transformIgnorePatterns: [

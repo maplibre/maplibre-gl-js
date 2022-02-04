@@ -3,7 +3,7 @@ import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import SymbolBucket from './symbol_bucket';
-import {CollisionBoxArray} from '../../data/array_types';
+import {CollisionBoxArray} from '../../data/array_types.g';
 import {performSymbolLayout} from '../../symbol/symbol_layout';
 import {Placement} from '../../symbol/placement';
 import Transform from '../../geo/transform';
@@ -139,12 +139,12 @@ describe('SymbolBucket', () => {
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
         bucket.populate(
-        [
-            createIndexedFeature(0, 0, 'a'),
-            createIndexedFeature(1, 1, 'b'),
-            createIndexedFeature(2, 2, 'a')
-        ] as any as IndexedFeature[],
-        options, undefined
+            [
+                createIndexedFeature(0, 0, 'a'),
+                createIndexedFeature(1, 1, 'b'),
+                createIndexedFeature(2, 2, 'a')
+            ] as any as IndexedFeature[],
+            options, undefined
         );
 
         const icons = options.iconDependencies as any;
@@ -179,12 +179,12 @@ describe('SymbolBucket', () => {
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
         bucket.populate(
-        [
-            createIndexedFeature(0, 0, 'a'),
-            createIndexedFeature(1, 1, 'b'),
-            createIndexedFeature(2, 2, 'a')
-        ] as any as IndexedFeature[],
-        options, undefined
+            [
+                createIndexedFeature(0, 0, 'a'),
+                createIndexedFeature(1, 1, 'b'),
+                createIndexedFeature(2, 2, 'a')
+            ] as any as IndexedFeature[],
+            options, undefined
         );
 
         const icons = options.iconDependencies as any;

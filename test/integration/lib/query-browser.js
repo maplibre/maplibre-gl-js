@@ -46,7 +46,7 @@ function testFunc(t) {
         skew: options.skew || [0, 0],
         fadeDuration: options.fadeDuration || 0,
         localIdeographFontFamily: options.localIdeographFontFamily || false,
-        crossSourceCollisions: typeof options.crossSourceCollisions === "undefined" ? true : options.crossSourceCollisions
+        crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions
     });
     map.repaint = true;
     map.once('load', () => {

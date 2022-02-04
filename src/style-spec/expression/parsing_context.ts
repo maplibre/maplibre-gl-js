@@ -54,13 +54,13 @@ class ParsingContext {
      * @private
      */
     parse(
-      expr: unknown,
-      index?: number,
-      expectedType?: Type | null,
-      bindings?: Array<[string, Expression]>,
-      options: {
-        typeAnnotation?: 'assert' | 'coerce' | 'omit';
-      } = {}
+        expr: unknown,
+        index?: number,
+        expectedType?: Type | null,
+        bindings?: Array<[string, Expression]>,
+        options: {
+            typeAnnotation?: 'assert' | 'coerce' | 'omit';
+        } = {}
     ): Expression {
         if (index) {
             return this.concat(index, expectedType, bindings)._parse(expr, options);
@@ -69,10 +69,10 @@ class ParsingContext {
     }
 
     _parse(
-      expr: unknown,
-      options: {
-        typeAnnotation?: 'assert' | 'coerce' | 'omit';
-      }
+        expr: unknown,
+        options: {
+            typeAnnotation?: 'assert' | 'coerce' | 'omit';
+        }
     ): Expression {
         if (expr === null || typeof expr === 'string' || typeof expr === 'boolean' || typeof expr === 'number') {
             expr = ['literal', expr];

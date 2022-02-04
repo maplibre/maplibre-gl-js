@@ -33,7 +33,7 @@ class NullIsland {
 
     render(gl, matrix) {
         gl.useProgram(this.program);
-        gl.uniformMatrix4fv(gl.getUniformLocation(this.program, "u_matrix"), false, matrix);
+        gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, matrix);
         gl.drawArrays(gl.POINTS, 0, 1);
     }
 }
@@ -76,8 +76,8 @@ class Tent3D {
         gl.linkProgram(this.program);
         gl.validateProgram(this.program);
 
-        this.program.aPos = gl.getAttribLocation(this.program, "aPos");
-        this.program.uMatrix = gl.getUniformLocation(this.program, "uMatrix");
+        this.program.aPos = gl.getAttribLocation(this.program, 'aPos');
+        this.program.uMatrix = gl.getUniformLocation(this.program, 'uMatrix');
 
         const x = 0.5 - 0.015;
         const y = 0.5 - 0.01;
@@ -118,6 +118,6 @@ class Tent3D {
 }
 
 export default {
-    "tent-3d": Tent3D,
-    "null-island": NullIsland
+    'tent-3d': Tent3D,
+    'null-island': NullIsland
 };

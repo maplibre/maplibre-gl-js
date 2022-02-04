@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import vtpbf from 'vt-pbf';
 import FeatureIndex from '../data/feature_index';
-import {CollisionBoxArray} from '../data/array_types';
+import {CollisionBoxArray} from '../data/array_types.g';
 import {extend} from '../util/util';
 import {serialize, deserialize} from '../util/web_worker_transfer';
 

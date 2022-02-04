@@ -7,11 +7,11 @@ import {
 } from './ajax';
 import config from './config';
 import webpSupported from './webp_supported';
-import {fakeServer, SinonFakeServer} from 'sinon';
+import {fakeServer, FakeServer} from 'nise';
 import {stubAjaxGetImage} from './test/util';
 
 describe('ajax', () => {
-    let server: SinonFakeServer;
+    let server: FakeServer;
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();

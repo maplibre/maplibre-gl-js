@@ -15,9 +15,9 @@ export type DepthRangeType = [number, number];
 export type DepthFuncType = CompareFuncType;
 
 export type StencilFuncType = {
-  func: CompareFuncType;
-  ref: number;
-  mask: number;
+    func: CompareFuncType;
+    ref: number;
+    mask: number;
 };
 
 export type StencilOpConstant = WebGLRenderingContext['KEEP'] | WebGLRenderingContext['ZERO'] | WebGLRenderingContext['REPLACE'] | WebGLRenderingContext['INCR'] | WebGLRenderingContext['INCR_WRAP'] | WebGLRenderingContext['DECR'] | WebGLRenderingContext['DECR_WRAP'] | WebGLRenderingContext['INVERT'];
@@ -29,29 +29,29 @@ export type TextureUnitType = number;
 export type ViewportType = [number, number, number, number];
 
 export type StencilTestGL = {
-  func: WebGLRenderingContext['NEVER'];
-  mask: 0;
+    func: WebGLRenderingContext['NEVER'];
+    mask: 0;
 } | {
-  func: WebGLRenderingContext['LESS'];
-  mask: number;
+    func: WebGLRenderingContext['LESS'];
+    mask: number;
 } | {
-  func: WebGLRenderingContext['EQUAL'];
-  mask: number;
+    func: WebGLRenderingContext['EQUAL'];
+    mask: number;
 } | {
-  func: WebGLRenderingContext['LEQUAL'];
-  mask: number;
+    func: WebGLRenderingContext['LEQUAL'];
+    mask: number;
 } | {
-  func: WebGLRenderingContext['GREATER'];
-  mask: number;
+    func: WebGLRenderingContext['GREATER'];
+    mask: number;
 } | {
-  func: WebGLRenderingContext['NOTEQUAL'];
-  mask: number;
+    func: WebGLRenderingContext['NOTEQUAL'];
+    mask: number;
 } | {
-  func: WebGLRenderingContext['GEQUAL'];
-  mask: number;
+    func: WebGLRenderingContext['GEQUAL'];
+    mask: number;
 } | {
-  func: WebGLRenderingContext['ALWAYS'];
-  mask: 0;
+    func: WebGLRenderingContext['ALWAYS'];
+    mask: 0;
 };
 
 export type CullFaceModeType = WebGLRenderingContext['FRONT'] | WebGLRenderingContext['BACK'] | WebGLRenderingContext['FRONT_AND_BACK'];

@@ -1,8 +1,8 @@
 import EXTENT from '../data/extent';
 
-import {SymbolInstanceArray} from '../data/array_types';
+import {SymbolInstanceArray} from '../data/array_types.g';
 
-import type {SymbolInstance} from '../data/array_types';
+import type {SymbolInstance} from '../data/array_types.g';
 import type {OverscaledTileID} from '../source/tile_id';
 import type SymbolBucket from '../data/bucket/symbol_bucket';
 import type StyleLayer from '../style/style_layer';
@@ -28,13 +28,13 @@ const roundingFactor = 512 / EXTENT / 2;
 class TileLayerIndex {
     tileID: OverscaledTileID;
     indexedSymbolInstances: {
-      [_: number]: Array<{
-        crossTileID: number;
-        coord: {
-          x: number;
-          y: number;
-        };
-      }>;
+        [_: number]: Array<{
+            crossTileID: number;
+            coord: {
+                x: number;
+                y: number;
+            };
+        }>;
     };
     bucketInstanceId: number;
 
@@ -74,7 +74,7 @@ class TileLayerIndex {
     }
 
     findMatches(symbolInstances: SymbolInstanceArray, newTileID: OverscaledTileID, zoomCrossTileIDs: {
-      [crossTileID: number]: boolean;
+        [crossTileID: number]: boolean;
     }) {
         const tolerance = this.tileID.canonical.z < newTileID.canonical.z ? 1 : Math.pow(2, this.tileID.canonical.z - newTileID.canonical.z);
 
@@ -123,14 +123,14 @@ class CrossTileIDs {
 
 class CrossTileSymbolLayerIndex {
     indexes: {
-      [zoom in string | number]: {
-        [tileId in string | number]: TileLayerIndex;
-      };
+        [zoom in string | number]: {
+            [tileId in string | number]: TileLayerIndex;
+        };
     };
     usedCrossTileIDs: {
-      [zoom in string | number]: {
-        [crossTileID: number]: boolean;
-      };
+        [zoom in string | number]: {
+            [crossTileID: number]: boolean;
+        };
     };
     lng: number;
 
@@ -234,7 +234,7 @@ class CrossTileSymbolLayerIndex {
     }
 
     removeStaleBuckets(currentIDs: {
-      [k in string | number]: boolean;
+        [k in string | number]: boolean;
     }) {
         let tilesChanged = false;
         for (const z in this.indexes) {

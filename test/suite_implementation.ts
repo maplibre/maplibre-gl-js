@@ -9,8 +9,9 @@ import path, {dirname} from 'path';
 import customLayerImplementations from './integration/custom_layer_implementations';
 import {fileURLToPath} from 'url';
 
+// @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
-var now = 0;
+let now = 0;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
 
 rtlTextPlugin['applyArabicShaping'] = rtlText.applyArabicShaping;
@@ -18,6 +19,7 @@ rtlTextPlugin['processBidirectionalText'] = rtlText.processBidirectionalText;
 rtlTextPlugin['processStyledBidirectionalText'] = rtlText.processStyledBidirectionalText;
 
 // replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
+// @ts-ignore
 browser.getImageData = function (img, padding = 0) {
     if (!img.data) {
         return {width: 1, height: 1, data: new Uint8Array(1)};
@@ -50,10 +52,13 @@ export default function(style, options, _callback) {
         }
     }
 
+    // @ts-ignore
     window.useFakeXMLHttpRequest();
+    // @ts-ignore
     XMLHttpRequest.onCreate = req => {
         setTimeout(() => {
             let reqObj = req.url;
+
             if (req.responseType === 'arraybuffer') {
                 reqObj = {url: req.url, encoding: null};
             }
@@ -86,7 +91,7 @@ export default function(style, options, _callback) {
         skew: options.skew || [0, 0],
         fadeDuration: options.fadeDuration || 0,
         localIdeographFontFamily: options.localIdeographFontFamily || false,
-        crossSourceCollisions: typeof options.crossSourceCollisions === "undefined" ? true : options.crossSourceCollisions
+        crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions
     });
 
     // Configure the map to never stop the render loop
@@ -94,7 +99,7 @@ export default function(style, options, _callback) {
     now = 0;
     browser.now = () => {
         return now;
-    }
+    };
 
     if (options.debug) map.showTileBoundaries = true;
     if (options.showOverdrawInspector) map.showOverdrawInspector = true;
@@ -106,9 +111,9 @@ export default function(style, options, _callback) {
         if (options.collisionDebug) {
             map.showCollisionBoxes = true;
             if (options.operations) {
-                options.operations.push(["wait"]);
+                options.operations.push(['wait']);
             } else {
-                options.operations = [["wait"]];
+                options.operations = [['wait']];
             }
         }
         applyOperations(map, options.operations, () => {
@@ -119,11 +124,13 @@ export default function(style, options, _callback) {
             const pixels = new Uint8Array(w * h * 4);
             gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
-            const data = new Buffer.from(pixels);
+            // eslint-disable-next-line new-cap
+            const data = Buffer.from(pixels);
 
             // Flip the scanlines.
             const stride = w * 4;
-            const tmp = new Buffer.alloc(stride);
+            // eslint-disable-next-line new-cap
+            const tmp = Buffer.alloc(stride);
             for (let i = 0, j = h - 1; i < j; i++, j--) {
                 const start = i * stride;
                 const end = j * stride;
