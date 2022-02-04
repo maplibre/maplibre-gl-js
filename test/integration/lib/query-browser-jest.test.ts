@@ -42,11 +42,8 @@ describe('query tests', () => {
 
     Object.keys(fixtures).forEach((testName, testindex) => {
 
-        if (testName in ignores) {
-        //tape.skip(testName, testFunc);
-        } else {
+        if (!(testName in ignores)) {
 
-            // eslint-disable-next-line no-loop-func
             test(testName, async () => {
                 console.log((testindex + 1), ' / ', Object.keys(fixtures).length);
 
