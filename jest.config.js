@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     'roots': [
         '<rootDir>/src',
         '<rootDir>/test/browser',
