@@ -42,7 +42,7 @@ describe('query tests', () => {
     Object.keys(fixtures).forEach((testName, testindex) => {
 
         test(testName, async () => {
-            console.log((testindex + 1), ' / ', Object.keys(fixtures).length);
+            console.log(`${testindex + 1} / ${Object.keys(fixtures).length}: ${testName}`);
 
             await page.goto(`file:${path.join(__dirname, 'fixtures/loadMap.html')}`);
 
