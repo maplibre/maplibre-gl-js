@@ -2,7 +2,7 @@
 
 ### Features and improvements
 
-- *...Add new stuff here...*
+- Export `Source` classes (`GeoJSONSource` etc.) declarations.
 
 ### 🐞 Bug fixes
 

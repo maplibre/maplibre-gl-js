@@ -18,13 +18,20 @@ import {Evented} from './util/evented';
 import config from './util/config';
 import {Debug} from './util/debug';
 import {isSafari} from './util/util';
-import {setRTLTextPlugin, getRTLTextPluginStatus} from './source/rtl_text_plugin';
+import {getRTLTextPluginStatus, setRTLTextPlugin} from './source/rtl_text_plugin';
 import WorkerPool from './util/worker_pool';
-import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
+import {clearPrewarmedResources, prewarm} from './util/global_worker_pool';
 import {clearTileCache} from './util/tile_request_cache';
 import {PerformanceUtils} from './util/performance';
 import type {RequestParameters, ResponseCallback} from './util/ajax';
 import type {Cancelable} from './types/cancelable';
+import GeoJSONSource from './source/geojson_source';
+import CanvasSource from './source/canvas_source';
+import ImageSource from './source/image_source';
+import RasterDEMTileSource from './source/raster_dem_tile_source';
+import RasterTileSource from './source/raster_tile_source';
+import VectorTileSource from './source/vector_tile_source';
+import VideoSource from './source/video_source';
 
 const exported = {
     supported,
@@ -45,6 +52,13 @@ const exported = {
     MercatorCoordinate,
     Evented,
     config,
+    CanvasSource,
+    GeoJSONSource,
+    ImageSource,
+    RasterDEMTileSource,
+    RasterTileSource,
+    VectorTileSource,
+    VideoSource,
     /**
      * Initializes resources like WebWorkers that can be shared across maps to lower load
      * times in some situations. `maplibregl.workerUrl` and `maplibregl.workerCount`, if being
