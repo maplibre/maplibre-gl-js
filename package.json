@@ -159,6 +159,7 @@
     "generate-style-code": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-code.ts",
     "generate-style-spec": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-style-spec.ts",
     "generate-typings": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-typings.ts",
+    "generate-query-test-fixtures": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-query-test-fixtures.ts",
     "build-swc-src": "swc src -d rollup/build/tsc/src -D -s",
     "build-swc-bench": "swc bench -d rollup/build/tsc/bench -D -s",
     "build-tsc": "npm run build-swc-src && npm run build-swc-bench",
@@ -180,7 +181,7 @@
     "start-debug": "run-p watch-css watch-dev start-server",
     "start-tests": "run-p watch-css watch-query start-server",
     "start-bench": "run-p watch-css watch-benchmarks start-server",
-    "lint": "eslint --cache --ext \".ts,.js,.html\" --ignore-path .gitignore src test build debug/*.html bench",
+    "lint": "eslint --cache --ext \".ts,.js,.html\" --ignore-path .gitignore src test build debug/*.html bench jest.config.js",
     "lint-docs": "documentation lint src/index.ts",
     "lint-css": "stylelint \"src/css/maplibre-gl.css\"",
     "test": "run-s lint lint-css lint-docs test-unit",
@@ -191,12 +192,13 @@
     "test-render": "node --loader ts-node/esm --experimental-specifier-resolution=node --experimental-json-modules --max-old-space-size=2048 test/render.test.ts",
     "watch-query": "testem -f test/integration/testem.cjs",
     "test-query": "testem ci -f test/integration/testem.cjs -R xunit > test/integration/query-tests/test-results.xml",
+    "test-query-jest": "jest test/integration/lib/query-browser-jest.test.ts",
     "test-expressions": "node --loader ts-node/esm --experimental-specifier-resolution=node test/expression.test.ts",
     "test-unit": "jest ./src",
     "codegen": "npm run generate-style-code && npm run generate-struct-arrays && npm run generate-style-spec && npm run generate-shaders",
     "benchmark": "node bench/run-benchmarks.js",
     "gl-stats": "node bench/gl-stats.js",
-    "postinstall": "npm run codegen"
+    "postinstall": "npm run codegen && npm run generate-query-test-fixtures"
   },
   "files": [
     "build/",
