@@ -8,7 +8,6 @@ import st from 'st';
 import http from 'http';
 import puppeteer, {Browser, Page} from 'puppeteer';
 import path from 'path';
-// alternatively, run npx st  -l --port 7357 -d test/integration -co
 
 let browser: Browser;
 let page: Page;
@@ -77,35 +76,35 @@ describe('query tests', () => {
 
                     return new Promise((resolve, _reject) => {
 
-                        function handleOperation(map, operations, opIndex, doneCb) {
+                        function handleOperation(map, operations, opIndex, done) {
                             const operation = operations[opIndex];
                             const opName = operation[0];
                             //Delegate to special handler if one is available
                             if (opName in operationHandlers) {
                                 operationHandlers[opName](map, operation.slice(1), () => {
-                                    doneCb(opIndex);
+                                    done(opIndex);
                                 });
                             } else {
                                 map[opName](...operation.slice(1));
-                                doneCb(opIndex);
+                                done(opIndex);
                             }
                         }
 
                         const operationHandlers = {
-                            wait(map, params, doneCb) {
+                            wait(map, params, done) {
                                 const wait = function() {
                                     if (map.loaded()) {
-                                        doneCb();
+                                        done();
                                     } else {
                                         map.once('render', wait);
                                     }
                                 };
                                 wait();
                             },
-                            idle(map, params, doneCb) {
+                            idle(map, params, done) {
                                 const idle = function() {
                                     if (!map.isMoving()) {
-                                        doneCb();
+                                        done();
                                     } else {
                                         map.once('render', idle);
                                     }
@@ -114,10 +113,10 @@ describe('query tests', () => {
                             }
                         };
 
-                        function applyOperations(map, operations, doneCb) {
-                            // No operations specified, end immediately adn invoke doneCb.
+                        function applyOperations(map, operations, done) {
+                            // No operations specified, end immediately and invoke done.
                             if (!operations || operations.length === 0) {
-                                doneCb();
+                                done();
                                 return;
                             }
 
@@ -125,7 +124,7 @@ describe('query tests', () => {
                             const scheduleNextOperation = (lastOpIndex) => {
                                 if (lastOpIndex === operations.length - 1) {
                                     // Stop recusive chain when at the end of the operations
-                                    doneCb();
+                                    done();
                                     return;
                                 }
 
@@ -158,11 +157,11 @@ describe('query tests', () => {
                         map.repaint = true;
                         map.once('load', () => {
                             console.log('load', map);
-                            //3. Run the operations on the map
+                            // Run the operations on the map
                             applyOperations(map, options.operations, () => {
                                 console.log('operation', map.queryRenderedFeatures);
 
-                                //4. Perform query operation and compare results from expected values
+                                // Perform query operation and compare results from expected values
                                 const results = options.queryGeometry ?
                                     map.queryRenderedFeatures(options.queryGeometry, options.queryOptions || {}) :
                                     [];
@@ -176,8 +175,6 @@ describe('query tests', () => {
 
                                 resolve(actual);
 
-                                // To reusing same map instance in the future, we can cleanup WebGL context:
-                                // delete map.painter.context.gl;
                             });
                         });
 
@@ -185,7 +182,6 @@ describe('query tests', () => {
                 }, fixture, testName);
 
                 expect(deepEqual(actual, fixture.expected)).toBeTruthy();
-                // To improve error handling, we can use generateDiffLog(fixture.expected, actual));
 
             }, 10000);
 
