@@ -2,7 +2,7 @@ import Camera from '../ui/camera';
 import Transform from '../geo/transform';
 import TaskQueue, {TaskID} from '../util/task_queue';
 import browser from '../util/browser';
-import {fixedLngLat, fixedNum} from '../../test/util/fixed';
+import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
 
 beforeEach(() => {

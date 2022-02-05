@@ -1,4 +1,4 @@
-name: Test Render
+name: Integration Test - Render
 
 on:
   push:
