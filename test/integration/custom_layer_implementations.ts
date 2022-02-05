@@ -2,14 +2,14 @@ class NullIsland {
     id: string;
     type: string;
     renderingMode: string;
-    program: any;
+    program: WebGLProgram;
     constructor() {
         this.id = 'null-island';
         this.type = 'custom';
         this.renderingMode = '2d';
     }
 
-    onAdd(map, gl) {
+    onAdd(map, gl: WebGLRenderingContext) {
         const vertexSource = `
         uniform mat4 u_matrix;
         void main() {
@@ -46,16 +46,20 @@ class Tent3D {
     id: string;
     type: string;
     renderingMode: string;
-    program: any;
-    vertexBuffer: any;
-    indexBuffer: any;
+    program: WebGLProgram & {
+        a_pos?: number;
+        aPos?: number;
+        uMatrix?:  WebGLUniformLocation;
+    };
+    vertexBuffer: WebGLBuffer;
+    indexBuffer: WebGLBuffer;
     constructor() {
         this.id = 'tent-3d';
         this.type = 'custom';
         this.renderingMode = '3d';
     }
 
-    onAdd(map, gl) {
+    onAdd(map, gl: WebGLRenderingContext) {
 
         const vertexSource = `
 
@@ -116,7 +120,7 @@ class Tent3D {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
     }
 
-    render(gl, matrix) {
+    render(gl: WebGLRenderingContext, matrix) {
         gl.useProgram(this.program);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
