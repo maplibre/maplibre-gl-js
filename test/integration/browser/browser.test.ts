@@ -111,7 +111,7 @@ describe('drag and zoom', () => {
     test('Drag: To the left', async () => {
         const {driver} = browser;
 
-        const canvas = await browser.getMapCanvas(`${browser.basePath}/test/browser/fixtures/land.html`);
+        const canvas = await browser.getMapCanvas(`${browser.basePath}/test/integration/browser/fixtures/land.html`);
 
         // Perform drag action, wait a bit the end to avoid the momentum mode.
         await driver
@@ -135,7 +135,7 @@ describe('drag and zoom', () => {
     test('Zoom: Double click at the center', async () => {
         const {driver} = browser;
 
-        const canvas = await browser.getMapCanvas(`${browser.basePath}/test/browser/fixtures/land.html`);
+        const canvas = await browser.getMapCanvas(`${browser.basePath}/test/integration/browser/fixtures/land.html`);
 
         // Double-click on the center of the map.
         await driver.executeScript(browser.doubleClick, canvas);

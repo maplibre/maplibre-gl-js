@@ -1,4 +1,4 @@
-name: Integration Test - Query
+name: Integration Test - Style Spec
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test_query:
+  test_style_spec:
     name: ubuntu-latest
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -19,4 +19,4 @@ jobs:
           architecture: x64
       - run: npm ci
       - run: npm run build-dev
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-query
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-style-spec

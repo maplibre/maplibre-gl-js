@@ -1,7 +1,7 @@
 import {extend} from '../../util/util';
 import Map from '../../ui/map';
 import DOM from '../../util/dom';
-import simulate from '../../../test/util/simulate_interaction';
+import simulate from '../../../test/unit/lib/simulate_interaction';
 import browser from '../../util/browser';
 import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
 

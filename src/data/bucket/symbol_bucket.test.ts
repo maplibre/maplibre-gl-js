@@ -11,16 +11,16 @@ import {OverscaledTileID} from '../../source/tile_id';
 import Tile from '../../source/tile';
 import CrossTileSymbolIndex from '../../symbol/cross_tile_symbol_index';
 import FeatureIndex from '../../data/feature_index';
-import {createSymbolBucket, createSymbolIconBucket} from '../../../test/util/create_symbol_layer';
+import {createSymbolBucket, createSymbolIconBucket} from '../../../test/unit/lib/create_symbol_layer';
 import {RGBAImage} from '../../util/image';
 import {ImagePosition} from '../../render/image_atlas';
 import {IndexedFeature, PopulateParameters} from '../bucket';
 import {StyleImage} from '../../style/style_image';
-import glyphs from '../../../test/fixtures/fontstack-glyphs.json';
+import glyphs from '../../../test/unit/assets/fontstack-glyphs.json';
 import {StyleGlyph} from '../../style/style_glyph';
 
 // Load a point feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/fixtures/mbsv5-6-18-23.vector.pbf'))));
+const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.place_label.feature(10);
 
 /*eslint new-cap: 0*/
