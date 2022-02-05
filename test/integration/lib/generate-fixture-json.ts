@@ -77,7 +77,7 @@ export function generateFixtureJson(rootDirectory, suiteDirectory, outputDirecto
     const outputStr = JSON.stringify(result, null, 4);
     const outputPath = path.join(outputDirectory, OUTPUT_FILE);
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         fs.writeFile(outputPath, outputStr, {encoding: 'utf8'}, (err) => {
             if (err) { reject(err); }
 
