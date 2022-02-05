@@ -1,4 +1,4 @@
-name: Inegration Test - Style Spec
+name: Integration Test - Style Spec
 
 on:
   push:

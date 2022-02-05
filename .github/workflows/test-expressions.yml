@@ -1,4 +1,4 @@
-name: Test Expressions
+name: Integration Test - Expressions
 
 on:
   push:
