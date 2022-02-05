@@ -1,6 +1,6 @@
 import AttributionControl from './attribution_control';
 import {createMap as globalCreateMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
-import simulate from '../../../test/unit/util/simulate_interaction';
+import simulate from '../../../test/unit/lib/simulate_interaction';
 
 function createMap() {
 

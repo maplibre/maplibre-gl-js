@@ -3,7 +3,7 @@ import Marker from './marker';
 import Popup from './popup';
 import LngLat from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
-import simulate from '../../test/unit/util/simulate_interaction';
+import simulate from '../../test/unit/lib/simulate_interaction';
 
 function createMap(options = {}) {
     const container = window.document.createElement('div');
