@@ -16,11 +16,11 @@ import {RGBAImage} from '../../util/image';
 import {ImagePosition} from '../../render/image_atlas';
 import {IndexedFeature, PopulateParameters} from '../bucket';
 import {StyleImage} from '../../style/style_image';
-import glyphs from '../../../test/unit/misc-assets/fontstack-glyphs.json';
+import glyphs from '../../../test/unit/assets/fontstack-glyphs.json';
 import {StyleGlyph} from '../../style/style_glyph';
 
 // Load a point feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/misc-assets/mbsv5-6-18-23.vector.pbf'))));
+const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.place_label.feature(10);
 
 /*eslint new-cap: 0*/

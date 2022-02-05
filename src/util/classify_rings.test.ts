@@ -6,7 +6,7 @@ import classifyRings from './classify_rings';
 import Point from '@mapbox/point-geometry';
 
 // Load a fill feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../test/unit/misc-assets/mbsv5-6-18-23.vector.pbf'))));
+const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.water.feature(0);
 
 describe('classifyRings', () => {

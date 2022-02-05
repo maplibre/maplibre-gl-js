@@ -273,7 +273,7 @@ describe('rtl text detection', () => {
 });
 
 function createRawTileData() {
-    return fs.readFileSync(path.join(__dirname, '../../test/unit/misc-assets/mbsv5-6-18-23.vector.pbf'));
+    return fs.readFileSync(path.join(__dirname, '../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
 }
 
 function createVectorData(options?) {

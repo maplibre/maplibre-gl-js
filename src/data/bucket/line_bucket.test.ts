@@ -11,7 +11,7 @@ import EvaluationParameters from '../../style/evaluation_parameters';
 import {BucketFeature, BucketParameters} from '../bucket';
 
 // Load a line feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/misc-assets/mbsv5-6-18-23.vector.pbf'))));
+const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.road.feature(0);
 
 function createLine(numPoints) {
