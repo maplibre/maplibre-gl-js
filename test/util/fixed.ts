@@ -1,6 +1,6 @@
-export function fixedNum(n, precision) {
+export function fixedNum(n:number, precision) {
     if (precision === undefined) precision = 10;
-    const fixedNum = parseFloat(n.toFixed(precision), 10);
+    const fixedNum = parseFloat(n.toFixed(precision));
 
     // Support signed zero
     if (fixedNum === 0) {
