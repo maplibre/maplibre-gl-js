@@ -4,7 +4,7 @@ import {fileURLToPath} from 'url';
 import {createRequire} from 'module';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
+const requireFn = createRequire(import.meta.url);
 
 export default function localizeURLs(style, port) {
     localizeStyleURLs(style, port);
@@ -22,7 +22,7 @@ export default function localizeURLs(style, port) {
                 try {
                     const relativePath = op[1].replace(/^local:\/\//, '');
                     if (relativePath.startsWith('mapbox-gl-styles')) {
-                        styleJSON = fs.readFileSync(path.join(path.dirname(require.resolve('mapbox-gl-styles')), '..', relativePath));
+                        styleJSON = fs.readFileSync(path.join(path.dirname(requireFn.resolve('mapbox-gl-styles')), '..', relativePath));
                     } else {
                         styleJSON = fs.readFileSync(path.join(__dirname, '..', relativePath));
                     }

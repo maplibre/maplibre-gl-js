@@ -19,7 +19,7 @@ export default {
  * @param {string} suiteDirectory
  * @param {boolean} includeImages
  */
-function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 'test/integration/dist', includeImages = false) {
+export function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 'test/integration/dist', includeImages = false) {
     const globs = getAllFixtureGlobs(rootDirectory, suiteDirectory);
     const jsonPaths = globs[0];
     const imagePaths = globs[1];
@@ -77,7 +77,7 @@ function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 't
     const outputStr = JSON.stringify(result, null, 4);
     const outputPath = path.join(outputDirectory, OUTPUT_FILE);
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         fs.writeFile(outputPath, outputStr, {encoding: 'utf8'}, (err) => {
             if (err) { reject(err); }
 
@@ -86,7 +86,7 @@ function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 't
     });
 }
 
-function getAllFixtureGlobs(rootDirectory, suiteDirectory) {
+export function getAllFixtureGlobs(rootDirectory, suiteDirectory) {
     const basePath = path.join(rootDirectory, suiteDirectory);
     const jsonPaths = path.join(basePath, '/**/*.json');
     const imagePaths = path.join(basePath, '/**/*.png');

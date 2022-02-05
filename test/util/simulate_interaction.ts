@@ -11,7 +11,7 @@ export function window(target) {
 
 const events = {};
 
-events.click = function (target, options) {
+events['click'] = function (target, options) {
     options = Object.assign({bubbles: true}, options);
     const MouseEvent = window(target).MouseEvent;
     target.dispatchEvent(new MouseEvent('mousedown', options));
@@ -19,7 +19,7 @@ events.click = function (target, options) {
     target.dispatchEvent(new MouseEvent('click', options));
 };
 
-events.drag = function (target, mousedownOptions, mouseUpOptions) {
+events['drag'] = function (target, mousedownOptions, mouseUpOptions) {
     mousedownOptions = Object.assign({bubbles: true}, mousedownOptions);
     mouseUpOptions = Object.assign({bubbles: true}, mouseUpOptions);
     const MouseEvent = window(target).MouseEvent;
@@ -28,7 +28,7 @@ events.drag = function (target, mousedownOptions, mouseUpOptions) {
     target.dispatchEvent(new MouseEvent('click', mouseUpOptions));
 };
 
-events.dblclick = function (target, options) {
+events['dblclick'] = function (target, options) {
     options = Object.assign({bubbles: true}, options);
     const MouseEvent = window(target).MouseEvent;
     target.dispatchEvent(new MouseEvent('mousedown', options));
@@ -66,7 +66,7 @@ events.dblclick = function (target, options) {
 
 // magic deltaY value that indicates the event is from a mouse wheel
 // (rather than a trackpad)
-events.magicWheelZoomDelta = 4.000244140625;
+events['magicWheelZoomDelta'] = 4.000244140625;
 
 [ 'touchstart', 'touchend', 'touchmove', 'touchcancel' ].forEach((event) => {
     events[event] = function (target, options) {

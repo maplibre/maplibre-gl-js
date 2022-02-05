@@ -1,32 +1,32 @@
-function handleOperation(map, operations, opIndex, doneCb) {
+function handleOperation(map, operations, opIndex, done) {
     const operation = operations[opIndex];
     const opName = operation[0];
     //Delegate to special handler if one is available
     if (opName in operationHandlers) {
         operationHandlers[opName](map, operation.slice(1), () => {
-            doneCb(opIndex);
+            done(opIndex);
         });
     } else {
         map[opName](...operation.slice(1));
-        doneCb(opIndex);
+        done(opIndex);
     }
 }
 
 export const operationHandlers = {
-    wait(map, params, doneCb) {
+    wait(map, params, done) {
         const wait = function() {
             if (map.loaded()) {
-                doneCb();
+                done();
             } else {
                 map.once('render', wait);
             }
         };
         wait();
     },
-    idle(map, params, doneCb) {
+    idle(map, params, done) {
         const idle = function() {
             if (!map.isMoving()) {
-                doneCb();
+                done();
             } else {
                 map.once('render', idle);
             }
@@ -35,10 +35,10 @@ export const operationHandlers = {
     }
 };
 
-export function applyOperations(map, operations, doneCb) {
-    // No operations specified, end immediately adn invoke doneCb.
+export function applyOperations(map, operations, done) {
+    // No operations specified, end immediately and invoke done.
     if (!operations || operations.length === 0) {
-        doneCb();
+        done();
         return;
     }
 
@@ -46,7 +46,7 @@ export function applyOperations(map, operations, doneCb) {
     const scheduleNextOperation = (lastOpIndex) => {
         if (lastOpIndex === operations.length - 1) {
             // Stop recusive chain when at the end of the operations
-            doneCb();
+            done();
             return;
         }
 
