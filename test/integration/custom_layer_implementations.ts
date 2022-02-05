@@ -1,4 +1,8 @@
 class NullIsland {
+    id: string;
+    type: string;
+    renderingMode: string;
+    program: any;
     constructor() {
         this.id = 'null-island';
         this.type = 'custom';
@@ -39,6 +43,12 @@ class NullIsland {
 }
 
 class Tent3D {
+    id: string;
+    type: string;
+    renderingMode: string;
+    program: any;
+    vertexBuffer: any;
+    indexBuffer: any;
     constructor() {
         this.id = 'tent-3d';
         this.type = 'custom';
