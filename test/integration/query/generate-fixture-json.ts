@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import glob from 'glob';
-import localizeURLs from './localize-urls.js';
+import localizeURLs from '../lib/localize-urls.js';
 
 const OUTPUT_FILE = 'fixtures.json';
 
@@ -19,7 +19,7 @@ export default {
  * @param {string} suiteDirectory
  * @param {boolean} includeImages
  */
-export function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 'test/integration/dist', includeImages = false) {
+export function generateFixtureJson(rootDirectory, suiteDirectory, outputDirectory = 'test/integration/query/dist', includeImages = false) {
     const globs = getAllFixtureGlobs(rootDirectory, suiteDirectory);
     const jsonPaths = globs[0];
     const imagePaths = globs[1];

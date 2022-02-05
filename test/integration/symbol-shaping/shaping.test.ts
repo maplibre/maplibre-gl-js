@@ -18,7 +18,7 @@ describe('shaping', () => {
     const layoutTextSizeThisZoom = 16;
     const fontStack = 'Test';
     const glyphs = {
-        'Test': require('../../unit/assets/fontstack-glyphs.json')
+        'Test': require('../assets/glyphs/fontstack-glyphs.json')
     };
     const glyphPositions = glyphs;
 

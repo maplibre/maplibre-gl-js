@@ -1,6 +1,6 @@
-const rootFixturePath = 'test/integration/';
-const suitePath = 'query-tests';
+const rootFixturePath = 'test/integration/query/';
+const suitePath = 'tests';
 
-import {generateFixtureJson} from '../test/integration/lib/generate-fixture-json.js';
+import {generateFixtureJson} from '../test/integration/query/generate-fixture-json.js';
 
 await generateFixtureJson(rootFixturePath, suitePath);
