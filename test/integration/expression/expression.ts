@@ -1,7 +1,7 @@
 import path, {dirname} from 'path';
 import {diffJson} from 'diff';
 import fs from 'fs';
-import harness from './harness';
+import harness from '../lib/harness';
 import compactStringify from 'json-stringify-pretty-compact';
 import {fileURLToPath} from 'url';
 
@@ -92,7 +92,7 @@ function deepEqual(a, b) {
 export function run(implementation: string, options: {
     tests?: any; ignores?: any; fixtureFilename?: any;
 }, runExpressionTest) {
-    const directory = path.join(__dirname, '../expression-tests');
+    const directory = path.join(__dirname);
     options.fixtureFilename = 'test.json';
     harness(directory, implementation, options, (fixture, params, done) => {
         try {
