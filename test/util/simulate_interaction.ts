@@ -66,8 +66,7 @@ events['dblclick'] = function (target, options) {
 
 // magic deltaY value that indicates the event is from a mouse wheel
 // (rather than a trackpad)
-// @ts-ignore
-events.magicWheelZoomDelta = 4.000244140625;
+events['magicWheelZoomDelta'] = 4.000244140625;
 
 [ 'touchstart', 'touchend', 'touchmove', 'touchcancel' ].forEach((event) => {
     events[event] = function (target, options) {
