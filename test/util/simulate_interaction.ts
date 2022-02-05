@@ -11,16 +11,15 @@ export function window(target) {
 
 const events = {};
 
-// @ts-ignore
-events.click = function (target, options) {
+events['click'] = function (target, options) {
     options = Object.assign({bubbles: true}, options);
     const MouseEvent = window(target).MouseEvent;
     target.dispatchEvent(new MouseEvent('mousedown', options));
     target.dispatchEvent(new MouseEvent('mouseup', options));
     target.dispatchEvent(new MouseEvent('click', options));
 };
-// @ts-ignore
-events.drag = function (target, mousedownOptions, mouseUpOptions) {
+
+events['drag'] = function (target, mousedownOptions, mouseUpOptions) {
     mousedownOptions = Object.assign({bubbles: true}, mousedownOptions);
     mouseUpOptions = Object.assign({bubbles: true}, mouseUpOptions);
     const MouseEvent = window(target).MouseEvent;
@@ -28,8 +27,8 @@ events.drag = function (target, mousedownOptions, mouseUpOptions) {
     target.dispatchEvent(new MouseEvent('mouseup', mouseUpOptions));
     target.dispatchEvent(new MouseEvent('click', mouseUpOptions));
 };
-// @ts-ignore
-events.dblclick = function (target, options) {
+
+events['dblclick'] = function (target, options) {
     options = Object.assign({bubbles: true}, options);
     const MouseEvent = window(target).MouseEvent;
     target.dispatchEvent(new MouseEvent('mousedown', options));
