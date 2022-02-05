@@ -7,11 +7,12 @@ import convertFunction from '../../../src/style-spec/function/convert';
 import {toString} from '../../../src/style-spec/expression/types';
 import {CanonicalTileID} from '../../../src/source/tile_id';
 import MercatorCoordinate from '../../../src/geo/mercator_coordinate';
+import Point from '@mapbox/point-geometry';
 
 const ignores = {};
 
 function getPoint(coord, canonical) {
-    const p = canonical.getTilePoint(MercatorCoordinate.fromLngLat({lng: coord[0], lat: coord[1]}, 0));
+    const p: Point = canonical.getTilePoint(MercatorCoordinate.fromLngLat({lng: coord[0], lat: coord[1]}, 0));
     p.x = Math.round(p.x);
     p.y = Math.round(p.y);
     return p;
