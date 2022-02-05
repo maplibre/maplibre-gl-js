@@ -1,4 +1,4 @@
-import './stub_loader';
+import './stub_loader.js';
 import canvas from 'canvas';
 import {run} from './integration/lib/render';
 import suiteImplementation from './suite_implementation';

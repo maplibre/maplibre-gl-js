@@ -24,8 +24,9 @@ export default function localizeURLs(style, port) {
                     if (relativePath.startsWith('mapbox-gl-styles')) {
                         styleJSON = fs.readFileSync(path.join(path.dirname(requireFn.resolve('mapbox-gl-styles')), '..', relativePath));
                     } else {
-                        styleJSON = fs.readFileSync(path.join(__dirname, '..', relativePath));
+                        styleJSON = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
                     }
+
                 } catch (error) {
                     console.log(`* ${error}`);
                     return;

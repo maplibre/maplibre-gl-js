@@ -1,8 +1,8 @@
 
 // fixtures.json is automatically generated before this file gets built
 // refer build/generate-query-test-fixtures.ts
-import fixtures from '../dist/fixtures.json';
-import {deepEqual} from './json-diff';
+import fixtures from './dist/fixtures.json';
+import {deepEqual} from '../lib/json-diff';
 import st from 'st';
 import http from 'http';
 import puppeteer, {Browser, Page} from 'puppeteer';
@@ -12,7 +12,7 @@ let browser: Browser;
 let page: Page;
 const server = http.createServer(
     st({
-        path: 'test/integration',
+        path: 'test/integration/assets',
         cors: true,
     })
 ).listen(7357);
@@ -153,7 +153,7 @@ describe('query tests', () => {
         test(testName, async () => {
             console.log(`${testindex + 1} / ${Object.keys(fixtures).length}: ${testName}`);
 
-            await page.goto(`file:${path.join(__dirname, 'fixtures/loadMap.html')}`);
+            await page.goto(`file:${path.join(__dirname, 'assets/loadMap.html')}`);
 
             const currentTestName = testName;
             const fixture = fixtures[currentTestName];

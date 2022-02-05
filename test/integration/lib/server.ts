@@ -11,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default function () {
     const port = 2900;
-    const integrationMount = st({path: path.join(__dirname, '..')});
+    const integrationMount = st({path: path.join(__dirname, '../assets')});
     const maplibreGLStylesMount = st({path: path.dirname(requireFn.resolve('mapbox-gl-styles')), url: 'mapbox-gl-styles'});
     const maplibreMVTFixturesMount = st({path: path.dirname(requireFn.resolve('@mapbox/mvt-fixtures')), url: 'mvt-fixtures'});
     const server = createServer((req, res) => {
