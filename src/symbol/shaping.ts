@@ -28,34 +28,34 @@ export {shapeText, shapeIcon, fitIconToText, getAnchorAlignment, WritingMode, SH
 
 // The position of a glyph relative to the text's anchor point.
 export type PositionedGlyph = {
-  glyph: number;
-  imageName: string | null;
-  x: number;
-  y: number;
-  vertical: boolean;
-  scale: number;
-  fontStack: string;
-  sectionIndex: number;
-  metrics: GlyphMetrics;
-  rect: Rect | null;
+    glyph: number;
+    imageName: string | null;
+    x: number;
+    y: number;
+    vertical: boolean;
+    scale: number;
+    fontStack: string;
+    sectionIndex: number;
+    metrics: GlyphMetrics;
+    rect: Rect | null;
 };
 
 export type PositionedLine = {
-  positionedGlyphs: Array<PositionedGlyph>;
-  lineOffset: number;
+    positionedGlyphs: Array<PositionedGlyph>;
+    lineOffset: number;
 };
 
 // A collection of positioned glyphs and some metadata
 export type Shaping = {
-  positionedLines: Array<PositionedLine>;
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-  writingMode: WritingMode.horizontal | WritingMode.vertical;
-  text: string;
-  iconsInText: boolean;
-  verticalizable: boolean;
+    positionedLines: Array<PositionedLine>;
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+    writingMode: WritingMode.horizontal | WritingMode.vertical;
+    text: string;
+    iconsInText: boolean;
+    verticalizable: boolean;
 };
 
 function isEmpty(positionedLines: Array<PositionedLine>) {
@@ -236,30 +236,30 @@ function breakLines(input: TaggedString, lineBreakPoints: Array<number>): Array<
 }
 
 function shapeText(
-  text: Formatted,
-  glyphMap: {
-    [_: string]: {
-      [_: number]: StyleGlyph;
-    };
-  },
-  glyphPositions: {
-    [_: string]: {
-      [_: number]: GlyphPosition;
-    };
-  },
-  imagePositions: {[_: string]: ImagePosition},
-  defaultFontStack: string,
-  maxWidth: number,
-  lineHeight: number,
-  textAnchor: SymbolAnchor,
-  textJustify: TextJustify,
-  spacing: number,
-  translate: [number, number],
-  writingMode: WritingMode.horizontal | WritingMode.vertical,
-  allowVerticalPlacement: boolean,
-  symbolPlacement: string,
-  layoutTextSize: number,
-  layoutTextSizeThisZoom: number
+    text: Formatted,
+    glyphMap: {
+        [_: string]: {
+            [_: number]: StyleGlyph;
+        };
+    },
+    glyphPositions: {
+        [_: string]: {
+            [_: number]: GlyphPosition;
+        };
+    },
+    imagePositions: {[_: string]: ImagePosition},
+    defaultFontStack: string,
+    maxWidth: number,
+    lineHeight: number,
+    textAnchor: SymbolAnchor,
+    textJustify: TextJustify,
+    spacing: number,
+    translate: [number, number],
+    writingMode: WritingMode.horizontal | WritingMode.vertical,
+    allowVerticalPlacement: boolean,
+    symbolPlacement: string,
+    layoutTextSize: number,
+    layoutTextSizeThisZoom: number
 ): Shaping | false {
     const logicalInput = TaggedString.fromFeature(text, defaultFontStack);
 
@@ -275,7 +275,7 @@ function shapeText(
         lines = [];
         const untaggedLines =
             processBidirectionalText(logicalInput.toString(),
-                                     determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, symbolPlacement, layoutTextSize));
+                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, symbolPlacement, layoutTextSize));
         for (const line of untaggedLines) {
             const taggedLine = new TaggedString();
             taggedLine.text = line;
@@ -291,8 +291,8 @@ function shapeText(
         lines = [];
         const processedLines =
             processStyledBidirectionalText(logicalInput.text,
-                                           logicalInput.sectionIndex,
-                                           determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, symbolPlacement, layoutTextSize));
+                logicalInput.sectionIndex,
+                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, symbolPlacement, layoutTextSize));
         for (const line of processedLines) {
             const taggedLine = new TaggedString();
             taggedLine.text = line[0];
@@ -327,7 +327,7 @@ function shapeText(
 /* eslint no-useless-computed-key: 0 */
 
 const whitespace: {
-  [_: number]: boolean;
+    [_: number]: boolean;
 } = {
     [0x09]: true, // tab
     [0x0a]: true, // newline
@@ -338,7 +338,7 @@ const whitespace: {
 };
 
 const breakable: {
-  [_: number]: boolean;
+    [_: number]: boolean;
 } = {
     [0x0a]:   true, // newline
     [0x20]:   true, // space
@@ -360,16 +360,16 @@ const breakable: {
 };
 
 function getGlyphAdvance(
-  codePoint: number,
-  section: SectionOptions,
-  glyphMap: {
-    [_: string]: {
-      [_: number]: StyleGlyph;
-    };
-  },
-  imagePositions: {[_: string]: ImagePosition},
-  spacing: number,
-  layoutTextSize: number
+    codePoint: number,
+    section: SectionOptions,
+    glyphMap: {
+        [_: string]: {
+            [_: number]: StyleGlyph;
+        };
+    },
+    imagePositions: {[_: string]: ImagePosition},
+    spacing: number,
+    layoutTextSize: number
 ): number {
     if (!section.imageName) {
         const positions = glyphMap[section.fontStack];
@@ -384,15 +384,15 @@ function getGlyphAdvance(
 }
 
 function determineAverageLineWidth(logicalInput: TaggedString,
-                                   spacing: number,
-                                   maxWidth: number,
-                                   glyphMap: {
-                                     [_: string]: {
-                                       [_: number]: StyleGlyph;
-                                     };
-                                   },
-                                   imagePositions: {[_: string]: ImagePosition},
-                                   layoutTextSize: number) {
+    spacing: number,
+    maxWidth: number,
+    glyphMap: {
+        [_: string]: {
+            [_: number]: StyleGlyph;
+        };
+    },
+    imagePositions: {[_: string]: ImagePosition},
+    layoutTextSize: number) {
     let totalWidth = 0;
 
     for (let index = 0; index < logicalInput.length(); index++) {
@@ -405,9 +405,9 @@ function determineAverageLineWidth(logicalInput: TaggedString,
 }
 
 function calculateBadness(lineWidth: number,
-                          targetWidth: number,
-                          penalty: number,
-                          isLastBreak: boolean) {
+    targetWidth: number,
+    penalty: number,
+    isLastBreak: boolean) {
     const raggedness = Math.pow(lineWidth - targetWidth, 2);
     if (isLastBreak) {
         // Favor finals lines shorter than average over longer than average
@@ -446,19 +446,19 @@ function calculatePenalty(codePoint: number, nextCodePoint: number, penalizableI
 }
 
 type Break = {
-  index: number;
-  x: number;
-  priorBreak: Break;
-  badness: number;
+    index: number;
+    x: number;
+    priorBreak: Break;
+    badness: number;
 };
 
 function evaluateBreak(
-  breakIndex: number,
-  breakX: number,
-  targetWidth: number,
-  potentialBreaks: Array<Break>,
-  penalty: number,
-  isLastBreak: boolean
+    breakIndex: number,
+    breakX: number,
+    targetWidth: number,
+    potentialBreaks: Array<Break>,
+    penalty: number,
+    isLastBreak: boolean
 ): Break {
     // We could skip evaluating breaks where the line length (breakX - priorBreak.x) > maxWidth
     //  ...but in fact we allow lines longer than maxWidth (if there's no break points)
@@ -494,17 +494,17 @@ function leastBadBreaks(lastLineBreak?: Break | null): Array<number> {
 }
 
 function determineLineBreaks(
-  logicalInput: TaggedString,
-  spacing: number,
-  maxWidth: number,
-  glyphMap: {
-    [_: string]: {
-      [_: number]: StyleGlyph;
-    };
-  },
-  imagePositions: {[_: string]: ImagePosition},
-  symbolPlacement: string,
-  layoutTextSize: number
+    logicalInput: TaggedString,
+    spacing: number,
+    maxWidth: number,
+    glyphMap: {
+        [_: string]: {
+            [_: number]: StyleGlyph;
+        };
+    },
+    imagePositions: {[_: string]: ImagePosition},
+    symbolPlacement: string,
+    layoutTextSize: number
 ): Array<number> {
     if (symbolPlacement !== 'point')
         return [];
@@ -556,54 +556,54 @@ function getAnchorAlignment(anchor: SymbolAnchor) {
     let horizontalAlign = 0.5, verticalAlign = 0.5;
 
     switch (anchor) {
-    case 'right':
-    case 'top-right':
-    case 'bottom-right':
-        horizontalAlign = 1;
-        break;
-    case 'left':
-    case 'top-left':
-    case 'bottom-left':
-        horizontalAlign = 0;
-        break;
+        case 'right':
+        case 'top-right':
+        case 'bottom-right':
+            horizontalAlign = 1;
+            break;
+        case 'left':
+        case 'top-left':
+        case 'bottom-left':
+            horizontalAlign = 0;
+            break;
     }
 
     switch (anchor) {
-    case 'bottom':
-    case 'bottom-right':
-    case 'bottom-left':
-        verticalAlign = 1;
-        break;
-    case 'top':
-    case 'top-right':
-    case 'top-left':
-        verticalAlign = 0;
-        break;
+        case 'bottom':
+        case 'bottom-right':
+        case 'bottom-left':
+            verticalAlign = 1;
+            break;
+        case 'top':
+        case 'top-right':
+        case 'top-left':
+            verticalAlign = 0;
+            break;
     }
 
     return {horizontalAlign, verticalAlign};
 }
 
 function shapeLines(shaping: Shaping,
-                    glyphMap: {
-                      [_: string]: {
-                        [_: number]: StyleGlyph;
-                      };
-                    },
-                    glyphPositions: {
-                      [_: string]: {
-                        [_: number]: GlyphPosition;
-                      };
-                    },
-                    imagePositions: {[_: string]: ImagePosition},
-                    lines: Array<TaggedString>,
-                    lineHeight: number,
-                    textAnchor: SymbolAnchor,
-                    textJustify: TextJustify,
-                    writingMode: WritingMode.horizontal | WritingMode.vertical,
-                    spacing: number,
-                    allowVerticalPlacement: boolean,
-                    layoutTextSizeThisZoom: number) {
+    glyphMap: {
+        [_: string]: {
+            [_: number]: StyleGlyph;
+        };
+    },
+    glyphPositions: {
+        [_: string]: {
+            [_: number]: GlyphPosition;
+        };
+    },
+    imagePositions: {[_: string]: ImagePosition},
+    lines: Array<TaggedString>,
+    lineHeight: number,
+    textAnchor: SymbolAnchor,
+    textJustify: TextJustify,
+    writingMode: WritingMode.horizontal | WritingMode.vertical,
+    spacing: number,
+    allowVerticalPlacement: boolean,
+    layoutTextSizeThisZoom: number) {
 
     let x = 0;
     let y = SHAPING_DEFAULT_OFFSET;
@@ -613,7 +613,7 @@ function shapeLines(shaping: Shaping,
 
     const justify =
         textJustify === 'right' ? 1 :
-        textJustify === 'left' ? 0 : 0.5;
+            textJustify === 'left' ? 0 : 0.5;
 
     let lineIndex = 0;
     for (const line of lines) {
@@ -736,10 +736,10 @@ function shapeLines(shaping: Shaping,
 
 // justify right = 1, left = 0, center = 0.5
 function justifyLine(positionedGlyphs: Array<PositionedGlyph>,
-                     start: number,
-                     end: number,
-                     justify: 1 | 0 | 0.5,
-                     lineOffset: number) {
+    start: number,
+    end: number,
+    justify: 1 | 0 | 0.5,
+    lineOffset: number) {
     if (!justify && !lineOffset)
         return;
 
@@ -754,14 +754,14 @@ function justifyLine(positionedGlyphs: Array<PositionedGlyph>,
 }
 
 function align(positionedLines: Array<PositionedLine>,
-               justify: number,
-               horizontalAlign: number,
-               verticalAlign: number,
-               maxLineLength: number,
-               maxLineHeight: number,
-               lineHeight: number,
-               blockHeight: number,
-               lineCount: number) {
+    justify: number,
+    horizontalAlign: number,
+    verticalAlign: number,
+    maxLineLength: number,
+    maxLineHeight: number,
+    lineHeight: number,
+    blockHeight: number,
+    lineCount: number) {
     const shiftX = (justify - horizontalAlign) * maxLineLength;
     let shiftY = 0;
 
@@ -780,18 +780,18 @@ function align(positionedLines: Array<PositionedLine>,
 }
 
 export type PositionedIcon = {
-  image: ImagePosition;
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-  collisionPadding?: [number, number, number, number];
+    image: ImagePosition;
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+    collisionPadding?: [number, number, number, number];
 };
 
 function shapeIcon(
-  image: ImagePosition,
-  iconOffset: [number, number],
-  iconAnchor: SymbolAnchor
+    image: ImagePosition,
+    iconOffset: [number, number],
+    iconAnchor: SymbolAnchor
 ): PositionedIcon {
     const {horizontalAlign, verticalAlign} = getAnchorAlignment(iconAnchor);
     const dx = iconOffset[0];
@@ -804,12 +804,12 @@ function shapeIcon(
 }
 
 function fitIconToText(
-  shapedIcon: PositionedIcon,
-  shapedText: Shaping,
-  textFit: string,
-  padding: [number, number, number, number],
-  iconOffset: [number, number],
-  fontScale: number
+    shapedIcon: PositionedIcon,
+    shapedText: Shaping,
+    textFit: string,
+    padding: [number, number, number, number],
+    iconOffset: [number, number],
+    fontScale: number
 ): PositionedIcon {
     assert(textFit !== 'none');
     assert(Array.isArray(padding) && padding.length === 4);

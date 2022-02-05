@@ -7,8 +7,8 @@ import type {ControlPosition, IControl} from './control';
 export type Unit = 'imperial' | 'metric' | 'nautical';
 
 type ScaleOptions = {
-  maxWidth?: number;
-  unit?: Unit;
+    maxWidth?: number;
+    unit?: Unit;
 };
 
 const defaultOptions: ScaleOptions = {
@@ -133,9 +133,9 @@ function getRoundNum(num) {
 
     d = d >= 10 ? 10 :
         d >= 5 ? 5 :
-        d >= 3 ? 3 :
-        d >= 2 ? 2 :
-        d >= 1 ? 1 : getDecimalRoundNum(d);
+            d >= 3 ? 3 :
+                d >= 2 ? 2 :
+                    d >= 1 ? 1 : getDecimalRoundNum(d);
 
     return pow10 * d;
 }

@@ -17,7 +17,7 @@ import DragPanHandler from './handler/shim/drag_pan';
 import DragRotateHandler from './handler/shim/drag_rotate';
 import TouchZoomRotateHandler from './handler/shim/touch_zoom_rotate';
 import {bindAll, extend} from '../util/util';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import assert from 'assert';
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
@@ -36,49 +36,49 @@ class RenderFrameEvent extends Event {
 // For example, if there is a mousedown and mousemove, the mousePan handler
 // would return a `panDelta` on the mousemove.
 export interface Handler {
-  enable(): void;
-  disable(): void;
-  isEnabled(): boolean;
-  isActive(): boolean;
-  // `reset` can be called by the manager at any time and must reset everything to it's original state
-  reset(): void;
-  // Handlers can optionally implement these methods.
-  // They are called with dom events whenever those dom evens are received.
-  readonly touchstart?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-  readonly touchmove?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-  readonly touchend?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-  readonly touchcancel?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-  readonly mousedown?: (e: MouseEvent, point: Point) => HandlerResult | void;
-  readonly mousemove?: (e: MouseEvent, point: Point) => HandlerResult | void;
-  readonly mouseup?: (e: MouseEvent, point: Point) => HandlerResult | void;
-  readonly dblclick?: (e: MouseEvent, point: Point) => HandlerResult | void;
-  readonly wheel?: (e: WheelEvent, point: Point) => HandlerResult | void;
-  readonly keydown?: (e: KeyboardEvent) => HandlerResult | void;
-  readonly keyup?: (e: KeyboardEvent) => HandlerResult | void;
-  // `renderFrame` is the only non-dom event. It is called during render
-  // frames and can be used to smooth camera changes (see scroll handler).
-  readonly renderFrame?: () => HandlerResult | void;
+    enable(): void;
+    disable(): void;
+    isEnabled(): boolean;
+    isActive(): boolean;
+    // `reset` can be called by the manager at any time and must reset everything to it's original state
+    reset(): void;
+    // Handlers can optionally implement these methods.
+    // They are called with dom events whenever those dom evens are received.
+    readonly touchstart?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+    readonly touchmove?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+    readonly touchend?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+    readonly touchcancel?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+    readonly mousedown?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly mousemove?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly mouseup?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly dblclick?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly wheel?: (e: WheelEvent, point: Point) => HandlerResult | void;
+    readonly keydown?: (e: KeyboardEvent) => HandlerResult | void;
+    readonly keyup?: (e: KeyboardEvent) => HandlerResult | void;
+    // `renderFrame` is the only non-dom event. It is called during render
+    // frames and can be used to smooth camera changes (see scroll handler).
+    readonly renderFrame?: () => HandlerResult | void;
 }
 
 // All handler methods that are called with events can optionally return a `HandlerResult`.
 export type HandlerResult = {
-  panDelta?: Point;
-  zoomDelta?: number;
-  bearingDelta?: number;
-  pitchDelta?: number;
-  // the point to not move when changing the camera
-  around?: Point | null;
-  // same as above, except for pinch actions, which are given higher priority
-  pinchAround?: Point | null;
-  // A method that can fire a one-off easing by directly changing the map's camera.
-  cameraAnimation?: (map: Map) => any;
-  // The last three properties are needed by only one handler: scrollzoom.
-  // The DOM event to be used as the `originalEvent` on any camera change events.
-  originalEvent?: any;
-  // Makes the manager trigger a frame, allowing the handler to return multiple results over time (see scrollzoom).
-  needsRenderFrame?: boolean;
-  // The camera changes won't get recorded for inertial zooming.
-  noInertia?: boolean;
+    panDelta?: Point;
+    zoomDelta?: number;
+    bearingDelta?: number;
+    pitchDelta?: number;
+    // the point to not move when changing the camera
+    around?: Point | null;
+    // same as above, except for pinch actions, which are given higher priority
+    pinchAround?: Point | null;
+    // A method that can fire a one-off easing by directly changing the map's camera.
+    cameraAnimation?: (map: Map) => any;
+    // The last three properties are needed by only one handler: scrollzoom.
+    // The DOM event to be used as the `originalEvent` on any camera change events.
+    originalEvent?: any;
+    // Makes the manager trigger a frame, allowing the handler to return multiple results over time (see scrollzoom).
+    needsRenderFrame?: boolean;
+    // The camera changes won't get recorded for inertial zooming.
+    noInertia?: boolean;
 };
 
 function hasChange(result: HandlerResult) {
@@ -89,9 +89,9 @@ class HandlerManager {
     _map: Map;
     _el: HTMLElement;
     _handlers: Array<{
-      handlerName: string;
-      handler: Handler;
-      allowed: any;
+        handlerName: string;
+        handler: Handler;
+        allowed: any;
     }>;
     _eventsInProgress: any;
     _frameId: number;
@@ -102,8 +102,8 @@ class HandlerManager {
     _changes: Array<[HandlerResult, any, any]>;
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
-      passive?: boolean;
-      capture?: boolean;
+        passive?: boolean;
+        capture?: boolean;
     } | undefined]>;
 
     constructor(map: Map, options: CompleteMapOptions) {

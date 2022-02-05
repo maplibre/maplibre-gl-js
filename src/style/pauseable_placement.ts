@@ -13,7 +13,7 @@ class LayerPlacement {
     _currentTileIndex: number;
     _currentPartIndex: number;
     _seenCrossTileIDs: {
-      [k in string | number]: boolean;
+        [k in string | number]: boolean;
     };
     _bucketParts: Array<BucketPart>;
 

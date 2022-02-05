@@ -36,8 +36,8 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
 
     const programId =
         image ? 'linePattern' :
-        dasharray ? 'lineSDF' :
-        gradient ? 'lineGradient' : 'line';
+            dasharray ? 'lineSDF' :
+                gradient ? 'lineGradient' : 'line';
 
     const context = painter.context;
     const gl = context.gl;
@@ -67,8 +67,8 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
 
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade) :
             dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade) :
-            gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length) :
-            lineUniformValues(painter, tile, layer);
+                gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length) :
+                    lineUniformValues(painter, tile, layer);
 
         if (image) {
             context.activeTexture.set(gl.TEXTURE0);

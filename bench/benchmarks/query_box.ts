@@ -1,7 +1,7 @@
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 import type Map from '../../src/ui/map';
-import {PointLike} from '../../src/util/point';
+import type {PointLike} from '../../src/ui/camera';
 
 const width = 1024;
 const height = 768;

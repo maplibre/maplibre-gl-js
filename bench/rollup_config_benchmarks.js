@@ -1,11 +1,11 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import replace from 'rollup-plugin-replace';
+import replace from '@rollup/plugin-replace';
 import {plugins} from '../build/rollup_plugins';
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
-import buble from 'rollup-plugin-buble';
+import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
+import {execSync} from 'child_process';
 
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
@@ -15,8 +15,13 @@ if (process.env.MAPLIBRE_STYLES) {
         .map(style => style.match(/\.json$/) ? require(style) : style);
 }
 
+const gitDesc = execSync('git describe --all --always --dirty').toString().trim();
+const gitRef = execSync('git rev-parse --short=7 HEAD').toString().trim();
+const defaultBenchmarkVersion = gitDesc.replace(/^(heads|tags)\//, '') + (gitDesc.match(/^heads\//) ? ` ${gitRef}` : '');
+
 const replaceConfig = {
-    'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION),
+    preventAssignment: true,
+    'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION || defaultBenchmarkVersion),
     'process.env.MAPLIBRE_STYLES': JSON.stringify(styles),
     'process.env.NODE_ENV': JSON.stringify('production')
 };
@@ -52,7 +57,7 @@ const splitConfig = (name) => [{
 }];
 
 const viewConfig = {
-    input: `${srcDir}bench/benchmarks_view.${inputExt}x`,
+    input: `${srcDir}bench/benchmarks_view.${inputExt}${watch ? 'x' : ''}`,
     output: {
         name: 'Benchmarks',
         file: 'bench/benchmarks_view_generated.js',
@@ -61,7 +66,6 @@ const viewConfig = {
         sourcemap: false
     },
     plugins: [
-        buble({transforms: {dangerousForOf: true}, objectAssign: true}),
         resolve({browser: true, preferBuiltins: false}),
         watch ? typescript() : false,
         commonjs(),

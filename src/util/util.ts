@@ -1,6 +1,6 @@
 import UnitBezier from '@mapbox/unitbezier';
 
-import Point from './point';
+import Point from '@mapbox/point-geometry';
 
 import type {Callback} from '../types/callback';
 
@@ -88,9 +88,9 @@ export function wrap(n: number, min: number, max: number): number {
  * @private
  */
 export function asyncAll<Item, Result>(
-  array: Array<Item>,
-  fn: (item: Item, fnCallback: Callback<Result>) => void,
-  callback: Callback<Array<Result>>
+    array: Array<Item>,
+    fn: (item: Item, fnCallback: Callback<Result>) => void,
+    callback: Callback<Array<Result>>
 ) {
     if (!array.length) { return callback(null, []); }
     let remaining = array.length;
@@ -113,8 +113,8 @@ export function asyncAll<Item, Result>(
  * @private
  */
 export function keysDifference<S, T>(
-  obj: {[key: string]: S},
-  other: {[key: string]: T}
+    obj: {[key: string]: S},
+    other: {[key: string]: T}
 ): Array<string> {
     const difference = [];
     for (const i in obj) {
@@ -365,9 +365,9 @@ export function isClosedPolygon(points: Array<Point>): boolean {
  */
 
 export function sphericalToCartesian([r, azimuthal, polar]: [number, number, number]): {
-  x: number;
-  y: number;
-  z: number;
+    x: number;
+    y: number;
+    z: number;
 } {
     // We abstract "north"/"up" (compass-wise) to be 0° when really this is 90° (π/2):
     // correct for that here

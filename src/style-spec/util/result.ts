@@ -5,11 +5,11 @@
  * @private
  */
 export type Result<T, E> = {
-  result: 'success';
-  value: T;
+    result: 'success';
+    value: T;
 } | {
-  result: 'error';
-  value: E;
+    result: 'error';
+    value: E;
 };
 
 export function success<T, E>(value: T): Result<T, E> {

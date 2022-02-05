@@ -1,7 +1,7 @@
 import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events';
 import {Handler} from '../handler_manager';
 import type Map from '../map';
-import type Point from '../../util/point';
+import type Point from '@mapbox/point-geometry';
 
 export class MapEventHandler implements Handler {
 
@@ -10,7 +10,7 @@ export class MapEventHandler implements Handler {
     _map: Map;
 
     constructor(map: Map, options: {
-      clickTolerance: number;
+        clickTolerance: number;
     }) {
         this._map = map;
         this._clickTolerance = options.clickTolerance;

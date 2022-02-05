@@ -1,4 +1,4 @@
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 
 import type {PossiblyEvaluatedPropertyValue} from './properties';
 import type StyleLayer from '../style/style_layer';
@@ -6,9 +6,9 @@ import type CircleBucket from '../data/bucket/circle_bucket';
 import type LineBucket from '../data/bucket/line_bucket';
 
 export function getMaximumPaintValue(
-  property: string,
-  layer: StyleLayer,
-  bucket: CircleBucket<any> | LineBucket
+    property: string,
+    layer: StyleLayer,
+    bucket: CircleBucket<any> | LineBucket
 ): number {
     const value = ((layer.paint as any).get(property) as PossiblyEvaluatedPropertyValue<any>).value;
     if (value.kind === 'constant') {
@@ -23,10 +23,10 @@ export function translateDistance(translate: [number, number]) {
 }
 
 export function translate(queryGeometry: Array<Point>,
-                   translate: [number, number],
-                   translateAnchor: 'viewport' | 'map',
-                   bearing: number,
-                   pixelsToTileUnits: number) {
+    translate: [number, number],
+    translateAnchor: 'viewport' | 'map',
+    bearing: number,
+    pixelsToTileUnits: number) {
     if (!translate[0] && !translate[1]) {
         return queryGeometry;
     }

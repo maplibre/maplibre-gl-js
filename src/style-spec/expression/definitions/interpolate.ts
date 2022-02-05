@@ -12,13 +12,13 @@ import type EvaluationContext from '../evaluation_context';
 import type {Type} from '../types';
 
 export type InterpolationType = {
-  name: 'linear';
+    name: 'linear';
 } | {
-  name: 'exponential';
-  base: number;
+    name: 'exponential';
+    base: number;
 } | {
-  name: 'cubic-bezier';
-  controlPoints: [number, number, number, number];
+    name: 'cubic-bezier';
+    controlPoints: [number, number, number, number];
 };
 
 class Interpolate implements Expression {

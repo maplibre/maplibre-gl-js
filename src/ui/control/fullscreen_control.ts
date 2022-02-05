@@ -6,7 +6,7 @@ import type Map from '../map';
 import type {IControl} from './control';
 
 type FullscreenOptions = {
-  container?: HTMLElement;
+    container?: HTMLElement;
 };
 
 /**

@@ -9,10 +9,10 @@ export default resolveTokens;
  * @private
  */
 function resolveTokens(
-  properties: {
-    readonly [x: string]: unknown;
-  },
-  text: string
+    properties: {
+        readonly [x: string]: unknown;
+    },
+    text: string
 ): string {
     return text.replace(/{([^{}]+)}/g, (match, key: string) => {
         return key in properties ? String(properties[key]) : '';

@@ -63,8 +63,8 @@ export function summaryStatistics(data): Summary {
     const trimmedMean = d3.mean(data.filter(d => d >= lowerQuintile && d <= upperQuintile));
     const windsorizedDeviation = d3.deviation(data.map(d =>
         d < lowerQuintile ? lowerQuintile :
-        d > upperQuintile ? upperQuintile :
-        d
+            d > upperQuintile ? upperQuintile :
+                d
     ));
 
     return {

@@ -1,5 +1,5 @@
 import DOM from '../../util/dom';
-import type Point from '../../util/point';
+import type Point from '@mapbox/point-geometry';
 
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;
@@ -25,7 +25,7 @@ class MouseHandler {
     _clickTolerance: number;
 
     constructor(options: {
-      clickTolerance: number;
+        clickTolerance: number;
     }) {
         this.reset();
         this._clickTolerance = options.clickTolerance || 1;

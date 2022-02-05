@@ -1,4 +1,4 @@
-import Point from './point';
+import Point from '@mapbox/point-geometry';
 
 import assert from 'assert';
 
@@ -53,7 +53,7 @@ export default class DOM {
     public static addEventListener(target: any, type: any, callback: any, options: {
         passive?: boolean;
         capture?: boolean;
-      } = {}) {
+    } = {}) {
         if ('passive' in options) {
             target.addEventListener(type, callback, options);
         } else {
@@ -64,7 +64,7 @@ export default class DOM {
     public static removeEventListener(target: any, type: any, callback: any, options: {
         passive?: boolean;
         capture?: boolean;
-      } = {}) {
+    } = {}) {
         if ('passive' in options) {
             target.removeEventListener(type, callback, options);
         } else {

@@ -3,14 +3,14 @@ import {Event, Evented} from '../util/evented';
 import {MapMouseEvent} from '../ui/events';
 import DOM from '../util/dom';
 import LngLat from '../geo/lng_lat';
-import Point, {PointLike} from '../util/point';
+import Point from '@mapbox/point-geometry';
 import smartWrap from '../util/smart_wrap';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 
 import type {PositionAnchor} from './anchor';
-
 import type Map from './map';
 import type {LngLatLike} from '../geo/lng_lat';
+import type {PointLike} from './camera';
 
 const defaultOptions = {
     closeButton: true,
@@ -21,18 +21,18 @@ const defaultOptions = {
 };
 
 export type Offset = number | PointLike | {
-  [_ in PositionAnchor]: PointLike;
+    [_ in PositionAnchor]: PointLike;
 };
 
 export type PopupOptions = {
-  closeButton?: boolean;
-  closeOnClick?: boolean;
-  closeOnMove?: boolean;
-  focusAfterOpen?: boolean;
-  anchor?: PositionAnchor;
-  offset?: Offset;
-  className?: string;
-  maxWidth?: string;
+    closeButton?: boolean;
+    closeOnClick?: boolean;
+    closeOnMove?: boolean;
+    focusAfterOpen?: boolean;
+    anchor?: PositionAnchor;
+    offset?: Offset;
+    className?: string;
+    maxWidth?: string;
 };
 
 const focusQuerySelector = [

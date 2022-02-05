@@ -24,9 +24,9 @@ import type {
 import type {LightSpecification} from '../style-spec/types';
 
 type LightPosition = {
-  x: number;
-  y: number;
-  z: number;
+    x: number;
+    y: number;
+    z: number;
 };
 
 class LightPositionProperty implements Property<[number, number, number], LightPosition> {
@@ -37,8 +37,8 @@ class LightPositionProperty implements Property<[number, number, number], LightP
     }
 
     possiblyEvaluate(
-      value: PropertyValue<[number, number, number], LightPosition>,
-      parameters: EvaluationParameters
+        value: PropertyValue<[number, number, number], LightPosition>,
+        parameters: EvaluationParameters
     ): LightPosition {
         return sphericalToCartesian(value.expression.evaluate(parameters));
     }
@@ -53,10 +53,10 @@ class LightPositionProperty implements Property<[number, number, number], LightP
 }
 
 type Props = {
-  'anchor': DataConstantProperty<'map' | 'viewport'>;
-  'position': LightPositionProperty;
-  'color': DataConstantProperty<Color>;
-  'intensity': DataConstantProperty<number>;
+    'anchor': DataConstantProperty<'map' | 'viewport'>;
+    'position': LightPositionProperty;
+    'color': DataConstantProperty<Color>;
+    'intensity': DataConstantProperty<number>;
 };
 
 type PropsPossiblyEvaluated = {
@@ -122,7 +122,7 @@ class Light extends Evented {
     }
 
     _validate(validate: Function, value: unknown, options?: {
-      validate?: boolean;
+        validate?: boolean;
     }) {
         if (options && options.validate === false) {
             return false;

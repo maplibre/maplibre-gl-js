@@ -35,16 +35,16 @@ class Program<Us extends UniformBindings> {
     failedToCreate: boolean;
 
     constructor(context: Context,
-            name: string,
-            source: {
-              fragmentSource: string;
-              vertexSource: string;
-              staticAttributes: Array<string>;
-              staticUniforms: Array<string>;
-            },
-            configuration: ProgramConfiguration,
-            fixedUniforms: (b: Context, a: UniformLocations) => Us,
-            showOverdrawInspector: boolean) {
+        name: string,
+        source: {
+            fragmentSource: string;
+            vertexSource: string;
+            staticAttributes: Array<string>;
+            staticUniforms: Array<string>;
+        },
+        configuration: ProgramConfiguration,
+        fixedUniforms: (b: Context, a: UniformLocations) => Us,
+        showOverdrawInspector: boolean) {
         const gl = context.gl;
         this.program = gl.createProgram();
 
@@ -121,21 +121,21 @@ class Program<Us extends UniformBindings> {
     }
 
     draw(context: Context,
-         drawMode: DrawMode,
-         depthMode: Readonly<DepthMode>,
-         stencilMode: Readonly<StencilMode>,
-         colorMode: Readonly<ColorMode>,
-         cullFaceMode: Readonly<CullFaceMode>,
-         uniformValues: UniformValues<Us>,
-         layerID: string,
-         layoutVertexBuffer: VertexBuffer,
-         indexBuffer: IndexBuffer,
-         segments: SegmentVector,
-         currentProperties?: any,
-         zoom?: number | null,
-         configuration?: ProgramConfiguration | null,
-         dynamicLayoutBuffer?: VertexBuffer | null,
-         dynamicLayoutBuffer2?: VertexBuffer | null) {
+        drawMode: DrawMode,
+        depthMode: Readonly<DepthMode>,
+        stencilMode: Readonly<StencilMode>,
+        colorMode: Readonly<ColorMode>,
+        cullFaceMode: Readonly<CullFaceMode>,
+        uniformValues: UniformValues<Us>,
+        layerID: string,
+        layoutVertexBuffer: VertexBuffer,
+        indexBuffer: IndexBuffer,
+        segments: SegmentVector,
+        currentProperties?: any,
+        zoom?: number | null,
+        configuration?: ProgramConfiguration | null,
+        dynamicLayoutBuffer?: VertexBuffer | null,
+        dynamicLayoutBuffer2?: VertexBuffer | null) {
 
         const gl = context.gl;
 

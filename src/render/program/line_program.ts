@@ -12,44 +12,44 @@ import type Painter from '../painter';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 
 export type LineUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_ratio': Uniform1f;
-  'u_device_pixel_ratio': Uniform1f;
-  'u_units_to_pixels': Uniform2f;
+    'u_matrix': UniformMatrix4f;
+    'u_ratio': Uniform1f;
+    'u_device_pixel_ratio': Uniform1f;
+    'u_units_to_pixels': Uniform2f;
 };
 
 export type LineGradientUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_ratio': Uniform1f;
-  'u_device_pixel_ratio': Uniform1f;
-  'u_units_to_pixels': Uniform2f;
-  'u_image': Uniform1i;
-  'u_image_height': Uniform1f;
+    'u_matrix': UniformMatrix4f;
+    'u_ratio': Uniform1f;
+    'u_device_pixel_ratio': Uniform1f;
+    'u_units_to_pixels': Uniform2f;
+    'u_image': Uniform1i;
+    'u_image_height': Uniform1f;
 };
 
 export type LinePatternUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_texsize': Uniform2f;
-  'u_ratio': Uniform1f;
-  'u_device_pixel_ratio': Uniform1f;
-  'u_units_to_pixels': Uniform2f;
-  'u_image': Uniform1i;
-  'u_scale': Uniform3f;
-  'u_fade': Uniform1f;
+    'u_matrix': UniformMatrix4f;
+    'u_texsize': Uniform2f;
+    'u_ratio': Uniform1f;
+    'u_device_pixel_ratio': Uniform1f;
+    'u_units_to_pixels': Uniform2f;
+    'u_image': Uniform1i;
+    'u_scale': Uniform3f;
+    'u_fade': Uniform1f;
 };
 
 export type LineSDFUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_ratio': Uniform1f;
-  'u_device_pixel_ratio': Uniform1f;
-  'u_units_to_pixels': Uniform2f;
-  'u_patternscale_a': Uniform2f;
-  'u_patternscale_b': Uniform2f;
-  'u_sdfgamma': Uniform1f;
-  'u_image': Uniform1i;
-  'u_tex_y_a': Uniform1f;
-  'u_tex_y_b': Uniform1f;
-  'u_mix': Uniform1f;
+    'u_matrix': UniformMatrix4f;
+    'u_ratio': Uniform1f;
+    'u_device_pixel_ratio': Uniform1f;
+    'u_units_to_pixels': Uniform2f;
+    'u_patternscale_a': Uniform2f;
+    'u_patternscale_b': Uniform2f;
+    'u_sdfgamma': Uniform1f;
+    'u_image': Uniform1i;
+    'u_tex_y_a': Uniform1f;
+    'u_tex_y_b': Uniform1f;
+    'u_mix': Uniform1f;
 };
 
 const lineUniforms = (context: Context, locations: UniformLocations): LineUniformsType => ({
@@ -99,7 +99,7 @@ const lineUniformValues = (painter: Painter, tile: Tile, layer: LineStyleLayer):
     return {
         'u_matrix': calculateMatrix(painter, tile, layer),
         'u_ratio': 1 / pixelsToTileUnits(tile, 1, transform.zoom),
-        'u_device_pixel_ratio': devicePixelRatio,
+        'u_device_pixel_ratio': painter.pixelRatio,
         'u_units_to_pixels': [
             1 / transform.pixelsToGLUnits[0],
             1 / transform.pixelsToGLUnits[1]
@@ -115,10 +115,10 @@ const lineGradientUniformValues = (painter: Painter, tile: Tile, layer: LineStyl
 };
 
 const linePatternUniformValues = (
-  painter: Painter,
-  tile: Tile,
-  layer: LineStyleLayer,
-  crossfade: CrossfadeParameters
+    painter: Painter,
+    tile: Tile,
+    layer: LineStyleLayer,
+    crossfade: CrossfadeParameters
 ): UniformValues<LinePatternUniformsType> => {
     const transform = painter.transform;
     const tileZoomRatio = calculateTileRatio(tile, transform);
@@ -127,7 +127,7 @@ const linePatternUniformValues = (
         'u_texsize': tile.imageAtlasTexture.size,
         // camera zoom ratio
         'u_ratio': 1 / pixelsToTileUnits(tile, 1, transform.zoom),
-        'u_device_pixel_ratio': devicePixelRatio,
+        'u_device_pixel_ratio': painter.pixelRatio,
         'u_image': 0,
         'u_scale': [tileZoomRatio, crossfade.fromScale, crossfade.toScale],
         'u_fade': crossfade.t,
@@ -139,11 +139,11 @@ const linePatternUniformValues = (
 };
 
 const lineSDFUniformValues = (
-  painter: Painter,
-  tile: Tile,
-  layer: LineStyleLayer,
-  dasharray: CrossFaded<Array<number>>,
-  crossfade: CrossfadeParameters
+    painter: Painter,
+    tile: Tile,
+    layer: LineStyleLayer,
+    dasharray: CrossFaded<Array<number>>,
+    crossfade: CrossfadeParameters
 ): UniformValues<LineSDFUniformsType> => {
     const transform = painter.transform;
     const lineAtlas = painter.lineAtlas;
@@ -160,7 +160,7 @@ const lineSDFUniformValues = (
     return extend(lineUniformValues(painter, tile, layer), {
         'u_patternscale_a': [tileRatio / widthA, -posA.height / 2],
         'u_patternscale_b': [tileRatio / widthB, -posB.height / 2],
-        'u_sdfgamma': lineAtlas.width / (Math.min(widthA, widthB) * 256 * devicePixelRatio) / 2,
+        'u_sdfgamma': lineAtlas.width / (Math.min(widthA, widthB) * 256 * painter.pixelRatio) / 2,
         'u_image': 0,
         'u_tex_y_a': posA.y,
         'u_tex_y_b': posB.y,

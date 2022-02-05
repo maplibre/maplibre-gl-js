@@ -1,7 +1,7 @@
 import FeatureIndex from '../data/feature_index';
 
 import {performSymbolLayout} from '../symbol/symbol_layout';
-import {CollisionBoxArray} from '../data/array_types';
+import {CollisionBoxArray} from '../data/array_types.g';
 import DictionaryCoder from '../util/dictionary_coder';
 import SymbolBucket from '../data/bucket/symbol_bucket';
 import LineBucket from '../data/bucket/line_bucket';
@@ -130,9 +130,9 @@ class WorkerTile {
 
         let error: Error;
         let glyphMap: {
-          [_: string]: {
-            [_: number]: StyleGlyph;
-          };
+            [_: string]: {
+                [_: number]: StyleGlyph;
+            };
         };
         let iconMap: {[_: string]: StyleImage};
         let patternMap: {[_: string]: StyleImage};
