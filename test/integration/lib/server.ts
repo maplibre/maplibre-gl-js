@@ -6,9 +6,7 @@ import localizeURLs from './localize-urls.js';
 import {fileURLToPath} from 'url';
 import {createRequire} from 'module';
 
-// @ts-ignore
 const requireFn = createRequire(import.meta.url);
-// @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default function () {

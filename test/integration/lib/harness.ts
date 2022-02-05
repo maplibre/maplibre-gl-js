@@ -7,7 +7,6 @@ import {queue} from 'd3-queue';
 import createServer from './server';
 import {fileURLToPath} from 'url';
 
-// @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const {shuffle} = shuffleSeed;
