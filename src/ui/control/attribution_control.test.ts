@@ -35,7 +35,7 @@ describe('AttributionControl', () => {
         map.addControl(new AttributionControl());
 
         expect(
-        map.getContainer().querySelectorAll('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib')
+            map.getContainer().querySelectorAll('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib')
         ).toHaveLength(1);
     });
 
@@ -43,7 +43,7 @@ describe('AttributionControl', () => {
         map.addControl(new AttributionControl(), 'top-left');
 
         expect(
-        map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left .maplibregl-ctrl-attrib')
+            map.getContainer().querySelectorAll('.maplibregl-ctrl-top-left .maplibregl-ctrl-attrib')
         ).toHaveLength(1);
     });
 
@@ -59,7 +59,7 @@ describe('AttributionControl', () => {
         const container = map.getContainer();
 
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')
+            container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')
         ).toHaveLength(1);
         map.removeControl(attributionControl);
 
@@ -70,7 +70,7 @@ describe('AttributionControl', () => {
 
         map.addControl(attributionControl);
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)')
+            container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)')
         ).toHaveLength(1);
     });
 
@@ -84,18 +84,18 @@ describe('AttributionControl', () => {
         const container = map.getContainer();
 
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)')
+            container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)')
         ).toHaveLength(1);
 
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 600, configurable: true});
         map.resize();
 
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')
+            container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')
         ).toHaveLength(1);
 
         expect(
-        container.querySelectorAll('.maplibregl-attrib-empty')
+            container.querySelectorAll('.maplibregl-attrib-empty')
         ).toHaveLength(0);
     });
 
@@ -106,18 +106,18 @@ describe('AttributionControl', () => {
         const container = map.getContainer();
 
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)')
+            container.querySelectorAll('.maplibregl-ctrl-attrib:not(.maplibregl-compact)')
         ).toHaveLength(1);
 
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 600, configurable: true});
         map.resize();
 
         expect(
-        container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')
+            container.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact')
         ).toHaveLength(0);
 
         expect(
-        container.querySelectorAll('.maplibregl-attrib-empty')
+            container.querySelectorAll('.maplibregl-attrib-empty')
         ).toHaveLength(1);
     });
 
