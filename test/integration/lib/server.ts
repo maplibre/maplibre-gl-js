@@ -12,8 +12,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export default function () {
     const port = 2900;
     const integrationMount = st({path: path.join(__dirname, '..')});
-    const mapboxGLStylesMount = st({path: path.dirname(requireFn.resolve('mapbox-gl-styles')), url: 'mapbox-gl-styles'});
-    const mapboxMVTFixturesMount = st({path: path.dirname(requireFn.resolve('@mapbox/mvt-fixtures')), url: 'mvt-fixtures'});
+    const maplibreGLStylesMount = st({path: path.dirname(requireFn.resolve('mapbox-gl-styles')), url: 'mapbox-gl-styles'});
+    const maplibreMVTFixturesMount = st({path: path.dirname(requireFn.resolve('@mapbox/mvt-fixtures')), url: 'mvt-fixtures'});
     const server = createServer((req, res) => {
         if (req.method === 'POST' && req.url === '/write-file') {
             let body = '';
@@ -31,8 +31,8 @@ export default function () {
             });
         }
 
-        return mapboxMVTFixturesMount(req, res, () => {
-            return mapboxGLStylesMount(req, res, () => {
+        return maplibreMVTFixturesMount(req, res, () => {
+            return maplibreGLStylesMount(req, res, () => {
                 return integrationMount(req, res);
             });
         });
