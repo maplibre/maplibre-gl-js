@@ -195,7 +195,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource provides resource timing information', done => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/fixtures/mbsv5-6-18-23.vector.pbf'));
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/misc-assets/mbsv5-6-18-23.vector.pbf'));
 
         function loadVectorData(params, callback) {
             return callback(null, {
@@ -251,7 +251,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource provides resource timing information (fallback method)', done => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/fixtures/mbsv5-6-18-23.vector.pbf'));
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/misc-assets/mbsv5-6-18-23.vector.pbf'));
 
         function loadVectorData(params, callback) {
             return callback(null, {

@@ -5,7 +5,7 @@ import Tile from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
-import fixturesSource from '../../test/fixtures/source.json';
+import fixturesSource from '../../test/unit/misc-assets/source.json';
 import {getMockDispatcher, getWrapDispatcher} from '../util/test/util';
 import Map from '../ui/map';
 

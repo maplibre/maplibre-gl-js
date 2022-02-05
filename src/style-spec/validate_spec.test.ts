@@ -7,7 +7,7 @@ import reference from './reference/latest';
 const UPDATE = !!process.env.UPDATE;
 
 describe('validate_spec', () => {
-    glob.sync('test/unit/style-spec/fixture/*.input.json').forEach((file) => {
+    glob.sync('test/unit/style-spec-fixtures/*.input.json').forEach((file) => {
         test(path.basename(file), () => {
             const outputfile = file.replace('.input', '.output');
             const style = fs.readFileSync(file);
@@ -19,7 +19,7 @@ describe('validate_spec', () => {
     });
 
     test('errors from validate do not contain line numbers', () => {
-        const fixtures = glob.sync('test/unit/style-spec/fixture/*.input.json');
+        const fixtures = glob.sync('test/unit/style-spec-fixtures/*.input.json');
         const style = JSON.parse(fs.readFileSync(fixtures[0]).toString());
 
         const result = validate(style, reference);

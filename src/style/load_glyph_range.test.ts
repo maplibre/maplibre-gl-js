@@ -38,6 +38,6 @@ test('loadGlyphRange', done => {
 
     expect(request.url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
     request.setStatus(200);
-    request.response = fs.readFileSync(path.join(__dirname, '../../test/fixtures/0-255.pbf'));
+    request.response = fs.readFileSync(path.join(__dirname, '../../test/unit/misc-assets/0-255.pbf'));
     request.onload();
 });
