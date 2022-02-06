@@ -8,30 +8,30 @@ import * as spec from '../../dist/style-spec/index.js';
 import {RollupOptions} from 'rollup';
 
 describe('@maplibre/maplibre-gl-style-spec npm package', () => {
-    // test('build plain ES5 bundle in prepublish', async () => {
-    //     jest.spyOn(console, 'warn').mockImplementation(() => {});
-    //     await rollup.rollup({
-    //         input: 'src/style-spec/style-spec.ts',
-    //         plugins: [{
-    //             name: 'tset-checker',
-    //             resolveId: (id, importer) => {
-    //                 if (
-    //                     /^[\/\.]/.test(id) ||
-    //                     isBuiltin(id) ||
-    //                     /node_modules/.test(importer)
-    //                 ) {
-    //                     return null;
-    //                 }
+    test('build plain ES5 bundle in prepublish', async () => {
+        jest.spyOn(console, 'warn').mockImplementation(() => {});
+        await rollup.rollup({
+            input: 'src/style-spec/style-spec.ts',
+            plugins: [{
+                name: 'tset-checker',
+                resolveId: (id, importer) => {
+                    if (
+                        /^[\/\.]/.test(id) ||
+                        isBuiltin(id) ||
+                        /node_modules/.test(importer)
+                    ) {
+                        return null;
+                    }
 
-    //                 expect(styleSpecPackage.dependencies[id]).toBeTruthy();
-    //                 return false;
-    //             }
-    //         }, ...(rollupConfig as RollupOptions[])[0].plugins]
-    //     }).then(() => {
-    //     }).catch(e => {
-    //         expect(e).toBeFalsy();
-    //     });
-    // }, 40000);
+                    expect(styleSpecPackage.dependencies[id]).toBeTruthy();
+                    return false;
+                }
+            }, ...(rollupConfig as RollupOptions[])[0].plugins]
+        }).then(() => {
+        }).catch(e => {
+            expect(e).toBeFalsy();
+        });
+    }, 40000);
 
     test('exports components directly, not behind `default` - https://github.com/mapbox/mapbox-gl-js/issues/6601', () => {
         // @ts-ignore
