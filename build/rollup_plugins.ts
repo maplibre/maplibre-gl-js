@@ -18,7 +18,7 @@ export const nodeResolve = resolve({
     extensions: ['.mjs', '.js', '.json', '.node', '.ts']
 });
 
-export const plugins = (minified: boolean, production: boolean, watch: boolean): Plugin[] => [
+export const plugins = (minified: boolean, production: boolean): Plugin[] => [
     minifyStyleSpec(),
     json(),
     // https://github.com/zaach/jison/issues/351
@@ -45,7 +45,7 @@ export const plugins = (minified: boolean, production: boolean, watch: boolean):
         include: ['**/*'], // by default, unassert only includes .js files
     }) : false,
     nodeResolve,
-    watch ? typescript() : false,
+    typescript(),
     commonjs({
         // global keyword handling causes Webpack compatibility issues, so we disabled it:
         // https://github.com/mapbox/mapbox-gl-js/pull/6956

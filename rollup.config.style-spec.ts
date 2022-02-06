@@ -6,11 +6,12 @@ import json from '@rollup/plugin-json';
 import {fileURLToPath, pathToFileURL} from 'url';
 import {RollupOptions} from 'rollup';
 import {nodeResolve} from './build/rollup_plugins';
+import typescript from '@rollup/plugin-typescript';
 
 const esm = 'esm' in process.env;
 
 const config: RollupOptions[] = [{
-    input: 'rollup/build/tsc/src/style-spec/style-spec.js',
+    input: 'src/style-spec/style-spec.ts',
     output: {
         name: 'maplibreGlStyleSpecification',
         file: `dist/style-spec/${esm ? 'index.mjs' : 'index.js'}`,
@@ -48,6 +49,7 @@ const config: RollupOptions[] = [{
         json(),
         unassert(),
         nodeResolve,
+        typescript(),
         commonjs()
     ]
 }];
