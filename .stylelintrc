@@ -15,5 +15,8 @@
     "property-no-vendor-prefix": null,
     "selector-no-vendor-prefix": null,
     "value-no-vendor-prefix": null
-  }
+  },
+  "ignoreFiles": [
+      "dist/**/*.css"
+  ]
 }
