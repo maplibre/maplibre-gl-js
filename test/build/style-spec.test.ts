@@ -11,9 +11,9 @@ describe('@maplibre/maplibre-gl-style-spec npm package', () => {
     test('build plain ES5 bundle in prepublish', async () => {
         jest.spyOn(console, 'warn').mockImplementation(() => {});
         await rollup.rollup({
-            input: 'src/style-spec/style-spec.ts',
+            input: './src/style-spec/style-spec.ts',
             plugins: [{
-                name: 'tset-checker',
+                name: 'test-checker',
                 resolveId: (id, importer) => {
                     if (
                         /^[\/\.]/.test(id) ||
