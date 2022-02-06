@@ -2,10 +2,12 @@
 
 ### Features and improvements
 
+- Default compact attribution to be open by default to comply with OpenSteetMap Attribution Guidelines (#795)
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
 
+- Fix compact attribution button showing when attribution is blank (#795)
 - Fix error mismatched image size for CJK characters (#718)
 - Fire `dataabort` and `sourcedataabort` events when a tile request is aborted (#794)
 - *...Add new stuff here...*
