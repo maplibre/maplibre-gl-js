@@ -32,18 +32,15 @@ while (match = regex.exec(changelog)) {
 const latest = releaseNotes[0];
 const previous = releaseNotes[1];
 
-/*
-  Fill and print the release notes template.
-*/
-let templatedReleaseNotes;
 
-templatedReleaseNotes = ejs.render(fs.readFileSync('build/release-notes.md.ejs', 'utf8'), {
-    'CURRENTVERSION': latest.version,
-    'PREVIOUSVERSION': previous.version,
-    'CHANGELOG': latest.changelog,
-    'isPrerelease': semver.prerelease(latest.version)
-});
-templatedReleaseNotes = templatedReleaseNotes.trimEnd();
+//  Print the release notes template.
+
+const templatedReleaseNotes = `https://github.com/maplibre/maplibre-gl-js
+[Changes](https://github.com/maplibre/maplibre-gl-js/compare/v${previous.version}...v${latest.version}) since [MapLibre GL JS v${previous.version}](https://github.com/maplibre/releases/tag/v${previous.version}):
+
+${latest.changelog}
+
+${semver.prerelease(latest.version) ? 'Pre-release version' : ''}`;
 
 // eslint-disable-next-line eol-last
-process.stdout.write(templatedReleaseNotes);
+process.stdout.write(templatedReleaseNotes.trimEnd());
