@@ -11,10 +11,10 @@ const suitePath = 'tests';
  * Analyzes the contents of the specified `path.join(rootDirectory, suiteDirectory)`, and inlines
  * the contents into a single json file which can then be imported and built into a bundle
  * to be shipped to the browser.
- * @param rootDirectory
- * @param suiteDirectory
- * @param outputDirectory
- * @param includeImages
+ * @param rootDirectory - The root directory
+ * @param suiteDirectory - The suite directory
+ * @param outputDirectory - The output directory
+ * @param includeImages - Flag to include images
  */
 function generateFixtureJson(rootDirectory: string, suiteDirectory: string, outputDirectory: string = 'test/integration/query/dist', includeImages:boolean = false) {
     const globs = getAllFixtureGlobs(rootDirectory, suiteDirectory);
