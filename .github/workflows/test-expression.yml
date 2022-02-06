@@ -1,4 +1,4 @@
-name: Integration Test - Expressions
+name: Integration Test - Expression
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test_expressions:
+  test_expression:
     name: ubuntu-latest
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -19,4 +19,4 @@ jobs:
           architecture: x64
       - run: npm ci
       - run: npm run build-dev
-      - run: npm run test-expressions
+      - run: npm run test-expression

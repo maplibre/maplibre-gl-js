@@ -27,9 +27,13 @@ try {
     const webPage = await browser.newPage();
 
     url.hash = 'NONE';
-    await webPage.goto(url);
+    await webPage.goto(url.toString());
+
+    // @ts-ignore
     await webPage.waitForFunction(() => window.maplibreglBenchmarkFinished);
+    // @ts-ignore
     const allNames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
+    // @ts-ignore
     const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allNames[0]);
 
     const toRun = argv._.length > 0 ? argv._ : allNames;
@@ -44,17 +48,18 @@ try {
         process.stdout.write(name.padStart(nameWidth));
 
         url.hash = name;
-        await webPage.goto(url);
+        await webPage.goto(url.toString());
         await webPage.reload();
 
         await webPage.waitForFunction(
+            // @ts-ignore
             () => window.maplibreglBenchmarkFinished,
             {
                 polling: 200,
                 timeout: 0
             }
         );
-
+        // @ts-ignore
         const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
         const output = versions.map((v) => formatTime(results[v].summary.trimmedMean).padStart(timeWidth) + formatRegression(results[v].regression));
         if (versions.length === 2) {
@@ -65,7 +70,7 @@ try {
         console.log(...output);
 
         merger.add(await webPage.pdf({
-            format: 'A4',
+            format: 'a4',
             path: `${dir}/${name}.pdf`,
             printBackground: true,
             margin: {

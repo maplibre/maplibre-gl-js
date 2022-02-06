@@ -1,7 +1,7 @@
 import path, {dirname} from 'path';
 import fs from 'fs';
 import {PNG} from 'pngjs';
-import harness from './harness';
+import harness from '../lib/harness';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import glob from 'glob';
@@ -82,7 +82,7 @@ export function run(implementation: string, ignores: any, render: any) {
         options.seed = checkValueParameter(options.seed, '--seed');
     }
 
-    const directory = path.join(__dirname, '../render-tests');
+    const directory = path.join(__dirname);
     harness(directory, implementation, options, (style, params, done) => {
         render(style, params, (err, data) => {
             if (err) return done(err);
