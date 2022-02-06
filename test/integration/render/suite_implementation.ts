@@ -2,7 +2,7 @@ import {PNG} from 'pngjs';
 import request from 'request';
 import maplibregl from '../../../src/index';
 import browser from '../../../src/util/browser';
-import * as rtlTextPluginModule from '../../../rollup/build/tsc/src/source/rtl_text_plugin';
+import * as rtlTextPluginModule from '../../../src/source/rtl_text_plugin';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import fs from 'fs';
 import path, {dirname} from 'path';
