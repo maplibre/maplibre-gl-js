@@ -1,6 +1,6 @@
-import './stub_loader.js';
+import './stub_loader';
 import canvas from 'canvas';
-import {run} from './integration/lib/render';
+import {run} from './render';
 import suiteImplementation from './suite_implementation';
 import ignores from './ignores.json';
 

@@ -1,12 +1,12 @@
 import {PNG} from 'pngjs';
 import request from 'request';
-import maplibregl from '../rollup/build/tsc/src/index';
-import browser from '../rollup/build/tsc/src/util/browser';
-import * as rtlTextPluginModule from '../rollup/build/tsc/src/source/rtl_text_plugin';
+import maplibregl from '../../../src/index';
+import browser from '../../../src/util/browser';
+import * as rtlTextPluginModule from '../../../src/source/rtl_text_plugin';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import fs from 'fs';
 import path, {dirname} from 'path';
-import customLayerImplementations from './integration/custom_layer_implementations';
+import customLayerImplementations from './custom_layer_implementations';
 import {fileURLToPath} from 'url';
 
 // @ts-ignore
@@ -21,11 +21,13 @@ rtlTextPlugin['processStyledBidirectionalText'] = rtlText.processStyledBidirecti
 // replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
 // @ts-ignore
 browser.getImageData = function (img, padding = 0) {
+    // @ts-ignore
     if (!img.data) {
         return {width: 1, height: 1, data: new Uint8Array(1)};
     }
-    const width = img.width;
-    const height = img.height;
+    const width = img.width as number;
+    const height = img.height as number;
+    // @ts-ignore
     const data = img.data;
     const source = new Uint8Array(data);
     const dest = new Uint8Array((2 * padding + width) * (2 * padding + height) * 4);
@@ -82,6 +84,8 @@ export default function(style, options, _callback) {
     const map = new maplibregl.Map({
         container,
         style,
+
+        // @ts-ignore
         classes: options.classes,
         interactive: false,
         attributionControl: false,
@@ -190,7 +194,7 @@ export default function(style, options, _callback) {
                 applyOperations(map, operations.slice(1), callback);
             }, operation[1]);
         } else if (operation[0] === 'addImage') {
-            const {data, width, height} = PNG.sync.read(fs.readFileSync(path.join(__dirname, './integration/assets', operation[2])));
+            const {data, width, height} = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', operation[2])));
             map.addImage(operation[1], {width, height, data: new Uint8Array(data)}, operation[3] || {});
             applyOperations(map, operations.slice(1), callback);
         } else if (operation[0] === 'addCustomLayer') {
@@ -226,7 +230,7 @@ export default function(style, options, _callback) {
 
 function createFakeCanvas(document, id, imagePath) {
     const fakeCanvas = document.createElement('canvas');
-    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, './integration/assets', imagePath)));
+    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', imagePath)));
     fakeCanvas.id = id;
     fakeCanvas.data = image.data;
     fakeCanvas.width = image.width;
@@ -236,7 +240,7 @@ function createFakeCanvas(document, id, imagePath) {
 
 function updateFakeCanvas(document, id, imagePath) {
     const fakeCanvas = document.getElementById(id);
-    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, './integration/assets', imagePath)));
+    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', imagePath)));
     fakeCanvas.data = image.data;
 }
 

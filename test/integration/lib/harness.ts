@@ -24,8 +24,8 @@ export default function (directory, implementation, options, run) {
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8'));
 
             server.localizeURLs(style);
-
             style.metadata = style.metadata || {};
+
             style.metadata.test = Object.assign({
                 id,
                 ignored: ignores[`${path.basename(directory)}/${id}`],
@@ -49,7 +49,6 @@ export default function (directory, implementation, options, run) {
                 console.log(`* skipped ${test.id}`);
                 return false;
             }
-
             if (/^skip/.test(test.ignored)) {
                 console.log(`* skipped ${test.id} (${test.ignored})`);
                 return false;
@@ -170,7 +169,7 @@ export default function (directory, implementation, options, run) {
                 erroredCount, (100 * erroredCount / totalCount).toFixed(1));
         }
 
-        const resultsTemplate = eval(fs.readFileSync(path.join(__dirname, '..', 'resultsTemplate.ts'), 'utf8'));
+        const resultsTemplate = eval(fs.readFileSync(path.join(__dirname, '', 'resultsTemplate.ts'), 'utf8'));
         const itemTemplate = eval(fs.readFileSync(path.join(directory, 'resultItemTemplate.ts'), 'utf8'));
 
         const stats = {};
