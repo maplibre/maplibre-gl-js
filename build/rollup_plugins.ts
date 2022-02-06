@@ -6,7 +6,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
 import json from '@rollup/plugin-json';
 import {terser} from 'rollup-plugin-terser';
-import minifyStyleSpec from './rollup_plugin_minify_style_spec.js';
+import minifyStyleSpec from './rollup_plugin_minify_style_spec';
 import strip from '@rollup/plugin-strip';
 
 // Common set of plugins/transformations shared across different rollup
@@ -30,6 +30,7 @@ export const plugins = (minified, production, watch) => [
     }) : false,
     minified ? terser({
         compress: {
+            // eslint-disable-next-line camelcase
             pure_getters: true,
             passes: 3
         }

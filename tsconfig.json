@@ -24,9 +24,11 @@
     "types": ["node", "jest", "geojson", "offscreencanvas"]
   },
   "include": [
+    "rollup.config.**",
     "src/**/*.ts",
     "bench/**/*.ts",
-    "bench/**/*.tsx"
+    "bench/**/*.tsx",
+    "build/**/*.ts"
   ],
   "exclude": [
     "node_modules",

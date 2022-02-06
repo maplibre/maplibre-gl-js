@@ -1,7 +1,7 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import {plugins} from './build/rollup_plugins.js';
-import banner from './build/banner.js';
+import {plugins} from './build/rollup_plugins';
+import banner from './build/banner';
 
 const {BUILD, MINIFY, ROLLUP_WATCH} = process.env;
 const minified = MINIFY === 'true';
@@ -11,7 +11,7 @@ const inputExt = watch ? 'ts' : 'js';
 const production = BUILD === 'production';
 const outputFile =
     !production ? 'dist/maplibre-gl-dev.js' :
-    minified ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-unminified.js';
+        minified ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-unminified.js';
 
 export default [{
     // Before rollup you should run build-tsc to transpile from typescript to javascript (except when running rollup in watch mode)
