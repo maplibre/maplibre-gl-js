@@ -1,4 +1,4 @@
-import simulate, {window} from '../../test/util/simulate_interaction';
+import simulate, {window} from '../../test/unit/lib/simulate_interaction';
 import StyleLayer from '../style/style_layer';
 import {createMap, setPerformance, setWebGlContext} from '../util/test/util';
 import {MapLayerEventType} from './events';

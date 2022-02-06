@@ -13,7 +13,7 @@ import ZoomHistory from '../../style/zoom_history';
 import {BucketFeature, BucketParameters} from '../bucket';
 
 // Load a fill feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/fixtures/mbsv5-6-18-23.vector.pbf'))));
+const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.water.feature(0);
 
 function createPolygon(numPoints) {

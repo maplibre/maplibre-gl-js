@@ -1,5 +1,5 @@
 import DOM from '../../util/dom';
-import simulate from '../../../test/util/simulate_interaction';
+import simulate from '../../../test/unit/lib/simulate_interaction';
 import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
 import Map, {MapOptions} from '../map';
 
