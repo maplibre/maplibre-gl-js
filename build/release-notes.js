@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import * as fs from 'fs';
-import * as ejs from 'ejs';
 import semver from 'semver';
 
 const changelogPath = 'CHANGELOG.md';
