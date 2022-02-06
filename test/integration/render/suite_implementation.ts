@@ -1,6 +1,6 @@
 import {PNG} from 'pngjs';
 import request from 'request';
-import maplibregl from '../../../rollup/build/tsc/src/index';
+import maplibregl from '../../../src/index';
 import browser from '../../../rollup/build/tsc/src/util/browser';
 import * as rtlTextPluginModule from '../../../rollup/build/tsc/src/source/rtl_text_plugin';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
@@ -82,6 +82,8 @@ export default function(style, options, _callback) {
     const map = new maplibregl.Map({
         container,
         style,
+
+        // @ts-ignore
         classes: options.classes,
         interactive: false,
         attributionControl: false,
