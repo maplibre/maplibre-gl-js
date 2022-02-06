@@ -1,7 +1,7 @@
 import {PNG} from 'pngjs';
 import request from 'request';
 import maplibregl from '../../../src/index';
-import browser from '../../../rollup/build/tsc/src/util/browser';
+import browser from '../../../src/util/browser';
 import * as rtlTextPluginModule from '../../../rollup/build/tsc/src/source/rtl_text_plugin';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import fs from 'fs';
@@ -21,11 +21,13 @@ rtlTextPlugin['processStyledBidirectionalText'] = rtlText.processStyledBidirecti
 // replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
 // @ts-ignore
 browser.getImageData = function (img, padding = 0) {
+    // @ts-ignore
     if (!img.data) {
         return {width: 1, height: 1, data: new Uint8Array(1)};
     }
-    const width = img.width;
-    const height = img.height;
+    const width = img.width as number;
+    const height = img.height as number;
+    // @ts-ignore
     const data = img.data;
     const source = new Uint8Array(data);
     const dest = new Uint8Array((2 * padding + width) * (2 * padding + height) * 4);
