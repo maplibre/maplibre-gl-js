@@ -21,7 +21,8 @@ function waitForConsole(page) {
 }
 
 const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    headless: false
 });
 try {
     const page = await browser.newPage();
@@ -30,6 +31,7 @@ try {
     await page.setViewport({width: 600, height: 600, deviceScaleFactor: 2});
     await page.setContent(benchHTML);
 
+    // @ts-ignore
     const stats = JSON.parse(await waitForConsole(page));
     stats['bundle_size'] = maplibreGLJSSrc.length + maplibreGLCSSSrc.length;
     stats['bundle_size_gz'] = zlib.gzipSync(maplibreGLJSSrc).length + zlib.gzipSync(maplibreGLCSSSrc).length;

@@ -182,8 +182,8 @@
     "test-expression": "node --loader ts-node/esm --experimental-specifier-resolution=node test/integration/expression/expression.test.ts",
     "test-unit": "jest ./src",
     "codegen": "npm run generate-style-code && npm run generate-struct-arrays && npm run generate-style-spec && npm run generate-shaders",
-    "benchmark": "node bench/run-benchmarks.js",
-    "gl-stats": "node bench/gl-stats.js",
+    "benchmark": "node --loader ts-node/esm --experimental-specifier-resolution=node bench/run-benchmarks.ts",
+    "gl-stats": "node --loader ts-node/esm --experimental-specifier-resolution=node bench/gl-stats.ts",
     "postinstall": "npm run codegen && npm run generate-query-test-fixtures",
     "prepare": "husky install"
   },
