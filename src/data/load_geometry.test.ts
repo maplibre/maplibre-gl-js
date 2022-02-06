@@ -5,7 +5,7 @@ import {VectorTile} from '@mapbox/vector-tile';
 import loadGeometry from './load_geometry';
 
 // Load a line feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../test/fixtures/mbsv5-6-18-23.vector.pbf'))));
+const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
 
 describe('loadGeometry', () => {
     test('loadGeometry', () => {

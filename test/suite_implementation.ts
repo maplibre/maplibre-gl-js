@@ -190,7 +190,7 @@ export default function(style, options, _callback) {
                 applyOperations(map, operations.slice(1), callback);
             }, operation[1]);
         } else if (operation[0] === 'addImage') {
-            const {data, width, height} = PNG.sync.read(fs.readFileSync(path.join(__dirname, './integration', operation[2])));
+            const {data, width, height} = PNG.sync.read(fs.readFileSync(path.join(__dirname, './integration/assets', operation[2])));
             map.addImage(operation[1], {width, height, data: new Uint8Array(data)}, operation[3] || {});
             applyOperations(map, operations.slice(1), callback);
         } else if (operation[0] === 'addCustomLayer') {
@@ -226,7 +226,7 @@ export default function(style, options, _callback) {
 
 function createFakeCanvas(document, id, imagePath) {
     const fakeCanvas = document.createElement('canvas');
-    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, './integration', imagePath)));
+    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, './integration/assets', imagePath)));
     fakeCanvas.id = id;
     fakeCanvas.data = image.data;
     fakeCanvas.width = image.width;
@@ -236,7 +236,7 @@ function createFakeCanvas(document, id, imagePath) {
 
 function updateFakeCanvas(document, id, imagePath) {
     const fakeCanvas = document.getElementById(id);
-    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, './integration', imagePath)));
+    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, './integration/assets', imagePath)));
     fakeCanvas.data = image.data;
 }
 

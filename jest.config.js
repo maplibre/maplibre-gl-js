@@ -1,9 +1,7 @@
 export default {
     'roots': [
         '<rootDir>/src',
-        '<rootDir>/test/browser',
-        '<rootDir>/test/build',
-        '<rootDir>/test/integration/lib'
+        '<rootDir>/test',
     ],
     'testMatch': [
         '**/__tests__/**/*.+(ts|tsx|js)',

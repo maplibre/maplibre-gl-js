@@ -1,13 +1,13 @@
 // Adapted from https://stackoverflow.com/a/47287595/331379
-export default (element, deltaY, x, y) => {
+export default (element: Element, deltaY: number, x: number, y: number): string | void => {
     // Disables modern JS features to maintain IE11/ES5 support.
     /* eslint-disable no-var, no-undef, object-shorthand */
-    var box = element.getBoundingClientRect();
-    var clientX = box.left + (typeof x !== 'undefined' ? x : box.width / 2);
-    var clientY = box.top + (typeof y !== 'undefined' ? y : box.height / 2);
-    var target = element.ownerDocument.elementFromPoint(clientX, clientY);
+    const box: DOMRect = element.getBoundingClientRect();
+    const clientX: number = box.left + (typeof x !== 'undefined' ? x : box.width / 2);
+    const clientY: number = box.top + (typeof y !== 'undefined' ? y : box.height / 2);
+    const target: Element = element.ownerDocument.elementFromPoint(clientX, clientY);
 
-    for (var e = target; e; e = e.parentElement) {
+    for (let e: Element = target; e; e = e.parentElement) {
         if (e === element) {
             target.dispatchEvent(
                 new MouseEvent('mouseover', {
