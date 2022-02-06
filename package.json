@@ -24,6 +24,7 @@
     "earcut": "^2.2.3",
     "geojson-vt": "^3.2.1",
     "gl-matrix": "^3.4.3",
+    "husky": "^7.0.4",
     "murmurhash-js": "^1.0.0",
     "pbf": "^3.2.1",
     "potpack": "^1.0.2",
@@ -183,7 +184,8 @@
     "codegen": "npm run generate-style-code && npm run generate-struct-arrays && npm run generate-style-spec && npm run generate-shaders",
     "benchmark": "node bench/run-benchmarks.js",
     "gl-stats": "node bench/gl-stats.js",
-    "postinstall": "npm run codegen && npm run generate-query-test-fixtures"
+    "postinstall": "npm run codegen && npm run generate-query-test-fixtures",
+    "prepare": "husky install"
   },
   "files": [
     "build/",
