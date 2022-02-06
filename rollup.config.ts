@@ -6,8 +6,6 @@ import {RollupOptions} from 'rollup';
 
 const {BUILD, MINIFY} = process.env;
 const minified = MINIFY === 'true';
-const srcDir = 'src';
-const inputExt = 'ts';
 const production = BUILD === 'production';
 const outputFile =
     !production ? 'dist/maplibre-gl-dev.js' :
@@ -21,7 +19,7 @@ const config: RollupOptions[] = [{
     // - rollup/build/maplibregl/shared.js: the set of modules that are dependencies of both the main module and the worker module
     //
     // This is also where we do all of our source transformations using the plugins.
-    input: [`${srcDir}/index.${inputExt}`, `${srcDir}/source/worker.${inputExt}`],
+    input: ['src/index.ts', 'src/source/worker.ts'],
     output: {
         dir: 'rollup/build/maplibregl',
         format: 'amd',
