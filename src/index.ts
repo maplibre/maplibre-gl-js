@@ -23,6 +23,7 @@ import WorkerPool from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {clearTileCache} from './util/tile_request_cache';
 import {PerformanceUtils} from './util/performance';
+import {AJAXError} from './util/ajax';
 import type {RequestParameters, ResponseCallback} from './util/ajax';
 import type {Cancelable} from './types/cancelable';
 import GeoJSONSource from './source/geojson_source';
@@ -51,6 +52,7 @@ const exported = {
     Point,
     MercatorCoordinate,
     Evented,
+    AJAXError,
     config,
     CanvasSource,
     GeoJSONSource,
