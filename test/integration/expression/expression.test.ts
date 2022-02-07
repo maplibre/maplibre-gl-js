@@ -65,8 +65,6 @@ describe('expression', () => {
 
 function evaluateFixture(fixture) {
     const spec = Object.assign({}, fixture.propertySpec);
-    let availableImages;
-    let canonical;
 
     if (!spec['property-type']) {
         spec['property-type'] = 'data-driven';
@@ -78,72 +76,6 @@ function evaluateFixture(fixture) {
             'parameters': ['zoom', 'feature']
         };
     }
-
-    const evaluateExpression = (expression, compilationResult) => {
-        if (expression.result === 'error') {
-            compilationResult.result = 'error';
-            compilationResult.errors = expression.value.map((err) => ({
-                key: err.key,
-                error: err.message
-            }));
-            return;
-        }
-
-        const evaluationResult = [];
-
-        expression = expression.value;
-        const type = expression._styleExpression.expression.type; // :scream:
-
-        compilationResult.result = 'success';
-        compilationResult.isFeatureConstant = expression.kind === 'constant' || expression.kind === 'camera';
-        compilationResult.isZoomConstant = expression.kind === 'constant' || expression.kind === 'source';
-        compilationResult.type = toString(type);
-
-        for (const input of fixture.inputs || []) {
-            try {
-                const feature: {
-                    properties: any;
-                    id?: any;
-                    type?: any;
-                } = {properties: input[1].properties || {}};
-                availableImages = input[0].availableImages || [];
-                if ('canonicalID' in input[0]) {
-                    const id = input[0].canonicalID;
-                    canonical = new CanonicalTileID(id.z, id.x, id.y);
-                } else {
-                    canonical = null;
-                }
-
-                if ('id' in input[1]) {
-                    feature.id = input[1].id;
-                }
-                if ('geometry' in input[1]) {
-                    if (canonical !== null) {
-                        getGeometry(feature, input[1].geometry, canonical);
-                    } else {
-                        feature.type = input[1].geometry.type;
-                    }
-                }
-
-                let value = expression.evaluateWithoutErrorHandling(input[0], feature, {}, canonical, availableImages);
-
-                if (type.kind === 'color') {
-                    value = [value.r, value.g, value.b, value.a];
-                }
-                evaluationResult.push(value);
-            } catch (error) {
-                if (error.name === 'ExpressionEvaluationError') {
-                    evaluationResult.push({error: error.toJSON()});
-                } else {
-                    evaluationResult.push({error: error.message});
-                }
-            }
-        }
-
-        if (fixture.inputs) {
-            return evaluationResult;
-        }
-    };
 
     const result: {
         compiled: any;
@@ -161,11 +93,11 @@ function evaluateFixture(fixture) {
         }
     })();
 
-    result.outputs = evaluateExpression(expression, result.compiled);
+    result.outputs = evaluateExpression(fixture, expression, result.compiled);
     if (expression.result === 'success') {
         // @ts-ignore
         result.serialized = expression.value._styleExpression.expression.serialize();
-        result.roundTripOutputs = evaluateExpression(
+        result.roundTripOutputs = evaluateExpression(fixture,
             createPropertyExpression(result.serialized, spec),
             result.recompiled);
         // Type is allowed to change through serialization
@@ -175,4 +107,74 @@ function evaluateFixture(fixture) {
     }
 
     return result;
+}
+
+function evaluateExpression (fixture, expression, compilationResult) {
+
+    let availableImages;
+    let canonical;
+
+    if (expression.result === 'error') {
+        compilationResult.result = 'error';
+        compilationResult.errors = expression.value.map((err) => ({
+            key: err.key,
+            error: err.message
+        }));
+        return;
+    }
+
+    const evaluationResult = [];
+
+    expression = expression.value;
+    const type = expression._styleExpression.expression.type; // :scream:
+
+    compilationResult.result = 'success';
+    compilationResult.isFeatureConstant = expression.kind === 'constant' || expression.kind === 'camera';
+    compilationResult.isZoomConstant = expression.kind === 'constant' || expression.kind === 'source';
+    compilationResult.type = toString(type);
+
+    for (const input of fixture.inputs || []) {
+        try {
+            const feature: {
+                properties: any;
+                id?: any;
+                type?: any;
+            } = {properties: input[1].properties || {}};
+            availableImages = input[0].availableImages || [];
+            if ('canonicalID' in input[0]) {
+                const id = input[0].canonicalID;
+                canonical = new CanonicalTileID(id.z, id.x, id.y);
+            } else {
+                canonical = null;
+            }
+
+            if ('id' in input[1]) {
+                feature.id = input[1].id;
+            }
+            if ('geometry' in input[1]) {
+                if (canonical !== null) {
+                    getGeometry(feature, input[1].geometry, canonical);
+                } else {
+                    feature.type = input[1].geometry.type;
+                }
+            }
+
+            let value = expression.evaluateWithoutErrorHandling(input[0], feature, {}, canonical, availableImages);
+
+            if (type.kind === 'color') {
+                value = [value.r, value.g, value.b, value.a];
+            }
+            evaluationResult.push(value);
+        } catch (error) {
+            if (error.name === 'ExpressionEvaluationError') {
+                evaluationResult.push({error: error.toJSON()});
+            } else {
+                evaluationResult.push({error: error.message});
+            }
+        }
+    }
+
+    if (fixture.inputs) {
+        return evaluationResult;
+    }
 }
