@@ -73,4 +73,5 @@ const viewConfig = {
     ].filter(Boolean)
 };
 
+// @ts-ignore
 export default splitConfig('versions').concat(splitConfig('styles')).concat(viewConfig);
