@@ -17,7 +17,7 @@ export default function (directory, implementation, options, run) {
 
     const tests = options.tests || [];
     const ignores = options.ignores || {};
-    console.log(directory);
+
     let sequence = glob.sync(`**/${options.fixtureFilename || 'style.json'}`, {cwd: directory})
         .map(fixture => {
             const id = path.dirname(fixture);
