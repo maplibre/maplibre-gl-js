@@ -18,115 +18,7 @@ describe('expression', () => {
             const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, expressionTestFileName), 'utf8'));
 
             try {
-                const spec = Object.assign({}, fixture.propertySpec);
-                let availableImages;
-                let canonical;
-
-                if (!spec['property-type']) {
-                    spec['property-type'] = 'data-driven';
-                }
-
-                if (!spec['expression']) {
-                    spec['expression'] = {
-                        'interpolated': true,
-                        'parameters': ['zoom', 'feature']
-                    };
-                }
-
-                const evaluateExpression = (expression, compilationResult) => {
-                    if (expression.result === 'error') {
-                        compilationResult.result = 'error';
-                        compilationResult.errors = expression.value.map((err) => ({
-                            key: err.key,
-                            error: err.message
-                        }));
-                        return;
-                    }
-
-                    const evaluationResult = [];
-
-                    expression = expression.value;
-                    const type = expression._styleExpression.expression.type; // :scream:
-
-                    compilationResult.result = 'success';
-                    compilationResult.isFeatureConstant = expression.kind === 'constant' || expression.kind === 'camera';
-                    compilationResult.isZoomConstant = expression.kind === 'constant' || expression.kind === 'source';
-                    compilationResult.type = toString(type);
-
-                    for (const input of fixture.inputs || []) {
-                        try {
-                            const feature: {
-                                properties: any;
-                                id?: any;
-                                type?: any;
-                            } = {properties: input[1].properties || {}};
-                            availableImages = input[0].availableImages || [];
-                            if ('canonicalID' in input[0]) {
-                                const id = input[0].canonicalID;
-                                canonical = new CanonicalTileID(id.z, id.x, id.y);
-                            } else {
-                                canonical = null;
-                            }
-
-                            if ('id' in input[1]) {
-                                feature.id = input[1].id;
-                            }
-                            if ('geometry' in input[1]) {
-                                if (canonical !== null) {
-                                    getGeometry(feature, input[1].geometry, canonical);
-                                } else {
-                                    feature.type = input[1].geometry.type;
-                                }
-                            }
-
-                            let value = expression.evaluateWithoutErrorHandling(input[0], feature, {}, canonical, availableImages);
-
-                            if (type.kind === 'color') {
-                                value = [value.r, value.g, value.b, value.a];
-                            }
-                            evaluationResult.push(value);
-                        } catch (error) {
-                            if (error.name === 'ExpressionEvaluationError') {
-                                evaluationResult.push({error: error.toJSON()});
-                            } else {
-                                evaluationResult.push({error: error.message});
-                            }
-                        }
-                    }
-
-                    if (fixture.inputs) {
-                        return evaluationResult;
-                    }
-                };
-
-                const result: {
-                    compiled: any;
-                    recompiled: any;
-                    outputs?: any;
-                    serialized?: any;
-                    roundTripOutputs?: any;
-                } = {compiled: {}, recompiled: {}};
-
-                const expression = (() => {
-                    if (isFunction(fixture.expression)) {
-                        return createPropertyExpression(convertFunction(fixture.expression, spec), spec);
-                    } else {
-                        return createPropertyExpression(fixture.expression, spec);
-                    }
-                })();
-
-                result.outputs = evaluateExpression(expression, result.compiled);
-                if (expression.result === 'success') {
-                // @ts-ignore
-                    result.serialized = expression.value._styleExpression.expression.serialize();
-                    result.roundTripOutputs = evaluateExpression(
-                        createPropertyExpression(result.serialized, spec),
-                        result.recompiled);
-                    // Type is allowed to change through serialization
-                    // (eg "array" -> "array<number, 3>")
-                    // Override the round-tripped type here so that the equality check passes
-                    result.recompiled.type = result.compiled.type;
-                }
+                const result = evaluateFixture(fixture);
 
                 if (process.env.UPDATE) {
                     fixture.expected = {
@@ -170,3 +62,117 @@ describe('expression', () => {
     });
 
 });
+
+function evaluateFixture(fixture) {
+    const spec = Object.assign({}, fixture.propertySpec);
+    let availableImages;
+    let canonical;
+
+    if (!spec['property-type']) {
+        spec['property-type'] = 'data-driven';
+    }
+
+    if (!spec['expression']) {
+        spec['expression'] = {
+            'interpolated': true,
+            'parameters': ['zoom', 'feature']
+        };
+    }
+
+    const evaluateExpression = (expression, compilationResult) => {
+        if (expression.result === 'error') {
+            compilationResult.result = 'error';
+            compilationResult.errors = expression.value.map((err) => ({
+                key: err.key,
+                error: err.message
+            }));
+            return;
+        }
+
+        const evaluationResult = [];
+
+        expression = expression.value;
+        const type = expression._styleExpression.expression.type; // :scream:
+
+        compilationResult.result = 'success';
+        compilationResult.isFeatureConstant = expression.kind === 'constant' || expression.kind === 'camera';
+        compilationResult.isZoomConstant = expression.kind === 'constant' || expression.kind === 'source';
+        compilationResult.type = toString(type);
+
+        for (const input of fixture.inputs || []) {
+            try {
+                const feature: {
+                    properties: any;
+                    id?: any;
+                    type?: any;
+                } = {properties: input[1].properties || {}};
+                availableImages = input[0].availableImages || [];
+                if ('canonicalID' in input[0]) {
+                    const id = input[0].canonicalID;
+                    canonical = new CanonicalTileID(id.z, id.x, id.y);
+                } else {
+                    canonical = null;
+                }
+
+                if ('id' in input[1]) {
+                    feature.id = input[1].id;
+                }
+                if ('geometry' in input[1]) {
+                    if (canonical !== null) {
+                        getGeometry(feature, input[1].geometry, canonical);
+                    } else {
+                        feature.type = input[1].geometry.type;
+                    }
+                }
+
+                let value = expression.evaluateWithoutErrorHandling(input[0], feature, {}, canonical, availableImages);
+
+                if (type.kind === 'color') {
+                    value = [value.r, value.g, value.b, value.a];
+                }
+                evaluationResult.push(value);
+            } catch (error) {
+                if (error.name === 'ExpressionEvaluationError') {
+                    evaluationResult.push({error: error.toJSON()});
+                } else {
+                    evaluationResult.push({error: error.message});
+                }
+            }
+        }
+
+        if (fixture.inputs) {
+            return evaluationResult;
+        }
+    };
+
+    const result: {
+        compiled: any;
+        recompiled: any;
+        outputs?: any;
+        serialized?: any;
+        roundTripOutputs?: any;
+    } = {compiled: {}, recompiled: {}};
+
+    const expression = (() => {
+        if (isFunction(fixture.expression)) {
+            return createPropertyExpression(convertFunction(fixture.expression, spec), spec);
+        } else {
+            return createPropertyExpression(fixture.expression, spec);
+        }
+    })();
+
+    result.outputs = evaluateExpression(expression, result.compiled);
+    if (expression.result === 'success') {
+        // @ts-ignore
+        result.serialized = expression.value._styleExpression.expression.serialize();
+        result.roundTripOutputs = evaluateExpression(
+            createPropertyExpression(result.serialized, spec),
+            result.recompiled);
+        // Type is allowed to change through serialization
+        // (eg "array" -> "array<number, 3>")
+        // Override the round-tripped type here so that the equality check passes
+        result.recompiled.type = result.compiled.type;
+    }
+
+    return result;
+}
