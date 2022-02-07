@@ -14,8 +14,7 @@
     <div id="benchmarks"></div>
     <!-- <script type="module" src="/bench/benchmarks_view_generated.js"></script> -->
     <script type="module">
-
-        const {run} = await import("/bench/benchmarks_view_generated.js");
+        const {run} = await import('/bench/benchmarks_view_generated.js');
         runComparison();
 
         async function runComparison() {
@@ -74,7 +73,7 @@
             return new Promise((resolve, reject) => {
                 const s = document.createElement('script');
                 s.src = src;
-                s.type = "module";
+                s.type = 'module';
                 s.onload = resolve;
                 s.onerror = reject;
                 document.head.appendChild(s);
