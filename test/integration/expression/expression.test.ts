@@ -9,7 +9,7 @@ import {CanonicalTileID} from '../../../src/source/tile_id';
 import {getGeometry} from './lib/geometry';
 import {stringify, deepEqual, stripPrecision} from './lib/util';
 
-const expressionTestFileNames = glob.sync('**/test.json', {cwd: __dirname});//, {cwd: __dirname});
+const expressionTestFileNames = glob.sync('**/test.json', {cwd: __dirname});
 describe('expression', () => {
 
     expressionTestFileNames.forEach((expressionTestFileName: any) => {
