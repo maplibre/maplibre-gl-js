@@ -6,6 +6,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import {execSync} from 'child_process';
+import {RollupOptions} from 'rollup';
 
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
@@ -33,7 +34,7 @@ const inputExt = watch ? 'ts' : 'js';
 const allPlugins = plugins(true, true, watch).concat(replace(replaceConfig));
 const intro = fs.readFileSync('rollup/bundle_prelude.js', 'utf8');
 
-const splitConfig = (name) => [{
+const splitConfig = (name: string): RollupOptions[] => [{
     input: [`${srcDir}bench/${name}/benchmarks.${inputExt}`, `${srcDir}src/source/worker.${inputExt}`],
     output: {
         dir: `rollup/build/benchmarks/${name}`,
@@ -56,7 +57,7 @@ const splitConfig = (name) => [{
     plugins: [sourcemaps()],
 }];
 
-const viewConfig = {
+const viewConfig: RollupOptions = {
     input: `${srcDir}bench/benchmarks_view.${inputExt}${watch ? 'x' : ''}`,
     output: {
         name: 'Benchmarks',
@@ -67,7 +68,7 @@ const viewConfig = {
     },
     plugins: [
         resolve({browser: true, preferBuiltins: false}),
-        watch ? typescript() : false,
+        watch ? typescript() : null,
         commonjs(),
         replace(replaceConfig)
     ].filter(Boolean)

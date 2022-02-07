@@ -5,10 +5,11 @@ import commonjs from '@rollup/plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
 import json from '@rollup/plugin-json';
 import {fileURLToPath, pathToFileURL} from 'url';
+import {RollupOptions} from 'rollup';
 
 const esm = 'esm' in process.env;
 
-const config = [{
+const config: RollupOptions[] = [{
     input: 'rollup/build/tsc/src/style-spec/style-spec.js',
     output: {
         name: 'maplibreGlStyleSpecification',
