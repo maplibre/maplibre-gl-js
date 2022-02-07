@@ -1,9 +1,10 @@
+import {Plugin} from 'rollup';
 
-function replacer(k, v) {
-    return (k === 'doc' || k === 'example' || k === 'sdk-support') ? undefined : v;
+function replacer(key: string, value: any) {
+    return (key === 'doc' || key === 'example' || key === 'sdk-support') ? undefined : value;
 }
 
-export default function minifyStyleSpec() {
+export default function minifyStyleSpec(): Plugin {
     return {
         name: 'minify-style-spec',
         transform: (source, id) => {
