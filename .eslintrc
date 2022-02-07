@@ -72,18 +72,9 @@
     "space-before-function-paren": "off",
     "template-curly-spacing": "error",
     "no-useless-escape": "off",
-    "indent": ["error", 4, {
-      "flatTernaryExpressions": true,
-      "CallExpression": {
-        "arguments": "off"
-      },
-      "FunctionDeclaration": {
-        "parameters": "off"
-      },
-      "FunctionExpression": {
-        "parameters": "off"
-      }
-    }],
+    // @typescript-eslint/indent requires standard indent rule to be turned off
+    "indent": "off",
+    "@typescript-eslint/indent": ["error"],
     "no-multiple-empty-lines": [ "error", {
         "max": 1
     }],
@@ -93,6 +84,8 @@
     "jsdoc/require-param-name": "warn",
     "jsdoc/require-returns": "warn",
     "jsdoc/require-returns-description": "warn",
+    "jsdoc/check-alignment": "error",
+    "jsdoc/check-line-alignment": "error",
 
     // Jest https://www.npmjs.com/package/eslint-plugin-jest
     "jest/no-commented-out-tests": "error",

@@ -31,7 +31,7 @@ export class Event {
 }
 
 interface ErrorLike {
-  message: string;
+    message: string;
 }
 
 export class ErrorEvent extends Event {

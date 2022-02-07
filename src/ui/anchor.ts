@@ -1,7 +1,7 @@
 export type PositionAnchor = 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 export const anchorTranslate: {
-  [_ in PositionAnchor]: string;
+    [_ in PositionAnchor]: string;
 } = {
     'center': 'translate(-50%,-50%)',
     'top': 'translate(-50%,0)',

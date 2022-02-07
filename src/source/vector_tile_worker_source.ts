@@ -19,11 +19,11 @@ import type {Callback} from '../types/callback';
 import type {VectorTile} from '@mapbox/vector-tile';
 
 export type LoadVectorTileResult = {
-  vectorTile: VectorTile;
-  rawData: ArrayBuffer;
-  expires?: any;
-  cacheControl?: any;
-  resourceTiming?: Array<PerformanceResourceTiming>;
+    vectorTile: VectorTile;
+    rawData: ArrayBuffer;
+    expires?: any;
+    cacheControl?: any;
+    resourceTiming?: Array<PerformanceResourceTiming>;
 };
 
 /**

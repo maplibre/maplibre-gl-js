@@ -21,18 +21,18 @@ const defaultOptions = {
 };
 
 export type Offset = number | PointLike | {
-  [_ in PositionAnchor]: PointLike;
+    [_ in PositionAnchor]: PointLike;
 };
 
 export type PopupOptions = {
-  closeButton?: boolean;
-  closeOnClick?: boolean;
-  closeOnMove?: boolean;
-  focusAfterOpen?: boolean;
-  anchor?: PositionAnchor;
-  offset?: Offset;
-  className?: string;
-  maxWidth?: string;
+    closeButton?: boolean;
+    closeOnClick?: boolean;
+    closeOnMove?: boolean;
+    focusAfterOpen?: boolean;
+    anchor?: PositionAnchor;
+    offset?: Offset;
+    className?: string;
+    maxWidth?: string;
 };
 
 const focusQuerySelector = [

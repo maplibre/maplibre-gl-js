@@ -2,7 +2,7 @@ import Camera from '../ui/camera';
 import Transform from '../geo/transform';
 import TaskQueue, {TaskID} from '../util/task_queue';
 import browser from '../util/browser';
-import {fixedLngLat, fixedNum} from '../../test/util/fixed';
+import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
 
 beforeEach(() => {
@@ -747,8 +747,8 @@ describe('#easeTo', () => {
             });
 
         camera.easeTo(
-                {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45},
-                eventData);
+            {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45},
+            eventData);
         done();
     });
 
@@ -1091,8 +1091,8 @@ describe('#flyTo', () => {
             });
 
         camera.flyTo(
-                {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, animate: false},
-                eventData);
+            {center: [100, 0], zoom: 3.2, bearing: 90, duration: 0, pitch: 45, animate: false},
+            eventData);
         done();
     });
 

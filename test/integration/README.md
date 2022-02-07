@@ -78,6 +78,26 @@ or
 open ./test/integration/query-tests/index.html
 ```
 
+## Notes on the query integration tests
+
+In test/integration/lib/query-browser-jest.test.ts a web server is automatically started to expose static assets from the integration folder. In order to start a similar server manually, run:
+
+```
+npx st  -l --port 7357 -d test/integration -co
+```
+
+We currently run each test in a new tab. Alterantively we might gain some speed by clearing the webgl context instead, and running everything in one tab.
+
+```
+delete map.painter.context.gl;
+```
+
+The output for each test is a true/false, regarding whether the expected and actual output has deep equality. To get a better test output, we can use:
+
+```
+generateDiffLog(fixture.expected, actual);
+```
+
 ## Running tests in the browser
 
 Query tests can be run in the browser, the server for serving up the test page and test fixtures starts when you run

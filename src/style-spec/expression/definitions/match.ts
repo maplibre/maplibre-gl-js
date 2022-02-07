@@ -11,7 +11,7 @@ import type EvaluationContext from '../evaluation_context';
 
 // Map input label values to output expression index
 type Cases = {
-  [k in number | string]: number;
+    [k in number | string]: number;
 };
 
 class Match implements Expression {
@@ -128,7 +128,7 @@ class Match implements Expression {
         // serializations of the form [case1, case2, ...] -> matchExpression
         const groupedByOutput: Array<[number, Array<number | string>]> = [];
         const outputLookup: {
-          [index: number]: number;
+            [index: number]: number;
         } = {}; // lookup index into groupedByOutput for a given output expression
         for (const label of sortedLabels) {
             const outputIndex = outputLookup[this.cases[label]];

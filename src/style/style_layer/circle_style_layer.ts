@@ -38,14 +38,14 @@ class CircleStyleLayer extends StyleLayer {
     }
 
     queryIntersectsFeature(
-      queryGeometry: Array<Point>,
-      feature: VectorTileFeature,
-      featureState: FeatureState,
-      geometry: Array<Array<Point>>,
-      zoom: number,
-      transform: Transform,
-      pixelsToTileUnits: number,
-      pixelPosMatrix: mat4
+        queryGeometry: Array<Point>,
+        feature: VectorTileFeature,
+        featureState: FeatureState,
+        geometry: Array<Array<Point>>,
+        zoom: number,
+        transform: Transform,
+        pixelsToTileUnits: number,
+        pixelPosMatrix: mat4
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('circle-translate'),

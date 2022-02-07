@@ -64,20 +64,20 @@ if (typeof Object.freeze == 'function') {
  *
  */
 export type RequestParameters = {
-  url: string;
-  headers?: any;
-  method?: 'GET' | 'POST' | 'PUT';
-  body?: string;
-  type?: 'string' | 'json' | 'arrayBuffer';
-  credentials?: 'same-origin' | 'include';
-  collectResourceTiming?: boolean;
+    url: string;
+    headers?: any;
+    method?: 'GET' | 'POST' | 'PUT';
+    body?: string;
+    type?: 'string' | 'json' | 'arrayBuffer';
+    credentials?: 'same-origin' | 'include';
+    collectResourceTiming?: boolean;
 };
 
 export type ResponseCallback<T> = (
-  error?: Error | null,
-  data?: T | null,
-  cacheControl?: string | null,
-  expires?: string | null
+    error?: Error | null,
+    data?: T | null,
+    cacheControl?: string | null,
+    expires?: string | null
 ) => void;
 
 /**
@@ -193,8 +193,8 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
     const finishRequest = (response, cacheableResponse?, requestTime?) => {
         (
             requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
-            requestParameters.type === 'json' ? response.json() :
-            response.text()
+                requestParameters.type === 'json' ? response.json() :
+                    response.text()
         ).then(result => {
             if (aborted) return;
             if (cacheableResponse && requestTime) {
@@ -298,8 +298,8 @@ export const getJSON = function(requestParameters: RequestParameters, callback: 
 };
 
 export const getArrayBuffer = function(
-  requestParameters: RequestParameters,
-  callback: ResponseCallback<ArrayBuffer>
+    requestParameters: RequestParameters,
+    callback: ResponseCallback<ArrayBuffer>
 ): Cancelable {
     return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), callback);
 };
@@ -360,8 +360,8 @@ export const resetImageRequestQueue = () => {
 resetImageRequestQueue();
 
 export const getImage = function(
-  requestParameters: RequestParameters,
-  callback: Callback<HTMLImageElement | ImageBitmap>
+    requestParameters: RequestParameters,
+    callback: Callback<HTMLImageElement | ImageBitmap>
 ): Cancelable {
     if (webpSupported.supported) {
         if (!requestParameters.headers) {

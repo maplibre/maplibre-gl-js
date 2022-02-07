@@ -1,5 +1,5 @@
 import fs from 'fs';
-import reference from '../../rollup/build/tsc/src/style-spec/reference/latest';
+import reference from '../../src/style-spec/reference/latest';
 import packageJson from '../../package.json';
 
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
@@ -28,7 +28,7 @@ describe('test min build', () => {
         global.URL.createObjectURL = () => 'placeholder';
 
         try {
-            await import('../../dist/maplibre-gl.js');
+            eval(minBundle);
         } catch (e) {
             expect(e).toBeFalsy();
         }

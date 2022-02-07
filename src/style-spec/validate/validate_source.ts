@@ -25,76 +25,76 @@ export default function validateSource(options) {
     let errors;
 
     switch (type) {
-    case 'vector':
-    case 'raster':
-    case 'raster-dem':
-        errors = validateObject({
-            key,
-            value,
-            valueSpec: styleSpec[`source_${type.replace('-', '_')}`],
-            style: options.style,
-            styleSpec,
-            objectElementValidators
-        });
-        return errors;
+        case 'vector':
+        case 'raster':
+        case 'raster-dem':
+            errors = validateObject({
+                key,
+                value,
+                valueSpec: styleSpec[`source_${type.replace('-', '_')}`],
+                style: options.style,
+                styleSpec,
+                objectElementValidators
+            });
+            return errors;
 
-    case 'geojson':
-        errors = validateObject({
-            key,
-            value,
-            valueSpec: styleSpec.source_geojson,
-            style,
-            styleSpec,
-            objectElementValidators
-        });
-        if (value.cluster) {
-            for (const prop in value.clusterProperties) {
-                const [operator, mapExpr] = value.clusterProperties[prop];
-                const reduceExpr = typeof operator === 'string' ? [operator, ['accumulated'], ['get', prop]] : operator;
+        case 'geojson':
+            errors = validateObject({
+                key,
+                value,
+                valueSpec: styleSpec.source_geojson,
+                style,
+                styleSpec,
+                objectElementValidators
+            });
+            if (value.cluster) {
+                for (const prop in value.clusterProperties) {
+                    const [operator, mapExpr] = value.clusterProperties[prop];
+                    const reduceExpr = typeof operator === 'string' ? [operator, ['accumulated'], ['get', prop]] : operator;
 
-                errors.push(...validateExpression({
-                    key: `${key}.${prop}.map`,
-                    value: mapExpr,
-                    expressionContext: 'cluster-map'
-                }));
-                errors.push(...validateExpression({
-                    key: `${key}.${prop}.reduce`,
-                    value: reduceExpr,
-                    expressionContext: 'cluster-reduce'
-                }));
+                    errors.push(...validateExpression({
+                        key: `${key}.${prop}.map`,
+                        value: mapExpr,
+                        expressionContext: 'cluster-map'
+                    }));
+                    errors.push(...validateExpression({
+                        key: `${key}.${prop}.reduce`,
+                        value: reduceExpr,
+                        expressionContext: 'cluster-reduce'
+                    }));
+                }
             }
-        }
-        return errors;
+            return errors;
 
-    case 'video':
-        return validateObject({
-            key,
-            value,
-            valueSpec: styleSpec.source_video,
-            style,
-            styleSpec
-        });
+        case 'video':
+            return validateObject({
+                key,
+                value,
+                valueSpec: styleSpec.source_video,
+                style,
+                styleSpec
+            });
 
-    case 'image':
-        return validateObject({
-            key,
-            value,
-            valueSpec: styleSpec.source_image,
-            style,
-            styleSpec
-        });
+        case 'image':
+            return validateObject({
+                key,
+                value,
+                valueSpec: styleSpec.source_image,
+                style,
+                styleSpec
+            });
 
-    case 'canvas':
-        return [new ValidationError(key, null, 'Please use runtime APIs to add canvas sources, rather than including them in stylesheets.', 'source.canvas')];
+        case 'canvas':
+            return [new ValidationError(key, null, 'Please use runtime APIs to add canvas sources, rather than including them in stylesheets.', 'source.canvas')];
 
-    default:
-        return validateEnum({
-            key: `${key}.type`,
-            value: value.type,
-            valueSpec: {values: ['vector', 'raster', 'raster-dem', 'geojson', 'video', 'image']},
-            style,
-            styleSpec
-        });
+        default:
+            return validateEnum({
+                key: `${key}.type`,
+                value: value.type,
+                valueSpec: {values: ['vector', 'raster', 'raster-dem', 'geojson', 'video', 'image']},
+                style,
+                styleSpec
+            });
     }
 }
 

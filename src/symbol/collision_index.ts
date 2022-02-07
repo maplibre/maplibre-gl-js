@@ -73,15 +73,15 @@ class CollisionIndex {
     }
 
     placeCollisionBox(
-      collisionBox: SingleCollisionBox,
-      overlapMode: OverlapMode,
-      textPixelRatio: number,
-      posMatrix: mat4,
-      collisionGroupPredicate?: (key: FeatureKey) => boolean
+        collisionBox: SingleCollisionBox,
+        overlapMode: OverlapMode,
+        textPixelRatio: number,
+        posMatrix: mat4,
+        collisionGroupPredicate?: (key: FeatureKey) => boolean
     ): {
-      box: Array<number>;
-      offscreen: boolean;
-    } {
+            box: Array<number>;
+            offscreen: boolean;
+        } {
         const projectedPoint = this.projectAndGetPerspectiveRatio(posMatrix, collisionBox.anchorPointX, collisionBox.anchorPointY);
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
         const tlX = collisionBox.x1 * tileToViewport + projectedPoint.point.x;
@@ -104,24 +104,24 @@ class CollisionIndex {
     }
 
     placeCollisionCircles(
-      overlapMode: OverlapMode,
-      symbol: any,
-      lineVertexArray: SymbolLineVertexArray,
-      glyphOffsetArray: GlyphOffsetArray,
-      fontSize: number,
-      posMatrix: mat4,
-      labelPlaneMatrix: mat4,
-      labelToScreenMatrix: mat4,
-      showCollisionCircles: boolean,
-      pitchWithMap: boolean,
-      collisionGroupPredicate: (key: FeatureKey) => boolean,
-      circlePixelDiameter: number,
-      textPixelPadding: number
+        overlapMode: OverlapMode,
+        symbol: any,
+        lineVertexArray: SymbolLineVertexArray,
+        glyphOffsetArray: GlyphOffsetArray,
+        fontSize: number,
+        posMatrix: mat4,
+        labelPlaneMatrix: mat4,
+        labelToScreenMatrix: mat4,
+        showCollisionCircles: boolean,
+        pitchWithMap: boolean,
+        collisionGroupPredicate: (key: FeatureKey) => boolean,
+        circlePixelDiameter: number,
+        textPixelPadding: number
     ): {
-      circles: Array<number>;
-      offscreen: boolean;
-      collisionDetected: boolean;
-    } {
+            circles: Array<number>;
+            offscreen: boolean;
+            collisionDetected: boolean;
+        } {
         const placedCollisionCircles = [];
 
         const tileUnitAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);

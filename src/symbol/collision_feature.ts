@@ -27,15 +27,15 @@ class CollisionFeature {
      * @private
      */
     constructor(collisionBoxArray: CollisionBoxArray,
-                anchor: Anchor,
-                featureIndex: number,
-                sourceLayerIndex: number,
-                bucketIndex: number,
-                shaped: any,
-                boxScale: number,
-                padding: number,
-                alignLine: boolean,
-                rotate: number) {
+        anchor: Anchor,
+        featureIndex: number,
+        sourceLayerIndex: number,
+        bucketIndex: number,
+        shaped: any,
+        boxScale: number,
+        padding: number,
+        alignLine: boolean,
+        rotate: number) {
 
         this.boxStartIndex = collisionBoxArray.length;
 

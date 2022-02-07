@@ -166,26 +166,26 @@ createStructArrayType('symbol_line_vertex', lineVertex, true);
 // feature index array
 createStructArrayType('feature_index', createLayout([
     // the index of the feature in the original vectortile
-    { type: 'Uint32', name: 'featureIndex' },
+    {type: 'Uint32', name: 'featureIndex'},
     // the source layer the feature appears in
-    { type: 'Uint16', name: 'sourceLayerIndex' },
+    {type: 'Uint16', name: 'sourceLayerIndex'},
     // the bucket the feature appears in
-    { type: 'Uint16', name: 'bucketIndex' }
+    {type: 'Uint16', name: 'bucketIndex'}
 ]), true);
 
 // triangle index array
 createStructArrayType('triangle_index', createLayout([
-    { type: 'Uint16', name: 'vertices', components: 3 }
+    {type: 'Uint16', name: 'vertices', components: 3}
 ]));
 
 // line index array
 createStructArrayType('line_index', createLayout([
-    { type: 'Uint16', name: 'vertices', components: 2 }
+    {type: 'Uint16', name: 'vertices', components: 2}
 ]));
 
 // line strip index array
 createStructArrayType('line_strip_index', createLayout([
-    { type: 'Uint16', name: 'vertices', components: 1 }
+    {type: 'Uint16', name: 'vertices', components: 1}
 ]));
 
 // paint vertex arrays

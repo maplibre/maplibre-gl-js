@@ -1,7 +1,7 @@
 import Map, {MapOptions} from '../map';
 import Marker from '../marker';
 import DOM from '../../util/dom';
-import simulate from '../../../test/util/simulate_interaction';
+import simulate from '../../../test/unit/lib/simulate_interaction';
 import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
 
 function createMap() {

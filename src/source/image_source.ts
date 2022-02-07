@@ -143,8 +143,8 @@ class ImageSource extends Evented implements Source {
      * @returns {ImageSource} this
      */
     updateImage(options: {
-      url: string;
-      coordinates?: Coordinates;
+        url: string;
+        coordinates?: Coordinates;
     }) {
         if (!this.image || !options.url) {
             return this;
@@ -299,9 +299,9 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
     const tilesAtZoom = Math.pow(2, zoom);
 
     return new CanonicalTileID(
-            zoom,
-            Math.floor((minX + maxX) / 2 * tilesAtZoom),
-            Math.floor((minY + maxY) / 2 * tilesAtZoom));
+        zoom,
+        Math.floor((minX + maxX) / 2 * tilesAtZoom),
+        Math.floor((minY + maxY) / 2 * tilesAtZoom));
 }
 
 export default ImageSource;
