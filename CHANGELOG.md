@@ -2,7 +2,7 @@
 
 ### Features and improvements
 
-- Export `Source` classes (`GeoJSONSource` etc.) declarations.
+- Export `Source` classes (`GeoJSONSource` etc.) declarations. ([#801](https://github.com/maplibre/maplibre-gl-js/issues/801))
 
 ### 🐞 Bug fixes
 
