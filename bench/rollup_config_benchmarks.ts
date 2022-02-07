@@ -57,7 +57,7 @@ const splitConfig = (name: string): RollupOptions[] => [{
     plugins: [sourcemaps()],
 }];
 
-const viewConfig = {
+const viewConfig: RollupOptions = {
     input: `${srcDir}bench/benchmarks_view.${inputExt}${watch ? 'x' : ''}`,
     output: {
         name: 'Benchmarks',
@@ -68,7 +68,7 @@ const viewConfig = {
     },
     plugins: [
         resolve({browser: true, preferBuiltins: false}),
-        watch ? typescript() : false,
+        watch ? typescript() : null,
         commonjs(),
         replace(replaceConfig)
     ].filter(Boolean)
