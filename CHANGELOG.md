@@ -2,6 +2,8 @@
 
 ### Features and improvements
 
+- Export `Source` classes (`GeoJSONSource` etc.) declarations. ([#801](https://github.com/maplibre/maplibre-gl-js/issues/801))
+- Make `AJAXError` public so error HTTP responses can be handled differently from other errors.
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes

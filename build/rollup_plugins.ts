@@ -6,13 +6,13 @@ import commonjs from '@rollup/plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
 import json from '@rollup/plugin-json';
 import {terser} from 'rollup-plugin-terser';
-import minifyStyleSpec from './rollup_plugin_minify_style_spec.js';
+import minifyStyleSpec from './rollup_plugin_minify_style_spec';
 import strip from '@rollup/plugin-strip';
-
+import {Plugin} from 'rollup';
 // Common set of plugins/transformations shared across different rollup
 // builds (main maplibre bundle, style-spec package, benchmarks bundle)
 
-export const plugins = (minified, production, watch) => [
+export const plugins = (minified: boolean, production: boolean, watch: boolean): Plugin[] => [
     minifyStyleSpec(),
     json(),
     // https://github.com/zaach/jison/issues/351
@@ -30,6 +30,7 @@ export const plugins = (minified, production, watch) => [
     }) : false,
     minified ? terser({
         compress: {
+            // eslint-disable-next-line camelcase
             pure_getters: true,
             passes: 3
         }
