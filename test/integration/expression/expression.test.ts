@@ -7,7 +7,10 @@ import convertFunction from '../../../src/style-spec/function/convert';
 import {toString} from '../../../src/style-spec/expression/types';
 import {CanonicalTileID} from '../../../src/source/tile_id';
 import {getGeometry} from './lib/geometry';
-import {stringify, deepEqual, stripPrecision} from './lib/util';
+import {stringify} from './lib/util';
+import {deepEqual, stripPrecision} from '../lib/json-diff';
+
+const decimalSigFigs =  6;
 
 const expressionTestFileNames = glob.sync('**/test.json', {cwd: __dirname});
 describe('expression', () => {
@@ -23,7 +26,7 @@ describe('expression', () => {
                 if (process.env.UPDATE) {
                     fixture.expected = {
                         compiled: result.compiled,
-                        outputs: stripPrecision(result.outputs),
+                        outputs: stripPrecision(result.outputs, decimalSigFigs),
                         serialized: result.serialized
                     };
 
@@ -35,16 +38,16 @@ describe('expression', () => {
                 }
 
                 const expected = fixture.expected;
-                const compileOk = deepEqual(result.compiled, expected.compiled);
-                const evalOk = compileOk && deepEqual(result.outputs, expected.outputs);
+                const compileOk = deepEqual(result.compiled, expected.compiled, decimalSigFigs);
+                const evalOk = compileOk && deepEqual(result.outputs, expected.outputs, decimalSigFigs);
 
                 let recompileOk = true;
                 let roundTripOk = true;
                 let serializationOk = true;
                 if (expected.compiled.result !== 'error') {
-                    serializationOk = compileOk && deepEqual(expected.serialized, result.serialized);
-                    recompileOk = compileOk && deepEqual(result.recompiled, expected.compiled);
-                    roundTripOk = recompileOk && deepEqual(result.roundTripOutputs, expected.outputs);
+                    serializationOk = compileOk && deepEqual(expected.serialized, result.serialized, decimalSigFigs);
+                    recompileOk = compileOk && deepEqual(result.recompiled, expected.compiled, decimalSigFigs);
+                    roundTripOk = recompileOk && deepEqual(result.roundTripOutputs, expected.outputs, decimalSigFigs);
                 }
 
                 expect(compileOk).toBeTruthy();
