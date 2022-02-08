@@ -4,7 +4,7 @@ import compactStringify from 'json-stringify-pretty-compact';
 // edge case, and we don't want UPDATE=1 to mess with them
 export function stringify(v) {
     let s = compactStringify(v);
-    // http://timelessrepo.com/json-isnt-a-javascript-subset
+
     if (s.indexOf('\u2028') >= 0) {
         s = s.replace(/\u2028/g, '\\u2028');
     }
