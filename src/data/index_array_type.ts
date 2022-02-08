@@ -1,4 +1,4 @@
-import {LineIndexArray, TriangleIndexArray, LineStripIndexArray} from './array_types';
+import {LineIndexArray, TriangleIndexArray, LineStripIndexArray} from './array_types.g';
 
 /**
  * An index array stores Uint16 indices of vertexes in a corresponding vertex array. We use

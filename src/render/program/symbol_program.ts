@@ -7,68 +7,68 @@ import type {UniformValues, UniformLocations} from '../uniform_binding';
 import {mat4} from 'gl-matrix';
 
 export type SymbolIconUniformsType = {
-  'u_is_size_zoom_constant': Uniform1i;
-  'u_is_size_feature_constant': Uniform1i;
-  'u_size_t': Uniform1f;
-  'u_size': Uniform1f;
-  'u_camera_to_center_distance': Uniform1f;
-  'u_pitch': Uniform1f;
-  'u_rotate_symbol': Uniform1i;
-  'u_aspect_ratio': Uniform1f;
-  'u_fade_change': Uniform1f;
-  'u_matrix': UniformMatrix4f;
-  'u_label_plane_matrix': UniformMatrix4f;
-  'u_coord_matrix': UniformMatrix4f;
-  'u_is_text': Uniform1i;
-  'u_pitch_with_map': Uniform1i;
-  'u_texsize': Uniform2f;
-  'u_texture': Uniform1i;
+    'u_is_size_zoom_constant': Uniform1i;
+    'u_is_size_feature_constant': Uniform1i;
+    'u_size_t': Uniform1f;
+    'u_size': Uniform1f;
+    'u_camera_to_center_distance': Uniform1f;
+    'u_pitch': Uniform1f;
+    'u_rotate_symbol': Uniform1i;
+    'u_aspect_ratio': Uniform1f;
+    'u_fade_change': Uniform1f;
+    'u_matrix': UniformMatrix4f;
+    'u_label_plane_matrix': UniformMatrix4f;
+    'u_coord_matrix': UniformMatrix4f;
+    'u_is_text': Uniform1i;
+    'u_pitch_with_map': Uniform1i;
+    'u_texsize': Uniform2f;
+    'u_texture': Uniform1i;
 };
 
 export type SymbolSDFUniformsType = {
-  'u_is_size_zoom_constant': Uniform1i;
-  'u_is_size_feature_constant': Uniform1i;
-  'u_size_t': Uniform1f;
-  'u_size': Uniform1f;
-  'u_camera_to_center_distance': Uniform1f;
-  'u_pitch': Uniform1f;
-  'u_rotate_symbol': Uniform1i;
-  'u_aspect_ratio': Uniform1f;
-  'u_fade_change': Uniform1f;
-  'u_matrix': UniformMatrix4f;
-  'u_label_plane_matrix': UniformMatrix4f;
-  'u_coord_matrix': UniformMatrix4f;
-  'u_is_text': Uniform1i;
-  'u_pitch_with_map': Uniform1i;
-  'u_texsize': Uniform2f;
-  'u_texture': Uniform1i;
-  'u_gamma_scale': Uniform1f;
-  'u_device_pixel_ratio': Uniform1f;
-  'u_is_halo': Uniform1i;
+    'u_is_size_zoom_constant': Uniform1i;
+    'u_is_size_feature_constant': Uniform1i;
+    'u_size_t': Uniform1f;
+    'u_size': Uniform1f;
+    'u_camera_to_center_distance': Uniform1f;
+    'u_pitch': Uniform1f;
+    'u_rotate_symbol': Uniform1i;
+    'u_aspect_ratio': Uniform1f;
+    'u_fade_change': Uniform1f;
+    'u_matrix': UniformMatrix4f;
+    'u_label_plane_matrix': UniformMatrix4f;
+    'u_coord_matrix': UniformMatrix4f;
+    'u_is_text': Uniform1i;
+    'u_pitch_with_map': Uniform1i;
+    'u_texsize': Uniform2f;
+    'u_texture': Uniform1i;
+    'u_gamma_scale': Uniform1f;
+    'u_device_pixel_ratio': Uniform1f;
+    'u_is_halo': Uniform1i;
 };
 
 export type symbolTextAndIconUniformsType = {
-  'u_is_size_zoom_constant': Uniform1i;
-  'u_is_size_feature_constant': Uniform1i;
-  'u_size_t': Uniform1f;
-  'u_size': Uniform1f;
-  'u_camera_to_center_distance': Uniform1f;
-  'u_pitch': Uniform1f;
-  'u_rotate_symbol': Uniform1i;
-  'u_aspect_ratio': Uniform1f;
-  'u_fade_change': Uniform1f;
-  'u_matrix': UniformMatrix4f;
-  'u_label_plane_matrix': UniformMatrix4f;
-  'u_coord_matrix': UniformMatrix4f;
-  'u_is_text': Uniform1i;
-  'u_pitch_with_map': Uniform1i;
-  'u_texsize': Uniform2f;
-  'u_texsize_icon': Uniform2f;
-  'u_texture': Uniform1i;
-  'u_texture_icon': Uniform1i;
-  'u_gamma_scale': Uniform1f;
-  'u_device_pixel_ratio': Uniform1f;
-  'u_is_halo': Uniform1i;
+    'u_is_size_zoom_constant': Uniform1i;
+    'u_is_size_feature_constant': Uniform1i;
+    'u_size_t': Uniform1f;
+    'u_size': Uniform1f;
+    'u_camera_to_center_distance': Uniform1f;
+    'u_pitch': Uniform1f;
+    'u_rotate_symbol': Uniform1i;
+    'u_aspect_ratio': Uniform1f;
+    'u_fade_change': Uniform1f;
+    'u_matrix': UniformMatrix4f;
+    'u_label_plane_matrix': UniformMatrix4f;
+    'u_coord_matrix': UniformMatrix4f;
+    'u_is_text': Uniform1i;
+    'u_pitch_with_map': Uniform1i;
+    'u_texsize': Uniform2f;
+    'u_texsize_icon': Uniform2f;
+    'u_texture': Uniform1i;
+    'u_texture_icon': Uniform1i;
+    'u_gamma_scale': Uniform1f;
+    'u_device_pixel_ratio': Uniform1f;
+    'u_is_halo': Uniform1i;
 };
 
 const symbolIconUniforms = (context: Context, locations: UniformLocations): SymbolIconUniformsType => ({
@@ -137,19 +137,19 @@ const symbolTextAndIconUniforms = (context: Context, locations: UniformLocations
 });
 
 const symbolIconUniformValues = (
-  functionType: string,
-  size: {
-    uSizeT: number;
-    uSize: number;
-  },
-  rotateInShader: boolean,
-  pitchWithMap: boolean,
-  painter: Painter,
-  matrix: mat4,
-  labelPlaneMatrix: mat4,
-  glCoordMatrix: mat4,
-  isText: boolean,
-  texSize: [number, number]
+    functionType: string,
+    size: {
+        uSizeT: number;
+        uSize: number;
+    },
+    rotateInShader: boolean,
+    pitchWithMap: boolean,
+    painter: Painter,
+    matrix: mat4,
+    labelPlaneMatrix: mat4,
+    glCoordMatrix: mat4,
+    isText: boolean,
+    texSize: [number, number]
 ): UniformValues<SymbolIconUniformsType> => {
     const transform = painter.transform;
 
@@ -174,20 +174,20 @@ const symbolIconUniformValues = (
 };
 
 const symbolSDFUniformValues = (
-  functionType: string,
-  size: {
-    uSizeT: number;
-    uSize: number;
-  },
-  rotateInShader: boolean,
-  pitchWithMap: boolean,
-  painter: Painter,
-  matrix: mat4,
-  labelPlaneMatrix: mat4,
-  glCoordMatrix: mat4,
-  isText: boolean,
-  texSize: [number, number],
-  isHalo: boolean
+    functionType: string,
+    size: {
+        uSizeT: number;
+        uSize: number;
+    },
+    rotateInShader: boolean,
+    pitchWithMap: boolean,
+    painter: Painter,
+    matrix: mat4,
+    labelPlaneMatrix: mat4,
+    glCoordMatrix: mat4,
+    isText: boolean,
+    texSize: [number, number],
+    isHalo: boolean
 ): UniformValues<SymbolSDFUniformsType> => {
     const transform = painter.transform;
 
@@ -195,25 +195,25 @@ const symbolSDFUniformValues = (
         rotateInShader, pitchWithMap, painter, matrix, labelPlaneMatrix,
         glCoordMatrix, isText, texSize), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform._pitch) * transform.cameraToCenterDistance : 1),
-        'u_device_pixel_ratio': devicePixelRatio,
+        'u_device_pixel_ratio': painter.pixelRatio,
         'u_is_halo': +isHalo
     });
 };
 
 const symbolTextAndIconUniformValues = (
-  functionType: string,
-  size: {
-    uSizeT: number;
-    uSize: number;
-  },
-  rotateInShader: boolean,
-  pitchWithMap: boolean,
-  painter: Painter,
-  matrix: mat4,
-  labelPlaneMatrix: mat4,
-  glCoordMatrix: mat4,
-  texSizeSDF: [number, number],
-  texSizeIcon: [number, number]
+    functionType: string,
+    size: {
+        uSizeT: number;
+        uSize: number;
+    },
+    rotateInShader: boolean,
+    pitchWithMap: boolean,
+    painter: Painter,
+    matrix: mat4,
+    labelPlaneMatrix: mat4,
+    glCoordMatrix: mat4,
+    texSizeSDF: [number, number],
+    texSizeIcon: [number, number]
 ): UniformValues<SymbolIconUniformsType> => {
     return extend(symbolSDFUniformValues(functionType, size,
         rotateInShader, pitchWithMap, painter, matrix, labelPlaneMatrix,

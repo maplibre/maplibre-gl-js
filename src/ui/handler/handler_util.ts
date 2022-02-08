@@ -1,5 +1,5 @@
 import assert from 'assert';
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 
 export function indexTouches(touches: Array<Touch>, points: Array<Point>) {
     assert(touches.length === points.length);

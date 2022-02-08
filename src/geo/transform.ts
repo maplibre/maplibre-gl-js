@@ -1,7 +1,7 @@
 import LngLat from './lng_lat';
 import LngLatBounds from './lng_lat_bounds';
 import MercatorCoordinate, {mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from './mercator_coordinate';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import {wrap, clamp} from '../util/util';
 import {number as interpolate} from '../style-spec/util/interpolate';
 import EXTENT from '../data/extent';
@@ -282,8 +282,8 @@ class Transform {
      * @returns {number} zoom level An integer zoom level at which all tiles will be visible.
      */
     coveringZoomLevel(options: {
-      roundZoom?: boolean;
-      tileSize: number;
+        roundZoom?: boolean;
+        tileSize: number;
     }) {
         const z = (options.roundZoom ? Math.round : Math.floor)(
             this.zoom + this.scaleZoom(this.tileSize / options.tileSize)
@@ -335,14 +335,14 @@ class Transform {
      * @private
      */
     coveringTiles(
-      options: {
-        tileSize: number;
-        minzoom?: number;
-        maxzoom?: number;
-        roundZoom?: boolean;
-        reparseOverscaled?: boolean;
-        renderWorldCopies?: boolean;
-      }
+        options: {
+            tileSize: number;
+            minzoom?: number;
+            maxzoom?: number;
+            roundZoom?: boolean;
+            reparseOverscaled?: boolean;
+            renderWorldCopies?: boolean;
+        }
     ): Array<OverscaledTileID> {
         let z = this.coveringZoomLevel(options);
         const actualZ = z;
@@ -351,9 +351,9 @@ class Transform {
         if (options.minzoom !== undefined && z < options.minzoom) return [];
         if (options.maxzoom !== undefined && z > options.maxzoom) z = options.maxzoom;
 
-        const cameraCoord = tsc.isEnabled()
-            ? this.pointCoordinate(this.getCameraPoint())
-            : MercatorCoordinate.fromLngLat(this.center);
+        const cameraCoord = tsc.isEnabled() ?
+            this.pointCoordinate(this.getCameraPoint()) :
+            MercatorCoordinate.fromLngLat(this.center);
         const centerCoord = MercatorCoordinate.fromLngLat(this.center);
         const numTiles = Math.pow(2, z);
         const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
@@ -438,7 +438,7 @@ class Transform {
                 const childZ = it.zoom + 1;
                 let quadrant = it.aabb.quadrant(i);
                 if (tsc.isEnabled()) {
-                    let tile = tsc.getSourceTile(new OverscaledTileID(childZ, it.wrap, childZ, childX, childY));
+                    const tile = tsc.getSourceTile(new OverscaledTileID(childZ, it.wrap, childZ, childX, childY));
                     quadrant = new Aabb(
                         vec3.fromValues(quadrant.min[0], quadrant.min[1], tile && tile.dem ? tile.dem.min - this.elevation : -this.elevation),
                         vec3.fromValues(quadrant.max[0], quadrant.max[1], tile && tile.dem ? Math.max(0, tile.dem.max - this.elevation) : 0)
@@ -468,8 +468,8 @@ class Transform {
     project(lnglat: LngLat) {
         const lat = clamp(lnglat.lat, -this.maxValidLatitude, this.maxValidLatitude);
         return new Point(
-                mercatorXfromLng(lnglat.lng) * this.worldSize,
-                mercatorYfromLat(lat) * this.worldSize);
+            mercatorXfromLng(lnglat.lng) * this.worldSize,
+            mercatorYfromLat(lat) * this.worldSize);
     }
 
     unproject(point: Point): LngLat {
@@ -495,7 +495,7 @@ class Transform {
     getCameraPosition() {
         const lngLat = this.pointLocation(this.getCameraPoint());
         const altitude = Math.cos(this._pitch) * this.cameraToCenterDistance / this._pixelPerMeter;
-        return { lngLat: lngLat, altitude: altitude + this.elevation };
+        return {lngLat, altitude: altitude + this.elevation};
     }
 
     // this method only works in combination with freezeElevation, because in this case
@@ -504,7 +504,7 @@ class Transform {
         // find position the camera is looking on
         const center = this.pointLocation3D(this.centerPoint);
         const elevation = this.getElevation(center);
-        const deltaElevation = + this.elevation - elevation;
+        const deltaElevation = this.elevation - elevation;
         if (!deltaElevation) return;
 
         // calculate mercator distance between camera & target
@@ -528,8 +528,8 @@ class Transform {
         const b = this.pointCoordinate(this.centerPoint);
         const loc = this.locationCoordinate(lnglat);
         const newCenter = new MercatorCoordinate(
-                loc.x - (a.x - b.x),
-                loc.y - (a.y - b.y));
+            loc.x - (a.x - b.x),
+            loc.y - (a.y - b.y));
         this.center = this.coordinateLocation(newCenter);
         if (this._renderWorldCopies) {
             this.center = this.center.wrap();
@@ -625,12 +625,12 @@ class Transform {
             interpolate(y0, y1, t) / this.worldSize);
     }
 
-    // FIXME-3D! mouseout events may contains coordinates outside the coords-framebuffer
+    // FIX ME-3D! mouseout events may contains coordinates outside the coords-framebuffer
     pointCoordinate3D(p: Point) {
         const rgba = new Uint8Array(4);
         const painter = this.terrainSourceCache._style.map.painter, context = painter.context, gl = context.gl;
         // grab coordinate pixel from coordinates framebuffer
-        context.bindFramebuffer.set(this.terrainSourceCache.getFramebuffer(painter, "coords").framebuffer);
+        context.bindFramebuffer.set(this.terrainSourceCache.getFramebuffer(painter, 'coords').framebuffer);
         gl.readPixels(p.x, painter.height / devicePixelRatio - p.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
         context.bindFramebuffer.set(null);
         // decode coordinates (encoding see terrain-source-cache)
@@ -638,7 +638,7 @@ class Transform {
         const y = rgba[1] + ((rgba[2] & 15) << 8);
         const tileID = this.terrainSourceCache._coordsIndex[255 - rgba[3]];
         const tile = tileID && this.terrainSourceCache.getTileByID(tileID);
-        if (!tile) return this.pointCoordinate(p); // FIXME! remove this hack
+        if (!tile) return this.pointCoordinate(p); // FIX ME! remove this hack
         const coordsSize = this.terrainSourceCache._coordsTextureSize;
         const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
         return new MercatorCoordinate(
@@ -655,7 +655,7 @@ class Transform {
      * @returns {number} elevation, default 0
      * @private
      */
-    coordinatePoint(coord: MercatorCoordinate, elevation: number=0) {
+    coordinatePoint(coord: MercatorCoordinate, elevation: number = 0) {
         const p = vec4.fromValues(coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1);
         vec4.transformMat4(p, p, this.pixelMatrix2);
         return new Point(p[0] / p[3], p[1] / p[3]);

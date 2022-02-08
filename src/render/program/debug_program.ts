@@ -6,10 +6,10 @@ import type Color from '../../style-spec/util/color';
 import {mat4} from 'gl-matrix';
 
 export type DebugUniformsType = {
-  'u_color': UniformColor;
-  'u_matrix': UniformMatrix4f;
-  'u_overlay': Uniform1i;
-  'u_overlay_scale': Uniform1f;
+    'u_color': UniformColor;
+    'u_matrix': UniformMatrix4f;
+    'u_overlay': Uniform1i;
+    'u_overlay_scale': Uniform1f;
 };
 
 const debugUniforms = (context: Context, locations: UniformLocations): DebugUniformsType => ({

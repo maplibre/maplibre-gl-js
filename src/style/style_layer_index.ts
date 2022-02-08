@@ -12,9 +12,9 @@ export type Family<Layer extends TypedStyleLayer> = Array<Layer>;
 
 class StyleLayerIndex {
     familiesBySource: {
-      [source: string]: {
-        [sourceLayer: string]: Array<Family<any>>;
-      };
+        [source: string]: {
+            [sourceLayer: string]: Array<Family<any>>;
+        };
     };
     keyCache: {[source: string]: string};
 

@@ -1,3 +1,15 @@
+## 15.1.0
+
+### ✨ Features and improvements
+* Add `icon-overlap` and `text-overlap` symbol layout properties [#347](https://github.com/maplibre/maplibre-gl-js/pull/347)
+* Deprecate `icon-allow-overlap` and `text-allow-overlap` symbol layout properties. `icon-overlap` and `text-overlap` are their replacements.
+
+## 15.0.0
+
+### Breaking changes
+
+* The migration to TypeScript [#209](https://github.com/maplibre/maplibre-gl-js/pull/209) removed support for the `mapbox://` protocol.
+
 ## 14.0.2
 
 ### ✨ Features and improvements

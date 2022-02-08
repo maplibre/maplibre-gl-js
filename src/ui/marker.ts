@@ -1,6 +1,6 @@
 import DOM from '../util/dom';
 import LngLat from '../geo/lng_lat';
-import Point, {PointLike} from '../util/point';
+import Point from '@mapbox/point-geometry';
 import smartWrap from '../util/smart_wrap';
 import {bindAll, extend} from '../util/util';
 import {anchorTranslate, applyAnchorClass} from './anchor';
@@ -10,18 +10,19 @@ import type Map from './map';
 import Popup, {Offset} from './popup';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
+import type {PointLike} from './camera';
 
 type MarkerOptions = {
-  element?: HTMLElement;
-  offset?: PointLike;
-  anchor?: PositionAnchor;
-  color?: string;
-  scale?: number;
-  draggable?: boolean;
-  clickTolerance?: number;
-  rotation?: number;
-  rotationAlignment?: string;
-  pitchAlignment?: string;
+    element?: HTMLElement;
+    offset?: PointLike;
+    anchor?: PositionAnchor;
+    color?: string;
+    scale?: number;
+    draggable?: boolean;
+    clickTolerance?: number;
+    rotation?: number;
+    rotationAlignment?: string;
+    pitchAlignment?: string;
 };
 
 /**
@@ -232,7 +233,7 @@ export default class Marker extends Evented {
 
     /**
      * Attaches the `Marker` to a `Map` object.
-     * @param {Map} map The Mapbox GL JS map to add the marker to.
+     * @param {Map} map The MapLibre GL JS map to add the marker to.
      * @returns {Marker} `this`
      * @example
      * var marker = new maplibregl.Marker()
@@ -289,29 +290,29 @@ export default class Marker extends Evented {
      * the marker on screen.
      *
      * @returns {LngLat} A {@link LngLat} describing the marker's location.
-    * @example
-    * // Store the marker's longitude and latitude coordinates in a variable
-    * var lngLat = marker.getLngLat();
-    * // Print the marker's longitude and latitude values in the console
-    * console.log('Longitude: ' + lngLat.lng + ', Latitude: ' + lngLat.lat )
-    * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
-    */
+     * @example
+     * // Store the marker's longitude and latitude coordinates in a variable
+     * var lngLat = marker.getLngLat();
+     * // Print the marker's longitude and latitude values in the console
+     * console.log('Longitude: ' + lngLat.lng + ', Latitude: ' + lngLat.lat )
+     * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
+     */
     getLngLat() {
         return this._lngLat;
     }
 
     /**
-    * Set the marker's geographical position and move it.
-    * @param {LngLat} lnglat A {@link LngLat} describing where the marker should be located.
-    * @returns {Marker} `this`
-    * @example
-    * // Create a new marker, set the longitude and latitude, and add it to the map
-    * new maplibregl.Marker()
-    *   .setLngLat([-65.017, -16.457])
-    *   .addTo(map);
-    * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
-    * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
-    */
+     * Set the marker's geographical position and move it.
+     * @param {LngLat} lnglat A {@link LngLat} describing where the marker should be located.
+     * @returns {Marker} `this`
+     * @example
+     * // Create a new marker, set the longitude and latitude, and add it to the map
+     * new maplibregl.Marker()
+     *   .setLngLat([-65.017, -16.457])
+     *   .addTo(map);
+     * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
+     * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
+     */
     setLngLat(lnglat: LngLatLike) {
         this._lngLat = LngLat.convert(lnglat);
         this._pos = null;
@@ -437,7 +438,7 @@ export default class Marker extends Evented {
     }
 
     _update(e?: {
-      type: 'move' | 'moveend';
+        type: 'move' | 'moveend';
     }) {
         if (!this._map) return;
 
@@ -474,8 +475,8 @@ export default class Marker extends Evented {
         const tsc = this._map.style.terrainSourceCache;
         if (tsc && tsc.isEnabled() && !this._opacityTimeout) this._opacityTimeout = setTimeout(() => {
             const lnglat = this._map.unproject(this._pos);
-            const metresPerPixel = 40075016.686 * Math.abs(Math.cos(this._lngLat.lat * Math.PI/180)) / Math.pow(2, this._map.transform.tileZoom+8);
-            this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? "0.2" : "1.0";
+            const metresPerPixel = 40075016.686 * Math.abs(Math.cos(this._lngLat.lat * Math.PI / 180)) / Math.pow(2, this._map.transform.tileZoom + 8);
+            this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? '0.2' : '1.0';
             this._opacityTimeout = null;
         }, 100);
     }
@@ -554,14 +555,14 @@ export default class Marker extends Evented {
         // only fire dragend if it was preceded by at least one drag event
         if (this._state === 'active') {
             /**
-            * Fired when the marker is finished being dragged
-            *
-            * @event dragend
-            * @memberof Marker
-            * @instance
-            * @type {Object}
-            * @property {Marker} marker object that was dragged
-            */
+             * Fired when the marker is finished being dragged
+             *
+             * @event dragend
+             * @memberof Marker
+             * @instance
+             * @type {Object}
+             * @property {Marker} marker object that was dragged
+             */
             this.fire(new Event('dragend'));
         }
 

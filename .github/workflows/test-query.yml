@@ -1,4 +1,4 @@
-name: Test Query
+name: Integration Test - Query
 
 on:
   push:
@@ -12,19 +12,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 14 x64
+      - name: Use Node.js 16 x64
         uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 16
           architecture: x64
       - run: npm ci
       - run: npm run build-dev
-      - run: npm run test-query
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./test/integration/query-tests
-          name: querytests
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./test/integration/query-tests/index.html
-          name: querytests.html
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-query

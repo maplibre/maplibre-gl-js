@@ -12,10 +12,10 @@ export const earthRadius = 6371008.8;
  * A `LngLat` object represents a given longitude and latitude coordinate, measured in degrees.
  * These coordinates are based on the [WGS84 (EPSG:4326) standard](https://en.wikipedia.org/wiki/World_Geodetic_System#WGS84).
  *
- * Mapbox GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match the
+ * MapLibre GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match the
  * [GeoJSON specification](https://tools.ietf.org/html/rfc7946).
  *
- * Note that any Mapbox GL method that accepts a `LngLat` object as an argument or option
+ * Note that any MapLibre GL method that accepts a `LngLat` object as an argument or option
  * can also accept an `Array` of two numbers and will perform an implicit conversion.
  * This flexible type is documented as {@link LngLatLike}.
  *
@@ -161,11 +161,11 @@ class LngLat {
  * var v3 = {lon: -122.420679, lat: 37.772537};
  */
 export type LngLatLike = LngLat | {
-  lng: number;
-  lat: number;
+    lng: number;
+    lat: number;
 } | {
-  lon: number;
-  lat: number;
+    lon: number;
+    lat: number;
 } | [number, number];
 
 export default LngLat;

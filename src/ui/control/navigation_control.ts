@@ -1,4 +1,4 @@
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 
 import DOM from '../../util/dom';
 import {extend, bindAll} from '../../util/util';
@@ -8,9 +8,9 @@ import type Map from '../map';
 import type {IControl} from './control';
 
 type NavigationOptions = {
-  showCompass?: boolean;
-  showZoom?: boolean;
-  visualizePitch?: boolean;
+    showCompass?: boolean;
+    showZoom?: boolean;
+    visualizePitch?: boolean;
 };
 
 const defaultOptions: NavigationOptions = {

@@ -15,7 +15,7 @@ import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '../style-spec/types';
 
 class RasterDEMTileSource extends RasterTileSource implements Source {
-    encoding: "mapbox" | "terrarium" | "mtk";
+    encoding: 'mapbox' | 'terrarium' | 'mtk';
 
     constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
@@ -37,7 +37,7 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
-        const url = tile.tileID.canonical.url(this.tiles, this.scheme);
+        const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         tile.request = getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), imageLoaded.bind(this));
 
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);

@@ -1,21 +1,22 @@
-import {fakeServer, SinonFakeServer} from 'sinon';
+import {fakeServer, FakeServer} from 'nise';
 import {Source} from './source';
 import VectorTileSource from './vector_tile_source';
 import Tile from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
-import fixturesSource from '../../test/fixtures/source.json';
+import fixturesSource from '../../test/unit/assets/source.json';
 import {getMockDispatcher, getWrapDispatcher} from '../util/test/util';
 import Map from '../ui/map';
 
-function createSource(options, transformCallback?) {
+function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
     source.onAdd({
         transform: {showCollisionBoxes: false},
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
-        style: {sourceCaches: {id: {clearTiles: () => {}}}}
+        style: {sourceCaches: {id: {clearTiles}}},
+        getPixelRatio() { return 1; }
     } as any as Map);
 
     source.on('error', (e) => {
@@ -26,7 +27,7 @@ function createSource(options, transformCallback?) {
 }
 
 describe('VectorTileSource', () => {
-    let server: SinonFakeServer;
+    let server: FakeServer;
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();
@@ -340,6 +341,17 @@ describe('VectorTileSource', () => {
             maxzoom: 10,
             attribution: 'Maplibre',
             tiles: ['http://example2.com/{z}/{x}/{y}.png']
+        });
+    });
+
+    test('setTiles only clears the cache once the TileJSON has reloaded', done => {
+        const clearTiles = jest.fn();
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']}, undefined, clearTiles);
+        source.setTiles(['http://example2.com/{z}/{x}/{y}.pbf']);
+        expect(clearTiles.mock.calls).toHaveLength(0);
+        source.once('data', () => {
+            expect(clearTiles.mock.calls).toHaveLength(1);
+            done();
         });
     });
 });

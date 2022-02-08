@@ -10,26 +10,26 @@ import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 
 type Entry = {
-  // null means we've requested the range, but the glyph wasn't included in the result.
-  glyphs: {
-    [id: number]: StyleGlyph | null;
-  };
-  requests: {
-    [range: number]: Array<Callback<{
-      [_: number]: StyleGlyph | null;
-    }>>;
-  };
-  ranges: {
-    [range: number]: boolean | null;
-  };
-  tinySDF?: TinySDF;
+    // null means we've requested the range, but the glyph wasn't included in the result.
+    glyphs: {
+        [id: number]: StyleGlyph | null;
+    };
+    requests: {
+        [range: number]: Array<Callback<{
+            [_: number]: StyleGlyph | null;
+        }>>;
+    };
+    ranges: {
+        [range: number]: boolean | null;
+    };
+    tinySDF?: TinySDF;
 };
 
 export default class GlyphManager {
     requestManager: RequestManager;
     localIdeographFontFamily: string;
     entries: {
-      [_: string]: Entry;
+        [_: string]: Entry;
     };
     url: string;
 
@@ -48,11 +48,11 @@ export default class GlyphManager {
     }
 
     getGlyphs(glyphs: {
-      [stack: string]: Array<number>;
+        [stack: string]: Array<number>;
     }, callback: Callback<{
-      [stack: string]: {
-        [id: number]: StyleGlyph;
-      };
+        [stack: string]: {
+            [id: number]: StyleGlyph;
+        };
     }>) {
         const all = [];
 
@@ -63,9 +63,9 @@ export default class GlyphManager {
         }
 
         asyncAll(all, ({stack, id}, callback: Callback<{
-          stack: string;
-          id: number;
-          glyph: StyleGlyph;
+            stack: string;
+            id: number;
+            glyph: StyleGlyph;
         }>) => {
             let entry = this.entries[stack];
             if (!entry) {
@@ -103,9 +103,9 @@ export default class GlyphManager {
             let requests = entry.requests[range];
             if (!requests) {
                 requests = entry.requests[range] = [];
-                GlyphManager.loadGlyphRange(stack, range, this.url as any, this.requestManager,
+                GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager,
                     (err, response?: {
-                      [_: number]: StyleGlyph | null;
+                        [_: number]: StyleGlyph | null;
                     } | null) => {
                         if (response) {
                             for (const id in response) {
@@ -123,7 +123,7 @@ export default class GlyphManager {
             }
 
             requests.push((err, result?: {
-              [_: number]: StyleGlyph | null;
+                [_: number]: StyleGlyph | null;
             } | null) => {
                 if (err) {
                     callback(err);
@@ -132,9 +132,9 @@ export default class GlyphManager {
                 }
             });
         }, (err, glyphs?: Array<{
-          stack: string;
-          id: number;
-          glyph: StyleGlyph;
+            stack: string;
+            id: number;
+            glyph: StyleGlyph;
         }> | null) => {
             if (err) {
                 callback(err);
@@ -198,13 +198,13 @@ export default class GlyphManager {
         const char = tinySDF.draw(String.fromCharCode(id));
         return {
             id,
-            bitmap: new AlphaImage({width: char.width, height: char.height}, char.data),
+            bitmap: new AlphaImage({width: char.width || 30, height: char.height || 30}, char.data),
             metrics: {
-                width: char.glyphWidth,
-                height: char.glyphHeight,
-                left: char.glyphLeft,
-                top: char.glyphTop,
-                advance: char.glyphAdvance
+                width: char.glyphWidth || 24,
+                height: char.glyphHeight || 24,
+                left: char.glyphLeft || 0,
+                top: char.glyphTop || -8,
+                advance: char.glyphAdvance || 24
             }
         };
     }

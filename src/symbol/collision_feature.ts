@@ -1,5 +1,5 @@
-import type {CollisionBoxArray} from '../data/array_types';
-import Point from '../util/point';
+import type {CollisionBoxArray} from '../data/array_types.g';
+import Point from '@mapbox/point-geometry';
 import type Anchor from './anchor';
 
 /**
@@ -27,15 +27,15 @@ class CollisionFeature {
      * @private
      */
     constructor(collisionBoxArray: CollisionBoxArray,
-                anchor: Anchor,
-                featureIndex: number,
-                sourceLayerIndex: number,
-                bucketIndex: number,
-                shaped: any,
-                boxScale: number,
-                padding: number,
-                alignLine: boolean,
-                rotate: number) {
+        anchor: Anchor,
+        featureIndex: number,
+        sourceLayerIndex: number,
+        bucketIndex: number,
+        shaped: any,
+        boxScale: number,
+        padding: number,
+        alignLine: boolean,
+        rotate: number) {
 
         this.boxStartIndex = collisionBoxArray.length;
 

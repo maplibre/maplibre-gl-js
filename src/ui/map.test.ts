@@ -4,15 +4,15 @@ import LngLat from '../geo/lng_lat';
 import Tile from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
 import {Event, ErrorEvent} from '../util/evented';
-import simulate from '../../test/util/simulate_interaction';
-import {fixedLngLat, fixedNum} from '../../test/util/fixed';
+import simulate from '../../test/unit/lib/simulate_interaction';
+import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {LayerSpecification, SourceSpecification, StyleSpecification} from '../style-spec/types';
 import {RequestTransformFunction} from '../util/request_manager';
 import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import {IControl} from './control/control';
 import EvaluationParameters from '../style/evaluation_parameters';
-import {fakeServer, SinonFakeServer} from 'sinon';
+import {fakeServer, FakeServer} from 'nise';
 
 function createStyleSource() {
     return {
@@ -24,7 +24,7 @@ function createStyleSource() {
     } as SourceSpecification;
 }
 
-let server: SinonFakeServer;
+let server: FakeServer;
 
 beforeEach(() => {
     setPerformance();
@@ -134,15 +134,17 @@ describe('Map', () => {
     test('emits load event after a style is set', done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
 
-        map.on('load', done.fail);
+        const fail = () => done('test failed');
+        const pass = () => done();
+
+        map.on('load', fail);
 
         setTimeout(() => {
-            map.off('load', done.fail);
-            map.on('load', () => {
-                done();
-            });
+            map.off('load', fail);
+            map.on('load', pass);
             map.setStyle(createStyle());
         }, 1);
+
     });
 
     describe('#setStyle', () => {
@@ -918,7 +920,7 @@ describe('Map', () => {
     test('does not fire "webglcontextlost" after #remove has been called', done => {
         const map = createMap();
         const canvas = map.getCanvas();
-        map.once('webglcontextlost', () => done.fail('"webglcontextlost" fired after #remove has been called'));
+        map.once('webglcontextlost', () => done('"webglcontextlost" fired after #remove has been called'));
         map.remove();
         // Dispatch the event manually because at the time of this writing, gl does not support
         // the WEBGL_lose_context extension.
@@ -931,7 +933,7 @@ describe('Map', () => {
         const canvas = map.getCanvas();
 
         map.once('webglcontextlost', () => {
-            map.once('webglcontextrestored', () => done.fail('"webglcontextrestored" fired after #remove has been called'));
+            map.once('webglcontextrestored', () => done('"webglcontextrestored" fired after #remove has been called'));
             map.remove();
             canvas.dispatchEvent(new window.Event('webglcontextrestored'));
             done();
@@ -1250,7 +1252,7 @@ describe('Map', () => {
                 style: {
                     'version': 8,
                     'sources': {
-                        'mapbox://mapbox.satellite': {
+                        'maplibre-satellite': {
                             'type': 'raster',
                             'tiles': ['http://example.com/{z}/{x}/{y}.png']
                         }
@@ -1258,7 +1260,7 @@ describe('Map', () => {
                     'layers': [{
                         'id': 'satellite',
                         'type': 'raster',
-                        'source': 'mapbox://mapbox.satellite',
+                        'source': 'maplibre-satellite',
                         'layout': {
                             'visibility': 'none'
                         }
@@ -1885,7 +1887,9 @@ describe('Map', () => {
             if (timer) clearTimeout(timer);
             timer = setTimeout(() => {
                 map.off('render', undefined);
-                map.on('render', done.fail);
+                map.on('render', () => {
+                    done('test failed');
+                });
                 expect((map as any)._frameId).toBeFalsy();
                 done();
             }, 100);
@@ -1896,7 +1900,9 @@ describe('Map', () => {
         const style = createStyle();
         const map = createMap({style});
         map.on('idle', () => {
-            map.on('render', done.fail);
+            map.on('render', () => {
+                done('test failed');
+            });
             setTimeout(() => {
                 done();
             }, 100);
@@ -2043,9 +2049,76 @@ describe('Map', () => {
             });
 
             map.on('styleimagemissing', ({id}) => {
-                done.fail(`styleimagemissing fired for value ${id}`);
+                done(`styleimagemissing fired for value ${id}`);
             });
         });
+    });
+
+    describe('setPixelRatio', () => {
+        test('resizes canvas', () => {
+            const container = window.document.createElement('div');
+            Object.defineProperty(container, 'clientWidth', {value: 512});
+            Object.defineProperty(container, 'clientHeight', {value: 512});
+            const map = createMap({container, pixelRatio: 1});
+            expect(map.getCanvas().width).toBe(512);
+            expect(map.getCanvas().height).toBe(512);
+            map.setPixelRatio(2);
+            expect(map.getCanvas().width).toBe(1024);
+            expect(map.getCanvas().height).toBe(1024);
+        });
+
+        test('resizes painter', () => {
+            const container = window.document.createElement('div');
+            Object.defineProperty(container, 'clientWidth', {value: 512});
+            Object.defineProperty(container, 'clientHeight', {value: 512});
+            const map = createMap({container, pixelRatio: 1});
+            expect(map.painter.pixelRatio).toBe(1);
+            expect(map.painter.width).toBe(512);
+            expect(map.painter.height).toBe(512);
+            map.setPixelRatio(2);
+            expect(map.painter.pixelRatio).toBe(2);
+            expect(map.painter.width).toBe(1024);
+            expect(map.painter.height).toBe(1024);
+        });
+    });
+
+    describe('getPixelRatio', () => {
+        test('returns the pixel ratio', () => {
+            const map = createMap({pixelRatio: 1});
+            expect(map.getPixelRatio()).toBe(1);
+            map.setPixelRatio(2);
+            expect(map.getPixelRatio()).toBe(2);
+        });
+    });
+
+    test('pixel ratio defaults to devicePixelRatio', () => {
+        const map = createMap();
+        expect(map.getPixelRatio()).toBe(devicePixelRatio);
+    });
+
+    test('canvas has the expected size', () => {
+        const container = window.document.createElement('div');
+        Object.defineProperty(container, 'clientWidth', {value: 512});
+        Object.defineProperty(container, 'clientHeight', {value: 512});
+        const map = createMap({container, pixelRatio: 2});
+        expect(map.getCanvas().width).toBe(1024);
+        expect(map.getCanvas().height).toBe(1024);
+    });
+
+    test('painter has the expected size and pixel ratio', () => {
+        const container = window.document.createElement('div');
+        Object.defineProperty(container, 'clientWidth', {value: 512});
+        Object.defineProperty(container, 'clientHeight', {value: 512});
+        const map = createMap({container, pixelRatio: 2});
+        expect(map.painter.pixelRatio).toBe(2);
+        expect(map.painter.width).toBe(1024);
+        expect(map.painter.height).toBe(1024);
+    });
+
+    test('fires sourcedataabort event on dataabort event', done => {
+        const map = createMap();
+        map.once('sourcedataabort', () => done());
+        map.fire(new Event('dataabort'));
     });
 
 });

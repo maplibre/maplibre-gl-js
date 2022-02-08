@@ -5,11 +5,11 @@ import assert from 'assert';
 import type {StylePropertyExpression} from '../style-spec/expression/index';
 
 export type ColorRampParams = {
-  expression: StylePropertyExpression;
-  evaluationKey: string;
-  resolution?: number;
-  image?: RGBAImage;
-  clips?: Array<any>;
+    expression: StylePropertyExpression;
+    evaluationKey: string;
+    resolution?: number;
+    image?: RGBAImage;
+    clips?: Array<any>;
 };
 
 /**

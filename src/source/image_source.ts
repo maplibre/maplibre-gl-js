@@ -2,7 +2,7 @@ import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {getImage, ResourceType} from '../util/ajax';
 import EXTENT from '../data/extent';
-import {RasterBoundsArray} from '../data/array_types';
+import {RasterBoundsArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import SegmentVector from '../data/segment';
 import Texture from '../render/texture';
@@ -24,13 +24,13 @@ export type Coordinates = [[number, number], [number, number], [number, number],
 
 /**
  * A data source containing an image.
- * (See the [Style Specification](https://www.mapbox.com/mapbox-gl-style-spec/#sources-image) for detailed documentation of options.)
+ * (See the [Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources-image) for detailed documentation of options.)
  *
  * @example
  * // add to map
  * map.addSource('some id', {
  *    type: 'image',
- *    url: 'https://www.mapbox.com/images/foo.png',
+ *    url: 'https://www.maplibre.org/images/foo.png',
  *    coordinates: [
  *        [-76.54, 39.18],
  *        [-76.52, 39.18],
@@ -50,7 +50,7 @@ export type Coordinates = [[number, number], [number, number], [number, number],
  *
  * // update url and coordinates simultaneously
  * mySource.updateImage({
- *    url: 'https://www.mapbox.com/images/bar.png',
+ *    url: 'https://www.maplibre.org/images/bar.png',
  *    coordinates: [
  *        [-76.54335737228394, 39.18579907229748],
  *        [-76.52803659439087, 39.1838364847587],
@@ -143,8 +143,8 @@ class ImageSource extends Evented implements Source {
      * @returns {ImageSource} this
      */
     updateImage(options: {
-      url: string;
-      coordinates?: Coordinates;
+        url: string;
+        coordinates?: Coordinates;
     }) {
         if (!this.image || !options.url) {
             return this;
@@ -299,9 +299,9 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
     const tilesAtZoom = Math.pow(2, zoom);
 
     return new CanonicalTileID(
-            zoom,
-            Math.floor((minX + maxX) / 2 * tilesAtZoom),
-            Math.floor((minY + maxY) / 2 * tilesAtZoom));
+        zoom,
+        Math.floor((minX + maxX) / 2 * tilesAtZoom),
+        Math.floor((minY + maxY) / 2 * tilesAtZoom));
 }
 
 export default ImageSource;

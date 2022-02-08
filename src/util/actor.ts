@@ -21,15 +21,15 @@ class Actor {
     parent: any;
     mapId: number;
     callbacks: {
-      number: any;
+        number: any;
     };
     name: string;
     tasks: {
-      number: any;
+        number: any;
     };
     taskQueue: Array<number>;
     cancelCallbacks: {
-      number: Cancelable;
+        number: Cancelable;
     };
     invoker: ThrottledInvoker;
     globalScope: any;
@@ -57,11 +57,11 @@ class Actor {
      * @private
      */
     send(
-      type: string,
-      data: unknown,
-      callback?: Function | null,
-      targetMapId?: string | null,
-      mustQueue: boolean = false
+        type: string,
+        data: unknown,
+        callback?: Function | null,
+        targetMapId?: string | null,
+        mustQueue: boolean = false
     ): Cancelable {
         // We're using a string ID instead of numbers because they are being used as object keys
         // anyway, and thus stringified implicitly. We use random IDs because an actor may receive

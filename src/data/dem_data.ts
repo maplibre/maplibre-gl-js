@@ -20,16 +20,16 @@ export default class DEMData {
     dim: number;
     min: number;
     max: number;
-    encoding: "mapbox" | "terrarium" | "mtk";
+    encoding: 'mapbox' | 'terrarium' | 'mtk';
 
     // RGBAImage data has uniform 1px padding on all sides: square tile edge size defines stride
     // and dim is calculated as stride - 2.
-    constructor(uid: string, data: RGBAImage, encoding: "mapbox" | "terrarium" | "mtk") {
+    constructor(uid: string, data: RGBAImage, encoding: 'mapbox' | 'terrarium' | 'mtk') {
         this.uid = uid;
         if (data.height !== data.width) throw new RangeError('DEM tiles must be square');
-        if (encoding && encoding !== "mapbox" && encoding !== "terrarium" && encoding !== "mtk") {
-           warnOnce(`"${encoding}" is not a valid encoding type. Valid types include "mapbox", "mtk" and "terrarium".`);
-           return;
+        if (encoding && encoding !== 'mapbox' && encoding !== 'terrarium' && encoding !== 'mtk') {
+            warnOnce(`"${encoding}" is not a valid encoding type. Valid types include "mapbox", "mtk" and "terrarium".`);
+            return;
         }
         this.stride = data.height;
         const dim = this.dim = data.height - 2;
@@ -58,10 +58,10 @@ export default class DEMData {
         // calculate min/max values
         this.min = Number.MAX_SAFE_INTEGER;
         this.max = Number.MIN_SAFE_INTEGER;
-        for (let x=0; x<dim; x++) for (let y=0; y<dim; y++) {
-           let ele = this.get(x, y);
-           if (ele > this.max) this.max = ele;
-           if (ele < this.min) this.min = ele;
+        for (let x = 0; x < dim; x++) for (let y = 0; y < dim; y++) {
+            const ele = this.get(x, y);
+            if (ele > this.max) this.max = ele;
+            if (ele < this.min) this.min = ele;
         }
     }
 
@@ -69,20 +69,20 @@ export default class DEMData {
         const pixels = new Uint8Array(this.data.buffer);
         const index = this._idx(x, y) * 4;
         let unpack = this._unpackMapbox;
-        if (this.encoding === "terrarium") unpack = this._unpackTerrarium;
-        if (this.encoding === "mtk") unpack = this._unpackMTK;
+        if (this.encoding === 'terrarium') unpack = this._unpackTerrarium;
+        if (this.encoding === 'mtk') unpack = this._unpackMTK;
         return unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
     }
 
     // when using MTK encoding the hillshading looks ugly, so still use mapbox encoding
     getHillshadingUnpackVector() {
-        if (this.encoding === "terrarium") return [256.0, 1.0, 1.0 / 256.0, 32768.0];
+        if (this.encoding === 'terrarium') return [256.0, 1.0, 1.0 / 256.0, 32768.0];
         return [6553.6, 25.6, 0.1, 10000.0];
     }
 
     getUnpackVector() {
-        if (this.encoding === "terrarium") return [256.0, 1.0, 1.0 / 256.0, 32768.0];
-        if (this.encoding === "mtk") return [65536.0 * 0.03, 256.0 * 0.03, 0.03, 10000.0];
+        if (this.encoding === 'terrarium') return [256.0, 1.0, 1.0 / 256.0, 32768.0];
+        if (this.encoding === 'mtk') return [65536.0 * 0.03, 256.0 * 0.03, 0.03, 10000.0];
         return [6553.6, 25.6, 0.1, 10000.0];
     }
 
@@ -120,21 +120,21 @@ export default class DEMData {
             yMax = dy * this.dim + this.dim;
 
         switch (dx) {
-        case -1:
-            xMin = xMax - 1;
-            break;
-        case 1:
-            xMax = xMin + 1;
-            break;
+            case -1:
+                xMin = xMax - 1;
+                break;
+            case 1:
+                xMax = xMin + 1;
+                break;
         }
 
         switch (dy) {
-        case -1:
-            yMin = yMax - 1;
-            break;
-        case 1:
-            yMax = yMin + 1;
-            break;
+            case -1:
+                yMin = yMax - 1;
+                break;
+            case 1:
+                yMax = yMin + 1;
+                break;
         }
 
         const ox = -dx * this.dim;

@@ -33,47 +33,47 @@ import {CanonicalTileID} from './tile_id';
  * if they are floor-ed to the nearest integer.
  */
 export interface Source {
-  readonly type: string;
-  id: string;
-  minzoom: number;
-  maxzoom: number;
-  tileSize: number;
-  attribution?: string;
-  roundZoom?: boolean;
-  isTileClipped?: boolean;
-  maplibreLogo?: boolean;
-  tileID?: CanonicalTileID;
-  reparseOverscaled?: boolean;
-  vectorLayerIds?: Array<string>;
-  hasTransition(): boolean;
-  loaded(): boolean;
-  fire(event: Event): unknown;
-  readonly onAdd?: (map: Map) => void;
-  readonly onRemove?: (map: Map) => void;
-  loadTile(tile: Tile, callback: Callback<void>): void;
-  readonly hasTile?: (tileID: OverscaledTileID) => boolean;
-  readonly abortTile?: (tile: Tile, callback: Callback<void>) => void;
-  readonly unloadTile?: (tile: Tile, callback: Callback<void>) => void;
-  /**
+    readonly type: string;
+    id: string;
+    minzoom: number;
+    maxzoom: number;
+    tileSize: number;
+    attribution?: string;
+    roundZoom?: boolean;
+    isTileClipped?: boolean;
+    maplibreLogo?: boolean;
+    tileID?: CanonicalTileID;
+    reparseOverscaled?: boolean;
+    vectorLayerIds?: Array<string>;
+    hasTransition(): boolean;
+    loaded(): boolean;
+    fire(event: Event): unknown;
+    readonly onAdd?: (map: Map) => void;
+    readonly onRemove?: (map: Map) => void;
+    loadTile(tile: Tile, callback: Callback<void>): void;
+    readonly hasTile?: (tileID: OverscaledTileID) => boolean;
+    readonly abortTile?: (tile: Tile, callback: Callback<void>) => void;
+    readonly unloadTile?: (tile: Tile, callback: Callback<void>) => void;
+    /**
      * @returns A plain (stringifiable) JS object representing the current state of the source.
      * Creating a source using the returned object as the `options` should result in a Source that is
      * equivalent to this one.
      * @private
      */
-  serialize(): any;
-  readonly prepare?: () => void;
+    serialize(): any;
+    readonly prepare?: () => void;
 }
 
 type SourceStatics = {
-  /*
+    /*
      * An optional URL to a script which, when run by a Worker, registers a {@link WorkerSource}
      * implementation for this Source type by calling `self.registerWorkerSource(workerSource: WorkerSource)`.
      */
-  workerSourceURL?: URL;
+    workerSourceURL?: URL;
 };
 
 export type SourceClass = {
-  new (...args: any): Source;
+    new (...args: any): Source;
 } & SourceStatics;
 
 import vector from '../source/vector_tile_source';
@@ -101,7 +101,7 @@ const sourceTypes = {
  *
  * @param id
  * @param {Object} source A source definition object compliant with
- * [`mapbox-gl-style-spec`](https://www.mapbox.com/mapbox-gl-style-spec/#sources) or, for a third-party source type,
+ * [`maplibre-gl-style-spec`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources) or, for a third-party source type,
   * with that type's requirements.
  * @param {Dispatcher} dispatcher
  * @returns {Source}
@@ -117,16 +117,16 @@ export const create = function(id: string, specification: SourceSpecification, d
     return source;
 };
 
-export const getType = function (name: string) {
+export const getSourceType = function (name: string) {
     return sourceTypes[name];
 };
 
-export const setType = function (name: string, type: {
-  new (...args: any): Source;
+export const setSourceType = function (name: string, type: {
+    new (...args: any): Source;
 }) {
     sourceTypes[name] = type;
 };
 
 export interface Actor {
-  send(type: string, data: any, callback: Callback<any>): void;
+    send(type: string, data: any, callback: Callback<any>): void;
 }

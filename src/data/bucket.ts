@@ -1,4 +1,4 @@
-import type {CollisionBoxArray} from './array_types';
+import type {CollisionBoxArray} from './array_types.g';
 import type Style from '../style/style';
 import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type FeatureIndex from './feature_index';
@@ -7,49 +7,49 @@ import type {FeatureStates} from '../source/source_state';
 import type {ImagePosition} from '../render/image_atlas';
 import type {CanonicalTileID} from '../source/tile_id';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
-  index: number;
-  layers: Array<Layer>;
-  zoom: number;
-  pixelRatio: number;
-  overscaling: number;
-  collisionBoxArray: CollisionBoxArray;
-  sourceLayerIndex: number;
-  sourceID: string;
+    index: number;
+    layers: Array<Layer>;
+    zoom: number;
+    pixelRatio: number;
+    overscaling: number;
+    collisionBoxArray: CollisionBoxArray;
+    sourceLayerIndex: number;
+    sourceID: string;
 };
 
 export type PopulateParameters = {
-  featureIndex: FeatureIndex;
-  iconDependencies: {};
-  patternDependencies: {};
-  glyphDependencies: {};
-  availableImages: Array<string>;
+    featureIndex: FeatureIndex;
+    iconDependencies: {};
+    patternDependencies: {};
+    glyphDependencies: {};
+    availableImages: Array<string>;
 };
 
 export type IndexedFeature = {
-  feature: VectorTileFeature;
-  id: number | string;
-  index: number;
-  sourceLayerIndex: number;
+    feature: VectorTileFeature;
+    id: number | string;
+    index: number;
+    sourceLayerIndex: number;
 };
 
 export type BucketFeature = {
-  index: number;
-  sourceLayerIndex: number;
-  geometry: Array<Array<Point>>;
-  properties: any;
-  type: 1 | 2 | 3;
-  id?: any;
-  readonly patterns: {
-    [_: string]: {
-      'min': string;
-      'mid': string;
-      'max': string;
+    index: number;
+    sourceLayerIndex: number;
+    geometry: Array<Array<Point>>;
+    properties: any;
+    type: 1 | 2 | 3;
+    id?: any;
+    readonly patterns: {
+        [_: string]: {
+            'min': string;
+            'mid': string;
+            'max': string;
+        };
     };
-  };
-  sortKey?: number;
+    sortKey?: number;
 };
 
 /**
@@ -76,24 +76,24 @@ export type BucketFeature = {
  * @private
  */
 export interface Bucket {
-  layerIds: Array<string>;
-  hasPattern: boolean;
-  readonly layers: Array<any>;
-  readonly stateDependentLayers: Array<any>;
-  readonly stateDependentLayerIds: Array<string>;
-  populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID): void;
-  update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}): void;
-  isEmpty(): boolean;
-  upload(context: Context): void;
-  uploadPending(): boolean;
-  /**
+    layerIds: Array<string>;
+    hasPattern: boolean;
+    readonly layers: Array<any>;
+    readonly stateDependentLayers: Array<any>;
+    readonly stateDependentLayerIds: Array<string>;
+    populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID): void;
+    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}): void;
+    isEmpty(): boolean;
+    upload(context: Context): void;
+    uploadPending(): boolean;
+    /**
      * Release the WebGL resources associated with the buffers. Note that because
      * buckets are shared between layers having the same layout properties, they
      * must be destroyed in groups (all buckets for a tile, or all symbol buckets).
      *
      * @private
      */
-  destroy(): void;
+    destroy(): void;
 }
 
 export function deserialize(input: Array<Bucket>, style: Style): {[_: string]: Bucket} {

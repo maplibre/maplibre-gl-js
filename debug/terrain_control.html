@@ -23,26 +23,26 @@ var map = window.map = new maplibregl.Map({
     zoom: 12.5,
     center: [11.40416, 47.26475],
     hash: true,
-    style: "https://static.maptoolkit.net/styles/toursprung/terrain.json",
+    style: 'https://static.maptoolkit.net/styles/toursprung/terrain.json',
     maxZoom: 16
 });
 
-map.on("load", () => {
-  map.addSource("terrain", {
-     "type": "raster-dem",
-     "tiles": ["https://vtc-cdn.maptoolkit.net/terrainrgb/{z}/{x}/{y}.webp"],
-     "encoding": "mtk",
-     "maxzoom": 14
-  });
-  map.addControl(
-    new maplibregl.TerrainControl({
-      id: "terrain",
-      options: {
-        exaggeration: 2,
-        elevationOffset: 0
-      }
-    })
-  );
+map.on('load', () => {
+    map.addSource('terrain', {
+        'type': 'raster-dem',
+        'tiles': ['https://vtc-cdn.maptoolkit.net/terrainrgb/{z}/{x}/{y}.webp'],
+        'encoding': 'mtk',
+        'maxzoom': 14
+    });
+    map.addControl(
+        new maplibregl.TerrainControl({
+            id: 'terrain',
+            options: {
+                exaggeration: 2,
+                elevationOffset: 0
+            }
+        })
+    );
 });
 
 map.addControl(new maplibregl.NavigationControl({

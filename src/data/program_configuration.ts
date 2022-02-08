@@ -3,7 +3,7 @@ import Color from '../style-spec/util/color';
 import {supportsPropertyExpression} from '../style-spec/util/properties';
 import {register} from '../util/web_worker_transfer';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties';
-import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types';
+import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types.g';
 import {clamp} from '../util/util';
 import patternAttributes from './bucket/pattern_attributes';
 import EvaluationParameters from '../style/evaluation_parameters';
@@ -31,9 +31,9 @@ import type {FormattedSection} from '../style-spec/expression/types/formatted';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 export type BinderUniform = {
-  name: string;
-  property: string;
-  binding: Uniform<any>;
+    name: string;
+    property: string;
+    binding: Uniform<any>;
 };
 
 function packColor(color: Color): [number, number] {
@@ -72,33 +72,33 @@ function packColor(color: Color): [number, number] {
  */
 
 interface AttributeBinder {
-  populatePaintArray(
-    length: number,
-    feature: Feature,
-    imagePositions: {[_: string]: ImagePosition},
-    canonical?: CanonicalTileID,
-    formattedSection?: FormattedSection
-  ): void;
-  updatePaintArray(
-    start: number,
-    length: number,
-    feature: Feature,
-    featureState: FeatureState,
-    imagePositions: {[_: string]: ImagePosition}
-  ): void;
-  upload(a: Context): void;
-  destroy(): void;
+    populatePaintArray(
+        length: number,
+        feature: Feature,
+        imagePositions: {[_: string]: ImagePosition},
+        canonical?: CanonicalTileID,
+        formattedSection?: FormattedSection
+    ): void;
+    updatePaintArray(
+        start: number,
+        length: number,
+        feature: Feature,
+        featureState: FeatureState,
+        imagePositions: {[_: string]: ImagePosition}
+    ): void;
+    upload(a: Context): void;
+    destroy(): void;
 }
 
 interface UniformBinder {
-  uniformNames: Array<string>;
-  setUniform(
-    uniform: Uniform<any>,
-    globals: GlobalProperties,
-    currentValue: PossiblyEvaluatedPropertyValue<any>,
-    uniformName: string
-  ): void;
-  getBinding(context: Context, location: WebGLUniformLocation, name: string): Partial<Uniform<any>>;
+    uniformNames: Array<string>;
+    setUniform(
+        uniform: Uniform<any>,
+        globals: GlobalProperties,
+        currentValue: PossiblyEvaluatedPropertyValue<any>,
+        uniformName: string
+    ): void;
+    getBinding(context: Context, location: WebGLUniformLocation, name: string): Partial<Uniform<any>>;
 }
 
 class ConstantBinder implements UniformBinder {
@@ -113,9 +113,9 @@ class ConstantBinder implements UniformBinder {
     }
 
     setUniform(
-      uniform: Uniform<any>,
-      globals: GlobalProperties,
-      currentValue: PossiblyEvaluatedPropertyValue<unknown>
+        uniform: Uniform<any>,
+        globals: GlobalProperties,
+        currentValue: PossiblyEvaluatedPropertyValue<unknown>
     ): void {
         uniform.set(currentValue.constantOr(this.value));
     }
@@ -129,7 +129,7 @@ class ConstantBinder implements UniformBinder {
 
 class CrossFadedConstantBinder implements UniformBinder {
     uniformNames: Array<string>;
-    patternFrom: Array<number> ;
+    patternFrom: Array<number>;
     patternTo: Array<number>;
     pixelRatioFrom: number;
     pixelRatioTo: number;
@@ -152,9 +152,9 @@ class CrossFadedConstantBinder implements UniformBinder {
     setUniform(uniform: Uniform<any>, globals: GlobalProperties, currentValue: PossiblyEvaluatedPropertyValue<unknown>, uniformName: string) {
         const pos =
             uniformName === 'u_pattern_to' ? this.patternTo :
-            uniformName === 'u_pattern_from' ? this.patternFrom :
-            uniformName === 'u_pixel_ratio_to' ? this.pixelRatioTo :
-            uniformName === 'u_pixel_ratio_from' ? this.pixelRatioFrom : null;
+                uniformName === 'u_pattern_from' ? this.patternFrom :
+                    uniformName === 'u_pixel_ratio_to' ? this.pixelRatioTo :
+                        uniformName === 'u_pixel_ratio_from' ? this.pixelRatioFrom : null;
         if (pos) uniform.set(pos);
     }
 
@@ -175,7 +175,7 @@ class SourceExpressionBinder implements AttributeBinder {
     paintVertexBuffer: VertexBuffer;
 
     constructor(expression: SourceExpression, names: Array<string>, type: string, PaintVertexArray: {
-      new (...args: any): StructArray;
+        new (...args: any): StructArray;
     }) {
         this.expression = expression;
         this.type = type;
@@ -245,7 +245,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
     paintVertexBuffer: VertexBuffer;
 
     constructor(expression: CompositeExpression, names: Array<string>, type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
-      new (...args: any): StructArray;
+        new (...args: any): StructArray;
     }) {
         this.expression = expression;
         this.uniformNames = names.map(name => `u_${name}_t`);
@@ -332,7 +332,7 @@ class CrossFadedCompositeBinder implements AttributeBinder {
     paintVertexAttributes: Array<StructArrayMember>;
 
     constructor(expression: CompositeExpression, type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
-      new (...args: any): StructArray;
+        new (...args: any): StructArray;
     }, layerId: string) {
         this.expression = expression;
         this.type = type;
@@ -485,11 +485,11 @@ export default class ProgramConfiguration {
     }
 
     updatePaintArrays(
-      featureStates: FeatureStates,
-      featureMap: FeaturePositionMap,
-      vtLayer: VectorTileLayer,
-      layer: TypedStyleLayer,
-      imagePositions: {[_: string]: ImagePosition}
+        featureStates: FeatureStates,
+        featureMap: FeaturePositionMap,
+        vtLayer: VectorTileLayer,
+        layer: TypedStyleLayer,
+        imagePositions: {[_: string]: ImagePosition}
     ): boolean {
         let dirty: boolean = false;
         for (const id in featureStates) {
@@ -576,10 +576,10 @@ export default class ProgramConfiguration {
     }
 
     setUniforms(
-      context: Context,
-      binderUniforms: Array<BinderUniform>,
-      properties: any,
-      globals: GlobalProperties
+        context: Context,
+        binderUniforms: Array<BinderUniform>,
+        properties: any,
+        globals: GlobalProperties
     ) {
         // Uniform state bindings are owned by the Program, but we set them
         // from within the ProgramConfiguraton's binder members.

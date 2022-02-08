@@ -2,8 +2,8 @@ import {createMap as globalCreateMap, setPerformance, setWebGlContext} from '../
 import Marker from './marker';
 import Popup from './popup';
 import LngLat from '../geo/lng_lat';
-import Point from '../util/point';
-import simulate from '../../test/util/simulate_interaction';
+import Point from '@mapbox/point-geometry';
+import simulate from '../../test/unit/lib/simulate_interaction';
 
 function createMap(options = {}) {
     const container = window.document.createElement('div');
@@ -46,16 +46,16 @@ describe('marker', () => {
 
         // initial dimensions of svg element
         expect(
-        defaultMarker.getElement().children[0].getAttribute('height').includes('41')
+            defaultMarker.getElement().children[0].getAttribute('height').includes('41')
         ).toBeTruthy();
         expect(defaultMarker.getElement().children[0].getAttribute('width').includes('27')).toBeTruthy();
 
         // (41 * 0.8) = 32.8, (27 * 0.8) = 21.6
         expect(
-        smallerMarker.getElement().children[0].getAttribute('height').includes('32.8')
+            smallerMarker.getElement().children[0].getAttribute('height').includes('32.8')
         ).toBeTruthy();
         expect(
-        smallerMarker.getElement().children[0].getAttribute('width').includes('21.6')
+            smallerMarker.getElement().children[0].getAttribute('width').includes('21.6')
         ).toBeTruthy();
 
         // (41 * 2) = 82, (27 * 2) = 54
@@ -287,49 +287,49 @@ describe('marker', () => {
 
         // marker should default to above since it has enough space
         expect(
-        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom')
+            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom')
         ).toBeTruthy();
 
         // move marker to the top forcing the popup to below
         marker.setLngLat(map.unproject([mapHeight / 2, markerTop]));
         expect(
-        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top')
+            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top')
         ).toBeTruthy();
 
         // move marker to the right forcing the popup to the left
         marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight / 2]));
         expect(
-        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-right')
+            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-right')
         ).toBeTruthy();
 
         // move marker to the left forcing the popup to the right
         marker.setLngLat(map.unproject([markerRight, mapHeight / 2]));
         expect(
-        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-left')
+            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-left')
         ).toBeTruthy();
 
         // move marker to the top left forcing the popup to the bottom right
         marker.setLngLat(map.unproject([markerRight, markerTop]));
         expect(
-        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-left')
+            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-left')
         ).toBeTruthy();
 
         // move marker to the top right forcing the popup to the bottom left
         marker.setLngLat(map.unproject([mapHeight - markerRight, markerTop]));
         expect(
-        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-right')
+            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-right')
         ).toBeTruthy();
 
         // move marker to the bottom left forcing the popup to the top right
         marker.setLngLat(map.unproject([markerRight, mapHeight]));
         expect(
-        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-left')
+            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-left')
         ).toBeTruthy();
 
         // move marker to the bottom right forcing the popup to the top left
         marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight]));
         expect(
-        marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right')
+            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right')
         ).toBeTruthy();
 
     });

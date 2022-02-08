@@ -1,4 +1,5 @@
-import {FillExtrusionLayoutArray, PosArray} from '../array_types';
+import {FillExtrusionLayoutArray, PosArray} from '../array_types.g';
+
 import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes';
 import SegmentVector from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
@@ -29,7 +30,7 @@ import type FillExtrusionStyleLayer from '../../style/style_layer/fill_extrusion
 import type Context from '../../gl/context';
 import type IndexBuffer from '../../gl/index_buffer';
 import type VertexBuffer from '../../gl/vertex_buffer';
-import type Point from '../../util/point';
+import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
@@ -160,7 +161,7 @@ class FillExtrusionBucket implements Bucket {
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
-        const centroid = { x: 0, y: 0, vertexCount: 0 };
+        const centroid = {x: 0, y: 0, vertexCount: 0};
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             let numVertices = 0;
             for (const ring of polygon) {
@@ -272,7 +273,7 @@ class FillExtrusionBucket implements Bucket {
         }
 
         // remember polygon centroid to calculate elevation in GPU
-        for (let i=0; i<centroid.vertexCount; i++) this.centroidVertexArray.emplaceBack(
+        for (let i = 0; i < centroid.vertexCount; i++) this.centroidVertexArray.emplaceBack(
             Math.floor(centroid.x / centroid.vertexCount),
             Math.floor(centroid.y / centroid.vertexCount)
         );

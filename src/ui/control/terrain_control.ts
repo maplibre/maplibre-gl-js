@@ -5,8 +5,8 @@ import type Map from '../map';
 import type {IControl} from './control';
 
 type TerrainOptions = {
-  id?: string;
-  options?: {exaggeration: number; elevationOffset: number}
+    id?: string;
+    options?: {exaggeration: number; elevationOffset: number};
 };
 
 /**
@@ -58,11 +58,11 @@ class TerrainControl implements IControl {
 
     _toggleTerrain() {
         if (this._map.style.terrainSourceCache.isEnabled()) {
-            this._map.removeTerrain()
+            this._map.removeTerrain();
         } else {
-            this._map.addTerrain(this.options.id, this.options.options)
+            this._map.addTerrain(this.options.id, this.options.options);
         }
-        this._updateTerrainIcon()
+        this._updateTerrainIcon();
     }
 
     _updateTerrainIcon() {
@@ -70,10 +70,10 @@ class TerrainControl implements IControl {
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled', 'mapboxgl-ctrl-terrain-enabled');
         if (this._map.isTerrainLoaded()) {
             this._terrainButton.classList.add('maplibregl-ctrl-terrain-enabled', 'mapboxgl-ctrl-terrain-enabled');
-            this._terrainButton.title = this._map._getUIString(`TerrainControl.disableTerrain`);
+            this._terrainButton.title = this._map._getUIString('TerrainControl.disableTerrain');
         } else {
             this._terrainButton.classList.add('maplibregl-ctrl-terrain', 'mapboxgl-ctrl-terrain');
-            this._terrainButton.title = this._map._getUIString(`TerrainControl.enableTerrain`);
+            this._terrainButton.title = this._map._getUIString('TerrainControl.enableTerrain');
         }
     }
 }

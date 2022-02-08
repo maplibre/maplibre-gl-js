@@ -3,13 +3,13 @@ import assert from 'assert';
 import {register} from './web_worker_transfer';
 
 export type Size = {
-  width: number;
-  height: number;
+    width: number;
+    height: number;
 };
 
 type Point2D = {
-  x: number;
-  y: number;
+    x: number;
+    y: number;
 };
 
 function createImage(image: any, {
@@ -21,7 +21,7 @@ function createImage(image: any, {
     } else if (data instanceof Uint8ClampedArray) {
         data = new Uint8Array(data.buffer);
     } else if (data.length !== width * height * channels) {
-        throw new RangeError('mismatched image size');
+        throw new RangeError(`mismatched image size. expected: ${data.length} but got: ${width * height * channels}`);
     }
     image.width = width;
     image.height = height;

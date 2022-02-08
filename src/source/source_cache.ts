@@ -7,7 +7,7 @@ import MercatorCoordinate from '../geo/mercator_coordinate';
 import {keysDifference} from '../util/util';
 import EXTENT from '../data/extent';
 import Context from '../gl/context';
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import browser from '../util/browser';
 import {OverscaledTileID} from './tile_id';
 import assert from 'assert';
@@ -46,10 +46,10 @@ class SourceCache extends Evented {
     _prevLng: number;
     _cache: TileCache;
     _timers: {
-      [_ in any]: ReturnType<typeof setTimeout>;
+        [_ in any]: ReturnType<typeof setTimeout>;
     };
     _cacheTimers: {
-      [_ in any]: ReturnType<typeof setTimeout>;
+        [_ in any]: ReturnType<typeof setTimeout>;
     };
     _maxTileCacheSize: number;
     _paused: boolean;
@@ -162,7 +162,9 @@ class SourceCache extends Evented {
 
     _abortTile(tile: Tile) {
         if (this._source.abortTile)
-            return this._source.abortTile(tile, () => {});
+            this._source.abortTile(tile, () => {});
+
+        this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
     }
 
     serialize() {
@@ -334,12 +336,12 @@ class SourceCache extends Evented {
      */
     _retainLoadedChildren(
         idealTiles: {
-          [_ in any]: OverscaledTileID;
+            [_ in any]: OverscaledTileID;
         },
         zoom: number,
         maxCoveringZoom: number,
         retain: {
-          [_ in any]: OverscaledTileID;
+            [_ in any]: OverscaledTileID;
         }
     ) {
         for (const id in this._tiles) {
@@ -519,10 +521,10 @@ class SourceCache extends Evented {
         if (this.usedForTerrain) {
             const parents = {};
             for (const tileID of idealTileIDs) {
-               if (tileID.canonical.z > this._source.minzoom) {
-                  const parent = tileID.scaledTo(tileID.canonical.z - 1);
-                  parents[parent.key] = parent;
-               }
+                if (tileID.canonical.z > this._source.minzoom) {
+                    const parent = tileID.scaledTo(tileID.canonical.z - 1);
+                    parents[parent.key] = parent;
+                }
             }
             idealTileIDs = idealTileIDs.concat(Object.values(parents));
         }
@@ -583,7 +585,7 @@ class SourceCache extends Evented {
                         idealRasterTileIDs[children[1].key] = retain[children[1].key] = children[1];
                         idealRasterTileIDs[children[2].key] = retain[children[2].key] = children[2];
                         idealRasterTileIDs[children[3].key] = retain[children[3].key] = children[3];
-                        delete(missingTileIDs[key]);
+                        delete (missingTileIDs[key]);
                     }
                 }
                 // search for parent for each missing tile
@@ -593,7 +595,7 @@ class SourceCache extends Evented {
                         idealRasterTileIDs[parent.tileID.key] = retain[parent.tileID.key] = parent.tileID;
                         // remove idealTiles which would be rendered twice
                         for (const key in idealRasterTileIDs) {
-                            if (idealRasterTileIDs[key].isChildOf(parent.tileID)) delete(idealRasterTileIDs[key]);
+                            if (idealRasterTileIDs[key].isChildOf(parent.tileID)) delete (idealRasterTileIDs[key]);
                         }
                     }
                 }

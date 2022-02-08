@@ -1,6 +1,6 @@
 import Queue from 'tinyqueue';
 
-import Point from './point';
+import Point from '@mapbox/point-geometry';
 import {distToSegmentSquared} from './intersection_tests';
 
 /**
@@ -14,9 +14,9 @@ import {distToSegmentSquared} from './intersection_tests';
  * @private
  */
 export default function(
-  polygonRings: Array<Array<Point>>,
-  precision: number = 1,
-  debug: boolean = false
+    polygonRings: Array<Array<Point>>,
+    precision: number = 1,
+    debug: boolean = false
 ): Point {
     // find the bounding box of the outer ring
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;

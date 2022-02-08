@@ -9,14 +9,14 @@ import type {Type} from './types';
 import type {Value} from './values';
 
 export type Varargs = {
-  type: Type;
+    type: Type;
 };
 type Signature = Array<Type> | Varargs;
 type Evaluate = (b: EvaluationContext, a: Array<Expression>) => Value;
 
 type Definition = [Type, Signature, Evaluate] | {
-  type: Type;
-  overloads: Array<[Signature, Evaluate]>;
+    type: Type;
+    overloads: Array<[Signature, Evaluate]>;
 };
 
 class CompoundExpression implements Expression {

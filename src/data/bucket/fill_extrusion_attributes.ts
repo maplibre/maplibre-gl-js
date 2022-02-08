@@ -6,7 +6,7 @@ const layout = createLayout([
 ], 4);
 
 export const centroidAttributes = createLayout([
-   {name: 'a_centroid', components: 2, type: 'Int16'}
+    {name: 'a_centroid', components: 2, type: 'Int16'}
 ], 4);
 
 export default layout;

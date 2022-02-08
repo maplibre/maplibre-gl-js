@@ -1,4 +1,4 @@
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 import drawCollisionDebug from './draw_collision_debug';
 
 import SegmentVector from '../data/segment';
@@ -36,26 +36,26 @@ import type {SymbolBuffers} from '../data/bucket/symbol_bucket';
 export default drawSymbols;
 
 type SymbolTileRenderState = {
-  segments: SegmentVector;
-  sortKey: number;
-  terrain: any;
-  state: {
-    program: any;
-    buffers: SymbolBuffers;
-    uniformValues: any;
-    atlasTexture: Texture;
-    atlasTextureIcon: Texture | null;
-    atlasInterpolation: any;
-    atlasInterpolationIcon: any;
-    isSDF: boolean;
-    hasHalo: boolean;
-  };
+    segments: SegmentVector;
+    sortKey: number;
+    terrain: any;
+    state: {
+        program: any;
+        buffers: SymbolBuffers;
+        uniformValues: any;
+        atlasTexture: Texture;
+        atlasTextureIcon: Texture | null;
+        atlasInterpolation: any;
+        atlasInterpolationIcon: any;
+        isSDF: boolean;
+        hasHalo: boolean;
+    };
 };
 
 const identityMat4 = mat4.identity(new Float32Array(16));
 
 function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
-  [_ in CrossTileID]: VariableOffset;
+    [_ in CrossTileID]: VariableOffset;
 }) {
     if (painter.renderPass !== 'translucent') return;
 
@@ -136,13 +136,14 @@ function updateVariableAnchors(coords, painter, layer, sourceCache, rotationAlig
             const tileScale = Math.pow(2, tr.zoom - tile.tileID.overscaledZ);
             const getElevation = (x: number, y: number) => painter.style.terrainSourceCache.getElevationWithExaggeration(coord, x, y);
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets, symbolSize,
-                                  tr, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, getElevation);
+                tr, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, getElevation);
         }
     }
 }
 
 function updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets, symbolSize,
-                               transform, labelPlaneMatrix, posMatrix, tileScale, size, updateTextFitIcon, getElevation) {
+    transform, labelPlaneMatrix, posMatrix, tileScale, size, updateTextFitIcon, getElevation) {
+
     const placedSymbols = bucket.text.placedSymbolArray;
     const dynamicTextLayoutVertexArray = bucket.text.dynamicLayoutVertexArray;
     const dynamicIconLayoutVertexArray = bucket.icon.dynamicLayoutVertexArray;
@@ -227,7 +228,7 @@ function getSymbolProgramName(isSDF: boolean, isText: boolean, bucket: SymbolBuc
 }
 
 function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate, translateAnchor,
-                          rotationAlignment, pitchAlignment, keepUpright, stencilMode, colorMode) {
+    rotationAlignment, pitchAlignment, keepUpright, stencilMode, colorMode) {
 
     const context = painter.context;
     const gl = context.gl;
@@ -316,12 +317,12 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
         if (isSDF) {
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, painter, matrix,
-                uLabelPlaneMatrix, uglCoordMatrix, isText, texSize, true);
+                    size, rotateInShader, pitchWithMap, painter, matrix,
+                    uLabelPlaneMatrix, uglCoordMatrix, isText, texSize, true);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, painter, matrix,
-                uLabelPlaneMatrix, uglCoordMatrix, texSize, texSizeIcon);
+                    size, rotateInShader, pitchWithMap, painter, matrix,
+                    uLabelPlaneMatrix, uglCoordMatrix, texSize, texSizeIcon);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,

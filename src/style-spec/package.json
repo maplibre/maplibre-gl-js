@@ -1,7 +1,7 @@
 {
   "name": "@maplibre/maplibre-gl-style-spec",
   "description": "a specification for maplibre gl styles",
-  "version": "14.0.2",
+  "version": "15.1.0",
   "author": "MapLibre",
   "keywords": [
     "mapbox",

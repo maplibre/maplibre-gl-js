@@ -1,4 +1,4 @@
-import {createSymbolBucket} from '../../test/util/create_symbol_layer_jest';
+import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer';
 import Tile from '../source/tile';
 import GeoJSONWrapper, {Feature} from '../source/geojson_wrapper';
 import {OverscaledTileID} from '../source/tile_id';
@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import vtpbf from 'vt-pbf';
 import FeatureIndex from '../data/feature_index';
-import {CollisionBoxArray} from '../data/array_types';
+import {CollisionBoxArray} from '../data/array_types.g';
 import {extend} from '../util/util';
 import {serialize, deserialize} from '../util/web_worker_transfer';
 
@@ -273,7 +273,7 @@ describe('rtl text detection', () => {
 });
 
 function createRawTileData() {
-    return fs.readFileSync(path.join(__dirname, '../../test/fixtures/mbsv5-6-18-23.vector.pbf'));
+    return fs.readFileSync(path.join(__dirname, '../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
 }
 
 function createVectorData(options?) {

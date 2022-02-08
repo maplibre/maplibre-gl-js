@@ -6,7 +6,7 @@ import {Evented} from '../util/evented';
 import Style from '../style/style';
 import Texture from '../render/texture';
 import {RGBAImage} from '../util/image';
-import {PosArray, TriangleIndexArray} from '../data/array_types';
+import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import {number as mix} from '../style-spec/util/interpolate.js';
 import posAttributes from '../data/pos_attributes';
 import SegmentVector from '../data/segment';
@@ -16,10 +16,9 @@ import type Context from '../gl/context';
 import type Painter from '../render/painter';
 import type RasterDEMTileSource from '../source/raster_dem_tile_source';
 import type Framebuffer from '../gl/framebuffer';
-import { warnOnce } from '../util/util';
+import {warnOnce} from '../util/util';
 import VertexBuffer from '../gl/vertex_buffer';
 import IndexBuffer from '../gl/index_buffer';
-
 
 /**
  * This is the main class which handles most of the 3D Terrain logic. It has the follwing topics:
@@ -69,7 +68,7 @@ class TerrainSourceCache extends Evented {
     _emptyDepthTexture: Texture;
     // GL Objects for the terrain-mesh
     // The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
-    _mesh: { indexBuffer: IndexBuffer, vertexBuffer: VertexBuffer, segments: SegmentVector };
+    _mesh: { indexBuffer: IndexBuffer; vertexBuffer: VertexBuffer; segments: SegmentVector };
     // coords index contains a list of tileID.keys. This index is used to identify
     // the tile via the alpha-cannel in the coords-texture.
     // As the alpha-channel has 1 Byte a max of 255 tiles can rendered without an error.
@@ -84,7 +83,7 @@ class TerrainSourceCache extends Evented {
     _emptyDemMatrix: mat4;
     // as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
     // matrices to transform from vector-tile coords to raster-dem-tile coords.
-    _demMatrixCache: {[_: string]: { matrix: mat4, coord: OverscaledTileID }};
+    _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
     // because of overzooming raster-dem tiles this cache holds the corresponding
     // raster-dem-tile for a vector-tile.
     _sourceTileCache: {[_: string]: string};
@@ -154,10 +153,10 @@ class TerrainSourceCache extends Evented {
         this.rttFramebuffer.depthAttachment.set(context.createRenderbuffer(context.gl.DEPTH_COMPONENT16, size, size));
 
         // rerender corresponding tiles on terrain-dem source-tile updates
-        style.on("data", e => {
-            if (e.dataType == "source" && e.coord && this.isEnabled()) {
+        style.on('data', e => {
+            if (e.dataType === 'source' && e.coord && this.isEnabled()) {
                 // redraw current and overscaled terrain-tiles
-                if (e.sourceId == this._sourceCache.id) {
+                if (e.sourceId === this._sourceCache.id) {
                     for (const key in this._tiles) {
                         const tile = this._tiles[key];
                         if (tile.tileID.equals(e.coord) || tile.tileID.isChildOf(e.coord)) {
@@ -168,7 +167,7 @@ class TerrainSourceCache extends Evented {
                     style.map.transform.updateElevation();
                 }
                 // remember GeoJson tile updates in rerender cache
-                if (e.source.type == "geojson") {
+                if (e.source.type === 'geojson') {
                     this.rerender[e.sourceId] = this.rerender[e.sourceId] || {};
                     this.rerender[e.sourceId][e.tile.tileID.key] = true;
                 }
@@ -180,13 +179,15 @@ class TerrainSourceCache extends Evented {
      * Loads a 3D terrain-mesh
      * @param {SourceCache} sourceCache
      * @param options Allowed options are exaggeration & elevationOffset
+     * @param options.exaggeration
+     * @param options.elevationOffset
      */
     enable(sourceCache: SourceCache, options?: {exaggeration: number; elevationOffset: number}): void {
         sourceCache.usedForTerrain = true;
         sourceCache.tileSize = this.tileSize * 2 ** this.deltaZoom;
         this._sourceCache = sourceCache;
         ['exaggeration', 'elevationOffset'].forEach(key => {
-            if (options && options[key] != undefined) this[key] = options[key]
+            if (options && options[key] !== undefined) this[key] = options[key];
         });
     }
 
@@ -198,7 +199,7 @@ class TerrainSourceCache extends Evented {
         this._sourceCache.usedForTerrain = false;
         this._sourceCache = null;
         for (const key in this._tiles) {
-            let tile = this._tiles[key];
+            const tile = this._tiles[key];
             tile.textures.forEach(t => t.destroy());
             tile.textures = [];
         }
@@ -210,7 +211,7 @@ class TerrainSourceCache extends Evented {
      * @return {boolean}
      */
     isEnabled(): boolean {
-       return this._sourceCache ? true : false;
+        return !!this._sourceCache;
     }
 
     /**
@@ -233,20 +234,20 @@ class TerrainSourceCache extends Evented {
         })) {
             this._renderableTiles.push(tileID.key);
             tileIDs[tileID.key] = true;
-            if (! this._tiles[tileID.key]) {
+            if (!this._tiles[tileID.key]) {
                 tileID.posMatrix = new Float64Array(16) as any;
                 mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
             }
         }
         // remove duplicates from _renderHistory
-        this._renderHistory = this._renderHistory.filter((i, p) => this._renderHistory.indexOf(i) == p);
+        this._renderHistory = this._renderHistory.filter((i, p) => this._renderHistory.indexOf(i) === p);
         // free (GPU) memory from previously rendered not needed tiles
         while (this._renderHistory.length > 150) {
-            let tile = this._tiles[this._renderHistory.shift()];
+            const tile = this._tiles[this._renderHistory.shift()];
             if (tile && !tileIDs[tile.tileID.key]) {
-               tile.clearTextures(this._style.map.painter);
-               delete(this._tiles[tile.tileID.key]);
+                tile.clearTextures(this._style.map.painter);
+                delete (this._tiles[tile.tileID.key]);
             }
         }
     }
@@ -261,6 +262,7 @@ class TerrainSourceCache extends Evented {
 
     /**
      * get terrain tile by the TileID key
+     * @param id
      * @returns {Tile}
      */
     getTileByID(id: string): Tile {
@@ -274,7 +276,7 @@ class TerrainSourceCache extends Evented {
      */
     getTerrainCoords(tileID: OverscaledTileID): {[_: string]: OverscaledTileID} {
         const coords = {};
-        for (let key of this._renderableTiles) {
+        for (const key of this._renderableTiles) {
             const _tileID = this._tiles[key].tileID;
             if (_tileID.equals(tileID)) {
                 const coord = tileID.clone();
@@ -339,7 +341,7 @@ class TerrainSourceCache extends Evented {
         // find covering dem tile and prepare demTexture
         const sourceTile = this.getSourceTile(tileID, true);
         if (sourceTile && sourceTile.dem && (!sourceTile.demTexture || sourceTile.needsTerrainPrepare)) {
-            let context = this._style.map.painter.context;
+            const context = this._style.map.painter.context;
             sourceTile.demTexture = this._style.map.painter.getTileTexture(sourceTile.dem.stride);
             if (sourceTile.demTexture) sourceTile.demTexture.update(sourceTile.dem.getPixels(), {premultiply: false});
             else sourceTile.demTexture = new Texture(context, sourceTile.dem.getPixels(), context.gl.RGBA, {premultiply: false});
@@ -353,23 +355,23 @@ class TerrainSourceCache extends Evented {
             let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
             if (tileID.overscaledZ > tileID.canonical.z) {
                 if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
-                else warnOnce("cannot calculate elevation if elevation maxzoom > source.maxzoom")
+                else warnOnce('cannot calculate elevation if elevation maxzoom > source.maxzoom');
             }
             const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
             const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
             const demMatrix = mat4.fromScaling(new Float64Array(16) as any, [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
             mat4.translate(demMatrix, demMatrix, [dx * EXTENT, dy * EXTENT, 0]);
-            this._demMatrixCache[tileID.key] = { matrix: demMatrix, coord: tileID };
-         }
+            this._demMatrixCache[tileID.key] = {matrix: demMatrix, coord: tileID};
+        }
         // return uniform values & textures
         return {
-            u_depth: 2,
-            u_terrain: 3,
-            u_terrain_dim: sourceTile && sourceTile.dem && sourceTile.dem.dim || 1,
-            u_terrain_matrix: matrixKey ? this._demMatrixCache[tileID.key].matrix : this._emptyDemMatrix,
-            u_terrain_unpack: sourceTile && sourceTile.dem && sourceTile.dem.getUnpackVector() || this._emptyDemUnpack,
-            u_terrain_offset: this.elevationOffset,
-            u_terrain_exaggeration: this.exaggeration,
+            'u_depth': 2,
+            'u_terrain': 3,
+            'u_terrain_dim': sourceTile && sourceTile.dem && sourceTile.dem.dim || 1,
+            'u_terrain_matrix': matrixKey ? this._demMatrixCache[tileID.key].matrix : this._emptyDemMatrix,
+            'u_terrain_unpack': sourceTile && sourceTile.dem && sourceTile.dem.getUnpackVector() || this._emptyDemUnpack,
+            'u_terrain_offset': this.elevationOffset,
+            'u_terrain_exaggeration': this.exaggeration,
             texture: (sourceTile && sourceTile.demTexture || this._emptyDemTexture).texture,
             depthTexture: (this._fboDepthTexture || this._emptyDepthTexture).texture,
             tile: sourceTile
@@ -385,7 +387,7 @@ class TerrainSourceCache extends Evented {
      * @param {number} extent optional, default 8192
      * @returns {number}
      */
-    getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number=EXTENT): number {
+    getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         if (!this.isEnabled()) return 0.0;
         if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return this.elevationOffset;
         let elevation = 0;
@@ -411,7 +413,7 @@ class TerrainSourceCache extends Evented {
      * @param {number} extent optional, default 8192
      * @returns {number}
      */
-    getElevationWithExaggeration(tileID: OverscaledTileID, x: number, y: number, extent: number=EXTENT): number {
+    getElevationWithExaggeration(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         if (!this.isEnabled()) return 0.0;
         return this.getElevation(tileID, x, y, extent) * this.exaggeration;
     }
@@ -419,12 +421,13 @@ class TerrainSourceCache extends Evented {
     /**
      * get a framebuffer as big as the map-div, which will be used to render depth & coords into a texture
      * @param {Painter} painter
+     * @param texture
      * @returns {Framebuffer}
      */
     getFramebuffer(painter: Painter, texture: string): Framebuffer {
         const width = painter.width / devicePixelRatio;
         const height = painter.height / devicePixelRatio;
-        if (this._fbo && (this._fbo.width != width || this._fbo.height != height)) {
+        if (this._fbo && (this._fbo.width !== width || this._fbo.height !== height)) {
             this._fbo.destroy();
             this._fboCoordsTexture.destroy();
             this._fboDepthTexture.destroy();
@@ -433,18 +436,18 @@ class TerrainSourceCache extends Evented {
             delete this._fboCoordsTexture;
         }
         if (!this._fboCoordsTexture) {
-            this._fboCoordsTexture = new Texture(painter.context, { width: width, height: height, data: null }, painter.context.gl.RGBA, {premultiply: false});
+            this._fboCoordsTexture = new Texture(painter.context, {width, height, data: null}, painter.context.gl.RGBA, {premultiply: false});
             this._fboCoordsTexture.bind(painter.context.gl.NEAREST, painter.context.gl.CLAMP_TO_EDGE);
         }
         if (!this._fboDepthTexture) {
-            this._fboDepthTexture = new Texture(painter.context, { width: width, height: height, data: null }, painter.context.gl.RGBA, {premultiply: false});
+            this._fboDepthTexture = new Texture(painter.context, {width, height, data: null}, painter.context.gl.RGBA, {premultiply: false});
             this._fboDepthTexture.bind(painter.context.gl.NEAREST, painter.context.gl.CLAMP_TO_EDGE);
         }
-        if (! this._fbo) {
+        if (!this._fbo) {
             this._fbo = painter.context.createFramebuffer(width, height, true);
             this._fbo.depthAttachment.set(painter.context.createRenderbuffer(painter.context.gl.DEPTH_COMPONENT16, width, height));
         }
-        this._fbo.colorAttachment.set(texture == "coords" ? this._fboCoordsTexture.texture : this._fboDepthTexture.texture);
+        this._fbo.colorAttachment.set(texture === 'coords' ? this._fboCoordsTexture.texture : this._fboDepthTexture.texture);
         return this._fbo;
     }
 
@@ -453,7 +456,7 @@ class TerrainSourceCache extends Evented {
      * @param {Date} time
      * @returns {Array<Tile>}
      */
-    tilesAfterTime(time=Date.now()): Array<Tile> {
+    tilesAfterTime(time = Date.now()): Array<Tile> {
         return Object.values(this._tiles).filter(t => t.timeLoaded >= time);
     }
 
@@ -466,17 +469,18 @@ class TerrainSourceCache extends Evented {
         if (this._mesh) return this._mesh;
         const vertexArray = new PosArray(), indexArray = new TriangleIndexArray();
         const meshSize = this.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
-        for (let y=0; y<=meshSize; y++) for (let x=0; x<=meshSize; x++)
+        for (let y = 0; y <= meshSize; y++) for (let x = 0; x <= meshSize; x++)
             vertexArray.emplaceBack(x * delta, y * delta);
-        for (let y=0; y<meshSize2; y+=meshSize+1) for (let x=0; x<meshSize; x++) {
-            indexArray.emplaceBack(x+y, meshSize+x+y+1, meshSize+x+y+2);
-            indexArray.emplaceBack(x+y, meshSize+x+y+2, x+y+1);
+        for (let y = 0; y < meshSize2; y += meshSize + 1) for (let x = 0; x < meshSize; x++) {
+            indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
+            indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
-        return this._mesh = {
+        this._mesh = {
             indexBuffer: context.createIndexBuffer(indexArray),
             vertexBuffer: context.createVertexBuffer(vertexArray, posAttributes.members),
             segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
         };
+        return this._mesh;
     }
 
     /**
@@ -493,16 +497,17 @@ class TerrainSourceCache extends Evented {
     getCoordsTexture(context: Context): Texture {
         if (this._coordsTexture) return this._coordsTexture;
         const data = new Uint8Array(this._coordsTextureSize * this._coordsTextureSize * 4);
-        for (let y=0, i=0; y<this._coordsTextureSize; y++) for (let x=0; x<this._coordsTextureSize; x++, i+=4) {
+        for (let y = 0, i = 0; y < this._coordsTextureSize; y++) for (let x = 0; x < this._coordsTextureSize; x++, i += 4) {
             data[i + 0] = x & 255;
             data[i + 1] = y & 255;
             data[i + 2] = ((x >> 8) << 4) | (y >> 8);
             data[i + 3] = 0;
         }
-        let image = new RGBAImage({width: this._coordsTextureSize, height: this._coordsTextureSize}, new Uint8Array(data.buffer));
-        let texture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
+        const image = new RGBAImage({width: this._coordsTextureSize, height: this._coordsTextureSize}, new Uint8Array(data.buffer));
+        const texture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
         texture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
-        return this._coordsTexture = texture;
+        this._coordsTexture = texture;
+        return texture;
     }
 }
 

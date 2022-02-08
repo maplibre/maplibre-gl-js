@@ -5,16 +5,16 @@ import type Map from '../map';
 import type {ControlPosition, IControl} from './control';
 
 type AttributionOptions = {
-  compact?: boolean;
-  customAttribution?: string | Array<string>;
+    compact?: boolean;
+    customAttribution?: string | Array<string>;
 };
 
 /**
- * An `AttributionControl` control presents the map's [attribution information](https://docs.mapbox.com/help/how-mapbox-works/attribution/).
+ * An `AttributionControl` control presents the map's attribution information.
  *
  * @implements {IControl}
  * @param {Object} [options]
- * @param {boolean} [options.compact] If `true`, force a compact attribution that shows the full attribution on mouse hover. If `false`, force the full attribution control. The default is a responsive attribution that collapses when the map is less than 640 pixels wide. **Attribution should not be collapsed if it can comfortably fit on the map. `compact` should only be used to modify default attribution when map size makes it impossible to fit [default attribution](https://docs.mapbox.com/help/how-mapbox-works/attribution/) and when the automatic compact resizing for default settings are not sufficient.**
+ * @param {boolean} [options.compact] If `true`, force a compact attribution that shows the full attribution on mouse hover. If `false`, force the full attribution control. The default is a responsive attribution that collapses when the map is less than 640 pixels wide. **Attribution should not be collapsed if it can comfortably fit on the map. `compact` should only be used to modify default attribution when map size makes it impossible to fit default attribution and when the automatic compact resizing for default settings are not sufficient.**
  * @param {string | Array<string>} [options.customAttribution] String or strings to show in addition to any other attributions.
  * @example
  * var map = new maplibregl.Map({attributionControl: false})

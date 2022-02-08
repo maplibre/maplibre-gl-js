@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 import segment from '../segment';
 import LineBucket from './line_bucket';
 import LineStyleLayer from '../../style/style_layer/line_style_layer';
@@ -11,7 +11,7 @@ import EvaluationParameters from '../../style/evaluation_parameters';
 import {BucketFeature, BucketParameters} from '../bucket';
 
 // Load a line feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/fixtures/mbsv5-6-18-23.vector.pbf'))));
+const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.road.feature(0);
 
 function createLine(numPoints) {
@@ -96,7 +96,7 @@ describe('LineBucket', () => {
                 new Point(0, 0)
             ], polygon, undefined, undefined, undefined, undefined);
 
-            bucket.addFeature(feature, feature.loadGeometry(), undefined, undefined, undefined);
+            bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined);
         }).not.toThrow();
     });
 

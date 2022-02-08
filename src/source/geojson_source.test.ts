@@ -227,6 +227,33 @@ describe('GeoJSONSource#update', () => {
         } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
     });
 
+    test('forwards Supercluster options with worker request, ignore max zoom of source', done => {
+        const mockDispatcher = wrapDispatcher({
+            send(message, params) {
+                expect(message).toBe('geojson.loadData');
+                expect(params.superclusterOptions).toEqual({
+                    maxZoom: 12,
+                    minPoints: 3,
+                    extent: 8192,
+                    radius: 1600,
+                    log: false,
+                    generateId: true
+                });
+                done();
+            }
+        });
+
+        new GeoJSONSource('id', {
+            data: {},
+            maxzoom: 10,
+            cluster: true,
+            clusterMaxZoom: 12,
+            clusterRadius: 100,
+            clusterMinPoints: 3,
+            generateId: true
+        } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+    });
+
     test('transforms url before making request', () => {
         const mapStub = {
             _requestManager: {
@@ -291,7 +318,8 @@ describe('GeoJSONSource#update', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = {
-            transform: {} as Transform
+            transform: {} as Transform,
+            getPixelRatio() { return 1; }
         } as any;
 
         source.on('data', (e) => {
