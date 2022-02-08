@@ -52,7 +52,7 @@ export function getGeometry(feature, geometry, canonical: CanonicalTileID) {
             feature.type = 'Point';
             feature.geometry.push(...convertPoints(coords, canonical));
         } else if (type === 'LineString') {
-            feature.geometry.push(...convertLine(coords, canonical));
+            feature.geometry.push(convertLine(coords, canonical));
         } else if (type === 'MultiLineString') {
             feature.type = 'LineString';
             feature.geometry.push(...convertLines(coords, canonical));
