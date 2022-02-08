@@ -495,7 +495,7 @@ class Transform {
     getCameraPosition() {
         const lngLat = this.pointLocation(this.getCameraPoint());
         const altitude = Math.cos(this._pitch) * this.cameraToCenterDistance / this._pixelPerMeter;
-        return { lngLat: lngLat, altitude: altitude };
+        return { lngLat: lngLat, altitude: altitude + this.elevation };
     }
 
     // this method only works in combination with freezeElevation, because in this case
@@ -508,9 +508,8 @@ class Transform {
         if (!deltaElevation) return;
 
         // calculate mercator distance between camera & target
-        const cameraAltitude = this.getCameraPosition().altitude + this.elevation;
-        const cameraLngLat = this.pointLocation(this.getCameraPoint());
-        const camera = MercatorCoordinate.fromLngLat(cameraLngLat, cameraAltitude);
+        const cameraPosition = this.getCameraPosition();
+        const camera = MercatorCoordinate.fromLngLat(cameraPosition.lngLat, cameraPosition.altitude);
         const target = MercatorCoordinate.fromLngLat(center, elevation);
         const dx = camera.x - target.x, dy = camera.y - target.y, dz = camera.z - target.z;
         const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
@@ -645,7 +644,7 @@ class Transform {
         return new MercatorCoordinate(
             (tile.tileID.canonical.x * coordsSize + x) / worldSize,
             (tile.tileID.canonical.y * coordsSize + y) / worldSize,
-            this.terrainSourceCache.getElevation(tile.tileID, x, y, coordsSize)
+            this.terrainSourceCache.getElevationWithExaggeration(tile.tileID, x, y, coordsSize)
         );
     }
 

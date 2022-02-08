@@ -375,7 +375,8 @@ class Painter {
         const layerIds = this.style._order;
         const sourceCaches = this.style.sourceCaches;
         const renderToTexture = { background: true, fill: true, line: true, raster: true };
-        const isTerrainEnabled = this.style.terrainSourceCache.isEnabled();
+        const tsc = this.style.terrainSourceCache
+        const isTerrainEnabled = tsc.isEnabled();
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -401,7 +402,7 @@ class Painter {
             if (isTerrainEnabled) {
                 coordsDescendingInv[id] = {};
                 for (let c=0; c<coordsDescending[id].length; c++) {
-                    const coords = this.style.terrainSourceCache.getTerrainCoords(coordsDescending[id][c]);
+                    const coords = tsc.getTerrainCoords(coordsDescending[id][c]);
                     for (let key in coords) {
                         if (!coordsDescendingInv[id][key]) coordsDescendingInv[id][key] = [];
                         coordsDescendingInv[id][key].push(coords[key]);
@@ -437,11 +438,11 @@ class Painter {
             this.opaquePassCutoff = 0;
 
             // update coords/depth-framebuffer on camera movement, ore tile reloading
-            const newTiles = this.style.terrainSourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
+            const newTiles = tsc.tilesAfterTime(this.terrainFacilitator.renderTime);
             if (!mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
                 mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
                 this.terrainFacilitator.renderTime = Date.now();
-                updateTerrainFacilitators(this, this.style.terrainSourceCache);
+                updateTerrainFacilitators(this, tsc);
             }
         }
 
@@ -496,16 +497,20 @@ class Painter {
         const rerender = {}; // create a lookup which tiles should rendered to texture
         let renderableTiles = []; // all terrain-tiles for the current scene
         if (isTerrainEnabled) {
-            renderableTiles = this.style.terrainSourceCache.getRenderableTiles();
+            renderableTiles = tsc.getRenderableTiles();
             renderableTiles.forEach(tile => {
-                // rerender if there are more coords to render than in the last rendering
                 for (let source in coordsDescendingInvStr) {
+                    // rerender if there are more coords to render than in the last rendering
                     const coords = coordsDescendingInvStr[source][tile.tileID.key];
                     if (coords && coords != tile.textureCoords[source]) tile.clearTextures(this);
+                    // rerender if terrainSourceCache has marked tile for rerender
+                    if (tsc.rerender[source] && tsc.rerender[source][tile.tileID.key]) tile.clearTextures(this);
                 }
                 // rerender if there are no previous renderings
                 rerender[tile.tileID.key] = !tile.textures.length;
             });
+            // reset terrainSource rerender cache
+            tsc.rerender = {};
         }
 
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
@@ -517,23 +522,27 @@ class Painter {
                 // due that switching textures is relatively slow, the render
                 // layer-by-layer context here is not practicable. To bypass this problem
                 // this lines of code stack all layers and later render all at once.
-                // Because of the stylesheet possibility to mixing render-to-texture layers and 'live'-layers
-                // and 'live'-layers it is necessary to create more stacks. For example
+                // Because of the stylesheet possibility to mixing render-to-texture layers
+                // and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
                 // a symbol-layer is in between of fill-layers.
+
+                const isLastLayer = this.currentLayer + 1 == layerIds.length;
 
                 // remember background, fill, line & raster layer to render into a stack
                 if (renderToTexture[type]) {
                     if (!prevType || !renderToTexture[prevType]) stacks.push([]);
                     prevType = type;
                     stacks[stacks.length-1].push(layerIds[this.currentLayer]);
-                    continue; // rendering is done later, all in once
+                    // rendering is done later, all in once
+                    if (!isLastLayer) continue;
+                }
 
                 // in case a stack is finished render all collected stack-layers into a texture
-                } else if (renderToTexture[prevType] || type == "hillshade") {
+                if (renderToTexture[prevType] || type == "hillshade" || (renderToTexture[type] && isLastLayer)) {
                     prevType = type;
                     const stack = stacks.length - 1, layers = stacks[stack] || [];
                     for (const tile of renderableTiles) {
-                        prepareTerrain(this, this.style.terrainSourceCache, tile, stack);
+                        prepareTerrain(this, tsc, tile, stack);
                         if (rerender[tile.tileID.key]) {
                             this.context.clear({ color: Color.transparent });
                             for (let l=0; l<layers.length; l++) {
@@ -544,22 +553,22 @@ class Painter {
                                 if (layer.source) tile.textureCoords[layer.source] = coordsDescendingInvStr[layer.source][tile.tileID.key];
                             }
                         }
-                        drawTerrain(this, this.style.terrainSourceCache, tile);
+                        drawTerrain(this, tsc, tile);
                     }
 
                     // the hillshading layer is a special case because it changes on every camera-movement
-                    // so rerender it in eny case.
+                    // so rerender it in any case.
                     // FIXME-3D! check if rerendering is really necessary, depending on hillshade-illumination-anchor
                     if (type == "hillshade") {
                         stacks.push([layerIds[this.currentLayer]]);
                         for (const tile of renderableTiles) {
                             const coords = coordsDescendingInv[layer.source][tile.tileID.key];
                             // FIXME-3D! replace prepareTerrain with hillshading texture from prepareHillshading directly
-                            prepareTerrain(this, this.style.terrainSourceCache, tile, stacks.length - 1);
+                            prepareTerrain(this, tsc, tile, stacks.length - 1);
                             this.context.clear({ color: Color.transparent });
                             this._renderTileClippingMasks(layer, coords);
                             this.renderLayer(this, sourceCache, layer, coords);
-                            drawTerrain(this, this.style.terrainSourceCache, tile);
+                            drawTerrain(this, tsc, tile);
                         }
                         continue;
                     }
