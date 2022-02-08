@@ -6,8 +6,8 @@ import {OverscaledTileID} from '../../src/source/tile_id';
 
 export default class Layout extends Benchmark {
     tiles: Array<{
-      tileID: OverscaledTileID;
-      buffer: ArrayBuffer;
+        tileID: OverscaledTileID;
+        buffer: ArrayBuffer;
     }>;
     parser: TileParser;
     style: string | StyleSpecification;

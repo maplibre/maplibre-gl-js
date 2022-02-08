@@ -2,59 +2,59 @@ type ExpressionType = 'data-driven' | 'cross-faded' | 'cross-faded-data-driven' 
 type ExpressionParameters = Array<'zoom' | 'feature' | 'feature-state' | 'heatmap-density' | 'line-progress'>;
 
 type ExpressionSpecification = {
-  interpolated: boolean;
-  parameters: ExpressionParameters;
+    interpolated: boolean;
+    parameters: ExpressionParameters;
 };
 
 export type StylePropertySpecification = {
-  type: 'number';
-  'property-type': ExpressionType;
-  expression?: ExpressionSpecification;
-  transition: boolean;
-  default?: number;
+    type: 'number';
+    'property-type': ExpressionType;
+    expression?: ExpressionSpecification;
+    transition: boolean;
+    default?: number;
 } | {
-  type: 'string';
-  'property-type': ExpressionType;
-  expression?: ExpressionSpecification;
-  transition: boolean;
-  default?: string;
-  tokens?: boolean;
+    type: 'string';
+    'property-type': ExpressionType;
+    expression?: ExpressionSpecification;
+    transition: boolean;
+    default?: string;
+    tokens?: boolean;
 } | {
-  type: 'boolean';
-  'property-type': ExpressionType;
-  expression?: ExpressionSpecification;
-  transition: boolean;
-  default?: boolean;
+    type: 'boolean';
+    'property-type': ExpressionType;
+    expression?: ExpressionSpecification;
+    transition: boolean;
+    default?: boolean;
 } | {
-  type: 'enum';
-  'property-type': ExpressionType;
-  expression?: ExpressionSpecification;
-  values: {[_: string]: {}};
-  transition: boolean;
-  default?: string;
+    type: 'enum';
+    'property-type': ExpressionType;
+    expression?: ExpressionSpecification;
+    values: {[_: string]: {}};
+    transition: boolean;
+    default?: string;
 } | {
-  type: 'color';
-  'property-type': ExpressionType;
-  expression?: ExpressionSpecification;
-  transition: boolean;
-  default?: string;
-  overridable: boolean;
+    type: 'color';
+    'property-type': ExpressionType;
+    expression?: ExpressionSpecification;
+    transition: boolean;
+    default?: string;
+    overridable: boolean;
 } | {
-  type: 'array';
-  value: 'number';
-  'property-type': ExpressionType;
-  expression?: ExpressionSpecification;
-  length?: number;
-  transition: boolean;
-  default?: Array<number>;
+    type: 'array';
+    value: 'number';
+    'property-type': ExpressionType;
+    expression?: ExpressionSpecification;
+    length?: number;
+    transition: boolean;
+    default?: Array<number>;
 } | {
-  type: 'array';
-  value: 'string';
-  'property-type': ExpressionType;
-  expression?: ExpressionSpecification;
-  length?: number;
-  transition: boolean;
-  default?: Array<string>;
+    type: 'array';
+    value: 'string';
+    'property-type': ExpressionType;
+    expression?: ExpressionSpecification;
+    length?: number;
+    transition: boolean;
+    default?: Array<string>;
 };
 
 import v8 from './reference/v8.json';
@@ -115,6 +115,3 @@ export {
     validate,
     visit
 };
-
-(validate as any).parsed = validate;
-(validate as any).latest = validate;

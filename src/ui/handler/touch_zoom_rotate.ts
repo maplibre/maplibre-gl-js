@@ -1,4 +1,4 @@
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 import DOM from '../../util/dom';
 
 class TwoTouchHandler {
@@ -70,7 +70,7 @@ class TwoTouchHandler {
     }
 
     enable(options?: {
-      around?: 'center';
+        around?: 'center';
     } | null) {
         this._enabled = true;
         this._aroundCenter = !!options && options.around === 'center';

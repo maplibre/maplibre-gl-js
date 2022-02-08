@@ -5,7 +5,7 @@
 <script>
 // stub performance.now for deterministic rendering per-frame;
 // we'll later increment the value by 16 on every frame (16ms per frame for 60fps)
-const now = performance.now();
+let now = performance.now(); //eslint-disable-line prefer-const
 window.performance.now = () => now;
 </script>
 <script src="../dist/maplibre-gl.js"></script>
@@ -16,7 +16,7 @@ maplibregl.workerCount = 1;
 
 const map = new maplibregl.Map({
     container: document.getElementById('map'),
-    style: 'mapbox://styles/mapbox/streets-v11',
+    style: 'https://api.maptiler.com/maps/streets/style.json?key=get_a_key_at_maptiler_cloud',
     center: [-77.07842066675323, 38.890315130853566],
     zoom: 11
 });

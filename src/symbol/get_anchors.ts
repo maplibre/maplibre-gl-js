@@ -3,7 +3,7 @@ import {number as interpolate} from '../style-spec/util/interpolate';
 import Anchor from '../symbol/anchor';
 import checkMaxAngle from './check_max_angle';
 
-import type Point from '../util/point';
+import type Point from '@mapbox/point-geometry';
 import type {Shaping, PositionedIcon} from './shaping';
 
 export {getAnchors, getCenterAnchor};
@@ -17,9 +17,9 @@ function getLineLength(line: Array<Point>): number {
 }
 
 function getAngleWindowSize(
-  shapedText: Shaping,
-  glyphSize: number,
-  boxScale: number
+    shapedText: Shaping,
+    glyphSize: number,
+    boxScale: number
 ): number {
     return shapedText ?
         3 / 5 * glyphSize * boxScale :
@@ -33,11 +33,11 @@ function getShapedLabelLength(shapedText?: Shaping | null, shapedIcon?: Position
 }
 
 function getCenterAnchor(line: Array<Point>,
-                         maxAngle: number,
-                         shapedText: Shaping,
-                         shapedIcon: PositionedIcon,
-                         glyphSize: number,
-                         boxScale: number) {
+    maxAngle: number,
+    shapedText: Shaping,
+    shapedIcon: PositionedIcon,
+    glyphSize: number,
+    boxScale: number) {
     const angleWindowSize = getAngleWindowSize(shapedText, glyphSize, boxScale);
     const labelLength = getShapedLabelLength(shapedText, shapedIcon) * boxScale;
 
@@ -71,14 +71,14 @@ function getCenterAnchor(line: Array<Point>,
 }
 
 function getAnchors(line: Array<Point>,
-                    spacing: number,
-                    maxAngle: number,
-                    shapedText: Shaping,
-                    shapedIcon: PositionedIcon,
-                    glyphSize: number,
-                    boxScale: number,
-                    overscaling: number,
-                    tileExtent: number) {
+    spacing: number,
+    maxAngle: number,
+    shapedText: Shaping,
+    shapedIcon: PositionedIcon,
+    glyphSize: number,
+    boxScale: number,
+    overscaling: number,
+    tileExtent: number) {
 
     // Resample a line to get anchor points for labels and check that each
     // potential label passes text-max-angle check and has enough froom to fit

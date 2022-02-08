@@ -3,7 +3,7 @@ import DOM from '../../util/dom';
 import {Event} from '../../util/evented';
 
 import type Map from '../map';
-import type Point from '../../util/point';
+import type Point from '@mapbox/point-geometry';
 
 /**
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.
@@ -24,7 +24,7 @@ class BoxZoomHandler {
      * @private
      */
     constructor(map: Map, options: {
-      clickTolerance: number;
+        clickTolerance: number;
     }) {
         this._map = map;
         this._el = map.getCanvasContainer();

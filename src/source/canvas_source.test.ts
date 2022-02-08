@@ -2,7 +2,6 @@ import CanvasSource from '../source/canvas_source';
 import Transform from '../geo/transform';
 import {Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
-import {stub as sinonStub} from 'sinon';
 
 import type Dispatcher from '../util/dispatcher';
 
@@ -62,27 +61,27 @@ describe('CanvasSource', () => {
     });
 
     test('self-validates', () => {
-        const stub = sinonStub(console, 'error');
+        const stub = jest.spyOn(console, 'error');
         createSource({coordinates: []});
-        expect(stub.called).toBeTruthy();
-        stub.resetHistory();
+        expect(stub).toHaveBeenCalled();
+        stub.mockReset();
 
         createSource({coordinates: 'asdf'});
-        expect(stub.called).toBeTruthy();
-        stub.resetHistory();
+        expect(stub).toHaveBeenCalled();
+        stub.mockReset();
 
         createSource({animate: 8});
-        expect(stub.called).toBeTruthy();
-        stub.resetHistory();
+        expect(stub).toHaveBeenCalled();
+        stub.mockReset();
 
         createSource({canvas: {}});
-        expect(stub.called).toBeTruthy();
-        stub.resetHistory();
+        expect(stub).toHaveBeenCalled();
+        stub.mockReset();
 
         const canvasEl = window.document.createElement('canvas');
         createSource({canvas: canvasEl});
-        expect(stub.called).toBeFalsy();
-        stub.resetHistory();
+        expect(stub).not.toHaveBeenCalled();
+        stub.mockReset();
 
     });
 

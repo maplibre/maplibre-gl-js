@@ -2,11 +2,60 @@
 
 ### Features and improvements
 
+- Export `Source` classes (`GeoJSONSource` etc.) declarations. ([#801](https://github.com/maplibre/maplibre-gl-js/issues/801))
+- Make `AJAXError` public so error HTTP responses can be handled differently from other errors.
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
 
+- Fix error mismatched image size for CJK characters (#718)
+- Fire `dataabort` and `sourcedataabort` events when a tile request is aborted (#794)
 - *...Add new stuff here...*
+
+## 2.1.1
+
+### 🐞 Bug fixes
+
+- Fix stale tiles being shown when calling VectorTileSource#setTiles while the map is moving.
+
+## 2.1.0
+### ✨ Features and improvements
+
+* Add `icon-overlap` and `text-overlap` symbol layout properties [#347](https://github.com/maplibre/maplibre-gl-js/pull/347)
+* Deprecate `icon-allow-overlap` and `text-allow-overlap` symbol layout properties. `icon-overlap` and `text-overlap` are their replacements.
+* Remove node package chalk from devDependencies (#789).
+* Allow setting a custom pixel ratio by adding a `MapOptions#pixelRatio` property and a `Map#setPixelRatio` method. Since a high `devicePixelRatio` value can lead to performance and display problems, it is done at your own risk.  (#769)
+
+## 2.0.5
+### 🐞 Bug fixes
+- Remove list of node versions allowed to install the package.
+
+## 2.0.4
+### 🐞 Bug fixes
+- Missing package.json file in version 2.0.3 dist in npm (#811) - this causes webpack to fail
+
+## 2.0.3
+### Features and improvements
+
+* Remove node package chalk from devDependencies (#789).
+* Remove vector-tile module declaration and revert to using point from @mapbox/point-geometry (#788, #800)
+* Moved development environemnt to use NodeJs 16 (#781, #806)
+
+### 🐞 Bug fixes
+
+- Fix max cluster zoom in geojson source (#61)
+
+## 2.0.2
+
+### 🐞 Bug fixes
+
+- Fix typescript generated file (#776).
+
+## 2.0.1
+
+### 🐞 Bug fixes
+
+- Fix documentation of `addProtocol` and `removeProtocol`.
 
 ## 2.0.0
 
@@ -15,6 +64,7 @@
 - Migrated the production code to typescript
 - ** Breaking Change ** removed `version` from the public API
 - ** Breaking Change ** stopped supporting IE (internet explorer)
+- ** Breaking Change ** stopped supporting Chrome 49-65. Chrome 66+ required. For Chrome 49-65 support use version 1.15.2.
 - ** Breaking Change ** removed all code related to `accessToken` and Mapbox specific urls starting with `mapbox://`. Telemetry and tracking code was removed.
 - ** Breaking Change ** removed `baseApiUrl` as it was used only for Mapbox related urls
 - ** Breaking Change ** typescript typings have changed:

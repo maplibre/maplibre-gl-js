@@ -1,8 +1,8 @@
 import {createMap as globalCreateMap, setPerformance, setWebGlContext} from '../util/test/util';
 import Popup, {Offset} from './popup';
 import LngLat from '../geo/lng_lat';
-import Point from '../util/point';
-import simulate from '../../test/util/simulate_interaction';
+import Point from '@mapbox/point-geometry';
+import simulate from '../../test/unit/lib/simulate_interaction';
 import {PositionAnchor} from './anchor';
 
 const containerWidth = 512;
@@ -91,7 +91,7 @@ describe('popup', () => {
             .addTo(map);
 
         expect(
-        popup.getElement().querySelectorAll('.maplibregl-popup-close-button')
+            popup.getElement().querySelectorAll('.maplibregl-popup-close-button')
         ).toHaveLength(0);
     });
 
@@ -561,7 +561,7 @@ describe('popup', () => {
             .addTo(map);
 
         expect(
-        popup._container.classList.value
+            popup._container.classList.value
         ).toContain('maplibregl-popup-track-pointer');
     });
 
@@ -574,7 +574,7 @@ describe('popup', () => {
         popup.setText('Test');
 
         expect(
-        popup._container.classList.value
+            popup._container.classList.value
         ).toContain('maplibregl-popup-track-pointer');
     });
 
@@ -587,7 +587,7 @@ describe('popup', () => {
         popup.trackPointer();
 
         expect(
-        popup._container.classList.value
+            popup._container.classList.value
         ).toContain('maplibregl-popup-track-pointer');
     });
 
@@ -601,7 +601,7 @@ describe('popup', () => {
 
         expect(popup._pos).toEqual(map.project([0, 0]));
         expect(
-        popup._container.classList.value
+            popup._container.classList.value
         ).not.toContain('maplibregl-popup-track-pointer');
     });
 
@@ -613,7 +613,7 @@ describe('popup', () => {
             .addTo(map);
 
         expect(
-        popup._container.classList.value
+            popup._container.classList.value
         ).not.toContain('maplibregl-popup-track-pointer');
     });
 

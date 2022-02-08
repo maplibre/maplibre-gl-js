@@ -1,7 +1,7 @@
 import browser from '../../util/browser';
 import Map from '../map';
 import DOM from '../../util/dom';
-import simulate from '../../../test/util/simulate_interaction';
+import simulate from '../../../test/unit/lib/simulate_interaction';
 import {setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 
 let map;

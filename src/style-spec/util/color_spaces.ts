@@ -3,17 +3,17 @@ import Color from './color';
 import {number as interpolateNumber} from './interpolate';
 
 type LABColor = {
-  l: number;
-  a: number;
-  b: number;
-  alpha: number;
+    l: number;
+    a: number;
+    b: number;
+    alpha: number;
 };
 
 type HCLColor = {
-  h: number;
-  c: number;
-  l: number;
-  alpha: number;
+    h: number;
+    c: number;
+    l: number;
+    alpha: number;
 };
 
 // Constants

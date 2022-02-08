@@ -15,17 +15,17 @@ import type Painter from '../painter';
 import type HeatmapStyleLayer from '../../style/style_layer/heatmap_style_layer';
 
 export type HeatmapUniformsType = {
-  'u_extrude_scale': Uniform1f;
-  'u_intensity': Uniform1f;
-  'u_matrix': UniformMatrix4f;
+    'u_extrude_scale': Uniform1f;
+    'u_intensity': Uniform1f;
+    'u_matrix': UniformMatrix4f;
 };
 
 export type HeatmapTextureUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_world': Uniform2f;
-  'u_image': Uniform1i;
-  'u_color_ramp': Uniform1i;
-  'u_opacity': Uniform1f;
+    'u_matrix': UniformMatrix4f;
+    'u_world': Uniform2f;
+    'u_image': Uniform1i;
+    'u_color_ramp': Uniform1i;
+    'u_opacity': Uniform1f;
 };
 
 const heatmapUniforms = (context: Context, locations: UniformLocations): HeatmapUniformsType => ({
@@ -49,10 +49,10 @@ const heatmapUniformValues = (matrix: mat4, tile: Tile, zoom: number, intensity:
 });
 
 const heatmapTextureUniformValues = (
-  painter: Painter,
-  layer: HeatmapStyleLayer,
-  textureUnit: number,
-  colorRampUnit: number
+    painter: Painter,
+    layer: HeatmapStyleLayer,
+    textureUnit: number,
+    colorRampUnit: number
 ): UniformValues<HeatmapTextureUniformsType> => {
     const matrix = mat4.create();
     mat4.ortho(matrix, 0, painter.width, painter.height, 0, 0, 1);

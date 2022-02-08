@@ -18,7 +18,7 @@ class Dispatcher {
 
     // exposed to allow stubbing in unit tests
     static Actor: {
-      new (...args: any): Actor;
+        new (...args: any): Actor;
     };
 
     constructor(workerPool: WorkerPool, parent: any) {

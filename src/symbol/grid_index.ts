@@ -1,5 +1,8 @@
+import type {OverlapMode} from '../style/style_layer/symbol_style_layer';
+
 type QueryArgs = {
     hitTest: boolean;
+    overlapMode?: OverlapMode;
     circle?: {
         x: number;
         y: number;
@@ -23,6 +26,24 @@ type QueryResult<T> = {
     y2: number;
 };
 
+export type GridKey = {
+    overlapMode?: OverlapMode;
+}
+
+function overlapAllowed(overlapA: OverlapMode, overlapB: OverlapMode): boolean {
+    let allowed = true;
+
+    if (overlapA === 'always') {
+        // symbol A using 'always' overlap - allowed to overlap anything.
+    } else if (overlapA === 'never' || overlapB === 'never') {
+        // symbol A using 'never' overlap - can't overlap anything
+        // symbol A using 'cooperative' overlap - can overlap 'always' or 'cooperative' symbol; can't overlap 'never'
+        allowed = false;
+    }
+
+    return allowed;
+}
+
 /**
  * GridIndex is a data structure for testing the intersection of
  * circles and rectangles in a 2d plane.
@@ -36,7 +57,7 @@ type QueryResult<T> = {
  *
  * @private
  */
-class GridIndex<T> {
+class GridIndex<T extends GridKey> {
     circleKeys: Array<T>;
     boxKeys: Array<T>;
     boxCells: Array<Array<number>>;
@@ -110,7 +131,7 @@ class GridIndex<T> {
         this.circleCells[cellIndex].push(uid);
     }
 
-    private _query(x1: number, y1: number, x2: number, y2: number, hitTest: boolean, predicate?: (key: T) => boolean): Array<QueryResult<T>> {
+    private _query(x1: number, y1: number, x2: number, y2: number, hitTest: boolean, overlapMode: OverlapMode, predicate?: (key: T) => boolean): Array<QueryResult<T>> {
         if (x2 < 0 || x1 > this.width || y2 < 0 || y1 > this.height) {
             return [];
         }
@@ -150,6 +171,7 @@ class GridIndex<T> {
         } else {
             const queryArgs: QueryArgs = {
                 hitTest,
+                overlapMode,
                 seenUids: {box: {}, circle: {}}
             };
             this._forEachCell(x1, y1, x2, y2, this._queryCell, result, queryArgs, predicate);
@@ -162,11 +184,11 @@ class GridIndex<T> {
         return this._query(x1, y1, x2, y2, false, null);
     }
 
-    hitTest(x1: number, y1: number, x2: number, y2: number, predicate?: (key: T) => boolean): boolean {
-        return this._query(x1, y1, x2, y2, true, predicate).length > 0;
+    hitTest(x1: number, y1: number, x2: number, y2: number, overlapMode: OverlapMode, predicate?: (key: T) => boolean): boolean {
+        return this._query(x1, y1, x2, y2, true, overlapMode, predicate).length > 0;
     }
 
-    hitTestCircle(x: number, y: number, radius: number, predicate?: (key: T) => boolean): boolean {
+    hitTestCircle(x: number, y: number, radius: number, overlapMode: OverlapMode, predicate?: (key: T) => boolean): boolean {
         // Insert circle into grid for all cells in the circumscribing square
         // It's more than necessary (by a factor of 4/PI), but fast to insert
         const x1 = x - radius;
@@ -183,6 +205,7 @@ class GridIndex<T> {
         const result: boolean[] = [];
         const queryArgs: QueryArgs = {
             hitTest: true,
+            overlapMode,
             circle: {x, y, radius},
             seenUids: {box: {}, circle: {}}
         };
@@ -191,7 +214,7 @@ class GridIndex<T> {
     }
 
     private _queryCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: Array<QueryResult<T>>, queryArgs: QueryArgs, predicate?: (key: T) => boolean): boolean {
-        const {seenUids, hitTest} = queryArgs;
+        const {seenUids, hitTest, overlapMode} = queryArgs;
         const boxCell = this.boxCells[cellIndex];
 
         if (boxCell !== null) {
@@ -207,16 +230,18 @@ class GridIndex<T> {
                         (x2 >= bboxes[offset + 0]) &&
                         (y2 >= bboxes[offset + 1]) &&
                         (!predicate || predicate(key))) {
-                        result.push({
-                            key,
-                            x1: bboxes[offset],
-                            y1: bboxes[offset + 1],
-                            x2: bboxes[offset + 2],
-                            y2: bboxes[offset + 3]
-                        });
-                        if (hitTest) {
-                            // true return value stops the query after first match
-                            return true;
+                        if (!hitTest || !overlapAllowed(overlapMode, key.overlapMode)) {
+                            result.push({
+                                key,
+                                x1: bboxes[offset],
+                                y1: bboxes[offset + 1],
+                                x2: bboxes[offset + 2],
+                                y2: bboxes[offset + 3]
+                            });
+                            if (hitTest) {
+                                // true return value stops the query after first match
+                                return true;
+                            }
                         }
                     }
                 }
@@ -240,19 +265,21 @@ class GridIndex<T> {
                         x2,
                         y2) &&
                         (!predicate || predicate(key))) {
-                        const x = circles[offset];
-                        const y = circles[offset + 1];
-                        const radius = circles[offset + 2];
-                        result.push({
-                            key,
-                            x1: x - radius,
-                            y1: y - radius,
-                            x2: x + radius,
-                            y2: y + radius
-                        });
-                        if (hitTest) {
-                            // true return value stops the query after first match
-                            return true;
+                        if (!hitTest || !overlapAllowed(overlapMode, key.overlapMode)) {
+                            const x = circles[offset];
+                            const y = circles[offset + 1];
+                            const radius = circles[offset + 2];
+                            result.push({
+                                key,
+                                x1: x - radius,
+                                y1: y - radius,
+                                x2: x + radius,
+                                y2: y + radius
+                            });
+                            if (hitTest) {
+                                // true return value stops the query after first match
+                                return true;
+                            }
                         }
                     }
                 }
@@ -263,8 +290,8 @@ class GridIndex<T> {
         return false;
     }
 
-    private _queryCellCircle(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: Array<boolean>, queryArgs: QueryArgs, predicate?: (key:T) => boolean): boolean {
-        const {circle, seenUids} = queryArgs;
+    private _queryCellCircle(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: Array<boolean>, queryArgs: QueryArgs, predicate?: (key: T) => boolean): boolean {
+        const {circle, seenUids, overlapMode} = queryArgs;
         const boxCell = this.boxCells[cellIndex];
 
         if (boxCell !== null) {
@@ -282,7 +309,8 @@ class GridIndex<T> {
                         bboxes[offset + 1],
                         bboxes[offset + 2],
                         bboxes[offset + 3]) &&
-                        (!predicate || predicate(key))) {
+                        (!predicate || predicate(key)) &&
+                        !overlapAllowed(overlapMode, key.overlapMode)) {
                         result.push(true);
                         return true;
                     }
@@ -305,7 +333,8 @@ class GridIndex<T> {
                         circle.x,
                         circle.y,
                         circle.radius) &&
-                        (!predicate || predicate(key))) {
+                        (!predicate || predicate(key)) &&
+                        !overlapAllowed(overlapMode, key.overlapMode)) {
                         result.push(true);
                         return true;
                     }
@@ -352,13 +381,13 @@ class GridIndex<T> {
     }
 
     private _circleAndRectCollide(
-      circleX: number,
-      circleY: number,
-      radius: number,
-      x1: number,
-      y1: number,
-      x2: number,
-      y2: number
+        circleX: number,
+        circleY: number,
+        radius: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number
     ): boolean {
         const halfRectWidth = (x2 - x1) / 2;
         const distX = Math.abs(circleX - (x1 + halfRectWidth));

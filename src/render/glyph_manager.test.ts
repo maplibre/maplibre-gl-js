@@ -4,7 +4,7 @@ import fs from 'fs';
 import {RequestManager} from '../util/request_manager';
 
 const glyphs = {};
-for (const glyph of parseGlyphPBF(fs.readFileSync('./test/fixtures/0-255.pbf'))) {
+for (const glyph of parseGlyphPBF(fs.readFileSync('./test/unit/assets/0-255.pbf'))) {
     glyphs[glyph.id] = glyph;
 }
 
@@ -21,12 +21,6 @@ const createLoadGlyphRangeStub = () => {
 };
 
 const createGlyphManager = (font?) => {
-    GlyphManager.TinySDF = class {
-        // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
-        draw() {
-            return {data: new Uint8ClampedArray(900)} as any;
-        }
-    };
     const manager = new GlyphManager(identityTransform, font);
     manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
     return manager;
@@ -106,8 +100,8 @@ describe('GlyphManager', () => {
                 expect(err).toBeFalsy();
                 const glyph = glyphs['Arial Unicode MS'][0x30c6];
                 //Ensure that te is locally generated.
-                expect(glyph.bitmap.height).toBe(30);
-                expect(glyph.bitmap.width).toBe(30);
+                expect(glyph.bitmap.height).toBe(6);
+                expect(glyph.bitmap.width).toBe(6);
                 done();
             });
         });
@@ -118,7 +112,7 @@ describe('GlyphManager', () => {
 
         manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
             expect(err).toBeFalsy();
-            expect(glyphs['Arial Unicode MS'][0x5e73].metrics.advance).toBe(24);
+            expect(glyphs['Arial Unicode MS'][0x5e73].metrics.advance).toBe(1);
             done();
         });
     });
@@ -129,7 +123,7 @@ describe('GlyphManager', () => {
         // Katakana letter te
         manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, (err, glyphs) => {
             expect(err).toBeFalsy();
-            expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(24);
+            expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(1);
             done();
         });
     });
@@ -140,7 +134,7 @@ describe('GlyphManager', () => {
         //Hiragana letter te
         manager.getGlyphs({'Arial Unicode MS': [0x3066]}, (err, glyphs) => {
             expect(err).toBeFalsy();
-            expect(glyphs['Arial Unicode MS'][0x3066].metrics.advance).toBe(24);
+            expect(glyphs['Arial Unicode MS'][0x3066].metrics.advance).toBe(1);
             done();
         });
     });
@@ -148,21 +142,16 @@ describe('GlyphManager', () => {
     test('GlyphManager caches locally generated glyphs', done => {
 
         const manager = createGlyphManager('sans-serif');
-        let drawCallCount = 0;
-        GlyphManager.TinySDF = class {
-            // Return empty 30x30 bitmap (24 fontsize + 3 * 2 buffer)
-            draw() {
-                drawCallCount++;
-                return {data: new Uint8ClampedArray(900)} as any;
-            }
-        };
+        const drawSpy = GlyphManager.TinySDF.prototype.draw = jest.fn().mockImplementation(() => {
+            return {data: new Uint8ClampedArray(900)} as any;
+        });
 
         // Katakana letter te
         manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, (err, glyphs) => {
             expect(err).toBeFalsy();
             expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(24);
             manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, () => {
-                expect(drawCallCount).toBe(1);
+                expect(drawSpy).toHaveBeenCalledTimes(1);
                 done();
             });
         });

@@ -22,6 +22,10 @@ class StubMap extends Evented {
         super();
         this._requestManager = new RequestManager();
     }
+
+    getPixelRatio() {
+        return devicePixelRatio;
+    }
 }
 
 const mapStub = new StubMap() as any as Map;
@@ -45,7 +49,7 @@ export default class TileParser {
     glyphs: any;
     style: Style;
     actor: {
-      send: Function;
+        send: Function;
     };
 
     constructor(styleJSON: StyleSpecification, sourceID: string) {
@@ -104,17 +108,17 @@ export default class TileParser {
     }
 
     fetchTile(tileID: OverscaledTileID) {
-        return fetch(tileID.canonical.url(this.tileJSON.tiles))
+        return fetch(tileID.canonical.url(this.tileJSON.tiles, devicePixelRatio))
             .then(response => response.arrayBuffer())
             .then(buffer => ({tileID, buffer}));
     }
 
     parseTile(
-      tile: {
-        tileID: OverscaledTileID;
-        buffer: ArrayBuffer;
-      },
-      returnDependencies?: boolean
+        tile: {
+            tileID: OverscaledTileID;
+            buffer: ArrayBuffer;
+        },
+        returnDependencies?: boolean
     ): Promise<WorkerTileResult> {
         const workerTile = new WorkerTile({
             tileID: tile.tileID,

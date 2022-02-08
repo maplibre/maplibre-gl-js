@@ -5,7 +5,7 @@ import type FeatureIndex from '../data/feature_index';
 import GeoJSONFeature from '../util/vectortile_to_geojson';
 import featureFilter from '../style-spec/feature_filter';
 import SymbolBucket from '../data/bucket/symbol_bucket';
-import {CollisionBoxArray} from '../data/array_types';
+import {CollisionBoxArray} from '../data/array_types.g';
 import Texture from '../render/texture';
 import browser from '../util/browser';
 import toEvaluationFeature from '../data/evaluation_feature';
@@ -30,7 +30,7 @@ import type Transform from '../geo/transform';
 import type {LayerFeatureStates} from './source_state';
 import type {Cancelable} from '../types/cancelable';
 import type {FilterSpecification} from '../style-spec/types';
-import type Point from '../util/point';
+import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 
@@ -268,20 +268,20 @@ class Tile {
     // Queries non-symbol features rendered for this tile.
     // Symbol features are queried globally
     queryRenderedFeatures(
-      layers: {[_: string]: StyleLayer},
-      serializedLayers: {[_: string]: any},
-      sourceFeatureState: SourceFeatureState,
-      queryGeometry: Array<Point>,
-      cameraQueryGeometry: Array<Point>,
-      scale: number,
-      params: {
-        filter: FilterSpecification;
-        layers: Array<string>;
-        availableImages: Array<string>;
-      },
-      transform: Transform,
-      maxPitchScaleFactor: number,
-      pixelPosMatrix: mat4
+        layers: {[_: string]: StyleLayer},
+        serializedLayers: {[_: string]: any},
+        sourceFeatureState: SourceFeatureState,
+        queryGeometry: Array<Point>,
+        cameraQueryGeometry: Array<Point>,
+        scale: number,
+        params: {
+            filter: FilterSpecification;
+            layers: Array<string>;
+            availableImages: Array<string>;
+        },
+        transform: Transform,
+        maxPitchScaleFactor: number,
+        pixelPosMatrix: mat4
     ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {
         if (!this.latestFeatureIndex || !this.latestFeatureIndex.rawTileData)
             return {};

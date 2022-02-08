@@ -3,14 +3,14 @@ import StyleLayer from '../style_layer';
 import CircleBucket from '../../data/bucket/circle_bucket';
 import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
-import properties, {CircleLayoutPropsPossiblyEvaluated, CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties';
+import properties, {CircleLayoutPropsPossiblyEvaluated, CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
 import {mat4, vec4} from 'gl-matrix';
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 import type {FeatureState} from '../../style-spec/expression';
 import type Transform from '../../geo/transform';
 import type {Bucket, BucketParameters} from '../../data/bucket';
-import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties';
+import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
 import type {LayerSpecification} from '../../style-spec/types';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
@@ -38,14 +38,14 @@ class CircleStyleLayer extends StyleLayer {
     }
 
     queryIntersectsFeature(
-      queryGeometry: Array<Point>,
-      feature: VectorTileFeature,
-      featureState: FeatureState,
-      geometry: Array<Array<Point>>,
-      zoom: number,
-      transform: Transform,
-      pixelsToTileUnits: number,
-      pixelPosMatrix: mat4
+        queryGeometry: Array<Point>,
+        feature: VectorTileFeature,
+        featureState: FeatureState,
+        geometry: Array<Array<Point>>,
+        zoom: number,
+        transform: Transform,
+        pixelsToTileUnits: number,
+        pixelPosMatrix: mat4
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('circle-translate'),

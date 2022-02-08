@@ -5,11 +5,13 @@ describe('web worker transfer', () => {
         class SerializableMock {
             n;
             buffer;
+            blob;
             _cached;
 
             constructor(n) {
                 this.n = n;
                 this.buffer = new ArrayBuffer(100);
+                this.blob = new Blob();
                 this.squared();
             }
 
@@ -33,6 +35,7 @@ describe('web worker transfer', () => {
         expect(deserialized.constructor === SerializableMock).toBeTruthy();
         expect(deserialized.n === 10).toBeTruthy();
         expect(deserialized.buffer === serializableMock.buffer).toBeTruthy();
+        expect(deserialized.blob === serializableMock.blob).toBeTruthy();
         expect(transferables[0] === serializableMock.buffer).toBeTruthy();
         expect(deserialized._cached === undefined).toBeTruthy();
         expect(deserialized.squared() === 100).toBeTruthy();

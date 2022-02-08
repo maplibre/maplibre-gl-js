@@ -1,6 +1,6 @@
 type Config = {
-  MAX_PARALLEL_IMAGE_REQUESTS: number;
-  REGISTERED_PROTOCOLS: {[x: string]: any};
+    MAX_PARALLEL_IMAGE_REQUESTS: number;
+    REGISTERED_PROTOCOLS: {[x: string]: any};
 };
 
 const config: Config = {

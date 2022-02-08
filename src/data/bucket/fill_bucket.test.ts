@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 import segment from '../segment';
 import FillBucket from './fill_bucket';
 import FillStyleLayer from '../../style/style_layer/fill_style_layer';
@@ -13,7 +13,7 @@ import ZoomHistory from '../../style/zoom_history';
 import {BucketFeature, BucketParameters} from '../bucket';
 
 // Load a fill feature from fixture tile.
-const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/fixtures/mbsv5-6-18-23.vector.pbf'))));
+const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.water.feature(0);
 
 function createPolygon(numPoints) {
@@ -42,7 +42,7 @@ test('FillBucket', () => {
             new Point(10, 20)
         ]], undefined, undefined, undefined);
 
-        bucket.addFeature(feature, feature.loadGeometry(), undefined, undefined, undefined);
+        bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined);
     }).not.toThrow();
 });
 

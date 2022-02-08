@@ -1,4 +1,4 @@
-import {FillLayoutArray} from '../array_types';
+import {FillLayoutArray} from '../array_types.g';
 
 import {members as layoutAttributes} from './fill_attributes';
 import SegmentVector from '../segment';
@@ -26,7 +26,7 @@ import type FillStyleLayer from '../../style/style_layer/fill_style_layer';
 import type Context from '../../gl/context';
 import type IndexBuffer from '../../gl/index_buffer';
 import type VertexBuffer from '../../gl/vertex_buffer';
-import type Point from '../../util/point';
+import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
@@ -126,14 +126,14 @@ class FillBucket implements Bucket {
     }
 
     update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {
-      [_: string]: ImagePosition;
+        [_: string]: ImagePosition;
     }) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
     }
 
     addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {
-      [_: string]: ImagePosition;
+        [_: string]: ImagePosition;
     }) {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions);
@@ -168,7 +168,7 @@ class FillBucket implements Bucket {
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {
-      [_: string]: ImagePosition;
+        [_: string]: ImagePosition;
     }) {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             let numVertices = 0;

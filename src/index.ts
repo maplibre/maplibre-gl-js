@@ -1,5 +1,3 @@
-/// <reference path="./types/glsl.d.ts" />
-/// <reference path="./types/non-typed-modules.d.ts" />
 import assert from 'assert';
 import {supported} from '@mapbox/mapbox-gl-supported';
 
@@ -14,7 +12,7 @@ import Marker from './ui/marker';
 import Style from './style/style';
 import LngLat from './geo/lng_lat';
 import LngLatBounds from './geo/lng_lat_bounds';
-import Point from './util/point';
+import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from './geo/mercator_coordinate';
 import {Evented} from './util/evented';
 import config from './util/config';
@@ -25,8 +23,16 @@ import WorkerPool from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {clearTileCache} from './util/tile_request_cache';
 import {PerformanceUtils} from './util/performance';
+import {AJAXError} from './util/ajax';
 import type {RequestParameters, ResponseCallback} from './util/ajax';
 import type {Cancelable} from './types/cancelable';
+import GeoJSONSource from './source/geojson_source';
+import CanvasSource from './source/canvas_source';
+import ImageSource from './source/image_source';
+import RasterDEMTileSource from './source/raster_dem_tile_source';
+import RasterTileSource from './source/raster_tile_source';
+import VectorTileSource from './source/vector_tile_source';
+import VideoSource from './source/video_source';
 
 const exported = {
     supported,
@@ -46,7 +52,15 @@ const exported = {
     Point,
     MercatorCoordinate,
     Evented,
+    AJAXError,
     config,
+    CanvasSource,
+    GeoJSONSource,
+    ImageSource,
+    RasterDEMTileSource,
+    RasterTileSource,
+    VectorTileSource,
+    VideoSource,
     /**
      * Initializes resources like WebWorkers that can be shared across maps to lower load
      * times in some situations. `maplibregl.workerUrl` and `maplibregl.workerCount`, if being
@@ -144,6 +158,8 @@ const exported = {
      * The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
      * The function passed will receive the request parameters and should call the callback with the resulting request,
      * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
+     *
+     * @function addProtocol
      * @param {string} customProtocol - the protocol to hook, for example 'custom'
      * @param {Function} loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
@@ -176,6 +192,8 @@ const exported = {
 
     /**
      * Removes a previusly added protocol
+     *
+     * @function removeProtocol
      * @param {string} customProtocol - the custom protocol to remove registration for
      * @example
      * maplibregl.removeProtocol('custom');
@@ -187,13 +205,6 @@ const exported = {
 
 //This gets automatically stripped out in production builds.
 Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
-
-/**
- * The version of MapLibre GL JS in use as specified in `package.json`,
- * `CHANGELOG.md`, and the GitHub release.
- *
- * @var {string} version
- */
 
 /**
  * Test whether the browser supports MapLibre GL JS.
@@ -227,14 +238,14 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
  */
 
 /**
-  * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
-  * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
-  * If the status is `loaded` and the plugin is requested again, an error will be thrown.
-  *
-  * @function getRTLTextPluginStatus
-  * @example
-  * const pluginStatus = maplibregl.getRTLTextPluginStatus();
-  */
+ * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
+ * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
+ * If the status is `loaded` and the plugin is requested again, an error will be thrown.
+ *
+ * @function getRTLTextPluginStatus
+ * @example
+ * const pluginStatus = maplibregl.getRTLTextPluginStatus();
+ */
 
 export default exported;
 // canary assert: used to confirm that asserts have been removed from production build

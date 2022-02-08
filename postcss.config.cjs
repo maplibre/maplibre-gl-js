@@ -5,10 +5,14 @@ module.exports = {
             preset: ['default', {
                 svgo: {
                     plugins: [{
-                        removeViewBox: false
-                    }, {
-                        removeDimensions: false
-                    }],
+                        name: 'preset-default',
+                        params: {
+                            overrides: {
+                                removeViewBox: false,
+                                removeDimensions: false
+                            }
+                         }
+                     }],
                 },
             }],
         }),

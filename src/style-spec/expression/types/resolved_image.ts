@@ -1,6 +1,6 @@
 export type ResolvedImageOptions = {
-  name: string;
-  available: boolean;
+    name: string;
+    available: boolean;
 };
 
 export default class ResolvedImage {

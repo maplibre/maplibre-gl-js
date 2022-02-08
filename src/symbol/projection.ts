@@ -1,4 +1,4 @@
-import Point from '../util/point';
+import Point from '@mapbox/point-geometry';
 
 import {mat4, vec4} from 'gl-matrix';
 import * as symbolSize from './symbol_size';
@@ -11,7 +11,7 @@ import type {
     GlyphOffsetArray,
     SymbolLineVertexArray,
     SymbolDynamicLayoutArray
-} from '../data/array_types';
+} from '../data/array_types.g';
 import {WritingMode} from '../symbol/shaping';
 
 export {updateLineLabels, hideGlyphs, getLabelPlaneMatrix, getGlCoordMatrix, project, getPerspectiveRatio, placeFirstAndLastGlyph, placeGlyphAlongLine, xyTransformMat4};
@@ -65,10 +65,10 @@ export {updateLineLabels, hideGlyphs, getLabelPlaneMatrix, getGlCoordMatrix, pro
  * Returns a matrix for converting from tile units to the correct label coordinate space.
  */
 function getLabelPlaneMatrix(posMatrix: mat4,
-                             pitchWithMap: boolean,
-                             rotateWithMap: boolean,
-                             transform: Transform,
-                             pixelsToTileUnits: number) {
+    pitchWithMap: boolean,
+    rotateWithMap: boolean,
+    transform: Transform,
+    pixelsToTileUnits: number) {
     const m = mat4.create();
     if (pitchWithMap) {
         mat4.scale(m, m, [1 / pixelsToTileUnits, 1 / pixelsToTileUnits, 1]);
@@ -85,10 +85,10 @@ function getLabelPlaneMatrix(posMatrix: mat4,
  * Returns a matrix for converting from the correct label coordinate space to gl coords.
  */
 function getGlCoordMatrix(posMatrix: mat4,
-                          pitchWithMap: boolean,
-                          rotateWithMap: boolean,
-                          transform: Transform,
-                          pixelsToTileUnits: number) {
+    pitchWithMap: boolean,
+    rotateWithMap: boolean,
+    transform: Transform,
+    pixelsToTileUnits: number) {
     if (pitchWithMap) {
         const m = mat4.clone(posMatrix);
         mat4.scale(m, m, [pixelsToTileUnits, pixelsToTileUnits, 1]);
@@ -116,7 +116,7 @@ function getPerspectiveRatio(cameraToCenterDistance: number, signedDistanceFromC
 }
 
 function isVisible(anchorPos: vec4,
-                   clippingBuffer: [number, number]) {
+    clippingBuffer: [number, number]) {
     const x = anchorPos[0] / anchorPos[3];
     const y = anchorPos[1] / anchorPos[3];
     const inPaddedViewport = (
@@ -132,13 +132,13 @@ function isVisible(anchorPos: vec4,
  *  This is only run on labels that are aligned with lines. Horizontal labels are handled entirely in the shader.
  */
 function updateLineLabels(bucket: SymbolBucket,
-                          posMatrix: mat4,
-                          painter: Painter,
-                          isText: boolean,
-                          labelPlaneMatrix: mat4,
-                          glCoordMatrix: mat4,
-                          pitchWithMap: boolean,
-                          keepUpright: boolean) {
+    posMatrix: mat4,
+    painter: Painter,
+    isText: boolean,
+    labelPlaneMatrix: mat4,
+    glCoordMatrix: mat4,
+    pitchWithMap: boolean,
+    keepUpright: boolean) {
 
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
     const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, painter.transform.zoom);
@@ -334,19 +334,19 @@ function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint:
 }
 
 function placeGlyphAlongLine(offsetX: number,
-                             lineOffsetX: number,
-                             lineOffsetY: number,
-                             flip: boolean,
-                             anchorPoint: Point,
-                             tileAnchorPoint: Point,
-                             anchorSegment: number,
-                             lineStartIndex: number,
-                             lineEndIndex: number,
-                             lineVertexArray: SymbolLineVertexArray,
-                             labelPlaneMatrix: mat4,
-                             projectionCache: {
-                               [_: number]: Point;
-                             }) {
+    lineOffsetX: number,
+    lineOffsetY: number,
+    flip: boolean,
+    anchorPoint: Point,
+    tileAnchorPoint: Point,
+    anchorSegment: number,
+    lineStartIndex: number,
+    lineEndIndex: number,
+    lineVertexArray: SymbolLineVertexArray,
+    labelPlaneMatrix: mat4,
+    projectionCache: {
+        [_: number]: Point;
+    }) {
 
     const combinedOffsetX = flip ?
         offsetX - lineOffsetX :

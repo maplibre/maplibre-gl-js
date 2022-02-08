@@ -1,4 +1,4 @@
-import Point from '../../util/point';
+import Point from '@mapbox/point-geometry';
 import {indexTouches} from './handler_util';
 
 function getCentroid(points: Array<Point>) {
@@ -20,11 +20,11 @@ export class SingleTapRecognizer {
     startTime: number;
     aborted: boolean;
     touches: {
-      [k in number | string]: Point;
+        [k in number | string]: Point;
     };
 
     constructor(options: {
-      numTouches: number;
+        numTouches: number;
     }) {
         this.reset();
         this.numTouches = options.numTouches;
@@ -92,8 +92,8 @@ export class TapRecognizer {
     count: number;
 
     constructor(options: {
-      numTaps: number;
-      numTouches: number;
+        numTaps: number;
+        numTouches: number;
     }) {
         this.singleTap = new SingleTapRecognizer(options);
         this.numTaps = options.numTaps;
