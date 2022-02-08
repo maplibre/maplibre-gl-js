@@ -45,7 +45,7 @@ export function stripPrecision(x) {
     }
 }
 
-export function deepEqual(a, b) {
+export function deepEqual(a, b): boolean {
     if (typeof a !== typeof b)
         return false;
     if (typeof a === 'number') {
