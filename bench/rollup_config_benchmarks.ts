@@ -38,7 +38,7 @@ const splitConfig = (name: string): RollupOptions[] => [{
     input: [`${srcDir}bench/${name}/benchmarks.${inputExt}`, `${srcDir}src/source/worker.${inputExt}`],
     output: {
         dir: `rollup/build/benchmarks/${name}`,
-        format: 'es',
+        format: 'amd',
         indent: false,
         sourcemap: 'inline',
         chunkFileNames: 'shared.js'
@@ -48,7 +48,7 @@ const splitConfig = (name: string): RollupOptions[] => [{
     input: `rollup/benchmarks_${name}.js`,
     output: {
         file: `bench/${name}/benchmarks_generated.js`,
-        format: 'es',
+        format: 'umd',
         indent: false,
         sourcemap: true,
         intro
@@ -62,7 +62,7 @@ const viewConfig: RollupOptions = {
     output: {
         name: 'Benchmarks',
         file: 'bench/benchmarks_view_generated.js',
-        format: 'es',
+        format: 'umd',
         indent: false,
         sourcemap: false
     },
