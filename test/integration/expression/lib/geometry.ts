@@ -14,7 +14,7 @@ function convertPoint(coord, canonical: CanonicalTileID): Point[] {
     return [getPoint(coord, canonical)];
 }
 
-function convertPoints(coords, canonical: CanonicalTileID) {
+function convertPoints(coords, canonical: CanonicalTileID): Point[][] {
     const o: Point[][] = [];
     for (let i = 0; i < coords.length; i++) {
         o.push(convertPoint(coords[i], canonical));
@@ -23,7 +23,7 @@ function convertPoints(coords, canonical: CanonicalTileID) {
     return o;
 }
 
-function convertLine(line, canonical: CanonicalTileID) {
+function convertLine(line, canonical: CanonicalTileID): Point[] {
     const l: Point[] = [];
     for (let i = 0; i < line.length; i++) {
         l.push(getPoint(line[i], canonical));
@@ -31,7 +31,7 @@ function convertLine(line, canonical: CanonicalTileID) {
     return l;
 }
 
-function convertLines(lines, canonical: CanonicalTileID) {
+function convertLines(lines, canonical: CanonicalTileID): Point[][] {
     const l: Point[][] = [];
     for (let i = 0; i < lines.length; i++) {
         l.push(convertLine(lines[i], canonical));
