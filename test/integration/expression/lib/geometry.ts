@@ -1,61 +1,67 @@
 
 import MercatorCoordinate from '../../../../src/geo/mercator_coordinate';
 import Point from '@mapbox/point-geometry';
+import {CanonicalTileID} from '../../../../src/source/tile_id';
 
-function getPoint(coord, canonical) {
+function getPoint(coord, canonical: CanonicalTileID): Point {
     const p: Point = canonical.getTilePoint(MercatorCoordinate.fromLngLat({lng: coord[0], lat: coord[1]}, 0));
     p.x = Math.round(p.x);
     p.y = Math.round(p.y);
     return p;
 }
 
-function convertPoint(coord, canonical, out) {
-    out.push([getPoint(coord, canonical)]);
+function convertPoint(coord, canonical: CanonicalTileID): Point[] {
+    return [getPoint(coord, canonical)];
 }
 
-function convertPoints(coords, canonical, out) {
+function convertPoints(coords, canonical: CanonicalTileID) {
+    const o: Point[][] = [];
     for (let i = 0; i < coords.length; i++) {
-        convertPoint(coords[i], canonical, out);
+        o.push(convertPoint(coords[i], canonical));
     }
+
+    return o;
 }
 
-function convertLine(line, canonical, out) {
-    const l = [];
+function convertLine(line, canonical: CanonicalTileID) {
+    const l: Point[] = [];
     for (let i = 0; i < line.length; i++) {
         l.push(getPoint(line[i], canonical));
     }
-    out.push(l);
+    return l;
 }
 
-function convertLines(lines, canonical, out) {
+function convertLines(lines, canonical: CanonicalTileID) {
+    const l: Point[][] = [];
     for (let i = 0; i < lines.length; i++) {
-        convertLine(lines[i], canonical, out);
+        l.push(convertLine(lines[i], canonical));
     }
+    return l;
 }
 
-export function getGeometry(feature, geometry, canonical) {
+export function getGeometry(feature, geometry, canonical: CanonicalTileID) {
     if (geometry.coordinates) {
         const coords = geometry.coordinates;
         const type = geometry.type;
         feature.type = type;
         feature.geometry = [];
         if (type === 'Point') {
-            convertPoint(coords, canonical, feature.geometry);
+            feature.geometry.push(convertPoint(coords, canonical));
         } else if (type === 'MultiPoint') {
             feature.type = 'Point';
-            convertPoints(coords, canonical, feature.geometry);
+            feature.geometry.push(...convertPoints(coords, canonical));
         } else if (type === 'LineString') {
-            convertLine(coords, canonical, feature.geometry);
+            feature.geometry.push(...convertLine(coords, canonical));
         } else if (type === 'MultiLineString') {
             feature.type = 'LineString';
-            convertLines(coords, canonical, feature.geometry);
+            feature.geometry.push(...convertLines(coords, canonical));
         } else if (type === 'Polygon') {
-            convertLines(coords, canonical, feature.geometry);
+            feature.geometry.push(...convertLines(coords, canonical));
         } else if (type === 'MultiPolygon') {
             feature.type = 'Polygon';
             for (let i = 0; i < coords.length; i++) {
                 const polygon = [];
-                convertLines(coords[i], canonical, polygon);
+                polygon.push(...convertLines(coords[i], canonical));
                 feature.geometry.push(polygon);
             }
         }
