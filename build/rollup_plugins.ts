@@ -40,7 +40,8 @@ export const plugins = (minified: boolean, production: boolean, watch: boolean):
     }) : false,
     resolve({
         browser: true,
-        preferBuiltins: false
+        preferBuiltins: false,
+        extensions: ['.mjs', '.js', '.json', '.node', '.ts']
     }),
     watch ? typescript() : false,
     commonjs({

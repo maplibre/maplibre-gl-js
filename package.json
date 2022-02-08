@@ -136,7 +136,7 @@
     "typescript": "^4.5.5"
   },
   "browser": {
-    "./rollup/build/tsc/src/util/web_worker.js": "./build/web_worker_replacement.js"
+    "./src/util/web_worker.ts": "./build/web_worker_replacement.ts"
   },
   "scripts": {
     "generate-shaders": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-shaders.ts",
