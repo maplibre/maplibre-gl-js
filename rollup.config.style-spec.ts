@@ -49,8 +49,7 @@ const config: RollupOptions[] = [{
         unassert(),
         resolve({
             browser: true,
-            preferBuiltins: false,
-            extensions: ['.mjs', '.js', '.json', '.node', '.ts']
+            preferBuiltins: false
         }),
         commonjs()
     ]

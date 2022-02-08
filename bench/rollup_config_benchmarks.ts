@@ -67,11 +67,7 @@ const viewConfig: RollupOptions = {
         sourcemap: false
     },
     plugins: [
-        resolve({
-            browser: true,
-            preferBuiltins: false,
-            extensions: ['.mjs', '.js', '.json', '.node', '.ts']
-        }),
+        resolve({browser: true, preferBuiltins: false}),
         watch ? typescript() : null,
         commonjs(),
         replace(replaceConfig)
