@@ -2,19 +2,20 @@
 import MercatorCoordinate from '../../../../src/geo/mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {CanonicalTileID} from '../../../../src/source/tile_id';
+import {LngLatLike} from '../../../../src/geo/lng_lat';
 
-function getPoint(coord, canonical: CanonicalTileID): Point {
+function getPoint(coord: LngLatLike, canonical: CanonicalTileID): Point {
     const p: Point = canonical.getTilePoint(MercatorCoordinate.fromLngLat({lng: coord[0], lat: coord[1]}, 0));
     p.x = Math.round(p.x);
     p.y = Math.round(p.y);
     return p;
 }
 
-function convertPoint(coord, canonical: CanonicalTileID): Point[] {
+function convertPoint(coord: LngLatLike, canonical: CanonicalTileID): Point[] {
     return [getPoint(coord, canonical)];
 }
 
-function convertPoints(coords, canonical: CanonicalTileID): Point[][] {
+function convertPoints(coords: LngLatLike[], canonical: CanonicalTileID): Point[][] {
     const o: Point[][] = [];
     for (let i = 0; i < coords.length; i++) {
         o.push(convertPoint(coords[i], canonical));
@@ -23,7 +24,7 @@ function convertPoints(coords, canonical: CanonicalTileID): Point[][] {
     return o;
 }
 
-function convertLine(line, canonical: CanonicalTileID): Point[] {
+function convertLine(line: LngLatLike[], canonical: CanonicalTileID): Point[] {
     const l: Point[] = [];
     for (let i = 0; i < line.length; i++) {
         l.push(getPoint(line[i], canonical));
@@ -31,7 +32,7 @@ function convertLine(line, canonical: CanonicalTileID): Point[] {
     return l;
 }
 
-function convertLines(lines, canonical: CanonicalTileID): Point[][] {
+function convertLines(lines: LngLatLike[][], canonical: CanonicalTileID): Point[][] {
     const l: Point[][] = [];
     for (let i = 0; i < lines.length; i++) {
         l.push(convertLine(lines[i], canonical));
