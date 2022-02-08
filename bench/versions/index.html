@@ -12,9 +12,8 @@
 
 <body>
     <div id="benchmarks"></div>
-    <!-- <script type="module" src="/bench/benchmarks_view_generated.js"></script> -->
-    <script type="module">
-        const {run} = await import('/bench/benchmarks_view_generated.js');
+    <script src="/bench/benchmarks_view_generated.js"></script>
+    <script>
         runComparison();
 
         async function runComparison() {
@@ -53,7 +52,7 @@
                     benchmarks.push({name, versions});
                 }
 
-                const results = await run(benchmarks);
+                const results = await window.Benchmarks.run(benchmarks);
                 // eslint-disable-next-line require-atomic-updates
                 window.maplibreglBenchmarkResults = {};
                 for (const result of results) {
@@ -73,7 +72,6 @@
             return new Promise((resolve, reject) => {
                 const s = document.createElement('script');
                 s.src = src;
-                s.type = 'module';
                 s.onload = resolve;
                 s.onerror = reject;
                 document.head.appendChild(s);
