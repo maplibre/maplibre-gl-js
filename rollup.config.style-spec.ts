@@ -1,11 +1,11 @@
 import path, {dirname} from 'path';
 import replace from '@rollup/plugin-replace';
-import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import unassert from 'rollup-plugin-unassert';
 import json from '@rollup/plugin-json';
 import {fileURLToPath, pathToFileURL} from 'url';
 import {RollupOptions} from 'rollup';
+import {nodeResolve} from './build/rollup_plugins';
 
 const esm = 'esm' in process.env;
 
@@ -47,10 +47,7 @@ const config: RollupOptions[] = [{
         }),
         json(),
         unassert(),
-        resolve({
-            browser: true,
-            preferBuiltins: false
-        }),
+        nodeResolve,
         commonjs()
     ]
 }];

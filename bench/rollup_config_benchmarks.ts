@@ -1,8 +1,7 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import replace from '@rollup/plugin-replace';
-import {plugins} from '../build/rollup_plugins';
-import resolve from '@rollup/plugin-node-resolve';
+import {plugins, nodeResolve} from '../build/rollup_plugins';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import {execSync} from 'child_process';
@@ -67,7 +66,7 @@ const viewConfig: RollupOptions = {
         sourcemap: false
     },
     plugins: [
-        resolve({browser: true, preferBuiltins: false}),
+        nodeResolve,
         watch ? typescript() : null,
         commonjs(),
         replace(replaceConfig)
