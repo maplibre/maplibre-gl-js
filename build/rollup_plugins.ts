@@ -12,6 +12,12 @@ import {Plugin} from 'rollup';
 // Common set of plugins/transformations shared across different rollup
 // builds (main maplibre bundle, style-spec package, benchmarks bundle)
 
+export const nodeResolve = resolve({
+    browser: true,
+    preferBuiltins: false,
+    extensions: ['.mjs', '.js', '.json', '.node', '.ts']
+});
+
 export const plugins = (minified: boolean, production: boolean, watch: boolean): Plugin[] => [
     minifyStyleSpec(),
     json(),
@@ -38,11 +44,7 @@ export const plugins = (minified: boolean, production: boolean, watch: boolean):
     production ? unassert({
         include: ['**/*'], // by default, unassert only includes .js files
     }) : false,
-    resolve({
-        browser: true,
-        preferBuiltins: false,
-        extensions: ['.mjs', '.js', '.json', '.node', '.ts']
-    }),
+    nodeResolve,
     watch ? typescript() : false,
     commonjs({
         // global keyword handling causes Webpack compatibility issues, so we disabled it:
