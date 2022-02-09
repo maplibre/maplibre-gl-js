@@ -24,7 +24,11 @@ const browser = await chromium.launch({
 });
 
 try {
-    const webPage = await browser.newPage();
+    const context = await browser.newContext({
+        viewport: {width: 1280, height: 1024}
+    });
+    context.setDefaultTimeout(0);
+    const webPage = await context.newPage();
 
     url.hash = 'NONE';
     await webPage.goto(url.toString());
