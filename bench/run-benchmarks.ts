@@ -1,5 +1,5 @@
 import fs from 'fs';
-import puppeteer from 'puppeteer';
+import {chromium} from 'playwright';
 import PDFMerger from 'pdf-merger-js';
 import minimist from 'minimist';
 
@@ -18,13 +18,17 @@ const url = new URL('http://localhost:9966/bench/versions/');
 for (const compare of [].concat(argv.compare).filter(Boolean))
     url.searchParams.append('compare', compare);
 
-const browser = await puppeteer.launch({
+const browser = await chromium.launch({
     headless: true,
     args: ['--use-gl=angle', '--no-sandbox', '--disable-setuid-sandbox']
 });
 
 try {
-    const webPage = await browser.newPage();
+    const context = await browser.newContext({
+        viewport: {width: 1280, height: 1024}
+    });
+    context.setDefaultTimeout(0);
+    const webPage = await context.newPage();
 
     url.hash = 'NONE';
     await webPage.goto(url.toString());
