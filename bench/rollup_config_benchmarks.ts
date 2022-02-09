@@ -26,15 +26,11 @@ const replaceConfig = {
     'process.env.NODE_ENV': JSON.stringify('production')
 };
 
-const watch = process.env.ROLLUP_WATCH === 'true';
-const srcDir = watch ? '' : 'rollup/build/tsc/';
-const inputExt = watch ? 'ts' : 'js';
-
-const allPlugins = plugins(true, true, watch).concat(replace(replaceConfig));
+const allPlugins = plugins(true, true).concat(replace(replaceConfig));
 const intro = fs.readFileSync('rollup/bundle_prelude.js', 'utf8');
 
 const splitConfig = (name: string): RollupOptions[] => [{
-    input: [`${srcDir}bench/${name}/benchmarks.${inputExt}`, `${srcDir}src/source/worker.${inputExt}`],
+    input: [`bench/${name}/benchmarks.ts`, 'src/source/worker.ts'],
     output: {
         dir: `rollup/build/benchmarks/${name}`,
         format: 'amd',
@@ -57,7 +53,7 @@ const splitConfig = (name: string): RollupOptions[] => [{
 }];
 
 const viewConfig: RollupOptions = {
-    input: `${srcDir}bench/benchmarks_view.${inputExt}${watch ? 'x' : ''}`,
+    input: 'bench/benchmarks_view.tsx',
     output: {
         name: 'Benchmarks',
         file: 'bench/benchmarks_view_generated.js',
@@ -67,7 +63,7 @@ const viewConfig: RollupOptions = {
     },
     plugins: [
         nodeResolve,
-        watch ? typescript() : null,
+        typescript(),
         commonjs(),
         replace(replaceConfig)
     ].filter(Boolean)
