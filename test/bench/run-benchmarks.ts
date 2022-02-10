@@ -13,7 +13,7 @@ if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
 }
 
-const url = new URL('http://localhost:9966/bench/versions/');
+const url = new URL('http://localhost:9966/test/bench/versions/');
 
 for (const compare of [].concat(argv.compare).filter(Boolean))
     url.searchParams.append('compare', compare);
