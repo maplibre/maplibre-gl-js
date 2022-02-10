@@ -5,7 +5,7 @@ import {MessageBus} from '../../test/unit/lib/web_worker_mock';
 const originalWorker = global.Worker;
 
 function setTestWorker(MockWorker: { new(...args: any): any}) {
-    (global as any).Worker = function Worker(url: string) {
+    (global as any).Worker = function Worker(_: string) {
         const parentListeners = [];
         const workerListeners = [];
         const parentBus = new MessageBus(workerListeners, parentListeners);

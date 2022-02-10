@@ -46,7 +46,7 @@ export class MessageBus implements WorkerInterface, WorkerGlobalScopeInterface {
     importScripts() { }
 }
 
-(global as any).Worker = function Worker(url: string) {
+(global as any).Worker = function Worker(_: string) {
     const parentListeners = [];
     const workerListeners = [];
     const parentBus = new MessageBus(workerListeners, parentListeners);
