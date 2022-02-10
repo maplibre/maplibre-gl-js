@@ -1,4 +1,4 @@
-import maplibregl from '../index';  
+import maplibregl from '../index';
 
 import type {WorkerSource} from '../source/worker_source';
 

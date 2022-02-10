@@ -58,4 +58,4 @@ export class MessageBus implements WorkerInterface, WorkerGlobalScopeInterface {
     new MaplibreWorker(workerBus);
 
     return parentBus;
-}
+};

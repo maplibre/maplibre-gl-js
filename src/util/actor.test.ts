@@ -10,20 +10,20 @@ function setTestWorker(MockWorker: { new(...args: any): any}) {
         const workerListeners = [];
         const parentBus = new MessageBus(workerListeners, parentListeners);
         const workerBus = new MessageBus(parentListeners, workerListeners);
-    
+
         parentBus.target = workerBus;
         workerBus.target = parentBus;
-    
+
         new MockWorker(workerBus);
-    
+
         return parentBus;
-    }
+    };
 }
 
 describe('Actor', () => {
     afterAll(() => {
         global.Worker = originalWorker;
-    })
+    });
 
     test('forwards responses to correct callback', done => {
         setTestWorker(class MockWorker {
@@ -35,7 +35,7 @@ describe('Actor', () => {
             }
             test(mapId, params, callback) {
                 setTimeout(callback, 0, null, params);
-            };
+            }
         });
 
         const worker = workerFactory();
