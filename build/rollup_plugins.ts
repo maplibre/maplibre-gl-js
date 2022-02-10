@@ -14,8 +14,7 @@ import {Plugin} from 'rollup';
 
 export const nodeResolve = resolve({
     browser: true,
-    preferBuiltins: false,
-    extensions: ['.mjs', '.js', '.json', '.node', '.ts']
+    preferBuiltins: false
 });
 
 export const plugins = (minified: boolean, production: boolean): Plugin[] => [
