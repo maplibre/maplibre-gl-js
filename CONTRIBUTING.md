@@ -107,7 +107,7 @@ See [`test/README.md`](./test/README.md).
 
 ## Writing & Running Benchmarks
 
-See [`bench/README.md`](./bench/README.md).
+See [`test/bench/README.md`](./test/bench/README.md).
 
 ## Code Conventions
 

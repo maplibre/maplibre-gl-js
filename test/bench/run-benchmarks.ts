@@ -8,7 +8,7 @@ const argv = minimist(process.argv.slice(2));
 const formatTime = (v) => `${v.toFixed(4)} ms`;
 const formatRegression = (v) => v.correlation < 0.9 ? '\u2620\uFE0F' : v.correlation < 0.99 ? '\u26A0\uFE0F' : ' ';
 
-const dir = './bench/results';
+const dir = './test/bench/results';
 if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
 }
