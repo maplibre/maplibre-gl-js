@@ -37,7 +37,7 @@ export type WorkerDEMTileParameters = TileParameters & {
         w: number;
     };
     rawImageData: RGBAImage | ImageBitmap;
-    encoding: 'mapbox' | 'terrarium' | 'mtk';
+    encoding: 'mapbox' | 'terrarium';
 };
 
 export type WorkerTileResult = {

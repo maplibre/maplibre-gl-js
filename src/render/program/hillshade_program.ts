@@ -95,7 +95,7 @@ const hillshadeUniformPrepareValues = (tileID: OverscaledTileID, dem: DEMData): 
         'u_image': 1,
         'u_dimension': [stride, stride],
         'u_zoom': tileID.overscaledZ,
-        'u_unpack': dem.getHillshadingUnpackVector()
+        'u_unpack': dem.getUnpackVector()
     };
 };
 

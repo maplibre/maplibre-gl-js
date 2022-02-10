@@ -51,11 +51,10 @@ function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: HeatmapS
             const programConfiguration = bucket.programConfigurations.get(layer.id);
             const program = painter.useProgram('heatmap', programConfiguration);
             const {zoom} = painter.transform;
-            const terrain = painter.style.terrainSourceCache.getTerrain(coord);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
-                heatmapUniformValues(coord.posMatrix, tile, zoom, layer.paint.get('heatmap-intensity')),
-                terrain, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
+                heatmapUniformValues(coord.posMatrix, tile, zoom, layer.paint.get('heatmap-intensity')), null,
+                layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
                 bucket.segments, layer.paint, painter.transform.zoom,
                 programConfiguration);
         }
@@ -125,7 +124,7 @@ function renderTextureToMap(painter, layer) {
 
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
-        heatmapTextureUniformValues(painter, layer, 0, 1),
+        heatmapTextureUniformValues(painter, layer, 0, 1), null, // FIX ME-3D render onto terrain-mesh
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, painter.transform.zoom);
 }

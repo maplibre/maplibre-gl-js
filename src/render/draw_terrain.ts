@@ -73,7 +73,7 @@ function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache, tile: Ti
     context.bindFramebuffer.set(null);
     context.viewport.set([0, 0, painter.width, painter.height]);
     context.activeTexture.set(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, sourceCache.rttFramebuffer.colorAttachment.get());
+    gl.bindTexture(gl.TEXTURE_2D, sourceCache.getRTTFramebuffer(painter).colorAttachment.get());
     const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
     const uniformValues = terrainUniformValues(posMatrix);
     program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrain, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
@@ -95,8 +95,9 @@ function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, tile:
         tile.textures[stack].bind(context.gl.LINEAR, context.gl.CLAMP_TO_EDGE);
         if (stack === 0) sourceCache._renderHistory.push(tile.tileID.key);
     }
-    sourceCache.rttFramebuffer.colorAttachment.set(tile.textures[stack].texture);
-    context.bindFramebuffer.set(sourceCache.rttFramebuffer.framebuffer);
+    const fb = sourceCache.getRTTFramebuffer(painter);
+    fb.colorAttachment.set(tile.textures[stack].texture);
+    context.bindFramebuffer.set(fb.framebuffer);
     context.viewport.set([0, 0, size, size]);
 }
 

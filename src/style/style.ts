@@ -158,7 +158,7 @@ class Style extends Evented {
         this._availableImages = [];
 
         // make elevation accessible from map.transform
-        map.transform.terrainSourceCache = this.terrainSourceCache;
+        if (map.transform) map.transform.terrainSourceCache = this.terrainSourceCache;
 
         this._resetUpdates();
 

@@ -31,10 +31,10 @@ map.on('load', () => {
     map.addSource('terrain', {
         'type': 'raster-dem',
         'tiles': ['https://vtc-cdn.maptoolkit.net/terrainrgb/{z}/{x}/{y}.webp'],
-        'encoding': 'mtk',
+        'encoding': 'mapbox',
         'maxzoom': 14
     });
-    map.addTerrain('terrain');
+    map.addTerrain('terrain', {exaggeration: 0.33});
 });
 
 map.on('click', e => {

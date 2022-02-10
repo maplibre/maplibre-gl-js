@@ -415,8 +415,9 @@ class HandlerManager {
     _updateMapTransform(combinedResult: any, combinedEventsInProgress: any, deactivatedHandlers: any) {
         const map = this._map;
         const tr = map.transform;
+        const hasTerrain = map.style && map.style.terrainSourceCache && map.style.terrainSourceCache.isEnabled();
 
-        if (!hasChange(combinedResult) && !this._drag) {
+        if (!hasChange(combinedResult) && !(hasTerrain && this._drag)) {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
         }
 
@@ -447,7 +448,7 @@ class HandlerManager {
         // when dragging ends, recalcuate the zoomlevel for the new center coordinate
         } else if (this._drag && deactivatedHandlers[this._drag.handlerName]) {
             tr.freezeElevation = false;
-            tr.recalculateZoom();
+            if (hasTerrain) tr.recalculateZoom();
             this._drag = null;
         // drag map
         } else if (combinedEventsInProgress.drag && this._drag) {
@@ -456,7 +457,7 @@ class HandlerManager {
             // of the picked point. With this approach it is no longer possible to pick a point from
             // from somewhere near the horizon to the center in one move.
             // So this logic avoids the problem, that in such cases you easily loose orientation.
-            if (map.style.terrainSourceCache.isEnabled()) {
+            if (hasTerrain) {
                 tr.center = tr.pointLocation(tr.centerPoint.sub(panDelta));
             // in flat mode leave all es it is. e.g. drag the picked point directly to the new posistion.
             } else {

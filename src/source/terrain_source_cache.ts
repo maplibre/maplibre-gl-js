@@ -7,7 +7,7 @@ import Style from '../style/style';
 import Texture from '../render/texture';
 import {RGBAImage} from '../util/image';
 import {PosArray, TriangleIndexArray} from '../data/array_types.g';
-import {number as mix} from '../style-spec/util/interpolate.js';
+import {number as mix} from '../style-spec/util/interpolate';
 import posAttributes from '../data/pos_attributes';
 import SegmentVector from '../data/segment';
 import type Transform from '../geo/transform';
@@ -87,6 +87,8 @@ class TerrainSourceCache extends Evented {
     // because of overzooming raster-dem tiles this cache holds the corresponding
     // raster-dem-tile for a vector-tile.
     _sourceTileCache: {[_: string]: string};
+    // framebuffer-object to render tiles to texture
+    _rttFramebuffer: Framebuffer;
     // minimum zoomlevel to render the terrain.
     minzoom: number;
     // maximum zoomlevel to render the terrain.
@@ -107,8 +109,6 @@ class TerrainSourceCache extends Evented {
     // a lot of terrain-dem tiles with very low visual advantage. So with this setting
     // the raster-dem tiles will load for the actualZoom - deltaZoom zoom-level.
     deltaZoom: number;
-    // framebuffer-object to render tiles to texture
-    rttFramebuffer: Framebuffer;
     // remember all tiles which contains new data for a spezific source and tile-key.
     rerender: {[_: string]: {[_: number]: boolean}};
 
@@ -134,23 +134,6 @@ class TerrainSourceCache extends Evented {
         this.qualityFactor = 2;
         this.deltaZoom = 1;
         this.rerender = {};
-
-        // create empty DEM Obejcts, which will used while raster-dem tiles will load.
-        const context = style.map.painter.context;
-        this._emptyDemUnpack = [0, 0, 0, 0];
-        this._emptyDemTexture = new Texture(context, new RGBAImage({width: 1, height: 1}), context.gl.RGBA, {premultiply: false});
-        this._emptyDemTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
-        this._emptyDemMatrix = mat4.identity([] as any);
-
-        // creates an empty depth-buffer texture which is needed, during the initialisation process of the 3d mesh..
-        const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4));
-        const texture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
-        this._emptyDepthTexture = texture;
-
-        // create the render-to-texture framebuffer
-        const size = this.tileSize * this.qualityFactor;
-        this.rttFramebuffer = context.createFramebuffer(size, size, true);
-        this.rttFramebuffer.depthAttachment.set(context.createRenderbuffer(context.gl.DEPTH_COMPONENT16, size, size));
 
         // rerender corresponding tiles on terrain-dem source-tile updates
         style.on('data', e => {
@@ -247,7 +230,7 @@ class TerrainSourceCache extends Evented {
             const tile = this._tiles[this._renderHistory.shift()];
             if (tile && !tileIDs[tile.tileID.key]) {
                 tile.clearTextures(this._style.map.painter);
-                delete (this._tiles[tile.tileID.key]);
+                delete this._tiles[tile.tileID.key];
             }
         }
     }
@@ -338,6 +321,17 @@ class TerrainSourceCache extends Evented {
      */
     getTerrain(tileID?: OverscaledTileID): any {
         if (!this.isEnabled() || !tileID) return null;
+        // create empty DEM Obejcts, which will used while raster-dem tiles will load.
+        // creates an empty depth-buffer texture which is needed, during the initialisation process of the 3d mesh..
+        if (!this._emptyDemTexture) {
+            const context = this._style.map.painter.context;
+            const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4));
+            this._emptyDepthTexture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
+            this._emptyDemUnpack = [0, 0, 0, 0];
+            this._emptyDemTexture = new Texture(context, new RGBAImage({width: 1, height: 1}), context.gl.RGBA, {premultiply: false});
+            this._emptyDemTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
+            this._emptyDemMatrix = mat4.identity([] as any);
+        }
         // find covering dem tile and prepare demTexture
         const sourceTile = this.getSourceTile(tileID, true);
         if (sourceTile && sourceTile.dem && (!sourceTile.demTexture || sourceTile.needsTerrainPrepare)) {
@@ -416,6 +410,20 @@ class TerrainSourceCache extends Evented {
     getElevationWithExaggeration(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         if (!this.isEnabled()) return 0.0;
         return this.getElevation(tileID, x, y, extent) * this.exaggeration;
+    }
+
+    /**
+     * create the render-to-texture framebuffer
+     * @param {Painter} painter
+     * @returns {Framebuffer}
+     */
+    getRTTFramebuffer(painter: Painter) {
+        if (!this._rttFramebuffer) {
+            const size = this.tileSize * this.qualityFactor;
+            this._rttFramebuffer = painter.context.createFramebuffer(size, size, true);
+            this._rttFramebuffer.depthAttachment.set(painter.context.createRenderbuffer(painter.context.gl.DEPTH_COMPONENT16, size, size));
+        }
+        return this._rttFramebuffer;
     }
 
     /**

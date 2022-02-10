@@ -351,7 +351,7 @@ class Transform {
         if (options.minzoom !== undefined && z < options.minzoom) return [];
         if (options.maxzoom !== undefined && z > options.maxzoom) z = options.maxzoom;
 
-        const cameraCoord = tsc.isEnabled() ?
+        const cameraCoord = (tsc && tsc.isEnabled()) ?
             this.pointCoordinate(this.getCameraPoint()) :
             MercatorCoordinate.fromLngLat(this.center);
         const centerCoord = MercatorCoordinate.fromLngLat(this.center);
@@ -363,7 +363,7 @@ class Transform {
         // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
         let minZoom = options.minzoom || 0;
         // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
-        if (!tsc.isEnabled() && this.pitch <= 60.0 && this._edgeInsets.top < 0.1)
+        if (!(tsc && tsc.isEnabled()) && this.pitch <= 60.0 && this._edgeInsets.top < 0.1)
             minZoom = z;
 
         // There should always be a certain number of maximum zoom level tiles surrounding the center location
@@ -437,7 +437,7 @@ class Transform {
                 const childY = (y << 1) + (i >> 1);
                 const childZ = it.zoom + 1;
                 let quadrant = it.aabb.quadrant(i);
-                if (tsc.isEnabled()) {
+                if (tsc && tsc.isEnabled()) {
                     const tile = tsc.getSourceTile(new OverscaledTileID(childZ, it.wrap, childZ, childX, childY));
                     quadrant = new Aabb(
                         vec3.fromValues(quadrant.min[0], quadrant.min[1], tile && tile.dem ? tile.dem.min - this.elevation : -this.elevation),
@@ -489,7 +489,7 @@ class Transform {
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
         const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
         const tileID = new OverscaledTileID(this.tileZoom, 0, this.tileZoom, tileX, tileY);
-        return this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize, tileSize);
+        return this.terrainSourceCache.getElevationWithExaggeration(tileID, mercX % tileSize, mercY % tileSize, tileSize);
     }
 
     getCameraPosition() {
@@ -498,9 +498,10 @@ class Transform {
         return {lngLat, altitude: altitude + this.elevation};
     }
 
-    // this method only works in combination with freezeElevation, because in this case
-    // this.elevation holds the old elevation value.
+    // this method only works in combination with elevation enabled and freezeElevation activated,
+    // because only in this case this.elevation holds the old elevation value.
     recalculateZoom() {
+        if (!this.terrainSourceCache || !this.terrainSourceCache.isEnabled()) return;
         // find position the camera is looking on
         const center = this.pointLocation3D(this.centerPoint);
         const elevation = this.getElevation(center);
@@ -627,6 +628,7 @@ class Transform {
 
     // FIX ME-3D! mouseout events may contains coordinates outside the coords-framebuffer
     pointCoordinate3D(p: Point) {
+        if (!this.terrainSourceCache) return this.pointCoordinate(p);
         const rgba = new Uint8Array(4);
         const painter = this.terrainSourceCache._style.map.painter, context = painter.context, gl = context.gl;
         // grab coordinate pixel from coordinates framebuffer
@@ -656,7 +658,7 @@ class Transform {
      * @private
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0) {
-        const p = vec4.fromValues(coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1);
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as any;
         vec4.transformMat4(p, p, this.pixelMatrix2);
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
@@ -801,8 +803,6 @@ class Transform {
     _calcMatrices() {
         if (!this.height) return;
 
-        const exaggeration = this.terrainSourceCache ? this.terrainSourceCache.exaggeration : 1.0;
-        const elevation = this._elevation * exaggeration;
         const halfFov = this._fov / 2;
         const offset = this.centerOffset;
         this.cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this.height;
@@ -826,7 +826,9 @@ class Transform {
         const groundAngle = Math.PI / 2 + this._pitch;
         const fovAboveCenter = this._fov * (0.5 + offset.y / this.height);
         const cameraAltitude = Math.cos(this._pitch) * this.cameraToCenterDistance / this._pixelPerMeter;
-        const cameraToCenterDistance = (cameraAltitude + elevation) * this._pixelPerMeter / Math.cos(this._pitch);
+        const cameraToCenterDistance = this.terrainSourceCache && this.terrainSourceCache.isEnabled() ?
+            (cameraAltitude + this._elevation) * this._pixelPerMeter / Math.cos(this._pitch) :
+            this.cameraToCenterDistance;
         const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * cameraToCenterDistance / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
         const point = this.point;
         const x = point.x, y = point.y;
@@ -861,7 +863,7 @@ class Transform {
 
         // The mercatorMatrix can be used to transform points from mercator coordinates
         // ([0, 0] nw, [1, 1] se) to GL coordinates.
-        this.mercatorMatrix = mat4.scale(new Float64Array(16) as any, m, vec3.fromValues(this.worldSize, this.worldSize, this.worldSize));
+        this.mercatorMatrix = mat4.scale([] as any, m, vec3.fromValues(this.worldSize, this.worldSize, this.worldSize));
 
         // scale vertically to meters per pixel (inverse of ground resolution):
         mat4.scale(m, m, vec3.fromValues(1, 1, this._pixelPerMeter));
@@ -870,8 +872,8 @@ class Transform {
         this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
         // matrix for conversion from location to GL coordinates (-1 .. 1)
-        this.invProjMatrix = mat4.invert(new Float64Array(16) as any, m);
-        mat4.translate(m, m, [0, 0, -elevation]); // elevate camera over terrain
+        this.invProjMatrix = mat4.invert([] as any, m);
+        mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
         this.projMatrix = m;
         this.pixelMatrix2 = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
