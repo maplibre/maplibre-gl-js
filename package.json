@@ -133,9 +133,6 @@
     "ts-node": "^10.5.0",
     "typescript": "^4.5.5"
   },
-  "browser": {
-    "./src/util/web_worker.ts": "./build/web_worker_replacement.ts"
-  },
   "scripts": {
     "generate-shaders": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-shaders.ts",
     "generate-struct-arrays": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-struct-arrays.ts",
