@@ -1,15 +1,9 @@
 # Build Scripts
 This folder holds common build scripts accessed via the various `npm run` commands.
-
+Codegen is executed when calling `npm install` in order to generate all artifacts needed for the build to pass
 ## Bundeling all the code
 
 The bundeling process can be split into several steps:
-
-`npx run tsc`
-This command will transpile all the typescript files into javascript files and place them in the `rollup/build` folder.
-
-`npm run build-glsl`
-This command will copy all the shader files to the build output and convert the shaders into strings that can be imported to javascript.
 
 `npm run build-css`
 This command will compile the css code and create the css file.
@@ -17,22 +11,21 @@ This command will compile the css code and create the css file.
 `npm run build-prod` or `npm run build-prod-min` or `npm run build-dev`
 These commands will use rollup to bundle the code. This is where the magic happens and uses some files in this folder.
 
-`banner.js` is used to create a banner at the beginning of the output file
+`banner.ts` is used to create a banner at the beginning of the output file
 
-`rollup_plugins.js` is used to define common plugins for rollup configurations
+`rollup_plugins.ts` is used to define common plugins for rollup configurations
 
-`rollup_plugin_minify_style_spec.js` is used to specify the plugin used in style spec bundeling
+`rollup_plugin_minify_style_spec.ts` is used to specify the plugin used in style spec bundeling
 
 In the `rollup` folder there are some files that are used as linking files as they link to other files for rollup to pick when bundling.
-Rollup also has a configuration in the `package.json` file to signal which files it needs to replace when bundling for the browser, this is where `web_worker_replacement.js` is used - as it replaces the node mocking of web worker that is present in the source code.
 
 Rollup is generating 3 files throughout the process of bundling: 
 
-`index.js` a file containing all the code that will run in the main thread. 
+`index.ts` a file containing all the code that will run in the main thread. 
 
-`shared.js` a file containing all the code shared between the main and worker code.
+`shared.ts` a file containing all the code shared between the main and worker code.
 
-`worker.js` a file containing all the code the will run in the worker threads.
+`worker.ts` a file containing all the code the will run in the worker threads.
 
 These 3 files are then referenced and used by the `bundle_prelude.js` file. It allows loading the web wroker code automatically in web workers without any extra effort from someone who would like to use the library, i.e. it simply works.
 
@@ -55,8 +48,5 @@ Generates `style-spec/types.ts` based on the content of `v8.json`. This provides
 <hr>
 
 ### Generate Release Nodes
-The following files are being used to generate release notes:
 
 `release-notes.js` Used to generate release notes when releasing a new version
-
-`release-notes.md.ejs` Used for the generation as a template file
