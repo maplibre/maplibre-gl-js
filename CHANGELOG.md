@@ -2,6 +2,15 @@
 
 ### Features and improvements
 
+- *...Add new stuff here...*
+
+### 🐞 Bug fixes
+
+- *...Add new stuff here...*
+## 2.1.2
+
+### Features and improvements
+
 - Default compact attribution to be open by default to comply with OpenSteetMap Attribution Guidelines (#795)
 - Export `Source` classes (`GeoJSONSource` etc.) declarations. ([#801](https://github.com/maplibre/maplibre-gl-js/issues/801))
 - Make `AJAXError` public so error HTTP responses can be handled differently from other errors.
