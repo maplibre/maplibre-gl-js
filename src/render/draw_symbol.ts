@@ -287,17 +287,17 @@ function getSymbolsState(painter, coord, tile, bucket, layer, isText) {
     if (isSDF) {
         if (!bucket.iconsInText) {
             uniformValues = symbolSDFUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, isText, texSize, true);
+                size, rotateInShader, pitchWithMap, painter, matrix,
+                uLabelPlaneMatrix, uglCoordMatrix, isText, texSize, true);
         } else {
             uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, texSize, texSizeIcon);
+                size, rotateInShader, pitchWithMap, painter, matrix,
+                uLabelPlaneMatrix, uglCoordMatrix, texSize, texSizeIcon);
         }
     } else {
         uniformValues = symbolIconUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, painter, matrix,
-                uLabelPlaneMatrix, uglCoordMatrix, isText, texSize);
+            size, rotateInShader, pitchWithMap, painter, matrix,
+            uLabelPlaneMatrix, uglCoordMatrix, isText, texSize);
     }
 
     return {
