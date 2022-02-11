@@ -1,7 +1,7 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import replace from '@rollup/plugin-replace';
-import {plugins, nodeResolve} from '../build/rollup_plugins';
+import {plugins, nodeResolve} from '../../build/rollup_plugins';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import {execSync} from 'child_process';
@@ -30,7 +30,7 @@ const allPlugins = plugins(true, true).concat(replace(replaceConfig));
 const intro = fs.readFileSync('rollup/bundle_prelude.js', 'utf8');
 
 const splitConfig = (name: string): RollupOptions[] => [{
-    input: [`bench/${name}/benchmarks.ts`, 'src/source/worker.ts'],
+    input: [`test/bench/${name}/benchmarks.ts`, 'src/source/worker.ts'],
     output: {
         dir: `rollup/build/benchmarks/${name}`,
         format: 'amd',
@@ -42,7 +42,7 @@ const splitConfig = (name: string): RollupOptions[] => [{
 }, {
     input: `rollup/benchmarks_${name}.js`,
     output: {
-        file: `bench/${name}/benchmarks_generated.js`,
+        file: `test/bench/${name}/benchmarks_generated.js`,
         format: 'umd',
         indent: false,
         sourcemap: true,
@@ -53,10 +53,10 @@ const splitConfig = (name: string): RollupOptions[] => [{
 }];
 
 const viewConfig: RollupOptions = {
-    input: 'bench/benchmarks_view.tsx',
+    input: 'test/bench/benchmarks_view.tsx',
     output: {
         name: 'Benchmarks',
-        file: 'bench/benchmarks_view_generated.js',
+        file: 'test/bench/benchmarks_view_generated.js',
         format: 'umd',
         indent: false,
         sourcemap: false

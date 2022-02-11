@@ -1,4 +1,4 @@
-import maplibregl from '../../src';
+import maplibregl from '../../../src';
 import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '@mapbox/gazetteer/benchmark/style-benchmark-locations.json';
 import Layout from '../benchmarks/layout';
@@ -19,7 +19,7 @@ import {FunctionCreate, FunctionEvaluate, ExpressionCreate, ExpressionEvaluate} 
 import FilterCreate from '../benchmarks/filter_create';
 import FilterEvaluate from '../benchmarks/filter_evaluate';
 
-import getWorkerPool from '../../src/util/global_worker_pool';
+import getWorkerPool from '../../../src/util/global_worker_pool';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 

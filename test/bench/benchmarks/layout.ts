@@ -1,8 +1,8 @@
-import type {StyleSpecification} from '../../src/style-spec/types';
+import type {StyleSpecification} from '../../../src/style-spec/types';
 import Benchmark from '../lib/benchmark';
 import fetchStyle from '../lib/fetch_style';
 import TileParser from '../lib/tile_parser';
-import {OverscaledTileID} from '../../src/source/tile_id';
+import {OverscaledTileID} from '../../../src/source/tile_id';
 
 export default class Layout extends Benchmark {
     tiles: Array<{
