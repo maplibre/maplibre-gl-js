@@ -16,6 +16,7 @@ import type {TileJSON} from '../../src/types/tilejson';
 import type Map from '../../src/ui/map';
 
 class StubMap extends Evented {
+    style: Style;
     _requestManager: RequestManager;
 
     constructor() {
@@ -28,11 +29,11 @@ class StubMap extends Evented {
     }
 }
 
-const mapStub = new StubMap() as any as Map;
-
 function createStyle(styleJSON: StyleSpecification): Promise<Style> {
     return new Promise((resolve, reject) => {
+        const mapStub = new StubMap() as any as Map;
         const style = new Style(mapStub);
+        mapStub.style = style;
         style.loadJSON(styleJSON);
         style
             .on('style.load', () => resolve(style))
