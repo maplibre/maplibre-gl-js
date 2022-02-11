@@ -18,6 +18,8 @@ const url = new URL('http://localhost:9966/bench/versions');
 for (const compare of [].concat(argv.compare).filter(Boolean))
     url.searchParams.append('compare', compare);
 
+console.log(`Starting headeless chrome at: ${url.toString()}`);
+
 const browser = await chromium.launch({
     headless: true,
     args: ['--use-gl=angle', '--no-sandbox', '--disable-setuid-sandbox']
