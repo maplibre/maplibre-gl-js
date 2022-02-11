@@ -14,7 +14,6 @@
 - Default compact attribution to be open by default to comply with OpenSteetMap Attribution Guidelines (#795)
 - Export `Source` classes (`GeoJSONSource` etc.) declarations. (#801)
 - Make `AJAXError` public so error HTTP responses can be handled differently from other errors.
-- *...Add new stuff here...*
 
 ### 🐞 Bug fixes
 
@@ -22,7 +21,6 @@
 - Fix error mismatched image size for CJK characters (#718)
 - Fire `dataabort` and `sourcedataabort` events when a tile request is aborted (#794)
 - Fix NextJs `performance` undefined (#768)
-- *...Add new stuff here...*
 
 ## 2.1.1
 
