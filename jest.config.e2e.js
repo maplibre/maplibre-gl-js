@@ -10,12 +10,8 @@ export default {
     'transform': {
         '^.+\\.(t|j)sx?$': '@swc/jest',
     },
-    testEnvironment: 'jsdom',
     transformIgnorePatterns: [
         '/node_modules/@mapbox/jsonlint-lines-primitives/lib/jsonlint.js'
     ],
-    setupFiles: [
-        'jest-canvas-mock',
-        './test/unit/lib/web_worker_mock.ts'
-    ],
+    setupFiles: ['jest-canvas-mock', 'jest-playwright-preset'],
 };

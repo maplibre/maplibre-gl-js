@@ -16,10 +16,10 @@ const config = (input: InputOption, file: string, format: ModuleFormat): RollupO
         banner
     },
     treeshake: true,
-    plugins: plugins(true, true, false)
+    plugins: plugins(true, true)
 });
 
 export default [
-    config('rollup/build/tsc/src/index.js', 'dist/maplibre-gl-csp.js', 'umd'),
-    config('rollup/build/tsc/src/source/worker.js', 'dist/maplibre-gl-csp-worker.js', 'iife')
+    config('src/index.ts', 'dist/maplibre-gl-csp.js', 'umd'),
+    config('src/source/worker.ts', 'dist/maplibre-gl-csp-worker.js', 'iife')
 ];

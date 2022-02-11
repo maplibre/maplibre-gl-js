@@ -2,12 +2,14 @@
 
 ### Features and improvements
 
+- Default compact attribution to be open by default to comply with OpenSteetMap Attribution Guidelines (#795)
 - Export `Source` classes (`GeoJSONSource` etc.) declarations. ([#801](https://github.com/maplibre/maplibre-gl-js/issues/801))
 - Make `AJAXError` public so error HTTP responses can be handled differently from other errors.
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
 
+- Fix compact attribution button showing when attribution is blank (#795)
 - Fix error mismatched image size for CJK characters (#718)
 - Fire `dataabort` and `sourcedataabort` events when a tile request is aborted (#794)
 - *...Add new stuff here...*

@@ -8,7 +8,7 @@ import fs from 'fs';
 import path, {dirname} from 'path';
 import customLayerImplementations from './custom_layer_implementations';
 import {fileURLToPath} from 'url';
-
+import '../../unit/lib/web_worker_mock';
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let now = 0;
