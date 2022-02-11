@@ -2,7 +2,7 @@
 /types/
 /dist/
 /dist_type/
-/bench/results/
+/test/bench/results/
 *.es.js
 node_modules
 *.sublime-*

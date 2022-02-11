@@ -1,14 +1,14 @@
 import Benchmark from '../lib/benchmark';
 
-import spec from '../../src/style-spec/reference/latest';
-import convertFunction from '../../src/style-spec/function/convert';
-import {isFunction, createFunction} from '../../src/style-spec/function';
-import {createPropertyExpression} from '../../src/style-spec/expression';
+import spec from '../../../src/style-spec/reference/latest';
+import convertFunction from '../../../src/style-spec/function/convert';
+import {isFunction, createFunction} from '../../../src/style-spec/function';
+import {createPropertyExpression} from '../../../src/style-spec/expression';
 import fetchStyle from '../lib/fetch_style';
 
-import type {StyleSpecification} from '../../src/style-spec/types';
-import type {StylePropertySpecification} from '../../src/style-spec/style-spec';
-import type {StylePropertyExpression} from '../../src/style-spec/expression';
+import type {StyleSpecification} from '../../../src/style-spec/types';
+import type {StylePropertySpecification} from '../../../src/style-spec/style-spec';
+import type {StylePropertyExpression} from '../../../src/style-spec/expression';
 
 interface DataT {
     propertySpec: StylePropertySpecification;

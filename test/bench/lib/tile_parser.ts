@@ -2,20 +2,21 @@ import Protobuf from 'pbf';
 import VT from '@mapbox/vector-tile';
 import assert from 'assert';
 
-import deref from '../../src/style-spec/deref';
-import Style from '../../src/style/style';
-import {Evented} from '../../src/util/evented';
-import {RequestManager} from '../../src/util/request_manager';
-import WorkerTile from '../../src/source/worker_tile';
-import StyleLayerIndex from '../../src/style/style_layer_index';
+import deref from '../../../src/style-spec/deref';
+import Style from '../../../src/style/style';
+import {Evented} from '../../../src/util/evented';
+import {RequestManager} from '../../../src/util/request_manager';
+import WorkerTile from '../../../src/source/worker_tile';
+import StyleLayerIndex from '../../../src/style/style_layer_index';
 
-import type {StyleSpecification} from '../../src/style-spec/types';
-import type {WorkerTileResult} from '../../src/source/worker_source';
-import type {OverscaledTileID} from '../../src/source/tile_id';
-import type {TileJSON} from '../../src/types/tilejson';
-import type Map from '../../src/ui/map';
+import type {StyleSpecification} from '../../../src/style-spec/types';
+import type {WorkerTileResult} from '../../../src/source/worker_source';
+import type {OverscaledTileID} from '../../../src/source/tile_id';
+import type {TileJSON} from '../../../src/types/tilejson';
+import type Map from '../../../src/ui/map';
 
 class StubMap extends Evented {
+    style: Style;
     _requestManager: RequestManager;
 
     constructor() {
@@ -28,11 +29,11 @@ class StubMap extends Evented {
     }
 }
 
-const mapStub = new StubMap() as any as Map;
-
 function createStyle(styleJSON: StyleSpecification): Promise<Style> {
     return new Promise((resolve, reject) => {
+        const mapStub = new StubMap() as any as Map;
         const style = new Style(mapStub);
+        mapStub.style = style;
         style.loadJSON(styleJSON);
         style
             .on('style.load', () => resolve(style))

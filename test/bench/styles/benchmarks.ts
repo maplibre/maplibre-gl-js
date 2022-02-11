@@ -1,4 +1,4 @@
-import maplibregl from '../../src';
+import maplibregl from '../../../src';
 import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '@mapbox/gazetteer/benchmark/style-benchmark-locations.json';
 import StyleLayerCreate from '../benchmarks/style_layer_create';
@@ -8,7 +8,7 @@ import Paint from '../benchmarks/paint';
 import QueryPoint from '../benchmarks/query_point';
 import QueryBox from '../benchmarks/query_box';
 
-import getWorkerPool from '../../src/util/global_worker_pool';
+import getWorkerPool from '../../../src/util/global_worker_pool';
 
 const locations = locationsWithTileID(styleBenchmarkLocations.features as GeoJSON.Feature<GeoJSON.Point>[]);
 

@@ -26,8 +26,8 @@ jobs:
       - name: Copy benchmarks_generated.js
         run: |
           mkdir tmp
-          cp bench/versions/benchmarks_generated.js tmp
-          cp bench/versions/benchmarks_generated.js.map tmp
+          cp test/bench/versions/benchmarks_generated.js tmp
+          cp test/bench/versions/benchmarks_generated.js.map tmp
 
       - name: Upload to GitHub Pages (main)
         if: startsWith(github.ref, 'refs/heads/main')
