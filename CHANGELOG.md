@@ -7,6 +7,13 @@
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
+
+## 2.1.3
+
+### 🐞 Bug fixes
+
+- Fix postinstall `ts-node` error on non-dev installs (#900)
+
 ## 2.1.2
 
 ### Features and improvements
