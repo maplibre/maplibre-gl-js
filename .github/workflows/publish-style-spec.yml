@@ -21,8 +21,6 @@ jobs:
 
       - name: Install GL JS
         run: npm ci
-
-      - run: npm run dev-postinstall
       
       - name: Build GL JS
         run: |

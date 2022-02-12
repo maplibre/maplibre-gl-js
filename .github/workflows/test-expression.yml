@@ -18,5 +18,4 @@ jobs:
           node-version: 16
           architecture: x64
       - run: npm ci
-      - run: npm run dev-postinstall
       - run: npm run test-expression
