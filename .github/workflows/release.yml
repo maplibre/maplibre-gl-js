@@ -57,6 +57,10 @@ jobs:
         run: |
           echo "// empty in published package" > postinstall.js
 
+      - name: Write dist/package.json
+        run: |
+          echo "{ \"type\": \"commonjs\" }" > dist/package.json
+
       - name: Create Archive
         run: |
           zip -r dist dist
