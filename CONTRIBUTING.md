@@ -27,6 +27,7 @@ Install node module dependencies
 ```bash
 cd maplibre-gl-js &&
 npm install
+npm run dev-postinstall
 ```
 
 ### Linux
@@ -56,6 +57,7 @@ Install node module dependencies
 ```bash
 cd maplibre-gl-js &&
 npm install
+npm run dev-postinstall
 ```
 
 ### Windows
@@ -72,6 +74,7 @@ Install node module dependencies
 ```bash
 cd maplibre-gl-js
 npm install
+npm run dev-postinstall
 ```
 
 Install headless-gl dependencies https://github.com/stackgl/headless-gl#windows

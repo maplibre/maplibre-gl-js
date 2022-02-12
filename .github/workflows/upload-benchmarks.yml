@@ -20,6 +20,8 @@ jobs:
       - name: Install
         run: npm ci
 
+      - run: npm run dev-postinstall
+
       - name: Build benchmarks
         run: npm run build-benchmarks
 

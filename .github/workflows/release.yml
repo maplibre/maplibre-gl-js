@@ -40,6 +40,8 @@ jobs:
       - name: Install
         run: npm ci
 
+      - run: npm run dev-postinstall
+
       - name: Prepare release
         id: prepare_release
         run: |
