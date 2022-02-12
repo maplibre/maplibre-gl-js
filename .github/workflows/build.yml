@@ -17,6 +17,8 @@ jobs:
           node-version: 16
           architecture: x64
       - run: npm ci
+        env:
+            NODE_ENV: development
       - run: npm run generate-typings
       - run: npm run build-prod-min
       - run: npm run build-prod

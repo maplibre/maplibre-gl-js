@@ -30,6 +30,8 @@ jobs:
           node-version: ${{ matrix.node_version }}
           architecture: ${{ matrix.architecture }}
       - run: npm ci
+        env:
+            NODE_ENV: development
       - run: npm run lint
       - run: npm run lint-docs
       - run: npm run lint-css

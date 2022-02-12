@@ -19,6 +19,8 @@ jobs:
 
       - name: Install
         run: npm ci
+        env:
+            NODE_ENV: development
 
       - name: Build benchmarks
         run: npm run build-benchmarks

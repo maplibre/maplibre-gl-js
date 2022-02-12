@@ -27,6 +27,8 @@ jobs:
           node-version: ${{ matrix.node_version }}
           architecture: ${{ matrix.architecture }}
       - run: npm ci
+        env:
+            NODE_ENV: development
       - run: npm run test-unit
 
   test_unit_ubuntu:
@@ -49,4 +51,6 @@ jobs:
           node-version: ${{ matrix.node_version }}
           architecture: ${{ matrix.architecture }}
       - run: npm ci
+        env:
+            NODE_ENV: development
       - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit

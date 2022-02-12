@@ -24,6 +24,8 @@ jobs:
           node-version: 16
           architecture: x64
       - run: npm ci
+        env:
+            NODE_ENV: development
       - name: Download branch artifact
         uses: dawidd6/action-download-artifact@v2
         with:

@@ -39,6 +39,8 @@ jobs:
 
       - name: Install
         run: npm ci
+        env:
+            NODE_ENV: development
 
       - name: Prepare release
         id: prepare_release

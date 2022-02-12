@@ -21,6 +21,8 @@ jobs:
 
       - name: Install GL JS
         run: npm ci
+        env:
+            NODE_ENV: development
       
       - name: Build GL JS
         run: |
