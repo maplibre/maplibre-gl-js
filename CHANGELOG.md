@@ -8,6 +8,12 @@
 
 - *...Add new stuff here...*
 
+## 2.1.5
+
+### 🐞 Bug fixes
+
+- Publish empty `postinstall.js` file. Follow-up on (#990), (#991), (#992).
+
 ## 2.1.5-pre.1
 
 ### 🐞 Bug fixes
