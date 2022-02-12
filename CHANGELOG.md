@@ -8,6 +8,13 @@
 
 - *...Add new stuff here...*
 
+## 2.1.4
+
+
+### 🐞 Bug fixes
+
+- Fix missing `postinstall.js` file in npm publish. Follow-up on (#990), (#991).
+
 ## 2.1.3
 
 ### 🐞 Bug fixes
