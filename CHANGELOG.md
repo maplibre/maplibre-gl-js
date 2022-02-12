@@ -8,6 +8,12 @@
 
 - *...Add new stuff here...*
 
+## 2.1.6-pre.1
+
+### 🐞 Bug fixes
+
+- Publish `dist/package.json` (#998).
+
 ## 2.1.5
 
 ### 🐞 Bug fixes
