@@ -43,7 +43,6 @@ describe('CanonicalTileID', () => {
         expect(new CanonicalTileID(17, 22914, 52870).url(['quadkey={quadkey}'], 1)).toBe('quadkey=02301322130000230');
 
         // Test case confirmed by quadkeytools package
-        // https://bitbucket.org/steele/quadkeytools/rollup/build/tsc/src/master/test/quadkey.js?fileviewer=file-view-default#quadkey.js-57
         expect(new CanonicalTileID(6, 29, 3).url(['quadkey={quadkey}'], 1)).toBe('quadkey=011123');
 
     });

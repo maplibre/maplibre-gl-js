@@ -1,11 +1,12 @@
 
 // fixtures.json is automatically generated before this file gets built
 // refer build/generate-query-test-fixtures.ts
+import {Browser, chromium, Page} from 'playwright';
+
 import fixtures from './dist/fixtures.json';
 import {deepEqual} from '../lib/json-diff';
 import st from 'st';
 import http from 'http';
-import puppeteer, {Browser, Page} from 'puppeteer';
 import path from 'path';
 
 let browser: Browser;
@@ -130,7 +131,7 @@ describe('query tests', () => {
 
     beforeAll(async () => {
 
-        browser = await puppeteer.launch({
+        browser = await chromium.launch({
             headless: false,
         });
     });

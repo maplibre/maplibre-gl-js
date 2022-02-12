@@ -1,4 +1,7 @@
 {
+  "ts-node": {
+    "swc": true
+  },
   "compilerOptions": {
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
@@ -24,15 +27,17 @@
     "types": ["node", "jest", "geojson", "offscreencanvas"]
   },
   "include": [
+    "rollup.config.**",
     "src/**/*.ts",
-    "bench/**/*.ts",
-    "bench/**/*.tsx"
+    "test/bench/**/*.ts",
+    "test/bench/**/*.tsx",
+    "build/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "lib",
     "dist",
-    "bench/**/*generated*",
+    "test/bench/**/*generated*",
     "src/**/*.test.ts"
   ]
 }
