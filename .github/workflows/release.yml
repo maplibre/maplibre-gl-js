@@ -53,6 +53,10 @@ jobs:
           npm run build-benchmarks
           npm run generate-typings
 
+      - name: Empty postinstall.js
+        run: |
+          echo "// empty in published package" > postinstall.js
+
       - name: Create Archive
         run: |
           zip -r dist dist
