@@ -12,10 +12,10 @@ import * as rtlTextPluginModule from '../../../src/source/rtl_text_plugin';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import customLayerImplementations from './custom_layer_implementations';
 import '../../unit/lib/web_worker_mock';
-import { setPerformance, setWebGlContext } from '../../../src/util/test/util';
-import { fakeXhr } from 'nise';
-import { StyleSpecification } from '../../../src/style-spec/types';
-import { PointLike } from '../../../src/ui/camera';
+import {setPerformance, setWebGlContext} from '../../../src/util/test/util';
+import {fakeXhr} from 'nise';
+import {StyleSpecification} from '../../../src/style-spec/types';
+import {PointLike} from '../../../src/ui/camera';
 import CanvasSource from '../../../src/source/canvas_source';
 
 const {registerFont} = canvas;
@@ -24,39 +24,39 @@ const PORT = 99999;
 
 type TestData = {
     id: string;
-            width: number
-            height: number;
-            pixelRatio: number;
-            recycleMap: boolean;
-            allowed: number;
-            ok: boolean;
-            difference: number;
-            actual: string;
-            expected: string;
-            diff: string;
-            timeout: number;
-            addFakeCanvas: {
-                id: string;
-                image: string; 
-            };
-            axonometric: boolean;
-            skew: [number, number];
-            fadeDuration: number;
-            debug: boolean;
-            showOverdrawInspector: boolean;
-            showPadding: boolean;
-            collisionDebug: boolean;
-            localIdeographFontFamily: string;
-            crossSourceCollisions: boolean;
-            operations: any[];
-            queryGeometry: PointLike;
-            queryOptions: any;
+    width: number;
+    height: number;
+    pixelRatio: number;
+    recycleMap: boolean;
+    allowed: number;
+    ok: boolean;
+    difference: number;
+    actual: string;
+    expected: string;
+    diff: string;
+    timeout: number;
+    addFakeCanvas: {
+        id: string;
+        image: string;
+    };
+    axonometric: boolean;
+    skew: [number, number];
+    fadeDuration: number;
+    debug: boolean;
+    showOverdrawInspector: boolean;
+    showPadding: boolean;
+    collisionDebug: boolean;
+    localIdeographFontFamily: string;
+    crossSourceCollisions: boolean;
+    operations: any[];
+    queryGeometry: PointLike;
+    queryOptions: any;
 }
 
 type StyleWithTestData = StyleSpecification & {
     metadata : {
         test: TestData;
-    }
+    };
 }
 
 type RenderOptions = {
@@ -118,11 +118,11 @@ function updateFakeCanvas(document: Document, id: string, imagePath: string) {
 }
 
 function compareRenderResults(data: Buffer, style: StyleWithTestData) {
-    let testData = style.metadata.test;
+    const testData = style.metadata.test;
     const dir = path.join(__dirname, testData.id);
     try {
         // @ts-ignore
-        let stats = fs.statSync(dir, fs.R_OK | fs.W_OK);
+        const stats = fs.statSync(dir, fs.R_OK | fs.W_OK);
         if (!stats.isDirectory()) throw new Error();
     } catch (e) {
         fs.mkdirSync(dir);
@@ -257,11 +257,11 @@ function applyOperations(map: Map, operations: any[], options: TestData, callbac
 }
 
 function getRenderTestsStyles(options: RenderOptions): StyleWithTestData[] {
-    let styles = [];
-    let renderTestStyles = glob.sync('**/style.json', {cwd: __dirname});
-    for (let renderTestStyle of renderTestStyles) {
+    const styles = [];
+    const renderTestStyles = glob.sync('**/style.json', {cwd: __dirname});
+    for (const renderTestStyle of renderTestStyles) {
         const id = path.dirname(renderTestStyle);
-        if (ignores["render/"+id]) {
+        if (ignores[`render/${id}`]) {
             continue;
         }
         const style = JSON.parse(fs.readFileSync(path.join(__dirname, renderTestStyle), 'utf8'));
@@ -305,7 +305,7 @@ browser.getImageData = (img, padding = 0) => {
 
 function runRenderingLogic(style: StyleWithTestData, _callback) {
     let wasCallbackCalled = false;
-    let testData = style.metadata.test;
+    const testData = style.metadata.test;
     // HM TODO: remove this...?
     const timeout = setTimeout(() => {
         callback(new Error('Test timed out'));
@@ -338,16 +338,16 @@ function runRenderingLogic(style: StyleWithTestData, _callback) {
             }
         }, 0);
     };
-    
+
     if (testData.addFakeCanvas) {
         const fakeCanvas = createFakeCanvas(window.document, testData.addFakeCanvas.id, testData.addFakeCanvas.image);
         window.document.body.appendChild(fakeCanvas);
     }
-    
+
     const container = window.document.createElement('div');
-    Object.defineProperty(container, 'clientWidth', {value: testData.width });
-    Object.defineProperty(container, 'clientHeight', {value: testData.height });
-    
+    Object.defineProperty(container, 'clientWidth', {value: testData.width});
+    Object.defineProperty(container, 'clientHeight', {value: testData.height});
+
     const map = new Map({
         container,
         style,
@@ -463,39 +463,40 @@ describe('render tests', () => {
             const reader = new FileReader();
             reader.onload = (_) => {
                 const buff = reader.result;
-                let array = Buffer.from(buff as ArrayBuffer);
-                let png = PNG.sync.read(array);
-                resolve({ 
+                const array = Buffer.from(buff as ArrayBuffer);
+                const png = PNG.sync.read(array);
+                resolve({
                     data: buff,
                     width: png.width,
                     height: png.height
                 });
-            }
+            };
             reader.readAsArrayBuffer(blob);
         })) as any;
-    })
-    let tests = getRenderTestsStyles(options);//.slice(0, 20);
+    });
+    const tests = getRenderTestsStyles(options);
     let index = 0;
-    for (let style of tests) {
+    for (const style of tests) {
+        // eslint-disable-next-line no-loop-func
         test(style.metadata.test.id, (done) => {
             runRenderingLogic(style, (err: Error, data: Buffer) => {
                 if (err) {
                     done(err);
-                    console.log(++index + "/" + tests.length + " failed: " + style.metadata.test.id );
+                    console.log(`${++index}/${tests.length} failed: ${style.metadata.test.id}`);
                     return;
                 }
                 if (!data) {
-                    done("Empty data...");
-                    console.log(++index + "/" + tests.length + " failed: " + style.metadata.test.id );
+                    done('Empty data...');
+                    console.log(`${++index}/${tests.length} failed: ${style.metadata.test.id}`);
                     return;
                 }
                 compareRenderResults(data, style);
                 if (style.metadata.test.ok) {
-                    console.log(++index + "/" + tests.length + " passed: " + style.metadata.test.id );
+                    console.log(`${++index}/${tests.length} passed: ${style.metadata.test.id}`);
                     done();
                 } else {
                     done(`failed, check diff.png in ${style.metadata.test.id}`);
-                    console.log(++index + "/" + tests.length + " failed: " + style.metadata.test.id );
+                    console.log(`${++index}/${tests.length} failed: ${style.metadata.test.id}`);
                 }
             });
         });
