@@ -1,16 +1,20 @@
 /* eslint-disable no-process-exit */
-import path from 'path';
+import path, {dirname} from 'path';
 import fs from 'fs';
 import glob from 'glob';
 import shuffleSeed from 'shuffle-seed';
 import {queue} from 'd3-queue';
-import createServer from './server';
+import localizeURLs from '../lib/localize-urls';
+import {fileURLToPath} from 'url';
+import {createRequire} from 'module';
+// @ts-ignore
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const requireFn = createRequire(import.meta.url);
 
 const {shuffle} = shuffleSeed;
 
 export default function (directory, implementation, options, run) {
     const q = queue(1);
-    const server = createServer();
 
     const tests = options.tests || [];
     const ignores = options.ignores || {};
@@ -19,8 +23,6 @@ export default function (directory, implementation, options, run) {
         .map(fixture => {
             const id = path.dirname(fixture);
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8'));
-
-            server.localizeURLs(style);
             style.metadata = style.metadata || {};
 
             style.metadata.test = Object.assign({
@@ -50,7 +52,7 @@ export default function (directory, implementation, options, run) {
                 console.log(`* skipped ${test.id} (${test.ignored})`);
                 return false;
             }
-
+            localizeURLs(style, 2900, path.join(__dirname, '../'), requireFn);
             return true;
         });
 
@@ -59,7 +61,6 @@ export default function (directory, implementation, options, run) {
         sequence = shuffle(sequence, options.seed);
     }
 
-    q.defer(server.listen);
     let index = 0;
     sequence.forEach(style => {
         q.defer((callback) => {
@@ -102,8 +103,6 @@ export default function (directory, implementation, options, run) {
             }
         });
     });
-
-    q.defer(server.close);
 
     q.awaitAll((err, results) => {
         if (err) {

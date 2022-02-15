@@ -1,8 +1,12 @@
+import path, {dirname} from 'path';
+import fs from 'fs';
 import gl from 'gl';
 import {JSDOM, VirtualConsole} from 'jsdom';
 import {PNG} from 'pngjs';
-import request from 'request';
 import {fakeServer} from 'nise';
+import {fileURLToPath} from 'url';
+// @ts-ignore
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let lastDataFromUrl = null;
 
@@ -90,19 +94,16 @@ HTMLVideoElement.prototype.appendChild = function(s) {
     if (!this.onloadstart) {
         return;
     }
-    request({url: s.src, encoding: null}, (error, response, body) => {
-        if (!error && response.statusCode >= 200 && response.statusCode < 300) {
-            new PNG().parse(body, (_, png) => {
-                Object.defineProperty(this, 'readyState', {get: () => 4}); // HAVE_ENOUGH_DATA
-                this.addEventListener = () => {};
-                this.play = () => {};
-                this.width = png.width;
-                this.height =  png.height;
-                this.data = png.data;
-                this.onloadstart();
-            });
-        }
-    });
+    const relativePath = s.src.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
+    const body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
+    const png = PNG.sync.read(body);
+    Object.defineProperty(this, 'readyState', {get: () => 4}); // HAVE_ENOUGH_DATA
+    this.addEventListener = () => {};
+    this.play = () => {};
+    this.width = png.width;
+    this.height =  png.height;
+    this.data = png.data;
+    this.onloadstart();
 };
 
 // Delete local and session storage from JSDOM and stub them out with a warning log

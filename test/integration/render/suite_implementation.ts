@@ -1,5 +1,4 @@
 import {PNG} from 'pngjs';
-import request from 'request';
 import maplibregl from '../../../src/index';
 import browser from '../../../src/util/browser';
 import * as rtlTextPluginModule from '../../../src/source/rtl_text_plugin';
@@ -8,9 +7,12 @@ import fs from 'fs';
 import path, {dirname} from 'path';
 import customLayerImplementations from './custom_layer_implementations';
 import {fileURLToPath} from 'url';
+import {createRequire} from 'module';
 import '../../unit/lib/web_worker_mock';
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const requireFn = createRequire(import.meta.url);
+
 let now = 0;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
 
@@ -59,16 +61,28 @@ export default function(style, options, _callback) {
     // @ts-ignore
     XMLHttpRequest.onCreate = req => {
         setTimeout(() => {
-            let reqObj = req.url;
+            const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
 
-            if (req.responseType === 'arraybuffer') {
-                reqObj = {url: req.url, encoding: null};
-            }
-            request(reqObj, (error, response, body) => {
-                req.setStatus(response.statusCode);
-                req.response = body;
+            let body: Buffer = null;
+            try {
+                if (relativePath.startsWith('mapbox-gl-styles')) {
+                    body = fs.readFileSync(path.join(path.dirname(requireFn.resolve('mapbox-gl-styles')), '..', relativePath));
+                } else if (relativePath.startsWith('mvt-fixtures')) {
+                    body = fs.readFileSync(path.join(path.dirname(requireFn.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
+                } else {
+                    body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
+                }
+                if (req.responseType !== 'arraybuffer') {
+                    req.response = body.toString('utf8');
+                } else {
+                    req.response = body;
+                }
+                req.setStatus(200);
                 req.onload();
-            });
+            } catch (ex) {
+                req.setStatus(404); // file not found
+                req.onload();
+            }
         }, 0);
     };
 
