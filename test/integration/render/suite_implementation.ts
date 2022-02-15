@@ -8,6 +8,8 @@ import path, {dirname} from 'path';
 import customLayerImplementations from './custom_layer_implementations';
 import {fileURLToPath} from 'url';
 import '../../unit/lib/web_worker_mock';
+import type Map from '../../../src/ui/map';
+import CanvasSource from '../../../src/source/canvas_source';
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -55,7 +57,7 @@ function updateFakeCanvas(document: Document, id: string, imagePath: string) {
     (fakeCanvas as any).data = image.data;
 }
 
-function applyOperations(options, map, operations: any[], callback: Function) {
+function applyOperations(options, map: Map & { _render: () => void}, operations: any[], callback: Function) {
     const operation = operations && operations[0];
     if (!operations || operations.length === 0) {
         callback();
@@ -92,7 +94,7 @@ function applyOperations(options, map, operations: any[], callback: Function) {
         map._render();
         applyOperations(options, map, operations.slice(1), callback);
     } else if (operation[0] === 'updateFakeCanvas') {
-        const canvasSource = map.getSource(operation[1]);
+        const canvasSource = map.getSource(operation[1]) as CanvasSource;
         canvasSource.play();
         // update before pause should be rendered
         updateFakeCanvas(window.document, options.addFakeCanvas.id, operation[2]);
@@ -104,7 +106,7 @@ function applyOperations(options, map, operations: any[], callback: Function) {
     } else if (operation[0] === 'setStyle') {
         // Disable local ideograph generation (enabled by default) for
         // consistent local ideograph rendering using fixtures in all runs of the test suite.
-        map.setStyle(operation[1], {localIdeographFontFamily: false});
+        map.setStyle(operation[1], {localIdeographFontFamily: false as any});
         applyOperations(options, map, operations.slice(1), callback);
     } else if (operation[0] === 'pauseSource') {
         map.style.sourceCaches[operation[1]].pause();
@@ -117,7 +119,8 @@ function applyOperations(options, map, operations: any[], callback: Function) {
     }
 }
 
-export default function render(style, options, _callback) {
+export default function render(style, _callback) {
+    const options = style.metadata.test;
     let wasCallbackCalled = false;
 
     const timeout = setTimeout(() => {
@@ -180,7 +183,7 @@ export default function render(style, options, _callback) {
                 options.operations = [['wait']];
             }
         }
-        applyOperations(options, map, options.operations, () => {
+        applyOperations(options, map as any, options.operations, () => {
             const viewport = gl.getParameter(gl.VIEWPORT);
             const w = viewport[2];
             const h = viewport[3];

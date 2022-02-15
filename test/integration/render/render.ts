@@ -10,6 +10,7 @@ import render from './suite_implementation';
 import type {PointLike} from '../../../src/ui/camera';
 import nise from 'nise';
 import {createRequire} from 'module';
+import localizeURLs from '../lib/localize-urls';
 const {fakeServer} = nise;
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -201,6 +202,49 @@ function mockXhr() {
     return server;
 }
 
+function getTests(options: RenderOptions, directory: string) {
+    const tests = options.tests || [];
+    const ignores = options.ignores || {};
+
+    const sequence = glob.sync('**/style.json', {cwd: directory})
+        .map(fixture => {
+            const id = path.dirname(fixture);
+            const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8'));
+            style.metadata = style.metadata || {};
+
+            style.metadata.test = Object.assign({
+                id,
+                ignored: ignores[`${path.basename(directory)}/${id}`],
+                width: 512,
+                height: 512,
+                pixelRatio: 1,
+                recycleMap: options.recycleMap || false,
+                allowed: 0.00015
+            }, style.metadata.test);
+
+            return style;
+        })
+        .filter(style => {
+            const test = style.metadata.test;
+
+            if (tests.length !== 0 && !tests.some(t => test.id.indexOf(t) !== -1)) {
+                return false;
+            }
+
+            if (process.env.BUILDTYPE !== 'Debug' && test.id.match(/^debug\//)) {
+                console.log(`* skipped ${test.id}`);
+                return false;
+            }
+            if (/^skip/.test(test.ignored)) {
+                console.log(`* skipped ${test.id} (${test.ignored})`);
+                return false;
+            }
+            localizeURLs(style, 2900, path.join(__dirname, '../'), requireFn);
+            return true;
+        });
+    return sequence;
+}
+
 /**
  * Run the render test suite, compute differences to expected values (making exceptions based on
  * implementation vagaries), print results to standard output, write test artifacts to the
@@ -236,9 +280,10 @@ export function runRenderTests() {
     mockXhr();
 
     const directory = path.join(__dirname);
-    harness(directory, 'js', options, (style, testData, done) => {
-        render(style, testData, (err, data) => {
-            compareRenderResults(directory, testData, err, data, done);
+    const tests = getTests(options, directory);
+    harness(tests, options, (style, done) => {
+        render(style, (err, data) => {
+            compareRenderResults(directory, style.metadata.test, err, data, done);
         });
     });
 }

@@ -1,60 +1,11 @@
 /* eslint-disable no-process-exit */
-import path, {dirname} from 'path';
-import fs from 'fs';
-import glob from 'glob';
 import shuffleSeed from 'shuffle-seed';
 import {queue} from 'd3-queue';
-import localizeURLs from '../lib/localize-urls';
-import {fileURLToPath} from 'url';
-import {createRequire} from 'module';
-// @ts-ignore
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const requireFn = createRequire(import.meta.url);
 
 const {shuffle} = shuffleSeed;
 
-export default function (directory, implementation, options, run) {
+export default function testRunner(sequence: any[], options, run) {
     const q = queue(1);
-
-    const tests = options.tests || [];
-    const ignores = options.ignores || {};
-
-    let sequence = glob.sync(`**/${options.fixtureFilename || 'style.json'}`, {cwd: directory})
-        .map(fixture => {
-            const id = path.dirname(fixture);
-            const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8'));
-            style.metadata = style.metadata || {};
-
-            style.metadata.test = Object.assign({
-                id,
-                ignored: ignores[`${path.basename(directory)}/${id}`],
-                width: 512,
-                height: 512,
-                pixelRatio: 1,
-                recycleMap: options.recycleMap || false,
-                allowed: 0.00015
-            }, style.metadata.test);
-
-            return style;
-        })
-        .filter(style => {
-            const test = style.metadata.test;
-
-            if (tests.length !== 0 && !tests.some(t => test.id.indexOf(t) !== -1)) {
-                return false;
-            }
-
-            if (implementation === 'native' && process.env.BUILDTYPE !== 'Debug' && test.id.match(/^debug\//)) {
-                console.log(`* skipped ${test.id}`);
-                return false;
-            }
-            if (/^skip/.test(test.ignored)) {
-                console.log(`* skipped ${test.id} (${test.ignored})`);
-                return false;
-            }
-            localizeURLs(style, 2900, path.join(__dirname, '../'), requireFn);
-            return true;
-        });
 
     if (options.shuffle) {
         console.log(`* shuffle seed: ${options.seed}`);
@@ -67,7 +18,7 @@ export default function (directory, implementation, options, run) {
             const test = style.metadata.test;
 
             try {
-                run(style, test, handleResult);
+                run(style, handleResult);
             } catch (error) {
                 handleResult(error);
             }
