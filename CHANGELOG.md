@@ -2,10 +2,55 @@
 
 ### Features and improvements
 
+- *...Add new stuff here...*
+
+### 🐞 Bug fixes
+
+- *...Add new stuff here...*
+
+## 2.1.6
+
+### 🐞 Bug fixes
+
+- Publish `dist/package.json` (#998).
+
+## 2.1.6-pre.1
+
+### 🐞 Bug fixes
+
+- Publish `dist/package.json` (#998).
+
+## 2.1.5
+
+### 🐞 Bug fixes
+
+- Publish empty `postinstall.js` file. Follow-up on (#990), (#991), (#992).
+
+## 2.1.5-pre.1
+
+### 🐞 Bug fixes
+
+- Publish empty `postinstall.js` file. Follow-up on (#990), (#991), (#992).
+
+## 2.1.4
+
+### 🐞 Bug fixes
+
+- Fix missing `postinstall.js` file in npm publish. Follow-up on (#990), (#991).
+
+## 2.1.3
+
+### 🐞 Bug fixes
+
+- Fix postinstall `ts-node` error on non-dev installs (#900)
+
+## 2.1.2
+
+### Features and improvements
+
 - Default compact attribution to be open by default to comply with OpenSteetMap Attribution Guidelines (#795)
 - Export `Source` classes (`GeoJSONSource` etc.) declarations. (#801)
 - Make `AJAXError` public so error HTTP responses can be handled differently from other errors.
-- *...Add new stuff here...*
 
 ### 🐞 Bug fixes
 
@@ -13,7 +58,6 @@
 - Fix error mismatched image size for CJK characters (#718)
 - Fire `dataabort` and `sourcedataabort` events when a tile request is aborted (#794)
 - Fix NextJs `performance` undefined (#768)
-- *...Add new stuff here...*
 
 ## 2.1.1
 
