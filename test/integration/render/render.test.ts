@@ -1,4 +1,3 @@
-import './stub_loader';
 import canvas from 'canvas';
 import {runRenderTests} from './render';
 
