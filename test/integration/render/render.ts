@@ -19,7 +19,7 @@ import type Map from '../../../src/ui/map';
 import CanvasSource from '../../../src/source/canvas_source';
 import customLayerImplementations from './custom_layer_implementations';
 import '../../unit/lib/web_worker_mock';
-import type { StyleSpecification } from '../../../src/style-spec/types';
+import type {StyleSpecification} from '../../../src/style-spec/types';
 
 const {fakeServer} = nise;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
