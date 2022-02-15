@@ -492,12 +492,12 @@ export class Placement {
 
             // update elevation of collisionArrays
             const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
-            const getElevation = (x: number, y: number) => this.transform.terrainSourceCache ?
-                this.transform.terrainSourceCache.getElevationWithExaggeration(tileID, x, y) :
-                0;
+            const getElevation = this.transform.terrainSourceCache && this.transform.terrainSourceCache.isEnabled() ?
+                (x: number, y: number) => this.transform.terrainSourceCache.getElevationWithExaggeration(tileID, x, y) :
+                null;
             for (const boxType of ['textBox', 'verticalTextBox', 'iconBox', 'verticalIconBox']) {
                 const box = collisionArrays[boxType];
-                if (box) box.elevation = getElevation(box.anchorPointX, box.anchorPointY);
+                if (box) box.elevation = getElevation ? getElevation(box.anchorPointX, box.anchorPointY) : 0;
             }
 
             const textBox = collisionArrays.textBox;

@@ -102,8 +102,14 @@ function getGlCoordMatrix(posMatrix: mat4,
 }
 
 function project(point: Point, matrix: mat4, getElevation: any) {
-    const pos = vec4.fromValues(point.x, point.y, getElevation(point.x, point.y), 1);
-    vec4.transformMat4(pos, pos, matrix);
+    let pos;
+    if (getElevation) { // slow because of handle z-index
+        pos = vec4.fromValues(point.x, point.y, getElevation(point.x, point.y), 1);
+        vec4.transformMat4(pos, pos, matrix);
+    } else { // fast because of ignore z-index
+        pos = vec4.fromValues(point.x, point.y, 0, 1);
+        xyTransformMat4(pos, pos, matrix);
+    }
     const w = pos[3];
     return {
         point: new Point(pos[0] / w, pos[1] / w),
@@ -171,8 +177,14 @@ function updateLineLabels(bucket: SymbolBucket,
         // Awkward... but we're counting on the paired "vertical" symbol coming immediately after its horizontal counterpart
         useVertical = false;
 
-        const anchorPos = vec4.fromValues(symbol.anchorX, symbol.anchorY, getElevation(symbol.anchorX, symbol.anchorY), 1);
-        vec4.transformMat4(anchorPos, anchorPos, posMatrix);
+        let anchorPos;
+        if (getElevation) {  // slow because of handle z-index
+            anchorPos = vec4.fromValues(symbol.anchorX, symbol.anchorY, getElevation(symbol.anchorX, symbol.anchorY), 1);
+            vec4.transformMat4(anchorPos, anchorPos, posMatrix);
+        } else {  // fast because of ignore z-index
+            anchorPos = vec4.fromValues(symbol.anchorX, symbol.anchorY, 0, 1);
+            xyTransformMat4(anchorPos, anchorPos, posMatrix);
+        }
 
         // Don't bother calculating the correct point for invisible labels.
         if (!isVisible(anchorPos, clippingBuffer)) {
