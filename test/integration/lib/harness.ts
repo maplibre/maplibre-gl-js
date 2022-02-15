@@ -63,7 +63,7 @@ export default function (directory, implementation, options, run) {
     }
 
     q.defer(server.listen);
-
+    let index = 0;
     sequence.forEach(style => {
         q.defer((callback) => {
             const test = style.metadata.test;
@@ -82,23 +82,23 @@ export default function (directory, implementation, options, run) {
                 if (test.ignored && !test.ok) {
                     test.color = '#9E9E9E';
                     test.status = 'ignored failed';
-                    console.log(`* ignore ${test.id} (${test.ignored})`);
+                    console.log(`${++index}/${sequence.length}: ignore ${test.id} (${test.ignored})`);
                 } else if (test.ignored) {
                     test.color = '#E8A408';
                     test.status = 'ignored passed';
-                    console.log(`* ignore ${test.id} (${test.ignored})`);
+                    console.log(`${++index}/${sequence.length}: ignore ${test.id} (${test.ignored})`);
                 } else if (test.error) {
                     test.color = 'red';
                     test.status = 'errored';
-                    console.log(`* errored ${test.id}`);
+                    console.log(`${++index}/${sequence.length}: errored ${test.id}`);
                 } else if (!test.ok) {
                     test.color = 'red';
                     test.status = 'failed';
-                    console.log(`* failed ${test.id}`);
+                    console.log(`${++index}/${sequence.length}: failed ${test.id}`);
                 } else {
                     test.color = 'green';
                     test.status = 'passed';
-                    console.log(`* passed ${test.id}`);
+                    console.log(`${++index}/${sequence.length}: passed ${test.id}`);
                 }
 
                 callback(null, test);

@@ -48,7 +48,7 @@ export default function () {
         },
 
         localizeURLs(style) {
-            return localizeURLs(style, port);
+            return localizeURLs(style, port, path.join(__dirname, '../'), requireFn);
         }
     };
 }

@@ -1,12 +1,7 @@
-import path, {dirname} from 'path';
+import path from 'path';
 import fs from 'fs';
-import {fileURLToPath} from 'url';
-import {createRequire} from 'module';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const requireFn = createRequire(import.meta.url);
-
-export default function localizeURLs(style, port) {
+export default function localizeURLs(style, port, baseTestsDir, requireFn) {
     localizeStyleURLs(style, port);
     if (style.metadata && style.metadata.test && style.metadata.test.operations) {
         style.metadata.test.operations.forEach((op) => {
@@ -24,7 +19,7 @@ export default function localizeURLs(style, port) {
                     if (relativePath.startsWith('mapbox-gl-styles')) {
                         styleJSON = fs.readFileSync(path.join(path.dirname(requireFn.resolve('mapbox-gl-styles')), '..', relativePath));
                     } else {
-                        styleJSON = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
+                        styleJSON = fs.readFileSync(path.join(baseTestsDir, 'assets', relativePath));
                     }
 
                 } catch (error) {
