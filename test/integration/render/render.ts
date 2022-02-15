@@ -74,7 +74,7 @@ function checkValueParameter(options: RenderOptions, defaultValue: any, param: s
  * @returns {undefined} terminates the process when testing is complete
  */
 export function runRenderTests() {
-    const options: RenderOptions = {ignores, tests: [], shuffle: false, recycleMap: false, seed: makeHash() };
+    const options: RenderOptions = {ignores, tests: [], shuffle: false, recycleMap: false, seed: makeHash()};
 
     if (process.argv.length > 2) {
         options.tests = process.argv.slice(2).filter((value, index, self) => { return self.indexOf(value) === index; }) || [];
