@@ -11,7 +11,6 @@ import '../../unit/lib/web_worker_mock';
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-
 let now = 0;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
 
@@ -21,7 +20,7 @@ rtlTextPlugin['processStyledBidirectionalText'] = rtlText.processStyledBidirecti
 
 // replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
 // @ts-ignore
-browser.getImageData = function (img, padding = 0) {
+browser.getImageData = (img, padding = 0) => {
     // @ts-ignore
     if (!img.data) {
         return {width: 1, height: 1, data: new Uint8Array(1)};
@@ -40,7 +39,85 @@ browser.getImageData = function (img, padding = 0) {
     return {width: width + 2 * padding, height: height + 2 * padding, data: dest};
 };
 
-export default function runder(style, options, _callback) {
+function createFakeCanvas(document: Document, id: string, imagePath: string): HTMLCanvasElement {
+    const fakeCanvas = document.createElement('canvas');
+    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', imagePath)));
+    fakeCanvas.id = id;
+    (fakeCanvas as any).data = image.data;
+    fakeCanvas.width = image.width;
+    fakeCanvas.height = image.height;
+    return fakeCanvas;
+}
+
+function updateFakeCanvas(document: Document, id: string, imagePath: string) {
+    const fakeCanvas = document.getElementById(id);
+    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', imagePath)));
+    (fakeCanvas as any).data = image.data;
+}
+
+function applyOperations(options, map, operations: any[], callback: Function) {
+    const operation = operations && operations[0];
+    if (!operations || operations.length === 0) {
+        callback();
+
+    } else if (operation[0] === 'wait') {
+        if (operation.length > 1) {
+            now += operation[1];
+            map._render();
+            applyOperations(options, map, operations.slice(1), callback);
+
+        } else {
+            const wait = function() {
+                if (map.loaded()) {
+                    applyOperations(options, map, operations.slice(1), callback);
+                } else {
+                    map.once('render', wait);
+                }
+            };
+            wait();
+        }
+
+    } else if (operation[0] === 'sleep') {
+        // Prefer "wait", which renders until the map is loaded
+        // Use "sleep" when you need to test something that sidesteps the "loaded" logic
+        setTimeout(() => {
+            applyOperations(options, map, operations.slice(1), callback);
+        }, operation[1]);
+    } else if (operation[0] === 'addImage') {
+        const {data, width, height} = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', operation[2])));
+        map.addImage(operation[1], {width, height, data: new Uint8Array(data)}, operation[3] || {});
+        applyOperations(options, map, operations.slice(1), callback);
+    } else if (operation[0] === 'addCustomLayer') {
+        map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
+        map._render();
+        applyOperations(options, map, operations.slice(1), callback);
+    } else if (operation[0] === 'updateFakeCanvas') {
+        const canvasSource = map.getSource(operation[1]);
+        canvasSource.play();
+        // update before pause should be rendered
+        updateFakeCanvas(window.document, options.addFakeCanvas.id, operation[2]);
+        canvasSource.pause();
+        // update after pause should not be rendered
+        updateFakeCanvas(window.document, options.addFakeCanvas.id, operation[3]);
+        map._render();
+        applyOperations(options, map, operations.slice(1), callback);
+    } else if (operation[0] === 'setStyle') {
+        // Disable local ideograph generation (enabled by default) for
+        // consistent local ideograph rendering using fixtures in all runs of the test suite.
+        map.setStyle(operation[1], {localIdeographFontFamily: false});
+        applyOperations(options, map, operations.slice(1), callback);
+    } else if (operation[0] === 'pauseSource') {
+        map.style.sourceCaches[operation[1]].pause();
+        applyOperations(options, map, operations.slice(1), callback);
+    } else {
+        if (typeof map[operation[0]] === 'function') {
+            map[operation[0]](...operation.slice(1));
+        }
+        applyOperations(options, map, operations.slice(1), callback);
+    }
+}
+
+export default function render(style, options, _callback) {
     let wasCallbackCalled = false;
 
     const timeout = setTimeout(() => {
@@ -103,7 +180,7 @@ export default function runder(style, options, _callback) {
                 options.operations = [['wait']];
             }
         }
-        applyOperations(map, options.operations, () => {
+        applyOperations(options, map, options.operations, () => {
             const viewport = gl.getParameter(gl.VIEWPORT);
             const w = viewport[2];
             const h = viewport[3];
@@ -148,82 +225,4 @@ export default function runder(style, options, _callback) {
         });
     });
 
-    function applyOperations(map, operations, callback) {
-        const operation = operations && operations[0];
-        if (!operations || operations.length === 0) {
-            callback();
-
-        } else if (operation[0] === 'wait') {
-            if (operation.length > 1) {
-                now += operation[1];
-                map._render();
-                applyOperations(map, operations.slice(1), callback);
-
-            } else {
-                const wait = function() {
-                    if (map.loaded()) {
-                        applyOperations(map, operations.slice(1), callback);
-                    } else {
-                        map.once('render', wait);
-                    }
-                };
-                wait();
-            }
-
-        } else if (operation[0] === 'sleep') {
-            // Prefer "wait", which renders until the map is loaded
-            // Use "sleep" when you need to test something that sidesteps the "loaded" logic
-            setTimeout(() => {
-                applyOperations(map, operations.slice(1), callback);
-            }, operation[1]);
-        } else if (operation[0] === 'addImage') {
-            const {data, width, height} = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', operation[2])));
-            map.addImage(operation[1], {width, height, data: new Uint8Array(data)}, operation[3] || {});
-            applyOperations(map, operations.slice(1), callback);
-        } else if (operation[0] === 'addCustomLayer') {
-            map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
-            map._render();
-            applyOperations(map, operations.slice(1), callback);
-        } else if (operation[0] === 'updateFakeCanvas') {
-            const canvasSource = map.getSource(operation[1]);
-            canvasSource.play();
-            // update before pause should be rendered
-            updateFakeCanvas(window.document, options.addFakeCanvas.id, operation[2]);
-            canvasSource.pause();
-            // update after pause should not be rendered
-            updateFakeCanvas(window.document, options.addFakeCanvas.id, operation[3]);
-            map._render();
-            applyOperations(map, operations.slice(1), callback);
-        } else if (operation[0] === 'setStyle') {
-            // Disable local ideograph generation (enabled by default) for
-            // consistent local ideograph rendering using fixtures in all runs of the test suite.
-            map.setStyle(operation[1], {localIdeographFontFamily: false});
-            applyOperations(map, operations.slice(1), callback);
-        } else if (operation[0] === 'pauseSource') {
-            map.style.sourceCaches[operation[1]].pause();
-            applyOperations(map, operations.slice(1), callback);
-        } else {
-            if (typeof map[operation[0]] === 'function') {
-                map[operation[0]](...operation.slice(1));
-            }
-            applyOperations(map, operations.slice(1), callback);
-        }
-    }
 }
-
-function createFakeCanvas(document, id, imagePath) {
-    const fakeCanvas = document.createElement('canvas');
-    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', imagePath)));
-    fakeCanvas.id = id;
-    fakeCanvas.data = image.data;
-    fakeCanvas.width = image.width;
-    fakeCanvas.height = image.height;
-    return fakeCanvas;
-}
-
-function updateFakeCanvas(document, id, imagePath) {
-    const fakeCanvas = document.getElementById(id);
-    const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', imagePath)));
-    fakeCanvas.data = image.data;
-}
-
