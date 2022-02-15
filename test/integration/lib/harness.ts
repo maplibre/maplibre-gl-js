@@ -1,13 +1,10 @@
 /* eslint-disable no-process-exit */
-import path, {dirname} from 'path';
+import path from 'path';
 import fs from 'fs';
 import glob from 'glob';
 import shuffleSeed from 'shuffle-seed';
 import {queue} from 'd3-queue';
 import createServer from './server';
-import {fileURLToPath} from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const {shuffle} = shuffleSeed;
 
@@ -169,43 +166,6 @@ export default function (directory, implementation, options, run) {
                 erroredCount, (100 * erroredCount / totalCount).toFixed(1));
         }
 
-        const resultsTemplate = eval(fs.readFileSync(path.join(__dirname, '', 'resultsTemplate.ts'), 'utf8'));
-        const itemTemplate = eval(fs.readFileSync(path.join(directory, 'resultItemTemplate.ts'), 'utf8'));
-
-        const stats = {};
-        for (const test of tests) {
-            stats[test.status] = (stats[test.status] || 0) + 1;
-        }
-
-        const unsuccessful = tests.filter(test =>
-            test.status === 'failed' || test.status === 'errored');
-
-        const resultsShell = resultsTemplate({unsuccessful, tests, stats, shuffle: options.shuffle, seed: options.seed})
-            .split('<!-- results go here -->');
-
-        const p = path.join(directory, options.recycleMap ? 'index-recycle-map.html' : 'index.html');
-        const out = fs.createWriteStream(p);
-
-        const q = queue(1);
-        q.defer(write, out, resultsShell[0]);
-        for (const test of tests) {
-            q.defer(write, out, itemTemplate({r: test, hasFailedTests: unsuccessful.length > 0}));
-        }
-        q.defer(write, out, resultsShell[1]);
-        q.await(() => {
-            out.end();
-            out.on('close', () => {
-                console.log(`Results at: ${p}`);
-                process.exit((failedCount + erroredCount) === 0 ? 0 : 1);
-            });
-        });
+        process.exit((failedCount + erroredCount) === 0 ? 0 : 1);
     });
-}
-
-function write(stream, data, cb) {
-    if (!stream.write(data)) {
-        stream.once('drain', cb);
-    } else {
-        process.nextTick(cb);
-    }
 }
