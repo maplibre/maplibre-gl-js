@@ -8,9 +8,12 @@ import glob from 'glob';
 import ignores from './ignores.json';
 import render from './suite_implementation';
 import type {PointLike} from '../../../src/ui/camera';
-
+import nise from 'nise';
+import {createRequire} from 'module';
+const {fakeServer} = nise;
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const requireFn = createRequire(import.meta.url);
 
 type TestData = {
     id: string;
@@ -165,6 +168,39 @@ function compareRenderResults(directory: string, testData: TestData, err: Error,
     done();
 }
 
+function mockXhr() {
+    const server = fakeServer.create();
+    global.XMLHttpRequest = (server as any).xhr;
+    // @ts-ignore
+    XMLHttpRequest.onCreate = (req: any) => {
+        setTimeout(() => {
+            const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
+
+            let body: Buffer = null;
+            try {
+                if (relativePath.startsWith('mapbox-gl-styles')) {
+                    body = fs.readFileSync(path.join(path.dirname(requireFn.resolve('mapbox-gl-styles')), '..', relativePath));
+                } else if (relativePath.startsWith('mvt-fixtures')) {
+                    body = fs.readFileSync(path.join(path.dirname(requireFn.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
+                } else {
+                    body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
+                }
+                if (req.responseType !== 'arraybuffer') {
+                    req.response = body.toString('utf8');
+                } else {
+                    req.response = body;
+                }
+                req.setStatus(200);
+                req.onload();
+            } catch (ex) {
+                req.setStatus(404); // file not found
+                req.onload();
+            }
+        }, 0);
+    };
+    return server;
+}
+
 /**
  * Run the render test suite, compute differences to expected values (making exceptions based on
  * implementation vagaries), print results to standard output, write test artifacts to the
@@ -196,6 +232,8 @@ export function runRenderTests() {
         options.recycleMap = checkParameter(options, '--recycle-map');
         options.seed = checkValueParameter(options, options.seed, '--seed');
     }
+
+    mockXhr();
 
     const directory = path.join(__dirname);
     harness(directory, 'js', options, (style, testData, done) => {

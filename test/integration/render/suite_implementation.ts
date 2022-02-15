@@ -7,11 +7,10 @@ import fs from 'fs';
 import path, {dirname} from 'path';
 import customLayerImplementations from './custom_layer_implementations';
 import {fileURLToPath} from 'url';
-import {createRequire} from 'module';
 import '../../unit/lib/web_worker_mock';
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const requireFn = createRequire(import.meta.url);
+
 
 let now = 0;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
@@ -41,7 +40,7 @@ browser.getImageData = function (img, padding = 0) {
     return {width: width + 2 * padding, height: height + 2 * padding, data: dest};
 };
 
-export default function(style, options, _callback) {
+export default function runder(style, options, _callback) {
     let wasCallbackCalled = false;
 
     const timeout = setTimeout(() => {
@@ -55,36 +54,6 @@ export default function(style, options, _callback) {
             _callback(...args);
         }
     }
-
-    // @ts-ignore
-    window.useFakeXMLHttpRequest();
-    // @ts-ignore
-    XMLHttpRequest.onCreate = req => {
-        setTimeout(() => {
-            const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
-
-            let body: Buffer = null;
-            try {
-                if (relativePath.startsWith('mapbox-gl-styles')) {
-                    body = fs.readFileSync(path.join(path.dirname(requireFn.resolve('mapbox-gl-styles')), '..', relativePath));
-                } else if (relativePath.startsWith('mvt-fixtures')) {
-                    body = fs.readFileSync(path.join(path.dirname(requireFn.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
-                } else {
-                    body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
-                }
-                if (req.responseType !== 'arraybuffer') {
-                    req.response = body.toString('utf8');
-                } else {
-                    req.response = body;
-                }
-                req.setStatus(200);
-                req.onload();
-            } catch (ex) {
-                req.setStatus(404); // file not found
-                req.onload();
-            }
-        }, 0);
-    };
 
     if (options.addFakeCanvas) {
         const fakeCanvas = createFakeCanvas(window.document, options.addFakeCanvas.id, options.addFakeCanvas.image);
