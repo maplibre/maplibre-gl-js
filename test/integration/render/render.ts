@@ -1,10 +1,12 @@
 import path, {dirname} from 'path';
 import fs from 'fs';
 import {PNG} from 'pngjs';
-import harness from '../lib/harness';
+import harness from './harness';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import glob from 'glob';
+import ignores from './ignores.json';
+import render from './suite_implementation';
 
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -29,8 +31,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * If all the tests are successful, this function exits the process with exit code 0. Otherwise
  * it exits with 1. If an unexpected error occurs, it exits with -1.
  *
- * @param implementation - identify the implementation under test; used to
- * deal with implementation-specific test exclusions and fudge-factors
  * @param ignores - map of test names to disable. A key is the relative
  * path to a test directory, e.g. `"render-tests/background-color/default"`. A value is a string
  * that by convention links to an issue that explains why the test is currently disabled. By default,
@@ -40,7 +40,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @param render - a function that performs the rendering
  * @returns {undefined} terminates the process when testing is complete
  */
-export function run(implementation: string, ignores: any, render: any) {
+export function runRenderTests() {
     const options = {ignores, tests:[], shuffle:false, recycleMap:false, seed:makeHash()};
 
     // https://stackoverflow.com/a/1349426/229714
@@ -83,7 +83,7 @@ export function run(implementation: string, ignores: any, render: any) {
     }
 
     const directory = path.join(__dirname);
-    harness(directory, implementation, options, (style, params, done) => {
+    harness(directory, 'js', options, (style, params, done) => {
         render(style, params, (err, data) => {
             if (err) return done(err);
 

@@ -2,7 +2,7 @@ import path, {dirname} from 'path';
 import fs from 'fs';
 import st from 'st';
 import {createServer} from 'http';
-import localizeURLs from './localize-urls.js';
+import localizeURLs from '../lib/localize-urls.js';
 import {fileURLToPath} from 'url';
 import {createRequire} from 'module';
 
