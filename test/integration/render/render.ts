@@ -11,6 +11,46 @@ import render from './suite_implementation';
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+type RenderOptions = {
+    tests: any[];
+    ignores: {};
+    shuffle: boolean;
+    recycleMap: boolean;
+    seed: string;
+}
+
+// https://stackoverflow.com/a/1349426/229714
+function makeHash(): string {
+    const array = [];
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (let i = 0; i < 10; ++i)
+        array.push(possible.charAt(Math.floor(Math.random() * possible.length)));
+
+    // join array elements without commas.
+    return array.join('');
+}
+
+function checkParameter(options: RenderOptions, param: string): boolean {
+    const index = options.tests.indexOf(param);
+    if (index === -1)
+        return false;
+    options.tests.splice(index, 1);
+    return true;
+}
+
+function checkValueParameter(options: RenderOptions, defaultValue: any, param: string) {
+    const index = options.tests.findIndex((elem) => { return String(elem).startsWith(param); });
+    if (index === -1)
+        return defaultValue;
+
+    const split = String(options.tests.splice(index, 1)).split('=');
+    if (split.length !== 2)
+        return defaultValue;
+
+    return split[1];
+}
+
 /**
  * Run the render test suite, compute differences to expected values (making exceptions based on
  * implementation vagaries), print results to standard output, write test artifacts to the
@@ -31,55 +71,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * If all the tests are successful, this function exits the process with exit code 0. Otherwise
  * it exits with 1. If an unexpected error occurs, it exits with -1.
  *
- * @param ignores - map of test names to disable. A key is the relative
- * path to a test directory, e.g. `"render-tests/background-color/default"`. A value is a string
- * that by convention links to an issue that explains why the test is currently disabled. By default,
- * disabled tests will be run, but not fail the test run if the result does not match the expected
- * result. If the value begins with "skip", the test will not be run at all -- use this for tests
- * that would crash the test harness entirely if they were run.
- * @param render - a function that performs the rendering
  * @returns {undefined} terminates the process when testing is complete
  */
 export function runRenderTests() {
-    const options = {ignores, tests:[], shuffle:false, recycleMap:false, seed:makeHash()};
-
-    // https://stackoverflow.com/a/1349426/229714
-    function makeHash() {
-        const array = [];
-        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-        for (let i = 0; i < 10; ++i)
-            array.push(possible.charAt(Math.floor(Math.random() * possible.length)));
-
-        // join array elements without commas.
-        return array.join('');
-    }
-
-    function checkParameter(param) {
-        const index = options.tests.indexOf(param);
-        if (index === -1)
-            return false;
-        options.tests.splice(index, 1);
-        return true;
-    }
-
-    function checkValueParameter(defaultValue, param) {
-        const index = options.tests.findIndex((elem) => { return String(elem).startsWith(param); });
-        if (index === -1)
-            return defaultValue;
-
-        const split = String(options.tests.splice(index, 1)).split('=');
-        if (split.length !== 2)
-            return defaultValue;
-
-        return split[1];
-    }
+    const options: RenderOptions = {ignores, tests: [], shuffle: false, recycleMap: false, seed: makeHash() };
 
     if (process.argv.length > 2) {
         options.tests = process.argv.slice(2).filter((value, index, self) => { return self.indexOf(value) === index; }) || [];
-        options.shuffle = checkParameter('--shuffle');
-        options.recycleMap = checkParameter('--recycle-map');
-        options.seed = checkValueParameter(options.seed, '--seed');
+        options.shuffle = checkParameter(options, '--shuffle');
+        options.recycleMap = checkParameter(options, '--recycle-map');
+        options.seed = checkValueParameter(options, options.seed, '--seed');
     }
 
     const directory = path.join(__dirname);
