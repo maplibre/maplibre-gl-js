@@ -1,25 +1,25 @@
+/* eslint-disable no-process-exit */
 import './mock_browser_for_node';
 import canvas from 'canvas';
 import path, {dirname} from 'path';
 import fs from 'fs';
 import {PNG} from 'pngjs';
-import harness from './harness';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import glob from 'glob';
 import ignores from './ignores.json';
-import type {PointLike} from '../../../src/ui/camera';
 import nise from 'nise';
 import {createRequire} from 'module';
+import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import localizeURLs from '../lib/localize-urls';
 import maplibregl from '../../../src/index';
 import browser from '../../../src/util/browser';
 import * as rtlTextPluginModule from '../../../src/source/rtl_text_plugin';
-import rtlText from '@mapbox/mapbox-gl-rtl-text';
-import type Map from '../../../src/ui/map';
 import CanvasSource from '../../../src/source/canvas_source';
 import customLayerImplementations from './custom_layer_implementations';
+import type Map from '../../../src/ui/map';
 import type {StyleSpecification} from '../../../src/style-spec/types';
+import type {PointLike} from '../../../src/ui/camera';
 
 const {fakeServer} = nise;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
@@ -27,7 +27,8 @@ const {registerFont} = canvas;
 
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const requireFn = createRequire(import.meta.url);
+// @ts-ignore
+const require = createRequire(import.meta.url);
 registerFont('./node_modules/npm-font-open-sans/fonts/Bold/OpenSans-Bold.ttf', {family: 'Open Sans', weight: 'bold'});
 
 rtlTextPlugin['applyArabicShaping'] = rtlText.applyArabicShaping;
@@ -65,6 +66,8 @@ type TestData = {
     operations: any[];
     queryGeometry: PointLike;
     queryOptions: any;
+    error: Error;
+    ignored: boolean;
 }
 
 type RenderOptions = {
@@ -112,10 +115,16 @@ function checkValueParameter(options: RenderOptions, defaultValue: any, param: s
 
     return split[1];
 }
-
-function compareRenderResults(directory: string, testData: TestData, err: Error, data: Buffer, done: Function) {
-    if (err) return done(err);
-
+/**
+ * This method compares the buffer that was created to the expected file in the file system.
+ * It updates the test data with the results.
+ *
+ * @param directory The base directory of the data
+ * @param testData The test data
+ * @param data The actual image data to compare the expected to
+ * @returns
+ */
+function compareRenderResults(directory: string, testData: TestData, data: Buffer) {
     let stats;
     const dir = path.join(directory, testData.id);
     try {
@@ -154,47 +163,47 @@ function compareRenderResults(directory: string, testData: TestData, err: Error,
 
     if (process.env.UPDATE) {
         fs.writeFileSync(expectedPath, PNG.sync.write(actualImg));
+        return;
+    }
+    // if we have multiple expected images, we'll compare against each one and pick the one with
+    // the least amount of difference; this is useful for covering features that render differently
+    // depending on platform, i.e. heatmaps use half-float textures for improved rendering where supported
+    let minDiff = Infinity;
+    let minDiffImg, minExpectedBuf;
 
-    } else {
-        // if we have multiple expected images, we'll compare against each one and pick the one with
-        // the least amount of difference; this is useful for covering features that render differently
-        // depending on platform, i.e. heatmaps use half-float textures for improved rendering where supported
-        let minDiff = Infinity;
-        let minDiffImg, minExpectedBuf;
+    for (const path of expectedPaths) {
+        const expectedBuf = fs.readFileSync(path);
+        const expectedImg = PNG.sync.read(expectedBuf);
+        const diffImg = new PNG({width, height});
 
-        for (const path of expectedPaths) {
-            const expectedBuf = fs.readFileSync(path);
-            const expectedImg = PNG.sync.read(expectedBuf);
-            const diffImg = new PNG({width, height});
+        const diff = pixelmatch(
+            actualImg.data, expectedImg.data, diffImg.data,
+            width, height, {threshold: 0.1285}) / (width * height);
 
-            const diff = pixelmatch(
-                actualImg.data, expectedImg.data, diffImg.data,
-                width, height, {threshold: 0.1285}) / (width * height);
-
-            if (diff < minDiff) {
-                minDiff = diff;
-                minDiffImg = diffImg;
-                minExpectedBuf = expectedBuf;
-            }
+        if (diff < minDiff) {
+            minDiff = diff;
+            minDiffImg = diffImg;
+            minExpectedBuf = expectedBuf;
         }
-
-        const diffBuf = PNG.sync.write(minDiffImg, {filterType: 4});
-        const actualBuf = PNG.sync.write(actualImg, {filterType: 4});
-
-        fs.writeFileSync(diffPath, diffBuf);
-        fs.writeFileSync(actualPath, actualBuf);
-
-        testData.difference = minDiff;
-        testData.ok = minDiff <= testData.allowed;
-
-        testData.actual = actualBuf.toString('base64');
-        testData.expected = minExpectedBuf.toString('base64');
-        testData.diff = diffBuf.toString('base64');
     }
 
-    done();
+    const diffBuf = PNG.sync.write(minDiffImg, {filterType: 4});
+    const actualBuf = PNG.sync.write(actualImg, {filterType: 4});
+
+    fs.writeFileSync(diffPath, diffBuf);
+    fs.writeFileSync(actualPath, actualBuf);
+
+    testData.difference = minDiff;
+    testData.ok = minDiff <= testData.allowed;
+
+    testData.actual = actualBuf.toString('base64');
+    testData.expected = minExpectedBuf.toString('base64');
+    testData.diff = diffBuf.toString('base64');
 }
 
+/**
+ * This function mocks XHR request and simply pulls file from the file system.
+ */
 function mockXhr() {
     const server = fakeServer.create();
     global.XMLHttpRequest = (server as any).xhr;
@@ -206,9 +215,9 @@ function mockXhr() {
             let body: Buffer = null;
             try {
                 if (relativePath.startsWith('mapbox-gl-styles')) {
-                    body = fs.readFileSync(path.join(path.dirname(requireFn.resolve('mapbox-gl-styles')), '..', relativePath));
+                    body = fs.readFileSync(path.join(path.dirname(require.resolve('mapbox-gl-styles')), '..', relativePath));
                 } else if (relativePath.startsWith('mvt-fixtures')) {
-                    body = fs.readFileSync(path.join(path.dirname(requireFn.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
+                    body = fs.readFileSync(path.join(path.dirname(require.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
                 } else {
                     body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
                 }
@@ -225,10 +234,16 @@ function mockXhr() {
             }
         }, 0);
     };
-    return server;
 }
 
-function getTests(options: RenderOptions, directory: string) {
+/**
+ * This method gets all the tests from the file system looking for style.json files.
+ *
+ * @param options The options
+ * @param directory The base directory
+ * @returns The tests data structure and the styles that were loaded
+ */
+function getTestStyles(options: RenderOptions, directory: string): StyleWithTestData[] {
     const tests = options.tests || [];
     const ignores = options.ignores || {};
 
@@ -265,7 +280,7 @@ function getTests(options: RenderOptions, directory: string) {
                 console.log(`* skipped ${test.id} (${test.ignored})`);
                 return false;
             }
-            localizeURLs(style, 2900, path.join(__dirname, '../'), requireFn);
+            localizeURLs(style, 2900, path.join(__dirname, '../'), require);
             return true;
         });
     return sequence;
@@ -308,7 +323,15 @@ function updateFakeCanvas(document: Document, id: string, imagePath: string) {
     (fakeCanvas as any).data = image.data;
 }
 
-function applyOperations(options: TestData, map: Map & { _render: () => void}, operations: any[], callback: Function) {
+/**
+ * Executes the operations in the test data
+ *
+ * @param testData The test data to operate upon
+ * @param map The Map
+ * @param operations The operations
+ * @param callback The callback to use when all the operations are executed
+ */
+function applyOperations(testData: TestData, map: Map & { _render: () => void}, operations: any[], callback: Function) {
     const operation = operations && operations[0];
     if (!operations || operations.length === 0) {
         callback();
@@ -317,12 +340,12 @@ function applyOperations(options: TestData, map: Map & { _render: () => void}, o
         if (operation.length > 1) {
             now += operation[1];
             map._render();
-            applyOperations(options, map, operations.slice(1), callback);
+            applyOperations(testData, map, operations.slice(1), callback);
 
         } else {
             const wait = function() {
                 if (map.loaded()) {
-                    applyOperations(options, map, operations.slice(1), callback);
+                    applyOperations(testData, map, operations.slice(1), callback);
                 } else {
                     map.once('render', wait);
                 }
@@ -334,149 +357,218 @@ function applyOperations(options: TestData, map: Map & { _render: () => void}, o
         // Prefer "wait", which renders until the map is loaded
         // Use "sleep" when you need to test something that sidesteps the "loaded" logic
         setTimeout(() => {
-            applyOperations(options, map, operations.slice(1), callback);
+            applyOperations(testData, map, operations.slice(1), callback);
         }, operation[1]);
     } else if (operation[0] === 'addImage') {
         const {data, width, height} = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', operation[2])));
         map.addImage(operation[1], {width, height, data: new Uint8Array(data)}, operation[3] || {});
-        applyOperations(options, map, operations.slice(1), callback);
+        applyOperations(testData, map, operations.slice(1), callback);
     } else if (operation[0] === 'addCustomLayer') {
         map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
         map._render();
-        applyOperations(options, map, operations.slice(1), callback);
+        applyOperations(testData, map, operations.slice(1), callback);
     } else if (operation[0] === 'updateFakeCanvas') {
         const canvasSource = map.getSource(operation[1]) as CanvasSource;
         canvasSource.play();
         // update before pause should be rendered
-        updateFakeCanvas(window.document, options.addFakeCanvas.id, operation[2]);
+        updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[2]);
         canvasSource.pause();
         // update after pause should not be rendered
-        updateFakeCanvas(window.document, options.addFakeCanvas.id, operation[3]);
+        updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[3]);
         map._render();
-        applyOperations(options, map, operations.slice(1), callback);
+        applyOperations(testData, map, operations.slice(1), callback);
     } else if (operation[0] === 'setStyle') {
         // Disable local ideograph generation (enabled by default) for
         // consistent local ideograph rendering using fixtures in all runs of the test suite.
         map.setStyle(operation[1], {localIdeographFontFamily: false as any});
-        applyOperations(options, map, operations.slice(1), callback);
+        applyOperations(testData, map, operations.slice(1), callback);
     } else if (operation[0] === 'pauseSource') {
         map.style.sourceCaches[operation[1]].pause();
-        applyOperations(options, map, operations.slice(1), callback);
+        applyOperations(testData, map, operations.slice(1), callback);
     } else {
         if (typeof map[operation[0]] === 'function') {
             map[operation[0]](...operation.slice(1));
         }
-        applyOperations(options, map, operations.slice(1), callback);
+        applyOperations(testData, map, operations.slice(1), callback);
+    }
+}
+/**
+ * The main method of this file - it creates the map and applies the operations to create an image
+ * and returns it as a buffer
+ *
+ * @param style The style to use
+ * @returns an image buffer
+ */
+function getImageFromStyle(style: StyleWithTestData): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+        const options = style.metadata.test;
+
+        setTimeout(() => {
+            reject(new Error('Test timed out'));
+        }, options.timeout || 20000);
+
+        if (options.addFakeCanvas) {
+            const fakeCanvas = createFakeCanvas(window.document, options.addFakeCanvas.id, options.addFakeCanvas.image);
+            window.document.body.appendChild(fakeCanvas);
+        }
+
+        const container = window.document.createElement('div');
+        Object.defineProperty(container, 'clientWidth', {value: options.width});
+        Object.defineProperty(container, 'clientHeight', {value: options.height});
+
+        const map = new maplibregl.Map({
+            container,
+            style,
+
+            // @ts-ignore
+            classes: options.classes,
+            interactive: false,
+            attributionControl: false,
+            pixelRatio: options.pixelRatio,
+            preserveDrawingBuffer: true,
+            axonometric: options.axonometric || false,
+            skew: options.skew || [0, 0],
+            fadeDuration: options.fadeDuration || 0,
+            localIdeographFontFamily: options.localIdeographFontFamily || false as any,
+            crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions
+        });
+
+        // Configure the map to never stop the render loop
+        map.repaint = true;
+        now = 0;
+        browser.now = () => {
+            return now;
+        };
+
+        if (options.debug) map.showTileBoundaries = true;
+        if (options.showOverdrawInspector) map.showOverdrawInspector = true;
+        if (options.showPadding) map.showPadding = true;
+
+        const gl = map.painter.context.gl;
+
+        map.once('load', () => {
+            if (options.collisionDebug) {
+                map.showCollisionBoxes = true;
+                if (options.operations) {
+                    options.operations.push(['wait']);
+                } else {
+                    options.operations = [['wait']];
+                }
+            }
+            applyOperations(options, map as any, options.operations, () => {
+                const viewport = gl.getParameter(gl.VIEWPORT);
+                const w = viewport[2];
+                const h = viewport[3];
+
+                const pixels = new Uint8Array(w * h * 4);
+                gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+                // eslint-disable-next-line new-cap
+                const data = Buffer.from(pixels);
+
+                // Flip the scanlines.
+                const stride = w * 4;
+                // eslint-disable-next-line new-cap
+                const tmp = Buffer.alloc(stride);
+                for (let i = 0, j = h - 1; i < j; i++, j--) {
+                    const start = i * stride;
+                    const end = j * stride;
+                    data.copy(tmp, 0, start, start + stride);
+                    data.copy(data, start, end, end + stride);
+                    tmp.copy(data, end);
+                }
+
+                map.remove();
+                gl.getExtension('STACKGL_destroy_context').destroy();
+                delete map.painter.context.gl;
+
+                if (options.addFakeCanvas) {
+                    const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
+                    fakeCanvas.parentNode.removeChild(fakeCanvas);
+                }
+
+                resolve(data);
+            });
+        });
+    });
+}
+
+/**
+ * Prints the progress to the console
+ *
+ * @param test The current test
+ * @param total The total number of tests
+ * @param index The current test index
+ */
+function printProgress(test: TestData, total: number, index: number) {
+    if (test.ignored && !test.ok) {
+        console.log(`${index}/${total}: ignore ${test.id} (${test.ignored})`);
+    } else if (test.ignored) {
+        console.log(`${index}/${total}: ignore ${test.id} (${test.ignored})`);
+    } else if (test.error) {
+        console.log(`${index}/${total}: errored ${test.id}`);
+    } else if (!test.ok) {
+        console.log(`${index}/${total}: failed ${test.id}`);
+    } else {
+        console.log(`${index}/${total}: passed ${test.id}`);
     }
 }
 
-function render(style: StyleWithTestData, _callback) {
-    const options = style.metadata.test;
-    let wasCallbackCalled = false;
+/**
+ * Prints the summary at the end of the run
+ *
+ * @param tests all the tests with their resutls
+ * @returns
+ */
+function printStatistics(tests: TestData[]): boolean {
+    let passedCount = 0,
+        ignoreCount = 0,
+        ignorePassCount = 0,
+        failedCount = 0,
+        erroredCount = 0;
 
-    const timeout = setTimeout(() => {
-        callback(new Error('Test timed out'));
-    }, options.timeout || 20000);
-
-    function callback(...args) {
-        if (!wasCallbackCalled) {
-            clearTimeout(timeout);
-            wasCallbackCalled = true;
-            _callback(...args);
+    for (const test of tests) {
+        if (test.ignored && !test.ok) {
+            ignoreCount++;
+        } else if (test.ignored) {
+            ignorePassCount++;
+        } else if (test.error) {
+            erroredCount++;
+        } else if (!test.ok) {
+            failedCount++;
+        } else {
+            passedCount++;
         }
     }
 
-    if (options.addFakeCanvas) {
-        const fakeCanvas = createFakeCanvas(window.document, options.addFakeCanvas.id, options.addFakeCanvas.image);
-        window.document.body.appendChild(fakeCanvas);
+    const totalCount = passedCount + ignorePassCount + ignoreCount + failedCount + erroredCount;
+
+    if (passedCount > 0) {
+        console.log('%d passed (%s%)',
+            passedCount, (100 * passedCount / totalCount).toFixed(1));
     }
 
-    const container = window.document.createElement('div');
-    Object.defineProperty(container, 'clientWidth', {value: options.width});
-    Object.defineProperty(container, 'clientHeight', {value: options.height});
+    if (ignorePassCount > 0) {
+        console.log('%d passed but were ignored (%s%)',
+            ignorePassCount, (100 * ignorePassCount / totalCount).toFixed(1));
+    }
 
-    const map = new maplibregl.Map({
-        container,
-        style,
+    if (ignoreCount > 0) {
+        console.log('%d ignored (%s%)',
+            ignoreCount, (100 * ignoreCount / totalCount).toFixed(1));
+    }
 
-        // @ts-ignore
-        classes: options.classes,
-        interactive: false,
-        attributionControl: false,
-        pixelRatio: options.pixelRatio,
-        preserveDrawingBuffer: true,
-        axonometric: options.axonometric || false,
-        skew: options.skew || [0, 0],
-        fadeDuration: options.fadeDuration || 0,
-        localIdeographFontFamily: options.localIdeographFontFamily || false as any,
-        crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions
-    });
+    if (failedCount > 0) {
+        console.log('%d failed (%s%)',
+            failedCount, (100 * failedCount / totalCount).toFixed(1));
+    }
 
-    // Configure the map to never stop the render loop
-    map.repaint = true;
-    now = 0;
-    browser.now = () => {
-        return now;
-    };
+    if (erroredCount > 0) {
+        console.log('%d errored (%s%)',
+            erroredCount, (100 * erroredCount / totalCount).toFixed(1));
+    }
 
-    if (options.debug) map.showTileBoundaries = true;
-    if (options.showOverdrawInspector) map.showOverdrawInspector = true;
-    if (options.showPadding) map.showPadding = true;
-
-    const gl = map.painter.context.gl;
-
-    map.once('load', () => {
-        if (options.collisionDebug) {
-            map.showCollisionBoxes = true;
-            if (options.operations) {
-                options.operations.push(['wait']);
-            } else {
-                options.operations = [['wait']];
-            }
-        }
-        applyOperations(options, map as any, options.operations, () => {
-            const viewport = gl.getParameter(gl.VIEWPORT);
-            const w = viewport[2];
-            const h = viewport[3];
-
-            const pixels = new Uint8Array(w * h * 4);
-            gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-
-            // eslint-disable-next-line new-cap
-            const data = Buffer.from(pixels);
-
-            // Flip the scanlines.
-            const stride = w * 4;
-            // eslint-disable-next-line new-cap
-            const tmp = Buffer.alloc(stride);
-            for (let i = 0, j = h - 1; i < j; i++, j--) {
-                const start = i * stride;
-                const end = j * stride;
-                data.copy(tmp, 0, start, start + stride);
-                data.copy(data, start, end, end + stride);
-                tmp.copy(data, end);
-            }
-
-            const results = options.queryGeometry ?
-                map.queryRenderedFeatures(options.queryGeometry, options.queryOptions || {}) :
-                [];
-
-            map.remove();
-            gl.getExtension('STACKGL_destroy_context').destroy();
-            delete map.painter.context.gl;
-
-            if (options.addFakeCanvas) {
-                const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
-                fakeCanvas.parentNode.removeChild(fakeCanvas);
-            }
-
-            callback(null, data, results.map((feature) => {
-                feature = feature.toJSON();
-                delete feature.layer;
-                return feature;
-            }));
-        });
-    });
+    return (failedCount + erroredCount) === 0;
 }
 
 /**
@@ -485,13 +577,8 @@ function render(style: StyleWithTestData, _callback) {
  * filesystem (optionally updating expected results), and exit the process with a success or
  * failure code.
  *
- * As the tests run, results are printed to standard output, and test artifacts are written
- * to the filesystem. If the environment variable `UPDATE` is set, the expected artifacts are
- * updated in place based on the test rendering.
- *
  * If all the tests are successful, this function exits the process with exit code 0. Otherwise
- * it exits with 1. If an unexpected error occurs, it exits with -1.
- *
+ * it exits with 1.
  */
 const options: RenderOptions = {ignores, tests: [], shuffle: false, recycleMap: false, seed: makeHash()};
 
@@ -505,10 +592,24 @@ if (process.argv.length > 2) {
 mockXhr();
 
 const directory = path.join(__dirname);
-const tests = getTests(options, directory);
-harness(tests, options, (style: StyleWithTestData, done: Function) => {
-    render(style, (err: Error, data: Buffer) => {
-        compareRenderResults(directory, style.metadata.test, err, data, done);
-    });
-});
+const testStyles = getTestStyles(options, directory);
+let index = 0;
+for (const style of testStyles) {
+    try {
+        //@ts-ignore
+        const data = await getImageFromStyle(style);
+        compareRenderResults(directory, style.metadata.test, data);
+    } catch (ex) {
+        style.metadata.test.error = ex;
+    }
+    printProgress(style.metadata.test, testStyles.length, ++index);
+}
+
+if (process.env.UPDATE) {
+    console.log(`Updated ${testStyles.length} tests.`);
+    process.exit(0);
+}
+
+const succuess = printStatistics(testStyles.map(s => s.metadata.test));
+process.exit(succuess ? 0 : 1);
 
