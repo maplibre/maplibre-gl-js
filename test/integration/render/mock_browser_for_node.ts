@@ -167,7 +167,7 @@ window.clearFakeWorkerPresence = () => {
     global.self = undefined;
 };
 
-let performance = window.performance as any;
+const performance = window.performance as any;
 performance.getEntriesByName = () => { };
 performance.mark = () => { };
 performance.measure = () => { };
