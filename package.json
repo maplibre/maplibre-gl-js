@@ -164,7 +164,6 @@
     "test-symbol-shaping": "jest ./test/integration/symbol-shaping",
     "test-style-spec": "jest ./test/integration/style-spec",
     "test-browser": "jest -c ./jest.config.e2e.js ./test/integration/browser",
-    "test-render-jest": "jest --maxWorkers=4 test/integration/render/render-jest.test.ts",
     "test-render": "node --loader ts-node/esm --experimental-specifier-resolution=node --experimental-json-modules --max-old-space-size=2048 test/integration/render/render.test.ts",
     "test-query": "jest -c ./jest.config.e2e.js test/integration/query",
     "test-expression": "jest test/integration/expression",
