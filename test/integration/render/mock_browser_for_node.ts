@@ -3,7 +3,6 @@ import fs from 'fs';
 import gl from 'gl';
 import {JSDOM, VirtualConsole} from 'jsdom';
 import {PNG} from 'pngjs';
-import {fakeServer} from 'nise';
 import {fileURLToPath} from 'url';
 import '../../unit/lib/web_worker_mock';
 // @ts-ignore
