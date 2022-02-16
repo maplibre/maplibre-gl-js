@@ -1,4 +1,4 @@
-import './stub_loader';
+import './mock_browser_for_node';
 import canvas from 'canvas';
 import path, {dirname} from 'path';
 import fs from 'fs';
@@ -19,7 +19,6 @@ import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import type Map from '../../../src/ui/map';
 import CanvasSource from '../../../src/source/canvas_source';
 import customLayerImplementations from './custom_layer_implementations';
-import '../../unit/lib/web_worker_mock';
 import type {StyleSpecification} from '../../../src/style-spec/types';
 
 const {fakeServer} = nise;
