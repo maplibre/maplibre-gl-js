@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 
+- Add adjustment for glyph rendering, CJK fonts are mainly affected.
 - *...Add new stuff here...*
 
 ## 2.1.6
