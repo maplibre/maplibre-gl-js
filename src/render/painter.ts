@@ -125,9 +125,10 @@ class Painter {
     emptyTexture: Texture;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
-    // this object stores the current camera-matrix and the last render time of
-    // of the terrain-acilitators. e.g. depth & coords framebuffers
-    terrainFacilitator: { matrix: mat4; renderTime: number };
+    // this object stores the current camera-matrix and the last render time
+    // of the terrain-facilitators. e.g. depth & coords framebuffers
+    // every time the camera-matrix changes the terrain-facilitators will be redrawn.
+    terrainFacilitator: {matrix: mat4; renderTime: number};
 
     constructor(gl: WebGLRenderingContext, transform: Transform) {
         this.context = new Context(gl);
@@ -244,7 +245,7 @@ class Painter {
 
         this.useProgram('clippingMask').draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
-            clippingMaskUniformValues(matrix), this.style.terrainSourceCache.getTerrain(),
+            clippingMaskUniformValues(matrix), null,
             '$clipping', this.viewportBuffer,
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }

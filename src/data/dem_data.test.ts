@@ -238,8 +238,8 @@ describe('DEMData is correctly serialized and deserialized', () => {
             stride: 6,
             data: dem0.data,
             encoding: 'mapbox',
-            max: max,
-            min: min,
+            max,
+            min,
         });
 
         const transferrables = [];

@@ -62,7 +62,6 @@ function prepareHillshade(painter, tile, layer, depthMode, stencilMode, colorMod
     const context = painter.context;
     const gl = context.gl;
     const dem = tile.dem;
-    const terrain = painter.style.terrainSourceCache.getTerrain();
     if (dem && dem.data) {
         const tileSize = dem.dim;
         const textureStride = dem.stride;
@@ -99,7 +98,7 @@ function prepareHillshade(painter, tile, layer, depthMode, stencilMode, colorMod
         painter.useProgram('hillshadePrepare').draw(context, gl.TRIANGLES,
             depthMode, stencilMode, colorMode, CullFaceMode.disabled,
             hillshadeUniformPrepareValues(tile.tileID, dem),
-            terrain, layer.id, painter.rasterBoundsBuffer,
+            null, layer.id, painter.rasterBoundsBuffer,
             painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
 
         tile.needsHillshadePrepare = false;

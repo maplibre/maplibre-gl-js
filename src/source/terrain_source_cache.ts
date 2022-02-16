@@ -316,12 +316,12 @@ class TerrainSourceCache extends Evented {
     }
 
     /**
-     * returns a Terrain Object for a tile. Unless the tile corresponds to data, return an flat dem object
+     * returns a Terrain Object for a tile. Unless the tile corresponds to data (e.g. tile is loading), return a flat dem object
      * @param {OverscaledTileID} tileID
      */
-    getTerrain(tileID?: OverscaledTileID): any {
-        if (!this.isEnabled() || !tileID) return null;
-        // create empty DEM Obejcts, which will used while raster-dem tiles will load.
+    getTerrain(tileID: OverscaledTileID): any {
+        if (!this.isEnabled()) return null;
+        // create empty DEM Obejcts, which will used while raster-dem tiles are loading.
         // creates an empty depth-buffer texture which is needed, during the initialisation process of the 3d mesh..
         if (!this._emptyDemTexture) {
             const context = this._style.map.painter.context;
