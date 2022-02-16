@@ -7,7 +7,6 @@ import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import glob from 'glob';
-import ignores from './ignores.json';
 import nise from 'nise';
 import {createRequire} from 'module';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
@@ -67,12 +66,10 @@ type TestData = {
     queryGeometry: PointLike;
     queryOptions: any;
     error: Error;
-    ignored: boolean;
 }
 
 type RenderOptions = {
     tests: any[];
-    ignores: {};
     shuffle: boolean;
     recycleMap: boolean;
     seed: string;
@@ -245,7 +242,6 @@ function mockXhr() {
  */
 function getTestStyles(options: RenderOptions, directory: string): StyleWithTestData[] {
     const tests = options.tests || [];
-    const ignores = options.ignores || {};
 
     const sequence = glob.sync('**/style.json', {cwd: directory})
         .map(fixture => {
@@ -255,7 +251,6 @@ function getTestStyles(options: RenderOptions, directory: string): StyleWithTest
 
             style.metadata.test = Object.assign({
                 id,
-                ignored: ignores[`${path.basename(directory)}/${id}`],
                 width: 512,
                 height: 512,
                 pixelRatio: 1,
@@ -501,11 +496,7 @@ function getImageFromStyle(style: StyleWithTestData): Promise<Buffer> {
  * @param index The current test index
  */
 function printProgress(test: TestData, total: number, index: number) {
-    if (test.ignored && !test.ok) {
-        console.log(`${index}/${total}: ignore ${test.id} (${test.ignored})`);
-    } else if (test.ignored) {
-        console.log(`${index}/${total}: ignore ${test.id} (${test.ignored})`);
-    } else if (test.error) {
+    if (test.error) {
         console.log(`${index}/${total}: errored ${test.id}`);
     } else if (!test.ok) {
         console.log(`${index}/${total}: failed ${test.id}`);
@@ -522,17 +513,11 @@ function printProgress(test: TestData, total: number, index: number) {
  */
 function printStatistics(tests: TestData[]): boolean {
     let passedCount = 0,
-        ignoreCount = 0,
-        ignorePassCount = 0,
         failedCount = 0,
         erroredCount = 0;
 
     for (const test of tests) {
-        if (test.ignored && !test.ok) {
-            ignoreCount++;
-        } else if (test.ignored) {
-            ignorePassCount++;
-        } else if (test.error) {
+        if (test.error) {
             erroredCount++;
         } else if (!test.ok) {
             failedCount++;
@@ -541,21 +526,11 @@ function printStatistics(tests: TestData[]): boolean {
         }
     }
 
-    const totalCount = passedCount + ignorePassCount + ignoreCount + failedCount + erroredCount;
+    const totalCount = passedCount + failedCount + erroredCount;
 
     if (passedCount > 0) {
         console.log('%d passed (%s%)',
             passedCount, (100 * passedCount / totalCount).toFixed(1));
-    }
-
-    if (ignorePassCount > 0) {
-        console.log('%d passed but were ignored (%s%)',
-            ignorePassCount, (100 * ignorePassCount / totalCount).toFixed(1));
-    }
-
-    if (ignoreCount > 0) {
-        console.log('%d ignored (%s%)',
-            ignoreCount, (100 * ignoreCount / totalCount).toFixed(1));
     }
 
     if (failedCount > 0) {
@@ -580,7 +555,7 @@ function printStatistics(tests: TestData[]): boolean {
  * If all the tests are successful, this function exits the process with exit code 0. Otherwise
  * it exits with 1.
  */
-const options: RenderOptions = {ignores, tests: [], shuffle: false, recycleMap: false, seed: makeHash()};
+const options: RenderOptions = {tests: [], shuffle: false, recycleMap: false, seed: makeHash()};
 
 if (process.argv.length > 2) {
     options.tests = process.argv.slice(2).filter((value, index, self) => { return self.indexOf(value) === index; }) || [];
