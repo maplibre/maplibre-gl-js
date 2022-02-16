@@ -246,8 +246,8 @@ function getTestStyles(options: RenderOptions, directory: string): StyleWithTest
     const sequence = glob.sync('**/style.json', {cwd: directory})
         .map(fixture => {
             const id = path.dirname(fixture);
-            const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8'));
-            style.metadata = style.metadata || {};
+            const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;
+            style.metadata = style.metadata || {} as any;
 
             style.metadata.test = Object.assign({
                 id,
@@ -269,10 +269,6 @@ function getTestStyles(options: RenderOptions, directory: string): StyleWithTest
 
             if (process.env.BUILDTYPE !== 'Debug' && test.id.match(/^debug\//)) {
                 console.log(`* skipped ${test.id}`);
-                return false;
-            }
-            if (/^skip/.test(test.ignored)) {
-                console.log(`* skipped ${test.id} (${test.ignored})`);
                 return false;
             }
             localizeURLs(style, 2900, path.join(__dirname, '../'), require);
