@@ -16,25 +16,25 @@ const context = new Context(gl(10, 10));
 const transform = new Transform();
 
 class StubMap extends Evented {
-   transform: Transform;
-   painter: Painter;
-   _requestManager: RequestManager;
+    transform: Transform;
+    painter: Painter;
+    _requestManager: RequestManager;
 
-   constructor() {
-       super();
-       this.transform = transform;
-       this._requestManager = {
-           transformRequest: (url) => {
-               return {url};
-           }
-       } as any as RequestManager;
-   }
+    constructor() {
+        super();
+        this.transform = transform;
+        this._requestManager = {
+            transformRequest: (url) => {
+                return {url};
+            }
+        } as any as RequestManager;
+    }
 }
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, null);
     source.onAdd({
-        transform: transform,
+        transform,
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
         getPixelRatio() { return 1; }
@@ -64,14 +64,14 @@ describe('TerrainSourceCache', () => {
         }));
         const map = new StubMap();
         style = new Style(map as any);
-        style.map.painter = {style: style, context: context} as any;
-        style.on("style.load", () => {
+        style.map.painter = {style, context} as any;
+        style.on('style.load', () => {
             const source = createSource({url: '/source.json'});
             server.respond();
             style.addSource('terrain', source as any);
             tsc = new TerrainSourceCache(style);
             done();
-        })
+        });
         style.loadJSON({
             'version': 8,
             'sources': {},
