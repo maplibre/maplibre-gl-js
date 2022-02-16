@@ -29,23 +29,18 @@ export default function testRunner(sequence: any[], options, run) {
                 }
 
                 if (test.ignored && !test.ok) {
-                    test.color = '#9E9E9E';
                     test.status = 'ignored failed';
                     console.log(`${++index}/${sequence.length}: ignore ${test.id} (${test.ignored})`);
                 } else if (test.ignored) {
-                    test.color = '#E8A408';
                     test.status = 'ignored passed';
                     console.log(`${++index}/${sequence.length}: ignore ${test.id} (${test.ignored})`);
                 } else if (test.error) {
-                    test.color = 'red';
                     test.status = 'errored';
                     console.log(`${++index}/${sequence.length}: errored ${test.id}`);
                 } else if (!test.ok) {
-                    test.color = 'red';
                     test.status = 'failed';
                     console.log(`${++index}/${sequence.length}: failed ${test.id}`);
                 } else {
-                    test.color = 'green';
                     test.status = 'passed';
                     console.log(`${++index}/${sequence.length}: passed ${test.id}`);
                 }
