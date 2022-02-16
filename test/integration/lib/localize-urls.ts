@@ -1,7 +1,8 @@
 import path from 'path';
 import fs from 'fs';
+import { StyleSpecification } from '../../../src/style-spec/types';
 
-export default function localizeURLs(style, port, baseTestsDir, requireFn) {
+export default function localizeURLs(style: any, port: number, baseTestsDir: string, requireFn: any) {
     localizeStyleURLs(style, port);
     if (style.metadata && style.metadata.test && style.metadata.test.operations) {
         style.metadata.test.operations.forEach((op) => {
@@ -43,27 +44,27 @@ export default function localizeURLs(style, port, baseTestsDir, requireFn) {
     }
 }
 
-function localizeURL(url, port) {
+function localizeURL(url: string, port: number) {
     return url.replace(/^local:\/\//, `http://localhost:${port}/`);
 }
 
-function localizeMapboxSpriteURL(url, port) {
+function localizeMapboxSpriteURL(url: string, port: number) {
     return url.replace(/^mapbox:\/\//, `http://localhost:${port}/`);
 }
 
-function localizeMapboxFontsURL(url, port) {
+function localizeMapboxFontsURL(url: string, port: number) {
     return url.replace(/^mapbox:\/\/fonts/, `http://localhost:${port}/glyphs`);
 }
 
-function localizeMapboxTilesURL(url, port) {
+function localizeMapboxTilesURL(url: string, port: number) {
     return url.replace(/^mapbox:\/\//, `http://localhost:${port}/tiles/`);
 }
 
-function localizeMapboxTilesetURL(url, port) {
+function localizeMapboxTilesetURL(url: string, port: number) {
     return url.replace(/^mapbox:\/\//, `http://localhost:${port}/tilesets/`);
 }
 
-function localizeSourceURLs(source, port) {
+function localizeSourceURLs(source: any, port: number) {
     for (const tile in source.tiles) {
         source.tiles[tile] = localizeMapboxTilesURL(source.tiles[tile], port);
         source.tiles[tile] = localizeURL(source.tiles[tile], port);
@@ -84,7 +85,7 @@ function localizeSourceURLs(source, port) {
     }
 }
 
-function localizeStyleURLs (style, port) {
+function localizeStyleURLs(style: StyleSpecification, port: number) {
     for (const source in style.sources) {
         localizeSourceURLs(style.sources[source], port);
     }
