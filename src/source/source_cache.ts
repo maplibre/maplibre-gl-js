@@ -521,9 +521,11 @@ class SourceCache extends Evented {
         if (this.usedForTerrain) {
             const parents = {};
             for (const tileID of idealTileIDs) {
-                if (tileID.canonical.z > this._source.minzoom) {
-                    const parent = tileID.scaledTo(tileID.canonical.z - 1);
-                    parents[parent.key] = parent;
+                for (let dz = 1; dz <= 22; dz++) { // load all parent tiles
+                    if (tileID.canonical.z - dz >= this._source.minzoom) {
+                        const parent = tileID.scaledTo(tileID.canonical.z - dz);
+                        parents[parent.key] = parent;
+                    }
                 }
             }
             idealTileIDs = idealTileIDs.concat(Object.values(parents));

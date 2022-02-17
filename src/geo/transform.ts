@@ -351,9 +351,7 @@ class Transform {
         if (options.minzoom !== undefined && z < options.minzoom) return [];
         if (options.maxzoom !== undefined && z > options.maxzoom) z = options.maxzoom;
 
-        const cameraCoord = (tsc && tsc.isEnabled()) ?
-            this.pointCoordinate(this.getCameraPoint()) :
-            MercatorCoordinate.fromLngLat(this.center);
+        const cameraCoord = this.pointCoordinate(this.getCameraPoint());
         const centerCoord = MercatorCoordinate.fromLngLat(this.center);
         const numTiles = Math.pow(2, z);
         const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
@@ -412,8 +410,10 @@ class Transform {
                 fullyVisible = intersectResult === 2;
             }
 
-            const distanceX = it.aabb.distanceX(cameraPoint);
-            const distanceY = it.aabb.distanceY(cameraPoint);
+            // FIX ME-3D. I think refPoint should in any case be the cameraPoint, this logic is only for backward-compatibliy
+            const refPoint = tsc && tsc.isEnabled() ? cameraPoint : centerPoint;
+            const distanceX = it.aabb.distanceX(refPoint);
+            const distanceY = it.aabb.distanceY(refPoint);
             const longestDim = Math.max(Math.abs(distanceX), Math.abs(distanceY));
 
             // We're using distance based heuristics to determine if a tile should be split into quadrants or not.
@@ -438,10 +438,15 @@ class Transform {
                 const childZ = it.zoom + 1;
                 let quadrant = it.aabb.quadrant(i);
                 if (tsc && tsc.isEnabled()) {
-                    const tile = tsc.getSourceTile(new OverscaledTileID(childZ, it.wrap, childZ, childX, childY));
+                    const tile = tsc.getSourceTile(new OverscaledTileID(childZ, it.wrap, childZ, childX, childY), true);
+                    let minElevation = this.elevation, maxElevation = this.elevation;
+                    if (tile && tile.dem) {
+                        minElevation = tile.dem.min * tsc.exaggeration;
+                        maxElevation = tile.dem.max * tsc.exaggeration;
+                    }
                     quadrant = new Aabb(
-                        vec3.fromValues(quadrant.min[0], quadrant.min[1], tile && tile.dem ? tile.dem.min - this.elevation : -this.elevation),
-                        vec3.fromValues(quadrant.max[0], quadrant.max[1], tile && tile.dem ? Math.max(0, tile.dem.max - this.elevation) : 0)
+                        vec3.fromValues(quadrant.min[0], quadrant.min[1], minElevation),
+                        vec3.fromValues(quadrant.max[0], quadrant.max[1], maxElevation)
                     );
                 }
                 stack.push({aabb: quadrant, zoom: childZ, x: childX, y: childY, wrap: it.wrap, fullyVisible});
