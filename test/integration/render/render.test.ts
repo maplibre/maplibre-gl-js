@@ -118,7 +118,7 @@ function checkValueParameter(options: RenderOptions, defaultValue: any, param: s
  * @param data The actual image data to compare the expected to
  * @returns
  */
-function compareRenderResults(directory: string, testData: TestData, data: Uint8Array) {
+function compareRenderResults(directory: string, testData: TestData, data: Buffer) {
     let stats;
     const dir = path.join(directory, testData.id);
     try {
@@ -146,7 +146,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
             data[i * 4 + 2] /= a;
         }
     }
-    actualImg.data = data as any;
+    actualImg.data = data;
 
     // there may be multiple expected images, covering different platforms
     const expectedPaths = glob.sync(path.join(dir, 'expected*.png'));
@@ -382,7 +382,7 @@ function applyOperations(testData: TestData, map: Map & { _render: () => void}, 
  * @param style The style to use
  * @returns an image buffer
  */
-function getImageFromStyle(style: StyleWithTestData): Promise<Uint8Array> {
+function getImageFromStyle(style: StyleWithTestData): Promise<Buffer> {
     return new Promise((resolve, reject) => {
         const options = style.metadata.test;
 
@@ -443,18 +443,22 @@ function getImageFromStyle(style: StyleWithTestData): Promise<Uint8Array> {
                 const w = viewport[2];
                 const h = viewport[3];
 
-                const data = new Uint8Array(w * h * 4);
-                gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+                const pixels = new Uint8Array(w * h * 4);
+                gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+                // eslint-disable-next-line new-cap
+                const data = Buffer.from(pixels);
 
                 // Flip the scanlines.
                 const stride = w * 4;
-                const tmp = new Uint8Array(stride);
+                // eslint-disable-next-line new-cap
+                const tmp = Buffer.alloc(stride);
                 for (let i = 0, j = h - 1; i < j; i++, j--) {
                     const start = i * stride;
                     const end = j * stride;
-                    tmp.set(data.slice(start, start + stride), 0);
-                    data.set(data.slice(end, end + stride), start);
-                    data.set(tmp, end);
+                    data.copy(tmp, 0, start, start + stride);
+                    data.copy(data, start, end, end + stride);
+                    tmp.copy(data, end);
                 }
 
                 map.remove();
