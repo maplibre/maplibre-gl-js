@@ -50,13 +50,11 @@ Object.defineProperty(global.Image.prototype, 'src', {
         if (src.startsWith('data:image/png')) {
             const base64 = src.replace(/data:.*;base64,/, '');
             const buff = Buffer.from(base64, 'base64');
-            new PNG().parse(buff, (err, png) => {
-                if (err) throw new Error('Couldn\'t parse PNG');
-                this.data = png.data;
-                this.height = png.height;
-                this.width = png.width;
-                this.onload();
-            });
+            let png = PNG.sync.read(buff);
+            this.data = png.data;
+            this.height = png.height;
+            this.width = png.width;
+            this.onload();
             return;
         }
         if (src && typeof src === 'string' && !src.startsWith('blob')) {

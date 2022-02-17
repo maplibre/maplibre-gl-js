@@ -45,9 +45,6 @@ type TestData = {
     allowed: number;
     ok: boolean;
     difference: number;
-    actual: string;
-    expected: string;
-    diff: string;
     timeout: number;
     addFakeCanvas: {
         id: string;
@@ -121,7 +118,7 @@ function checkValueParameter(options: RenderOptions, defaultValue: any, param: s
  * @param data The actual image data to compare the expected to
  * @returns
  */
-function compareRenderResults(directory: string, testData: TestData, data: Buffer) {
+function compareRenderResults(directory: string, testData: TestData, data: Uint8Array) {
     let stats;
     const dir = path.join(directory, testData.id);
     try {
@@ -149,7 +146,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Buffe
             data[i * 4 + 2] /= a;
         }
     }
-    actualImg.data = data;
+    actualImg.data = data as any;
 
     // there may be multiple expected images, covering different platforms
     const expectedPaths = glob.sync(path.join(dir, 'expected*.png'));
@@ -166,7 +163,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Buffe
     // the least amount of difference; this is useful for covering features that render differently
     // depending on platform, i.e. heatmaps use half-float textures for improved rendering where supported
     let minDiff = Infinity;
-    let minDiffImg, minExpectedBuf;
+    let minDiffImg: PNG;
 
     for (const path of expectedPaths) {
         const expectedBuf = fs.readFileSync(path);
@@ -180,7 +177,6 @@ function compareRenderResults(directory: string, testData: TestData, data: Buffe
         if (diff < minDiff) {
             minDiff = diff;
             minDiffImg = diffImg;
-            minExpectedBuf = expectedBuf;
         }
     }
 
@@ -192,10 +188,6 @@ function compareRenderResults(directory: string, testData: TestData, data: Buffe
 
     testData.difference = minDiff;
     testData.ok = minDiff <= testData.allowed;
-
-    testData.actual = actualBuf.toString('base64');
-    testData.expected = minExpectedBuf.toString('base64');
-    testData.diff = diffBuf.toString('base64');
 }
 
 /**
@@ -390,7 +382,7 @@ function applyOperations(testData: TestData, map: Map & { _render: () => void}, 
  * @param style The style to use
  * @returns an image buffer
  */
-function getImageFromStyle(style: StyleWithTestData): Promise<Buffer> {
+function getImageFromStyle(style: StyleWithTestData): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
         const options = style.metadata.test;
 
@@ -451,22 +443,18 @@ function getImageFromStyle(style: StyleWithTestData): Promise<Buffer> {
                 const w = viewport[2];
                 const h = viewport[3];
 
-                const pixels = new Uint8Array(w * h * 4);
-                gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-
-                // eslint-disable-next-line new-cap
-                const data = Buffer.from(pixels);
+                const data = new Uint8Array(w * h * 4);
+                gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
 
                 // Flip the scanlines.
                 const stride = w * 4;
-                // eslint-disable-next-line new-cap
-                const tmp = Buffer.alloc(stride);
+                const tmp = new Uint8Array(stride);
                 for (let i = 0, j = h - 1; i < j; i++, j--) {
                     const start = i * stride;
                     const end = j * stride;
-                    data.copy(tmp, 0, start, start + stride);
-                    data.copy(data, start, end, end + stride);
-                    tmp.copy(data, end);
+                    tmp.set(data.slice(start, start + stride), 0);
+                    data.set(data.slice(end, end + stride), start);
+                    data.set(tmp, end);
                 }
 
                 map.remove();
@@ -493,7 +481,7 @@ function getImageFromStyle(style: StyleWithTestData): Promise<Buffer> {
  */
 function printProgress(test: TestData, total: number, index: number) {
     if (test.error) {
-        console.log(`${index}/${total}: errored ${test.id}`);
+        console.log(`${index}/${total}: errored ${test.id} ${test.error.message}`);
     } else if (!test.ok) {
         console.log(`${index}/${total}: failed ${test.id}`);
     } else {
