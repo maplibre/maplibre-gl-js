@@ -50,7 +50,7 @@ Object.defineProperty(global.Image.prototype, 'src', {
         if (src.startsWith('data:image/png')) {
             const base64 = src.replace(/data:.*;base64,/, '');
             const buff = Buffer.from(base64, 'base64');
-            let png = PNG.sync.read(buff);
+            const png = PNG.sync.read(buff);
             this.data = png.data;
             this.height = png.height;
             this.width = png.width;
