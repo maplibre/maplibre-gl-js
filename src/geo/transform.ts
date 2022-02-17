@@ -494,7 +494,7 @@ class Transform {
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
         const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
         const tileID = new OverscaledTileID(this.tileZoom, 0, this.tileZoom, tileX, tileY);
-        return this.terrainSourceCache.getElevationWithExaggeration(tileID, mercX % tileSize, mercY % tileSize, tileSize);
+        return this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize, tileSize);
     }
 
     getCameraPosition() {
@@ -651,7 +651,7 @@ class Transform {
         return new MercatorCoordinate(
             (tile.tileID.canonical.x * coordsSize + x) / worldSize,
             (tile.tileID.canonical.y * coordsSize + y) / worldSize,
-            this.terrainSourceCache.getElevationWithExaggeration(tile.tileID, x, y, coordsSize)
+            this.terrainSourceCache.getElevation(tile.tileID, x, y, coordsSize)
         );
     }
 
@@ -877,9 +877,9 @@ class Transform {
         this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
         // matrix for conversion from location to GL coordinates (-1 .. 1)
-        this.invProjMatrix = mat4.invert([] as any, m);
         mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
         this.projMatrix = m;
+        this.invProjMatrix = mat4.invert([] as any, m);
         this.pixelMatrix2 = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.

@@ -135,7 +135,7 @@ function updateVariableAnchors(coords, painter, layer, sourceCache, rotationAlig
         if (size) {
             const tileScale = Math.pow(2, tr.zoom - tile.tileID.overscaledZ);
             const getElevation = painter.style.terrainSourceCache && painter.style.terrainSourceCache.isEnabled() ?
-                (x: number, y: number) => painter.style.terrainSourceCache.getElevationWithExaggeration(coord, x, y) :
+                (x: number, y: number) => painter.style.terrainSourceCache.getElevation(coord, x, y) :
                 null;
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets, symbolSize,
                 tr, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, getElevation);
@@ -306,7 +306,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
 
         if (alongLine) {
             const getElevation = painter.style.terrainSourceCache && painter.style.terrainSourceCache.isEnabled() ?
-                (x: number, y: number) => painter.style.terrainSourceCache.getElevationWithExaggeration(coord, x, y) :
+                (x: number, y: number) => painter.style.terrainSourceCache.getElevation(coord, x, y) :
                 0;
             symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, getElevation);
         }

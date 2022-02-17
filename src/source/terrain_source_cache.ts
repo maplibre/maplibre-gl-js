@@ -373,15 +373,14 @@ class TerrainSourceCache extends Evented {
     }
 
     /**
-     * get the Elevation for given coordinate
-     * FIXME-3D: handle coordinates outside bounds, e.g. use neighbouring tiles
+     * get the elevation-value from original dem-data for a given tile-coordinate
      * @param {OverscaledTileID} tileID
      * @param {number} x between 0 .. EXTENT
      * @param {number} y between 0 .. EXTENT
      * @param {number} extent optional, default 8192
      * @returns {number}
      */
-    getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
+    getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         if (!this.isEnabled()) return 0.0;
         if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return this.elevationOffset;
         let elevation = 0;
@@ -396,20 +395,20 @@ class TerrainSourceCache extends Evented {
             const br = terrain.tile.dem.get(c[0] + 1, c[1] + 1);
             elevation = mix(mix(tl, tr, coord[0] - c[0]), mix(bl, br, coord[0] - c[0]), coord[1] - c[1]);
         }
-        return (elevation + this.elevationOffset);
+        return elevation;
     }
 
     /**
-     * get the Elevation for given coordinate multiplied by exaggeration.
+     * get the Elevation for given coordinate in respect of elevationOffset and exaggeration.
      * @param {OverscaledTileID} tileID
      * @param {number} x between 0 .. EXTENT
      * @param {number} y between 0 .. EXTENT
      * @param {number} extent optional, default 8192
      * @returns {number}
      */
-    getElevationWithExaggeration(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
+    getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         if (!this.isEnabled()) return 0.0;
-        return this.getElevation(tileID, x, y, extent) * this.exaggeration;
+        return (this.getDEMElevation(tileID, x, y, extent) + this.elevationOffset) * this.exaggeration;
     }
 
     /**
