@@ -569,6 +569,6 @@ if (process.env.UPDATE) {
     process.exit(0);
 }
 
-const succuess = printStatistics(testStyles.map(s => s.metadata.test));
-process.exit(succuess ? 0 : 1);
+const success = printStatistics(testStyles.map(s => s.metadata.test));
+process.exit(success ? 0 : 1);
 
