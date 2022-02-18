@@ -483,7 +483,7 @@ function printProgress(test: TestData, total: number, index: number) {
     if (test.error) {
         console.log(`${index}/${total}: errored ${test.id} ${test.error.message}`);
     } else if (!test.ok) {
-        console.log(`${index}/${total}: failed ${test.id}`);
+        console.log(`${index}/${total}: failed ${test.id} ${test.difference}`);
     } else {
         console.log(`${index}/${total}: passed ${test.id}`);
     }
