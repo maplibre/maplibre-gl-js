@@ -23,4 +23,4 @@ jobs:
         if: always()
         with:
           name: index.html
-          path: test/integration/render-tests/index.html
+          path: test/integration/render/index.html
