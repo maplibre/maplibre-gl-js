@@ -110,13 +110,13 @@ function checkValueParameter(options: RenderOptions, defaultValue: any, param: s
     return split[1];
 }
 /**
- * This method compares the buffer that was created to the expected file in the file system.
- * It updates the test data with the results.
+ * Compares the Unit8Array that was created to the expected file in the file system.
+ * It updates testData with the results.
  *
  * @param directory The base directory of the data
  * @param testData The test data
  * @param data The actual image data to compare the expected to
- * @returns
+ * @returns nothing as it updates the testData object
  */
 function compareRenderResults(directory: string, testData: TestData, data: Uint8Array) {
     let stats;
@@ -191,7 +191,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 }
 
 /**
- * This function mocks XHR request and simply pulls file from the file system.
+ * Mocks XHR request and simply pulls file from the file system.
  */
 function mockXhr() {
     const server = fakeServer.create();
@@ -226,7 +226,7 @@ function mockXhr() {
 }
 
 /**
- * This method gets all the tests from the file system looking for style.json files.
+ * Gets all the tests from the file system looking for style.json files.
  *
  * @param options The options
  * @param directory The base directory
@@ -376,11 +376,11 @@ function applyOperations(testData: TestData, map: Map & { _render: () => void}, 
     }
 }
 /**
- * The main method of this file - it creates the map and applies the operations to create an image
- * and returns it as a buffer
+ * It creates the map and applies the operations to create an image
+ * and returns it as a Uint8Array
  *
  * @param style The style to use
- * @returns an image buffer
+ * @returns an image byte array promise
  */
 function getImageFromStyle(style: StyleWithTestData): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
