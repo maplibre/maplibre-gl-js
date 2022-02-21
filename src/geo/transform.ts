@@ -425,9 +425,12 @@ class Transform {
 
             // Have we reached the target depth or is the tile too far away to be any split further?
             if (it.zoom === maxZoom || (longestDim > distToSplit && it.zoom >= minZoom)) {
+                const dz = maxZoom - it.zoom, dx = cameraPoint[0] - 0.5 - (x << dz), dy = cameraPoint[1] - 0.5 - (y << dz);
                 result.push({
                     tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
-                    distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y])
+                    distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y]),
+                    // this variable is currently not used, but may be important to reduce the amount of loaded tiles
+                    tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
                 });
                 continue;
             }
