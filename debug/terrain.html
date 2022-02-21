@@ -24,7 +24,8 @@ var map = window.map = new maplibregl.Map({
     center: [11.40416, 47.26475],
     hash: true,
     style: 'https://static.maptoolkit.net/styles/toursprung/terrain.json',
-    maxZoom: 16
+    maxZoom: 18,
+    maxPitch: 85
 });
 
 map.on('load', () => {
@@ -32,7 +33,8 @@ map.on('load', () => {
         'type': 'raster-dem',
         'tiles': ['https://vtc-cdn.maptoolkit.net/terrainrgb/{z}/{x}/{y}.webp'],
         'encoding': 'mapbox',
-        'maxzoom': 14
+        'maxzoom': 14,
+        'minzoom': 4
     });
     map.addTerrain('terrain', {exaggeration: 0.33});
 });
