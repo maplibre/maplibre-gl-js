@@ -1,4 +1,4 @@
-name: Integration Test - Browser tests
+name: Integration Test - Browser
 
 on:
   push:
