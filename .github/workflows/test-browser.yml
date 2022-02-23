@@ -1,4 +1,4 @@
-name: Integration Test - Browser Interaction
+name: Integration Test - Browser tests
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
 
 jobs:
   test_browser:
-    name: macos
-    runs-on: macos
+    name: macos-latest
+    runs-on: macos-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
