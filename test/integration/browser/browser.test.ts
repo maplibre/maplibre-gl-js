@@ -171,7 +171,7 @@ describe('browser tests', () => {
 
             const expectedHtml = fs.readFileSync(path.join(__dirname, 'fixtures/expected-base64-image.html'), 'utf8');
             expect(pageWithImage).toBe(expectedHtml);
-        });
+        }, 20000);
     });
 
     afterEach(async() => {
