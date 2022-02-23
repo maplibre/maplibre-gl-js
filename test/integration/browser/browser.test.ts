@@ -2,6 +2,8 @@ import {Browser, BrowserContext, BrowserType, chromium, Page} from 'playwright';
 import address from 'address';
 import st from 'st';
 import http from 'http';
+import fs from 'fs';
+import path from 'path';
 
 const ip = address.ip();
 const port = 9968;
@@ -43,7 +45,7 @@ let context: BrowserContext;
 let page: Page;
 let map: any;
 
-describe('drag and zoom', () => {
+describe('browser tests', () => {
 
     // start server
     beforeAll((done) => {
@@ -78,7 +80,7 @@ describe('drag and zoom', () => {
             expect(center.lat).toBeCloseTo(0, 7);
         }, 20000);
 
-        test('Zoom: Double click at the center', async () => {
+        test(`${impl.name()} Zoom: Double click at the center`, async () => {
 
             await newTest(impl);
             const canvas = await page.$('.maplibregl-canvas');
@@ -94,6 +96,82 @@ describe('drag and zoom', () => {
 
             expect(zoom).toBe(2);
         }, 20000);
+
+        test(`${impl.name()} - CJK Characters`, async () => {
+            await newTest(impl);
+            await page.evaluate(() => {
+
+                map.setStyle({
+                    version: 8,
+                    glyphs: 'https://mierune.github.io/fonts/{fontstack}/{range}.pbf',
+                    sources: {
+                        sample: {
+                            type: 'geojson',
+                            data: {
+                                type: 'Feature',
+                                geometry: {
+                                    type: 'Point',
+                                    coordinates: [0, 0]
+                                },
+                                properties: {
+                                    'name_en': 'abcde',
+                                    'name_ja': 'あいうえお',
+                                    'name_ch': '阿衣乌唉哦',
+                                    'name_kr': '아이우'
+                                }
+                            }
+                        },
+                    },
+                    'layers':[
+                        {
+                            'id':'sample-text-left',
+                            'type':'symbol',
+                            'source':'sample',
+                            'layout':{
+                                'text-anchor':'top',
+                                'text-field':'{name_ja}{name_en}',
+                                'text-font':['Open Sans Regular'],
+                                'text-offset':[-10, 0],
+                            }
+                        },
+                        {
+                            'id':'sample-text-center',
+                            'type':'symbol',
+                            'source':'sample',
+                            'layout':{
+                                'text-anchor':'top',
+                                'text-field':'{name_ch}{name_kr}',
+                                'text-font':['Open Sans Regular'],
+                                'text-offset':[0, 0],
+                            }
+                        },
+                        {
+                            'id':'sample-text-right',
+                            'type':'symbol',
+                            'source':'sample',
+                            'layout':{
+                                'text-anchor':'top',
+                                'text-field':'{name_en}{name_ja}',
+                                'text-font':['Open Sans Regular'],
+                                'text-offset':[10, 0],
+                            }
+                        },
+                    ]
+                });
+            });
+
+            const image = await page.evaluate(() => {
+                return new Promise((resolve, _) => {
+                    map.once('idle', () => resolve(map.getCanvas().toDataURL()));
+                    map.setZoom(8);
+                });
+            });
+
+            const pageWithImage = `<html><head></head><body><img src="${image}" width="800" height="600" /></body></html>`;
+
+            const expectedHtml = fs.readFileSync(path.join(__dirname, 'fixtures/expected-base64-image.html'), 'utf8');
+            expect(pageWithImage).toBe(expectedHtml);
+        });
     });
 
     afterEach(async() => {
