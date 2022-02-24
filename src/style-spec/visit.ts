@@ -6,7 +6,7 @@ import type {
     LayerSpecification,
     PropertyValueSpecification,
     DataDrivenPropertyValueSpecification
-} from './types';
+} from './types.g';
 
 function getPropertyReference(propertyName): StylePropertySpecification {
     for (let i = 0; i < Reference.layout.length; i++) {
