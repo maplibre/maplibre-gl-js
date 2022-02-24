@@ -163,10 +163,10 @@
 
                 if (network === 'US:PA:Belt') {
                     switch (ref) {
-                    case 'Red Belt':
-                    default:
-                        shield = shieldImages.shield40_us_pa_belt_red_2;
-                        break;
+                        case 'Red Belt':
+                        default:
+                            shield = shieldImages.shield40_us_pa_belt_red_2;
+                            break;
                     }
                 }
 
@@ -215,14 +215,14 @@
                 return;
             } else {
                 switch (network) {
-                default: {
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(0, 0, 80, 80);
-                    ctx.lineWidth = 8;
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(0, 0, 80, 80);
+                    default: {
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(0, 0, 80, 80);
+                        ctx.lineWidth = 8;
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(0, 0, 80, 80);
                     //        ctx.fillText(ref, width * 0.5, height * 0.58, width);
-                }
+                    }
                 }
             }
 
