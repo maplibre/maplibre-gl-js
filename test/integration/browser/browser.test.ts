@@ -1,60 +1,47 @@
+import {Browser, BrowserContext, BrowserType, chromium, Page} from 'playwright';
 import address from 'address';
 import st from 'st';
 import http from 'http';
 
-import webdriver, {Origin} from 'selenium-webdriver';
-const {Builder, By} = webdriver;
-
-import chrome from 'selenium-webdriver/chrome';
-import firefox from 'selenium-webdriver/firefox';
-import safari from 'selenium-webdriver/safari';
-
-import doubleClick from './util/doubleclick';
-import mouseWheel from './util/mousewheel';
-
-const defaultViewportSize = {width: 800, height: 600};
-
-const chromeOptions = new chrome.Options().windowSize(defaultViewportSize);
-const firefoxOptions = new firefox.Options().windowSize(defaultViewportSize);
-const safariOptions = new safari.Options();
-
-if (process.env.SELENIUM_BROWSER && process.env.SELENIUM_BROWSER.split(/:/, 3)[2] === 'android') {
-    chromeOptions.androidChrome().setPageLoadStrategy('normal');
-}
-
 const ip = address.ip();
 const port = 9968;
+const basePath = `http://${ip}:${port}`;
 
-const browser = {
-    driver: null,
-    pixelRatio: 1,
-    scaleFactor: 1,
-    basePath: `http://${ip}:${port}`,
-    getMapCanvas,
-    doubleClick,
-    mouseWheel
-};
+async function getMapCanvas(url, page: Page) {
 
-export default browser;
+    await page.goto(url);
 
-async function getMapCanvas(url) {
-    await browser.driver.get(url);
-
-    await browser.driver.executeAsyncScript(callback => {
-
-        // @ts-ignore
-        if (map.loaded()) {
-            callback();
-        } else {
-            // @ts-ignore
-            map.once('load', () => callback());
-        }
+    await page.evaluate(() => {
+        new Promise<void>((resolve, _reject) => {
+            if (map.loaded()) {
+                resolve();
+            } else {
+                map.once('load', () => resolve());
+            }
+        });
     });
 
-    return browser.driver.findElement(By.className('maplibregl-canvas mapboxgl-canvas'));
+}
+
+async function newTest(impl: BrowserType) {
+    browser = await impl.launch({
+        headless: false,
+    });
+
+    context = await browser.newContext({
+        viewport: {width: 800, height: 600},
+        deviceScaleFactor: 2,
+    });
+
+    page = await context.newPage();
+    await getMapCanvas(`${basePath}/test/integration/browser/fixtures/land.html`, page);
 }
 
 let server = null;
+let browser: Browser;
+let context: BrowserContext;
+let page: Page;
+let map: any;
 
 describe('drag and zoom', () => {
 
@@ -67,94 +54,53 @@ describe('drag and zoom', () => {
         });
     });
 
-    // start browser
-    beforeAll(async () => {
+    [chromium].forEach((impl) => {
 
-        try {
-        // eslint-disable-next-line require-atomic-updates
-            browser.driver = await new Builder()
-                .forBrowser('chrome')
-                .setChromeOptions(chromeOptions)
-                .setFirefoxOptions(firefoxOptions)
-                .setSafariOptions(safariOptions)
-                .build();
-        } catch (err) {
-            expect(err).toBeFalsy();
-        }
+        test(`${impl.name()} - Drag to the left`, async () => {
 
-        const capabilities = await browser.driver.getCapabilities();
-        expect(true).toBeTruthy();
-        expect(true).toBeTruthy();
-        expect(true).toBeTruthy();
+            await newTest(impl);
 
-        if (capabilities.getBrowserName() === 'Safari') {
-        // eslint-disable-next-line require-atomic-updates
-            browser.scaleFactor = 2;
-        }
+            const canvas = await page.$('.maplibregl-canvas');
+            const canvasBB = await canvas.boundingBox();
 
-        const metrics = await browser.driver.executeScript(size => {
-        /* eslint-disable no-undef */
-            return {
-                width: outerWidth - innerWidth / devicePixelRatio + size.width,
-                height: outerHeight - innerHeight / devicePixelRatio + size.height,
-                pixelRatio: devicePixelRatio
-            };
-        }, defaultViewportSize);
-        // eslint-disable-next-line require-atomic-updates
-        browser.pixelRatio = metrics.pixelRatio;
-        (await browser.driver.manage().window()).setRect({
-            width: metrics.width,
-            height: metrics.height
-        });
-    }, 50000);
+            // Perform drag action, wait a bit the end to avoid the momentum mode.
+            await page.mouse.move(canvasBB.x, canvasBB.y);
+            await page.mouse.down();
+            await page.mouse.move(100, 0);
+            await new Promise(r => setTimeout(r, 200));
+            await page.mouse.up();
 
-    test('Drag: To the left', async () => {
-        const {driver} = browser;
+            const center = await page.evaluate(() => {
+                return map.getCenter();
+            });
 
-        const canvas = await browser.getMapCanvas(`${browser.basePath}/test/integration/browser/fixtures/land.html`);
+            expect(center.lng).toBeCloseTo(-35.15625, 4);
+            expect(center.lat).toBeCloseTo(0, 7);
+        }, 20000);
 
-        // Perform drag action, wait a bit the end to avoid the momentum mode.
-        await driver
-            .actions()
-            .move(canvas)
-            .press()
-            .move({x: 100 / browser.scaleFactor, y: 0, origin: Origin.POINTER})
-            .pause(200)
-            .release()
-            .perform();
+        test('Zoom: Double click at the center', async () => {
 
-        const center = await driver.executeScript(() => {
-            /* eslint-disable no-undef */
-            // @ts-ignore
-            return map.getCenter();
-        });
-        expect(center.lng).toBeCloseTo(-35.15625, 4);
-        expect(center.lat).toBeCloseTo(0, 7);
-    }, 20000);
+            await newTest(impl);
+            const canvas = await page.$('.maplibregl-canvas');
+            const canvasBB = await canvas.boundingBox();
+            await page.mouse.dblclick(canvasBB.x, canvasBB.y);
 
-    test('Zoom: Double click at the center', async () => {
-        const {driver} = browser;
+            // Wait until the map has settled, then report the zoom level back.
+            const zoom = await page.evaluate(() => {
+                return new Promise((resolve, _reject) => {
+                    map.once('idle', () => resolve(map.getZoom()));
+                });
+            });
 
-        const canvas = await browser.getMapCanvas(`${browser.basePath}/test/integration/browser/fixtures/land.html`);
+            expect(zoom).toBe(2);
+        }, 20000);
+    });
 
-        // Double-click on the center of the map.
-        await driver.executeScript(browser.doubleClick, canvas);
-
-        // Wait until the map has settled, then report the zoom level back.
-        const zoom = await driver.executeAsyncScript(callback => {
-            /* eslint-disable no-undef */
-            // @ts-ignore
-            map.once('idle', () => callback(map.getZoom()));
-        });
-
-        expect(zoom).toBe(2);
-    }, 20000);
+    afterEach(async() => {
+        await browser.close();
+    });
 
     afterAll(async () => {
-        if (browser.driver) {
-            await browser.driver.quit();
-        }
-
         if (server) {
             server.close();
         }

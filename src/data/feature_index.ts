@@ -21,7 +21,7 @@ import {mat4} from 'gl-matrix';
 import type StyleLayer from '../style/style_layer';
 import type {FeatureFilter} from '../style-spec/feature_filter';
 import type Transform from '../geo/transform';
-import type {FilterSpecification, PromoteIdSpecification} from '../style-spec/types';
+import type {FilterSpecification, PromoteIdSpecification} from '../style-spec/types.g';
 import type {FeatureState} from '../style-spec/expression';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 

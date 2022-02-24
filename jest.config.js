@@ -14,5 +14,8 @@ export default {
     transformIgnorePatterns: [
         '/node_modules/@mapbox/jsonlint-lines-primitives/lib/jsonlint.js'
     ],
-    setupFiles: ['jest-canvas-mock'],
+    setupFiles: [
+        'jest-canvas-mock',
+        './test/unit/lib/web_worker_mock.ts'
+    ],
 };

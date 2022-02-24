@@ -52,7 +52,7 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification
-} from '../style-spec/types';
+} from '../style-spec/types.g';
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 

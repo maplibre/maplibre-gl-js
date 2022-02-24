@@ -1,8 +1,12 @@
-import path from 'path';
+import path, {dirname} from 'path';
 import fs from 'fs';
 import glob from 'glob';
 import localizeURLs from '../test/integration/lib/localize-urls';
+import {fileURLToPath} from 'url';
+import {createRequire} from 'module';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const requireFn = createRequire(import.meta.url);
 const OUTPUT_FILE = 'fixtures.json';
 const rootFixturePath = 'test/integration/query/';
 const suitePath = 'tests';
@@ -50,7 +54,7 @@ function generateFixtureJson(rootDirectory: string, suiteDirectory: string, outp
                 throw new Error(`${extension} is incompatible , file path ${fixturePath}`);
             }
         } catch (e) {
-            console.log(`Error parsing file: ${fixturePath}`);
+            console.log(`Error parsing file: ${fixturePath} ${e.message}`);
             malformedTests[testName] = true;
         }
     }
@@ -101,8 +105,7 @@ function pngToBase64Str(filePath) {
 
 function processStyle(testName, style) {
     const clone = JSON.parse(JSON.stringify(style));
-
-    localizeURLs(clone, 7357);
+    localizeURLs(clone, 7357, path.join(__dirname, '../test/integration'), requireFn);
 
     clone.metadata = clone.metadata || {};
 
@@ -118,6 +121,5 @@ function processStyle(testName, style) {
 
     return clone;
 }
-
 // @ts-ignore
 await generateFixtureJson(rootFixturePath, suitePath);

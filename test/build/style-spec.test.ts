@@ -11,9 +11,9 @@ describe('@maplibre/maplibre-gl-style-spec npm package', () => {
     test('build plain ES5 bundle in prepublish', async () => {
         jest.spyOn(console, 'warn').mockImplementation(() => {});
         await rollup.rollup({
-            input: './rollup/build/tsc/src/style-spec/style-spec.js',
+            input: './src/style-spec/style-spec.ts',
             plugins: [{
-                name: 'tset-checker',
+                name: 'test-checker',
                 resolveId: (id, importer) => {
                     if (
                         /^[\/\.]/.test(id) ||
@@ -31,7 +31,7 @@ describe('@maplibre/maplibre-gl-style-spec npm package', () => {
         }).catch(e => {
             expect(e).toBeFalsy();
         });
-    });
+    }, 40000);
 
     test('exports components directly, not behind `default` - https://github.com/mapbox/mapbox-gl-js/issues/6601', () => {
         // @ts-ignore
