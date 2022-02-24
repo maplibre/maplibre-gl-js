@@ -5,7 +5,7 @@ import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../../geo/mercator_coordinate';
 import EXTENT from '../../data/extent';
 import {CanonicalTileID} from '../../source/tile_id';
-import {FilterSpecification} from '../types';
+import {FilterSpecification} from '../types.g';
 import {Feature} from '../expression';
 
 describe('filter', () => {

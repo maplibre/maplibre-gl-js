@@ -18,7 +18,7 @@ import type VertexBuffer from '../gl/vertex_buffer';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
-} from '../style-spec/types';
+} from '../style-spec/types.g';
 
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 

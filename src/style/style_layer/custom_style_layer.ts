@@ -2,7 +2,7 @@ import StyleLayer from '../style_layer';
 import type Map from '../../ui/map';
 import assert from 'assert';
 import {mat4} from 'gl-matrix';
-import {LayerSpecification} from '../../style-spec/types';
+import {LayerSpecification} from '../../style-spec/types.g';
 
 type CustomRenderMethod = (gl: WebGLRenderingContext, matrix: mat4) => void;
 

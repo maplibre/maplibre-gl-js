@@ -23,7 +23,7 @@ import type Transform from '../geo/transform';
 import type {
     LayerSpecification,
     FilterSpecification
-} from '../style-spec/types';
+} from '../style-spec/types.g';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type Map from '../ui/map';
 import type {StyleSetterOptions} from './style';

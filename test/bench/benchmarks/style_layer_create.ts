@@ -1,4 +1,4 @@
-import type {StyleSpecification} from '../../../src/style-spec/types';
+import type {StyleSpecification} from '../../../src/style-spec/types.g';
 import Benchmark from '../lib/benchmark';
 import createStyleLayer from '../../../src/style/create_style_layer';
 import deref from '../../../src/style-spec/deref';

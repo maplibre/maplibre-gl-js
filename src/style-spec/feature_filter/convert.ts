@@ -1,6 +1,6 @@
 import {isExpressionFilter} from './index';
 
-import type {FilterSpecification} from '../types';
+import type {FilterSpecification} from '../types.g';
 
 type ExpectedTypes = {[_: string]: 'string' | 'number' | 'boolean'};
 
