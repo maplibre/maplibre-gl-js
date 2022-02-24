@@ -7,6 +7,7 @@
 ### 🐞 Bug fixes
 
 - Add adjustment for glyph rendering, CJK fonts are mainly affected (#1002).
+- Improve typings to fix Angular strict mode failure (#790, #970, #934)
 - *...Add new stuff here...*
 
 ## 2.1.6
