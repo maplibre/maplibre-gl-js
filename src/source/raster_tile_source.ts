@@ -18,7 +18,7 @@ import type {Cancelable} from '../types/cancelable';
 import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
-} from '../style-spec/types';
+} from '../style-spec/types.g';
 
 class RasterTileSource extends Evented implements Source {
     type: 'raster' | 'raster-dem';

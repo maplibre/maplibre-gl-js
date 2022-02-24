@@ -5,7 +5,7 @@ import featureFilter from '../style-spec/feature_filter';
 import groupByLayout from '../style-spec/group_by_layout';
 
 import type {TypedStyleLayer} from './style_layer/typed_style_layer';
-import type {LayerSpecification} from '../style-spec/types';
+import type {LayerSpecification} from '../style-spec/types.g';
 
 export type LayerConfigs = {[_: string]: LayerSpecification};
 export type Family<Layer extends TypedStyleLayer> = Array<Layer>;

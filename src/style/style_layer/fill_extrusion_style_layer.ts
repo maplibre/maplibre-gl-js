@@ -11,7 +11,7 @@ import type {FeatureState} from '../../style-spec/expression';
 import type {BucketParameters} from '../../data/bucket';
 import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g';
 import type Transform from '../../geo/transform';
-import type {LayerSpecification} from '../../style-spec/types';
+import type {LayerSpecification} from '../../style-spec/types.g';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class Point3D extends Point {

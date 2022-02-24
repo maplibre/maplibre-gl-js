@@ -57,7 +57,7 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification
-} from '../style-spec/types';
+} from '../style-spec/types.g';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';

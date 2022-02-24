@@ -94,7 +94,6 @@
     "eslint-plugin-react": "^7.28.0",
     "gl": "^5.0.0",
     "glob": "^7.2.0",
-    "husky": "^7.0.4",
     "is-builtin-module": "^3.1.0",
     "jest": "^27.5.1",
     "jest-canvas-mock": "^2.3.1",
