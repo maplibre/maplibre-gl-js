@@ -1,6 +1,6 @@
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import type {StyleSpecification} from '../../../src/style-spec/types';
+import type {StyleSpecification} from '../../../src/style-spec/types.g';
 
 export default class HillshadeLoad extends Benchmark {
     style: StyleSpecification;
