@@ -4,7 +4,7 @@ import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import VectorTileWorkerSource from '../source/vector_tile_worker_source';
 import StyleLayerIndex from '../style/style_layer_index';
-import {fakeServer, SinonFakeServer} from 'sinon';
+import {fakeServer, FakeServer} from 'nise';
 import Actor from '../util/actor';
 import {TileParameters, WorkerTileParameters} from './worker_source';
 import WorkerTile from './worker_tile';
@@ -12,7 +12,7 @@ import {setPerformance} from '../util/test/util';
 
 describe('vector tile worker source', () => {
     const actor = {send: () => {}} as any as Actor;
-    let server: SinonFakeServer;
+    let server: FakeServer;
     let originalGetEntriesByName;
     let originalMeasure;
     let originalMark;
@@ -195,7 +195,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource provides resource timing information', done => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/fixtures/mbsv5-6-18-23.vector.pbf'));
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
 
         function loadVectorData(params, callback) {
             return callback(null, {
@@ -251,7 +251,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource provides resource timing information (fallback method)', done => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/fixtures/mbsv5-6-18-23.vector.pbf'));
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
 
         function loadVectorData(params, callback) {
             return callback(null, {

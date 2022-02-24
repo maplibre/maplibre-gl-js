@@ -1,15 +1,42 @@
 import Actor from './actor';
 import workerFactory from './web_worker';
+import {MessageBus} from '../../test/unit/lib/web_worker_mock';
+
+const originalWorker = global.Worker;
+
+function setTestWorker(MockWorker: { new(...args: any): any}) {
+    (global as any).Worker = function Worker(_: string) {
+        const parentListeners = [];
+        const workerListeners = [];
+        const parentBus = new MessageBus(workerListeners, parentListeners);
+        const workerBus = new MessageBus(parentListeners, workerListeners);
+
+        parentBus.target = workerBus;
+        workerBus.target = parentBus;
+
+        new MockWorker(workerBus);
+
+        return parentBus;
+    };
+}
 
 describe('Actor', () => {
+    afterAll(() => {
+        global.Worker = originalWorker;
+    });
+
     test('forwards responses to correct callback', done => {
-        jest.spyOn(workerFactory, 'Worker').mockImplementation(function Worker(self) {
-            this.self = self;
-            this.actor = new Actor(self, this);
-            this.test = function (mapId, params, callback) {
+        setTestWorker(class MockWorker {
+            self: any;
+            actor: Actor;
+            constructor(self) {
+                this.self = self;
+                this.actor = new Actor(self, this);
+            }
+            test(mapId, params, callback) {
                 setTimeout(callback, 0, null, params);
-            };
-        } as any);
+            }
+        });
 
         const worker = workerFactory();
 
@@ -38,10 +65,14 @@ describe('Actor', () => {
     test('targets worker-initiated messages to correct map instance', done => {
         let workerActor;
 
-        jest.spyOn(workerFactory, 'Worker').mockImplementation(function Worker(self) {
-            this.self = self;
-            this.actor = workerActor = new Actor(self, this);
-        } as any);
+        setTestWorker(class MockWorker {
+            self: any;
+            actor: Actor;
+            constructor(self) {
+                this.self = self;
+                this.actor = workerActor = new Actor(self, this);
+            }
+        });
 
         const worker = workerFactory();
 

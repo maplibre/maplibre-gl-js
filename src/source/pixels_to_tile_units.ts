@@ -15,12 +15,12 @@ import type {OverscaledTileID} from './tile_id';
  * @private
  */
 export default function(
-  tile: {
-    tileID: OverscaledTileID;
-    tileSize: number;
-  },
-  pixelValue: number,
-  z: number
+    tile: {
+        tileID: OverscaledTileID;
+        tileSize: number;
+    },
+    pixelValue: number,
+    z: number
 ): number {
     return pixelValue * (EXTENT / (tile.tileSize * Math.pow(2, z - tile.tileID.overscaledZ)));
 }

@@ -37,8 +37,8 @@ import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
 // to continue to allow canvas sources to be added at runtime/updated in
 // smart setStyle (see https://github.com/mapbox/mapbox-gl-js/pull/6424):
 const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
-  message: string;
-  identifier?: string;
+    message: string;
+    identifier?: string;
 }> | null) =>
     _emitValidationErrors(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
 
@@ -88,12 +88,12 @@ const ignoredDiffOperations = pick(diffOperations, [
 const empty = emptyStyle() as StyleSpecification;
 
 export type StyleOptions = {
-  validate?: boolean;
-  localIdeographFontFamily?: string;
+    validate?: boolean;
+    localIdeographFontFamily?: string;
 };
 
 export type StyleSetterOptions = {
-  validate?: boolean;
+    validate?: boolean;
 };
 /**
  * @private
@@ -203,7 +203,7 @@ class Style extends Evented {
     }
 
     loadURL(url: string, options: {
-      validate?: boolean;
+        validate?: boolean;
     } = {}) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
@@ -611,10 +611,10 @@ class Style extends Evented {
     }
 
     /**
-    * Set the data of a GeoJSON source, given its id.
-    * @param {string} id id of the source
-    * @param {GeoJSON|string} data GeoJSON source
-    */
+     * Set the data of a GeoJSON source, given its id.
+     * @param {string} id id of the source
+     * @param {GeoJSON|string} data GeoJSON source
+     */
     setGeoJSONSourceData(id: string, data: GeoJSON.GeoJSON | string) {
         this._checkLoaded();
 
@@ -716,7 +716,7 @@ class Style extends Evented {
     /**
      * Moves a layer to a different z-position. The layer will be inserted before the layer with
      * ID `before`, or appended if `before` is omitted.
-     * @param {string} id  ID of the layer to move
+     * @param {string} id ID of the layer to move
      * @param {string} [before] ID of an existing layer to insert before
      */
     moveLayer(id: string, before?: string) {
@@ -913,9 +913,9 @@ class Style extends Evented {
     }
 
     setFeatureState(target: {
-      source: string;
-      sourceLayer?: string;
-      id: string | number;
+        source: string;
+        sourceLayer?: string;
+        id: string | number;
     }, state: any) {
         this._checkLoaded();
         const sourceId = target.source;
@@ -943,9 +943,9 @@ class Style extends Evented {
     }
 
     removeFeatureState(target: {
-      source: string;
-      sourceLayer?: string;
-      id?: string | number;
+        source: string;
+        sourceLayer?: string;
+        id?: string | number;
     }, key?: string) {
         this._checkLoaded();
         const sourceId = target.source;
@@ -973,9 +973,9 @@ class Style extends Evented {
     }
 
     getFeatureState(target: {
-      source: string;
-      sourceLayer?: string;
-      id: string | number;
+        source: string;
+        sourceLayer?: string;
+        id: string | number;
     }) {
         this._checkLoaded();
         const sourceId = target.source;
@@ -1218,7 +1218,7 @@ class Style extends Evented {
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {
-      validate?: boolean;
+        validate?: boolean;
     } = {}) {
         if (options && options.validate === false) {
             return false;
@@ -1354,14 +1354,14 @@ class Style extends Evented {
     // Callbacks from web workers
 
     getImages(
-      mapId: string,
-      params: {
-        icons: Array<string>;
-        source: string;
-        tileID: OverscaledTileID;
-        type: string;
-      },
-      callback: Callback<{[_: string]: StyleImage}>
+        mapId: string,
+        params: {
+            icons: Array<string>;
+            source: string;
+            tileID: OverscaledTileID;
+            type: string;
+        },
+        callback: Callback<{[_: string]: StyleImage}>
     ) {
         this.imageManager.getImages(params.icons, callback);
 

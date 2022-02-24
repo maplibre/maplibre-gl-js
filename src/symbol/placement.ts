@@ -12,13 +12,13 @@ import Point from '@mapbox/point-geometry';
 import type Transform from '../geo/transform';
 import type StyleLayer from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';
-import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
 import {getOverlapMode, OverlapMode} from '../style/style_layer/symbol_style_layer';
 
 import type Tile from '../source/tile';
 import SymbolBucket, {CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';
 
-import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance} from '../data/array_types';
+import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance} from '../data/array_types.g';
 import type FeatureIndex from '../data/feature_index';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {TextAnchor} from './symbol_layout';
@@ -87,10 +87,10 @@ export class RetainedQueryData {
     tileID: OverscaledTileID;
     featureSortOrder: Array<number>;
     constructor(bucketInstanceId: number,
-                featureIndex: FeatureIndex,
-                sourceLayerIndex: number,
-                bucketIndex: number,
-                tileID: OverscaledTileID) {
+        featureIndex: FeatureIndex,
+        sourceLayerIndex: number,
+        bucketIndex: number,
+        tileID: OverscaledTileID) {
         this.bucketInstanceId = bucketInstanceId;
         this.featureIndex = featureIndex;
         this.sourceLayerIndex = sourceLayerIndex;
@@ -100,8 +100,8 @@ export class RetainedQueryData {
 }
 
 type CollisionGroup = {
-  ID: number;
-  predicate?: (key: FeatureKey) => boolean;
+    ID: number;
+    predicate?: (key: FeatureKey) => boolean;
 };
 
 class CollisionGroups {
@@ -137,11 +137,11 @@ class CollisionGroups {
 }
 
 function calculateVariableLayoutShift(
-  anchor: TextAnchor,
-  width: number,
-  height: number,
-  textOffset: [number, number],
-  textBoxScale: number
+    anchor: TextAnchor,
+    width: number,
+    height: number,
+    textOffset: [number, number],
+    textBoxScale: number
 ): Point {
     const {horizontalAlign, verticalAlign} = getAnchorAlignment(anchor);
     const shiftX = -(horizontalAlign - 0.5) * width;
@@ -154,9 +154,9 @@ function calculateVariableLayoutShift(
 }
 
 function shiftVariableCollisionBox(collisionBox: SingleCollisionBox,
-                                  shiftX: number, shiftY: number,
-                                  rotateWithMap: boolean, pitchWithMap: boolean,
-                                  angle: number) {
+    shiftX: number, shiftY: number,
+    rotateWithMap: boolean, pitchWithMap: boolean,
+    angle: number) {
     const {x1, x2, y1, y2, anchorPointX, anchorPointY} = collisionBox;
     const rotatedOffset = new Point(shiftX, shiftY);
     if (rotateWithMap) {
@@ -183,20 +183,20 @@ export type VariableOffset = {
 };
 
 type TileLayerParameters = {
-  bucket: SymbolBucket;
-  layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
-  posMatrix: mat4;
-  textLabelPlaneMatrix: mat4;
-  labelToScreenMatrix: mat4;
-  scale: number;
-  textPixelRatio: number;
-  holdingForFade: boolean;
-  collisionBoxArray: CollisionBoxArray;
-  partiallyEvaluatedTextSize: {
-    uSize: number;
-    uSizeT: number;
-  };
-  collisionGroup: CollisionGroup;
+    bucket: SymbolBucket;
+    layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
+    posMatrix: mat4;
+    textLabelPlaneMatrix: mat4;
+    labelToScreenMatrix: mat4;
+    scale: number;
+    textPixelRatio: number;
+    holdingForFade: boolean;
+    collisionBoxArray: CollisionBoxArray;
+    partiallyEvaluatedTextSize: {
+        uSize: number;
+        uSizeT: number;
+    };
+    collisionGroup: CollisionGroup;
 };
 
 export type BucketPart = {
@@ -212,16 +212,16 @@ export class Placement {
     transform: Transform;
     collisionIndex: CollisionIndex;
     placements: {
-      [_ in CrossTileID]: JointPlacement;
+        [_ in CrossTileID]: JointPlacement;
     };
     opacities: {
-      [_ in CrossTileID]: JointOpacityState;
+        [_ in CrossTileID]: JointOpacityState;
     };
     variableOffsets: {
-      [_ in CrossTileID]: VariableOffset;
+        [_ in CrossTileID]: VariableOffset;
     };
     placedOrientations: {
-      [_ in CrossTileID]: number;
+        [_ in CrossTileID]: number;
     };
     commitTime: number;
     prevZoomAdjustment: number;
@@ -229,13 +229,13 @@ export class Placement {
     stale: boolean;
     fadeDuration: number;
     retainedQueryData: {
-      [_: number]: RetainedQueryData;
+        [_: number]: RetainedQueryData;
     };
     collisionGroups: CollisionGroups;
     prevPlacement: Placement;
     zoomAtLastRecencyCheck: number;
     collisionCircleArrays: {
-      [k in any]: CollisionCircleArray;
+        [k in any]: CollisionCircleArray;
     };
 
     constructor(transform: Transform, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
@@ -279,10 +279,10 @@ export class Placement {
         const pixelsToTiles = pixelsToTileUnits(tile, 1, this.transform.zoom);
 
         const textLabelPlaneMatrix = projection.getLabelPlaneMatrix(posMatrix,
-                pitchWithMap,
-                rotateWithMap,
-                this.transform,
-                pixelsToTiles);
+            pitchWithMap,
+            rotateWithMap,
+            this.transform,
+            pixelsToTiles);
 
         let labelToScreenMatrix = null;
 
@@ -336,28 +336,28 @@ export class Placement {
     }
 
     attemptAnchorPlacement(
-      anchor: TextAnchor,
-      textBox: SingleCollisionBox,
-      width: number,
-      height: number,
-      textBoxScale: number,
-      rotateWithMap: boolean,
-      pitchWithMap: boolean,
-      textPixelRatio: number,
-      posMatrix: mat4,
-      collisionGroup: CollisionGroup,
-      textOverlapMode: OverlapMode,
-      symbolInstance: SymbolInstance,
-      bucket: SymbolBucket,
-      orientation: number,
-      iconBox?: SingleCollisionBox | null
+        anchor: TextAnchor,
+        textBox: SingleCollisionBox,
+        width: number,
+        height: number,
+        textBoxScale: number,
+        rotateWithMap: boolean,
+        pitchWithMap: boolean,
+        textPixelRatio: number,
+        posMatrix: mat4,
+        collisionGroup: CollisionGroup,
+        textOverlapMode: OverlapMode,
+        symbolInstance: SymbolInstance,
+        bucket: SymbolBucket,
+        orientation: number,
+        iconBox?: SingleCollisionBox | null
     ): {
-      shift: Point;
-      placedGlyphBoxes: {
-        box: Array<number>;
-        offscreen: boolean;
-      };
-    } {
+            shift: Point;
+            placedGlyphBoxes: {
+                box: Array<number>;
+                offscreen: boolean;
+            };
+        } {
 
         const textOffset = [symbolInstance.textOffset0, symbolInstance.textOffset1] as [number, number];
         const shift = calculateVariableLayoutShift(anchor, width, height, textOffset, textBoxScale);
@@ -408,7 +408,7 @@ export class Placement {
     }
 
     placeLayerBucketPart(bucketPart: BucketPart, seenCrossTileIDs: {
-      [k in string | number]: boolean;
+        [k in string | number]: boolean;
     }, showCollisionBoxes: boolean) {
 
         const {
@@ -573,8 +573,8 @@ export class Placement {
                         const variableIconBox = hasIconTextFit && (iconOverlapMode === 'never') ? collisionIconBox : null;
 
                         let placedBox: {
-                          box: Array<number>;
-                          offscreen: boolean;
+                            box: Array<number>;
+                            offscreen: boolean;
                         } = {box: [], offscreen: false};
                         const placementAttempts = (textOverlapMode !== 'never') ? anchors.length * 2 : anchors.length;
                         for (let i = 0; i < placementAttempts; ++i) {
@@ -924,7 +924,7 @@ export class Placement {
     }
 
     updateBucketOpacities(bucket: SymbolBucket, seenCrossTileIDs: {
-      [k in string | number]: boolean;
+        [k in string | number]: boolean;
     }, collisionBoxArray?: CollisionBoxArray | null) {
         if (bucket.hasTextData()) bucket.text.opacityVertexArray.clear();
         if (bucket.hasIconData()) bucket.icon.opacityVertexArray.clear();
@@ -944,9 +944,9 @@ export class Placement {
         // with allow-overlap: false.
         // See https://github.com/mapbox/mapbox-gl-js/issues/7032
         const defaultOpacityState = new JointOpacityState(null, 0,
-                textAllowOverlap && (iconAllowOverlap || !bucket.hasIconData() || layout.get('icon-optional')),
-                iconAllowOverlap && (textAllowOverlap || !bucket.hasTextData() || layout.get('text-optional')),
-                true);
+            textAllowOverlap && (iconAllowOverlap || !bucket.hasIconData() || layout.get('icon-optional')),
+            iconAllowOverlap && (textAllowOverlap || !bucket.hasTextData() || layout.get('text-optional')),
+            true);
 
         if (!bucket.collisionArrays && collisionBoxArray && ((bucket.hasIconCollisionBoxData() || bucket.hasTextCollisionBoxData()))) {
             bucket.deserializeCollisionBoxes(collisionBoxArray);
@@ -1060,10 +1060,10 @@ export class Placement {
                                 // just made the symbol disappear, and the most likely place for the
                                 // symbol to come back)
                                 shift = calculateVariableLayoutShift(variableOffset.anchor,
-                                   variableOffset.width,
-                                   variableOffset.height,
-                                   variableOffset.textOffset,
-                                   variableOffset.textBoxScale);
+                                    variableOffset.width,
+                                    variableOffset.height,
+                                    variableOffset.textOffset,
+                                    variableOffset.textBoxScale);
                                 if (rotateWithMap) {
                                     shift._rotate(pitchWithMap ? this.transform.angle : -this.transform.angle);
                                 }

@@ -381,13 +381,13 @@ class GridIndex<T extends GridKey> {
     }
 
     private _circleAndRectCollide(
-      circleX: number,
-      circleY: number,
-      radius: number,
-      x1: number,
-      y1: number,
-      x2: number,
-      y2: number
+        circleX: number,
+        circleY: number,
+        radius: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number
     ): boolean {
         const halfRectWidth = (x2 - x1) / 2;
         const distX = Math.abs(circleX - (x1 + halfRectWidth));

@@ -99,9 +99,9 @@ class MercatorCoordinate {
         const lngLat = LngLat.convert(lngLatLike);
 
         return new MercatorCoordinate(
-                mercatorXfromLng(lngLat.lng),
-                mercatorYfromLat(lngLat.lat),
-                mercatorZfromAltitude(altitude, lngLat.lat));
+            mercatorXfromLng(lngLat.lng),
+            mercatorYfromLat(lngLat.lat),
+            mercatorZfromAltitude(altitude, lngLat.lat));
     }
 
     /**
@@ -114,8 +114,8 @@ class MercatorCoordinate {
      */
     toLngLat() {
         return new LngLat(
-                lngFromMercatorX(this.x),
-                latFromMercatorY(this.y));
+            lngFromMercatorX(this.x),
+            latFromMercatorY(this.y));
     }
 
     /**

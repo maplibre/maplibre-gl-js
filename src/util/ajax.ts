@@ -64,37 +64,57 @@ if (typeof Object.freeze == 'function') {
  *
  */
 export type RequestParameters = {
-  url: string;
-  headers?: any;
-  method?: 'GET' | 'POST' | 'PUT';
-  body?: string;
-  type?: 'string' | 'json' | 'arrayBuffer';
-  credentials?: 'same-origin' | 'include';
-  collectResourceTiming?: boolean;
+    url: string;
+    headers?: any;
+    method?: 'GET' | 'POST' | 'PUT';
+    body?: string;
+    type?: 'string' | 'json' | 'arrayBuffer';
+    credentials?: 'same-origin' | 'include';
+    collectResourceTiming?: boolean;
 };
 
 export type ResponseCallback<T> = (
-  error?: Error | null,
-  data?: T | null,
-  cacheControl?: string | null,
-  expires?: string | null
+    error?: Error | null,
+    data?: T | null,
+    cacheControl?: string | null,
+    expires?: string | null
 ) => void;
 
-class AJAXError extends Error {
+/**
+ * An error thrown when a HTTP request results in an error response.
+ * @extends Error
+ * @param {number} status The response's HTTP status code.
+ * @param {string} statusText The response's HTTP status text.
+ * @param {string} url The request's URL.
+ * @param {Blob} body The response's body.
+ */
+export class AJAXError extends Error {
+    /**
+     * The response's HTTP status code.
+     */
     status: number;
+
+    /**
+     * The response's HTTP status text.
+     */
+    statusText: string;
+
+    /**
+     * The request's URL.
+     */
     url: string;
-    constructor(message: string, status: number, url: string) {
-        super(message);
+
+    /**
+     * The response's body.
+     */
+    body: Blob;
+
+    constructor(status: number, statusText: string, url: string, body: Blob) {
+        super(`AJAXError: ${statusText} (${status}): ${url}`);
         this.status = status;
+        this.statusText = statusText;
         this.url = url;
-
-        // work around for https://github.com/Rich-Harris/buble/issues/40
-        this.name = this.constructor.name;
-        this.message = message;
-    }
-
-    toString() {
-        return `${this.name}: ${this.message} (${this.status}): ${this.url}`;
+        this.body = body;
     }
 }
 
@@ -159,7 +179,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
                 return finishRequest(response, cacheableResponse, requestTime);
 
             } else {
-                return callback(new AJAXError(response.statusText, response.status, requestParameters.url));
+                return response.blob().then(body => callback(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
             }
         }).catch(error => {
             if (error.code === 20) {
@@ -173,8 +193,8 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
     const finishRequest = (response, cacheableResponse?, requestTime?) => {
         (
             requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
-            requestParameters.type === 'json' ? response.json() :
-            response.text()
+                requestParameters.type === 'json' ? response.json() :
+                    response.text()
         ).then(result => {
             if (aborted) return;
             if (cacheableResponse && requestTime) {
@@ -235,7 +255,8 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
             }
             callback(null, data, xhr.getResponseHeader('Cache-Control'), xhr.getResponseHeader('Expires'));
         } else {
-            callback(new AJAXError(xhr.statusText, xhr.status, requestParameters.url));
+            const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
+            callback(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
         }
     };
     xhr.send(requestParameters.body);
@@ -277,8 +298,8 @@ export const getJSON = function(requestParameters: RequestParameters, callback: 
 };
 
 export const getArrayBuffer = function(
-  requestParameters: RequestParameters,
-  callback: ResponseCallback<ArrayBuffer>
+    requestParameters: RequestParameters,
+    callback: ResponseCallback<ArrayBuffer>
 ): Cancelable {
     return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), callback);
 };
@@ -339,8 +360,8 @@ export const resetImageRequestQueue = () => {
 resetImageRequestQueue();
 
 export const getImage = function(
-  requestParameters: RequestParameters,
-  callback: Callback<HTMLImageElement | ImageBitmap>
+    requestParameters: RequestParameters,
+    callback: Callback<HTMLImageElement | ImageBitmap>
 ): Cancelable {
     if (webpSupported.supported) {
         if (!requestParameters.headers) {

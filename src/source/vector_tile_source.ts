@@ -64,7 +64,7 @@ class VectorTileSource extends Evented implements Source {
     _loaded: boolean;
 
     constructor(id: string, options: VectorSourceSpecification & {
-      collectResourceTiming: boolean;
+        collectResourceTiming: boolean;
     }, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
@@ -97,6 +97,7 @@ class VectorTileSource extends Evented implements Source {
         this._tileJSONRequest = loadTileJSON(this._options, this.map._requestManager, (err, tileJSON) => {
             this._tileJSONRequest = null;
             this._loaded = true;
+            this.map.style.sourceCaches[this.id].clearTiles();
             if (err) {
                 this.fire(new ErrorEvent(err));
             } else if (tileJSON) {
@@ -132,8 +133,6 @@ class VectorTileSource extends Evented implements Source {
 
         callback();
 
-        const sourceCache = this.map.style.sourceCaches[this.id];
-        sourceCache.clearTiles();
         this.load();
     }
 

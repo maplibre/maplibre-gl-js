@@ -1,6 +1,6 @@
 import SymbolStyleLayer, {getOverlapMode} from '../style/style_layer/symbol_style_layer';
 import FormatSectionOverride from '../style/format_section_override';
-import properties, {SymbolPaintPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties';
+import properties, {SymbolPaintPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
 import ZoomHistory from '../style/zoom_history';
 import EvaluationParameters from '../style/evaluation_parameters';
 

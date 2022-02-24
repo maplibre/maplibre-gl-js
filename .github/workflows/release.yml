@@ -50,6 +50,16 @@ jobs:
         run: |
           npm run build-prod-min
           npm run build-css
+          npm run build-benchmarks
+          npm run generate-typings
+
+      - name: Empty postinstall.js
+        run: |
+          echo "// empty in published package" > postinstall.js
+
+      - name: Write dist/package.json
+        run: |
+          echo "{ \"type\": \"commonjs\" }" > dist/package.json
 
       - name: Create Archive
         run: |
@@ -109,6 +119,20 @@ jobs:
           asset_path: ./dist.zip
           asset_name: dist.zip
           asset_content_type: application/zip
+
+      - name: Copy benchmarks_generated.js
+        run: |
+          mkdir tmp
+          cp test/bench/versions/benchmarks_generated.js tmp
+          cp test/bench/versions/benchmarks_generated.js.map tmp
+
+      - name: Upload Benchmarks to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: tmp
+          destination_dir: benchmarks/${{ steps.prepare_release.outputs.version_tag }}
+          commit_message: 'deploy: ${{ steps.prepare_release.outputs.version_tag }}'
 
       - name: Clean up
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}

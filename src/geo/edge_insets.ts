@@ -116,8 +116,8 @@ class EdgeInsets {
  */
 export type PaddingOptions = {
     /**
-    * @property {number} top Padding in pixels from the top of the map canvas.
-    */
+     * @property {number} top Padding in pixels from the top of the map canvas.
+     */
     top: number;
     /**
      * @property {number} bottom Padding in pixels from the bottom of the map canvas.

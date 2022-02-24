@@ -8,18 +8,18 @@ import type Tile from '../../source/tile';
 import {mat4} from 'gl-matrix';
 
 export type CollisionUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_camera_to_center_distance': Uniform1f;
-  'u_pixels_to_tile_units': Uniform1f;
-  'u_extrude_scale': Uniform2f;
-  'u_overscale_factor': Uniform1f;
+    'u_matrix': UniformMatrix4f;
+    'u_camera_to_center_distance': Uniform1f;
+    'u_pixels_to_tile_units': Uniform1f;
+    'u_extrude_scale': Uniform2f;
+    'u_overscale_factor': Uniform1f;
 };
 
 export type CollisionCircleUniformsType = {
-  'u_matrix': UniformMatrix4f;
-  'u_inv_matrix': UniformMatrix4f;
-  'u_camera_to_center_distance': Uniform1f;
-  'u_viewport_size': Uniform2f;
+    'u_matrix': UniformMatrix4f;
+    'u_inv_matrix': UniformMatrix4f;
+    'u_camera_to_center_distance': Uniform1f;
+    'u_viewport_size': Uniform2f;
 };
 
 const collisionUniforms = (context: Context, locations: UniformLocations): CollisionUniformsType => ({

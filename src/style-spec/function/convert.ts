@@ -60,9 +60,9 @@ function convertIdentityFunction(parameters, propertySpec): Array<unknown> {
 
 function getInterpolateOperator(parameters) {
     switch (parameters.colorSpace) {
-    case 'hcl': return 'interpolate-hcl';
-    case 'lab': return 'interpolate-lab';
-    default: return 'interpolate';
+        case 'hcl': return 'interpolate-hcl';
+        case 'lab': return 'interpolate-lab';
+        default: return 'interpolate';
     }
 }
 

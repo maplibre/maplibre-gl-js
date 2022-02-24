@@ -11,10 +11,10 @@ import type Tile from './tile';
 class TileCache {
     max: number;
     data: {
-      [key: string]: Array<{
-        value: Tile;
-        timeout: ReturnType<typeof setTimeout>;
-      }>;
+        [key: string]: Array<{
+            value: Tile;
+            timeout: ReturnType<typeof setTimeout>;
+        }>;
     };
     order: Array<string>;
     onRemove: (element: Tile) => void;
@@ -157,8 +157,8 @@ class TileCache {
      * @private
      */
     remove(tileID: OverscaledTileID, value?: {
-      value: Tile;
-      timeout: ReturnType<typeof setTimeout>;
+        value: Tile;
+        timeout: ReturnType<typeof setTimeout>;
     }) {
         if (!this.has(tileID)) { return this; }
         const key = tileID.wrapped().key;

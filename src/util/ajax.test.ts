@@ -3,15 +3,25 @@ import {
     getJSON,
     postData,
     getImage,
-    resetImageRequestQueue
+    resetImageRequestQueue,
+    AJAXError
 } from './ajax';
 import config from './config';
 import webpSupported from './webp_supported';
-import {fakeServer, SinonFakeServer} from 'sinon';
+import {fakeServer, FakeServer} from 'nise';
 import {stubAjaxGetImage} from './test/util';
 
+function readAsText(blob) {
+    return new Promise((resolve, reject) => {
+        const fileReader = new FileReader();
+        fileReader.onload = () => resolve(fileReader.result);
+        fileReader.onerror = () => reject(fileReader.error);
+        fileReader.readAsText(blob);
+    });
+}
+
 describe('ajax', () => {
-    let server: SinonFakeServer;
+    let server: FakeServer;
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();
@@ -22,10 +32,15 @@ describe('ajax', () => {
 
     test('getArrayBuffer, 404', done => {
         server.respondWith(request => {
-            request.respond(404, undefined, undefined);
+            request.respond(404, undefined, '404 Not Found');
         });
-        getArrayBuffer({url:''}, (error) => {
-            expect((error as any).status).toBe(404);
+        getArrayBuffer({url:'http://example.com/test.bin'}, async (error) => {
+            const ajaxError = error as AJAXError;
+            const body = await readAsText(ajaxError.body);
+            expect(ajaxError.status).toBe(404);
+            expect(ajaxError.statusText).toBe('Not Found');
+            expect(ajaxError.url).toBe('http://example.com/test.bin');
+            expect(body).toBe('404 Not Found');
             done();
         });
         server.respond();
@@ -56,22 +71,15 @@ describe('ajax', () => {
 
     test('getJSON, 404', done => {
         server.respondWith(request => {
-            request.respond(404, undefined, undefined);
+            request.respond(404, undefined, '404 Not Found');
         });
-        getJSON({url:''}, (error) => {
-            expect((error as any).status).toBe(404);
-            done();
-        });
-        server.respond();
-    });
-
-    test('getJSON, 401: non-Mapbox domain', done => {
-        server.respondWith(request => {
-            request.respond(401, undefined, undefined);
-        });
-        getJSON({url:''}, (error) => {
-            expect((error as any).status).toBe(401);
-            expect(error.message).toBe('Unauthorized');
+        getJSON({url:'http://example.com/test.json'}, async (error) => {
+            const ajaxError = error as AJAXError;
+            const body = await readAsText(ajaxError.body);
+            expect(ajaxError.status).toBe(404);
+            expect(ajaxError.statusText).toBe('Not Found');
+            expect(ajaxError.url).toBe('http://example.com/test.json');
+            expect(body).toBe('404 Not Found');
             done();
         });
         server.respond();

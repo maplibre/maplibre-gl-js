@@ -15,7 +15,7 @@ import EvaluationParameters from '../style/evaluation_parameters';
 import SourceFeatureState from '../source/source_state';
 import {polygonIntersectsBox} from '../util/intersection_tests';
 import {PossiblyEvaluated} from '../style/properties';
-import {FeatureIndexArray} from './array_types';
+import {FeatureIndexArray} from './array_types.g';
 import {mat4} from 'gl-matrix';
 
 import type StyleLayer from '../style/style_layer';
@@ -26,18 +26,18 @@ import type {FeatureState} from '../style-spec/expression';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 
 type QueryParameters = {
-  scale: number;
-  pixelPosMatrix: mat4;
-  transform: Transform;
-  tileSize: number;
-  queryGeometry: Array<Point>;
-  cameraQueryGeometry: Array<Point>;
-  queryPadding: number;
-  params: {
-    filter: FilterSpecification;
-    layers: Array<string>;
-    availableImages: Array<string>;
-  };
+    scale: number;
+    pixelPosMatrix: mat4;
+    transform: Transform;
+    tileSize: number;
+    queryGeometry: Array<Point>;
+    cameraQueryGeometry: Array<Point>;
+    queryPadding: number;
+    params: {
+        filter: FilterSpecification;
+        layers: Array<string>;
+        availableImages: Array<string>;
+    };
 };
 
 class FeatureIndex {
@@ -104,10 +104,10 @@ class FeatureIndex {
 
     // Finds non-symbol features in this tile at a particular position.
     query(
-      args: QueryParameters,
-      styleLayers: {[_: string]: StyleLayer},
-      serializedLayers: {[_: string]: any},
-      sourceFeatureState: SourceFeatureState
+        args: QueryParameters,
+        styleLayers: {[_: string]: StyleLayer},
+        serializedLayers: {[_: string]: any},
+        sourceFeatureState: SourceFeatureState
     ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {
         this.loadVTLayers();
 
@@ -123,10 +123,10 @@ class FeatureIndex {
 
         const cameraBounds = getBounds(args.cameraQueryGeometry);
         const matching3D = this.grid3D.query(
-                cameraBounds.minX - queryPadding, cameraBounds.minY - queryPadding, cameraBounds.maxX + queryPadding, cameraBounds.maxY + queryPadding,
-                (bx1, by1, bx2, by2) => {
-                    return polygonIntersectsBox(args.cameraQueryGeometry, bx1 - queryPadding, by1 - queryPadding, bx2 + queryPadding, by2 + queryPadding);
-                });
+            cameraBounds.minX - queryPadding, cameraBounds.minY - queryPadding, cameraBounds.maxX + queryPadding, cameraBounds.maxY + queryPadding,
+            (bx1, by1, bx2, by2) => {
+                return polygonIntersectsBox(args.cameraQueryGeometry, bx1 - queryPadding, by1 - queryPadding, bx2 + queryPadding, by2 + queryPadding);
+            });
 
         for (const key of matching3D) {
             matching.push(key);
@@ -171,11 +171,11 @@ class FeatureIndex {
 
     loadMatchingFeature(
         result: {
-          [_: string]: Array<{
-            featureIndex: number;
-            feature: GeoJSONFeature;
-            intersectionZ?: boolean | number;
-          }>;
+            [_: string]: Array<{
+                featureIndex: number;
+                feature: GeoJSONFeature;
+                intersectionZ?: boolean | number;
+            }>;
         },
         bucketIndex: number,
         sourceLayerIndex: number,
@@ -187,10 +187,10 @@ class FeatureIndex {
         serializedLayers: {[_: string]: any},
         sourceFeatureState?: SourceFeatureState,
         intersectionTest?: (
-          feature: VectorTileFeature,
-          styleLayer: StyleLayer,
-          featureState: any,
-          id: string | number | void
+            feature: VectorTileFeature,
+            styleLayer: StyleLayer,
+            featureState: any,
+            id: string | number | void
         ) => boolean | number) {
 
         const layerIDs = this.bucketLayerIDs[bucketIndex];
@@ -253,13 +253,13 @@ class FeatureIndex {
     // Given a set of symbol indexes that have already been looked up,
     // return a matching set of GeoJSONFeatures
     lookupSymbolFeatures(symbolFeatureIndexes: Array<number>,
-                         serializedLayers: {[_: string]: StyleLayer},
-                         bucketIndex: number,
-                         sourceLayerIndex: number,
-                         filterSpec: FilterSpecification,
-                         filterLayerIDs: Array<string>,
-                         availableImages: Array<string>,
-                         styleLayers: {[_: string]: StyleLayer}) {
+        serializedLayers: {[_: string]: StyleLayer},
+        bucketIndex: number,
+        sourceLayerIndex: number,
+        filterSpec: FilterSpecification,
+        filterLayerIDs: Array<string>,
+        availableImages: Array<string>,
+        styleLayers: {[_: string]: StyleLayer}) {
         const result = {};
         this.loadVTLayers();
 

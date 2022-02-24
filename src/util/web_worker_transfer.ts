@@ -6,30 +6,31 @@ import {StylePropertyFunction, StyleExpression, ZoomDependentExpression, ZoomCon
 import CompoundExpression from '../style-spec/expression/compound_expression';
 import expressions from '../style-spec/expression/definitions';
 import ResolvedImage from '../style-spec/expression/types/resolved_image';
+import {AJAXError} from './ajax';
 
 import type {Transferable} from '../types/transferable';
 import {isImageBitmap} from './util';
 
 type SerializedObject = {
-  [_: string]: Serialized;
+    [_: string]: Serialized;
 }; // eslint-disable-line
 
-export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Array<Serialized> | SerializedObject;
+export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Blob | Array<Serialized> | SerializedObject;
 
 type Registry = {
-  [_: string]: {
-    klass: {
-      new (...args: any): any;
-      deserialize?: (input: Serialized) => unknown;
+    [_: string]: {
+        klass: {
+            new (...args: any): any;
+            deserialize?: (input: Serialized) => unknown;
+        };
+        omit: ReadonlyArray<string>;
+        shallow: ReadonlyArray<string>;
     };
-    omit: ReadonlyArray<string>;
-    shallow: ReadonlyArray<string>;
-  };
 };
 
 type RegisterOptions<T> = {
-  omit?: ReadonlyArray<keyof T>;
-  shallow?: ReadonlyArray<keyof T>;
+    omit?: ReadonlyArray<keyof T>;
+    shallow?: ReadonlyArray<keyof T>;
 };
 
 const registry: Registry = {};
@@ -44,11 +45,11 @@ const registry: Registry = {};
  * @private
  */
 export function register<T extends any>(
-  name: string,
-  klass: {
-    new (...args: any): T;
-  },
-  options: RegisterOptions<T> = {}
+    name: string,
+    klass: {
+        new (...args: any): T;
+    },
+    options: RegisterOptions<T> = {}
 ) {
     assert(!registry[name], `${name} is already registered.`);
     ((Object.defineProperty as any))(klass, '_classRegistryKey', {
@@ -67,6 +68,7 @@ register('TransferableGridIndex', TransferableGridIndex);
 
 register('Color', Color);
 register('Error', Error);
+register('AJAXError', AJAXError);
 register('ResolvedImage', ResolvedImage);
 
 register('StylePropertyFunction', StylePropertyFunction);
@@ -109,7 +111,8 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         input instanceof Number ||
         input instanceof String ||
         input instanceof Date ||
-        input instanceof RegExp) {
+        input instanceof RegExp ||
+        input instanceof Blob) {
         return input;
     }
 
@@ -210,6 +213,7 @@ export function deserialize(input: Serialized): unknown {
         input instanceof String ||
         input instanceof Date ||
         input instanceof RegExp ||
+        input instanceof Blob ||
         isArrayBuffer(input) ||
         isImageBitmap(input) ||
         ArrayBuffer.isView(input) ||

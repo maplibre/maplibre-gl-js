@@ -1,4 +1,3 @@
-/// <reference path="./types/glsl.d.ts" />
 import assert from 'assert';
 import {supported} from '@mapbox/mapbox-gl-supported';
 
@@ -24,8 +23,16 @@ import WorkerPool from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {clearTileCache} from './util/tile_request_cache';
 import {PerformanceUtils} from './util/performance';
+import {AJAXError} from './util/ajax';
 import type {RequestParameters, ResponseCallback} from './util/ajax';
 import type {Cancelable} from './types/cancelable';
+import GeoJSONSource from './source/geojson_source';
+import CanvasSource from './source/canvas_source';
+import ImageSource from './source/image_source';
+import RasterDEMTileSource from './source/raster_dem_tile_source';
+import RasterTileSource from './source/raster_tile_source';
+import VectorTileSource from './source/vector_tile_source';
+import VideoSource from './source/video_source';
 
 const exported = {
     supported,
@@ -45,7 +52,15 @@ const exported = {
     Point,
     MercatorCoordinate,
     Evented,
+    AJAXError,
     config,
+    CanvasSource,
+    GeoJSONSource,
+    ImageSource,
+    RasterDEMTileSource,
+    RasterTileSource,
+    VectorTileSource,
+    VideoSource,
     /**
      * Initializes resources like WebWorkers that can be shared across maps to lower load
      * times in some situations. `maplibregl.workerUrl` and `maplibregl.workerCount`, if being
@@ -223,14 +238,14 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
  */
 
 /**
-  * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
-  * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
-  * If the status is `loaded` and the plugin is requested again, an error will be thrown.
-  *
-  * @function getRTLTextPluginStatus
-  * @example
-  * const pluginStatus = maplibregl.getRTLTextPluginStatus();
-  */
+ * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
+ * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
+ * If the status is `loaded` and the plugin is requested again, an error will be thrown.
+ *
+ * @function getRTLTextPluginStatus
+ * @example
+ * const pluginStatus = maplibregl.getRTLTextPluginStatus();
+ */
 
 export default exported;
 // canary assert: used to confirm that asserts have been removed from production build
