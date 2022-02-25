@@ -436,6 +436,18 @@ describe('SourceCache / Source lifecycle', () => {
         sourceCache.onAdd(undefined);
     });
 
+    test('loaded() false after source begins loading following error', done => {
+        const sourceCache = createSourceCache({error: 'Error loading source'}).on('error', () => {
+            sourceCache.on('dataloading', () => {
+                expect(sourceCache.loaded()).toBeFalsy();
+                done();
+            });
+            sourceCache.getSource().fire(new Event('dataloading'));
+        });
+
+        sourceCache.onAdd(undefined);
+    });
+
     test('reloads tiles after a data event where source is updated', () => {
         const transform = new Transform();
         transform.resize(511, 511);
