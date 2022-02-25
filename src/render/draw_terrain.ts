@@ -11,10 +11,10 @@ import ColorMode from '../gl/color_mode';
 
 /**
  * Redraw the Coords & Depth Framebuffers
- * @param {Painter} painter
- * @param {sourceCache} sourceCache
+ * @param {Painter} painter - the painter
+ * @param {TerrainSourceCache} sourceCache- the source cache
  */
-function updateTerrainFacilitators(painter, sourceCache: TerrainSourceCache) {
+function updateTerrainFacilitators(painter: Painter, sourceCache: TerrainSourceCache) {
     const context = painter.context;
     const gl = context.gl;
     const colorMode = ColorMode.unblended;
@@ -57,9 +57,9 @@ function updateTerrainFacilitators(painter, sourceCache: TerrainSourceCache) {
 
 /**
  * Render, e.g. drape, a render-to-texture tile onto the 3d mesh on screen.
- * @param {Painter} painter
- * @param {TerrainSourceCache} sourceCache
- * @param {Tile} tile
+ * @param {Painter} painter - the painter
+ * @param {TerrainSourceCache} sourceCache - the source cache
+ * @param {Tile} tile - the tile
  */
 function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache, tile: Tile) {
     const context = painter.context;
@@ -82,9 +82,9 @@ function drawTerrain(painter: Painter, sourceCache: TerrainSourceCache, tile: Ti
 /**
  * prepare the render-to-texture tile.
  * E.g. creates the necessary textures and attach them to the render-to-texture-framebuffer.
- * @param {Painter} painter
- * @param {TerrainSourceCache} sourceCache
- * @param {Tile} tile
+ * @param {Painter} painter - the painter
+ * @param {TerrainSourceCache} sourceCache - the source cache
+ * @param {Tile} tile - the tile
  * @param {number} stack number of a layer-groop. see painter.ts
  */
 function prepareTerrain(painter: Painter, sourceCache: TerrainSourceCache, tile: Tile, stack: number) {
