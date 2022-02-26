@@ -32,13 +32,14 @@ import type {SymbolSDFUniformsType} from '../render/program/symbol_program';
 import type {CrossTileID, VariableOffset} from '../symbol/placement';
 import type SymbolBucket from '../data/bucket/symbol_bucket';
 import type {SymbolBuffers} from '../data/bucket/symbol_bucket';
+import type {TerrainData} from '../source/terrain_source_cache';
 
 export default drawSymbols;
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
     sortKey: number;
-    terrain: any;
+    terrain: TerrainData;
     state: {
         program: any;
         buffers: SymbolBuffers;

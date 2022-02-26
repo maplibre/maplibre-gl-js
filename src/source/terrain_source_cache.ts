@@ -20,6 +20,25 @@ import {warnOnce} from '../util/util';
 import VertexBuffer from '../gl/vertex_buffer';
 import IndexBuffer from '../gl/index_buffer';
 
+export type TerrainData = {
+    'u_depth': number;
+    'u_terrain': number;
+    'u_terrain_dim': number;
+    'u_terrain_matrix': mat4;
+    'u_terrain_unpack': number[];
+    'u_terrain_offset': number;
+    'u_terrain_exaggeration': number;
+    texture: WebGLTexture;
+    depthTexture: WebGLTexture;
+    tile: Tile;
+}
+
+export type TerrainMesh = {
+    indexBuffer: IndexBuffer;
+    vertexBuffer: VertexBuffer;
+    segments: SegmentVector;
+}
+
 /**
  * This is the main class which handles most of the 3D Terrain logic. It has the follwing topics:
  *    1) loads raster-dem tiles via the internal sourceCache this._source
@@ -68,7 +87,7 @@ class TerrainSourceCache extends Evented {
     _emptyDepthTexture: Texture;
     // GL Objects for the terrain-mesh
     // The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
-    _mesh: { indexBuffer: IndexBuffer; vertexBuffer: VertexBuffer; segments: SegmentVector };
+    _mesh: TerrainMesh;
     // coords index contains a list of tileID.keys. This index is used to identify
     // the tile via the alpha-cannel in the coords-texture.
     // As the alpha-channel has 1 Byte a max of 255 tiles can rendered without an error.
@@ -160,10 +179,10 @@ class TerrainSourceCache extends Evented {
 
     /**
      * Loads a 3D terrain-mesh
-     * @param {SourceCache} sourceCache
+     * @param {SourceCache} sourceCache - the source cache
      * @param options Allowed options are exaggeration & elevationOffset
-     * @param options.exaggeration
-     * @param options.elevationOffset
+     * @param options.exaggeration - the exaggeration
+     * @param options.elevationOffset - the elevation offset
      */
     enable(sourceCache: SourceCache, options?: {exaggeration: number; elevationOffset: number}): void {
         sourceCache.usedForTerrain = true;
@@ -191,7 +210,7 @@ class TerrainSourceCache extends Evented {
 
     /**
      * check if terrain is currently activated
-     * @return {boolean}
+     * @returns {boolean} - true if the terrain source cache is enabled, false otherwise
      */
     isEnabled(): boolean {
         return !!this._sourceCache;
@@ -318,8 +337,9 @@ class TerrainSourceCache extends Evented {
     /**
      * returns a Terrain Object for a tile. Unless the tile corresponds to data (e.g. tile is loading), return a flat dem object
      * @param {OverscaledTileID} tileID - the tile to get the terrain for
+     * @returns {TerrainData} the terrain data to use in the program
      */
-    getTerrain(tileID: OverscaledTileID): any {
+    getTerrain(tileID: OverscaledTileID): TerrainData {
         if (!this.isEnabled()) return null;
         // create empty DEM Obejcts, which will used while raster-dem tiles are loading.
         // creates an empty depth-buffer texture which is needed, during the initialisation process of the 3d mesh..
@@ -470,9 +490,9 @@ class TerrainSourceCache extends Evented {
     /**
      * create a regular mesh which will be used by all terrain-tiles
      * @param {Context} context - the context
-     * @returns {Object}
+     * @returns {TerrainMesh} - the created regular mesh
      */
-    getTerrainMesh(context: Context) {
+    getTerrainMesh(context: Context): TerrainMesh {
         if (this._mesh) return this._mesh;
         const vertexArray = new PosArray(), indexArray = new TriangleIndexArray();
         const meshSize = this.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;

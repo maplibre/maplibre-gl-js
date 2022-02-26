@@ -15,6 +15,7 @@ import type VertexBuffer from '../gl/vertex_buffer';
 import type IndexBuffer from '../gl/index_buffer';
 import type {UniformValues} from './uniform_binding';
 import type {CircleUniformsType} from './program/circle_program';
+import type {TerrainData} from '../source/terrain_source_cache';
 
 export default drawCircles;
 
@@ -24,7 +25,7 @@ type TileRenderState = {
     layoutVertexBuffer: VertexBuffer;
     indexBuffer: IndexBuffer;
     uniformValues: UniformValues<CircleUniformsType>;
-    terrain: any;
+    terrain: TerrainData;
 };
 
 type SegmentsTileRenderState = {

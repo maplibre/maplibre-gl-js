@@ -1574,13 +1574,13 @@ class Map extends Camera {
      *
      * @param {string} id The ID of the raster-dem source to use.
      * @param options Allowed options are exaggeration, elevationOffset
-     * @param options.exaggeration
-     * @param options.elevationOffset
+     * @param options.exaggeration - the exaggeration
+     * @param options.elevationOffset - the elevation offset
      * @returns {Map} `this`
      * @example
      * map.addTerrain('my-data');
      */
-    addTerrain(id: string, options?: {exaggeration: number; elevationOffset: number}) {
+    addTerrain(id: string, options?: {exaggeration: number; elevationOffset: number}): Map {
         this.isSourceLoaded(id);
         this.style.terrainSourceCache.enable(this.style.sourceCaches[id], options);
         this.transform.updateElevation();
@@ -1594,9 +1594,9 @@ class Map extends Camera {
 
     /**
      * Returns a Boolean indicating whether terrain is loaded.
-     * @returns {boolean}
+     * @returns {boolean} true if the terrain is loaded
      */
-    isTerrainLoaded() {
+    isTerrainLoaded(): boolean {
         return this.style.terrainSourceCache.isEnabled();
     }
 
@@ -1607,7 +1607,7 @@ class Map extends Camera {
      * @example
      * map.removeTerrain();
      */
-    removeTerrain() {
+    removeTerrain(): Map {
         this.style.terrainSourceCache.disable();
         this.transform.updateElevation();
         this.triggerRepaint();
@@ -1623,7 +1623,7 @@ class Map extends Camera {
      * @example
      * var tilesLoaded = map.areTilesLoaded();
      */
-    areTilesLoaded() {
+    areTilesLoaded(): boolean {
         const sources = this.style && this.style.sourceCaches;
         for (const id in sources) {
             const source = sources[id];
@@ -1657,7 +1657,7 @@ class Map extends Camera {
      * @example
      * map.removeSource('bathymetry-data');
      */
-    removeSource(id: string) {
+    removeSource(id: string): Map {
         this.style.removeSource(id);
         return this._update(true);
     }

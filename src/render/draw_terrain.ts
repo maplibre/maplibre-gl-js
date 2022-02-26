@@ -12,7 +12,7 @@ import ColorMode from '../gl/color_mode';
 /**
  * Redraw the Coords & Depth Framebuffers
  * @param {Painter} painter - the painter
- * @param {TerrainSourceCache} sourceCache- the source cache
+ * @param {TerrainSourceCache} sourceCache - the source cache
  */
 function updateTerrainFacilitators(painter: Painter, sourceCache: TerrainSourceCache) {
     const context = painter.context;
