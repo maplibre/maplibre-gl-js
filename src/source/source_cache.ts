@@ -86,6 +86,10 @@ class SourceCache extends Evented {
             }
         });
 
+        this.on('dataloading', () => {
+            this._sourceErrored = false;
+        });
+
         this.on('error', () => {
             this._sourceErrored = true;
         });
