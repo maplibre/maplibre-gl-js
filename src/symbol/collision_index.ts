@@ -78,7 +78,7 @@ class CollisionIndex {
         textPixelRatio: number,
         posMatrix: mat4,
         collisionGroupPredicate?: (key: FeatureKey) => boolean,
-        getElevation?: any
+        getElevation?: (x: number, y: number) => number
     ): {
             box: Array<number>;
             offscreen: boolean;
@@ -118,7 +118,7 @@ class CollisionIndex {
         collisionGroupPredicate: (key: FeatureKey) => boolean,
         circlePixelDiameter: number,
         textPixelPadding: number,
-        getElevation: any
+        getElevation: (x: number, y: number) => number
     ): {
             circles: Array<number>;
             offscreen: boolean;
@@ -356,7 +356,7 @@ class CollisionIndex {
         }
     }
 
-    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, getElevation: any) {
+    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, getElevation: (x: number, y: number) => number) {
         let p;
         if (getElevation) { // slow because of handle z-index
             p = vec4.fromValues(x, y, getElevation(x, y), 1);

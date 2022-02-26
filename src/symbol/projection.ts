@@ -101,7 +101,7 @@ function getGlCoordMatrix(posMatrix: mat4,
     }
 }
 
-function project(point: Point, matrix: mat4, getElevation: any) {
+function project(point: Point, matrix: mat4, getElevation: (x: number, y: number) => number) {
     let pos;
     if (getElevation) { // slow because of handle z-index
         pos = vec4.fromValues(point.x, point.y, getElevation(point.x, point.y), 1);
@@ -335,7 +335,7 @@ function placeGlyphsAlongLine(symbol, fontSize, flip, keepUpright, posMatrix, la
     return {};
 }
 
-function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4, getElevation: any) {
+function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4, getElevation: (x: number, y: number) => number) {
     // We are assuming "previousTilePoint" won't project to a point within one unit of the camera plane
     // If it did, that would mean our label extended all the way out from within the viewport to a (very distant)
     // point near the plane of the camera. We wouldn't be able to render the label anyway once it crossed the
@@ -361,7 +361,7 @@ function placeGlyphAlongLine(
     projectionCache: {
         [_: number]: Point;
     },
-    getElevation: any) {
+    getElevation: (x: number, y: number) => number) {
 
     const combinedOffsetX = flip ?
         offsetX - lineOffsetX :
