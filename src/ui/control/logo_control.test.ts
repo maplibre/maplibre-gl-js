@@ -98,9 +98,9 @@ describe('LogoControl', () => {
             map.on('sourcedata', (e) => {
                 if (e.isSourceLoaded && e.sourceId === 'source2' && e.sourceDataType === 'metadata') {
                     expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-logo')).toHaveLength(1);
+                    done();
                 }
             });
-            done();
         });
 
     });

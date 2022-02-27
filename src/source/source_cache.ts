@@ -20,7 +20,7 @@ import type Dispatcher from '../util/dispatcher';
 import type Transform from '../geo/transform';
 import type {TileState} from './tile';
 import type {Callback} from '../types/callback';
-import type {SourceSpecification} from '../style-spec/types';
+import type {SourceSpecification} from '../style-spec/types.g';
 
 /**
  * `SourceCache` is responsible for
@@ -82,6 +82,10 @@ class SourceCache extends Evented {
                     this.update(this.transform);
                 }
             }
+        });
+
+        this.on('dataloading', () => {
+            this._sourceErrored = false;
         });
 
         this.on('error', () => {

@@ -1,4 +1,4 @@
-import type {StyleSpecification} from '../../../src/style-spec/types';
+import type {StyleSpecification} from '../../../src/style-spec/types.g';
 
 export default function fetchStyle(value: string | StyleSpecification): Promise<StyleSpecification> {
     return typeof value === 'string' ?

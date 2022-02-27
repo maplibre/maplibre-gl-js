@@ -1,8 +1,12 @@
+import path, {dirname} from 'path';
+import fs from 'fs';
 import gl from 'gl';
 import {JSDOM, VirtualConsole} from 'jsdom';
 import {PNG} from 'pngjs';
-import request from 'request';
-import {fakeServer} from 'nise';
+import {fileURLToPath} from 'url';
+import '../../unit/lib/web_worker_mock';
+// @ts-ignore
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let lastDataFromUrl = null;
 
@@ -34,6 +38,7 @@ global.Blob = window.Blob;
 global.URL = window.URL;
 global.fetch = window.fetch;
 global.document = window.document;
+//@ts-ignore
 global.window = window;
 // stubbing image load as it is not implemented in jsdom
 // eslint-disable-next-line accessor-pairs
@@ -45,13 +50,11 @@ Object.defineProperty(global.Image.prototype, 'src', {
         if (src.startsWith('data:image/png')) {
             const base64 = src.replace(/data:.*;base64,/, '');
             const buff = Buffer.from(base64, 'base64');
-            new PNG().parse(buff, (err, png) => {
-                if (err) throw new Error('Couldn\'t parse PNG');
-                this.data = png.data;
-                this.height = png.height;
-                this.width = png.width;
-                this.onload();
-            });
+            const png = PNG.sync.read(buff);
+            this.data = png.data;
+            this.height = png.height;
+            this.width = png.width;
+            this.onload();
             return;
         }
         if (src && typeof src === 'string' && !src.startsWith('blob')) {
@@ -70,7 +73,7 @@ Object.defineProperty(global.Image.prototype, 'src', {
         const reader = new window.FileReader();
         reader.onload = (_) => {
             const dataUrl = reader.result;
-            new PNG().parse(dataUrl, (err, png) => {
+            new PNG().parse(dataUrl as any, (err, png) => {
                 if (err) throw new Error('Couldn\'t parse PNG');
                 this.data = png.data;
                 this.height = png.height;
@@ -86,37 +89,30 @@ Object.defineProperty(global.Image.prototype, 'src', {
 // At this time the fake code will go to the server and get the "video".
 // Hack: since node doesn't have any good video codec modules, just grab a png with
 // the first frame and fake the video API.
-HTMLVideoElement.prototype.appendChild = function(s) {
+HTMLVideoElement.prototype.appendChild = function(s: any) {
     if (!this.onloadstart) {
         return;
     }
-    request({url: s.src, encoding: null}, (error, response, body) => {
-        if (!error && response.statusCode >= 200 && response.statusCode < 300) {
-            new PNG().parse(body, (_, png) => {
-                Object.defineProperty(this, 'readyState', {get: () => 4}); // HAVE_ENOUGH_DATA
-                this.addEventListener = () => {};
-                this.play = () => {};
-                this.width = png.width;
-                this.height =  png.height;
-                this.data = png.data;
-                this.onloadstart();
-            });
-        }
-    });
+    const relativePath = s.src.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
+    const body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
+    const png = PNG.sync.read(body);
+    Object.defineProperty(this, 'readyState', {get: () => 4}); // HAVE_ENOUGH_DATA
+    this.addEventListener = () => {};
+    this.play = () => {};
+    this.width = png.width;
+    this.height =  png.height;
+    this.data = png.data;
+    this.onloadstart();
+    return s;
 };
 
-// Delete local and session storage from JSDOM and stub them out with a warning log
-// Accessing these properties during extend() produces an error in Node environments
-// See https://github.com/mapbox/mapbox-gl-js/pull/7455 for discussion
-delete window.localStorage;
-delete window.sessionStorage;
-window.localStorage = window.sessionStorage = () => console.log('Local and session storage not available in Node. Use a stub implementation if needed for testing.');
-
+//@ts-ignore
 window.devicePixelRatio = 1;
-
+//@ts-ignore
 global.requestAnimationFrame = window.requestAnimationFrame = (callback) => {
     return setImmediate(callback, 0);
 };
+//@ts-ignore
 global.cancelAnimationFrame = clearImmediate;
 
 // Add webgl context with the supplied GL
@@ -134,16 +130,6 @@ function imitateWebGlGetContext(type, attributes) {
 }
 global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 
-window.useFakeXMLHttpRequest = () => {
-    window.server = fakeServer.create();
-    global.XMLHttpRequest = window.server.xhr;
-};
-
-window.clearFakeXMLHttpRequest = () => {
-    window.server = null;
-    global.XMLHttpRequest = null;
-};
-
 global.URL.createObjectURL = (blob) => {
     lastDataFromUrl = blob;
     return 'blob:';
@@ -153,18 +139,10 @@ global.URL.revokeObjectURL = () => {
     lastDataFromUrl = null;
 };
 
-window.useFakeWorkerPresence = () => {
-    global.WorkerGlobalScope = function () { };
-    global.self = new global.WorkerGlobalScope();
-};
-window.clearFakeWorkerPresence = () => {
-    global.WorkerGlobalScope = undefined;
-    global.self = undefined;
-};
-
-window.performance.getEntriesByName = () => { };
-window.performance.mark = () => { };
-window.performance.measure = () => { };
-window.performance.clearMarks = () => { };
-window.performance.clearMeasures = () => { };
+const performance = window.performance as any;
+performance.getEntriesByName = () => { };
+performance.mark = () => { };
+performance.measure = () => { };
+performance.clearMarks = () => { };
+performance.clearMeasures = () => { };
 

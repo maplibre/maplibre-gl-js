@@ -24,7 +24,7 @@ import {
 import type {BucketParameters} from '../../data/bucket';
 import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
 import type EvaluationParameters from '../evaluation_parameters';
-import type {LayerSpecification} from '../../style-spec/types';
+import type {LayerSpecification} from '../../style-spec/types.g';
 import type {Feature, SourceExpression, CompositeExpression} from '../../style-spec/expression';
 import type {Expression} from '../../style-spec/expression/expression';
 import type {CanonicalTileID} from '../../source/tile_id';

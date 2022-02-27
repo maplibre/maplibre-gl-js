@@ -11,7 +11,7 @@ import type {FeatureState} from '../../style-spec/expression';
 import type Transform from '../../geo/transform';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
-import type {LayerSpecification} from '../../style-spec/types';
+import type {LayerSpecification} from '../../style-spec/types.g';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 class CircleStyleLayer extends StyleLayer {

@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "2.1.1",
+  "version": "2.1.6",
   "main": "dist/maplibre-gl.js",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -24,7 +24,6 @@
     "earcut": "^2.2.3",
     "geojson-vt": "^3.2.1",
     "gl-matrix": "^3.4.3",
-    "husky": "^7.0.4",
     "murmurhash-js": "^1.0.0",
     "pbf": "^3.2.1",
     "potpack": "^1.0.2",
@@ -171,12 +170,12 @@
     "codegen": "npm run generate-style-code && npm run generate-struct-arrays && npm run generate-style-spec && npm run generate-shaders",
     "benchmark": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/run-benchmarks.ts",
     "gl-stats": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/gl-stats.ts",
-    "postinstall": "npm run codegen && npm run generate-query-test-fixtures",
-    "prepare": "husky install"
+    "postinstall": "node ./postinstall.js"
   },
   "files": [
     "build/",
     "dist/*",
-    "src/"
+    "src/",
+    "postinstall.js"
   ]
 }

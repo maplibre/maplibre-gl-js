@@ -53,6 +53,14 @@ jobs:
           npm run build-benchmarks
           npm run generate-typings
 
+      - name: Empty postinstall.js
+        run: |
+          echo "// empty in published package" > postinstall.js
+
+      - name: Write dist/package.json
+        run: |
+          echo "{ \"type\": \"commonjs\" }" > dist/package.json
+
       - name: Create Archive
         run: |
           zip -r dist dist
@@ -115,8 +123,8 @@ jobs:
       - name: Copy benchmarks_generated.js
         run: |
           mkdir tmp
-          cp bench/versions/benchmarks_generated.js tmp
-          cp bench/versions/benchmarks_generated.js.map tmp
+          cp test/bench/versions/benchmarks_generated.js tmp
+          cp test/bench/versions/benchmarks_generated.js.map tmp
 
       - name: Upload Benchmarks to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
