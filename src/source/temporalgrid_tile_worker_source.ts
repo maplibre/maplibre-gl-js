@@ -5,7 +5,7 @@ import geojsonVt from 'geojson-vt';
 import {MultiSourceLayerGeoJSONWrapper} from './multi_source_geojson_wrapper';
 import {VectorTileWorkerSource, LoadVectorDataCallback} from './vector_tile_worker_source';
 import {getArrayBuffer} from '../util/ajax';
-import {aggregateTile} from '@globalfishingwatch/fourwings-aggregate';
+import {aggregate} from '@globalfishingwatch/fourwings-aggregate';
 import tilebelt from '@mapbox/tilebelt';
 import {WorkerTileParameters} from './worker_source';
 import {extend} from '../util/util';
@@ -153,7 +153,7 @@ const getTile = (data, options) => {
     const tileBBox = tilebelt.tileToBBOX([x, y, z]);
     const int16ArrayBuffer = decodeProto(data);
     // update lib version to support rows, columns, and multiplier
-    const aggregated = aggregateTile(int16ArrayBuffer, {
+    const aggregated = aggregate(int16ArrayBuffer, {
         ...options,
         tileBBox
     });
