@@ -7,6 +7,7 @@
     }
   },
   "bearing": 45,
+  "pitch": 50,
   "sources": {
     "geojson": {
       "type": "geojson",
@@ -28,15 +29,21 @@
   "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
   "layers": [
     {
+      "id": "line",
+      "type": "line",
+      "source": "geojson"
+    },
+    {
       "id": "symbol",
       "type": "symbol",
       "source": "geojson",
       "layout": {
         "symbol-placement": "line",
         "symbol-spacing": 20,
-        "text-rotate-to-line": true,
+        "text-rotate-to-line": false,
+        "text-rotation-alignment": "map",
         "text-pitch-alignment": "viewport",
-        "text-field": "-->",
+        "text-field": "ABCDE",
         "text-font": [
           "Open Sans Semibold",
           "Arial Unicode MS Bold"
