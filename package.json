@@ -155,6 +155,7 @@
     "build-dist": "run-p --print-label generate-typings build-dev build-prod build-csp build-csp-dev build-css",
     "build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
     "watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",
+    "build": "run-s build-prod-min build-prod build-csp build-dev build-css build-benchmarks generate-typings build-style-spec",
     "build-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production",
     "watch-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production --watch",
     "build-prod-min": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production,MINIFY:true",

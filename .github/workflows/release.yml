@@ -43,13 +43,7 @@ jobs:
 
       - name: Build
         run: |
-          npm run build-prod
-          npm run build-csp
-          npm run build-dev
-          npm run build-css
-          npm run build-benchmarks
-          npm run generate-typings
-          npm run build-style-spec
+          npm run build
 
       - name: Tag commit and push
         uses: mathieudutour/github-tag-action@v6.1
