@@ -564,7 +564,7 @@ class Transform {
      * @private
      */
     locationPoint3D(lnglat: LngLat) {
-        return this.coordinatePoint(this.locationCoordinate(lnglat), this.getElevation(lnglat));
+        return this.coordinatePoint(this.locationCoordinate(lnglat), this.getElevation(lnglat), this.pixelMatrix2);
     }
 
     /**
@@ -667,9 +667,9 @@ class Transform {
      * @returns {number} elevation, default 0
      * @private
      */
-    coordinatePoint(coord: MercatorCoordinate, elevation: number = 0) {
+    coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix=this.pixelMatrix) {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as any;
-        vec4.transformMat4(p, p, this.pixelMatrix2);
+        vec4.transformMat4(p, p, pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
 
