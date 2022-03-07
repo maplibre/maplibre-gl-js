@@ -525,11 +525,12 @@ class SourceCache extends Evented {
         if (this.usedForTerrain) {
             const parents = {};
             for (const tileID of idealTileIDs) {
-                for (let dz = 1; dz <= 22; dz++) { // load all parent tiles
-                    if (tileID.canonical.z - dz >= this._source.minzoom) {
-                        const parent = tileID.scaledTo(tileID.canonical.z - dz);
-                        parents[parent.key] = parent;
-                    }
+                if (tileID.canonical.z > this._source.minzoom) {
+                    const parent = tileID.scaledTo(tileID.canonical.z - 1);
+                    parents[parent.key] = parent;
+                    // load very low zoom to calculate tile visability in transform.coveringTiles correct
+                    const parent2 = tileID.scaledTo(Math.max(this._source.minzoom, 5));
+                    parents[parent2.key] = parent2;
                 }
             }
             idealTileIDs = idealTileIDs.concat(Object.values(parents));

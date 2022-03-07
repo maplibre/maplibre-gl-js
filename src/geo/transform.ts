@@ -366,7 +366,7 @@ class Transform {
             minZoom = z;
 
         // There should always be a certain number of maximum zoom level tiles surrounding the center location
-        const radiusOfMaxLvlLodInTiles = 3;
+        let radiusOfMaxLvlLodInTiles = tsc && tsc.isEnabled() ? 2 / options.tileSize * this.tileSize : 3;
 
         const newRootTile = (wrap: number): any => {
             return {
@@ -430,8 +430,6 @@ class Transform {
                 result.push({
                     tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
                     distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y]),
-                    // this variable is currently not used, but may be important to reduce the amount of loaded tiles
-                    tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
                 });
                 continue;
             }
@@ -699,7 +697,8 @@ class Transform {
         return new LngLatBounds([this.lngRange[0], this.latRange[0]], [this.lngRange[1], this.latRange[1]]);
     }
 
-    // calculate pixel height of the visible horizon, multiplied by a static factor to simulate the earth-radius.
+    // calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
+    // multiplied by a static factor to simulate the earth-radius.
     // The calculated value is the horizontal line from the camera-height to sea-level.
     getHorizon() {
         return Math.tan(Math.PI / 2 - this._pitch) * this.cameraToCenterDistance * 0.85;
