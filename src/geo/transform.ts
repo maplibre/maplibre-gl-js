@@ -32,6 +32,7 @@ class Transform {
     zoomFraction: number;
     pixelsToGLUnits: [number, number];
     cameraToCenterDistance: number;
+    cameraToSeaLevelDistance: number;
     mercatorMatrix: mat4;
     projMatrix: mat4;
     invProjMatrix: mat4;
@@ -500,7 +501,10 @@ class Transform {
         return this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize, tileSize);
     }
 
-    getCameraPosition() {
+    /**
+     * get the camera position in LngLat and altitudes in meter
+     */
+    getCameraPosition(): {lngLat: LngLat, altitude: number} {
         const lngLat = this.pointLocation(this.getCameraPoint());
         const altitude = Math.cos(this._pitch) * this.cameraToCenterDistance / this._pixelPerMeter;
         return {lngLat, altitude: altitude + this.elevation};
@@ -695,6 +699,12 @@ class Transform {
         return new LngLatBounds([this.lngRange[0], this.latRange[0]], [this.lngRange[1], this.latRange[1]]);
     }
 
+    // calculate pixel height of the visible horizon, multiplied by a static factor to simulate the earth-radius.
+    // The calculated value is the horizontal line from the camera-height to sea-level.
+    getHorizon() {
+        return Math.tan(Math.PI / 2 - this._pitch) * this.cameraToCenterDistance * 0.85;
+    }
+
     /**
      * Sets or clears the map's geographical constraints.
      * @param {LngLatBounds} bounds A {@link LngLatBounds} object describing the new geographic boundaries of the map.
@@ -813,7 +823,10 @@ class Transform {
 
         const halfFov = this._fov / 2;
         const offset = this.centerOffset;
+        const hasTerrain = this.terrainSourceCache && this.terrainSourceCache.isEnabled();
+        const x = this.point.x, y = this.point.y;
         this.cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this.height;
+        this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
 
         let m = mat4.identity(new Float64Array(16) as any);
         mat4.scale(m, m, [this.width / 2, -this.height / 2, 1]);
@@ -826,25 +839,31 @@ class Transform {
         mat4.scale(m, m, [2 / this.width, 2 / this.height, 1]);
         this.glCoordMatrix = m;
 
+        // calculate the camera to sea-level distance in pixel in respect of terrain
+        this.cameraToSeaLevelDistance = hasTerrain ?
+            this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch) :
+            this.cameraToCenterDistance;
+
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
-        this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
         const groundAngle = Math.PI / 2 + this._pitch;
         const fovAboveCenter = this._fov * (0.5 + offset.y / this.height);
-        const cameraAltitude = Math.cos(this._pitch) * this.cameraToCenterDistance / this._pixelPerMeter;
-        const cameraToCenterDistance = this.terrainSourceCache && this.terrainSourceCache.isEnabled() ?
-            (cameraAltitude + this._elevation) * this._pixelPerMeter / Math.cos(this._pitch) :
-            this.cameraToCenterDistance;
-        const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * cameraToCenterDistance / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
-        const point = this.point;
-        const x = point.x, y = point.y;
+        const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * this.cameraToSeaLevelDistance / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
+
+        // Find the distance from the center point to the horizon
+        const horizon = this.getHorizon();
+        const horizonAngle = Math.atan(horizon / this.cameraToCenterDistance);
+        const fovAboveCenter2 = 2 * horizonAngle * (0.5 + offset.y / (horizon * 2));
+        const topHalfSurfaceDistance2 = Math.sin(fovAboveCenter2) * this.cameraToSeaLevelDistance / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter2, 0.01, Math.PI - 0.01));
 
         // Calculate z distance of the farthest fragment that should be rendered.
-        const furthestDistance = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistance + cameraToCenterDistance;
+        const furthestDistance = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistance + this.cameraToSeaLevelDistance;
+        const furthestDistance2 = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistance2 + this.cameraToSeaLevelDistance;
+
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
-        const farZ = furthestDistance * 1.01;
+        const farZ = Math.min(furthestDistance, furthestDistance2) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
