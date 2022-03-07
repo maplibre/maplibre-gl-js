@@ -167,9 +167,9 @@ describe('browser tests', () => {
                 });
             });
 
-            const pageWithImage = `<html><head></head><body><img src="${image}" width="800" height="600" /></body></html>`;
+            const pageWithImage = `<html><head></head><body><img src="${image}" width="800" height="600" /></body></html>`.replace(/\s/g, '');
 
-            const expectedHtml = fs.readFileSync(path.join(__dirname, 'fixtures/expected-base64-image.html'), 'utf8');
+            const expectedHtml = fs.readFileSync(path.join(__dirname, 'fixtures/expected-base64-image.html'), 'utf8').replace(/\s/g, '');
             expect(pageWithImage).toBe(expectedHtml);
         }, 20000);
     });
