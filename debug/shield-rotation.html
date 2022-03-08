@@ -152,15 +152,15 @@
                 }
             });
             var rotation = document.getElementById('rotation');
-            rotation.addEventListener('click', function() {
+            rotation.addEventListener('change', function() {
                 map.setLayoutProperty('maine-text', 'text-rotation-alignment', rotation.value);
             });
             var pitch = document.getElementById('pitch');
-            pitch.addEventListener('click', function() {
+            pitch.addEventListener('change', function() {
                 map.setLayoutProperty('maine-text', 'text-pitch-alignment', pitch.value);
             });
             var line = document.getElementById('line');
-            line.addEventListener('click', function() {
+            line.addEventListener('change', function() {
                 map.setLayoutProperty('maine-text', 'text-rotate-to-line', line.value === 'true');
             });
 
