@@ -575,6 +575,8 @@ class Painter {
                         }
                         continue;
                     }
+
+                    if (isLastLayer) continue;
                 }
 
             }
