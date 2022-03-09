@@ -280,7 +280,7 @@ class TerrainSourceCache extends Evented {
         const coords = {};
         for (const key of this._renderableTiles) {
             const _tileID = this._tiles[key].tileID;
-            if (_tileID.equals(tileID)) {
+            if (_tileID.canonical.equals(tileID.canonical)) {
                 const coord = tileID.clone();
                 coord.posMatrix = new Float64Array(16) as any;
                 mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
