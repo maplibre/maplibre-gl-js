@@ -10,7 +10,7 @@ export default class FilterEvaluate extends Benchmark {
     layers: any[];
 
     setup() {
-        return fetch('test/bench/data/785.vector.pbf')
+        return fetch('/test/bench/data/785.vector.pbf')
             .then(response => response.arrayBuffer())
             .then(data => {
                 const tile = new VectorTile(new Pbf(data));
