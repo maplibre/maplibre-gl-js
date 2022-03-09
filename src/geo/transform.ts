@@ -38,7 +38,7 @@ class Transform {
     invProjMatrix: mat4;
     alignedProjMatrix: mat4;
     pixelMatrix: mat4;
-    pixelMatrix2: mat4;
+    pixelMatrix3D: mat4;
     pixelMatrixInverse: mat4;
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
@@ -366,7 +366,7 @@ class Transform {
             minZoom = z;
 
         // There should always be a certain number of maximum zoom level tiles surrounding the center location
-        let radiusOfMaxLvlLodInTiles = tsc && tsc.isEnabled() ? 2 / options.tileSize * this.tileSize : 3;
+        const radiusOfMaxLvlLodInTiles = tsc && tsc.isEnabled() ? 2 / Math.min(this.tileSize, options.tileSize) * this.tileSize : 3;
 
         const newRootTile = (wrap: number): any => {
             return {
@@ -430,6 +430,8 @@ class Transform {
                 result.push({
                     tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
                     distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y]),
+                    // this variable is currently not used, but may be important to reduce the amount of loaded tiles
+                    tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
                 });
                 continue;
             }
@@ -501,8 +503,12 @@ class Transform {
 
     /**
      * get the camera position in LngLat and altitudes in meter
+     * @returns {Object} An object with lngLat & altitude.
      */
-    getCameraPosition(): {lngLat: LngLat, altitude: number} {
+    getCameraPosition(): {
+        lngLat: LngLat;
+        altitude: number;
+    } {
         const lngLat = this.pointLocation(this.getCameraPoint());
         const altitude = Math.cos(this._pitch) * this.cameraToCenterDistance / this._pixelPerMeter;
         return {lngLat, altitude: altitude + this.elevation};
@@ -564,7 +570,7 @@ class Transform {
      * @private
      */
     locationPoint3D(lnglat: LngLat) {
-        return this.coordinatePoint(this.locationCoordinate(lnglat), this.getElevation(lnglat), this.pixelMatrix2);
+        return this.coordinatePoint(this.locationCoordinate(lnglat), this.getElevation(lnglat), this.pixelMatrix3D);
     }
 
     /**
@@ -663,11 +669,12 @@ class Transform {
     /**
      * Given a coordinate, return the screen point that corresponds to it
      * @param {Coordinate} coord
+     * @params {number} elevation default = 0
+     * @params {mat4} pixelMatrix, default = this.pixelMatrix
      * @returns {Point} screen point
-     * @returns {number} elevation, default 0
      * @private
      */
-    coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix=this.pixelMatrix) {
+    coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix = this.pixelMatrix): Point {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as any;
         vec4.transformMat4(p, p, pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
@@ -697,9 +704,12 @@ class Transform {
         return new LngLatBounds([this.lngRange[0], this.latRange[0]], [this.lngRange[1], this.latRange[1]]);
     }
 
-    // calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
-    // multiplied by a static factor to simulate the earth-radius.
-    // The calculated value is the horizontal line from the camera-height to sea-level.
+    /**
+     * Calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
+     * multiplied by a static factor to simulate the earth-radius.
+     * The calculated value is the horizontal line from the camera-height to sea-level.
+     * @returns {number} Horizon above center in pixels.
+     */
     getHorizon() {
         return Math.tan(Math.PI / 2 - this._pitch) * this.cameraToCenterDistance * 0.85;
     }
@@ -894,14 +904,16 @@ class Transform {
         // scale vertically to meters per pixel (inverse of ground resolution):
         mat4.scale(m, m, vec3.fromValues(1, 1, this._pixelPerMeter));
 
-        // matrix for conversion from location to screen coordinates
+        // matrix for conversion from location to screen coordinates in 2D
         this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
         // matrix for conversion from location to GL coordinates (-1 .. 1)
         mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
         this.projMatrix = m;
         this.invProjMatrix = mat4.invert([] as any, m);
-        this.pixelMatrix2 = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
+
+        // matrix for conversion from location to screen coordinates in 2D
+        this.pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional
