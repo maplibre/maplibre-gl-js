@@ -101,7 +101,7 @@ class HandlerManager {
     _handlersById: {[x: string]: Handler};
     _updatingCamera: boolean;
     _changes: Array<[HandlerResult, any, any]>;
-    _drag: {center: Point; lngLat: LngLat; point: Point; delta: Point; handlerName: string};
+    _drag: {center: Point; lngLat: LngLat; point: Point; handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
         passive?: boolean;
