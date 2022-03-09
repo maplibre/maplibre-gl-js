@@ -40,9 +40,9 @@
       "layout": {
         "symbol-placement": "line",
         "symbol-spacing": 20,
-        "text-rotate-to-line": false,
-        "text-rotation-alignment": "viewport",
-        "text-pitch-alignment": "viewport",
+        "text-new-property": true,
+        "text-rotation-alignment": "map",
+        "text-pitch-alignment": "map",
         "text-field": "ABCDE",
         "text-font": [
           "Open Sans Semibold",

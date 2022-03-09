@@ -524,7 +524,7 @@ class SymbolBucket implements Bucket {
 
             if (text) {
                 const fontStack = textFont.evaluate(evaluationFeature, {}, canonical).join(',');
-                const textAlongLine = (layout.get('text-rotation-alignment') === 'map' || !layout.get('text-rotate-to-line')) && layout.get('symbol-placement') !== 'point';
+                const textAlongLine = (layout.get('text-rotation-alignment') === 'map' || layout.get('text-new-property')) && layout.get('symbol-placement') !== 'point';
                 this.allowVerticalPlacement = this.writingModes && this.writingModes.indexOf(WritingMode.vertical) >= 0;
                 for (const section of text.sections) {
                     if (!section.image) {

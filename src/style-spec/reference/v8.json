@@ -2257,15 +2257,12 @@
       },
       "property-type": "data-constant"
     },
-    "text-rotate-to-line": {
+    "text-new-property": {
       "type": "boolean",
-      "default": true,
-      "doc": "If true, the text rotates to the orientation of the line.",
+      "default": false,
+      "doc": "To be defined",
       "requires": [
         "text-field",
-        {
-          "text-rotation-alignment": "map"
-        },
         {
           "symbol-placement": [
             "line",

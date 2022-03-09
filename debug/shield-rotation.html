@@ -78,10 +78,10 @@
                 </select>
             </fieldset>
             <fieldset>
-                <label>text-rotate-to-line</label>
+                <label>text-new-property</label>
                 <select id="line" name="line">
-                    <option value="true">true</option>
                     <option value="false">false</option>
+                    <option value="true">true</option>
                 </select>
             </fieldset>
         </div>
@@ -148,7 +148,7 @@
                     'symbol-placement': 'line',
                     'text-pitch-alignment': 'map',
                     'text-rotation-alignment': 'map',
-                    'text-rotate-to-line': true,
+                    'text-new-property': false,
                     'text-size': 36
                 }
             });
@@ -162,7 +162,7 @@
             });
             var line = document.getElementById('line');
             line.addEventListener('change', function() {
-                map.setLayoutProperty('maine-text', 'text-rotate-to-line', line.value === 'true');
+                map.setLayoutProperty('maine-text', 'text-new-property', line.value === 'true');
             });
 
         });
