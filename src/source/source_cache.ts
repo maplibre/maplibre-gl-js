@@ -872,8 +872,8 @@ class SourceCache extends Evented {
             transform.getCameraQueryGeometry(pointQueryGeometry) :
             pointQueryGeometry;
 
-        const queryGeometry = pointQueryGeometry.map((p) => transform.pointCoordinate(p));
-        const cameraQueryGeometry = cameraPointQueryGeometry.map((p) => transform.pointCoordinate(p));
+        const queryGeometry = pointQueryGeometry.map((p) => transform.pointCoordinate3D(p));
+        const cameraQueryGeometry = cameraPointQueryGeometry.map((p) => transform.pointCoordinate3D(p));
 
         const ids = this.getIds();
 

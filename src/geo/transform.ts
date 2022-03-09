@@ -644,7 +644,7 @@ class Transform {
 
     // FIX ME-3D! mouseout events may contains coordinates outside the coords-framebuffer
     pointCoordinate3D(p: Point) {
-        if (!this.terrainSourceCache) return this.pointCoordinate(p);
+        if (!(this.terrainSourceCache && this.terrainSourceCache.isEnabled())) return this.pointCoordinate(p);
         const rgba = new Uint8Array(4);
         const painter = this.terrainSourceCache._style.map.painter, context = painter.context, gl = context.gl;
         // grab coordinate pixel from coordinates framebuffer
