@@ -28,7 +28,7 @@ export default class PaintStates extends Benchmark {
     }
 
     setup() {
-        return fetch('/bench/data/naturalearth-land.json')
+        return fetch('/test/bench/data/naturalearth-land.json')
             .then(response => response.json())
             .then(data => {
                 this.numFeatures = data.features.length;
