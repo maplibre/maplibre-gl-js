@@ -28,7 +28,7 @@
       "layout": {
         "symbol-placement": "point",
         "text-rotation-alignment": "map",
-        "text-field": "-->",
+        "text-field": "ABC",
         "text-font": [
           "Open Sans Semibold",
           "Arial Unicode MS Bold"
