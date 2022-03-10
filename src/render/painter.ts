@@ -561,12 +561,10 @@ class Painter {
 
                     // the hillshading layer is a special case because it changes on every camera-movement
                     // so rerender it in any case.
-                    // FIX ME-3D! check if rerendering is really necessary, depending on hillshade-illumination-anchor
                     if (type === 'hillshade') {
                         stacks.push([layerIds[this.currentLayer]]);
                         for (const tile of renderableTiles) {
                             const coords = coordsDescendingInv[layer.source][tile.tileID.key];
-                            // FIX ME-3D! replace prepareTerrain with hillshading texture from prepareHillshading directly
                             prepareTerrain(this, tsc, tile, stacks.length - 1);
                             this.context.clear({color: Color.transparent});
                             this._renderTileClippingMasks(layer, coords);

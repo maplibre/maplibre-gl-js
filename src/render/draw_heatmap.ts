@@ -124,7 +124,7 @@ function renderTextureToMap(painter, layer) {
 
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
-        heatmapTextureUniformValues(painter, layer, 0, 1), null, // FIX ME-3D render onto terrain-mesh
+        heatmapTextureUniformValues(painter, layer, 0, 1), null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, painter.transform.zoom);
 }

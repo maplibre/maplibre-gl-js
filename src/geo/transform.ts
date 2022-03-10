@@ -411,7 +411,6 @@ class Transform {
                 fullyVisible = intersectResult === 2;
             }
 
-            // FIX ME-3D. I think refPoint should in any case be the cameraPoint, this logic is only for backward-compatibliy
             const refPoint = tsc && tsc.isEnabled() ? cameraPoint : centerPoint;
             const distanceX = it.aabb.distanceX(refPoint);
             const distanceY = it.aabb.distanceY(refPoint);
@@ -642,7 +641,6 @@ class Transform {
             interpolate(y0, y1, t) / this.worldSize);
     }
 
-    // FIX ME-3D! mouseout events may contains coordinates outside the coords-framebuffer
     pointCoordinate3D(p: Point) {
         if (!(this.terrainSourceCache && this.terrainSourceCache.isEnabled())) return this.pointCoordinate(p);
         const rgba = new Uint8Array(4);
@@ -656,7 +654,7 @@ class Transform {
         const y = rgba[1] + ((rgba[2] & 15) << 8);
         const tileID = this.terrainSourceCache._coordsIndex[255 - rgba[3]];
         const tile = tileID && this.terrainSourceCache.getTileByID(tileID);
-        if (!tile) return this.pointCoordinate(p); // FIX ME! remove this hack
+        if (!tile) return this.pointCoordinate(p);
         const coordsSize = this.terrainSourceCache._coordsTextureSize;
         const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
         return new MercatorCoordinate(
