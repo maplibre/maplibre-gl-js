@@ -68,6 +68,7 @@
                 <select id="rotation" name="rotation">
                     <option value="map">map</option>
                     <option value="viewport">viewport</option>
+                    <option value="viewport-letter">viewport-letter</option>
                 </select>
             </fieldset>
             <fieldset>
@@ -75,13 +76,6 @@
                 <select id="pitch" name="pitch">
                     <option value="map">map</option>
                     <option value="viewport">viewport</option>
-                </select>
-            </fieldset>
-            <fieldset>
-                <label>text-new-property</label>
-                <select id="line" name="line">
-                    <option value="false">false</option>
-                    <option value="true">true</option>
                 </select>
             </fieldset>
         </div>
@@ -148,7 +142,6 @@
                     'symbol-placement': 'line',
                     'text-pitch-alignment': 'map',
                     'text-rotation-alignment': 'map',
-                    'text-new-property': false,
                     'text-size': 36
                 }
             });
@@ -159,10 +152,6 @@
             var pitch = document.getElementById('pitch');
             pitch.addEventListener('change', function() {
                 map.setLayoutProperty('maine-text', 'text-pitch-alignment', pitch.value);
-            });
-            var line = document.getElementById('line');
-            line.addEventListener('change', function() {
-                map.setLayoutProperty('maine-text', 'text-new-property', line.value === 'true');
             });
 
         });

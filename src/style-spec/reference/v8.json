@@ -1690,6 +1690,9 @@
         "viewport": {
           "doc": "Produces glyphs whose x-axes are aligned with the x-axis of the viewport, regardless of the value of `symbol-placement`."
         },
+        "viewport-letter": {
+          "doc": "When `symbol-placement` is set to `point`, aligns text to the x-axis of the viewport. When `symbol-placement` is set to `line` or `line-center`, aligns letters to the x-axis of the viewport and places them along the line."
+        },
         "auto": {
           "doc": "When `symbol-placement` is set to `point`, this is equivalent to `viewport`. When `symbol-placement` is set to `line` or `line-center`, this is equivalent to `map`."
         }
@@ -2247,32 +2250,6 @@
           "android": "2.0.1",
           "ios": "2.0.0",
           "macos": "0.1.0"
-        }
-      },
-      "expression": {
-        "interpolated": false,
-        "parameters": [
-          "zoom"
-        ]
-      },
-      "property-type": "data-constant"
-    },
-    "text-new-property": {
-      "type": "boolean",
-      "default": false,
-      "doc": "To be defined",
-      "requires": [
-        "text-field",
-        {
-          "symbol-placement": [
-            "line",
-            "line-center"
-          ]
-        }
-      ],
-      "sdk-support": {
-        "basic functionality": {
-          "js": "2.x.x"
         }
       },
       "expression": {
