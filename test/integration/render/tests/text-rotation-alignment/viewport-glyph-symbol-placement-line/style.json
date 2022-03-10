@@ -11,10 +11,16 @@
     "geojson": {
       "type": "geojson",
       "data": {
-        "type": "Point",
+        "type": "LineString",
         "coordinates": [
-          0,
-          0
+          [
+            -40,
+            0
+          ],
+          [
+            40,
+            0
+          ]
         ]
       }
     }
@@ -26,8 +32,10 @@
       "type": "symbol",
       "source": "geojson",
       "layout": {
-        "symbol-placement": "point",
-        "text-rotation-alignment": "map",
+        "symbol-placement": "line",
+        "symbol-spacing": 20,
+        "text-allow-overlap": true,
+        "text-rotation-alignment": "viewport-glyph",
         "text-field": "ABC",
         "text-font": [
           "Open Sans Semibold",

@@ -235,7 +235,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
     // Line label rotation happens in `updateLineLabels`
     // Pitched point labels are automatically rotated by the labelPlaneMatrix projection
     // Unpitched point labels need to have their rotation applied after projection
-    const rotateInShader = rotateWithMap && !pitchWithMap && (!alongLine || rotationAlignment === 'viewport-letter');
+    const rotateInShader = rotateWithMap && !pitchWithMap && (!alongLine || rotationAlignment === 'viewport-glyph');
 
     const hasSortKey = !layer.layout.get('symbol-sort-key').isConstant();
     let sortFeaturesByKey = false;
