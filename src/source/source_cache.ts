@@ -91,7 +91,8 @@ class SourceCache extends Evented {
         });
 
         this.on('error', () => {
-            this._sourceErrored = true;
+            // Only set _sourceErrored if the source does not have pending loads.
+            this._sourceErrored = this._source.loaded();
         });
 
         this._source = createSource(id, options, dispatcher, this);
