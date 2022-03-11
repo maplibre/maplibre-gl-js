@@ -29,6 +29,8 @@ export type SizeData = {
     interpolationType: InterpolationType;
 };
 
+export type EvaluatedZoomSize = {uSizeT: number; uSize: number};
+
 // For {text,icon}-size, get the bucket-level data that will be needed by
 // the painter to set symbol-size-related uniforms
 function getSizeData(
@@ -88,7 +90,7 @@ function evaluateSizeForFeature(sizeData: SizeData,
     }: {
         lowerSize: number;
         upperSize: number;
-    }) {
+    }): number {
     if (sizeData.kind === 'source') {
         return lowerSize / SIZE_PACK_FACTOR;
     } else if (sizeData.kind === 'composite') {
@@ -97,7 +99,7 @@ function evaluateSizeForFeature(sizeData: SizeData,
     return uSize;
 }
 
-function evaluateSizeForZoom(sizeData: SizeData, zoom: number) {
+function evaluateSizeForZoom(sizeData: SizeData, zoom: number): EvaluatedZoomSize {
     let uSizeT = 0;
     let uSize = 0;
 
