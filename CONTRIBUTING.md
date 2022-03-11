@@ -23,6 +23,11 @@ Clone the repository
 git clone git@github.com:maplibre/maplibre-gl-js.git
 ```
 
+Install dependencies for node_canvas (https://github.com/Automattic/node-canvas)
+```bash
+brew install pkg-config cairo pango libpng jpeg giflib librsvg
+```
+
 Install node module dependencies
 ```bash
 cd maplibre-gl-js &&

@@ -6,8 +6,16 @@
 
 ### 🐞 Bug fixes
 
-- Add adjustment for glyph rendering, CJK fonts are mainly affected (#1002).
 - *...Add new stuff here...*
+
+## 2.1.7
+
+### 🐞 Bug fixes
+
+- Add adjustment for glyph rendering, CJK fonts are mainly affected (#1002).
+- Improve typings to fix Angular strict mode failure (#790, #970, #934)
+- Fix `SourceCache.loaded()` always returning `true` following a load error (#1025)
+- Added back csp and dev builds to npm package (#1042)
 
 ## 2.1.6
 

@@ -917,7 +917,12 @@ class Map extends Camera {
         return this._rotating || this.handlers.isRotating();
     }
 
-    _createDelegatedListener(type: MapEvent, layerId: any, listener: any) {
+    _createDelegatedListener(type: MapEvent, layerId: string, listener: Listener):
+    {
+        layer: string;
+        listener: Listener;
+        delegates: {[type in keyof MapEventType]?: (e: any) => void};
+    } {
         if (type === 'mouseenter' || type === 'mouseover') {
             let mousein = false;
             const mousemove = (e) => {
@@ -1078,14 +1083,14 @@ class Map extends Camera {
             return super.on(type, layerIdOrListener as Listener);
         }
 
-        const delegatedListener = this._createDelegatedListener(type, layerIdOrListener, listener);
+        const delegatedListener = this._createDelegatedListener(type, layerIdOrListener as string, listener);
 
         this._delegatedListeners = this._delegatedListeners || {};
         this._delegatedListeners[type] = this._delegatedListeners[type] || [];
         this._delegatedListeners[type].push(delegatedListener);
 
         for (const event in delegatedListener.delegates) {
-            this.on(event as any, delegatedListener.delegates[event]);
+            this.on(event as MapEvent, delegatedListener.delegates[event]);
         }
 
         return this;
@@ -1133,10 +1138,10 @@ class Map extends Camera {
             return super.once(type, layerIdOrListener as Listener);
         }
 
-        const delegatedListener = this._createDelegatedListener(type, layerIdOrListener, listener);
+        const delegatedListener = this._createDelegatedListener(type, layerIdOrListener as string, listener);
 
         for (const event in delegatedListener.delegates) {
-            this.once(event as any, delegatedListener.delegates[event]);
+            this.once(event as MapEvent, delegatedListener.delegates[event]);
         }
 
         return this;
