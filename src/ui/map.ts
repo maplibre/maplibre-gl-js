@@ -1360,6 +1360,7 @@ export class Map extends Camera {
      * | `dataloading`          |                           |
      * | `styledataloading`     |                           |
      * | `sourcedataloading`    |                           |
+     * | `sourcetilesdata`      |                           |
      * | `styleimagemissing`    |                           |
      * | `dataabort`            |                           |
      * | `sourcedataabort`      |                           |

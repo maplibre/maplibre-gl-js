@@ -225,6 +225,10 @@ export type MapEventType = {
      */
     sourcedata: MapSourceDataEvent;
     /**
+     * Fired when one of the map's tile sources is fully loaded
+     */
+    sourcetilesdata: MapSourceDataEvent;
+    /**
      * Fired when the map's style loads or changes.
      */
     styledata: MapStyleDataEvent;
