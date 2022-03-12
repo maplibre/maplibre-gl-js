@@ -417,13 +417,12 @@ class Painter {
         // create a string representation of all to tiles rendered to render-to-texture tiles
         // this string representation is used to check if tile should be re-rendered.
         for (const id of layerIds) {
-            const layer = this.style._layers[id], source = layer.source;
-            if (renderToTexture[layer.type]) {
-                if (!coordsDescendingInvStr[source]) {
-                    coordsDescendingInvStr[source] = {};
-                    for (const key in coordsDescendingInv[source])
-                        coordsDescendingInvStr[source][key] = coordsDescendingInv[source][key].map(c => c.key).sort().join();
-                }
+            const layer = this.style._layers[id]; 
+            const source = layer.source;
+            if (renderToTexture[layer.type] && !coordsDescendingInvStr[source]) {
+                coordsDescendingInvStr[source] = {};
+                for (const key in coordsDescendingInv[source])
+                    coordsDescendingInvStr[source][key] = coordsDescendingInv[source][key].map(c => c.key).sort().join();
             }
         }
 
