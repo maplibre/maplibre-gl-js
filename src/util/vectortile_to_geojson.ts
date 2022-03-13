@@ -35,12 +35,14 @@ class GeoJSONFeature {
     }
 
     toJSON() {
-        return {
-            geometry: this.geometry,
-            properties: this.properties,
-            type: this.type,
-            id: this.id
+        const json: any = {
+            geometry: this.geometry
         };
+        for (const i in this) {
+            if (i === '_geometry' || i === '_vectorTileFeature') continue;
+            json[i] = (this)[i];
+        }
+        return json;
     }
 }
 
