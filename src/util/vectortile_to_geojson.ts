@@ -35,10 +35,12 @@ class GeoJSONFeature {
     }
 
     toJSON() {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const {_geometry, _vectorTileFeature, ...json} = this;
-        json.geometry = this.geometry;
-        return json;
+        return {
+            geometry: this.geometry,
+            properties: this.properties,
+            type: this.type,
+            id: this.id
+        };
     }
 }
 
