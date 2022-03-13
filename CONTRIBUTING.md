@@ -13,7 +13,7 @@ Install the Xcode Command Line Tools Package
 xcode-select --install
 ```
 
-Install [node.js](https://nodejs.org/) version ^16
+Install [node.js](https://nodejs.org/) version 16.13
 ```bash
 brew install node
 ```
@@ -34,6 +34,13 @@ cd maplibre-gl-js &&
 npm install
 ```
 
+**Apple silicon**
+If you have one of the newer arm64 machines, you might find that canvas.node or webgl.node can't be found for your architecture. In that case go to node-modules/canvas and node-modules/gl and run:
+
+```
+npm install --build-from-source
+```
+
 ### Linux
 
 Install [git](https://git-scm.com/), [GNU Make](http://www.gnu.org/software/make/), and libglew-dev
@@ -47,7 +54,7 @@ Install [nvm](https://github.com/nvm-sh/nvm)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
 ```
 
-Install [Node.js](https://nodejs.org/) ^16
+Install [Node.js](https://nodejs.org/) 16.13
 ```
 nvm install 16
 ```
@@ -65,7 +72,7 @@ npm install
 
 ### Windows
 
-Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^16), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
+Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version 16.13), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
 
 Clone the repository
 ```bash
