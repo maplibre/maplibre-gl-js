@@ -6,7 +6,9 @@
 
 ### 🐞 Bug fixes
 
-- Add FeatureIdentifier interface to define feature parameter in setFeatureState, removeFeatureState, and getFeatureState methods. Change FeatureIdentifier.id from `id: string | number;` to `id?: string | number | undefined;` (#1095)
+- Change `GeoJSONFeature.id` type from `number | string | void` to `number | string | undefined` (#1093)
+- Add FeatureIdentifier type to define feature parameter in setFeatureState, removeFeatureState, and getFeatureState methods. Change FeatureIdentifier.id from `id: string | number;` to `id?: string | number | undefined;` (#1095)
+
 
 ## 2.1.7
 
