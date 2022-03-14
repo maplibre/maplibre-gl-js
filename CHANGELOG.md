@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- *...Add new stuff here...*
+- Change map.on, map.off, and map.once type parameter from "type: MapEvent" to "type: MapEvent | string"
 
 ## 2.1.7
 
