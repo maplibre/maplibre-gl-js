@@ -4,11 +4,11 @@ class GeoJSONFeature {
     type: 'Feature';
     _geometry: GeoJSON.Geometry;
     properties: {};
-    id: number | string | void;
+    id: number | string | undefined;
 
     _vectorTileFeature: VectorTileFeature;
 
-    constructor(vectorTileFeature: VectorTileFeature, z: number, x: number, y: number, id: string | number | void) {
+    constructor(vectorTileFeature: VectorTileFeature, z: number, x: number, y: number, id: string | number | undefined) {
         this.type = 'Feature';
 
         this._vectorTileFeature = vectorTileFeature;
