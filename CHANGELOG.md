@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- *...Add new stuff here...*
+- Add FeatureIdentifier interface to define feature parameter in setFeatureState, removeFeatureState, and getFeatureState methods. Change FeatureIdentifier.id from `id: string | number;` to `id?: string | number | undefined;` (#1095)
 
 ## 2.1.7
 
