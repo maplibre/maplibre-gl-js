@@ -6,7 +6,8 @@
 
 ### 🐞 Bug fixes
 
-- Change map.on, map.off, and map.once type parameter from "type: MapEvent" to "type: MapEvent | string"
+- Change `GeoJSONFeature.id` type from `number | string | void` to `number | string | undefined` (#1093)
+- Change map.on, map.off, and map.once type parameter from "type: MapEvent" to "type: MapEvent | string" (#1094)
 
 ## 2.1.7
 
