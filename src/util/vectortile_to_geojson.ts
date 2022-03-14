@@ -35,9 +35,13 @@ class GeoJSONFeature {
     }
 
     toJSON() {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const {_geometry, _vectorTileFeature, ...json} = this;
-        json.geometry = this.geometry;
+        const json: any = {
+            geometry: this.geometry
+        };
+        for (const i in this) {
+            if (i === '_geometry' || i === '_vectorTileFeature') continue;
+            json[i] = (this)[i];
+        }
         return json;
     }
 }
