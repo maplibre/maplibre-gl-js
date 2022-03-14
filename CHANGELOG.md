@@ -7,7 +7,10 @@
 ### 🐞 Bug fixes
 
 - Change `GeoJSONFeature.id` type from `number | string | void` to `number | string | undefined` (#1093)
+- Add FeatureIdentifier type to define feature parameter in setFeatureState, removeFeatureState, and getFeatureState methods. Change FeatureIdentifier.id from `id: string | number;` to `id?: string | number | undefined;` (#1095)
 - Change map.on, map.off, and map.once type parameter from "type: MapEvent" to "type: MapEvent | string" (#1094)
+
+>>>>>>> 88f499fdb090e3cbdb42fb70a202bfb898dd999b
 
 ## 2.1.7
 

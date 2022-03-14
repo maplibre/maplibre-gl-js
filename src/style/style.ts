@@ -87,6 +87,12 @@ const ignoredDiffOperations = pick(diffOperations, [
 
 const empty = emptyStyle() as StyleSpecification;
 
+export type FeatureIdentifier = {
+    id?: string | number | undefined;
+    source: string;
+    sourceLayer?: string | undefined;
+};
+
 export type StyleOptions = {
     validate?: boolean;
     localIdeographFontFamily?: string;
@@ -912,11 +918,7 @@ class Style extends Evented {
         return this.getLayer(layer).getPaintProperty(name);
     }
 
-    setFeatureState(target: {
-        source: string;
-        sourceLayer?: string;
-        id: string | number;
-    }, state: any) {
+    setFeatureState(target: FeatureIdentifier, state: any) {
         this._checkLoaded();
         const sourceId = target.source;
         const sourceLayer = target.sourceLayer;
@@ -942,11 +944,7 @@ class Style extends Evented {
         sourceCache.setFeatureState(sourceLayer, target.id, state);
     }
 
-    removeFeatureState(target: {
-        source: string;
-        sourceLayer?: string;
-        id?: string | number;
-    }, key?: string) {
+    removeFeatureState(target: FeatureIdentifier, key?: string) {
         this._checkLoaded();
         const sourceId = target.source;
         const sourceCache = this.sourceCaches[sourceId];
@@ -972,11 +970,7 @@ class Style extends Evented {
         sourceCache.removeFeatureState(sourceLayer, target.id, key);
     }
 
-    getFeatureState(target: {
-        source: string;
-        sourceLayer?: string;
-        id: string | number;
-    }) {
+    getFeatureState(target: FeatureIdentifier) {
         this._checkLoaded();
         const sourceId = target.source;
         const sourceLayer = target.sourceLayer;

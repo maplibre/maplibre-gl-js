@@ -29,7 +29,7 @@ import StyleLayer from '../style/style_layer';
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
-import type {StyleOptions, StyleSetterOptions} from '../style/style';
+import type {FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style';
 import type {MapEvent, MapDataEvent} from './events';
 import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer';
 import type {StyleImageInterface, StyleImageMetadata} from '../style/style_image';
@@ -2216,11 +2216,7 @@ class Map extends Camera {
      *
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      */
-    setFeatureState(feature: {
-        source: string;
-        sourceLayer?: string;
-        id: string | number;
-    }, state: any) {
+    setFeatureState(feature: FeatureIdentifier, state: any) {
         this.style.setFeatureState(feature, state);
         return this._update();
     }
@@ -2272,11 +2268,7 @@ class Map extends Camera {
      * });
      *
      */
-    removeFeatureState(target: {
-        source: string;
-        sourceLayer?: string;
-        id?: string | number;
-    }, key?: string) {
+    removeFeatureState(target: FeatureIdentifier, key?: string) {
         this.style.removeFeatureState(target, key);
         return this._update();
     }
@@ -2310,13 +2302,7 @@ class Map extends Camera {
      * });
      *
      */
-    getFeatureState(
-        feature: {
-            source: string;
-            sourceLayer?: string;
-            id: string | number;
-        }
-    ): any {
+    getFeatureState(feature: FeatureIdentifier): any {
         return this.style.getFeatureState(feature);
     }
 
