@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- *...Add new stuff here...*
+- Change `GeoJSONFeature.id` type from `number | string | void` to `number | string | undefined` (#1093)
 
 ## 2.1.7
 
