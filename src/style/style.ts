@@ -87,11 +87,11 @@ const ignoredDiffOperations = pick(diffOperations, [
 
 const empty = emptyStyle() as StyleSpecification;
 
-export interface FeatureIdentifier {
+export type FeatureIdentifier = {
     id?: string | number | undefined;
     source: string;
     sourceLayer?: string | undefined;
-}
+};
 
 export type StyleOptions = {
     validate?: boolean;
