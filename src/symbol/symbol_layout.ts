@@ -165,6 +165,7 @@ export function performSymbolLayout(
     imageMap: {[_: string]: StyleImage},
     imagePositions: {[_: string]: ImagePosition},
     showCollisionBoxes: boolean,
+    collisionSymbolSpacing: boolean,
     canonical: CanonicalTileID
 ) {
     bucket.createArrays();
@@ -334,7 +335,7 @@ export function performSymbolLayout(
         const shapedText = getDefaultHorizontalShaping(shapedTextOrientations.horizontal) || shapedTextOrientations.vertical;
         bucket.iconsInText = shapedText ? shapedText.iconsInText : false;
         if (shapedText || shapedIcon) {
-            addFeature(bucket, feature, shapedTextOrientations, shapedIcon, imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, canonical);
+            addFeature(bucket, feature, shapedTextOrientations, shapedIcon, imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, canonical, collisionSymbolSpacing);
         }
     }
 
@@ -374,7 +375,9 @@ function addFeature(bucket: SymbolBucket,
     layoutTextSize: number,
     layoutIconSize: number,
     textOffset: [number, number],
-    isSDFIcon: boolean, canonical: CanonicalTileID) {
+    isSDFIcon: boolean,
+    canonical: CanonicalTileID,
+    collisionSymbolSpacing: boolean) {
     // To reduce the number of labels that jump around when zooming we need
     // to use a text-size value that is the same for all zoom levels.
     // bucket calculates text-size at a high zoom level so that all tiles can
@@ -440,11 +443,13 @@ function addFeature(bucket: SymbolBucket,
                 glyphSize,
                 textMaxBoxScale,
                 bucket.overscaling,
-                EXTENT
+                EXTENT,
+                collisionSymbolSpacing
             );
             for (const anchor of anchors) {
                 const shapedText = defaultHorizontalShaping;
-                if (!shapedText || !anchorIsTooClose(bucket, shapedText.text, textRepeatDistance, anchor)) {
+                // If collisionSymbolSpacing is true, defer the anchorIsTooClose logic to the Placement code
+                if (!shapedText || collisionSymbolSpacing || !anchorIsTooClose(bucket, shapedText.text, textRepeatDistance, anchor)) {
                     addSymbolAtAnchor(line, anchor);
                 }
             }

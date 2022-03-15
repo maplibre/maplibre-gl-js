@@ -153,6 +153,7 @@ class VectorTileWorkerSource implements WorkerSource {
         if (loaded && loaded[uid]) {
             const workerTile = loaded[uid];
             workerTile.showCollisionBoxes = params.showCollisionBoxes;
+            workerTile.collisionSymbolSpacing = params.collisionSymbolSpacing;
 
             const done = (err?: Error, data?: any) => {
                 const reloadCallback = workerTile.reloadCallback;

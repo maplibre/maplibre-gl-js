@@ -188,6 +188,7 @@ class VectorTileSource extends Evented implements Source {
             source: this.id,
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
+            collisionSymbolSpacing: this.map.collisionSymbolSpacing,
             promoteId: this.promoteId
         };
         params.request.collectResourceTiming = this._collectResourceTiming;

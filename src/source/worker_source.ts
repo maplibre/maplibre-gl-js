@@ -25,6 +25,7 @@ export type WorkerTileParameters = TileParameters & {
     promoteId: PromoteIdSpecification;
     pixelRatio: number;
     showCollisionBoxes: boolean;
+    collisionSymbolSpacing: boolean;
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
 };

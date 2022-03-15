@@ -36,6 +36,7 @@ export default class SymbolLayout extends Layout {
                             tileResult.iconMap,
                             tileResult.imageAtlas.iconPositions,
                             false,
+                            false,
                             tileResult.featureIndex.tileID.canonical);
                     }
                 }

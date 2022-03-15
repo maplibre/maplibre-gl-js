@@ -206,6 +206,11 @@ export type BucketPart = {
     parameters: TileLayerParameters;
 };
 
+export type CompareAnchorEntry = {
+    crossTileID: number | string,
+    anchor: Point
+};
+
 export type CrossTileID = string | number;
 
 export class Placement {
@@ -407,10 +412,13 @@ export class Placement {
         }
     }
 
-    placeLayerBucketPart(bucketPart: BucketPart, seenCrossTileIDs: {
-        [k in string | number]: boolean;
-    }, showCollisionBoxes: boolean) {
-
+    placeLayerBucketPart(
+        bucketPart: BucketPart,
+        seenCrossTileIDs: {[k in string | number]: boolean;},
+        nearbyAnchors: {[_: string | number]: Array<CompareAnchorEntry>},
+        showCollisionBoxes: boolean,
+        collisionSymbolSpacing: boolean
+    ) {
         const {
             bucket,
             layout,
@@ -434,6 +442,8 @@ export class Placement {
         const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
         const hasIconTextFit = layout.get('icon-text-fit') !== 'none';
         const zOrderByViewportY = layout.get('symbol-z-order') === 'viewport-y';
+        const symbolPlacement = layout.get('symbol-placement');
+        const symbolMinDistance = bucket.tilePixelRatio * layout.get('symbol-spacing');
 
         // This logic is similar to the "defaultOpacityState" logic below in updateBucketOpacities
         // If we know a symbol is always supposed to show, force it to be marked visible even if
@@ -479,6 +489,22 @@ export class Placement {
             let textFeatureIndex = 0;
             let verticalTextFeatureIndex = 0;
             let iconFeatureIndex = 0;
+            let featureKey: string;
+
+            if (collisionSymbolSpacing && symbolPlacement === 'line') {
+                // Resolve the layer's symbol-spacing value against already-placed anchors for this symbol
+                featureKey = `${bucket.bucketInstanceId}_${symbolInstance.featureIndex}`;
+                const tooClose = anchorIsTooClose(nearbyAnchors, featureKey, symbolInstance.crossTileID, symbolMinDistance / 2, new Point(symbolInstance.anchorX, symbolInstance.anchorY));
+
+                if (tooClose) {
+                    // TODO: Combine update of this.placements & seenCrossTileIDs with those at bottom of func
+                    assert(symbolInstance.crossTileID !== 0);
+        
+                    this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
+                    seenCrossTileIDs[symbolInstance.crossTileID] = true;
+                    return;
+                }
+            }
 
             if (collisionArrays.textFeatureIndex) {
                 textFeatureIndex = collisionArrays.textFeatureIndex;
@@ -769,6 +795,14 @@ export class Placement {
             assert(symbolInstance.crossTileID !== 0);
             assert(bucket.bucketInstanceId !== 0);
 
+            if (featureKey && (placeText || placeIcon)) {
+                // Keep track of placed anchor for future symbol-spacing evaluation
+                nearbyAnchors[featureKey].push({
+                    crossTileID: symbolInstance.crossTileID,
+                    anchor: new Point(symbolInstance.anchorX, symbolInstance.anchorY)
+                });
+            }
+            
             this.placements[symbolInstance.crossTileID] = new JointPlacement(placeText || alwaysShowText, placeIcon || alwaysShowIcon, offscreen || bucket.justReloaded);
             seenCrossTileIDs[symbolInstance.crossTileID] = true;
         };
@@ -1202,3 +1236,24 @@ function packOpacity(opacityState: OpacityState): number {
 }
 
 const PACKED_HIDDEN_OPACITY = 0;
+
+function anchorIsTooClose(
+    nearbyAnchors: {[_: string | number]: Array<CompareAnchorEntry>},
+    featureKey: string,
+    crossTileID: number,
+    repeatDistance: number,
+    anchor: Point
+) {
+    if (!(featureKey in nearbyAnchors)) {
+        nearbyAnchors[featureKey] = [];
+    } else {
+        const otherSymbols = nearbyAnchors[featureKey];
+        for (const otherSymbol of otherSymbols) {
+            if (crossTileID !== otherSymbol.crossTileID && anchor.dist(otherSymbol.anchor) < repeatDistance) {
+                // If it's within repeatDistance of one anchor, stop looking
+                return true;
+            }
+        }
+    }
+    return false;
+}

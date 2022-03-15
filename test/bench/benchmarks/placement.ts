@@ -38,6 +38,7 @@ export default class Paint extends Benchmark {
     bench() {
         for (const map of this.maps) {
             const showCollisionBoxes = false;
+            const collisionSymbolSpacing = false;
             const fadeDuration = 300;
             const crossSourceCollisions = true;
             const forceFullPlacement = true;
@@ -45,6 +46,7 @@ export default class Paint extends Benchmark {
             map.style._updatePlacement(
                 map.transform,
                 showCollisionBoxes,
+                collisionSymbolSpacing,
                 fadeDuration,
                 crossSourceCollisions,
                 forceFullPlacement);

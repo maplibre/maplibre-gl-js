@@ -78,7 +78,8 @@ function getAnchors(line: Array<Point>,
     glyphSize: number,
     boxScale: number,
     overscaling: number,
-    tileExtent: number) {
+    tileExtent: number,
+    collisionSymbolSpacing: boolean) {
 
     // Resample a line to get anchor points for labels and check that each
     // potential label passes text-max-angle check and has enough froom to fit
@@ -91,10 +92,17 @@ function getAnchors(line: Array<Point>,
     // Is the line continued from outside the tile boundary?
     const isLineContinued = line[0].x === 0 || line[0].x === tileExtent || line[0].y === 0 || line[0].y === tileExtent;
 
-    // Is the label long, relative to the spacing?
-    // If so, adjust the spacing so there is always a minimum space of `spacing / 4` between label edges.
-    if (spacing - labelLength < spacing / 4) {
-        spacing = labelLength + spacing / 4;
+    if (collisionSymbolSpacing) {
+        // Final anchor usage will be determined at placement+collision time. Create a set of
+        // possible anchors to use here, in case one or more get knocked out by collisions.
+        // HACK: Distribute anchors overlapping labels by 1/3 of their length, but no closer than 20px
+        spacing = Math.max(labelLength / 3, 20 * boxScale);
+    } else {
+        // Is the label long, relative to the spacing?
+        // If so, adjust the spacing so there is always a minimum space of `spacing / 4` between label edges.
+        if (spacing - labelLength < spacing / 4) {
+            spacing = labelLength + spacing / 4;
+        }
     }
 
     // Offset the first anchor by:

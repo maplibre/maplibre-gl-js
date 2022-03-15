@@ -301,6 +301,7 @@ class GeoJSONSource extends Evented implements Source {
             source: this.id,
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
+            collisionSymbolSpacing: this.map.collisionSymbolSpacing,
             promoteId: this.promoteId
         };
 

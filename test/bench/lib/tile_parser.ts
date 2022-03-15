@@ -126,6 +126,7 @@ export default class TileParser {
             zoom: tile.tileID.overscaledZ,
             tileSize: 512,
             showCollisionBoxes: false,
+            collisionSymbolSpacing: false,
             source: this.sourceID,
             uid: '0',
             maxZoom: 22,

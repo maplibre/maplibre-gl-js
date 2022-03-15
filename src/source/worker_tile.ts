@@ -37,6 +37,7 @@ class WorkerTile {
     promoteId: PromoteIdSpecification;
     overscaling: number;
     showCollisionBoxes: boolean;
+    collisionSymbolSpacing: boolean;
     collectResourceTiming: boolean;
     returnDependencies: boolean;
 
@@ -57,6 +58,7 @@ class WorkerTile {
         this.source = params.source;
         this.overscaling = this.tileID.overscaleFactor();
         this.showCollisionBoxes = params.showCollisionBoxes;
+        this.collisionSymbolSpacing = params.collisionSymbolSpacing;
         this.collectResourceTiming = !!params.collectResourceTiming;
         this.returnDependencies = !!params.returnDependencies;
         this.promoteId = params.promoteId;
@@ -189,7 +191,7 @@ class WorkerTile {
                     const bucket = buckets[key];
                     if (bucket instanceof SymbolBucket) {
                         recalculateLayers(bucket.layers, this.zoom, availableImages);
-                        performSymbolLayout(bucket, glyphMap, glyphAtlas.positions, iconMap, imageAtlas.iconPositions, this.showCollisionBoxes, this.tileID.canonical);
+                        performSymbolLayout(bucket, glyphMap, glyphAtlas.positions, iconMap, imageAtlas.iconPositions, this.showCollisionBoxes, this.collisionSymbolSpacing, this.tileID.canonical);
                     } else if (bucket.hasPattern &&
                         (bucket instanceof LineBucket ||
                          bucket instanceof FillBucket ||

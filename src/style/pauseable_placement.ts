@@ -6,7 +6,7 @@ import type Transform from '../geo/transform';
 import type StyleLayer from './style_layer';
 import type SymbolStyleLayer from './style_layer/symbol_style_layer';
 import type Tile from '../source/tile';
-import type {BucketPart} from '../symbol/placement';
+import type {BucketPart, CompareAnchorEntry} from '../symbol/placement';
 
 class LayerPlacement {
     _sortAcrossTiles: boolean;
@@ -15,6 +15,7 @@ class LayerPlacement {
     _seenCrossTileIDs: {
         [k in string | number]: boolean;
     };
+    _nearbyAnchors: {[_: string | number]: Array<CompareAnchorEntry>};
     _bucketParts: Array<BucketPart>;
 
     constructor(styleLayer: SymbolStyleLayer) {
@@ -24,10 +25,11 @@ class LayerPlacement {
         this._currentTileIndex = 0;
         this._currentPartIndex = 0;
         this._seenCrossTileIDs = {};
+        this._nearbyAnchors = {};
         this._bucketParts = [];
     }
 
-    continuePlacement(tiles: Array<Tile>, placement: Placement, showCollisionBoxes: boolean, styleLayer: StyleLayer, shouldPausePlacement: () => boolean) {
+    continuePlacement(tiles: Array<Tile>, placement: Placement, showCollisionBoxes: boolean, styleLayer: StyleLayer, shouldPausePlacement: () => boolean, collisionSymbolSpacing: boolean) {
 
         const bucketParts = this._bucketParts;
 
@@ -48,7 +50,7 @@ class LayerPlacement {
 
         while (this._currentPartIndex < bucketParts.length) {
             const bucketPart = bucketParts[this._currentPartIndex];
-            placement.placeLayerBucketPart(bucketPart, this._seenCrossTileIDs, showCollisionBoxes);
+            placement.placeLayerBucketPart(bucketPart, this._seenCrossTileIDs, this._nearbyAnchors, showCollisionBoxes, collisionSymbolSpacing);
 
             this._currentPartIndex++;
             if (shouldPausePlacement()) {
@@ -65,6 +67,7 @@ class PauseablePlacement {
     _currentPlacementIndex: number;
     _forceFullPlacement: boolean;
     _showCollisionBoxes: boolean;
+    _collisionSymbolSpacing: boolean;
     _inProgressLayer: LayerPlacement;
 
     constructor(
@@ -72,6 +75,7 @@ class PauseablePlacement {
         order: Array<string>,
         forceFullPlacement: boolean,
         showCollisionBoxes: boolean,
+        collisionSymbolSpacing: boolean,
         fadeDuration: number,
         crossSourceCollisions: boolean,
         prevPlacement?: Placement
@@ -80,6 +84,7 @@ class PauseablePlacement {
         this._currentPlacementIndex = order.length - 1;
         this._forceFullPlacement = forceFullPlacement;
         this._showCollisionBoxes = showCollisionBoxes;
+        this._collisionSymbolSpacing = collisionSymbolSpacing;
         this._done = false;
     }
 
@@ -111,7 +116,7 @@ class PauseablePlacement {
                     this._inProgressLayer = new LayerPlacement(layer as any as SymbolStyleLayer);
                 }
 
-                const pausePlacement = this._inProgressLayer.continuePlacement(layerTiles[layer.source], this.placement, this._showCollisionBoxes, layer, shouldPausePlacement);
+                const pausePlacement = this._inProgressLayer.continuePlacement(layerTiles[layer.source], this.placement, this._showCollisionBoxes, layer, shouldPausePlacement, this._collisionSymbolSpacing);
 
                 if (pausePlacement) {
                     // We didn't finish placing all layers within 2ms,

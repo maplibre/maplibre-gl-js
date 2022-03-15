@@ -267,6 +267,7 @@ class Map extends Camera {
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
     _interactive: boolean;
+    _collisionSymbolSpacing: boolean;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -2546,7 +2547,7 @@ class Map extends Camera {
             this.style._updateSources(this.transform);
         }
 
-        this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
+        this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this.collisionSymbolSpacing, this._fadeDuration, this._crossSourceCollisions);
 
         // Actually draw
         this.painter.render(this.style, {
@@ -2778,6 +2779,24 @@ class Map extends Camera {
             // Otherwise, call an update to remove collision boxes
             this._update();
         }
+    }
+
+    /**
+     * Gets and sets a Boolean indicating whether symbol-spacing is applied
+     * at symbol layout time (false, default), or at symbol placement/collision
+     * time (true).
+     * 
+     * @name collisionSymbolSpacing
+     * @type {boolean}
+     * @instance
+     * @memberof Map
+     */
+    get collisionSymbolSpacing() { return !!this._collisionSymbolSpacing; }
+    set collisionSymbolSpacing(value: boolean) {
+        if (this._collisionSymbolSpacing === value) {return;}
+        this._collisionSymbolSpacing = value;
+        // _generateCollisionBoxes reloads all sources - should have a more generic name
+        this.style._generateCollisionBoxes();
     }
 
     /*
