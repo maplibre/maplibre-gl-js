@@ -168,7 +168,6 @@ describe('drawSymbol', () => {
             terrainSourceCache: new TerrainSourceCache(new Style(new StubMap() as any as Map))
         } as any as Style;
 
-        console.log(`painterMock.style = ${painterMock.style}`);
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
         drawSymbol(painterMock, sourceCacheMock, layer, [tileId], null);
 
