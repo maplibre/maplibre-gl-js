@@ -1,18 +1,24 @@
 ## main
 
-### Features and improvements
-
-- Add option `viewport-glyph` to `text-rotation-alignment` which places glyphs along a linestring and rotates them to the x-axis of the viewport (#716).
+### ✨ Features and improvements
 
 - *...Add new stuff here...*
+
+### 🐞 Bug fixes
+
+- *...Add new stuff here...*
+
+## 2.1.8-pre.1
+
+### ✨ Features and improvements
+
+- Add option `viewport-glyph` to `text-rotation-alignment` which places glyphs along a linestring and rotates them to the x-axis of the viewport (#716).
 
 ### 🐞 Bug fixes
 
 - Change `GeoJSONFeature.id` type from `number | string | void` to `number | string | undefined` (#1093)
 - Add FeatureIdentifier type to define feature parameter in setFeatureState, removeFeatureState, and getFeatureState methods. Change FeatureIdentifier.id from `id: string | number;` to `id?: string | number | undefined;` (#1095)
 - Change map.on, map.off, and map.once type parameter from "type: MapEvent" to "type: MapEvent | string" (#1094)
-
-- *...Add new stuff here...*
 
 ## 2.1.7
 
