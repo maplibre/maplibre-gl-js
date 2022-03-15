@@ -1,6 +1,6 @@
 ## main
 
-### Features and improvements
+### ✨ Features and improvements
 
 - *...Add new stuff here...*
 
@@ -10,7 +10,7 @@
 
 ## 2.1.8-pre.1
 
-### Features and improvements
+### ✨ Features and improvements
 
 - Add option `viewport-glyph` to `text-rotation-alignment` which places glyphs along a linestring and rotates them to the x-axis of the viewport (#716).
 
