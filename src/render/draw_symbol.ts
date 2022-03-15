@@ -273,7 +273,7 @@ function drawLayerSymbols(
 
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
-    const alongLine = rotateWithMap && layer.layout.get('symbol-placement') !== 'point';
+    const alongLine = rotationAlignment !== 'viewport' && layer.layout.get('symbol-placement') !== 'point';
     // Line label rotation happens in `updateLineLabels`
     // Pitched point labels are automatically rotated by the labelPlaneMatrix projection
     // Unpitched point labels need to have their rotation applied after projection
@@ -343,7 +343,9 @@ function drawLayerSymbols(
             const getElevation = painter.style.terrainSourceCache && painter.style.terrainSourceCache.isEnabled() ?
                 (x: number, y: number) => painter.style.terrainSourceCache.getElevation(coord, x, y) :
                 null;
-            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, getElevation);
+            const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
+            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, getElevation, rotateToLine);
+
         }
 
         const matrix = painter.translatePosMatrix(coord.posMatrix, tile, translate, translateAnchor),

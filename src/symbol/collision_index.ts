@@ -150,7 +150,8 @@ class CollisionIndex {
             lineVertexArray,
             labelPlaneMatrix,
             projectionCache,
-            getElevation);
+            getElevation,
+            false);
 
         let collisionDetected = false;
         let inGrid = false;
