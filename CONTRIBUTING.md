@@ -34,6 +34,13 @@ cd maplibre-gl-js &&
 npm install
 ```
 
+**Apple silicon**
+If you have one of the newer arm64 machines, you might find that canvas.node or webgl.node can't be found for your architecture. In that case go to node_modules/canvas and node_modules/gl and run:
+
+```
+npm install --build-from-source
+```
+
 ### Linux
 
 Install [git](https://git-scm.com/), [GNU Make](http://www.gnu.org/software/make/), and libglew-dev
