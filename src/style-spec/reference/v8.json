@@ -1714,6 +1714,9 @@
           "android": "4.2.0",
           "ios": "3.4.0",
           "macos": "0.3.0"
+        },
+        "`viewport-glyph` value": {
+          "js": "2.1.8"
         }
       },
       "expression": {
