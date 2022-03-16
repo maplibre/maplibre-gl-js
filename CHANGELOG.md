@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- *...Add new stuff here...*
+- Add layer, source, sourceLayer, and state properties to GeoJSONFeature class type definition
 
 ## 2.1.8-pre.1
 
