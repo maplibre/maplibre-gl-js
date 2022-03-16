@@ -256,20 +256,13 @@ class GeoJSONSource extends Evented implements Source {
             this._pendingLoads--;
 
             if (this._removed || (result && result.abandoned)) {
+                this.fire(new Event('dataabort', {dataType: 'source', sourceDataType}));
                 return;
             }
 
             let resourceTiming = null;
             if (result && result.resourceTiming && result.resourceTiming[this.id])
                 resourceTiming = result.resourceTiming[this.id].slice(0);
-            // Any `loadData` calls that piled up while we were processing
-            // this one will get coalesced into a single call when this
-            // 'coalesce' message is processed.
-            // We would self-send from the worker if we had access to its
-            // message queue. Waiting instead for the 'coalesce' to round-trip
-            // through the foreground just means we're throttling the worker
-            // to run at a little less than full-throttle.
-            this.actor.send(`${this.type}.coalesce`, {source: options.source}, null);
 
             if (err) {
                 this.fire(new ErrorEvent(err));

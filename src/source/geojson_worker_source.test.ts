@@ -46,7 +46,6 @@ describe('reloadTile', () => {
 
         function addData(callback) {
             source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err) => {
-                source.coalesce();
                 expect(err).toBeNull();
                 callback();
             });
@@ -134,7 +133,10 @@ describe('resourceTiming', () => {
         window.performance.getEntriesByName = jest.fn().mockReturnValue([ exampleResourceTiming ]);
 
         const layerIndex = new StyleLayerIndex(layers);
-        const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => { return callback(null, geoJson); });
+        const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => {
+            callback(null, geoJson);
+            return {cancel: () => {}};
+        });
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
@@ -166,7 +168,10 @@ describe('resourceTiming', () => {
         jest.spyOn(perf, 'clearMeasures').mockImplementation(() => { return null; });
 
         const layerIndex = new StyleLayerIndex(layers);
-        const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => { return callback(null, geoJson); });
+        const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => {
+            callback(null, geoJson);
+            return {cancel: () => {}};
+        });
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
@@ -221,22 +226,17 @@ describe('loadData', () => {
         // (regardless of timing)
         const originalLoadGeoJSON = worker.loadGeoJSON;
         worker.loadGeoJSON = function(params, callback) {
-            setTimeout(() => {
+            const timeout = setTimeout(() => {
                 originalLoadGeoJSON(params, callback);
             }, 0);
+
+            return {cancel: () => clearTimeout(timeout)};
         };
         return worker;
     }
 
-    test('abandons coalesced callbacks', done => {
-        // Expect first call to run, second to be abandoned,
-        // and third to run in response to coalesce
+    test('abandons previous callbacks', done => {
         const worker = createWorker();
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
-            expect(err).toBeNull();
-            expect(result && result.abandoned).toBeFalsy();
-            worker.coalesce();
-        });
 
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
@@ -251,21 +251,11 @@ describe('loadData', () => {
     });
 
     test('removeSource aborts callbacks', done => {
-        // Expect:
-        // First loadData starts running before removeSource arrives
-        // Second loadData is pending when removeSource arrives, gets cancelled
-        // removeSource is executed immediately
-        // First loadData finishes running, sends results back to foreground
         const worker = createWorker();
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
-            expect(result && result.abandoned).toBeFalsy();
-            done();
-        });
-
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
-            expect(err).toBeNull();
             expect(result && result.abandoned).toBeTruthy();
+            done();
         });
 
         worker.removeSource({source: 'source1'}, (err) => {
