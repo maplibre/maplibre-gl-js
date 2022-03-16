@@ -6,10 +6,10 @@ class GeoJSONFeature {
     _geometry: GeoJSON.Geometry;
     properties: {};
     id: number | string | undefined;
-    layer: LayerSpecification;
-    source: string;
-    sourceLayer: string;
-    state: { [key: string]: any };
+    layer: LayerSpecification | undefined;
+    source: string | undefined;
+    sourceLayer: string | undefined;
+    state: { [key: string]: any } | undefined;
 
     _vectorTileFeature: VectorTileFeature;
 
