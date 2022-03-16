@@ -1651,3 +1651,25 @@ describe('SourceCache sets max cache size correctly', () => {
     });
 
 });
+
+describe('SourceCache#onRemove', () => {
+    test('clears tiles', () => {
+        const sourceCache = createSourceCache();
+        jest.spyOn(sourceCache, 'clearTiles');
+
+        sourceCache.onRemove(undefined);
+
+        expect(sourceCache.clearTiles).toHaveBeenCalled();
+    });
+
+    test('calls onRemove on source', () => {
+        const sourceOnRemove = jest.fn();
+        const sourceCache = createSourceCache({
+            onRemove: sourceOnRemove
+        });
+
+        sourceCache.onRemove(undefined);
+
+        expect(sourceOnRemove).toHaveBeenCalled();
+    });
+});

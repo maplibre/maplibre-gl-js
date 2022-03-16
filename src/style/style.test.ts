@@ -390,16 +390,15 @@ describe('Style#_remove', () => {
 
         style.on('style.load', () => {
             const sourceCache = style.sourceCaches['source-id'];
-            jest.spyOn(sourceCache, 'clearTiles');
             jest.spyOn(sourceCache, 'setEventedParent');
             jest.spyOn(sourceCache, 'onRemove');
+            jest.spyOn(sourceCache, 'clearTiles');
 
             style._remove();
 
-            expect(sourceCache.clearTiles).toHaveBeenCalledTimes(1);
-            expect(sourceCache.setEventedParent).toHaveBeenCalledTimes(1);
             expect(sourceCache.setEventedParent).toHaveBeenCalledWith(null);
-            expect(sourceCache.onRemove).toHaveBeenCalledTimes(1);
+            expect(sourceCache.onRemove).toHaveBeenCalledWith(style.map);
+            expect(sourceCache.clearTiles).toHaveBeenCalled();
 
             done();
         });

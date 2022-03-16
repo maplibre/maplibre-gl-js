@@ -610,9 +610,7 @@ class Style extends Evented {
         delete this._updatedSources[id];
         sourceCache.fire(new Event('data', {sourceDataType: 'metadata', dataType:'source', sourceId: id}));
         sourceCache.setEventedParent(null);
-        sourceCache.clearTiles();
-
-        if (sourceCache.onRemove) sourceCache.onRemove(this.map);
+        sourceCache.onRemove(this.map);
         this._changed = true;
     }
 
@@ -1241,9 +1239,8 @@ class Style extends Evented {
         }
         for (const id in this.sourceCaches) {
             const sourceCache = this.sourceCaches[id];
-            sourceCache.clearTiles();
             sourceCache.setEventedParent(null);
-            if (sourceCache.onRemove) sourceCache.onRemove(this.map);
+            sourceCache.onRemove(this.map);
         }
         this.imageManager.setEventedParent(null);
         this.setEventedParent(null);
