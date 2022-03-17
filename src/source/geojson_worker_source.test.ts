@@ -237,29 +237,35 @@ describe('loadData', () => {
 
     test('abandons previous callbacks', done => {
         const worker = createWorker();
+        let firstCallbackHasRun = false;
 
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
             expect(result && result.abandoned).toBeTruthy();
+            firstCallbackHasRun = true;
         });
 
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
             expect(result && result.abandoned).toBeFalsy();
+            expect(firstCallbackHasRun).toBeTruthy();
             done();
         });
     });
 
     test('removeSource aborts callbacks', done => {
         const worker = createWorker();
+        let loadDataCallbackHasRun = false;
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
             expect(result && result.abandoned).toBeTruthy();
-            done();
+            loadDataCallbackHasRun = true;
         });
 
         worker.removeSource({source: 'source1'}, (err) => {
             expect(err).toBeFalsy();
+            expect(loadDataCallbackHasRun).toBeTruthy();
+            done();
         });
 
     });
