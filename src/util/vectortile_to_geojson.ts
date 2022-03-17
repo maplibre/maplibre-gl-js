@@ -1,7 +1,6 @@
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {LayerSpecification} from '../style-spec/types.g';
 
-
 export type MapGeoJSONFeature = GeoJSONFeature & {
     layer: LayerSpecification;
     source: string;

@@ -1202,8 +1202,7 @@ class Map extends Camera {
     }
 
     /**
-     * Returns an array of [GeoJSON](http://geojson.org/)
-     * [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2)
+     * Returns an array of MapGeoJSONFeature objects
      * representing visible features that satisfy the query parameters.
      *
      * @param {PointLike|Array<PointLike>} [geometry] - The geometry of the query region:
@@ -1218,8 +1217,7 @@ class Map extends Camera {
      *   to limit query results.
      * @param {boolean} [options.validate=true] Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
-     * @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
-     * [feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
+     * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
      *
      * The `properties` value of each returned feature object contains the properties of its source feature. For GeoJSON sources, only
      * string and numeric property values are supported (i.e. `null`, `Array`, and `Object` values are not supported).
@@ -1313,8 +1311,7 @@ class Map extends Camera {
     }
 
     /**
-     * Returns an array of [GeoJSON](http://geojson.org/)
-     * [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2)
+     * Returns an array of MapGeoJSONFeature objects
      * representing features within the specified vector tile or GeoJSON source that satisfy the query parameters.
      *
      * @param {string} sourceId The ID of the vector tile or GeoJSON source to query.
@@ -1325,8 +1322,7 @@ class Map extends Camera {
      *   to limit query results.
      * @param {boolean} [parameters.validate=true] Whether to check if the [parameters.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
-     * @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
-     * [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
+     * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
      *
      * In contrast to {@link Map#queryRenderedFeatures}, this function returns all features matching the query parameters,
      * whether or not they are rendered by the current style (i.e. visible). The domain of the query includes all currently-loaded
