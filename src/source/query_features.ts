@@ -81,10 +81,6 @@ export function queryRenderedFeatures(
         result[layerID].forEach((featureWrapper) => {
             const feature = featureWrapper.feature as MapGeoJSONFeature;
             const state = sourceCache.getFeatureState(feature.layer['source-layer'], feature.id);
-            // @ts-expect-error
-            // LayerSpecification is union of all LayerSpecifications, including BackgroundLayerSpecification.
-            // BackgroundLayerSpecification does not have source property.
-            // This is not an issues since background layers do not supply features so layer will never be BackgroundLayerSpecification
             feature.source = feature.layer.source;
             if (feature.layer['source-layer']) {
                 feature.sourceLayer = feature.layer['source-layer'];
