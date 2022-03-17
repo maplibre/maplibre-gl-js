@@ -115,6 +115,7 @@ class SourceCache extends Evented {
     }
 
     onRemove(map: Map) {
+        this.clearTiles();
         if (this._source && this._source.onRemove) {
             this._source.onRemove(map);
         }
@@ -272,7 +273,9 @@ class SourceCache extends Evented {
         if (this.getSource().type === 'raster-dem' && tile.dem) this._backfillDEM(tile);
         this._state.initializeTileState(tile, this.map ? this.map.painter : null);
 
-        this._source.fire(new Event('data', {dataType: 'source', tile, coord: tile.tileID}));
+        if (!tile.aborted) {
+            this._source.fire(new Event('data', {dataType: 'source', tile, coord: tile.tileID}));
+        }
     }
 
     /**
