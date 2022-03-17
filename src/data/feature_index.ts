@@ -8,6 +8,7 @@ import DictionaryCoder from '../util/dictionary_coder';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import GeoJSONFeature from '../util/vectortile_to_geojson';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import {arraysIntersect, mapObject, extend} from '../util/util';
 import {OverscaledTileID} from '../source/tile_id';
 import {register} from '../util/web_worker_transfer';
@@ -241,7 +242,7 @@ class FeatureIndex {
             }
 
             const geojsonFeature = new GeoJSONFeature(feature, this.z, this.x, this.y, id);
-            geojsonFeature.layer = serializedLayer;
+            (geojsonFeature as MapGeoJSONFeature).layer = serializedLayer;
             let layerResult = result[layerID];
             if (layerResult === undefined) {
                 layerResult = result[layerID] = [];

@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- Add layer, source, sourceLayer, and state properties to GeoJSONFeature class type definition
+- Add MapGeoJSONFeature type as replacement for MapboxGeoJSONFeature. MapGeoJSONFeature type extends GeoJSONFeature type with layer, source, sourceLayer, and state properties.
 
 ## 2.1.8-pre.1
 

@@ -1,15 +1,19 @@
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {LayerSpecification} from '../style-spec/types.g';
 
+
+export type MapGeoJSONFeature = GeoJSONFeature & {
+    layer: LayerSpecification;
+    source: string;
+    sourceLayer?: string;
+    state: { [key: string]: any };
+}
+
 class GeoJSONFeature {
     type: 'Feature';
     _geometry: GeoJSON.Geometry;
     properties: {};
     id: number | string | undefined;
-    layer: LayerSpecification | undefined;
-    source: string | undefined;
-    sourceLayer: string | undefined;
-    state: { [key: string]: any } | undefined;
 
     _vectorTileFeature: VectorTileFeature;
 

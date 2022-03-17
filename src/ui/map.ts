@@ -55,6 +55,7 @@ import type {
 } from '../style-spec/types.g';
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
 /* eslint-enable no-use-before-define */
 
@@ -1277,7 +1278,7 @@ class Map extends Camera {
      * var features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
      * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/queryrenderedfeatures/)
      */
-    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike], options?: any) {
+    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike], options?: any): MapGeoJSONFeature[] {
         // The first parameter can be omitted entirely, making this effectively an overloaded method
         // with two signatures:
         //
@@ -1351,7 +1352,7 @@ class Map extends Camera {
         sourceLayer: string;
         filter: Array<any>;
         validate?: boolean;
-    } | null) {
+    } | null): MapGeoJSONFeature[] {
         return this.style.querySourceFeatures(sourceId, parameters);
     }
 
