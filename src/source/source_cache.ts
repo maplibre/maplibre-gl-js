@@ -115,6 +115,7 @@ class SourceCache extends Evented {
     }
 
     onRemove(map: Map) {
+        this.clearTiles();
         if (this._source && this._source.onRemove) {
             this._source.onRemove(map);
         }

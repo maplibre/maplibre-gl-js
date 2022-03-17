@@ -7,6 +7,7 @@
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
+- Dispose source resources on map style removal, it also fixes `cannot read properties of undefined (reading 'sourceCaches')` error (#1099).
 
 ## 2.1.8-pre.1
 
