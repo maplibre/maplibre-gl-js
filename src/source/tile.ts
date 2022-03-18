@@ -33,6 +33,7 @@ import type {FilterSpecification} from '../style-spec/types.g';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import {ExpiryData} from '../util/ajax';
 
 export type TileState = // Tile data is in the process of loading.
 'loading' | // Tile data has been loaded. Tile can be rendered.
@@ -340,7 +341,7 @@ class Tile {
         return this.imageAtlas && !!Object.keys(this.imageAtlas.patternPositions).length;
     }
 
-    setExpiryData(data: any) {
+    setExpiryData(data: ExpiryData) {
         const prior = this.expirationTime;
 
         if (data.cacheControl) {
