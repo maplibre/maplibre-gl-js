@@ -1,7 +1,7 @@
 import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
-import {getImage, getJSON, ResourceType} from '../util/ajax';
+import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
 import Style from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
@@ -1836,7 +1836,7 @@ class Map extends Camera {
      *
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image/)
      */
-    loadImage(url: string, callback: Callback<HTMLImageElement | ImageBitmap>) {
+    loadImage(url: string, callback: GetImageCallback) {
         getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
     }
 
