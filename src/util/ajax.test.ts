@@ -182,13 +182,17 @@ describe('ajax', () => {
     test('getImage uses ImageBitmap when supported', done => {
         resetImageRequestQueue();
 
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+            'Cache-Control': 'cache',
+            'Expires': 'expires'}, ''));
 
         stubAjaxGetImage(() => Promise.resolve(new ImageBitmap()));
 
-        getImage({url: ''}, (err, img) => {
+        getImage({url: ''}, (err, img, expiry) => {
             if (err) done(err);
             expect(img).toBeInstanceOf(ImageBitmap);
+            expect(expiry.cacheControl).toBe('cache');
+            expect(expiry.expires).toBe('expires');
             done();
         });
 
@@ -198,13 +202,17 @@ describe('ajax', () => {
     test('getImage uses HTMLImageElement when ImageBitmap is not supported', done => {
         resetImageRequestQueue();
 
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+            'Cache-Control': 'cache',
+            'Expires': 'expires'}, ''));
 
         stubAjaxGetImage(undefined);
 
-        getImage({url: ''}, (err, img) => {
+        getImage({url: ''}, (err, img, expiry) => {
             if (err) done(`get image failed with error ${err.message}`);
             expect(img).toBeInstanceOf(HTMLImageElement);
+            expect(expiry.cacheControl).toBe('cache');
+            expect(expiry.expires).toBe('expires');
             done();
         });
 
