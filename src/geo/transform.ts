@@ -774,7 +774,7 @@ class Transform {
         if (!this.pixelMatrixInverse) return 1;
 
         const coord = this.pointCoordinate(new Point(0, 0));
-        const p = vec4.fromValues(coord.x * this.worldSize, coord.y * this.worldSize, 0, 1);
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1] as vec4;
         const topPoint = vec4.transformMat4(p, p, this.pixelMatrix);
         return topPoint[3] / this.cameraToCenterDistance;
     }

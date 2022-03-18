@@ -343,10 +343,13 @@ describe('transform', () => {
 
         const transform = new Transform(0, 22, 0, 60, true);
         transform.resize(200, 200);
-        transform.zoom = 10.25;
-        transform.center = new LngLat(-170.01, 0.01);
+        transform.zoom = 20.25;
+        transform.pitch = 67.25;
+        transform.center = new LngLat(0.0, 0.0);
+        transform._calcMatrices();
 
         expect(transform.customLayerMatrix()[0].toString().length).toBeGreaterThan(10);
         expect(transform.glCoordMatrix[0].toString().length).toBeGreaterThan(10);
+        expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025414864222, 10);
     });
 });
