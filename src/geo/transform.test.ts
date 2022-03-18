@@ -338,4 +338,15 @@ describe('transform', () => {
         unwrappedCoords = transform.getVisibleUnwrappedCoordinates(new CanonicalTileID(0, 0, 0));
         expect(unwrappedCoords).toHaveLength(1);
     });
+
+    test('maintains high float precision when calculating matrices', () => {
+
+        const transform = new Transform(0, 22, 0, 60, true);
+        transform.resize(200, 200);
+        transform.zoom = 10.25;
+        transform.center = new LngLat(-170.01, 0.01);
+
+        expect(transform.customLayerMatrix()[0].toString().length).toBeGreaterThan(10);
+        expect(transform.glCoordMatrix[0].toString().length).toBeGreaterThan(10);
+    });
 });
