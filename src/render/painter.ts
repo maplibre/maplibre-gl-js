@@ -559,11 +559,11 @@ class Painter {
             ];
         }
 
-        const translation = vec3.fromValues(
+        const translation = [
             inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], this.transform.zoom),
             inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], this.transform.zoom),
             0
-        );
+        ] as vec3;
 
         const translatedMatrix = new Float32Array(16);
         mat4.translate(translatedMatrix, matrix, translation);

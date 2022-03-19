@@ -9,6 +9,7 @@
 - Dispose source resources on map style removal, it also fixes `cannot read properties of undefined (reading 'sourceCaches')` error (#1099).
 - Add MapGeoJSONFeature type as replacement for MapboxGeoJSONFeature. MapGeoJSONFeature type extends GeoJSONFeature type with layer, source, sourceLayer, and state properties (#1104).
 - Fix automatic refreshing of expired raster tiles (#1106)
+- Fix precision loss in some matrix calculations (#1105)
 
 ## 2.1.8-pre.1
 
