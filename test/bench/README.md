@@ -31,7 +31,7 @@ By default, the style benchmark page will run its benchmarks against `https://ap
 
 ## Generating gl statistics
 
-Build minimized production maplibre-gl-js with `npm run build-prod-min`.
+Build minimized production maplibre-gl-js with `npm run build-prod`.
 
 Gather and output gl statistics from headless chromium with `npm run gl-stats`. The results are output to the terminal and saved in data.json.gz.
 

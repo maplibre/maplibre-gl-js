@@ -142,7 +142,6 @@
     "build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
     "watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",
     "build-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production",
-    "build-prod-min": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production,MINIFY:true",
     "build-csp": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts",
     "build-css": "postcss -o dist/maplibre-gl.css src/css/maplibre-gl.css",
     "build-style-spec": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.style-spec.ts && rollup --configPlugin @rollup/plugin-typescript -c rollup.config.style-spec.ts --environment esm",
