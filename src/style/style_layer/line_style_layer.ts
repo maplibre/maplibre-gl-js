@@ -128,7 +128,6 @@ function getLineWidth(lineWidth, lineGapWidth) {
 
 function offsetLine(rings, offset) {
     const newRings = [];
-    const zero = new Point(0, 0);
     for (let k = 0; k < rings.length; k++) {
         const ring = rings[k];
         const newRing = [];
@@ -136,8 +135,8 @@ function offsetLine(rings, offset) {
             const a = ring[i - 1];
             const b = ring[i];
             const c = ring[i + 1];
-            const aToB = i === 0 ? zero : b.sub(a)._unit()._perp();
-            const bToC = i === ring.length - 1 ? zero : c.sub(b)._unit()._perp();
+            const aToB = i === 0 ? new Point(0, 0) : b.sub(a)._unit()._perp();
+            const bToC = i === ring.length - 1 ? new Point(0, 0) : c.sub(b)._unit()._perp();
             const extrude = aToB._add(bToC)._unit();
 
             const cosHalfAngle = extrude.x * bToC.x + extrude.y * bToC.y;
