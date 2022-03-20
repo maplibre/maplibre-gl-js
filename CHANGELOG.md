@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
-
+- Fixed issue with node 16.14
 
 ## 2.1.8-pre.2
 
