@@ -11,7 +11,7 @@
 ## 2.1.8-pre.2
 
 ### ✨ Features and improvements
-- Removed the unminified production build target, so `npm run build-prod` will be the main build command going forward.
+- Removal of the unminified production build target, so `npm run build-prod` will be the main build command going forward.
 ### 🐞 Bug fixes
 
 - Dispose source resources on map style removal, it also fixes `cannot read properties of undefined (reading 'sourceCaches')` error (#1099).
