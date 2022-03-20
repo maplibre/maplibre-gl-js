@@ -43,3 +43,26 @@ export function translate(queryGeometry: Array<Point>,
     }
     return translated;
 }
+
+export function offsetLine(rings, offset) {
+    const newRings = [];
+    for (let k = 0; k < rings.length; k++) {
+        const ring = rings[k];
+        const newRing = [];
+        for (let i = 0; i < ring.length; i++) {
+            const a = ring[i - 1];
+            const b = ring[i];
+            const c = ring[i + 1];
+            const aToB = i === 0 ? new Point(0, 0) : b.sub(a)._unit()._perp();
+            const bToC = i === ring.length - 1 ? new Point(0, 0) : c.sub(b)._unit()._perp();
+            const extrude = aToB._add(bToC)._unit();
+
+            const cosHalfAngle = extrude.x * bToC.x + extrude.y * bToC.y;
+            extrude._mult(1 / cosHalfAngle);
+
+            newRing.push(extrude._mult(offset)._add(b));
+        }
+        newRings.push(newRing);
+    }
+    return newRings;
+}
