@@ -107,7 +107,7 @@ A standalone build allows you to turn the contents of this repository into `mapl
 
 To create a standalone build, run
 ```bash
-npm run build-prod-min
+npm run build-prod
 npm run build-css
 ```
 

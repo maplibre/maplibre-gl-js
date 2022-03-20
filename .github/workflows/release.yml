@@ -48,7 +48,6 @@ jobs:
 
       - name: Build
         run: |
-          npm run build-prod-min
           npm run build-prod
           npm run build-csp
           npm run build-dev
