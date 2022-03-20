@@ -58,7 +58,9 @@ export function offsetLine(rings, offset) {
             const extrude = aToB._add(bToC)._unit();
 
             const cosHalfAngle = extrude.x * bToC.x + extrude.y * bToC.y;
-            extrude._mult(1 / cosHalfAngle);
+            if (cosHalfAngle !== 0) {
+                extrude._mult(1 / cosHalfAngle);
+            }
 
             newRing.push(extrude._mult(offset)._add(b));
         }
