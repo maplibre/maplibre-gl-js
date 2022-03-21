@@ -14,8 +14,10 @@
   "license": "ISC",
   "main": "./dist/index.js",
   "module": "./dist/index.es.js",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "scripts": {
+    "generate-typings": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-typings.ts"
   },
   "repository": {
     "type": "git",
