@@ -7,7 +7,7 @@
 ### 🐞 Bug fixes
 
 - Use correct location for mouse events of line layer with line-offset (#1108).
-- *...Add new stuff here...*
+- Change `GeoJSONFeature.properties` type from `{}` to `{ [name: string]: any; }` (#1115).
 
 ## 2.1.8-pre.2
 
