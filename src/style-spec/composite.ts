@@ -1,4 +1,16 @@
-
+/**
+ * Takes a non-composited style and produces a [composite style](https://www.mapbox.com/blog/better-label-placement-in-mapbox-studio/)
+ *
+ * @private
+ * @alias composite
+ * @param {object} style an uncomposited Mapbox GL Style
+ * @returns {Object} a composited style
+ * @example
+ * var fs = require('fs');
+ * var migrate = require('maplibre-gl-style-spec').composite;
+ * var style = fs.readFileSync('./style.json', 'utf8');
+ * fs.writeFileSync('./style.json', JSON.stringify(composite(style)));
+ */
 export default function composite(style) {
     const styleIDs = [];
     const sourceIDs = [];
