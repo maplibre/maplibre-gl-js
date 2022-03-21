@@ -14,12 +14,12 @@ function generateGLTypes() {
     // Classes are not exported but should be since this is exported as UMD - fixing...
     types = types.replace(/declare class/g, 'export declare class');
     fs.writeFileSync(outputFile, types);
-    console.log("Finished building maplibre-gl")
+    console.log('Finished building maplibre-gl');
 }
 
 function generateStyleSpecTypes() {
-    const moduleBasePath = './src/style-spec'
-    const outputPath = `${moduleBasePath}/dist`
+    const moduleBasePath = './src/style-spec';
+    const outputPath = `${moduleBasePath}/dist`;
     if (!fs.existsSync(outputPath)) {
         fs.mkdirSync(outputPath);
     }
@@ -29,11 +29,10 @@ function generateStyleSpecTypes() {
     // Classes are not exported but should be since this is exported as UMD - fixing...
     types = types.replace(/declare class/g, 'export declare class');
     fs.writeFileSync(outputFile, types);
-    console.log("Finished building style-spec")
+    console.log('Finished building style-spec');
 }
 
-
-generateGLTypes()
-generateStyleSpecTypes()
+generateGLTypes();
+generateStyleSpecTypes();
 
 console.log('Finished bundling types');
