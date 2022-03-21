@@ -5,8 +5,9 @@
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
-- *...Add new stuff here...*
 
+- Use correct location for mouse events of line layer with line-offset (#1108).
+- *...Add new stuff here...*
 
 ## 2.1.8-pre.2
 
