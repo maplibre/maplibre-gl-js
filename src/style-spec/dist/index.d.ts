@@ -43,7 +43,7 @@ export function migrate(style: any): any;
  *
  * @private
  * @alias composite
- * @param {object} style an uncomposited Mapbox GL Style
+ * @param {object} style an uncomposited MapLibre GL Style
  * @returns {Object} a composited style
  * @example
  * var fs = require('fs');
