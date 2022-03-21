@@ -44,17 +44,17 @@ export function translate(queryGeometry: Array<Point>,
     return translated;
 }
 
-export function offsetLine(rings, offset) {
-    const newRings = [];
-    for (let k = 0; k < rings.length; k++) {
-        const ring = rings[k];
-        const newRing = [];
-        for (let i = 0; i < ring.length; i++) {
-            const a = ring[i - 1];
-            const b = ring[i];
-            const c = ring[i + 1];
-            const aToB = i === 0 ? new Point(0, 0) : b.sub(a)._unit()._perp();
-            const bToC = i === ring.length - 1 ? new Point(0, 0) : c.sub(b)._unit()._perp();
+export function offsetLine(rings: Array<Array<Point>>, offset: number) {
+    const newRings: Array<Array<Point>> = [];
+    for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
+        const ring = rings[ringIndex];
+        const newRing: Array<Point> = [];
+        for (let index = 0; index < ring.length; index++) {
+            const a = ring[index - 1];
+            const b = ring[index];
+            const c = ring[index + 1];
+            const aToB = index === 0 ? new Point(0, 0) : b.sub(a)._unit()._perp();
+            const bToC = index === ring.length - 1 ? new Point(0, 0) : c.sub(b)._unit()._perp();
             const extrude = aToB._add(bToC)._unit();
 
             const cosHalfAngle = extrude.x * bToC.x + extrude.y * bToC.y;
