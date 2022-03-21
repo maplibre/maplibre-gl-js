@@ -63,12 +63,15 @@ type TestData = {
     queryGeometry: PointLike;
     queryOptions: any;
     error: Error;
+    actualPath: string;
+    diffPath: string;
+    expectedPath: string;
 }
 
 type RenderOptions = {
     tests: any[];
-    shuffle: boolean;
     recycleMap: boolean;
+    report: boolean;
     seed: string;
 }
 
@@ -164,6 +167,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     // depending on platform, i.e. heatmaps use half-float textures for improved rendering where supported
     let minDiff = Infinity;
     let minDiffImg: PNG;
+    let minExpectedPath = expectedPath;
 
     for (const path of expectedPaths) {
         const expectedBuf = fs.readFileSync(path);
@@ -177,6 +181,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         if (diff < minDiff) {
             minDiff = diff;
             minDiffImg = diffImg;
+            minExpectedPath = path;
         }
     }
 
@@ -188,6 +193,9 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 
     testData.difference = minDiff;
     testData.ok = minDiff <= testData.allowed;
+    testData.actualPath = actualPath;
+    testData.diffPath = diffPath;
+    testData.expectedPath = minExpectedPath;
 }
 
 /**
@@ -489,42 +497,37 @@ function printProgress(test: TestData, total: number, index: number) {
     }
 }
 
+type TestStats = {
+    total: number;
+    errored: TestData[];
+    failed: TestData[];
+    passed: TestData[];
+};
+
 /**
  * Prints the summary at the end of the run
  *
  * @param tests all the tests with their resutls
  * @returns
  */
-function printStatistics(tests: TestData[]): boolean {
-    let passedCount = 0,
-        failedCount = 0,
-        erroredCount = 0;
-
-    for (const test of tests) {
-        if (test.error) {
-            erroredCount++;
-        } else if (!test.ok) {
-            failedCount++;
-        } else {
-            passedCount++;
-        }
-    }
-
-    const totalCount = passedCount + failedCount + erroredCount;
+function printStatistics(stats: TestStats): boolean {
+    const erroredCount = stats.errored.length;
+    const failedCount = stats.failed.length;
+    const passedCount = stats.passed.length;
 
     if (passedCount > 0) {
         console.log('%d passed (%s%)',
-            passedCount, (100 * passedCount / totalCount).toFixed(1));
+            passedCount, (100 * passedCount / stats.total).toFixed(1));
     }
 
     if (failedCount > 0) {
         console.log('%d failed (%s%)',
-            failedCount, (100 * failedCount / totalCount).toFixed(1));
+            failedCount, (100 * failedCount / stats.total).toFixed(1));
     }
 
     if (erroredCount > 0) {
         console.log('%d errored (%s%)',
-            erroredCount, (100 * erroredCount / totalCount).toFixed(1));
+            erroredCount, (100 * erroredCount / stats.total).toFixed(1));
     }
 
     return (failedCount + erroredCount) === 0;
@@ -539,12 +542,17 @@ function printStatistics(tests: TestData[]): boolean {
  * If all the tests are successful, this function exits the process with exit code 0. Otherwise
  * it exits with 1.
  */
-const options: RenderOptions = {tests: [], shuffle: false, recycleMap: false, seed: makeHash()};
+const options: RenderOptions = {
+    tests: [],
+    recycleMap: false,
+    report: false,
+    seed: makeHash()
+};
 
 if (process.argv.length > 2) {
     options.tests = process.argv.slice(2).filter((value, index, self) => { return self.indexOf(value) === index; }) || [];
-    options.shuffle = checkParameter(options, '--shuffle');
     options.recycleMap = checkParameter(options, '--recycle-map');
+    options.report = checkParameter(options, '--report');
     options.seed = checkValueParameter(options, options.seed, '--seed');
 }
 
@@ -564,11 +572,37 @@ for (const style of testStyles) {
     printProgress(style.metadata.test, testStyles.length, ++index);
 }
 
+const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
+const testStats: TestStats = {
+    total: tests.length,
+    errored: tests.filter(t => t.error),
+    failed: tests.filter(t => !t.error && !t.ok),
+    passed: tests.filter(t => !t.error && t.ok)
+};
+
 if (process.env.UPDATE) {
     console.log(`Updated ${testStyles.length} tests.`);
     process.exit(0);
 }
 
-const success = printStatistics(testStyles.map(s => s.metadata.test));
+const success = printStatistics(testStats);
+
+if (options.report) {
+    const resultsTemplate = eval(fs.readFileSync(path.join(__dirname, 'resultsTemplate.ts'), 'utf8')) as (options) => string;
+    const itemTemplate = eval(fs.readFileSync(path.join(__dirname, 'resultItemTemplate.ts'), 'utf8')) as (test) => string;
+    const erroredItems = testStats.errored.map(t => itemTemplate({status: 'errored', test: t}));
+    const failedItems = testStats.failed.map(t => itemTemplate({status: 'failed', test: t}));
+    const hasFailedTests = !!testStats.failed.length;
+    const passedItems = testStats.passed.map(t => itemTemplate({status: 'passed', test: t, hasFailedTests}));
+
+    const resultsShell = resultsTemplate(testStats)
+        .replace('<!-- Errored tests go here -->', erroredItems.join('\n'))
+        .replace('<!-- Failed tests go here -->', failedItems.join('\n'))
+        .replace('<!-- Passed tests go here -->', passedItems.join('\n'));
+    const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : 'results.html');
+    fs.writeFileSync(p, resultsShell, 'utf8');
+    console.log(`Results logged to '${p}'`);
+}
+
 process.exit(success ? 0 : 1);
 
