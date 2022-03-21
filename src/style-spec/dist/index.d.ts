@@ -38,6 +38,19 @@ export declare function format(style: any, space?: number): string;
  * fs.writeFileSync('./style.json', JSON.stringify(migrate(style)));
  */
 export function migrate(style: any): any;
+/**
+ * Takes a non-composited style and produces a [composite style](https://www.mapbox.com/blog/better-label-placement-in-mapbox-studio/)
+ *
+ * @private
+ * @alias composite
+ * @param {object} style an uncomposited Mapbox GL Style
+ * @returns {Object} a composited style
+ * @example
+ * var fs = require('fs');
+ * var migrate = require('maplibre-gl-style-spec').composite;
+ * var style = fs.readFileSync('./style.json', 'utf8');
+ * fs.writeFileSync('./style.json', JSON.stringify(composite(style)));
+ */
 export function composite(style: any): any;
 /**
  * Given an array of layers, some of which may contain `ref` properties
@@ -54,7 +67,7 @@ export function composite(style: any): any;
  */
 export declare function derefLayers(layers: any): any;
 declare function diffStyles(before: any, after: any): any[];
-export export declare class ValidationError {
+export declare class ValidationError {
 	message: string;
 	identifier: string;
 	line: number;
@@ -62,13 +75,13 @@ export export declare class ValidationError {
 		__line__: number;
 	}, message: string, identifier?: string | null);
 }
-export export declare class ParsingError {
+export declare class ParsingError {
 	message: string;
 	error: Error;
 	line: number;
 	constructor(error: Error);
 }
-export declare class ExpressionParsingError extends Error {
+declare class ExpressionParsingError extends Error {
 	key: string;
 	message: string;
 	constructor(key: string, message: string);
@@ -84,7 +97,7 @@ export declare class ExpressionParsingError extends Error {
  * @param {number} a The alpha channel.
  * @private
  */
-export export declare class Color {
+export declare class Color {
 	r: number;
 	g: number;
 	b: number;
@@ -117,7 +130,7 @@ export export declare class Color {
 		number
 	];
 }
-export declare class Intl$Collator {
+declare class Intl$Collator {
 	constructor(locales?: string | string[], options?: CollatorOptions);
 	compare(a: string, b: string): number;
 	resolvedOptions(): any;
@@ -130,7 +143,7 @@ export declare type CollatorOptions = {
 	numeric?: boolean;
 	caseFirst?: "upper" | "lower" | "false";
 };
-export declare class Collator {
+declare class Collator {
 	locale: string | null;
 	sensitivity: "base" | "accent" | "case" | "variant";
 	collator: Intl$Collator;
@@ -142,7 +155,7 @@ export declare type ResolvedImageOptions = {
 	name: string;
 	available: boolean;
 };
-export declare class ResolvedImage {
+declare class ResolvedImage {
 	name: string;
 	available: boolean;
 	constructor(options: ResolvedImageOptions);
@@ -150,7 +163,7 @@ export declare class ResolvedImage {
 	static fromString(name: string): ResolvedImage | null;
 	serialize(): Array<string>;
 }
-export declare class FormattedSection {
+declare class FormattedSection {
 	text: string;
 	image: ResolvedImage | null;
 	scale: number | null;
@@ -158,7 +171,7 @@ export declare class FormattedSection {
 	textColor: Color | null;
 	constructor(text: string, image: ResolvedImage | null, scale: number | null, fontStack: string | null, textColor: Color | null);
 }
-export declare class Formatted {
+declare class Formatted {
 	sections: Array<FormattedSection>;
 	constructor(sections: Array<FormattedSection>);
 	static fromString(unformatted: string): Formatted;
@@ -211,7 +224,7 @@ export declare type ArrayType = {
 export declare type Value = null | string | boolean | number | Color | Collator | Formatted | ResolvedImage | ReadonlyArray<Value> | {
 	readonly [x: string]: Value;
 };
-export declare class LngLatBounds {
+declare class LngLatBounds {
 	_ne: LngLat;
 	_sw: LngLat;
 	constructor(sw?: any, ne?: any);
@@ -373,7 +386,7 @@ export declare type LngLatBoundsLike = LngLatBounds | [
 	number,
 	number
 ];
-export declare class LngLat {
+declare class LngLat {
 	lng: number;
 	lat: number;
 	constructor(lng: number, lat: number);
@@ -462,7 +475,7 @@ export declare type LngLatLike = LngLat | {
 	number,
 	number
 ];
-export declare class MercatorCoordinate {
+declare class MercatorCoordinate {
 	x: number;
 	y: number;
 	z: number;
@@ -506,7 +519,7 @@ export declare class MercatorCoordinate {
 	 */
 	meterInMercatorCoordinateUnits(): number;
 }
-export declare class CanonicalTileID {
+declare class CanonicalTileID {
 	z: number;
 	x: number;
 	y: number;
@@ -517,7 +530,7 @@ export declare class CanonicalTileID {
 	getTilePoint(coord: MercatorCoordinate): Point;
 	toString(): string;
 }
-export declare class EvaluationContext {
+declare class EvaluationContext {
 	globals: GlobalProperties;
 	feature: Feature;
 	featureState: FeatureState;
@@ -1207,7 +1220,7 @@ export declare type GlobalProperties = Readonly<{
 	isSupportedScript?: (_: string) => boolean;
 	accumulated?: Value;
 }>;
-export declare class StyleExpression {
+declare class StyleExpression {
 	expression: Expression;
 	_evaluator: EvaluationContext;
 	_defaultValue: Value;
@@ -1223,7 +1236,7 @@ export declare class StyleExpression {
 }
 declare function isExpression(expression: unknown): boolean;
 declare function createExpression(expression: unknown, propertySpec?: StylePropertySpecification | null): Result<StyleExpression, Array<ExpressionParsingError>>;
-export declare class ZoomConstantExpression<Kind extends EvaluationKind> {
+declare class ZoomConstantExpression<Kind extends EvaluationKind> {
 	kind: Kind;
 	isStateDependent: boolean;
 	_styleExpression: StyleExpression;
@@ -1231,7 +1244,7 @@ export declare class ZoomConstantExpression<Kind extends EvaluationKind> {
 	evaluateWithoutErrorHandling(globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: CanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection): any;
 	evaluate(globals: GlobalProperties, feature?: Feature, featureState?: FeatureState, canonical?: CanonicalTileID, availableImages?: Array<string>, formattedSection?: FormattedSection): any;
 }
-export declare class ZoomDependentExpression<Kind extends EvaluationKind> {
+declare class ZoomDependentExpression<Kind extends EvaluationKind> {
 	kind: Kind;
 	zoomStops: Array<number>;
 	isStateDependent: boolean;
@@ -1268,7 +1281,7 @@ export declare type CompositeExpression = {
 };
 export declare type StylePropertyExpression = ConstantExpression | SourceExpression | CameraExpression | CompositeExpression;
 declare function createPropertyExpression(expressionInput: unknown, propertySpec: StylePropertySpecification): Result<StylePropertyExpression, Array<ExpressionParsingError>>;
-export declare class StylePropertyFunction<T> {
+declare class StylePropertyFunction<T> {
 	_parameters: PropertyValueSpecification<T>;
 	_specification: StylePropertySpecification;
 	kind: EvaluationKind;
