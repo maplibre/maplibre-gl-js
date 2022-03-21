@@ -11,7 +11,7 @@ export type MapGeoJSONFeature = GeoJSONFeature & {
 class GeoJSONFeature {
     type: 'Feature';
     _geometry: GeoJSON.Geometry;
-    properties: { [name: string]: any; };
+    properties: { [name: string]: any };
     id: number | string | undefined;
 
     _vectorTileFeature: VectorTileFeature;
