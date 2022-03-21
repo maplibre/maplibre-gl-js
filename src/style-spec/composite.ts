@@ -1,5 +1,5 @@
 
-export default function (style) {
+export default function composite(style) {
     const styleIDs = [];
     const sourceIDs = [];
     const compositedSourceLayers = [];
