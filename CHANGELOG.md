@@ -8,6 +8,8 @@
 
 - Use correct location for mouse events of line layer with line-offset (#1108).
 - Change `GeoJSONFeature.properties` type from `{}` to `{ [name: string]: any; }` (#1115).
+- Fix `error TS2503: Cannot find namespace 'GeoJSON'` (#1096).
+- *...Add new stuff here...*
 
 ## 2.1.8-pre.2
 
