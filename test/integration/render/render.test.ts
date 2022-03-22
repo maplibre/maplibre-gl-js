@@ -582,24 +582,16 @@ if (process.env.UPDATE) {
 
 const success = printStatistics(testStats);
 
-type ReportItemData = {
-    test: TestData;
-    hasFailedTests?: boolean;
-};
-
-function getReportItem(data: ReportItemData) {
-    const test = data.test;
-    let status: string;
+function getReportItem(test: TestData) {
+    let status: 'errored' | 'failed';
 
     if (test.error) {
         status = 'errored';
-    } else if (test.ok) {
-        status = 'passed';
     } else {
         status = 'failed';
     }
 
-    return `<div class="test ${(data.hasFailedTests && status === 'passed') ? 'hide' : ''}">
+    return `<div class="test">
     <h2>${test.id}</h2>
     ${status !== 'errored' ? `
         <img width="${test.width}" height="${test.height}" src="${test.actualPath}" data-alt-src="${test.expectedPath}"><img style="width: ${test.width}; height: ${test.height}" src="${test.diffPath}">` : ''
@@ -610,10 +602,50 @@ function getReportItem(data: ReportItemData) {
 }
 
 if (options.report) {
-    const erroredItems = testStats.errored.map(t => getReportItem({test: t}));
-    const failedItems = testStats.failed.map(t => getReportItem({test: t}));
-    const hasFailedTests = !!testStats.failed.length;
-    const passedItems = testStats.passed.map(t => getReportItem({test: t, hasFailedTests}));
+    const erroredItems = testStats.errored.map(t => getReportItem(t));
+    const failedItems = testStats.failed.map(t => getReportItem(t));
+
+    let resultData: string;
+
+    if (erroredItems.length || failedItems.length) {
+        resultData = `
+    <div class="tests failed">
+        <h1 style="color: red"><button id="toggle-failed">Toggle</button> Failed Tests (${failedItems.length})</h1>
+        ${failedItems.join('\n')}
+    </div>
+
+    <div class="tests errored">
+        <h1 style="color: black"><button id="toggle-errored">Toggle</button> Errored Tests (${erroredItems.length})</h1>
+        ${erroredItems.join('\n')}
+    </div>
+
+    <script>
+        document.addEventListener('mouseover', handleHover);
+        document.addEventListener('mouseout', handleHover);
+
+        function handleHover(e) {
+            var el = e.target;
+            if (el.tagName === 'IMG' && el.dataset.altSrc) {
+                var tmp = el.src;
+                el.src = el.dataset.altSrc;
+                el.dataset.altSrc = tmp;
+            }
+        }
+
+        document.getElementById('toggle-failed').addEventListener('click', function (e) {
+            for (const row of document.querySelectorAll('.tests.failed .test')) {
+                row.classList.toggle('hide');
+            }
+        });
+        document.getElementById('toggle-errored').addEventListener('click', function (e) {
+            for (const row of document.querySelectorAll('.tests.errored .test.')) {
+                row.classList.toggle('hide');
+            }
+        });
+    </script>`;
+    } else {
+        resultData = '<h1 style="color: green">All tests passed!</h1>';
+    }
 
     const resultsContent = `
 <!doctype html>
@@ -678,51 +710,7 @@ if (options.report) {
 </head>
 
 <body>
-
-<div class="tests passed">
-    <h1 style="color: green;"><button id="toggle-passed">Toggle</button> Passed Tests (${passedItems.length})</h1>
-    ${passedItems.join('\n')}
-</div>
-
-<div class="tests failed">
-    <h1 style="color: red;"><button id="toggle-failed">Toggle</button> Failed Tests (${failedItems.length})</h1>
-    ${failedItems.join('\n')}
-</div>
-
-<div class="tests errored">
-    <h1 style="color: black;"><button id="toggle-errored">Toggle</button> Errored Tests (${erroredItems.length})</h1>
-    ${erroredItems.join('\n')}
-</div>
-
-<script>
-    document.addEventListener('mouseover', handleHover);
-    document.addEventListener('mouseout', handleHover);
-
-    function handleHover(e) {
-        var el = e.target;
-        if (el.tagName === 'IMG' && el.dataset.altSrc) {
-            var tmp = el.src;
-            el.src = el.dataset.altSrc;
-            el.dataset.altSrc = tmp;
-        }
-    }
-
-    document.getElementById('toggle-passed').addEventListener('click', function (e) {
-        for (const row of document.querySelectorAll('.tests.passed .test')) {
-            row.classList.toggle('hide');
-        }
-    });
-    document.getElementById('toggle-failed').addEventListener('click', function (e) {
-        for (const row of document.querySelectorAll('.tests.failed .test')) {
-            row.classList.toggle('hide');
-        }
-    });
-    document.getElementById('toggle-errored').addEventListener('click', function (e) {
-        for (const row of document.querySelectorAll('.tests.errored .test.')) {
-            row.classList.toggle('hide');
-        }
-    });
-</script>
+${resultData}
 </body>
 </html>
 `;
