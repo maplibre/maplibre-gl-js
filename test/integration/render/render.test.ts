@@ -515,20 +515,15 @@ function printStatistics(stats: TestStats): boolean {
     const failedCount = stats.failed.length;
     const passedCount = stats.passed.length;
 
-    if (passedCount > 0) {
-        console.log('%d passed (%s%)',
-            passedCount, (100 * passedCount / stats.total).toFixed(1));
+    function printStat(status: string, statusCount: number) {
+        if (statusCount > 0) {
+            console.log(`${statusCount} ${status} (${(100 * statusCount / stats.total).toFixed(1)}%)`);
+        }
     }
 
-    if (failedCount > 0) {
-        console.log('%d failed (%s%)',
-            failedCount, (100 * failedCount / stats.total).toFixed(1));
-    }
-
-    if (erroredCount > 0) {
-        console.log('%d errored (%s%)',
-            erroredCount, (100 * erroredCount / stats.total).toFixed(1));
-    }
+    printStat('passed', passedCount);
+    printStat('failed', failedCount);
+    printStat('errored', erroredCount);
 
     return (failedCount + erroredCount) === 0;
 }
