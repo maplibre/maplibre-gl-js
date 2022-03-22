@@ -675,7 +675,7 @@ class Map extends Camera {
      * // Set the map's max bounds.
      * map.setMaxBounds(bounds);
      */
-    setMaxBounds(bounds: LngLatBoundsLike) {
+    setMaxBounds(bounds?: LngLatBoundsLike | null) {
         this.transform.setMaxBounds(LngLatBounds.convert(bounds));
         return this._update();
     }

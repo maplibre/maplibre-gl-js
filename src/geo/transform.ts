@@ -568,7 +568,7 @@ class Transform {
      * Sets or clears the map's geographical constraints.
      * @param {LngLatBounds} bounds A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
-    setMaxBounds(bounds?: LngLatBounds) {
+    setMaxBounds(bounds?: LngLatBounds | null) {
         if (bounds) {
             this.lngRange = [bounds.getWest(), bounds.getEast()];
             this.latRange = [bounds.getSouth(), bounds.getNorth()];
