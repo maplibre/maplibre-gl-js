@@ -588,8 +588,8 @@ if (process.env.UPDATE) {
 const success = printStatistics(testStats);
 
 type ReportItemData = {
-    test: TestData,
-    hasFailedTests?: boolean
+    test: TestData;
+    hasFailedTests?: boolean;
 };
 
 function getReportItem(data: ReportItemData) {
@@ -626,58 +626,58 @@ if (options.report) {
 <head>
 <title>Render Test Results</title>
 <style>
-    body { 
-        font: 18px/1.2 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; 
-        padding: 10px; 
+    body {
+        font: 18px/1.2 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        padding: 10px;
     }
-    h1 { 
-        font-size: 32px; 
-        margin-bottom: 0; 
+    h1 {
+        font-size: 32px;
+        margin-bottom: 0;
     }
-    button { 
-        vertical-align: middle; 
+    button {
+        vertical-align: middle;
     }
-    h2 { 
-        font-size: 24px; 
-        font-weight: normal; 
-        margin: 10px 0 10px; 
-        line-height: 1; 
+    h2 {
+        font-size: 24px;
+        font-weight: normal;
+        margin: 10px 0 10px;
+        line-height: 1;
     }
-    img { 
-        margin: 0 10px 10px 0; 
-        border: 1px dotted #ccc; 
+    img {
+        margin: 0 10px 10px 0;
+        border: 1px dotted #ccc;
     }
-    .stats { 
-        margin-top: 10px; 
+    .stats {
+        margin-top: 10px;
     }
-    .test { 
-        border-bottom: 1px dotted #bbb; 
-        padding-bottom: 5px; 
+    .test {
+        border-bottom: 1px dotted #bbb;
+        padding-bottom: 5px;
     }
-    .tests { 
-        border-top: 1px dotted #bbb; 
-        margin-top: 10px; 
+    .tests {
+        border-top: 1px dotted #bbb;
+        margin-top: 10px;
     }
-    .diff { 
-        color: #777; 
+    .diff {
+        color: #777;
     }
-    .test p, .test pre { 
-        margin: 0 0 10px; 
+    .test p, .test pre {
+        margin: 0 0 10px;
     }
-    .test pre { 
-        font-size: 14px; 
+    .test pre {
+        font-size: 14px;
     }
-    .label { 
-        color: white; 
-        font-size: 18px; 
-        padding: 2px 6px 3px; 
-        border-radius: 3px; 
-        margin-right: 3px; 
-        vertical-align: bottom; 
-        display: inline-block; 
+    .label {
+        color: white;
+        font-size: 18px;
+        padding: 2px 6px 3px;
+        border-radius: 3px;
+        margin-right: 3px;
+        vertical-align: bottom;
+        display: inline-block;
     }
-    .hide { 
-        display: none; 
+    .hide {
+        display: none;
     }
 </style>
 </head>
@@ -731,11 +731,10 @@ if (options.report) {
 </body>
 </html>
 `;
-    
+
     const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : 'results.html');
     fs.writeFileSync(p, resultsContent, 'utf8');
     console.log(`Results logged to '${p}'`);
 }
 
 process.exit(success ? 0 : 1);
-
