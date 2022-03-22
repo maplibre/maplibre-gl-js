@@ -1,4 +1,4 @@
-import {getArrayBuffer} from '../util/ajax';
+import {ExpiryData, getArrayBuffer} from '../util/ajax';
 
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
@@ -21,10 +21,8 @@ import type {VectorTile} from '@mapbox/vector-tile';
 export type LoadVectorTileResult = {
     vectorTile: VectorTile;
     rawData: ArrayBuffer;
-    expires?: any;
-    cacheControl?: any;
     resourceTiming?: Array<PerformanceResourceTiming>;
-};
+} & ExpiryData;
 
 /**
  * @callback LoadVectorDataCallback

@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import StyleLayer from '../style_layer';
 import LineBucket from '../../data/bucket/line_bucket';
 import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests';
-import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
+import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '../query_utils';
 import properties, {LineLayoutPropsPossiblyEvaluated, LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g';
 import {extend} from '../../util/util';
 import EvaluationParameters from '../evaluation_parameters';
@@ -124,28 +124,4 @@ function getLineWidth(lineWidth, lineGapWidth) {
     } else {
         return lineWidth;
     }
-}
-
-function offsetLine(rings, offset) {
-    const newRings = [];
-    const zero = new Point(0, 0);
-    for (let k = 0; k < rings.length; k++) {
-        const ring = rings[k];
-        const newRing = [];
-        for (let i = 0; i < ring.length; i++) {
-            const a = ring[i - 1];
-            const b = ring[i];
-            const c = ring[i + 1];
-            const aToB = i === 0 ? zero : b.sub(a)._unit()._perp();
-            const bToC = i === ring.length - 1 ? zero : c.sub(b)._unit()._perp();
-            const extrude = aToB._add(bToC)._unit();
-
-            const cosHalfAngle = extrude.x * bToC.x + extrude.y * bToC.y;
-            extrude._mult(1 / cosHalfAngle);
-
-            newRing.push(extrude._mult(offset)._add(b));
-        }
-        newRings.push(newRing);
-    }
-    return newRings;
 }

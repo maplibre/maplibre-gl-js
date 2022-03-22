@@ -368,6 +368,23 @@ describe('SourceCache#removeTile', () => {
         expect(onAbort).toHaveBeenCalledTimes(0);
     });
 
+    test('does not fire data event when the tile has already been aborted', () => {
+        const onData = jest.fn();
+        const sourceCache = createSourceCache({
+            loadTile(tile, callback) {
+                sourceCache.once('dataabort', () => {
+                    tile.state = 'loaded';
+                    callback();
+                    expect(onData).toHaveBeenCalledTimes(0);
+                });
+            }
+        });
+        sourceCache.once('data', onData);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        sourceCache._addTile(tileID);
+        sourceCache._removeTile(tileID.key);
+    });
+
 });
 
 describe('SourceCache / Source lifecycle', () => {
@@ -1650,4 +1667,26 @@ describe('SourceCache sets max cache size correctly', () => {
         expect(sourceCache._cache.max).toBe(20);
     });
 
+});
+
+describe('SourceCache#onRemove', () => {
+    test('clears tiles', () => {
+        const sourceCache = createSourceCache();
+        jest.spyOn(sourceCache, 'clearTiles');
+
+        sourceCache.onRemove(undefined);
+
+        expect(sourceCache.clearTiles).toHaveBeenCalled();
+    });
+
+    test('calls onRemove on source', () => {
+        const sourceOnRemove = jest.fn();
+        const sourceCache = createSourceCache({
+            onRemove: sourceOnRemove
+        });
+
+        sourceCache.onRemove(undefined);
+
+        expect(sourceOnRemove).toHaveBeenCalled();
+    });
 });

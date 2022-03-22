@@ -217,7 +217,7 @@ function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: nu
 function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4, transform: Transform, z: number) {
     const projectedQueryGeometry = [];
     for (const p of queryGeometry) {
-        const v = vec4.fromValues(p.x, p.y, z, 1);
+        const v = [p.x, p.y, z, 1] as vec4;
         vec4.transformMat4(v, v, pixelPosMatrix);
         projectedQueryGeometry.push(new Point(v[0] / v[3], v[1] / v[3]));
     }
