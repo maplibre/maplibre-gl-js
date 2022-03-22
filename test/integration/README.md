@@ -82,6 +82,11 @@ Results logged to './test/integration/render/results.html'
 open ./test/integration/render/results.html
 ```
 
+Same parameter can be used to view results for a single test...
+```
+$ npm run test-render circle-radius/literal -- --report
+```
+
 ## Notes on the query integration tests
 
 In test/integration/lib/query-browser-jest.test.ts a web server is automatically started to expose static assets from the integration folder. In order to start a similar server manually, run:
