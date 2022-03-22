@@ -63,12 +63,15 @@ type TestData = {
     queryGeometry: PointLike;
     queryOptions: any;
     error: Error;
+    actualPath: string;
+    diffPath: string;
+    expectedPath: string;
 }
 
 type RenderOptions = {
     tests: any[];
-    shuffle: boolean;
     recycleMap: boolean;
+    report: boolean;
     seed: string;
 }
 
@@ -164,6 +167,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     // depending on platform, i.e. heatmaps use half-float textures for improved rendering where supported
     let minDiff = Infinity;
     let minDiffImg: PNG;
+    let minExpectedPath = expectedPath;
 
     for (const path of expectedPaths) {
         const expectedBuf = fs.readFileSync(path);
@@ -177,6 +181,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         if (diff < minDiff) {
             minDiff = diff;
             minDiffImg = diffImg;
+            minExpectedPath = path;
         }
     }
 
@@ -188,6 +193,9 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 
     testData.difference = minDiff;
     testData.ok = minDiff <= testData.allowed;
+    testData.actualPath = actualPath;
+    testData.diffPath = diffPath;
+    testData.expectedPath = minExpectedPath;
 }
 
 /**
@@ -489,43 +497,33 @@ function printProgress(test: TestData, total: number, index: number) {
     }
 }
 
+type TestStats = {
+    total: number;
+    errored: TestData[];
+    failed: TestData[];
+    passed: TestData[];
+};
+
 /**
  * Prints the summary at the end of the run
  *
  * @param tests all the tests with their resutls
  * @returns
  */
-function printStatistics(tests: TestData[]): boolean {
-    let passedCount = 0,
-        failedCount = 0,
-        erroredCount = 0;
+function printStatistics(stats: TestStats): boolean {
+    const erroredCount = stats.errored.length;
+    const failedCount = stats.failed.length;
+    const passedCount = stats.passed.length;
 
-    for (const test of tests) {
-        if (test.error) {
-            erroredCount++;
-        } else if (!test.ok) {
-            failedCount++;
-        } else {
-            passedCount++;
+    function printStat(status: string, statusCount: number) {
+        if (statusCount > 0) {
+            console.log(`${statusCount} ${status} (${(100 * statusCount / stats.total).toFixed(1)}%)`);
         }
     }
 
-    const totalCount = passedCount + failedCount + erroredCount;
-
-    if (passedCount > 0) {
-        console.log('%d passed (%s%)',
-            passedCount, (100 * passedCount / totalCount).toFixed(1));
-    }
-
-    if (failedCount > 0) {
-        console.log('%d failed (%s%)',
-            failedCount, (100 * failedCount / totalCount).toFixed(1));
-    }
-
-    if (erroredCount > 0) {
-        console.log('%d errored (%s%)',
-            erroredCount, (100 * erroredCount / totalCount).toFixed(1));
-    }
+    printStat('passed', passedCount);
+    printStat('failed', failedCount);
+    printStat('errored', erroredCount);
 
     return (failedCount + erroredCount) === 0;
 }
@@ -539,12 +537,17 @@ function printStatistics(tests: TestData[]): boolean {
  * If all the tests are successful, this function exits the process with exit code 0. Otherwise
  * it exits with 1.
  */
-const options: RenderOptions = {tests: [], shuffle: false, recycleMap: false, seed: makeHash()};
+const options: RenderOptions = {
+    tests: [],
+    recycleMap: false,
+    report: false,
+    seed: makeHash()
+};
 
 if (process.argv.length > 2) {
     options.tests = process.argv.slice(2).filter((value, index, self) => { return self.indexOf(value) === index; }) || [];
-    options.shuffle = checkParameter(options, '--shuffle');
     options.recycleMap = checkParameter(options, '--recycle-map');
+    options.report = checkParameter(options, '--report');
     options.seed = checkValueParameter(options, options.seed, '--seed');
 }
 
@@ -564,11 +567,157 @@ for (const style of testStyles) {
     printProgress(style.metadata.test, testStyles.length, ++index);
 }
 
+const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
+const testStats: TestStats = {
+    total: tests.length,
+    errored: tests.filter(t => t.error),
+    failed: tests.filter(t => !t.error && !t.ok),
+    passed: tests.filter(t => !t.error && t.ok)
+};
+
 if (process.env.UPDATE) {
     console.log(`Updated ${testStyles.length} tests.`);
     process.exit(0);
 }
 
-const success = printStatistics(testStyles.map(s => s.metadata.test));
-process.exit(success ? 0 : 1);
+const success = printStatistics(testStats);
 
+function getReportItem(test: TestData) {
+    let status: 'errored' | 'failed';
+
+    if (test.error) {
+        status = 'errored';
+    } else {
+        status = 'failed';
+    }
+
+    return `<div class="test">
+    <h2>${test.id}</h2>
+    ${status !== 'errored' ? `
+        <img width="${test.width}" height="${test.height}" src="${test.actualPath}" data-alt-src="${test.expectedPath}"><img style="width: ${test.width}; height: ${test.height}" src="${test.diffPath}">` : ''
+}
+    ${test.error ? `<p style="color: red"><strong>Error:</strong> ${test.error.message}</p>` : ''}
+    ${test.difference ? `<p class="diff"><strong>Diff:</strong> ${test.difference}</p>` : ''}
+</div>`;
+}
+
+if (options.report) {
+    const erroredItems = testStats.errored.map(t => getReportItem(t));
+    const failedItems = testStats.failed.map(t => getReportItem(t));
+
+    let resultData: string;
+
+    if (erroredItems.length || failedItems.length) {
+        resultData = `
+    <div class="tests failed">
+        <h1 style="color: red"><button id="toggle-failed">Toggle</button> Failed Tests (${failedItems.length})</h1>
+        ${failedItems.join('\n')}
+    </div>
+
+    <div class="tests errored">
+        <h1 style="color: black"><button id="toggle-errored">Toggle</button> Errored Tests (${erroredItems.length})</h1>
+        ${erroredItems.join('\n')}
+    </div>
+
+    <script>
+        document.addEventListener('mouseover', handleHover);
+        document.addEventListener('mouseout', handleHover);
+
+        function handleHover(e) {
+            var el = e.target;
+            if (el.tagName === 'IMG' && el.dataset.altSrc) {
+                var tmp = el.src;
+                el.src = el.dataset.altSrc;
+                el.dataset.altSrc = tmp;
+            }
+        }
+
+        document.getElementById('toggle-failed').addEventListener('click', function (e) {
+            for (const row of document.querySelectorAll('.tests.failed .test')) {
+                row.classList.toggle('hide');
+            }
+        });
+        document.getElementById('toggle-errored').addEventListener('click', function (e) {
+            for (const row of document.querySelectorAll('.tests.errored .test.')) {
+                row.classList.toggle('hide');
+            }
+        });
+    </script>`;
+    } else {
+        resultData = '<h1 style="color: green">All tests passed!</h1>';
+    }
+
+    const resultsContent = `
+<!doctype html>
+<html lang="en">
+<head>
+<title>Render Test Results</title>
+<style>
+    body {
+        font: 18px/1.2 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        padding: 10px;
+    }
+    h1 {
+        font-size: 32px;
+        margin-bottom: 0;
+    }
+    button {
+        vertical-align: middle;
+    }
+    h2 {
+        font-size: 24px;
+        font-weight: normal;
+        margin: 10px 0 10px;
+        line-height: 1;
+    }
+    img {
+        margin: 0 10px 10px 0;
+        border: 1px dotted #ccc;
+    }
+    .stats {
+        margin-top: 10px;
+    }
+    .test {
+        border-bottom: 1px dotted #bbb;
+        padding-bottom: 5px;
+    }
+    .tests {
+        border-top: 1px dotted #bbb;
+        margin-top: 10px;
+    }
+    .diff {
+        color: #777;
+    }
+    .test p, .test pre {
+        margin: 0 0 10px;
+    }
+    .test pre {
+        font-size: 14px;
+    }
+    .label {
+        color: white;
+        font-size: 18px;
+        padding: 2px 6px 3px;
+        border-radius: 3px;
+        margin-right: 3px;
+        vertical-align: bottom;
+        display: inline-block;
+    }
+    .hide {
+        display: none;
+    }
+</style>
+</head>
+
+<body>
+${resultData}
+</body>
+</html>
+`;
+
+    const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : 'results.html');
+    fs.writeFileSync(p, resultsContent, 'utf8');
+    console.log(`Results logged to '${p}'`);
+}
+
+process.exit(success ? 0 : 1);
