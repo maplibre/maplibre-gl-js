@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- *...Add new stuff here...*
+- Type CustomLayerInterface renderingMode, onRemove, onAdd, and prerender optional (#1122)
  
 ## 2.1.8-pre.3
 
