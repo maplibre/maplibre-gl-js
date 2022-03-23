@@ -24,7 +24,7 @@ import type {
     WorkerTileParameters,
     WorkerTileCallback,
 } from '../source/worker_source';
-import type {PromoteIdSpecification} from '../style-spec/types';
+import type {PromoteIdSpecification} from '../style-spec/types.g';
 import type {VectorTile} from '@mapbox/vector-tile';
 
 class WorkerTile {

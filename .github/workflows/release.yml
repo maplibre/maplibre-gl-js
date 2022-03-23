@@ -48,7 +48,9 @@ jobs:
 
       - name: Build
         run: |
-          npm run build-prod-min
+          npm run build-prod
+          npm run build-csp
+          npm run build-dev
           npm run build-css
           npm run build-benchmarks
           npm run generate-typings

@@ -10,7 +10,7 @@ import {StylePropertySpecification} from '../style-spec/style-spec';
 import {
     TransitionSpecification,
     PropertyValueSpecification
-} from '../style-spec/types';
+} from '../style-spec/types.g';
 
 import {
     normalizePropertyExpression,

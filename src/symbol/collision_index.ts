@@ -147,7 +147,8 @@ class CollisionIndex {
             symbol,
             lineVertexArray,
             labelPlaneMatrix,
-            projectionCache);
+            projectionCache,
+            false);
 
         let collisionDetected = false;
         let inGrid = false;
@@ -354,7 +355,7 @@ class CollisionIndex {
     }
 
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number) {
-        const p = vec4.fromValues(x, y, 0, 1);
+        const p = [x, y, 0, 1] as vec4;
         projection.xyTransformMat4(p, p, posMatrix);
         const a = new Point(
             (((p[0] / p[3] + 1) / 2) * this.transform.width) + viewportPadding,

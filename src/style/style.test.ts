@@ -15,7 +15,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {fakeXhr, fakeServer} from 'nise';
 import {WorkerGlobalScopeInterface} from '../util/web_worker';
 import EvaluationParameters from './evaluation_parameters';
-import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '../style-spec/types';
+import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '../style-spec/types.g';
 import {SourceClass} from '../source/source';
 import GeoJSONSource from '../source/geojson_source';
 
@@ -382,7 +382,7 @@ describe('Style#loadJSON', () => {
 });
 
 describe('Style#_remove', () => {
-    test('clears tiles', done => {
+    test('removes cache sources and clears their tiles', done => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
             sources: {'source-id': createGeoJSONSource()}
@@ -390,9 +390,16 @@ describe('Style#_remove', () => {
 
         style.on('style.load', () => {
             const sourceCache = style.sourceCaches['source-id'];
+            jest.spyOn(sourceCache, 'setEventedParent');
+            jest.spyOn(sourceCache, 'onRemove');
             jest.spyOn(sourceCache, 'clearTiles');
+
             style._remove();
-            expect(sourceCache.clearTiles).toHaveBeenCalledTimes(1);
+
+            expect(sourceCache.setEventedParent).toHaveBeenCalledWith(null);
+            expect(sourceCache.onRemove).toHaveBeenCalledWith(style.map);
+            expect(sourceCache.clearTiles).toHaveBeenCalled();
+
             done();
         });
     });
