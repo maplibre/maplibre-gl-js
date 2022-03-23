@@ -250,7 +250,7 @@ class LngLatBounds {
      * var llb = maplibregl.LngLatBounds.convert(arr);
      * llb;   // = LngLatBounds {_sw: LngLat {lng: -73.9876, lat: 40.7661}, _ne: LngLat {lng: -73.9397, lat: 40.8002}}
      */
-    static convert(input: LngLatBoundsLike): LngLatBounds {
+    static convert(input: LngLatBoundsLike | null): LngLatBounds {
         if (input instanceof LngLatBounds) return input;
         if (!input) return input as null;
         return new LngLatBounds(input);

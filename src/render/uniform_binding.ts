@@ -7,7 +7,7 @@ type $ObjMap<T extends {}, F extends (v: any) => any> = {
     [K in keyof T]: F extends (v: T[K]) => infer R ? R : never;
 };
 
-export type UniformValues<Us extends any> = $ObjMap<Us, <V>(u: Uniform<V>) => V>;
+export type UniformValues<Us extends {}> = $ObjMap<Us, <V>(u: Uniform<V>) => V>;
 export type UniformLocations = {[_: string]: WebGLUniformLocation};
 
 abstract class Uniform<T> {

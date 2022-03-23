@@ -8,7 +8,7 @@ The bundeling process can be split into several steps:
 `npm run build-css`
 This command will compile the css code and create the css file.
 
-`npm run build-prod` or `npm run build-prod-min` or `npm run build-dev`
+`npm run build-prod` and `npm run build-dev`
 These commands will use rollup to bundle the code. This is where the magic happens and uses some files in this folder.
 
 `banner.ts` is used to create a banner at the beginning of the output file
