@@ -83,7 +83,7 @@ export interface CustomLayerInterface {
     /**
      * @property {string} renderingMode Either `"2d"` or `"3d"`. Defaults to `"2d"`.
      */
-    renderingMode?: '2d' | '3d' | undefined;
+    renderingMode?: '2d' | '3d';
     /**
      * Called during a render frame allowing the layer to draw into the GL context.
      *
