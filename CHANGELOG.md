@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- *...Add new stuff here...*
+- Fix missing `touchmove` in `MapTouchEvent["type"]` (#1131)
  
 ## 2.1.8-pre.3
 
