@@ -31,7 +31,7 @@ import raster from './draw_raster';
 import background from './draw_background';
 import debug, {drawDebugPadding} from './draw_debug';
 import custom from './draw_custom';
-import {prepareTerrain, drawTerrain, updateTerrainFacilitators} from './draw_terrain';
+import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 
 const draw = {
@@ -61,6 +61,7 @@ import type IndexBuffer from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type ResolvedImage from '../style-spec/expression/types/resolved_image';
 import type {RGBAImage} from '../util/image';
+import RenderToTexture from './render_to_texture';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -272,13 +273,13 @@ class Painter {
 
         for (const tileID of tileIDs) {
             const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;
-            const terrain = this.style.terrainSourceCache.getTerrain(tileID);
+            const terrainData = this.style.terrain && this.style.terrain.getTerrainData(tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, id, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
                 ColorMode.disabled, CullFaceMode.disabled, clippingMaskUniformValues(tileID.posMatrix),
-                terrain, '$clipping', this.tileExtentBuffer,
+                terrainData, '$clipping', this.tileExtentBuffer,
                 this.quadTriangleIndexBuffer, this.tileExtentSegments);
         }
     }
@@ -377,9 +378,7 @@ class Painter {
 
         const layerIds = this.style._order;
         const sourceCaches = this.style.sourceCaches;
-        const renderToTexture = {background: true, fill: true, line: true, raster: true};
-        const tsc = this.style.terrainSourceCache;
-        const isTerrainEnabled = tsc.isEnabled();
+        const renderToTexture = this.style.terrain && new RenderToTexture(this);
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -391,40 +390,12 @@ class Painter {
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
-        // this is used for 3d-terrain
-        // coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
-        // e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
-        const coordsDescendingInv: {[_: string]: {[_:string]: Array<OverscaledTileID>}} = {};
-        const coordsDescendingInvStr: {[_: string]: {[_:string]: string}} = {};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
             coordsAscending[id] = sourceCache.getVisibleCoordinates();
             coordsDescending[id] = coordsAscending[id].slice().reverse();
             coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
-            if (isTerrainEnabled) {
-                coordsDescendingInv[id] = {};
-                for (let c = 0; c < coordsDescending[id].length; c++) {
-                    const coords = tsc.getTerrainCoords(coordsDescending[id][c]);
-                    for (const key in coords) {
-                        if (!coordsDescendingInv[id][key]) coordsDescendingInv[id][key] = [];
-                        coordsDescendingInv[id][key].push(coords[key]);
-                    }
-                }
-            }
-        }
-
-        // create a string representation of all to tiles rendered to render-to-texture tiles
-        // this string representation is used to check if tile should be re-rendered.
-        for (const id of layerIds) {
-            const layer = this.style._layers[id], source = layer.source;
-            if (renderToTexture[layer.type]) {
-                if (!coordsDescendingInvStr[source]) {
-                    coordsDescendingInvStr[source] = {};
-                    for (const key in coordsDescendingInv[source])
-                        coordsDescendingInvStr[source][key] = coordsDescendingInv[source][key].map(c => c.key).sort().join();
-                }
-            }
         }
 
         this.opaquePassCutoff = Infinity;
@@ -436,16 +407,17 @@ class Painter {
             }
         }
 
-        if (isTerrainEnabled) {
+        if (renderToTexture) {
             // this is disabled, because render-to-texture is rendering all layers from bottom to top.
             this.opaquePassCutoff = 0;
 
-            // update coords/depth-framebuffer on camera movement, ore tile reloading
-            const newTiles = tsc.tilesAfterTime(this.terrainFacilitator.renderTime);
+            // update coords/depth-framebuffer on camera movement, or tile reloading
+            const newTiles = this.style.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
             if (!mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
                 mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
                 this.terrainFacilitator.renderTime = Date.now();
-                updateTerrainFacilitators(this, tsc);
+                drawDepth(this, this.style.terrain);
+                drawCoords(this, this.style.terrain);
             }
         }
 
@@ -477,7 +449,7 @@ class Painter {
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
-        if (!isTerrainEnabled) {
+        if (!renderToTexture) {
             this.renderPass = 'opaque';
 
             for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
@@ -494,90 +466,11 @@ class Painter {
         // Draw all other layers bottom-to-top.
         this.renderPass = 'translucent';
 
-        // the following variables only used when terrain-3d is enabled
-        const stacks = []; // render layers not one by one, instead group into stacks
-        let prevType = null; // remember the type of the last layer when render to a stack
-        const rerender = {}; // create a lookup which tiles should rendered to texture
-        let renderableTiles = []; // all terrain-tiles for the current scene
-        if (isTerrainEnabled) {
-            renderableTiles = tsc.getRenderableTiles();
-            renderableTiles.forEach(tile => {
-                for (const source in coordsDescendingInvStr) {
-                    // rerender if there are more coords to render than in the last rendering
-                    const coords = coordsDescendingInvStr[source][tile.tileID.key];
-                    if (coords && coords !== tile.textureCoords[source]) tile.clearTextures(this);
-                    // rerender if terrainSourceCache has marked tile for rerender
-                    if (tsc.rerender[source] && tsc.rerender[source][tile.tileID.key]) tile.clearTextures(this);
-                }
-                // rerender if there are no previous renderings
-                rerender[tile.tileID.key] = !tile.textures.length;
-            });
-            // reset terrainSource rerender cache
-            tsc.rerender = {};
-        }
-
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
-            const type = layer.type;
 
-            if (isTerrainEnabled) {
-                // due that switching textures is relatively slow, the render
-                // layer-by-layer context here is not practicable. To bypass this problem
-                // this lines of code stack all layers and later render all at once.
-                // Because of the stylesheet possibility to mixing render-to-texture layers
-                // and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
-                // a symbol-layer is in between of fill-layers.
-
-                const isLastLayer = this.currentLayer + 1 === layerIds.length;
-
-                // remember background, fill, line & raster layer to render into a stack
-                if (renderToTexture[type]) {
-                    if (!prevType || !renderToTexture[prevType]) stacks.push([]);
-                    prevType = type;
-                    stacks[stacks.length - 1].push(layerIds[this.currentLayer]);
-                    // rendering is done later, all in once
-                    if (!isLastLayer) continue;
-                }
-
-                // in case a stack is finished render all collected stack-layers into a texture
-                if (renderToTexture[prevType] || type === 'hillshade' || (renderToTexture[type] && isLastLayer)) {
-                    prevType = type;
-                    const stack = stacks.length - 1, layers = stacks[stack] || [];
-                    for (const tile of renderableTiles) {
-                        prepareTerrain(this, tsc, tile, stack);
-                        if (rerender[tile.tileID.key]) {
-                            this.context.clear({color: Color.transparent});
-                            for (let l = 0; l < layers.length; l++) {
-                                const layer = this.style._layers[layers[l]];
-                                const coords = layer.source ? coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
-                                this._renderTileClippingMasks(layer, coords);
-                                this.renderLayer(this, this.style.sourceCaches[layer.source], layer, coords);
-                                if (layer.source) tile.textureCoords[layer.source] = coordsDescendingInvStr[layer.source][tile.tileID.key];
-                            }
-                        }
-                        drawTerrain(this, tsc, tile);
-                    }
-
-                    // the hillshading layer is a special case because it changes on every camera-movement
-                    // so rerender it in any case.
-                    if (type === 'hillshade') {
-                        stacks.push([layerIds[this.currentLayer]]);
-                        for (const tile of renderableTiles) {
-                            const coords = coordsDescendingInv[layer.source][tile.tileID.key];
-                            prepareTerrain(this, tsc, tile, stacks.length - 1);
-                            this.context.clear({color: Color.transparent});
-                            this._renderTileClippingMasks(layer, coords);
-                            this.renderLayer(this, sourceCache, layer, coords);
-                            drawTerrain(this, tsc, tile);
-                        }
-                        continue;
-                    }
-
-                    if (isLastLayer) continue;
-                }
-
-            }
+            if (renderToTexture && renderToTexture.renderLayer(layer)) continue;
 
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
@@ -736,7 +629,7 @@ class Painter {
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
             (this._showOverdrawInspector ? '/overdraw' : '') +
-            (this.style.terrainSourceCache.isEnabled() ? '/terrain' : '');
+            (this.style.terrain ? '/terrain' : '');
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,
@@ -745,7 +638,7 @@ class Painter {
                 programConfiguration,
                 programUniforms[name],
                 this._showOverdrawInspector,
-                this.style.terrainSourceCache.isEnabled()
+                this.style.terrain !== null
             );
         }
         return this.cache[key];

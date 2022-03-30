@@ -415,7 +415,7 @@ class HandlerManager {
     _updateMapTransform(combinedResult: any, combinedEventsInProgress: any, deactivatedHandlers: any) {
         const map = this._map;
         const tr = map.transform;
-        const hasTerrain = map.style && map.style.terrainSourceCache && map.style.terrainSourceCache.isEnabled();
+        const hasTerrain = map.style && map.style.terrain;
 
         if (!hasChange(combinedResult) && !(hasTerrain && this._drag)) {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
@@ -456,7 +456,7 @@ class HandlerManager {
             // when dragging ends, recalcuate the zoomlevel for the new center coordinate
             } else if (this._drag && deactivatedHandlers[this._drag.handlerName]) {
                 tr.freezeElevation = false;
-                if (hasTerrain) tr.recalculateZoom();
+                tr.recalculateZoom();
                 this._drag = null;
             // drag map
             } else if (combinedEventsInProgress.drag && this._drag) {

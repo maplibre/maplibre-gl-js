@@ -11,7 +11,7 @@ import EdgeInsets from './edge_insets';
 
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
-import TerrainSourceCache from '../source/terrain_source_cache';
+import Terrain from '../render/terrain';
 
 /**
  * A single transform, generally used for a single tile to be
@@ -42,8 +42,8 @@ class Transform {
     pixelMatrixInverse: mat4;
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
-    terrainSourceCache: TerrainSourceCache;
     freezeElevation: boolean;
+    terrain: Terrain;
     _fov: number;
     _pitch: number;
     _zoom: number;
@@ -103,7 +103,7 @@ class Transform {
         clone._pitch = this._pitch;
         clone._unmodified = this._unmodified;
         clone._edgeInsets = this._edgeInsets.clone();
-        clone.terrainSourceCache = this.terrainSourceCache;
+        clone.terrain = this.terrain;
         clone._calcMatrices();
         return clone;
     }
@@ -347,7 +347,6 @@ class Transform {
     ): Array<OverscaledTileID> {
         let z = this.coveringZoomLevel(options);
         const actualZ = z;
-        const tsc = this.terrainSourceCache;
 
         if (options.minzoom !== undefined && z < options.minzoom) return [];
         if (options.maxzoom !== undefined && z > options.maxzoom) z = options.maxzoom;
@@ -362,11 +361,11 @@ class Transform {
         // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
         let minZoom = options.minzoom || 0;
         // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
-        if (!(tsc && tsc.isEnabled()) && this.pitch <= 60.0 && this._edgeInsets.top < 0.1)
+        if (!this.terrain && this.pitch <= 60.0 && this._edgeInsets.top < 0.1)
             minZoom = z;
 
         // There should always be a certain number of maximum zoom level tiles surrounding the center location
-        const radiusOfMaxLvlLodInTiles = tsc && tsc.isEnabled() ? 2 / Math.min(this.tileSize, options.tileSize) * this.tileSize : 3;
+        const radiusOfMaxLvlLodInTiles = this.terrain ? 2 / Math.min(this.tileSize, options.tileSize) * this.tileSize : 3;
 
         const newRootTile = (wrap: number): any => {
             return {
@@ -411,7 +410,7 @@ class Transform {
                 fullyVisible = intersectResult === 2;
             }
 
-            const refPoint = tsc && tsc.isEnabled() ? cameraPoint : centerPoint;
+            const refPoint = this.terrain ? cameraPoint : centerPoint;
             const distanceX = it.aabb.distanceX(refPoint);
             const distanceY = it.aabb.distanceY(refPoint);
             const longestDim = Math.max(Math.abs(distanceX), Math.abs(distanceY));
@@ -440,12 +439,13 @@ class Transform {
                 const childY = (y << 1) + (i >> 1);
                 const childZ = it.zoom + 1;
                 let quadrant = it.aabb.quadrant(i);
-                if (tsc && tsc.isEnabled()) {
-                    const tile = tsc.getSourceTile(new OverscaledTileID(childZ, it.wrap, childZ, childX, childY), true);
+                if (this.terrain) {
+                    const tileID = new OverscaledTileID(childZ, it.wrap, childZ, childX, childY);
+                    const tile = this.terrain.getTerrainData(tileID).tile;
                     let minElevation = this.elevation, maxElevation = this.elevation;
                     if (tile && tile.dem) {
-                        minElevation = tile.dem.min * tsc.exaggeration;
-                        maxElevation = tile.dem.max * tsc.exaggeration;
+                        minElevation = tile.dem.min * this.terrain.exaggeration;
+                        maxElevation = tile.dem.max * this.terrain.exaggeration;
                     }
                     quadrant = new Aabb(
                         vec3.fromValues(quadrant.min[0], quadrant.min[1], minElevation),
@@ -491,13 +491,13 @@ class Transform {
     }
 
     getElevation(lnglat: LngLat) {
-        const merc = this.locationCoordinate(lnglat), tsc = this.terrainSourceCache;
-        if (!(tsc && tsc.isEnabled())) return 0;
-        const tileSize = tsc.tileSize, worldSize = (1 << this.tileZoom) * tileSize;
+        if (!this.terrain) return 0;
+        const merc = MercatorCoordinate.fromLngLat(lnglat);
+        const worldSize = (1 << this.tileZoom) * EXTENT;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
-        const tileX = Math.floor(mercX / tileSize), tileY = Math.floor(mercY / tileSize);
+        const tileX = Math.floor(mercX / EXTENT), tileY = Math.floor(mercY / EXTENT);
         const tileID = new OverscaledTileID(this.tileZoom, 0, this.tileZoom, tileX, tileY);
-        return this.terrainSourceCache.getElevation(tileID, mercX % tileSize, mercY % tileSize, tileSize);
+        return this.terrain.getElevation(tileID, mercX % EXTENT, mercY % EXTENT, EXTENT)
     }
 
     /**
@@ -516,7 +516,6 @@ class Transform {
     // this method only works in combination with elevation enabled and freezeElevation activated,
     // because only in this case this.elevation holds the old elevation value.
     recalculateZoom() {
-        if (!this.terrainSourceCache || !this.terrainSourceCache.isEnabled()) return;
         // find position the camera is looking on
         const center = this.pointLocation3D(this.centerPoint);
         const elevation = this.getElevation(center);
@@ -641,27 +640,9 @@ class Transform {
             interpolate(y0, y1, t) / this.worldSize);
     }
 
-    pointCoordinate3D(p: Point) {
-        if (!(this.terrainSourceCache && this.terrainSourceCache.isEnabled())) return this.pointCoordinate(p);
-        const rgba = new Uint8Array(4);
-        const painter = this.terrainSourceCache._style.map.painter, context = painter.context, gl = context.gl;
-        // grab coordinate pixel from coordinates framebuffer
-        context.bindFramebuffer.set(this.terrainSourceCache.getFramebuffer(painter, 'coords').framebuffer);
-        gl.readPixels(p.x, painter.height / devicePixelRatio - p.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
-        context.bindFramebuffer.set(null);
-        // decode coordinates (encoding see terrain-source-cache)
-        const x = rgba[0] + ((rgba[2] >> 4) << 8);
-        const y = rgba[1] + ((rgba[2] & 15) << 8);
-        const tileID = this.terrainSourceCache._coordsIndex[255 - rgba[3]];
-        const tile = tileID && this.terrainSourceCache.getTileByID(tileID);
-        if (!tile) return this.pointCoordinate(p);
-        const coordsSize = this.terrainSourceCache._coordsTextureSize;
-        const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
-        return new MercatorCoordinate(
-            (tile.tileID.canonical.x * coordsSize + x) / worldSize,
-            (tile.tileID.canonical.y * coordsSize + y) / worldSize,
-            this.terrainSourceCache.getElevation(tile.tileID, x, y, coordsSize)
-        );
+    pointCoordinate3D(p: Point): MercatorCoordinate {
+        const coordinate = this.terrain && this.terrain.pointCoordinate(p);
+        return coordinate || this.pointCoordinate(p);
     }
 
     /**
@@ -830,7 +811,6 @@ class Transform {
 
         const halfFov = this._fov / 2;
         const offset = this.centerOffset;
-        const hasTerrain = this.terrainSourceCache && this.terrainSourceCache.isEnabled();
         const x = this.point.x, y = this.point.y;
         this.cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this.height;
         this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
@@ -847,7 +827,7 @@ class Transform {
         this.glCoordMatrix = m;
 
         // calculate the camera to sea-level distance in pixel in respect of terrain
-        this.cameraToSeaLevelDistance = hasTerrain ?
+        this.cameraToSeaLevelDistance = this.terrain ?
             this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch) :
             this.cameraToCenterDistance;
 

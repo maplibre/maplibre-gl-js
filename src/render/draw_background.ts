@@ -46,10 +46,10 @@ function drawBackground(painter: Painter, sourceCache: SourceCache, layer: Backg
         const uniformValues = image ?
             backgroundPatternUniformValues(matrix, opacity, painter, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(matrix, opacity, color);
-        const terrain = painter.style.terrainSourceCache.getTerrain(tileID);
+        const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(tileID);
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-            uniformValues, terrain, layer.id, painter.tileExtentBuffer,
+            uniformValues, terrainData, layer.id, painter.tileExtentBuffer,
             painter.quadTriangleIndexBuffer, painter.tileExtentSegments);
     }
 }

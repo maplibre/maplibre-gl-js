@@ -935,8 +935,7 @@ abstract class Camera extends Evented {
         }
         delete this._easeId;
         this.transform.freezeElevation = false;
-        if (this.transform.terrainSourceCache && this.transform.terrainSourceCache.isEnabled())
-            this.transform.recalculateZoom();
+        if (this.transform.terrain) this.transform.recalculateZoom();
 
         const wasZooming = this._zooming;
         const wasRotating = this._rotating;

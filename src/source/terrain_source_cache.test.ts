@@ -9,6 +9,7 @@ import Painter from '../render/painter';
 import Context from '../gl/context';
 import gl from 'gl';
 import RasterDEMTileSource from './raster_dem_tile_source';
+import LngLat from '../geo/lng_lat';
 
 const context = new Context(gl(10, 10));
 const transform = new Transform();
@@ -67,7 +68,7 @@ describe('TerrainSourceCache', () => {
             const source = createSource({url: '/source.json'});
             server.respond();
             style.addSource('terrain', source as any);
-            tsc = new TerrainSourceCache(style);
+            tsc = new TerrainSourceCache(style.sourceCaches.terrain);
             done();
         });
         style.loadJSON({
@@ -81,25 +82,22 @@ describe('TerrainSourceCache', () => {
         server.restore();
     });
 
-    test('#enable', () => {
-        tsc.enable(style.sourceCaches['terrain']);
-        expect(tsc.exaggeration).toBe(1);
-        expect(tsc.elevationOffset).toBe(450);
-        expect(style.sourceCaches['terrain'].usedForTerrain).toBeTruthy();
-        expect(style.sourceCaches['terrain'].tileSize).toBe(1024);
-        expect(tsc.isEnabled()).toBeTruthy();
-
-        tsc.enable(style.sourceCaches['terrain'], {exaggeration: 2, elevationOffset: 1000});
-        expect(tsc.exaggeration).toBe(2);
-        expect(tsc.elevationOffset).toBe(1000);
+    test('#constructor', () => {
+        expect(tsc.sourceCache.usedForTerrain).toBeTruthy();
+        expect(tsc.sourceCache.tileSize).toBe(tsc.tileSize * 2 ** tsc.deltaZoom);
     });
 
-    test('#disable', () => {
-        tsc.disable();
-        expect(tsc._sourceCache).toBeNull();
-        expect(style.sourceCaches['terrain'].usedForTerrain).toBeFalsy();
-        expect(tsc.isEnabled()).toBeFalsy();
-        expect(tsc._tiles).toEqual({});
-    });
+    // test('#update', () => {
+    //     const transform = new Transform(0, 22, 0, 60, true);
+    //     transform.center = new LngLat(10, 50);
+    //     transform.zoom = 10;
+    //     tsc.update(transform);
+
+    //     // expect(tsc.exaggeration).toBe(1);
+    //     // expect(tsc.elevationOffset).toBe(450);
+    //     // expect(style.sourceCaches['terrain'].usedForTerrain).toBeTruthy();
+    //     // expect(style.sourceCaches['terrain'].tileSize).toBe(1024);
+    //     // expect(tsc.isEnabled()).toBeTruthy();
+    // });
 
 });

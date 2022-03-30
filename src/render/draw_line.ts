@@ -56,7 +56,7 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
         const prevProgram = painter.context.program.get();
         const program = painter.useProgram(programId, programConfiguration);
         const programChanged = firstTile || program.program !== prevProgram;
-        const terrain = painter.style.terrainSourceCache.getTerrain(coord);
+        const terrainData = painter.style.terrain &&  painter.style.terrain.getTerrainData(coord);
 
         const constantPattern = patternProperty.constantOr(null);
         if (constantPattern && tile.imageAtlas) {
@@ -66,7 +66,7 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
+        const terrainCoord = terrainData ? coord : null;
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, terrainCoord) :
             dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, terrainCoord) :
                 gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length, terrainCoord) :
@@ -115,7 +115,7 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
         }
 
         program.draw(context, gl.TRIANGLES, depthMode,
-            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrain,
+            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
             layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 

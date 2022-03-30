@@ -17,7 +17,6 @@ import {getSourceType, setSourceType, Source} from '../source/source';
 import type {SourceClass} from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import SourceCache from '../source/source_cache';
-import TerrainSourceCache from '../source/terrain_source_cache';
 import GeoJSONSource from '../source/geojson_source';
 import styleSpec from '../style-spec/reference/latest';
 import getWorkerPool from '../util/global_worker_pool';
@@ -62,6 +61,7 @@ import type {
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';
+import Terrain from '../render/terrain';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',
@@ -96,6 +96,13 @@ export type StyleOptions = {
 export type StyleSetterOptions = {
     validate?: boolean;
 };
+
+export type TerrainOptions = {
+    source: string;
+    exaggeration?: number;
+    elevationOffset?: number;
+};
+
 /**
  * @private
  */
@@ -107,6 +114,7 @@ class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
+    terrain: Terrain;
 
     _request: Cancelable;
     _spriteRequest: Cancelable;
@@ -114,10 +122,10 @@ class Style extends Evented {
     _serializedLayers: {[_: string]: any};
     _order: Array<string>;
     sourceCaches: {[_: string]: SourceCache};
-    terrainSourceCache: TerrainSourceCache;
     zoomHistory: ZoomHistory;
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
+    _terrainDataCallback: (e: any) => any;
     _changed: boolean;
     _updatedSources: {[_: string]: 'clear' | 'reload'};
     _updatedLayers: {[_: string]: true};
@@ -152,13 +160,9 @@ class Style extends Evented {
         this._serializedLayers = {};
         this._order  = [];
         this.sourceCaches = {};
-        this.terrainSourceCache = new TerrainSourceCache(this);
         this.zoomHistory = new ZoomHistory();
         this._loaded = false;
         this._availableImages = [];
-
-        // make elevation accessible from map.transform
-        if (map.transform) map.transform.terrainSourceCache = this.terrainSourceCache;
 
         this._resetUpdates();
 
@@ -475,6 +479,31 @@ class Style extends Evented {
         this._updatedPaintProps = {};
 
         this._changedImages = {};
+    }
+
+    setTerrain(options?: TerrainOptions) {
+        // clear event handlers
+        if (this._terrainDataCallback) this.off("data", this._terrainDataCallback)
+        // add terrain
+        if (options) {
+            const sourceCache = this.sourceCaches[options.source];
+            this.map.transform.terrain = this.terrain = new Terrain(this, sourceCache, options);
+            this.map.transform.updateElevation();
+            this._terrainDataCallback = e => {
+                if (!e.tile) return;
+                if (e.sourceId === options.source) {
+                    this.map.transform.updateElevation();
+                    this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
+                } else if (e.source.type === 'geojson') {
+                    this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
+                }
+            };
+            this.on("data", this._terrainDataCallback);
+        // remove terrain
+        } else {
+            this.terrain = this.map.transform.terrain = null;
+            this.map.transform.updateElevation();
+        }
     }
 
     /**
@@ -1270,7 +1299,6 @@ class Style extends Evented {
     }
 
     _updateSources(transform: Transform) {
-        this.terrainSourceCache.update(transform);
         for (const id in this.sourceCaches) {
             this.sourceCaches[id].update(transform);
         }

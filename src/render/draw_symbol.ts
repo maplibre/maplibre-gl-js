@@ -32,14 +32,14 @@ import type {SymbolSDFUniformsType} from '../render/program/symbol_program';
 import type {CrossTileID, VariableOffset} from '../symbol/placement';
 import type SymbolBucket from '../data/bucket/symbol_bucket';
 import type {SymbolBuffers} from '../data/bucket/symbol_bucket';
-import type {TerrainData} from '../source/terrain_source_cache';
+import type {TerrainData} from '../render/terrain';
 
 export default drawSymbols;
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
     sortKey: number;
-    terrain: TerrainData;
+    terrainData: TerrainData;
     state: {
         program: any;
         buffers: SymbolBuffers;
@@ -135,9 +135,7 @@ function updateVariableAnchors(coords, painter, layer, sourceCache, rotationAlig
 
         if (size) {
             const tileScale = Math.pow(2, tr.zoom - tile.tileID.overscaledZ);
-            const getElevation = painter.style.terrainSourceCache && painter.style.terrainSourceCache.isEnabled() ?
-                (x: number, y: number) => painter.style.terrainSourceCache.getElevation(coord, x, y) :
-                null;
+            const getElevation = painter.style.terrain ? (x: number, y: number) => painter.style.terrain.getElevation(coord, x, y) : null;
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets, symbolSize,
                 tr, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, getElevation);
         }
@@ -269,7 +267,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
 
         const program = painter.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
         const size = symbolSize.evaluateSizeForZoom(sizeData, tr.zoom);
-        const terrain = painter.style.terrainSourceCache.getTerrain(coord);
+        const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
 
         let texSize: [number, number];
         let texSizeIcon: [number, number] = [0, 0];
@@ -306,9 +304,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
             bucket.hasIconData();
 
         if (alongLine) {
-            const getElevation = painter.style.terrainSourceCache && painter.style.terrainSourceCache.isEnabled() ?
-                (x: number, y: number) => painter.style.terrainSourceCache.getElevation(coord, x, y) :
-                0;
+            const getElevation = painter.style.terrain ? (x: number, y: number) => painter.style.terrain.getElevation(coord, x, y) : null;
             symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, getElevation);
         }
 
@@ -355,7 +351,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
                     segments: new SegmentVector([segment]),
                     sortKey: (segment.sortKey as any as number),
                     state,
-                    terrain
+                    terrainData
                 });
             }
         } else {
@@ -363,7 +359,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
                 segments: buffers.segments,
                 sortKey: 0,
                 state,
-                terrain
+                terrainData
             });
         }
     }
@@ -388,19 +384,19 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
             const uniformValues = (state.uniformValues as any as UniformValues<SymbolSDFUniformsType>);
             if (state.hasHalo) {
                 uniformValues['u_is_halo'] = 1;
-                drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, segmentState.terrain);
+                drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, segmentState.terrainData);
             }
             uniformValues['u_is_halo'] = 0;
         }
-        drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, segmentState.terrain);
+        drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, segmentState.terrainData);
     }
 }
 
-function drawSymbolElements(buffers, segments, layer, painter, program, depthMode, stencilMode, colorMode, uniformValues, terrain) {
+function drawSymbolElements(buffers, segments, layer, painter, program, depthMode, stencilMode, colorMode, uniformValues, terrainData) {
     const context = painter.context;
     const gl = context.gl;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        uniformValues, terrain, layer.id, buffers.layoutVertexBuffer,
+        uniformValues, terrainData, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
         painter.transform.zoom, buffers.programConfigurations.get(layer.id),
         buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);

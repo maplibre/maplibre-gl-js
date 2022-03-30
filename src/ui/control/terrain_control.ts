@@ -3,11 +3,7 @@ import {bindAll} from '../../util/util';
 
 import type Map from '../map';
 import type {IControl} from './control';
-
-type TerrainOptions = {
-    id?: string;
-    options?: {exaggeration: number; elevationOffset: number};
-};
+import type {TerrainOptions} from '../../style/style';
 
 /**
  * An `TerrainControl` control adds a button to turn terrain on and off.
@@ -19,7 +15,7 @@ type TerrainOptions = {
  * @example
  * var map = new maplibregl.Map({TerrainControl: false})
  *     .addControl(new maplibregl.TerrainControl({
- *         id: "terrain"
+ *         source: "terrain"
  *     }));
  */
 class TerrainControl implements IControl {
@@ -28,7 +24,7 @@ class TerrainControl implements IControl {
     _container: HTMLElement;
     _terrainButton: HTMLButtonElement;
 
-    constructor(options: TerrainOptions = {}) {
+    constructor(options: TerrainOptions) {
         this.options = options;
 
         bindAll([
@@ -57,10 +53,10 @@ class TerrainControl implements IControl {
     }
 
     _toggleTerrain() {
-        if (this._map.style.terrainSourceCache.isEnabled()) {
-            this._map.removeTerrain();
+        if (this._map.getTerrain()) {
+            this._map.setTerrain(null);
         } else {
-            this._map.addTerrain(this.options.id, this.options.options);
+            this._map.setTerrain(this.options);
         }
         this._updateTerrainIcon();
     }
@@ -68,7 +64,7 @@ class TerrainControl implements IControl {
     _updateTerrainIcon() {
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain', 'mapboxgl-ctrl-terrain');
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled', 'mapboxgl-ctrl-terrain-enabled');
-        if (this._map.isTerrainLoaded()) {
+        if (this._map.style.terrain) {
             this._terrainButton.classList.add('maplibregl-ctrl-terrain-enabled', 'mapboxgl-ctrl-terrain-enabled');
             this._terrainButton.title = this._map._getUIString('TerrainControl.disableTerrain');
         } else {

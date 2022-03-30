@@ -15,7 +15,7 @@ import type VertexBuffer from '../gl/vertex_buffer';
 import type IndexBuffer from '../gl/index_buffer';
 import type {UniformValues} from './uniform_binding';
 import type {CircleUniformsType} from './program/circle_program';
-import type {TerrainData} from '../source/terrain_source_cache';
+import type {TerrainData} from '../render/terrain';
 
 export default drawCircles;
 
@@ -25,7 +25,7 @@ type TileRenderState = {
     layoutVertexBuffer: VertexBuffer;
     indexBuffer: IndexBuffer;
     uniformValues: UniformValues<CircleUniformsType>;
-    terrain: TerrainData;
+    terrainData: TerrainData;
 };
 
 type SegmentsTileRenderState = {
@@ -68,7 +68,7 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
         const program = painter.useProgram('circle', programConfiguration);
         const layoutVertexBuffer = bucket.layoutVertexBuffer;
         const indexBuffer = bucket.indexBuffer;
-        const terrain = painter.style.terrainSourceCache.getTerrain(coord);
+        const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
         const uniformValues = circleUniformValues(painter, coord, tile, layer);
 
         const state: TileRenderState = {
@@ -77,7 +77,7 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
             layoutVertexBuffer,
             indexBuffer,
             uniformValues,
-            terrain
+            terrainData
         };
 
         if (sortFeaturesByKey) {
@@ -104,11 +104,11 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
     }
 
     for (const segmentsState of segmentsRenderStates) {
-        const {programConfiguration, program, layoutVertexBuffer, indexBuffer, uniformValues, terrain} = segmentsState.state;
+        const {programConfiguration, program, layoutVertexBuffer, indexBuffer, uniformValues, terrainData} = segmentsState.state;
         const segments = segmentsState.segments;
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-            uniformValues, terrain, layer.id,
+            uniformValues, terrainData, layer.id,
             layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }

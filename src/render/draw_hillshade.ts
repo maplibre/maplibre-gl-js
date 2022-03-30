@@ -44,14 +44,14 @@ function renderHillshade(painter, coord, tile, layer, depthMode, stencilMode, co
     if (!fbo) return;
 
     const program = painter.useProgram('hillshade');
-    const terrain = painter.style.terrainSourceCache.getTerrain(coord);
+    const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
 
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
-    const terrainCoord = painter.style.terrainSourceCache.isEnabled() ? coord : null;
+    const terrainCoord = terrainData ? coord : null;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        hillshadeUniformValues(painter, tile, layer, terrainCoord), terrain, layer.id, painter.rasterBoundsBuffer,
+        hillshadeUniformValues(painter, tile, layer, terrainCoord), terrainData, layer.id, painter.rasterBoundsBuffer,
         painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
 
 }

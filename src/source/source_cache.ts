@@ -529,7 +529,7 @@ class SourceCache extends Evented {
                     const parent = tileID.scaledTo(tileID.canonical.z - 1);
                     parents[parent.key] = parent;
                     // load very low zoom to calculate tile visability in transform.coveringTiles correct
-                    const parent2 = tileID.scaledTo(Math.max(this._source.minzoom, 5));
+                    const parent2 = tileID.scaledTo(Math.max(this._source.minzoom, Math.min(tileID.canonical.z, 5)));
                     parents[parent2.key] = parent2;
                 }
             }
@@ -573,9 +573,8 @@ class SourceCache extends Evented {
                 }
             }
 
-            // disable fading logic in renderToTexture (e.g. 3D) mode
-            // e.g. avoid rendering two tiles on the same place
-            if (this.style && this.style.terrainSourceCache && this.style.terrainSourceCache.isEnabled()) {
+            // disable fading logic in terrain3D mode to avoid rendering two tiles on the same place
+            if (this.style && this.style.terrain) {
                 const idealRasterTileIDs: {[_: string]: OverscaledTileID} = {};
                 const missingTileIDs: {[_: string]: OverscaledTileID} = {};
                 for (const tileID of idealTileIDs) {

@@ -3,7 +3,7 @@ import browser from '../util/browser';
 import DOM from '../util/dom';
 import {getImage, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
-import Style from '../style/style';
+import Style, { TerrainOptions } from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
 import Transform from '../geo/transform';
@@ -55,6 +55,7 @@ import type {
 } from '../style-spec/types.g';
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
+import Terrain from '../render/terrain';
 
 /* eslint-enable no-use-before-define */
 
@@ -868,7 +869,7 @@ class Map extends Camera {
      * var point = map.project(coordinate);
      */
     project(lnglat: LngLatLike) {
-        return this.style && this.style.terrainSourceCache.isEnabled() ?
+        return this.style && this.style.terrain ?
             this.transform.locationPoint3D(LngLat.convert(lnglat)) :
             this.transform.locationPoint(LngLat.convert(lnglat));
     }
@@ -886,7 +887,7 @@ class Map extends Camera {
      * });
      */
     unproject(point: PointLike) {
-        return this.style && this.style.terrainSourceCache.isEnabled() ?
+        return this.style && this.style.terrain ?
             this.transform.pointLocation3D(Point.convert(point)) :
             this.transform.pointLocation(Point.convert(point));
     }
@@ -1576,48 +1577,28 @@ class Map extends Camera {
 
     /**
      * Loads a 3D terrain mesh, based on a "raster-dem" source.
-     *
-     * @param {string} id The ID of the raster-dem source to use.
-     * @param options Allowed options are exaggeration, elevationOffset
-     * @param options.exaggeration - the exaggeration
-     * @param options.elevationOffset - the elevation offset
+     * @param {TerrainOptions} [options] Options object.
      * @returns {Map} `this`
      * @example
-     * map.addTerrain('my-data');
+     * map.setTerrain({ source: 'terrain' });
      */
-    addTerrain(id: string, options?: {exaggeration: number; elevationOffset: number}): Map {
-        this.isSourceLoaded(id);
-        this.style.terrainSourceCache.enable(this.style.sourceCaches[id], options);
-        this.transform.updateElevation();
-        this.style.terrainSourceCache.update(this.transform);
+    setTerrain(options: TerrainOptions): Map {
+        if (options) this.isSourceLoaded(options.source);
+        this.style.setTerrain(options);
         this._sourcesDirty = true;
         this._styleDirty = true;
         this.triggerRepaint();
-        this.fire(new Event('terrain'));
         return this;
     }
 
     /**
-     * Returns a Boolean indicating whether terrain is loaded.
-     * @returns {boolean} true if the terrain is loaded
-     */
-    isTerrainLoaded(): boolean {
-        return this.style.terrainSourceCache.isEnabled();
-    }
-
-    /**
-     * Removes the 3D terrain mesh from the map.
-     *
-     * @returns {Map} `this`
+     * Get the terrain-options if terrain is loaded
+     * @returns {TerrainOptions}
      * @example
-     * map.removeTerrain();
+     * map.getTerrain(); // { source: 'terrain' };
      */
-    removeTerrain(): Map {
-        this.style.terrainSourceCache.disable();
-        this.transform.updateElevation();
-        this.triggerRepaint();
-        this.fire(new Event('terrain'));
-        return this;
+    getTerrain(): TerrainOptions {
+        return this.style.terrain && this.style.terrain.options;
     }
 
     /**
@@ -2611,6 +2592,10 @@ class Map extends Camera {
             this._sourcesDirty = false;
             this.style._updateSources(this.transform);
         }
+
+        // update terrain stuff
+        if (this.style.terrain) this.style.terrain.sourceCache.update(this.transform);
+        this.transform.updateElevation();
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 

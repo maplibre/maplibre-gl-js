@@ -36,8 +36,8 @@ map.on('load', () => {
     });
     map.addControl(
         new maplibregl.TerrainControl({
-            id: 'terrain',
-            options: {exaggeration: 0.33}
+            source: 'terrain',
+            exaggeration: 0.33
         })
     );
 });
