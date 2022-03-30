@@ -1690,3 +1690,86 @@ describe('SourceCache#onRemove', () => {
         expect(sourceOnRemove).toHaveBeenCalled();
     });
 });
+
+describe('SourceCache#usedForTerrain', () => {
+    test('loads covering tiles with usedForTerrain with source zoom 0-14', done => {
+        const transform = new Transform();
+        transform.resize(511, 511);
+        transform.zoom = 10;
+
+        const sourceCache = createSourceCache({});
+        sourceCache.usedForTerrain = true;
+        sourceCache.tileSize = 1024;
+        expect(sourceCache.usedForTerrain).toBeTruthy();
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+                expect(Object.values(sourceCache._tiles).map(t => t.tileID.key)).toEqual(
+                    ['2tc099', '2tbz99', '2sxs99', '2sxr99', 'pds88', 'eo55', 'pdr88', 'en55', 'p6o88', 'ds55', 'p6n88', 'dr55']
+                );
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+
+    test('loads covering tiles with usedForTerrain with source zoom 8-14', done => {
+        const transform = new Transform();
+        transform.resize(511, 511);
+        transform.zoom = 10;
+
+        const sourceCache = createSourceCache({minzoom: 8, maxzoom: 14});
+        sourceCache.usedForTerrain = true;
+        sourceCache.tileSize = 1024;
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+                expect(Object.values(sourceCache._tiles).map(t => t.tileID.key)).toEqual(
+                    ['2tc099', '2tbz99', '2sxs99', '2sxr99', 'pds88', 'pdr88', 'p6o88', 'p6n88']
+                );
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+
+    test('loads covering tiles with usedForTerrain with source zoom 0-4', done => {
+        const transform = new Transform();
+        transform.resize(511, 511);
+        transform.zoom = 10;
+
+        const sourceCache = createSourceCache({minzoom: 0, maxzoom: 4});
+        sourceCache.usedForTerrain = true;
+        sourceCache.tileSize = 1024;
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+                expect(Object.values(sourceCache._tiles).map(t => t.tileID.key)).toEqual(
+                    ['1033', '3s44', '3r44', '3c44', '3b44', 'z33', 's33', 'r33']
+                );
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+
+    test('loads covering tiles with usedForTerrain with source zoom 4-4', done => {
+        const transform = new Transform();
+        transform.resize(511, 511);
+        transform.zoom = 10;
+
+        const sourceCache = createSourceCache({minzoom: 4, maxzoom: 4});
+        sourceCache.usedForTerrain = true;
+        sourceCache.tileSize = 1024;
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+                expect(Object.values(sourceCache._tiles).map(t => t.tileID.key)).toEqual(
+                    ['3s44', '3r44', '3c44', '3b44']
+                );
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+});
