@@ -83,7 +83,6 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
         const program = painter.useProgram(programName, programConfiguration);
         const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
 
-
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);
             tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);

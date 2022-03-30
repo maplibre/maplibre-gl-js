@@ -1,7 +1,7 @@
-import Painter from "./painter";
-import Tile from "../source/tile";
-import Color from "../style-spec/util/color";
-import {OverscaledTileID} from "../source/tile_id";
+import Painter from './painter';
+import Tile from '../source/tile';
+import Color from '../style-spec/util/color';
+import {OverscaledTileID} from '../source/tile_id';
 import {prepareTerrain, drawTerrain} from './draw_terrain';
 
 export default class RenderToTexture {
@@ -31,7 +31,7 @@ export default class RenderToTexture {
         this._renderToTexture = {background: true, fill: true, line: true, raster: true};
         this._coordsDescendingInv = {};
         this._coordsDescendingInvStr = {};
-        this._stacks = []
+        this._stacks = [];
         this._prevType = null;
         this._rerender = {};
         this._renderableTiles = painter.style.terrain.sourceCache.getRenderableTiles();
@@ -60,9 +60,9 @@ export default class RenderToTexture {
             const layer = style._layers[id], source = layer.source;
             if (this._renderToTexture[layer.type]) {
                 if (!this._coordsDescendingInvStr[source]) {
-                  this._coordsDescendingInvStr[source] = {};
+                    this._coordsDescendingInvStr[source] = {};
                     for (const key in this._coordsDescendingInv[source])
-                    this._coordsDescendingInvStr[source][key] = this._coordsDescendingInv[source][key].map(c => c.key).sort().join();
+                        this._coordsDescendingInvStr[source][key] = this._coordsDescendingInv[source][key].map(c => c.key).sort().join();
                 }
             }
         }
@@ -91,7 +91,7 @@ export default class RenderToTexture {
      * Because of the stylesheet possibility to mixing render-to-texture layers
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
-     * @param {Layer} layer
+     * @param {Layer} layer the layer to render
      * @returns {boolean} if true layer is rendered to texture, otherwise false
      */
     renderLayer(layer: any): boolean {

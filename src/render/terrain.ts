@@ -48,16 +48,16 @@ import {number as mix} from '../style-spec/util/interpolate';
  */
 
 export type TerrainData = {
-   'u_depth': number;
-   'u_terrain': number;
-   'u_terrain_dim': number;
-   'u_terrain_matrix': mat4;
-   'u_terrain_unpack': number[];
-   'u_terrain_offset': number;
-   'u_terrain_exaggeration': number;
-   texture: WebGLTexture;
-   depthTexture: WebGLTexture;
-   tile: Tile;
+    'u_depth': number;
+    'u_terrain': number;
+    'u_terrain_dim': number;
+    'u_terrain_matrix': mat4;
+    'u_terrain_unpack': number[];
+    'u_terrain_offset': number;
+    'u_terrain_exaggeration': number;
+    texture: WebGLTexture;
+    depthTexture: WebGLTexture;
+    tile: Tile;
 }
 
 export type TerrainMesh = {
@@ -118,8 +118,8 @@ export default class Terrain {
         this.style = style;
         this.sourceCache = new TerrainSourceCache(sourceCache);
         this.options = options;
-        this.exaggeration = typeof(options.exaggeration) === "number" ? options.exaggeration : 1.0;
-        this.elevationOffset = typeof(options.elevationOffset) === "number" ? options.elevationOffset : 450; // ~ dead-sea
+        this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
+        this.elevationOffset = typeof options.elevationOffset === 'number' ? options.elevationOffset : 450; // ~ dead-sea
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = {};
@@ -136,7 +136,7 @@ export default class Terrain {
      * @param {number} extent optional, default 8192
      * @returns {number} - the elevation
      */
-     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
+    getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return this.elevationOffset;
         let elevation = 0;
         const terrain = this.getTerrainData(tileID);
@@ -165,7 +165,7 @@ export default class Terrain {
     }
 
     needsRerender(source: string, tileID: OverscaledTileID) {
-        return this._rerender[source] && this._rerender[source][tileID.key]
+        return this._rerender[source] && this._rerender[source][tileID.key];
     }
 
     clearRerenderCache() {
@@ -238,9 +238,8 @@ export default class Terrain {
             texture: (sourceTile && sourceTile.demTexture || this._emptyDemTexture).texture,
             depthTexture: (this._fboDepthTexture || this._emptyDepthTexture).texture,
             tile: sourceTile
-       };
+        };
     }
-
 
     /**
      * create the render-to-texture framebuffer
@@ -252,8 +251,8 @@ export default class Terrain {
             const size = this.sourceCache.tileSize * this.qualityFactor;
             this._rttFramebuffer = painter.context.createFramebuffer(size, size, true);
             this._rttFramebuffer.depthAttachment.set(painter.context.createRenderbuffer(painter.context.gl.DEPTH_COMPONENT16, size, size));
-       }
-       return this._rttFramebuffer;
+        }
+        return this._rttFramebuffer;
     }
 
     /**
@@ -261,7 +260,7 @@ export default class Terrain {
      * @param {string} texture - the texture
      * @returns {Framebuffer} the frame buffer
      */
-     getFramebuffer(texture: string): Framebuffer {
+    getFramebuffer(texture: string): Framebuffer {
         const painter = this.style.map.painter;
         const width = painter.width / devicePixelRatio;
         const height = painter.height / devicePixelRatio;
@@ -299,7 +298,7 @@ export default class Terrain {
      *   - 8 bits for coordsIndex (1 .. 255) (= number of terraintile), is later setted in draw_terrain uniform value
      * @returns {Texture} - the texture
      */
-     getCoordsTexture(): Texture {
+    getCoordsTexture(): Texture {
         const context = this.style.map.painter.context;
         if (this._coordsTexture) return this._coordsTexture;
         const data = new Uint8Array(this._coordsTextureSize * this._coordsTextureSize * 4);

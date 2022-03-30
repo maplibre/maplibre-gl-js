@@ -497,7 +497,7 @@ class Transform {
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
         const tileX = Math.floor(mercX / EXTENT), tileY = Math.floor(mercY / EXTENT);
         const tileID = new OverscaledTileID(this.tileZoom, 0, this.tileZoom, tileX, tileY);
-        return this.terrain.getElevation(tileID, mercX % EXTENT, mercY % EXTENT, EXTENT)
+        return this.terrain.getElevation(tileID, mercX % EXTENT, mercY % EXTENT, EXTENT);
     }
 
     /**

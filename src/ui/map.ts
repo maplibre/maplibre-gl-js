@@ -3,7 +3,7 @@ import browser from '../util/browser';
 import DOM from '../util/dom';
 import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
-import Style, { TerrainOptions } from '../style/style';
+import Style, {TerrainOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
 import Transform from '../geo/transform';
@@ -1589,7 +1589,7 @@ class Map extends Camera {
 
     /**
      * Get the terrain-options if terrain is loaded
-     * @returns {TerrainOptions}
+     * @returns {TerrainOptions} the TerrainOptions passed to setTerrain
      * @example
      * map.getTerrain(); // { source: 'terrain' };
      */

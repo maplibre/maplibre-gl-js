@@ -35,7 +35,7 @@ import Painter from '../render/painter';
  *
  */
 
- export default class TerrainSourceCache extends Evented {
+export default class TerrainSourceCache extends Evented {
     // source-cache for the raster-dem source.
     sourceCache: SourceCache;
     // stores all render-to-texture tiles.
@@ -55,7 +55,7 @@ import Painter from '../render/painter';
     // each time a render-to-texture tile is rendered, its tileID.key is stored into this array
     renderHistory: Array<string>;
     // maximal size of render-history
-    renderHistorySize: number
+    renderHistorySize: number;
 
     constructor(sourceCache: SourceCache) {
         super();
@@ -109,7 +109,7 @@ import Painter from '../render/painter';
 
     /**
      * This method should called before each render-to-texture step to free old cached tiles
-     * @param {Painter} painter
+     * @param {Painter} painter - the painter
      */
     removeOutdated(painter: Painter) {
         // create lookuptable for actual needed tiles
@@ -126,7 +126,6 @@ import Painter from '../render/painter';
             }
         }
     }
-
 
     /**
      * get a list of tiles, which are loaded and should be rendered in the current scene

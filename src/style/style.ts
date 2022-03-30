@@ -490,7 +490,7 @@ class Style extends Evented {
 
     setTerrain(options?: TerrainOptions) {
         // clear event handlers
-        if (this._terrainDataCallback) this.off("data", this._terrainDataCallback)
+        if (this._terrainDataCallback) this.off('data', this._terrainDataCallback);
         // add terrain
         if (options) {
             const sourceCache = this.sourceCaches[options.source];
@@ -505,7 +505,7 @@ class Style extends Evented {
                     this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
                 }
             };
-            this.on("data", this._terrainDataCallback);
+            this.on('data', this._terrainDataCallback);
         // remove terrain
         } else {
             this.terrain = this.map.transform.terrain = null;
