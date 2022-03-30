@@ -84,7 +84,7 @@ export default class Terrain {
     // So to get good results with not too much memory footprint a value of 2 should be fine.
     qualityFactor: number;
     // holds the framebuffer object in size of the screen to render the coords & depth into a texture.
-    _fbo: any;
+    _fbo: Framebuffer;
     _fboCoordsTexture: Texture;
     _fboDepthTexture: Texture;
     _emptyDepthTexture: Texture;
@@ -100,7 +100,7 @@ export default class Terrain {
     // accuracy of the coords. 2 * tileSize should be enoughth.
     _coordsTextureSize: number;
     // variables for an empty dem texture, which is used while the raster-dem tile is loading.
-    _emptyDemUnpack: any;
+    _emptyDemUnpack: number[];
     _emptyDemTexture: Texture;
     _emptyDemMatrix: mat4;
     // as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
