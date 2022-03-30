@@ -351,7 +351,7 @@ export class Placement {
         bucket: SymbolBucket,
         orientation: number,
         iconBox?: SingleCollisionBox | null,
-        getElevation?: any
+        getElevation?: (x: number, y: number) => number
     ): {
             shift: Point;
             placedGlyphBoxes: {

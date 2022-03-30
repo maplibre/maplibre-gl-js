@@ -58,10 +58,12 @@ export default class DEMData {
         // calculate min/max values
         this.min = Number.MAX_SAFE_INTEGER;
         this.max = Number.MIN_SAFE_INTEGER;
-        for (let x = 0; x < dim; x++) for (let y = 0; y < dim; y++) {
-            const ele = this.get(x, y);
-            if (ele > this.max) this.max = ele;
-            if (ele < this.min) this.min = ele;
+        for (let x = 0; x < dim; x++) {
+            for (let y = 0; y < dim; y++) {
+                const ele = this.get(x, y);
+                if (ele > this.max) this.max = ele;
+                if (ele < this.min) this.min = ele;
+            }
         }
     }
 

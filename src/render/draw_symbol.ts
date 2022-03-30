@@ -167,7 +167,7 @@ function updateVariableAnchorsForBucket(
     tileScale: number,
     size: EvaluatedZoomSize,
     updateTextFitIcon: boolean,
-    getElevation: any) {
+    getElevation: (x: number, y: number) => number) {
     const placedSymbols = bucket.text.placedSymbolArray;
     const dynamicTextLayoutVertexArray = bucket.text.dynamicLayoutVertexArray;
     const dynamicIconLayoutVertexArray = bucket.icon.dynamicLayoutVertexArray;

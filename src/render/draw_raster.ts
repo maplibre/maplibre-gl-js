@@ -43,7 +43,7 @@ function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterSty
         tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
 
         const parentTile = sourceCache.findLoadedParent(coord, 0),
-            fade = getFadeValues(tile, parentTile, sourceCache, layer, painter);
+            fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, painter.style.terrain);
 
         let parentScaleBy, parentTL;
 
@@ -80,16 +80,16 @@ function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterSty
     }
 }
 
-function getFadeValues(tile, parentTile, sourceCache, layer, painter) {
+function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain) {
     const fadeDuration = layer.paint.get('raster-fade-duration');
 
-    if (!painter.style.terrain && fadeDuration > 0) {
+    if (!terrain && fadeDuration > 0) {
         const now = browser.now();
         const sinceTile = (now - tile.timeAdded) / fadeDuration;
         const sinceParent = parentTile ? (now - parentTile.timeAdded) / fadeDuration : -1;
 
         const source = sourceCache.getSource();
-        const idealZ = painter.transform.coveringZoomLevel({
+        const idealZ = transform.coveringZoomLevel({
             tileSize: source.tileSize,
             roundZoom: source.roundZoom
         });
