@@ -23,10 +23,22 @@ Clone the repository
 git clone git@github.com:maplibre/maplibre-gl-js.git
 ```
 
+Install dependencies for node_canvas (https://github.com/Automattic/node-canvas)
+```bash
+brew install pkg-config cairo pango libpng jpeg giflib librsvg
+```
+
 Install node module dependencies
 ```bash
 cd maplibre-gl-js &&
 npm install
+```
+
+**Apple silicon**
+If you have one of the newer arm64 machines, you might find that canvas.node or webgl.node can't be found for your architecture. In that case go to node_modules/canvas and node_modules/gl and run:
+
+```
+npm install --build-from-source
 ```
 
 ### Linux
@@ -95,7 +107,7 @@ A standalone build allows you to turn the contents of this repository into `mapl
 
 To create a standalone build, run
 ```bash
-npm run build-prod-min
+npm run build-prod
 npm run build-css
 ```
 

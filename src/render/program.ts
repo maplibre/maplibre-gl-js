@@ -15,6 +15,7 @@ import type {UniformBindings, UniformValues, UniformLocations} from './uniform_b
 import type {BinderUniform} from '../data/program_configuration';
 import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terrain_program';
 import type {TerrainData} from '../render/terrain';
+import Terrain from '../render/terrain';
 
 export type DrawMode = WebGLRenderingContext['LINES'] | WebGLRenderingContext['TRIANGLES'] | WebGLRenderingContext['LINE_STRIP'];
 
@@ -48,7 +49,7 @@ class Program<Us extends UniformBindings> {
         configuration: ProgramConfiguration,
         fixedUniforms: (b: Context, a: UniformLocations) => Us,
         showOverdrawInspector: boolean,
-        useTerrain: boolean) {
+        terrain: Terrain) {
 
         const gl = context.gl;
         this.program = gl.createProgram();
@@ -71,7 +72,7 @@ class Program<Us extends UniformBindings> {
         if (showOverdrawInspector) {
             defines.push('#define OVERDRAW_INSPECTOR;');
         }
-        if (useTerrain) {
+        if (terrain) {
             defines.push('#define TERRAIN3D;');
         }
         const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');

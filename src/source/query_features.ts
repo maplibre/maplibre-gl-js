@@ -4,6 +4,7 @@ import type CollisionIndex from '../symbol/collision_index';
 import type Transform from '../geo/transform';
 import type {RetainedQueryData} from '../symbol/placement';
 import type {FilterSpecification} from '../style-spec/types.g';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type Point from '@mapbox/point-geometry';
 import assert from 'assert';
 import {mat4} from 'gl-matrix';
@@ -48,7 +49,7 @@ export function queryRenderedFeatures(
         availableImages: Array<string>;
     },
     transform: Transform
-) {
+): { [key: string]: Array<{featureIndex: number; feature: MapGeoJSONFeature}> } {
 
     const has3DLayer = queryIncludes3DLayer(params && params.layers, styleLayers, sourceCache.id);
     const maxPitchScaleFactor = transform.maxPitchScaleFactor();
@@ -78,7 +79,7 @@ export function queryRenderedFeatures(
     // Merge state from SourceCache into the results
     for (const layerID in result) {
         result[layerID].forEach((featureWrapper) => {
-            const feature = featureWrapper.feature;
+            const feature = featureWrapper.feature as MapGeoJSONFeature;
             const state = sourceCache.getFeatureState(feature.layer['source-layer'], feature.id);
             feature.source = feature.layer.source;
             if (feature.layer['source-layer']) {

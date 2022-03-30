@@ -448,8 +448,8 @@ class Transform {
                         maxElevation = tile.dem.max * this.terrain.exaggeration;
                     }
                     quadrant = new Aabb(
-                        vec3.fromValues(quadrant.min[0], quadrant.min[1], minElevation),
-                        vec3.fromValues(quadrant.max[0], quadrant.max[1], maxElevation)
+                        [quadrant.min[0], quadrant.min[1], minElevation] as vec3,
+                        [quadrant.max[0], quadrant.max[1], maxElevation] as vec3
                     );
                 }
                 stack.push({aabb: quadrant, zoom: childZ, x: childX, y: childY, wrap: it.wrap, fullyVisible});
@@ -697,7 +697,7 @@ class Transform {
      * Sets or clears the map's geographical constraints.
      * @param {LngLatBounds} bounds A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
-    setMaxBounds(bounds?: LngLatBounds) {
+    setMaxBounds(bounds?: LngLatBounds | null) {
         if (bounds) {
             this.lngRange = [bounds.getWest(), bounds.getEast()];
             this.latRange = [bounds.getSouth(), bounds.getNorth()];
@@ -877,10 +877,10 @@ class Transform {
 
         // The mercatorMatrix can be used to transform points from mercator coordinates
         // ([0, 0] nw, [1, 1] se) to GL coordinates.
-        this.mercatorMatrix = mat4.scale([] as any, m, vec3.fromValues(this.worldSize, this.worldSize, this.worldSize));
+        this.mercatorMatrix = mat4.scale([] as any, m, [this.worldSize, this.worldSize, this.worldSize]);
 
         // scale vertically to meters per pixel (inverse of ground resolution):
-        mat4.scale(m, m, vec3.fromValues(1, 1, this._pixelPerMeter));
+        mat4.scale(m, m, [1, 1, this._pixelPerMeter]);
 
         // matrix for conversion from location to screen coordinates in 2D
         this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
@@ -921,7 +921,7 @@ class Transform {
         if (!this.pixelMatrixInverse) return 1;
 
         const coord = this.pointCoordinate(new Point(0, 0));
-        const p = vec4.fromValues(coord.x * this.worldSize, coord.y * this.worldSize, 0, 1);
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1] as vec4;
         const topPoint = vec4.transformMat4(p, p, this.pixelMatrix);
         return topPoint[3] / this.cameraToCenterDistance;
     }

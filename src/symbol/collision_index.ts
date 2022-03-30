@@ -150,6 +150,7 @@ class CollisionIndex {
             lineVertexArray,
             labelPlaneMatrix,
             projectionCache,
+            false,
             getElevation);
 
         let collisionDetected = false;
@@ -359,10 +360,10 @@ class CollisionIndex {
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, getElevation: (x: number, y: number) => number) {
         let p;
         if (getElevation) { // slow because of handle z-index
-            p = vec4.fromValues(x, y, getElevation(x, y), 1);
+            p = [x, y, getElevation(x, y), 1] as vec4;
             vec4.transformMat4(p, p, posMatrix);
         } else { // fast because of ignore z-index
-            p = vec4.fromValues(x, y, 0, 1);
+            p = [x, y, 0, 1] as vec4;
             projection.xyTransformMat4(p, p, posMatrix);
         }
         const a = new Point(

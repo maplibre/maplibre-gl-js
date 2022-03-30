@@ -18,7 +18,6 @@ jobs:
           architecture: x64
       - run: npm ci
       - run: npm run generate-typings
-      - run: npm run build-prod-min
       - run: npm run build-prod
       - run: npm run build-csp
       - run: npm run build-dev

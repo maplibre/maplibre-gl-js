@@ -5,16 +5,10 @@
 
 First you must configure your development environment per [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
 
-There are two test suites associated with Mapbox GL JS
+To run individual tests:
 
- - `npm run test` runs quick unit tests
- - `npm run test-suite` runs slower integration tests
-
- To run individual tests:
-
- - Unit tests: `npm run test-unit-file path/to/file.test.js` where path *does not include* `test/unit/`
-   - e.g. `npm run test-unit-file test/unit/ui/handler/scroll_zoom.test.js`
- - Render tests: `npm run test-render render-test-name` (e.g. `npm run test-render background-color/default`)
+ - Unit tests: `npx jest path/to/file.test.js` (e.g. `npx jest src/style/style_layer.test.ts`)
+ - Render tests: `npm run test-render -- render-test-name` (e.g. `npm run test-render -- text-rotation-alignment`)
 
 ## Integration Tests
 

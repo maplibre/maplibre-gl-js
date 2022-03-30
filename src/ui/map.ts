@@ -1,7 +1,7 @@
 import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
-import {getImage, getJSON, ResourceType} from '../util/ajax';
+import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
 import Style, { TerrainOptions } from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
@@ -29,7 +29,7 @@ import StyleLayer from '../style/style_layer';
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
-import type {StyleOptions, StyleSetterOptions} from '../style/style';
+import type {FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style';
 import type {MapEvent, MapDataEvent} from './events';
 import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer';
 import type {StyleImageInterface, StyleImageMetadata} from '../style/style_image';
@@ -55,7 +55,7 @@ import type {
 } from '../style-spec/types.g';
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
-import Terrain from '../render/terrain';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
 /* eslint-enable no-use-before-define */
 
@@ -675,7 +675,7 @@ class Map extends Camera {
      * // Set the map's max bounds.
      * map.setMaxBounds(bounds);
      */
-    setMaxBounds(bounds: LngLatBoundsLike) {
+    setMaxBounds(bounds?: LngLatBoundsLike | null) {
         this.transform.setMaxBounds(LngLatBounds.convert(bounds));
         return this._update();
     }
@@ -922,7 +922,7 @@ class Map extends Camera {
         return this._rotating || this.handlers.isRotating();
     }
 
-    _createDelegatedListener(type: MapEvent, layerId: string, listener: Listener):
+    _createDelegatedListener(type: MapEvent | string, layerId: string, listener: Listener):
     {
         layer: string;
         listener: Listener;
@@ -1082,8 +1082,8 @@ class Map extends Camera {
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): this;
     on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
-    on(type: MapEvent, listener: Listener): this;
-    on(type: MapEvent, layerIdOrListener: string | Listener, listener?: Listener): this {
+    on(type: MapEvent | string, listener: Listener): this;
+    on(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this {
         if (listener === undefined) {
             return super.on(type, layerIdOrListener as Listener);
         }
@@ -1136,8 +1136,8 @@ class Map extends Camera {
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): this;
     once<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
-    once(type: MapEvent, listener: Listener): this;
-    once(type: MapEvent, layerIdOrListener: string | Listener, listener?: Listener): this {
+    once(type: MapEvent | string, listener: Listener): this;
+    once(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this {
 
         if (listener === undefined) {
             return super.once(type, layerIdOrListener as Listener);
@@ -1178,8 +1178,8 @@ class Map extends Camera {
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): this;
     off<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
-    off(type: MapEvent, listener: Listener): this;
-    off(type: MapEvent, layerIdOrListener: string | Listener, listener?: Listener): this {
+    off(type: MapEvent | string, listener: Listener): this;
+    off(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this {
         if (listener === undefined) {
             return super.off(type, layerIdOrListener as Listener);
         }
@@ -1206,8 +1206,7 @@ class Map extends Camera {
     }
 
     /**
-     * Returns an array of [GeoJSON](http://geojson.org/)
-     * [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2)
+     * Returns an array of MapGeoJSONFeature objects
      * representing visible features that satisfy the query parameters.
      *
      * @param {PointLike|Array<PointLike>} [geometry] - The geometry of the query region:
@@ -1222,8 +1221,7 @@ class Map extends Camera {
      *   to limit query results.
      * @param {boolean} [options.validate=true] Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
-     * @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
-     * [feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
+     * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
      *
      * The `properties` value of each returned feature object contains the properties of its source feature. For GeoJSON sources, only
      * string and numeric property values are supported (i.e. `null`, `Array`, and `Object` values are not supported).
@@ -1282,7 +1280,7 @@ class Map extends Camera {
      * var features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
      * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/queryrenderedfeatures/)
      */
-    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike], options?: any) {
+    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike], options?: any): MapGeoJSONFeature[] {
         // The first parameter can be omitted entirely, making this effectively an overloaded method
         // with two signatures:
         //
@@ -1317,8 +1315,7 @@ class Map extends Camera {
     }
 
     /**
-     * Returns an array of [GeoJSON](http://geojson.org/)
-     * [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2)
+     * Returns an array of MapGeoJSONFeature objects
      * representing features within the specified vector tile or GeoJSON source that satisfy the query parameters.
      *
      * @param {string} sourceId The ID of the vector tile or GeoJSON source to query.
@@ -1329,8 +1326,7 @@ class Map extends Camera {
      *   to limit query results.
      * @param {boolean} [parameters.validate=true] Whether to check if the [parameters.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
-     * @returns {Array<Object>} An array of [GeoJSON](http://geojson.org/)
-     * [Feature objects](https://tools.ietf.org/html/rfc7946#section-3.2).
+     * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
      *
      * In contrast to {@link Map#queryRenderedFeatures}, this function returns all features matching the query parameters,
      * whether or not they are rendered by the current style (i.e. visible). The domain of the query includes all currently-loaded
@@ -1356,7 +1352,7 @@ class Map extends Camera {
         sourceLayer: string;
         filter: Array<any>;
         validate?: boolean;
-    } | null) {
+    } | null): MapGeoJSONFeature[] {
         return this.style.querySourceFeatures(sourceId, parameters);
     }
 
@@ -1869,7 +1865,7 @@ class Map extends Camera {
      *
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image/)
      */
-    loadImage(url: string, callback: Callback<HTMLImageElement | ImageBitmap>) {
+    loadImage(url: string, callback: GetImageCallback) {
         getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
     }
 
@@ -2246,11 +2242,7 @@ class Map extends Camera {
      *
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      */
-    setFeatureState(feature: {
-        source: string;
-        sourceLayer?: string;
-        id: string | number;
-    }, state: any) {
+    setFeatureState(feature: FeatureIdentifier, state: any) {
         this.style.setFeatureState(feature, state);
         return this._update();
     }
@@ -2302,11 +2294,7 @@ class Map extends Camera {
      * });
      *
      */
-    removeFeatureState(target: {
-        source: string;
-        sourceLayer?: string;
-        id?: string | number;
-    }, key?: string) {
+    removeFeatureState(target: FeatureIdentifier, key?: string) {
         this.style.removeFeatureState(target, key);
         return this._update();
     }
@@ -2340,13 +2328,7 @@ class Map extends Camera {
      * });
      *
      */
-    getFeatureState(
-        feature: {
-            source: string;
-            sourceLayer?: string;
-            id: string | number;
-        }
-    ): any {
+    getFeatureState(feature: FeatureIdentifier): any {
         return this.style.getFeatureState(feature);
     }
 
