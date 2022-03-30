@@ -8,6 +8,11 @@
 
 - *...Add new stuff here...*
 
+## 1.15.3
+
+### 🐞 Bug fixes
+- Bump minimist dependency to fix security issue in the production dependencies (#1135)
+
 ## 1.15.2
 
 ### 🐞 Bug fixes
