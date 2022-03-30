@@ -842,15 +842,15 @@ class Transform {
         // Find the distance from the center point to the horizon
         const horizon = this.getHorizon();
         const horizonAngle = Math.atan(horizon / this.cameraToCenterDistance);
-        const fovAboveCenter2 = 2 * horizonAngle * (0.5 + offset.y / (horizon * 2));
-        const topHalfSurfaceDistance2 = Math.sin(fovAboveCenter2) * this.cameraToSeaLevelDistance / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter2, 0.01, Math.PI - 0.01));
+        const fovCenterToHorizon = 2 * horizonAngle * (0.5 + offset.y / (horizon * 2));
+        const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * this.cameraToSeaLevelDistance / Math.sin(clamp(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
 
         // Calculate z distance of the farthest fragment that should be rendered.
         const furthestDistance = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistance + this.cameraToSeaLevelDistance;
-        const furthestDistance2 = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistance2 + this.cameraToSeaLevelDistance;
+        const furthestDistanceHorizon = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistanceHorizon + this.cameraToSeaLevelDistance;
 
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
-        const farZ = Math.min(furthestDistance, furthestDistance2) * 1.01;
+        const farZ = Math.min(furthestDistance, furthestDistanceHorizon) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)

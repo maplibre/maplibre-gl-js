@@ -74,7 +74,7 @@ export default class Marker extends Evented {
     _pitchAlignment: string;
     _rotationAlignment: string;
     _originalTabIndex: string; // original tabindex of _element
-    _opacityTimeout: any;
+    _opacityTimeout: ReturnType<typeof setTimeout>;
 
     constructor(options?: MarkerOptions, legacyOptions?: MarkerOptions) {
         super();
@@ -471,7 +471,8 @@ export default class Marker extends Evented {
 
         DOM.setTransform(this._element, `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`);
 
-        // in case of 3D, ask the the terrain coords-framebuffer for this pos and check if the marker is visible
+        // in case of 3D, ask the terrain coords-framebuffer for this pos and check if the marker is visible
+        // call this logic in setTimeout with a timeout of 100ms to save performance in map-movement
         if (this._map.style && this._map.style.terrain && !this._opacityTimeout) this._opacityTimeout = setTimeout(() => {
             const lnglat = this._map.unproject(this._pos);
             const metresPerPixel = 40075016.686 * Math.abs(Math.cos(this._lngLat.lat * Math.PI / 180)) / Math.pow(2, this._map.transform.tileZoom + 8);

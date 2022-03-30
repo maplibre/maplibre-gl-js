@@ -441,10 +441,10 @@ class HandlerManager {
         } else {
             // when 3d-terrain is enabled act a litte different:
             //    - draging do not drag the picked point itself, instead it drags the map by pixel-delta.
-            //      With this approach it is no longer possible to pick a point from from somewhere near
+            //      With this approach it is no longer possible to pick a point from somewhere near
             //      the horizon to the center in one move.
             //      So this logic avoids the problem, that in such cases you easily loose orientation.
-            //    - scrollzoom does not zoom into the mouse-point, instead it zoomt into map-center
+            //    - scrollzoom does not zoom into the mouse-point, instead it zooms into map-center
             //      this should be fixed in future-version
             // when dragging starts, remember mousedown-location and panDelta from this point
             if (combinedEventsInProgress.drag && !this._drag) {
