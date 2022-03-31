@@ -282,9 +282,9 @@ class Style extends Evented {
         this.dispatcher.broadcast('setLayers', this._serializeLayers(this._order));
 
         this.light = new Light(this.stylesheet.light);
-        
+
         this.setTerrain(this.stylesheet.terrain);
-        
+
         this.fire(new Event('data', {dataType: 'style'}));
         this.fire(new Event('style.load'));
     }
