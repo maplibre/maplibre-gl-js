@@ -488,6 +488,10 @@ class Style extends Evented {
         this._changedImages = {};
     }
 
+    /**
+     * Loads a 3D terrain mesh, based on a "raster-dem" source.
+     * @param {TerrainOptions} [options] Options object.
+     */
     setTerrain(options?: TerrainOptions) {
         // clear event handlers
         if (this._terrainDataCallback) this.off('data', this._terrainDataCallback);

@@ -21,10 +21,10 @@ import {number as mix} from '../style-spec/util/interpolate';
 
 /**
  * This is the main class which handles most of the 3D Terrain logic. It has the follwing topics:
- *    1) loads raster-dem tiles via the internal sourceCache this._source
+ *    1) loads raster-dem tiles via the internal sourceCache this.sourceCache
  *    2) creates a depth-framebuffer, which is used to calculate the visibility of coordinates
  *    3) creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
- *    4) stores all render-to-texture tiles in the this._tiles variable
+ *    4) stores all render-to-texture tiles in the this.sourceCache._tiles
  *    5) calculates the elevation for a spezific tile-coordinate
  *    6) creates a terrain-mesh
  *

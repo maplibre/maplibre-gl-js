@@ -12,7 +12,10 @@ uniform lowp float u_lightintensity;
 
 attribute vec2 a_pos;
 attribute vec4 a_normal_ed;
-attribute vec2 a_centroid;
+
+#ifdef TERRAIN3D
+    attribute vec2 a_centroid;
+#endif
 
 varying vec2 v_pos_a;
 varying vec2 v_pos_b;
@@ -48,8 +51,16 @@ void main() {
     vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
     vec2 display_size_b = (pattern_br_b - pattern_tl_b) / pixel_ratio_to;
 
-    float ele = get_elevation(a_centroid);
-    base = max(0.0, ele + base - 10.0);  // minus 10 to avoid floating buildings because centroid is used for elevation
+    #ifdef TERRAIN3D
+        // To avoid floating buildings in 3d-terrain, especially in heavy terrain,
+        // render the buildings a little below terrain. The unit is meter.
+        float baseDelta = 10.0;
+        float ele = get_elevation(a_centroid);
+    #else
+        float baseDelta = 0.0;
+        float ele = 0.0;
+    #endif
+    base = max(0.0, ele + base - baseDelta);
     height = max(0.0, ele + height);
 
     float t = mod(normal.x, 2.0);
