@@ -197,6 +197,8 @@ ${objectDeclaration('StyleSpecification', spec.$root)}
 
 ${objectDeclaration('LightSpecification', spec.light)}
 
+${objectDeclaration('TerrainSpecification', spec.terrain)}
+
 ${spec.source.map(key => objectDeclaration(sourceTypeName(key), spec[key])).join('\n\n')}
 
 export type SourceSpecification =

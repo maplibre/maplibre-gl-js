@@ -18,33 +18,32 @@
 <script src='../debug/access_token_generated.js'></script>
 <script>
 
-var map = window.map = new maplibregl.Map({
-    container: 'map',
-    zoom: 12.5,
-    center: [11.40416, 47.26475],
-    hash: true,
-    style: 'https://static.maptoolkit.net/styles/toursprung/terrain.json',
-    maxZoom: 18,
-    maxPitch: 85
-});
-
-map.on('load', () => {
-    map.addSource('terrain', {
+fetch('https://static.maptoolkit.net/styles/toursprung/terrain.json').then((req) => req.json()).then((style) => {
+    style.sources.terrain = {
         'type': 'raster-dem',
         'tiles': ['https://vtc-cdn.maptoolkit.net/terrainrgb/{z}/{x}/{y}.webp'],
         'encoding': 'mapbox',
         'maxzoom': 14,
         'minzoom': 4
+    };
+    style.terrain = {source: 'terrain', exaggeration: 0.33};
+
+    var map = window.map = new maplibregl.Map({
+        container: 'map',
+        zoom: 12.5,
+        center: [11.40416, 47.26475],
+        hash: true,
+        style,
+        maxZoom: 18,
+        maxPitch: 85
     });
-    map.setTerrain({source: 'terrain', exaggeration: 0.33});
+
+    map.on('click', e => {
+        new maplibregl.Marker().setLngLat(e.lngLat).addTo(map);
+    });
+
+    map.addControl(new maplibregl.NavigationControl());
 });
-
-map.on('click', e => {
-    new maplibregl.Marker().setLngLat(e.lngLat).addTo(map);
-});
-
-map.addControl(new maplibregl.NavigationControl());
-
 </script>
 </body>
 </html>

@@ -3,7 +3,7 @@ import browser from '../util/browser';
 import DOM from '../util/dom';
 import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
-import Style, {TerrainOptions} from '../style/style';
+import Style from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
 import Transform from '../geo/transform';
@@ -51,7 +51,8 @@ import type {
     FilterSpecification,
     StyleSpecification,
     LightSpecification,
-    SourceSpecification
+    SourceSpecification,
+    TerrainSpecification
 } from '../style-spec/types.g';
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
@@ -1573,12 +1574,12 @@ class Map extends Camera {
 
     /**
      * Loads a 3D terrain mesh, based on a "raster-dem" source.
-     * @param {TerrainOptions} [options] Options object.
+     * @param {TerrainSpecification} [options] Options object.
      * @returns {Map} `this`
      * @example
      * map.setTerrain({ source: 'terrain' });
      */
-    setTerrain(options: TerrainOptions): Map {
+    setTerrain(options: TerrainSpecification): Map {
         if (options) this.isSourceLoaded(options.source);
         this.style.setTerrain(options);
         this._sourcesDirty = true;
@@ -1589,11 +1590,11 @@ class Map extends Camera {
 
     /**
      * Get the terrain-options if terrain is loaded
-     * @returns {TerrainOptions} the TerrainOptions passed to setTerrain
+     * @returns {TerrainSpecification} the TerrainSpecification passed to setTerrain
      * @example
      * map.getTerrain(); // { source: 'terrain' };
      */
-    getTerrain(): TerrainOptions {
+    getTerrain(): TerrainSpecification {
         return this.style.terrain && this.style.terrain.options;
     }
 

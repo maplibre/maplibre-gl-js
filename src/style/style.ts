@@ -57,7 +57,8 @@ import type {
     FilterSpecification,
     StyleSpecification,
     LightSpecification,
-    SourceSpecification
+    SourceSpecification,
+    TerrainSpecification
 } from '../style-spec/types.g';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
@@ -102,12 +103,6 @@ export type StyleOptions = {
 
 export type StyleSetterOptions = {
     validate?: boolean;
-};
-
-export type TerrainOptions = {
-    source: string;
-    exaggeration?: number;
-    elevationOffset?: number;
 };
 
 /**
@@ -287,7 +282,9 @@ class Style extends Evented {
         this.dispatcher.broadcast('setLayers', this._serializeLayers(this._order));
 
         this.light = new Light(this.stylesheet.light);
-
+        
+        this.setTerrain(this.stylesheet.terrain);
+        
         this.fire(new Event('data', {dataType: 'style'}));
         this.fire(new Event('style.load'));
     }
@@ -490,9 +487,9 @@ class Style extends Evented {
 
     /**
      * Loads a 3D terrain mesh, based on a "raster-dem" source.
-     * @param {TerrainOptions} [options] Options object.
+     * @param {TerrainSpecification} [options] Options object.
      */
-    setTerrain(options?: TerrainOptions) {
+    setTerrain(options?: TerrainSpecification) {
         // clear event handlers
         if (this._terrainDataCallback) this.off('data', this._terrainDataCallback);
         if (!options) {
