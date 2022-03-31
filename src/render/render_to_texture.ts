@@ -3,11 +3,12 @@ import Tile from '../source/tile';
 import Color from '../style-spec/util/color';
 import {OverscaledTileID} from '../source/tile_id';
 import {prepareTerrain, drawTerrain} from './draw_terrain';
+import type StyleLayer from '../style/style_layer';
 
 export default class RenderToTexture {
     painter: Painter;
     // this object holds a lookup table which layers should rendered to texture
-    _renderToTexture: any;
+    _renderToTexture: {[keyof in StyleLayer['type']]?: boolean};
     // coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
     // e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
     _coordsDescendingInv: {[_: string]: {[_:string]: Array<OverscaledTileID>}} = {};
@@ -91,10 +92,10 @@ export default class RenderToTexture {
      * Because of the stylesheet possibility to mixing render-to-texture layers
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
-     * @param {Layer} layer the layer to render
+     * @param {StyleLayer} layer the layer to render
      * @returns {boolean} if true layer is rendered to texture, otherwise false
      */
-    renderLayer(layer: any): boolean {
+    renderLayer(layer: StyleLayer): boolean {
         const type = layer.type;
         const painter = this.painter;
         const layerIds = painter.style._order;
