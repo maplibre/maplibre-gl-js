@@ -62,6 +62,7 @@ import type {
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';
+import Terrain from '../render/terrain';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',
@@ -102,6 +103,13 @@ export type StyleOptions = {
 export type StyleSetterOptions = {
     validate?: boolean;
 };
+
+export type TerrainOptions = {
+    source: string;
+    exaggeration?: number;
+    elevationOffset?: number;
+};
+
 /**
  * @private
  */
@@ -113,6 +121,7 @@ class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
+    terrain: Terrain;
 
     _request: Cancelable;
     _spriteRequest: Cancelable;
@@ -123,6 +132,7 @@ class Style extends Evented {
     zoomHistory: ZoomHistory;
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
+    _terrainDataCallback: (e: any) => any;
     _changed: boolean;
     _updatedSources: {[_: string]: 'clear' | 'reload'};
     _updatedLayers: {[_: string]: true};
@@ -476,6 +486,35 @@ class Style extends Evented {
         this._updatedPaintProps = {};
 
         this._changedImages = {};
+    }
+
+    /**
+     * Loads a 3D terrain mesh, based on a "raster-dem" source.
+     * @param {TerrainOptions} [options] Options object.
+     */
+    setTerrain(options?: TerrainOptions) {
+        // clear event handlers
+        if (this._terrainDataCallback) this.off('data', this._terrainDataCallback);
+        if (!options) {
+            // remove terrain
+            this.terrain = this.map.transform.terrain = null;
+            this.map.transform.updateElevation();
+        } else {
+            // add terrain
+            const sourceCache = this.sourceCaches[options.source];
+            this.map.transform.terrain = this.terrain = new Terrain(this, sourceCache, options);
+            this.map.transform.updateElevation();
+            this._terrainDataCallback = e => {
+                if (!e.tile) return;
+                if (e.sourceId === options.source) {
+                    this.map.transform.updateElevation();
+                    this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
+                } else if (e.source.type === 'geojson') {
+                    this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
+                }
+            };
+            this.on('data', this._terrainDataCallback);
+        }
     }
 
     /**

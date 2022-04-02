@@ -222,13 +222,26 @@ describe('DEMData is correctly serialized and deserialized', () => {
         const dem0 = new DEMData('0', imageData0, 'mapbox');
         const serialized = serialize(dem0);
 
+        // calculate min/max values
+        let min = Number.MAX_SAFE_INTEGER;
+        let max = Number.MIN_SAFE_INTEGER;
+        for (let x = 0; x < 4; x++) {
+            for (let y = 0; y < 4; y++) {
+                const ele = dem0.get(x, y);
+                if (ele > max) max = ele;
+                if (ele < min) min = ele;
+            }
+        }
+
         expect(serialized).toEqual({
             $name: 'DEMData',
             uid: '0',
             dim: 4,
             stride: 6,
             data: dem0.data,
-            encoding: 'mapbox'
+            encoding: 'mapbox',
+            max,
+            min,
         });
 
         const transferrables = [];

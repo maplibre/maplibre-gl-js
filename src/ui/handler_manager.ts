@@ -18,6 +18,7 @@ import DragRotateHandler from './handler/shim/drag_rotate';
 import TouchZoomRotateHandler from './handler/shim/touch_zoom_rotate';
 import {bindAll, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
+import LngLat from '../geo/lng_lat';
 import assert from 'assert';
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
@@ -100,6 +101,7 @@ class HandlerManager {
     _handlersById: {[x: string]: Handler};
     _updatingCamera: boolean;
     _changes: Array<[HandlerResult, any, any]>;
+    _drag: {center: Point; lngLat: LngLat; point: Point; handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
         passive?: boolean;
@@ -411,11 +413,11 @@ class HandlerManager {
     }
 
     _updateMapTransform(combinedResult: any, combinedEventsInProgress: any, deactivatedHandlers: any) {
-
         const map = this._map;
         const tr = map.transform;
+        const hasTerrain = map.style && map.style.terrain;
 
-        if (!hasChange(combinedResult)) {
+        if (!hasChange(combinedResult) && !(hasTerrain && this._drag)) {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
         }
 
@@ -433,7 +435,36 @@ class HandlerManager {
         if (bearingDelta) tr.bearing += bearingDelta;
         if (pitchDelta) tr.pitch += pitchDelta;
         if (zoomDelta) tr.zoom += zoomDelta;
-        tr.setLocationAtPoint(loc, around);
+
+        if (!hasTerrain) {
+            tr.setLocationAtPoint(loc, around);
+        } else {
+            // when 3d-terrain is enabled act a litte different:
+            //    - draging do not drag the picked point itself, instead it drags the map by pixel-delta.
+            //      With this approach it is no longer possible to pick a point from somewhere near
+            //      the horizon to the center in one move.
+            //      So this logic avoids the problem, that in such cases you easily loose orientation.
+            //    - scrollzoom does not zoom into the mouse-point, instead it zooms into map-center
+            //      this should be fixed in future-version
+            // when dragging starts, remember mousedown-location and panDelta from this point
+            if (combinedEventsInProgress.drag && !this._drag) {
+                this._drag = {
+                    center: tr.centerPoint,
+                    lngLat: tr.pointLocation(around),
+                    point: around,
+                    handlerName: combinedEventsInProgress.drag.handlerName
+                };
+                tr.freezeElevation = true;
+            // when dragging ends, recalcuate the zoomlevel for the new center coordinate
+            } else if (this._drag && deactivatedHandlers[this._drag.handlerName]) {
+                tr.freezeElevation = false;
+                tr.recalculateZoom();
+                this._drag = null;
+            // drag map
+            } else if (combinedEventsInProgress.drag && this._drag) {
+                tr.center = tr.pointLocation(tr.centerPoint.sub(panDelta));
+            }
+        }
 
         this._map._update();
         if (!combinedResult.noInertia) this._inertia.record(combinedResult);

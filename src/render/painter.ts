@@ -1,5 +1,4 @@
 import browser from '../util/browser';
-
 import {mat4, vec3} from 'gl-matrix';
 import SourceCache from '../source/source_cache';
 import EXTENT from '../data/extent';
@@ -32,6 +31,8 @@ import raster from './draw_raster';
 import background from './draw_background';
 import debug, {drawDebugPadding} from './draw_debug';
 import custom from './draw_custom';
+import {drawDepth, drawCoords} from './draw_terrain';
+import {OverscaledTileID} from '../source/tile_id';
 
 const draw = {
     symbol,
@@ -49,7 +50,6 @@ const draw = {
 
 import type Transform from '../geo/transform';
 import type Tile from '../source/tile';
-import type {OverscaledTileID} from '../source/tile_id';
 import type Style from '../style/style';
 import type StyleLayer from '../style/style_layer';
 import type {CrossFaded} from '../style/properties';
@@ -61,6 +61,7 @@ import type IndexBuffer from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type ResolvedImage from '../style-spec/expression/types/resolved_image';
 import type {RGBAImage} from '../util/image';
+import RenderToTexture from './render_to_texture';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -125,11 +126,16 @@ class Painter {
     emptyTexture: Texture;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
+    // this object stores the current camera-matrix and the last render time
+    // of the terrain-facilitators. e.g. depth & coords framebuffers
+    // every time the camera-matrix changes the terrain-facilitators will be redrawn.
+    terrainFacilitator: {matrix: mat4; renderTime: number};
 
     constructor(gl: WebGLRenderingContext, transform: Transform) {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
+        this.terrainFacilitator = {matrix: mat4.create(), renderTime: 0};
 
         this.setup();
 
@@ -240,7 +246,7 @@ class Painter {
 
         this.useProgram('clippingMask').draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
-            clippingMaskUniformValues(matrix),
+            clippingMaskUniformValues(matrix), null,
             '$clipping', this.viewportBuffer,
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
@@ -267,12 +273,13 @@ class Painter {
 
         for (const tileID of tileIDs) {
             const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;
+            const terrainData = this.style.terrain && this.style.terrain.getTerrainData(tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, id, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
                 ColorMode.disabled, CullFaceMode.disabled, clippingMaskUniformValues(tileID.posMatrix),
-                '$clipping', this.tileExtentBuffer,
+                terrainData, '$clipping', this.tileExtentBuffer,
                 this.quadTriangleIndexBuffer, this.tileExtentSegments);
         }
     }
@@ -371,6 +378,7 @@ class Painter {
 
         const layerIds = this.style._order;
         const sourceCaches = this.style.sourceCaches;
+        const renderToTexture = this.style.terrain && new RenderToTexture(this);
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -396,6 +404,20 @@ class Painter {
             if (this.style._layers[layerId].is3D()) {
                 this.opaquePassCutoff = i;
                 break;
+            }
+        }
+
+        if (renderToTexture) {
+            // this is disabled, because render-to-texture is rendering all layers from bottom to top.
+            this.opaquePassCutoff = 0;
+
+            // update coords/depth-framebuffer on camera movement, or tile reloading
+            const newTiles = this.style.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
+            if (!mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
+                mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
+                this.terrainFacilitator.renderTime = Date.now();
+                drawDepth(this, this.style.terrain);
+                drawCoords(this, this.style.terrain);
             }
         }
 
@@ -427,15 +449,17 @@ class Painter {
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
-        this.renderPass = 'opaque';
+        if (!renderToTexture) {
+            this.renderPass = 'opaque';
 
-        for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
-            const layer = this.style._layers[layerIds[this.currentLayer]];
-            const sourceCache = sourceCaches[layer.source];
-            const coords = coordsAscending[layer.source];
+            for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
+                const layer = this.style._layers[layerIds[this.currentLayer]];
+                const sourceCache = sourceCaches[layer.source];
+                const coords = coordsAscending[layer.source];
 
-            this._renderTileClippingMasks(layer, coords);
-            this.renderLayer(this, sourceCache, layer, coords);
+                this._renderTileClippingMasks(layer, coords);
+                this.renderLayer(this, sourceCache, layer, coords);
+            }
         }
 
         // Translucent pass ===============================================
@@ -445,6 +469,8 @@ class Painter {
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
+
+            if (renderToTexture && renderToTexture.renderLayer(layer)) continue;
 
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
@@ -486,7 +512,7 @@ class Painter {
 
     renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>) {
         if (layer.isHidden(this.transform.zoom)) return;
-        if (layer.type !== 'background' && layer.type !== 'custom' && !coords.length) return;
+        if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
         this.gpuTimingStart(layer);
@@ -600,9 +626,20 @@ class Painter {
 
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null): Program<any> {
         this.cache = this.cache || {};
-        const key = `${name}${programConfiguration ? programConfiguration.cacheKey : ''}${this._showOverdrawInspector ? '/overdraw' : ''}`;
+        const key = name +
+            (programConfiguration ? programConfiguration.cacheKey : '') +
+            (this._showOverdrawInspector ? '/overdraw' : '') +
+            (this.style.terrain ? '/terrain' : '');
         if (!this.cache[key]) {
-            this.cache[key] = new Program(this.context, name, shaders[name], programConfiguration, programUniforms[name], this._showOverdrawInspector);
+            this.cache[key] = new Program(
+                this.context,
+                name,
+                shaders[name],
+                programConfiguration,
+                programUniforms[name],
+                this._showOverdrawInspector,
+                this.style.terrain
+            );
         }
         return this.cache[key];
     }

@@ -15,14 +15,11 @@ uniform highp float u_pitch;
 uniform bool u_rotate_symbol;
 uniform highp float u_aspect_ratio;
 uniform float u_fade_change;
-
 uniform mat4 u_matrix;
 uniform mat4 u_label_plane_matrix;
 uniform mat4 u_coord_matrix;
-
 uniform bool u_is_text;
 uniform bool u_pitch_with_map;
-
 uniform vec2 u_texsize;
 
 varying vec2 v_tex;
@@ -43,6 +40,7 @@ void main() {
     vec2 a_pxoffset = a_pixeloffset.xy;
     vec2 a_minFontScale = a_pixeloffset.zw / 256.0;
 
+    float ele = get_elevation(a_pos);
     highp float segment_angle = -a_projected_pos[2];
     float size;
 
@@ -54,7 +52,7 @@ void main() {
         size = u_size;
     }
 
-    vec4 projectedPoint = u_matrix * vec4(a_pos, 0, 1);
+    vec4 projectedPoint = u_matrix * vec4(a_pos, ele, 1);
     highp float camera_to_anchor_distance = projectedPoint.w;
     // See comments in symbol_sdf.vertex
     highp float distance_ratio = u_pitch_with_map ?
@@ -72,7 +70,7 @@ void main() {
     highp float symbol_rotation = 0.0;
     if (u_rotate_symbol) {
         // See comments in symbol_sdf.vertex
-        vec4 offsetProjectedPoint = u_matrix * vec4(a_pos + vec2(1, 0), 0, 1);
+        vec4 offsetProjectedPoint = u_matrix * vec4(a_pos + vec2(1, 0), ele, 1);
 
         vec2 a = projectedPoint.xy / projectedPoint.w;
         vec2 b = offsetProjectedPoint.xy / offsetProjectedPoint.w;
@@ -84,11 +82,13 @@ void main() {
     highp float angle_cos = cos(segment_angle + symbol_rotation);
     mat2 rotation_matrix = mat2(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
-    vec4 projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy, 0.0, 1.0);
-    gl_Position = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * max(a_minFontScale, fontScale) + a_pxoffset / 16.0), 0.0, 1.0);
+    vec4 projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy, ele, 1.0);
+    float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w;
+    gl_Position = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * max(a_minFontScale, fontScale) + a_pxoffset / 16.0), z, 1.0);
 
     v_tex = a_tex / u_texsize;
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
     float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
-    v_fade_opacity = max(0.0, min(1.0, fade_opacity[0] + fade_change));
+    float visibility = calculate_visibility(projectedPoint);
+    v_fade_opacity = max(0.0, min(visibility, fade_opacity[0] + fade_change));
 }

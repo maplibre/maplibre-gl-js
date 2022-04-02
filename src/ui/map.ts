@@ -3,7 +3,7 @@ import browser from '../util/browser';
 import DOM from '../util/dom';
 import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
-import Style from '../style/style';
+import Style, {TerrainOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
 import Transform from '../geo/transform';
@@ -869,7 +869,9 @@ class Map extends Camera {
      * var point = map.project(coordinate);
      */
     project(lnglat: LngLatLike) {
-        return this.transform.locationPoint(LngLat.convert(lnglat));
+        return this.style && this.style.terrain ?
+            this.transform.locationPoint3D(LngLat.convert(lnglat)) :
+            this.transform.locationPoint(LngLat.convert(lnglat));
     }
 
     /**
@@ -885,7 +887,9 @@ class Map extends Camera {
      * });
      */
     unproject(point: PointLike) {
-        return this.transform.pointLocation(Point.convert(point));
+        return this.style && this.style.terrain ?
+            this.transform.pointLocation3D(Point.convert(point)) :
+            this.transform.pointLocation(Point.convert(point));
     }
 
     /**
@@ -1568,6 +1572,32 @@ class Map extends Camera {
     }
 
     /**
+     * Loads a 3D terrain mesh, based on a "raster-dem" source.
+     * @param {TerrainOptions} [options] Options object.
+     * @returns {Map} `this`
+     * @example
+     * map.setTerrain({ source: 'terrain' });
+     */
+    setTerrain(options: TerrainOptions): Map {
+        if (options) this.isSourceLoaded(options.source);
+        this.style.setTerrain(options);
+        this._sourcesDirty = true;
+        this._styleDirty = true;
+        this.triggerRepaint();
+        return this;
+    }
+
+    /**
+     * Get the terrain-options if terrain is loaded
+     * @returns {TerrainOptions} the TerrainOptions passed to setTerrain
+     * @example
+     * map.getTerrain(); // { source: 'terrain' };
+     */
+    getTerrain(): TerrainOptions {
+        return this.style.terrain && this.style.terrain.options;
+    }
+
+    /**
      * Returns a Boolean indicating whether all tiles in the viewport from all sources on
      * the style are loaded.
      *
@@ -1575,8 +1605,7 @@ class Map extends Camera {
      * @example
      * var tilesLoaded = map.areTilesLoaded();
      */
-
-    areTilesLoaded() {
+    areTilesLoaded(): boolean {
         const sources = this.style && this.style.sourceCaches;
         for (const id in sources) {
             const source = sources[id];
@@ -1610,7 +1639,7 @@ class Map extends Camera {
      * @example
      * map.removeSource('bathymetry-data');
      */
-    removeSource(id: string) {
+    removeSource(id: string): Map {
         this.style.removeSource(id);
         return this._update(true);
     }
@@ -2545,6 +2574,10 @@ class Map extends Camera {
             this._sourcesDirty = false;
             this.style._updateSources(this.transform);
         }
+
+        // update terrain stuff
+        if (this.style.terrain) this.style.terrain.sourceCache.update(this.transform);
+        this.transform.updateElevation();
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 

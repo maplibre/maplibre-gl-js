@@ -311,6 +311,10 @@ export type MapDataEvent = {
     sourceDataType: MapSourceDataType;
 };
 
+export type MapTerrainEvent = {
+    type: 'terrain';
+};
+
 export type MapContextEvent = {
     type: 'webglcontextlost' | 'webglcontextrestored';
     originalEvent: WebGLContextEvent;
@@ -386,6 +390,8 @@ export type MapEventType = {
     pitchend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
 
     wheel: MapWheelEvent;
+
+    terrain: MapTerrainEvent;
 };
 
 export type MapEvent =
@@ -1393,6 +1399,14 @@ export type MapEvent =
      * @private
      */
     | 'style.load'
+
+    /**
+     * @event terrain
+     * @memberof Map
+     * @instance
+     * @private
+     */
+    | 'terrain'
 
     /**
      * Fired when a request for one of the map's sources' tiles is aborted.

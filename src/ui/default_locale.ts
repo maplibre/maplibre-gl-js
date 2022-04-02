@@ -13,8 +13,9 @@ const defaultLocale = {
     'ScaleControl.Meters': 'm',
     'ScaleControl.Kilometers': 'km',
     'ScaleControl.Miles': 'mi',
-    'ScaleControl.NauticalMiles': 'nm'
-
+    'ScaleControl.NauticalMiles': 'nm',
+    'TerrainControl.enableTerrain': 'Enable terrain',
+    'TerrainControl.disableTerrain': 'Disable terrain'
 };
 
 export default defaultLocale;
