@@ -379,6 +379,23 @@ describe('Style#loadJSON', () => {
             style._layers.background.fire(new Event('error', {mapLibre: true}));
         });
     });
+
+    test('sets terrain if defined', (done) => {
+        const map = getStubMap();
+        const style = new Style(map);
+        map.transform.updateElevation = jest.fn();
+        style.loadJSON(createStyleJSON({
+            sources: {'source-id': createGeoJSONSource()},
+            terrain: { source: 'source-id', exaggeration: 0.33}
+        }));
+
+        style.on('style.load', () => {
+            expect(style.terrain).not.toBeUndefined();
+            expect(style.terrain).not.toBeNull();
+            expect(map.transform.updateElevation).toHaveBeenCalled();
+            done();
+        });
+    });
 });
 
 describe('Style#_remove', () => {
