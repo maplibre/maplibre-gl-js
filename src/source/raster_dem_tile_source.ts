@@ -15,7 +15,7 @@ import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '../style-spec/types.g';
 
 class RasterDEMTileSource extends RasterTileSource implements Source {
-    encoding: 'mapbox' | 'terrarium';
+    encoding: 'mapbox' | 'terrarium' | 'mtk';
 
     constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);

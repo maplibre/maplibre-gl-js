@@ -32,11 +32,11 @@ map.on('load', () => {
     map.addSource('terrain', {
         'type': 'raster-dem',
         'tiles': ['https://vtc-cdn.maptoolkit.net/terrainrgb/{z}/{x}/{y}.webp'],
-        'encoding': 'mapbox',
+        'encoding': 'mtk',
         'maxzoom': 14,
         'minzoom': 4
     });
-    map.setTerrain({source: 'terrain', exaggeration: 0.33});
+    map.setTerrain({source: 'terrain', exaggeration: 1});
 });
 
 map.on('click', e => {

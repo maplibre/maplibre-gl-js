@@ -31,13 +31,13 @@ map.on('load', () => {
     map.addSource('terrain', {
         'type': 'raster-dem',
         'tiles': ['https://vtc-cdn.maptoolkit.net/terrainrgb/{z}/{x}/{y}.webp'],
-        'encoding': 'mapbox',
+        'encoding': 'mtk',
         'maxzoom': 14
     });
     map.addControl(
         new maplibregl.TerrainControl({
             source: 'terrain',
-            exaggeration: 0.33
+            exaggeration: 1
         })
     );
 });
