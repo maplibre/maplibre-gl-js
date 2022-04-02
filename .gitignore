@@ -4,6 +4,7 @@
 /dist_type/
 /test/bench/results/
 *.es.js
+*.js.map
 node_modules
 *.sublime-*
 coverage
