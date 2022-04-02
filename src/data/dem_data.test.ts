@@ -47,7 +47,7 @@ describe('DEMData', () => {
             new DEMData('0', imageData0, 'otherEncoding' as any);
 
             expect(spyOnWarnConsole).toHaveBeenCalledTimes(1);
-            expect(spyOnWarnConsole.mock.calls).toEqual([['\"otherEncoding\" is not a valid encoding type. Valid types include \"mapbox\" and \"terrarium\".']]);
+            expect(spyOnWarnConsole.mock.calls).toEqual([['\"otherEncoding\" is not a valid encoding type. Valid types include \"mapbox\", \"mtk\" and \"terrarium\".']]);
         });
     });
 });
