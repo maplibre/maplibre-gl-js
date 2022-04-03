@@ -386,12 +386,11 @@ describe('Style#loadJSON', () => {
         map.transform.updateElevation = jest.fn();
         style.loadJSON(createStyleJSON({
             sources: {'source-id': createGeoJSONSource()},
-            terrain: { source: 'source-id', exaggeration: 0.33}
+            terrain: {source: 'source-id', exaggeration: 0.33}
         }));
 
         style.on('style.load', () => {
-            expect(style.terrain).not.toBeUndefined();
-            expect(style.terrain).not.toBeNull();
+            expect(style.terrain).toBeDefined();
             expect(map.transform.updateElevation).toHaveBeenCalled();
             done();
         });
