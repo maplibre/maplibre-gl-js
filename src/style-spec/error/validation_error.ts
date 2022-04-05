@@ -5,7 +5,7 @@ export default class ValidationError {
     identifier: string;
     line: number;
 
-    constructor(key: string, value: {
+    constructor(key: string, value: any & {
         __line__: number;
     }, message: string, identifier?: string | null) {
         this.message = (key ? `${key}: ` : '') + message;
