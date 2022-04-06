@@ -316,7 +316,7 @@ export default class Terrain {
     }
 
     /**
-     * Reads a Pixel from the Coords-Framebuffer and translate this to mercator.
+     * Reads a pixel from the coords-framebuffer and translate this to mercator.
      * @param {Point} p Screen-Coordinate
      * @returns {MercatorCoordinate} mercator coordinate for a screen pixel
      */
@@ -327,7 +327,7 @@ export default class Terrain {
         context.bindFramebuffer.set(this.getFramebuffer('coords').framebuffer);
         gl.readPixels(p.x, painter.height / devicePixelRatio - p.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
         context.bindFramebuffer.set(null);
-        // decode coordinates (encoding see terrain-source-cache)
+        // decode coordinates (encoding see getCoordsTexture)
         const x = rgba[0] + ((rgba[2] >> 4) << 8);
         const y = rgba[1] + ((rgba[2] & 15) << 8);
         const tileID = this._coordsIndex[255 - rgba[3]];
