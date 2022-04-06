@@ -963,7 +963,7 @@ describe('Map', () => {
             }
         } as any as IControl;
         map.addControl(control);
-        expect(map._controls[1]).toBe(control);
+        expect(map._controls[0]).toBe(control);
     });
 
     test('#removeControl errors on invalid arguments', () => {
@@ -989,7 +989,7 @@ describe('Map', () => {
         };
         map.addControl(control);
         map.removeControl(control);
-        expect(map._controls).toHaveLength(1);
+        expect(map._controls).toHaveLength(0);
 
     });
 

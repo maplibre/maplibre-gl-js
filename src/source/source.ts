@@ -41,7 +41,6 @@ export interface Source {
     attribution?: string;
     roundZoom?: boolean;
     isTileClipped?: boolean;
-    maplibreLogo?: boolean;
     tileID?: CanonicalTileID;
     reparseOverscaled?: boolean;
     vectorLayerIds?: Array<string>;
