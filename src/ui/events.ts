@@ -141,7 +141,7 @@ export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
     /**
      * The event type.
      */
-    type: 'touchstart' | 'touchend' | 'touchcancel';
+    type: 'touchstart' | 'touchmove' | 'touchend' | 'touchcancel';
 
     /**
      * The `Map` object that fired the event.
