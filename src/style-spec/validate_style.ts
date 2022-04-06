@@ -33,6 +33,7 @@ export default function validateStyle(style, styleSpec = v8) {
 
 export const source = validateStyleMin.source;
 export const light = validateStyleMin.light;
+export const terrain = validateStyleMin.terrain;
 export const layer = validateStyleMin.layer;
 export const filter = validateStyleMin.filter;
 export const paintProperty = validateStyleMin.paintProperty;

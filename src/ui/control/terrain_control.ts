@@ -3,7 +3,7 @@ import {bindAll} from '../../util/util';
 
 import type Map from '../map';
 import type {IControl} from './control';
-import type {TerrainOptions} from '../../style/style';
+import type {TerrainSpecification} from '../../style-spec/types.g';
 
 /**
  * An `TerrainControl` control adds a button to turn terrain on and off.
@@ -19,12 +19,12 @@ import type {TerrainOptions} from '../../style/style';
  *     }));
  */
 class TerrainControl implements IControl {
-    options: TerrainOptions;
+    options: TerrainSpecification;
     _map: Map;
     _container: HTMLElement;
     _terrainButton: HTMLButtonElement;
 
-    constructor(options: TerrainOptions) {
+    constructor(options: TerrainSpecification) {
         this.options = options;
 
         bindAll([
