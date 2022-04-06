@@ -1,0 +1,48 @@
+name: Deploy build on pull request
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  deploy-build-on-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set-up node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
+      - name: Build
+        run: |
+          npm ci
+          npm run build-prod
+          npm run build-csp
+          npm run build-dev
+          npm run build-css
+          npm run build-benchmarks
+          npm run generate-typings
+
+      - name: Empty postinstall.js
+        run: |
+          echo "// empty in published package" > postinstall.js
+
+      - name: Write dist/package.json
+        run: |
+          echo "{ \"type\": \"commonjs\" }" > dist/package.json
+    
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@4.1.0
+        with:
+          branch: gh-pages
+          folder: dist
+          target-folder: pulls/${{ github.event.number }}
+
+      - name: Add comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: demo
+          message: |
+            Build output available at <https://maplibre.github.io/maplibre-gl-js/pulls/${{ github.event.number }}>.
