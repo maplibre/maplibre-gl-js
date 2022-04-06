@@ -9,7 +9,7 @@ import posAttributes from '../data/pos_attributes';
 import SegmentVector from '../data/segment';
 import VertexBuffer from '../gl/vertex_buffer';
 import IndexBuffer from '../gl/index_buffer';
-import Style, {TerrainOptions} from '../style/style';
+import Style from '../style/style';
 import Texture from '../render/texture';
 import type Framebuffer from '../gl/framebuffer';
 import Point from '@mapbox/point-geometry';
@@ -18,6 +18,7 @@ import TerrainSourceCache from '../source/terrain_source_cache';
 import SourceCache from '../source/source_cache';
 import EXTENT from '../data/extent';
 import {number as mix} from '../style-spec/util/interpolate';
+import type {TerrainSpecification} from '../style-spec/types.g';
 
 /**
  * This is the main class which handles most of the 3D Terrain logic. It has the follwing topics:
@@ -71,8 +72,8 @@ export default class Terrain {
     style: Style;
     // the sourcecache this terrain is based on
     sourceCache: TerrainSourceCache;
-    // the TerrainOptions object passed to this instance
-    options: TerrainOptions;
+    // the TerrainSpecification object passed to this instance
+    options: TerrainSpecification;
     // define the meshSize per tile.
     meshSize: number;
     // multiplicator for the elevation. Used to make terrain more "extrem".
@@ -114,7 +115,7 @@ export default class Terrain {
     // remember all tiles which contains new data for a spezific source and tile-key.
     _rerender: {[_: string]: {[_: number]: boolean}};
 
-    constructor(style: Style, sourceCache: SourceCache, options: TerrainOptions) {
+    constructor(style: Style, sourceCache: SourceCache, options: TerrainSpecification) {
         this.style = style;
         this.sourceCache = new TerrainSourceCache(sourceCache);
         this.options = options;
