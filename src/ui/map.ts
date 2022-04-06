@@ -66,6 +66,7 @@ export type MapOptions = {
     bearingSnap?: number;
     attributionControl?: boolean;
     customAttribution?: string | Array<string>;
+    maplibreLogo?: boolean;
     logoPosition?: ControlPosition;
     failIfMajorPerformanceCaveat?: boolean;
     preserveDrawingBuffer?: boolean;
@@ -151,6 +152,7 @@ const defaultOptions = {
 
     hash: false,
     attributionControl: true,
+    maplibreLogo: false,
 
     failIfMajorPerformanceCaveat: false,
     preserveDrawingBuffer: false,
@@ -198,6 +200,7 @@ const defaultOptions = {
  * @param {number} [options.clickTolerance=3] The max number of pixels a user can shift the mouse pointer during a click for it to be considered a valid click (as opposed to a mouse drag).
  * @param {boolean} [options.attributionControl=true] If `true`, an {@link AttributionControl} will be added to the map.
  * @param {string | Array<string>} [options.customAttribution] String or strings to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
+ * @param {boolean} [options.maplibreLogo=false] If `true`, the MapLibre logo will be shown.
  * @param {string} [options.logoPosition='bottom-left'] A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
  * @param {boolean} [options.failIfMajorPerformanceCaveat=false] If `true`, map creation will fail if the performance of MapLibre
  *   GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
@@ -463,7 +466,8 @@ class Map extends Camera {
         if (options.attributionControl)
             this.addControl(new AttributionControl({customAttribution: options.customAttribution}));
 
-        this.addControl(new LogoControl(), options.logoPosition);
+        if (options.maplibreLogo)
+            this.addControl(new LogoControl(), options.logoPosition);
 
         this.on('style.load', () => {
             if (this.transform.unmodified) {
