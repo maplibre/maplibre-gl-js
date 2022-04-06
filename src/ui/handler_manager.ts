@@ -415,9 +415,9 @@ class HandlerManager {
     _updateMapTransform(combinedResult: any, combinedEventsInProgress: any, deactivatedHandlers: any) {
         const map = this._map;
         const tr = map.transform;
-        const hasTerrain = map.style && map.style.terrain;
+        const terrain = map.style && map.style.terrain;
 
-        if (!hasChange(combinedResult) && !(hasTerrain && this._drag)) {
+        if (!hasChange(combinedResult) && !(terrain && this._drag)) {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
         }
 
@@ -436,7 +436,7 @@ class HandlerManager {
         if (pitchDelta) tr.pitch += pitchDelta;
         if (zoomDelta) tr.zoom += zoomDelta;
 
-        if (!hasTerrain) {
+        if (!terrain) {
             tr.setLocationAtPoint(loc, around);
         } else {
             // when 3d-terrain is enabled act a litte different:
@@ -454,11 +454,10 @@ class HandlerManager {
                     point: around,
                     handlerName: combinedEventsInProgress.drag.handlerName
                 };
-                tr.freezeElevation = true;
+                map.fire(new Event('freezeElevation', {freeze: true}));
             // when dragging ends, recalcuate the zoomlevel for the new center coordinate
             } else if (this._drag && deactivatedHandlers[this._drag.handlerName]) {
-                tr.freezeElevation = false;
-                tr.recalculateZoom();
+                map.fire(new Event('freezeElevation', {freeze: false}));
                 this._drag = null;
             // drag map
             } else if (combinedEventsInProgress.drag && this._drag) {

@@ -22,6 +22,7 @@ import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance} from '../d
 import type FeatureIndex from '../data/feature_index';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {TextAnchor} from './symbol_layout';
+import Terrain from '../render/terrain';
 
 class OpacityState {
     opacity: number;
@@ -210,6 +211,7 @@ export type CrossTileID = string | number;
 
 export class Placement {
     transform: Transform;
+    terrain: Terrain;
     collisionIndex: CollisionIndex;
     placements: {
         [_ in CrossTileID]: JointPlacement;
@@ -238,8 +240,9 @@ export class Placement {
         [k in any]: CollisionCircleArray;
     };
 
-    constructor(transform: Transform, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
+    constructor(transform: Transform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
         this.transform = transform.clone();
+        this.terrain = terrain;
         this.collisionIndex = new CollisionIndex(this.transform);
         this.placements = {};
         this.opacities = {};
@@ -492,7 +495,7 @@ export class Placement {
 
             // update elevation of collisionArrays
             const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
-            const getElevation = this.transform.terrain ? (x: number, y: number) => this.transform.terrain.getElevation(tileID, x, y) : null;
+            const getElevation = this.terrain ? (x: number, y: number) => this.terrain.getElevation(tileID, x, y) : null;
             for (const boxType of ['textBox', 'verticalTextBox', 'iconBox', 'verticalIconBox']) {
                 const box = collisionArrays[boxType];
                 if (box) box.elevation = getElevation ? getElevation(box.anchorPointX, box.anchorPointY) : 0;

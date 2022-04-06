@@ -869,9 +869,7 @@ class Map extends Camera {
      * var point = map.project(coordinate);
      */
     project(lnglat: LngLatLike) {
-        return this.style && this.style.terrain ?
-            this.transform.locationPoint3D(LngLat.convert(lnglat)) :
-            this.transform.locationPoint(LngLat.convert(lnglat));
+        this.transform.locationPoint(LngLat.convert(lnglat), this.style && this.style.terrain);
     }
 
     /**
@@ -887,9 +885,7 @@ class Map extends Camera {
      * });
      */
     unproject(point: PointLike) {
-        return this.style && this.style.terrain ?
-            this.transform.pointLocation3D(Point.convert(point)) :
-            this.transform.pointLocation(Point.convert(point));
+        this.transform.pointLocation(Point.convert(point), this.style && this.style.terrain);
     }
 
     /**
@@ -2576,8 +2572,8 @@ class Map extends Camera {
         }
 
         // update terrain stuff
-        if (this.style.terrain) this.style.terrain.sourceCache.update(this.transform);
-        this.transform.updateElevation();
+        if (this.style.terrain) this.style.terrain.sourceCache.update(this.transform, this.style.terrain);
+        this.transform.updateElevation(this.style.terrain);
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 

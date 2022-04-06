@@ -898,7 +898,7 @@ abstract class Camera extends Evented {
 
     _prepareEase(eventData: any, noMoveStart: boolean, currently: any = {}) {
         this._moving = true;
-        this.transform.freezeElevation = true;
+        this.fire(new Event('freezeElevation', {freeze: true}));
 
         if (!noMoveStart && !currently.moving) {
             this.fire(new Event('movestart', eventData));
@@ -934,8 +934,7 @@ abstract class Camera extends Evented {
             return;
         }
         delete this._easeId;
-        this.transform.freezeElevation = false;
-        if (this.transform.terrain) this.transform.recalculateZoom();
+        this.fire(new Event('freezeElevation', {freeze: false}));
 
         const wasZooming = this._zooming;
         const wasRotating = this._rotating;

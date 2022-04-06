@@ -133,6 +133,7 @@ class Style extends Evented {
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
     _terrainDataCallback: (e: any) => any;
+    _terrainfreezeElevationCallback: (e: any) => any;
     _changed: boolean;
     _updatedSources: {[_: string]: 'clear' | 'reload'};
     _updatedLayers: {[_: string]: true};
@@ -495,26 +496,39 @@ class Style extends Evented {
     setTerrain(options?: TerrainOptions) {
         // clear event handlers
         if (this._terrainDataCallback) this.off('data', this._terrainDataCallback);
+        if (this._terrainfreezeElevationCallback) this.off('freezeElevation', this._terrainfreezeElevationCallback);
+
+        // remove terrain
         if (!options) {
-            // remove terrain
-            this.terrain = this.map.transform.terrain = null;
             this.map.transform.updateElevation();
+
+        // add terrain
         } else {
-            // add terrain
             const sourceCache = this.sourceCaches[options.source];
-            this.map.transform.terrain = this.terrain = new Terrain(this, sourceCache, options);
-            this.map.transform.updateElevation();
+            this.terrain = new Terrain(this, sourceCache, options);
+            this.map.transform.updateElevation(this.terrain);
+            this._terrainfreezeElevationCallback = (e: any) => {
+                if (e.freeze) {
+                    this.map.transform.freezeElevation = true;
+                } else {
+                    this.map.transform.freezeElevation = false;
+                    this.map.transform.recalculateZoom(this.terrain);
+                }
+            };
             this._terrainDataCallback = e => {
                 if (!e.tile) return;
                 if (e.sourceId === options.source) {
-                    this.map.transform.updateElevation();
+                    this.map.transform.updateElevation(this.terrain);
                     this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
                 } else if (e.source.type === 'geojson') {
                     this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
                 }
             };
             this.on('data', this._terrainDataCallback);
+            this.map.on('freezeElevation', this._terrainfreezeElevationCallback);
         }
+
+        this.map.fire(new Event('terrain', {terrain: options}));
     }
 
     /**
@@ -1298,7 +1312,7 @@ class Style extends Evented {
 
     _updateSources(transform: Transform) {
         for (const id in this.sourceCaches) {
-            this.sourceCaches[id].update(transform);
+            this.sourceCaches[id].update(transform, this.terrain);
         }
     }
 
@@ -1339,7 +1353,7 @@ class Style extends Evented {
         forceFullPlacement = forceFullPlacement || this._layerOrderChanged || fadeDuration === 0;
 
         if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(browser.now(), transform.zoom))) {
-            this.pauseablePlacement = new PauseablePlacement(transform, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
+            this.pauseablePlacement = new PauseablePlacement(transform, this.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
 

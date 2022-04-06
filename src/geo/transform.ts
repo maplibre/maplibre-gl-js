@@ -43,7 +43,6 @@ class Transform {
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
     freezeElevation: boolean;
-    terrain: Terrain;
     _fov: number;
     _pitch: number;
     _zoom: number;
@@ -103,7 +102,6 @@ class Transform {
         clone._pitch = this._pitch;
         clone._unmodified = this._unmodified;
         clone._edgeInsets = this._edgeInsets.clone();
-        clone.terrain = this.terrain;
         clone._calcMatrices();
         return clone;
     }
@@ -220,7 +218,6 @@ class Transform {
 
     get elevation(): number { return this._elevation; }
     set elevation(elevation: number) {
-        if (this.freezeElevation) return;
         if (elevation === this._elevation) return;
         this._unmodified = false;
         this._elevation = elevation;
@@ -343,6 +340,7 @@ class Transform {
             roundZoom?: boolean;
             reparseOverscaled?: boolean;
             renderWorldCopies?: boolean;
+            terrain?: Terrain;
         }
     ): Array<OverscaledTileID> {
         let z = this.coveringZoomLevel(options);
@@ -361,11 +359,11 @@ class Transform {
         // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
         let minZoom = options.minzoom || 0;
         // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
-        if (!this.terrain && this.pitch <= 60.0 && this._edgeInsets.top < 0.1)
+        if (!options.terrain && this.pitch <= 60.0 && this._edgeInsets.top < 0.1)
             minZoom = z;
 
-        // There should always be a certain number of maximum zoom level tiles surrounding the center location
-        const radiusOfMaxLvlLodInTiles = this.terrain ? 2 / Math.min(this.tileSize, options.tileSize) * this.tileSize : 3;
+        // There should always be a certain number of maximum zoom level tiles surrounding the center location in 2D or in front of the camera in 3D
+        const radiusOfMaxLvlLodInTiles = options.terrain ? 2 / Math.min(this.tileSize, options.tileSize) * this.tileSize : 3;
 
         const newRootTile = (wrap: number): any => {
             return {
@@ -410,7 +408,7 @@ class Transform {
                 fullyVisible = intersectResult === 2;
             }
 
-            const refPoint = this.terrain ? cameraPoint : centerPoint;
+            const refPoint = options.terrain ? cameraPoint : centerPoint;
             const distanceX = it.aabb.distanceX(refPoint);
             const distanceY = it.aabb.distanceY(refPoint);
             const longestDim = Math.max(Math.abs(distanceX), Math.abs(distanceY));
@@ -439,13 +437,13 @@ class Transform {
                 const childY = (y << 1) + (i >> 1);
                 const childZ = it.zoom + 1;
                 let quadrant = it.aabb.quadrant(i);
-                if (this.terrain) {
+                if (options.terrain) {
                     const tileID = new OverscaledTileID(childZ, it.wrap, childZ, childX, childY);
-                    const tile = this.terrain.getTerrainData(tileID).tile;
+                    const tile = options.terrain.getTerrainData(tileID).tile;
                     let minElevation = this.elevation, maxElevation = this.elevation;
                     if (tile && tile.dem) {
-                        minElevation = tile.dem.min * this.terrain.exaggeration;
-                        maxElevation = tile.dem.max * this.terrain.exaggeration;
+                        minElevation = tile.dem.min * options.terrain.exaggeration;
+                        maxElevation = tile.dem.max * options.terrain.exaggeration;
                     }
                     quadrant = new Aabb(
                         [quadrant.min[0], quadrant.min[1], minElevation] as vec3,
@@ -486,18 +484,28 @@ class Transform {
 
     get point(): Point { return this.project(this.center); }
 
-    updateElevation() {
-        this.elevation = this.getElevation(this._center);
+    /**
+     * Updates the center-elevation value unless freezeElevation is activated.
+     * @param terrain the terrain
+     */
+    updateElevation(terrain?: Terrain) {
+        if (this.freezeElevation) return;
+        this.elevation = terrain ? this.getElevation(this._center, terrain) : 0;
     }
 
-    getElevation(lnglat: LngLat) {
-        if (!this.terrain) return 0;
+    /**
+     * get the elevation from terrain for the current zoomlevel.
+     * @param lnglat the location
+     * @param terrain the terrain
+     * @returns {Number} elevation in meters
+     */
+    getElevation(lnglat: LngLat, terrain: Terrain) {
         const merc = MercatorCoordinate.fromLngLat(lnglat);
         const worldSize = (1 << this.tileZoom) * EXTENT;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
         const tileX = Math.floor(mercX / EXTENT), tileY = Math.floor(mercY / EXTENT);
         const tileID = new OverscaledTileID(this.tileZoom, 0, this.tileZoom, tileX, tileY);
-        return this.terrain.getElevation(tileID, mercX % EXTENT, mercY % EXTENT, EXTENT);
+        return terrain.getElevation(tileID, mercX % EXTENT, mercY % EXTENT, EXTENT);
     }
 
     /**
@@ -513,12 +521,16 @@ class Transform {
         return {lngLat, altitude: altitude + this.elevation};
     }
 
-    // this method only works in combination with elevation enabled and freezeElevation activated,
-    // because only in this case this.elevation holds the old elevation value.
-    recalculateZoom() {
+    /**
+     * This method works in combination with freezeElevation activated.
+     * freezeElevtion is enabled during map-panning because during this the camera should sit in constant height.
+     * After panning finished, call this method to recalculate the zoomlevel for the current camera-height in current terrain.
+     * @param {Terrain} terrain the terrain
+     */
+    recalculateZoom(terrain: Terrain) {
         // find position the camera is looking on
-        const center = this.pointLocation3D(this.centerPoint);
-        const elevation = this.getElevation(center);
+        const center = this.pointLocation(this.centerPoint, terrain);
+        const elevation = this.getElevation(center, terrain);
         const deltaElevation = this.elevation - elevation;
         if (!deltaElevation) return;
 
@@ -554,51 +566,35 @@ class Transform {
     /**
      * Given a location, return the screen point that corresponds to it
      * @param {LngLat} lnglat location
+     * @param {Terrain} terrain optional terrain
      * @returns {Point} screen point
      * @private
      */
-    locationPoint(lnglat: LngLat) {
-        return this.coordinatePoint(this.locationCoordinate(lnglat));
-    }
-
-    /**
-     * Given a location, return the screen point that corresponds to it
-     * @param {LngLat} lnglat location
-     * @returns {Point} screen point
-     * @private
-     */
-    locationPoint3D(lnglat: LngLat) {
-        return this.coordinatePoint(this.locationCoordinate(lnglat), this.getElevation(lnglat), this.pixelMatrix3D);
+    locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
+        return terrain ?
+            this.coordinatePoint(this.locationCoordinate(lnglat), this.getElevation(lnglat, terrain), this.pixelMatrix3D) :
+            this.coordinatePoint(this.locationCoordinate(lnglat));
     }
 
     /**
      * Given a point on screen, return its lnglat
      * @param {Point} p screen point
+     * @param {Terrain} terrain optional terrain
      * @returns {LngLat} lnglat location
      * @private
      */
-    pointLocation(p: Point) {
-        return this.coordinateLocation(this.pointCoordinate(p));
-    }
-
-    /**
-     * Given a point on screen, return its lnglat
-     * @param {Point} p screen point
-     * @returns {LngLat} lnglat location
-     * @private
-     */
-    pointLocation3D(p: Point) {
-        return this.coordinateLocation(this.pointCoordinate3D(p));
+    pointLocation(p: Point, terrain?: Terrain): LngLat {
+        return this.coordinateLocation(this.pointCoordinate(p, terrain));
     }
 
     /**
      * Given a geographical lnglat, return an unrounded
      * coordinate that represents it at this transform's zoom level.
      * @param {LngLat} lnglat
-     * @returns {Coordinate}
+     * @returns {MercatorCoordinate}
      * @private
      */
-    locationCoordinate(lnglat: LngLat) {
+    locationCoordinate(lnglat: LngLat): MercatorCoordinate {
         return MercatorCoordinate.fromLngLat(lnglat);
     }
 
@@ -608,11 +604,22 @@ class Transform {
      * @returns {LngLat} lnglat
      * @private
      */
-    coordinateLocation(coord: MercatorCoordinate) {
-        return coord.toLngLat();
+    coordinateLocation(coord: MercatorCoordinate): LngLat {
+        return coord && coord.toLngLat();
     }
 
-    pointCoordinate(p: Point) {
+    /**
+     * Given a Point, return its mercator coordinate.
+     * @param {Point} p the point
+     * @param {Terrain} terrain optional terrain
+     * @returns {LngLat} lnglat
+     * @private
+     */
+    pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
+        // get point-coordinate from terrain coordinates framebuffer
+        if (terrain) return terrain.pointCoordinate(p);
+
+        // calcuate point-coordinate on flat earth
         const targetZ = 0;
         // since we don't know the correct projected z value for the point,
         // unproject two points to get a line and then find the point on that
@@ -638,11 +645,6 @@ class Transform {
         return new MercatorCoordinate(
             interpolate(x0, x1, t) / this.worldSize,
             interpolate(y0, y1, t) / this.worldSize);
-    }
-
-    pointCoordinate3D(p: Point): MercatorCoordinate {
-        const coordinate = this.terrain && this.terrain.pointCoordinate(p);
-        return coordinate || this.pointCoordinate(p);
     }
 
     /**
@@ -827,9 +829,7 @@ class Transform {
         this.glCoordMatrix = m;
 
         // calculate the camera to sea-level distance in pixel in respect of terrain
-        this.cameraToSeaLevelDistance = this.terrain ?
-            this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch) :
-            this.cameraToCenterDistance;
+        this.cameraToSeaLevelDistance = this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.

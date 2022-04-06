@@ -21,6 +21,7 @@ import type Transform from '../geo/transform';
 import type {TileState} from './tile';
 import type {Callback} from '../types/callback';
 import type {SourceSpecification} from '../style-spec/types.g';
+import Terrain from '../render/terrain';
 
 /**
  * `SourceCache` is responsible for
@@ -56,6 +57,7 @@ class SourceCache extends Evented {
     _shouldReloadOnResume: boolean;
     _coveredTiles: {[_: string]: boolean};
     transform: Transform;
+    terrain: Terrain;
     used: boolean;
     usedForTerrain: boolean;
     tileSize: number;
@@ -81,7 +83,7 @@ class SourceCache extends Evented {
             if (this._sourceLoaded && !this._paused && e.dataType === 'source' && e.sourceDataType === 'content') {
                 this.reload();
                 if (this.transform) {
-                    this.update(this.transform);
+                    this.update(this.transform, this.terrain);
                 }
             }
         });
@@ -154,7 +156,7 @@ class SourceCache extends Evented {
         this._paused = false;
         this._shouldReloadOnResume = false;
         if (shouldReload) this.reload();
-        if (this.transform) this.update(this.transform);
+        if (this.transform) this.update(this.transform, this.terrain);
     }
 
     _loadTile(tile: Tile, callback: Callback<void>) {
@@ -265,7 +267,7 @@ class SourceCache extends Evented {
             tile.state = 'errored';
             if ((err as any).status !== 404) this._source.fire(new ErrorEvent(err, {tile}));
             // continue to try loading parent/children tiles if a tile doesn't exist (404)
-            else this.update(this.transform);
+            else this.update(this.transform, this.terrain);
             return;
         }
 
@@ -489,8 +491,9 @@ class SourceCache extends Evented {
      * are inside the viewport.
      * @private
      */
-    update(transform: Transform) {
+    update(transform: Transform, terrain: Terrain) {
         this.transform = transform;
+        this.terrain = terrain;
         if (!this._sourceLoaded || this._paused) { return; }
 
         this.updateCacheSize(transform);
@@ -512,7 +515,8 @@ class SourceCache extends Evented {
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
-                reparseOverscaled: this._source.reparseOverscaled
+                reparseOverscaled: this._source.reparseOverscaled,
+                terrain
             });
 
             if (this._source.hasTile) {
@@ -578,7 +582,7 @@ class SourceCache extends Evented {
             }
 
             // disable fading logic in terrain3D mode to avoid rendering two tiles on the same place
-            if (this.style && this.style.terrain) {
+            if (terrain) {
                 const idealRasterTileIDs: {[_: string]: OverscaledTileID} = {};
                 const missingTileIDs: {[_: string]: OverscaledTileID} = {};
                 for (const tileID of idealTileIDs) {
@@ -875,8 +879,8 @@ class SourceCache extends Evented {
             transform.getCameraQueryGeometry(pointQueryGeometry) :
             pointQueryGeometry;
 
-        const queryGeometry = pointQueryGeometry.map((p) => transform.pointCoordinate3D(p));
-        const cameraQueryGeometry = cameraPointQueryGeometry.map((p) => transform.pointCoordinate3D(p));
+        const queryGeometry = pointQueryGeometry.map((p: Point) => transform.pointCoordinate(p, this.terrain));
+        const cameraQueryGeometry = cameraPointQueryGeometry.map((p: Point) => transform.pointCoordinate(p, this.terrain));
 
         const ids = this.getIds();
 

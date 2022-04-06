@@ -33,7 +33,7 @@ function drawBackground(painter: Painter, sourceCache: SourceCache, layer: Backg
     const depthMode = painter.depthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
     const program = painter.useProgram(image ? 'backgroundPattern' : 'background');
-    const tileIDs = coords ? coords : transform.coveringTiles({tileSize});
+    const tileIDs = coords ? coords : transform.coveringTiles({tileSize, terrain: painter.style.terrain});
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);

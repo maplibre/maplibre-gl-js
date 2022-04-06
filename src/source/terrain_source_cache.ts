@@ -6,6 +6,7 @@ import {Evented} from '../util/evented';
 import type Transform from '../geo/transform';
 import type SourceCache from '../source/source_cache';
 import Painter from '../render/painter';
+import Terrain from '../render/terrain';
 
 /**
  * This is the main class which handles most of the 3D Terrain logic. It has the follwing topics:
@@ -86,17 +87,19 @@ export default class TerrainSourceCache extends Evented {
     /**
      * Load Terrain Tiles, create internal render-to-texture tiles, free GPU memory.
      * @param {Transform} transform - the operation to do
+     * @param {Terrain} terrain - the terrain
      */
-    update(transform: Transform): void {
+    update(transform: Transform, terrain: Terrain): void {
         // load raster-dem tiles for the current scene.
-        this.sourceCache.update(transform);
+        this.sourceCache.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
         this._renderableTilesKeys = [];
         for (const tileID of transform.coveringTiles({
             tileSize: this.tileSize,
             minzoom: this.minzoom,
             maxzoom: this.maxzoom,
-            reparseOverscaled: false
+            reparseOverscaled: false,
+            terrain
         })) {
             this._renderableTilesKeys.push(tileID.key);
             if (!this._tiles[tileID.key]) {
