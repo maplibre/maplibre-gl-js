@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - *...Add new stuff here...*
+- Changed logic for showing the Maplibre logo. The Maplibre logo is now shown by setting the map option 'maplibreLogo' to true or by adding it to a map with addControl. TileJSON no longer controls if the logo is shown. (#786)
 
 ### 🐞 Bug fixes
 
