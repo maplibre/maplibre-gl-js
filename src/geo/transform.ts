@@ -219,7 +219,6 @@ class Transform {
     get elevation(): number { return this._elevation; }
     set elevation(elevation: number) {
         if (elevation === this._elevation) return;
-        this._unmodified = false;
         this._elevation = elevation;
         this._constrain();
         this._calcMatrices();
