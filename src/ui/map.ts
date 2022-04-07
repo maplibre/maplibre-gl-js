@@ -432,7 +432,7 @@ class Map extends Camera {
         this.on('zoom', () => this._update(true));
         this.on('terrain', () => {
             this.painter.terrainFacilitator.dirty = true;
-            this._update(true)
+            this._update(true);
         });
 
         if (typeof window !== 'undefined') {
