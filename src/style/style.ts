@@ -491,17 +491,21 @@ class Style extends Evented {
      * @param {TerrainSpecification} [options] Options object.
      */
     setTerrain(options?: TerrainSpecification) {
+        this._checkLoaded();
+
         // clear event handlers
         if (this._terrainDataCallback) this.off('data', this._terrainDataCallback);
         if (this._terrainfreezeElevationCallback) this.off('freezeElevation', this._terrainfreezeElevationCallback);
 
         // remove terrain
         if (!options) {
-            this.map.transform.updateElevation();
+            this.terrain = null;
+            this.map.transform.updateElevation(this.terrain);
 
         // add terrain
         } else {
             const sourceCache = this.sourceCaches[options.source];
+            if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
             this.terrain = new Terrain(this, sourceCache, options);
             this.map.transform.updateElevation(this.terrain);
             this._terrainfreezeElevationCallback = (e: any) => {

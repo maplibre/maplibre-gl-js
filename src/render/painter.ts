@@ -129,13 +129,13 @@ class Painter {
     // this object stores the current camera-matrix and the last render time
     // of the terrain-facilitators. e.g. depth & coords framebuffers
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
-    terrainFacilitator: {matrix: mat4; renderTime: number};
+    terrainFacilitator: {dirty: boolean; matrix: mat4; renderTime: number};
 
     constructor(gl: WebGLRenderingContext, transform: Transform) {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
-        this.terrainFacilitator = {matrix: mat4.create(), renderTime: 0};
+        this.terrainFacilitator = {dirty: true, matrix: mat4.create(), renderTime: 0};
 
         this.setup();
 
@@ -413,9 +413,10 @@ class Painter {
 
             // update coords/depth-framebuffer on camera movement, or tile reloading
             const newTiles = this.style.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
-            if (!mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
+            if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
                 mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
                 this.terrainFacilitator.renderTime = Date.now();
+                this.terrainFacilitator.dirty = false;
                 drawDepth(this, this.style.terrain);
                 drawCoords(this, this.style.terrain);
             }

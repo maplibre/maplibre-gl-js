@@ -430,6 +430,10 @@ class Map extends Camera {
         this.on('move', () => this._update(false));
         this.on('moveend', () => this._update(false));
         this.on('zoom', () => this._update(true));
+        this.on('terrain', () => {
+            this.painter.terrainFacilitator.dirty = true;
+            this._update(true)
+        });
 
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
@@ -1576,11 +1580,7 @@ class Map extends Camera {
      * map.setTerrain({ source: 'terrain' });
      */
     setTerrain(options: TerrainSpecification): Map {
-        if (options) this.isSourceLoaded(options.source);
         this.style.setTerrain(options);
-        this._sourcesDirty = true;
-        this._styleDirty = true;
-        this.triggerRepaint();
         return this;
     }
 
