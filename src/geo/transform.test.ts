@@ -340,7 +340,6 @@ describe('transform', () => {
     });
 
     test('maintains high float precision when calculating matrices', () => {
-
         const transform = new Transform(0, 22, 0, 60, true);
         transform.resize(200.25, 200.25);
         transform.zoom = 20.25;
@@ -352,4 +351,26 @@ describe('transform', () => {
         expect(transform.glCoordMatrix[0].toString().length).toBeGreaterThan(10);
         expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 10);
     });
+
+    test('recalcuateZoom', () => {
+        const transform = new Transform(0, 22, 0, 60, true);
+        transform.elevation = 200;
+        transform.center = new LngLat(10.0, 50.0);
+        transform.zoom = 14;
+        transform.resize(512, 512);
+
+        // expect same values because of no elevation change
+        transform.getElevation = () => 200;
+        transform.recalculateZoom(null);
+        expect(transform.zoom).toBe(14);
+
+        // expect new zoom because of elevation change
+        transform.getElevation = () => 400;
+        transform.recalculateZoom(null);
+        expect(transform.zoom).toBe(14.127997275621933);
+        expect(transform.elevation).toBe(400);
+        expect(transform._center.lng).toBe(10.00000000000071);
+        expect(transform._center.lat).toBe(50.00000000000017);
+    });
+
 });
