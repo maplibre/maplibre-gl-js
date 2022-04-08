@@ -8,6 +8,12 @@
 
 - *...Add new stuff here...*
 
+## 2.1.9
+
+### 🐞 Bug fixes
+
+- Add back typescript typings to dependencies instead of devDependencies (#1178)
+
 ## 2.1.8
 
 ### ✨ Features and improvements
