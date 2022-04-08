@@ -170,6 +170,6 @@ jobs:
 
       - name: Publish NPM package
         run: |
-          yarn publish --non-interactive
+          yarn publish --non-interactive --tag v1
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
