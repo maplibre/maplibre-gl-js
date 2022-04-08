@@ -61,7 +61,7 @@ describe('CanvasSource', () => {
     });
 
     test('self-validates', () => {
-        const stub = jest.spyOn(console, 'error');
+        const stub = jest.spyOn(console, 'error').mockImplementation(() => {});
         createSource({coordinates: []});
         expect(stub).toHaveBeenCalled();
         stub.mockReset();

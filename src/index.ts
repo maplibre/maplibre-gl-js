@@ -5,6 +5,7 @@ import Map from './ui/map';
 import NavigationControl from './ui/control/navigation_control';
 import GeolocateControl from './ui/control/geolocate_control';
 import AttributionControl from './ui/control/attribution_control';
+import LogoControl from './ui/control/logo_control';
 import ScaleControl from './ui/control/scale_control';
 import FullscreenControl from './ui/control/fullscreen_control';
 import TerrainControl from './ui/control/terrain_control';
@@ -43,6 +44,7 @@ const exported = {
     NavigationControl,
     GeolocateControl,
     AttributionControl,
+    LogoControl,
     ScaleControl,
     FullscreenControl,
     TerrainControl,

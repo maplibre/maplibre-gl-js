@@ -6,7 +6,24 @@
 
 ### 🐞 Bug fixes
 
+- *...Add new stuff here...*
+
+## 2.1.9
+
+### 🐞 Bug fixes
+
+- Add back typescript typings to dependencies instead of devDependencies (#1178)
+
+## 2.1.8
+
+### ✨ Features and improvements
+
+- Changed logic for showing the Maplibre logo. The Maplibre logo is now shown by setting the map option 'maplibreLogo' to true or by adding it to a map with addControl. TileJSON no longer controls if the logo is shown. (#786)
+
+### 🐞 Bug fixes
+
 - Fix missing `touchmove` in `MapTouchEvent["type"]` (#1131)
+- Type CustomLayerInterface renderingMode, onRemove, onAdd, and prerender optional (#1122)
  
 ## 2.1.8-pre.3
 
