@@ -1,5 +1,7 @@
 # MapLibre GL
 
+Just a demo test!
+
 **MapLibre GL** is a community-led fork derived from [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) before their switch to a non-OSS license.
 
 ### Migrating from mapbox-gl
