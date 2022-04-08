@@ -46,4 +46,4 @@ jobs:
         with:
           header: pr-demo
           message: |
-            Uploaded [build output](https://github.com/wipfli/maplibre-gl-js/tree/gh-pages/pulls/${{ github.event.number }}) and created a [live demo](https://maplibre.org/maplibre-gl-js/pulls/${{ github.event.number }}).
+            Uploaded [build output](https://github.com/maplibre/maplibre-gl-js/tree/gh-pages/pulls/${{ github.event.number }}) and created a [live demo](https://maplibre.org/maplibre-gl-js/pulls/${{ github.event.number }}).
