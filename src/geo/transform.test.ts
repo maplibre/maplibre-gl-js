@@ -373,4 +373,14 @@ describe('transform', () => {
         expect(transform._center.lat).toBe(50.00000000000017);
     });
 
+    test('pointCoordinate with terrain when returning null should fall back to 2D', () => {
+        const transform = new Transform(0, 22, 0, 60, true);
+        transform.resize(500, 500);
+        const terrain = {
+            pointCoordinate: () => null
+        } as any;
+        const coordinate = transform.pointCoordinate(new Point(0,0), terrain);
+
+        expect(coordinate).toBeDefined();
+    });
 });

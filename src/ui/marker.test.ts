@@ -771,4 +771,24 @@ describe('marker', () => {
 
         map.remove();
     });
+
+    test('Marker removed after update when terrain is on should clear timeout', () => {
+        jest.spyOn(global, 'setTimeout');
+        jest.spyOn(global, 'clearTimeout');
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+        map.style.terrain = {
+            getElevation: () => 0
+        } as any;
+
+        marker.setOffset([10, 10]);
+
+        expect(setTimeout).toHaveBeenCalled();
+        marker.remove();
+        expect(clearTimeout).toHaveBeenCalled();
+
+        map.remove();
+    });
 });
