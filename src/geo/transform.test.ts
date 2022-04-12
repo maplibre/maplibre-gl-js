@@ -379,7 +379,7 @@ describe('transform', () => {
         const terrain = {
             pointCoordinate: () => null
         } as any;
-        const coordinate = transform.pointCoordinate(new Point(0,0), terrain);
+        const coordinate = transform.pointCoordinate(new Point(0, 0), terrain);
 
         expect(coordinate).toBeDefined();
     });
