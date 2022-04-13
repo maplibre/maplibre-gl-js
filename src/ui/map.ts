@@ -2785,7 +2785,7 @@ class Map extends Camera {
      * Gets and sets a Boolean indicating whether symbol-spacing is applied
      * at symbol layout time (false, default), or at symbol placement/collision
      * time (true).
-     * 
+     *
      * @name collisionSymbolSpacing
      * @type {boolean}
      * @instance
@@ -2793,7 +2793,7 @@ class Map extends Camera {
      */
     get collisionSymbolSpacing() { return !!this._collisionSymbolSpacing; }
     set collisionSymbolSpacing(value: boolean) {
-        if (this._collisionSymbolSpacing === value) {return;}
+        if (this._collisionSymbolSpacing === value) { return; }
         this._collisionSymbolSpacing = value;
         // _generateCollisionBoxes reloads all sources - should have a more generic name
         this.style._generateCollisionBoxes();

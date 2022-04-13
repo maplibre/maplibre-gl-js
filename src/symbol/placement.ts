@@ -207,8 +207,8 @@ export type BucketPart = {
 };
 
 export type CompareAnchorEntry = {
-    crossTileID: number | string,
-    anchor: Point
+    crossTileID: number | string;
+    anchor: Point;
 };
 
 export type CrossTileID = string | number;
@@ -493,13 +493,14 @@ export class Placement {
 
             if (collisionSymbolSpacing && symbolPlacement === 'line') {
                 // Resolve the layer's symbol-spacing value against already-placed anchors for this symbol
-                featureKey = `${bucket.bucketInstanceId}_${symbolInstance.featureIndex}`;
+                featureKey = `${symbolInstance.key}`;
                 const tooClose = anchorIsTooClose(nearbyAnchors, featureKey, symbolInstance.crossTileID, symbolMinDistance / 2, new Point(symbolInstance.anchorX, symbolInstance.anchorY));
 
                 if (tooClose) {
+                    // eslint-disable-next-line
                     // TODO: Combine update of this.placements & seenCrossTileIDs with those at bottom of func
                     assert(symbolInstance.crossTileID !== 0);
-        
+
                     this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
                     seenCrossTileIDs[symbolInstance.crossTileID] = true;
                     return;
@@ -802,7 +803,7 @@ export class Placement {
                     anchor: new Point(symbolInstance.anchorX, symbolInstance.anchorY)
                 });
             }
-            
+
             this.placements[symbolInstance.crossTileID] = new JointPlacement(placeText || alwaysShowText, placeIcon || alwaysShowIcon, offscreen || bucket.justReloaded);
             seenCrossTileIDs[symbolInstance.crossTileID] = true;
         };
@@ -813,6 +814,58 @@ export class Placement {
             for (let i = symbolIndexes.length - 1; i >= 0; --i) {
                 const symbolIndex = symbolIndexes[i];
                 placeSymbol(bucket.symbolInstances.get(symbolIndex), bucket.collisionArrays[symbolIndex]);
+            }
+        } else if (collisionSymbolSpacing && this.prevPlacement) {
+            const symbolKeyToInstance: {[_: number]: number[]} = {};
+
+            // Map from symbol key to list of symbol instances (repeats).
+            // eslint-disable-next-line
+            // TODO: Store this mapping in the bucket, so repeats can more easily be considered as a batch
+            for (let i = 0; i < bucket.symbolInstances.length; i++) {
+                const instance = bucket.symbolInstances.get(i);
+                const key = instance.key;
+
+                symbolKeyToInstance[key] = symbolKeyToInstance[key] || [];
+                symbolKeyToInstance[key].push(i);
+            }
+
+            // For symbol instances with the same key, sort previously placed instances first, so they are likely to be placed again
+            for (const key of Object.keys(symbolKeyToInstance)) {
+                symbolKeyToInstance[key].sort((aIndex, bIndex) => {
+                    const aInstance = bucket.symbolInstances.get(aIndex);
+                    const bInstance = bucket.symbolInstances.get(bIndex);
+                    const aPlacement = this.prevPlacement.placements[aInstance.crossTileID];
+                    const bPlacement = this.prevPlacement.placements[bInstance.crossTileID];
+
+                    const aIsPlaced = aPlacement && (aPlacement.icon || aPlacement.text);
+                    const bIsPlaced = bPlacement && (bPlacement.icon || bPlacement.text);
+
+                    if (aIsPlaced === bIsPlaced) {
+                        return aIndex - bIndex;
+                    }
+                    if (aIsPlaced) {
+                        return -1;
+                    }
+                    return 1;
+                });
+            }
+
+            const seenKey: {[_: number]: boolean} = {};
+
+            // Place symbols in bucket order, in groups batched by symbol key
+            for (let i = 0; i < bucket.symbolInstances.length; i++) {
+                const instance = bucket.symbolInstances.get(i);
+                const key = instance.key;
+
+                if (!seenKey[key]) {
+                    seenKey[key] = true;
+
+                    const orderedInstances = symbolKeyToInstance[key];
+
+                    for (const orderedIndex of orderedInstances) {
+                        placeSymbol(bucket.symbolInstances.get(orderedIndex), bucket.collisionArrays[orderedIndex]);
+                    }
+                }
             }
         } else {
             for (let i = bucketPart.symbolInstanceStart; i < bucketPart.symbolInstanceEnd; i++) {
