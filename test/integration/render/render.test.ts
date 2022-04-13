@@ -595,12 +595,6 @@ function getReportItem(test: TestData) {
         status = 'failed';
     }
 
-    // Some of the regression tests refer to github issue numbers; need to escape
-    // the hash char since it's still part of the path.
-    function escapePath(path: string) {
-        return path.replace(/#/g, '%23');
-    }
-
     return `<div class="test">
     <h2>${test.id}</h2>
     ${status !== 'errored' ? `
