@@ -3,6 +3,7 @@ import Transform from './transform';
 import LngLat from './lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed';
+import type Terrain from '../render/terrain';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -378,7 +379,7 @@ describe('transform', () => {
         transform.resize(500, 500);
         const terrain = {
             pointCoordinate: () => null
-        } as any;
+        } as any as Terrain;
         const coordinate = transform.pointCoordinate(new Point(0, 0), terrain);
 
         expect(coordinate).toBeDefined();

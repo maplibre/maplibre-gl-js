@@ -4,6 +4,10 @@ import gl from 'gl';
 import Context from '../gl/context';
 import {RGBAImage} from '../util/image';
 import Texture from './texture';
+import type Style from '../style/style';
+import type SourceCache from '../source/source_cache';
+import type TerrainSourceCache from '../source/terrain_source_cache';
+import type {TerrainSpecification} from '../style-spec/types.g';
 
 describe('Terrain', () => {
     test('pointCoordiate should not return null', () => {
@@ -15,7 +19,7 @@ describe('Terrain', () => {
                     height: 1
                 }
             }
-        } as any;
+        } as any as Style;
         const sourceCache = {
             getTileByID: (tileID) => {
                 if (tileID !== 'abcd') {
@@ -31,8 +35,8 @@ describe('Terrain', () => {
                     }
                 };
             }
-        } as any;
-        const terrain = new Terrain(style, {} as any, {} as any);
+        } as any as TerrainSourceCache;
+        const terrain = new Terrain(style, {} as any as SourceCache, {} as any as TerrainSpecification);
         terrain.sourceCache = sourceCache;
         const context = style.map.painter.context as Context;
         const pixels = new Uint8Array([0, 0, 255, 255]);

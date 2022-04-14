@@ -4,6 +4,7 @@ import Popup from './popup';
 import LngLat from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
+import type Terrain from '../render/terrain';
 
 function createMap(options = {}) {
     const container = window.document.createElement('div');
@@ -781,7 +782,7 @@ describe('marker', () => {
             .addTo(map);
         map.style.terrain = {
             getElevation: () => 0
-        } as any;
+        } as any as Terrain;
 
         marker.setOffset([10, 10]);
 
