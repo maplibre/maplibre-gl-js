@@ -63,9 +63,11 @@ type TestData = {
     queryGeometry: PointLike;
     queryOptions: any;
     error: Error;
-    actualPath: string;
-    diffPath: string;
-    expectedPath: string;
+
+    // base64-encoded content of the PNG results
+    actual: string;
+    diff: string;
+    expected: string;
 }
 
 type RenderOptions = {
@@ -162,12 +164,13 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         fs.writeFileSync(expectedPath, PNG.sync.write(actualImg));
         return;
     }
+
     // if we have multiple expected images, we'll compare against each one and pick the one with
     // the least amount of difference; this is useful for covering features that render differently
     // depending on platform, i.e. heatmaps use half-float textures for improved rendering where supported
     let minDiff = Infinity;
     let minDiffImg: PNG;
-    let minExpectedPath = expectedPath;
+    let minExpectedBuf: Buffer;
 
     for (const path of expectedPaths) {
         const expectedBuf = fs.readFileSync(path);
@@ -181,7 +184,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         if (diff < minDiff) {
             minDiff = diff;
             minDiffImg = diffImg;
-            minExpectedPath = path;
+            minExpectedBuf = expectedBuf;
         }
     }
 
@@ -193,9 +196,10 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 
     testData.difference = minDiff;
     testData.ok = minDiff <= testData.allowed;
-    testData.actualPath = actualPath;
-    testData.diffPath = diffPath;
-    testData.expectedPath = minExpectedPath;
+
+    testData.actual = actualBuf.toString('base64');
+    testData.expected = minExpectedBuf.toString('base64');
+    testData.diff = diffBuf.toString('base64');
 }
 
 /**
@@ -594,7 +598,8 @@ function getReportItem(test: TestData) {
     return `<div class="test">
     <h2>${test.id}</h2>
     ${status !== 'errored' ? `
-        <img width="${test.width}" height="${test.height}" src="${test.actualPath}" data-alt-src="${test.expectedPath}"><img style="width: ${test.width}; height: ${test.height}" src="${test.diffPath}">` : ''
+        <img width="${test.width}" height="${test.height}" src="data:image/png;base64,${test.actual}" data-alt-src="data:image/png;base64,${test.expected}">
+        <img style="width: ${test.width}; height: ${test.height}" src="data:image/png;base64,${test.diff}">` : ''
 }
     ${test.error ? `<p style="color: red"><strong>Error:</strong> ${test.error.message}</p>` : ''}
     ${test.difference ? `<p class="diff"><strong>Diff:</strong> ${test.difference}</p>` : ''}
