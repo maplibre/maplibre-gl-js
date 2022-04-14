@@ -54,15 +54,15 @@ function drawCoords(painter: Painter, terrain: Terrain) {
     context.bindFramebuffer.set(terrain.getFramebuffer('coords').framebuffer);
     context.viewport.set([0, 0, painter.width  / devicePixelRatio, painter.height / devicePixelRatio]);
     context.clear({color: Color.transparent, depth: 1});
-    terrain._coordsIndex = [];
+    terrain.coordsIndex = [];
     for (const tile of tiles) {
         const terrainData = terrain.getTerrainData(tile.tileID);
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, coords.texture);
         const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
-        const uniformValues = terrainCoordsUniformValues(posMatrix, 255 - terrain._coordsIndex.length);
+        const uniformValues = terrainCoordsUniformValues(posMatrix, 255 - terrain.coordsIndex.length);
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
-        terrain._coordsIndex.push(tile.tileID.key);
+        terrain.coordsIndex.push(tile.tileID.key);
     }
 
     context.bindFramebuffer.set(null);

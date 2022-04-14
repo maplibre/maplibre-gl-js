@@ -616,7 +616,12 @@ class Transform {
      */
     pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
-        if (terrain) return terrain.pointCoordinate(p);
+        if (terrain) {
+            const coordinate = terrain.pointCoordinate(p);
+            if (coordinate != null) {
+                return coordinate;
+            }
+        }
 
         // calcuate point-coordinate on flat earth
         const targetZ = 0;
