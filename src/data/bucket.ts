@@ -8,6 +8,7 @@ import type {ImagePosition} from '../render/image_atlas';
 import type {CanonicalTileID} from '../source/tile_id';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 import Point from '@mapbox/point-geometry';
+import SymbolBucket from './bucket/symbol_bucket';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -96,7 +97,7 @@ export interface Bucket {
     destroy(): void;
 }
 
-export function deserialize(input: Array<Bucket>, style: Style): {[_: string]: Bucket} {
+export function deserialize(input: Array<Bucket>, style: Style, collisionSymbolSpacing: boolean): {[_: string]: Bucket} {
     const output = {};
 
     // Guard against the case where the map's style has been set to null while
@@ -110,6 +111,20 @@ export function deserialize(input: Array<Bucket>, style: Style): {[_: string]: B
 
         if (layers.length === 0) {
             continue;
+        }
+
+        if (collisionSymbolSpacing && bucket instanceof SymbolBucket && bucket.symbolInstances) {
+            const symbolKeyToInstance: {[_: number]: number[]} = {};
+
+            for (let i = 0; i < bucket.symbolInstances.length; i++) {
+                const instance = bucket.symbolInstances.get(i);
+                const key = instance.key;
+
+                symbolKeyToInstance[key] = symbolKeyToInstance[key] || [];
+                symbolKeyToInstance[key].push(i);
+            }
+
+            bucket.symbolKeyToInstance = symbolKeyToInstance;
         }
 
         // look up StyleLayer objects from layer ids (since we don't

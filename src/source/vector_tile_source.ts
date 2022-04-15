@@ -178,6 +178,7 @@ class VectorTileSource extends Evented implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        const collisionSymbolSpacing = this.map.collisionSymbolSpacing;
         const params = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
             uid: tile.uid,
@@ -188,7 +189,7 @@ class VectorTileSource extends Evented implements Source {
             source: this.id,
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
-            collisionSymbolSpacing: this.map.collisionSymbolSpacing,
+            collisionSymbolSpacing,
             promoteId: this.promoteId
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
@@ -217,7 +218,7 @@ class VectorTileSource extends Evented implements Source {
                 tile.resourceTiming = data.resourceTiming;
 
             if (this.map._refreshExpiredTiles && data) tile.setExpiryData(data);
-            tile.loadVectorData(data, this.map.painter);
+            tile.loadVectorData(data, this.map.painter, false, collisionSymbolSpacing);
 
             cacheEntryPossiblyAdded(this.dispatcher);
 

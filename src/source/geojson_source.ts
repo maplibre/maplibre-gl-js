@@ -291,6 +291,7 @@ class GeoJSONSource extends Evented implements Source {
     loadTile(tile: Tile, callback: Callback<void>) {
         const message = !tile.actor ? 'loadTile' : 'reloadTile';
         tile.actor = this.actor;
+        const collisionSymbolSpacing = this.map.collisionSymbolSpacing;
         const params = {
             type: this.type,
             uid: tile.uid,
@@ -301,7 +302,7 @@ class GeoJSONSource extends Evented implements Source {
             source: this.id,
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
-            collisionSymbolSpacing: this.map.collisionSymbolSpacing,
+            collisionSymbolSpacing,
             promoteId: this.promoteId
         };
 
@@ -317,7 +318,7 @@ class GeoJSONSource extends Evented implements Source {
                 return callback(err);
             }
 
-            tile.loadVectorData(data, this.map.painter, message === 'reloadTile');
+            tile.loadVectorData(data, this.map.painter, message === 'reloadTile', collisionSymbolSpacing);
 
             return callback(null);
         });

@@ -349,6 +349,9 @@ class SymbolBucket implements Bucket {
     placementInvProjMatrix: mat4;
     placementViewportMatrix: mat4;
 
+    // mapping from symbolInstance.key to list of indices in symbolInstances array
+    symbolKeyToInstance: {[_: number]: number[]};
+
     text: SymbolBuffers;
     icon: SymbolBuffers;
     textCollisionBox: CollisionBuffers;

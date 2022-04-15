@@ -139,7 +139,7 @@ class Tile {
      * @returns {undefined}
      * @private
      */
-    loadVectorData(data: WorkerTileResult, painter: any, justReloaded?: boolean | null) {
+    loadVectorData(data: WorkerTileResult, painter: any, justReloaded: boolean, collisionSymbolSpacing: boolean) {
         if (this.hasData()) {
             this.unloadVectorData();
         }
@@ -166,7 +166,7 @@ class Tile {
             }
         }
         this.collisionBoxArray = data.collisionBoxArray;
-        this.buckets = deserializeBucket(data.buckets, painter.style);
+        this.buckets = deserializeBucket(data.buckets, painter.style, collisionSymbolSpacing);
 
         this.hasSymbolBuckets = false;
         for (const id in this.buckets) {
