@@ -19,8 +19,9 @@
 
 var map = window.map = new maplibregl.Map({
     container: 'map',
-    zoom: 13,
-    center: [35.6025, 32.8240],
+    zoom: 12,
+    center: [11.39085, 47.27574],
+    pitch: 52,
     hash: true,
     style: {
         version: 8,
@@ -34,7 +35,7 @@ var map = window.map = new maplibregl.Map({
             },
             terrain: {
                 type: 'raster-dem',
-                url: 'put-your-terrain-tile-source-url-here',
+                url: 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
                 tileSize: 256
             },
         },
@@ -54,18 +55,25 @@ var map = window.map = new maplibregl.Map({
         ],
         terrain: {
             source: 'terrain',
-            exaggeration: 2
+            exaggeration: 1
         }
     },
     maxZoom: 18,
     maxPitch: 85
 });
 
-map.on('click', e => {
-    new maplibregl.Marker().setLngLat(e.lngLat).addTo(map);
-});
+map.addControl(new maplibregl.NavigationControl({
+    visualizePitch: true,
+    showZoom: true,
+    showCompass: true
+}));
 
-map.addControl(new maplibregl.NavigationControl());
+map.addControl(
+    new maplibregl.TerrainControl({
+        source: 'terrain',
+        exaggeration: 1
+    })
+);
 </script>
 </body>
 </html>
