@@ -27,7 +27,7 @@ function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: Hillsh
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
-        if (tile.needsHillshadePrepare && painter.renderPass === 'offscreen') {
+        if (typeof tile.needsHillshadePrepare !== 'undefined' && tile.needsHillshadePrepare && painter.renderPass === 'offscreen') {
             prepareHillshade(painter, tile, layer, depthMode, StencilMode.disabled, colorMode);
         } else if (painter.renderPass === 'translucent') {
             renderHillshade(painter, coord, tile, layer, depthMode, stencilModes[coord.overscaledZ], colorMode);
