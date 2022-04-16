@@ -5589,7 +5589,7 @@ export declare class Terrain {
 	_fboDepthTexture: Texture;
 	_emptyDepthTexture: Texture;
 	_mesh: TerrainMesh;
-	_coordsIndex: Array<string>;
+	coordsIndex: Array<string>;
 	_coordsTexture: Texture;
 	_coordsTextureSize: number;
 	_emptyDemUnpack: number[];
