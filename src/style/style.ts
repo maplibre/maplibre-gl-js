@@ -495,7 +495,7 @@ class Style extends Evented {
 
         // clear event handlers
         if (this._terrainDataCallback) this.off('data', this._terrainDataCallback);
-        if (this._terrainfreezeElevationCallback) this.off('freezeElevation', this._terrainfreezeElevationCallback);
+        if (this._terrainfreezeElevationCallback) this.map.off('freezeElevation', this._terrainfreezeElevationCallback);
 
         // remove terrain
         if (!options) {
