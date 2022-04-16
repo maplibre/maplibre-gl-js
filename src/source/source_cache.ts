@@ -21,6 +21,7 @@ import type Transform from '../geo/transform';
 import type {TileState} from './tile';
 import type {Callback} from '../types/callback';
 import type {SourceSpecification} from '../style-spec/types.g';
+import type {MapSourceDataEvent} from '../ui/events';
 import Terrain from '../render/terrain';
 
 /**
@@ -72,7 +73,7 @@ class SourceCache extends Evented {
         this.id = id;
         this.dispatcher = dispatcher;
 
-        this.on('data', (e) => {
+        this.on('data', (e: MapSourceDataEvent) => {
             // this._sourceLoaded signifies that the TileJSON is loaded if applicable.
             // if the source type does not come with a TileJSON, the flag signifies the
             // source data has loaded (i.e geojson has been tiled on the worker and is ready)

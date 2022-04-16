@@ -95,7 +95,7 @@ export default class Terrain {
     // coords index contains a list of tileID.keys. This index is used to identify
     // the tile via the alpha-cannel in the coords-texture.
     // As the alpha-channel has 1 Byte a max of 255 tiles can rendered without an error.
-    _coordsIndex: Array<string>;
+    coordsIndex: Array<string>;
     // tile-coords encoded in the rgb channel, _coordsIndex is in the alpha-channel.
     _coordsTexture: Texture;
     // accuracy of the coords. 2 * tileSize should be enoughth.
@@ -124,7 +124,7 @@ export default class Terrain {
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = {};
-        this._coordsIndex = [];
+        this.coordsIndex = [];
         this._coordsTextureSize = 1024;
         this.clearRerenderCache();
     }
@@ -326,12 +326,12 @@ export default class Terrain {
         const painter = this.style.map.painter, context = painter.context, gl = context.gl;
         // grab coordinate pixel from coordinates framebuffer
         context.bindFramebuffer.set(this.getFramebuffer('coords').framebuffer);
-        gl.readPixels(p.x, painter.height / devicePixelRatio - p.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+        gl.readPixels(p.x, painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
         context.bindFramebuffer.set(null);
         // decode coordinates (encoding see getCoordsTexture)
         const x = rgba[0] + ((rgba[2] >> 4) << 8);
         const y = rgba[1] + ((rgba[2] & 15) << 8);
-        const tileID = this._coordsIndex[255 - rgba[3]];
+        const tileID = this.coordsIndex[255 - rgba[3]];
         const tile = tileID && this.sourceCache.getTileByID(tileID);
         if (!tile) return null;
         const coordsSize = this._coordsTextureSize;

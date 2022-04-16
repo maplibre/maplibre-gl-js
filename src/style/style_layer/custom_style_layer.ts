@@ -83,7 +83,7 @@ export interface CustomLayerInterface {
     /**
      * @property {string} renderingMode Either `"2d"` or `"3d"`. Defaults to `"2d"`.
      */
-    renderingMode: '2d' | '3d';
+    renderingMode?: '2d' | '3d';
     /**
      * Called during a render frame allowing the layer to draw into the GL context.
      *
@@ -130,7 +130,7 @@ export interface CustomLayerInterface {
      * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate}.fromLngLat
      * can be used to project a `LngLat` to a mercator coordinate.
      */
-    prerender: CustomRenderMethod;
+    prerender?: CustomRenderMethod;
     /**
      * Optional method called when the layer has been added to the Map with {@link Map#addLayer}. This
      * gives the layer a chance to initialize gl resources and register event listeners.
@@ -142,7 +142,7 @@ export interface CustomLayerInterface {
      * @param {Map} map The Map this custom layer was just added to.
      * @param {WebGLRenderingContext} gl The gl context for the map.
      */
-    onAdd(map: Map, gl: WebGLRenderingContext): void;
+    onAdd?(map: Map, gl: WebGLRenderingContext): void;
     /**
      * Optional method called when the layer has been removed from the Map with {@link Map#removeLayer}. This
      * gives the layer a chance to clean up gl resources and event listeners.
@@ -154,7 +154,7 @@ export interface CustomLayerInterface {
      * @param {Map} map The Map this custom layer was just added to.
      * @param {WebGLRenderingContext} gl The gl context for the map.
      */
-    onRemove(map: Map, gl: WebGLRenderingContext): void;
+    onRemove?(map: Map, gl: WebGLRenderingContext): void;
 }
 
 export function validateCustomStyleLayer(layerObject: CustomLayerInterface) {

@@ -265,6 +265,10 @@ export default class Marker extends Evented {
      * @returns {Marker} `this`
      */
     remove() {
+        if (this._opacityTimeout) {
+            clearTimeout(this._opacityTimeout);
+            delete this._opacityTimeout;
+        }
         if (this._map) {
             this._map.off('click', this._onMapClick);
             this._map.off('move', this._update);
