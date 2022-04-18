@@ -671,9 +671,10 @@ class Transform {
      * @returns {LngLatBounds} Returns a {@link LngLatBounds} object describing the map's geographical bounds.
      */
     getBounds(): LngLatBounds {
+        const top = Math.max(0, this.height / 2 - this.getHorizon());
         return new LngLatBounds()
-            .extend(this.pointLocation(new Point(0, 0)))
-            .extend(this.pointLocation(new Point(this.width, 0)))
+            .extend(this.pointLocation(new Point(0, top)))
+            .extend(this.pointLocation(new Point(this.width, top)))
             .extend(this.pointLocation(new Point(this.width, this.height)))
             .extend(this.pointLocation(new Point(0, this.height)));
     }
@@ -695,7 +696,7 @@ class Transform {
      * The calculated value is the horizontal line from the camera-height to sea-level.
      * @returns {number} Horizon above center in pixels.
      */
-    getHorizon() {
+    getHorizon(): number {
         return Math.tan(Math.PI / 2 - this._pitch) * this.cameraToCenterDistance * 0.85;
     }
 

@@ -55,6 +55,10 @@ class CollisionIndex {
     gridRightBoundary: number;
     gridBottomBoundary: number;
 
+    // With perspectiveRatio the fontsize is calculated for tilted maps (near = bigger, far = smaller).
+    // The cutoff defines a threshold to no longer render labels near the horizon.
+    perspectiveRatioCutoff: number;
+
     constructor(
         transform: Transform,
         grid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
@@ -70,6 +74,8 @@ class CollisionIndex {
         this.screenBottomBoundary = transform.height + viewportPadding;
         this.gridRightBoundary = transform.width + 2 * viewportPadding;
         this.gridBottomBoundary = transform.height + 2 * viewportPadding;
+
+        this.perspectiveRatioCutoff = 0.6;
     }
 
     placeCollisionBox(
@@ -91,7 +97,8 @@ class CollisionIndex {
         const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
 
         if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
-            (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate))) {
+            (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate)) ||
+            projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff) {
             return {
                 box: [],
                 offscreen: false
@@ -268,7 +275,7 @@ class CollisionIndex {
         }
 
         return {
-            circles: ((!showCollisionCircles && collisionDetected) || !inGrid) ? [] : placedCollisionCircles,
+            circles: ((!showCollisionCircles && collisionDetected) || !inGrid || perspectiveRatio < this.perspectiveRatioCutoff) ? [] : placedCollisionCircles,
             offscreen: entirelyOffscreen,
             collisionDetected
         };
