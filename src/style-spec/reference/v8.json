@@ -3884,6 +3884,26 @@
       },
       "property-type": "data-constant"
     },
+    "fill-per-layer-opacity": {
+      "type": "boolean",
+      "default": false,
+      "doc": "Whether or not the opacity style of fill should be per-layer.",
+      "sdk-support": {
+        "basic functionality": {
+          "js": "0.10.0",
+          "android": "2.0.1",
+          "ios": "2.0.0",
+          "macos": "0.1.0"
+        }
+      },
+      "expression": {
+        "interpolated": false,
+        "parameters": [
+          "zoom"
+        ]
+      },
+      "property-type": "data-constant"
+    },
     "fill-opacity": {
       "type": "number",
       "default": 1,

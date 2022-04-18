@@ -14,8 +14,12 @@ import type EvaluationParameters from '../evaluation_parameters';
 import type Transform from '../../geo/transform';
 import type {LayerSpecification} from '../../style-spec/types.g';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
+import Framebuffer from '../../gl/framebuffer';
 
 class FillStyleLayer extends StyleLayer {
+
+    fillFbo: Framebuffer;
+
     _unevaluatedLayout: Layout<FillLayoutProps>;
     layout: PossiblyEvaluated<FillLayoutProps, FillLayoutPropsPossiblyEvaluated>;
 
@@ -62,6 +66,18 @@ class FillStyleLayer extends StyleLayer {
 
     isTileClipped() {
         return true;
+    }
+
+    resize() {
+        super.resize();
+        if (this.fillFbo) {
+            this.fillFbo.destroy();
+            this.fillFbo = null;
+        }
+    }
+
+    hasOffscreenPass() {
+        return this.paint.get('fill-per-layer-opacity') && this.visibility !== 'none';
     }
 }
 

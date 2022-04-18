@@ -24,6 +24,13 @@ export type FillOutlineUniformsType = {
     'u_world': Uniform2f;
 };
 
+export type FillfboUniformsType = {
+    'u_matrix': UniformMatrix4f;
+    'u_world': Uniform2f;
+    'u_image': Uniform1i;
+    'u_opacity': Uniform1f;
+};
+
 export type FillPatternUniformsType = {
     'u_matrix': UniformMatrix4f;
     // pattern uniforms:
@@ -51,6 +58,13 @@ const fillUniforms = (context: Context, locations: UniformLocations): FillUnifor
     'u_matrix': new UniformMatrix4f(context, locations.u_matrix)
 });
 
+const fillfboUniforms = (context: Context, locations: UniformLocations): FillfboUniformsType => ({
+    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
+    'u_world': new Uniform2f(context, locations.u_world),
+    'u_image': new Uniform1i(context, locations.u_image),
+    'u_opacity': new Uniform1f(context, locations.u_opacity)
+});
+
 const fillPatternUniforms = (context: Context, locations: UniformLocations): FillPatternUniformsType => ({
     'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_image': new Uniform1i(context, locations.u_image),
@@ -76,6 +90,18 @@ const fillOutlinePatternUniforms = (context: Context, locations: UniformLocation
     'u_scale': new Uniform3f(context, locations.u_scale),
     'u_fade': new Uniform1f(context, locations.u_fade)
 });
+
+const fillfboUniformValues = (painter: Painter, textureUnit: number, opacity = 1.0): UniformValues<FillfboUniformsType> => {
+    const gl = painter.context.gl;
+    const matrix = mat4.create();
+    mat4.ortho(matrix, 0, painter.width, painter.height, 0, 0, 1);
+    return {
+        'u_matrix': matrix,
+        'u_world': [gl.drawingBufferWidth, gl.drawingBufferHeight],
+        'u_image': textureUnit,
+        'u_opacity': opacity
+    };
+};
 
 const fillUniformValues = (matrix: mat4): UniformValues<FillUniformsType> => ({
     'u_matrix': matrix
@@ -117,5 +143,7 @@ export {
     fillUniformValues,
     fillPatternUniformValues,
     fillOutlineUniformValues,
+    fillfboUniformValues,
+    fillfboUniforms,
     fillOutlinePatternUniformValues
 };

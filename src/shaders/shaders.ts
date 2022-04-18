@@ -22,7 +22,11 @@ import collisionCircleVert from './collision_circle.vertex.glsl.g';
 import debugFrag from './debug.fragment.glsl.g';
 import debugVert from './debug.vertex.glsl.g';
 import fillFrag from './fill.fragment.glsl.g';
+import fillopaqueVert from './fillopaque.vertex.glsl.g';
+import fillopaqueFrag from './fillopaque.fragment.glsl.g';
 import fillVert from './fill.vertex.glsl.g';
+import fillfboFrag from './fillfbo.fragment.glsl.g';
+import fillfboVert from './fillfbo.vertex.glsl.g';
 import fillOutlineFrag from './fill_outline.fragment.glsl.g';
 import fillOutlineVert from './fill_outline.vertex.glsl.g';
 import fillOutlinePatternFrag from './fill_outline_pattern.fragment.glsl.g';
@@ -70,6 +74,8 @@ const shaders = {
     collisionCircle: compile(collisionCircleFrag, collisionCircleVert),
     debug: compile(debugFrag, debugVert),
     fill: compile(fillFrag, fillVert),
+    fillopaque: compile(fillopaqueFrag, fillopaqueVert),
+    fillfbo: compile(fillfboFrag, fillfboVert),
     fillOutline: compile(fillOutlineFrag, fillOutlineVert),
     fillOutlinePattern: compile(fillOutlinePatternFrag, fillOutlinePatternVert),
     fillPattern: compile(fillPatternFrag, fillPatternVert),
