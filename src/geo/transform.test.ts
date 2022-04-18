@@ -384,4 +384,27 @@ describe('transform', () => {
 
         expect(coordinate).toBeDefined();
     });
+
+    test('horizon', () => {
+        const transform = new Transform(0, 22, 0, 85, true);
+        transform.resize(500, 500);
+        transform.pitch = 75;
+        const horizon = transform.getHorizon();
+
+        expect(horizon).toBeCloseTo(170.8176101748407, 10);
+    });
+
+    test('getBounds with horizon', () => {
+        const transform = new Transform(0, 22, 0, 85, true);
+        transform.resize(500, 500);
+
+        transform.pitch = 60;
+        expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, 0)).toArray());
+
+        transform.pitch = 75;
+        const top = Math.max(0, transform.height / 2 - transform.getHorizon());
+        expect(top).toBeCloseTo(79.1823898251593, 10);
+        expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, top)).toArray());
+    });
+
 });

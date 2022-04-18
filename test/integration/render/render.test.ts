@@ -66,6 +66,7 @@ type TestData = {
     actualPath: string;
     diffPath: string;
     expectedPath: string;
+    maxPitch: number;
 }
 
 type RenderOptions = {
@@ -415,6 +416,7 @@ function getImageFromStyle(style: StyleWithTestData): Promise<Uint8Array> {
             classes: options.classes,
             interactive: false,
             attributionControl: false,
+            maxPitch: options.maxPitch,
             pixelRatio: options.pixelRatio,
             preserveDrawingBuffer: true,
             axonometric: options.axonometric || false,
