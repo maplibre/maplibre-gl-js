@@ -145,7 +145,7 @@ export default class RenderToTexture {
                 return true;
             }
 
-            if (isLastLayer) return true;
+            return this._renderToTexture[type];
         }
 
         return false;
