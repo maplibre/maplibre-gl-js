@@ -203,7 +203,7 @@ export function performSymbolLayout(
     }
 
     const lineHeight = layout.get('text-line-height') * ONE_EM;
-    const textAlongLine = layout.get('text-rotation-alignment') === 'map' && layout.get('symbol-placement') !== 'point';
+    const textAlongLine = layout.get('text-rotation-alignment') !== 'viewport' && layout.get('symbol-placement') !== 'point';
     const keepUpright = layout.get('text-keep-upright');
     const textSize = layout.get('text-size');
 
@@ -395,7 +395,7 @@ function addFeature(bucket: SymbolBucket,
         textPadding = layout.get('text-padding') * bucket.tilePixelRatio,
         iconPadding = layout.get('icon-padding') * bucket.tilePixelRatio,
         textMaxAngle = layout.get('text-max-angle') / 180 * Math.PI,
-        textAlongLine = layout.get('text-rotation-alignment') === 'map' && layout.get('symbol-placement') !== 'point',
+        textAlongLine = layout.get('text-rotation-alignment') !== 'viewport' && layout.get('symbol-placement') !== 'point',
         iconAlongLine = layout.get('icon-rotation-alignment') === 'map' && layout.get('symbol-placement') !== 'point',
         symbolPlacement = layout.get('symbol-placement'),
         textRepeatDistance = symbolMinDistance / 2;

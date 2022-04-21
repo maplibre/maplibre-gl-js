@@ -6,7 +6,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {Event, ErrorEvent} from '../util/evented';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {LayerSpecification, SourceSpecification, StyleSpecification} from '../style-spec/types';
+import {LayerSpecification, SourceSpecification, StyleSpecification} from '../style-spec/types.g';
 import {RequestTransformFunction} from '../util/request_manager';
 import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
@@ -963,7 +963,7 @@ describe('Map', () => {
             }
         } as any as IControl;
         map.addControl(control);
-        expect(map._controls[1]).toBe(control);
+        expect(map._controls[0]).toBe(control);
     });
 
     test('#removeControl errors on invalid arguments', () => {
@@ -989,7 +989,7 @@ describe('Map', () => {
         };
         map.addControl(control);
         map.removeControl(control);
-        expect(map._controls).toHaveLength(1);
+        expect(map._controls).toHaveLength(0);
 
     });
 

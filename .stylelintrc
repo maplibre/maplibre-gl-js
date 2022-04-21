@@ -11,6 +11,9 @@
     }],
     "property-no-vendor-prefix": [true, {
       "ignoreProperties": ["/user-select/"]
+    }],
+    "function-no-unknown": [true, {
+      "ignoreFunctions": ["svg-load", "svg-inline"]
     }]
   },
   "ignoreFiles": [

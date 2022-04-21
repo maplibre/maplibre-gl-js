@@ -9,7 +9,7 @@ import {RequestManager} from '../../../src/util/request_manager';
 import WorkerTile from '../../../src/source/worker_tile';
 import StyleLayerIndex from '../../../src/style/style_layer_index';
 
-import type {StyleSpecification} from '../../../src/style-spec/types';
+import type {StyleSpecification} from '../../../src/style-spec/types.g';
 import type {WorkerTileResult} from '../../../src/source/worker_source';
 import type {OverscaledTileID} from '../../../src/source/tile_id';
 import type {TileJSON} from '../../../src/types/tilejson';

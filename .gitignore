@@ -12,7 +12,7 @@ coverage
 .nyc_output
 *_generated.js
 *_generated.js.map
-test/integration/**/index*.html
+test/integration/**/results*.html
 test/integration/**/actual.png
 test/integration/**/actual.json
 test/integration/**/diff.png

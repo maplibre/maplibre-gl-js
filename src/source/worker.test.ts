@@ -1,6 +1,6 @@
 import {fakeServer} from 'nise';
 import Worker from './worker';
-import {LayerSpecification} from '../style-spec/types';
+import {LayerSpecification} from '../style-spec/types.g';
 import {Cancelable} from '../types/cancelable';
 import {WorkerGlobalScopeInterface} from '../util/web_worker';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';

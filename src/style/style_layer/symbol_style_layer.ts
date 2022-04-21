@@ -24,7 +24,7 @@ import {
 import type {BucketParameters} from '../../data/bucket';
 import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
 import type EvaluationParameters from '../evaluation_parameters';
-import type {LayerSpecification} from '../../style-spec/types';
+import type {LayerSpecification} from '../../style-spec/types.g';
 import type {Feature, SourceExpression, CompositeExpression} from '../../style-spec/expression';
 import type {Expression} from '../../style-spec/expression/expression';
 import type {CanonicalTileID} from '../../source/tile_id';
@@ -68,7 +68,7 @@ class SymbolStyleLayer extends StyleLayer {
 
         // If unspecified, `*-pitch-alignment` inherits `*-rotation-alignment`
         if (this.layout.get('text-pitch-alignment') === 'auto') {
-            this.layout._values['text-pitch-alignment'] = this.layout.get('text-rotation-alignment');
+            this.layout._values['text-pitch-alignment'] = this.layout.get('text-rotation-alignment') === 'map' ? 'map' : 'viewport';
         }
         if (this.layout.get('icon-pitch-alignment') === 'auto') {
             this.layout._values['icon-pitch-alignment'] = this.layout.get('icon-rotation-alignment');

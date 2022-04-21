@@ -1,14 +1,22 @@
 import type {VectorTileFeature} from '@mapbox/vector-tile';
+import type {LayerSpecification} from '../style-spec/types.g';
+
+export type MapGeoJSONFeature = GeoJSONFeature & {
+    layer: Omit<LayerSpecification, 'source'> & {source: string};
+    source: string;
+    sourceLayer?: string;
+    state: { [key: string]: any };
+}
 
 class GeoJSONFeature {
     type: 'Feature';
     _geometry: GeoJSON.Geometry;
-    properties: {};
-    id: number | string | void;
+    properties: { [name: string]: any };
+    id: number | string | undefined;
 
     _vectorTileFeature: VectorTileFeature;
 
-    constructor(vectorTileFeature: VectorTileFeature, z: number, x: number, y: number, id: string | number | void) {
+    constructor(vectorTileFeature: VectorTileFeature, z: number, x: number, y: number, id: string | number | undefined) {
         this.type = 'Feature';
 
         this._vectorTileFeature = vectorTileFeature;
@@ -35,9 +43,13 @@ class GeoJSONFeature {
     }
 
     toJSON() {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const {_geometry, _vectorTileFeature, ...json} = this;
-        json.geometry = this.geometry;
+        const json: any = {
+            geometry: this.geometry
+        };
+        for (const i in this) {
+            if (i === '_geometry' || i === '_vectorTileFeature') continue;
+            json[i] = (this)[i];
+        }
         return json;
     }
 }

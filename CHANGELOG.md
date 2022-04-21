@@ -1,13 +1,69 @@
 ## main
 
-### Features and improvements
+### ✨ Features and improvements
 
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
 
-- Add adjustment for glyph rendering, CJK fonts are mainly affected (#1002).
 - *...Add new stuff here...*
+
+## 2.1.9
+
+### 🐞 Bug fixes
+
+- Add back typescript typings to dependencies instead of devDependencies (#1178)
+
+## 2.1.8
+
+### ✨ Features and improvements
+
+- Changed logic for showing the Maplibre logo. The Maplibre logo is now shown by setting the map option 'maplibreLogo' to true or by adding it to a map with addControl. TileJSON no longer controls if the logo is shown. (#786)
+
+### 🐞 Bug fixes
+
+- Fix missing `touchmove` in `MapTouchEvent["type"]` (#1131)
+- Type CustomLayerInterface renderingMode, onRemove, onAdd, and prerender optional (#1122)
+ 
+## 2.1.8-pre.3
+
+### 🐞 Bug fixes
+
+- Use correct location for mouse events of line layer with line-offset (#1108).
+- Change `GeoJSONFeature.properties` type from `{}` to `{ [name: string]: any; }` (#1115).
+- Fix `error TS2503: Cannot find namespace 'GeoJSON'` (#1096).
+
+## 2.1.8-pre.2
+
+### ✨ Features and improvements
+- Removal of the unminified production build target, so `npm run build-prod` will be the main build command going forward.
+### 🐞 Bug fixes
+
+- Dispose source resources on map style removal, it also fixes `cannot read properties of undefined (reading 'sourceCaches')` error (#1099).
+- Add MapGeoJSONFeature type as replacement for MapboxGeoJSONFeature. MapGeoJSONFeature type extends GeoJSONFeature type with layer, source, sourceLayer, and state properties (#1104).
+- Fix automatic refreshing of expired raster tiles (#1106)
+- Fix precision loss in some matrix calculations (#1105)
+
+## 2.1.8-pre.1
+
+### ✨ Features and improvements
+
+- Add option `viewport-glyph` to `text-rotation-alignment` which places glyphs along a linestring and rotates them to the x-axis of the viewport (#716).
+
+### 🐞 Bug fixes
+
+- Change `GeoJSONFeature.id` type from `number | string | void` to `number | string | undefined` (#1093)
+- Add FeatureIdentifier type to define feature parameter in setFeatureState, removeFeatureState, and getFeatureState methods. Change FeatureIdentifier.id from `id: string | number;` to `id?: string | number | undefined;` (#1095)
+- Change map.on, map.off, and map.once type parameter from "type: MapEvent" to "type: MapEvent | string" (#1094)
+
+## 2.1.7
+
+### 🐞 Bug fixes
+
+- Add adjustment for glyph rendering, CJK fonts are mainly affected (#1002).
+- Improve typings to fix Angular strict mode failure (#790, #970, #934)
+- Fix `SourceCache.loaded()` always returning `true` following a load error (#1025)
+- Added back csp and dev builds to npm package (#1042)
 
 ## 2.1.6
 

@@ -8,6 +8,7 @@ import DictionaryCoder from '../util/dictionary_coder';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import GeoJSONFeature from '../util/vectortile_to_geojson';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import {arraysIntersect, mapObject, extend} from '../util/util';
 import {OverscaledTileID} from '../source/tile_id';
 import {register} from '../util/web_worker_transfer';
@@ -21,7 +22,7 @@ import {mat4} from 'gl-matrix';
 import type StyleLayer from '../style/style_layer';
 import type {FeatureFilter} from '../style-spec/feature_filter';
 import type Transform from '../geo/transform';
-import type {FilterSpecification, PromoteIdSpecification} from '../style-spec/types';
+import type {FilterSpecification, PromoteIdSpecification} from '../style-spec/types.g';
 import type {FeatureState} from '../style-spec/expression';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 
@@ -240,8 +241,8 @@ class FeatureIndex {
                 continue;
             }
 
-            const geojsonFeature = new GeoJSONFeature(feature, this.z, this.x, this.y, id);
-            (geojsonFeature as any).layer = serializedLayer;
+            const geojsonFeature = new GeoJSONFeature(feature, this.z, this.x, this.y, id) as MapGeoJSONFeature;
+            geojsonFeature.layer = serializedLayer;
             let layerResult = result[layerID];
             if (layerResult === undefined) {
                 layerResult = result[layerID] = [];

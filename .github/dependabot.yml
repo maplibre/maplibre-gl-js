@@ -11,3 +11,4 @@ updates:
       interval: "monthly"
     ignore:
       - dependency-name: "documentation"
+    open-pull-requests-limit: 20

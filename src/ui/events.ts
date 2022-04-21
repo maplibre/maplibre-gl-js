@@ -6,7 +6,7 @@ import {extend} from '../util/util';
 
 import type Map from './map';
 import type LngLat from '../geo/lng_lat';
-import {SourceSpecification} from '../style-spec/types';
+import {SourceSpecification} from '../style-spec/types.g';
 
 export type MapLayerMouseEvent = MapMouseEvent & { features?: GeoJSON.Feature[] };
 
@@ -141,7 +141,7 @@ export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
     /**
      * The event type.
      */
-    type: 'touchstart' | 'touchend' | 'touchcancel';
+    type: 'touchstart' | 'touchmove' | 'touchend' | 'touchcancel';
 
     /**
      * The `Map` object that fired the event.

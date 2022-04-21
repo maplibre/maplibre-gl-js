@@ -4,7 +4,7 @@ import properties, {RasterPaintPropsPossiblyEvaluated} from './raster_style_laye
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 
 import type {RasterPaintProps} from './raster_style_layer_properties.g';
-import type {LayerSpecification} from '../../style-spec/types';
+import type {LayerSpecification} from '../../style-spec/types.g';
 
 class RasterStyleLayer extends StyleLayer {
     _transitionablePaint: Transitionable<RasterPaintProps>;
