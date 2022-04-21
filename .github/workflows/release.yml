@@ -61,7 +61,7 @@ jobs:
 
       - name: Write dist/package.json
         run: |
-          echo "{ \"type\": \"commonjs\" }" > dist/package.json
+          echo "{ \"type\": \"commonjs\", \"name\": \"maplibre-gl\" }" > dist/package.json
 
       - name: Create Archive
         run: |
