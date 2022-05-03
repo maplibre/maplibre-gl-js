@@ -95,7 +95,7 @@
     "gl": "^5.0.0",
     "glob": "^7.2.0",
     "is-builtin-module": "^3.1.0",
-    "jest": "^27.5.1",
+    "jest": "^28.0.3",
     "jest-canvas-mock": "^2.3.1",
     "jest-playwright-preset": "^1.7.0",
     "jsdom": "^19.0.0",
