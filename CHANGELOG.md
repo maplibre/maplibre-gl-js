@@ -2,7 +2,7 @@
 
 ### ✨ Features and improvements
 
-- Add new paint property `fill-per-layer-opacity` to fill type. Setting it as true can prevent the opacity on stacked polygons from being increased.
+- Add new paint property `fill-per-layer-opacity` to fill type. Setting it as true can prevent the opacity on stacked polygons from being increased. (#1191)
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
