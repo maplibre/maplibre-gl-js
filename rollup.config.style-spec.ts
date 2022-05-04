@@ -14,7 +14,7 @@ const config: RollupOptions[] = [{
     input: 'src/style-spec/style-spec.ts',
     output: {
         name: 'maplibreGlStyleSpecification',
-        file: `dist/style-spec/${esm ? 'index.mjs' : 'index.js'}`,
+        file: `dist/style-spec/${esm ? 'index.mjs' : 'index.cjs'}`,
         format: esm ? 'esm' : 'umd',
         sourcemap: true
     },
