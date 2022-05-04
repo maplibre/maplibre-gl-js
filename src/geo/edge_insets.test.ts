@@ -1,4 +1,3 @@
-import {expect} from 'expect';
 import EdgeInsets from '../geo/edge_insets';
 
 describe('EdgeInsets', () => {
