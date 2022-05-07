@@ -1,5 +1,4 @@
 # Code of conduct
 
-A formal code of conduct may be selected by the MapLibre project shortly, until then:
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://github.com/maplibre/maplibre/blob/main/CODE_OF_CONDUCT.md)
 
-Be kind, thoughtful and respectul to everyone. Give other people the benefit of the doubt.
