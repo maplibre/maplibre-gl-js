@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import isBuiltin from 'is-builtin-module';
 import * as rollup from 'rollup';
 import rollupConfig from '../../rollup.config.style-spec';
