@@ -16,7 +16,6 @@ export const programUniforms = {
     fillExtrusion: fillExtrusionUniforms,
     fillExtrusionPattern: fillExtrusionPatternUniforms,
     fill: fillUniforms,
-    fillopaque: fillUniforms,
     fillfbo: fillfboUniforms,
     fillPattern: fillPatternUniforms,
     fillOutline: fillOutlineUniforms,

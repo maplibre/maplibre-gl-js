@@ -31,9 +31,9 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
 
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
-    (!pattern.constantOr(1 as any) &&
-    color.constantOr(Color.transparent).a === 1 &&
-    opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
+        (!pattern.constantOr(1 as any) &&
+        color.constantOr(Color.transparent).a === 1 &&
+        opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
 
     const perLayerOpacity = layer.paint.get('fill-per-layer-opacity') && pass === 'translucent';
 
@@ -51,15 +51,15 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
             drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false, true);
         } else if (painter.renderPass === 'translucent') {
             const context = painter.context;
-            context.setColorMode(painter.colorModeForRenderPass());
+            context.setColorMode(colorMode);
 
             const fbo = layer.fillFbo;
             if (!fbo) return;
             context.activeTexture.set(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
-            const uniformValues = fillfboUniformValues(painter, 0, opacity.constantOr(1));
+            const uniformValues = fillfboUniformValues(painter, 0);
             painter.useProgram('fillfbo').draw(context, gl.TRIANGLES,
-                DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
+                DepthMode.disabled, StencilMode.disabled, colorMode, CullFaceMode.disabled,
                 uniformValues,
                 layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
                 painter.viewportSegments, layer.paint, painter.transform.zoom);
@@ -99,11 +99,7 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
     if (!isOutline) {
-        if (drawToOffscreen) {
-            programName = 'fillopaque';
-        } else {
-            programName = image ? 'fillPattern' : 'fill';
-        }
+        programName = image ? 'fillPattern' : 'fill';
         drawMode = gl.TRIANGLES;
     } else {
         programName = image && !layer.getPaintProperty('fill-outline-color') ? 'fillOutlinePattern' : 'fillOutline';

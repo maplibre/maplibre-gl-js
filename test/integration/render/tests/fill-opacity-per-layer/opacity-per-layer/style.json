@@ -19,7 +19,8 @@
               "features": [{
                       "type": "Feature",
                       "properties": {
-                        "color": "rgba(0,255,0,255)"
+                        "color": "rgba(0,255,0,255)",
+                        "opacity": 0.6
                       },
                       "geometry": {
                           "type": "MultiPolygon",
@@ -35,7 +36,8 @@
                   {
                     "type": "Feature",
                     "properties": {
-                      "color": "red"
+                      "color": "red",
+                      "opacity": 0.3
                     },
                     "geometry": {
                         "type": "MultiPolygon",
@@ -56,7 +58,7 @@
           "source": "polygon",
           "paint": {
               "fill-color": ["get", "color"],
-              "fill-opacity": 0.5,
+              "fill-opacity": ["get", "opacity"],
               "fill-per-layer-opacity": true
           }
       }
