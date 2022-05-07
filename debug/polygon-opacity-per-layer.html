@@ -33,9 +33,7 @@
                             'type': 'Feature',
                             'properties': {
                                 'color': 'red',
-                                'opacity': 0.5,
-                                'height': 0,
-                                'base_height': 0
+                                'opacity': 0.4
                             },
                             'geometry': {
                                 'type': 'MultiPolygon',
@@ -51,10 +49,8 @@
                         {
                             'type': 'Feature',
                             'properties': {
-                                'color': 'rgba(0,255,0,255)',
-                                'height': 0,
-                                'opacity': 0.9,
-                                'base_height': 0
+                                'color': 'rgb(0,255,0)',
+                                'opacity': 0.9
                             },
                             'geometry': {
                                 'type': 'MultiPolygon',
@@ -74,13 +70,10 @@
         );
 
         const paint2d = {
-            // Get the fill-extrusion-color from the source 'color' property.
-            // 'fill-color': 'red',
             'fill-color': ['get', 'color'],
-            // Make extrusions slightly opaque for see through indoor walls.
-            'fill-opacity': ['get', 'opacity'], //0.5,
+            'fill-opacity': ['get', 'opacity'],
             'fill-per-layer-opacity': true,
-            'fill-outline-color': 'rgba(255,0,0,1)'
+            'fill-outline-color': 'rgba(0,0,0,0)'
         };
         map.addLayer({
             'id': 'shape1',
