@@ -77,7 +77,7 @@ class FillStyleLayer extends StyleLayer {
     }
 
     hasOffscreenPass() {
-        return this.paint.get('fill-per-layer-opacity') && this.visibility !== 'none';
+        return !this.paint.get('fill-opacity-per-geometry') && this.visibility !== 'none';
     }
 }
 

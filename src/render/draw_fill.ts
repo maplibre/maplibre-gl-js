@@ -35,35 +35,10 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
         color.constantOr(Color.transparent).a === 1 &&
         opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
 
-    const perLayerOpacity = layer.paint.get('fill-per-layer-opacity') && pass === 'translucent';
+    const perLayerOpacity = !layer.paint.get('fill-opacity-per-geometry') && pass === 'translucent';
 
     if (perLayerOpacity) {
-        const gl = painter.context.gl;
-        if (painter.renderPass === 'offscreen') {
-            // prepare fbo
-            const context = painter.context;
-            // Turn on additive blending for kernels, which is a key aspect of kernel density estimation formula
-            colorMode = new ColorMode([gl.ONE, gl.ZERO], Color.transparent, [true, true, true, true]);
-            bindFramebuffer(context, painter, layer);
-            context.clear({color: Color.transparent});
-
-            const depthMode = DepthMode.disabled;
-            drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false, true);
-        } else if (painter.renderPass === 'translucent') {
-            const context = painter.context;
-            context.setColorMode(colorMode);
-
-            const fbo = layer.fillFbo;
-            if (!fbo) return;
-            context.activeTexture.set(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
-            const uniformValues = fillfboUniformValues(painter, 0);
-            painter.useProgram('fillfbo').draw(context, gl.TRIANGLES,
-                DepthMode.disabled, StencilMode.disabled, colorMode, CullFaceMode.disabled,
-                uniformValues,
-                layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
-                painter.viewportSegments, layer.paint, painter.transform.zoom);
-        }
+        perLayerOpacityDraw(painter, sourceCache, layer, coords, colorMode);
     } else {
         // Draw fill
         if (painter.renderPass === pass) {
@@ -86,7 +61,33 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
                 layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
             drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true, false);
         }
+    }
+}
 
+function perLayerOpacityDraw(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, colorMode: ColorMode) {
+    const gl = painter.context.gl;
+    const context = painter.context;
+    if (painter.renderPass === 'offscreen') {
+        // Turn on additive blending for kernels, which is a key aspect of kernel density estimation formula
+        const additiveBlendMode = new ColorMode([gl.ONE, gl.ZERO], Color.transparent, [true, true, true, true]);
+        bindFramebuffer(context, painter, layer);
+        context.clear({color: Color.transparent});
+
+        const depthMode = DepthMode.disabled;
+        drawFillTiles(painter, sourceCache, layer, coords, depthMode, additiveBlendMode, false, true);
+    } else if (painter.renderPass === 'translucent') {
+        context.setColorMode(colorMode);
+
+        const fbo = layer.fillFbo;
+        if (!fbo) return;
+        context.activeTexture.set(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
+        const uniformValues = fillfboUniformValues(painter, 0);
+        painter.useProgram('fillfbo').draw(context, gl.TRIANGLES,
+            DepthMode.disabled, StencilMode.disabled, colorMode, CullFaceMode.disabled,
+            uniformValues,
+            layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
+            painter.viewportSegments, layer.paint, painter.transform.zoom);
     }
 }
 

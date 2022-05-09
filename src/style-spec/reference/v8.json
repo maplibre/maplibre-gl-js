@@ -3884,10 +3884,10 @@
       },
       "property-type": "data-constant"
     },
-    "fill-per-layer-opacity": {
+    "fill-opacity-per-geometry": {
       "type": "boolean",
-      "default": false,
-      "doc": "Whether or not the opacity style of fill should be per-layer.",
+      "default": true,
+      "doc": "Whether or not the opacity style of fill should be per-geometry.",
       "sdk-support": {
         "basic functionality": {
           "js": "0.10.0",

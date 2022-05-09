@@ -148,7 +148,7 @@ describe('drawFill', () => {
                 paint: {
                     'fill-color': 'red',
                     'fill-opacity': 0.5,
-                    'fill-per-layer-opacity': true
+                    'fill-opacity-per-geometry': false
                 }
             }
         );
@@ -182,7 +182,7 @@ describe('drawFill', () => {
         expect(spy.mock.calls[0]).toBeTruthy();
     });
 
-    test('should render texture of fbo to screen if fill-per-layer-opacity is true and render pass is translucent ', () => {
+    test('should render texture of fbo to screen if fill-opacity-per-geometry is false and render pass is translucent ', () => {
         const mockPainter = new Painter(null, null);
         mockPainter.renderPass = 'translucent';
 
@@ -210,7 +210,7 @@ describe('drawFill', () => {
                 paint: {
                     'fill-color': 'red',
                     'fill-opacity': 0.5,
-                    'fill-per-layer-opacity': true
+                    'fill-opacity-per-geometry': false
                 }
             }
         );
