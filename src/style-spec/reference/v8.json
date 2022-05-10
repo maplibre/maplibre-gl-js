@@ -3890,10 +3890,7 @@
       "doc": "Whether or not the opacity style of fill should be per-geometry.",
       "sdk-support": {
         "basic functionality": {
-          "js": "0.10.0",
-          "android": "2.0.1",
-          "ios": "2.0.0",
-          "macos": "0.1.0"
+          "js": "2.2.0"
         }
       },
       "expression": {
