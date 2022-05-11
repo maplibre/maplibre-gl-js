@@ -218,7 +218,7 @@ const defaultOptions = {
  * @param {boolean} [options.doubleClickZoom=true] If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
  * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TouchZoomRotateHandler#enable}.
  * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TouchPitchHandler#enable}.
- * @param {boolean} [options.cooperativeGestures=false] If `true`, map is only accessible on desktop while holding Command and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen.
+ * @param {boolean} [options.cooperativeGestures=false] If `true`, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen.
  * @param {boolean} [options.trackResize=true] If `true`, the map will automatically resize when the browser window resizes.
  * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
  * @param {number} [options.zoom=0] The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
@@ -275,6 +275,7 @@ class Map extends Camera {
     _interactive: boolean;
     _cooperativeGestures: boolean;
     _cooperativeGesturesScreen: HTMLElement;
+    _metaPress: boolean;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -2377,6 +2378,7 @@ class Map extends Camera {
         this._canvas.setAttribute('tabindex', '0');
         this._canvas.setAttribute('aria-label', 'Map');
         this._canvas.setAttribute('role', 'region');
+        this._metaPress = false;
 
         const dimensions = this._containerDimensions();
         this._resizeCanvas(dimensions[0], dimensions[1], this.getPixelRatio());
@@ -2388,10 +2390,23 @@ class Map extends Camera {
             if (navigator.platform.indexOf("Mac") === 0) {
                 modifierKeyPrefix = "⌘"; // command key
             }
-            cooperativeGestureScreen.innerHTML = `
+            this._cooperativeGesturesScreen.innerHTML = `
                 <div class="desktop-message">Use ${modifierKeyPrefix} + scroll to zoom the map</div>
                 <div class="mobile-message">Use two fingers to move the map</div>
-            `
+            `;
+            document.addEventListener("keydown", (event) => {
+                console.log(event.key);
+                if (event.key === "Meta") {
+                    this._metaPress = true;
+                }
+            });
+            document.addEventListener("keyup", (event) => {
+                console.log(event.key);
+                if (event.key === "Meta") {
+                    this._metaPress = false;
+                }
+            });
+            this._cooperativeGesturesScreen.addEventListener('wheel', (e) => {this._onCooperativeGesture(e, this._metaPress)}, false);
         } 
 
         const positions = this._controlPositions = {};
@@ -2449,11 +2464,21 @@ class Map extends Camera {
     }
 
     _onMapScroll(event: any) {
+        console.log("HEYO MAP SCROLL")
         if (event.target !== this._container) return;
 
         // Revert any scroll which would move the canvas outside of the view
         this._container.scrollTop = 0;
         this._container.scrollLeft = 0;
+        return false;
+    }
+
+    _onCooperativeGesture(event: any, metaPress) {
+        //if (event.target !== this._cooperativeGesturesScreen) return;
+        console.log("SCROLLIN THE DIV", event, metaPress, this)
+        if (metaPress){
+            console.log("ALLOW THE SCROLL")
+        }
         return false;
     }
 
