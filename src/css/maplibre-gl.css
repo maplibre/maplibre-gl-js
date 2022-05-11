@@ -917,3 +917,32 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     border: 2px dotted #202020;
     opacity: 0.5;
 }
+
+.maplibregl-cooperative-gesture-screen {
+    background: rgba(0, 0, 0, 0.4);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 1rem;
+    font-size: 1.4em;
+    line-height: 1.2;
+    transition: opacity 0.5s ease 0s;
+}
+
+@media (max-width: 767px) {
+    .maplibregl-cooperative-gesture-screen .desktop-message {
+        display: none;
+    }
+}
+
+@media (min-width: 768px) {
+    .maplibregl-cooperative-gesture-screen .mobile-message {
+        display: none;
+    }
+}

@@ -85,6 +85,7 @@ export type MapOptions = {
     doubleClickZoom?: boolean;
     touchZoomRotate?: boolean;
     touchPitch?: boolean;
+    cooperativeGestures?: boolean;
     trackResize?: boolean;
     center?: LngLatLike;
     zoom?: number;
@@ -145,6 +146,7 @@ const defaultOptions = {
     doubleClickZoom: true,
     touchZoomRotate: true,
     touchPitch: true,
+    cooperativeGestures: false,
 
     bearingSnap: 7,
     clickTolerance: 3,
@@ -216,6 +218,7 @@ const defaultOptions = {
  * @param {boolean} [options.doubleClickZoom=true] If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
  * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TouchZoomRotateHandler#enable}.
  * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TouchPitchHandler#enable}.
+ * @param {boolean} [options.cooperativeGestures=false] If `true`, map is only accessible on desktop while holding Command and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen.
  * @param {boolean} [options.trackResize=true] If `true`, the map will automatically resize when the browser window resizes.
  * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
  * @param {number} [options.zoom=0] The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
@@ -270,6 +273,8 @@ class Map extends Camera {
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
     _interactive: boolean;
+    _cooperativeGestures: boolean;
+    _cooperativeGesturesScreen: HTMLElement;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -380,6 +385,7 @@ class Map extends Camera {
         super(transform, {bearingSnap: options.bearingSnap});
 
         this._interactive = options.interactive;
+        this._cooperativeGestures = options.cooperativeGestures;
         this._maxTileCacheSize = options.maxTileCacheSize;
         this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
         this._preserveDrawingBuffer = options.preserveDrawingBuffer;
@@ -2376,6 +2382,18 @@ class Map extends Camera {
         this._resizeCanvas(dimensions[0], dimensions[1], this.getPixelRatio());
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container mapboxgl-control-container', container);
+        if (this._cooperativeGestures) {
+            const cooperativeGestureScreen = this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
+            let modifierKeyPrefix = "^"; // control key
+            if (navigator.platform.indexOf("Mac") === 0) {
+                modifierKeyPrefix = "⌘"; // command key
+            }
+            cooperativeGestureScreen.innerHTML = `
+                <div class="desktop-message">Use ${modifierKeyPrefix} + scroll to zoom the map</div>
+                <div class="mobile-message">Use two fingers to move the map</div>
+            `
+        } 
+
         const positions = this._controlPositions = {};
         ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach((positionName) => {
             positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName} mapboxgl-ctrl-${positionName}`, controlContainer);
@@ -2684,6 +2702,9 @@ class Map extends Camera {
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
+        if (this._cooperativeGestures){
+            DOM.remove(this._cooperativeGesturesScreen);
+        }
         this._container.classList.remove('maplibregl-map', 'mapboxgl-map');
 
         PerformanceUtils.clearMetrics();
