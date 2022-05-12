@@ -5,5 +5,9 @@ const layout = createLayout([
     {name: 'a_normal_ed',    components: 4, type: 'Int16'},
 ], 4);
 
+export const centroidAttributes = createLayout([
+    {name: 'a_centroid', components: 2, type: 'Int16'}
+], 4);
+
 export default layout;
 export const {members, size, alignment} = layout;

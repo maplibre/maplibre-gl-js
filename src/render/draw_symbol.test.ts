@@ -10,9 +10,13 @@ import drawSymbol from './draw_symbol';
 import * as symbolProjection from '../symbol/projection';
 import type ZoomHistory from '../style/zoom_history';
 import type Map from '../ui/map';
-import type Transform from '../geo/transform';
+import Transform from '../geo/transform';
 import type EvaluationParameters from '../style/evaluation_parameters';
 import type {SymbolLayerSpecification} from '../style-spec/types.g';
+import Style from '../style/style';
+import TerrainSourceCache from '../source/terrain_source_cache';
+import {Evented} from '../util/evented';
+import {RequestManager} from '../util/request_manager';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -20,6 +24,22 @@ jest.mock('../source/source_cache');
 jest.mock('../source/tile');
 jest.mock('../data/bucket/symbol_bucket');
 jest.mock('../symbol/projection');
+
+class StubMap extends Evented {
+    transform: Transform;
+    painter: Painter;
+    _requestManager: RequestManager;
+
+    constructor() {
+        super();
+        this.transform = new Transform();
+        this._requestManager = {
+            transformRequest: (url) => {
+                return {url};
+            }
+        } as any as RequestManager;
+    }
+}
 
 describe('drawSymbol', () => {
     test('should not do anything', () => {
@@ -37,12 +57,13 @@ describe('drawSymbol', () => {
         painterMock.context = {
             gl: {},
             activeTexture: {
-                set: () => {}
+                set: () => { }
             }
         } as any;
         painterMock.renderPass = 'translucent';
         painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
         painterMock.options = {} as any;
+        painterMock.style = {terrainSourceCache: {getTerrain: () => null}} as any as Style;
 
         const layerSpec = {
             id: 'mock-layer',
@@ -58,12 +79,12 @@ describe('drawSymbol', () => {
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.posMatrix = mat4.create();
-        const programMock = new Program(null, null, null, null, null, null);
+        const programMock = new Program(null, null, null, null, null, null, null);
         (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
-                get: () => {}
+                get: () => { }
             },
             segments: {
                 get: () => [1]
@@ -76,7 +97,7 @@ describe('drawSymbol', () => {
         const tile = new Tile(tileId, 256);
         tile.tileID = tileId;
         tile.imageAtlasTexture = {
-            bind: () => {}
+            bind: () => { }
         } as any;
         (tile.getBucket as jest.Mock).mockReturnValue(bucketMock);
         const sourceCacheMock = new SourceCache(null, null, null);
@@ -94,7 +115,7 @@ describe('drawSymbol', () => {
         painterMock.context = {
             gl: {},
             activeTexture: {
-                set: () => {}
+                set: () => { }
             }
         } as any;
         painterMock.renderPass = 'translucent';
@@ -119,12 +140,12 @@ describe('drawSymbol', () => {
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.posMatrix = mat4.create();
-        const programMock = new Program(null, null, null, null, null, null);
+        const programMock = new Program(null, null, null, null, null, null, null);
         (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
-                get: () => {}
+                get: () => { }
             },
             segments: {
                 get: () => [1]
@@ -137,16 +158,19 @@ describe('drawSymbol', () => {
         const tile = new Tile(tileId, 256);
         tile.tileID = tileId;
         tile.imageAtlasTexture = {
-            bind: () => {}
+            bind: () => { }
         } as any;
         (tile.getBucket as jest.Mock).mockReturnValue(bucketMock);
         const sourceCacheMock = new SourceCache(null, null, null);
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
+        painterMock.style = {
+            terrainSourceCache: new TerrainSourceCache(new Style(new StubMap() as any as Map))
+        } as any as Style;
 
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
         drawSymbol(painterMock, sourceCacheMock, layer, [tileId], null);
 
-        expect(spy.mock.calls[0][8]).toBeFalsy(); // rotateToLine === false
+        expect(spy.mock.calls[0][9]).toBeFalsy(); // rotateToLine === false
     });
 });

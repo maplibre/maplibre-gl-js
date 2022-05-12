@@ -63,6 +63,7 @@ type TestData = {
     queryGeometry: PointLike;
     queryOptions: any;
     error: Error;
+    maxPitch: number;
 
     // base64-encoded content of the PNG results
     actual: string;
@@ -419,6 +420,7 @@ function getImageFromStyle(style: StyleWithTestData): Promise<Uint8Array> {
             classes: options.classes,
             interactive: false,
             attributionControl: false,
+            maxPitch: options.maxPitch,
             pixelRatio: options.pixelRatio,
             preserveDrawingBuffer: true,
             axonometric: options.axonometric || false,

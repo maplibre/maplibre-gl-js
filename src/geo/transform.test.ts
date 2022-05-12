@@ -3,6 +3,7 @@ import Transform from './transform';
 import LngLat from './lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed';
+import type Terrain from '../render/terrain';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -340,7 +341,6 @@ describe('transform', () => {
     });
 
     test('maintains high float precision when calculating matrices', () => {
-
         const transform = new Transform(0, 22, 0, 60, true);
         transform.resize(200.25, 200.25);
         transform.zoom = 20.25;
@@ -352,4 +352,59 @@ describe('transform', () => {
         expect(transform.glCoordMatrix[0].toString().length).toBeGreaterThan(10);
         expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 10);
     });
+
+    test('recalcuateZoom', () => {
+        const transform = new Transform(0, 22, 0, 60, true);
+        transform.elevation = 200;
+        transform.center = new LngLat(10.0, 50.0);
+        transform.zoom = 14;
+        transform.resize(512, 512);
+
+        // expect same values because of no elevation change
+        transform.getElevation = () => 200;
+        transform.recalculateZoom(null);
+        expect(transform.zoom).toBe(14);
+
+        // expect new zoom because of elevation change
+        transform.getElevation = () => 400;
+        transform.recalculateZoom(null);
+        expect(transform.zoom).toBe(14.127997275621933);
+        expect(transform.elevation).toBe(400);
+        expect(transform._center.lng).toBe(10.00000000000071);
+        expect(transform._center.lat).toBe(50.00000000000017);
+    });
+
+    test('pointCoordinate with terrain when returning null should fall back to 2D', () => {
+        const transform = new Transform(0, 22, 0, 60, true);
+        transform.resize(500, 500);
+        const terrain = {
+            pointCoordinate: () => null
+        } as any as Terrain;
+        const coordinate = transform.pointCoordinate(new Point(0, 0), terrain);
+
+        expect(coordinate).toBeDefined();
+    });
+
+    test('horizon', () => {
+        const transform = new Transform(0, 22, 0, 85, true);
+        transform.resize(500, 500);
+        transform.pitch = 75;
+        const horizon = transform.getHorizon();
+
+        expect(horizon).toBeCloseTo(170.8176101748407, 10);
+    });
+
+    test('getBounds with horizon', () => {
+        const transform = new Transform(0, 22, 0, 85, true);
+        transform.resize(500, 500);
+
+        transform.pitch = 60;
+        expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, 0)).toArray());
+
+        transform.pitch = 75;
+        const top = Math.max(0, transform.height / 2 - transform.getHorizon());
+        expect(top).toBeCloseTo(79.1823898251593, 10);
+        expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, top)).toArray());
+    });
+
 });
