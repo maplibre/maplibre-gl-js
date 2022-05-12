@@ -1,9 +1,9 @@
-These integration tests verify the correctness and consistency of [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) and
-[mapbox-gl-native](https://github.com/mapbox/mapbox-gl-native) rendering.
+These integration tests verify the correctness and consistency of [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and
+[maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) rendering.
 
 ## Organization
 
-Tests are contained in a directory tree, generally organized by [style specification](https://github.com/mapbox/mapbox-gl-style-spec)
+Tests are contained in a directory tree, generally organized by [style specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/)
 property: `background-color`, `line-width`, etc., with a second level of directories below that for individual tests. For example, the test for specifying a literal `circle-radius` value lives in [`test/integration/render/tests/circle-radius/literal/`](./render/tests/circle-radius/literal).
 
 Within a leaf directory is a `style.json` file (e.g. [`circle-radius/literal/style.json`](./render/tests/circle-radius/literal/style.json)), which contains the minimal style needed for the given test case. The style can specify the map size, center, bearing, and pitch, and additional test metadata (e.g. output image dimensions).
@@ -17,25 +17,26 @@ The contents of vector tile fixtures can be read using the [`vt2geojson`](https:
 
 ## Running tests
 
-To run the entire integration test suite (both render or query tests), from within the `mapbox-gl-js` directory run the command:
-```
-npm run test-suite
-```
-
-To run only the render/query tests:
+To run the render tests:
 
 ```
 npm run test-render
 ```
-or
+
+To run the query tests:
 ```
 npm run test-query
 ```
 
-To run only the expression tests:
+To run the expression tests:
 
 ```
 npm run test-expressions
+```
+
+To run the browser tests (see [`browser/README.md`](./browser/README.md)):
+```
+npm run test-browser
 ```
 
 ### Running specific tests

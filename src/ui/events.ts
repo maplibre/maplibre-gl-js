@@ -1410,6 +1410,7 @@ export type MapEvent =
 
     /**
      * Fired when a request for one of the map's sources' tiles is aborted.
+     * Fired when a request for one of the map's sources' data is aborted.
      * See {@link MapDataEvent} for more information.
      *
      * @event dataabort
@@ -1420,7 +1421,7 @@ export type MapEvent =
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
-     * // when a request for one of the map's sources' tiles is aborted.
+     * // when a request for one of the map's sources' data is aborted.
      * map.on('dataabort', function() {
      *   console.log('A dataabort event occurred.');
      * });
@@ -1428,7 +1429,7 @@ export type MapEvent =
     | 'dataabort'
 
     /**
-     * Fired when a request for one of the map's sources' tiles is aborted.
+     * Fired when a request for one of the map's sources' data is aborted.
      * See {@link MapDataEvent} for more information.
      *
      * @event sourcedataabort
@@ -1439,7 +1440,7 @@ export type MapEvent =
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
-     * // when a request for one of the map's sources' tiles is aborted.
+     * // when a request for one of the map's sources' data is aborted.
      * map.on('sourcedataabort', function() {
      *   console.log('A sourcedataabort event occurred.');
      * });
