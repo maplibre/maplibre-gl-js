@@ -8,6 +8,12 @@
 
 - *...Add new stuff here...*
 
+## 2.2.0-pre.2
+
+### ✨ Features and improvements
+
+- Add 3D terrain capabilities  (#165, #1022)
+
 ## 2.2.0-pre.1
 
 ### ✨ Features and improvements
