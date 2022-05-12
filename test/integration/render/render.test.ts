@@ -64,7 +64,7 @@ type TestData = {
     queryOptions: any;
     error: Error;
     maxPitch: number;
-    
+
     // base64-encoded content of the PNG results
     actual: string;
     diff: string;
