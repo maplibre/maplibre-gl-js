@@ -21,6 +21,7 @@ import type StyleLayerIndex from '../style/style_layer_index';
 import type {LoadVectorDataCallback} from './vector_tile_worker_source';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {Callback} from '../types/callback';
+import type {Cancelable} from '../types/cancelable';
 
 export type LoadGeoJSONParameters = {
     request?: RequestParameters;
@@ -33,7 +34,7 @@ export type LoadGeoJSONParameters = {
     filter?: Array<unknown>;
 };
 
-export type LoadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>) => void;
+export type LoadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>) => Cancelable;
 
 export interface GeoJSONIndex {
     getTile(z: number, x: number, y: number): any;
@@ -72,10 +73,6 @@ function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataC
     });
 }
 
-export type SourceState = // Source empty or data loaded
-'Idle' | // Data finished loading, but discard 'loadData' messages until receiving 'coalesced'
-'Coalescing' | 'NeedsLoadData';  // 'loadData' received while coalescing, trigger one more 'loadData' on receiving 'coalesced'
-
 /**
  * The {@link WorkerSource} implementation that supports {@link GeoJSONSource}.
  * This class is designed to be easily reused to support custom source types
@@ -87,12 +84,11 @@ export type SourceState = // Source empty or data loaded
  * @private
  */
 class GeoJSONWorkerSource extends VectorTileWorkerSource {
-    _state: SourceState;
     _pendingCallback: Callback<{
         resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
         abandoned?: boolean;
     }>;
-    _pendingLoadDataParams: LoadGeoJSONParameters;
+    _pendingRequest: Cancelable;
     _geoJSONIndex: GeoJSONIndex;
 
     /**
@@ -117,9 +113,8 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * expecting `callback(error, data)` to be called with either an error or a
      * parsed GeoJSON object.
      *
-     * When `loadData` requests come in faster than they can be processed,
-     * they are coalesced into a single request using the latest data.
-     * See {@link GeoJSONWorkerSource#coalesce}
+     * When a `loadData` request comes in while a previous one is being processed,
+     * the previous one is aborted.
      *
      * @param params
      * @param callback
@@ -129,40 +124,20 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
         resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
         abandoned?: boolean;
     }>) {
+        this._pendingRequest?.cancel();
         if (this._pendingCallback) {
             // Tell the foreground the previous call has been abandoned
             this._pendingCallback(null, {abandoned: true});
         }
-        this._pendingCallback = callback;
-        this._pendingLoadDataParams = params;
-
-        if (this._state &&
-            this._state !== 'Idle') {
-            this._state = 'NeedsLoadData';
-        } else {
-            this._state = 'Coalescing';
-            this._loadData();
-        }
-    }
-
-    /**
-     * Internal implementation: called directly by `loadData`
-     * or by `coalesce` using stored parameters.
-     */
-    _loadData() {
-        if (!this._pendingCallback || !this._pendingLoadDataParams) {
-            assert(false);
-            return;
-        }
-        const callback = this._pendingCallback;
-        const params = this._pendingLoadDataParams;
-        delete this._pendingCallback;
-        delete this._pendingLoadDataParams;
 
         const perf = (params && params.request && params.request.collectResourceTiming) ?
             new RequestPerformance(params.request) : false;
 
-        this.loadGeoJSON(params, (err?: Error | null, data?: any | null) => {
+        this._pendingCallback = callback;
+        this._pendingRequest = this.loadGeoJSON(params, (err?: Error | null, data?: any | null) => {
+            delete this._pendingCallback;
+            delete this._pendingRequest;
+
             if (err || !data) {
                 return callback(err);
             } else if (typeof data !== 'object') {
@@ -205,35 +180,6 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     /**
-     * While processing `loadData`, we coalesce all further
-     * `loadData` messages into a single call to _loadData
-     * that will happen once we've finished processing the
-     * first message. {@link GeoJSONSource#_updateWorkerData}
-     * is responsible for sending us the `coalesce` message
-     * at the time it receives a response from `loadData`
-     *
-     *          State: Idle
-     *          ↑          |
-     *     'coalesce'   'loadData'
-     *          |     (triggers load)
-     *          |          ↓
-     *        State: Coalescing
-     *          ↑          |
-     *   (triggers load)   |
-     *     'coalesce'   'loadData'
-     *          |          ↓
-     *        State: NeedsLoadData
-     */
-    coalesce() {
-        if (this._state === 'Coalescing') {
-            this._state = 'Idle';
-        } else if (this._state === 'NeedsLoadData') {
-            this._state = 'Coalescing';
-            this._loadData();
-        }
-    }
-
-    /**
     * Implements {@link WorkerSource#reloadTile}.
     *
     * If the tile is loaded, uses the implementation in VectorTileWorkerSource.
@@ -264,24 +210,27 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @param params
      * @param [params.url] A URL to the remote GeoJSON data.
      * @param [params.data] Literal GeoJSON data. Must be provided if `params.url` is not.
+     * @returns {Cancelable} A Cancelable object.
      * @private
      */
-    loadGeoJSON(params: LoadGeoJSONParameters, callback: ResponseCallback<any>) {
+    loadGeoJSON(params: LoadGeoJSONParameters, callback: ResponseCallback<any>): Cancelable {
         // Because of same origin issues, urls must either include an explicit
         // origin or absolute path.
         // ie: /foo/bar.json or http://example.com/bar.json
         // but not ../foo/bar.json
         if (params.request) {
-            getJSON(params.request, callback);
+            return getJSON(params.request, callback);
         } else if (typeof params.data === 'string') {
             try {
-                return callback(null, JSON.parse(params.data));
+                callback(null, JSON.parse(params.data));
             } catch (e) {
-                return callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
+                callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
             }
         } else {
-            return callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
+            callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
         }
+
+        return {cancel: () => {}};
     }
 
     removeSource(params: {

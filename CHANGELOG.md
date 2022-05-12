@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Cancel pending GeoJSON requests when `GeoJSONSource.setData()` is called instead of waiting for any pending request to complete before issuing the request for the new URL (#1102)
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes

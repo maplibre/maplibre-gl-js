@@ -90,6 +90,18 @@ describe('GeoJSONSource#setData', () => {
         source.load();
     });
 
+    test('fires "dataabort" event', done => {
+        const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
+            send(type, data, callback) {
+                setTimeout(() => callback(null, {abandoned: true}));
+            }
+        }), undefined);
+        source.on('dataabort', () => {
+            done();
+        });
+        source.load();
+    });
+
     test('respects collectResourceTiming parameter on source', done => {
         const source = createSource({collectResourceTiming: true});
         source.map = {
@@ -132,6 +144,19 @@ describe('GeoJSONSource#setData', () => {
     test('marks source as loaded before firing "data" event', done => {
         const source = createSource();
         source.once('data', () => {
+            expect(source.loaded()).toBeTruthy();
+            done();
+        });
+        source.setData({} as GeoJSON.GeoJSON);
+    });
+
+    test('marks source as loaded before firing "dataabort" event', done => {
+        const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
+            send(type, data, callback) {
+                setTimeout(() => callback(null, {abandoned: true}));
+            }
+        }), undefined);
+        source.on('dataabort', () => {
             expect(source.loaded()).toBeTruthy();
             done();
         });
