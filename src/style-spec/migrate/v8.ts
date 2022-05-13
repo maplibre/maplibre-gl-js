@@ -1,8 +1,9 @@
 
 import URL from 'url';
 import {eachSource, eachLayer, eachProperty} from '../visit';
+import type {LayerSpecification, StyleSpecification} from '../types.g';
 
-function eachLayout(layer, callback) {
+function eachLayout(layer: LayerSpecification, callback: (_: LayerSpecification['layout'], __: string) => void) {
     for (const k in layer) {
         if (k.indexOf('layout') === 0) {
             callback(layer[k], k);
@@ -10,7 +11,7 @@ function eachLayout(layer, callback) {
     }
 }
 
-function eachPaint(layer, callback) {
+function eachPaint(layer: LayerSpecification, callback: (_: LayerSpecification['paint'], __: string) => void) {
     for (const k in layer) {
         if (k.indexOf('paint') === 0) {
             callback(layer[k], k);
@@ -18,9 +19,9 @@ function eachPaint(layer, callback) {
     }
 }
 
-function resolveConstant(style, value) {
+function resolveConstant(style: StyleSpecification, value: any) {
     if (typeof value === 'string' && value[0] === '@') {
-        return resolveConstant(style, style.constants[value]);
+        return resolveConstant(style, (style as any).constants[value]);
     } else {
         return value;
     }
@@ -30,11 +31,11 @@ function isFunction(value) {
     return Array.isArray(value.stops);
 }
 
-function renameProperty(obj, from, to) {
+function renameProperty(obj: Object, from: string, to: string) {
     obj[to] = obj[from]; delete obj[from];
 }
 
-export default function(style) {
+export default function migrateV8(style: StyleSpecification) {
     style.version = 8;
 
     // Rename properties, reverse coordinates in source and layers
@@ -81,7 +82,7 @@ export default function(style) {
 
         property.set(value);
     });
-    delete style.constants;
+    delete style['constants'];
 
     eachLayer(style, (layer) => {
         // get rid of text-max-size, icon-max-size

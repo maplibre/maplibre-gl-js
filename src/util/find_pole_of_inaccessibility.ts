@@ -13,7 +13,7 @@ import {distToSegmentSquared} from './intersection_tests';
  * @returns Pole of Inaccessibiliy.
  * @private
  */
-export default function(
+export default function findPoleOfInaccessibility(
     polygonRings: Array<Array<Point>>,
     precision: number = 1,
     debug: boolean = false

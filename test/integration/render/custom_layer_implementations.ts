@@ -131,7 +131,9 @@ class Tent3D {
     }
 }
 
-export default {
+const customLayersImplementations = {
     'tent-3d': Tent3D,
     'null-island': NullIsland
 };
+
+export default customLayersImplementations;

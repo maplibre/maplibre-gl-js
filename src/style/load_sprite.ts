@@ -8,7 +8,7 @@ import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 
-export default function(
+export default function loadSprite(
     baseURL: string,
     requestManager: RequestManager,
     pixelRatio: number,

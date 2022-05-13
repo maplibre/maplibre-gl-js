@@ -1,5 +1,6 @@
+import type {StyleSpecification} from './types.g';
 
-export default function (style) {
+export default function composite(style: StyleSpecification): StyleSpecification {
     const styleIDs = [];
     const sourceIDs = [];
     const compositedSourceLayers = [];
@@ -32,7 +33,7 @@ export default function (style) {
         'url': `mapbox://${compositeID}`
     };
 
-    style.layers.forEach((layer) => {
+    style.layers.forEach((layer: any) => {
         if (styleIDs.indexOf(layer.source) >= 0) {
             layer.source = compositeID;
 

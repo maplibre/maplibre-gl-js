@@ -78,6 +78,7 @@
     "no-multiple-empty-lines": [ "error", {
         "max": 1
     }],
+    "import/no-anonymous-default-export": ["error", {"allowLiteral": true} ],
     "jsdoc/check-param-names": "warn",
     "jsdoc/require-param": "warn",
     "jsdoc/require-param-description": "warn",
