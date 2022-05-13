@@ -56,7 +56,6 @@ import type {
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import { easeExp } from 'd3';
 
 /* eslint-enable no-use-before-define */
 
@@ -2474,7 +2473,7 @@ class Map extends Camera {
 
     _onCooperativeGesture(event: any, metaPress, touches) {
         if (!metaPress && touches < 2){
-            // Alert user how to scroll
+            // Alert user how to scroll/pan
             this._cooperativeGesturesScreen.classList.add("show")
             setTimeout(() => {
                 this._cooperativeGesturesScreen.classList.remove("show")
