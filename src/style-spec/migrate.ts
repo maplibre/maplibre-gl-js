@@ -8,7 +8,7 @@ import type {StyleSpecification} from './types.g';
  *
  * @private
  * @alias migrate
- * @param {StyleSpecification} style a Mapbox GL Style
+ * @param {StyleSpecification} style a MapLibre GL Style
  * @returns {StyleSpecification} a migrated style
  * @example
  * var fs = require('fs');
