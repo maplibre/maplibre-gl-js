@@ -2396,7 +2396,6 @@ class Map extends Camera {
     }
 
     _setupCooperativeGestures(){
-        console.log("SETUP COOP")
         const container = this._container;
         this._metaPress = false;
         const cooperativeGestureScreen = this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
@@ -2409,19 +2408,13 @@ class Map extends Camera {
             <div class="mobile-message">Use two fingers to move the map</div>
         `;
         document.addEventListener("keydown", (event) => {
-            console.log(event.key);
-            if (event.key === "Meta") {
-                this._metaPress = true;
-            }
+            if (event.key === "Meta") this._metaPress = true;
         });
         document.addEventListener("keyup", (event) => {
-            console.log(event.key);
-            if (event.key === "Meta") {
-                this._metaPress = false;
-            }
+            if (event.key === "Meta") this._metaPress = false;
         });
         // Add event to canvas container since gesture container is pointer-events: none
-        this._canvasContainer.addEventListener('wheel', (e) => {this._onCooperativeGesture(e, this._metaPress)}, false);
+        this._canvasContainer.addEventListener('wheel', (e) => {this._onCooperativeGesture(e, this._metaPress, 1)}, false);
     }
 
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
@@ -2480,7 +2473,6 @@ class Map extends Camera {
     }
 
     _onCooperativeGesture(event: any, metaPress, touches) {
-        console.log("ONSCROLL EVENT", event)
         if (!metaPress && touches < 2){
             // Alert user how to scroll
             this._cooperativeGesturesScreen.classList.add("show")
