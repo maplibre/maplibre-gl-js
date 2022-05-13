@@ -18,7 +18,7 @@ import type Transform from '../geo/transform';
  *
  * @private
  */
-export default function(lngLat: LngLat, priorPos: Point, transform: Transform): LngLat {
+export default function smartWrap(lngLat: LngLat, priorPos: Point, transform: Transform): LngLat {
     lngLat = new LngLat(lngLat.lng, lngLat.lat);
 
     // First, try shifting one world in either direction, and see if either is closer to the

@@ -35,7 +35,7 @@ function readGlyph(tag: number, glyph: any, pbf: Protobuf) {
     else if (tag === 7) glyph.advance = pbf.readVarint();
 }
 
-export default function(data: ArrayBuffer | Uint8Array): Array<StyleGlyph> {
+export default function parseGlyphPbf(data: ArrayBuffer | Uint8Array): Array<StyleGlyph> {
     return new Protobuf(data).readFields(readFontstacks, []);
 }
 

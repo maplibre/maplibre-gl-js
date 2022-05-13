@@ -14,7 +14,7 @@ import type {OverscaledTileID} from './tile_id';
  * @returns value in tile units
  * @private
  */
-export default function(
+export default function pixelsToTileUnits(
     tile: {
         tileID: OverscaledTileID;
         tileSize: number;

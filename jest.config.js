@@ -1,4 +1,4 @@
-export default {
+export default config = {
     'roots': [
         '<rootDir>/src',
         '<rootDir>/test',

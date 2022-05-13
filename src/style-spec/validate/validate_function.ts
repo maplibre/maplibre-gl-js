@@ -13,7 +13,7 @@ import {
     supportsInterpolation
 } from '../util/properties';
 
-export default function validateFunction(options) {
+export default function validateFunction(options): Array<ValidationError> {
     const functionValueSpec = options.valueSpec;
     const functionType = unbundle(options.value.type);
     let stopKeyType;
@@ -195,7 +195,7 @@ export default function validateFunction(options) {
         return [];
     }
 
-    function validateFunctionDefault(options) {
+    function validateFunctionDefault(options): Array<ValidationError> {
         return validate({
             key: options.key,
             value: options.value,

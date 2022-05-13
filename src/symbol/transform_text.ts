@@ -4,7 +4,7 @@ import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
 import type {Feature} from '../style-spec/expression';
 import Formatted from '../style-spec/expression/types/formatted';
 
-function transformText(text: string, layer: SymbolStyleLayer, feature: Feature) {
+function transformTextInternal(text: string, layer: SymbolStyleLayer, feature: Feature) {
     const transform = layer.layout.get('text-transform').evaluate(feature, {});
     if (transform === 'uppercase') {
         text = text.toLocaleUpperCase();
@@ -19,9 +19,9 @@ function transformText(text: string, layer: SymbolStyleLayer, feature: Feature) 
     return text;
 }
 
-export default function(text: Formatted, layer: SymbolStyleLayer, feature: Feature): Formatted {
+export default function transformText(text: Formatted, layer: SymbolStyleLayer, feature: Feature): Formatted {
     text.sections.forEach(section => {
-        section.text = transformText(section.text, layer, feature);
+        section.text = transformTextInternal(section.text, layer, feature);
     });
     return text;
 }

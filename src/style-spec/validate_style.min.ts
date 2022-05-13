@@ -11,6 +11,7 @@ import validateLayer from './validate/validate_layer';
 import validateFilter from './validate/validate_filter';
 import validatePaintProperty from './validate/validate_paint_property';
 import validateLayoutProperty from './validate/validate_layout_property';
+import type {StyleSpecification} from './types.g';
 
 /**
  * Validate a MapLibre GL style against the style specification. This entrypoint,
@@ -27,7 +28,7 @@ import validateLayoutProperty from './validate/validate_layout_property';
  *   var validate = require('maplibre-gl-style-spec/lib/validate_style.min');
  *   var errors = validate(style);
  */
-function validateStyleMin(style, styleSpec = latestStyleSpec) {
+function validateStyleMin(style: StyleSpecification, styleSpec = latestStyleSpec) {
 
     let errors = [];
 
@@ -45,10 +46,10 @@ function validateStyleMin(style, styleSpec = latestStyleSpec) {
         }
     }));
 
-    if (style.constants) {
+    if (style['constants']) {
         errors = errors.concat(validateConstants({
             key: 'constants',
-            value: style.constants,
+            value: style['constants'],
             style,
             styleSpec
         }));

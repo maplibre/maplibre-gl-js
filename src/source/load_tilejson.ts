@@ -7,8 +7,13 @@ import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 import type {TileJSON} from '../types/tilejson';
 import type {Cancelable} from '../types/cancelable';
+import type {RasterDEMSourceSpecification, RasterSourceSpecification, VectorSourceSpecification} from '../style-spec/types.g';
 
-export default function(options: any, requestManager: RequestManager, callback: Callback<TileJSON>): Cancelable {
+export default function loadTileJson(
+    options: RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification,
+    requestManager: RequestManager,
+    callback: Callback<TileJSON>
+): Cancelable {
     const loaded = function(err: Error, tileJSON: any) {
         if (err) {
             return callback(err);

@@ -2,7 +2,7 @@
 import ValidationError from '../error/validation_error';
 import validateString from './validate_string';
 
-export default function(options) {
+export default function validateGlyphsUrl(options) {
     const value = options.value;
     const key = options.key;
 

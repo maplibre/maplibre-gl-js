@@ -1,5 +1,6 @@
 
 import deref from '../deref';
+import type {StyleSpecification} from '../types.g';
 
 function eachLayer(style, callback) {
     for (const k in style.layers) {
@@ -7,8 +8,8 @@ function eachLayer(style, callback) {
     }
 }
 
-export default function(style) {
-    style.version = 9;
+export default function migrateV9(style: StyleSpecification): StyleSpecification {
+    (style.version as any) = 9;
 
     // remove user-specified refs
     style.layers = deref(style.layers);
