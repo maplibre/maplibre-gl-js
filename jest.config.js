@@ -1,4 +1,4 @@
-export default config = {
+const config = {
     'roots': [
         '<rootDir>/src',
         '<rootDir>/test',
@@ -19,3 +19,5 @@ export default config = {
         './test/unit/lib/web_worker_mock.ts'
     ],
 };
+
+export default config;
