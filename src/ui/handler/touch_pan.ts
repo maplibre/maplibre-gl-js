@@ -1,5 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {indexTouches} from './handler_util';
+import type Map from '../map';
 
 export default class TouchPanHandler {
 
@@ -11,12 +12,15 @@ export default class TouchPanHandler {
     _minTouches: number;
     _clickTolerance: number;
     _sum: Point;
+    _map: Map;
 
     constructor(options: {
         clickTolerance: number;
-    }) {
-        this._minTouches = 1;
+        cooperativeGestures: boolean;
+    }, map: Map) {
+        this._minTouches = options.cooperativeGestures ? 2 : 1;
         this._clickTolerance = options.clickTolerance || 1;
+        this._map = map;
         this.reset();
     }
 
@@ -31,6 +35,10 @@ export default class TouchPanHandler {
     }
 
     touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+        if (this._minTouches == 2 && mapTouches.length < 2){
+            // If coop gesture enabled, show panning info to user
+            this._map._onCooperativeGesture(e, false, mapTouches.length)
+        }
         if (!this._active || mapTouches.length < this._minTouches) return;
         e.preventDefault();
         return this._calculateTransform(e, points, mapTouches);

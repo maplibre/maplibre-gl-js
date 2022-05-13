@@ -932,7 +932,14 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     padding: 1rem;
     font-size: 1.4em;
     line-height: 1.2;
-    transition: opacity 0.5s ease 0s;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease 1s;
+}
+
+.maplibregl-cooperative-gesture-screen.show {
+    opacity: 1;
+    transition: opacity 0.05s;
 }
 
 @media (max-width: 767px) {

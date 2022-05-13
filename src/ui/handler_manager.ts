@@ -203,7 +203,7 @@ class HandlerManager {
         this._add('mousePitch', mousePitch, ['mouseRotate']);
 
         const mousePan = new MousePanHandler(options);
-        const touchPan = new TouchPanHandler(options);
+        const touchPan = new TouchPanHandler(options, map);
         map.dragPan = new DragPanHandler(el, mousePan, touchPan);
         this._add('mousePan', mousePan);
         this._add('touchPan', touchPan, ['touchZoom', 'touchRotate']);
