@@ -942,14 +942,15 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     transition: opacity 0.05s;
 }
 
-@media (max-width: 767px) {
+.maplibregl-cooperative-gesture-screen .mobile-message {
+    display: none;
+}
+
+@media (hover: none) {
     .maplibregl-cooperative-gesture-screen .desktop-message {
         display: none;
     }
-}
-
-@media (min-width: 768px) {
     .maplibregl-cooperative-gesture-screen .mobile-message {
-        display: none;
+        display: block;
     }
 }

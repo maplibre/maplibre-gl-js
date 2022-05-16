@@ -2398,7 +2398,7 @@ class Map extends Camera {
         const container = this._container;
         this._metaPress = false;
         const cooperativeGestureScreen = this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
-        let modifierKeyPrefix = "^"; // control key
+        let modifierKeyPrefix = "Ctrl"; // control key
         if (navigator.platform.indexOf("Mac") === 0) {
             modifierKeyPrefix = "⌘"; // command key
         }
@@ -2474,9 +2474,12 @@ class Map extends Camera {
     _onCooperativeGesture(event: any, metaPress, touches) {
         if (!metaPress && touches < 2){
             // Alert user how to scroll/pan
-            this._cooperativeGesturesScreen.classList.add("show")
+            this._cooperativeGesturesScreen.classList.add("show");
+            this._canvasContainer.classList.remove("mapboxgl-touch-drag-pan", "maplibregl-touch-drag-pan")
+            // this._canvas.style.pointerEvents = "none";
             setTimeout(() => {
-                this._cooperativeGesturesScreen.classList.remove("show")
+                this._cooperativeGesturesScreen.classList.remove("show");
+                //this._canvas.style.pointerEvents = "auto";
             }, 100)
         }
         return false;
