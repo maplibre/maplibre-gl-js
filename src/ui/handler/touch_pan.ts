@@ -41,7 +41,6 @@ export default class TouchPanHandler {
     }
 
     touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
-        console.log("TOUCH MOVING");
         if (this._map._cooperativeGestures){
             if (this._minTouches == 2 && mapTouches.length < 2 && !this._cancelCooperativeMessage){
                 // If coop gesture enabled, show panning info to user

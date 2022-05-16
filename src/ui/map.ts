@@ -431,9 +431,6 @@ class Map extends Camera {
         ], this);
 
         this._setupContainer();
-        if (this._cooperativeGestures) {
-            this._setupCooperativeGestures();
-        } 
         this._setupPainter();
         if (this.painter === undefined) {
             throw new Error('Failed to initialize WebGL.');
@@ -450,6 +447,10 @@ class Map extends Camera {
         }
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
+
+        if (this._cooperativeGestures) {
+            this._setupCooperativeGestures();
+        }
 
         const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
         this._hash = options.hash && (new Hash(hashName)).addTo(this);
@@ -2414,6 +2415,8 @@ class Map extends Camera {
         });
         // Add event to canvas container since gesture container is pointer-events: none
         this._canvasContainer.addEventListener('wheel', (e) => {this._onCooperativeGesture(e, this._metaPress, 1)}, false);
+        // Remove the traditional pan classes
+        this._canvasContainer.classList.remove("mapboxgl-touch-drag-pan", "maplibregl-touch-drag-pan");
     }
 
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
@@ -2475,12 +2478,9 @@ class Map extends Camera {
         if (!metaPress && touches < 2){
             // Alert user how to scroll/pan
             this._cooperativeGesturesScreen.classList.add("show");
-            this._canvasContainer.classList.remove("mapboxgl-touch-drag-pan", "maplibregl-touch-drag-pan")
-            // this._canvas.style.pointerEvents = "none";
             setTimeout(() => {
                 this._cooperativeGesturesScreen.classList.remove("show");
-                //this._canvas.style.pointerEvents = "auto";
-            }, 100)
+            }, 100);
         }
         return false;
     }
