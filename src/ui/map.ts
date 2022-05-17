@@ -2399,9 +2399,9 @@ class Map extends Camera {
         const container = this._container;
         this._metaPress = false;
         this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
-        let modifierKeyPrefix = "Ctrl"; // control key
+        let modifierKeyPrefix = 'Ctrl'; // control key
         if (navigator.platform.indexOf('Mac') === 0) {
-            modifierKeyPrefix = "⌘"; // command key
+            modifierKeyPrefix = '⌘'; // command key
         }
         this._cooperativeGesturesScreen.innerHTML = `
             <div class="desktop-message">Use ${modifierKeyPrefix} + scroll to zoom the map</div>
@@ -2414,7 +2414,9 @@ class Map extends Camera {
             if (event.key === 'Meta') this._metaPress = false;
         });
         // Add event to canvas container since gesture container is pointer-events: none
-        this._canvasContainer.addEventListener('wheel', (e) => {this._onCooperativeGesture(e, this._metaPress, 1)}, false);
+        this._canvasContainer.addEventListener('wheel', (e) => {
+            this._onCooperativeGesture(e, this._metaPress, 1);
+        }, false);
         // Remove the traditional pan classes
         this._canvasContainer.classList.remove('mapboxgl-touch-drag-pan', 'maplibregl-touch-drag-pan');
     }
@@ -2475,7 +2477,7 @@ class Map extends Camera {
     }
 
     _onCooperativeGesture(event: any, metaPress, touches) {
-        if (!metaPress && touches < 2){
+        if (!metaPress && touches < 2) {
             // Alert user how to scroll/pan
             this._cooperativeGesturesScreen.classList.add('show');
             setTimeout(() => {
@@ -2730,7 +2732,7 @@ class Map extends Camera {
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
-        if (this._cooperativeGestures){
+        if (this._cooperativeGestures) {
             DOM.remove(this._cooperativeGesturesScreen);
         }
         this._container.classList.remove('maplibregl-map', 'mapboxgl-map');

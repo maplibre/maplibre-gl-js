@@ -41,7 +41,7 @@ export default class TouchPanHandler {
     }
 
     touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
-        if (this._map._cooperativeGestures){
+        if (this._map._cooperativeGestures) {
             if (this._minTouches === 2 && mapTouches.length < 2 && !this._cancelCooperativeMessage) {
                 // If coop gesture enabled, show panning info to user
                 this._map._onCooperativeGesture(e, false, mapTouches.length);
