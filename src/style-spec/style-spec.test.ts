@@ -81,6 +81,7 @@ function validSchema(k, v, obj, ref, version, kind) {
         'property-type',
         'length',
         'min-length',
+        'max-length',
         'required',
         'transition',
         'type',
