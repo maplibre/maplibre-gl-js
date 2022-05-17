@@ -2404,8 +2404,8 @@ class Map extends Camera {
             modifierKeyPrefix = '⌘'; // command key
         }
         this._cooperativeGesturesScreen.innerHTML = `
-            <div class="desktop-message">Use ${modifierKeyPrefix} + scroll to zoom the map</div>
-            <div class="mobile-message">Use two fingers to move the map</div>
+            <div class="maplibregl-desktop-message">Use ${modifierKeyPrefix} + scroll to zoom the map</div>
+            <div class="maplibregl-mobile-message">Use two fingers to move the map</div>
         `;
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Meta') this._metaPress = true;
@@ -2479,9 +2479,9 @@ class Map extends Camera {
     _onCooperativeGesture(event: any, metaPress, touches) {
         if (!metaPress && touches < 2) {
             // Alert user how to scroll/pan
-            this._cooperativeGesturesScreen.classList.add('show');
+            this._cooperativeGesturesScreen.classList.add('maplibregl-show');
             setTimeout(() => {
-                this._cooperativeGesturesScreen.classList.remove('show');
+                this._cooperativeGesturesScreen.classList.remove('maplibregl-show');
             }, 100);
         }
         return false;

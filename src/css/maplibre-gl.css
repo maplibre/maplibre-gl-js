@@ -919,7 +919,7 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
 }
 
 .maplibregl-cooperative-gesture-screen {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0 0 0 40%);
     position: absolute;
     top: 0;
     left: 0;
@@ -937,20 +937,21 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     transition: opacity 1s ease 1s;
 }
 
-.maplibregl-cooperative-gesture-screen.show {
+.maplibregl-cooperative-gesture-screen.maplibregl-show {
     opacity: 1;
     transition: opacity 0.05s;
 }
 
-.maplibregl-cooperative-gesture-screen .mobile-message {
+.maplibregl-cooperative-gesture-screen .maplibregl-mobile-message {
     display: none;
 }
 
 @media (hover: none) {
-    .maplibregl-cooperative-gesture-screen .desktop-message {
+    .maplibregl-cooperative-gesture-screen .maplibregl-desktop-message {
         display: none;
     }
-    .maplibregl-cooperative-gesture-screen .mobile-message {
+    
+    .maplibregl-cooperative-gesture-screen .maplibregl-mobile-message {
         display: block;
     }
 }
