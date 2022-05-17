@@ -2395,28 +2395,28 @@ class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _setupCooperativeGestures(){
+    _setupCooperativeGestures() {
         const container = this._container;
         this._metaPress = false;
-        const cooperativeGestureScreen = this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
+        this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
         let modifierKeyPrefix = "Ctrl"; // control key
-        if (navigator.platform.indexOf("Mac") === 0) {
+        if (navigator.platform.indexOf('Mac') === 0) {
             modifierKeyPrefix = "⌘"; // command key
         }
         this._cooperativeGesturesScreen.innerHTML = `
             <div class="desktop-message">Use ${modifierKeyPrefix} + scroll to zoom the map</div>
             <div class="mobile-message">Use two fingers to move the map</div>
         `;
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "Meta") this._metaPress = true;
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Meta') this._metaPress = true;
         });
-        document.addEventListener("keyup", (event) => {
-            if (event.key === "Meta") this._metaPress = false;
+        document.addEventListener('keyup', (event) => {
+            if (event.key === 'Meta') this._metaPress = false;
         });
         // Add event to canvas container since gesture container is pointer-events: none
         this._canvasContainer.addEventListener('wheel', (e) => {this._onCooperativeGesture(e, this._metaPress, 1)}, false);
         // Remove the traditional pan classes
-        this._canvasContainer.classList.remove("mapboxgl-touch-drag-pan", "maplibregl-touch-drag-pan");
+        this._canvasContainer.classList.remove('mapboxgl-touch-drag-pan', 'maplibregl-touch-drag-pan');
     }
 
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
@@ -2477,9 +2477,9 @@ class Map extends Camera {
     _onCooperativeGesture(event: any, metaPress, touches) {
         if (!metaPress && touches < 2){
             // Alert user how to scroll/pan
-            this._cooperativeGesturesScreen.classList.add("show");
+            this._cooperativeGesturesScreen.classList.add('show');
             setTimeout(() => {
-                this._cooperativeGesturesScreen.classList.remove("show");
+                this._cooperativeGesturesScreen.classList.remove('show');
             }, 100);
         }
         return false;
