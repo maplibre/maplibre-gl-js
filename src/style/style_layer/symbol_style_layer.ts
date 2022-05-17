@@ -1,7 +1,7 @@
 import StyleLayer from '../style_layer';
 
 import assert from 'assert';
-import SymbolBucket from '../../data/bucket/symbol_bucket';
+import SymbolBucket, {SymbolFeature} from '../../data/bucket/symbol_bucket';
 import resolveTokens from '../../util/resolve_tokens';
 import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
 
@@ -202,6 +202,45 @@ export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, Symb
     }
 
     return result;
+}
+
+export type SymbolMargin = [number, number, number, number]
+
+export function getMargin(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, feature: SymbolFeature, canonical: CanonicalTileID, pixelRatio = 1): SymbolMargin {
+    // Support text-margin in addition to icon-margin? Unclear how to apply asymmetric text-margin to the radius for collision circles.
+    const result = layout.get('icon-margin').evaluate(feature, {}, canonical);
+
+    if (result) {
+        switch (result.length) {
+            default:
+                // REVIEW: Can this happen? Doesn't the min- and max-length check prevent this?
+                // Fall through
+            case 1:
+                // all 4 sides -> [vertical, horizontal]
+                result[1] = result[0];
+                // Fall through
+            case 2:
+                // [vertical, horizontal] -> [top, horizontal, bottom]
+                result[2] = result[0];
+                // Fall through
+            case 3:
+                // [top, horizontal, bottom] -> [top, right, bottom, left]
+                result[3] = result[1];
+                // Fall through
+            case 4:
+                return [
+                    result[0] * pixelRatio,
+                    result[1] * pixelRatio,
+                    result[2] * pixelRatio,
+                    result[3] * pixelRatio,
+                ];
+        }
+    } else {
+        // Backwards compatibility with single-value icon-padding style
+        const padding = layout.get('icon-padding') * pixelRatio;
+
+        return [padding, padding, padding, padding];
+    }
 }
 
 export default SymbolStyleLayer;

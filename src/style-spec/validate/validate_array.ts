@@ -23,6 +23,10 @@ export default function validateArray(options) {
         return [new ValidationError(key, array, `array length at least ${arraySpec['min-length']} expected, length ${array.length} found`)];
     }
 
+    if (arraySpec['max-length'] && array.length > arraySpec['max-length']) {
+        return [new ValidationError(key, array, `array length no more than ${arraySpec['max-length']} expected, length ${array.length} found`)];
+    }
+
     let arrayElementSpec = {
         'type': arraySpec.value,
         'values': arraySpec.values

@@ -30,6 +30,7 @@ import type {PossiblyEvaluatedPropertyValue} from '../style/properties';
 
 import Point from '@mapbox/point-geometry';
 import murmur3 from 'murmurhash-js';
+import {getMargin, SymbolMargin} from '../style/style_layer/symbol_style_layer';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
 // `icon-size` at up to three:
@@ -393,7 +394,7 @@ function addFeature(bucket: SymbolBucket,
         iconBoxScale = bucket.tilePixelRatio * layoutIconSize,
         symbolMinDistance = bucket.tilePixelRatio * layout.get('symbol-spacing'),
         textPadding = layout.get('text-padding') * bucket.tilePixelRatio,
-        iconPadding = layout.get('icon-padding') * bucket.tilePixelRatio,
+        iconMargin = getMargin(layout, feature, canonical, bucket.tilePixelRatio),
         textMaxAngle = layout.get('text-max-angle') / 180 * Math.PI,
         textAlongLine = layout.get('text-rotation-alignment') !== 'viewport' && layout.get('symbol-placement') !== 'point',
         iconAlongLine = layout.get('icon-rotation-alignment') === 'map' && layout.get('symbol-placement') !== 'point',
@@ -424,8 +425,8 @@ function addFeature(bucket: SymbolBucket,
 
         addSymbol(bucket, anchor, line, shapedTextOrientations, shapedIcon, imageMap, verticallyShapedIcon, bucket.layers[0],
             bucket.collisionBoxArray, feature.index, feature.sourceLayerIndex, bucket.index,
-            textBoxScale, textPadding, textAlongLine, textOffset,
-            iconBoxScale, iconPadding, iconAlongLine, iconOffset,
+            textBoxScale, [textPadding, textPadding, textPadding, textPadding], textAlongLine, textOffset,
+            iconBoxScale, iconMargin, iconAlongLine, iconOffset,
             feature, sizes, isSDFIcon, canonical, layoutTextSize);
     };
 
@@ -583,11 +584,11 @@ function addSymbol(bucket: SymbolBucket,
     sourceLayerIndex: number,
     bucketIndex: number,
     textBoxScale: number,
-    textPadding: number,
+    textMargin: SymbolMargin,
     textAlongLine: boolean,
     textOffset: [number, number],
     iconBoxScale: number,
-    iconPadding: number,
+    iconMargin: SymbolMargin,
     iconAlongLine: boolean,
     iconOffset: [number, number],
     feature: SymbolFeature,
@@ -621,10 +622,10 @@ function addSymbol(bucket: SymbolBucket,
         const textRotation = layer.layout.get('text-rotate').evaluate(feature, {}, canonical);
         const verticalTextRotation = textRotation + 90.0;
         const verticalShaping = shapedTextOrientations.vertical;
-        verticalTextCollisionFeature = new CollisionFeature(collisionBoxArray, anchor, featureIndex, sourceLayerIndex, bucketIndex, verticalShaping, textBoxScale, textPadding, textAlongLine, verticalTextRotation);
+        verticalTextCollisionFeature = new CollisionFeature(collisionBoxArray, anchor, featureIndex, sourceLayerIndex, bucketIndex, verticalShaping, textBoxScale, textMargin, textAlongLine, verticalTextRotation);
 
         if (verticallyShapedIcon) {
-            verticalIconCollisionFeature = new CollisionFeature(collisionBoxArray, anchor, featureIndex, sourceLayerIndex, bucketIndex, verticallyShapedIcon, iconBoxScale, iconPadding, textAlongLine, verticalTextRotation);
+            verticalIconCollisionFeature = new CollisionFeature(collisionBoxArray, anchor, featureIndex, sourceLayerIndex, bucketIndex, verticallyShapedIcon, iconBoxScale, iconMargin, textAlongLine, verticalTextRotation);
         }
     }
 
@@ -637,7 +638,7 @@ function addSymbol(bucket: SymbolBucket,
         const hasIconTextFit = layer.layout.get('icon-text-fit') !== 'none';
         const iconQuads = getIconQuads(shapedIcon, iconRotate, isSDFIcon, hasIconTextFit);
         const verticalIconQuads = verticallyShapedIcon ? getIconQuads(verticallyShapedIcon, iconRotate, isSDFIcon, hasIconTextFit) : undefined;
-        iconCollisionFeature = new CollisionFeature(collisionBoxArray, anchor, featureIndex, sourceLayerIndex, bucketIndex, shapedIcon, iconBoxScale, iconPadding, /*align boxes to line*/false, iconRotate);
+        iconCollisionFeature = new CollisionFeature(collisionBoxArray, anchor, featureIndex, sourceLayerIndex, bucketIndex, shapedIcon, iconBoxScale, iconMargin, /*align boxes to line*/false, iconRotate);
 
         numIconVertices = iconQuads.length * 4;
 
@@ -707,7 +708,7 @@ function addSymbol(bucket: SymbolBucket,
             const textRotate = layer.layout.get('text-rotate').evaluate(feature, {}, canonical);
             // As a collision approximation, we can use either the vertical or any of the horizontal versions of the feature
             // We're counting on all versions having similar dimensions
-            textCollisionFeature = new CollisionFeature(collisionBoxArray, anchor, featureIndex, sourceLayerIndex, bucketIndex, shaping, textBoxScale, textPadding, textAlongLine, textRotate);
+            textCollisionFeature = new CollisionFeature(collisionBoxArray, anchor, featureIndex, sourceLayerIndex, bucketIndex, shaping, textBoxScale, textMargin, textAlongLine, textRotate);
         }
 
         const singleLine = shaping.positionedLines.length === 1;

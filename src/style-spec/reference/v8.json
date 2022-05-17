@@ -1465,6 +1465,36 @@
       },
       "property-type": "data-driven"
     },
+    "icon-margin": {
+      "type": "array",
+      "value": "number",
+      "min-length": 1,
+      "max-length": 4,
+      "units": "pixels",
+      "doc": "Size of additional area round the icon bounding box used for detecting symbol collisions. Values are declared using CSS margin shorthand syntax: a single value applies to all four sides; two values apply to [top/bottom, left/right]; three values apply to [top, left/right, bottom]; four values apply to [top, right, bottom, left].",
+      "requires": [
+        "icon-image",
+        {
+          "!": "icon-padding"
+        }
+      ],
+      "sdk-support": {
+        "basic functionality": {
+          "js": "2.2.0"
+        },
+        "data-driven styling": {
+          "js": "2.2.0"
+        }
+      },
+      "expression": {
+        "interpolated": true,
+        "parameters": [
+          "zoom",
+          "feature"
+        ]
+      },
+      "property-type": "data-driven"
+    },
     "icon-padding": {
       "type": "number",
       "default": 2,
