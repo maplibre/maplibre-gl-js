@@ -919,7 +919,7 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
 }
 
 .maplibregl-cooperative-gesture-screen {
-    background: rgba(0 0 0 40%);
+    background: rgba(0 0 0 / 40%);
     position: absolute;
     top: 0;
     left: 0;
@@ -950,7 +950,7 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     .maplibregl-cooperative-gesture-screen .maplibregl-desktop-message {
         display: none;
     }
-    
+
     .maplibregl-cooperative-gesture-screen .maplibregl-mobile-message {
         display: block;
     }
