@@ -379,8 +379,10 @@ export function normalizePropertyExpression<T>(
 
     } else {
         let constant: any = value;
-        if (typeof value === 'string' && specification.type === 'color') {
+        if (specification.type === 'color' && typeof value === 'string') {
             constant = Color.parse(value);
+        } else if (specification.type === 'padding' && (typeof value === 'number' || Array.isArray(value))) {
+            constant = Padding.parse(value as (number | number[]));
         }
         return {
             kind: 'constant',
@@ -430,7 +432,8 @@ function findZoomCurve(expression: Expression): Step | Interpolate | ParsingErro
     return result;
 }
 
-import {ColorType, StringType, NumberType, BooleanType, ValueType, FormattedType, ResolvedImageType, array} from './types';
+import {ColorType, StringType, NumberType, BooleanType, ValueType, FormattedType, PaddingType, ResolvedImageType, array} from './types';
+import Padding from '../util/padding';
 
 function getExpectedType(spec: StylePropertySpecification): Type {
     const types = {
@@ -440,6 +443,7 @@ function getExpectedType(spec: StylePropertySpecification): Type {
         enum: StringType,
         boolean: BooleanType,
         formatted: FormattedType,
+        padding: PaddingType,
         resolvedImage: ResolvedImageType
     };
 
@@ -458,6 +462,8 @@ function getDefaultValue(spec: StylePropertySpecification): Value {
         return new Color(0, 0, 0, 0);
     } else if (spec.type === 'color') {
         return Color.parse(spec.default) || null;
+    } else if (spec.type === 'padding') {
+        return Padding.parse(spec.default) || null;
     } else if (spec.default === undefined) {
         return null;
     } else {

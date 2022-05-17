@@ -1,5 +1,5 @@
 import assert from 'assert';
-import {isValue, typeOf, Color} from '../values';
+import {isValue, typeOf, Color, Padding} from '../values';
 import Formatted from '../types/formatted';
 
 import type {Type} from '../types';
@@ -59,6 +59,8 @@ class Literal implements Expression {
             // couldn't actually generate with a "literal" expression,
             // so we have to implement an equivalent serialization here
             return ['rgba' as unknown].concat(this.value.toArray());
+        } else if (this.value instanceof Padding) {
+            return ['padding' as unknown].concat(this.value.toArray());
         } else if (this.value instanceof Formatted) {
             // Same as Color
             return this.value.serialize();

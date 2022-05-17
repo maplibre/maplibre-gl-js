@@ -9,6 +9,7 @@ import Formatted from '../expression/types/formatted';
 import ResolvedImage from '../expression/types/resolved_image';
 import {supportsInterpolation} from '../util/properties';
 import {findStopLessThanOrEqualTo} from '../expression/stops';
+import Padding from '../util/padding';
 
 export function isFunction(value) {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -25,19 +26,21 @@ export function createFunction(parameters, propertySpec) {
     const zoomDependent = zoomAndFeatureDependent || !featureDependent;
     const type = parameters.type || (supportsInterpolation(propertySpec) ? 'exponential' : 'interval');
 
-    if (isColor) {
+    if (isColor || propertySpec.type === 'padding') {
+        const parseFn = isColor ? Color.parse : Padding.parse;
+
         parameters = extend({}, parameters);
 
         if (parameters.stops) {
             parameters.stops = parameters.stops.map((stop) => {
-                return [stop[0], Color.parse(stop[1])];
+                return [stop[0], parseFn(stop[1])];
             });
         }
 
         if (parameters.default) {
-            parameters.default = Color.parse(parameters.default);
+            parameters.default = parseFn(parameters.default);
         } else {
-            parameters.default = Color.parse(propertySpec.default);
+            parameters.default = parseFn(propertySpec.default);
         }
     }
 
@@ -198,14 +201,23 @@ function evaluateExponentialFunction(parameters, propertySpec, input) {
 }
 
 function evaluateIdentityFunction(parameters, propertySpec, input) {
-    if (propertySpec.type === 'color') {
-        input = Color.parse(input);
-    } else if (propertySpec.type === 'formatted') {
-        input = Formatted.fromString(input.toString());
-    } else if (propertySpec.type === 'resolvedImage') {
-        input = ResolvedImage.fromString(input.toString());
-    } else if (getType(input) !== propertySpec.type && (propertySpec.type !== 'enum' || !propertySpec.values[input])) {
-        input = undefined;
+    switch (propertySpec.type) {
+        case 'color':
+            input = Color.parse(input);
+            break;
+        case 'formatted':
+            input = Formatted.fromString(input.toString());
+            break;
+        case 'resolvedImage':
+            input = ResolvedImage.fromString(input.toString());
+            break;
+        case 'padding':
+            input = Padding.parse(input);
+            break;
+        default:
+            if (getType(input) !== propertySpec.type && (propertySpec.type !== 'enum' || !propertySpec.values[input])) {
+                input = undefined;
+            }
     }
     return coalesce(input, parameters.default, propertySpec.default);
 }

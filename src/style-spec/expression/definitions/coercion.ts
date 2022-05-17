@@ -1,7 +1,7 @@
 import assert from 'assert';
 
 import {BooleanType, ColorType, NumberType, StringType, ValueType} from '../types';
-import {Color, toString as valueToString, validateRGBA} from '../values';
+import {Color, Padding, toString as valueToString, validateRGBA} from '../values';
 import RuntimeError from '../runtime_error';
 import Formatted from '../types/formatted';
 import FormatExpression from '../definitions/format';
@@ -84,6 +84,17 @@ class Coercion implements Expression {
                 }
             }
             throw new RuntimeError(error || `Could not parse color from value '${typeof input === 'string' ? input : String(JSON.stringify(input))}'`);
+        } else if (this.type.kind === 'padding') {
+            let input;
+            for (const arg of this.args) {
+                input = arg.evaluate(ctx);
+
+                const pad = Padding.parse(input);
+                if (pad) {
+                    return pad;
+                }
+            }
+            throw new RuntimeError(`Could not parse padding from value '${typeof input === 'string' ? input : String(JSON.stringify(input))}'`);
         } else if (this.type.kind === 'number') {
             let value = null;
             for (const arg of this.args) {
