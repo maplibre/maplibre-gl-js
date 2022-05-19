@@ -447,6 +447,7 @@ class Style extends Evented {
 
             for (const id in this._updatedPaintProps) {
                 this._layers[id].updateTransitions(parameters);
+                this._serializedLayers[id] = this._layers[id].serialize();
             }
 
             this.light.updateTransitions(parameters);
@@ -995,6 +996,7 @@ class Style extends Evented {
         if (deepEqual(layer.getLayoutProperty(name), value)) return;
 
         layer.setLayoutProperty(name, value, options);
+        this._serializedLayers[layerId] = layer.serialize();
         this._updateLayer(layer);
     }
 
