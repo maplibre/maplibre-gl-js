@@ -8,7 +8,7 @@ import ImageManager from '../render/image_manager';
 import GlyphManager from '../render/glyph_manager';
 import Light from './light';
 import LineAtlas from '../render/line_atlas';
-import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
+import {pick, clone, extend, deepEqual, filterObject, mapObject, warnOnce} from '../util/util';
 import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
@@ -66,6 +66,7 @@ import type {OverscaledTileID} from '../source/tile_id';
 import Terrain from '../render/terrain';
 
 const supportedDiffOperations = pick(diffOperations, [
+    'moveLayer',
     'addLayer',
     'removeLayer',
     'setPaintProperty',
@@ -104,6 +105,29 @@ export type StyleOptions = {
 export type StyleSetterOptions = {
     validate?: boolean;
 };
+
+export type StyleSwapOptions = {
+    /** should style diffing be applied that may allow smooth transitions between styles */
+    diff?: boolean,
+    /**
+     * a function that will perform a side-effect after a style is fetched but before it is committed to the map state
+     * 
+     * @param previousStyle The current style.
+     * @param nextStyle The next style which is to be applied.
+     * @param preserveLayer Preserve a layer from the previous style in the next style.
+     * @param updatePaintProperty Modify paint properties of a layer in the next style before the style is applied.
+     * @param updateLayoutProperty Modify layout properties of a layer in the next style before the style is applied.
+     * @param updateFilter Modify filter property of a layer in the next style before the style is applied. 
+     */
+    stylePatch?: (
+        previousStyle: StyleSpecification,
+        nextStyle: StyleSpecification,
+        preserveLayer: (layerId: string, before?: string) => void,
+        updatePaintProperty: (layerId: string, name: string, value: any) => void,
+        updateLayoutProperty: (layerId: string, name: string, value: any) => void,
+        updateFilter: (layerId: string, name: string, value: any) => void
+    ) => void
+}
 
 /**
  * @private
@@ -215,12 +239,10 @@ class Style extends Evented {
         });
     }
 
-    loadURL(url: string, options: {
-        validate?: boolean;
-    } = {}) {
+    loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
-        const validate = typeof options.validate === 'boolean' ?
+        options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
 
         const request = this.map._requestManager.transformRequest(url, ResourceType.Style);
@@ -229,28 +251,35 @@ class Style extends Evented {
             if (error) {
                 this.fire(new ErrorEvent(error));
             } else if (json) {
-                this._load(json, validate);
+                this._load(json, options);
             }
         });
     }
 
-    loadJSON(json: StyleSpecification, options: StyleSetterOptions = {}) {
+    loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         this._request = browser.frame(() => {
             this._request = null;
-            this._load(json, options.validate !== false);
+            options.validate = options.validate !== false;
+            this._load(json, options);
         });
     }
 
     loadEmpty() {
         this.fire(new Event('dataloading', {dataType: 'style'}));
-        this._load(empty, false);
+        this._load(empty, {validate: false});
     }
 
-    _load(json: StyleSpecification, validate: boolean) {
-        if (validate && emitValidationErrors(this, validateStyle(json))) {
+    _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions) {
+        if (options.validate && emitValidationErrors(this, validateStyle(json))) {
             return;
+        }
+
+        let patchOperations: { command: string, args: (string | LayerSpecification | {validate: boolean})[] }[] = [];
+        if (options.stylePatch) {
+            patchOperations = this._buildStylePatch(json, options);
+            this.sourceCaches = {};
         }
 
         this._loaded = true;
@@ -283,6 +312,10 @@ class Style extends Evented {
         this.dispatcher.broadcast('setLayers', this._serializeLayers(this._order));
 
         this.light = new Light(this.stylesheet.light);
+
+        patchOperations.filter(op => op.command !== diffOperations.moveLayer).forEach((op) => {
+            this[op.command].apply(this, op.args);
+        });
 
         this.setTerrain(this.stylesheet.terrain);
 
@@ -542,7 +575,7 @@ class Style extends Evented {
      * @returns {boolean} true if any changes were made; false otherwise
      * @private
      */
-    setState(nextState: StyleSpecification) {
+    setState(nextState: StyleSpecification, options: StyleSwapOptions = {}) {
         this._checkLoaded();
 
         if (emitValidationErrors(this, validateStyle(nextState))) return false;
@@ -550,9 +583,37 @@ class Style extends Evented {
         nextState = clone(nextState);
         nextState.layers = deref(nextState.layers);
 
-        const changes = diffStyles(this.serialize(), nextState)
-            .filter(op => !(op.command in ignoredDiffOperations));
+        let patchOperations: { command: string, args: (string | LayerSpecification | {validate: boolean})[] }[] = [];
+        let preservedLayers: {} = {};
+        let preservedSources: {} = {};
+        if (options.stylePatch) {
+            patchOperations = this._buildStylePatch(
+                nextState,
+                options);
+        }
 
+        patchOperations = patchOperations.filter((op: {command: string, args: any[]}) => {
+            if (op.command === diffOperations.addLayer &&
+                this._serializedLayers.hasOwnProperty(op.args[0].id)) {
+                preservedLayers[op.args[0].id] = true;
+                return false;
+            }
+            if (op.command === diffOperations.moveLayer &&
+                this._serializedLayers.hasOwnProperty(op.args[0])) {
+                preservedLayers[op.args[0]] = true;
+                return true;
+            }
+            if (op.command === diffOperations.addSource &&
+                this.sourceCaches.hasOwnProperty(op.args[0])) {
+                preservedSources[op.args[0]] = true;
+                return false;
+            }
+            return true;
+        });
+
+        let changes = diffStyles(this.serialize(), nextState)
+            .filter(op => !(op.command in ignoredDiffOperations));
+        changes = changes.concat(patchOperations);
         if (changes.length === 0) {
             return false;
         }
@@ -568,7 +629,13 @@ class Style extends Evented {
                 // `this.stylesheet`, which we update below
                 return;
             }
-            (this as any)[op.command].apply(this, op.args);
+            if (op.command === diffOperations.removeLayer && preservedLayers.hasOwnProperty(op.args[0])) {
+                return;
+            }
+            if ((op.command === diffOperations.addSource || op.command === diffOperations.removeSource) && preservedSources.hasOwnProperty(op.args[0])) {
+                return;
+            }
+            this[op.command].apply(this, op.args);
         });
 
         this.stylesheet = nextState;
@@ -1050,21 +1117,93 @@ class Style extends Evented {
     }
 
     serialize(): StyleSpecification {
-        return filterObject({
-            version: this.stylesheet.version,
-            name: this.stylesheet.name,
-            metadata: this.stylesheet.metadata,
-            light: this.stylesheet.light,
-            center: this.stylesheet.center,
-            zoom: this.stylesheet.zoom,
-            bearing: this.stylesheet.bearing,
-            pitch: this.stylesheet.pitch,
-            sprite: this.stylesheet.sprite,
-            glyphs: this.stylesheet.glyphs,
-            transition: this.stylesheet.transition,
-            sources: mapObject(this.sourceCaches, (source) => source.serialize()),
-            layers: this._serializeLayers(this._order)
-        }, (value) => { return value !== undefined; });
+        if(this._loaded){
+            return filterObject({
+                version: this.stylesheet.version,
+                name: this.stylesheet.name,
+                metadata: this.stylesheet.metadata,
+                light: this.stylesheet.light,
+                center: this.stylesheet.center,
+                zoom: this.stylesheet.zoom,
+                bearing: this.stylesheet.bearing,
+                pitch: this.stylesheet.pitch,
+                sprite: this.stylesheet.sprite,
+                glyphs: this.stylesheet.glyphs,
+                transition: this.stylesheet.transition,
+                sources: mapObject(this.sourceCaches, (source) => source.serialize()),
+                layers: this._serializeLayers(this._order)
+            }, (value) => { return value !== undefined; });
+        } else {
+            return empty;
+        }
+    }
+
+    _buildStylePatch(next: StyleSpecification, options: StyleSwapOptions): { command: string, args: (string | LayerSpecification | {validate: boolean})[] }[] {
+        let patchOperations: { command: string, args: (string | LayerSpecification | {validate: boolean})[] }[] = [];
+        let preservedSources: string[] = [];
+        let preservedLayers: string[] = [];
+        let nextLayerIndex = next.layers.reduce((p: { [layerId: string]: LayerSpecification }, c: LayerSpecification) => {
+            p[c.id] = c;
+            return p;
+        }, {});
+
+        const preserveLayer = (layerId: string, before?: string) => {
+            if (this.hasLayer(layerId)) {
+                const preservedLayer: LayerSpecification = this._serializedLayers[layerId];
+                if (preservedLayer.type !== 'background' && !next.sources.hasOwnProperty(preservedLayer.source) && !preservedSources.includes(preservedLayer.source)) {
+                    patchOperations.push({ command: "addSource", args: [preservedLayer.source, this.sourceCaches[preservedLayer.source].serialize(), { validate: false }] });
+                    preservedSources.push(preservedLayer.source);
+                }
+
+                if (nextLayerIndex.hasOwnProperty(layerId)) {
+                    patchOperations.push({ command: "removeLayer", args: [layerId] })
+                }
+
+                before = (nextLayerIndex.hasOwnProperty(before) || preservedLayers.find(layerId => layerId === before)) ? before : undefined;
+                // Hackish. If style diff is enabled, and succeeds, moveLayer will be applied and addLayer will be ignored. 
+                // If style diff is disabled, or fails, addLayer will be applied and moveLayer will be ignored.
+                patchOperations.push({ command: "moveLayer", args: [preservedLayer.id, before, { validate: true }] })
+                patchOperations.push({ command: "addLayer", args: [preservedLayer, before, { validate: true }] })
+                preservedLayers.push(layerId);
+            } else {
+                warnOnce(`Cannot preserve layer ${layerId} that is not in the previous style.`);
+            }
+        }
+
+        const updatePaintProperty = (layerId: string, name: string, value: any) => {
+            if (nextLayerIndex.hasOwnProperty(layerId) || preservedLayers.includes(layerId)) {
+                patchOperations.push({ command: "setPaintProperty", args: [layerId, name, value, { validate: true }] });
+            } else {
+                warnOnce(`Cannot update paint property on layer ${layerId} that is not in the next style.`);
+            }
+        }
+
+        const updateLayoutProperty = (layerId: string, name: string, value: any) => {
+            if (nextLayerIndex.hasOwnProperty(layerId) || preservedLayers.includes(layerId)) {
+                patchOperations.push({ command: "setLayoutProperty", args: [layerId, name, value, { validate: true }] });
+            } else {
+                warnOnce(`Cannot update layout property on layer ${layerId} that is not in the next style.`);
+            }
+        }
+
+        const updateFilter = (layerId: string, name: string, value: any) => {
+            if (nextLayerIndex.hasOwnProperty(layerId) || preservedLayers.includes(layerId)) {
+                patchOperations.push({ command: "setFilter", args: [layerId, name, value, { validate: true }] });
+            } else {
+                warnOnce(`Cannot update filter on layer ${layerId} that is not in the next style.`);
+            }
+        }
+
+        if (options.stylePatch) {
+            options.stylePatch(this.serialize(),
+                next,
+                preserveLayer.bind(this),
+                updatePaintProperty.bind(this),
+                updateLayoutProperty.bind(this),
+                updateFilter.bind(this));
+        }
+
+        return patchOperations;
     }
 
     _updateLayer(layer: StyleLayer) {

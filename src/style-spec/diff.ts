@@ -14,6 +14,11 @@ const operations = {
     addLayer: 'addLayer',
 
     /*
+     * { command: 'moveLayer', args: ['layerId, 'beforeLayerId']}
+     */
+    moveLayer: 'moveLayer',
+
+    /*
      * { command: 'removeLayer', args: ['layerId'] }
      */
     removeLayer: 'removeLayer',

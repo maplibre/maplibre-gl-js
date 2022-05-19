@@ -29,7 +29,7 @@ import StyleLayer from '../style/style_layer';
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
-import type {FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style';
+import type {FeatureIdentifier, StyleOptions, StyleSetterOptions, StyleSwapOptions} from '../style/style';
 import type {MapEvent, MapDataEvent} from './events';
 import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer';
 import type {StyleImageInterface, StyleImageMetadata} from '../style/style_image';
@@ -57,6 +57,7 @@ import type {
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import emptyStyle from '../style-spec/empty';
 
 /* eslint-enable no-use-before-define */
 
@@ -1387,9 +1388,7 @@ class Map extends Camera {
      * map.setStyle("https://demotiles.maplibre.org/style.json");
      *
      */
-    setStyle(style: StyleSpecification | string | null, options?: {
-        diff?: boolean;
-    } & StyleOptions) {
+    setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions & StyleOptions) {
         options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {
@@ -1426,27 +1425,36 @@ class Map extends Camera {
         return str;
     }
 
-    _updateStyle(style: StyleSpecification | string | null,  options?: {
-        diff?: boolean;
-    } & StyleOptions) {
-        if (this.style) {
-            this.style.setEventedParent(null);
-            this.style._remove();
-        }
+    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
+        if(!options.stylePatch){
+            if (this.style) {
+                this.style.setEventedParent(null);
+                this.style._remove();
+            }
 
-        if (!style) {
-            delete this.style;
-            return this;
+            if (!style) {
+                delete this.style;
+                return this;
+            } else {
+                this.style = new Style(this, options || {});
+            }
+
+            this.style.setEventedParent(this, {style: this.style});
         } else {
-            this.style = new Style(this, options || {});
+            if (!style) {
+                style = emptyStyle() as StyleSpecification
+            }
         }
 
-        this.style.setEventedParent(this, {style: this.style});
+        if (!this.style) {
+            this.style = new Style(this, options);
+            this.style.setEventedParent(this, { style: this.style });
+        }
 
         if (typeof style === 'string') {
-            this.style.loadURL(style);
+            this.style.loadURL(style, options);
         } else {
-            this.style.loadJSON(style);
+            this.style.loadJSON(style, options);
         }
 
         return this;
@@ -1460,9 +1468,7 @@ class Map extends Camera {
         }
     }
 
-    _diffStyle(style: StyleSpecification | string,  options?: {
-        diff?: boolean;
-    } & StyleOptions) {
+    _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
             const request = this._requestManager.transformRequest(url, ResourceType.Style);
@@ -1478,11 +1484,9 @@ class Map extends Camera {
         }
     }
 
-    _updateDiff(style: StyleSpecification,  options?: {
-        diff?: boolean;
-    } & StyleOptions) {
+    _updateDiff(style: StyleSpecification,  options?: StyleSwapOptions & StyleOptions) {
         try {
-            if (this.style.setState(style)) {
+            if (this.style.setState(style, options)) {
                 this._update(true);
             }
         } catch (e) {
