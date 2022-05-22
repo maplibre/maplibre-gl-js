@@ -16,6 +16,6 @@ void main() {
     // as an arbitrarily high number to preserve adequate precision when rendering.
     // This is also the same value as the EXTENT we are using for our tile buffer pos coordinates,
     // so math for modifying either is consistent.
-    v_pos0 = (((a_texture_pos / 8192.0) - 0.5) / u_buffer_scale ) + 0.5;
+    v_pos0 = (((a_texture_pos / 16384.0) - 0.5) / u_buffer_scale ) + 0.5;
     v_pos1 = (v_pos0 * u_scale_parent) + u_tl_parent;
 }
