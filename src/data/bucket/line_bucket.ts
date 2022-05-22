@@ -539,8 +539,10 @@ class LineBucket implements Bucket {
         this.layoutVertexArray.emplaceBack(
             // a_pos_normal
             // Encode round/up the least significant bits
-            (x << 1) + (round ? 1 : 0),
-            (y << 1) + (up ? 1 : 0),
+            x,
+            y,
+            round ? 1 : 0,
+            up ? 1 : -1,
             // a_data
             // add 128 to store a byte in an unsigned byte
             Math.round(EXTRUDE_SCALE * extrudeX) + 128,
