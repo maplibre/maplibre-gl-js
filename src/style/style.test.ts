@@ -435,6 +435,182 @@ describe('Style#_remove', () => {
     });
 });
 
+describe('Style#_buildStylePatch', () => {
+    const originalConsoleWarn = console.warn;
+    beforeEach(() => {
+        console.warn = originalConsoleWarn;
+    })
+
+    test('copy preserved layer', done => {
+        const style = createStyle();
+        const initial = createStyleJSON({
+            "version": 8,
+            "sources": {
+                "foo": {
+                    "type": "vector"
+                }
+            },
+            "layers": [
+                {
+                    "id": "initial_0",
+                    "source": "foo",
+                    "source-layer": "source-layer",
+                    "type": "fill"
+                },
+                {
+                    "id": "initial_1",
+                    "source": "foo",
+                    "source-layer": "source-layer",
+                    "type": "fill"
+                },
+                {
+                    "id": "initial_2",
+                    "source": "foo",
+                    "source-layer": "source-layer",
+                    "type": "fill"
+                }]});
+
+        const next = createStyleJSON({
+            "version": 8,
+            "sources": {
+                "bar": {
+                    "type": "vector"
+                }
+            },
+            "layers": [
+                {
+                    "id": "next_0",
+                    "source": "bar",
+                    "source-layer": "source-layer",
+                    "type": "fill"
+                }]});
+
+        let reloaded = false;
+        style.loadJSON(initial);
+        style.on('style.load', () => {
+            if (!reloaded) {
+                reloaded = true;
+                style.loadJSON(next, {
+                    stylePatch: (_prev, _next, preserve) => ['initial_0', 'initial_1'].map(layerId => preserve(layerId))
+                });
+            } else {
+                const result = style.serialize();
+                const layers = result.layers.reduce((p, c) => { p[c.id] = c; return p; }, {});
+                expect(result.sources.hasOwnProperty("foo")).toBeTruthy();
+                expect(result.sources.hasOwnProperty("bar"));
+                expect(layers.hasOwnProperty("initial_0"));
+                expect(layers.hasOwnProperty("initial_1"));
+                expect(layers.hasOwnProperty("next_0"));
+                done();
+            }
+        });
+    });
+
+    test('preserved layer missing from base warns once', done => {
+        console.warn = jest.fn();
+        const style = createStyle();
+        const initial = createStyleJSON({
+            "version": 8,
+            "sources": {
+                "foo": {
+                    "type": "vector"
+                }
+            },
+            "layers": [
+                {
+                    "id": "initial_0",
+                    "source": "foo",
+                    "source-layer": "source-layer",
+                    "type": "fill"
+                }]});
+
+        let reloaded = false;
+        style.loadJSON(initial);
+        style.on('style.load', () => {
+            if (!reloaded) {
+                reloaded = true;
+                style.loadJSON(createStyleJSON(), {
+                    stylePatch: (_prev, _next, preserve) => preserve('does not exist')
+                });
+            } else {
+                expect(console.warn).toBeCalledTimes(1);
+                expect(console.warn).toBeCalledWith('Cannot preserve layer does not exist that is not in the previous style.');
+                done();
+            }
+        });
+    });
+
+    test('layer id collision selects preserved layer', done => {
+        const style = createStyle();
+        const initial = createStyleJSON({
+            "sources": {
+                "foo": {"type": "vector"}
+            },
+            "layers": [{
+                "id": "test",
+                "source": "foo",
+                "source-layer": "source-layer",
+                "type": "line"
+            }]
+        });
+
+        const next = createStyleJSON({
+            "sources": {
+                "foo": {"type": "vector"}
+            },
+            "layers": [{
+                "id": "test",
+                "source": "foo",
+                "source-layer": "source-layer",
+                "type": "fill"
+            }]
+        });
+
+        let reloaded = false;
+        style.loadJSON(initial);
+        style.on('style.load', () => {
+            if (!reloaded) {
+                reloaded = true;
+                style.loadJSON(next, {
+                    stylePatch: (_prev, _next, preserve) => preserve('test')
+                });
+            } else {
+                expect(style.getLayer('test').type).toEqual("line");
+                done();
+            }
+        });
+    });
+
+    test('copy into empty next style', done => {
+        const style = createStyle();
+        const initial = createStyleJSON({
+            "sources": {
+                "foo": {"type": "vector"}
+            },
+            "layers": [{
+                "id": "layer0",
+                "source": "foo",
+                "source-layer": "source-layer",
+                "type": "line"
+            }]
+        });
+        const next = createStyleJSON();
+        let reloaded = false;
+        style.loadJSON(initial);
+        style.on('style.load', () => {
+            if (!reloaded) {
+                reloaded = true;
+                style.loadJSON(next, {
+                    stylePatch: (_prev, _next, preserve) => preserve('layer0')
+                });
+            } else {
+                expect(style.getLayer('layer0')).toBeDefined();
+                done();
+            }
+        });
+    });
+});
+
 describe('Style#update', () => {
     test('on error', done => {
         const style = createStyle();
