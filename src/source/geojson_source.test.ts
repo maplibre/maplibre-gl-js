@@ -206,10 +206,10 @@ describe('GeoJSONSource#update', () => {
             send(message, params) {
                 expect(message).toBe('geojson.loadData');
                 expect(params.geojsonVtOptions).toEqual({
-                    extent: 8192,
+                    extent: 16384,
                     maxZoom: 10,
-                    tolerance: 4,
-                    buffer: 256,
+                    tolerance: 8,
+                    buffer: 512,
                     lineMetrics: false,
                     generateId: true
                 });
@@ -233,8 +233,8 @@ describe('GeoJSONSource#update', () => {
                 expect(params.superclusterOptions).toEqual({
                     maxZoom: 12,
                     minPoints: 3,
-                    extent: 8192,
-                    radius: 1600,
+                    extent: 16384,
+                    radius: 3200,
                     log: false,
                     generateId: true
                 });
@@ -259,8 +259,8 @@ describe('GeoJSONSource#update', () => {
                 expect(params.superclusterOptions).toEqual({
                     maxZoom: 12,
                     minPoints: 3,
-                    extent: 8192,
-                    radius: 1600,
+                    extent: 16384,
+                    radius: 3200,
                     log: false,
                     generateId: true
                 });

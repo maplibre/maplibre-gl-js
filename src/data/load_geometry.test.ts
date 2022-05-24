@@ -12,8 +12,8 @@ describe('loadGeometry', () => {
         const feature = vt.layers.road.feature(0);
         const originalGeometry = feature.loadGeometry();
         const scaledGeometry = loadGeometry(feature);
-        expect(scaledGeometry[0][0].x).toBe(originalGeometry[0][0].x * 2);
-        expect(scaledGeometry[0][0].y).toBe(originalGeometry[0][0].y * 2);
+        expect(scaledGeometry[0][0].x).toBe(originalGeometry[0][0].x * 4);
+        expect(scaledGeometry[0][0].y).toBe(originalGeometry[0][0].y * 4);
     });
 
     test('loadGeometry warns and clamps when exceeding extent', () => {
@@ -40,7 +40,7 @@ describe('loadGeometry', () => {
                 maxValue = Math.max(x, y, maxValue);
             }
         }
-        expect(maxValue).toBe(16383);
+        expect(maxValue).toBe(32767);
 
         // Put it back
         console.warn = warn;
