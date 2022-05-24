@@ -27,7 +27,7 @@ const style = {
             ],
             tileSize: 256
         },
-        
+
     },
     layers: [{
         id: 'osm',
@@ -36,7 +36,7 @@ const style = {
         minzoom: 0,
         maxzoom: 19
     }]
-}
+};
 
 const map = new maplibregl.Map({
     container: 'map',
@@ -50,9 +50,9 @@ map.setStyle('https://demotiles.maplibre.org/style.json', {
     stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
         const prevRasterLayer = prevStyle.layers[0];
         preserveLayer(prevRasterLayer.id);
-        updatePaintProperty(prevRasterLayer.id, 'raster-opacity', 0.75)
+        updatePaintProperty(prevRasterLayer.id, 'raster-opacity', 0.75);
     }
-})
+});
 
 </script>
 </body>
