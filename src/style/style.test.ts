@@ -439,50 +439,50 @@ describe('Style#_buildStylePatch', () => {
     const originalConsoleWarn = console.warn;
     beforeEach(() => {
         console.warn = originalConsoleWarn;
-    })
+    });
 
     test('copy preserved layer', done => {
         const style = createStyle();
         const initial = createStyleJSON({
-            "version": 8,
-            "sources": {
-                "foo": {
-                    "type": "vector"
+            'version': 8,
+            'sources': {
+                'foo': {
+                    'type': 'vector'
                 }
             },
-            "layers": [
+            'layers': [
                 {
-                    "id": "initial_0",
-                    "source": "foo",
-                    "source-layer": "source-layer",
-                    "type": "fill"
+                    'id': 'initial_0',
+                    'source': 'foo',
+                    'source-layer': 'source-layer',
+                    'type': 'fill'
                 },
                 {
-                    "id": "initial_1",
-                    "source": "foo",
-                    "source-layer": "source-layer",
-                    "type": "fill"
+                    'id': 'initial_1',
+                    'source': 'foo',
+                    'source-layer': 'source-layer',
+                    'type': 'fill'
                 },
                 {
-                    "id": "initial_2",
-                    "source": "foo",
-                    "source-layer": "source-layer",
-                    "type": "fill"
+                    'id': 'initial_2',
+                    'source': 'foo',
+                    'source-layer': 'source-layer',
+                    'type': 'fill'
                 }]});
 
         const next = createStyleJSON({
-            "version": 8,
-            "sources": {
-                "bar": {
-                    "type": "vector"
+            'version': 8,
+            'sources': {
+                'bar': {
+                    'type': 'vector'
                 }
             },
-            "layers": [
+            'layers': [
                 {
-                    "id": "next_0",
-                    "source": "bar",
-                    "source-layer": "source-layer",
-                    "type": "fill"
+                    'id': 'next_0',
+                    'source': 'bar',
+                    'source-layer': 'source-layer',
+                    'type': 'fill'
                 }]});
 
         let reloaded = false;
@@ -496,11 +496,11 @@ describe('Style#_buildStylePatch', () => {
             } else {
                 const result = style.serialize();
                 const layers = result.layers.reduce((p, c) => { p[c.id] = c; return p; }, {});
-                expect(result.sources.hasOwnProperty("foo")).toBeTruthy();
-                expect(result.sources.hasOwnProperty("bar"));
-                expect(layers.hasOwnProperty("initial_0"));
-                expect(layers.hasOwnProperty("initial_1"));
-                expect(layers.hasOwnProperty("next_0"));
+                expect('foo' in result.sources).toBeTruthy();
+                expect('bar' in result.sources).toBeTruthy();
+                expect('initial_0' in layers).toBeTruthy();
+                expect('initial_1' in layers).toBeTruthy();
+                expect('next_0' in layers).toBeTruthy();
                 done();
             }
         });
@@ -510,18 +510,18 @@ describe('Style#_buildStylePatch', () => {
         console.warn = jest.fn();
         const style = createStyle();
         const initial = createStyleJSON({
-            "version": 8,
-            "sources": {
-                "foo": {
-                    "type": "vector"
+            'version': 8,
+            'sources': {
+                'foo': {
+                    'type': 'vector'
                 }
             },
-            "layers": [
+            'layers': [
                 {
-                    "id": "initial_0",
-                    "source": "foo",
-                    "source-layer": "source-layer",
-                    "type": "fill"
+                    'id': 'initial_0',
+                    'source': 'foo',
+                    'source-layer': 'source-layer',
+                    'type': 'fill'
                 }]});
 
         let reloaded = false;
@@ -533,8 +533,8 @@ describe('Style#_buildStylePatch', () => {
                     stylePatch: (_prev, _next, preserve) => preserve('does not exist')
                 });
             } else {
-                expect(console.warn).toBeCalledTimes(1);
-                expect(console.warn).toBeCalledWith('Cannot preserve layer does not exist that is not in the previous style.');
+                expect(console.warn).toHaveBeenCalledTimes(1);
+                expect(console.warn).toHaveBeenCalledWith('Cannot preserve layer does not exist that is not in the previous style.');
                 done();
             }
         });
@@ -543,26 +543,26 @@ describe('Style#_buildStylePatch', () => {
     test('layer id collision selects preserved layer', done => {
         const style = createStyle();
         const initial = createStyleJSON({
-            "sources": {
-                "foo": {"type": "vector"}
+            'sources': {
+                'foo': {'type': 'vector'}
             },
-            "layers": [{
-                "id": "test",
-                "source": "foo",
-                "source-layer": "source-layer",
-                "type": "line"
+            'layers': [{
+                'id': 'test',
+                'source': 'foo',
+                'source-layer': 'source-layer',
+                'type': 'line'
             }]
         });
 
         const next = createStyleJSON({
-            "sources": {
-                "foo": {"type": "vector"}
+            'sources': {
+                'foo': {'type': 'vector'}
             },
-            "layers": [{
-                "id": "test",
-                "source": "foo",
-                "source-layer": "source-layer",
-                "type": "fill"
+            'layers': [{
+                'id': 'test',
+                'source': 'foo',
+                'source-layer': 'source-layer',
+                'type': 'fill'
             }]
         });
 
@@ -575,7 +575,7 @@ describe('Style#_buildStylePatch', () => {
                     stylePatch: (_prev, _next, preserve) => preserve('test')
                 });
             } else {
-                expect(style.getLayer('test').type).toEqual("line");
+                expect(style.getLayer('test').type).toBe('line');
                 done();
             }
         });
@@ -584,14 +584,14 @@ describe('Style#_buildStylePatch', () => {
     test('copy into empty next style', done => {
         const style = createStyle();
         const initial = createStyleJSON({
-            "sources": {
-                "foo": {"type": "vector"}
+            'sources': {
+                'foo': {'type': 'vector'}
             },
-            "layers": [{
-                "id": "layer0",
-                "source": "foo",
-                "source-layer": "source-layer",
-                "type": "line"
+            'layers': [{
+                'id': 'layer0',
+                'source': 'foo',
+                'source-layer': 'source-layer',
+                'type': 'line'
             }]
         });
         const next = createStyleJSON();

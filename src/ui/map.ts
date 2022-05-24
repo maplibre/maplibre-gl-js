@@ -1426,7 +1426,7 @@ class Map extends Camera {
     }
 
     _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
-        if(!options.stylePatch){
+        if (!options.stylePatch) {
             if (this.style) {
                 this.style.setEventedParent(null);
                 this.style._remove();
@@ -1442,13 +1442,13 @@ class Map extends Camera {
             this.style.setEventedParent(this, {style: this.style});
         } else {
             if (!style) {
-                style = emptyStyle() as StyleSpecification
+                style = emptyStyle() as StyleSpecification;
             }
         }
 
         if (!this.style) {
             this.style = new Style(this, options);
-            this.style.setEventedParent(this, { style: this.style });
+            this.style.setEventedParent(this, {style: this.style});
         }
 
         if (typeof style === 'string') {
