@@ -2,7 +2,7 @@
 
 ### ✨ Features and improvements
 
-- *...Add new stuff here...*
+- Add style swap's stylePatch support (#1238)
 
 ### 🐞 Bug fixes
 
