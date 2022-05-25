@@ -59,7 +59,7 @@ Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs
 
 We thank everyone who supported us financially in the past and special thanks to the people and organizations who support us with recurring dontations:  
 
-@jawg, @nekoyasan, @atierian, @photoprism, @kaplanlior, @francois2metz, @Schneider-Geo, @serghov, @ambientlight, @joschi77, @geoffhill, @jasongodev
+[MIERUNE Inc.](https://www.mierune.co.jp/?lang=en), [@jawg](https://github.com/jawg), [@nekoyasan](https://github.com/nekoyasan), [@atierian](https://github.com/atierian), [@photoprism](https://github.com/photoprism), [@kaplanlior](https://github.com/kaplanlior), [@francois2metz](https://github.com/francois2metz), [@Schneider-Geo](https://github.com/Schneider-Geo), [@serghov](https://github.com/serghov), [@ambientlight](https://github.com/ambientlight), [@joschi77](https://github.com/joschi77), [@geoffhill](https://github.com/geoffhill), [@jasongode](https://github.com/jasongode)
 
 ### Roadmap
 
