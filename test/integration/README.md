@@ -166,6 +166,16 @@ To add a new render test:
 
 5. Commit the new `style.json` and `expected.png` :rocket:
 
+## Updating results of query-tests
+You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled:
+```
+UPDATE=true npm run test-query
+```
+You have to regenerate the fixture afterwards
+```
+ npm run generate-query-test-fixtures
+```
+Check carefully if all changes are intended.
 
 ## Reading Vector Tile Fixtures
 

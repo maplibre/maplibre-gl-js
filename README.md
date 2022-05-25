@@ -55,6 +55,12 @@ Want an example? Have a look at the official [MapLibre GL JS Documentation](http
 
 Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs/get-started/get-started#using-with-a-mapbox-gl-fork) and Angular (https://github.com/maplibre/ngx-maplibre-gl). Find more at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
 
+### Sponsors
+
+We thank everyone who supported us financially in the past and special thanks to the people and organizations who support us with recurring dontations:  
+
+@jawg, @nekoyasan, @atierian, @photoprism, @kaplanlior, @francois2metz, @Schneider-Geo, @serghov, @ambientlight, @joschi77, @geoffhill, @jasongodev
+
 ### Roadmap
 
 This project's initial plans are outlined in the [Roadmap](https://github.com/maplibre/maplibre-gl-js/projects/2) project. The primary goal is consistency and continued bug fixes and maintenance as we advance. 
