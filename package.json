@@ -145,6 +145,9 @@
       "postcss-value-parser": "^4.2.0"
     }
   },
+  "optionalDependencies": {
+    "@swc/core-linux-x64-gnu": "^1.2.192"
+  },
   "scripts": {
     "generate-dist-package": "npm run tsnode build/generate-dist-package.js",
     "generate-shaders": "npm run tsnode build/generate-shaders.ts",
