@@ -208,7 +208,7 @@ describe('GeoJSONSource#update', () => {
                 expect(params.geojsonVtOptions).toEqual({
                     extent: 16384,
                     maxZoom: 10,
-                    tolerance: 8,
+                    tolerance: 4,
                     buffer: 512,
                     lineMetrics: false,
                     generateId: true

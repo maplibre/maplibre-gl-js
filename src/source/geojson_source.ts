@@ -129,7 +129,7 @@ class GeoJSONSource extends Evented implements Source {
             cluster: options.cluster || false,
             geojsonVtOptions: {
                 buffer: (options.buffer !== undefined ? options.buffer : 128) * scale,
-                tolerance: (options.tolerance !== undefined ? options.tolerance : 0.375) * scale,
+                tolerance: (options.tolerance !== undefined ? options.tolerance : 0.1875) * scale,
                 extent: EXTENT,
                 maxZoom: this.maxzoom,
                 lineMetrics: options.lineMetrics || false,
