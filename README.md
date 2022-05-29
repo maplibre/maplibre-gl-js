@@ -65,7 +65,7 @@ We thank everyone who supported us financially in the past and special thanks to
 
 This project's initial plans are outlined in the [Roadmap](https://github.com/maplibre/maplibre-gl-js/projects/2) project. The primary goal is consistency and continued bug fixes and maintenance as we advance. 
 
-> **MapLibre GL** is developed following [Semantic Versioning (2.0.0)](http://semver.org/spec/v2.0.0.html).
+> **MapLibre GL** is developed following [Semantic Versioning (2.0.0)](https://semver.org/spec/v2.0.0.html).
 
 ### Getting Involved
 
