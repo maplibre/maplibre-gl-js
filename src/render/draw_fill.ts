@@ -85,7 +85,7 @@ function perLayerOpacityDraw(painter: Painter, sourceCache: SourceCache, layer: 
         const uniformValues = fillfboUniformValues(painter, 0);
         painter.useProgram('fillfbo').draw(context, gl.TRIANGLES,
             DepthMode.disabled, StencilMode.disabled, colorMode, CullFaceMode.disabled,
-            uniformValues,
+            uniformValues, null,
             layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
             painter.viewportSegments, layer.paint, painter.transform.zoom);
     }
