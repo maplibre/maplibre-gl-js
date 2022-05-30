@@ -71,6 +71,8 @@ describe('drawFill', () => {
         const mockPainter = new Painter(null, null);
         mockPainter.renderPass = 'translucent';
 
+        mockPainter.style = {terrain: null};
+
         mockPainter.context = {
             gl: {},
             activeTexture: {
@@ -94,8 +96,8 @@ describe('drawFill', () => {
 
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
-        const fillProgramMock = new Program(null, null, null, null, null, null);
-        const fillOutlineProgramMock = new Program(null, null, null, null, null, null);
+        const fillProgramMock = new Program(null, null, null, null, null, null, null);
+        const fillOutlineProgramMock = new Program(null, null, null, null, null, null, null);
         mockPainter.useProgram = (programName) => {
             switch (programName) {
                 case 'fill': {
@@ -118,6 +120,7 @@ describe('drawFill', () => {
     test('should call bindFramebuffer in offscreen render pass', () => {
         const mockPainter = new Painter(null, null);
         mockPainter.renderPass = 'offscreen';
+        mockPainter.style = {terrain: null};
 
         const bindFramebuffer = {
             set: () => {}
@@ -161,8 +164,8 @@ describe('drawFill', () => {
             }
         } as any;
 
-        const fillProgramMock = new Program(null, null, null, null, null, null);
-        const fillfboProgramMock = new Program(null, null, null, null, null, null);
+        const fillProgramMock = new Program(null, null, null, null, null, null, null);
+        const fillfboProgramMock = new Program(null, null, null, null, null, null, null);
         mockPainter.useProgram = (programName) => {
             switch (programName) {
                 case 'fill': {
@@ -223,8 +226,8 @@ describe('drawFill', () => {
             }
         } as any;
 
-        const fillProgramMock = new Program(null, null, null, null, null, null);
-        const fillfboProgramMock = new Program(null, null, null, null, null, null);
+        const fillProgramMock = new Program(null, null, null, null, null, null, null);
+        const fillfboProgramMock = new Program(null, null, null, null, null, null, null);
         mockPainter.useProgram = (programName) => {
             switch (programName) {
                 case 'fill': {
