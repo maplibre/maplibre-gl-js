@@ -580,6 +580,15 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
         border: 0;
     }
 
+    .maplibregl-ctrl-attrib summary.maplibregl-ctrl-attrib-button {
+        appearance: none;
+        list-style: none;
+    }
+
+    .maplibregl-ctrl-attrib summary.maplibregl-ctrl-attrib-button::-webkit-details-marker {
+        display: none;
+    }
+
     .maplibregl-ctrl-top-left .maplibregl-ctrl-attrib-button,
     .maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib-button,
     .mapboxgl-ctrl-top-left .mapboxgl-ctrl-attrib-button,
