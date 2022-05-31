@@ -35,10 +35,20 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
         color.constantOr(Color.transparent).a === 1 &&
         opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
 
-    const perLayerOpacity = !layer.paint.get('fill-opacity-per-geometry') && pass === 'translucent';
+    const compOp = layer.paint.get('fill-comp-op');
 
-    if (perLayerOpacity) {
-        perLayerOpacityDraw(painter, sourceCache, layer, coords, colorMode);
+    if (pass === 'translucent' && compOp !== 'none') {
+        switch (compOp) {
+            case 'normal': {
+                normalCompOpDraw(painter, sourceCache, layer, coords, colorMode);
+                break;
+            }
+            /**
+             * TODO: add other blend modes.
+             */
+            default:
+                break;
+        }
     } else {
         // Draw fill
         if (painter.renderPass === pass) {
@@ -64,12 +74,12 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
     }
 }
 
-function perLayerOpacityDraw(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, colorMode: ColorMode) {
+function normalCompOpDraw(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, colorMode: ColorMode) {
     const gl = painter.context.gl;
     const context = painter.context;
     if (painter.renderPass === 'offscreen') {
         // Turn on additive blending for kernels, which is a key aspect of kernel density estimation formula
-        const additiveBlendMode = new ColorMode([gl.ONE, gl.ZERO], Color.transparent, [true, true, true, true]);
+        const additiveBlendMode = ColorMode.unblended;
         bindFramebuffer(context, painter, layer);
         context.clear({color: Color.transparent});
 

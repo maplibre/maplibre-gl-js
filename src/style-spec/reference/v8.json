@@ -3884,10 +3884,18 @@
       },
       "property-type": "data-constant"
     },
-    "fill-opacity-per-geometry": {
-      "type": "boolean",
-      "default": true,
-      "doc": "Whether or not the opacity style of fill should be per-geometry.",
+    "fill-comp-op": {
+      "type": "enum",
+      "values": {
+        "none": {
+          "doc": "Each geometry will be alpha-blended with destination separately. The performance is best since no frame buffer objact is used for off-screen rendering."
+        },
+        "normal": {
+          "doc": "The destination color is completely covered/replaced by the source color."
+        }
+      },
+      "default": "none",
+      "doc": "Blend each geometry with compositing operations. It describes the process by which the colors of each geometry are combined together. There are two categories of composite operations: color and alpha",
       "sdk-support": {
         "basic functionality": {
           "js": "2.2.0"

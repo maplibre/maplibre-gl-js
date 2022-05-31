@@ -59,7 +59,7 @@
           "paint": {
               "fill-color": ["get", "color"],
               "fill-opacity": ["get", "opacity"],
-              "fill-opacity-per-geometry": false
+              "fill-comp-op": "normal"
           }
       }
   ]
