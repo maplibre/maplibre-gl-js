@@ -57,7 +57,7 @@
           "paint": {
               "fill-color": ["get", "color"],
               "fill-opacity": 1,
-              "fill-comp-op": "normal"
+              "fill-composite-operation": "source-only"
           }
       }
   ]

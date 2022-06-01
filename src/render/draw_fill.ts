@@ -35,12 +35,12 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
         color.constantOr(Color.transparent).a === 1 &&
         opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
 
-    const compOp = layer.paint.get('fill-comp-op');
+    const compOp = layer.paint.get('fill-composite-operation');
 
-    if (pass === 'translucent' && compOp !== 'none') {
+    if (pass === 'translucent' && compOp !== 'source-over') {
         switch (compOp) {
-            case 'normal': {
-                normalCompOpDraw(painter, sourceCache, layer, coords, colorMode);
+            case 'source-only': {
+                sourceOnlyCompOpDraw(painter, sourceCache, layer, coords, colorMode);
                 break;
             }
             /**
@@ -74,7 +74,7 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
     }
 }
 
-function normalCompOpDraw(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, colorMode: ColorMode) {
+function sourceOnlyCompOpDraw(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, colorMode: ColorMode) {
     const gl = painter.context.gl;
     const context = painter.context;
     if (painter.renderPass === 'offscreen') {

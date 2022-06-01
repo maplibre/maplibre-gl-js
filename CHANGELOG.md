@@ -12,7 +12,7 @@
 
 ### ✨ Features and improvements
 
-- Add new paint property `fill-comp-op` to fill type. If the fill opacity is `none` by default, each geometry will be alph-blended to screen. Setting it as `normal`, all geometies are blended to frame buffer object before rendered to screen, and it can prevent the opacity on stacked polygons from being increased. (#1191)
+- Add new paint property `fill-composite-operation` to fill type. If the fill opacity is `source-over` by default, each geometry will be alph-blended to screen. Setting it as `source-only`, all geometies are blended to frame buffer object before rendered to screen, and it can prevent the opacity on stacked polygons from being increased. (#1191)
 
 ## 2.2.0-pre.2
 

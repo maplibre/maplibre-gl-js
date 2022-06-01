@@ -3884,18 +3884,18 @@
       },
       "property-type": "data-constant"
     },
-    "fill-comp-op": {
+    "fill-composite-operation": {
       "type": "enum",
       "values": {
-        "none": {
-          "doc": "Each geometry will be alpha-blended with destination separately. The performance is best since no frame buffer objact is used for off-screen rendering."
+        "source-over": {
+          "doc": "Alpha composite: each geometry will be alpha-blended with destination separately. The performance is best since no frame buffer object is used for off-screen rendering."
         },
-        "normal": {
-          "doc": "The destination color is completely covered/replaced by the source color."
+        "source-only": {
+          "doc": "Alpha composite: the destination color and alpha are completely covered/replaced by the source color."
         }
       },
-      "default": "none",
-      "doc": "Blend each geometry with compositing operations. It describes the process by which the colors of each geometry are combined together. There are two categories of composite operations: color and alpha",
+      "default": "source-over",
+      "doc": "Blend each geometry with composite operations. It describes the process by which the colors of each geometry are combined together. There are two categories of composite operations: color and alpha",
       "sdk-support": {
         "basic functionality": {
           "js": "2.2.0"

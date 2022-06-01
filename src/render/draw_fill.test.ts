@@ -151,7 +151,7 @@ describe('drawFill', () => {
                 paint: {
                     'fill-color': 'red',
                     'fill-opacity': 0.5,
-                    'fill-comp-op': 'normal'
+                    'fill-composite-operation': 'source-only'
                 }
             }
         );
@@ -185,7 +185,7 @@ describe('drawFill', () => {
         expect(spy.mock.calls[0]).toBeTruthy();
     });
 
-    test('should render texture of fbo to screen if fill-comp-op is normal and render pass is translucent ', () => {
+    test('should render texture of fbo to screen if fill-composite-operation is source-only and render pass is translucent ', () => {
         const mockPainter = new Painter(null, null);
         mockPainter.renderPass = 'translucent';
 
@@ -213,7 +213,7 @@ describe('drawFill', () => {
                 paint: {
                     'fill-color': 'red',
                     'fill-opacity': 0.5,
-                    'fill-comp-op': 'normal'
+                    'fill-composite-operation': 'source-only'
                 }
             }
         );

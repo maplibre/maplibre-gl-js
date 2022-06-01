@@ -77,7 +77,7 @@ class FillStyleLayer extends StyleLayer {
     }
 
     hasOffscreenPass() {
-        return this.paint.get('fill-comp-op') !== 'none' && this.visibility !== 'none';
+        return this.paint.get('fill-composite-operation') !== 'source-over' && this.visibility !== 'none';
     }
 }
 

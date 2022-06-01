@@ -1,7 +1,7 @@
 ## 16.0.1
 
 ### ✨ Features and improvements
-* Add `fill-comp-op` fill paint property [#1191](https://github.com/maplibre/maplibre-gl-js/pull/1191)
+* Add `fill-composite-operation` fill paint property [#1191](https://github.com/maplibre/maplibre-gl-js/pull/1191)
 
 ## 16.0.0
 
