@@ -1485,7 +1485,9 @@ export class Style extends Evented {
 
     _debouncedUpdateSource = debounce(
         (id: string, transform: Transform) => {
-            this.sourceCaches[id].update(transform, this.map.terrain);
+            if (this.sourceCaches[id]) {
+                this.sourceCaches[id].update(transform, this.map.terrain);
+            }
         },
         60, {leading: true}
     );
