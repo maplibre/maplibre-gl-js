@@ -500,6 +500,8 @@ class Style extends Evented {
         // remove terrain
         if (!options) {
             this.terrain = null;
+            console.log('this.map is', this.map);
+            console.log('this.map.transform is', this.map.transform);
             this.map.transform?.updateElevation(this.terrain);
 
         // add terrain
