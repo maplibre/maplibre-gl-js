@@ -2,8 +2,8 @@ import {BenchmarkRow, BenchmarkRowProps} from './BenchmarkRow';
 import React from 'react';
 
 type BenchmarksTableProps = {
-  finished: boolean;
-  benchmarks: BenchmarkRowProps[];
+    finished: boolean;
+    benchmarks: BenchmarkRowProps[];
 }
 
 export const BenchmarksTable = (props: BenchmarksTableProps) => (

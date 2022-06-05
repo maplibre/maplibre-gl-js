@@ -4,11 +4,11 @@ import {Axis} from './Axis';
 import {formatSample, Version, versionColor} from './util';
 
 type RegressionPlotProps = {
-  versions: Version[];
+    versions: Version[];
 }
 
 type RegressionPlotState = {
-  width: number;
+    width: number;
 }
 
 export const RegressionPlot = (props: RegressionPlotProps) => {

@@ -154,7 +154,7 @@
     "start": "run-p watch-css start-server",
     "start-debug": "run-p watch-css watch-dev start-server",
     "start-bench": "run-p watch-css watch-benchmarks start-server-at-test",
-    "lint": "eslint --cache --ext \".ts,.js,.html\" --ignore-path .gitignore src test build debug/*.html jest.config.js",
+    "lint": "eslint --cache --ext \".ts,.tsx,.js,.html\" --ignore-path .gitignore src test build debug/*.html jest.config.js",
     "lint-docs": "documentation lint src/index.ts",
     "lint-css": "stylelint \"src/css/maplibre-gl.css\"",
     "test": "run-s lint lint-css lint-docs test-unit",
