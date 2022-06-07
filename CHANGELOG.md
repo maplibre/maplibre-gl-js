@@ -7,7 +7,7 @@
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
-- Hide arrow displayed in default `summary` styles on the attribution control
+- Hide arrow displayed in default `summary` styles on the attribution control ([#1258](https://github.com/maplibre/maplibre-gl-js/pull/1258))
 
 ## 2.2.0-pre.2
 
