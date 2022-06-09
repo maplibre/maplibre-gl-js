@@ -2,7 +2,6 @@ import RenderToTexture from './render_to_texture';
 import type Painter from './painter';
 import type LineStyleLayer from '../style/style_layer/line_style_layer';
 import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
-import { createFalse } from 'typescript';
 
 describe('render to texture', () => {
     test('should render text after a line by not adding the text to the stack', () => {
