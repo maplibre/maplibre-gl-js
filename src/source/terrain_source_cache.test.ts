@@ -9,7 +9,7 @@ import Painter from '../render/painter';
 import Context from '../gl/context';
 import gl from 'gl';
 import RasterDEMTileSource from './raster_dem_tile_source';
-import { OverscaledTileID } from './tile_id';
+import {OverscaledTileID} from './tile_id';
 import Tile from './tile';
 import DEMData from '../data/dem_data';
 
@@ -99,6 +99,6 @@ describe('TerrainSourceCache', () => {
         expect(tsc.getSourceTile(tileID.children(12)[0])).toBeTruthy();
         expect(tsc.getSourceTile(tileID.children(12)[0].children(12)[0])).toBeFalsy();
         expect(tsc.getSourceTile(tileID.children(12)[0].children(12)[0], true)).toBeTruthy();
-  });
+    });
 
 });
