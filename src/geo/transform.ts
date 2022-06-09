@@ -441,8 +441,8 @@ class Transform {
                     const tile = options.terrain.getTerrainData(tileID).tile;
                     let minElevation = this.elevation, maxElevation = this.elevation;
                     if (tile && tile.dem) {
-                        minElevation = tile.dem.min * options.terrain.exaggeration;
-                        maxElevation = tile.dem.max * options.terrain.exaggeration;
+                        minElevation = (tile.dem.min + options.terrain.elevationOffset) * options.terrain.exaggeration;
+                        maxElevation = (tile.dem.max + options.terrain.elevationOffset) * options.terrain.exaggeration;
                     }
                     quadrant = new Aabb(
                         [quadrant.min[0], quadrant.min[1], minElevation] as vec3,
