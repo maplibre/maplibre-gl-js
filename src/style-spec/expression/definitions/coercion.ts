@@ -83,7 +83,7 @@ class Coercion implements Expression {
                     }
                 }
             }
-            throw new RuntimeError(error || `Could not parse color from value '${typeof input === 'string' ? input : String(JSON.stringify(input))}'`);
+            throw new RuntimeError(error || `Could not parse color from value '${typeof input === 'string' ? input : JSON.stringify(input)}'`);
         } else if (this.type.kind === 'padding') {
             let input;
             for (const arg of this.args) {
@@ -94,7 +94,7 @@ class Coercion implements Expression {
                     return pad;
                 }
             }
-            throw new RuntimeError(`Could not parse padding from value '${typeof input === 'string' ? input : String(JSON.stringify(input))}'`);
+            throw new RuntimeError(`Could not parse padding from value '${typeof input === 'string' ? input : JSON.stringify(input)}'`);
         } else if (this.type.kind === 'number') {
             let value = null;
             for (const arg of this.args) {

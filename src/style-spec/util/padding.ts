@@ -20,8 +20,10 @@ class Padding {
             return input;
         }
 
+        // Backwards compatibility: bare number is treated the same as array with single value.
+        // Padding applies to all four sides.
         if (typeof input === 'number') {
-            input = [input];
+            return new Padding([input, input, input, input]);
         }
 
         if (!Array.isArray(input)) {
