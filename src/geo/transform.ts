@@ -766,8 +766,20 @@ class Transform {
 
         if (this.lngRange) {
             const lngRange = this.lngRange;
-            minX = mercatorXfromLng(lngRange[0]) * this.worldSize;
-            maxX = mercatorXfromLng(lngRange[1]) * this.worldSize;
+
+            minX = wrap(
+                mercatorXfromLng(lngRange[0]) * this.worldSize,
+                0,
+                this.worldSize
+            );
+            maxX = wrap(
+                mercatorXfromLng(lngRange[1]) * this.worldSize,
+                0,
+                this.worldSize
+            );
+
+            if (maxX < minX) maxX += this.worldSize;
+
             sx = maxX - minX < size.x ? size.x / (maxX - minX) : 0;
         }
 
@@ -795,7 +807,8 @@ class Transform {
         }
 
         if (this.lngRange) {
-            const x = point.x,
+            const centerX = (minX + maxX) / 2;
+            const x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2),
                 w2 = size.x / 2;
 
             if (x - w2 < minX) x2 = minX + w2;
@@ -806,7 +819,7 @@ class Transform {
         if (x2 !== undefined || y2 !== undefined) {
             this.center = this.unproject(new Point(
                 x2 !== undefined ? x2 : point.x,
-                y2 !== undefined ? y2 : point.y));
+                y2 !== undefined ? y2 : point.y)).wrap();
         }
 
         this._unmodified = unmodified;
