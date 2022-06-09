@@ -114,6 +114,7 @@ export default class Terrain {
     // a lot of terrain-dem tiles with very low visual advantage. So with this setting
     // remember all tiles which contains new data for a spezific source and tile-key.
     _rerender: {[_: string]: {[_: number]: boolean}};
+    _rerenderAll: boolean;
 
     constructor(style: Style, sourceCache: SourceCache, options: TerrainSpecification) {
         this.style = style;
@@ -154,6 +155,10 @@ export default class Terrain {
         return elevation;
     }
 
+    rememberAllForRerender() {
+        this._rerenderAll = true;
+    }
+
     rememberForRerender(source: string, tileID: OverscaledTileID) {
         for (const key in this.sourceCache._tiles) {
             const tile = this.sourceCache._tiles[key];
@@ -165,11 +170,16 @@ export default class Terrain {
         }
     }
 
+    needsRerenderAll() {
+        return this._rerenderAll;
+    }
+
     needsRerender(source: string, tileID: OverscaledTileID) {
-        return this._rerender[source] && this._rerender[source][tileID.key];
+        return this.needsRerenderAll() || this._rerender[source] && this._rerender[source][tileID.key];
     }
 
     clearRerenderCache() {
+        this._rerenderAll = false;
         this._rerender = {};
     }
 

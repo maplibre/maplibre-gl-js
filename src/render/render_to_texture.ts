@@ -69,16 +69,20 @@ export default class RenderToTexture {
         }
 
         // remove cached textures
-        this._renderableTiles.forEach(tile => {
-            for (const source in this._coordsDescendingInvStr) {
-                // rerender if there are more coords to render than in the last rendering
-                const coords = this._coordsDescendingInvStr[source][tile.tileID.key];
-                if (coords && coords !== tile.textureCoords[source]) tile.clearTextures(this.painter);
-                // rerender if tile is marked for rerender
-                if (terrain.needsRerender(source, tile.tileID)) tile.clearTextures(this.painter);
-            }
-            this._rerender[tile.tileID.key] = !tile.textures.length;
-        });
+        if (terrain.needsRerenderAll()) {
+            terrain.sourceCache.getAllTiles().forEach(tile => tile.clearTextures(this.painter));
+        } else {
+            this._renderableTiles.forEach(tile => {
+                for (const source in this._coordsDescendingInvStr) {
+                    // rerender if there are more coords to render than in the last rendering
+                    const coords = this._coordsDescendingInvStr[source][tile.tileID.key];
+                    if (coords && coords !== tile.textureCoords[source]) tile.clearTextures(this.painter);
+                    // rerender if tile is marked for rerender
+                    if (terrain.needsRerender(source, tile.tileID)) tile.clearTextures(this.painter);
+                }
+                this._rerender[tile.tileID.key] = !tile.textures.length;
+            });
+        }
         terrain.clearRerenderCache();
         terrain.sourceCache.removeOutdated(this.painter);
 

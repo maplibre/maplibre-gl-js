@@ -517,12 +517,15 @@ class Style extends Evented {
                 }
             };
             this._terrainDataCallback = e => {
-                if (!e.tile) return;
-                if (e.sourceId === options.source) {
-                    this.map.transform.updateElevation(this.terrain);
-                    this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
-                } else if (e.source.type === 'geojson') {
-                    this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
+                if (e.dataType === 'style') {
+                    this.terrain.rememberAllForRerender();
+                } else if (e.dataType === 'source' && e.tile) {
+                    if (e.sourceId === options.source) {
+                        this.map.transform.updateElevation(this.terrain);
+                        this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
+                    } else if (e.source.type === 'geojson') {
+                        this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
+                    }
                 }
             };
             this.on('data', this._terrainDataCallback);

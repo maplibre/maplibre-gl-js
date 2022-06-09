@@ -112,6 +112,14 @@ export default class TerrainSourceCache extends Evented {
     }
 
     /**
+     * get a list of all loaded tiles
+     * @returns {Array<Tile>} the tiles
+     */
+    getAllTiles(): Array<Tile> {
+        return Object.values(this._tiles);
+    }
+
+    /**
      * get a list of tiles, which are loaded and should be rendered in the current scene
      * @returns {Array<Tile>} the renderable tiles
      */
