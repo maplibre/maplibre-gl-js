@@ -6,11 +6,13 @@ import StencilMode from '../gl/stencil_mode';
 import type Painter from './painter';
 import type SourceCache from '../source/source_cache';
 import type CustomStyleLayer from '../style/style_layer/custom_style_layer';
+import type {OverscaledTileID} from '../source/tile_id';
 
-function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer) {
-
+function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer, tileIDs: Array<OverscaledTileID>) {    
     const context = painter.context;
     const implementation = layer.implementation;
+    
+    const tiles = tileIDs.map(tileID => sourceCache.getTile(tileID))
 
     if (painter.renderPass === 'offscreen') {
 
@@ -19,7 +21,7 @@ function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomSty
             painter.setCustomLayerDefaults();
             context.setColorMode(painter.colorModeForRenderPass());
 
-            prerender.call(implementation, context.gl, painter.transform.customLayerMatrix());
+            prerender.call(implementation, context.gl, painter.transform.customLayerMatrix(), tiles);
 
             context.setDirty();
             painter.setBaseState();
@@ -38,7 +40,7 @@ function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomSty
 
         context.setDepthMode(depthMode);
 
-        implementation.render(context.gl, painter.transform.customLayerMatrix());
+        implementation.render(context.gl, painter.transform.customLayerMatrix(), tiles);
 
         context.setDirty();
         painter.setBaseState();
