@@ -78,7 +78,10 @@ abstract class StyleLayer extends Evented {
         this.type = layer.type;
         this._featureFilter = {filter: () => true, needGeometry: false};
 
-        if (layer.type === 'custom') return;
+        if (layer.type === 'custom') {
+            this.source = layer.source
+            return;
+        }
 
         layer = (layer as any as LayerSpecification);
 
