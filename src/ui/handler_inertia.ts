@@ -92,7 +92,7 @@ export default class HandlerInertia {
             if (settings.panDelta) {
                 deltas.pan._add(settings.panDelta);
                 const panDistance = ((settings.panDelta as Point).x ** 2 + (settings.panDelta as Point).y ** 2) ** 0.5;
-                if  (panDistance < 3) deltas.pan = new Point(0, 0) // the number is a threshold to kill inertia, in xy-distance
+                if  (panDistance < 3) deltas.pan = new Point(0, 0); // the number is a threshold to kill inertia, in xy-distance
             }
         }
 
