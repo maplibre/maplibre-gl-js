@@ -5,7 +5,7 @@ import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '../../style-spec/types.g';
 import Tile from '../../source/tile';
 
-type CustomRenderMethod = (gl: WebGLRenderingContext, matrix: mat4, tiles?: Tile[]) => void;
+type CustomRenderMethod = (gl: WebGLRenderingContext, matrix: mat4, tiles: Tile[]) => void;
 
 /**
  * Interface for custom style layers. This is a specification for

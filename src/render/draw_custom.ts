@@ -7,12 +7,17 @@ import type Painter from './painter';
 import type SourceCache from '../source/source_cache';
 import type CustomStyleLayer from '../style/style_layer/custom_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
+import Tile from '../source/tile';
 
-function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer, tileIDs: Array<OverscaledTileID>) {    
+function drawCustom(painter: Painter, sourceCache: SourceCache | undefined, layer: CustomStyleLayer, tileIDs: Array<OverscaledTileID> | undefined) {    
     const context = painter.context;
     const implementation = layer.implementation;
-    
-    const tiles = tileIDs.map(tileID => sourceCache.getTile(tileID))
+
+    let tiles: Tile[] = [];
+    // passing tile-data to custom-layer if layer has source
+    if (sourceCache !== undefined && tileIDs !== undefined) {
+        tiles = tileIDs.map(tileID => sourceCache.getTile(tileID))
+    }
 
     if (painter.renderPass === 'offscreen') {
 
