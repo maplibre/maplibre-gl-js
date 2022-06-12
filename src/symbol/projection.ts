@@ -282,6 +282,10 @@ function placeGlyphsAlongLine(symbol, fontSize, flip, keepUpright, posMatrix, la
         if (!firstAndLastGlyph) {
             return {notEnoughRoom: true};
         }
+        // it's not possible to determine if the oriantation has to change on a vertical line.
+        // without the following line, it depends on FP arithmetic. Push the value a litte
+        // bit to make sure, we don't flip vertical text
+        firstAndLastGlyph.first.point.x = firstAndLastGlyph.first.point.x - 0.01;
         const firstPoint = project(firstAndLastGlyph.first.point, glCoordMatrix, getElevation).point;
         const lastPoint = project(firstAndLastGlyph.last.point, glCoordMatrix, getElevation).point;
 
