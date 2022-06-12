@@ -808,8 +808,8 @@ class Transform {
 
         if (this.lngRange) {
             const centerX = (minX + maxX) / 2;
-            const x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2),
-                w2 = size.x / 2;
+            const x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+            const w2 = size.x / 2;
 
             if (x - w2 < minX) x2 = minX + w2;
             if (x + w2 > maxX) x2 = maxX - w2;
