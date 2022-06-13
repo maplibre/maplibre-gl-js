@@ -131,6 +131,137 @@ class Tent3D {
     }
 }
 
+class TileSource {
+    id: string;
+    type: string;
+    renderingMode: string;
+    source?: string;
+    minzoom?: number;
+    maxzoom?:number;
+    
+    constructor() {
+        this.id = 'custom-rastertile';
+        this.type = 'custom';
+        this.renderingMode = '3d';
+        this.source = 'gsi';
+        this.minzoom = 2;
+        this.maxzoom = 5;
+    }
+
+    onAdd(map, gl) {
+        this.map = map;
+
+        this.camera = new THREE.Camera();
+        this.scene = new THREE.Scene();
+        // use the MapLibre GL JS map canvas for three.js
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: map.getCanvas(),
+            context: gl,
+            antialias: true,
+        });
+
+        this.renderer.autoClear = false;
+
+        const geometry = new THREE.BufferGeometry();
+        const vertices = new Float32Array([
+            -1000000.0, -1000000.0, 1000000.0, 1000000.0,
+            -1000000.0, 1000000.0, 1000000.0, 1000000.0, 1000000.0,
+        ]);
+        const uvs = new Float32Array([
+            0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+        ]);
+        geometry.addAttribute(
+            'position',
+            new THREE.BufferAttribute(vertices, 3),
+        );
+        geometry.addAttribute(
+            'uv',
+            new THREE.BufferAttribute(uvs, 2),
+        );
+        const material = new THREE.MeshBasicMaterial();
+        this.triangle = new THREE.Mesh(geometry, this.material);
+        this.scene.add(this.triangle);
+
+        const boxGeom = new THREE.BoxGeometry(
+            1000000,
+            1000000,
+            1000000,
+        );
+        const boxMaterial = new THREE.MeshBasicMaterial();
+        this.box = new THREE.Mesh(boxGeom, boxMaterial);
+        this.scene.add(this.box);
+    }
+
+    render(gl, matrix, tiles) {
+        // WebGLTexture -> THREE.texture
+        const threetexture = new THREE.Texture();
+        const texProps = this.renderer.properties.get(threetexture);
+        texProps.__webglTexture = tiles[0].texture.texture;
+        const material = new THREE.MeshBasicMaterial({
+            map: threetexture,
+            side: THREE.DoubleSide,
+        });
+        this.triangle.material = material;
+
+        // WebGLTexture -> THREE.texture
+        const boxTexs = [
+            new THREE.Texture(),
+            new THREE.Texture(),
+            new THREE.Texture(),
+            new THREE.Texture(),
+            new THREE.Texture(),
+            new THREE.Texture(),
+        ];
+        boxTexs.forEach((tex, idx) => {
+            const boxTexProps = this.renderer.properties.get(tex);
+            boxTexProps.__webglTexture = tiles[idx].texture.texture;
+        });
+        const boxMaterial = boxTexs.map((tex) => {
+            return new THREE.MeshBasicMaterial({
+                map: tex,
+                side: THREE.DoubleSide,
+            });
+        });
+        this.box.material = boxMaterial;
+
+        const rotationX = new THREE.Matrix4().makeRotationAxis(
+            new THREE.Vector3(1, 0, 0),
+            modelTransform.rotateX,
+        );
+        const rotationY = new THREE.Matrix4().makeRotationAxis(
+            new THREE.Vector3(0, 1, 0),
+            modelTransform.rotateY,
+        );
+        const rotationZ = new THREE.Matrix4().makeRotationAxis(
+            new THREE.Vector3(0, 0, 1),
+            modelTransform.rotateZ,
+        );
+
+        const m = new THREE.Matrix4().fromArray(matrix);
+        const l = new THREE.Matrix4()
+            .makeTranslation(
+                modelTransform.translateX,
+                modelTransform.translateY,
+                modelTransform.translateZ,
+            )
+            .scale(
+                new THREE.Vector3(
+                    modelTransform.scale,
+                    -modelTransform.scale,
+                    modelTransform.scale,
+                ),
+            )
+            .multiply(rotationX)
+            .multiply(rotationY)
+            .multiply(rotationZ);
+
+        this.camera.projectionMatrix = m.multiply(l);
+        this.renderer.state.reset();
+        this.renderer.render(this.scene, this.camera);
+        this.map.triggerRepaint();
+    }
+}
+
 const customLayersImplementations = {
     'tent-3d': Tent3D,
     'null-island': NullIsland
