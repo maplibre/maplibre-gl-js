@@ -63,13 +63,7 @@
                                 '<a href="https://maps.gsi.go.jp/development/ichiran.html">Geospatial Information Authority of Japan</a>',
                         },
                     },
-                    layers: [
-                        {
-                            id: 'gsi',
-                            type: 'raster',
-                            source: 'gsi',
-                        },
-                    ],
+                    layers: [],
                 },
                 hash: true,
             }));
@@ -80,6 +74,8 @@
                     this.type = 'custom';
                     this.renderingMode = '3d';
                     this.source = 'gsi';
+                    this.minzoom = 2;
+                    this.maxzoom = 5;
                 }
 
                 onAdd(map, gl) {
