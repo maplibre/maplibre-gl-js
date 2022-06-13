@@ -137,7 +137,7 @@ export interface CustomLayerInterface {
      * @name prerender
      * @param {WebGLRenderingContext} gl The map's gl context.
      * @param {mat4} matrix The map's camera matrix. It projects spherical mercator
-     * @param {Tile} [tile] Tile-data passed by source
+     * @param {Tile[]} [tiles] Tile-data passed by source
      * coordinates to gl coordinates. The mercator coordinate `[0, 0]` represents the
      * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
      * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
