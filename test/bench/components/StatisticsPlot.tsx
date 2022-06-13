@@ -5,11 +5,11 @@ import {Axis} from './Axis';
 import {formatSample, Version, versionColor} from './util';
 
 type StatisticsPlotProps = {
-  versions: Version[];
+    versions: Version[];
 }
 
 type StatisticsPlotState = {
-  width: number;
+    width: number;
 }
 
 export const StatisticsPlot = (props:StatisticsPlotProps) => {
