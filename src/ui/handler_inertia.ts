@@ -89,14 +89,12 @@ export default class HandlerInertia {
             deltas.pitch += settings.pitchDelta || 0;
             if (settings.around) deltas.around = settings.around;
             if (settings.pinchAround) deltas.pinchAround = settings.pinchAround;
-            if (settings.panDelta) {
-                deltas.pan._add(settings.panDelta);
-                const panDistance = ((settings.panDelta as Point).x ** 2 + (settings.panDelta as Point).y ** 2) ** 0.5;
-                if  (panDistance < 3) deltas.pan = new Point(0, 0); // the number is a threshold to kill inertia, in xy-distance
-            }
         }
+        
 
         const lastEntry = this._inertiaBuffer[this._inertiaBuffer.length - 1];
+        if (lastEntry.settings.panDelta) deltas.pan._add(lastEntry.settings.panDelta.mult(10)); // the number of mult is magnifier for panDelta
+
         const duration = (lastEntry.time - this._inertiaBuffer[0].time);
 
         const easeOptions = {} as any;
