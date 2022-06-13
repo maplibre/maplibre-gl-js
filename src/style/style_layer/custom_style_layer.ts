@@ -86,9 +86,17 @@ export interface CustomLayerInterface {
      */
     renderingMode?: '2d' | '3d';
     /**
-     * @property {string} [source] A name of source
+     * @property {string} [source] name of source
      */
     source?: string;
+    /**
+     * @property {number} [minzoom]
+     */
+    minzoom?: number;
+    /**
+     * @property {number} [maxzoom]
+     */
+    maxzoom?: number;
     /**
      * Called during a render frame allowing the layer to draw into the GL context.
      *
