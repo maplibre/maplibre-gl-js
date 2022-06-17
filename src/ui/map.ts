@@ -2400,18 +2400,20 @@ class Map extends Camera {
         this._metaPress = false;
         this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
         let modifierKeyPrefix = 'Ctrl'; // control key
+        let modifierKeyName = 'Control';
         if (navigator.platform.indexOf('Mac') === 0) {
-            modifierKeyPrefix = '⌘'; // command key
+            modifierKeyPrefix = '⌘'; // ⌘ key
+            modifierKeyName = 'Meta';
         }
         this._cooperativeGesturesScreen.innerHTML = `
             <div class="maplibregl-desktop-message">Use ${modifierKeyPrefix} + scroll to zoom the map</div>
             <div class="maplibregl-mobile-message">Use two fingers to move the map</div>
         `;
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Meta') this._metaPress = true;
+            if (event.key === modifierKeyName) this._metaPress = true;
         });
         document.addEventListener('keyup', (event) => {
-            if (event.key === 'Meta') this._metaPress = false;
+            if (event.key === modifierKeyName) this._metaPress = false;
         });
         // Add event to canvas container since gesture container is pointer-events: none
         this._canvasContainer.addEventListener('wheel', (e) => {

@@ -148,7 +148,13 @@ class ScrollZoomHandler {
 
     wheel(e: WheelEvent) {
         if (!this.isEnabled()) return;
-        if (this._map._cooperativeGestures && !this._map._metaPress) return;
+        if (this._map._cooperativeGestures) {
+            if (this._map._metaPress) {
+                e.preventDefault();
+            } else {
+                return;
+            }
+        }
         let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
         const now = browser.now(),
             timeDelta = now - (this._lastWheelEventTime || 0);
