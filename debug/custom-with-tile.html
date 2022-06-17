@@ -109,7 +109,7 @@
                         'uTexture',
                     );
 
-                    const { x, y } = maplibregl.MercatorCoordinate.fromLngLat({
+                    const {x, y} = maplibregl.MercatorCoordinate.fromLngLat({
                         lng: 13.418056,
                         lat: 52.499167,
                     });
@@ -160,7 +160,7 @@
                     gl.useProgram(this.program);
 
                     // bind texture
-                    const { texture } = tiles[0];
+                    const {texture} = tiles[0];
                     gl.bindTexture(gl.TEXTURE_2D, texture.texture);
                     gl.uniform1i(this.uTexture, 0);
 
