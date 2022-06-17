@@ -1,0 +1,19 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "height": 256,
+            "operations": [["addCustomLayerWithWait", "tile-source"]]
+        }
+    },
+    "sources": {
+        "satellite": {
+            "type": "raster",
+            "tiles": ["local://tiles/{z}-{x}-{y}.satellite.png"],
+            "tileSize": 256
+        }
+    },
+    "layers": [],
+    "zoom": 16,
+    "center": [13.418056, 52.499167]
+}
