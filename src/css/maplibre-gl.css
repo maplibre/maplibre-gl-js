@@ -946,7 +946,7 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     display: none;
 }
 
-@media (hover: none) {
+@media (hover: none), (max-width: 480px) {
     .maplibregl-cooperative-gesture-screen .maplibregl-desktop-message {
         display: none;
     }
