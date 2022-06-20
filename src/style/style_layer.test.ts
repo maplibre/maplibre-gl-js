@@ -14,9 +14,7 @@ describe('StyleLayer', () => {
 
         expect(layer instanceof FillStyleLayer).toBeTruthy();
     });
-});
 
-describe('StyleLayer-CustomLayer', () => {
     test('custom-layer', () => {
         const layer = createStyleLayer({
             'id': 'custom',
