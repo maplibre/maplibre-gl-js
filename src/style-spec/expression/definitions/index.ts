@@ -151,7 +151,6 @@ CompoundExpression.register(expressions, {
         [NumberType, NumberType, NumberType, NumberType],
         rgba
     ],
-    // REVIEW: Need an entry for 'padding' here, to consume values produced by Literal.serialize?
     'has': {
         type: BooleanType,
         overloads: [

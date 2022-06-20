@@ -59,8 +59,6 @@ class Literal implements Expression {
             // couldn't actually generate with a "literal" expression,
             // so we have to implement an equivalent serialization here
             return ['rgba' as unknown].concat(this.value.toArray());
-        } else if (this.value instanceof Padding) {
-            return ['padding' as unknown].concat(this.value.toArray());
         } else if (this.value instanceof Formatted) {
             // Same as Color
             return this.value.serialize();
