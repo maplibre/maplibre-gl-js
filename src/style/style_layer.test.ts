@@ -43,7 +43,7 @@ describe('StyleLayer-CustomLayer', () => {
         expect(layer.minzoom).toBe(2);
         expect(layer.maxzoom).toBe(16);
     });
-})
+});
 
 describe('StyleLayer#setPaintProperty', () => {
     test('sets new property value', () => {
