@@ -1,4 +1,4 @@
-import maplibregl from '../../../src/index';
+import MercatorCoordinate from '../../../src/geo/mercator_coordinate';
 
 class NullIsland {
     id: string;
@@ -208,7 +208,7 @@ class TileSource {
             'uTexture',
         );
 
-        const {x, y} = maplibregl.MercatorCoordinate.fromLngLat({
+        const {x, y} = MercatorCoordinate.fromLngLat({
             lng: 13.418056,
             lat: 52.499167,
         });
