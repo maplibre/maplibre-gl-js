@@ -133,7 +133,7 @@ class Tent3D {
     }
 }
 
-class TileSource {
+class TriangleImageWithTiles {
     id: string;
     type: string;
     renderingMode: string;
@@ -271,7 +271,7 @@ class TileSource {
 const customLayersImplementations = {
     'tent-3d': Tent3D,
     'null-island': NullIsland,
-    'tile-source': TileSource
+    'triangle-image-with-tiles': TriangleImageWithTiles
 };
 
 export default customLayersImplementations;
