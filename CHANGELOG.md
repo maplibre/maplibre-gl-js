@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - *...Add new stuff here...*
+- Pass Tile-data to layer with `type:custom` which `source` is set. Developer can get tile-data in extra argument of `render()` or `prerender()`. Example is `./debug/custom-with-tile.html` (#1309)
 
 ### 🐞 Bug fixes
 
