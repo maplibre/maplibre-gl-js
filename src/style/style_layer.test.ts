@@ -16,6 +16,35 @@ describe('StyleLayer', () => {
     });
 });
 
+describe('StyleLayer CustomLayer', () => {
+    test('custom-layer with no tile-source', () => {
+        const layer = createStyleLayer({
+            'id': 'custom',
+            'type': 'custom',
+            'render': () => {}
+        });
+
+        expect(layer.source).toBeUndefined();
+        expect(layer.minzoom).toBeUndefined();
+        expect(layer.maxzoom).toBeUndefined();
+    });
+
+    test('custom-layer with tile-source', () => {
+        const layer = createStyleLayer({
+            'id': 'custom',
+            'type': 'custom',
+            'source': 'custom',
+            'minzoom': 2,
+            'maxzoom': 16,
+            'render': () => {}
+        });
+
+        expect(layer.source).toBe('custom');
+        expect(layer.minzoom).toBe(2);
+        expect(layer.maxzoom).toBe(16);
+    });
+})
+
 describe('StyleLayer#setPaintProperty', () => {
     test('sets new property value', () => {
         const layer = createStyleLayer({
@@ -184,7 +213,6 @@ describe('StyleLayer#setPaintProperty', () => {
 
         expect(layer.getPaintProperty('background-color-transition')).toBeUndefined();
     });
-
 });
 
 describe('StyleLayer#setLayoutProperty', () => {
