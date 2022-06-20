@@ -362,10 +362,6 @@ function applyOperations(testData: TestData, map: Map & { _render: () => void}, 
     } else if (operation[0] === 'addCustomLayer') {
         map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
         map._render();
-        applyOperations(testData, map, operations.slice(1), callback);
-    } else if (operation[0] === 'addCustomLayerWithWait') {
-        map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
-        map._render();
         const wait = function() {
             if (map.loaded()) {
                 applyOperations(testData, map, operations.slice(1), callback);
