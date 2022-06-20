@@ -1,5 +1,5 @@
-import { mat4 } from 'gl-matrix';
-import { OverscaledTileID } from '../source/tile_id';
+import {mat4} from 'gl-matrix';
+import {OverscaledTileID} from '../source/tile_id';
 import SourceCache from '../source/source_cache';
 import Tile from '../source/tile';
 import Painter from './painter';
@@ -9,11 +9,8 @@ import CustomStyleLayer from '../style/style_layer/custom_style_layer';
 import Context from '../gl/context';
 
 jest.mock('./painter');
-jest.mock('./program');
 jest.mock('../source/source_cache');
 jest.mock('../source/tile');
-jest.mock('../data/bucket/symbol_bucket');
-jest.mock('../symbol/projection');
 
 describe('passing tile-data to render/prerender', () => {
     test('no sourceCache, no tile', () => {
@@ -42,7 +39,7 @@ describe('passing tile-data to render/prerender', () => {
 
         drawCustom(mockPainter, null, mockLayer, []);
         expect(Array.isArray(passedTiles)).toBeTruthy();
-        expect(passedTiles.length).toBe(0);
+        expect(passedTiles).toHaveLength(0);
     });
 
     test('passing tile to render', () => {
@@ -80,7 +77,7 @@ describe('passing tile-data to render/prerender', () => {
 
         drawCustom(mockPainter, sourceCacheMock, mockLayer, [tileId]);
         expect(Array.isArray(passedTiles)).toBeTruthy();
-        expect(passedTiles.length).toBe(1);
+        expect(passedTiles).toHaveLength(1);
     });
 
     test('passing tile to prerender', () => {
@@ -118,6 +115,6 @@ describe('passing tile-data to render/prerender', () => {
 
         drawCustom(mockPainter, sourceCacheMock, mockLayer, [tileId]);
         expect(Array.isArray(passedTiles)).toBeTruthy();
-        expect(passedTiles.length).toBe(1);
+        expect(passedTiles).toHaveLength(1);
     });
 });
