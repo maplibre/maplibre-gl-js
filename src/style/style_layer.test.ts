@@ -16,8 +16,8 @@ describe('StyleLayer', () => {
     });
 });
 
-describe('StyleLayer CustomLayer', () => {
-    test('custom-layer with no tile-source', () => {
+describe('StyleLayer-CustomLayer', () => {
+    test('custom-layer', () => {
         const layer = createStyleLayer({
             'id': 'custom',
             'type': 'custom',
@@ -29,7 +29,7 @@ describe('StyleLayer CustomLayer', () => {
         expect(layer.maxzoom).toBeUndefined();
     });
 
-    test('custom-layer with tile-source', () => {
+    test('custom-layer with tile-source and min/maxzoom', () => {
         const layer = createStyleLayer({
             'id': 'custom',
             'type': 'custom',
