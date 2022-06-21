@@ -25,10 +25,6 @@ describe('expression', () => {
                 const result = evaluateFixture(fixture);
 
                 if (process.env.UPDATE) {
-                    if (expressionTestFileName.endsWith('/acos/basic/test.json')) {
-                        console.log(result.outputs);
-                    }
-
                     fixture.expected = {
                         compiled: result.compiled,
                         outputs: stripPrecision(result.outputs, decimalSigFigs),
