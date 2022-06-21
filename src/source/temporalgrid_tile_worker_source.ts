@@ -91,36 +91,36 @@ const getAggregationParams = (params) => {
     );
 };
 
-type FinalUrlParams = {
-    singleFrame: boolean;
-    interval: string;
-};
-const getFinalurl = (originalUrlString, {singleFrame, interval}: FinalUrlParams) => {
+const OMITTED_URL_PARAMS = [
+    'aggregationOperation',
+    'delta',
+    'geomType',
+    'id',
+    'interactive',
+    'quantizeOffset',
+    'singleFrame',
+    'sublayerBreaks',
+    'sublayerCombinationMode',
+    'sublayerCount',
+    'sublayerVisibility',
+];
+const getFinalurl = (originalUrlString) => {
     const originalUrl = new URL(originalUrlString);
     let searchParams = originalUrl.searchParams;
     if (!searchParams) {
         searchParams = new SearchParams(originalUrlString) as any;
     }
 
-    const finalUrlParams = {
-        // We want proxy active as default when api tiles auth is required
-        proxy: searchParams.get('proxy') !== 'false',
-        format: 'intArray',
-        'temporal-aggregation': singleFrame === true,
-        interval,
-        'date-range': decodeURI(searchParams.get('date-range')),
-        'comparison-range': decodeURI(searchParams.get('comparison-range'))
-    };
-    const finalUrlParamsArr = objectEntries(finalUrlParams)
-        .filter(([_, value]) => {
-            return value !== undefined && value !== null && value !== 'undefined' && value !== 'null';
-        })
-        .map(([key, value]) => {
-            return `${key}=${value}`;
-        });
-    finalUrlParamsArr.push(searchParams.get('datasets'));
-    finalUrlParamsArr.push(searchParams.get('filters'));
-    const finalUrlStr = `${originalUrl.origin}${originalUrl.pathname}?${finalUrlParamsArr.join('&')}`;
+    OMITTED_URL_PARAMS.forEach((param) => {
+        if (searchParams.get(param)) {
+            searchParams.delete(param);
+        }
+    });
+
+    const finalUrlStr = `${originalUrl.origin}${
+        originalUrl.pathname
+    }?${searchParams.toString()}`;
+
     return decodeURI(finalUrlStr);
 };
 
@@ -186,7 +186,7 @@ const getTile = (data, options) => {
 
 const loadVectorData = (params: WorkerTileParameters, callback: LoadVectorDataCallback) => {
     const aggregationParams = getAggregationParams(params);
-    const url = getFinalurl(params.request.url, aggregationParams as FinalUrlParams);
+    const url = getFinalurl(params.request.url);
     // console.log(url)
     const requestParams = extend(params.request, {url});
     const request = getArrayBuffer(
