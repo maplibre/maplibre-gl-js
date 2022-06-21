@@ -4,8 +4,6 @@ import {BooleanType, ColorType, NumberType, StringType, ValueType} from '../type
 import {Color, toString as valueToString, validateRGBA} from '../values';
 import RuntimeError from '../runtime_error';
 import Formatted from '../types/formatted';
-import FormatExpression from '../definitions/format';
-import ImageExpression from '../definitions/image';
 import ResolvedImage from '../types/resolved_image';
 
 import type {Expression} from '../expression';
@@ -111,20 +109,6 @@ class Coercion implements Expression {
 
     outputDefined(): boolean {
         return this.args.every(arg => arg.outputDefined());
-    }
-
-    serialize() {
-        if (this.type.kind === 'formatted') {
-            return new FormatExpression([{content: this.args[0], scale: null, font: null, textColor: null}]).serialize();
-        }
-
-        if (this.type.kind === 'resolvedImage') {
-            return new ImageExpression(this.args[0]).serialize();
-        }
-
-        const serialized = [`to-${this.type.kind}` as unknown];
-        this.eachChild(child => { serialized.push(child.serialize()); });
-        return serialized;
     }
 }
 

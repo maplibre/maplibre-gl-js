@@ -29,18 +29,6 @@
       [153, 0, 102, 1],
       [0, 0, 255, 1],
       {"error": "Could not parse color from value 'oops blue'"}
-    ],
-    "serialized": [
-      "to-rgba",
-      [
-        "interpolate",
-        ["linear"],
-        ["number", ["get", "x"]],
-        1,
-        ["rgba", 255, 0, 0, 1],
-        11,
-        ["to-color", ["get", "color"]]
-      ]
     ]
   }
 }
