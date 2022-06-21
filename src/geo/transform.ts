@@ -12,6 +12,7 @@ import EdgeInsets from './edge_insets';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import Terrain from '../render/terrain';
+import Tile from '../source/tile';
 
 /**
  * A single transform, generally used for a single tile to be
@@ -441,8 +442,7 @@ class Transform {
                     const tile = options.terrain.getTerrainData(tileID).tile;
                     let minElevation = this.elevation, maxElevation = this.elevation;
                     if (tile && tile.dem) {
-                        minElevation = (tile.dem.min + options.terrain.elevationOffset) * options.terrain.exaggeration;
-                        maxElevation = (tile.dem.max + options.terrain.elevationOffset) * options.terrain.exaggeration;
+                        ({minElevation, maxElevation} = this.getTileMinMaxElevation(tile, options.terrain));
                     }
                     quadrant = new Aabb(
                         [quadrant.min[0], quadrant.min[1], minElevation] as vec3,
@@ -454,6 +454,22 @@ class Transform {
         }
 
         return result.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileID);
+    }
+
+    /**
+     * Get the minimum and maximum elevation contained in a tile. This includes any elevation offset
+     * and exaggeration in the provided terrain configuration.
+     *
+     * @param tile Tile instance
+     * @param terrain Terrain configuration
+     * @returns {Object} Minimum and maximum elevation found in the tile, including the terrain's
+     * elevation offset and exaggeration
+     */
+    getTileMinMaxElevation(tile: Tile, terrain: Terrain): {minElevation: number; maxElevation: number} {
+        return {
+            minElevation: (tile.dem.min + terrain.elevationOffset) * terrain.exaggeration,
+            maxElevation: (tile.dem.max + terrain.elevationOffset) * terrain.exaggeration,
+        };
     }
 
     resize(width: number, height: number) {

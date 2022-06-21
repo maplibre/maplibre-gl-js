@@ -4,6 +4,8 @@ import LngLat from './lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed';
 import type Terrain from '../render/terrain';
+import type DEMData from '../data/dem_data';
+import Tile from '../source/tile';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -407,4 +409,21 @@ describe('transform', () => {
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, top)).toArray());
     });
 
+    test('Calculate tile minimum and maximum elevation', () => {
+        const transform = new Transform(0, 22, 0, 85, true);
+        const tile = {
+            dem: {
+                min: 0,
+                max: 100,
+            } as any as DEMData
+        } as any as Tile;
+        const terrain = {
+            exaggeration: 2,
+            elevationOffset: 50,
+        } as any as Terrain;
+        const {minElevation, maxElevation} = transform.getMinMaxElevation(tile, terrain);
+
+        expect(minElevation).toBe(100);
+        expect(maxElevation).toBe(300);
+    });
 });
