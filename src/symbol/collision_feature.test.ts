@@ -32,6 +32,20 @@ describe('CollisionFeature', () => {
         expect(box.y2).toBe(10);
     });
 
+    test('point label with padding', () => {
+        const point = new Point(500, 0);
+        const anchor = new Anchor(point.x, point.y, 0, undefined);
+        const pointPadding: SymbolPadding = [10, 20, -5, -10]; // top, right, bottom, left
+        const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, pointPadding, false, 0);
+
+        expect(cf.boxEndIndex - cf.boxStartIndex).toBe(1);
+        const box = collisionBoxArray.get(cf.boxStartIndex);
+        expect(box.x1).toBe(-40);
+        expect(box.x2).toBe(70);
+        expect(box.y1).toBe(-20);
+        expect(box.y2).toBe(5);
+    });
+
     test('Compute line height for runtime collision circles (line label)', () => {
         const anchor = new Anchor(505, 95, 0, 1);
         const cf = new CollisionFeature(collisionBoxArray, anchor, 0, 0, 0, shapedText, 1, padding, true, 0);

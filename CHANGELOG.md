@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - *...Add new stuff here...*
+- Update `icon-padding` symbol layout property to support asymmetric padding [#1289](https://github.com/maplibre/maplibre-gl-js/pull/1289)
 
 ### 🐞 Bug fixes
 
@@ -37,7 +38,7 @@
 
 - Fix missing `touchmove` in `MapTouchEvent["type"]` (#1131)
 - Type CustomLayerInterface renderingMode, onRemove, onAdd, and prerender optional (#1122)
- 
+
 ## 2.1.8-pre.3
 
 ### 🐞 Bug fixes
