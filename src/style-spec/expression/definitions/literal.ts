@@ -1,5 +1,5 @@
 import assert from 'assert';
-import {isValue, typeOf, Color, Padding} from '../values';
+import {isValue, typeOf, Color} from '../values';
 import Formatted from '../types/formatted';
 
 import type {Type} from '../types';
