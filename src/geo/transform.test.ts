@@ -421,7 +421,7 @@ describe('transform', () => {
             exaggeration: 2,
             elevationOffset: 50,
         } as any as Terrain;
-        const {minElevation, maxElevation} = transform.getMinMaxElevation(tile, terrain);
+        const {minElevation, maxElevation} = transform.getTileMinMaxElevation(tile, terrain);
 
         expect(minElevation).toBe(100);
         expect(maxElevation).toBe(300);
