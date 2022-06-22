@@ -8,6 +8,8 @@ import type Style from '../style/style';
 import type SourceCache from '../source/source_cache';
 import type TerrainSourceCache from '../source/terrain_source_cache';
 import type {TerrainSpecification} from '../style-spec/types.g';
+import type DEMData from '../data/dem_data';
+import Tile from '../source/tile';
 
 describe('Terrain', () => {
     test('pointCoordiate should not return null', () => {
@@ -49,5 +51,35 @@ describe('Terrain', () => {
         const coordinate = terrain.pointCoordinate(new Point(0, 0));
 
         expect(coordinate).not.toBeNull();
+    });
+
+    test('Calculate tile minimum and maximum elevation', () => {
+        const terrain = new Terrain(
+            {} as any as Style,
+            {} as any as SourceCache,
+            {exaggeration: 2, elevationOffset: 50} as any as TerrainSpecification,
+        );
+        const tile = {dem: {min: 0, max: 100} as any as DEMData} as any as Tile;
+        const {minElevation, maxElevation} = terrain.getMinMaxElevation(tile);
+
+        expect(minElevation).toBe(100);
+        expect(maxElevation).toBe(300);
+    });
+
+    test('Return null elevation values when no tile or DEM', () => {
+        const terrain = new Terrain(
+            {} as any as Style,
+            {} as any as SourceCache,
+            {exaggeration: 2, elevationOffset: 50} as any as TerrainSpecification,
+        );
+        const tile = {dem: null as any as DEMData} as any as Tile;
+
+        const minMaxNoTile = terrain.getMinMaxElevation(null as any as Tile);
+        const minMaxNoDEM = terrain.getMinMaxElevation(tile);
+
+        expect(minMaxNoTile.minElevation).toBeNull();
+        expect(minMaxNoTile.maxElevation).toBeNull();
+        expect(minMaxNoDEM.minElevation).toBeNull();
+        expect(minMaxNoDEM.maxElevation).toBeNull();
     });
 });

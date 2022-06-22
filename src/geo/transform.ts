@@ -12,7 +12,6 @@ import EdgeInsets from './edge_insets';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import Terrain from '../render/terrain';
-import Tile from '../source/tile';
 
 /**
  * A single transform, generally used for a single tile to be
@@ -440,10 +439,9 @@ class Transform {
                 if (options.terrain) {
                     const tileID = new OverscaledTileID(childZ, it.wrap, childZ, childX, childY);
                     const tile = options.terrain.getTerrainData(tileID).tile;
-                    let minElevation = this.elevation, maxElevation = this.elevation;
-                    if (tile && tile.dem) {
-                        ({minElevation, maxElevation} = this.getTileMinMaxElevation(tile, options.terrain));
-                    }
+                    const minMax = options.terrain.getMinMaxElevation(tile);
+                    const minElevation = minMax.minElevation ?? this.elevation;
+                    const maxElevation = minMax.maxElevation ?? this.elevation;
                     quadrant = new Aabb(
                         [quadrant.min[0], quadrant.min[1], minElevation] as vec3,
                         [quadrant.max[0], quadrant.max[1], maxElevation] as vec3
@@ -454,22 +452,6 @@ class Transform {
         }
 
         return result.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileID);
-    }
-
-    /**
-     * Get the minimum and maximum elevation contained in a tile. This includes any elevation offset
-     * and exaggeration in the provided terrain configuration.
-     *
-     * @param tile Tile instance
-     * @param terrain Terrain configuration
-     * @returns {Object} Minimum and maximum elevation found in the tile, including the terrain's
-     * elevation offset and exaggeration
-     */
-    getTileMinMaxElevation(tile: Tile, terrain: Terrain): {minElevation: number; maxElevation: number} {
-        return {
-            minElevation: (tile.dem.min + terrain.elevationOffset) * terrain.exaggeration,
-            maxElevation: (tile.dem.max + terrain.elevationOffset) * terrain.exaggeration,
-        };
     }
 
     resize(width: number, height: number) {
