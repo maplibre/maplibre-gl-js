@@ -28,7 +28,6 @@
       {
         "error": "Expected value to be of type array<number>, but found string instead."
       }
-    ],
-    "serialized": ["array", "number", ["get", "p"]]
+    ]
   }
 }

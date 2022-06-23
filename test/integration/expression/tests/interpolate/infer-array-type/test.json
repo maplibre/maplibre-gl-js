@@ -20,13 +20,6 @@
       "isZoomConstant": true,
       "type": "array<string>"
     },
-    "outputs": [],
-    "serialized": [
-      "step",
-      ["number", ["get", "x"]],
-      ["literal", ["one"]],
-      10,
-      ["literal", ["one", "two"]]
-    ]
+    "outputs": []
   }
 }

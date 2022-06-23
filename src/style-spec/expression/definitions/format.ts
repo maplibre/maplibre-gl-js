@@ -128,23 +128,4 @@ export default class FormatExpression implements Expression {
         // Usually, this.text will be undefined anyway
         return false;
     }
-
-    serialize() {
-        const serialized = ['format'] as (string | {})[];
-        for (const section of this.sections) {
-            serialized.push(section.content.serialize());
-            const options = {};
-            if (section.scale) {
-                options['font-scale'] = section.scale.serialize();
-            }
-            if (section.font) {
-                options['text-font'] = section.font.serialize();
-            }
-            if (section.textColor) {
-                options['text-color'] = section.textColor.serialize();
-            }
-            serialized.push(options);
-        }
-        return serialized;
-    }
 }

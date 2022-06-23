@@ -26,15 +26,6 @@
       [0.870599, -0.0798922, 0.394264, 1],
       [0, 0, 1, 1],
       {"error": "Could not parse color from value 'oops blue'"}
-    ],
-    "serialized": [
-      "interpolate-hcl",
-      ["linear"],
-      ["number", ["get", "x"]],
-      1,
-      ["rgba", 255, 0, 0, 1],
-      11,
-      ["to-color", ["get", "color"]]
     ]
   }
 }

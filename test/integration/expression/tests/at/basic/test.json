@@ -21,10 +21,6 @@
       {"error": "Array index out of bounds: -1 < 0."},
       {"error": "Array index out of bounds: 4 > 2."},
       {"error": "Array index must be an integer, but found 1.5 instead."}
-    ],
-    "serialized": [
-      "number",
-      ["at", ["number", ["get", "i"]], ["array", ["get", "arr"]]]
     ]
   }
 }

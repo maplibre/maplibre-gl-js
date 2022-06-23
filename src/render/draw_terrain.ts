@@ -107,7 +107,7 @@ function prepareTerrain(painter: Painter, terrain: Terrain, tile: Tile, stack: n
     if (!tile.textures[stack]) {
         tile.textures[stack] = painter.getTileTexture(size) || new Texture(context, {width: size, height: size, data: null}, context.gl.RGBA);
         tile.textures[stack].bind(context.gl.LINEAR, context.gl.CLAMP_TO_EDGE);
-        if (stack === 0) terrain.sourceCache.renderHistory.push(tile.tileID.key);
+        if (stack === 0) terrain.sourceCache.renderHistory.unshift(tile.tileID.key);
     }
     const fb = terrain.getRTTFramebuffer();
     fb.colorAttachment.set(tile.textures[stack].texture);

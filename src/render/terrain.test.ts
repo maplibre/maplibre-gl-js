@@ -6,10 +6,10 @@ import {RGBAImage} from '../util/image';
 import Texture from './texture';
 import type Style from '../style/style';
 import type SourceCache from '../source/source_cache';
-import type TerrainSourceCache from '../source/terrain_source_cache';
 import {OverscaledTileID} from '../source/tile_id';
 import type {TerrainSpecification} from '../style-spec/types.g';
 import type DEMData from '../data/dem_data';
+import TileCache from '../source/tile_cache';
 import Tile from '../source/tile';
 
 describe('Terrain', () => {
@@ -24,23 +24,24 @@ describe('Terrain', () => {
             }
         } as any as Style;
         const sourceCache = {
-            getTileByID: (tileID) => {
-                if (tileID !== 'abcd') {
-                    return null;
-                }
-                return {
-                    tileID: {
-                        canonical: {
-                            x: 0,
-                            y: 0,
-                            z: 0
-                        }
-                    }
-                };
+            _cache: {max: 100} as TileCache
+        } as SourceCache;
+        const getTileByID = (tileID) : Tile => {
+            if (tileID !== 'abcd') {
+                return null as any as Tile;
             }
-        } as any as TerrainSourceCache;
-        const terrain = new Terrain(style, {} as any as SourceCache, {} as any as TerrainSpecification);
-        terrain.sourceCache = sourceCache;
+            return {
+                tileID: {
+                    canonical: {
+                        x: 0,
+                        y: 0,
+                        z: 0
+                    }
+                }
+            } as any as Tile;
+        };
+        const terrain = new Terrain(style, sourceCache, {} as any as TerrainSpecification);
+        terrain.sourceCache.getTileByID = getTileByID;
         const context = style.map.painter.context as Context;
         const pixels = new Uint8Array([0, 0, 255, 255]);
         const image = new RGBAImage({width: 1, height: 1}, pixels);
