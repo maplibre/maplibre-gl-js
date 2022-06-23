@@ -76,6 +76,7 @@ describe('Terrain', () => {
         } as any as Style;
         const sourceCache = {
             _source: {maxzoom: 12},
+            _cache: { max: 10 },
             getTileByID: () => {
                 return tile;
             },
@@ -106,6 +107,7 @@ describe('Terrain', () => {
         } as any as Style;
         const sourceCache = {
             _source: {maxzoom: 12},
+            _cache: { max: 10 },
             getTileByID: () => null,
         } as any as SourceCache;
         const terrain = new Terrain(
@@ -135,6 +137,7 @@ describe('Terrain', () => {
         } as any as Style;
         const sourceCache = {
             _source: {maxzoom: 12},
+            _cache: { max: 10 },
             getTileByID: () => {
                 return tile;
             },
