@@ -15,14 +15,6 @@
       "isZoomConstant": true,
       "type": "number"
     },
-    "outputs": [4],
-    "serialized": [
-      "let",
-      "a",
-      ["number", ["get", "a"]],
-      "b",
-      ["number", ["get", "b"]],
-      ["+", ["+", ["var", "a"], ["var", "b"]], ["var", "a"]]
-    ]
+    "outputs": [4]
   }
 }

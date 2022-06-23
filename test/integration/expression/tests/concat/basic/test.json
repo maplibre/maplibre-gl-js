@@ -8,7 +8,6 @@
       "isZoomConstant": true,
       "type": "string"
     },
-    "outputs": ["abc"],
-    "serialized": "abc"
+    "outputs": ["abc"]
   }
 }
