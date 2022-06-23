@@ -10,7 +10,7 @@
 // long distances for long segments. Use this value to unscale the distance.
 #define LINE_DISTANCE_SCALE 2.0
 
-attribute vec2 a_pos_normal;
+attribute vec4 a_pos_normal;
 attribute vec4 a_data;
 
 uniform mat4 u_matrix;
@@ -53,13 +53,11 @@ void main() {
     float a_direction = mod(a_data.z, 4.0) - 1.0;
     float a_linesofar = (floor(a_data.z / 4.0) + a_data.w * 64.0) * LINE_DISTANCE_SCALE;
 
-    vec2 pos = floor(a_pos_normal * 0.5);
+    vec2 pos = a_pos_normal.xy;
 
     // x is 1 if it's a round cap, 0 otherwise
     // y is 1 if the normal points up, and -1 if it points down
-    // We store these in the least significant bit of a_pos_normal
-    mediump vec2 normal = a_pos_normal - 2.0 * pos;
-    normal.y = normal.y * 2.0 - 1.0;
+    mediump vec2 normal = a_pos_normal.zw;
     v_normal = normal;
 
     // these transformations used to be applied in the JS and native code bases.

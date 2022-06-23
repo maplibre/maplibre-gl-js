@@ -2,7 +2,7 @@
 
 ### ✨ Features and improvements
 
-- *...Add new stuff here...*
+- double internal extent from 8192 to 16384. This increases the quality while overzooming, if source provides enough accuracy.
 
 ### 🐞 Bug fixes
 

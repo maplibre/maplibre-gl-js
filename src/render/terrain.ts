@@ -134,7 +134,7 @@ export default class Terrain {
      * @param {OverscaledTileID} tileID - the tile to get elevation for
      * @param {number} x between 0 .. EXTENT
      * @param {number} y between 0 .. EXTENT
-     * @param {number} extent optional, default 8192
+     * @param {number} extent optional, default 16384
      * @returns {number} - the elevation
      */
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
@@ -178,7 +178,7 @@ export default class Terrain {
      * @param {OverscaledTileID} tileID - the tile id
      * @param {number} x between 0 .. EXTENT
      * @param {number} y between 0 .. EXTENT
-     * @param {number} extent optional, default 8192
+     * @param {number} extent optional, default 16384
      * @returns {number} - the elevation
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {

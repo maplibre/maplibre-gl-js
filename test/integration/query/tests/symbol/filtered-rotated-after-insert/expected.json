@@ -32,7 +32,7 @@
       "type": "Point",
       "coordinates": [
         -4.998779296875,
-        2.9978987411030573
+        3.000641560869667
       ]
     },
     "type": "Feature",
@@ -46,7 +46,7 @@
       "type": "Point",
       "coordinates": [
         -3.9990234375,
-        2.9978987411030573
+        3.000641560869667
       ]
     },
     "type": "Feature",
@@ -88,54 +88,12 @@
       "type": "Point",
       "coordinates": [
         -4.998779296875,
-        4.997922089609858
+        5.000658223032488
       ]
     },
     "type": "Feature",
     "properties": {},
     "id": 10,
-    "source": "geojson",
-    "state": {}
-  },
-  {
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
-        -3.9990234375,
-        4.997922089609858
-      ]
-    },
-    "type": "Feature",
-    "properties": {},
-    "id": 20,
-    "source": "geojson",
-    "state": {}
-  },
-  {
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
-        -2.999267578125,
-        4.001260305845264
-      ]
-    },
-    "type": "Feature",
-    "properties": {},
-    "id": 30,
-    "source": "geojson",
-    "state": {}
-  },
-  {
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
-        -1.99951171875,
-        2.9978987411030573
-      ]
-    },
-    "type": "Feature",
-    "properties": {},
-    "id": 40,
     "source": "geojson",
     "state": {}
   },
@@ -158,7 +116,49 @@
       "type": "Point",
       "coordinates": [
         -1.99951171875,
-        4.997922089609858
+        3.000641560869667
+      ]
+    },
+    "type": "Feature",
+    "properties": {},
+    "id": 40,
+    "source": "geojson",
+    "state": {}
+  },
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -2.999267578125,
+        4.001260305845264
+      ]
+    },
+    "type": "Feature",
+    "properties": {},
+    "id": 30,
+    "source": "geojson",
+    "state": {}
+  },
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -3.9990234375,
+        5.000658223032488
+      ]
+    },
+    "type": "Feature",
+    "properties": {},
+    "id": 20,
+    "source": "geojson",
+    "state": {}
+  },
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -1.99951171875,
+        5.000658223032488
       ]
     },
     "type": "Feature",
@@ -199,20 +199,6 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        0,
-        2.9978987411030573
-      ]
-    },
-    "type": "Feature",
-    "properties": {},
-    "id": 62,
-    "source": "geojson",
-    "state": {}
-  },
-  {
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
         0.999755859375,
         1.9991059831233287
       ]
@@ -241,8 +227,22 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
+        0,
+        3.000641560869667
+      ]
+    },
+    "type": "Feature",
+    "properties": {},
+    "id": 62,
+    "source": "geojson",
+    "state": {}
+  },
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
         1.99951171875,
-        2.9978987411030573
+        3.000641560869667
       ]
     },
     "type": "Feature",
@@ -283,20 +283,6 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        0,
-        4.997922089609858
-      ]
-    },
-    "type": "Feature",
-    "properties": {},
-    "id": 64,
-    "source": "geojson",
-    "state": {}
-  },
-  {
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
         0.999755859375,
         4.001260305845264
       ]
@@ -311,13 +297,13 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        3.9990234375,
-        2.9978987411030573
+        0,
+        5.000658223032488
       ]
     },
     "type": "Feature",
     "properties": {},
-    "id": 106,
+    "id": 64,
     "source": "geojson",
     "state": {}
   },
@@ -339,13 +325,13 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        1.99951171875,
-        4.997922089609858
+        3.9990234375,
+        3.000641560869667
       ]
     },
     "type": "Feature",
     "properties": {},
-    "id": 86,
+    "id": 106,
     "source": "geojson",
     "state": {}
   },
@@ -367,8 +353,22 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
+        1.99951171875,
+        5.000658223032488
+      ]
+    },
+    "type": "Feature",
+    "properties": {},
+    "id": 86,
+    "source": "geojson",
+    "state": {}
+  },
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
         3.9990234375,
-        4.997922089609858
+        5.000658223032488
       ]
     },
     "type": "Feature",
@@ -396,12 +396,26 @@
       "type": "Point",
       "coordinates": [
         -4.998779296875,
-        -2.9978987411030573
+        -3.000641560869667
       ]
     },
     "type": "Feature",
     "properties": {},
     "id": 2,
+    "source": "geojson",
+    "state": {}
+  },
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -1.99951171875,
+        -5.000658223032488
+      ]
+    },
+    "type": "Feature",
+    "properties": {},
+    "id": 32,
     "source": "geojson",
     "state": {}
   },
@@ -423,22 +437,8 @@
     "geometry": {
       "type": "Point",
       "coordinates": [
-        -1.99951171875,
-        -4.997922089609844
-      ]
-    },
-    "type": "Feature",
-    "properties": {},
-    "id": 32,
-    "source": "geojson",
-    "state": {}
-  },
-  {
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
         -3.9990234375,
-        -2.9978987411030573
+        -3.000641560869667
       ]
     },
     "type": "Feature",
@@ -508,7 +508,7 @@
       "type": "Point",
       "coordinates": [
         -1.99951171875,
-        -2.9978987411030573
+        -3.000641560869667
       ]
     },
     "type": "Feature",
@@ -578,7 +578,7 @@
       "type": "Point",
       "coordinates": [
         0,
-        -4.997922089609844
+        -5.000658223032488
       ]
     },
     "type": "Feature",
@@ -606,7 +606,7 @@
       "type": "Point",
       "coordinates": [
         1.99951171875,
-        -4.997922089609844
+        -5.000658223032488
       ]
     },
     "type": "Feature",
@@ -620,12 +620,54 @@
       "type": "Point",
       "coordinates": [
         0,
-        -2.9978987411030573
+        -3.000641560869667
       ]
     },
     "type": "Feature",
     "properties": {},
     "id": 56,
+    "source": "geojson",
+    "state": {}
+  },
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        3.9990234375,
+        -5.000658223032488
+      ]
+    },
+    "type": "Feature",
+    "properties": {},
+    "id": 98,
+    "source": "geojson",
+    "state": {}
+  },
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        2.999267578125,
+        -4.00126030584525
+      ]
+    },
+    "type": "Feature",
+    "properties": {},
+    "id": 88,
+    "source": "geojson",
+    "state": {}
+  },
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        1.99951171875,
+        -3.000641560869667
+      ]
+    },
+    "type": "Feature",
+    "properties": {},
+    "id": 78,
     "source": "geojson",
     "state": {}
   },
@@ -654,48 +696,6 @@
     "type": "Feature",
     "properties": {},
     "id": 68,
-    "source": "geojson",
-    "state": {}
-  },
-  {
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
-        1.99951171875,
-        -2.9978987411030573
-      ]
-    },
-    "type": "Feature",
-    "properties": {},
-    "id": 78,
-    "source": "geojson",
-    "state": {}
-  },
-  {
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
-        2.999267578125,
-        -4.00126030584525
-      ]
-    },
-    "type": "Feature",
-    "properties": {},
-    "id": 88,
-    "source": "geojson",
-    "state": {}
-  },
-  {
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
-        3.9990234375,
-        -4.997922089609844
-      ]
-    },
-    "type": "Feature",
-    "properties": {},
-    "id": 98,
     "source": "geojson",
     "state": {}
   },
@@ -760,7 +760,7 @@
       "type": "Point",
       "coordinates": [
         3.9990234375,
-        -2.9978987411030573
+        -3.000641560869667
       ]
     },
     "type": "Feature",

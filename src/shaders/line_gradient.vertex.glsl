@@ -6,7 +6,7 @@
 // #define scale 63.0
 #define scale 0.015873016
 
-attribute vec2 a_pos_normal;
+attribute vec4 a_pos_normal;
 attribute vec4 a_data;
 attribute float a_uv_x;
 attribute float a_split_index;
@@ -46,13 +46,11 @@ void main() {
     highp float half_texel_height = 0.5 * texel_height;
     v_uv = vec2(a_uv_x, a_split_index * texel_height - half_texel_height);
 
-    vec2 pos = floor(a_pos_normal * 0.5);
+    vec2 pos = a_pos_normal.xy;
 
     // x is 1 if it's a round cap, 0 otherwise
     // y is 1 if the normal points up, and -1 if it points down
-    // We store these in the least significant bit of a_pos_normal
-    mediump vec2 normal = a_pos_normal - 2.0 * pos;
-    normal.y = normal.y * 2.0 - 1.0;
+    mediump vec2 normal = a_pos_normal.zw;
     v_normal = normal;
 
     // these transformations used to be applied in the JS and native code bases.

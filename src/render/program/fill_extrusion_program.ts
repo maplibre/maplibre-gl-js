@@ -108,7 +108,7 @@ const fillExtrusionPatternUniformValues = (
     return extend(fillExtrusionUniformValues(matrix, painter, shouldUseVerticalGradient, opacity),
         patternUniformValues(crossfade, painter, tile),
         {
-            'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8
+            'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 4 // find out where 4 comes from. Has to do something with the extent
         });
 };
 

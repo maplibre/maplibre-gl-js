@@ -1352,12 +1352,12 @@ describe('SourceCache#tilesIn', () => {
                 expect(tiles[0].tile.tileID.key).toBe('011');
                 expect(tiles[0].tile.tileSize).toBe(512);
                 expect(tiles[0].scale).toBe(1);
-                expect(round(tiles[0].queryGeometry)).toEqual([{x: 4096, y: 4050}, {x:12288, y: 8146}]);
+                expect(round(tiles[0].queryGeometry)).toEqual([{x: 8192, y: 8101}, {x:24576, y: 16293}]);
 
                 expect(tiles[1].tile.tileID.key).toBe('111');
                 expect(tiles[1].tile.tileSize).toBe(512);
                 expect(tiles[1].scale).toBe(1);
-                expect(round(tiles[1].queryGeometry)).toEqual([{x: -4096, y: 4050}, {x: 4096, y: 8146}]);
+                expect(round(tiles[1].queryGeometry)).toEqual([{x: -8192, y: 8101}, {x: 8192, y: 16293}]);
 
                 done();
             }
@@ -1404,12 +1404,12 @@ describe('SourceCache#tilesIn', () => {
                 expect(tiles[0].tile.tileID.key).toBe('012');
                 expect(tiles[0].tile.tileSize).toBe(1024);
                 expect(tiles[0].scale).toBe(1);
-                expect(round(tiles[0].queryGeometry)).toEqual([{x: 4096, y: 4050}, {x:12288, y: 8146}]);
+                expect(round(tiles[0].queryGeometry)).toEqual([{x: 8192, y: 8101}, {x:24576, y: 16293}]);
 
                 expect(tiles[1].tile.tileID.key).toBe('112');
                 expect(tiles[1].tile.tileSize).toBe(1024);
                 expect(tiles[1].scale).toBe(1);
-                expect(round(tiles[1].queryGeometry)).toEqual([{x: -4096, y: 4050}, {x: 4096, y: 8146}]);
+                expect(round(tiles[1].queryGeometry)).toEqual([{x: -8192, y: 8101}, {x: 8192, y: 16293}]);
 
             }
         });
