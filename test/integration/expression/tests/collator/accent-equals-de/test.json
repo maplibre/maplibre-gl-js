@@ -34,34 +34,6 @@
       "isZoomConstant": true,
       "type": "boolean"
     },
-    "outputs": [true, false],
-    "serialized": [
-      "case",
-      [
-        "==",
-        [
-          "resolved-locale",
-          [
-            "collator",
-            {
-              "case-sensitive": true,
-              "diacritic-sensitive": false,
-              "locale": "de"
-            }
-          ]
-        ],
-        "de"
-      ],
-      [
-        "==",
-        ["string", ["get", "lhs"]],
-        ["get", "rhs"],
-        [
-          "collator",
-          {"case-sensitive": true, "diacritic-sensitive": false, "locale": "de"}
-        ]
-      ],
-      ["case", ["==", ["get", "rhs"], "ue"], true, false]
-    ]
+    "outputs": [true, false]
   }
 }

@@ -35,7 +35,6 @@
       {
         "error": "Expected value to be of type number, but found string instead."
       }
-    ],
-    "serialized": ["step", ["number", ["get", "p"]], "0", 1, "1"]
+    ]
   }
 }

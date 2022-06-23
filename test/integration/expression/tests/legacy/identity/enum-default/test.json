@@ -19,13 +19,6 @@
       "isZoomConstant": true,
       "type": "string"
     },
-    "outputs": ["a", "a", "b", "a"],
-    "serialized": [
-      "match",
-      ["get", "p"],
-      ["a", "b"],
-      ["string", ["get", "p"]],
-      "a"
-    ]
+    "outputs": ["a", "a", "b", "a"]
   }
 }

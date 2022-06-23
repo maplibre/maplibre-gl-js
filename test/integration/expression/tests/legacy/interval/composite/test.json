@@ -40,13 +40,6 @@
       {
         "error": "Expected value to be of type number, but found string instead."
       }
-    ],
-    "serialized": [
-      "step",
-      ["zoom"],
-      ["step", ["number", ["get", "p"]], 0, 1, 1],
-      1,
-      ["step", ["number", ["get", "p"]], 2, 1, 3]
     ]
   }
 }

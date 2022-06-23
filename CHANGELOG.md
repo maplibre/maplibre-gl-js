@@ -7,6 +7,8 @@
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
+- Handle maxBounds which cross the meridian at longitude ±180° (#1298, #1299)
+- Hide arrow displayed in default `summary` styles on the attribution control ([#1258](https://github.com/maplibre/maplibre-gl-js/pull/1258))
 
 ## 2.2.0-pre.2
 

@@ -16,7 +16,7 @@ const decimalSigFigs =  6;
 const expressionTestFileNames = glob.sync('**/test.json', {cwd: __dirname});
 describe('expression', () => {
 
-    expressionTestFileNames.forEach((expressionTestFileName: any) => {
+    expressionTestFileNames.forEach((expressionTestFileName) => {
         test(expressionTestFileName, (done) => {
 
             const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, expressionTestFileName), 'utf8'));
@@ -28,13 +28,12 @@ describe('expression', () => {
                     fixture.expected = {
                         compiled: result.compiled,
                         outputs: stripPrecision(result.outputs, decimalSigFigs),
-                        serialized: result.serialized
                     };
 
                     delete fixture.metadata;
 
-                    const dir = path.join(__dirname, expressionTestFileName);
-                    fs.writeFile(path.join(dir, 'test.json'), `${stringify(fixture)}\n`, done);
+                    const fname = path.join(__dirname, expressionTestFileName);
+                    fs.writeFile(fname, `${stringify(fixture)}\n`, done);
                     return;
                 }
 
@@ -42,20 +41,8 @@ describe('expression', () => {
                 const compileOk = deepEqual(result.compiled, expected.compiled, decimalSigFigs);
                 const evalOk = compileOk && deepEqual(result.outputs, expected.outputs, decimalSigFigs);
 
-                let recompileOk = true;
-                let roundTripOk = true;
-                let serializationOk = true;
-                if (expected.compiled.result !== 'error') {
-                    serializationOk = compileOk && deepEqual(expected.serialized, result.serialized, decimalSigFigs);
-                    recompileOk = compileOk && deepEqual(result.recompiled, expected.compiled, decimalSigFigs);
-                    roundTripOk = recompileOk && deepEqual(result.roundTripOutputs, expected.outputs, decimalSigFigs);
-                }
-
                 expect(compileOk).toBeTruthy();
                 expect(evalOk).toBeTruthy();
-                expect(recompileOk).toBeTruthy();
-                expect(roundTripOk).toBeTruthy();
-                expect(serializationOk).toBeTruthy();
 
                 done();
             } catch (e) {
@@ -83,11 +70,8 @@ function evaluateFixture(fixture) {
 
     const result: {
         compiled: any;
-        recompiled: any;
         outputs?: any;
-        serialized?: any;
-        roundTripOutputs?: any;
-    } = {compiled: {}, recompiled: {}};
+    } = {compiled: {}};
 
     const expression = (() => {
         if (isFunction(fixture.expression)) {
@@ -98,17 +82,6 @@ function evaluateFixture(fixture) {
     })();
 
     result.outputs = evaluateExpression(fixture, expression, result.compiled);
-    if (expression.result === 'success') {
-        // @ts-ignore
-        result.serialized = expression.value._styleExpression.expression.serialize();
-        result.roundTripOutputs = evaluateExpression(fixture,
-            createPropertyExpression(result.serialized, spec),
-            result.recompiled);
-        // Type is allowed to change through serialization
-        // (eg "array" -> "array<number, 3>")
-        // Override the round-tripped type here so that the equality check passes
-        result.recompiled.type = result.compiled.type;
-    }
 
     return result;
 }

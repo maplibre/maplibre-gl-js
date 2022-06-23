@@ -20,7 +20,6 @@
       {"default": "value"},
       {"default": "value"},
       {"default": "value"}
-    ],
-    "serialized": ["object", ["get", "x"], ["literal", {"default": "value"}]]
+    ]
   }
 }
