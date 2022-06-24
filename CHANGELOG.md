@@ -7,6 +7,11 @@
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
+
+## 2.2.0-pre.3
+
+### 🐞 Bug fixes
+
 - Handle maxBounds which cross the meridian at longitude ±180° (#1298, #1299)
 - Hide arrow displayed in default `summary` styles on the attribution control (#1258)
 - Fix memory usage in terrain 3D (#1291, #1302)
