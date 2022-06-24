@@ -438,12 +438,9 @@ class Transform {
                 let quadrant = it.aabb.quadrant(i);
                 if (options.terrain) {
                     const tileID = new OverscaledTileID(childZ, it.wrap, childZ, childX, childY);
-                    const tile = options.terrain.getTerrainData(tileID).tile;
-                    let minElevation = this.elevation, maxElevation = this.elevation;
-                    if (tile && tile.dem) {
-                        minElevation = tile.dem.min * options.terrain.exaggeration;
-                        maxElevation = tile.dem.max * options.terrain.exaggeration;
-                    }
+                    const minMax = options.terrain.getMinMaxElevation(tileID);
+                    const minElevation = minMax.minElevation ?? this.elevation;
+                    const maxElevation = minMax.maxElevation ?? this.elevation;
                     quadrant = new Aabb(
                         [quadrant.min[0], quadrant.min[1], minElevation] as vec3,
                         [quadrant.max[0], quadrant.max[1], maxElevation] as vec3

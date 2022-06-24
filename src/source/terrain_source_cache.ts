@@ -189,7 +189,7 @@ export default class TerrainSourceCache extends Evented {
         let tile = this.sourceCache.getTileByID(this._sourceTileCache[tileID.key]);
         // during tile-loading phase look if parent tiles (with loaded dem) are available.
         if (!(tile && tile.dem) && searchForDEM)
-            while (z > source.minzoom && !(tile && tile.dem))
+            while (z >= source.minzoom && !(tile && tile.dem))
                 tile = this.sourceCache.getTileByID(tileID.scaledTo(z--).key);
         return tile;
     }
