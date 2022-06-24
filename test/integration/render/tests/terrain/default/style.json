@@ -43,6 +43,6 @@
   "terrain": {
     "source": "terrain",
     "exaggeration": 2,
-    "elevationOffset": 50
+    "elevationOffset": 2000
   }
 }
