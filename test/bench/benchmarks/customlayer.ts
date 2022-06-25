@@ -1,7 +1,7 @@
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import type { StyleSpecification } from '../../../src/style-spec/types.g';
-import { CustomLayerInterface } from '../../../src/style/style_layer/custom_style_layer';
+import type {StyleSpecification} from '../../../src/style-spec/types.g';
+import {CustomLayerInterface} from '../../../src/style/style_layer/custom_style_layer';
 
 class Tent3D implements CustomLayerInterface {
     id: string;
