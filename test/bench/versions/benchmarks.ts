@@ -71,7 +71,7 @@ register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => 
 register('FilterCreate', new FilterCreate());
 register('FilterEvaluate', new FilterEvaluate());
 register('HillshadeLoad', new HillshadeLoad());
-register('Custom', new CustomLayer());
+register('CustomLayer', new CustomLayer());
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits
