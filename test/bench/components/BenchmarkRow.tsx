@@ -7,9 +7,9 @@ import {formatSample, Version, versionColor} from './util';
 import React from 'react';
 
 export type BenchmarkRowProps = {
-  name: string;
-  location: LocationsWithTileID;
-  versions: Version[];
+    name: string;
+    location: LocationsWithTileID;
+    versions: Version[];
 }
 
 export const BenchmarkRow = (props: BenchmarkRowProps) => {
@@ -31,10 +31,10 @@ export const BenchmarkRow = (props: BenchmarkRowProps) => {
         // how much to emphasize difference between means
         // https://en.wikipedia.org/wiki/Effect_size#Cohen.27s_d
         const pooledDeviation = Math.sqrt(
-              (
-                  (main.samples.length - 1) * Math.pow(main.summary.windsorizedDeviation, 2) +
+            (
+                (main.samples.length - 1) * Math.pow(main.summary.windsorizedDeviation, 2) +
                   (current.samples.length - 1) * Math.pow(current.summary.windsorizedDeviation, 2)
-              ) /
+            ) /
               (main.samples.length + current.samples.length - 2)
         );
         const d = delta / pooledDeviation;
@@ -81,18 +81,18 @@ export const BenchmarkRow = (props: BenchmarkRowProps) => {
                         <th><p style={{color: '#1287A8'}}>Lat: {props.location.center[1]} Lng: {props.location.center[0]}</p></th>
                     </tr>}
                     {renderStatistic('(20% trimmed) Mean',
-                          (version) => <p>
-                              {formatSample(version.summary.trimmedMean)} ms
-                              {current && version.name === current.name && change}
-                          </p>)}
+                        (version) => <p>
+                            {formatSample(version.summary.trimmedMean)} ms
+                            {current && version.name === current.name && change}
+                        </p>)}
                     {renderStatistic('(Windsorized) Deviation',
-                          (version) => <p>{formatSample(version.summary.windsorizedDeviation)} ms</p>)}
+                        (version) => <p>{formatSample(version.summary.windsorizedDeviation)} ms</p>)}
                     {renderStatistic('R² Slope / Correlation',
-                          (version) => <p>{formatSample(version.regression.slope)} ms / {version.regression.correlation.toFixed(3)} {
-                              version.regression.correlation < 0.9 ? '\u2620\uFE0F' :
-                              version.regression.correlation < 0.99 ? '\u26A0\uFE0F' : ''}</p>)}
+                        (version) => <p>{formatSample(version.regression.slope)} ms / {version.regression.correlation.toFixed(3)} {
+                            version.regression.correlation < 0.9 ? '\u2620\uFE0F' :
+                                version.regression.correlation < 0.99 ? '\u26A0\uFE0F' : ''}</p>)}
                     {renderStatistic('Minimum',
-                          (version) => <p>{formatSample(version.summary.min)} ms</p>)}
+                        (version) => <p>{formatSample(version.summary.min)} ms</p>)}
                     {pInferiority && <tr><td colSpan={3}>{pInferiority}</td></tr>}
                 </tbody>
             </table>

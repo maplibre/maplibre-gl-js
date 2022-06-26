@@ -72,12 +72,6 @@ class Case implements Expression {
     outputDefined(): boolean {
         return this.branches.every(([_, out]) => out.outputDefined()) && this.otherwise.outputDefined();
     }
-
-    serialize() {
-        const serialized = ['case' as unknown];
-        this.eachChild(child => { serialized.push(child.serialize()); });
-        return serialized;
-    }
 }
 
 export default Case;

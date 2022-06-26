@@ -59,13 +59,13 @@ Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs
 
 We thank everyone who supported us financially in the past and special thanks to the people and organizations who support us with recurring dontations:  
 
-@jawg, @nekoyasan, @atierian, @photoprism, @kaplanlior, @francois2metz, @Schneider-Geo, @serghov, @ambientlight, @joschi77, @geoffhill, @jasongodev
+[MIERUNE Inc.](https://www.mierune.co.jp/?lang=en) [@MIERUNE](https://github.com/MIERUNE), [@jawg](https://github.com/jawg), [@nekoyasan](https://github.com/nekoyasan), [@atierian](https://github.com/atierian), [@photoprism](https://github.com/photoprism), [@kaplanlior](https://github.com/kaplanlior), [@francois2metz](https://github.com/francois2metz), [@Schneider-Geo](https://github.com/Schneider-Geo), [@serghov](https://github.com/serghov), [@ambientlight](https://github.com/ambientlight), [@joschi77](https://github.com/joschi77), [@geoffhill](https://github.com/geoffhill), [@jasongode](https://github.com/jasongode)
 
 ### Roadmap
 
 This project's initial plans are outlined in the [Roadmap](https://github.com/maplibre/maplibre-gl-js/projects/2) project. The primary goal is consistency and continued bug fixes and maintenance as we advance. 
 
-> **MapLibre GL** is developed following [Semantic Versioning (2.0.0)](http://semver.org/spec/v2.0.0.html).
+> **MapLibre GL** is developed following [Semantic Versioning (2.0.0)](https://semver.org/spec/v2.0.0.html).
 
 ### Getting Involved
 

@@ -1,13 +1,6 @@
-
 {
-  "expression": [
-    "number-format",
-    123456.789,
-    {}
-  ],
-  "inputs": [
-    [{}, {}]
-  ],
+  "expression": ["number-format", 123456.789, {}],
+  "inputs": [[{}, {}]],
   "expected": {
     "compiled": {
       "result": "success",
@@ -15,7 +8,6 @@
       "isZoomConstant": true,
       "type": "string"
     },
-    "outputs": ["123,456.789"],
-    "serialized": "123,456.789"
+    "outputs": ["123,456.789"]
   }
 }

@@ -80,12 +80,6 @@ class Coalesce implements Expression {
     outputDefined(): boolean {
         return this.args.every(arg => arg.outputDefined());
     }
-
-    serialize() {
-        const serialized = ['coalesce' as unknown];
-        this.eachChild(child => { serialized.push(child.serialize()); });
-        return serialized;
-    }
 }
 
 export default Coalesce;

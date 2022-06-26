@@ -24,19 +24,19 @@ function center(scale) {
 }
 
 type AxisProps = {
-  children?: any;
-  scale: ScaleBand<string> | ScaleLinear<number, number>;
-  orientation: string;
-  ticks?: number | (number | string)[];
-  tickValues?: number[];
-  tickFormat?: (n: number | {
-      valueOf(): number;
-  }) => string;
-  tickSize?: number;
-  tickSizeInner?: number;
-  tickSizeOuter?: number;
-  tickPadding?: number;
-  transform?: string;
+    children?: any;
+    scale: ScaleBand<string> | ScaleLinear<number, number>;
+    orientation: string;
+    ticks?: number | (number | string)[];
+    tickValues?: number[];
+    tickFormat?: (n: number | {
+        valueOf(): number;
+    }) => string;
+    tickSize?: number;
+    tickSizeInner?: number;
+    tickSizeOuter?: number;
+    tickPadding?: number;
+    transform?: string;
 }
 
 export const Axis = (props: AxisProps) => {

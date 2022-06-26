@@ -43,18 +43,6 @@
       91.834,
       98.0277,
       100
-    ],
-    "serialized": [
-      "number",
-      [
-        "interpolate",
-        ["cubic-bezier", 0.42, 0, 0.58, 1],
-        ["number", ["get", "x"]],
-        0,
-        0,
-        100,
-        100
-      ]
     ]
   }
 }
