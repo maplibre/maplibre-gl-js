@@ -7,6 +7,7 @@
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
+- Fix compact attribution style when using global CSS that sets `box-sizing: border-box;` ([#1250](https://github.com/maplibre/maplibre-gl-js/pull/1250))
 
 ## 2.2.0-pre.3
 
