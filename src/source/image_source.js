@@ -3,6 +3,7 @@
 import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {getImage, ResourceType} from '../util/ajax';
+import browser from '../util/browser';
 import EXTENT from '../data/extent';
 import {RasterBoundsArray} from '../data/array_types';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
@@ -77,7 +78,7 @@ class ImageSource extends Evented implements Source {
     dispatcher: Dispatcher;
     map: Map;
     texture: Texture | null;
-    image: HTMLImageElement | ImageBitmap;
+    image: ImageData;
     tileID: CanonicalTileID;
     _boundsArray: RasterBoundsArray;
     boundsBuffer: VertexBuffer;
@@ -116,7 +117,7 @@ class ImageSource extends Evented implements Source {
             if (err) {
                 this.fire(new ErrorEvent(err));
             } else if (image) {
-                this.image = image;
+                this.image = browser.getImageData(image);
                 if (newCoordinates) {
                     this.coordinates = newCoordinates;
                 }
