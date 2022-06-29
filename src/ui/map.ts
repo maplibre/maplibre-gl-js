@@ -218,7 +218,13 @@ const defaultOptions = {
  * @param {boolean} [options.doubleClickZoom=true] If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
  * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TouchZoomRotateHandler#enable}.
  * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TouchPitchHandler#enable}.
- * @param {boolean} [options.cooperativeGestures=false] If `true`, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
+ * @param {boolean} [options.cooperativeGestures=false] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
+ * A valid options object includes the following properties to customize the text on the informational screen. The values below are the defaults.
+ * {
+ *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
+ *   macHelpText: "Use ⌘ + scroll to zoom the map",
+ *   mobileHelpText: "Use two fingers to move the map",
+ * }
  * @param {boolean} [options.trackResize=true] If `true`, the map will automatically resize when the browser window resizes.
  * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
  * @param {number} [options.zoom=0] The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
@@ -273,7 +279,7 @@ class Map extends Camera {
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
     _interactive: boolean;
-    _cooperativeGestures: boolean;
+    _cooperativeGestures: any;
     _cooperativeGesturesScreen: HTMLElement;
     _metaPress: boolean;
     _showTileBoundaries: boolean;
@@ -2399,15 +2405,16 @@ class Map extends Camera {
         const container = this._container;
         this._metaPress = false;
         this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
-        let modifierKeyPrefix = 'Ctrl'; // control key
         let modifierKeyName = 'Control';
+        let desktopMessage = this._cooperativeGestures.windowsHelpText || 'Use Ctrl + scroll to zoom the map';
         if (navigator.platform.indexOf('Mac') === 0) {
-            modifierKeyPrefix = '⌘'; // ⌘ key
+            desktopMessage = this._cooperativeGestures.macHelpText || 'Use ⌘ + scroll to zoom the map';
             modifierKeyName = 'Meta';
         }
+        const mobileMessage = this._cooperativeGestures.mobileHelpText || 'Use two fingers to move the map';
         this._cooperativeGesturesScreen.innerHTML = `
-            <div class="maplibregl-desktop-message">Use ${modifierKeyPrefix} + scroll to zoom the map</div>
-            <div class="maplibregl-mobile-message">Use two fingers to move the map</div>
+            <div class="maplibregl-desktop-message">${desktopMessage}</div>
+            <div class="maplibregl-mobile-message">${mobileMessage}</div>
         `;
         document.addEventListener('keydown', (event) => {
             if (event.key === modifierKeyName) this._metaPress = true;
