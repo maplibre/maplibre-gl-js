@@ -84,7 +84,7 @@ export type MapOptions = {
     doubleClickZoom?: boolean;
     touchZoomRotate?: boolean;
     touchPitch?: boolean;
-    cooperativeGestures?: GestureOptions;
+    cooperativeGestures?: boolean | GestureOptions;
     trackResize?: boolean;
     center?: LngLatLike;
     zoom?: number;
@@ -106,11 +106,11 @@ export type MapOptions = {
     pixelRatio?: number;
 };
 
-export type GestureOptions = boolean | {
+export type GestureOptions = {
     windowsHelpText?: string;
     macHelpText?: string;
     mobileHelpText?: string;
-}
+};
 
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
 type Complete<T> = {
@@ -223,7 +223,7 @@ const defaultOptions = {
  * @param {boolean} [options.doubleClickZoom=true] If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
  * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TouchZoomRotateHandler#enable}.
  * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TouchPitchHandler#enable}.
- * @param {GestureOptions} [options.cooperativeGestures=undefined] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
+ * @param {boolean|GestureOptions} [options.cooperativeGestures=undefined] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
  * A valid options object includes the following properties to customize the text on the informational screen. The values below are the defaults.
  * {
  *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
@@ -284,7 +284,7 @@ class Map extends Camera {
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
     _interactive: boolean;
-    _cooperativeGestures: GestureOptions;
+    _cooperativeGestures: boolean | GestureOptions;
     _cooperativeGesturesScreen: HTMLElement;
     _metaPress: boolean;
     _showTileBoundaries: boolean;
@@ -2411,12 +2411,12 @@ class Map extends Camera {
         this._metaPress = false;
         this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
         let modifierKeyName = 'Control';
-        let desktopMessage = this._cooperativeGestures.windowsHelpText || 'Use Ctrl + scroll to zoom the map';
+        let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
         if (navigator.platform.indexOf('Mac') === 0) {
-            desktopMessage = this._cooperativeGestures.macHelpText || 'Use ⌘ + scroll to zoom the map';
+            desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
             modifierKeyName = 'Meta';
         }
-        const mobileMessage = this._cooperativeGestures.mobileHelpText || 'Use two fingers to move the map';
+        const mobileMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.mobileHelpText ? this._cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
         this._cooperativeGesturesScreen.innerHTML = `
             <div class="maplibregl-desktop-message">${desktopMessage}</div>
             <div class="maplibregl-mobile-message">${mobileMessage}</div>

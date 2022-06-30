@@ -1,6 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {indexTouches} from './handler_util';
 import type Map from '../map';
+import {GestureOptions} from '../map';
 
 export default class TouchPanHandler {
 
@@ -17,7 +18,7 @@ export default class TouchPanHandler {
 
     constructor(options: {
         clickTolerance: number;
-        cooperativeGestures: boolean;
+        cooperativeGestures: boolean | GestureOptions;
     }, map: Map) {
         this._minTouches = options.cooperativeGestures ? 2 : 1;
         this._clickTolerance = options.clickTolerance || 1;
