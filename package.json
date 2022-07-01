@@ -98,7 +98,7 @@
     "jest": "^27.5.1",
     "jest-canvas-mock": "^2.3.1",
     "jest-playwright-preset": "^1.7.0",
-    "jsdom": "^19.0.0",
+    "jsdom": "^20.0.0",
     "json-stringify-pretty-compact": "^4.0.0",
     "mapbox-gl-styles": "^2.0.2",
     "minimist": "^1.2.5",
