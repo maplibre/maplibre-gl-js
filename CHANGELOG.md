@@ -2,7 +2,7 @@
 
 ### ✨ Features and improvements
 
-- *...Add new stuff here...*
+- Added `collaborativeGestures` option when instantiating map to prevent inadvertent scrolling/panning when navigating a page where map is embedded inline (#234)
 
 ### 🐞 Bug fixes
 
