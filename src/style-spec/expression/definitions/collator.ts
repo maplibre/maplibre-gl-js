@@ -63,14 +63,4 @@ export default class CollatorExpression implements Expression {
         // possible outputs anyway, so we can get away with leaving this false for now.
         return false;
     }
-
-    serialize() {
-        const options = {};
-        options['case-sensitive'] = this.caseSensitive.serialize();
-        options['diacritic-sensitive'] = this.diacriticSensitive.serialize();
-        if (this.locale) {
-            options['locale'] = this.locale.serialize();
-        }
-        return ['collator', options];
-    }
 }

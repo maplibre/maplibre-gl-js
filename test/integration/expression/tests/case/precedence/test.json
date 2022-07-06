@@ -8,7 +8,6 @@
       "isZoomConstant": true,
       "type": "boolean"
     },
-    "outputs": [false],
-    "serialized": false
+    "outputs": [false]
   }
 }

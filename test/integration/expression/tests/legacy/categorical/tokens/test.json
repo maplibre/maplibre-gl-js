@@ -24,7 +24,6 @@
       "isZoomConstant": true,
       "type": "string"
     },
-    "outputs": ["default", "0 {a}", "1 {b}", "default"],
-    "serialized": ["match", ["get", "p"], "0", "0 {a}", "1", "1 {b}", "default"]
+    "outputs": ["default", "0 {a}", "1 {b}", "default"]
   }
 }

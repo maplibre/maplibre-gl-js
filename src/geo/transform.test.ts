@@ -93,7 +93,7 @@ describe('transform', () => {
         transform.latRange = [-5, 5];
 
         transform.zoom = 0;
-        expect(transform.zoom).toBe(5.135709286104402);
+        expect(transform.zoom).toBe(5.1357092861044045);
 
         transform.center = new LngLat(-50, -30);
         expect(transform.center).toEqual(new LngLat(0, -0.0063583052861417855));
@@ -101,6 +101,39 @@ describe('transform', () => {
         transform.zoom = 10;
         transform.center = new LngLat(-50, -30);
         expect(transform.center).toEqual(new LngLat(-4.828338623046875, -4.828969771321582));
+    });
+
+    test('lngRange can constrain zoom and center across meridian', () => {
+        const transform = new Transform(0, 22, 0, 60, true);
+        transform.center = new LngLat(180, 0);
+        transform.zoom = 10;
+        transform.resize(500, 500);
+
+        // equivalent ranges
+        const lngRanges: [number, number][] = [
+            [175, -175], [175, 185], [-185, -175], [-185, 185]
+        ];
+
+        for (const lngRange of lngRanges) {
+            transform.lngRange = lngRange;
+            transform.latRange = [-5, 5];
+
+            transform.zoom = 0;
+            expect(transform.zoom).toBe(5.1357092861044045);
+
+            transform.center = new LngLat(-50, -30);
+            expect(transform.center).toEqual(new LngLat(180, -0.0063583052861417855));
+
+            transform.zoom = 10;
+            transform.center = new LngLat(-50, -30);
+            expect(transform.center).toEqual(new LngLat(-175.171661376953125, -4.828969771321582));
+
+            transform.center = new LngLat(230, 0);
+            expect(transform.center).toEqual(new LngLat(-175.171661376953125, 0));
+
+            transform.center = new LngLat(130, 0);
+            expect(transform.center).toEqual(new LngLat(175.171661376953125, 0));
+        }
     });
 
     describe('coveringTiles', () => {

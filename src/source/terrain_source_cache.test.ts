@@ -9,6 +9,9 @@ import Painter from '../render/painter';
 import Context from '../gl/context';
 import gl from 'gl';
 import RasterDEMTileSource from './raster_dem_tile_source';
+import {OverscaledTileID} from './tile_id';
+import Tile from './tile';
+import DEMData from '../data/dem_data';
 
 const context = new Context(gl(10, 10));
 const transform = new Transform();
@@ -54,8 +57,8 @@ describe('TerrainSourceCache', () => {
         global.fetch = null;
         server = fakeServer.create();
         server.respondWith('/source.json', JSON.stringify({
-            minzoom: 0,
-            maxzoom: 22,
+            minzoom: 5,
+            maxzoom: 12,
             attribution: 'MapLibre',
             tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
             bounds: [-47, -7, -45, -5]
@@ -84,6 +87,18 @@ describe('TerrainSourceCache', () => {
     test('#constructor', () => {
         expect(tsc.sourceCache.usedForTerrain).toBeTruthy();
         expect(tsc.sourceCache.tileSize).toBe(tsc.tileSize * 2 ** tsc.deltaZoom);
+    });
+
+    test('#getSourceTile', () => {
+        const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
+        const tile = new Tile(tileID, 256);
+        tile.dem = {} as DEMData;
+        tsc.sourceCache._tiles[tileID.key] = tile;
+        expect(tsc.deltaZoom).toBe(1);
+        expect(tsc.getSourceTile(tileID)).toBeFalsy();
+        expect(tsc.getSourceTile(tileID.children(12)[0])).toBeTruthy();
+        expect(tsc.getSourceTile(tileID.children(12)[0].children(12)[0])).toBeFalsy();
+        expect(tsc.getSourceTile(tileID.children(12)[0].children(12)[0], true)).toBeTruthy();
     });
 
 });

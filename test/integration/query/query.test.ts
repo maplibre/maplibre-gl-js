@@ -8,6 +8,7 @@ import {deepEqual} from '../lib/json-diff';
 import st from 'st';
 import http from 'http';
 import path from 'path';
+import fs from 'fs';
 
 let browser: Browser;
 let page: Page;
@@ -173,7 +174,14 @@ describe('query tests', () => {
 
             const actual = await page.evaluate(performQueryOnFixture, fixture);
 
-            expect(deepEqual(actual, fixture.expected)).toBeTruthy();
+            const isEqual = deepEqual(actual, fixture.expected);
+            // update expected.json if UPDATE=true is passed and the test fails
+            if (process.env.UPDATE && !isEqual) {
+                const expecedPath = path.join('test/integration/query/', testName, 'expected.json');
+                console.log('updating', expecedPath);
+                fs.writeFileSync(expecedPath, JSON.stringify(actual, null, 2));
+            }
+            expect(isEqual).toBeTruthy();
 
         }, 10000);
 

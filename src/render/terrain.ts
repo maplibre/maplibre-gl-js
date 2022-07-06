@@ -366,4 +366,22 @@ export default class Terrain {
         return this._mesh;
     }
 
+    /**
+     * Get the minimum and maximum elevation contained in a tile. This includes any elevation offset
+     * and exaggeration included in the terrain.
+     *
+     * @param tileID Id of the tile to be used as a source for the min/max elevation
+     * @returns {Object} Minimum and maximum elevation found in the tile, including the terrain's
+     * elevation offset and exaggeration
+     */
+    getMinMaxElevation(tileID: OverscaledTileID): {minElevation: number | null; maxElevation: number | null} {
+        const tile = this.getTerrainData(tileID).tile;
+        const minMax = {minElevation: null, maxElevation: null};
+        if (tile && tile.dem) {
+            minMax.minElevation = (tile.dem.min + this.elevationOffset) * this.exaggeration;
+            minMax.maxElevation = (tile.dem.max + this.elevationOffset) * this.exaggeration;
+        }
+        return minMax;
+    }
+
 }
