@@ -47,10 +47,34 @@ const map = new maplibregl.Map({
 });
 
 map.setStyle('https://demotiles.maplibre.org/style.json', {
+    // style patch can be used to compose a desired style representation on runtime
+    // based on the previous style and the style that is being set.
+    // this can be handy when previous and incoming style need to be combined in a certain way
+    // or a partial visual state needs to move from one style to another
+    //
+    // let's use the hypothetical example when we want to show the countries shown in different colours (demotiles)
+    // while for US we display the original OSM basemap
     stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+        // preserve the OSM basemap from original style, place it above the background layer (below the next level above background)
         const prevRasterLayer = prevStyle.layers[0];
-        preserveLayer(prevRasterLayer.id);
-        updatePaintProperty(prevRasterLayer.id, 'raster-opacity', 0.75);
+        const aboveBackgroundLayerId = nextStyle.layers.length > 0 ? nextStyle.layers[1].id : undefined
+        preserveLayer(prevRasterLayer.id, aboveBackgroundLayerId);
+        // we can modify the paint/layout property or filter on layers from previous and next styles
+        updatePaintProperty(prevRasterLayer.id, 'raster-opacity', 0.8);
+
+        // hide the layers we don't need from demotiles style
+        nextStyle.layers
+            .filter(layer => layer.id.startsWith('geolines'))
+            .forEach(layer => {
+                updateLayoutProperty(layer.id, 'visibility', 'none');
+            });
+
+        // filter out US polygons 
+        nextStyle.layers
+            .filter(layer => layer.id.startsWith('coastline') || layer.id.startsWith('countries'))
+            .forEach(layer => {
+                updateFilter(layer.id, ['!=', ['get', 'ADM0_A3'], 'USA']);
+            });
     }
 });
 
