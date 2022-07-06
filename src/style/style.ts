@@ -106,27 +106,38 @@ export type StyleSetterOptions = {
     validate?: boolean;
 };
 
+/**
+ * a style patch function that will perform a side-effect after a style is fetched but before it is committed to the map state
+ * this function exposes previous and next styles as well as means to update paint, layout properties and filters in style layers of the target style
+ * it can be commonly used to support a range of functionalities like:
+ *      when incoming style requires modification based on external state,
+ *      when previous style carries certain 'state' that needs to be carried over to a new style gracefully,
+ *      when a desired target style is a certain combination of previous and incoming style.
+ *
+ * @param previousStyle The current style.
+ * @param nextStyle The next style which is to be applied.
+ * @param preserveLayer Preserve a layer from the previous style in the next style.
+ * @param updatePaintProperty Modify paint properties of a layer in the next style before the style is applied.
+ * @param updateLayoutProperty Modify layout properties of a layer in the next style before the style is applied.
+ * @param updateFilter Modify filter property of a layer in the next style before the style is applied.
+ */
+export type StylePatchFunction = (
+    previousStyle: StyleSpecification,
+    nextStyle: StyleSpecification,
+    preserveLayer: (layerId: string, before?: string) => void,
+    updatePaintProperty: (layerId: string, name: string, value: any) => void,
+    updateLayoutProperty: (layerId: string, name: string, value: any) => void,
+    updateFilter: (layerId: string, filter: FilterSpecification | null, options?: StyleSetterOptions) => void
+) => void;
+
 export type StyleSwapOptions = {
     /** should style diffing be applied that may allow smooth transitions between styles */
     diff?: boolean;
+
     /**
-     * a function that will perform a side-effect after a style is fetched but before it is committed to the map state
-     *
-     * @param previousStyle The current style.
-     * @param nextStyle The next style which is to be applied.
-     * @param preserveLayer Preserve a layer from the previous style in the next style.
-     * @param updatePaintProperty Modify paint properties of a layer in the next style before the style is applied.
-     * @param updateLayoutProperty Modify layout properties of a layer in the next style before the style is applied.
-     * @param updateFilter Modify filter property of a layer in the next style before the style is applied.
+     * a style patch function that will perform a side-effect after a style is fetched but before it is committed to the map state
      */
-    stylePatch?: (
-        previousStyle: StyleSpecification,
-        nextStyle: StyleSpecification,
-        preserveLayer: (layerId: string, before?: string) => void,
-        updatePaintProperty: (layerId: string, name: string, value: any) => void,
-        updateLayoutProperty: (layerId: string, name: string, value: any) => void,
-        updateFilter: (layerId: string, filter: FilterSpecification | null, options?: StyleSetterOptions) => void
-    ) => void;
+    stylePatch?: StylePatchFunction;
 }
 
 /**

@@ -3,7 +3,7 @@ import browser from '../util/browser';
 import DOM from '../util/dom';
 import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
-import Style from '../style/style';
+import Style, { StylePatchFunction } from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
 import Transform from '../geo/transform';
@@ -1404,11 +1404,35 @@ class Map extends Camera {
      *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      *   Set to `false`, to enable font settings from the map's style for these glyph ranges.
      *   Forces a full update.
+     * @param {StylePatchFunction} [options.stylePatch=undefined] A style patch function 
+     *   that will perform a side-effect after a style is fetched but before it is committed to the map state.
+     *   This function exposes previous and next styles as well as means to update paint, layout properties and filters in style layers of the target style.
+     *   It can be commonly used to support a range of functionalities like:
+     *      when incoming style requires modification based on external state,
+     *      when previous style carries certain 'state' that needs to be carried over to a new style gracefully,
+     *      or when a desired target style is a certain combination of previous and incoming style.
      * @returns {Map} `this`
      *
      * @example
      * map.setStyle("https://demotiles.maplibre.org/style.json");
+     * // set style with style patch
+     * map.setStyle('https://demotiles.maplibre.org/style.json', {
+     *   stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+     *       // hide the layers we don't need from demotiles style
+     *       nextStyle.layers
+     *           .filter(layer => layer.id.startsWith('geolines'))
+     *           .forEach(layer => {
+     *               updateLayoutProperty(layer.id, 'visibility', 'none');
+     *           });
      *
+     *       // filter out US polygons 
+     *       nextStyle.layers
+     *           .filter(layer => layer.id.startsWith('coastline') || layer.id.startsWith('countries'))
+     *           .forEach(layer => {
+     *               updateFilter(layer.id, ['!=', ['get', 'ADM0_A3'], 'USA']);
+     *           });
+     *   }
+     * });
      */
     setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions & StyleOptions) {
         options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
