@@ -125,7 +125,7 @@ export type StyleSwapOptions = {
         preserveLayer: (layerId: string, before?: string) => void,
         updatePaintProperty: (layerId: string, name: string, value: any) => void,
         updateLayoutProperty: (layerId: string, name: string, value: any) => void,
-        updateFilter: (layerId: string, name: string, value: any) => void
+        updateFilter: (layerId: string, filter: FilterSpecification | null, options?: StyleSetterOptions) => void
     ) => void;
 }
 
