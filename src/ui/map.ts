@@ -3,7 +3,7 @@ import browser from '../util/browser';
 import DOM from '../util/dom';
 import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
-import Style, { StylePatchFunction } from '../style/style';
+import Style from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
 import Transform from '../geo/transform';
@@ -1404,7 +1404,7 @@ class Map extends Camera {
      *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      *   Set to `false`, to enable font settings from the map's style for these glyph ranges.
      *   Forces a full update.
-     * @param {StylePatchFunction} [options.stylePatch=undefined] A style patch function 
+     * @param {StylePatchFunction} [options.stylePatch=undefined] A style patch function
      *   that will perform a side-effect after a style is fetched but before it is committed to the map state.
      *   This function exposes previous and next styles as well as means to update paint, layout properties and filters in style layers of the target style.
      *   It can be commonly used to support a range of functionalities like:
@@ -1425,7 +1425,7 @@ class Map extends Camera {
      *               updateLayoutProperty(layer.id, 'visibility', 'none');
      *           });
      *
-     *       // filter out US polygons 
+     *       // filter out US polygons
      *       nextStyle.layers
      *           .filter(layer => layer.id.startsWith('coastline') || layer.id.startsWith('countries'))
      *           .forEach(layer => {

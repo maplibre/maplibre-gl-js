@@ -13,7 +13,7 @@ import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import {IControl} from './control/control';
 import EvaluationParameters from '../style/evaluation_parameters';
 import {fakeServer, FakeServer} from 'nise';
-import { CircleLayoutProps, CirclePaintProps } from '../style/style_layer/circle_style_layer_properties.g';
+import {CircleLayoutProps, CirclePaintProps} from '../style/style_layer/circle_style_layer_properties.g';
 import CircleStyleLayer from '../style/style_layer/circle_style_layer';
 
 function createStyleSource() {
@@ -302,22 +302,22 @@ describe('Map', () => {
                 }]
             });
 
-            const map = createMap({ style });
+            const map = createMap({style});
             map.setStyle(createStyle(), {
                 stylePatch: (prevStyle, nextStyle, preserveLayer) => {
-                    preserveLayer(prevStyle.layers[0].id)
+                    preserveLayer(prevStyle.layers[0].id);
                 }
             });
 
             let initialStyleDidLoad = false;
             map.on('style.load', () => {
-                if(!initialStyleDidLoad){
+                if (!initialStyleDidLoad) {
                     initialStyleDidLoad = true;
                 } else {
                     const loadedStyle = map.style.serialize();
                     expect('maplibre' in loadedStyle.sources).toBeTruthy();
                     expect(loadedStyle.layers[0].id).toBe(style.layers[0].id);
-                    expect(loadedStyle.layers.length).toBe(1);
+                    expect(loadedStyle.layers).toHaveLength(1);
                     done();
                 }
             });
@@ -339,7 +339,7 @@ describe('Map', () => {
                     source: 'maplibre',
                     'source-layer': 'sourceLayer',
                     paint: {
-                        'circle-color': "#000000"
+                        'circle-color': '#000000'
                     }
                 }]
             });
@@ -353,7 +353,7 @@ describe('Map', () => {
 
             let initialStyleDidLoad = false;
             map.on('style.load', () => {
-                if(!initialStyleDidLoad){
+                if (!initialStyleDidLoad) {
                     initialStyleDidLoad = true;
                 } else {
                     const paint = map.style.serialize().layers[0].paint as CirclePaintProps;
@@ -391,7 +391,7 @@ describe('Map', () => {
 
             let initialStyleDidLoad = false;
             map.on('style.load', () => {
-                if(!initialStyleDidLoad){
+                if (!initialStyleDidLoad) {
                     initialStyleDidLoad = true;
                 } else {
                     const layout = map.style.serialize().layers[0].layout as CircleLayoutProps;
@@ -429,7 +429,7 @@ describe('Map', () => {
 
             let initialStyleDidLoad = false;
             map.on('style.load', () => {
-                if(!initialStyleDidLoad){
+                if (!initialStyleDidLoad) {
                     initialStyleDidLoad = true;
                 } else {
                     const layer = map.style.serialize().layers[0] as CircleStyleLayer;

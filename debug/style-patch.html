@@ -57,7 +57,7 @@ map.setStyle('https://demotiles.maplibre.org/style.json', {
     stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
         // preserve the OSM basemap from original style, place it above the background layer (below the next level above background)
         const prevRasterLayer = prevStyle.layers[0];
-        const aboveBackgroundLayerId = nextStyle.layers.length > 0 ? nextStyle.layers[1].id : undefined
+        const aboveBackgroundLayerId = nextStyle.layers.length > 0 ? nextStyle.layers[1].id : undefined;
         preserveLayer(prevRasterLayer.id, aboveBackgroundLayerId);
         // we can modify the paint/layout property or filter on layers from previous and next styles
         updatePaintProperty(prevRasterLayer.id, 'raster-opacity', 0.8);
@@ -69,7 +69,7 @@ map.setStyle('https://demotiles.maplibre.org/style.json', {
                 updateLayoutProperty(layer.id, 'visibility', 'none');
             });
 
-        // filter out US polygons 
+        // filter out US polygons
         nextStyle.layers
             .filter(layer => layer.id.startsWith('coastline') || layer.id.startsWith('countries'))
             .forEach(layer => {
