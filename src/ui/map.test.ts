@@ -13,6 +13,8 @@ import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import {IControl} from './control/control';
 import EvaluationParameters from '../style/evaluation_parameters';
 import {fakeServer, FakeServer} from 'nise';
+import { CircleLayoutProps, CirclePaintProps } from '../style/style_layer/circle_style_layer_properties.g';
+import CircleStyleLayer from '../style/style_layer/circle_style_layer';
 
 function createStyleSource() {
     return {
@@ -275,6 +277,166 @@ describe('Map', () => {
             jest.spyOn(style, '_remove');
             map.setStyle(null);
             expect(style._remove).toHaveBeenCalledTimes(1);
+        });
+
+        test('style patch with preserveLayer call should copy the source and the layer into next style', done => {
+            const style = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'layerId0',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }, {
+                    id: 'layerId1',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }]
+            });
+
+            const map = createMap({ style });
+            map.setStyle(createStyle(), {
+                stylePatch: (prevStyle, nextStyle, preserveLayer) => {
+                    preserveLayer(prevStyle.layers[0].id)
+                }
+            });
+
+            let initialStyleDidLoad = false;
+            map.on('style.load', () => {
+                if(!initialStyleDidLoad){
+                    initialStyleDidLoad = true;
+                } else {
+                    const loadedStyle = map.style.serialize();
+                    expect('maplibre' in loadedStyle.sources).toBeTruthy();
+                    expect(loadedStyle.layers[0].id).toBe(style.layers[0].id);
+                    expect(loadedStyle.layers.length).toBe(1);
+                    done();
+                }
+            });
+        });
+
+        test('style patch with updatePaintProperty should update the target layer paint property accordingly', done => {
+            const style = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'layerId0',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer',
+                    paint: {
+                        'circle-color': "#000000"
+                    }
+                }]
+            });
+
+            const map = createMap();
+            map.setStyle(style, {
+                stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty) => {
+                    updatePaintProperty(nextStyle.layers[0].id, 'circle-color', '#FF0000');
+                }
+            });
+
+            let initialStyleDidLoad = false;
+            map.on('style.load', () => {
+                if(!initialStyleDidLoad){
+                    initialStyleDidLoad = true;
+                } else {
+                    const paint = map.style.serialize().layers[0].paint as CirclePaintProps;
+                    expect(paint).toBeDefined();
+                    expect(paint['circle-color']).toBe('#FF0000');
+                    done();
+                }
+            });
+        });
+
+        test('style patch with updateLayoutProperty should update the target layer layout property accordingly', done => {
+            const style = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'layerId0',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }]
+            });
+
+            const map = createMap();
+            map.setStyle(style, {
+                stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty) => {
+                    updateLayoutProperty(nextStyle.layers[0].id, 'visibility', 'none');
+                }
+            });
+
+            let initialStyleDidLoad = false;
+            map.on('style.load', () => {
+                if(!initialStyleDidLoad){
+                    initialStyleDidLoad = true;
+                } else {
+                    const layout = map.style.serialize().layers[0].layout as CircleLayoutProps;
+                    expect(layout).toBeDefined();
+                    expect(layout['visibility']).toBe('none');
+                    done();
+                }
+            });
+        });
+
+        test('style patch with updateFilter should update the target layer filter accordingly', done => {
+            const style = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'layerId0',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }]
+            });
+
+            const map = createMap();
+            map.setStyle(style, {
+                stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+                    updateFilter(nextStyle.layers[0].id, ['!=', ['get', 'foo'], 'bar']);
+                }
+            });
+
+            let initialStyleDidLoad = false;
+            map.on('style.load', () => {
+                if(!initialStyleDidLoad){
+                    initialStyleDidLoad = true;
+                } else {
+                    const layer = map.style.serialize().layers[0] as CircleStyleLayer;
+                    expect(layer.filter).toStrictEqual(['!=', ['get', 'foo'], 'bar']);
+                    done();
+                }
+            });
         });
     });
 
