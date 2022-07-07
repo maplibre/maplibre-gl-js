@@ -147,17 +147,19 @@ function blurMap(val) {
     node.classList[val ? 'add' : 'remove']('blur');
 }
 
-function checkEvent(type, checked) {
-    map.off(type);
-    if (!checked) return;
-    map.on(type, function(data) {
-        var e = (data && data.originalEvent) || {};
-        var dbg =
-            (typeof data.point !== 'undefined' ? ' point = ' + JSON.stringify(data.point) : '') +
-            (typeof e.button !== 'undefined' ? ' button = ' + e.button : '');
+var logEvent = function (data) {
+    var e = (data && data.originalEvent) || {};
+    var dbg =
+        (typeof data.point !== 'undefined' ? ' point = ' + JSON.stringify(data.point) : '') +
+        (typeof e.button !== 'undefined' ? ' button = ' + e.button : '');
 
-        console.log(type + ': ' + dbg);
-    });
+    console.log(data.type + ': ' + dbg);
+};
+
+function checkEvent(type, checked) {
+    map.off(type, logEvent);
+    if (!checked) return;
+    map.on(type, logEvent);
 }
 
 // Which map events do we want to observe?
