@@ -4,7 +4,7 @@
     <title>MapLibre GL JS debug page</title>
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='../dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -28,7 +28,7 @@
     <label><input id='pitch-checkbox' type='checkbox' checked> pitch with rotate</label><br />
 </div>
 
-<script src='../dist/maplibre-gl-dev.js'></script>
+<script src='../../dist/maplibre-gl-dev.js'></script>
 <script>
 
 var map = window.map = new maplibregl.Map({
@@ -71,7 +71,7 @@ map.on('load', function() {
 
     map.addSource('points', {
         'type': 'geojson',
-        'data': '/debug/cross_source_points.geojson'
+        'data': '/test/debug-pages/cross_source_points.geojson'
     });
 
     map.addLayer({
@@ -140,15 +140,6 @@ document.getElementById('show-overdraw-checkbox').onclick = function() {
 
 document.getElementById('pitch-checkbox').onclick = function() {
     map.dragRotate._pitchWithRotate = !!this.checked;
-};
-
-// keyboard shortcut for comparing rendering with MapLibre GL native
-document.onkeypress = function(e) {
-    if (e.charCode === 111 && !e.shiftKey && !e.metaKey && !e.altKey) {
-        var center = map.getCenter();
-        location.href = 'mapboxgl://?center=' + center.lat + ',' + center.lng + '&zoom=' + map.getZoom() + '&bearing=' + map.getBearing();
-        return false;
-    }
 };
 
 </script>
