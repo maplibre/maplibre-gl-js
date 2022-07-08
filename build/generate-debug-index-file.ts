@@ -3,7 +3,7 @@ import fs from 'fs';
 
 const htmlFilesLinks = fs.readdirSync('test/debug-pages')
     .filter(f => f.endsWith('.html'))
-    .map(f => `    <a href='debug-pages/${f}'>${f}</a><br/>`)
+    .map(f => `    <a href='${f}'>${f}</a><br/>`)
     .join('\n');
 
 fs.writeFileSync('test/debug-pages/index.html', `
