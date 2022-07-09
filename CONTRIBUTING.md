@@ -99,7 +99,7 @@ Start the debug server
 npm run start-debug
 ```
 
-Open the debug page at [http://localhost:9966/debug](http://localhost:9966/debug)
+Open the debug page at [http://localhost:9966/test/debug-pages](http://localhost:9966/test/debug-pages)
 
 ## Creating a Standalone Build
 
