@@ -1,5 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {indexTouches} from './handler_util';
+import type Map from '../map';
+import {GestureOptions} from '../map';
 
 export default class TouchPanHandler {
 
@@ -11,12 +13,16 @@ export default class TouchPanHandler {
     _minTouches: number;
     _clickTolerance: number;
     _sum: Point;
+    _map: Map;
+    _cancelCooperativeMessage: boolean;
 
     constructor(options: {
         clickTolerance: number;
-    }) {
-        this._minTouches = 1;
+        cooperativeGestures: boolean | GestureOptions;
+    }, map: Map) {
+        this._minTouches = options.cooperativeGestures ? 2 : 1;
         this._clickTolerance = options.clickTolerance || 1;
+        this._map = map;
         this.reset();
     }
 
@@ -24,6 +30,11 @@ export default class TouchPanHandler {
         this._active = false;
         this._touches = {};
         this._sum = new Point(0, 0);
+
+        // Put a delay on the cooperative gesture message so it's less twitchy
+        setTimeout(() => {
+            this._cancelCooperativeMessage = false;
+        }, 200);
     }
 
     touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
@@ -31,6 +42,15 @@ export default class TouchPanHandler {
     }
 
     touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+        if (this._map._cooperativeGestures) {
+            if (this._minTouches === 2 && mapTouches.length < 2 && !this._cancelCooperativeMessage) {
+                // If coop gesture enabled, show panning info to user
+                this._map._onCooperativeGesture(e, false, mapTouches.length);
+            } else if (!this._cancelCooperativeMessage) {
+                // If user is successfully navigating, we don't need this warning until the touch resets
+                this._cancelCooperativeMessage = true;
+            }
+        }
         if (!this._active || mapTouches.length < this._minTouches) return;
         e.preventDefault();
         return this._calculateTransform(e, points, mapTouches);

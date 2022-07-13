@@ -56,15 +56,6 @@ class Let implements Expression {
     outputDefined() {
         return this.result.outputDefined();
     }
-
-    serialize() {
-        const serialized = ['let' as unknown];
-        for (const [name, expr] of this.bindings) {
-            serialized.push(name, expr.serialize());
-        }
-        serialized.push(this.result.serialize());
-        return serialized;
-    }
 }
 
 export default Let;

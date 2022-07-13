@@ -195,7 +195,7 @@ class HandlerManager {
         const tapDragZoom = new TapDragZoomHandler();
         this._add('tapDragZoom', tapDragZoom);
 
-        const touchPitch = map.touchPitch = new TouchPitchHandler();
+        const touchPitch = map.touchPitch = new TouchPitchHandler(map);
         this._add('touchPitch', touchPitch);
 
         const mouseRotate = new MouseRotateHandler(options);
@@ -205,7 +205,7 @@ class HandlerManager {
         this._add('mousePitch', mousePitch, ['mouseRotate']);
 
         const mousePan = new MousePanHandler(options);
-        const touchPan = new TouchPanHandler(options);
+        const touchPan = new TouchPanHandler(options, map);
         map.dragPan = new DragPanHandler(el, mousePan, touchPan);
         this._add('mousePan', mousePan);
         this._add('touchPan', touchPan, ['touchZoom', 'touchRotate']);

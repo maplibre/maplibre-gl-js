@@ -542,6 +542,7 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
         position: relative;
         background-color: #fff;
         border-radius: 12px;
+        box-sizing: content-box;
     }
 
     .maplibregl-ctrl-attrib.maplibregl-compact-show,
@@ -945,4 +946,42 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     background: #fff;
     border: 2px dotted #202020;
     opacity: 0.5;
+}
+
+.maplibregl-cooperative-gesture-screen {
+    background: rgba(0 0 0 / 40%);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 1rem;
+    font-size: 1.4em;
+    line-height: 1.2;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease 1s;
+}
+
+.maplibregl-cooperative-gesture-screen.maplibregl-show {
+    opacity: 1;
+    transition: opacity 0.05s;
+}
+
+.maplibregl-cooperative-gesture-screen .maplibregl-mobile-message {
+    display: none;
+}
+
+@media (hover: none), (max-width: 480px) {
+    .maplibregl-cooperative-gesture-screen .maplibregl-desktop-message {
+        display: none;
+    }
+
+    .maplibregl-cooperative-gesture-screen .maplibregl-mobile-message {
+        display: block;
+    }
 }

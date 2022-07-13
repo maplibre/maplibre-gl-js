@@ -109,7 +109,7 @@
   "ignorePatterns": ["build/*.js", "*.json"],
   "overrides": [
     {
-      "files": ["debug/**", "test/**", "src/style-spec/**"],
+      "files": ["test/**", "src/style-spec/**"],
       "rules": {
         "jsdoc/check-param-names": "off",
         "jsdoc/require-param": "off",

@@ -1,8 +1,8 @@
 {
   "expression": ["index-of", ["get", "needle"], ["get", "haystack"]],
   "inputs": [
-    [{}, { "properties": { "needle": {}, "haystack": [9, 8, 7] } }],
-    [{}, { "properties": { "needle": {}, "haystack": "helloworld" } }]
+    [{}, {"properties": {"needle": {}, "haystack": [9, 8, 7]}}],
+    [{}, {"properties": {"needle": {}, "haystack": "helloworld"}}]
   ],
   "expected": {
     "compiled": {
@@ -18,7 +18,6 @@
       {
         "error": "Expected first argument to be of type boolean, string, number or null, but found object instead."
       }
-    ],
-    "serialized": ["index-of", ["get", "needle"], ["get", "haystack"]]
+    ]
   }
 }

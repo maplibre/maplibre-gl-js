@@ -8,7 +8,6 @@
       "isZoomConstant": true,
       "type": "string"
     },
-    "outputs": ["hello"],
-    "serialized": "hello"
+    "outputs": ["hello"]
   }
 }

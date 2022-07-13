@@ -8,7 +8,6 @@
       "isZoomConstant": true,
       "type": "object"
     },
-    "outputs": [{"x": 5}],
-    "serialized": ["properties"]
+    "outputs": [{"x": 5}]
   }
 }

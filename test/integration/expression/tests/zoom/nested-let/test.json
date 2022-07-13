@@ -15,12 +15,6 @@
     },
     "outputs": [
       {"error": "Expected value to be of type number, but found null instead."}
-    ],
-    "serialized": [
-      "let",
-      "x",
-      ["number", ["get", "a"]],
-      ["interpolate", ["linear"], ["zoom"], 0, 0, 30, ["var", "x"]]
     ]
   }
 }
