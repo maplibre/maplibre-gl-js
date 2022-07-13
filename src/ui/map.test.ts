@@ -227,7 +227,7 @@ describe('Map', () => {
             map.transform.lngRange = [-120, 140];
             map.transform.latRange = [-60, 80];
             map.transform.resize(600, 400);
-            expect(map.transform.zoom).toBe(0.6983039737971012);
+            expect(map.transform.zoom).toBe(0.6983039737971014);
             expect(map.transform.unmodified).toBeTruthy();
             map.setStyle(createStyle());
             map.on('style.load', () => {

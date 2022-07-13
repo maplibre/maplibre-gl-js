@@ -59,7 +59,6 @@ import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
 /* eslint-enable no-use-before-define */
-
 export type MapOptions = {
     hash?: boolean | string;
     interactive?: boolean;
@@ -86,6 +85,7 @@ export type MapOptions = {
     doubleClickZoom?: boolean;
     touchZoomRotate?: boolean;
     touchPitch?: boolean;
+    cooperativeGestures?: boolean | GestureOptions;
     trackResize?: boolean;
     center?: LngLatLike;
     zoom?: number;
@@ -105,6 +105,12 @@ export type MapOptions = {
     style: StyleSpecification | string;
     pitchWithRotate?: boolean;
     pixelRatio?: number;
+};
+
+export type GestureOptions = {
+    windowsHelpText?: string;
+    macHelpText?: string;
+    mobileHelpText?: string;
 };
 
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
@@ -146,6 +152,7 @@ const defaultOptions = {
     doubleClickZoom: true,
     touchZoomRotate: true,
     touchPitch: true,
+    cooperativeGestures: undefined,
 
     bearingSnap: 7,
     clickTolerance: 3,
@@ -217,6 +224,13 @@ const defaultOptions = {
  * @param {boolean} [options.doubleClickZoom=true] If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
  * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TouchZoomRotateHandler#enable}.
  * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TouchPitchHandler#enable}.
+ * @param {boolean|GestureOptions} [options.cooperativeGestures=undefined] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
+ * A valid options object includes the following properties to customize the text on the informational screen. The values below are the defaults.
+ * {
+ *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
+ *   macHelpText: "Use ⌘ + scroll to zoom the map",
+ *   mobileHelpText: "Use two fingers to move the map",
+ * }
  * @param {boolean} [options.trackResize=true] If `true`, the map will automatically resize when the browser window resizes.
  * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
  * @param {number} [options.zoom=0] The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
@@ -271,6 +285,9 @@ class Map extends Camera {
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
     _interactive: boolean;
+    _cooperativeGestures: boolean | GestureOptions;
+    _cooperativeGesturesScreen: HTMLElement;
+    _metaPress: boolean;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -381,6 +398,7 @@ class Map extends Camera {
         super(transform, {bearingSnap: options.bearingSnap});
 
         this._interactive = options.interactive;
+        this._cooperativeGestures = options.cooperativeGestures;
         this._maxTileCacheSize = options.maxTileCacheSize;
         this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
         this._preserveDrawingBuffer = options.preserveDrawingBuffer;
@@ -445,6 +463,10 @@ class Map extends Camera {
         }
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
+
+        if (this._cooperativeGestures) {
+            this._setupCooperativeGestures();
+        }
 
         const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
         this._hash = options.hash && (new Hash(hashName)).addTo(this);
@@ -2410,6 +2432,35 @@ class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
+    _setupCooperativeGestures() {
+        const container = this._container;
+        this._metaPress = false;
+        this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
+        let modifierKeyName = 'Control';
+        let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
+        if (navigator.platform.indexOf('Mac') === 0) {
+            desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
+            modifierKeyName = 'Meta';
+        }
+        const mobileMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.mobileHelpText ? this._cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
+        this._cooperativeGesturesScreen.innerHTML = `
+            <div class="maplibregl-desktop-message">${desktopMessage}</div>
+            <div class="maplibregl-mobile-message">${mobileMessage}</div>
+        `;
+        document.addEventListener('keydown', (event) => {
+            if (event.key === modifierKeyName) this._metaPress = true;
+        });
+        document.addEventListener('keyup', (event) => {
+            if (event.key === modifierKeyName) this._metaPress = false;
+        });
+        // Add event to canvas container since gesture container is pointer-events: none
+        this._canvasContainer.addEventListener('wheel', (e) => {
+            this._onCooperativeGesture(e, this._metaPress, 1);
+        }, false);
+        // Remove the traditional pan classes
+        this._canvasContainer.classList.remove('mapboxgl-touch-drag-pan', 'maplibregl-touch-drag-pan');
+    }
+
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
         // Request the required canvas size taking the pixelratio into account.
         this._canvas.width = pixelRatio * width;
@@ -2462,6 +2513,17 @@ class Map extends Camera {
         // Revert any scroll which would move the canvas outside of the view
         this._container.scrollTop = 0;
         this._container.scrollLeft = 0;
+        return false;
+    }
+
+    _onCooperativeGesture(event: any, metaPress, touches) {
+        if (!metaPress && touches < 2) {
+            // Alert user how to scroll/pan
+            this._cooperativeGesturesScreen.classList.add('maplibregl-show');
+            setTimeout(() => {
+                this._cooperativeGesturesScreen.classList.remove('maplibregl-show');
+            }, 100);
+        }
         return false;
     }
 
@@ -2714,6 +2776,9 @@ class Map extends Camera {
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
+        if (this._cooperativeGestures) {
+            DOM.remove(this._cooperativeGesturesScreen);
+        }
         this._container.classList.remove('maplibregl-map', 'mapboxgl-map');
 
         PerformanceUtils.clearMetrics();

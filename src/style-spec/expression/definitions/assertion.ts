@@ -105,24 +105,6 @@ class Assertion implements Expression {
     outputDefined(): boolean {
         return this.args.every(arg => arg.outputDefined());
     }
-
-    serialize(): Array<unknown> {
-        const type = this.type;
-        const serialized = [type.kind as unknown];
-        if (type.kind === 'array') {
-            const itemType = type.itemType;
-            if (itemType.kind === 'string' ||
-                itemType.kind === 'number' ||
-                itemType.kind === 'boolean') {
-                serialized.push(itemType.kind);
-                const N = type.N;
-                if (typeof N === 'number' || this.args.length > 1) {
-                    serialized.push(N);
-                }
-            }
-        }
-        return serialized.concat(this.args.map(arg => arg.serialize()));
-    }
 }
 
 export default Assertion;

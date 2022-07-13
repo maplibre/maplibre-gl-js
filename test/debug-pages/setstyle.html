@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MapLibre GL JS debug page</title>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+
+<body>
+<div id='map'></div>
+
+<script src='../../dist/maplibre-gl-dev.js'></script>
+<script src='/test/debug-pages/dark-demotiles.js'></script>
+<script src='/test/debug-pages/light-demotiles.js'></script>
+<script>
+// these are set in dark-demotiles.js and light-demotiles.js
+var dark = window.darkdemotiles;
+var light = window.lightdemotiles;
+
+var style = dark;
+var map = window.map = new maplibregl.Map({
+    container: 'map',
+    zoom: 2,
+    center: [-77.01866, 38.888],
+    style,
+    hash: style
+});
+
+setInterval(function () {
+    style = (style === dark ? light : dark);
+    map.setStyle(style);
+}, 2000);
+
+</script>
+</body>
+</html>

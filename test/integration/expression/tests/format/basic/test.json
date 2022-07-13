@@ -4,30 +4,13 @@
     "a",
     {},
     "b",
-    {
-      "font-scale": 2
-    },
+    {"font-scale": 2},
     "c",
-    {
-      "text-font": [
-        "literal",
-        [
-          "a",
-          "b"
-        ]
-      ]
-    },
+    {"text-font": ["literal", ["a", "b"]]},
     "d",
-    {
-      "text-color": "rgb(0, 255, 0)"
-    }
+    {"text-color": "rgb(0, 255, 0)"}
   ],
-  "inputs": [
-    [
-      {},
-      {}
-    ]
-  ],
+  "inputs": [[{}, {}]],
   "expected": {
     "compiled": {
       "result": "success",
@@ -64,32 +47,9 @@
             "image": null,
             "scale": null,
             "fontStack": null,
-            "textColor": {"r":0,"g":1,"b":0,"a":1}
+            "textColor": {"r": 0, "g": 1, "b": 0, "a": 1}
           }
         ]
-      }
-    ],
-    "serialized": [
-      "format",
-      "a",
-      {},
-      "b",
-      {
-        "font-scale": 2
-      },
-      "c",
-      {
-        "text-font": [
-          "literal",
-          [
-            "a",
-            "b"
-          ]
-        ]
-      },
-      "d",
-      {
-        "text-color": ["rgba", 0, 255, 0, 1]
       }
     ]
   }

@@ -14,9 +14,6 @@ import Transform from '../geo/transform';
 import type EvaluationParameters from '../style/evaluation_parameters';
 import type {SymbolLayerSpecification} from '../style-spec/types.g';
 import Style from '../style/style';
-import TerrainSourceCache from '../source/terrain_source_cache';
-import {Evented} from '../util/evented';
-import {RequestManager} from '../util/request_manager';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -24,22 +21,6 @@ jest.mock('../source/source_cache');
 jest.mock('../source/tile');
 jest.mock('../data/bucket/symbol_bucket');
 jest.mock('../symbol/projection');
-
-class StubMap extends Evented {
-    transform: Transform;
-    painter: Painter;
-    _requestManager: RequestManager;
-
-    constructor() {
-        super();
-        this.transform = new Transform();
-        this._requestManager = {
-            transformRequest: (url) => {
-                return {url};
-            }
-        } as any as RequestManager;
-    }
-}
 
 describe('drawSymbol', () => {
     test('should not do anything', () => {
@@ -63,7 +44,7 @@ describe('drawSymbol', () => {
         painterMock.renderPass = 'translucent';
         painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
         painterMock.options = {} as any;
-        painterMock.style = {terrainSourceCache: {getTerrain: () => null}} as any as Style;
+        painterMock.style = {} as any as Style;
 
         const layerSpec = {
             id: 'mock-layer',
@@ -164,9 +145,7 @@ describe('drawSymbol', () => {
         const sourceCacheMock = new SourceCache(null, null, null);
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
-        painterMock.style = {
-            terrainSourceCache: new TerrainSourceCache(new Style(new StubMap() as any as Map))
-        } as any as Style;
+        painterMock.style = {} as any as Style;
 
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
         drawSymbol(painterMock, sourceCacheMock, layer, [tileId], null);

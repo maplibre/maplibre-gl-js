@@ -102,17 +102,6 @@ class Step implements Expression {
     outputDefined(): boolean {
         return this.outputs.every(out => out.outputDefined());
     }
-
-    serialize() {
-        const serialized = ['step', this.input.serialize()];
-        for (let i = 0; i < this.labels.length; i++) {
-            if (i > 0) {
-                serialized.push(this.labels[i]);
-            }
-            serialized.push(this.outputs[i].serialize());
-        }
-        return serialized;
-    }
 }
 
 export default Step;

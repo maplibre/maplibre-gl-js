@@ -79,14 +79,6 @@ class Slice implements Expression {
     outputDefined() {
         return false;
     }
-
-    serialize() {
-        if (this.endIndex != null && this.endIndex !== undefined) {
-            const endIndex = this.endIndex.serialize();
-            return ['slice', this.input.serialize(), this.beginIndex.serialize(), endIndex];
-        }
-        return ['slice', this.input.serialize(), this.beginIndex.serialize()];
-    }
 }
 
 export default Slice;
