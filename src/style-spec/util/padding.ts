@@ -59,10 +59,6 @@ class Padding {
     toString(): string {
         return JSON.stringify(this.values);
     }
-
-    toArray(): [number, number, number, number] {
-        return this.values.slice() as [number, number, number, number];
-    }
 }
 
 export default Padding;
