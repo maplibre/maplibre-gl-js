@@ -18,6 +18,12 @@
 - Fix memory usage in terrain 3D (#1291, #1302)
 - Fix disappearence of closest tiles when 3D terrain is enabled (#1241, #1300)
 
+## 2.2.0-pre.3
+
+### ✨ Features and improvements
+
+- Add new paint property `fill-composite-operation` to fill type. If the fill opacity is `source-over` by default, each geometry will be alph-blended to screen. Setting it as `source-only`, all geometies are blended to frame buffer object before rendered to screen, and it can prevent the opacity on stacked polygons from being increased. (#1191)
+
 ## 2.2.0-pre.2
 
 ### ✨ Features and improvements
