@@ -1,0 +1,57 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "collisionDebug": true,
+      "width": 240,
+      "height": 100
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [{
+          "type": "Feature",
+          "properties": { },
+          "geometry": { "type": "Point", "coordinates": [-60, 0] }
+         }, {
+          "type": "Feature",
+          "properties": { "padding": 5 },
+          "geometry": { "type": "Point", "coordinates": [-30, 0] }
+         }, {
+          "type": "Feature",
+          "properties": { "padding": [-20, -5] },
+          "geometry": { "type": "Point", "coordinates": [-0, 0] }
+         }, {
+          "type": "Feature",
+          "properties": { "padding": [2, 2, -10] },
+          "geometry": { "type": "Point", "coordinates": [30, 0] }
+         }, {
+          "type": "Feature",
+          "properties": { "padding": [2, 10, -20, 2] },
+          "geometry": { "type": "Point", "coordinates": [60, 0] }
+         }
+        ]
+      }
+    }
+  },
+  "sprite": "local://sprites/2x",
+  "layers": [{
+      "id": "bg",
+      "type": "background",
+      "paint": {
+        "background-color": "#ccc"
+      }
+    }, {
+      "id": "symbolA",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "icon-image": "icon",
+        "icon-padding": ["coalesce", ["get", "padding"], ["literal", [2]]]
+      }
+    }
+  ]
+}

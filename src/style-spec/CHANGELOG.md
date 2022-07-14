@@ -1,3 +1,8 @@
+## 16.1.0
+
+### ✨ Features and improvements
+* Update `icon-padding` symbol layout property to support asymmetric padding [#1289](https://github.com/maplibre/maplibre-gl-js/pull/1289)
+
 ## 16.0.0
 
 ### Breaking changes

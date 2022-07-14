@@ -1,7 +1,7 @@
 import StyleLayer from '../style_layer';
 
 import assert from 'assert';
-import SymbolBucket from '../../data/bucket/symbol_bucket';
+import SymbolBucket, {SymbolFeature} from '../../data/bucket/symbol_bucket';
 import resolveTokens from '../../util/resolve_tokens';
 import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
 
@@ -202,6 +202,21 @@ export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, Symb
     }
 
     return result;
+}
+
+export type SymbolPadding = [number, number, number, number];
+
+export function getIconPadding(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, feature: SymbolFeature, canonical: CanonicalTileID, pixelRatio = 1): SymbolPadding {
+    // Support text-padding in addition to icon-padding? Unclear how to apply asymmetric text-padding to the radius for collision circles.
+    const result = layout.get('icon-padding').evaluate(feature, {}, canonical);
+    const values = result && result.values;
+
+    return [
+        values[0] * pixelRatio,
+        values[1] * pixelRatio,
+        values[2] * pixelRatio,
+        values[3] * pixelRatio,
+    ];
 }
 
 export default SymbolStyleLayer;
