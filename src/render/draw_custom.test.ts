@@ -1,5 +1,5 @@
-import { mat4 } from 'gl-matrix';
-import { OverscaledTileID } from '../source/tile_id';
+import {mat4} from 'gl-matrix';
+import {OverscaledTileID} from '../source/tile_id';
 import SourceCache from '../source/source_cache';
 import Tile from '../source/tile';
 import Painter from './painter';
