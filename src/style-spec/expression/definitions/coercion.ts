@@ -1,11 +1,9 @@
 import assert from 'assert';
 
 import {BooleanType, ColorType, NumberType, StringType, ValueType} from '../types';
-import {Color, toString as valueToString, validateRGBA} from '../values';
+import {Color, Padding, toString as valueToString, validateRGBA} from '../values';
 import RuntimeError from '../runtime_error';
 import Formatted from '../types/formatted';
-import FormatExpression from '../definitions/format';
-import ImageExpression from '../definitions/image';
 import ResolvedImage from '../types/resolved_image';
 
 import type {Expression} from '../expression';
@@ -83,7 +81,18 @@ class Coercion implements Expression {
                     }
                 }
             }
-            throw new RuntimeError(error || `Could not parse color from value '${typeof input === 'string' ? input : String(JSON.stringify(input))}'`);
+            throw new RuntimeError(error || `Could not parse color from value '${typeof input === 'string' ? input : JSON.stringify(input)}'`);
+        } else if (this.type.kind === 'padding') {
+            let input;
+            for (const arg of this.args) {
+                input = arg.evaluate(ctx);
+
+                const pad = Padding.parse(input);
+                if (pad) {
+                    return pad;
+                }
+            }
+            throw new RuntimeError(`Could not parse padding from value '${typeof input === 'string' ? input : JSON.stringify(input)}'`);
         } else if (this.type.kind === 'number') {
             let value = null;
             for (const arg of this.args) {
@@ -111,20 +120,6 @@ class Coercion implements Expression {
 
     outputDefined(): boolean {
         return this.args.every(arg => arg.outputDefined());
-    }
-
-    serialize() {
-        if (this.type.kind === 'formatted') {
-            return new FormatExpression([{content: this.args[0], scale: null, font: null, textColor: null}]).serialize();
-        }
-
-        if (this.type.kind === 'resolvedImage') {
-            return new ImageExpression(this.args[0]).serialize();
-        }
-
-        const serialized = [`to-${this.type.kind}` as unknown];
-        this.eachChild(child => { serialized.push(child.serialize()); });
-        return serialized;
     }
 }
 

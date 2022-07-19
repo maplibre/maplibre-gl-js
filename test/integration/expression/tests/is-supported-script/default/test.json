@@ -12,7 +12,6 @@
       "isZoomConstant": true,
       "type": "boolean"
     },
-    "outputs": [true, true],
-    "serialized": ["is-supported-script", ["string", ["get", "x"]]]
+    "outputs": [true, true]
   }
 }

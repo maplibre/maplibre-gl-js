@@ -29,15 +29,6 @@
       {
         "error": "Expected value to be of type number, but found string instead."
       }
-    ],
-    "serialized": [
-      "interpolate",
-      ["linear"],
-      ["number", ["get", "x"]],
-      0,
-      100,
-      10,
-      200
     ]
   }
 }

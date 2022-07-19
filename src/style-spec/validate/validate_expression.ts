@@ -3,6 +3,7 @@ import ValidationError from '../error/validation_error';
 import {createExpression, createPropertyExpression} from '../expression';
 import {deepUnbundle} from '../util/unbundle_jsonlint';
 import {isStateConstant, isGlobalPropertyConstant, isFeatureConstant} from '../expression/is_constant';
+import {Expression} from '../expression/expression';
 
 export default function validateExpression(options: any): Array<ValidationError> {
     const expression = (options.expressionContext === 'property' ? createPropertyExpression : createExpression)(deepUnbundle(options.value), options.valueSpec);
@@ -12,7 +13,7 @@ export default function validateExpression(options: any): Array<ValidationError>
         });
     }
 
-    const expressionObj = (expression.value as any).expression || (expression.value as any)._styleExpression.expression;
+    const expressionObj: Expression = (expression.value as any).expression || (expression.value as any)._styleExpression.expression;
 
     if (options.expressionContext === 'property' && (options.propertyKey === 'text-font') &&
         !expressionObj.outputDefined()) {

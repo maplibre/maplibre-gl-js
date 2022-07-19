@@ -4,11 +4,22 @@
 
 - *...Add new stuff here...*
 - Pass Tile-data to layer which is `type:custom` and has `source`. Developer can get tile-data in extra argument of `render()` or `prerender()`. Example is `./debug/custom-with-tile.html` (#1309)
+- Update `icon-padding` symbol layout property to support asymmetric padding [#1289](https://github.com/maplibre/maplibre-gl-js/pull/1289)
+- Added `collaborativeGestures` option when instantiating map to prevent inadvertent scrolling/panning when navigating a page where map is embedded inline (#234)
 
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
-- Hide arrow displayed in default `summary` styles on the attribution control ([#1258](https://github.com/maplibre/maplibre-gl-js/pull/1258))
+- Fix compact attribution style when using global CSS that sets `box-sizing: border-box;` ([#1250](https://github.com/maplibre/maplibre-gl-js/pull/1250))
+
+## 2.2.0-pre.3
+
+### 🐞 Bug fixes
+
+- Handle maxBounds which cross the meridian at longitude ±180° (#1298, #1299)
+- Hide arrow displayed in default `summary` styles on the attribution control (#1258)
+- Fix memory usage in terrain 3D (#1291, #1302)
+- Fix disappearence of closest tiles when 3D terrain is enabled (#1241, #1300)
 
 ## 2.2.0-pre.2
 
@@ -38,7 +49,7 @@
 
 - Fix missing `touchmove` in `MapTouchEvent["type"]` (#1131)
 - Type CustomLayerInterface renderingMode, onRemove, onAdd, and prerender optional (#1122)
- 
+
 ## 2.1.8-pre.3
 
 ### 🐞 Bug fixes

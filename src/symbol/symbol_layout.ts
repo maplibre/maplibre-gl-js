@@ -30,6 +30,7 @@ import type {PossiblyEvaluatedPropertyValue} from '../style/properties';
 
 import Point from '@mapbox/point-geometry';
 import murmur3 from 'murmurhash-js';
+import {getIconPadding, SymbolPadding} from '../style/style_layer/symbol_style_layer';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
 // `icon-size` at up to three:
@@ -393,7 +394,7 @@ function addFeature(bucket: SymbolBucket,
         iconBoxScale = bucket.tilePixelRatio * layoutIconSize,
         symbolMinDistance = bucket.tilePixelRatio * layout.get('symbol-spacing'),
         textPadding = layout.get('text-padding') * bucket.tilePixelRatio,
-        iconPadding = layout.get('icon-padding') * bucket.tilePixelRatio,
+        iconPadding = getIconPadding(layout, feature, canonical, bucket.tilePixelRatio),
         textMaxAngle = layout.get('text-max-angle') / 180 * Math.PI,
         textAlongLine = layout.get('text-rotation-alignment') !== 'viewport' && layout.get('symbol-placement') !== 'point',
         iconAlongLine = layout.get('icon-rotation-alignment') === 'map' && layout.get('symbol-placement') !== 'point',
@@ -424,7 +425,7 @@ function addFeature(bucket: SymbolBucket,
 
         addSymbol(bucket, anchor, line, shapedTextOrientations, shapedIcon, imageMap, verticallyShapedIcon, bucket.layers[0],
             bucket.collisionBoxArray, feature.index, feature.sourceLayerIndex, bucket.index,
-            textBoxScale, textPadding, textAlongLine, textOffset,
+            textBoxScale, [textPadding, textPadding, textPadding, textPadding], textAlongLine, textOffset,
             iconBoxScale, iconPadding, iconAlongLine, iconOffset,
             feature, sizes, isSDFIcon, canonical, layoutTextSize);
     };
@@ -583,11 +584,11 @@ function addSymbol(bucket: SymbolBucket,
     sourceLayerIndex: number,
     bucketIndex: number,
     textBoxScale: number,
-    textPadding: number,
+    textPadding: SymbolPadding,
     textAlongLine: boolean,
     textOffset: [number, number],
     iconBoxScale: number,
-    iconPadding: number,
+    iconPadding: SymbolPadding,
     iconAlongLine: boolean,
     iconOffset: [number, number],
     feature: SymbolFeature,

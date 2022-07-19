@@ -20,15 +20,6 @@
       "isZoomConstant": true,
       "type": "boolean"
     },
-    "outputs": [true, true, false],
-    "serialized": [
-      "==",
-      ["string", ["get", "lhs"]],
-      ["get", "rhs"],
-      [
-        "collator",
-        {"case-sensitive": false, "diacritic-sensitive": false, "locale": "en"}
-      ]
-    ]
+    "outputs": [true, true, false]
   }
 }

@@ -83,14 +83,6 @@ class IndexOf implements Expression {
     outputDefined() {
         return false;
     }
-
-    serialize() {
-        if (this.fromIndex != null && this.fromIndex !== undefined) {
-            const fromIndex = this.fromIndex.serialize();
-            return ['index-of', this.needle.serialize(), this.haystack.serialize(), fromIndex];
-        }
-        return ['index-of', this.needle.serialize(), this.haystack.serialize()];
-    }
 }
 
 export default IndexOf;
