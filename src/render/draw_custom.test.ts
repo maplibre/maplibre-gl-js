@@ -1,5 +1,5 @@
-import {mat4} from 'gl-matrix';
-import {OverscaledTileID} from '../source/tile_id';
+import { mat4 } from 'gl-matrix';
+import { OverscaledTileID } from '../source/tile_id';
 import SourceCache from '../source/source_cache';
 import Tile from '../source/tile';
 import Painter from './painter';
@@ -13,9 +13,10 @@ jest.mock('../source/source_cache');
 jest.mock('../source/tile');
 
 describe('passing tile-data to render/prerender', () => {
-    test('no sourceCache, no tile', () => {
-        const mockPainter = new Painter(null, null);
-        mockPainter.renderPass = 'translucent';
+    let mockPainter: Painter;
+
+    beforeEach(() => {
+        mockPainter = new Painter(null, null);
         mockPainter.context = {
             setColorMode: () => null,
             setStencilMode: () => null,
@@ -28,6 +29,10 @@ describe('passing tile-data to render/prerender', () => {
         mockPainter.transform = {
             customLayerMatrix: () => null,
         } as any as Transform;
+    });
+
+    test('no sourceCache, no tile', () => {
+        mockPainter.renderPass = 'translucent';
 
         // array to store tiles passed from drawCustom
         let passedTiles;
@@ -43,20 +48,7 @@ describe('passing tile-data to render/prerender', () => {
     });
 
     test('passing tile to render', () => {
-        const mockPainter = new Painter(null, null);
         mockPainter.renderPass = 'translucent';
-        mockPainter.context = {
-            setColorMode: () => null,
-            setStencilMode: () => null,
-            setDepthMode: () => null,
-            setDirty: () => null,
-            bindFramebuffer: {
-                set: () => null,
-            },
-        } as any as Context;
-        mockPainter.transform = {
-            customLayerMatrix: () => null,
-        } as any as Transform;
 
         // array to store tiles passed from drawCustom
         let passedTiles;
@@ -81,20 +73,7 @@ describe('passing tile-data to render/prerender', () => {
     });
 
     test('passing tile to prerender', () => {
-        const mockPainter = new Painter(null, null);
         mockPainter.renderPass = 'offscreen';
-        mockPainter.context = {
-            setColorMode: () => null,
-            setStencilMode: () => null,
-            setDepthMode: () => null,
-            setDirty: () => null,
-            bindFramebuffer: {
-                set: () => null,
-            },
-        } as any as Context;
-        mockPainter.transform = {
-            customLayerMatrix: () => null,
-        } as any as Transform;
 
         // array to store tiles passed from drawCustom
         let passedTiles;
