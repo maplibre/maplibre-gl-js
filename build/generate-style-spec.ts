@@ -128,36 +128,152 @@ export type ResolvedImageSpecification = string;
 
 export type PromoteIdSpecification = {[_: string]: string} | string;
 
-export type FilterSpecificationInputType = string | number | boolean;
-export type FilterSpecification =
-    // Lookup
-    | ['at', number, (number |string)[]]
-    | ['get', string, Record<string, unknown>?]
-    | ['has', string, Record<string, unknown>?]
-    | ['in', ...FilterSpecificationInputType[], FilterSpecificationInputType | FilterSpecificationInputType[]]
-    | ['index-of', FilterSpecificationInputType, FilterSpecificationInputType | FilterSpecificationInputType[]]
-    | ['length', string | string[]]
-    | ['slice', string | string[], number]
+export type ExpressionInputType = string | number | boolean;
+
+export type CollatorExpressionSpecification = 
+    ['collator', {
+        'case-sensitive'?: boolean | ExpressionSpecification, 
+        'diacritic-sensitive'?: boolean | ExpressionSpecification, 
+        locale?: string | ExpressionSpecification}
+    ]; // collator
+
+export type InterpolationSpecification =
+    | ['linear'] 
+    | ['exponential', number | ExpressionSpecification] 
+    | ['cubic-bezier', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification]
+    
+export type ExpressionSpecification = 
+    // types
+    | ['array', unknown | ExpressionSpecification] // array
+    | ['array', ExpressionInputType | ExpressionSpecification, unknown | ExpressionSpecification] // array
+    | ['array', ExpressionInputType | ExpressionSpecification, number | ExpressionSpecification, unknown | ExpressionSpecification] // array
+    | ['boolean', ...(unknown | ExpressionSpecification)[], unknown | ExpressionSpecification] // boolean
+    | CollatorExpressionSpecification
+    | ['format', ...(string | ['image', ExpressionSpecification] | ExpressionSpecification | {'font-scale'?: number | ExpressionSpecification, 'text-font'?: string[] | ExpressionSpecification, 'text-color': ColorSpecification | ExpressionSpecification})[]] // string
+    | ['image', unknown | ExpressionSpecification] // image
+    | ['literal', unknown]
+    | ['number', unknown | ExpressionSpecification, ...(unknown | ExpressionSpecification)[]] // number
+    | ['number-format', number | ExpressionSpecification, {'locale'?: string | ExpressionSpecification, 'currency'?: string | ExpressionSpecification, 'min-fraction-digits'?: number | ExpressionSpecification, 'max-fraction-digits'?: number | ExpressionSpecification}] // string
+    | ['object', unknown | ExpressionSpecification, ...(unknown | ExpressionSpecification)[]] // object
+    | ['string', unknown | ExpressionSpecification, ...(unknown | ExpressionSpecification)[]] // string
+    | ['to-boolean', unknown | ExpressionSpecification] // boolean
+    | ['to-color', unknown | ExpressionSpecification, ...(unknown | ExpressionSpecification)[]] // color
+    | ['to-number', unknown | ExpressionSpecification, ...(unknown | ExpressionSpecification)[]] // number
+    | ['to-string', unknown | ExpressionSpecification] // string
+    // feature data
+    | ['accumulated']
+    | ['feature-state', string]
+    | ['geometry-type'] // string
+    | ['id']
+    | ['line-progress'] // number
+    | ['properties'] // object
+    // lookup
+    | ['at', number | ExpressionSpecification, ExpressionSpecification]
+    | ['get', string | ExpressionSpecification, (Record<string, unknown> | ExpressionSpecification)?]
+    | ['has', string | ExpressionSpecification, (Record<string, unknown> | ExpressionSpecification)?]
+    | ['in', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification]
+    | ['index-of', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification] // number
+    | ['length', string | ExpressionSpecification]
+    | ['slice', string | ExpressionSpecification, number | ExpressionSpecification]
     // Decision
-    | ['!', FilterSpecification]
-    | ['!=', string | FilterSpecification, FilterSpecificationInputType]
-    | ['<', string | FilterSpecification, FilterSpecificationInputType]
-    | ['<=', string | FilterSpecification, FilterSpecificationInputType]
-    | ['==', string | FilterSpecification, FilterSpecificationInputType]
-    | ['>', string | FilterSpecification, FilterSpecificationInputType]
-    | ['>=', string | FilterSpecification, FilterSpecificationInputType]
-    | ["all", ...FilterSpecification[], FilterSpecificationInputType]
-    | ["any", ...FilterSpecification[], FilterSpecificationInputType]
-    | ["case", ...FilterSpecification[], FilterSpecificationInputType]
-    | ["coalesce", ...FilterSpecification[], FilterSpecificationInputType]
-    | ["match", ...FilterSpecification[], FilterSpecificationInputType]
-    | ["within", ...FilterSpecification[], FilterSpecificationInputType]
-    // Used in convert.ts
-    | ["!in", ...FilterSpecification[], FilterSpecificationInputType]
-    | ["!has", ...FilterSpecification[], FilterSpecificationInputType]
-    | ["none", ...FilterSpecification[], FilterSpecificationInputType]
-    // Fallbak for others
-    | Array<string | FilterSpecification>
+    | ['!', boolean | ExpressionSpecification] // boolean
+    | ['!=', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, CollatorExpressionSpecification?] // boolean
+    | ['<', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, CollatorExpressionSpecification?] // boolean
+    | ['<=', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, CollatorExpressionSpecification?] // boolean
+    | ['==', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, CollatorExpressionSpecification?] // boolean
+    | ['>', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, CollatorExpressionSpecification?] // boolean
+    | ['>=', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, CollatorExpressionSpecification?] // boolean
+    | ['all', ...(boolean | ExpressionSpecification)[]] // boolean
+    | ['any', ...(boolean | ExpressionSpecification)[]] // boolean
+    | ['case', boolean | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
+        ...(boolean | ExpressionInputType | ExpressionSpecification)[], ExpressionInputType | ExpressionSpecification]
+    | ['coalesce', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
+        ...(ExpressionInputType | ExpressionSpecification)[]]
+    | ['match', ExpressionInputType | ExpressionSpecification, 
+        ExpressionInputType | ExpressionInputType[], ExpressionInputType | ExpressionSpecification, 
+        ...(ExpressionInputType | ExpressionInputType[] | ExpressionSpecification)[], // repeated as above
+        ExpressionInputType]
+    | ['within', unknown | ExpressionSpecification
+    // Ramps, scales, curves
+    | ['interpolate', InterpolationSpecification, 
+        number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
+        ...(number | ExpressionInputType | ExpressionSpecification)[]]]
+    | ['interpolate-hcl', InterpolationSpecification,
+        number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
+        ...(number | ColorSpecification | ExpressionSpecification)[]]
+    | ['interpolate-lab', InterpolationSpecification,
+        number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
+        ...(number | ColorSpecification | ExpressionSpecification)[]]
+    | ['step', number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
+        ...(number | ExpressionInputType | ExpressionSpecification)[]]
+    // Variable binding
+    | ['let', string, ExpressionInputType | ExpressionSpecification, ...(string | ExpressionInputType | ExpressionSpecification)[]]
+    | ['var', string]
+    // String
+    | ['concat', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
+        ...(ExpressionInputType | ExpressionSpecification)[]] // string
+    | ['downcase', string | ExpressionSpecification] // string
+    | ['is-supported-script', string | ExpressionSpecification] // boolean
+    | ['resolved-locale', CollatorExpressionSpecification] // string
+    | ['upcase', string | ExpressionSpecification] // string
+    // Color
+    | ['rgb', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification] // color
+    | ['rgba', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification]
+    | ['to-rgba', ColorSpecification | ExpressionSpecification]
+    // Math
+    | ['-', number | ExpressionSpecification, (number | ExpressionSpecification)?] // number
+    | ['*', number | ExpressionSpecification, number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] // number
+    | ['/', number | ExpressionSpecification, number | ExpressionSpecification] // number
+    | ['%', number | ExpressionSpecification, number | ExpressionSpecification] // number
+    | ['^', number | ExpressionSpecification, number | ExpressionSpecification] // number
+    | ['+', number | ExpressionSpecification, number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] // number
+    | ['abs', number | ExpressionSpecification] // number
+    | ['acos', number | ExpressionSpecification] // number
+    | ['asin', number | ExpressionSpecification] // number
+    | ['atan', number | ExpressionSpecification] // number
+    | ['ceil', number | ExpressionSpecification] // number
+    | ['cos', number | ExpressionSpecification] // number
+    | ['distance', Record<string, unknown> | ExpressionSpecification] // number
+    | ['ExpressionSpecification'] // number
+    | ['floor', number | ExpressionSpecification] // number
+    | ['ln', number | ExpressionSpecification] // number
+    | ['ln2'] // number
+    | ['log10', number | ExpressionSpecification] // number
+    | ['log2', number | ExpressionSpecification] // number
+    | ['max', number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] // number
+    | ['min', number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] // number
+    | ['pi'] // number
+    | ['round', number | ExpressionSpecification] // number
+    | ['sin', number | ExpressionSpecification] // number
+    | ['sqrt', number | ExpressionSpecification] // number
+    | ['tan', number | ExpressionSpecification] // number
+    // Zoom
+    | ['zoom'] // number
+    // Heatmap
+    | ['heatmap-density'] // number
+
+export type ExpressionFilterSpecification = boolean | ExpressionSpecification
+
+export type LegacyFilterSpecification =
+    // Existential
+    | ['has', string]
+    | ['!has', string]
+    // Comparison
+    | ['==', string, string | number | boolean]
+    | ['!=', string, string | number | boolean]
+    | ['>', string, string | number | boolean]
+    | ['>=', string, string | number | boolean]
+    | ['<', string, string | number | boolean]
+    | ['<=', string, string | number | boolean]
+    // Set membership
+    | ['in', string, ...(string | number | boolean)[]]
+    | ['!in', string, ...(string | number | boolean)[]]
+    // Combining
+    | ['all', ...LegacyFilterSpecification[]]
+    | ['any', ...LegacyFilterSpecification[]]
+    | ['none', ...LegacyFilterSpecification[]]
+
+export type FilterSpecification = ExpressionFilterSpecification | LegacyFilterSpecification
 
 export type TransitionSpecification = {
     duration?: number,
@@ -181,7 +297,7 @@ export type CompositeFunctionSpecification<T> =
     | { type: 'interval',    stops: Array<[{zoom: number, value: number}, T]>, property: string, default?: T }
     | { type: 'categorical', stops: Array<[{zoom: number, value: string | number | boolean}, T]>, property: string, default?: T };
 
-export type ExpressionSpecificationArray = Array<unknown>;
+export type ExpressionSpecificationArray = ExpressionSpecification;
 
 export type PropertyValueSpecification<T> =
       T

@@ -52,6 +52,18 @@ describe('filter', () => {
         expect(createFilter(['any', false, false]).filter(undefined, undefined)).toBe(false);
     });
 
+    test('expression, literal', () => {
+        expect(createFilter(['literal', true]).filter(undefined, undefined)).toBe(true);
+        expect(createFilter(['literal', false]).filter(undefined, undefined)).toBe(false);
+    });
+
+    test('expression, match', () => {
+        const match = createFilter(['match', ['get', 'x'], ['a', 'b', 'c'], true, false]).filter;
+        expect(match(undefined, {properties: {x: 'a'}} as any as Feature)).toBe(true);
+        expect(match(undefined, {properties: {x: 'c'}} as any as Feature)).toBe(true);
+        expect(match(undefined, {properties: {x: 'd'}} as any as Feature)).toBe(false);
+    });
+
     test('expression, type error', () => {
         expect(() => {
             createFilter(['==', ['number', ['get', 'x']], ['string', ['get', 'y']]]);
@@ -179,14 +191,14 @@ describe('convert legacy filters to expressions', () => {
                 ['LineString', 'Point', 'Polygon'],
                 true,
                 false
-            ] as FilterSpecification,
+            ],
             [
                 'match',
                 ['get', 'type'],
                 ['island'],
                 true,
                 false
-            ] as FilterSpecification
+            ]
         ];
 
         const converted = convertFilter(filter);
