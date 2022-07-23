@@ -1,4 +1,4 @@
-import {Browser, BrowserContext, BrowserType, chromium, Page} from 'playwright';
+import {Browser, BrowserContext, BrowserType, chromium, firefox, webkit, Page} from 'playwright';
 import address from 'address';
 import st from 'st';
 import http from 'http';
@@ -56,7 +56,7 @@ describe('browser tests', () => {
         });
     });
 
-    [chromium].forEach((impl) => {
+    [chromium, firefox, webkit].forEach((impl) => {
 
         test(`${impl.name()} - Drag to the left`, async () => {
 
