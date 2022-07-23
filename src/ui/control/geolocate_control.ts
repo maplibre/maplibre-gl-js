@@ -1,7 +1,7 @@
 import {Event, Evented} from '../../util/evented';
 import DOM from '../../util/dom';
 import {extend, bindAll, warnOnce} from '../../util/util';
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 import LngLat from '../../geo/lng_lat';
 import Marker from '../marker';
 
@@ -195,7 +195,7 @@ class GeolocateControl extends Evented implements IControl {
             case 'ACTIVE_ERROR':
                 break;
             default:
-                assert(false, `Unexpected watchState ${this._watchState}`);
+                // #DISABLE_NODE_ASSERT: assert(false, `Unexpected watchState ${this._watchState}`);
         }
     }
 
@@ -244,7 +244,7 @@ class GeolocateControl extends Evented implements IControl {
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background', 'mapboxgl-ctrl-geolocate-background');
                     break;
                 default:
-                    assert(false, `Unexpected watchState ${this._watchState}`);
+                    // #DISABLE_NODE_ASSERT: assert(false, `Unexpected watchState ${this._watchState}`);
             }
         }
 
@@ -306,7 +306,7 @@ class GeolocateControl extends Evented implements IControl {
     }
 
     _updateCircleRadius() {
-        assert(this._circleElement);
+        // #DISABLE_NODE_ASSERT: assert(this._circleElement);
         const y = this._map._container.clientHeight / 2;
         const a = this._map.unproject([0, y]);
         const b = this._map.unproject([1, y]);
@@ -485,7 +485,7 @@ class GeolocateControl extends Evented implements IControl {
                     this.fire(new Event('trackuserlocationstart'));
                     break;
                 default:
-                    assert(false, `Unexpected watchState ${this._watchState}`);
+                    // #DISABLE_NODE_ASSERT: assert(false, `Unexpected watchState ${this._watchState}`);
             }
 
             // incoming state setup
@@ -500,7 +500,7 @@ class GeolocateControl extends Evented implements IControl {
                 case 'OFF':
                     break;
                 default:
-                    assert(false, `Unexpected watchState ${this._watchState}`);
+                    // #DISABLE_NODE_ASSERT: assert(false, `Unexpected watchState ${this._watchState}`);
             }
 
             // manage geolocation.watchPosition / geolocation.clearWatch

@@ -4,7 +4,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {RGBAImage} from '../util/image';
 import {ImagePosition} from './image_atlas';
 import Texture from './texture';
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 import {renderStyleImage} from '../style/style_image';
 import {warnOnce} from '../util/util';
 
@@ -87,7 +87,7 @@ class ImageManager extends Evented {
     }
 
     addImage(id: string, image: StyleImage) {
-        assert(!this.images[id]);
+        // #DISABLE_NODE_ASSERT: assert(!this.images[id]);
         if (this._validate(id, image)) {
             this.images[id] = image;
         }
@@ -134,16 +134,16 @@ class ImageManager extends Evented {
 
     updateImage(id: string, image: StyleImage) {
         const oldImage = this.images[id];
-        assert(oldImage);
-        assert(oldImage.data.width === image.data.width);
-        assert(oldImage.data.height === image.data.height);
+        // #DISABLE_NODE_ASSERT: assert(oldImage);
+        // #DISABLE_NODE_ASSERT: assert(oldImage.data.width === image.data.width);
+        // #DISABLE_NODE_ASSERT: assert(oldImage.data.height === image.data.height);
         image.version = oldImage.version + 1;
         this.images[id] = image;
         this.updatedImages[id] = true;
     }
 
     removeImage(id: string) {
-        assert(this.images[id]);
+        // #DISABLE_NODE_ASSERT: assert(this.images[id]);
         const image = this.images[id];
         delete this.images[id];
         delete this.patterns[id];
@@ -294,7 +294,7 @@ class ImageManager extends Evented {
             this.callbackDispatchedThisFrame[id] = true;
 
             const image = this.images[id];
-            assert(image);
+            // #DISABLE_NODE_ASSERT: assert(image);
 
             const updated = renderStyleImage(image);
             if (updated) {

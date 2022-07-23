@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 import type Program from './program';
 import type VertexBuffer from '../gl/vertex_buffer';
@@ -121,7 +121,7 @@ class VertexArrayObject {
             for (let i = numNextAttributes; i < numPrevAttributes; i++) {
                 // WebGL breaks if you disable attribute 0.
                 // http://stackoverflow.com/questions/20305231
-                assert(i !== 0);
+                // #DISABLE_NODE_ASSERT: assert(i !== 0);
                 gl.disableVertexAttribArray(i);
             }
         }

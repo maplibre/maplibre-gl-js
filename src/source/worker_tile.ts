@@ -8,7 +8,7 @@ import LineBucket from '../data/bucket/line_bucket';
 import FillBucket from '../data/bucket/fill_bucket';
 import FillExtrusionBucket from '../data/bucket/fill_extrusion_bucket';
 import {warnOnce, mapObject} from '../util/util';
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 import ImageAtlas from '../render/image_atlas';
 import GlyphAtlas from '../render/glyph_atlas';
 import EvaluationParameters from '../style/evaluation_parameters';
@@ -105,7 +105,7 @@ class WorkerTile {
             for (const family of layerFamilies[sourceLayerId]) {
                 const layer = family[0];
 
-                assert(layer.source === this.source);
+                // #DISABLE_NODE_ASSERT: assert(layer.source === this.source);
                 if (layer.minzoom && this.zoom < Math.floor(layer.minzoom)) continue;
                 if (layer.maxzoom && this.zoom >= layer.maxzoom) continue;
                 if (layer.visibility === 'none') continue;

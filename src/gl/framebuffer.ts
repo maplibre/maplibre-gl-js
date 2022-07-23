@@ -1,5 +1,5 @@
 import {ColorAttachment, DepthAttachment} from './value';
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 import type Context from './context';
 
@@ -22,7 +22,7 @@ class Framebuffer {
         if (hasDepth) {
             this.depthAttachment = new DepthAttachment(context, fbo);
         }
-        assert(gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE);
+        // #DISABLE_NODE_ASSERT: assert(gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE);
     }
 
     destroy() {

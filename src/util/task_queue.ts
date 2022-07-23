@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 export type TaskID = number; // can't mark opaque due to https://github.com/flowtype/flow-remove-types/pull/61
 
@@ -40,7 +40,7 @@ class TaskQueue {
     }
 
     run(timeStamp: number = 0) {
-        assert(!this._currentlyRunning);
+        // #DISABLE_NODE_ASSERT: assert(!this._currentlyRunning);
         const queue = this._currentlyRunning = this._queue;
 
         // Tasks queued by callbacks in the current queue should be executed

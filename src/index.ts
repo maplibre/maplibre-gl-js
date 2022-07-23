@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 import {supported} from '@mapbox/mapbox-gl-supported';
 
 import Map from './ui/map';
@@ -253,4 +253,4 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
 
 export default exported;
 // canary assert: used to confirm that asserts have been removed from production build
-assert(true, 'canary assert');
+// #DISABLE_NODE_ASSERT: assert(true, 'canary assert');

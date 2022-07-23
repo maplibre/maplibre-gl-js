@@ -4,7 +4,7 @@ import {VectorTile} from '@mapbox/vector-tile';
 import Pbf from 'pbf';
 import createFilter from '../../../src/style-spec/feature_filter';
 import filters from '../data/filters.json';
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 export default class FilterEvaluate extends Benchmark {
     layers: any[];
@@ -42,7 +42,7 @@ export default class FilterEvaluate extends Benchmark {
             for (const filter of layer.filters) {
                 for (const feature of layer.features) {
                     if (typeof filter.filter({zoom: 0}, feature) !== 'boolean') {
-                        assert(false, 'Expected boolean result from filter');
+                        // #DISABLE_NODE_ASSERT: assert(false, 'Expected boolean result from filter');
                     }
                 }
             }

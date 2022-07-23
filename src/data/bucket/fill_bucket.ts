@@ -6,7 +6,7 @@ import {ProgramConfigurationSet} from '../program_configuration';
 import {LineIndexArray, TriangleIndexArray} from '../index_array_type';
 import earcut from 'earcut';
 import classifyRings from '../../util/classify_rings';
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 const EARCUT_MAX_RINGS = 500;
 import {register} from '../../util/web_worker_transfer';
 import {hasPattern, addPatternDependencies} from './pattern_bucket_features';
@@ -211,7 +211,7 @@ class FillBucket implements Bucket {
             }
 
             const indices = earcut(flattened, holeIndices);
-            assert(indices.length % 3 === 0);
+            // #DISABLE_NODE_ASSERT: assert(indices.length % 3 === 0);
 
             for (let i = 0; i < indices.length; i += 3) {
                 this.indexArray.emplaceBack(

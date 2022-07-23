@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 import {
     ObjectType,
@@ -69,7 +69,7 @@ class Assertion implements Expression {
 
             type = array(itemType, N);
         } else {
-            assert(types[name], name);
+            // #DISABLE_NODE_ASSERT: assert(types[name], name);
             type = types[name];
         }
 
@@ -94,7 +94,7 @@ class Assertion implements Expression {
             }
         }
 
-        assert(false);
+        // #DISABLE_NODE_ASSERT: assert(false);
         return null;
     }
 

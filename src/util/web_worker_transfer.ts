@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 import TransferableGridIndex from './transferable_grid_index';
 import Color from '../style-spec/util/color';
@@ -51,7 +51,7 @@ export function register<T extends any>(
     },
     options: RegisterOptions<T> = {}
 ) {
-    assert(!registry[name], `${name} is already registered.`);
+    // #DISABLE_NODE_ASSERT: assert(!registry[name], `${name} is already registered.`);
     ((Object.defineProperty as any))(klass, '_classRegistryKey', {
         value: name,
         writeable: false
@@ -159,7 +159,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         if (!name) {
             throw new Error('can\'t serialize object of unregistered class');
         }
-        assert(registry[name]);
+        // #DISABLE_NODE_ASSERT: assert(registry[name]);
 
         const properties: SerializedObject = klass.serialize ?
             // (Temporary workaround) allow a class to provide static
@@ -186,7 +186,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
             }
         } else {
             // make sure statically serialized object survives transfer of $name property
-            assert(!transferables || properties as any !== transferables[transferables.length - 1]);
+            // #DISABLE_NODE_ASSERT: assert(!transferables || properties as any !== transferables[transferables.length - 1]);
         }
 
         if (properties.$name) {

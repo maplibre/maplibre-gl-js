@@ -1,6 +1,6 @@
 import StyleLayer from '../style_layer';
 
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 import SymbolBucket, {SymbolFeature} from '../../data/bucket/symbol_bucket';
 import resolveTokens from '../../util/resolve_tokens';
 import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
@@ -110,7 +110,7 @@ class SymbolStyleLayer extends StyleLayer {
     }
 
     queryIntersectsFeature(): boolean {
-        assert(false); // Should take a different path in FeatureIndex
+        // #DISABLE_NODE_ASSERT: assert(false); // Should take a different path in FeatureIndex
         return false;
     }
 

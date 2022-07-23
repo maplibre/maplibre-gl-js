@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 import {
     Uniform1i,
     Uniform1f,
@@ -74,7 +74,7 @@ function bgPatternUniformValues(
 ): UniformValues<BackgroundPatternUniformsType> {
     const imagePosA = painter.imageManager.getPattern(image.from.toString());
     const imagePosB = painter.imageManager.getPattern(image.to.toString());
-    assert(imagePosA && imagePosB);
+    // #DISABLE_NODE_ASSERT: assert(imagePosA && imagePosB);
     const {width, height} = painter.imageManager.getPixelSize();
 
     const numTiles = Math.pow(2, tile.tileID.overscaledZ);

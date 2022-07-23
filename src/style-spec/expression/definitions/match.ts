@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 import {typeOf} from '../values';
 import {ValueType} from '../types';
@@ -92,7 +92,7 @@ class Match implements Expression {
         const otherwise = context.parse(args[args.length - 1], args.length - 1, outputType);
         if (!otherwise) return null;
 
-        assert(inputType && outputType);
+        // #DISABLE_NODE_ASSERT: assert(inputType && outputType);
 
         if (input.type.kind !== 'value' && context.concat(1).checkSubtype(((inputType as any)), input.type)) {
             return null;

@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 import {BooleanType} from '../types';
 
@@ -48,7 +48,7 @@ class Case implements Expression {
         const otherwise = context.parse(args[args.length - 1], args.length - 1, outputType);
         if (!otherwise) return null;
 
-        assert(outputType);
+        // #DISABLE_NODE_ASSERT: assert(outputType);
         return new Case((outputType as any), branches, otherwise);
     }
 

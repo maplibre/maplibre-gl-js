@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 import extend from '../util/extend';
 import ParsingError from './parsing_error';
@@ -143,7 +143,7 @@ export function createExpression(expression: unknown, propertySpec?: StyleProper
         propertySpec && propertySpec.type === 'string' ? {typeAnnotation: 'coerce'} : undefined);
 
     if (!parsed) {
-        assert(parser.errors.length > 0);
+        // #DISABLE_NODE_ASSERT: assert(parser.errors.length > 0);
         return error(parser.errors);
     }
 

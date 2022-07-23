@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 class DictionaryCoder {
     _stringToNumber: {[_: string]: number};
@@ -15,12 +15,12 @@ class DictionaryCoder {
     }
 
     encode(string: string) {
-        assert(string in this._stringToNumber);
+        // #DISABLE_NODE_ASSERT: assert(string in this._stringToNumber);
         return this._stringToNumber[string];
     }
 
     decode(n: number) {
-        assert(n < this._numberToString.length);
+        // #DISABLE_NODE_ASSERT: assert(n < this._numberToString.length);
         return this._numberToString[n];
     }
 }

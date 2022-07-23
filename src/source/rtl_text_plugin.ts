@@ -1,7 +1,7 @@
 import {Event, Evented} from '../util/evented';
 import {getArrayBuffer} from '../util/ajax';
 import browser from '../util/browser';
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 import {isWorker} from '../util/util';
 
 const status = {
@@ -113,20 +113,20 @@ export const plugin: {
         return pluginStatus === status.loading;
     },
     setState(state: PluginState) { // Worker thread only: this tells the worker threads that the plugin is available on the Main thread
-        assert(isWorker(), 'Cannot set the state of the rtl-text-plugin when not in the web-worker context');
+        // #DISABLE_NODE_ASSERT: assert(isWorker(), 'Cannot set the state of the rtl-text-plugin when not in the web-worker context');
 
         pluginStatus = state.pluginStatus;
         pluginURL = state.pluginURL;
     },
     isParsed(): boolean {
-        assert(isWorker(), 'rtl-text-plugin is only parsed on the worker-threads');
+        // #DISABLE_NODE_ASSERT: assert(isWorker(), 'rtl-text-plugin is only parsed on the worker-threads');
 
         return plugin.applyArabicShaping != null &&
             plugin.processBidirectionalText != null &&
             plugin.processStyledBidirectionalText != null;
     },
     getPluginURL(): string {
-        assert(isWorker(), 'rtl-text-plugin url can only be queried from the worker threads');
+        // #DISABLE_NODE_ASSERT: assert(isWorker(), 'rtl-text-plugin url can only be queried from the worker threads');
         return pluginURL;
     }
 };

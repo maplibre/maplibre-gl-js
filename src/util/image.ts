@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 import {register} from './web_worker_transfer';
 
@@ -71,7 +71,7 @@ function copyImage(srcImg: any, dstImg: any, srcPt: Point2D, dstPt: Point2D, siz
     const srcData = srcImg.data;
     const dstData = dstImg.data;
 
-    assert(srcData !== dstData);
+    // #DISABLE_NODE_ASSERT: assert(srcData !== dstData);
 
     for (let y = 0; y < size.height; y++) {
         const srcOffset = ((srcPt.y + y) * srcImg.width + srcPt.x) * channels;

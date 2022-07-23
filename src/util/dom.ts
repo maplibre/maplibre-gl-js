@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 export default class DOM {
     private static readonly docStyle = typeof window !== 'undefined' && window.document && window.document.documentElement.style;
@@ -107,7 +107,7 @@ export default class DOM {
     }
 
     public static mouseButton(e: MouseEvent) {
-        assert(e.type === 'mousedown' || e.type === 'mouseup');
+        // #DISABLE_NODE_ASSERT: assert(e.type === 'mousedown' || e.type === 'mouseup');
         return e.button;
     }
 

@@ -10,7 +10,7 @@ import Context from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import browser from '../util/browser';
 import {OverscaledTileID} from './tile_id';
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 import SourceFeatureState from './source_state';
 
 import type {Source} from './source';
@@ -556,7 +556,7 @@ class SourceCache extends Evented {
             const ids = Object.keys(retain);
             for (const id of ids) {
                 const tileID = retain[id];
-                assert(tileID.key === id);
+                // #DISABLE_NODE_ASSERT: assert(tileID.key === id);
 
                 const tile = this._tiles[id];
                 if (!tile || tile.fadeEndTime && tile.fadeEndTime <= browser.now()) continue;
