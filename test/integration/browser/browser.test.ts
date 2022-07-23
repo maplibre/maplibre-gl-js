@@ -27,7 +27,7 @@ async function getMapCanvas(url, page: Page) {
 
 async function newTest(impl: BrowserType) {
     browser = await impl.launch({
-        headless: false,
+        headless: true,
     });
 
     context = await browser.newContext({
