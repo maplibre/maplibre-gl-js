@@ -78,7 +78,7 @@ describe('browser tests', () => {
 
             expect(center.lng).toBeCloseTo(-35.15625, 4);
             expect(center.lat).toBeCloseTo(0, 7);
-        }, 20000);
+        }, 40000);
 
         test(`${impl.name()} Zoom: Double click at the center`, async () => {
 
