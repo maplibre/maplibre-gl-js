@@ -48,7 +48,7 @@ function propertyType(property) {
     } else if (properties.supportsZoomExpression(property)) {
         return `PropertyValueSpecification<${baseType}>`;
     } else if (property.expression) {
-        return 'ExpressionSpecificationArray';
+        return 'ExpressionSpecification';
     } else {
         return baseType;
     }
@@ -297,19 +297,17 @@ export type CompositeFunctionSpecification<T> =
     | { type: 'interval',    stops: Array<[{zoom: number, value: number}, T]>, property: string, default?: T }
     | { type: 'categorical', stops: Array<[{zoom: number, value: string | number | boolean}, T]>, property: string, default?: T };
 
-export type ExpressionSpecificationArray = ExpressionSpecification;
-
 export type PropertyValueSpecification<T> =
       T
     | CameraFunctionSpecification<T>
-    | ExpressionSpecificationArray;
+    | ExpressionSpecification;
 
 export type DataDrivenPropertyValueSpecification<T> =
       T
     | CameraFunctionSpecification<T>
     | SourceFunctionSpecification<T>
     | CompositeFunctionSpecification<T>
-    | ExpressionSpecificationArray;
+    | ExpressionSpecification;
 
 ${objectDeclaration('StyleSpecification', spec.$root)}
 
