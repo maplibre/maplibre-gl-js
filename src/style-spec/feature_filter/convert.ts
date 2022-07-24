@@ -66,31 +66,37 @@ export default function convertFilter(filter: FilterSpecification, expectedTypes
         case '<':
         case '>':
         case '<=':
-        case '>=':
+        case '>=': {
             const [, property, value] = filter;
             return convertComparisonOp(property as string, value, legacyOp, expectedTypes);
-        case 'any':
-            const [, ...anyConditions] = legacyFilter;
-            const anyChildren = anyConditions.map((f: LegacyFilterSpecification) => {
+        }
+        case 'any': {
+            const [, ...conditions] = legacyFilter;
+            const children = conditions.map((f: LegacyFilterSpecification) => {
                 const types = {};
                 const child = convertFilter(f, types);
                 const typechecks = runtimeTypeChecks(types);
                 return typechecks === true ? child : ['case', typechecks, child, false] as ExpressionSpecification;
             });
-            return ['any', ...anyChildren];
-        case 'all':
-            const [, ...allConditions] = legacyFilter;
-            const allChildren = allConditions.map(f => convertFilter(f, expectedTypes));
-            return allChildren.length > 1 ? ['all', ...allChildren] : allChildren[0];
-        case 'none':
-            const [, ...noneConditions] = legacyFilter;
-            return ['!', convertFilter(['any', ...noneConditions], {})];
-        case 'in':
-            const [, inProperty, ...inValues] = legacyFilter;
-            return convertInOp(inProperty, inValues);
-        case '!in':
-            const [, notInProperty, ...notInValues] = legacyFilter;
-            return convertInOp(notInProperty, notInValues, true);
+            return ['any', ...children];
+        }
+        case 'all': {
+            const [, ...conditions] = legacyFilter;
+            const children = conditions.map(f => convertFilter(f, expectedTypes));
+            return children.length > 1 ? ['all', ...children] : children[0];
+        }
+        case 'none': {
+            const [, ...conditions] = legacyFilter;
+            return ['!', convertFilter(['any', ...conditions], {})];
+        }
+        case 'in': {
+            const [, property, ...values] = legacyFilter;
+            return convertInOp(property, values);
+        }
+        case '!in': {
+            const [, property, ...values] = legacyFilter;
+            return convertInOp(property, values, true);
+        }
         case 'has':
             return convertHasOp(legacyFilter[1]);
         case '!has':
