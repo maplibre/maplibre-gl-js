@@ -54,10 +54,10 @@ map.setStyle('https://demotiles.maplibre.org/style.json', {
     //
     // let's use the hypothetical example when we want to show the countries shown in different colours (demotiles)
     // while for US we display the original OSM basemap
-    stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+    stylePatch: (previousStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
         // preserve the OSM basemap from original style, place it above the background layer (below the next level above background)
-        const prevRasterLayer = prevStyle.layers[0];
-        const aboveBackgroundLayerId = nextStyle.layers.length > 0 ? nextStyle.layers[1].id : undefined;
+        const prevRasterLayer = previousStyle.layers[0];
+        const aboveBackgroundLayerId = nextStyle.layers[1].id;
         preserveLayer(prevRasterLayer.id, aboveBackgroundLayerId);
         // we can modify the paint/layout property or filter on layers from previous and next styles
         updatePaintProperty(prevRasterLayer.id, 'raster-opacity', 0.8);

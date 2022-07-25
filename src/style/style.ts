@@ -114,6 +114,7 @@ export type StyleSetterOptions = {
  *      when previous style carries certain 'state' that needs to be carried over to a new style gracefully,
  *      when a desired target style is a certain combination of previous and incoming style.
  *
+ * @typedef {Function} StylePatchFunction
  * @param previousStyle The current style.
  * @param nextStyle The next style which is to be applied.
  * @param preserveLayer Preserve a layer from the previous style in the next style.
@@ -124,9 +125,41 @@ export type StyleSetterOptions = {
 export type StylePatchFunction = (
     previousStyle: StyleSpecification,
     nextStyle: StyleSpecification,
+
+    /** 
+     * Preserve a layer from the previous style in the next style. 
+     * 
+     * @param {string} layerId ID of the layer from previous style that should be preserved in next.
+     * @param {string} [before] ID of the layer in the next style to insert before.
+     */
     preserveLayer: (layerId: string, before?: string) => void,
+
+    /** 
+     * Modify paint properties of a layer in the next style before the style is applied.
+     * 
+     * @param {string} layerId ID of the layer from next style that should be updated.
+     * @param {string} name The name of the paint property to update.
+     * @param {*} value The value of the paint property to update.
+     */
     updatePaintProperty: (layerId: string, name: string, value: any) => void,
+    
+    /** 
+     * Modify layout properties of a layer in the next style before the style is applied.
+     * 
+     * @param {string} layerId ID of the layer from next style that should be updated.
+     * @param {string} name The name of the layout property to update.
+     * @param {*} value The value of the layout property to update.
+     */
     updateLayoutProperty: (layerId: string, name: string, value: any) => void,
+
+    /** 
+     * Modify filter property of a layer in the next style before the style is applied.
+     * 
+     * @param {string} layerId ID of the layer from next style that should be updated.
+     * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
+     *   [filter definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
+     * @param {Object} [options] Options object.
+     */
     updateFilter: (layerId: string, filter: FilterSpecification | null, options?: StyleSetterOptions) => void
 ) => void;
 

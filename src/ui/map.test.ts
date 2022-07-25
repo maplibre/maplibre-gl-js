@@ -423,7 +423,7 @@ describe('Map', () => {
             const map = createMap();
             map.setStyle(style, {
                 stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
-                    updateFilter(nextStyle.layers[0].id, ['!=', ['get', 'foo'], 'bar']);
+                    updateFilter(nextStyle.layers[0].id, ['!=', ['get', 'sample_property'], 'sample_value']);
                 }
             });
 
@@ -433,7 +433,7 @@ describe('Map', () => {
                     initialStyleDidLoad = true;
                 } else {
                     const layer = map.style.serialize().layers[0] as CircleStyleLayer;
-                    expect(layer.filter).toStrictEqual(['!=', ['get', 'foo'], 'bar']);
+                    expect(layer.filter).toStrictEqual(['!=', ['get', 'sample_property'], 'sample_value']);
                     done();
                 }
             });

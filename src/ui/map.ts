@@ -1417,7 +1417,7 @@ class Map extends Camera {
      * map.setStyle("https://demotiles.maplibre.org/style.json");
      * // set style with style patch
      * map.setStyle('https://demotiles.maplibre.org/style.json', {
-     *   stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+     *   stylePatch: (previousStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
      *       // hide the layers we don't need from demotiles style
      *       nextStyle.layers
      *           .filter(layer => layer.id.startsWith('geolines'))

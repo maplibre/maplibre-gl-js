@@ -446,26 +446,26 @@ describe('Style#_buildStylePatch', () => {
         const initial = createStyleJSON({
             'version': 8,
             'sources': {
-                'foo': {
+                'originalSource': {
                     'type': 'vector'
                 }
             },
             'layers': [
                 {
                     'id': 'initial_0',
-                    'source': 'foo',
+                    'source': 'originalSource',
                     'source-layer': 'source-layer',
                     'type': 'fill'
                 },
                 {
                     'id': 'initial_1',
-                    'source': 'foo',
+                    'source': 'originalSource',
                     'source-layer': 'source-layer',
                     'type': 'fill'
                 },
                 {
                     'id': 'initial_2',
-                    'source': 'foo',
+                    'source': 'originalSource',
                     'source-layer': 'source-layer',
                     'type': 'fill'
                 }]});
@@ -473,14 +473,14 @@ describe('Style#_buildStylePatch', () => {
         const next = createStyleJSON({
             'version': 8,
             'sources': {
-                'bar': {
+                'nextSource': {
                     'type': 'vector'
                 }
             },
             'layers': [
                 {
                     'id': 'next_0',
-                    'source': 'bar',
+                    'source': 'nextSource',
                     'source-layer': 'source-layer',
                     'type': 'fill'
                 }]});
@@ -496,8 +496,8 @@ describe('Style#_buildStylePatch', () => {
             } else {
                 const result = style.serialize();
                 const layers = result.layers.reduce((p, c) => { p[c.id] = c; return p; }, {});
-                expect('foo' in result.sources).toBeTruthy();
-                expect('bar' in result.sources).toBeTruthy();
+                expect('originalSource' in result.sources).toBeTruthy();
+                expect('nextSource' in result.sources).toBeTruthy();
                 expect('initial_0' in layers).toBeTruthy();
                 expect('initial_1' in layers).toBeTruthy();
                 expect('next_0' in layers).toBeTruthy();
@@ -512,14 +512,14 @@ describe('Style#_buildStylePatch', () => {
         const initial = createStyleJSON({
             'version': 8,
             'sources': {
-                'foo': {
+                'originalSource': {
                     'type': 'vector'
                 }
             },
             'layers': [
                 {
                     'id': 'initial_0',
-                    'source': 'foo',
+                    'source': 'originalSource',
                     'source-layer': 'source-layer',
                     'type': 'fill'
                 }]});
@@ -544,11 +544,11 @@ describe('Style#_buildStylePatch', () => {
         const style = createStyle();
         const initial = createStyleJSON({
             'sources': {
-                'foo': {'type': 'vector'}
+                'originalSource': {'type': 'vector'}
             },
             'layers': [{
                 'id': 'test',
-                'source': 'foo',
+                'source': 'originalSource',
                 'source-layer': 'source-layer',
                 'type': 'line'
             }]
@@ -556,11 +556,11 @@ describe('Style#_buildStylePatch', () => {
 
         const next = createStyleJSON({
             'sources': {
-                'foo': {'type': 'vector'}
+                'originalSource': {'type': 'vector'}
             },
             'layers': [{
                 'id': 'test',
-                'source': 'foo',
+                'source': 'originalSource',
                 'source-layer': 'source-layer',
                 'type': 'fill'
             }]
@@ -585,11 +585,11 @@ describe('Style#_buildStylePatch', () => {
         const style = createStyle();
         const initial = createStyleJSON({
             'sources': {
-                'foo': {'type': 'vector'}
+                'originalSource': {'type': 'vector'}
             },
             'layers': [{
                 'id': 'layer0',
-                'source': 'foo',
+                'source': 'originalSource',
                 'source-layer': 'source-layer',
                 'type': 'line'
             }]
