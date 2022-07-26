@@ -120,6 +120,8 @@ fs.writeFileSync('src/style-spec/types.g.ts',
 
 export type ColorSpecification = string;
 
+export type PaddingSpecification = number | number[];
+
 export type FormattedSpecification = string;
 
 export type ResolvedImageSpecification = string;

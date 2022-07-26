@@ -55,6 +55,12 @@ export type StylePropertySpecification = {
     length?: number;
     transition: boolean;
     default?: Array<string>;
+} | {
+    type: 'padding';
+    'property-type': ExpressionType;
+    expression?: ExpressionSpecification;
+    transition: boolean;
+    default?: number | Array<number>;
 };
 
 import v8 from './reference/v8.json';
@@ -71,6 +77,7 @@ import featureFilter, {isExpressionFilter} from './feature_filter';
 
 import convertFilter from './feature_filter/convert';
 import Color from './util/color';
+import Padding from './util/padding';
 import {createFunction, isFunction} from './function';
 import convertFunction from './function/convert';
 import {eachSource, eachLayer, eachProperty} from './visit';
@@ -111,6 +118,7 @@ export {
     featureFilter,
     convertFilter,
     Color,
+    Padding,
     styleFunction as function,
     validate,
     visit

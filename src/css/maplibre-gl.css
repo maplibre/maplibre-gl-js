@@ -464,26 +464,6 @@
     100% { transform: rotate(360deg); }
 }
 
-@keyframes maplibregl-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes maplibregl-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes maplibregl-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes maplibregl-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
 a.maplibregl-ctrl-logo,
 a.mapboxgl-ctrl-logo {
     width: 88px;
@@ -889,18 +869,6 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     width: 19px;
     box-sizing: border-box;
     box-shadow: 0 0 3px rgb(0 0 0 / 35%);
-}
-
-@keyframes maplibregl-user-location-dot-pulse {
-    0%   { transform: scale(1); opacity: 1; }
-    70%  { transform: scale(3); opacity: 0; }
-    100% { transform: scale(1); opacity: 0; }
-}
-
-@keyframes maplibregl-user-location-dot-pulse {
-    0%   { transform: scale(1); opacity: 1; }
-    70%  { transform: scale(3); opacity: 0; }
-    100% { transform: scale(1); opacity: 0; }
 }
 
 @keyframes maplibregl-user-location-dot-pulse {
