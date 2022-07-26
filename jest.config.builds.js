@@ -13,6 +13,5 @@ export default {
     transformIgnorePatterns: [
         '/node_modules/@mapbox/jsonlint-lines-primitives/lib/jsonlint.js'
     ],
-    preset: 'jest-playwright-preset',
     setupFiles: ['jest-canvas-mock'],
 };
