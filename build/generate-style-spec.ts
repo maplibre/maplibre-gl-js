@@ -115,9 +115,7 @@ function layerType(key) {
 const layerTypes = Object.keys(spec.layer.type.values);
 
 fs.writeFileSync('src/style-spec/types.g.ts',
-    `// @ts-nocheck
-
-// Generated code; do not edit. Edit build/generate-style-spec.ts instead.
+    `// Generated code; do not edit. Edit build/generate-style-spec.ts instead.
 /* eslint-disable */
 
 export type ColorSpecification = string;
