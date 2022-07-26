@@ -1405,12 +1405,7 @@ class Map extends Camera {
      *   Set to `false`, to enable font settings from the map's style for these glyph ranges.
      *   Forces a full update.
      * @param {StylePatchFunction} [options.stylePatch=undefined] A style patch function
-     *   that will perform a side-effect after a style is fetched but before it is committed to the map state.
-     *   This function exposes previous and next styles as well as means to update paint, layout properties and filters in style layers of the target style.
-     *   It can be commonly used to support a range of functionalities like:
-     *      when incoming style requires modification based on external state,
-     *      when previous style carries certain 'state' that needs to be carried over to a new style gracefully,
-     *      or when a desired target style is a certain combination of previous and incoming style.
+     *   that will perform a side-effect after a style is fetched but before it is committed to the map state. Refer to {@link StylePatchFunction}.
      * @returns {Map} `this`
      *
      * @example

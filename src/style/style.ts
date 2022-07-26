@@ -107,7 +107,77 @@ export type StyleSetterOptions = {
 };
 
 /**
- * a style patch function that will perform a side-effect after a style is fetched but before it is committed to the map state
+ * {@link StylePatchFunction} parameter - preserves a layer from the previous style in the next style.
+ *
+ * @typedef {Function} PreserveLayerFunction
+ * @param {string} layerId ID of the layer from previous style that should be preserved in next.
+ * @param {string} [before] ID of the layer in the next style to insert before.
+ *
+ * @example
+ * map.setStyle('https://demotiles.maplibre.org/style.json', {
+ *   stylePatch: (previousStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+ *       const aboveBackgroundLayerId = nextStyle.layers[1].id;
+ *       preserveLayer(previousStyle.layers[0], aboveBackgroundLayerId);
+ *   }
+ * });
+ */
+export type PreserveLayerFunction = (layerId: string, before?: string) => void;
+
+/**
+ * {@link StylePatchFunction} parameter - modifies paint properties of a layer in the next style before the style is applied.
+ *
+ * @typedef {Function} UpdatePaintPropertyFunction
+ * @param {string} layerId ID of the layer from next style that should be updated.
+ * @param {string} name The name of the paint property to update.
+ * @param {*} value The value of the paint property to update.
+ *
+ * @example
+ * map.setStyle('https://demotiles.maplibre.org/style.json', {
+ *   stylePatch: (previousStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+ *       updatePaintProperty('countries-fill', 'fill-color', '#D6C7FF');
+ *   }
+ * });
+ */
+export type UpdatePaintPropertyFunction = (layerId: string, name: string, value: any) => void;
+
+/**
+ * {@link StylePatchFunction} parameter - modifies layout properties of a layer in the next style before the style is applied.
+ *
+ * @typedef {Function} UpdateLayoutPropertyFunction
+ * @param {string} layerId ID of the layer from next style that should be updated.
+ * @param {string} name The name of the layout property to update.
+ * @param {*} value The value of the layout property to update.
+ *
+ * @example
+ * map.setStyle('https://demotiles.maplibre.org/style.json', {
+ *    stylePatch: (previousStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+ *        updateLayoutProperty('geolines', 'visibility', 'none');
+ *    }
+ * });
+ */
+export type UpdateLayoutPropertyFunction = (layerId: string, name: string, value: any) => void;
+
+/**
+ * {@link StylePatchFunction} parameter - modifies filter property of a layer in the next style before the style is applied.
+ *
+ * @typedef {Function} UpdateFilterFunction
+ * @param {string} layerId ID of the layer from next style that should be updated.
+ * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
+ *   [filter definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
+ * @param {Object} [options] Options object.
+ *
+ * @example
+ * map.setStyle('https://demotiles.maplibre.org/style.json', {
+ *   stylePatch: (previousStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+ *       // filters out US polygons
+ *       updateFilter('countries-fill', ['!=', ['get', 'ADM0_A3'], 'USA']);
+ *   }
+ * });
+ */
+export type UpdateFilterFunction = (layerId: string, filter: FilterSpecification | null, options?: StyleSetterOptions) => void;
+
+/**
+ * Part of {@link Map#setStyle} options, a style patch function will perform a side-effect after a style is fetched but before it is committed to the map state
  * this function exposes previous and next styles as well as means to update paint, layout properties and filters in style layers of the target style
  * it can be commonly used to support a range of functionalities like:
  *      when incoming style requires modification based on external state,
@@ -115,51 +185,38 @@ export type StyleSetterOptions = {
  *      when a desired target style is a certain combination of previous and incoming style.
  *
  * @typedef {Function} StylePatchFunction
- * @param previousStyle The current style.
- * @param nextStyle The next style which is to be applied.
- * @param preserveLayer Preserve a layer from the previous style in the next style.
- * @param updatePaintProperty Modify paint properties of a layer in the next style before the style is applied.
- * @param updateLayoutProperty Modify layout properties of a layer in the next style before the style is applied.
- * @param updateFilter Modify filter property of a layer in the next style before the style is applied.
+ * @param {Object} previousStyle The current style.
+ * @param {Object} nextStyle The next style which is to be applied.
+ * @param {PreserveLayerFunction} preserveLayer Preserve a layer from the previous style in the next style.
+ * @param {UpdatePaintPropertyFunction} updatePaintProperty Modify paint properties of a layer in the next style before the style is applied.
+ * @param {UpdateLayoutPropertyFunction} updateLayoutProperty Modify layout properties of a layer in the next style before the style is applied.
+ * @param {UpdateFilterFunction} updateFilter Modify filter property of a layer in the next style before the style is applied.
+ *
+ * @example
+ * map.setStyle('https://demotiles.maplibre.org/style.json', {
+ *   stylePatch: (previousStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+ *       // hide the layers we don't need from demotiles style
+ *       nextStyle.layers
+ *           .filter(layer => layer.id.startsWith('geolines'))
+ *           .forEach(layer => {
+ *               updateLayoutProperty(layer.id, 'visibility', 'none');
+ *           });
+ *
+ *       // filter out US polygons
+ *       nextStyle.layers
+ *           .filter(layer => layer.id.startsWith('coastline') || layer.id.startsWith('countries'))
+ *           .forEach(layer => {
+ *               updateFilter(layer.id, ['!=', ['get', 'ADM0_A3'], 'USA']);
+ *           });
+ *   }
+ * });
  */
 export type StylePatchFunction = (
     previousStyle: StyleSpecification,
     nextStyle: StyleSpecification,
-
-    /** 
-     * Preserve a layer from the previous style in the next style. 
-     * 
-     * @param {string} layerId ID of the layer from previous style that should be preserved in next.
-     * @param {string} [before] ID of the layer in the next style to insert before.
-     */
-    preserveLayer: (layerId: string, before?: string) => void,
-
-    /** 
-     * Modify paint properties of a layer in the next style before the style is applied.
-     * 
-     * @param {string} layerId ID of the layer from next style that should be updated.
-     * @param {string} name The name of the paint property to update.
-     * @param {*} value The value of the paint property to update.
-     */
-    updatePaintProperty: (layerId: string, name: string, value: any) => void,
-    
-    /** 
-     * Modify layout properties of a layer in the next style before the style is applied.
-     * 
-     * @param {string} layerId ID of the layer from next style that should be updated.
-     * @param {string} name The name of the layout property to update.
-     * @param {*} value The value of the layout property to update.
-     */
-    updateLayoutProperty: (layerId: string, name: string, value: any) => void,
-
-    /** 
-     * Modify filter property of a layer in the next style before the style is applied.
-     * 
-     * @param {string} layerId ID of the layer from next style that should be updated.
-     * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
-     *   [filter definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
-     * @param {Object} [options] Options object.
-     */
+    preserveLayer: PreserveLayerFunction,
+    updatePaintProperty: UpdatePaintPropertyFunction,
+    updateLayoutProperty: UpdateLayoutPropertyFunction,
     updateFilter: (layerId: string, filter: FilterSpecification | null, options?: StyleSetterOptions) => void
 ) => void;
 
