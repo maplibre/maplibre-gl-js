@@ -160,7 +160,7 @@
     "lint-docs": "documentation lint src/index.ts",
     "lint-css": "stylelint \"src/css/maplibre-gl.css\"",
     "test": "run-s lint lint-css lint-docs test-unit",
-    "test-build": "jest --roots ./test/build",
+    "test-build": "jest -c ./jest.config.builds.js --roots ./test/build",
     "test-symbol-shaping": "jest --roots ./test/integration/symbol-shaping",
     "test-style-spec": "jest --roots ./test/integration/style-spec",
     "test-browser": "jest -c ./jest.config.e2e.js --roots ./test/integration/browser",
