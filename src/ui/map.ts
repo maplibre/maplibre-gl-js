@@ -1386,8 +1386,8 @@ class Map extends Camera {
      *
      */
     querySourceFeatures(sourceId: string, parameters?: {
-        sourceLayer: string;
-        filter: Array<any>;
+        sourceLayer?: string;
+        filter?: FilterSpecification;
         validate?: boolean;
     } | null): MapGeoJSONFeature[] {
         return this.style.querySourceFeatures(sourceId, parameters);
