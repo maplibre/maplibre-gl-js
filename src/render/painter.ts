@@ -483,20 +483,29 @@ class Painter {
         }
 
         if (this.options.showTileBoundaries) {
-            //Use source with highest maxzoom
+            // Use vector source with highest maxzoom
+            // Else use source with highest maxzoom of any type
             let selectedSource;
-            let sourceCache;
             const layers = Object.values(this.style._layers);
-            layers.forEach((layer) => {
+            const sources = layers.flatMap((layer) => {
                 if (layer.source && !layer.isHidden(this.transform.zoom)) {
-                    if (layer.source !== (sourceCache && sourceCache.id)) {
-                        sourceCache = this.style.sourceCaches[layer.source];
-                    }
-                    if (!selectedSource || (selectedSource.getSource().maxzoom < sourceCache.getSource().maxzoom)) {
-                        selectedSource = sourceCache;
-                    }
+                    const sourceCache = this.style.sourceCaches[layer.source];
+                    return [sourceCache];
+                } else {
+                    return [];
                 }
             });
+            const vectorSources = sources.filter((source) => source.getSource().type === 'vector');
+            const otherSources = sources.filter((source) => source.getSource().type !== 'vector');
+            const considerSource = (source) => {
+                if (!selectedSource || (selectedSource.getSource().maxzoom < source.getSource().maxzoom)) {
+                    selectedSource = source;
+                }
+            };
+            vectorSources.forEach((source) => considerSource(source));
+            if (!selectedSource) {
+                otherSources.forEach((source) => considerSource(source));
+            }
             if (selectedSource) {
                 draw.debug(this, selectedSource, selectedSource.getVisibleCoordinates());
             }
