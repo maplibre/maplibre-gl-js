@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import migrate from './migrate';
 import * as spec from './style-spec';
 import v8 from './reference/v8.json';

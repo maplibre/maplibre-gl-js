@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import migrate from './v8';
 
 describe('migrate v8', () => {
