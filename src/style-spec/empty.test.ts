@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import emptyStyle from './empty';
 import validateStyleMin from './validate_style.min';
 

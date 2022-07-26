@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import simulate, {window} from '../../test/unit/lib/simulate_interaction';
 import StyleLayer from '../style/style_layer';
 import {createMap, setPerformance, setWebGlContext} from '../util/test/util';

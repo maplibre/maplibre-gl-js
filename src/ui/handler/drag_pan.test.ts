@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import DOM from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
