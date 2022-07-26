@@ -56,7 +56,7 @@
     "@types/gl": "^4.1.0",
     "@types/glob": "^7.2.0",
     "@types/jest": "^28.1.6",
-    "@types/jsdom": "^16.2.14",
+    "@types/jsdom": "^20.0.0",
     "@types/minimist": "^1.2.2",
     "@types/murmurhash-js": "^1.0.3",
     "@types/nise": "^1.4.0",
