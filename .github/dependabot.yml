@@ -11,5 +11,4 @@ updates:
       interval: "monthly"
     ignore:
       - dependency-name: "documentation"
-      - dependency-name: "ts-node"
     open-pull-requests-limit: 20
