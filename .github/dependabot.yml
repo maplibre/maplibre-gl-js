@@ -11,7 +11,5 @@ updates:
       interval: "monthly"
     ignore:
       - dependency-name: "documentation"
-      - dependency-name: "jest"
-      - dependency-name: "@types/jest"
       - dependency-name: "ts-node"
     open-pull-requests-limit: 20
