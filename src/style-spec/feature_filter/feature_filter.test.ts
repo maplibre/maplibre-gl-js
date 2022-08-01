@@ -11,7 +11,7 @@ import {Feature} from '../expression';
 describe('filter', () => {
     test('exprssions transpilation test', () => {
         function compileTimeCheck(_: ExpressionFilterSpecification) {
-            expect(true).toBeTruthy()
+            expect(true).toBeTruthy();
         }
         compileTimeCheck(['any']);
         compileTimeCheck(['at', 2, ['array', 1, 2, 3]]);
