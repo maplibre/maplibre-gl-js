@@ -5,10 +5,18 @@ import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../../geo/mercator_coordinate';
 import EXTENT from '../../data/extent';
 import {CanonicalTileID} from '../../source/tile_id';
-import {FilterSpecification} from '../types.g';
+import {ExpressionFilterSpecification, FilterSpecification} from '../types.g';
 import {Feature} from '../expression';
 
 describe('filter', () => {
+    test('exprssions transpilation test', () => {
+        function compileTimeCheck(filter: ExpressionFilterSpecification) {
+            expect(true).toBeTruthy()
+        }
+        compileTimeCheck(['any']);
+        compileTimeCheck(['at', 2, ['array', 1, 2, 3]]);
+    });
+
     test('expression, zoom', () => {
         const f = createFilter(['>=', ['number', ['get', 'x']], ['zoom']]).filter;
         expect(f({zoom: 1}, {properties: {x: 0}} as any as Feature)).toBe(false);
