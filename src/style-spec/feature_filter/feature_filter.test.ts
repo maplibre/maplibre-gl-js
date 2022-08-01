@@ -10,7 +10,7 @@ import {Feature} from '../expression';
 
 describe('filter', () => {
     test('exprssions transpilation test', () => {
-        function compileTimeCheck(filter: ExpressionFilterSpecification) {
+        function compileTimeCheck(_: ExpressionFilterSpecification) {
             expect(true).toBeTruthy()
         }
         compileTimeCheck(['any']);
