@@ -1,9 +1,6 @@
 {
-  "ts-node": {
-    "swc": true
-  },
   "compilerOptions": {
-    "allowJs": false,
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "checkJs": false,
     "esModuleInterop": true,

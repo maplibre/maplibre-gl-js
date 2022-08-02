@@ -341,7 +341,7 @@ function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | nu
     });
 }
 
-export type ExpiryData = {cacheControl?: string | null; expires?: string | null};
+export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
 
 function arrayBufferToCanvasImageSource(data: ArrayBuffer, callback: Callback<CanvasImageSource>) {
     const imageBitmapSupported = typeof createImageBitmap === 'function';

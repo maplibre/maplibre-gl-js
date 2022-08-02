@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import composite from './composite';
 
 describe('composite', () => {

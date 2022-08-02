@@ -86,4 +86,27 @@ events['magicWheelZoomDelta'] = 4.000244140625;
     };
 });
 
-export default events;
+interface EventsInterface {
+    click: Function;
+    drag: Function;
+    dblclick: Function;
+    keydown: Function;
+    keyup: Function;
+    keypress: Function;
+    mouseup: Function;
+    mousedown: Function;
+    mouseover: Function;
+    mousemove: Function;
+    mouseout: Function;
+    wheel: Function;
+    mousewheel: Function;
+    magicWheelZoomDelta: Number;
+    touchstart: Function;
+    touchend: Function;
+    touchmove: Function;
+    touchcancel: Function;
+    focus: Function;
+    blur: Function;
+}
+
+export default events as EventsInterface;
