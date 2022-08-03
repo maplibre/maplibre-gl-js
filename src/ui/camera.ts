@@ -13,6 +13,7 @@ import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
+import MercatorCoordinate from '../geo/mercator_coordinate';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -773,6 +774,34 @@ abstract class Camera extends Evented {
         }
 
         return this.fire(new Event('moveend', eventData));
+    }
+
+    /**
+     * Calculates pitch, zoom and bearing for looking at @param newCenter with the camera position being @param newCenter
+     * and returns them as Cameraoptions.
+     * @param from the camera to look from
+     * @param to the center to look at
+     * @returns {CameraOptions} the calculated camera options
+     */
+    calclulateCameraOptionsFromTo(from: MercatorCoordinate, to: MercatorCoordinate,) : CameraOptions {
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const dz = to.z - from.z;
+
+        const distance3D = Math.hypot(dx, dy, dz);
+        const groundDistance = Math.hypot(dx, dy);
+
+        const zoom = this.transform.scaleZoom(this.transform.cameraToCenterDistance / distance3D / this.transform.tileSize);
+        const bearing = (Math.atan2(dx, -dy) * 180) / Math.PI;
+        let pitch = (Math.acos(groundDistance / distance3D) * 180) / Math.PI;
+        pitch = dz < 0 ? 90 - pitch : 90 + pitch;
+
+        return {
+            center: to.toLngLat(),
+            zoom,
+            pitch,
+            bearing
+        };
     }
 
     /**

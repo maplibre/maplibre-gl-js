@@ -1,9 +1,10 @@
-import Camera from '../ui/camera';
+import Camera, { CameraOptions } from '../ui/camera';
 import Transform from '../geo/transform';
 import TaskQueue, {TaskID} from '../util/task_queue';
 import browser from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
+import MercatorCoordinate from '../geo/mercator_coordinate';
 
 beforeEach(() => {
     setMatchMedia();
@@ -54,6 +55,39 @@ function assertTransitionTime(done, camera, min, max) {
             done();
         });
 }
+
+describe('#lookAtFrom', () => {
+    // Choose initial zoom to avoid center being constrained by mercator latitude limits.
+    const camera = createCamera({zoom: 1});
+
+    test('look at north', () => {
+        const cameraOptions: CameraOptions = camera.calclulateCameraOptionsFromTo(MercatorCoordinate.fromLngLat({lng: 1, lat: 0}), MercatorCoordinate.fromLngLat({lng: 1, lat: 1}));
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.center).toBeDefined();
+        expect(cameraOptions.bearing).toBeCloseTo(0);
+    });
+
+    test('look at west', () => {
+        const cameraOptions = camera.calclulateCameraOptionsFromTo(MercatorCoordinate.fromLngLat({lng: 1, lat: 0}, 0), MercatorCoordinate.fromLngLat({lng: 0, lat: 0}));
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.bearing).toBeCloseTo(-90);
+    });
+
+    test('pitch 45', () => {
+        const cam = MercatorCoordinate.fromLngLat({lng: 1, lat: 0});
+        //up as far as away => pitch should be 45°
+        cam.z = cam.x - 0.5;
+        const cameraOptions: CameraOptions = camera.calclulateCameraOptionsFromTo(cam, MercatorCoordinate.fromLngLat({lng: 1, lat: 1}));
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.pitch).toBeCloseTo(45);
+    });
+
+    test('pitch 90', () => {
+        const cameraOptions = camera.calclulateCameraOptionsFromTo(MercatorCoordinate.fromLngLat({lng: 1, lat: 0}, 0), MercatorCoordinate.fromLngLat({lng: 0, lat: 0}));
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.pitch).toBeCloseTo(90);
+    });
+});
 
 describe('#jumpTo', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
