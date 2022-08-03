@@ -1,4 +1,4 @@
-import Camera, { CameraOptions } from '../ui/camera';
+import Camera, {CameraOptions} from '../ui/camera';
 import Transform from '../geo/transform';
 import TaskQueue, {TaskID} from '../util/task_queue';
 import browser from '../util/browser';
