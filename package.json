@@ -16,7 +16,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@globalfishingwatch/fourwings-aggregate": "4.2.0",
+    "@globalfishingwatch/fourwings-aggregate": "4.2.1",
     "@mapbox/geojson-rewind": "^0.5.2",
     "@mapbox/jsonlint-lines-primitives": "^2.0.2",
     "@mapbox/point-geometry": "^0.1.0",
