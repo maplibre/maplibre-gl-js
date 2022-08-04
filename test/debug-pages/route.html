@@ -138,7 +138,7 @@
               camera.coord.y += Math.sin(a) * delta;
     }
 
-    map.jumpTo(map.calculateCameraOptionsFromTo(camera.coord.toLngLat(), camera.altitude, lngLat));
+    map.easeTo(map.calculateCameraOptionsFromTo(camera.coord.toLngLat(), camera.altitude, lngLat));
 
     if (progress < playtime) requestAnimationFrame(animate);
 };
@@ -154,21 +154,22 @@
           camera.coord = new maplibregl.MercatorCoordinate(a.x - dx, a.y - dy);
       
           map.on('click', (e) => {
-              if (e.altKey) {
-                  return {cameraAnimation: (map) => {
-                      if (!this.first) {
-                          this.first = map.transform.pointCoordinate(point, map.style.terrain);
-                      } else {
-                          const last = map.transform.pointCoordinate(point, map.style.terrain);
-                          const co = map.calculateCameraOptionsFromTo(this.first.toLngLat(), this.first.z, last.toLngLat());
+              if (e.originalEvent.altKey) {
+                  if (!this.first) {
+                      this.first = map.transform.pointCoordinate(e.point, map.style.terrain);
+                  } else {
+                      const last = map.transform.pointCoordinate(e.point, map.style.terrain);
+                      const co = map.calculateCameraOptionsFromTo(last.toLngLat(), last.z, this.first.toLngLat());
+                      if (e.originalEvent.ctrlKey) {
+                          map.jumpTo(co);
+                      } else
                           map.flyTo(co);
-                          this.first = null;
-                      }
-                  }};
+                      this.first = null;
+                  }
               }
           });
           map.flyTo(map.calculateCameraOptionsFromTo(camera.coord.toLngLat(), camera.altitude, coordinates[0]));
-          setTimeout(() => animate(), 2000);
+          //   setTimeout(() => animate(), 2000);
       });
 
    </script>
