@@ -779,14 +779,15 @@ abstract class Camera extends Evented {
     /**
      * Calculates pitch, zoom and bearing for looking at @param newCenter with the camera position being @param newCenter
      * and returns them as Cameraoptions.
-     * @param from the camera to look from
-     * @param altitudeFrom the altitude of the camera to look from
-     * @param to the center to look at
+     * @param from The camera to look from
+     * @param altitudeFrom The altitude of the camera to look from
+     * @param to The center to look at
+     * @param altitudeTo Optional altitude of the center to look at. If none given the ground height will be used.
      * @returns {CameraOptions} the calculated camera options
      */
-    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom:number, to: LngLat) : CameraOptions {
+    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo: number = 0) : CameraOptions {
         const fromMerc = MercatorCoordinate.fromLngLat(from, altitudeFrom);
-        const toMerc = MercatorCoordinate.fromLngLat(to);
+        const toMerc = MercatorCoordinate.fromLngLat(to, altitudeTo);
         const dx = toMerc.x - fromMerc.x;
         const dy = toMerc.y - fromMerc.y;
         const dz = toMerc.z - fromMerc.z;

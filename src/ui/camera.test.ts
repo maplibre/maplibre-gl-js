@@ -4,7 +4,6 @@ import TaskQueue, {TaskID} from '../util/task_queue';
 import browser from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
-import MercatorCoordinate from '../geo/mercator_coordinate';
 
 beforeEach(() => {
     setMatchMedia();
@@ -74,10 +73,9 @@ describe('#calculateCameraOptionsFromTo', () => {
     });
 
     test('pitch 45', () => {
-        const cam = MercatorCoordinate.fromLngLat({lng: 1, lat: 0});
-        //up as far as away => pitch should be 45°
-        cam.z = cam.x - 0.5;
-        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo(cam.toLngLat(), cam.toAltitude(), {lng: 1, lat: 1});
+        // altitude same as grounddistance => 45°
+        // distance between lat x and lat x+1 is 111.2km at same lng
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 1, lat: 1});
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(45);
     });

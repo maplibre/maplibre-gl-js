@@ -9,7 +9,7 @@ import Painter from '../render/painter';
 import Transform from '../geo/transform';
 import Hash from './hash';
 import HandlerManager from './handler_manager';
-import Camera from './camera';
+import Camera, {CameraOptions} from './camera';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
@@ -598,6 +598,13 @@ class Map extends Camera {
      */
     hasControl(control: IControl) {
         return this._controls.indexOf(control) > -1;
+    }
+
+    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number) : CameraOptions {
+        if (!altitudeTo && this.style.terrain) {
+            altitudeTo = this.transform.getElevation(to, this.style.terrain);
+        }
+        return super.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
 
     /**
