@@ -193,11 +193,11 @@ export type ExpressionSpecification =
         ExpressionInputType | ExpressionInputType[], ExpressionInputType | ExpressionSpecification, 
         ...(ExpressionInputType | ExpressionInputType[] | ExpressionSpecification)[], // repeated as above
         ExpressionInputType]
-    | ['within', unknown | ExpressionSpecification
+    | ['within', unknown | ExpressionSpecification]
     // Ramps, scales, curves
     | ['interpolate', InterpolationSpecification, 
         number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
-        ...(number | ExpressionInputType | ExpressionSpecification)[]]]
+        ...(number | ExpressionInputType | ExpressionSpecification)[]]
     | ['interpolate-hcl', InterpolationSpecification,
         number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
         ...(number | ColorSpecification | ExpressionSpecification)[]]
