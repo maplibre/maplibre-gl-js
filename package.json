@@ -80,7 +80,7 @@
     "d3": "^7.6.1",
     "d3-queue": "^3.0.7",
     "diff": "^5.1.0",
-    "documentation": "git://github.com/documentationjs/documentation.git#e4ba155b47a147e8a9310fc6af99a6e4f779ebbc",
+    "documentation": "14.0.0-alpha.0",
     "dts-bundle-generator": "^6.12.0",
     "eslint": "^8.19.0",
     "eslint-config-mourner": "^3.0.0",
