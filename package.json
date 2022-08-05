@@ -121,7 +121,7 @@
     "rollup-plugin-import-assert": "^2.1.0",
     "rollup-plugin-sourcemaps": "^0.6.3",
     "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-unassert": "^0.4.0",
+    "rollup-plugin-unassert": "git://github.com/birkskyum/rollup-plugin-unassert.git#94c2fc4992b8bf008da4d85e814d90e291367303",
     "rw": "^1.3.3",
     "semver": "^7.3.7",
     "shuffle-seed": "^1.1.6",
