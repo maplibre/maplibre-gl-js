@@ -162,7 +162,7 @@
     "test-symbol-shaping": "jest --roots ./test/integration/symbol-shaping",
     "test-style-spec": "jest --roots ./test/integration/style-spec",
     "test-browser": "jest -c ./jest.config.e2e.ts --roots ./test/integration/browser",
-    "test-render": "node --loader ts-node/esm --experimental-specifier-resolution=node --experimental-json-modules --max-old-space-size=2048 test/integration/render/render.test.ts",
+    "test-render": "node --loader ts-node/esm --experimental-specifier-resolution=node --max-old-space-size=2048 test/integration/render/render.test.ts",
     "test-query": "jest -c ./jest.config.e2e.ts --roots ./test/integration/query",
     "test-expression": "jest --roots ./test/integration/expression",
     "test-unit": "jest  -c ./jest.config.ts --roots ./src",
