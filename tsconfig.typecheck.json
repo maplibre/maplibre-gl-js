@@ -13,6 +13,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
+    "noEmit": true,
     "strict": false,
     "target": "es2017",
     "lib": [
@@ -35,6 +36,5 @@
     "lib",
     "dist",
     "test/bench/**/*generated*",
-    "src/**/*.test.ts"
   ]
 }
