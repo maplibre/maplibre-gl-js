@@ -5,7 +5,7 @@ import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../../geo/mercator_coordinate';
 import EXTENT from '../../data/extent';
 import {CanonicalTileID} from '../../source/tile_id';
-import {ExpressionFilterSpecification, FilterSpecification, InterpolationSpecification} from '../types.g';
+import {ExpressionFilterSpecification, FilterSpecification} from '../types.g';
 import {Feature} from '../expression';
 
 describe('filter', () => {
@@ -15,27 +15,27 @@ describe('filter', () => {
         }
         compileTimeCheck(['any']);
         compileTimeCheck(['at', 2, ['array', 1, 2, 3]]);
-        compileTimeCheck(["case", ["has", "color"], ["get", "color"], "white"]);
-        compileTimeCheck(["case", ["all", ["has", "point_count"], ["<", ["get", "point_count"], 3]], ["get", "cluster_routes"], ""]);
-        compileTimeCheck(["interpolate", ["linear"], ["get", "point_count"], 2, 18.0, 10, 24.0]);
-        compileTimeCheck(["case", ["has", "point_count"], ["interpolate", ["linear"], ["get", "point_count"], 2, 18.0, 10, 24.0], 12.0]);
+        compileTimeCheck(['case', ['has', 'color'], ['get', 'color'], 'white']);
+        compileTimeCheck(['case', ['all', ['has', 'point_count'], ['<', ['get', 'point_count'], 3]], ['get', 'cluster_routes'], '']);
+        compileTimeCheck(['interpolate', ['linear'], ['get', 'point_count'], 2, 18.0, 10, 24.0]);
+        compileTimeCheck(['case', ['has', 'point_count'], ['interpolate', ['linear'], ['get', 'point_count'], 2, 18.0, 10, 24.0], 12.0]);
         compileTimeCheck([
-            "case",
-            ["has", "point_count"], ["interpolate", ["linear"], ["get", "point_count"], 2, "#ccc", 10, "#444"],
-            ["has", "priorityValue"], ["interpolate", ["linear"], ["get", "priorityValue"], 0, "#ff9", 1, "#f66"],
-            "#fcaf3e"
+            'case',
+            ['has', 'point_count'], ['interpolate', ['linear'], ['get', 'point_count'], 2, '#ccc', 10, '#444'],
+            ['has', 'priorityValue'], ['interpolate', ['linear'], ['get', 'priorityValue'], 0, '#ff9', 1, '#f66'],
+            '#fcaf3e'
         ]);
         compileTimeCheck([
-            "case",
-            ["==", ["get", "CAPITAL"], 1], "city-capital",
-            [">=", ["get", "POPULATION"], 1000000], "city-1M",
-            [">=", ["get", "POPULATION"], 500000], "city-500k",
-            [">=", ["get", "POPULATION"], 100000], "city-100k",
-            "city"
+            'case',
+            ['==', ['get', 'CAPITAL'], 1], 'city-capital',
+            ['>=', ['get', 'POPULATION'], 1000000], 'city-1M',
+            ['>=', ['get', 'POPULATION'], 500000], 'city-500k',
+            ['>=', ['get', 'POPULATION'], 100000], 'city-100k',
+            'city'
         ]);
-        compileTimeCheck(["match", ["get", "TYPE"], ["TARGETPOINT:HOSPITAL"], true, false]);
-        compileTimeCheck(["match", ["get", "TYPE"], ["ADIZ", "AMA", "AWY", "CLASS", "NO-FIR", "OCA", "OTA", "P", "RAS", "RCA", "UTA", "UTA-P"], true, false]);
-        compileTimeCheck(["==", ["get", "MILITARYAIRPORT"], 1]);
+        compileTimeCheck(['match', ['get', 'TYPE'], ['TARGETPOINT:HOSPITAL'], true, false]);
+        compileTimeCheck(['match', ['get', 'TYPE'], ['ADIZ', 'AMA', 'AWY', 'CLASS', 'NO-FIR', 'OCA', 'OTA', 'P', 'RAS', 'RCA', 'UTA', 'UTA-P'], true, false]);
+        compileTimeCheck(['==', ['get', 'MILITARYAIRPORT'], 1]);
     });
 
     test('expression, zoom', () => {
