@@ -3,7 +3,7 @@ import * as rollup from 'rollup';
 import rollupConfig from '../../rollup.config.style-spec';
 import styleSpecPackage from '../../src/style-spec/package.json';
 import * as spec from '../../dist/style-spec/index.cjs';
-
+import {importAssertions} from 'acorn-import-assertions';
 /* eslint-disable import/namespace */
 import {RollupOptions} from 'rollup';
 
@@ -12,6 +12,7 @@ describe('@maplibre/maplibre-gl-style-spec npm package', () => {
         jest.spyOn(console, 'warn').mockImplementation(() => {});
         await rollup.rollup({
             input: './src/style-spec/style-spec.ts',
+            acornInjectPlugins: [ importAssertions ],
             plugins: [{
                 name: 'test-checker',
                 resolveId: (id, importer) => {
