@@ -1,3 +1,4 @@
+/* eslint-disable key-spacing */
 import potpack from 'potpack';
 
 import {Event, ErrorEvent, Evented} from '../util/evented';
