@@ -3,13 +3,14 @@
 ### ✨ Features and improvements
 
 - *...Add new stuff here...*
-- Update `icon-padding` symbol layout property to support asymmetric padding [#1289](https://github.com/maplibre/maplibre-gl-js/pull/1289)
-- Added `collaborativeGestures` option when instantiating map to prevent inadvertent scrolling/panning when navigating a page where map is embedded inline (#234)
+- Update `icon-padding` symbol layout property to support asymmetric padding (#1289)
+- Added `cooperativeGestures` option when instantiating map to prevent inadvertent scrolling/panning when navigating a page where map is embedded inline (#234)
+- Improve filter specification typings (#1390)
 
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
-- Fix compact attribution style when using global CSS that sets `box-sizing: border-box;` ([#1250](https://github.com/maplibre/maplibre-gl-js/pull/1250))
+- Fix compact attribution style when using global CSS that sets `box-sizing: border-box;` (#1250)
 
 ## 2.2.0-pre.3
 
