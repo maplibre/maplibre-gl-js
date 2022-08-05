@@ -1,4 +1,4 @@
-name: Integration Test - Expression
+name: TypeCheck with Typescript Compiler
 
 on:
   push:
