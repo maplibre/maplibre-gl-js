@@ -1,3 +1,3 @@
 
-import spec from './v8.json' assert {type: 'json'};
+import spec from './v8.json';
 export default spec;

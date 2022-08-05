@@ -169,7 +169,9 @@
     "codegen": "npm run generate-style-code && npm run generate-struct-arrays && npm run generate-style-spec && npm run generate-shaders && npm run generate-debug-index-file",
     "benchmark": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/run-benchmarks.ts",
     "gl-stats": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/gl-stats.ts",
-    "postinstall": "node ./postinstall.js"
+    "postinstall": "node ./postinstall.js",
+    "typecheck": "tsc --noEmit"
+  
   },
   "files": [
     "build/",
