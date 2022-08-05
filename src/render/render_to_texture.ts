@@ -5,6 +5,9 @@ import {OverscaledTileID} from '../source/tile_id';
 import {prepareTerrain, drawTerrain} from './draw_terrain';
 import type StyleLayer from '../style/style_layer';
 
+/**
+ * RenderToTexture
+ */
 export default class RenderToTexture {
     painter: Painter;
     // this object holds a lookup table which layers should rendered to texture

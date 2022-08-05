@@ -20,6 +20,25 @@ import EXTENT from '../data/extent';
 import {number as mix} from '../style-spec/util/interpolate';
 import type {TerrainSpecification} from '../style-spec/types.g';
 
+export type TerrainData = {
+    'u_depth': number;
+    'u_terrain': number;
+    'u_terrain_dim': number;
+    'u_terrain_matrix': mat4;
+    'u_terrain_unpack': number[];
+    'u_terrain_offset': number;
+    'u_terrain_exaggeration': number;
+    texture: WebGLTexture;
+    depthTexture: WebGLTexture;
+    tile: Tile;
+}
+
+export type TerrainMesh = {
+    indexBuffer: IndexBuffer;
+    vertexBuffer: VertexBuffer;
+    segments: SegmentVector;
+}
+
 /**
  * This is the main class which handles most of the 3D Terrain logic. It has the follwing topics:
  *    1) loads raster-dem tiles via the internal sourceCache this.sourceCache
@@ -47,25 +66,6 @@ import type {TerrainSpecification} from '../style-spec/types.g';
  *         cache of the last 150 newest rendered tiles.
  *
  */
-
-export type TerrainData = {
-    'u_depth': number;
-    'u_terrain': number;
-    'u_terrain_dim': number;
-    'u_terrain_matrix': mat4;
-    'u_terrain_unpack': number[];
-    'u_terrain_offset': number;
-    'u_terrain_exaggeration': number;
-    texture: WebGLTexture;
-    depthTexture: WebGLTexture;
-    tile: Tile;
-}
-
-export type TerrainMesh = {
-    indexBuffer: IndexBuffer;
-    vertexBuffer: VertexBuffer;
-    segments: SegmentVector;
-}
 
 export default class Terrain {
     // The style this terrain crresponds to
