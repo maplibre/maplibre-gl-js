@@ -172,7 +172,7 @@
     "benchmark": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/run-benchmarks.ts",
     "gl-stats": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/gl-stats.ts",
     "postinstall": "node ./postinstall.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --project tsconfig.typecheck.json"
   },
   "files": [
     "build/",
