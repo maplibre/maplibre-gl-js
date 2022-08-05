@@ -4,7 +4,7 @@
 
 - *...Add new stuff here...*
 - Update `icon-padding` symbol layout property to support asymmetric padding [#1289](https://github.com/maplibre/maplibre-gl-js/pull/1289)
-- Added `collaborativeGestures` option when instantiating map to prevent inadvertent scrolling/panning when navigating a page where map is embedded inline (#234)
+- Added `cooperativeGestures` option when instantiating map to prevent inadvertent scrolling/panning when navigating a page where map is embedded inline (#234)
 - Improve filter specification typings
 
 ### 🐞 Bug fixes
