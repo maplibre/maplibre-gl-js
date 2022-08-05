@@ -72,6 +72,7 @@
     "@types/window-or-global": "^1.0.4",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "@typescript-eslint/parser": "^5.30.5",
+    "acorn-import-assertions": "^1.8.0",
     "address": "^1.2.0",
     "benchmark": "^2.1.4",
     "browserify": "^17.0.0",
@@ -117,6 +118,7 @@
     "react-dom": "^18.2.0",
     "request": "^2.88.0",
     "rollup": "^2.76.0",
+    "rollup-plugin-import-assert": "^2.1.0",
     "rollup-plugin-sourcemaps": "^0.6.3",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-unassert": "^0.4.0",
@@ -171,7 +173,6 @@
     "gl-stats": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/gl-stats.ts",
     "postinstall": "node ./postinstall.js",
     "typecheck": "tsc --noEmit"
-  
   },
   "files": [
     "build/",
