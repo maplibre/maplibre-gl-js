@@ -104,7 +104,7 @@ describe('migrate', () => {
         });
         expect(migrated.layers[0].layout['icon-image']).toEqual([
             'match',
-            ['get', 'type' ],
+            ['get', 'type'],
             'park',
             'some-icon',
             ''
