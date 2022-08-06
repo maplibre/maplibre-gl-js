@@ -4,7 +4,7 @@
         <title>MapLibre GL JS debug page</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="../dist/maplibre-gl.css" />
+        <link rel="stylesheet" href="../../dist/maplibre-gl.css" />
         <style>
             body {
                 margin: 0;
@@ -21,8 +21,7 @@
     <body>
         <div id="map"></div>
 
-        <script src="../dist/maplibre-gl-dev.js"></script>
-        <script src="https://unpkg.com/three@0.106.2/build/three.min.js"></script>
+        <script src="../../dist/maplibre-gl-dev.js"></script>
         <script>
             const map = (window.map = new maplibregl.Map({
                 container: 'map',
@@ -36,8 +35,7 @@
                             tiles: [
                                 'http://tile.openstreetmap.org/{z}/{x}/{y}.png',
                             ],
-                            attribution:
-                                '© OpenStreetMap contributors',
+                            attribution: '© OpenStreetMap contributors',
                         },
                     },
                     layers: [
@@ -109,7 +107,7 @@
                         'uTexture',
                     );
 
-                    const {x, y} = maplibregl.MercatorCoordinate.fromLngLat({
+                    const { x, y } = maplibregl.MercatorCoordinate.fromLngLat({
                         lng: 13.418056,
                         lat: 52.499167,
                     });
@@ -160,8 +158,8 @@
                     gl.useProgram(this.program);
 
                     // bind texture
-                    const {texture} = tiles[0];
-                    gl.bindTexture(gl.TEXTURE_2D, texture.texture);
+                    const { texture } = tiles[0];
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
                     gl.uniform1i(this.uTexture, 0);
 
                     // render

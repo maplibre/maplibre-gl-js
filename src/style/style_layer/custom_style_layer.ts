@@ -3,9 +3,22 @@ import type Map from '../../ui/map';
 import assert from 'assert';
 import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '../../style-spec/types.g';
-import Tile from '../../source/tile';
 
-type CustomRenderMethod = (gl: WebGLRenderingContext, matrix: mat4, tiles: Tile[]) => void;
+/**
+ * raw data passing to custom-layer through render().
+ */
+export interface TileData {
+    /**
+     * @property {[number, number, number]} tileIndex as x,y,z
+     */
+    tileIndex: [number, number, number];
+    /**
+     * @property {WebGLTexture} texture exists only when raster-source
+     */
+    texture?: WebGLTexture;
+}
+
+type CustomRenderMethod = (gl: WebGLRenderingContext, matrix: mat4, tiles: TileData[]) => void;
 
 /**
  * Interface for custom style layers. This is a specification for
@@ -119,6 +132,7 @@ export interface CustomLayerInterface {
      * @name render
      * @param {WebGLRenderingContext} gl The map's gl context.
      * @param {Array<number>} matrix The map's camera matrix. It projects spherical mercator
+     * @param {TileData[]} [tiles] Tile-data passed by source
      * coordinates to gl coordinates. The spherical mercator coordinate `[0, 0]` represents the
      * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
      * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
@@ -137,7 +151,7 @@ export interface CustomLayerInterface {
      * @name prerender
      * @param {WebGLRenderingContext} gl The map's gl context.
      * @param {mat4} matrix The map's camera matrix. It projects spherical mercator
-     * @param {Tile[]} [tiles] Tile-data passed by source
+     * @param {TileData[]} [tiles] Tile-data passed by source
      * coordinates to gl coordinates. The mercator coordinate `[0, 0]` represents the
      * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
      * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
