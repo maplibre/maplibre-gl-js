@@ -169,7 +169,7 @@ describe('browser tests', () => {
 
             const pageWithImage = `<html><head></head><body><img src="${image}" width="800" height="600" /></body></html>`.replace(/\s/g, '');
 
-            function getFixture(platform) {
+            function getFixture(platform: string): string {
                 return fs.readFileSync(path.join(__dirname, `fixtures/cjk-expected-base64-image/${platform}.html`), 'utf8').replace(/\s/g, '');
             }
 
