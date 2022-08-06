@@ -7,8 +7,8 @@ on:
 
 jobs:
   test_browser:
-    name: macos-latest
-    runs-on: macos-latest
+    name: ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
