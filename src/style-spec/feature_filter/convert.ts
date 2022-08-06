@@ -63,6 +63,7 @@ export default function convertFilter(filter: FilterSpecification, expectedTypes
     switch (legacyOp) {
         case '==':
         case '!=':
+        case '~':
         case '<':
         case '>':
         case '<=':
