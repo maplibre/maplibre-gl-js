@@ -40,7 +40,7 @@ describe('createPropertyExpression', () => {
 
 describe('evaluate expression', () => {
     test('warns and falls back to default for invalid enum values', () => {
-        const {value} = createPropertyExpression([ 'get', 'x' ], {
+        const {value} = createPropertyExpression(['get', 'x'], {
             type: 'enum',
             values: {a: {}, b: {}, c: {}},
             default: 'a',

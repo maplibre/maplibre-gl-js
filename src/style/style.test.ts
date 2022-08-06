@@ -883,7 +883,7 @@ describe('Style#addLayer', () => {
                 'type': 'geojson',
                 'data': {
                     'type': 'Point',
-                    'coordinates': [ 0, 0]
+                    'coordinates': [0, 0]
                 }
             };
             const layer = {id: 'inline-source-layer', type: 'circle', source} as any as LayerSpecification;

@@ -6,6 +6,7 @@
 - Update `icon-padding` symbol layout property to support asymmetric padding (#1289)
 - Added `cooperativeGestures` option when instantiating map to prevent inadvertent scrolling/panning when navigating a page where map is embedded inline (#234)
 - Improve filter specification typings (#1390)
+- Add internal support for Node 18 (#1431)
 
 ### 🐞 Bug fixes
 

@@ -12,7 +12,7 @@ describe('@maplibre/maplibre-gl-style-spec npm package', () => {
         jest.spyOn(console, 'warn').mockImplementation(() => {});
         await rollup.rollup({
             input: './src/style-spec/style-spec.ts',
-            acornInjectPlugins: [ importAssertions ],
+            acornInjectPlugins: [importAssertions],
             plugins: [{
                 name: 'test-checker',
                 resolveId: (id, importer) => {

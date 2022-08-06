@@ -598,8 +598,8 @@ describe('Map', () => {
             expect(parseFloat(map.getBounds().getCenter().lat.toFixed(10))).toBe(0);
 
             expect(toFixed(map.getBounds().toArray())).toEqual(toFixed([
-                [ -70.31249999999976, -57.326521225216965 ],
-                [ 70.31249999999977, 57.32652122521695 ] ]));
+                [-70.31249999999976, -57.326521225216965],
+                [70.31249999999977, 57.32652122521695]]));
         });
 
         test('rotated bounds', () => {
