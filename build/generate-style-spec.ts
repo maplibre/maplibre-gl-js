@@ -262,7 +262,6 @@ export type LegacyFilterSpecification =
     // Comparison
     | ['==', string, string | number | boolean]
     | ['!=', string, string | number | boolean]
-    | ['~', string, string]
     | ['>', string, string | number | boolean]
     | ['>=', string, string | number | boolean]
     | ['<', string, string | number | boolean]

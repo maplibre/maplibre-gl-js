@@ -12,6 +12,12 @@
 - *...Add new stuff here...*
 - Fix compact attribution style when using global CSS that sets `box-sizing: border-box;` (#1250)
 
+## 2.2.0-pre.4
+
+### ✨ Features and improvements
+
+- Add `~` operator for regex filters
+
 ## 2.2.0-pre.3
 
 ### 🐞 Bug fixes

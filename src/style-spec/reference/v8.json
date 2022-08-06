@@ -2540,6 +2540,9 @@
       "==": {
         "doc": "`[\"==\", key, value]` equality: `feature[key] = value`"
       },
+      "~": {
+        "doc": "`[\"~\", key, value]` equality: `new RegExp(value).test(feature[key])`"
+      },
       "!=": {
         "doc": "`[\"!=\", key, value]` inequality: `feature[key] ≠ value`"
       },
@@ -3513,6 +3516,15 @@
             "android": "6.5.0",
             "ios": "4.2.0",
             "macos": "0.9.0"
+          }
+        }
+      },
+      "~": {
+        "doc": "Returns `true` if the input values are matching with regex, `false` otherwise. The comparison is strictly typed: only strings may be used. Regexp is case sensitive.",
+        "group": "Decision",
+        "sdk-support": {
+          "basic functionality": {
+            "js": "2.2.0-pre.4"
           }
         }
       },

@@ -1,0 +1,20 @@
+{
+    "expression": ["~", ["string", ["get", "x"]], ["get", "y"]],
+    "inputs": [
+      [{}, {"properties": {"x": "String 0 for regex test", "y": "\\d+"}}],
+      [{}, {"properties": {"x": "String one for regex test", "y": "\\d+"}}],
+      [{}, {"properties": {"x": "String two for regex test", "y": "\\d+"}}],
+      [{}, {"properties": {"x": "String three for regex test", "y": "three"}}],
+      [{}, {"properties": {"x": "String three for regex test", "y": "string"}}]
+    ],
+    "expected": {
+      "compiled": {
+        "result": "success",
+        "isFeatureConstant": false,
+        "isZoomConstant": true,
+        "type": "boolean"
+      },
+      "outputs": [true, false, false, true, false]
+    }
+  }
+  
