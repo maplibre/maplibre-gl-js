@@ -1,6 +1,6 @@
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import { CustomLayerInterface } from '../../../src/style/style_layer/custom_style_layer';
+import {CustomLayerInterface} from '../../../src/style/style_layer/custom_style_layer';
 import Map from '../../../src/ui/map';
 
 class Tent3D implements CustomLayerInterface {
@@ -101,10 +101,6 @@ class Tent3D implements CustomLayerInterface {
 
 export default class CustomLayer extends Benchmark {
     map: Map;
-    constructor() {
-        super();
-    }
-
     setup(): Promise<void> {
         return new Promise((resolve, reject) => {
             createMap({
