@@ -1,7 +1,7 @@
 import path, {dirname} from 'path';
 import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
-import unassert from 'rollup-plugin-unassert';
+import {unassert} from 'unassert-rollup-plugin';
 import json from '@rollup/plugin-json';
 import {fileURLToPath, pathToFileURL} from 'url';
 import {RollupOptions} from 'rollup';
