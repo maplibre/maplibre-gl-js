@@ -169,8 +169,16 @@ describe('browser tests', () => {
 
             const pageWithImage = `<html><head></head><body><img src="${image}" width="800" height="600" /></body></html>`.replace(/\s/g, '');
 
-            const expectedHtml = fs.readFileSync(path.join(__dirname, 'fixtures/expected-base64-image-ubuntu.html'), 'utf8').replace(/\s/g, '');
-            expect(pageWithImage).toBe(expectedHtml);
+            function getFixture(platform) {
+                return fs.readFileSync(path.join(__dirname, `fixtures/cjk-expected-base64-image/${platform}.html`), 'utf8').replace(/\s/g, '');
+            }
+
+            expect(
+                pageWithImage === getFixture('ubuntu-runner') ||
+                pageWithImage === getFixture('macos-runner') ||
+                pageWithImage === getFixture('macos-local')
+            ).toBeTruthy();
+
         }, 20000);
     });
 
