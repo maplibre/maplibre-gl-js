@@ -130,7 +130,7 @@ describe('resourceTiming', () => {
             secureConnectionStart: 0
         } as any as PerformanceEntry;
 
-        window.performance.getEntriesByName = jest.fn().mockReturnValue([ exampleResourceTiming ]);
+        window.performance.getEntriesByName = jest.fn().mockReturnValue([exampleResourceTiming]);
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => {
@@ -140,7 +140,7 @@ describe('resourceTiming', () => {
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters, (err, result) => {
             expect(err).toBeNull();
-            expect(result.resourceTiming.testSource).toEqual([ exampleResourceTiming ]);
+            expect(result.resourceTiming.testSource).toEqual([exampleResourceTiming]);
             done();
         });
     });

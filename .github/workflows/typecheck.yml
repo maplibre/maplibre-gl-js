@@ -1,4 +1,4 @@
-name: Integration Test - Render
+name: TypeCheck with Typescript Compiler
 
 on:
   push:
@@ -6,7 +6,8 @@ on:
   pull_request:
 
 jobs:
-  test_render:
+  test_expression:
+    name: ubuntu-latest
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -17,5 +18,4 @@ jobs:
           node-version: 16
           architecture: x64
       - run: npm ci
-      - run: npm run build-dev
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-render
+      - run: npm run typecheck
