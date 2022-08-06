@@ -17,7 +17,7 @@ const js = document.createElement('a');
 js.href = '../dist/maplibre-gl-dev.js';
 const css = document.createElement('a');
 css.href = '../dist/maplibre-gl.css';
-document.querySelector('iframe').src = URL.createObjectURL(new Blob([ `
+document.querySelector('iframe').src = URL.createObjectURL(new Blob([`
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,7 +47,7 @@ var map = window.map = new maplibregl.Map({
 <\/script>
 </body>
 </html>
-` ], {type: 'text/html'}));
+`], {type: 'text/html'}));
 </script>
 
 </body>

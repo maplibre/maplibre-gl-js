@@ -143,8 +143,8 @@ export default class Terrain {
         const terrain = this.getTerrainData(tileID);
         if (terrain.tile && terrain.tile.dem) {
             const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
-            const coord = [ pos[0] * terrain.tile.dem.dim, pos[1] * terrain.tile.dem.dim ];
-            const c = [ Math.floor(coord[0]), Math.floor(coord[1]) ];
+            const coord = [pos[0] * terrain.tile.dem.dim, pos[1] * terrain.tile.dem.dim];
+            const c = [Math.floor(coord[0]), Math.floor(coord[1])];
             const tl = terrain.tile.dem.get(c[0], c[1]);
             const tr = terrain.tile.dem.get(c[0], c[1] + 1);
             const bl = terrain.tile.dem.get(c[0] + 1, c[1]);

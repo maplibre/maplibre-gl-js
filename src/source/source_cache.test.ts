@@ -485,7 +485,7 @@ describe('SourceCache / Source lifecycle', () => {
         transform.resize(511, 511);
         transform.zoom = 0;
 
-        const expected = [ new OverscaledTileID(0, 0, 0, 0, 0).key, new OverscaledTileID(0, 0, 0, 0, 0).key ];
+        const expected = [new OverscaledTileID(0, 0, 0, 0, 0).key, new OverscaledTileID(0, 0, 0, 0, 0).key];
         expect.assertions(expected.length);
 
         const sourceCache = createSourceCache({

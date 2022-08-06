@@ -39,7 +39,7 @@ const splitConfig = (name: string): RollupOptions[] => [{
         sourcemap: 'inline',
         chunkFileNames: 'shared.js'
     },
-    acornInjectPlugins: [ importAssertions ],
+    acornInjectPlugins: [importAssertions],
     plugins: allPlugins
 }, {
     input: `rollup/benchmarks_${name}.js`,
