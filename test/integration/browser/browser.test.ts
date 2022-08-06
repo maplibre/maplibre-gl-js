@@ -167,9 +167,14 @@ describe('browser tests', () => {
                 });
             });
 
+
+            // @ts-ignore
+            fs.writeFileSync(path.join(__dirname, 'fixtures/actual-base64-image.png'), image, 'utf8');
+
+
             const pageWithImage = `<html><head></head><body><img src="${image}" width="800" height="600" /></body></html>`.replace(/\s/g, '');
 
-            const expectedHtml = fs.readFileSync(path.join(__dirname, 'fixtures/expected-base64-image.html'), 'utf8').replace(/\s/g, '');
+            const expectedHtml = fs.readFileSync(path.join(__dirname, 'fixtures/expected-base64-image-ubuntu.html'), 'utf8').replace(/\s/g, '');
             expect(pageWithImage).toBe(expectedHtml);
         }, 20000);
     });
