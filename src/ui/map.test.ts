@@ -631,7 +631,7 @@ describe('Map', () => {
 
     describe('#setMaxBounds', () => {
         test('constrains map bounds', () => {
-            const map = createMap({zoom:0});
+            const map = createMap({zoom: 0});
             map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
             expect(
                 toFixed([[-130.4297000000, 7.0136641176], [-61.5234400000, 60.2398142283]])
@@ -639,7 +639,7 @@ describe('Map', () => {
         });
 
         test('when no argument is passed, map bounds constraints are removed', () => {
-            const map = createMap({zoom:0});
+            const map = createMap({zoom: 0});
             map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
             expect(
                 toFixed([[-166.28906999999964, -27.6835270554], [-25.664070000000066, 73.8248206697]])
@@ -664,12 +664,12 @@ describe('Map', () => {
 
     describe('#getMaxBounds', () => {
         test('returns null when no bounds set', () => {
-            const map = createMap({zoom:0});
+            const map = createMap({zoom: 0});
             expect(map.getMaxBounds()).toBeNull();
         });
 
         test('returns bounds', () => {
-            const map = createMap({zoom:0});
+            const map = createMap({zoom: 0});
             const bounds = [[-130.4297, 50.0642], [-61.52344, 24.20688]] as LngLatBoundsLike;
             map.setMaxBounds(bounds);
             expect(map.getMaxBounds().toArray()).toEqual(bounds);
@@ -718,14 +718,14 @@ describe('Map', () => {
     });
 
     test('#setMinZoom', () => {
-        const map = createMap({zoom:5});
+        const map = createMap({zoom: 5});
         map.setMinZoom(3.5);
         map.setZoom(1);
         expect(map.getZoom()).toBe(3.5);
     });
 
     test('unset minZoom', () => {
-        const map = createMap({minZoom:5});
+        const map = createMap({minZoom: 5});
         map.setMinZoom(null);
         map.setZoom(1);
         expect(map.getZoom()).toBe(1);
@@ -739,7 +739,7 @@ describe('Map', () => {
     });
 
     test('ignore minZooms over maxZoom', () => {
-        const map = createMap({zoom:2, maxZoom:5});
+        const map = createMap({zoom: 2, maxZoom: 5});
         expect(() => {
             map.setMinZoom(6);
         }).toThrow();
@@ -748,14 +748,14 @@ describe('Map', () => {
     });
 
     test('#setMaxZoom', () => {
-        const map = createMap({zoom:0});
+        const map = createMap({zoom: 0});
         map.setMaxZoom(3.5);
         map.setZoom(4);
         expect(map.getZoom()).toBe(3.5);
     });
 
     test('unset maxZoom', () => {
-        const map = createMap({maxZoom:5});
+        const map = createMap({maxZoom: 5});
         map.setMaxZoom(null);
         map.setZoom(6);
         expect(map.getZoom()).toBe(6);
@@ -769,7 +769,7 @@ describe('Map', () => {
     });
 
     test('ignore maxZooms over minZoom', () => {
-        const map = createMap({minZoom:5});
+        const map = createMap({minZoom: 5});
         expect(() => {
             map.setMaxZoom(4);
         }).toThrow();
@@ -779,13 +779,13 @@ describe('Map', () => {
 
     test('throw on maxZoom smaller than minZoom at init', () => {
         expect(() => {
-            createMap({minZoom:10, maxZoom:5});
+            createMap({minZoom: 10, maxZoom: 5});
         }).toThrow(new Error('maxZoom must be greater than or equal to minZoom'));
     });
 
     test('throw on maxZoom smaller than minZoom at init with falsey maxZoom', () => {
         expect(() => {
-            createMap({minZoom:1, maxZoom:0});
+            createMap({minZoom: 1, maxZoom: 0});
         }).toThrow(new Error('maxZoom must be greater than or equal to minZoom'));
     });
 
@@ -827,7 +827,7 @@ describe('Map', () => {
     });
 
     test('unset maxPitch', () => {
-        const map = createMap({maxPitch:10});
+        const map = createMap({maxPitch: 10});
         map.setMaxPitch(null);
         map.setPitch(20);
         expect(map.getPitch()).toBe(20);
@@ -841,7 +841,7 @@ describe('Map', () => {
     });
 
     test('ignore maxPitchs over minPitch', () => {
-        const map = createMap({minPitch:10});
+        const map = createMap({minPitch: 10});
         expect(() => {
             map.setMaxPitch(0);
         }).toThrow();

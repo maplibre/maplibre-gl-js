@@ -516,7 +516,7 @@ class GeolocateControl extends Evented implements IControl {
                 numberOfWatches++;
                 let positionOptions;
                 if (numberOfWatches > 1) {
-                    positionOptions = {maximumAge:600000, timeout:0};
+                    positionOptions = {maximumAge: 600000, timeout: 0};
                     noTimeout = true;
                 } else {
                     positionOptions = this.options.positionOptions;

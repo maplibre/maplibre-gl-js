@@ -67,7 +67,7 @@ describe('hasPaintOverrides', () => {
     });
 
     test('format expression, overriden text-color', () => {
-        const props = {layout: {'text-field': ['format', ['get', 'name'], {'text-color':'red'}]}};
+        const props = {layout: {'text-field': ['format', ['get', 'name'], {'text-color': 'red'}]}};
         const layer = createSymbolLayer(props);
         expect(SymbolStyleLayer.hasPaintOverride(layer.layout, 'text-color')).toBe(true);
 

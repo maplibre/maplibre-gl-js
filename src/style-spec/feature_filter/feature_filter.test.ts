@@ -118,7 +118,7 @@ describe('filter', () => {
         };
         const withinFilter =  createFilter(['within', {'type': 'Polygon', 'coordinates': [[[0, 0], [5, 0], [5, 5], [0, 5], [0, 0]]]}]);
         expect(withinFilter.needGeometry).toBe(true);
-        const canonical = {z: 3, x: 3, y:3} as CanonicalTileID;
+        const canonical = {z: 3, x: 3, y: 3} as CanonicalTileID;
         expect(
             withinFilter.filter({zoom: 3}, {type: 1, geometry: [[getPointFromLngLat(2, 2, canonical)]]} as Feature, canonical)
         ).toBe(true);
