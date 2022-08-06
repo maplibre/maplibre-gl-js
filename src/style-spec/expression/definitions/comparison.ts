@@ -8,7 +8,7 @@ import type EvaluationContext from '../evaluation_context';
 import type ParsingContext from '../parsing_context';
 import type {Type} from '../types';
 
-type ComparisonOperator = '==' | '!=' | '<' | '>' | '<=' | '>=';
+type ComparisonOperator = '==' | '!=' | '<' | '>' | '<=' | '>=' | '~';
 
 function isComparableType(op: ComparisonOperator, type: Type) {
     if (op === '==' || op === '!=') {
@@ -18,6 +18,9 @@ function isComparableType(op: ComparisonOperator, type: Type) {
             type.kind === 'number' ||
             type.kind === 'null' ||
             type.kind === 'value';
+    } else if (op === '~') {
+        return type.kind === 'string' ||
+            type.kind === 'value'
     } else {
         // ordering operator
         return type.kind === 'string' ||
@@ -32,6 +35,7 @@ function lt(ctx, a, b) { return a < b; }
 function gt(ctx, a, b) { return a > b; }
 function lteq(ctx, a, b) { return a <= b; }
 function gteq(ctx, a, b) { return a >= b; }
+function re(ctx, a, b) { return new RegExp(b).test(a); }
 
 function eqCollate(ctx, a, b, c) { return c.compare(a, b) === 0; }
 function neqCollate(ctx, a, b, c) { return !eqCollate(ctx, a, b, c); }
@@ -39,6 +43,9 @@ function ltCollate(ctx, a, b, c) { return c.compare(a, b) < 0; }
 function gtCollate(ctx, a, b, c) { return c.compare(a, b) > 0; }
 function lteqCollate(ctx, a, b, c) { return c.compare(a, b) <= 0; }
 function gteqCollate(ctx, a, b, c) { return c.compare(a, b) >= 0; }
+
+const reCollate = re
+
 
 /**
  * Special form for comparison operators, implementing the signatures:
@@ -174,3 +181,4 @@ export const LessThan = makeComparison('<', lt, ltCollate);
 export const GreaterThan = makeComparison('>', gt, gtCollate);
 export const LessThanOrEqual = makeComparison('<=', lteq, lteqCollate);
 export const GreaterThanOrEqual = makeComparison('>=', gteq, gteqCollate);
+export const Regex = makeComparison('~', re, reCollate);

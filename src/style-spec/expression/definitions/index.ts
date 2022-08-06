@@ -36,7 +36,8 @@ import {
     LessThan,
     GreaterThan,
     LessThanOrEqual,
-    GreaterThanOrEqual
+    GreaterThanOrEqual,
+    Regex
 } from './comparison';
 import CollatorExpression from './collator';
 import NumberFormat from './number_format';
@@ -56,6 +57,7 @@ const expressions: ExpressionRegistry = {
     '<': LessThan,
     '>=': GreaterThanOrEqual,
     '<=': LessThanOrEqual,
+    '~': Regex,
     'array': Assertion,
     'at': At,
     'boolean': Assertion,
@@ -450,6 +452,25 @@ CompoundExpression.register(expressions, {
             const a = ctx.id();
             const b = (v as any).value;
             return typeof a === typeof b && a >= b;
+        }
+    ],
+    'filter-~': [
+        BooleanType,
+        [StringType, ValueType],
+        (ctx, [k, v]) => {
+            const a = ctx.properties()[(k as any).value];
+            const b = (v as any).value;
+            console.log('map filter re', { a, b })
+            return typeof a === typeof b && new RegExp(b).test(a);
+        }
+    ],
+    'filter-id-~': [
+        BooleanType,
+        [ValueType],
+        (ctx, [v]) => {
+            const a = ctx.id();
+            const b = (v as any).value;
+            return typeof a === typeof b && new RegExp(b).test(a);
         }
     ],
     'filter-has': [

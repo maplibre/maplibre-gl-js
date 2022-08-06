@@ -54,6 +54,7 @@ function validateNonExpressionFilter(options) {
         /* falls through */
         case '==':
         case '!=':
+        case '~':
             if (value.length !== 3) {
                 errors.push(new ValidationError(key, value, `filter array for operator "${value[0]}" must have 3 elements`));
             }

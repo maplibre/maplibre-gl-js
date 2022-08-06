@@ -40,6 +40,7 @@ function isExpressionFilter(filter: any): filter is ExpressionFilterSpecificatio
 
         case '==':
         case '!=':
+        case '~':
         case '>':
         case '>=':
         case '<':
