@@ -1,7 +1,7 @@
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import type {StyleSpecification} from '../../../src/style-spec/types.g';
-import {CustomLayerInterface} from '../../../src/style/style_layer/custom_style_layer';
+import { CustomLayerInterface } from '../../../src/style/style_layer/custom_style_layer';
+import Map from '../../../src/ui/map';
 
 class Tent3D implements CustomLayerInterface {
     id: string;
@@ -100,38 +100,45 @@ class Tent3D implements CustomLayerInterface {
 }
 
 export default class CustomLayer extends Benchmark {
-    style: StyleSpecification;
-    customlayer: CustomLayerInterface;
+    map: Map;
     constructor() {
         super();
-        this.style = {
-            version: 8,
-            sources: {},
-            pitch: 60,
-            zoom: 4,
-            bearing: -35,
-            layers: [],
-        };
     }
 
-    setup() {
-        this.customlayer = new Tent3D();
+    setup(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            createMap({
+                width: 1024,
+                height: 1024,
+                style: {
+                    version: 8,
+                    sources: {},
+                    layers: [],
+                },
+                center: [-9.4, -26.8],
+                pitch: 60,
+                bearing: 131,
+                zoom: 1.69,
+            })
+                .then((map) => {
+                    this.map = map;
+                    resolve();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    reject(error);
+                });
+        });
     }
 
     bench() {
-        return createMap({
-            width: 1024,
-            height: 1024,
-            style: this.style,
-            stubRender: false,
-            showMap: true,
-            idle: true,
-        }).then((map) => {
-            map.addLayer(this.customlayer);
-            map._styleDirty = true;
-            map._sourcesDirty = true;
-            map._render(Date.now());
-            map.remove();
-        });
+        const customLayer = new Tent3D();
+        this.map.addLayer(customLayer);
+        this.map._styleDirty = true;
+        this.map._sourcesDirty = true;
+        this.map._render(Date.now());
+    }
+    teardown() {
+        this.map.remove();
     }
 }
