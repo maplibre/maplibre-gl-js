@@ -3,7 +3,7 @@ import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
-import unassert from 'rollup-plugin-unassert';
+import {unassert} from 'unassert-rollup-plugin';
 import json from '@rollup/plugin-json';
 import {terser} from 'rollup-plugin-terser';
 import minifyStyleSpec from './rollup_plugin_minify_style_spec';
