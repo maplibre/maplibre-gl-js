@@ -82,7 +82,19 @@ map.on('load', function() {
         }
     });
     
-    map.setFilter('circles', ['~', ['get', 'name'], '(Cape|Cabo)'])
+    const tests = [ 'Cape', 'Cabo', 'Cape|Cabo', null ]
+    let idx = -1
+    setInterval(() => {
+        idx++
+        if (idx == tests.length - 1) idx = 0
+
+        let re = tests[idx]
+        console.log('regex filter:', re)
+        
+        re === null
+            ? map.setFilter('circles', null)
+            : map.setFilter('circles', ['~', ['get', 'name'], re])
+    }, 2000)
 });
 
 </script>

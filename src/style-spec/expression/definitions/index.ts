@@ -460,7 +460,6 @@ CompoundExpression.register(expressions, {
         (ctx, [k, v]) => {
             const a = ctx.properties()[(k as any).value];
             const b = (v as any).value;
-            console.log('map filter re', { a, b })
             return typeof a === typeof b && new RegExp(b).test(a);
         }
     ],
