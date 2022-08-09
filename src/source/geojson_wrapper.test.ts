@@ -14,7 +14,7 @@ describe('geojsonwrapper', () => {
         expect(feature).toBeTruthy();
         expect(feature.loadGeometry()).toEqual([[{x: 0, y: 0}, {x: 10, y: 10}]]);
         expect(feature.type).toBe(2);
-        expect(feature.properties).toEqual({hello:'world'});
+        expect(feature.properties).toEqual({hello: 'world'});
 
     });
 

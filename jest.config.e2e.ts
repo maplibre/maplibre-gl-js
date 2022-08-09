@@ -17,6 +17,12 @@ const config: InitialOptionsTsJest = {
         '/node_modules/@mapbox/jsonlint-lines-primitives/lib/jsonlint.js'
     ],
     preset: 'jest-playwright-preset',
+
+    globals: {
+        'ts-jest': {
+            isolatedModules: true
+        }
+    },
     setupFiles: ['jest-canvas-mock'],
 };
 

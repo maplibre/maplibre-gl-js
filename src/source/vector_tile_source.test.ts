@@ -253,7 +253,7 @@ describe('VectorTileSource', () => {
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                expect(source.tileBounds.bounds).toEqual({_sw:{lng: -47, lat: -7}, _ne:{lng: -45, lat: 90}});
+                expect(source.tileBounds.bounds).toEqual({_sw: {lng: -47, lat: -7}, _ne: {lng: -45, lat: 90}});
                 done();
             }
         });

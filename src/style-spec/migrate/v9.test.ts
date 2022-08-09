@@ -7,7 +7,7 @@ describe('migrate v9', () => {
         const input = {
             version: 8,
             sources: {
-                a: {type: 'vector', tiles: [ 'http://dev/null' ]}
+                a: {type: 'vector', tiles: ['http://dev/null']}
             },
             layers: [{
                 id: 'parent',
@@ -23,7 +23,7 @@ describe('migrate v9', () => {
         expect(migrate(input)).toEqual({
             version: 9,
             sources: {
-                a: {type: 'vector', tiles: [ 'http://dev/null' ]}
+                a: {type: 'vector', tiles: ['http://dev/null']}
             },
             layers: [{
                 id: 'parent',
@@ -44,7 +44,7 @@ describe('migrate v9', () => {
         const input = {
             version: 8,
             sources: {
-                a: {type: 'vector', tiles: [ 'http://dev/null' ]}
+                a: {type: 'vector', tiles: ['http://dev/null']}
             },
             layers: [{
                 id: 'a',
@@ -63,7 +63,7 @@ describe('migrate v9', () => {
         expect(migrate(input)).toEqual({
             version: 9,
             sources: {
-                a: {type: 'vector', tiles: [ 'http://dev/null' ]}
+                a: {type: 'vector', tiles: ['http://dev/null']}
             },
             layers: [{
                 id: 'a',

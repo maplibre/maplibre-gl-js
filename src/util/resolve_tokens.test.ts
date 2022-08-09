@@ -1,7 +1,7 @@
 import resolveTokens from './resolve_tokens';
 
 test('resolveToken', () => {
-    expect('3 Fine Fields').toBe(resolveTokens({a:3, b:'Fine', c:'Fields'}, '{a} {b} {c}'));
+    expect('3 Fine Fields').toBe(resolveTokens({a: 3, b: 'Fine', c: 'Fields'}, '{a} {b} {c}'));
 
     // No tokens.
     expect(resolveTokens({}, 'Test')).toBe('Test');

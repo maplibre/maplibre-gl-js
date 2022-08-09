@@ -122,38 +122,38 @@ describe('browser tests', () => {
                             }
                         },
                     },
-                    'layers':[
+                    'layers': [
                         {
-                            'id':'sample-text-left',
-                            'type':'symbol',
-                            'source':'sample',
-                            'layout':{
-                                'text-anchor':'top',
-                                'text-field':'{name_ja}{name_en}',
-                                'text-font':['Open Sans Regular'],
-                                'text-offset':[-10, 0],
+                            'id': 'sample-text-left',
+                            'type': 'symbol',
+                            'source': 'sample',
+                            'layout': {
+                                'text-anchor': 'top',
+                                'text-field': '{name_ja}{name_en}',
+                                'text-font': ['Open Sans Regular'],
+                                'text-offset': [-10, 0],
                             }
                         },
                         {
-                            'id':'sample-text-center',
-                            'type':'symbol',
-                            'source':'sample',
-                            'layout':{
-                                'text-anchor':'top',
-                                'text-field':'{name_ch}{name_kr}',
-                                'text-font':['Open Sans Regular'],
-                                'text-offset':[0, 0],
+                            'id': 'sample-text-center',
+                            'type': 'symbol',
+                            'source': 'sample',
+                            'layout': {
+                                'text-anchor': 'top',
+                                'text-field': '{name_ch}{name_kr}',
+                                'text-font': ['Open Sans Regular'],
+                                'text-offset': [0, 0],
                             }
                         },
                         {
-                            'id':'sample-text-right',
-                            'type':'symbol',
-                            'source':'sample',
-                            'layout':{
-                                'text-anchor':'top',
-                                'text-field':'{name_en}{name_ja}',
-                                'text-font':['Open Sans Regular'],
-                                'text-offset':[10, 0],
+                            'id': 'sample-text-right',
+                            'type': 'symbol',
+                            'source': 'sample',
+                            'layout': {
+                                'text-anchor': 'top',
+                                'text-field': '{name_en}{name_ja}',
+                                'text-font': ['Open Sans Regular'],
+                                'text-offset': [10, 0],
                             }
                         },
                     ]

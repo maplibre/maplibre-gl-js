@@ -72,6 +72,7 @@
     "@types/window-or-global": "^1.0.4",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "@typescript-eslint/parser": "^5.30.5",
+    "acorn-import-assertions": "^1.8.0",
     "address": "^1.2.0",
     "benchmark": "^2.1.4",
     "browserify": "^17.0.0",
@@ -80,7 +81,7 @@
     "d3": "^7.6.1",
     "d3-queue": "^3.0.7",
     "diff": "^5.1.0",
-    "documentation": "13.0.2",
+    "documentation": "14.0.0-alpha.0",
     "dts-bundle-generator": "^6.12.0",
     "eslint": "^8.19.0",
     "eslint-config-mourner": "^3.0.0",
@@ -117,9 +118,9 @@
     "react-dom": "^18.2.0",
     "request": "^2.88.0",
     "rollup": "^2.76.0",
+    "rollup-plugin-import-assert": "^2.1.0",
     "rollup-plugin-sourcemaps": "^0.6.3",
     "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-unassert": "^0.4.0",
     "rw": "^1.3.3",
     "semver": "^7.3.7",
     "shuffle-seed": "^1.1.6",
@@ -128,8 +129,9 @@
     "stylelint": "^14.9.1",
     "stylelint-config-standard": "^26.0.0",
     "ts-jest": "^28.0.7",
-    "ts-node": "10.7",
-    "typescript": "^4.7.4"
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4",
+    "unassert-rollup-plugin": "^2.0.0"
   },
   "scripts": {
     "generate-shaders": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-shaders.ts",
@@ -162,14 +164,15 @@
     "test-symbol-shaping": "jest --roots ./test/integration/symbol-shaping",
     "test-style-spec": "jest --roots ./test/integration/style-spec",
     "test-browser": "jest -c ./jest.config.e2e.ts --roots ./test/integration/browser",
-    "test-render": "node --loader ts-node/esm --experimental-specifier-resolution=node --experimental-json-modules --max-old-space-size=2048 test/integration/render/render.test.ts",
+    "test-render": "node --loader ts-node/esm --experimental-specifier-resolution=node --max-old-space-size=2048 test/integration/render/render.test.ts",
     "test-query": "jest -c ./jest.config.e2e.ts --roots ./test/integration/query",
     "test-expression": "jest --roots ./test/integration/expression",
     "test-unit": "jest  -c ./jest.config.ts --roots ./src",
     "codegen": "npm run generate-style-code && npm run generate-struct-arrays && npm run generate-style-spec && npm run generate-shaders && npm run generate-debug-index-file",
     "benchmark": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/run-benchmarks.ts",
     "gl-stats": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/gl-stats.ts",
-    "postinstall": "node ./postinstall.js"
+    "postinstall": "node ./postinstall.js",
+    "typecheck": "tsc --project tsconfig.typecheck.json"
   },
   "files": [
     "build/",

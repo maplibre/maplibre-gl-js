@@ -16,6 +16,11 @@ const config: InitialOptionsTsJest = {
     transformIgnorePatterns: [
         '/node_modules/@mapbox/jsonlint-lines-primitives/lib/jsonlint.js'
     ],
+    globals: {
+        'ts-jest': {
+            isolatedModules: true
+        }
+    },
     setupFiles: ['jest-canvas-mock'],
 };
 
