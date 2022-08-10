@@ -524,6 +524,13 @@ class Map extends Camera {
     }
 
     /**
+     * Returns the package version of the library
+     */
+    get version(): string {
+        return '__packageVersion';
+    }
+
+    /**
      * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
      *
      * @param {IControl} control The {@link IControl} to add.

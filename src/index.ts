@@ -100,6 +100,13 @@ const exported = {
     clearPrewarmedResources,
 
     /**
+     * Returns the package version of the library
+     */
+    get version(): string {
+        return '__packageVersion';
+    },
+
+    /**
      * Gets and sets the number of web workers instantiated on a page with GL JS maps.
      * By default, it is set to half the number of CPU cores (capped at 6).
      * Make sure to set this property before creating any map instances for it to have effect.
