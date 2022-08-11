@@ -1,11 +1,9 @@
-// @ts-nocheck
-
 import composite from './composite';
 
 describe('composite', () => {
     test('composites Mapbox vector sources', () => {
         const result = composite({
-            'version': 7,
+            'version': 7 as any,
             'sources': {
                 'mapbox-a': {
                     'type': 'vector',
@@ -40,7 +38,7 @@ describe('composite', () => {
 
     test('does not composite vector + raster', () => {
         const result = composite({
-            'version': 7,
+            'version': 7 as any,
             'sources': {
                 'a': {
                     'type': 'vector',
@@ -59,7 +57,7 @@ describe('composite', () => {
 
     test('incorrect url match', () => {
         const result = composite({
-            'version': 7,
+            'version': 7 as any,
             'sources': {
                 'a': {
                     'type': 'vector',
@@ -79,7 +77,7 @@ describe('composite', () => {
     test('composites Mapbox vector sources with conflicting source layer names', () => {
         expect(() => {
             composite({
-                'version': 7,
+                'version': 7 as any,
                 'sources': {
                     'mapbox-a': {
                         'type': 'vector',
