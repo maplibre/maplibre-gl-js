@@ -1,8 +1,17 @@
 import {isExpressionFilter} from './index';
 
-import type {ExpressionFilterSpecification, ExpressionInputType, ExpressionSpecification, FilterSpecification, LegacyFilterSpecification} from '../types.g';
+import type {FilterSpecification} from '../types.g';
 
-type ExpectedTypes = {[_: string]: ExpressionInputType};
+type ExpectedTypes = {[_: string]: 'string' | 'number' | 'boolean'};
+
+/**
+ * Convert the given legacy filter to (the JSON representation of) an
+ * equivalent expression
+ * @private
+ */
+export default function convertFilter(filter: FilterSpecification): unknown {
+    return _convertFilter(filter, {});
+}
 
 /*
  * Convert the given filter to an expression, storing the expected types for
@@ -52,58 +61,51 @@ type ExpectedTypes = {[_: string]: ExpressionInputType};
  * false (legacy filter semantics) are equivalent: they cause the filter to
  * produce a `false` result.
  */
-export default function convertFilter(filter: FilterSpecification, expectedTypes: ExpectedTypes = {}): ExpressionFilterSpecification {
-    if (isExpressionFilter(filter)) return filter;
+function _convertFilter(filter: FilterSpecification, expectedTypes: ExpectedTypes): unknown {
+    if (isExpressionFilter(filter)) { return filter; }
+
     if (!filter) return true;
+    const op = filter[0];
+    if (filter.length <= 1) return (op !== 'any');
 
-    const legacyFilter = filter as LegacyFilterSpecification;
-    const legacyOp = legacyFilter[0];
-    if (filter.length <= 1) return (legacyOp !== 'any');
+    let converted;
 
-    switch (legacyOp) {
-        case '==':
-        case '!=':
-        case '<':
-        case '>':
-        case '<=':
-        case '>=': {
-            const [, property, value] = filter;
-            return convertComparisonOp(property as string, value, legacyOp, expectedTypes);
-        }
-        case 'any': {
-            const [, ...conditions] = legacyFilter;
-            const children = conditions.map((f: LegacyFilterSpecification) => {
-                const types = {};
-                const child = convertFilter(f, types);
-                const typechecks = runtimeTypeChecks(types);
-                return typechecks === true ? child : ['case', typechecks, child, false] as ExpressionSpecification;
-            });
-            return ['any', ...children];
-        }
-        case 'all': {
-            const [, ...conditions] = legacyFilter;
-            const children = conditions.map(f => convertFilter(f, expectedTypes));
-            return children.length > 1 ? ['all', ...children] : children[0];
-        }
-        case 'none': {
-            const [, ...conditions] = legacyFilter;
-            return ['!', convertFilter(['any', ...conditions], {})];
-        }
-        case 'in': {
-            const [, property, ...values] = legacyFilter;
-            return convertInOp(property, values);
-        }
-        case '!in': {
-            const [, property, ...values] = legacyFilter;
-            return convertInOp(property, values, true);
-        }
-        case 'has':
-            return convertHasOp(legacyFilter[1]);
-        case '!has':
-            return ['!', convertHasOp(legacyFilter[1])];
-        default:
-            return true;
+    if (
+        op === '==' ||
+        op === '!=' ||
+        op === '<' ||
+        op === '>' ||
+        op === '<=' ||
+        op === '>='
+    ) {
+        const [, property, value] = filter;
+        converted = convertComparisonOp(property as string, value, op, expectedTypes);
+    } else if (op === 'any') {
+        const children = (filter).slice(1).map((f: FilterSpecification) => {
+            const types = {};
+            const child = _convertFilter(f, types);
+            const typechecks = runtimeTypeChecks(types);
+            return typechecks === true ? child : ['case', typechecks, child, false];
+        });
+        return ['any'].concat(children as string[]);
+    } else if (op === 'all') {
+        const children = (filter).slice(1).map(f => _convertFilter(f as FilterSpecification, expectedTypes));
+        return children.length > 1 ? ['all'].concat(children as string[]) : [].concat(...children);
+    } else if (op === 'none') {
+        return ['!', _convertFilter(['any'].concat(filter.slice(1) as string[]) as string[], {})];
+    } else if (op === 'in') {
+        converted = convertInOp(filter[1] as string, filter.slice(2));
+    } else if (op === '!in') {
+        converted = convertInOp(filter[1] as string, filter.slice(2), true);
+    } else if (op === 'has') {
+        converted = convertHasOp(filter[1] as string);
+    } else if (op === '!has') {
+        converted = ['!', convertHasOp(filter[1] as string)];
+    } else {
+        converted = true;
     }
+
+    return converted;
 }
 
 // Given a set of feature properties and an expected type for each one,
@@ -114,7 +116,7 @@ export default function convertFilter(filter: FilterSpecification, expectedTypes
 //   ['==', ['typeof', ['get', 'name'], 'string']],
 //   ['==', ['typeof', ['get', 'population'], 'number]]
 // ]
-function runtimeTypeChecks(expectedTypes: ExpectedTypes): ExpressionFilterSpecification {
+function runtimeTypeChecks(expectedTypes: ExpectedTypes) {
     const conditions = [];
     for (const property in expectedTypes) {
         const get = property === '$id' ? ['id'] : ['get', property];
@@ -122,13 +124,13 @@ function runtimeTypeChecks(expectedTypes: ExpectedTypes): ExpressionFilterSpecif
     }
     if (conditions.length === 0) return true;
     if (conditions.length === 1) return conditions[0];
-    return ['all', ...conditions];
+    return ['all'].concat(conditions);
 }
 
-function convertComparisonOp(property: string, value: any, op: string, expectedTypes?: ExpectedTypes | null): ExpressionFilterSpecification {
+function convertComparisonOp(property: string, value: any, op: string, expectedTypes?: ExpectedTypes | null) {
     let get;
     if (property === '$type') {
-        return [op, ['geometry-type'], value] as ExpressionFilterSpecification;
+        return [op, ['geometry-type'], value];
     } else if (property === '$id') {
         get = ['id'];
     } else {
@@ -154,13 +156,13 @@ function convertComparisonOp(property: string, value: any, op: string, expectedT
         ];
     }
 
-    return [op, get, value] as ExpressionFilterSpecification;
+    return [op, get, value];
 }
 
-function convertInOp(property: string, values: Array<any>, negate = false): ExpressionFilterSpecification {
+function convertInOp(property: string, values: Array<any>, negate = false) {
     if (values.length === 0) return negate;
 
-    let get: ExpressionSpecification;
+    let get;
     if (property === '$type') {
         get = ['geometry-type'];
     } else if (property === '$id') {
@@ -188,14 +190,12 @@ function convertInOp(property: string, values: Array<any>, negate = false): Expr
         return ['match', get, uniqueValues, !negate, negate];
     }
 
-    if (negate) {
-        return ['all', ...values.map(v => ['!=', get, v] as ExpressionSpecification)];
-    } else {
-        return ['any', ...values.map(v => ['==', get, v] as ExpressionSpecification)];
-    }
+    return [ negate ? 'all' : 'any' as any].concat(
+        values.map(v => [negate ? '!=' : '==', get, v])
+    );
 }
 
-function convertHasOp(property: string): ExpressionFilterSpecification {
+function convertHasOp(property: string) {
     if (property === '$type') {
         return true;
     } else if (property === '$id') {

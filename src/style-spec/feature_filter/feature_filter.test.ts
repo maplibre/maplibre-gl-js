@@ -5,39 +5,10 @@ import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../../geo/mercator_coordinate';
 import EXTENT from '../../data/extent';
 import {CanonicalTileID} from '../../source/tile_id';
-import {ExpressionFilterSpecification, FilterSpecification} from '../types.g';
+import {FilterSpecification} from '../types.g';
 import {Feature} from '../expression';
 
 describe('filter', () => {
-    test('exprssions transpilation test', () => {
-        function compileTimeCheck(_: ExpressionFilterSpecification) {
-            expect(true).toBeTruthy();
-        }
-        compileTimeCheck(['any']);
-        compileTimeCheck(['at', 2, ['array', 1, 2, 3]]);
-        compileTimeCheck(['case', ['has', 'color'], ['get', 'color'], 'white']);
-        compileTimeCheck(['case', ['all', ['has', 'point_count'], ['<', ['get', 'point_count'], 3]], ['get', 'cluster_routes'], '']);
-        compileTimeCheck(['interpolate', ['linear'], ['get', 'point_count'], 2, 18.0, 10, 24.0]);
-        compileTimeCheck(['case', ['has', 'point_count'], ['interpolate', ['linear'], ['get', 'point_count'], 2, 18.0, 10, 24.0], 12.0]);
-        compileTimeCheck([
-            'case',
-            ['has', 'point_count'], ['interpolate', ['linear'], ['get', 'point_count'], 2, '#ccc', 10, '#444'],
-            ['has', 'priorityValue'], ['interpolate', ['linear'], ['get', 'priorityValue'], 0, '#ff9', 1, '#f66'],
-            '#fcaf3e'
-        ]);
-        compileTimeCheck([
-            'case',
-            ['==', ['get', 'CAPITAL'], 1], 'city-capital',
-            ['>=', ['get', 'POPULATION'], 1000000], 'city-1M',
-            ['>=', ['get', 'POPULATION'], 500000], 'city-500k',
-            ['>=', ['get', 'POPULATION'], 100000], 'city-100k',
-            'city'
-        ]);
-        compileTimeCheck(['match', ['get', 'TYPE'], ['TARGETPOINT:HOSPITAL'], true, false]);
-        compileTimeCheck(['match', ['get', 'TYPE'], ['ADIZ', 'AMA', 'AWY', 'CLASS', 'NO-FIR', 'OCA', 'OTA', 'P', 'RAS', 'RCA', 'UTA', 'UTA-P'], true, false]);
-        compileTimeCheck(['==', ['get', 'MILITARYAIRPORT'], 1]);
-    });
-
     test('expression, zoom', () => {
         const f = createFilter(['>=', ['number', ['get', 'x']], ['zoom']]).filter;
         expect(f({zoom: 1}, {properties: {x: 0}} as any as Feature)).toBe(false);
@@ -79,18 +50,6 @@ describe('filter', () => {
         expect(createFilter(['any', true]).filter(undefined, undefined)).toBe(true);
         expect(createFilter(['any', true, false]).filter(undefined, undefined)).toBe(true);
         expect(createFilter(['any', false, false]).filter(undefined, undefined)).toBe(false);
-    });
-
-    test('expression, literal', () => {
-        expect(createFilter(['literal', true]).filter(undefined, undefined)).toBe(true);
-        expect(createFilter(['literal', false]).filter(undefined, undefined)).toBe(false);
-    });
-
-    test('expression, match', () => {
-        const match = createFilter(['match', ['get', 'x'], ['a', 'b', 'c'], true, false]).filter;
-        expect(match(undefined, {properties: {x: 'a'}} as any as Feature)).toBe(true);
-        expect(match(undefined, {properties: {x: 'c'}} as any as Feature)).toBe(true);
-        expect(match(undefined, {properties: {x: 'd'}} as any as Feature)).toBe(false);
     });
 
     test('expression, type error', () => {
@@ -220,14 +179,14 @@ describe('convert legacy filters to expressions', () => {
                 ['LineString', 'Point', 'Polygon'],
                 true,
                 false
-            ],
+            ] as FilterSpecification,
             [
                 'match',
                 ['get', 'type'],
                 ['island'],
                 true,
                 false
-            ]
+            ] as FilterSpecification
         ];
 
         const converted = convertFilter(filter);
