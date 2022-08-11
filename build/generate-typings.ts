@@ -16,7 +16,7 @@ fs.writeFileSync(outputFile, types);
 
 console.log('Finifhed bundling types for maplibre-gl starting style-spec');
 
-const outputPath = `./dist/style-spec`;
+const outputPath = './dist/style-spec';
 if (!fs.existsSync(outputPath)) {
     fs.mkdirSync(outputPath);
 }
