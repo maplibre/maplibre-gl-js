@@ -392,8 +392,8 @@ export function sphericalToCartesian([r, azimuthal, polar]: [number, number, num
  * @returns {boolean}
  */
 export function isWorker(): boolean {
-    return typeof WorkerGlobalScope !== 'undefined' && typeof self !== 'undefined' &&
-           self instanceof WorkerGlobalScope;
+    // @ts-ignore
+    return typeof WorkerGlobalScope !== 'undefined' && typeof self !== 'undefined' && self instanceof WorkerGlobalScope;
 }
 
 /**

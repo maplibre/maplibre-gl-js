@@ -266,10 +266,11 @@ export default class Worker {
         enforceCacheSizeLimit(limit);
     }
 }
-
 /* global self, WorkerGlobalScope */
+// @ts-ignore
 if (typeof WorkerGlobalScope !== 'undefined' &&
     typeof self !== 'undefined' &&
+    // @ts-ignore
     self instanceof WorkerGlobalScope) {
     (self as any).worker = new Worker(self as any);
 }
