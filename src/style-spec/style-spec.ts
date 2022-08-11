@@ -64,7 +64,7 @@ export type StylePropertySpecification = {
 };
 
 import v8Spec from './reference/v8.json' assert {type: 'json'};
-let v8 = v8Spec as any;
+const v8 = v8Spec as any;
 import latest from './reference/latest';
 import format from './format';
 import migrate from './migrate';

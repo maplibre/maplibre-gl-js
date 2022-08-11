@@ -267,7 +267,7 @@ export default class Worker {
         enforceCacheSizeLimit(limit);
     }
 }
-/* global self, WorkerGlobalScope */
+
 if (isWorker()) {
     (self as any).worker = new Worker(self as any);
 }
