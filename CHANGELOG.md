@@ -6,6 +6,7 @@
 - 
 ### 🐞 Bug fixes
 
+- Fix types generation and make sure they run as part of the CI (#1462, #1465)
 - *...Add new stuff here...*
 
 ## 2.2.0
