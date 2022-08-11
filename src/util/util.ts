@@ -384,7 +384,6 @@ export function sphericalToCartesian([r, azimuthal, polar]: [number, number, num
     };
 }
 
-/* global self, WorkerGlobalScope */
 /**
  *  Returns true if the when run in the web-worker context.
  *
