@@ -75,7 +75,7 @@ describe('SymbolBucket', () => {
                 bucket: bucketA,
                 glyphMap: stacks,
                 glyphPositions: {}
-            });
+            } as any);
         const tileA = new Tile(tileID, 512);
         tileA.latestFeatureIndex = new FeatureIndex(tileID);
         tileA.buckets = {test: bucketA};
@@ -85,7 +85,7 @@ describe('SymbolBucket', () => {
         bucketB.populate([{feature} as IndexedFeature], options, undefined as any);
         performSymbolLayout({
             bucket: bucketB, glyphMap: stacks, glyphPositions: {}
-        });
+        } as any);
         const tileB = new Tile(tileID, 512);
         tileB.buckets = {test: bucketB};
         tileB.collisionBoxArray = collisionBoxArray;
@@ -123,7 +123,7 @@ describe('SymbolBucket', () => {
             bucket,
             glyphMap: stacks,
             glyphPositions: {'Test': {97: fakeGlyph, 98: fakeGlyph, 99: fakeGlyph, 100: fakeGlyph, 101: fakeGlyph, 102: fakeGlyph} as any}
-        });
+        } as any);
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].includes('Too many glyphs being rendered in a tile.')).toBeTruthy();
@@ -164,7 +164,7 @@ describe('SymbolBucket', () => {
 
         performSymbolLayout({
             bucket, imageMap, imagePositions: imagePos
-        });
+        } as any);
 
         // undefined SDF should be treated the same as false SDF - no warning raised
         expect(spy).not.toHaveBeenCalledTimes(1);
@@ -204,7 +204,7 @@ describe('SymbolBucket', () => {
         expect(icons.a).toBe(true);
         expect(icons.b).toBe(true);
 
-        performSymbolLayout({bucket, imageMap, imagePositions: imagePos});
+        performSymbolLayout({bucket, imageMap, imagePositions: imagePos} as any);
 
         // true SDF and false SDF in same bucket should trigger warning
         expect(spy).toHaveBeenCalledTimes(1);

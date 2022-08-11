@@ -1,4 +1,5 @@
 import composite from './composite';
+import {LineLayerSpecification} from './types.g';
 
 describe('composite', () => {
     test('composites Mapbox vector sources', () => {
@@ -32,8 +33,8 @@ describe('composite', () => {
             }
         });
 
-        expect(result.layers[0].source).toBe('a,b');
-        expect(result.layers[1].source).toBe('a,b');
+        expect((result.layers[0] as LineLayerSpecification).source).toBe('a,b');
+        expect((result.layers[1] as LineLayerSpecification).source).toBe('a,b');
     });
 
     test('does not composite vector + raster', () => {
