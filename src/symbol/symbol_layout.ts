@@ -153,20 +153,20 @@ export function evaluateVariableOffset(anchor: TextAnchor, offset: [number, numb
 
 export function performSymbolLayout(args: {
     bucket: SymbolBucket;
-    glyphMap?: {
+    glyphMap: {
         [_: string]: {
             [x: number]: StyleGlyph;
         };
     };
-    glyphPositions?: {
+    glyphPositions: {
         [_: string]: {
             [x: number]: GlyphPosition;
         };
     };
-    imageMap?: {[_: string]: StyleImage};
-    imagePositions?: {[_: string]: ImagePosition};
-    showCollisionBoxes?: boolean;
-    canonical?: CanonicalTileID;
+    imageMap: {[_: string]: StyleImage};
+    imagePositions: {[_: string]: ImagePosition};
+    showCollisionBoxes: boolean;
+    canonical: CanonicalTileID;
 }) {
     args.bucket.createArrays();
 

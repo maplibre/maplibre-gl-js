@@ -64,19 +64,17 @@ describe('SymbolBucket', () => {
         const bucketA = bucketSetup() as any as SymbolBucket;
         const bucketB = bucketSetup() as any as SymbolBucket;
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
-        // @ts-ignore
-        // Is the second argument "Terrain" missing?
-        const placement = new Placement(transform, 0, true);
+        const placement = new Placement(transform, undefined as any, 0, true);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const crossTileSymbolIndex = new CrossTileSymbolIndex();
 
         // add feature from bucket A
-        bucketA.populate([{feature} as IndexedFeature], options, undefined);
+        bucketA.populate([{feature} as IndexedFeature], options, undefined as any);
         performSymbolLayout(
             {
                 bucket: bucketA,
                 glyphMap: stacks,
-                glyphPositions: {},
+                glyphPositions: {}
             });
         const tileA = new Tile(tileID, 512);
         tileA.latestFeatureIndex = new FeatureIndex(tileID);
@@ -84,7 +82,7 @@ describe('SymbolBucket', () => {
         tileA.collisionBoxArray = collisionBoxArray;
 
         // add same feature from bucket B
-        bucketB.populate([{feature} as IndexedFeature], options);
+        bucketB.populate([{feature} as IndexedFeature], options, undefined as any);
         performSymbolLayout({
             bucket: bucketB, glyphMap: stacks, glyphPositions: {}
         });
@@ -92,7 +90,7 @@ describe('SymbolBucket', () => {
         tileB.buckets = {test: bucketB};
         tileB.collisionBoxArray = collisionBoxArray;
 
-        crossTileSymbolIndex.addLayer(bucketA.layers[0], [tileA, tileB], undefined);
+        crossTileSymbolIndex.addLayer(bucketA.layers[0], [tileA, tileB], undefined as any);
 
         const place = (layer, tile) => {
             const parts = [];
@@ -119,7 +117,7 @@ describe('SymbolBucket', () => {
         const bucket = bucketSetup() as any as SymbolBucket;
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
-        bucket.populate([{feature} as IndexedFeature], options);
+        bucket.populate([{feature} as IndexedFeature], options, undefined as any);
         const fakeGlyph = {rect: {w: 10, h: 10}, metrics: {left: 10, top: 10, advance: 10}};
         performSymbolLayout({
             bucket,
@@ -157,7 +155,7 @@ describe('SymbolBucket', () => {
                 createIndexedFeature(1, 1, 'b'),
                 createIndexedFeature(2, 2, 'a')
             ] as any as IndexedFeature[],
-            options, undefined
+            options, undefined as any
         );
 
         const icons = options.iconDependencies as any;
@@ -216,8 +214,8 @@ describe('SymbolBucket', () => {
         const rtlBucket = bucketSetup('مرحبا');
         const ltrBucket = bucketSetup('hello');
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
-        rtlBucket.populate([{feature} as IndexedFeature], options);
-        ltrBucket.populate([{feature} as IndexedFeature], options);
+        rtlBucket.populate([{feature} as IndexedFeature], options, undefined as any);
+        ltrBucket.populate([{feature} as IndexedFeature], options, undefined as any);
 
         expect(rtlBucket.hasRTLText).toBeTruthy();
         expect(ltrBucket.hasRTLText).toBeFalsy();
@@ -228,7 +226,7 @@ describe('SymbolBucket', () => {
         const rtlBucket = bucketSetup('مرحبا');
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
         rtlBucket.createArrays();
-        rtlBucket.populate([{feature} as IndexedFeature], options);
+        rtlBucket.populate([{feature} as IndexedFeature], options, undefined as any);
 
         expect(rtlBucket.isEmpty()).toBeFalsy();
         expect(rtlBucket.symbolInstances).toHaveLength(0);
@@ -237,7 +235,7 @@ describe('SymbolBucket', () => {
     test('SymbolBucket detects rtl text mixed with ltr text', () => {
         const mixedBucket = bucketSetup('مرحبا translates to hello');
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
-        mixedBucket.populate([{feature} as IndexedFeature], options);
+        mixedBucket.populate([{feature} as IndexedFeature], options, undefined as any);
 
         expect(mixedBucket.hasRTLText).toBeTruthy();
     });
