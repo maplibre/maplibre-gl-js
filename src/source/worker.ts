@@ -7,6 +7,7 @@ import GeoJSONWorkerSource from './geojson_worker_source';
 import assert from 'assert';
 import {plugin as globalRTLTextPlugin} from './rtl_text_plugin';
 import {enforceCacheSizeLimit} from '../util/tile_request_cache';
+import {isWorker} from '../util/util';
 
 import type {
     WorkerSource,
@@ -267,9 +268,6 @@ export default class Worker {
     }
 }
 
-/* global self, WorkerGlobalScope */
-if (typeof WorkerGlobalScope !== 'undefined' &&
-    typeof self !== 'undefined' &&
-    self instanceof WorkerGlobalScope) {
+if (isWorker()) {
     (self as any).worker = new Worker(self as any);
 }

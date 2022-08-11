@@ -133,11 +133,11 @@ export default class TerrainSourceCache extends Evented {
     }
 
     /**
-     * searches for the corresponding current renderable terrain-tiles
+     * Searches for the corresponding current renderable terrain-tiles
      * @param {OverscaledTileID} tileID - the tile to look for
-     * @returns {[_:string]: Tile} - the tiles that were found
+     * @returns {Record<string, OverscaledTileID>} - the tiles that were found
      */
-    getTerrainCoords(tileID: OverscaledTileID): {[_: string]: OverscaledTileID} {
+    getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
         const coords = {};
         for (const key of this._renderableTilesKeys) {
             const _tileID = this._tiles[key].tileID;

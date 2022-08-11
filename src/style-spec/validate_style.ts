@@ -9,7 +9,7 @@ import type {StyleSpecification} from './types.g';
  *
  * @private
  * @alias validate
- * @param {StyleSpecification|String|Buffer} style The style to be validated. If a `String`
+ * @param {StyleSpecification|string|Buffer} style The style to be validated. If a `String`
  *     or `Buffer` is provided, the returned errors will contain line numbers.
  * @param {Object} [styleSpec] The style specification to validate against.
  *     If omitted, the spec version is inferred from the stylesheet.

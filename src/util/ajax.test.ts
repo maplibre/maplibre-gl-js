@@ -34,7 +34,7 @@ describe('ajax', () => {
         server.respondWith(request => {
             request.respond(404, undefined, '404 Not Found');
         });
-        getArrayBuffer({url:'http://example.com/test.bin'}, async (error) => {
+        getArrayBuffer({url: 'http://example.com/test.bin'}, async (error) => {
             const ajaxError = error as AJAXError;
             const body = await readAsText(ajaxError.body);
             expect(ajaxError.status).toBe(404);
@@ -50,7 +50,7 @@ describe('ajax', () => {
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
         });
-        getJSON({url:''}, (error, body) => {
+        getJSON({url: ''}, (error, body) => {
             expect(error).toBeFalsy();
             expect(body).toEqual({foo: 'bar'});
             done();
@@ -62,7 +62,7 @@ describe('ajax', () => {
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
         });
-        getJSON({url:''}, (error) => {
+        getJSON({url: ''}, (error) => {
             expect(error).toBeTruthy();
             done();
         });
@@ -73,7 +73,7 @@ describe('ajax', () => {
         server.respondWith(request => {
             request.respond(404, undefined, '404 Not Found');
         });
-        getJSON({url:'http://example.com/test.json'}, async (error) => {
+        getJSON({url: 'http://example.com/test.json'}, async (error) => {
             const ajaxError = error as AJAXError;
             const body = await readAsText(ajaxError.body);
             expect(ajaxError.status).toBe(404);
@@ -89,7 +89,7 @@ describe('ajax', () => {
         server.respondWith(request => {
             request.respond(204, undefined, undefined);
         });
-        postData({url:'api.mapbox.com'}, (error) => {
+        postData({url: 'api.mapbox.com'}, (error) => {
             expect(error).toBeNull();
             done();
         });
