@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import migrate from './v9';
 
 describe('migrate v9', () => {
