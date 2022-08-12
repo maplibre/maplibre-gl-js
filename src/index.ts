@@ -101,6 +101,7 @@ const exported = {
 
     /**
      * Returns the package version of the library
+     * @returns {string} Package version of the library
      */
     get version(): string {
         return '__packageVersion';
