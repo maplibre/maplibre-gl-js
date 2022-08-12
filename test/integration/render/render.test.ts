@@ -3,7 +3,6 @@ import './mock_browser_for_node';
 import canvas from 'canvas';
 import path, {dirname} from 'path';
 import fs from 'fs';
-import isWindows from 'is-windows';
 import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
@@ -157,9 +156,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 
     // there may be multiple expected images, covering different platforms
     let globPattern = path.join(dir, 'expected*.png');
-    if (isWindows()) {
-        globPattern = globPattern.replace(/\\/g, '/');
-    }
+    globPattern = globPattern.replace(/\\/g, '/'); // ensure a Windows path is converted to a glob compatible pattern.
     const expectedPaths = glob.sync(globPattern);
 
     if (!process.env.UPDATE && expectedPaths.length === 0) {
@@ -253,7 +250,8 @@ function mockXhr() {
 function getTestStyles(options: RenderOptions, directory: string): StyleWithTestData[] {
     const tests = options.tests || [];
 
-    const sequence = glob.sync('**/style.json', {cwd: directory})
+    const globCwd = directory.replace(/\\/g, '/'); // ensure a Windows path is converted to a glob compatible pattern.
+    const sequence = glob.sync('**/style.json', {cwd: globCwd})
         .map(fixture => {
             const id = path.dirname(fixture);
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;
