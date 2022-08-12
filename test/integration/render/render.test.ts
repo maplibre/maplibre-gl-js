@@ -3,6 +3,7 @@ import './mock_browser_for_node';
 import canvas from 'canvas';
 import path, {dirname} from 'path';
 import fs from 'fs';
+import isWindows from 'is-windows';
 import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
@@ -155,7 +156,11 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     actualImg.data = data as any;
 
     // there may be multiple expected images, covering different platforms
-    const expectedPaths = glob.sync(path.join(dir, 'expected*.png'));
+    let globPattern = path.join(dir, 'expected*.png');
+    if (isWindows()) {
+        globPattern = globPattern.replace(/\\/g, '/');
+    }
+    const expectedPaths = glob.sync(globPattern);
 
     if (!process.env.UPDATE && expectedPaths.length === 0) {
         throw new Error('No expected*.png files found; did you mean to run tests with UPDATE=true?');
