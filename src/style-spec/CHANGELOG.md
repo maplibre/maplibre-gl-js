@@ -1,3 +1,7 @@
+## 17.0.1
+
+* Generated typings file as not created in the build process and was added in this version
+
 ## 17.0.0
 
 ### Breaking changes
