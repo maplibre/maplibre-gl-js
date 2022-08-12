@@ -1,6 +1,7 @@
 import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
+import {version} from '../../package.json';
 import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
 import Style from '../style/style';
@@ -521,13 +522,6 @@ class Map extends Camera {
     */
     _getMapId() {
         return this._mapId;
-    }
-
-    /**
-     * Returns the package version of the library
-     */
-    get version(): string {
-        return '__packageVersion';
     }
 
     /**
@@ -2931,6 +2925,14 @@ class Map extends Camera {
     // for cache browser tests
     _setCacheLimits(limit: number, checkThreshold: number) {
         setCacheLimits(limit, checkThreshold);
+    }
+
+    /**
+     * Returns the package version of the library
+     * @returns {string} Package version of the library
+     */
+    get version(): string {
+        return version;
     }
 }
 
