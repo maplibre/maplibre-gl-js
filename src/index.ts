@@ -1,6 +1,6 @@
 import assert from 'assert';
 import {supported} from '@mapbox/mapbox-gl-supported';
-
+import {version} from '../package.json';
 import Map from './ui/map';
 import NavigationControl from './ui/control/navigation_control';
 import GeolocateControl from './ui/control/geolocate_control';
@@ -104,7 +104,7 @@ const exported = {
      * @returns {string} Package version of the library
      */
     get version(): string {
-        return '__packageVersion';
+        return version;
     },
 
     /**

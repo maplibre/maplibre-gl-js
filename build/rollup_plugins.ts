@@ -11,8 +11,6 @@ import strip from '@rollup/plugin-strip';
 import {Plugin} from 'rollup';
 import {importAssertionsPlugin} from 'rollup-plugin-import-assert';
 
-import {version} from '../package.json';
-
 // Common set of plugins/transformations shared across different rollup
 // builds (main maplibre bundle, style-spec package, benchmarks bundle)
 
@@ -33,9 +31,6 @@ export const plugins = (production: boolean): Plugin[] => [
         values: {
             '_token_stack:': ''
         }
-    }),
-    replace({
-        '__packageVersion': version,
     }),
     production && strip({
         sourceMap: true,
