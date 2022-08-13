@@ -3,7 +3,8 @@
 ### ✨ Features and improvements
 
 - *...Add new stuff here...*
-- 
+- Re-enable method to get library version. Either with `import {version} from 'maplibre-gl'`, or on a Map instance as `map.version`.
+
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
