@@ -10,7 +10,7 @@ export default class TouchPanHandler {
     _touches: {
         [k in string | number]: Point;
     };
-    _minTouches: number;
+    _minTouches: () => number;
     _clickTolerance: number;
     _sum: Point;
     _map: Map;
@@ -20,7 +20,7 @@ export default class TouchPanHandler {
         clickTolerance: number;
         cooperativeGestures: boolean | GestureOptions;
     }, map: Map) {
-        this._minTouches = options.cooperativeGestures ? 2 : 1;
+        this._minTouches = () => (options.cooperativeGestures && document.fullscreenElement == null) ? 2 : 1;
         this._clickTolerance = options.clickTolerance || 1;
         this._map = map;
         this.reset();
@@ -42,8 +42,8 @@ export default class TouchPanHandler {
     }
 
     touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
-        if (this._map._cooperativeGestures) {
-            if (this._minTouches === 2 && mapTouches.length < 2 && !this._cancelCooperativeMessage) {
+        if (this._map._cooperativeGestures && document.fullscreenElement == null) {
+            if (this._minTouches() === 2 && mapTouches.length < 2 && !this._cancelCooperativeMessage) {
                 // If coop gesture enabled, show panning info to user
                 this._map._onCooperativeGesture(e, false, mapTouches.length);
             } else if (!this._cancelCooperativeMessage) {
@@ -51,7 +51,7 @@ export default class TouchPanHandler {
                 this._cancelCooperativeMessage = true;
             }
         }
-        if (!this._active || mapTouches.length < this._minTouches) return;
+        if (!this._active || mapTouches.length < this._minTouches()) return;
         e.preventDefault();
         return this._calculateTransform(e, points, mapTouches);
     }
@@ -59,7 +59,7 @@ export default class TouchPanHandler {
     touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
         this._calculateTransform(e, points, mapTouches);
 
-        if (this._active && mapTouches.length < this._minTouches) {
+        if (this._active && mapTouches.length < this._minTouches()) {
             this.reset();
         }
     }
@@ -90,7 +90,7 @@ export default class TouchPanHandler {
 
         this._touches = touches;
 
-        if (touchDeltaCount < this._minTouches || !touchDeltaSum.mag()) return;
+        if (touchDeltaCount < this._minTouches() || !touchDeltaSum.mag()) return;
 
         const panDelta = touchDeltaSum.div(touchDeltaCount);
         this._sum._add(panDelta);

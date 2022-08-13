@@ -2523,7 +2523,7 @@ class Map extends Camera {
     }
 
     _onCooperativeGesture(event: any, metaPress, touches) {
-        if (!metaPress && touches < 2) {
+        if (document.fullscreenElement == null && !metaPress && touches < 2) {
             // Alert user how to scroll/pan
             this._cooperativeGesturesScreen.classList.add('maplibregl-show');
             setTimeout(() => {

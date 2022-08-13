@@ -148,7 +148,7 @@ class ScrollZoomHandler {
 
     wheel(e: WheelEvent) {
         if (!this.isEnabled()) return;
-        if (this._map._cooperativeGestures) {
+        if (this._map._cooperativeGestures && document.fullscreenElement == null) {
             if (this._map._metaPress) {
                 e.preventDefault();
             } else {
