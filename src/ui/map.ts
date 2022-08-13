@@ -1,7 +1,7 @@
 import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
-import {version} from '../../package.json';
+import packageJSON from '../../package.json' assert {type: 'json'};
 import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
 import Style from '../style/style';
@@ -58,6 +58,8 @@ import type {
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+
+const version = packageJSON.version;
 
 /* eslint-enable no-use-before-define */
 export type MapOptions = {
