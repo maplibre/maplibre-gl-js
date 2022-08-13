@@ -1,4 +1,4 @@
-import {naiveAssert} from '../../util/test/util';
+import {naiveAssert} from '../../util/test/naive_assert';
 import Point from '@mapbox/point-geometry';
 
 export function indexTouches(touches: Array<Touch>, points: Array<Point>) {

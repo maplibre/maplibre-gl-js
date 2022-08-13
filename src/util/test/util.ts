@@ -3,10 +3,6 @@ import {extend} from '../../util/util';
 import Dispatcher from '../../util/dispatcher';
 import gl from 'gl';
 
-export function naiveAssert(test: unknown, message?: string) {
-    if (!test) throw new Error(message.toString());
-}
-
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
     const defaultOptions = {

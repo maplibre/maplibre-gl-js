@@ -6,7 +6,7 @@ import type {RetainedQueryData} from '../symbol/placement';
 import type {FilterSpecification} from '../style-spec/types.g';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type Point from '@mapbox/point-geometry';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 import {mat4} from 'gl-matrix';
 
 /*

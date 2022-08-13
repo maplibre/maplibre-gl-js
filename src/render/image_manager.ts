@@ -5,7 +5,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {RGBAImage} from '../util/image';
 import {ImagePosition} from './image_atlas';
 import Texture from './texture';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 import {renderStyleImage} from '../style/style_image';
 import {warnOnce} from '../util/util';
 

@@ -1,6 +1,6 @@
 import Protobuf from 'pbf';
 import VT from '@mapbox/vector-tile';
-import {naiveAssert} from '../../../src/util/test/util';
+import {naiveAssert} from '../../../src/util/test/naive_assert';
 
 import deref from '../../../src/style-spec/deref';
 import Style from '../../../src/style/style';

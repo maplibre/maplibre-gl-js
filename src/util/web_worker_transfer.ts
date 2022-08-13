@@ -1,4 +1,4 @@
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 
 import TransferableGridIndex from './transferable_grid_index';
 import Color from '../style-spec/util/color';

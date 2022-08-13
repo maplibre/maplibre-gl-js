@@ -1,6 +1,6 @@
 import StyleLayer from '../style_layer';
 import type Map from '../../ui/map';
-import {naiveAssert} from '../../util/test/util';
+import {naiveAssert} from '../../util/test/naive_assert';
 import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '../../style-spec/types.g';
 

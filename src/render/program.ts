@@ -1,5 +1,5 @@
 import shaders from '../shaders/shaders';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 import ProgramConfiguration from '../data/program_configuration';
 import VertexArrayObject from './vertex_array_object';
 import Context from '../gl/context';

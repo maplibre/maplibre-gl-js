@@ -1,4 +1,4 @@
-import {naiveAssert} from '../../util/test/util';
+import {naiveAssert} from '../../util/test/naive_assert';
 import DOM from '../../util/dom';
 
 import {ease as _ease, bindAll, bezier} from '../../util/util';

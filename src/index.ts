@@ -1,4 +1,4 @@
-import {naiveAssert} from './util/test/util';
+import {naiveAssert} from './util/test/naive_assert';
 import {supported} from '@mapbox/mapbox-gl-supported';
 import packageJSON from '../package.json' assert {type: 'json'};
 import Map from './ui/map';

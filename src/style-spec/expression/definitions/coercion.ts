@@ -1,4 +1,4 @@
-import {naiveAssert} from '../../../util/test/util';
+import {naiveAssert} from '../../../util/test/naive_assert';
 
 import {BooleanType, ColorType, NumberType, StringType, ValueType} from '../types';
 import {Color, Padding, toString as valueToString, validateRGBA} from '../values';

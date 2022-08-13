@@ -1,4 +1,4 @@
-import {naiveAssert} from '../../../util/test/util';
+import {naiveAssert} from '../../../util/test/naive_assert';
 
 import {typeOf} from '../values';
 import {ValueType} from '../types';

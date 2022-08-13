@@ -1,6 +1,6 @@
 import murmur3 from 'murmurhash-js';
 import {register} from '../util/web_worker_transfer';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 
 type SerializedFeaturePositionMap = {
     ids: Float64Array;

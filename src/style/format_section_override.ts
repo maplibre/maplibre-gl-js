@@ -1,4 +1,4 @@
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 import type {Expression} from '../style-spec/expression/expression';
 import type EvaluationContext from '../style-spec/expression/evaluation_context';
 import type {Type} from '../style-spec/expression/types';

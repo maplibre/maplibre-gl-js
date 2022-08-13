@@ -1,4 +1,4 @@
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 
 import {register} from './web_worker_transfer';
 

@@ -1,6 +1,6 @@
 // Note: all "sizes" are measured in bytes
 
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 
 import type {Transferable} from '../types/transferable';
 

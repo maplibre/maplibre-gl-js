@@ -10,7 +10,7 @@ import Context from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import browser from '../util/browser';
 import {OverscaledTileID} from './tile_id';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 import SourceFeatureState from './source_state';
 
 import type {Source} from './source';

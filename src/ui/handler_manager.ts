@@ -19,7 +19,7 @@ import TouchZoomRotateHandler from './handler/shim/touch_zoom_rotate';
 import {bindAll, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import LngLat from '../geo/lng_lat';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
 

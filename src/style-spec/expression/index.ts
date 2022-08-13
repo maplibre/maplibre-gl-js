@@ -1,4 +1,4 @@
-import {naiveAssert} from '../../util/test/util';
+import {naiveAssert} from '../../util/test/naive_assert';
 
 import extend from '../util/extend';
 import ExpressionParsingError from './parsing_error';

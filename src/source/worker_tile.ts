@@ -8,7 +8,7 @@ import LineBucket from '../data/bucket/line_bucket';
 import FillBucket from '../data/bucket/fill_bucket';
 import FillExtrusionBucket from '../data/bucket/fill_extrusion_bucket';
 import {warnOnce, mapObject} from '../util/util';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 import ImageAtlas from '../render/image_atlas';
 import GlyphAtlas from '../render/glyph_atlas';
 import EvaluationParameters from '../style/evaluation_parameters';

@@ -1,4 +1,4 @@
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 
 import type Program from './program';
 import type VertexBuffer from '../gl/vertex_buffer';

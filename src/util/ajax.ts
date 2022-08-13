@@ -1,6 +1,6 @@
 import {extend, warnOnce, isWorker} from './util';
 import config from './config';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 import {cacheGet, cachePut} from './tile_request_cache';
 import webpSupported from './webp_supported';
 

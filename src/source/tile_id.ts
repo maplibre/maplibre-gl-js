@@ -4,7 +4,7 @@ import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../geo/mercator_coordinate';
 import {register} from '../util/web_worker_transfer';
 import {mat4} from 'gl-matrix';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 
 export class CanonicalTileID {
     z: number;

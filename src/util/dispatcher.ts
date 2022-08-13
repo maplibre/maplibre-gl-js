@@ -1,6 +1,6 @@
 import {uniqueId, asyncAll} from './util';
 import Actor from './actor';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 
 import type WorkerPool from './worker_pool';
 

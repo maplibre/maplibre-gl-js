@@ -1,4 +1,4 @@
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 import {clone, extend, easeCubicInOut} from '../util/util';
 import * as interpolate from '../style-spec/util/interpolate';
 import Color from '../style-spec/util/color';

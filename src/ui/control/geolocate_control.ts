@@ -1,7 +1,7 @@
 import {Event, Evented} from '../../util/evented';
 import DOM from '../../util/dom';
 import {extend, bindAll, warnOnce} from '../../util/util';
-import {naiveAssert} from '../../util/test/util';
+import {naiveAssert} from '../../util/test/naive_assert';
 import LngLat from '../../geo/lng_lat';
 import Marker from '../marker';
 

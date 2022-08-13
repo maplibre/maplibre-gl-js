@@ -1,5 +1,5 @@
 import {ColorAttachment, DepthAttachment} from './value';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 
 import type Context from './context';
 

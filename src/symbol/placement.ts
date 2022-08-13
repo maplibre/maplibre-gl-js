@@ -6,7 +6,7 @@ import * as projection from './projection';
 import {getAnchorJustification, evaluateVariableOffset} from './symbol_layout';
 import {getAnchorAlignment, WritingMode} from './shaping';
 import {mat4} from 'gl-matrix';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 import pixelsToTileUnits from '../source/pixels_to_tile_units';
 import Point from '@mapbox/point-geometry';
 import type Transform from '../geo/transform';

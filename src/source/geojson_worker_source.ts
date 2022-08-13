@@ -6,7 +6,7 @@ import GeoJSONWrapper from './geojson_wrapper';
 import vtpbf from 'vt-pbf';
 import Supercluster from 'supercluster';
 import geojsonvt from 'geojson-vt';
-import {naiveAssert} from '../util/test/util';
+import {naiveAssert} from '../util/test/naive_assert';
 import VectorTileWorkerSource from './vector_tile_worker_source';
 import {createExpression} from '../style-spec/expression';
 

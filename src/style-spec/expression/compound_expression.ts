@@ -2,7 +2,7 @@ import {toString} from './types';
 
 import ParsingContext from './parsing_context';
 import EvaluationContext from './evaluation_context';
-import {naiveAssert} from '../../util/test/util';
+import {naiveAssert} from '../../util/test/naive_assert';
 
 import type {Expression, ExpressionRegistry} from './expression';
 import type {Type} from './types';
