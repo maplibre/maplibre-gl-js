@@ -6,7 +6,7 @@ import * as projection from './projection';
 import {getAnchorJustification, evaluateVariableOffset} from './symbol_layout';
 import {getAnchorAlignment, WritingMode} from './shaping';
 import {mat4} from 'gl-matrix';
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 import pixelsToTileUnits from '../source/pixels_to_tile_units';
 import Point from '@mapbox/point-geometry';
 import type Transform from '../geo/transform';
@@ -391,7 +391,7 @@ export class Placement {
                 this.prevPlacement.placements[symbolInstance.crossTileID].text) {
                 prevAnchor = this.prevPlacement.variableOffsets[symbolInstance.crossTileID].anchor;
             }
-            assert(symbolInstance.crossTileID !== 0);
+            // #DISABLE_NODE_ASSERT: assert(symbolInstance.crossTileID !== 0);
             this.variableOffsets[symbolInstance.crossTileID] = {
                 textOffset,
                 width,
@@ -676,7 +676,7 @@ export class Placement {
                     getElevation
                 );
 
-                assert(!placedGlyphCircles.circles.length || (!placedGlyphCircles.collisionDetected || showCollisionBoxes));
+                // #DISABLE_NODE_ASSERT: assert(!placedGlyphCircles.circles.length || (!placedGlyphCircles.collisionDetected || showCollisionBoxes));
                 // If text-overlap is set to 'always', force "placedCircles" to true
                 // In theory there should always be at least one circle placed
                 // in this case, but for now quirks in text-anchor
@@ -781,15 +781,15 @@ export class Placement {
                 }
             }
 
-            assert(symbolInstance.crossTileID !== 0);
-            assert(bucket.bucketInstanceId !== 0);
+            // #DISABLE_NODE_ASSERT: assert(symbolInstance.crossTileID !== 0);
+            // #DISABLE_NODE_ASSERT: assert(bucket.bucketInstanceId !== 0);
 
             this.placements[symbolInstance.crossTileID] = new JointPlacement(placeText || alwaysShowText, placeIcon || alwaysShowIcon, offscreen || bucket.justReloaded);
             seenCrossTileIDs[symbolInstance.crossTileID] = true;
         };
 
         if (zOrderByViewportY) {
-            assert(bucketPart.symbolInstanceStart === 0);
+            // #DISABLE_NODE_ASSERT: assert(bucketPart.symbolInstanceStart === 0);
             const symbolIndexes = bucket.getSortedSymbolIndexes(this.transform.angle);
             for (let i = symbolIndexes.length - 1; i >= 0; --i) {
                 const symbolIndex = symbolIndexes[i];
@@ -920,7 +920,7 @@ export class Placement {
         // this.lastPlacementChangeTime is the time of the last commit() that
         // resulted in a placement change -- in other words, the start time of
         // the last symbol fade animation
-        assert(!prevPlacement || prevPlacement.lastPlacementChangeTime !== undefined);
+        // #DISABLE_NODE_ASSERT: assert(!prevPlacement || prevPlacement.lastPlacementChangeTime !== undefined);
         if (placementChanged) {
             this.lastPlacementChangeTime = now;
         } else if (typeof this.lastPlacementChangeTime !== 'number') {
@@ -1133,8 +1133,8 @@ export class Placement {
             bucket.textCollisionBox.collisionVertexBuffer.updateData(bucket.textCollisionBox.collisionVertexArray);
         }
 
-        assert(bucket.text.opacityVertexArray.length === bucket.text.layoutVertexArray.length / 4);
-        assert(bucket.icon.opacityVertexArray.length === bucket.icon.layoutVertexArray.length / 4);
+        // #DISABLE_NODE_ASSERT: assert(bucket.text.opacityVertexArray.length === bucket.text.layoutVertexArray.length / 4);
+        // #DISABLE_NODE_ASSERT: assert(bucket.icon.opacityVertexArray.length === bucket.icon.layoutVertexArray.length / 4);
 
         // Push generated collision circles to the bucket for debug rendering
         if (bucket.bucketInstanceId in this.collisionCircleArrays) {

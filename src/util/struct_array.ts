@@ -1,6 +1,6 @@
 // Note: all "sizes" are measured in bytes
 
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 import type {Transferable} from '../types/transferable';
 
@@ -111,7 +111,7 @@ abstract class StructArray {
      * @private
      */
     static serialize(array: StructArray, transferables?: Array<Transferable>): SerializedStructArray {
-        assert(!array.isTransferred);
+        // #DISABLE_NODE_ASSERT: assert(!array.isTransferred);
 
         array._trim();
 
@@ -160,7 +160,7 @@ abstract class StructArray {
      * @param {number} n The new size of the array.
      */
     resize(n: number) {
-        assert(!this.isTransferred);
+        // #DISABLE_NODE_ASSERT: assert(!this.isTransferred);
         this.reserve(n);
         this.length = n;
     }
@@ -209,7 +209,7 @@ function createLayout(
     let offset = 0;
     let maxSize = 0;
     const layoutMembers = members.map((member) => {
-        assert(member.name.length);
+        // #DISABLE_NODE_ASSERT: assert(member.name.length);
         const typeSize = sizeOf(member.type);
         const memberOffset = offset = align(offset, Math.max(alignment, typeSize));
         const components = member.components || 1;

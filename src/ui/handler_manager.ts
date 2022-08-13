@@ -19,7 +19,7 @@ import TouchZoomRotateHandler from './handler/shim/touch_zoom_rotate';
 import {bindAll, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import LngLat from '../geo/lng_lat';
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
 
@@ -299,7 +299,7 @@ class HandlerManager {
         }
 
         this._updatingCamera = true;
-        assert(e.timeStamp !== undefined);
+        // #DISABLE_NODE_ASSERT: assert(e.timeStamp !== undefined);
 
         const inputEvent = e.type === 'renderFrame' ? undefined : (e as any as InputEvent);
 

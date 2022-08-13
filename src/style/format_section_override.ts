@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 import type {Expression} from '../style-spec/expression/expression';
 import type EvaluationContext from '../style-spec/expression/evaluation_context';
 import type {Type} from '../style-spec/expression/types';
@@ -14,7 +14,7 @@ export default class FormatSectionOverride<T> implements Expression {
     defaultValue: PossiblyEvaluatedPropertyValue<T>;
 
     constructor(defaultValue: PossiblyEvaluatedPropertyValue<T>) {
-        assert(defaultValue.property.overrides !== undefined);
+        // #DISABLE_NODE_ASSERT: assert(defaultValue.property.overrides !== undefined);
         this.type = defaultValue.property.overrides ? defaultValue.property.overrides.runtimeType : NullType;
         this.defaultValue = defaultValue;
     }

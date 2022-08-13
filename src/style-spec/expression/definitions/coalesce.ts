@@ -1,4 +1,4 @@
-import assert from 'assert';
+// #DISABLE_NODE_ASSERT: import assert from 'assert';
 
 import {checkSubtype, ValueType} from '../types';
 import ResolvedImage from '../types/resolved_image';
@@ -34,7 +34,7 @@ class Coalesce implements Expression {
             outputType = outputType || parsed.type;
             parsedArgs.push(parsed);
         }
-        assert(outputType);
+        // #DISABLE_NODE_ASSERT: assert(outputType);
 
         // Above, we parse arguments without inferred type annotation so that
         // they don't produce a runtime error for `null` input, which would

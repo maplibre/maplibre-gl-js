@@ -43,9 +43,6 @@ export const plugins = (production: boolean): Plugin[] => [
             passes: 3
         }
     }),
-    production && unassert({
-        include: ['**/*'], // by default, unassert only includes .js files
-    }),
     nodeResolve,
     typescript(),
     commonjs({

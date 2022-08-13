@@ -20,7 +20,7 @@ const config: RollupOptions[] = [{
         format: esm ? 'esm' : 'umd',
         sourcemap: true
     },
-    acornInjectPlugins: [ importAssertions ],
+    acornInjectPlugins: [importAssertions],
     plugins: [
         {
             name: 'dep-checker',
@@ -51,7 +51,6 @@ const config: RollupOptions[] = [{
         }),
         importAssertionsPlugin(),
         json(),
-        unassert(),
         nodeResolve,
         typescript(),
         commonjs()
