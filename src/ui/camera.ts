@@ -1273,19 +1273,19 @@ function addAssertions(camera: Camera) { //eslint-disable-line
             inProgress[name] = false;
 
             camera.on(`${name}start`, () => {
-                // #DISABLE_NODE_ASSERT: assert(!inProgress[name], `"${name}start" fired twice without a "${name}end"`);
+                naiveAssert(!inProgress[name], `"${name}start" fired twice without a "${name}end"`);
                 inProgress[name] = true;
-                // #DISABLE_NODE_ASSERT: assert(inProgress.move);
+                naiveAssert(inProgress.move);
             });
 
             camera.on(name, () => {
-                // #DISABLE_NODE_ASSERT: assert(inProgress[name]);
-                // #DISABLE_NODE_ASSERT: assert(inProgress.move);
+                naiveAssert(inProgress[name]);
+                naiveAssert(inProgress.move);
             });
 
             camera.on(`${name}end`, () => {
-                // #DISABLE_NODE_ASSERT: assert(inProgress.move);
-                // #DISABLE_NODE_ASSERT: assert(inProgress[name]);
+                naiveAssert(inProgress.move);
+                naiveAssert(inProgress[name]);
                 inProgress[name] = false;
             });
         });

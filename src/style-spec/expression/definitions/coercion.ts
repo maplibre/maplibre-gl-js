@@ -39,7 +39,7 @@ class Coercion implements Expression {
             return context.error('Expected at least one argument.') as null;
 
         const name: string = (args[0] as any);
-        // #DISABLE_NODE_ASSERT: assert(types[name], name);
+        naiveAssert(types[name], name);
 
         if ((name === 'to-boolean' || name === 'to-string') && args.length !== 2)
             return context.error('Expected one argument.') as null;

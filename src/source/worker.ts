@@ -121,7 +121,7 @@ export default class Worker {
     loadTile(mapId: string, params: WorkerTileParameters & {
         type: string;
     }, callback: WorkerTileCallback) {
-        // #DISABLE_NODE_ASSERT: assert(params.type);
+        naiveAssert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).loadTile(params, callback);
     }
 
@@ -132,21 +132,21 @@ export default class Worker {
     reloadTile(mapId: string, params: WorkerTileParameters & {
         type: string;
     }, callback: WorkerTileCallback) {
-        // #DISABLE_NODE_ASSERT: assert(params.type);
+        naiveAssert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).reloadTile(params, callback);
     }
 
     abortTile(mapId: string, params: TileParameters & {
         type: string;
     }, callback: WorkerTileCallback) {
-        // #DISABLE_NODE_ASSERT: assert(params.type);
+        naiveAssert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).abortTile(params, callback);
     }
 
     removeTile(mapId: string, params: TileParameters & {
         type: string;
     }, callback: WorkerTileCallback) {
-        // #DISABLE_NODE_ASSERT: assert(params.type);
+        naiveAssert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).removeTile(params, callback);
     }
 
@@ -159,8 +159,8 @@ export default class Worker {
     } & {
         type: string;
     }, callback: WorkerTileCallback) {
-        // #DISABLE_NODE_ASSERT: assert(params.type);
-        // #DISABLE_NODE_ASSERT: assert(params.source);
+        naiveAssert(params.type);
+        naiveAssert(params.source);
 
         if (!this.workerSources[mapId] ||
             !this.workerSources[mapId][params.type] ||

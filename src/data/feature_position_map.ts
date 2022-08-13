@@ -31,7 +31,7 @@ export default class FeaturePositionMap {
     }
 
     getPositions(id: unknown): Array<FeaturePosition> {
-        // #DISABLE_NODE_ASSERT: assert(this.indexed);
+        naiveAssert(this.indexed);
 
         const intId = getNumericId(id);
 

@@ -105,7 +105,7 @@ class WorkerTile {
             for (const family of layerFamilies[sourceLayerId]) {
                 const layer = family[0];
 
-                // #DISABLE_NODE_ASSERT: assert(layer.source === this.source);
+                naiveAssert(layer.source === this.source);
                 if (layer.minzoom && this.zoom < Math.floor(layer.minzoom)) continue;
                 if (layer.maxzoom && this.zoom >= layer.maxzoom) continue;
                 if (layer.visibility === 'none') continue;

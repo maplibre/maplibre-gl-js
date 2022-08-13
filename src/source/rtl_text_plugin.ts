@@ -113,20 +113,20 @@ export const plugin: {
         return pluginStatus === status.loading;
     },
     setState(state: PluginState) { // Worker thread only: this tells the worker threads that the plugin is available on the Main thread
-        // #DISABLE_NODE_ASSERT: assert(isWorker(), 'Cannot set the state of the rtl-text-plugin when not in the web-worker context');
+        naiveAssert(isWorker(), 'Cannot set the state of the rtl-text-plugin when not in the web-worker context');
 
         pluginStatus = state.pluginStatus;
         pluginURL = state.pluginURL;
     },
     isParsed(): boolean {
-        // #DISABLE_NODE_ASSERT: assert(isWorker(), 'rtl-text-plugin is only parsed on the worker-threads');
+        naiveAssert(isWorker(), 'rtl-text-plugin is only parsed on the worker-threads');
 
         return plugin.applyArabicShaping != null &&
             plugin.processBidirectionalText != null &&
             plugin.processStyledBidirectionalText != null;
     },
     getPluginURL(): string {
-        // #DISABLE_NODE_ASSERT: assert(isWorker(), 'rtl-text-plugin url can only be queried from the worker threads');
+        naiveAssert(isWorker(), 'rtl-text-plugin url can only be queried from the worker threads');
         return pluginURL;
     }
 };

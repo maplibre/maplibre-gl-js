@@ -34,7 +34,7 @@ class IndexBuffer {
 
     updateData(array: StructArray) {
         const gl = this.context.gl;
-        // #DISABLE_NODE_ASSERT: assert(this.dynamicDraw);
+        naiveAssert(this.dynamicDraw);
         // The right VAO will get this buffer re-bound later in VertexArrayObject#bind
         // See https://github.com/mapbox/mapbox-gl-js/issues/5620
         this.context.unbindVAO();

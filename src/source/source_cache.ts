@@ -556,7 +556,7 @@ class SourceCache extends Evented {
             const ids = Object.keys(retain);
             for (const id of ids) {
                 const tileID = retain[id];
-                // #DISABLE_NODE_ASSERT: assert(tileID.key === id);
+                naiveAssert(tileID.key === id);
 
                 const tile = this._tiles[id];
                 if (!tile || tile.fadeEndTime && tile.fadeEndTime <= browser.now()) continue;

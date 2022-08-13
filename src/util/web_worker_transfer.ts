@@ -51,7 +51,7 @@ export function register<T extends any>(
     },
     options: RegisterOptions<T> = {}
 ) {
-    // #DISABLE_NODE_ASSERT: assert(!registry[name], `${name} is already registered.`);
+    naiveAssert(!registry[name], `${name} is already registered.`);
     ((Object.defineProperty as any))(klass, '_classRegistryKey', {
         value: name,
         writeable: false
@@ -159,7 +159,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         if (!name) {
             throw new Error('can\'t serialize object of unregistered class');
         }
-        // #DISABLE_NODE_ASSERT: assert(registry[name]);
+        naiveAssert(registry[name]);
 
         const properties: SerializedObject = klass.serialize ?
             // (Temporary workaround) allow a class to provide static
@@ -186,7 +186,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
             }
         } else {
             // make sure statically serialized object survives transfer of $name property
-            // #DISABLE_NODE_ASSERT: assert(!transferables || properties as any !== transferables[transferables.length - 1]);
+            naiveAssert(!transferables || properties as any !== transferables[transferables.length - 1]);
         }
 
         if (properties.$name) {

@@ -107,7 +107,7 @@ export default class DOM {
     }
 
     public static mouseButton(e: MouseEvent) {
-        // #DISABLE_NODE_ASSERT: assert(e.type === 'mousedown' || e.type === 'mouseup');
+        naiveAssert(e.type === 'mousedown' || e.type === 'mouseup');
         return e.button;
     }
 

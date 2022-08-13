@@ -24,7 +24,7 @@ export function renderColorRamp(params: ColorRampParams): RGBAImage {
     const height = params.clips ? params.clips.length : 1;
     const image = params.image || new RGBAImage({width, height});
 
-    // #DISABLE_NODE_ASSERT: assert(isPowerOfTwo(width));
+    naiveAssert(isPowerOfTwo(width));
 
     const renderPixel = (stride, index, progress) => {
         evaluationGlobals[params.evaluationKey] = progress;

@@ -143,7 +143,7 @@ export function createExpression(expression: unknown, propertySpec?: StyleProper
         propertySpec && propertySpec.type === 'string' ? {typeAnnotation: 'coerce'} : undefined);
 
     if (!parsed) {
-        // #DISABLE_NODE_ASSERT: assert(parser.errors.length > 0);
+        naiveAssert(parser.errors.length > 0);
         return error(parser.errors);
     }
 

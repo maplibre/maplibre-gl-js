@@ -88,7 +88,7 @@ class ImageManager extends Evented {
     }
 
     addImage(id: string, image: StyleImage) {
-        // #DISABLE_NODE_ASSERT: assert(!this.images[id]);
+        naiveAssert(!this.images[id]);
         if (this._validate(id, image)) {
             this.images[id] = image;
         }
@@ -135,16 +135,16 @@ class ImageManager extends Evented {
 
     updateImage(id: string, image: StyleImage) {
         const oldImage = this.images[id];
-        // #DISABLE_NODE_ASSERT: assert(oldImage);
-        // #DISABLE_NODE_ASSERT: assert(oldImage.data.width === image.data.width);
-        // #DISABLE_NODE_ASSERT: assert(oldImage.data.height === image.data.height);
+        naiveAssert(oldImage);
+        naiveAssert(oldImage.data.width === image.data.width);
+        naiveAssert(oldImage.data.height === image.data.height);
         image.version = oldImage.version + 1;
         this.images[id] = image;
         this.updatedImages[id] = true;
     }
 
     removeImage(id: string) {
-        // #DISABLE_NODE_ASSERT: assert(this.images[id]);
+        naiveAssert(this.images[id]);
         const image = this.images[id];
         delete this.images[id];
         delete this.patterns[id];
@@ -295,7 +295,7 @@ class ImageManager extends Evented {
             this.callbackDispatchedThisFrame[id] = true;
 
             const image = this.images[id];
-            // #DISABLE_NODE_ASSERT: assert(image);
+            naiveAssert(image);
 
             const updated = renderStyleImage(image);
             if (updated) {

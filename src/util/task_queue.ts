@@ -40,7 +40,7 @@ class TaskQueue {
     }
 
     run(timeStamp: number = 0) {
-        // #DISABLE_NODE_ASSERT: assert(!this._currentlyRunning);
+        naiveAssert(!this._currentlyRunning);
         const queue = this._currentlyRunning = this._queue;
 
         // Tasks queued by callbacks in the current queue should be executed

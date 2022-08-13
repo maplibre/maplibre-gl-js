@@ -211,7 +211,7 @@ class FillBucket implements Bucket {
             }
 
             const indices = earcut(flattened, holeIndices);
-            // #DISABLE_NODE_ASSERT: assert(indices.length % 3 === 0);
+            naiveAssert(indices.length % 3 === 0);
 
             for (let i = 0; i < indices.length; i += 3) {
                 this.indexArray.emplaceBack(

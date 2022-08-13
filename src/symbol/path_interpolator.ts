@@ -30,7 +30,7 @@ class PathInterpolator {
     }
 
     lerp(t: number): Point {
-        // #DISABLE_NODE_ASSERT: assert(this.points.length > 0);
+        naiveAssert(this.points.length > 0);
         if (this.points.length === 1) {
             return this.points[0];
         }

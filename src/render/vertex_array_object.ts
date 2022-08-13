@@ -121,7 +121,7 @@ class VertexArrayObject {
             for (let i = numNextAttributes; i < numPrevAttributes; i++) {
                 // WebGL breaks if you disable attribute 0.
                 // http://stackoverflow.com/questions/20305231
-                // #DISABLE_NODE_ASSERT: assert(i !== 0);
+                naiveAssert(i !== 0);
                 gl.disableVertexAttribArray(i);
             }
         }

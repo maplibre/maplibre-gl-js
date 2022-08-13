@@ -69,7 +69,7 @@ class Assertion implements Expression {
 
             type = array(itemType, N);
         } else {
-            // #DISABLE_NODE_ASSERT: assert(types[name], name);
+            naiveAssert(types[name], name);
             type = types[name];
         }
 
@@ -94,7 +94,7 @@ class Assertion implements Expression {
             }
         }
 
-        // #DISABLE_NODE_ASSERT: assert(false);
+        naiveAssert(false);
         return null;
     }
 

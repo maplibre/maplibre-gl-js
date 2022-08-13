@@ -42,7 +42,7 @@ export default class FilterEvaluate extends Benchmark {
             for (const filter of layer.filters) {
                 for (const feature of layer.features) {
                     if (typeof filter.filter({zoom: 0}, feature) !== 'boolean') {
-                        // #DISABLE_NODE_ASSERT: assert(false, 'Expected boolean result from filter');
+                        naiveAssert(false, 'Expected boolean result from filter');
                     }
                 }
             }

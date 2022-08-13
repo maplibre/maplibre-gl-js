@@ -811,9 +811,9 @@ function fitIconToText(
     iconOffset: [number, number],
     fontScale: number
 ): PositionedIcon {
-    // #DISABLE_NODE_ASSERT: assert(textFit !== 'none');
-    // #DISABLE_NODE_ASSERT: assert(Array.isArray(padding) && padding.length === 4);
-    // #DISABLE_NODE_ASSERT: assert(Array.isArray(iconOffset) && iconOffset.length === 2);
+    naiveAssert(textFit !== 'none');
+    naiveAssert(Array.isArray(padding) && padding.length === 4);
+    naiveAssert(Array.isArray(iconOffset) && iconOffset.length === 2);
 
     const image = shapedIcon.image;
 

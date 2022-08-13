@@ -195,7 +195,7 @@ class GeolocateControl extends Evented implements IControl {
             case 'ACTIVE_ERROR':
                 break;
             default:
-                // #DISABLE_NODE_ASSERT: assert(false, `Unexpected watchState ${this._watchState}`);
+                naiveAssert(false, `Unexpected watchState ${this._watchState}`);
         }
     }
 
@@ -244,7 +244,7 @@ class GeolocateControl extends Evented implements IControl {
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background', 'mapboxgl-ctrl-geolocate-background');
                     break;
                 default:
-                    // #DISABLE_NODE_ASSERT: assert(false, `Unexpected watchState ${this._watchState}`);
+                    naiveAssert(false, `Unexpected watchState ${this._watchState}`);
             }
         }
 
@@ -306,7 +306,7 @@ class GeolocateControl extends Evented implements IControl {
     }
 
     _updateCircleRadius() {
-        // #DISABLE_NODE_ASSERT: assert(this._circleElement);
+        naiveAssert(this._circleElement);
         const y = this._map._container.clientHeight / 2;
         const a = this._map.unproject([0, y]);
         const b = this._map.unproject([1, y]);
@@ -485,7 +485,7 @@ class GeolocateControl extends Evented implements IControl {
                     this.fire(new Event('trackuserlocationstart'));
                     break;
                 default:
-                    // #DISABLE_NODE_ASSERT: assert(false, `Unexpected watchState ${this._watchState}`);
+                    naiveAssert(false, `Unexpected watchState ${this._watchState}`);
             }
 
             // incoming state setup
@@ -500,7 +500,7 @@ class GeolocateControl extends Evented implements IControl {
                 case 'OFF':
                     break;
                 default:
-                    // #DISABLE_NODE_ASSERT: assert(false, `Unexpected watchState ${this._watchState}`);
+                    naiveAssert(false, `Unexpected watchState ${this._watchState}`);
             }
 
             // manage geolocation.watchPosition / geolocation.clearWatch

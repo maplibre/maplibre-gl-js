@@ -14,7 +14,7 @@ export default class FormatSectionOverride<T> implements Expression {
     defaultValue: PossiblyEvaluatedPropertyValue<T>;
 
     constructor(defaultValue: PossiblyEvaluatedPropertyValue<T>) {
-        // #DISABLE_NODE_ASSERT: assert(defaultValue.property.overrides !== undefined);
+        naiveAssert(defaultValue.property.overrides !== undefined);
         this.type = defaultValue.property.overrides ? defaultValue.property.overrides.runtimeType : NullType;
         this.defaultValue = defaultValue;
     }

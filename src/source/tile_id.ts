@@ -2,10 +2,9 @@ import {getTileBBox} from '@mapbox/whoots-js';
 import EXTENT from '../data/extent';
 import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../geo/mercator_coordinate';
-
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
 import {register} from '../util/web_worker_transfer';
 import {mat4} from 'gl-matrix';
+import {naiveAssert} from '../util/test/util';
 
 export class CanonicalTileID {
     z: number;
@@ -14,9 +13,9 @@ export class CanonicalTileID {
     key: string;
 
     constructor(z: number, x: number, y: number) {
-        // #DISABLE_NODE_ASSERT: assert(z >= 0 && z <= 25);
-        // #DISABLE_NODE_ASSERT: assert(x >= 0 && x < Math.pow(2, z));
-        // #DISABLE_NODE_ASSERT: assert(y >= 0 && y < Math.pow(2, z));
+        naiveAssert(z >= 0 && z <= 25);
+        naiveAssert(x >= 0 && x < Math.pow(2, z));
+        naiveAssert(y >= 0 && y < Math.pow(2, z));
         this.z = z;
         this.x = x;
         this.y = y;
@@ -79,7 +78,7 @@ export class OverscaledTileID {
     posMatrix: mat4;
 
     constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number) {
-        // #DISABLE_NODE_ASSERT: assert(overscaledZ >= z);
+        naiveAssert(overscaledZ >= z);
         this.overscaledZ = overscaledZ;
         this.wrap = wrap;
         this.canonical = new CanonicalTileID(z, +x, +y);
@@ -95,7 +94,7 @@ export class OverscaledTileID {
     }
 
     scaledTo(targetZ: number) {
-        // #DISABLE_NODE_ASSERT: assert(targetZ <= this.overscaledZ);
+        naiveAssert(targetZ <= this.overscaledZ);
         const zDifference = this.canonical.z - targetZ;
         if (targetZ > this.canonical.z) {
             return new OverscaledTileID(targetZ, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y);
@@ -110,7 +109,7 @@ export class OverscaledTileID {
      * when withWrap == false, implements the same as this.scaledTo(z).wrapped().key.
      */
     calculateScaledKey(targetZ: number, withWrap: boolean): string {
-        // #DISABLE_NODE_ASSERT: assert(targetZ <= this.overscaledZ);
+        naiveAssert(targetZ <= this.overscaledZ);
         const zDifference = this.canonical.z - targetZ;
         if (targetZ > this.canonical.z) {
             return calculateKey(this.wrap * +withWrap, targetZ, this.canonical.z, this.canonical.x, this.canonical.y);

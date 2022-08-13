@@ -110,7 +110,7 @@ class SymbolStyleLayer extends StyleLayer {
     }
 
     queryIntersectsFeature(): boolean {
-        // #DISABLE_NODE_ASSERT: assert(false); // Should take a different path in FeatureIndex
+        naiveAssert(false); // Should take a different path in FeatureIndex
         return false;
     }
 

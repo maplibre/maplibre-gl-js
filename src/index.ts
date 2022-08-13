@@ -263,4 +263,4 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
 
 export default exported;
 // canary assert: used to confirm that asserts have been removed from production build
-// #DISABLE_NODE_ASSERT: assert(true, 'canary assert');
+naiveAssert(true, 'canary assert');

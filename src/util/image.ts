@@ -71,7 +71,7 @@ function copyImage(srcImg: any, dstImg: any, srcPt: Point2D, dstPt: Point2D, siz
     const srcData = srcImg.data;
     const dstData = dstImg.data;
 
-    // #DISABLE_NODE_ASSERT: assert(srcData !== dstData);
+    naiveAssert(srcData !== dstData);
 
     for (let y = 0; y < size.height; y++) {
         const srcOffset = ((srcPt.y + y) * srcImg.width + srcPt.x) * channels;

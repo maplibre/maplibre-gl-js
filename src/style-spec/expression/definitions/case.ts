@@ -48,7 +48,7 @@ class Case implements Expression {
         const otherwise = context.parse(args[args.length - 1], args.length - 1, outputType);
         if (!otherwise) return null;
 
-        // #DISABLE_NODE_ASSERT: assert(outputType);
+        naiveAssert(outputType);
         return new Case((outputType as any), branches, otherwise);
     }
 

@@ -292,8 +292,8 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: { supe
         const reduceExpressionParsed = createExpression(
             typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator);
 
-        // #DISABLE_NODE_ASSERT: assert(mapExpressionParsed.result === 'success');
-        // #DISABLE_NODE_ASSERT: assert(reduceExpressionParsed.result === 'success');
+        naiveAssert(mapExpressionParsed.result === 'success');
+        naiveAssert(reduceExpressionParsed.result === 'success');
 
         mapExpressions[key] = mapExpressionParsed.value;
         reduceExpressions[key] = reduceExpressionParsed.value;

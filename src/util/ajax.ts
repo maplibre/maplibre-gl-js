@@ -390,7 +390,7 @@ export const getImage = function(
         if (advanced) return;
         advanced = true;
         numImageRequests--;
-        // #DISABLE_NODE_ASSERT: assert(numImageRequests >= 0);
+        naiveAssert(numImageRequests >= 0);
         while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) { // eslint-disable-line
             const request = imageQueue.shift();
             const {requestParameters, callback, cancelled} = request;

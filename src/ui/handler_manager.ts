@@ -299,7 +299,7 @@ class HandlerManager {
         }
 
         this._updatingCamera = true;
-        // #DISABLE_NODE_ASSERT: assert(e.timeStamp !== undefined);
+        naiveAssert(e.timeStamp !== undefined);
 
         const inputEvent = e.type === 'renderFrame' ? undefined : (e as any as InputEvent);
 

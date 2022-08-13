@@ -282,7 +282,7 @@ class ScrollZoomHandler {
         let finished = false;
         let zoom;
         if (this._type === 'wheel' && startZoom && easing) {
-            // #DISABLE_NODE_ASSERT: assert(easing && typeof startZoom === 'number');
+            naiveAssert(easing && typeof startZoom === 'number');
 
             const t = Math.min((browser.now() - this._lastWheelEventTime) / 200, 1);
             const k = easing(t);

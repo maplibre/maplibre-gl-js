@@ -181,7 +181,7 @@ class CollisionIndex {
             for (let i = 1; i < last.path.length; i++) {
                 projectedPath.push(last.path[i]);
             }
-            // #DISABLE_NODE_ASSERT: assert(projectedPath.length >= 2);
+            naiveAssert(projectedPath.length >= 2);
 
             // Tolerate a slightly longer distance than one diameter between two adjacent circles
             const circleDist = radius * 2.5;
@@ -229,7 +229,7 @@ class CollisionIndex {
 
             for (const seg of segments) {
                 // interpolate positions for collision circles. Add a small padding to both ends of the segment
-                // #DISABLE_NODE_ASSERT: assert(seg.length > 0);
+                naiveAssert(seg.length > 0);
                 interpolator.reset(seg, radius * 0.25);
 
                 let numCircles = 0;

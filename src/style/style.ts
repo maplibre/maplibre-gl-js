@@ -402,7 +402,7 @@ class Style extends Evented {
             }
             for (const id in this._updatedSources) {
                 const action = this._updatedSources[id];
-                // #DISABLE_NODE_ASSERT: assert(action === 'reload' || action === 'clear');
+                naiveAssert(action === 'reload' || action === 'clear');
                 if (action === 'reload') {
                     this._reloadSource(id);
                 } else if (action === 'clear') {
@@ -677,9 +677,9 @@ class Style extends Evented {
     setGeoJSONSourceData(id: string, data: GeoJSON.GeoJSON | string) {
         this._checkLoaded();
 
-        // #DISABLE_NODE_ASSERT: assert(this.sourceCaches[id] !== undefined, 'There is no source with this ID');
+        naiveAssert(this.sourceCaches[id] !== undefined, 'There is no source with this ID');
         const geojsonSource: GeoJSONSource = (this.sourceCaches[id].getSource() as any);
-        // #DISABLE_NODE_ASSERT: assert(geojsonSource.type === 'geojson');
+        naiveAssert(geojsonSource.type === 'geojson');
 
         geojsonSource.setData(data);
         this._changed = true;

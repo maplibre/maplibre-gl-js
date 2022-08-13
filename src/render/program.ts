@@ -84,7 +84,7 @@ class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(fragmentShader, fragmentSource);
         gl.compileShader(fragmentShader);
-        // #DISABLE_NODE_ASSERT: assert(gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS), (gl.getShaderInfoLog(fragmentShader) as any));
+        naiveAssert(gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS), (gl.getShaderInfoLog(fragmentShader) as any));
         gl.attachShader(this.program, fragmentShader);
 
         const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -94,7 +94,7 @@ class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(vertexShader, vertexSource);
         gl.compileShader(vertexShader);
-        // #DISABLE_NODE_ASSERT: assert(gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS), (gl.getShaderInfoLog(vertexShader) as any));
+        naiveAssert(gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS), (gl.getShaderInfoLog(vertexShader) as any));
         gl.attachShader(this.program, vertexShader);
 
         this.attributes = {};
@@ -110,7 +110,7 @@ class Program<Us extends UniformBindings> {
         }
 
         gl.linkProgram(this.program);
-        // #DISABLE_NODE_ASSERT: assert(gl.getProgramParameter(this.program, gl.LINK_STATUS), (gl.getProgramInfoLog(this.program) as any));
+        naiveAssert(gl.getProgramParameter(this.program, gl.LINK_STATUS), (gl.getProgramInfoLog(this.program) as any));
 
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);

@@ -114,7 +114,7 @@ class CompoundExpression implements Expression {
             }
         }
 
-        // #DISABLE_NODE_ASSERT: assert(!signatureContext || signatureContext.errors.length > 0);
+        naiveAssert(!signatureContext || signatureContext.errors.length > 0);
 
         if (overloads.length === 1) {
             context.errors.push(...signatureContext.errors);
@@ -142,7 +142,7 @@ class CompoundExpression implements Expression {
         registry: ExpressionRegistry,
         definitions: {[_: string]: Definition}
     ) {
-        // #DISABLE_NODE_ASSERT: assert(!CompoundExpression.definitions);
+        naiveAssert(!CompoundExpression.definitions);
         CompoundExpression.definitions = definitions;
         for (const name in definitions) {
             registry[name] = CompoundExpression;

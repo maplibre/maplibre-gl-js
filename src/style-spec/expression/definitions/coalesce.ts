@@ -34,7 +34,7 @@ class Coalesce implements Expression {
             outputType = outputType || parsed.type;
             parsedArgs.push(parsed);
         }
-        // #DISABLE_NODE_ASSERT: assert(outputType);
+        naiveAssert(outputType);
 
         // Above, we parse arguments without inferred type annotation so that
         // they don't produce a runtime error for `null` input, which would

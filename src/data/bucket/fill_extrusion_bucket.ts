@@ -264,7 +264,7 @@ class FillExtrusionBucket implements Bucket {
             }
 
             const indices = earcut(flattened, holeIndices);
-            // #DISABLE_NODE_ASSERT: assert(indices.length % 3 === 0);
+            naiveAssert(indices.length % 3 === 0);
 
             for (let j = 0; j < indices.length; j += 3) {
                 // Counter-clockwise winding order.

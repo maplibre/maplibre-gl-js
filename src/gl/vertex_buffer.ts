@@ -62,7 +62,7 @@ class VertexBuffer {
     }
 
     updateData(array: StructArray) {
-        // #DISABLE_NODE_ASSERT: assert(array.length === this.length);
+        naiveAssert(array.length === this.length);
         const gl = this.context.gl;
         this.bind();
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, array.arrayBuffer);

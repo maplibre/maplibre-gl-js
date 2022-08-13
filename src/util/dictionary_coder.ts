@@ -15,12 +15,12 @@ class DictionaryCoder {
     }
 
     encode(string: string) {
-        // #DISABLE_NODE_ASSERT: assert(string in this._stringToNumber);
+        naiveAssert(string in this._stringToNumber);
         return this._stringToNumber[string];
     }
 
     decode(n: number) {
-        // #DISABLE_NODE_ASSERT: assert(n < this._numberToString.length);
+        naiveAssert(n < this._numberToString.length);
         return this._numberToString[n];
     }
 }

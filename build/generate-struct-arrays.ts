@@ -409,7 +409,7 @@ export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
      * @private
      */
     get(index: number): ${structTypeClass} {
-        // #DISABLE_NODE_ASSERT: assert(!this.isTransferred);
+        naiveAssert(!this.isTransferred);
         return new ${structTypeClass}(this, index);
     }`);
     }

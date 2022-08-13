@@ -111,7 +111,7 @@ abstract class StructArray {
      * @private
      */
     static serialize(array: StructArray, transferables?: Array<Transferable>): SerializedStructArray {
-        // #DISABLE_NODE_ASSERT: assert(!array.isTransferred);
+        naiveAssert(!array.isTransferred);
 
         array._trim();
 
@@ -160,7 +160,7 @@ abstract class StructArray {
      * @param {number} n The new size of the array.
      */
     resize(n: number) {
-        // #DISABLE_NODE_ASSERT: assert(!this.isTransferred);
+        naiveAssert(!this.isTransferred);
         this.reserve(n);
         this.length = n;
     }
@@ -209,7 +209,7 @@ function createLayout(
     let offset = 0;
     let maxSize = 0;
     const layoutMembers = members.map((member) => {
-        // #DISABLE_NODE_ASSERT: assert(member.name.length);
+        naiveAssert(member.name.length);
         const typeSize = sizeOf(member.type);
         const memberOffset = offset = align(offset, Math.max(alignment, typeSize));
         const components = member.components || 1;

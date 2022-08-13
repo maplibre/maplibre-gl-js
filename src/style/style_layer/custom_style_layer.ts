@@ -206,7 +206,7 @@ class CustomStyleLayer extends StyleLayer {
     hasTransition() { return false; }
 
     serialize(): LayerSpecification {
-        // #DISABLE_NODE_ASSERT: assert(false, 'Custom layers cannot be serialized');
+        naiveAssert(false, 'Custom layers cannot be serialized');
         return null;
     }
 

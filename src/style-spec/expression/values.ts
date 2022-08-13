@@ -107,7 +107,7 @@ export function typeOf(value: Value): Type {
 
         return array(itemType || ValueType, length);
     } else {
-        // #DISABLE_NODE_ASSERT: assert(typeof value === 'object');
+        naiveAssert(typeof value === 'object');
         return ObjectType;
     }
 }

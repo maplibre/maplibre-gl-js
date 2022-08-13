@@ -137,8 +137,8 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
                     // we sort each feature based on the first matching symbol instance.
                     const sortedA = featureSortOrder.indexOf(a.featureIndex);
                     const sortedB = featureSortOrder.indexOf(b.featureIndex);
-                    // #DISABLE_NODE_ASSERT: assert(sortedA >= 0);
-                    // #DISABLE_NODE_ASSERT: assert(sortedB >= 0);
+                    naiveAssert(sortedA >= 0);
+                    naiveAssert(sortedB >= 0);
                     return sortedB - sortedA;
                 } else {
                     // Bucket hasn't been re-sorted based on angle, so use the
