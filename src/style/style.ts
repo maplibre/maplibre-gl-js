@@ -1,5 +1,4 @@
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
-
+import {naiveAssert} from '../util/test/util';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import StyleLayer from './style_layer';
 import createStyleLayer from './create_style_layer';

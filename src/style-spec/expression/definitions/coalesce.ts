@@ -1,4 +1,4 @@
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../../../util/test/util';
 
 import {checkSubtype, ValueType} from '../types';
 import ResolvedImage from '../types/resolved_image';

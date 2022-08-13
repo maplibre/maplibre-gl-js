@@ -1,6 +1,6 @@
 import {uniqueId, asyncAll} from './util';
 import Actor from './actor';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../util/test/util';
 
 import type WorkerPool from './worker_pool';
 

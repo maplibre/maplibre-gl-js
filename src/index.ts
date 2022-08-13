@@ -1,4 +1,4 @@
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from './util/test/util';
 import {supported} from '@mapbox/mapbox-gl-supported';
 import packageJSON from '../package.json' assert {type: 'json'};
 import Map from './ui/map';

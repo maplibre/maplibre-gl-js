@@ -1,5 +1,5 @@
 import shaders from '../shaders/shaders';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../util/test/util';
 import ProgramConfiguration from '../data/program_configuration';
 import VertexArrayObject from './vertex_array_object';
 import Context from '../gl/context';

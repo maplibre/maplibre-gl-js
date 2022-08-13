@@ -1,6 +1,6 @@
 import StyleLayer from '../style_layer';
 
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../../util/test/util';
 import SymbolBucket, {SymbolFeature} from '../../data/bucket/symbol_bucket';
 import resolveTokens from '../../util/resolve_tokens';
 import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';

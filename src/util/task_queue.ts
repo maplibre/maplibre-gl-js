@@ -1,4 +1,4 @@
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../util/test/util';
 
 export type TaskID = number; // can't mark opaque due to https://github.com/flowtype/flow-remove-types/pull/61
 

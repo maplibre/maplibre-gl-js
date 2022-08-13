@@ -2,7 +2,7 @@ import {toString} from './types';
 
 import ParsingContext from './parsing_context';
 import EvaluationContext from './evaluation_context';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../../util/test/util';
 
 import type {Expression, ExpressionRegistry} from './expression';
 import type {Type} from './types';

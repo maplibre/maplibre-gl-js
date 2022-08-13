@@ -1,7 +1,7 @@
 import {Event, Evented} from '../../util/evented';
 import DOM from '../../util/dom';
 import {extend, bindAll, warnOnce} from '../../util/util';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../../util/test/util';
 import LngLat from '../../geo/lng_lat';
 import Marker from '../marker';
 

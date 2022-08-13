@@ -1,6 +1,6 @@
 import {extend, warnOnce, isWorker} from './util';
 import config from './config';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../util/test/util';
 import {cacheGet, cachePut} from './tile_request_cache';
 import webpSupported from './webp_supported';
 

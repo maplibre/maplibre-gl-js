@@ -1,4 +1,4 @@
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../util/test/util';
 import type {Expression} from '../style-spec/expression/expression';
 import type EvaluationContext from '../style-spec/expression/evaluation_context';
 import type {Type} from '../style-spec/expression/types';

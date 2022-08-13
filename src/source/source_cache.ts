@@ -10,7 +10,7 @@ import Context from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import browser from '../util/browser';
 import {OverscaledTileID} from './tile_id';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../util/test/util';
 import SourceFeatureState from './source_state';
 
 import type {Source} from './source';

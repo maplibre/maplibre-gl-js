@@ -5,7 +5,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {RGBAImage} from '../util/image';
 import {ImagePosition} from './image_atlas';
 import Texture from './texture';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../util/test/util';
 import {renderStyleImage} from '../style/style_image';
 import {warnOnce} from '../util/util';
 

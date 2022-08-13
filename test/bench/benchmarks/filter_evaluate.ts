@@ -4,7 +4,7 @@ import {VectorTile} from '@mapbox/vector-tile';
 import Pbf from 'pbf';
 import createFilter from '../../../src/style-spec/feature_filter';
 import filters from '../data/filters.json';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../../../src/util/test/util';
 
 export default class FilterEvaluate extends Benchmark {
     layers: any[];

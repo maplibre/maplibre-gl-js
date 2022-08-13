@@ -1,6 +1,6 @@
 // Note: all "sizes" are measured in bytes
 
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../util/test/util';
 
 import type {Transferable} from '../types/transferable';
 

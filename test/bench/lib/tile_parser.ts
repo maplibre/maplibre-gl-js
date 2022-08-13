@@ -1,6 +1,6 @@
 import Protobuf from 'pbf';
 import VT from '@mapbox/vector-tile';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../../../src/util/test/util';
 
 import deref from '../../../src/style-spec/deref';
 import Style from '../../../src/style/style';
@@ -97,7 +97,7 @@ export default class TileParser {
                         parser.loadImages(params, callback);
                     } else if (action === 'getGlyphs') {
                         parser.loadGlyphs(params, callback);
-                    } // #DISABLE_NODE_ASSERT: else assert(false);
+                    } else naiveAssert(false);
                 }, 0);
             }
         };

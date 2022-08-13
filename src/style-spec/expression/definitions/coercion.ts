@@ -1,4 +1,4 @@
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../../../util/test/util';
 
 import {BooleanType, ColorType, NumberType, StringType, ValueType} from '../types';
 import {Color, Padding, toString as valueToString, validateRGBA} from '../values';

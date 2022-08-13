@@ -6,7 +6,7 @@ import * as intersectionTests from '../util/intersection_tests';
 import GridIndex from './grid_index';
 import {mat4, vec4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../util/test/util';
 
 import * as projection from '../symbol/projection';
 

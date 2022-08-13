@@ -3,7 +3,7 @@ import {extend} from '../../util/util';
 import Dispatcher from '../../util/dispatcher';
 import gl from 'gl';
 
-export function naiveAssert(test: boolean, message?: string) {
+export function naiveAssert(test: unknown, message?: string) {
     if (!test) throw new Error(message.toString());
 }
 

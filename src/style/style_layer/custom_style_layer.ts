@@ -1,6 +1,6 @@
 import StyleLayer from '../style_layer';
 import type Map from '../../ui/map';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../../util/test/util';
 import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '../../style-spec/types.g';
 

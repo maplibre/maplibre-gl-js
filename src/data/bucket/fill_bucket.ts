@@ -6,7 +6,7 @@ import {ProgramConfigurationSet} from '../program_configuration';
 import {LineIndexArray, TriangleIndexArray} from '../index_array_type';
 import earcut from 'earcut';
 import classifyRings from '../../util/classify_rings';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../../util/test/util';
 const EARCUT_MAX_RINGS = 500;
 import {register} from '../../util/web_worker_transfer';
 import {hasPattern, addPatternDependencies} from './pattern_bucket_features';

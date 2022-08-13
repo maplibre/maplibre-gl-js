@@ -1,6 +1,6 @@
 import {RGBAImage} from './image';
 import {isPowerOfTwo} from './util';
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../util/test/util';
 
 import type {StylePropertyExpression} from '../style-spec/expression/index';
 

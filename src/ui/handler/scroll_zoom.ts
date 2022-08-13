@@ -1,4 +1,4 @@
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../../util/test/util';
 import DOM from '../../util/dom';
 
 import {ease as _ease, bindAll, bezier} from '../../util/util';

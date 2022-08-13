@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-// #DISABLE_NODE_ASSERT: import assert from 'assert';
+import {naiveAssert} from '../util/test/util';
 
 export default class DOM {
     private static readonly docStyle = typeof window !== 'undefined' && window.document && window.document.documentElement.style;
