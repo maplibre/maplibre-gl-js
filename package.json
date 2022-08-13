@@ -167,7 +167,7 @@
     "test-render": "node --loader ts-node/esm --experimental-specifier-resolution=node --max-old-space-size=2048 test/integration/render/render.test.ts",
     "test-query": "jest -c ./jest.config.e2e.ts --roots ./test/integration/query",
     "test-expression": "jest --roots ./test/integration/expression",
-    "test-unit": "jest  -c ./jest.config.ts --roots ./src",
+    "test-unit": "jest --roots ./src  -c ./jest.config.ts ",
     "codegen": "npm run generate-style-code && npm run generate-struct-arrays && npm run generate-style-spec && npm run generate-shaders && npm run generate-debug-index-file",
     "benchmark": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/run-benchmarks.ts",
     "gl-stats": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/gl-stats.ts",
