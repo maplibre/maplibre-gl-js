@@ -117,7 +117,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "request": "^2.88.0",
-    "rollup": "^2.77.2",
+    "rollup": "^2.77.3",
     "rollup-plugin-import-assert": "^2.1.0",
     "rollup-plugin-sourcemaps": "^0.6.3",
     "rollup-plugin-terser": "^7.0.2",
