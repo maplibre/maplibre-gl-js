@@ -9,11 +9,11 @@
 
 - *...Add new stuff here...*
 - 
-## 2.2.2
+## 2.3.0
 
-### 🐞 Bug fixes
+### ✨ Features and improvements
 
-- Fix method to get library version. Either with `import {version} from 'maplibre-gl'`, or on a Map instance as `map.version`.
+- Re-enable method to get library version. Either with `import {version} from 'maplibre-gl'`, or on a Map instance as `map.version`.
 
 ## 2.2.1
 
