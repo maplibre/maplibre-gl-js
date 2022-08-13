@@ -11,14 +11,16 @@ import type {TerrainSpecification} from '../../style-spec/types.g';
  * @implements {IControl}
  * @param {Object} [options]
  * @param {string} [options.id] The ID of the raster-dem source to use.
- * @param {exaggeration: number; elevationOffset: number} [options.options] Allowed options are exaggeration: number; elevationOffset: number
+ * @param {Object} [options.options]
+ * @param {number} [options.options.elevationOffset]
+ * @param {number} [options.options.exaggeration]
  * @example
  * var map = new maplibregl.Map({TerrainControl: false})
  *     .addControl(new maplibregl.TerrainControl({
  *         source: "terrain"
  *     }));
  */
-class TerrainControl implements IControl {
+export default class TerrainControl implements IControl {
     options: TerrainSpecification;
     _map: Map;
     _container: HTMLElement;
@@ -73,5 +75,3 @@ class TerrainControl implements IControl {
         }
     }
 }
-
-export default TerrainControl;

@@ -11,14 +11,16 @@
     "module": "esnext",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "sourceMap": true,
+    "noEmit": true,
     "strict": false,
     "target": "es2017",
     "lib": [
       "ESNext",
       "DOM",
-      "DOM.Iterable"
+      "DOM.Iterable",
+      "WebWorker"
     ],
     "types": ["node", "jest", "geojson", "offscreencanvas"]
   },
@@ -34,6 +36,5 @@
     "lib",
     "dist",
     "test/bench/**/*generated*",
-    "src/**/*.test.ts"
   ]
 }

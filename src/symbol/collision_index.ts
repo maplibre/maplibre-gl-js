@@ -364,7 +364,7 @@ class CollisionIndex {
         }
     }
 
-    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, getElevation: (x: number, y: number) => number) {
+    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, getElevation?: (x: number, y: number) => number) {
         let p;
         if (getElevation) { // slow because of handle z-index
             p = [x, y, getElevation(x, y), 1] as vec4;

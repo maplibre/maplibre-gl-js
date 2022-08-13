@@ -492,7 +492,7 @@ class SourceCache extends Evented {
      * are inside the viewport.
      * @private
      */
-    update(transform: Transform, terrain: Terrain) {
+    update(transform: Transform, terrain?: Terrain) {
         this.transform = transform;
         this.terrain = terrain;
         if (!this._sourceLoaded || this._paused) { return; }

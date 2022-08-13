@@ -236,7 +236,7 @@ describe('vector tile worker source', () => {
 
         const source = new VectorTileWorkerSource(actor, layerIndex, [], loadVectorData);
 
-        window.performance.getEntriesByName = jest.fn().mockReturnValue([ exampleResourceTiming ]);
+        window.performance.getEntriesByName = jest.fn().mockReturnValue([exampleResourceTiming]);
 
         source.loadTile({
             source: 'source',

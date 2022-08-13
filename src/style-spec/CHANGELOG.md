@@ -1,3 +1,9 @@
+## 17.0.0
+
+### Breaking changes
+
+* Renamed `ParsingError` to `ExpressionParsingError` as there were two with the same name and added typescript typings [1468](https://github.com/maplibre/maplibre-gl-js/pull/1468)
+
 ## 16.1.0
 
 ### ✨ Features and improvements
