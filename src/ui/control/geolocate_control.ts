@@ -1,7 +1,6 @@
 import {Event, Evented} from '../../util/evented';
 import DOM from '../../util/dom';
 import {extend, bindAll, warnOnce} from '../../util/util';
-import {naiveAssert} from '../../util/test/naive_assert';
 import LngLat from '../../geo/lng_lat';
 import Marker from '../marker';
 
@@ -195,7 +194,7 @@ class GeolocateControl extends Evented implements IControl {
             case 'ACTIVE_ERROR':
                 break;
             default:
-                naiveAssert(false, `Unexpected watchState ${this._watchState}`);
+                throw new Error(`Unexpected watchState ${this._watchState}`);
         }
     }
 
@@ -244,7 +243,7 @@ class GeolocateControl extends Evented implements IControl {
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background', 'mapboxgl-ctrl-geolocate-background');
                     break;
                 default:
-                    naiveAssert(false, `Unexpected watchState ${this._watchState}`);
+                    throw new Error(`Unexpected watchState ${this._watchState}`);
             }
         }
 
@@ -484,7 +483,7 @@ class GeolocateControl extends Evented implements IControl {
                     this.fire(new Event('trackuserlocationstart'));
                     break;
                 default:
-                    naiveAssert(false, `Unexpected watchState ${this._watchState}`);
+                    throw new Error(`Unexpected watchState ${this._watchState}`);
             }
 
             // incoming state setup
@@ -499,7 +498,7 @@ class GeolocateControl extends Evented implements IControl {
                 case 'OFF':
                     break;
                 default:
-                    naiveAssert(false, `Unexpected watchState ${this._watchState}`);
+                    throw new Error(`Unexpected watchState ${this._watchState}`);
             }
 
             // manage geolocation.watchPosition / geolocation.clearWatch

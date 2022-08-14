@@ -94,8 +94,7 @@ class Assertion implements Expression {
             }
         }
 
-        naiveAssert(false);
-        return null;
+        throw new Error();
     }
 
     eachChild(fn: (_: Expression) => void) {

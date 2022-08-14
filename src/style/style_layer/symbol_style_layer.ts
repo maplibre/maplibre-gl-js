@@ -1,6 +1,5 @@
 import StyleLayer from '../style_layer';
 
-import {naiveAssert} from '../../util/test/naive_assert';
 import SymbolBucket, {SymbolFeature} from '../../data/bucket/symbol_bucket';
 import resolveTokens from '../../util/resolve_tokens';
 import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
@@ -110,8 +109,7 @@ class SymbolStyleLayer extends StyleLayer {
     }
 
     queryIntersectsFeature(): boolean {
-        naiveAssert(false); // Should take a different path in FeatureIndex
-        return false;
+        throw new Error('Should take a different path in FeatureIndex');
     }
 
     _setPaintOverrides() {

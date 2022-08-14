@@ -1,6 +1,5 @@
 import StyleLayer from '../style_layer';
 import type Map from '../../ui/map';
-import {naiveAssert} from '../../util/test/naive_assert';
 import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '../../style-spec/types.g';
 
@@ -206,8 +205,7 @@ class CustomStyleLayer extends StyleLayer {
     hasTransition() { return false; }
 
     serialize(): LayerSpecification {
-        naiveAssert(false, 'Custom layers cannot be serialized');
-        return null;
+        throw new Error('Custom layers cannot be serialized');
     }
 
     onAdd = (map: Map) => {
