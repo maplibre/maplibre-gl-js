@@ -94,7 +94,7 @@ export class OverscaledTileID {
     }
 
     scaledTo(targetZ: number) {
-        naiveAssert(targetZ <= this.overscaledZ);
+        if (targetZ > this.overscaledZ) throw new Error();
         const zDifference = this.canonical.z - targetZ;
         if (targetZ > this.canonical.z) {
             return new OverscaledTileID(targetZ, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y);
@@ -109,7 +109,7 @@ export class OverscaledTileID {
      * when withWrap == false, implements the same as this.scaledTo(z).wrapped().key.
      */
     calculateScaledKey(targetZ: number, withWrap: boolean): string {
-        naiveAssert(targetZ <= this.overscaledZ);
+        if (targetZ > this.overscaledZ) throw new Error();
         const zDifference = this.canonical.z - targetZ;
         if (targetZ > this.canonical.z) {
             return calculateKey(this.wrap * +withWrap, targetZ, this.canonical.z, this.canonical.x, this.canonical.y);

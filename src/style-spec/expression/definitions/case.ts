@@ -1,4 +1,3 @@
-import {naiveAssert} from '../../../util/test/naive_assert';
 
 import {BooleanType} from '../types';
 
@@ -48,7 +47,7 @@ class Case implements Expression {
         const otherwise = context.parse(args[args.length - 1], args.length - 1, outputType);
         if (!otherwise) return null;
 
-        naiveAssert(outputType);
+        if (!outputType) throw new Error();
         return new Case((outputType as any), branches, otherwise);
     }
 

@@ -88,7 +88,7 @@ class ImageManager extends Evented {
     }
 
     addImage(id: string, image: StyleImage) {
-        naiveAssert(!this.images[id]);
+        if (this.images[id]) throw new Error();
         if (this._validate(id, image)) {
             this.images[id] = image;
         }

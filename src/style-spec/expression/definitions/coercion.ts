@@ -1,5 +1,3 @@
-import {naiveAssert} from '../../../util/test/naive_assert';
-
 import {BooleanType, ColorType, NumberType, StringType, ValueType} from '../types';
 import {Color, Padding, toString as valueToString, validateRGBA} from '../values';
 import RuntimeError from '../runtime_error';
@@ -32,6 +30,7 @@ class Coercion implements Expression {
     constructor(type: Type, args: Array<Expression>) {
         this.type = type;
         this.args = args;
+
     }
 
     static parse(args: ReadonlyArray<unknown>, context: ParsingContext): Expression {
@@ -39,8 +38,7 @@ class Coercion implements Expression {
             return context.error('Expected at least one argument.') as null;
 
         const name: string = (args[0] as any);
-        naiveAssert(types[name], name);
-
+        if (!types[name]) throw new Error(name);
         if ((name === 'to-boolean' || name === 'to-string') && args.length !== 2)
             return context.error('Expected one argument.') as null;
 

@@ -1,6 +1,5 @@
 import murmur3 from 'murmurhash-js';
 import {register} from '../util/web_worker_transfer';
-import {naiveAssert} from '../util/test/naive_assert';
 
 type SerializedFeaturePositionMap = {
     ids: Float64Array;
@@ -31,7 +30,7 @@ export default class FeaturePositionMap {
     }
 
     getPositions(id: unknown): Array<FeaturePosition> {
-        naiveAssert(this.indexed);
+        if (!this.indexed) throw new Error();
 
         const intId = getNumericId(id);
 

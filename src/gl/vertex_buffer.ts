@@ -1,4 +1,3 @@
-import {naiveAssert} from '../util/test/naive_assert';
 
 import type {
     StructArray,
@@ -62,7 +61,7 @@ class VertexBuffer {
     }
 
     updateData(array: StructArray) {
-        naiveAssert(array.length === this.length);
+        if (array.length !== this.length) throw new Error();
         const gl = this.context.gl;
         this.bind();
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, array.arrayBuffer);
