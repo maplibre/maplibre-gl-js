@@ -104,7 +104,7 @@ class WorkerTile {
             for (const family of layerFamilies[sourceLayerId]) {
                 const layer = family[0];
 
-                if (!(layer.source === this.source)) {
+                if (layer.source !== this.source) {
                     warnOnce(`layer.source = ${layer.source} does not equal this.source = ${this.source}`);
                 }
                 if (layer.minzoom && this.zoom < Math.floor(layer.minzoom)) continue;
