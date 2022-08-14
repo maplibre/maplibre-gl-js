@@ -6,7 +6,6 @@ import * as projection from './projection';
 import {getAnchorJustification, evaluateVariableOffset} from './symbol_layout';
 import {getAnchorAlignment, WritingMode} from './shaping';
 import {mat4} from 'gl-matrix';
-import {naiveAssert} from '../util/test/naive_assert';
 import pixelsToTileUnits from '../source/pixels_to_tile_units';
 import Point from '@mapbox/point-geometry';
 import type Transform from '../geo/transform';
@@ -391,7 +390,7 @@ export class Placement {
                 this.prevPlacement.placements[symbolInstance.crossTileID].text) {
                 prevAnchor = this.prevPlacement.variableOffsets[symbolInstance.crossTileID].anchor;
             }
-            naiveAssert(symbolInstance.crossTileID !== 0);
+            if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
             this.variableOffsets[symbolInstance.crossTileID] = {
                 textOffset,
                 width,
@@ -676,7 +675,10 @@ export class Placement {
                     getElevation
                 );
 
-                naiveAssert(!placedGlyphCircles.circles.length || (!placedGlyphCircles.collisionDetected || showCollisionBoxes));
+                if (placedGlyphCircles.circles.length && placedGlyphCircles.collisionDetected && !showCollisionBoxes) {
+                    throw new Error('Collisions detected, but collision boxes are not shown');
+                }
+
                 // If text-overlap is set to 'always', force "placedCircles" to true
                 // In theory there should always be at least one circle placed
                 // in this case, but for now quirks in text-anchor
@@ -781,15 +783,15 @@ export class Placement {
                 }
             }
 
-            naiveAssert(symbolInstance.crossTileID !== 0);
-            naiveAssert(bucket.bucketInstanceId !== 0);
+            if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
+            if (bucket.bucketInstanceId === 0) throw new Error('bucket.bucketInstanceId can\'t be 0');
 
             this.placements[symbolInstance.crossTileID] = new JointPlacement(placeText || alwaysShowText, placeIcon || alwaysShowIcon, offscreen || bucket.justReloaded);
             seenCrossTileIDs[symbolInstance.crossTileID] = true;
         };
 
         if (zOrderByViewportY) {
-            naiveAssert(bucketPart.symbolInstanceStart === 0);
+            if (bucketPart.symbolInstanceStart !== 0) throw new Error('bucket.bucketInstanceId should be 0');
             const symbolIndexes = bucket.getSortedSymbolIndexes(this.transform.angle);
             for (let i = symbolIndexes.length - 1; i >= 0; --i) {
                 const symbolIndex = symbolIndexes[i];

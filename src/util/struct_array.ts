@@ -1,7 +1,5 @@
 // Note: all "sizes" are measured in bytes
 
-import {naiveAssert} from '../util/test/naive_assert';
-
 import type {Transferable} from '../types/transferable';
 
 const viewTypes = {
@@ -111,7 +109,7 @@ abstract class StructArray {
      * @private
      */
     static serialize(array: StructArray, transferables?: Array<Transferable>): SerializedStructArray {
-        naiveAssert(!array.isTransferred);
+        if (array.isTransferred) throw new Error('Array is already transferred');
 
         array._trim();
 

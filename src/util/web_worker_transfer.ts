@@ -1,5 +1,3 @@
-import {naiveAssert} from '../util/test/naive_assert';
-
 import TransferableGridIndex from './transferable_grid_index';
 import Color from '../style-spec/util/color';
 import {StylePropertyFunction, StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '../style-spec/expression';
@@ -185,8 +183,9 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
                 properties.message = input.message;
             }
         } else {
-            // make sure statically serialized object survives transfer of $name property
-            naiveAssert(!transferables || properties as any !== transferables[transferables.length - 1]);
+            if (transferables && properties as any === transferables[transferables.length - 1]) {
+                throw new Error('statically serialized object won\'t survive transfer of $name property');
+            }
         }
 
         if (properties.$name) {

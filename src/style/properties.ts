@@ -1,4 +1,3 @@
-import {naiveAssert} from '../util/test/naive_assert';
 import {clone, extend, easeCubicInOut} from '../util/util';
 import * as interpolate from '../style-spec/util/interpolate';
 import Color from '../style-spec/util/color';
@@ -488,7 +487,7 @@ export class DataConstantProperty<T> implements Property<T, T> {
     }
 
     possiblyEvaluate(value: PropertyValue<T, T>, parameters: EvaluationParameters): T {
-        naiveAssert(!value.isDataDriven());
+        if (value.isDataDriven()) throw new Error('Value is not data driven');
         return value.expression.evaluate(parameters);
     }
 
