@@ -69,7 +69,7 @@ class Assertion implements Expression {
 
             type = array(itemType, N);
         } else {
-            naiveAssert(types[name], name);
+            if (!types[name]) throw new Error(`Types doesn't contain name = ${name}`);
             type = types[name];
         }
 

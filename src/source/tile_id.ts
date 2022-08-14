@@ -4,7 +4,6 @@ import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../geo/mercator_coordinate';
 import {register} from '../util/web_worker_transfer';
 import {mat4} from 'gl-matrix';
-import {naiveAssert} from '../util/test/naive_assert';
 
 export class CanonicalTileID {
     z: number;
@@ -13,9 +12,11 @@ export class CanonicalTileID {
     key: string;
 
     constructor(z: number, x: number, y: number) {
-        naiveAssert(z >= 0 && z <= 25);
-        naiveAssert(x >= 0 && x < Math.pow(2, z));
-        naiveAssert(y >= 0 && y < Math.pow(2, z));
+
+        if (z < 0 || z > 25 || y < 0 || y >= Math.pow(2, z) || x < 0 || x >= Math.pow(2, z)) {
+            throw new Error(`x=${x}, y=${y}, z=${z} outside of bounds. 0<=x<${Math.pow(2, z)}, 0<=y<${Math.pow(2, z)} 0<=z<=25 `);
+        }
+
         this.z = z;
         this.x = x;
         this.y = y;
@@ -78,7 +79,7 @@ export class OverscaledTileID {
     posMatrix: mat4;
 
     constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number) {
-        naiveAssert(overscaledZ >= z);
+        if (overscaledZ < z) throw new Error(`overscaledZ should be >= z; overscaledZ = ${overscaledZ}; z = ${z}`);
         this.overscaledZ = overscaledZ;
         this.wrap = wrap;
         this.canonical = new CanonicalTileID(z, +x, +y);

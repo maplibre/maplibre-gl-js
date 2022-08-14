@@ -119,14 +119,14 @@ export const plugin: {
         pluginURL = state.pluginURL;
     },
     isParsed(): boolean {
-        naiveAssert(isWorker(), 'rtl-text-plugin is only parsed on the worker-threads');
+        if (!isWorker()) throw new Error('rtl-text-plugin is only parsed on the worker-threads');
 
         return plugin.applyArabicShaping != null &&
             plugin.processBidirectionalText != null &&
             plugin.processStyledBidirectionalText != null;
     },
     getPluginURL(): string {
-        naiveAssert(isWorker(), 'rtl-text-plugin url can only be queried from the worker threads');
+        if (!isWorker()) throw new Error('rtl-text-plugin url can only be queried from the worker threads');
         return pluginURL;
     }
 };
