@@ -109,7 +109,6 @@ abstract class StructArray {
      * @private
      */
     static serialize(array: StructArray, transferables?: Array<Transferable>): SerializedStructArray {
-        if (array.isTransferred) throw new Error('Array is already transferred');
 
         array._trim();
 
