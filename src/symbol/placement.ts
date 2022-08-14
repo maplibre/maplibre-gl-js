@@ -920,7 +920,7 @@ export class Placement {
         // this.lastPlacementChangeTime is the time of the last commit() that
         // resulted in a placement change -- in other words, the start time of
         // the last symbol fade animation
-        if (!(!prevPlacement || prevPlacement.lastPlacementChangeTime !== undefined)) throw new Error();
+        if (prevPlacement && prevPlacement.lastPlacementChangeTime === undefined) throw new Error('Last placement time for previous placement is not defined');
         if (placementChanged) {
             this.lastPlacementChangeTime = now;
         } else if (typeof this.lastPlacementChangeTime !== 'number') {
