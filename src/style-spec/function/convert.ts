@@ -1,4 +1,4 @@
-import {naiveAssert} from '../../util/test/naive_assert';
+
 import type {StylePropertySpecification} from '../style-spec';
 
 export default convertFunction;
