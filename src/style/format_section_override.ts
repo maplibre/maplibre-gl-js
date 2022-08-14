@@ -1,4 +1,3 @@
-import {naiveAssert} from '../util/test/naive_assert';
 import type {Expression} from '../style-spec/expression/expression';
 import type EvaluationContext from '../style-spec/expression/evaluation_context';
 import type {Type} from '../style-spec/expression/types';
@@ -14,7 +13,7 @@ export default class FormatSectionOverride<T> implements Expression {
     defaultValue: PossiblyEvaluatedPropertyValue<T>;
 
     constructor(defaultValue: PossiblyEvaluatedPropertyValue<T>) {
-        naiveAssert(defaultValue.property.overrides !== undefined);
+        if (defaultValue.property.overrides === undefined) throw new Error();
         this.type = defaultValue.property.overrides ? defaultValue.property.overrides.runtimeType : NullType;
         this.defaultValue = defaultValue;
     }

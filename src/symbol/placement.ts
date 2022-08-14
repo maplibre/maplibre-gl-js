@@ -920,7 +920,7 @@ export class Placement {
         // this.lastPlacementChangeTime is the time of the last commit() that
         // resulted in a placement change -- in other words, the start time of
         // the last symbol fade animation
-        naiveAssert(!prevPlacement || prevPlacement.lastPlacementChangeTime !== undefined);
+        if (!(!prevPlacement || prevPlacement.lastPlacementChangeTime !== undefined)) throw new Error();
         if (placementChanged) {
             this.lastPlacementChangeTime = now;
         } else if (typeof this.lastPlacementChangeTime !== 'number') {
@@ -1133,8 +1133,8 @@ export class Placement {
             bucket.textCollisionBox.collisionVertexBuffer.updateData(bucket.textCollisionBox.collisionVertexArray);
         }
 
-        naiveAssert(bucket.text.opacityVertexArray.length === bucket.text.layoutVertexArray.length / 4);
-        naiveAssert(bucket.icon.opacityVertexArray.length === bucket.icon.layoutVertexArray.length / 4);
+        if (bucket.text.opacityVertexArray.length !== bucket.text.layoutVertexArray.length / 4) throw new Error();
+        if (bucket.icon.opacityVertexArray.length !== bucket.icon.layoutVertexArray.length / 4) throw new Error();
 
         // Push generated collision circles to the bucket for debug rendering
         if (bucket.bucketInstanceId in this.collisionCircleArrays) {
