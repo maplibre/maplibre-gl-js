@@ -6,7 +6,6 @@ import type {RetainedQueryData} from '../symbol/placement';
 import type {FilterSpecification} from '../style-spec/types.g';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type Point from '@mapbox/point-geometry';
-import {naiveAssert} from '../util/test/naive_assert';
 import {mat4} from 'gl-matrix';
 
 /*
@@ -137,8 +136,6 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
                     // we sort each feature based on the first matching symbol instance.
                     const sortedA = featureSortOrder.indexOf(a.featureIndex);
                     const sortedB = featureSortOrder.indexOf(b.featureIndex);
-                    naiveAssert(sortedA >= 0);
-                    naiveAssert(sortedB >= 0);
                     return sortedB - sortedA;
                 } else {
                     // Bucket hasn't been re-sorted based on angle, so use the

@@ -144,7 +144,6 @@ class ImageManager extends Evented {
     }
 
     removeImage(id: string) {
-        naiveAssert(this.images[id]);
         const image = this.images[id];
         delete this.images[id];
         delete this.patterns[id];
@@ -295,7 +294,7 @@ class ImageManager extends Evented {
             this.callbackDispatchedThisFrame[id] = true;
 
             const image = this.images[id];
-            naiveAssert(image);
+            console.warn(`Image with ID: "${id}" was not found`);
 
             const updated = renderStyleImage(image);
             if (updated) {

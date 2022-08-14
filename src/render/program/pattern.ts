@@ -1,4 +1,3 @@
-import {naiveAssert} from '../../util/test/naive_assert';
 import {
     Uniform1i,
     Uniform1f,
@@ -74,7 +73,6 @@ function bgPatternUniformValues(
 ): UniformValues<BackgroundPatternUniformsType> {
     const imagePosA = painter.imageManager.getPattern(image.from.toString());
     const imagePosB = painter.imageManager.getPattern(image.to.toString());
-    naiveAssert(imagePosA && imagePosB);
     const {width, height} = painter.imageManager.getPixelSize();
 
     const numTiles = Math.pow(2, tile.tileID.overscaledZ);
