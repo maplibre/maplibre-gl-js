@@ -676,9 +676,9 @@ class Style extends Evented {
     setGeoJSONSourceData(id: string, data: GeoJSON.GeoJSON | string) {
         this._checkLoaded();
 
-        if (this.sourceCaches[id] === undefined) throw new Error(`There is no source with ID=${id}`);
+        if (this.sourceCaches[id] === undefined) throw new Error('There is no source with this ID');
         const geojsonSource: GeoJSONSource = (this.sourceCaches[id].getSource() as any);
-        if (geojsonSource.type !== 'geojson') throw new Error(`Invalid geojson source with type: ${geojsonSource.type}`);
+        if (geojsonSource.type !== 'geojson') throw new Error();
 
         geojsonSource.setData(data);
         this._changed = true;
