@@ -401,11 +401,13 @@ class Style extends Evented {
             }
             for (const id in this._updatedSources) {
                 const action = this._updatedSources[id];
-                naiveAssert(action === 'reload' || action === 'clear');
+
                 if (action === 'reload') {
                     this._reloadSource(id);
                 } else if (action === 'clear') {
                     this._clearSource(id);
+                } else {
+                    throw new Error(`Invalid action ${action}`);
                 }
             }
 

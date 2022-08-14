@@ -13,7 +13,7 @@ export default class FormatSectionOverride<T> implements Expression {
     defaultValue: PossiblyEvaluatedPropertyValue<T>;
 
     constructor(defaultValue: PossiblyEvaluatedPropertyValue<T>) {
-        if (defaultValue.property.overrides === undefined) throw new Error();
+        if (defaultValue.property.overrides === undefined) throw new Error('overrides must be provided to instantiate FormatSectionOverride class');
         this.type = defaultValue.property.overrides ? defaultValue.property.overrides.runtimeType : NullType;
         this.defaultValue = defaultValue;
     }
