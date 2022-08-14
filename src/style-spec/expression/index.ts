@@ -1,4 +1,3 @@
-import assert from 'assert';
 
 import extend from '../util/extend';
 import ExpressionParsingError from './parsing_error';
@@ -143,7 +142,6 @@ export function createExpression(expression: unknown, propertySpec?: StyleProper
         propertySpec && propertySpec.type === 'string' ? {typeAnnotation: 'coerce'} : undefined);
 
     if (!parsed) {
-        assert(parser.errors.length > 0);
         return error(parser.errors);
     }
 

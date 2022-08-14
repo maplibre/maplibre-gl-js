@@ -28,6 +28,7 @@
     "earcut": "^2.2.4",
     "geojson-vt": "^3.2.1",
     "gl-matrix": "^3.4.3",
+    "global-prefix": "^3.0.0",
     "murmurhash-js": "^1.0.0",
     "pbf": "^3.2.1",
     "potpack": "^1.0.2",
@@ -47,7 +48,6 @@
     "@rollup/plugin-strip": "^2.1.0",
     "@rollup/plugin-typescript": "^8.3.4",
     "@types/benchmark": "^2.1.1",
-    "@types/browserify": "^12.0.37",
     "@types/cssnano": "^5.0.0",
     "@types/d3": "^7.4.0",
     "@types/diff": "^5.0.2",
@@ -75,7 +75,6 @@
     "acorn-import-assertions": "^1.8.0",
     "address": "^1.2.0",
     "benchmark": "^2.1.4",
-    "browserify": "^17.0.0",
     "canvas": "^2.9.3",
     "cssnano": "^5.1.13",
     "d3": "^7.6.1",
@@ -130,8 +129,7 @@
     "stylelint-config-standard": "^27.0.0",
     "ts-jest": "^28.0.7",
     "ts-node": "^10.9.1",
-    "typescript": "^4.7.4",
-    "unassert-rollup-plugin": "^2.0.0"
+    "typescript": "^4.7.4"
   },
   "scripts": {
     "generate-shaders": "node --loader ts-node/esm --experimental-specifier-resolution=node build/generate-shaders.ts",

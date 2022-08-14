@@ -1,5 +1,3 @@
-import assert from 'assert';
-
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import StyleLayer from './style_layer';
 import createStyleLayer from './create_style_layer';
@@ -402,11 +400,13 @@ class Style extends Evented {
             }
             for (const id in this._updatedSources) {
                 const action = this._updatedSources[id];
-                assert(action === 'reload' || action === 'clear');
+
                 if (action === 'reload') {
                     this._reloadSource(id);
                 } else if (action === 'clear') {
                     this._clearSource(id);
+                } else {
+                    throw new Error(`Invalid action ${action}`);
                 }
             }
 
@@ -677,9 +677,9 @@ class Style extends Evented {
     setGeoJSONSourceData(id: string, data: GeoJSON.GeoJSON | string) {
         this._checkLoaded();
 
-        assert(this.sourceCaches[id] !== undefined, 'There is no source with this ID');
+        if (this.sourceCaches[id] === undefined) throw new Error(`There is no source with this ID=${id}`);
         const geojsonSource: GeoJSONSource = (this.sourceCaches[id].getSource() as any);
-        assert(geojsonSource.type === 'geojson');
+        if (geojsonSource.type !== 'geojson') throw new Error(`geojsonSource.type is ${geojsonSource.type}, which is !== 'geojson`);
 
         geojsonSource.setData(data);
         this._changed = true;

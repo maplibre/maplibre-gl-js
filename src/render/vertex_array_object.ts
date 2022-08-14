@@ -1,4 +1,3 @@
-import assert from 'assert';
 
 import type Program from './program';
 import type VertexBuffer from '../gl/vertex_buffer';
@@ -119,9 +118,8 @@ class VertexArrayObject {
             // Disable all attributes from the previous program that aren't used in
             // the new program. Note: attribute indices are *not* program specific!
             for (let i = numNextAttributes; i < numPrevAttributes; i++) {
-                // WebGL breaks if you disable attribute 0.
+                // WebGL breaks if you disable attribute 0, so if i == 0.
                 // http://stackoverflow.com/questions/20305231
-                assert(i !== 0);
                 gl.disableVertexAttribArray(i);
             }
         }

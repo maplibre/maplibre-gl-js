@@ -4,6 +4,7 @@
 ### ✨ Features and improvements
 
 - *...Add new stuff here...*
+- Improved error handling ([#1485](https://github.com/maplibre/maplibre-gl-js/pull/1485))
 - 
 ### 🐞 Bug fixes
 

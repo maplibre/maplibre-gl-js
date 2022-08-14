@@ -6,7 +6,6 @@ import * as intersectionTests from '../util/intersection_tests';
 import GridIndex from './grid_index';
 import {mat4, vec4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
-import assert from 'assert';
 
 import * as projection from '../symbol/projection';
 
@@ -181,7 +180,6 @@ class CollisionIndex {
             for (let i = 1; i < last.path.length; i++) {
                 projectedPath.push(last.path[i]);
             }
-            assert(projectedPath.length >= 2);
 
             // Tolerate a slightly longer distance than one diameter between two adjacent circles
             const circleDist = radius * 2.5;
@@ -229,7 +227,6 @@ class CollisionIndex {
 
             for (const seg of segments) {
                 // interpolate positions for collision circles. Add a small padding to both ends of the segment
-                assert(seg.length > 0);
                 interpolator.reset(seg, radius * 0.25);
 
                 let numCircles = 0;
