@@ -51,7 +51,7 @@ export function register<T extends any>(
     },
     options: RegisterOptions<T> = {}
 ) {
-    naiveAssert(!registry[name], `${name} is already registered.`);
+    if (registry[name]) throw new Error(`${name} is already registered.`);
     ((Object.defineProperty as any))(klass, '_classRegistryKey', {
         value: name,
         writeable: false
@@ -159,7 +159,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         if (!name) {
             throw new Error('can\'t serialize object of unregistered class');
         }
-        naiveAssert(registry[name]);
+        if (!registry[name]) throw new Error(`${name} is not registered.`);
 
         const properties: SerializedObject = klass.serialize ?
             // (Temporary workaround) allow a class to provide static

@@ -1,4 +1,3 @@
-import {naiveAssert} from '../util/test/naive_assert';
 
 class DictionaryCoder {
     _stringToNumber: {[_: string]: number};
@@ -19,7 +18,7 @@ class DictionaryCoder {
     }
 
     decode(n: number) {
-        naiveAssert(n < this._numberToString.length);
+        if (n >= this._numberToString.length) throw new Error();
         return this._numberToString[n];
     }
 }

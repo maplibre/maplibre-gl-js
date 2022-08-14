@@ -1,6 +1,5 @@
 import {uniqueId, asyncAll} from './util';
 import Actor from './actor';
-import {naiveAssert} from '../util/test/naive_assert';
 
 import type WorkerPool from './worker_pool';
 
@@ -33,7 +32,7 @@ class Dispatcher {
             actor.name = `Worker ${i}`;
             this.actors.push(actor);
         }
-        naiveAssert(this.actors.length);
+        if (!this.actors.length) throw new Error();
     }
 
     /**

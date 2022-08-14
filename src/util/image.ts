@@ -1,5 +1,3 @@
-import {naiveAssert} from '../util/test/naive_assert';
-
 import {register} from './web_worker_transfer';
 
 export type Size = {
@@ -71,7 +69,7 @@ function copyImage(srcImg: any, dstImg: any, srcPt: Point2D, dstPt: Point2D, siz
     const srcData = srcImg.data;
     const dstData = dstImg.data;
 
-    naiveAssert(srcData !== dstData);
+    if (srcData === dstData) throw new Error();
 
     for (let y = 0; y < size.height; y++) {
         const srcOffset = ((srcPt.y + y) * srcImg.width + srcPt.x) * channels;
