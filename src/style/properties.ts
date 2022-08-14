@@ -487,7 +487,7 @@ export class DataConstantProperty<T> implements Property<T, T> {
     }
 
     possiblyEvaluate(value: PropertyValue<T, T>, parameters: EvaluationParameters): T {
-        if (value.isDataDriven()) throw new Error('Value is not data driven');
+        if (value.isDataDriven()) throw new Error('Value should not be data driven');
         return value.expression.evaluate(parameters);
     }
 
