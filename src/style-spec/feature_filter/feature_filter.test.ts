@@ -36,6 +36,13 @@ describe('filter', () => {
         compileTimeCheck(['match', ['get', 'TYPE'], ['TARGETPOINT:HOSPITAL'], true, false]);
         compileTimeCheck(['match', ['get', 'TYPE'], ['ADIZ', 'AMA', 'AWY', 'CLASS', 'NO-FIR', 'OCA', 'OTA', 'P', 'RAS', 'RCA', 'UTA', 'UTA-P'], true, false]);
         compileTimeCheck(['==', ['get', 'MILITARYAIRPORT'], 1]);
+        const colorStops = [0, 'red', 0.5, 'green', 1, 'blue'];
+        compileTimeCheck([
+            'interpolate',
+            ['linear'],
+            ['line-progress'],
+            ...colorStops
+        ]);
     });
 
     test('expression, zoom', () => {

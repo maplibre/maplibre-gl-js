@@ -141,7 +141,7 @@ export type InterpolationSpecification =
     | ['linear'] 
     | ['exponential', number | ExpressionSpecification] 
     | ['cubic-bezier', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification]
-    
+
 export type ExpressionSpecification = 
     // types
     | ['array', unknown | ExpressionSpecification] // array
@@ -196,8 +196,7 @@ export type ExpressionSpecification =
     | ['within', unknown | ExpressionSpecification]
     // Ramps, scales, curves
     | ['interpolate', InterpolationSpecification, 
-        number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
-        ...(number | ExpressionInputType | ExpressionSpecification)[]]
+        number | ExpressionSpecification, ...(number | ExpressionInputType | ExpressionSpecification)[]]
     | ['interpolate-hcl', InterpolationSpecification,
         number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
         ...(number | ColorSpecification | ExpressionSpecification)[]]
