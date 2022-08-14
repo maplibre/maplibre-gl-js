@@ -1,7 +1,5 @@
 import Point from '@mapbox/point-geometry';
 
-import {naiveAssert} from '../util/test/naive_assert';
-
 export default class DOM {
     private static readonly docStyle = typeof window !== 'undefined' && window.document && window.document.documentElement.style;
 
@@ -107,7 +105,6 @@ export default class DOM {
     }
 
     public static mouseButton(e: MouseEvent) {
-        naiveAssert(e.type === 'mousedown' || e.type === 'mouseup');
         return e.button;
     }
 

@@ -41,7 +41,6 @@ class Dispatcher {
      * @private
      */
     broadcast(type: string, data: unknown, cb?: (...args: any[]) => any) {
-        naiveAssert(this.actors.length);
         cb = cb || function () {};
         asyncAll(this.actors, (actor, done) => {
             actor.send(type, data, done);
@@ -53,7 +52,6 @@ class Dispatcher {
      * @returns An actor object backed by a web worker for processing messages.
      */
     getActor(): Actor {
-        naiveAssert(this.actors.length);
         this.currentActor = (this.currentActor + 1) % this.actors.length;
         return this.actors[this.currentActor];
     }

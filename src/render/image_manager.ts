@@ -294,7 +294,7 @@ class ImageManager extends Evented {
             this.callbackDispatchedThisFrame[id] = true;
 
             const image = this.images[id];
-            if (!image) console.warn(`Image with ID: "${id}" was not found`);
+            if (!image) warnOnce(`Image with ID: "${id}" was not found`);
 
             const updated = renderStyleImage(image);
             if (updated) {

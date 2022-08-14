@@ -15,7 +15,6 @@ class DictionaryCoder {
     }
 
     encode(string: string) {
-        naiveAssert(string in this._stringToNumber);
         return this._stringToNumber[string];
     }
 

@@ -160,7 +160,6 @@ abstract class StructArray {
      * @param {number} n The new size of the array.
      */
     resize(n: number) {
-        naiveAssert(!this.isTransferred);
         this.reserve(n);
         this.length = n;
     }
@@ -209,7 +208,6 @@ function createLayout(
     let offset = 0;
     let maxSize = 0;
     const layoutMembers = members.map((member) => {
-        naiveAssert(member.name.length);
         const typeSize = sizeOf(member.type);
         const memberOffset = offset = align(offset, Math.max(alignment, typeSize));
         const components = member.components || 1;

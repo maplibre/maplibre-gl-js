@@ -1,4 +1,3 @@
-import {naiveAssert} from '../../util/test/naive_assert';
 import DOM from '../../util/dom';
 
 import {ease as _ease, bindAll, bezier} from '../../util/util';
@@ -282,7 +281,6 @@ class ScrollZoomHandler {
         let finished = false;
         let zoom;
         if (this._type === 'wheel' && startZoom && easing) {
-            naiveAssert(easing && typeof startZoom === 'number');
 
             const t = Math.min((browser.now() - this._lastWheelEventTime) / 200, 1);
             const k = easing(t);
