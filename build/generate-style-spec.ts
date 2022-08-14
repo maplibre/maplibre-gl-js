@@ -142,6 +142,9 @@ export type InterpolationSpecification =
     | ['exponential', number | ExpressionSpecification] 
     | ['cubic-bezier', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification]
     
+export type InterpolationStopsSpecification = [number, number | number[] | ColorSpecification, number, number | number[] | ColorSpecification]
+    | [number, number | number[] | ColorSpecification, number, number | number[] | ColorSpecification, ...(number | number[] | ColorSpecification)[]];
+
 export type ExpressionSpecification = 
     // types
     | ['array', unknown | ExpressionSpecification] // array
@@ -198,6 +201,8 @@ export type ExpressionSpecification =
     | ['interpolate', InterpolationSpecification, 
         number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
         ...(number | ExpressionInputType | ExpressionSpecification)[]]
+    | ['interpolate', InterpolationSpecification, 
+        number | ExpressionSpecification, ...InterpolationStopsSpecification]
     | ['interpolate-hcl', InterpolationSpecification,
         number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
         ...(number | ColorSpecification | ExpressionSpecification)[]]
