@@ -38,7 +38,7 @@ class Coercion implements Expression {
             return context.error('Expected at least one argument.') as null;
 
         const name: string = (args[0] as any);
-        if (!types[name]) throw new Error(name);
+        if (!types[name]) throw new Error(`Can't parse ${name} as it is not part of the known types`);
         if ((name === 'to-boolean' || name === 'to-string') && args.length !== 2)
             return context.error('Expected one argument.') as null;
 

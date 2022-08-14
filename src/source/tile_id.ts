@@ -94,7 +94,7 @@ export class OverscaledTileID {
     }
 
     scaledTo(targetZ: number) {
-        if (targetZ > this.overscaledZ) throw new Error();
+        if (targetZ > this.overscaledZ) throw new Error(`targetZ > this.overscaledZ; targetZ = ${targetZ}; overscaledZ = ${this.overscaledZ}`);
         const zDifference = this.canonical.z - targetZ;
         if (targetZ > this.canonical.z) {
             return new OverscaledTileID(targetZ, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y);

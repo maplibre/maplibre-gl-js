@@ -32,7 +32,7 @@ class Dispatcher {
             actor.name = `Worker ${i}`;
             this.actors.push(actor);
         }
-        if (!this.actors.length) throw new Error();
+        if (!this.actors.length) throw new Error('No actors found');
     }
 
     /**

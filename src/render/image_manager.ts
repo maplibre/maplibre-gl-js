@@ -88,7 +88,7 @@ class ImageManager extends Evented {
     }
 
     addImage(id: string, image: StyleImage) {
-        if (this.images[id]) throw new Error();
+        if (this.images[id]) throw new Error(`Image id ${id} already exist`);
         if (this._validate(id, image)) {
             this.images[id] = image;
         }

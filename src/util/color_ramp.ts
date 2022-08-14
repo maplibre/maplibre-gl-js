@@ -23,7 +23,7 @@ export function renderColorRamp(params: ColorRampParams): RGBAImage {
     const height = params.clips ? params.clips.length : 1;
     const image = params.image || new RGBAImage({width, height});
 
-    if (!isPowerOfTwo(width)) throw new Error();
+    if (!isPowerOfTwo(width)) throw new Error(`width is not a power of 2 - ${width}`);
 
     const renderPixel = (stride, index, progress) => {
         evaluationGlobals[params.evaluationKey] = progress;

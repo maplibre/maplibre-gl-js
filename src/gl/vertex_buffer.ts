@@ -61,7 +61,7 @@ class VertexBuffer {
     }
 
     updateData(array: StructArray) {
-        if (array.length !== this.length) throw new Error();
+        if (array.length !== this.length) throw new Error(`Length of new data is ${array.length}, which doesn't match current length of ${this.length}`);
         const gl = this.context.gl;
         this.bind();
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, array.arrayBuffer);

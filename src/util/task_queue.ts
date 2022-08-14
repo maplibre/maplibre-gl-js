@@ -38,7 +38,7 @@ class TaskQueue {
     }
 
     run(timeStamp: number = 0) {
-        if (this._currentlyRunning) throw new Error();
+        if (this._currentlyRunning) throw new Error('Attempting to run(), but is already running.');
         const queue = this._currentlyRunning = this._queue;
 
         // Tasks queued by callbacks in the current queue should be executed

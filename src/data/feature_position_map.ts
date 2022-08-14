@@ -30,7 +30,7 @@ export default class FeaturePositionMap {
     }
 
     getPositions(id: unknown): Array<FeaturePosition> {
-        if (!this.indexed) throw new Error();
+        if (!this.indexed) throw new Error('Trying to get index, but feature positions are not indexed');
 
         const intId = getNumericId(id);
 

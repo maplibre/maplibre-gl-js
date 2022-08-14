@@ -69,7 +69,7 @@ function copyImage(srcImg: any, dstImg: any, srcPt: Point2D, dstPt: Point2D, siz
     const srcData = srcImg.data;
     const dstData = dstImg.data;
 
-    if (srcData === dstData) throw new Error();
+    if (srcData === dstData) throw new Error('srcData equals dstData, so image is already copied');
 
     for (let y = 0; y < size.height; y++) {
         const srcOffset = ((srcPt.y + y) * srcImg.width + srcPt.x) * channels;

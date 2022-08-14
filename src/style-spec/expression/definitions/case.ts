@@ -47,7 +47,7 @@ class Case implements Expression {
         const otherwise = context.parse(args[args.length - 1], args.length - 1, outputType);
         if (!otherwise) return null;
 
-        if (!outputType) throw new Error();
+        if (!outputType) throw new Error('Can\'t infer output type');
         return new Case((outputType as any), branches, otherwise);
     }
 
