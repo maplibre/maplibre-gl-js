@@ -22,7 +22,7 @@ import type FeatureIndex from '../data/feature_index';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {TextAnchor} from './symbol_layout';
 import Terrain from '../render/terrain';
-import { warnOnce } from '../util/util';
+import {warnOnce} from '../util/util';
 
 class OpacityState {
     opacity: number;
