@@ -199,8 +199,7 @@ export type ExpressionSpecification =
     | ['within', unknown | ExpressionSpecification]
     // Ramps, scales, curves
     | ['interpolate', InterpolationSpecification, 
-        number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
-        ...(number | ExpressionInputType | ExpressionSpecification)[]]
+        number | ExpressionSpecification, ...(number | ExpressionInputType | ExpressionSpecification)[]]
     | ['interpolate', InterpolationSpecification, 
         number | ExpressionSpecification, ...InterpolationStopsSpecification]
     | ['interpolate-hcl', InterpolationSpecification,
