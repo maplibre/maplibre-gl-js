@@ -1275,8 +1275,6 @@ function addAssertions(camera: Camera) { //eslint-disable-line
                 inProgress[name] = true;
             });
 
-            camera.on(name, () => {});
-
             camera.on(`${name}end`, () => {
                 inProgress[name] = false;
             });

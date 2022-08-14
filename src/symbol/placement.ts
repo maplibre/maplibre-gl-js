@@ -1133,8 +1133,8 @@ export class Placement {
             bucket.textCollisionBox.collisionVertexBuffer.updateData(bucket.textCollisionBox.collisionVertexArray);
         }
 
-        if (bucket.text.opacityVertexArray.length !== bucket.text.layoutVertexArray.length / 4) throw new Error();
-        if (bucket.icon.opacityVertexArray.length !== bucket.icon.layoutVertexArray.length / 4) throw new Error();
+        if (bucket.text.opacityVertexArray.length !== bucket.text.layoutVertexArray.length / 4) throw new Error(`bucket.text.opacityVertexArray.length (= ${bucket.text.opacityVertexArray.length}) !== bucket.text.layoutVertexArray.length (= ${bucket.text.layoutVertexArray.length}) / 4`);
+        if (bucket.icon.opacityVertexArray.length !== bucket.icon.layoutVertexArray.length / 4) throw new Error(`bucket.icon.opacityVertexArray.length (= ${bucket.icon.opacityVertexArray.length}) !== bucket.icon.layoutVertexArray.length (= ${bucket.icon.layoutVertexArray.length}) / 4`);
 
         // Push generated collision circles to the bucket for debug rendering
         if (bucket.bucketInstanceId in this.collisionCircleArrays) {
