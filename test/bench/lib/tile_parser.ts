@@ -96,7 +96,7 @@ export default class TileParser {
                         parser.loadImages(params, callback);
                     } else if (action === 'getGlyphs') {
                         parser.loadGlyphs(params, callback);
-                    } else throw new Error();
+                    } else throw new Error(`Invalid action ${action}`);
                 }, 0);
             }
         };

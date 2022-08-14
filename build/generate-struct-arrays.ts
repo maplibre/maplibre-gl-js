@@ -409,7 +409,6 @@ export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
      * @private
      */
     get(index: number): ${structTypeClass} {
-        naiveAssert(!this.isTransferred);
         return new ${structTypeClass}(this, index);
     }`);
     }
@@ -425,7 +424,6 @@ register('${structArrayClass}', ${structArrayClass});
 fs.writeFileSync('src/data/array_types.g.ts',
     `// This file is generated. Edit build/generate-struct-arrays.ts, then run \`npm run codegen\`.
 
-import {naiveAssert} from '../util/test/naive_assert';
 import {Struct, StructArray} from '../util/struct_array';
 import {register} from '../util/web_worker_transfer';
 import Point from '@mapbox/point-geometry';
