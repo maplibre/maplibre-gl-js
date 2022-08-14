@@ -306,7 +306,6 @@ class GeolocateControl extends Evented implements IControl {
     }
 
     _updateCircleRadius() {
-        naiveAssert(this._circleElement);
         const y = this._map._container.clientHeight / 2;
         const a = this._map.unproject([0, y]);
         const b = this._map.unproject([1, y]);

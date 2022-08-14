@@ -668,7 +668,6 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
             const constant = value.expression.evaluate(parameters, null, {}, canonical, availableImages);
             return this._calculate(constant, constant, constant, parameters);
         } else {
-            naiveAssert(!value.isDataDriven());
             return this._calculate(
                 value.expression.evaluate(new EvaluationParameters(Math.floor(parameters.zoom - 1.0), parameters)),
                 value.expression.evaluate(new EvaluationParameters(Math.floor(parameters.zoom), parameters)),

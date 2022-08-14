@@ -92,8 +92,6 @@ class Match implements Expression {
         const otherwise = context.parse(args[args.length - 1], args.length - 1, outputType);
         if (!otherwise) return null;
 
-        naiveAssert(inputType && outputType);
-
         if (input.type.kind !== 'value' && context.concat(1).checkSubtype(((inputType as any)), input.type)) {
             return null;
         }

@@ -1,4 +1,3 @@
-import {naiveAssert} from '../util/test/naive_assert';
 import {
     charHasUprightVerticalOrientation,
     charAllowsIdeographicBreaking,
@@ -811,9 +810,6 @@ function fitIconToText(
     iconOffset: [number, number],
     fontScale: number
 ): PositionedIcon {
-    naiveAssert(textFit !== 'none');
-    naiveAssert(Array.isArray(padding) && padding.length === 4);
-    naiveAssert(Array.isArray(iconOffset) && iconOffset.length === 2);
 
     const image = shapedIcon.image;
 

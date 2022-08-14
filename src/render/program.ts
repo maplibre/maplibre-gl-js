@@ -1,5 +1,4 @@
 import shaders from '../shaders/shaders';
-import {naiveAssert} from '../util/test/naive_assert';
 import ProgramConfiguration from '../data/program_configuration';
 import VertexArrayObject from './vertex_array_object';
 import Context from '../gl/context';
@@ -84,7 +83,6 @@ class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(fragmentShader, fragmentSource);
         gl.compileShader(fragmentShader);
-        naiveAssert(gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS), (gl.getShaderInfoLog(fragmentShader) as any));
         gl.attachShader(this.program, fragmentShader);
 
         const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -94,7 +92,6 @@ class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(vertexShader, vertexSource);
         gl.compileShader(vertexShader);
-        naiveAssert(gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS), (gl.getShaderInfoLog(vertexShader) as any));
         gl.attachShader(this.program, vertexShader);
 
         this.attributes = {};
@@ -110,7 +107,6 @@ class Program<Us extends UniformBindings> {
         }
 
         gl.linkProgram(this.program);
-        naiveAssert(gl.getProgramParameter(this.program, gl.LINK_STATUS), (gl.getProgramInfoLog(this.program) as any));
 
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
