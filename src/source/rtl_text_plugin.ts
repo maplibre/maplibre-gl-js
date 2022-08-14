@@ -1,7 +1,6 @@
 import {Event, Evented} from '../util/evented';
 import {getArrayBuffer} from '../util/ajax';
 import browser from '../util/browser';
-import {naiveAssert} from '../util/test/naive_assert';
 import {isWorker} from '../util/util';
 
 const status = {

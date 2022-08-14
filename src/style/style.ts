@@ -1,4 +1,3 @@
-import {naiveAssert} from '../util/test/naive_assert';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import StyleLayer from './style_layer';
 import createStyleLayer from './create_style_layer';
