@@ -134,7 +134,9 @@ class ImageManager extends Evented {
 
     updateImage(id: string, image: StyleImage) {
         const oldImage = this.images[id];
-        if (oldImage.data.width !== image.data.width || oldImage.data.height !== image.data.height) throw new Error(`size mismatch between old image (${oldImage.data.width}x${oldImage.data.height}) and new image (${image.data.width}x${image.data.height}).`);
+        if (oldImage.data.width !== image.data.width || oldImage.data.height !== image.data.height) {
+            throw new Error(`size mismatch between old image (${oldImage.data.width}x${oldImage.data.height}) and new image (${image.data.width}x${image.data.height}).`);
+        }
         image.version = oldImage.version + 1;
         this.images[id] = image;
         this.updatedImages[id] = true;
