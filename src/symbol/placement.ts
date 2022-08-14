@@ -22,6 +22,7 @@ import type FeatureIndex from '../data/feature_index';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {TextAnchor} from './symbol_layout';
 import Terrain from '../render/terrain';
+import { warnOnce } from '../util/util';
 
 class OpacityState {
     opacity: number;
@@ -676,7 +677,7 @@ export class Placement {
                 );
 
                 if (placedGlyphCircles.circles.length && placedGlyphCircles.collisionDetected && !showCollisionBoxes) {
-                    throw new Error('Collisions detected, but collision boxes are not shown');
+                    warnOnce('Collisions detected, but collision boxes are not shown');
                 }
 
                 // If text-overlap is set to 'always', force "placedCircles" to true
