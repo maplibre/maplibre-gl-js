@@ -4,12 +4,16 @@
 ### ✨ Features and improvements
 
 - *...Add new stuff here...*
-- Improved error handling ([#1485](https://github.com/maplibre/maplibre-gl-js/pull/1485))
-- 
+
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
-- 
+
+## 2.3.1-pre.1
+
+### ✨ Features and improvements
+- Improve error handling ([#1485](https://github.com/maplibre/maplibre-gl-js/pull/1485))
+
 ## 2.3.0
 
 ### ✨ Features and improvements
