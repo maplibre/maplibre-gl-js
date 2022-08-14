@@ -1,6 +1,5 @@
 import {RGBAImage} from './image';
 import {isPowerOfTwo} from './util';
-import {naiveAssert} from '../util/test/naive_assert';
 
 import type {StylePropertyExpression} from '../style-spec/expression/index';
 
@@ -24,7 +23,7 @@ export function renderColorRamp(params: ColorRampParams): RGBAImage {
     const height = params.clips ? params.clips.length : 1;
     const image = params.image || new RGBAImage({width, height});
 
-    naiveAssert(isPowerOfTwo(width));
+    if (!isPowerOfTwo(width)) throw new Error();
 
     const renderPixel = (stride, index, progress) => {
         evaluationGlobals[params.evaluationKey] = progress;
