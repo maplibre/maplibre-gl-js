@@ -7,12 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{matrix.os}}
-
-  strategy:
-    matrix:
-      os: [ubuntu-latest, windows-latest]
-
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
@@ -35,7 +30,6 @@ jobs:
         run: |
           echo "${{ github.event.pull_request.base.sha }}" > build-info/base_sha
           echo "${{ github.event.number }}" > build-info/pull_request_number
-
       - uses: actions/upload-artifact@v3
         with:
           name: dist
