@@ -40,7 +40,7 @@
   "devDependencies": {
     "@mapbox/gazetteer": "^5.1.0",
     "@mapbox/mapbox-gl-rtl-text": "^0.2.3",
-    "@mapbox/mvt-fixtures": "^3.9.0",
+    "@mapbox/mvt-fixtures": "^3.10.0",
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
