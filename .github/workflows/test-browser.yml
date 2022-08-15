@@ -6,14 +6,13 @@ on:
   pull_request:
 
 jobs:
-  test_browser:
+  test_browser_mac_win:
   strategy:
       fail-fast: false
       matrix:
         os:
           - macos-latest
           - windows-latest
-          - ubuntu-latest
 
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -31,4 +30,29 @@ jobs:
           architecture: x64
       - run: npm ci
       - run: npm run build-dev
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser
+      - run: npm run test-browser
+      
+  test_browser_ubuntu:
+    strategy:
+        fail-fast: false
+        matrix:
+          os:
+            - ubuntu-latest
+
+      name: ${{ matrix.os }}
+      runs-on: ${{ matrix.os }}
+      timeout-minutes: 20
+      steps:
+        - uses: actions/checkout@v3
+        - name: Install fonts-noto-cjk
+          run: |
+            sudo apt-get update
+            sudo apt-get install fonts-noto-cjk
+        - name: Use Node.js 16 x64
+          uses: actions/setup-node@v3.4.1
+          with:
+            node-version: 16
+            architecture: x64
+        - run: npm ci
+        - run: npm run build-dev
+        - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser
