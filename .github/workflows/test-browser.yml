@@ -7,7 +7,7 @@ on:
 
 jobs:
   test_browser_mac_win:
-  strategy:
+    strategy:
       fail-fast: false
       matrix:
         os:
