@@ -40,6 +40,7 @@
   "devDependencies": {
     "@mapbox/gazetteer": "^5.1.0",
     "@mapbox/mapbox-gl-rtl-text": "^0.2.3",
+    "@mapbox/mapbox-gl-styles": "^2.1.1",
     "@mapbox/mvt-fixtures": "^3.10.0",
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-json": "^4.1.0",
@@ -98,7 +99,6 @@
     "jest-playwright-preset": "^2.0.0",
     "jsdom": "^20.0.0",
     "json-stringify-pretty-compact": "^4.0.0",
-    "mapbox-gl-styles": "^2.0.2",
     "minimist": "^1.2.6",
     "mock-geolocation": "^1.0.11",
     "nise": "^5.1.1",
