@@ -14,7 +14,7 @@
     "skipLibCheck": false,
     "sourceMap": true,
     "strict": false,
-    "target": "es2017",
+    "target": "ES2019",
     "lib": [
       "ESNext",
       "DOM",

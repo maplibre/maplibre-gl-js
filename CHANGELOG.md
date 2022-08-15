@@ -4,11 +4,12 @@
 ### ✨ Features and improvements
 
 - *...Add new stuff here...*
+- Upgrade target from ES2017 to ES2019
 
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
-
+  
 ## 2.3.1-pre.1
 
 ### ✨ Features and improvements
