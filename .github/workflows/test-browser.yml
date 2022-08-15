@@ -34,10 +34,10 @@ jobs:
       
   test_browser_ubuntu:
     strategy:
-        fail-fast: false
-        matrix:
-          os:
-            - ubuntu-latest
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
 
       name: ${{ matrix.os }}
       runs-on: ${{ matrix.os }}
