@@ -7,8 +7,16 @@ on:
 
 jobs:
   test_browser:
-    name: ubuntu-latest
-    runs-on: ubuntu-latest
+  strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+          - ubuntu-latest
+
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
