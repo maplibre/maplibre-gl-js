@@ -175,12 +175,16 @@ class Program<Us extends UniformBindings> {
         }
 
         let primitiveSize = 0;
-        if (drawMode === gl.LINES) {
-            primitiveSize = 2;
-        } else if (drawMode === gl.TRIANGLES) {
-            primitiveSize = 3;
-        } else if (drawMode === gl.LINE_STRIP) {
-            primitiveSize = 1;
+        switch (drawMode) {
+            case gl.LINES:
+                primitiveSize = 2;
+                break;
+            case gl.TRIANGLES:
+                primitiveSize = 3;
+                break;
+            case gl.LINE_STRIP:
+                primitiveSize = 1;
+                break;
         }
 
         for (const segment of segments.get()) {
