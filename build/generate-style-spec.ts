@@ -203,7 +203,7 @@ export type ExpressionSpecification =
     | ['interpolate-lab', InterpolationSpecification,
         number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
         ...(number | ColorSpecification | ExpressionSpecification)[]]
-    | ['step', number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
+    | ['step', number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
         ...(number | ExpressionInputType | ExpressionSpecification)[]]
     // Variable binding
     | ['let', string, ExpressionInputType | ExpressionSpecification, ...(string | ExpressionInputType | ExpressionSpecification)[]]

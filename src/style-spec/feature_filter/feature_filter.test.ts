@@ -43,6 +43,7 @@ describe('filter', () => {
             ['line-progress'],
             ...colorStops
         ]);
+        compileTimeCheck(['step', ['get', 'point_count'], '#df2d43', 50, '#df2d43', 200, '#df2d43']);
     });
 
     test('expression, zoom', () => {
