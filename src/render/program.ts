@@ -174,11 +174,18 @@ class Program<Us extends UniformBindings> {
             configuration.setUniforms(context, this.binderUniforms, currentProperties, {zoom: (zoom as any)});
         }
 
-        const primitiveSize = {
-            [gl.LINES]: 2,
-            [gl.TRIANGLES]: 3,
-            [gl.LINE_STRIP]: 1
-        }[drawMode];
+        let primitiveSize = 0;
+        switch (drawMode) {
+            case gl.LINES:
+                primitiveSize = 2;
+                break;
+            case gl.TRIANGLES:
+                primitiveSize = 3;
+                break;
+            case gl.LINE_STRIP:
+                primitiveSize = 1;
+                break;
+        }
 
         for (const segment of segments.get()) {
             const vaos = segment.vaos || (segment.vaos = {});
