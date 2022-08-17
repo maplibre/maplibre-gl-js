@@ -187,30 +187,26 @@ export type ExpressionSpecification =
     | ['any', ...(boolean | ExpressionSpecification)[]] // boolean
     | ['case', boolean | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
         ...(boolean | ExpressionInputType | ExpressionSpecification)[], ExpressionInputType | ExpressionSpecification]
-    | ['coalesce', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
-        ...(ExpressionInputType | ExpressionSpecification)[]]
+    | ['coalesce', ...(ExpressionInputType | ExpressionSpecification)[]] // at least two inputs required
     | ['match', ExpressionInputType | ExpressionSpecification, 
         ExpressionInputType | ExpressionInputType[], ExpressionInputType | ExpressionSpecification, 
         ...(ExpressionInputType | ExpressionInputType[] | ExpressionSpecification)[], // repeated as above
         ExpressionInputType]
     | ['within', unknown | ExpressionSpecification]
     // Ramps, scales, curves
-    | ['interpolate', InterpolationSpecification, 
-        number | ExpressionSpecification, ...(number | ExpressionInputType | ExpressionSpecification)[]]
-    | ['interpolate-hcl', InterpolationSpecification,
-        number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
-        ...(number | ColorSpecification | ExpressionSpecification)[]]
-    | ['interpolate-lab', InterpolationSpecification,
-        number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
-        ...(number | ColorSpecification | ExpressionSpecification)[]]
-    | ['step', number | ExpressionSpecification, number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
-        ...(number | ExpressionInputType | ExpressionSpecification)[]]
+    | ['interpolate', InterpolationSpecification, number | ExpressionSpecification, 
+        ...(number | number[] | ColorSpecification)[]] // alternating number and number | number[] | ColorSpecification
+    | ['interpolate-hcl', InterpolationSpecification, number | ExpressionSpecification, 
+        ...(number | ColorSpecification)[]] // alternating number and ColorSpecificaton
+    | ['interpolate-lab', InterpolationSpecification, number | ExpressionSpecification, 
+        ...(number | ColorSpecification)[]] // alternating number and ColorSpecification
+    | ['step', number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification,
+        ...(number | ExpressionInputType | ExpressionSpecification)[]] // alternating number and ExpressionInputType | ExpressionSpecification
     // Variable binding
     | ['let', string, ExpressionInputType | ExpressionSpecification, ...(string | ExpressionInputType | ExpressionSpecification)[]]
     | ['var', string]
     // String
-    | ['concat', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
-        ...(ExpressionInputType | ExpressionSpecification)[]] // string
+    | ['concat', ...(ExpressionInputType | ExpressionSpecification)[]] // at least two inputs required -> string
     | ['downcase', string | ExpressionSpecification] // string
     | ['is-supported-script', string | ExpressionSpecification] // boolean
     | ['resolved-locale', CollatorExpressionSpecification] // string
@@ -225,7 +221,7 @@ export type ExpressionSpecification =
     | ['/', number | ExpressionSpecification, number | ExpressionSpecification] // number
     | ['%', number | ExpressionSpecification, number | ExpressionSpecification] // number
     | ['^', number | ExpressionSpecification, number | ExpressionSpecification] // number
-    | ['+', number | ExpressionSpecification, number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] // number
+    | ['+', ...(number | ExpressionSpecification)[]] // at least two inputs required -> number
     | ['abs', number | ExpressionSpecification] // number
     | ['acos', number | ExpressionSpecification] // number
     | ['asin', number | ExpressionSpecification] // number
