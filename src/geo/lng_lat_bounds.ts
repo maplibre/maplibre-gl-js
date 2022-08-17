@@ -69,6 +69,8 @@ class LngLatBounds {
             ne = this._ne;
         let sw2, ne2;
 
+        if (!obj) return this;
+ 
         if (obj instanceof LngLat) {
             sw2 = obj;
             ne2 = obj;
@@ -84,10 +86,11 @@ class LngLatBounds {
                 if (obj.length === 4 || (obj as any[]).every(Array.isArray)) {
                     const lngLatBoundsObj = (obj as any as LngLatBoundsLike);
                     return this.extend(LngLatBounds.convert(lngLatBoundsObj));
-                } else {
-                    const lngLatObj = (obj as any as LngLatLike);
-                    return this.extend(LngLat.convert(lngLatObj));
                 }
+            }
+            else {
+                const lngLatObj = (obj as any as LngLatLike);
+                return this.extend(LngLat.convert(lngLatObj));
             }
             return this;
         }

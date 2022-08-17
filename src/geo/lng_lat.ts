@@ -148,6 +148,10 @@ class LngLat {
         }
         throw new Error('`LngLatLike` argument must be specified as a LngLat instance, an object {lng: <lng>, lat: <lat>}, an object {lon: <lng>, lat: <lat>}, or an array of [<lng>, <lat>]');
     }
+
+    static isLngLatLikeObject(input: LngLatLike) {
+        return typeof input === 'object' && input.lng || input.lon && input.lat
+    }
 }
 
 /**
