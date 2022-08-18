@@ -1558,6 +1558,38 @@ describe('#flyTo', () => {
         assertTransitionTime(done, camera, 0, 10);
         camera.flyTo({center: [100, 0], bearing: 90, animate: true});
     });
+
+    test('check freezeElevation events', done => {
+        const camera = createCamera();
+        const stub = jest.spyOn(browser, 'now');
+
+        camera.setCenter([-10, 0]);
+        let freeze = 0;
+
+        camera.on('freezeElevation', (e) => {
+            if (e.freeze && freeze === 0) freeze++;
+            if (!e.freeze && freeze === 1) freeze++;
+        });
+
+        camera.on('moveend', () => {
+            expect(freeze).toBe(2);
+            done();
+        });
+
+        stub.mockImplementation(() => 0);
+        camera.flyTo({center: [10, 0], duration: 20, freezeElevation: true});
+
+        setTimeout(() => {
+            stub.mockImplementation(() => 1);
+            camera.simulateFrame();
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 20);
+                camera.simulateFrame();
+            }, 0);
+        }, 0);
+    });
+
 });
 
 describe('#isEasing', () => {

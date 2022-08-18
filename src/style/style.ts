@@ -511,7 +511,7 @@ class Style extends Evented {
             this._terrainfreezeElevationCallback = (e: any) => {
                 if (e.freeze) {
                     this.map.transform.freezeElevation = true;
-                } else {
+                } else if (this.map.transform.freezeElevation) {
                     this.map.transform.freezeElevation = false;
                     this.map.transform.recalculateZoom(this.terrain);
                 }
