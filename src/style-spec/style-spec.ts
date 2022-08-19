@@ -63,7 +63,7 @@ export type StylePropertySpecification = {
     default?: number | Array<number>;
 };
 
-import v8Spec from './reference/v8.json' assert {type: 'json'};
+import v8Spec from './reference/v8.json';
 const v8 = v8Spec as any;
 import latest from './reference/latest';
 import format from './format';
