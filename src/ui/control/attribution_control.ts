@@ -63,6 +63,7 @@ class AttributionControl implements IControl {
 
         this._map.on('styledata', this._updateData);
         this._map.on('sourcedata', this._updateData);
+        this._map.on('terrain', this._updateData);
         this._map.on('resize', this._updateCompact);
         this._map.on('drag', this._updateCompactMinimize);
 
@@ -74,6 +75,7 @@ class AttributionControl implements IControl {
 
         this._map.off('styledata', this._updateData);
         this._map.off('sourcedata', this._updateData);
+        this._map.off('terrain', this._updateData);
         this._map.off('resize', this._updateCompact);
         this._map.off('drag', this._updateCompactMinimize);
 
@@ -101,7 +103,7 @@ class AttributionControl implements IControl {
     }
 
     _updateData(e: any) {
-        if (e && (e.sourceDataType === 'metadata' || e.sourceDataType === 'visibility' || e.dataType === 'style')) {
+        if (e && (e.sourceDataType === 'metadata' || e.sourceDataType === 'visibility' || e.dataType === 'style' || e.type === 'terrain')) {
             this._updateAttributions();
         }
     }
