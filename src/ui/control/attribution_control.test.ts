@@ -272,6 +272,26 @@ describe('AttributionControl', () => {
         });
     });
 
+    test('shows attributions for sources that are used for terrain', done => {
+        const attribution = new AttributionControl();
+        map.addControl(attribution);
+
+        map.on('load', () => {
+			map.addSource('terrain', {type: 'raster-dem', url: '/source.json', attribution: 'Test Terrain'});
+            map.setTerrain({source: 'terrain'});
+        });
+
+        let times = 0;
+        map.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
+                if (++times === 3) {
+                    expect(attribution._innerContainer.innerHTML).toBe('Test Terrain');
+                    done();
+                }
+            }
+        });
+    });
+
     test('toggles attributions for sources whose visibility changes when zooming', done => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
