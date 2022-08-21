@@ -380,6 +380,7 @@
       "doc": "The data type of the GeoJSON source."
     },
     "data": {
+      "required": true,
       "type": "*",
       "doc": "A URL to a GeoJSON file, or inline GeoJSON."
     },
