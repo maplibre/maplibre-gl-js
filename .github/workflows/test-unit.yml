@@ -18,6 +18,10 @@ jobs:
           - x64
 
     name: ${{ matrix.os }}
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: write
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -27,4 +31,9 @@ jobs:
           node-version: ${{ matrix.node_version }}
           architecture: ${{ matrix.architecture }}
       - run: npm ci
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit
+      - uses: ArtiomTr/jest-coverage-report-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          test-script: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci
+      
+      - run: 
