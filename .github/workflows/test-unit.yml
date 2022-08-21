@@ -35,5 +35,3 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           test-script: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci
-      
-      - run: 
