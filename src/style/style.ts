@@ -499,13 +499,9 @@ class Style extends Evented {
 
         // remove terrain
         if (!options) {
+            if (this.terrain) this.terrain.sourceCache.destruct();
             this.terrain = null;
             this.map.transform.updateElevation(this.terrain);
-
-            for (const sourceId in this.sourceCaches) {
-                const sourceCache = this.sourceCaches[sourceId];
-                if (sourceCache.usedForTerrain) sourceCache.usedForTerrain = false;
-            }
 
         // add terrain
         } else {
