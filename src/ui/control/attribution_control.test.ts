@@ -274,10 +274,8 @@ describe('AttributionControl', () => {
     });
 
     test('does not show attributions for sources that are used for terrain when they are not in use', done => {
-        let server: FakeServer;
-
         global.fetch = null;
-        server = fakeServer.create();
+        const server = fakeServer.create();
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
             maxzoom: 12,
@@ -306,10 +304,8 @@ describe('AttributionControl', () => {
     });
 
     test('shows attributions for sources that are used for terrain', done => {
-        let server: FakeServer;
-
         global.fetch = null;
-        server = fakeServer.create();
+        const server = fakeServer.create();
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
             maxzoom: 12,
