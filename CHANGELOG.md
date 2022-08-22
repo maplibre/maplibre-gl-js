@@ -10,7 +10,7 @@
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
-- No triggering of contextmenu after rotate, pitch, etc. also on Windows
+- No triggering of contextmenu after rotate, pitch, etc. also on Windows ([#1537](https://github.com/maplibre/maplibre-gl-js/pull/1537))
 
 ## 2.3.1-pre.2
 
