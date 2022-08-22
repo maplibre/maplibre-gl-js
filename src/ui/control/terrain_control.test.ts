@@ -1,6 +1,5 @@
-import AttributionControl from './attribution_control';
-import {createMap as globalCreateMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 import TerrainControl from './terrain_control';
+import {createMap as globalCreateMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 
 function createMap() {
 
@@ -53,7 +52,7 @@ describe('TerrainControl', () => {
         expect(
             map.getContainer().querySelectorAll('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-terrain')
         ).toHaveLength(1);
-		
+
         expect(
             map.getContainer().querySelectorAll('.maplibregl-ctrl-top-right .maplibregl-ctrl-terrain')
         ).toHaveLength(0);
