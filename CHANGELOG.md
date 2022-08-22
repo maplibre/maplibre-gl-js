@@ -5,6 +5,7 @@
 
 - *...Add new stuff here...*
 - Upgrade target from ES2017 to ES2019
+- Removed `_interpolationType` unused field (#264)
 
 ### 🐞 Bug fixes
 
