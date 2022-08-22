@@ -273,6 +273,38 @@ describe('AttributionControl', () => {
         });
     });
 
+    test('does not show attributions for sources that are used for terrain when they are not in use', done => {
+        let server: FakeServer;
+
+        global.fetch = null;
+        server = fakeServer.create();
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 5,
+            maxzoom: 12,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
+            bounds: [-47, -7, -45, -5]
+        }));
+
+        const attribution = new AttributionControl();
+        map.addControl(attribution);
+
+        map.on('load', () => {
+            map.addSource('1', {type: 'raster-dem', url: '/source.json', attribution: 'Terrain'});
+            server.respond();
+        });
+
+        let times = 0;
+        map.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
+                if (++times === 1) {
+                    expect(attribution._innerContainer.innerHTML).toBe('');
+                    done();
+                }
+            }
+        });
+    });
+
     test('shows attributions for sources that are used for terrain', done => {
         let server: FakeServer;
 
