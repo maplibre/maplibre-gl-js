@@ -1,15 +1,6 @@
 import AttributionControl from './attribution_control';
 import {createMap as globalCreateMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {RequestManager} from '../../util/request_manager';
-import {fakeServer, FakeServer} from 'nise';
-import Transform from '../../geo/transform';
-import gl from 'gl';
-import RasterDEMTileSource from '../../source/raster_dem_tile_source';
-import Context from '../../gl/context';
-
-const context = new Context(gl(10, 10));
-const transform = new Transform();
 
 function createMap() {
 
@@ -24,22 +15,6 @@ function createMap() {
         },
         hash: true
     }, undefined);
-}
-
-function createSource(options, transformCallback?) {
-    const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, null);
-    source.onAdd({
-        transform,
-        _getMapId: () => 1,
-        _requestManager: new RequestManager(transformCallback),
-        getPixelRatio() { return 1; }
-    } as any);
-
-    source.on('error', (e) => {
-        throw e.error;
-    });
-
-    return source;
 }
 
 let map;
@@ -297,6 +272,26 @@ describe('AttributionControl', () => {
         });
     });
 
+    test('shows attributions for sources that are used for terrain', done => {
+        const attribution = new AttributionControl();
+        map.addControl(attribution);
+
+        map.on('load', () => {
+			map.addSource('terrain', {type: 'raster-dem', url: '/source.json', attribution: 'Test Terrain'});
+            map.setTerrain({source: 'terrain'});
+        });
+
+        let times = 0;
+        map.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
+                if (++times === 3) {
+                    expect(attribution._innerContainer.innerHTML).toBe('Test Terrain');
+                    done();
+                }
+            }
+        });
+    });
+
     test('toggles attributions for sources whose visibility changes when zooming', done => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
@@ -319,6 +314,7 @@ describe('AttributionControl', () => {
             }
         });
     });
+
 });
 
 describe('AttributionControl test regarding the HTML elements details and summary', () => {
@@ -503,41 +499,5 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBe('');
         });
-    });
-});
-
-describe('Terrain Attribution', () => {
-    let server: FakeServer;
-    let style: Style;
-
-    test('shows attributions for sources that are used for terrain', done => {
-        global.fetch = null;
-        server = fakeServer.create();
-        server.respondWith('/source.json', JSON.stringify({
-            minzoom: 5,
-            maxzoom: 12,
-            attribution: 'MapLibre',
-            tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
-            bounds: [-47, -7, -45, -5]
-        }));
-
-        const attribution = new AttributionControl();
-        map.addControl(attribution);
-
-        map.on('load', () => {
-            const source = createSource({url: '/source.json'});
-            server.respond();
-            map.addSource('terrain', source as any);
-            map.setTerrain({source: 'terrain'});
-        });
-
-        let times = 0;
-        map.on('terrain', (e) => {
-            if (++times === 1) {
-                expect(attribution._innerContainer.innerHTML).toBe('Test Terrain');
-                done();
-            }
-        });
-
     });
 });
