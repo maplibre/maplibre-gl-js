@@ -9,6 +9,7 @@
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
+- Fix attribution not being displayed for terrain([#1516](https://github.com/maplibre/maplibre-gl-js/pull/1516))
 
 ## 2.3.1-pre.2
 
