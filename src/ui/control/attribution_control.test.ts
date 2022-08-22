@@ -1,6 +1,7 @@
 import AttributionControl from './attribution_control';
 import {createMap as globalCreateMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
+import {fakeServer, FakeServer} from 'nise';
 
 function createMap() {
 
@@ -273,19 +274,32 @@ describe('AttributionControl', () => {
     });
 
     test('shows attributions for sources that are used for terrain', done => {
+        let server: FakeServer;
+
+        global.fetch = null;
+        server = fakeServer.create();
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 5,
+            maxzoom: 12,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
+            bounds: [-47, -7, -45, -5]
+        }));
+
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
         map.on('load', () => {
-			map.addSource('terrain', {type: 'raster-dem', url: '/source.json', attribution: 'Test Terrain'});
-            map.setTerrain({source: 'terrain'});
+            map.addSource('1', {type: 'raster-dem', url: '/source.json', attribution: 'Terrain'});
+            server.respond();
+            map.setTerrain({source: '1'});
         });
 
         let times = 0;
         map.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
-                if (++times === 3) {
-                    expect(attribution._innerContainer.innerHTML).toBe('Test Terrain');
+                if (++times === 1) {
+                    expect(attribution._innerContainer.innerHTML).toBe('Terrain');
                     done();
                 }
             }
