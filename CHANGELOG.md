@@ -5,11 +5,13 @@
 
 - *...Add new stuff here...*
 - Upgrade target from ES2017 to ES2019
+- Removed `_interpolationType` unused field (#264)
 
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
 - Fix attribution not being displayed for terrain([#1516](https://github.com/maplibre/maplibre-gl-js/pull/1516))
+- No triggering of contextmenu after rotate, pitch, etc. also on Windows ([#1537](https://github.com/maplibre/maplibre-gl-js/pull/1537))
 
 ## 2.3.1-pre.2
 
