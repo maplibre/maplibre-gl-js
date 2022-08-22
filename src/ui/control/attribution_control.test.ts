@@ -1,7 +1,7 @@
 import AttributionControl from './attribution_control';
 import {createMap as globalCreateMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {fakeServer, FakeServer} from 'nise';
+import {fakeServer} from 'nise';
 
 function createMap() {
 
@@ -279,7 +279,7 @@ describe('AttributionControl', () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
             maxzoom: 12,
-            attribution: 'MapLibre',
+            attribution: 'Terrain',
             tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
             bounds: [-47, -7, -45, -5]
         }));
@@ -288,7 +288,7 @@ describe('AttributionControl', () => {
         map.addControl(attribution);
 
         map.on('load', () => {
-            map.addSource('1', {type: 'raster-dem', url: '/source.json', attribution: 'Terrain'});
+            map.addSource('1', {type: 'raster-dem', url: '/source.json'});
             server.respond();
         });
 
@@ -309,7 +309,7 @@ describe('AttributionControl', () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
             maxzoom: 12,
-            attribution: 'MapLibre',
+            attribution: 'Terrain',
             tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
             bounds: [-47, -7, -45, -5]
         }));
@@ -318,7 +318,7 @@ describe('AttributionControl', () => {
         map.addControl(attribution);
 
         map.on('load', () => {
-            map.addSource('1', {type: 'raster-dem', url: '/source.json', attribution: 'Terrain'});
+            map.addSource('1', {type: 'raster-dem', url: '/source.json'});
             server.respond();
             map.setTerrain({source: '1'});
         });
