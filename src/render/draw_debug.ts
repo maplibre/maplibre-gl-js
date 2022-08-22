@@ -66,7 +66,7 @@ function drawDebug(painter: Painter, sourceCache: SourceCache, coords: Array<Ove
     }
 }
 
-function drawDebugTile(painter, sourceCache, coord: OverscaledTileID) {
+function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: OverscaledTileID) {
     const context = painter.context;
     const gl = context.gl;
 
