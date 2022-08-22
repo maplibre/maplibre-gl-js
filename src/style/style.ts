@@ -502,6 +502,11 @@ class Style extends Evented {
             this.terrain = null;
             this.map.transform.updateElevation(this.terrain);
 
+            for (const sourceId in this.sourceCaches) {
+                const sourceCache = this.sourceCaches[sourceId];
+                if (sourceCache.usedForTerrain) sourceCache.usedForTerrain = false;
+            }
+
         // add terrain
         } else {
             const sourceCache = this.sourceCaches[options.source];
