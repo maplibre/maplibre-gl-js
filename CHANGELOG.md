@@ -10,6 +10,7 @@
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
+- No triggering of contextmenu after rotate, pitch, etc. also on Windows
 
 ## 2.3.1-pre.2
 
