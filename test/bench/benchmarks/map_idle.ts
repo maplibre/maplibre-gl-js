@@ -19,7 +19,6 @@ export default class MapIdle extends Benchmark {
      */
     async createMap(): Promise<void> {
         return createMap({
-            style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
             idle: true,
             center: [-77.032194, 38.912753],
             zoom: 15

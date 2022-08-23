@@ -2,6 +2,9 @@ import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 import type {StyleSpecification} from '../../../src/style-spec/types.g';
 
+/**
+ * Measures how long it takes the map to reach the idle state when only using hill shade tiles.
+ */
 export default class HillshadeLoad extends Benchmark {
     style: StyleSpecification;
 
