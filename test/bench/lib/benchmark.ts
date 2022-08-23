@@ -32,6 +32,8 @@ class Benchmark {
      */
     teardown(): Promise<void> | void {}
 
+    public minimumMeasurements = 210;
+
     _elapsed: number;
     _measurements: Array<Measurement>;
     _iterationsPerMeasurement: number;
@@ -53,7 +55,7 @@ class Benchmark {
 
     private _done() {
         // 210 samples => 20 observations for regression
-        return this._elapsed >= 500 && this._measurements.length > 210;
+        return this._elapsed >= 500 && this._measurements.length > this.minimumMeasurements;
     }
 
     private _begin(): Promise<Array<Measurement>> {
