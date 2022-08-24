@@ -126,7 +126,6 @@ class Style extends Evented {
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
     _terrainDataCallback: (e: any) => any;
-    _terrainfreezeElevationCallback: (e: any) => any;
     _changed: boolean;
     _updatedSources: {[_: string]: 'clear' | 'reload'};
     _updatedLayers: {[_: string]: true};
@@ -495,11 +494,11 @@ class Style extends Evented {
 
         // clear event handlers
         if (this._terrainDataCallback) this.off('data', this._terrainDataCallback);
-        if (this._terrainfreezeElevationCallback) this.map.off('freezeElevation', this._terrainfreezeElevationCallback);
 
         // remove terrain
         if (!options) {
             this.terrain = null;
+            this.map.terrain = null;
             this.map.transform.updateElevation(this.terrain);
 
         // add terrain
@@ -507,15 +506,8 @@ class Style extends Evented {
             const sourceCache = this.sourceCaches[options.source];
             if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
             this.terrain = new Terrain(this, sourceCache, options);
+            this.map.terrain = this.terrain;
             this.map.transform.updateElevation(this.terrain);
-            this._terrainfreezeElevationCallback = (e: any) => {
-                if (e.freeze) {
-                    this.map.transform.freezeElevation = true;
-                } else if (this.map.transform.freezeElevation) {
-                    this.map.transform.freezeElevation = false;
-                    this.map.transform.recalculateZoom(this.terrain);
-                }
-            };
             this._terrainDataCallback = e => {
                 if (!e.tile) return;
                 if (e.sourceId === options.source) {
@@ -526,7 +518,6 @@ class Style extends Evented {
                 }
             };
             this.on('data', this._terrainDataCallback);
-            this.map.on('freezeElevation', this._terrainfreezeElevationCallback);
         }
 
         this.map.fire(new Event('terrain', {terrain: options}));

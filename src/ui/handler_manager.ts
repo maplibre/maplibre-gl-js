@@ -452,10 +452,11 @@ class HandlerManager {
                     point: around,
                     handlerName: combinedEventsInProgress.drag.handlerName
                 };
-                map.fire(new Event('freezeElevation', {freeze: true}));
+                tr.freezeElevation = true;
             // when dragging ends, recalcuate the zoomlevel for the new center coordinate
             } else if (this._drag && deactivatedHandlers[this._drag.handlerName]) {
-                map.fire(new Event('freezeElevation', {freeze: false}));
+                tr.freezeElevation = false;
+                tr.recalculateZoom(map.terrain);
                 this._drag = null;
             // drag map
             } else if (combinedEventsInProgress.drag && this._drag) {

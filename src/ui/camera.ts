@@ -6,6 +6,7 @@ import LngLatBounds from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
 import {Debug} from '../util/debug';
+import Terrain from '../render/terrain';
 
 import type Transform from '../geo/transform';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -128,6 +129,8 @@ export type AnimationOptions = {
 
 abstract class Camera extends Evented {
     transform: Transform;
+    terrain: Terrain;
+
     _moving: boolean;
     _zooming: boolean;
     _rotating: boolean;
@@ -145,6 +148,10 @@ abstract class Camera extends Evented {
     _onEaseFrame: (_: number) => void;
     _onEaseEnd: (easeId?: string) => void;
     _easeFrameId: TaskID;
+
+    _elevationCenter: LngLat;
+    _elevationStart: number;
+    _elevationTarget: number;
 
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
@@ -861,6 +868,7 @@ abstract class Camera extends Evented {
 
         this._easeId = options.easeId;
         this._prepareEase(options, eventData, options.noMoveStart, currently);
+        this._prepareElevation(center);
 
         this._ease((k) => {
             if (this._zooming) {
@@ -879,6 +887,8 @@ abstract class Camera extends Evented {
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
 
+            if (!options.freezeElevation) this._updateElevation(k);
+
             if (around) {
                 tr.setLocationAtPoint(around, aroundPoint);
             } else {
@@ -894,6 +904,7 @@ abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
+            this._finalizeElevation();
             this._afterEase(options, eventData, interruptingEaseId);
         }, options as any);
 
@@ -902,9 +913,6 @@ abstract class Camera extends Evented {
 
     _prepareEase(options: any, eventData: any, noMoveStart: boolean, currently: any = {}) {
         this._moving = true;
-        if (options.freezeElevation) {
-            this.fire(new Event('freezeElevation', {freeze: true}));
-        }
         if (!noMoveStart && !currently.moving) {
             this.fire(new Event('movestart', eventData));
         }
@@ -917,6 +925,28 @@ abstract class Camera extends Evented {
         if (this._pitching && !currently.pitching) {
             this.fire(new Event('pitchstart', eventData));
         }
+    }
+
+    _prepareElevation(center: LngLat) {
+        this._elevationCenter = center;
+        this._elevationStart = this.transform.elevation;
+        this._elevationTarget = this.transform.getElevation(center, this.terrain);
+        this.transform.freezeElevation = true;
+    }
+
+    _updateElevation(k: number) {
+         const elevation = this.transform.getElevation(this._elevationCenter, this.terrain);
+         // target terrain updated during flight, slowly move camera to new height
+         if (elevation != this._elevationTarget) {
+            this._elevationStart += (this._elevationTarget - elevation) * 1 / k; // FIXME! is this correct?
+            this._elevationTarget = elevation;
+         }
+         this.transform.elevation = interpolate(this._elevationStart, this._elevationTarget, k);
+    }
+
+    _finalizeElevation() {
+        this.transform.freezeElevation = false;
+        this.transform.recalculateZoom(this.terrain);
     }
 
     _fireMoveEvents(eventData?: any) {
@@ -939,10 +969,6 @@ abstract class Camera extends Evented {
             return;
         }
         delete this._easeId;
-
-        if (options.freezeElevation) {
-            this.fire(new Event('freezeElevation', {freeze: false}));
-        }
 
         const wasZooming = this._zooming;
         const wasRotating = this._rotating;
@@ -1152,6 +1178,7 @@ abstract class Camera extends Evented {
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
         this._prepareEase(options, eventData, false);
+        this._prepareElevation(center);
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfuls.
@@ -1172,12 +1199,17 @@ abstract class Camera extends Evented {
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
 
+            if (!options.freezeElevation) this._updateElevation(k);
+
             const newCenter = k === 1 ? center : tr.unproject(from.add(delta.mult(u(s))).mult(scale));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
 
             this._fireMoveEvents(eventData);
 
-        }, () => this._afterEase(options, eventData), options);
+        }, () => {
+            this._finalizeElevation();
+            this._afterEase(options, eventData);
+        }, options);
 
         return this;
     }
