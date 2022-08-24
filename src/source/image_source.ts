@@ -209,7 +209,7 @@ class ImageSource extends Evented implements Source {
             delete this.boundsBuffer;
         }
 
-        this.fire(new Event('data', {dataType:'source', sourceDataType: 'content'}));
+        this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
         return this;
     }
 

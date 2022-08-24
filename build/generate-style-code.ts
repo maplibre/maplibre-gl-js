@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 
-import spec from '../src/style-spec/reference/v8.json';
+import spec from '../src/style-spec/reference/v8.json' assert {type: 'json'};
 
 function camelCase(str: string): string {
     return str.replace(/-(.)/g, (_, x) => {
@@ -27,6 +27,8 @@ function nativeType(property) {
             return Object.keys(property.values).map(v => JSON.stringify(v)).join(' | ');
         case 'color':
             return 'Color';
+        case 'padding':
+            return 'Padding';
         case 'formatted':
             return 'Formatted';
         case 'resolvedImage':
@@ -87,6 +89,8 @@ function runtimeType(property) {
             return 'StringType';
         case 'color':
             return 'ColorType';
+        case 'padding':
+            return 'PaddingType';
         case 'formatted':
             return 'FormattedType';
         case 'Image':
@@ -175,6 +179,7 @@ import {
 } from '../properties';
 
 import type Color from '../../style-spec/util/color';
+import type Padding from '../../style-spec/util/padding';
 
 import type Formatted from '../../style-spec/expression/types/formatted';
 

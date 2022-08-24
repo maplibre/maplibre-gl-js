@@ -1,6 +1,7 @@
 import AttributionControl from './attribution_control';
 import {createMap as globalCreateMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
+import {fakeServer} from 'nise';
 
 function createMap() {
 
@@ -266,6 +267,67 @@ describe('AttributionControl', () => {
             if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
                 if (++times === 3) {
                     expect(attribution._innerContainer.innerHTML).toBe('Used');
+                    done();
+                }
+            }
+        });
+    });
+
+    test('does not show attributions for sources that are used for terrain when they are not in use', done => {
+        global.fetch = null;
+        const server = fakeServer.create();
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 5,
+            maxzoom: 12,
+            attribution: 'Terrain',
+            tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
+            bounds: [-47, -7, -45, -5]
+        }));
+
+        const attribution = new AttributionControl();
+        map.addControl(attribution);
+
+        map.on('load', () => {
+            map.addSource('1', {type: 'raster-dem', url: '/source.json'});
+            server.respond();
+        });
+
+        let times = 0;
+        map.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
+                if (++times === 1) {
+                    expect(attribution._innerContainer.innerHTML).toBe('');
+                    done();
+                }
+            }
+        });
+    });
+
+    test('shows attributions for sources that are used for terrain', done => {
+        global.fetch = null;
+        const server = fakeServer.create();
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 5,
+            maxzoom: 12,
+            attribution: 'Terrain',
+            tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
+            bounds: [-47, -7, -45, -5]
+        }));
+
+        const attribution = new AttributionControl();
+        map.addControl(attribution);
+
+        map.on('load', () => {
+            map.addSource('1', {type: 'raster-dem', url: '/source.json'});
+            server.respond();
+            map.setTerrain({source: '1'});
+        });
+
+        let times = 0;
+        map.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
+                if (++times === 1) {
+                    expect(attribution._innerContainer.innerHTML).toBe('Terrain');
                     done();
                 }
             }

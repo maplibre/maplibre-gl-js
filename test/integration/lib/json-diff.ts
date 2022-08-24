@@ -53,14 +53,14 @@ export function stripPrecision(x, decimalSigFigs = 10) {
         // eg `Math.floor(8.16598 * 100000) / 100000` -> 8.16597
         const firstStrip = Math.floor(x * multiplier) / multiplier;
         return Math.floor(firstStrip * multiplier) / multiplier;
-    } else if (typeof x !== 'object') {
+    } else if (!x || typeof x !== 'object') {
         return x;
     } else if (Array.isArray(x)) {
-        return x.map(stripPrecision);
+        return x.map((v) => stripPrecision(v, decimalSigFigs));
     } else {
         const stripped = {};
         for (const key of Object.keys(x)) {
-            stripped[key] = stripPrecision(x[key]);
+            stripped[key] = stripPrecision(x[key], decimalSigFigs);
         }
         return stripped;
     }

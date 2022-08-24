@@ -45,7 +45,14 @@ function draw(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLa
     }
 }
 
-function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMode, colorMode) {
+function drawExtrusionTiles(
+    painter: Painter,
+    source: SourceCache,
+    layer: FillExtrusionStyleLayer,
+    coords: OverscaledTileID[],
+    depthMode: DepthMode,
+    stencilMode: Readonly<StencilMode>,
+    colorMode: Readonly<ColorMode>) {
     const context = painter.context;
     const gl = context.gl;
     const patternProperty = layer.paint.get('fill-extrusion-pattern');

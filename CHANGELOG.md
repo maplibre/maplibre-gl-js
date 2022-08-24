@@ -1,12 +1,85 @@
 ## main
 
+
 ### ✨ Features and improvements
 
 - *...Add new stuff here...*
+- Upgrade target from ES2017 to ES2019
+- Removed `_interpolationType` unused field (#264)
 
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
+- Fix attribution not being displayed for terrain ([#1516](https://github.com/maplibre/maplibre-gl-js/pull/1516))
+- No triggering of contextmenu after rotate, pitch, etc. also on Windows ([#1537](https://github.com/maplibre/maplibre-gl-js/pull/1537))
+
+## 2.3.1-pre.2
+
+### ✨ Features and improvements
+- Improve expression types ([#1510](https://github.com/maplibre/maplibre-gl-js/pull/1510))
+- Improve performance for primitive size selection ([#1508](https://github.com/maplibre/maplibre-gl-js/pull/1508))
+- Fix query tests on windows ([#1506](https://github.com/maplibre/maplibre-gl-js/pull/1506))
+- Upgrade target from ES2017 to ES2019 ([#1499](https://github.com/maplibre/maplibre-gl-js/pull/1499))
+
+## 2.3.1-pre.1
+
+### ✨ Features and improvements
+- Improve error handling ([#1485](https://github.com/maplibre/maplibre-gl-js/pull/1485))
+
+## 2.3.0
+
+### ✨ Features and improvements
+
+- Re-enable method to get library version. Either with `import {version} from 'maplibre-gl'`, or on a Map instance as `map.version`.
+
+## 2.2.1
+
+### 🐞 Bug fixes
+
+- Fix types generation and make sure they run as part of the CI (#1462, #1465)
+
+## 2.2.0
+
+Everything from the four previous pre-releases:
+
+### ✨ Features and improvements
+
+- Update `icon-padding` symbol layout property to support asymmetric padding (#1289)
+- Added `cooperativeGestures` option when instantiating map to prevent inadvertent scrolling/panning when navigating a page where map is embedded inline (#234)
+- Improve filter specification typings (#1390)
+- Add internal support for Node 18 (#1431)
+- Add 3D terrain capabilities  (#165, #1022)
+- Cancel pending GeoJSON requests when `GeoJSONSource.setData()` is called instead of waiting for any pending request to complete before issuing the request for the new URL (#1102)
+
+### 🐞 Bug fixes
+
+- Fix compact attribution style when using global CSS that sets `box-sizing: border-box;` (#1250)
+- Handle maxBounds which cross the meridian at longitude ±180° (#1298, #1299)
+- Hide arrow displayed in default `summary` styles on the attribution control (#1258)
+- Fix memory usage in terrain 3D (#1291, #1302)
+- Fix disappearence of closest tiles when 3D terrain is enabled (#1241, #1300)
+
+## 2.2.0-pre.4
+
+### ✨ Features and improvements
+
+- Update `icon-padding` symbol layout property to support asymmetric padding (#1289)
+- Added `cooperativeGestures` option when instantiating map to prevent inadvertent scrolling/panning when navigating a page where map is embedded inline (#234)
+- Improve filter specification typings (#1390)
+- Add internal support for Node 18 (#1431)
+
+### 🐞 Bug fixes
+
+- Fix compact attribution style when using global CSS that sets `box-sizing: border-box;` (#1250)
+
+## 2.2.0-pre.3
+
+### 🐞 Bug fixes
+
+- Handle maxBounds which cross the meridian at longitude ±180° (#1298, #1299)
+- Hide arrow displayed in default `summary` styles on the attribution control (#1258)
+- Fix memory usage in terrain 3D (#1291, #1302)
+- Fix disappearence of closest tiles when 3D terrain is enabled (#1241, #1300)
 
 ## 2.2.0-pre.2
 
@@ -36,7 +109,7 @@
 
 - Fix missing `touchmove` in `MapTouchEvent["type"]` (#1131)
 - Type CustomLayerInterface renderingMode, onRemove, onAdd, and prerender optional (#1122)
- 
+
 ## 2.1.8-pre.3
 
 ### 🐞 Bug fixes

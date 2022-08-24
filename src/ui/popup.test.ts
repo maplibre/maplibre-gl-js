@@ -625,8 +625,8 @@ describe('popup', () => {
             .trackPointer()
             .addTo(map);
 
-        simulate.mousemove(map.getCanvas(), {screenX:0, screenY:0});
-        expect(popup._pos).toEqual({x:0, y:0});
+        simulate.mousemove(map.getCanvas(), {screenX: 0, screenY: 0});
+        expect(popup._pos).toEqual({x: 0, y: 0});
     });
 
     test('Popup closes on Map#remove', () => {

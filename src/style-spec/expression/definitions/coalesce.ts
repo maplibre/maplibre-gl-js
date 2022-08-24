@@ -1,5 +1,3 @@
-import assert from 'assert';
-
 import {checkSubtype, ValueType} from '../types';
 import ResolvedImage from '../types/resolved_image';
 
@@ -34,7 +32,7 @@ class Coalesce implements Expression {
             outputType = outputType || parsed.type;
             parsedArgs.push(parsed);
         }
-        assert(outputType);
+        if (!outputType) throw new Error('No output type');
 
         // Above, we parse arguments without inferred type annotation so that
         // they don't produce a runtime error for `null` input, which would
@@ -79,12 +77,6 @@ class Coalesce implements Expression {
 
     outputDefined(): boolean {
         return this.args.every(arg => arg.outputDefined());
-    }
-
-    serialize() {
-        const serialized = ['coalesce' as unknown];
-        this.eachChild(child => { serialized.push(child.serialize()); });
-        return serialized;
     }
 }
 

@@ -70,10 +70,6 @@ class In implements Expression {
     outputDefined() {
         return true;
     }
-
-    serialize() {
-        return ['in', this.needle.serialize(), this.haystack.serialize()];
-    }
 }
 
 export default In;

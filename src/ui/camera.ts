@@ -5,7 +5,6 @@ import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
-import assert from 'assert';
 import {Debug} from '../util/debug';
 
 import type Transform from '../geo/transform';
@@ -1273,19 +1272,10 @@ function addAssertions(camera: Camera) { //eslint-disable-line
             inProgress[name] = false;
 
             camera.on(`${name}start`, () => {
-                assert(!inProgress[name], `"${name}start" fired twice without a "${name}end"`);
                 inProgress[name] = true;
-                assert(inProgress.move);
-            });
-
-            camera.on(name, () => {
-                assert(inProgress[name]);
-                assert(inProgress.move);
             });
 
             camera.on(`${name}end`, () => {
-                assert(inProgress.move);
-                assert(inProgress[name]);
                 inProgress[name] = false;
             });
         });

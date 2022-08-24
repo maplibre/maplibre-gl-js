@@ -464,26 +464,6 @@
     100% { transform: rotate(360deg); }
 }
 
-@keyframes maplibregl-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes maplibregl-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes maplibregl-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes maplibregl-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
 a.maplibregl-ctrl-logo,
 a.mapboxgl-ctrl-logo {
     width: 88px;
@@ -542,6 +522,7 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
         position: relative;
         background-color: #fff;
         border-radius: 12px;
+        box-sizing: content-box;
     }
 
     .maplibregl-ctrl-attrib.maplibregl-compact-show,
@@ -578,6 +559,15 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
         top: 0;
         right: 0;
         border: 0;
+    }
+
+    .maplibregl-ctrl-attrib summary.maplibregl-ctrl-attrib-button {
+        appearance: none;
+        list-style: none;
+    }
+
+    .maplibregl-ctrl-attrib summary.maplibregl-ctrl-attrib-button::-webkit-details-marker {
+        display: none;
     }
 
     .maplibregl-ctrl-top-left .maplibregl-ctrl-attrib-button,
@@ -887,18 +877,6 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     100% { transform: scale(1); opacity: 0; }
 }
 
-@keyframes maplibregl-user-location-dot-pulse {
-    0%   { transform: scale(1); opacity: 1; }
-    70%  { transform: scale(3); opacity: 0; }
-    100% { transform: scale(1); opacity: 0; }
-}
-
-@keyframes maplibregl-user-location-dot-pulse {
-    0%   { transform: scale(1); opacity: 1; }
-    70%  { transform: scale(3); opacity: 0; }
-    100% { transform: scale(1); opacity: 0; }
-}
-
 .maplibregl-user-location-dot-stale,
 .mapboxgl-user-location-dot-stale {
     background-color: #aaa;
@@ -936,4 +914,42 @@ a.mapboxgl-ctrl-logo.mapboxgl-compact {
     background: #fff;
     border: 2px dotted #202020;
     opacity: 0.5;
+}
+
+.maplibregl-cooperative-gesture-screen {
+    background: rgba(0 0 0 / 40%);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 1rem;
+    font-size: 1.4em;
+    line-height: 1.2;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease 1s;
+}
+
+.maplibregl-cooperative-gesture-screen.maplibregl-show {
+    opacity: 1;
+    transition: opacity 0.05s;
+}
+
+.maplibregl-cooperative-gesture-screen .maplibregl-mobile-message {
+    display: none;
+}
+
+@media (hover: none), (max-width: 480px) {
+    .maplibregl-cooperative-gesture-screen .maplibregl-desktop-message {
+        display: none;
+    }
+
+    .maplibregl-cooperative-gesture-screen .maplibregl-mobile-message {
+        display: block;
+    }
 }

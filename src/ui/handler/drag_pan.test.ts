@@ -2,6 +2,7 @@ import DOM from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
 import Map, {MapOptions} from '../map';
+import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 
 function createMap(clickTolerance?, dragPan?) {
     return new Map({
@@ -456,7 +457,7 @@ describe('drag_pan', () => {
         const target = map.getCanvas();
 
         jest.spyOn(map, 'getLayer').mockReturnValue(true as any);
-        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
         map.on('touchstart', 'point', (e) => {
             e.preventDefault();

@@ -1,4 +1,3 @@
-import assert from 'assert';
 
 import {typeOf} from '../values';
 import {ValueType} from '../types';
@@ -92,8 +91,6 @@ class Match implements Expression {
         const otherwise = context.parse(args[args.length - 1], args.length - 1, outputType);
         if (!otherwise) return null;
 
-        assert(inputType && outputType);
-
         if (input.type.kind !== 'value' && context.concat(1).checkSubtype(((inputType as any)), input.type)) {
             return null;
         }
@@ -115,47 +112,6 @@ class Match implements Expression {
 
     outputDefined(): boolean {
         return this.outputs.every(out => out.outputDefined()) && this.otherwise.outputDefined();
-    }
-
-    serialize(): Array<unknown> {
-        const serialized = ['match', this.input.serialize()];
-
-        // Sort so serialization has an arbitrary defined order, even though
-        // branch order doesn't affect evaluation
-        const sortedLabels = Object.keys(this.cases).sort();
-
-        // Group branches by unique match expression to support condensed
-        // serializations of the form [case1, case2, ...] -> matchExpression
-        const groupedByOutput: Array<[number, Array<number | string>]> = [];
-        const outputLookup: {
-            [index: number]: number;
-        } = {}; // lookup index into groupedByOutput for a given output expression
-        for (const label of sortedLabels) {
-            const outputIndex = outputLookup[this.cases[label]];
-            if (outputIndex === undefined) {
-                // First time seeing this output, add it to the end of the grouped list
-                outputLookup[this.cases[label]] = groupedByOutput.length;
-                groupedByOutput.push([this.cases[label], [label]]);
-            } else {
-                // We've seen this expression before, add the label to that output's group
-                groupedByOutput[outputIndex][1].push(label);
-            }
-        }
-
-        const coerceLabel = (label) => this.inputType.kind === 'number' ? Number(label) : label;
-
-        for (const [outputIndex, labels] of groupedByOutput) {
-            if (labels.length === 1) {
-                // Only a single label matches this output expression
-                serialized.push(coerceLabel(labels[0]));
-            } else {
-                // Array of literal labels pointing to this output expression
-                serialized.push(labels.map(coerceLabel));
-            }
-            serialized.push(this.outputs[outputIndex].serialize());
-        }
-        serialized.push(this.otherwise.serialize());
-        return serialized;
     }
 }
 

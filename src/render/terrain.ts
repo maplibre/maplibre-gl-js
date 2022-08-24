@@ -20,6 +20,25 @@ import EXTENT from '../data/extent';
 import {number as mix} from '../style-spec/util/interpolate';
 import type {TerrainSpecification} from '../style-spec/types.g';
 
+export type TerrainData = {
+    'u_depth': number;
+    'u_terrain': number;
+    'u_terrain_dim': number;
+    'u_terrain_matrix': mat4;
+    'u_terrain_unpack': number[];
+    'u_terrain_offset': number;
+    'u_terrain_exaggeration': number;
+    texture: WebGLTexture;
+    depthTexture: WebGLTexture;
+    tile: Tile;
+}
+
+export type TerrainMesh = {
+    indexBuffer: IndexBuffer;
+    vertexBuffer: VertexBuffer;
+    segments: SegmentVector;
+}
+
 /**
  * This is the main class which handles most of the 3D Terrain logic. It has the follwing topics:
  *    1) loads raster-dem tiles via the internal sourceCache this.sourceCache
@@ -47,25 +66,6 @@ import type {TerrainSpecification} from '../style-spec/types.g';
  *         cache of the last 150 newest rendered tiles.
  *
  */
-
-export type TerrainData = {
-    'u_depth': number;
-    'u_terrain': number;
-    'u_terrain_dim': number;
-    'u_terrain_matrix': mat4;
-    'u_terrain_unpack': number[];
-    'u_terrain_offset': number;
-    'u_terrain_exaggeration': number;
-    texture: WebGLTexture;
-    depthTexture: WebGLTexture;
-    tile: Tile;
-}
-
-export type TerrainMesh = {
-    indexBuffer: IndexBuffer;
-    vertexBuffer: VertexBuffer;
-    segments: SegmentVector;
-}
 
 export default class Terrain {
     // The style this terrain crresponds to
@@ -144,8 +144,8 @@ export default class Terrain {
         const terrain = this.getTerrainData(tileID);
         if (terrain.tile && terrain.tile.dem) {
             const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
-            const coord = [ pos[0] * terrain.tile.dem.dim, pos[1] * terrain.tile.dem.dim ];
-            const c = [ Math.floor(coord[0]), Math.floor(coord[1]) ];
+            const coord = [pos[0] * terrain.tile.dem.dim, pos[1] * terrain.tile.dem.dim];
+            const c = [Math.floor(coord[0]), Math.floor(coord[1])];
             const tl = terrain.tile.dem.get(c[0], c[1]);
             const tr = terrain.tile.dem.get(c[0], c[1] + 1);
             const bl = terrain.tile.dem.get(c[0] + 1, c[1]);
@@ -374,6 +374,24 @@ export default class Terrain {
             segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
         };
         return this._mesh;
+    }
+
+    /**
+     * Get the minimum and maximum elevation contained in a tile. This includes any elevation offset
+     * and exaggeration included in the terrain.
+     *
+     * @param tileID Id of the tile to be used as a source for the min/max elevation
+     * @returns {Object} Minimum and maximum elevation found in the tile, including the terrain's
+     * elevation offset and exaggeration
+     */
+    getMinMaxElevation(tileID: OverscaledTileID): {minElevation: number | null; maxElevation: number | null} {
+        const tile = this.getTerrainData(tileID).tile;
+        const minMax = {minElevation: null, maxElevation: null};
+        if (tile && tile.dem) {
+            minMax.minElevation = (tile.dem.min + this.elevationOffset) * this.exaggeration;
+            minMax.maxElevation = (tile.dem.max + this.elevationOffset) * this.exaggeration;
+        }
+        return minMax;
     }
 
 }
