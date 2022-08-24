@@ -74,6 +74,7 @@ export default class RenderToTexture {
         // remove cached textures
         if (terrain.needsRerenderAll()) {
             terrain.sourceCache.getAllTiles().forEach(tile => tile.clearTextures(this.painter));
+            this._renderableTiles.forEach(tile => this._rerender[tile.tileID.key] = true);
         } else {
             this._renderableTiles.forEach(tile => {
                 for (const source in this._coordsDescendingInvStr) {
@@ -103,6 +104,8 @@ export default class RenderToTexture {
      * @returns {boolean} if true layer is rendered to texture, otherwise false
      */
     renderLayer(layer: StyleLayer): boolean {
+        if (layer.isHidden(this.painter.transform.zoom)) return;
+
         const type = layer.type;
         const painter = this.painter;
         const layerIds = painter.style._order;
@@ -122,7 +125,7 @@ export default class RenderToTexture {
         if (this._renderToTexture[this._prevType] || type === 'hillshade' || (this._renderToTexture[type] && isLastLayer)) {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
-            for (const tile of this._renderableTiles) {
+            if (this._stacks.length) for (const tile of this._renderableTiles) {
                 prepareTerrain(painter, painter.style.terrain, tile, stack);
                 if (this._rerender[tile.tileID.key]) {
                     painter.context.clear({color: Color.transparent});
