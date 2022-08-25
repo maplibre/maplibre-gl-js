@@ -4,6 +4,7 @@ import TaskQueue, {TaskID} from '../util/task_queue';
 import browser from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
+import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 
 beforeEach(() => {
     setMatchMedia();
@@ -74,8 +75,8 @@ describe('#calculateCameraOptionsFromTo', () => {
 
     test('pitch 45', () => {
         // altitude same as grounddistance => 45°
-        // distance between lat x and lat x+1 is 111.2km at same lng
-        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 1, lat: 1});
+        // distance between lng x and lng x+1 is 111.2km at same lat
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0});
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(45);
     });
@@ -84,6 +85,36 @@ describe('#calculateCameraOptionsFromTo', () => {
         const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0});
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(90);
+    });
+
+    test('pitch 153.435', () => {
+
+        // distance between lng x and lng x+1 is 111.2km at same lat
+        // (elevation difference of cam and center) / 2 = grounddistance =>
+        // acos(111.2 / sqrt(111.2² + (111.2 * 2)²)) = acos(1/sqrt(5)) => 63.435 + 90 (looking up) = 153.435
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0}, 111200 * 3);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.pitch).toBeCloseTo(153.435);
+    });
+
+    test('zoom distance 1000', () => {
+        const expectedZoom = Math.log2(camera.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / camera.transform.tileSize);
+        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 1000);
+
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
+    });
+
+    test('zoom distance 1 lng (111.2km), 111.2km altitude away', () => {
+        const expectedZoom = Math.log2(camera.transform.cameraToCenterDistance / mercatorZfromAltitude(Math.hypot(111200, 111200), 0) / camera.transform.tileSize);
+        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 1, lat: 0}, 111200);
+
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
+    });
+
+    test('same To as From error', () => {
+        expect(() => { camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0); }).toThrow();
     });
 });
 

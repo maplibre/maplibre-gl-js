@@ -793,6 +793,8 @@ abstract class Camera extends Evented {
         const dz = toMerc.z - fromMerc.z;
 
         const distance3D = Math.hypot(dx, dy, dz);
+        if (distance3D === 0) throw new Error('Can\'t calculate camera options with same From and To');
+
         const groundDistance = Math.hypot(dx, dy);
 
         const zoom = this.transform.scaleZoom(this.transform.cameraToCenterDistance / distance3D / this.transform.tileSize);
