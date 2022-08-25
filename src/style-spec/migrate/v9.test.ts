@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import migrate from './v9';
 
 describe('migrate v9', () => {
@@ -7,7 +5,7 @@ describe('migrate v9', () => {
         const input = {
             version: 8,
             sources: {
-                a: {type: 'vector', tiles: [ 'http://dev/null' ]}
+                a: {type: 'vector', tiles: ['http://dev/null']}
             },
             layers: [{
                 id: 'parent',
@@ -18,12 +16,12 @@ describe('migrate v9', () => {
                 id: 'child',
                 ref: 'parent'
             }]
-        };
+        } as any;
 
         expect(migrate(input)).toEqual({
             version: 9,
             sources: {
-                a: {type: 'vector', tiles: [ 'http://dev/null' ]}
+                a: {type: 'vector', tiles: ['http://dev/null']}
             },
             layers: [{
                 id: 'parent',
@@ -44,7 +42,7 @@ describe('migrate v9', () => {
         const input = {
             version: 8,
             sources: {
-                a: {type: 'vector', tiles: [ 'http://dev/null' ]}
+                a: {type: 'vector', tiles: ['http://dev/null']}
             },
             layers: [{
                 id: 'a',
@@ -58,12 +56,12 @@ describe('migrate v9', () => {
                     'fill-color': 'blue'
                 }
             }]
-        };
+        } as any;
 
         expect(migrate(input)).toEqual({
             version: 9,
             sources: {
-                a: {type: 'vector', tiles: [ 'http://dev/null' ]}
+                a: {type: 'vector', tiles: ['http://dev/null']}
             },
             layers: [{
                 id: 'a',

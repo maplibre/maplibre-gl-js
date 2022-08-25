@@ -2,7 +2,6 @@ import {toString} from './types';
 
 import ParsingContext from './parsing_context';
 import EvaluationContext from './evaluation_context';
-import assert from 'assert';
 
 import type {Expression, ExpressionRegistry} from './expression';
 import type {Type} from './types';
@@ -114,8 +113,6 @@ class CompoundExpression implements Expression {
             }
         }
 
-        assert(!signatureContext || signatureContext.errors.length > 0);
-
         if (overloads.length === 1) {
             context.errors.push(...signatureContext.errors);
         } else {
@@ -142,7 +139,6 @@ class CompoundExpression implements Expression {
         registry: ExpressionRegistry,
         definitions: {[_: string]: Definition}
     ) {
-        assert(!CompoundExpression.definitions);
         CompoundExpression.definitions = definitions;
         for (const name in definitions) {
             registry[name] = CompoundExpression;

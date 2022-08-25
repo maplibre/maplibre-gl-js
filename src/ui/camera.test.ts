@@ -989,17 +989,17 @@ describe('#flyTo', () => {
     });
 
     test('does not throw when cameras current zoom is sufficiently greater than passed zoom option', () => {
-        const camera = createCamera({zoom: 22, center:[0, 0]});
-        expect(() => camera.flyTo({zoom:10, center:[0, 0]})).not.toThrow();
+        const camera = createCamera({zoom: 22, center: [0, 0]});
+        expect(() => camera.flyTo({zoom: 10, center: [0, 0]})).not.toThrow();
     });
 
     test('does not throw when cameras current zoom is above maxzoom and an offset creates infinite zoom out factor', () => {
         const transform = new Transform(0, 20.9999, 0, 60, true);
         transform.resize(512, 512);
         const camera = attachSimulateFrame(new CameraMock(transform, {} as any))
-            .jumpTo({zoom: 21, center:[0, 0]});
+            .jumpTo({zoom: 21, center: [0, 0]});
         camera._update = () => {};
-        expect(() => camera.flyTo({zoom:7.5, center:[0, 0], offset:[0, 70]})).not.toThrow();
+        expect(() => camera.flyTo({zoom: 7.5, center: [0, 0], offset: [0, 70]})).not.toThrow();
     });
 
     test('zooms to specified level', () => {
@@ -1861,7 +1861,7 @@ describe('#fitBounds', () => {
     test('no padding passed', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-        camera.fitBounds(bb, {duration:0});
+        camera.fitBounds(bb, {duration: 0});
 
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.7171});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2.469);
@@ -1870,7 +1870,7 @@ describe('#fitBounds', () => {
     test('padding number', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-        camera.fitBounds(bb, {padding: 15, duration:0});
+        camera.fitBounds(bb, {padding: 15, duration: 0});
 
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.7171});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2.382);
@@ -1879,7 +1879,7 @@ describe('#fitBounds', () => {
     test('padding object', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-        camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration:0});
+        camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
 
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -96.5558, lat: 32.0833});
     });
@@ -1887,7 +1887,7 @@ describe('#fitBounds', () => {
     test('padding does not get propagated to transform.padding', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]];
-        camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration:0});
+        camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
         const padding = camera.transform.padding;
 
         expect(padding).toEqual({
@@ -1905,7 +1905,7 @@ describe('#fitScreenCoordinates', () => {
         const p0 = [128, 128];
         const p1 = [256, 256];
         const bearing = 225;
-        camera.fitScreenCoordinates(p0, p1, bearing, {duration:0});
+        camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
 
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
         expect(fixedNum(camera.getZoom(), 3)).toBe(1.5);
@@ -1917,7 +1917,7 @@ describe('#fitScreenCoordinates', () => {
         const p0 = [128, 128];
         const p1 = [256, 256];
         const bearing = 0;
-        camera.fitScreenCoordinates(p0, p1, bearing, {duration:0});
+        camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
 
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2);
@@ -1929,7 +1929,7 @@ describe('#fitScreenCoordinates', () => {
         const p1 = [128, 128];
         const p0 = [256, 256];
         const bearing = 0;
-        camera.fitScreenCoordinates(p0, p1, bearing, {duration:0});
+        camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
 
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2);

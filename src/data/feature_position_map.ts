@@ -1,6 +1,5 @@
 import murmur3 from 'murmurhash-js';
 import {register} from '../util/web_worker_transfer';
-import assert from 'assert';
 
 type SerializedFeaturePositionMap = {
     ids: Float64Array;
@@ -31,7 +30,7 @@ export default class FeaturePositionMap {
     }
 
     getPositions(id: unknown): Array<FeaturePosition> {
-        assert(this.indexed);
+        if (!this.indexed) throw new Error('Trying to get index, but feature positions are not indexed');
 
         const intId = getNumericId(id);
 

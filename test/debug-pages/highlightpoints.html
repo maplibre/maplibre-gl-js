@@ -31,9 +31,9 @@ map.on('load', function() {
         data: '/test/integration/data/places.geojson'
     });
     map.addLayer({
-        id:'places',
+        id: 'places',
         source: 'places',
-        type:'circle',
+        type: 'circle',
         paint: {
             'circle-radius': ['case',
                 ['boolean', ['feature-state', 'hover'], false],
@@ -49,7 +49,7 @@ map.on('load', function() {
     });
     let hoveredFeature;
     map.on('mousemove', function(e) {
-        var f = map.queryRenderedFeatures(e.point, {layers:['places']})[0];
+        var f = map.queryRenderedFeatures(e.point, {layers: ['places']})[0];
         if (f) {
             map.setFeatureState(f, {'hover': true});
             if (hoveredFeature && f.id !== hoveredFeature.id) map.removeFeatureState(hoveredFeature);
