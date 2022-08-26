@@ -2127,7 +2127,7 @@ describe('Map', () => {
     describe('#calculateCameraOptionsFromTo', () => {
         // Choose initial zoom to avoid center being constrained by mercator latitude limits.
         test('pitch 90 with terrain', () => {
-            const map = createMap({zoom:1});
+            const map = createMap();
 
             const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 111200);
 
@@ -2144,7 +2144,7 @@ describe('Map', () => {
         });
 
         test('pitch 153.435 with terrain', () => {
-            const map = createMap({zoom:1});
+            const map = createMap();
 
             const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 111200 * 3);
 
@@ -2161,7 +2161,7 @@ describe('Map', () => {
         });
 
         test('pitch 63 with terrain', () => {
-            const map = createMap({zoom:1});
+            const map = createMap();
 
             const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 111200 / 2);
 
@@ -2179,7 +2179,7 @@ describe('Map', () => {
         });
 
         test('zoom distance 1000', () => {
-            const map = createMap({zoom:1});
+            const map = createMap();
 
             const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 1000);
 
@@ -2196,7 +2196,7 @@ describe('Map', () => {
         });
 
         test('don\'t call getElevation when altitude supplied', () => {
-            const map = createMap({zoom:1});
+            const map = createMap();
 
             const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 0);
 
@@ -2205,6 +2205,21 @@ describe('Map', () => {
             map.style.terrain = terrainStub;
 
             const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(0, 0), 1000);
+
+            expect(cameraOptions).toBeDefined();
+            expect(mockedGetElevation.mock.calls).toHaveLength(0);
+        });
+
+        test('don\'t call getElevation when altitude 0 supplied', () => {
+            const map = createMap();
+
+            const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 0);
+
+            const terrainStub = {} as Terrain;
+            terrainStub.getElevation = mockedGetElevation;
+            map.style.terrain = terrainStub;
+
+            const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(1, 0), 0);
 
             expect(cameraOptions).toBeDefined();
             expect(mockedGetElevation.mock.calls).toHaveLength(0);

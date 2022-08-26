@@ -601,7 +601,7 @@ class Map extends Camera {
     }
 
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number) : CameraOptions {
-        if (!altitudeTo && this.style.terrain) {
+        if (altitudeTo == null && this.style.terrain) {
             altitudeTo = this.transform.getElevation(to, this.style.terrain);
         }
         return super.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
