@@ -778,6 +778,7 @@ abstract class Camera extends Evented {
     /**
      * Calculates pitch, zoom and bearing for looking at @param newCenter with the camera position being @param newCenter
      * and returns them as Cameraoptions.
+     * @memberof Map#
      * @param from The camera to look from
      * @param altitudeFrom The altitude of the camera to look from
      * @param to The center to look at
