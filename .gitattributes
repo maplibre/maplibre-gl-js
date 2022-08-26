@@ -7,3 +7,4 @@
 *.png binary
 *.mvt binary
 *.pbf binary
+*.mbtiles binary
