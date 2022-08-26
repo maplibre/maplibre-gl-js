@@ -55,7 +55,7 @@ describe('Validate Padding', () => {
         expect(errors).toHaveLength(1);
         expect(errors[0].message).toBe('padding[0]: number expected, NaN found');
 
-        errors = validatePadding({key: 'padding', value: [{x:1}]});
+        errors = validatePadding({key: 'padding', value: [{x: 1}]});
         expect(errors).toHaveLength(1);
         expect(errors[0].message).toBe('padding[0]: number expected, object found');
 

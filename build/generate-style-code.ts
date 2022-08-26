@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 
-import spec from '../src/style-spec/reference/v8.json';
+import spec from '../src/style-spec/reference/v8.json' assert {type: 'json'};
 
 function camelCase(str: string): string {
     return str.replace(/-(.)/g, (_, x) => {
