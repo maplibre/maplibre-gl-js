@@ -2943,6 +2943,14 @@ class Map extends Camera {
     get version(): string {
         return version;
     }
+
+    /**
+     * Returns the elevation for the point on the terrain where the camera is looking
+     * @returns {number} * The elevation.
+     */
+    getCameraTargetElevation(): number {
+        return this.transform.elevation;
+    }
 }
 
 export default Map;
