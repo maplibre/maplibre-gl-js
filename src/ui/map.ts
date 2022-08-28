@@ -2945,7 +2945,7 @@ class Map extends Camera {
     }
 
     /**
-     * Returns the elevation for the point on the terrain where the camera is looking
+     * Returns the elevation for the point where the camera is looking
      * @returns {number} * The elevation.
      */
     getCameraTargetElevation(): number {
