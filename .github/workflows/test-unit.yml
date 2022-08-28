@@ -34,4 +34,5 @@ jobs:
       - uses: ArtiomTr/jest-coverage-report-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          annotations: none
           test-script: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci
