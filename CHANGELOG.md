@@ -1,14 +1,18 @@
 ## main
 
-
 ### ✨ Features and improvements
 
 - *...Add new stuff here...*
-- Add map.getCameraTargetElevation() (#1558)
 
 ### 🐞 Bug fixes
 
 - *...Add new stuff here...*
+
+## 2.5.0
+
+### ✨ Features and improvements
+
+- Add map.getCameraTargetElevation() (#1558)
 
 ## 2.4.0
 
