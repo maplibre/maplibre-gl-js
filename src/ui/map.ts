@@ -2945,7 +2945,9 @@ class Map extends Camera {
     }
 
     /**
-     * Returns the elevation for the point where the camera is looking
+     * Returns the elevation for the point where the camera is looking.
+     * This value corresponds to:
+     * ("meters above sea level" + "elevation offset (style-spec v8 defualts to 450 m)") * "exaggeration"
      * @returns {number} * The elevation.
      */
     getCameraTargetElevation(): number {
