@@ -16,6 +16,7 @@ import {fakeServer, FakeServer} from 'nise';
 import {CameraOptions} from './camera';
 import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
+import Transform from '../geo/transform';
 
 function createStyleSource() {
     return {
@@ -2133,6 +2134,29 @@ describe('Map', () => {
         const map = createMap();
         map.once('sourcedataabort', () => done());
         map.fire(new Event('dataabort'));
+    });
+
+    describe('getCameraTargetElevation', () => {
+        test('Elevation is zero without terrain, and matches any given terrain', () => {
+            const map = createMap();
+            expect(map.getCameraTargetElevation()).toBe(0);
+
+            const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 2000);
+
+            const terrainStub = {} as Terrain;
+            terrainStub.getElevation = mockedGetElevation;
+            map.style.terrain = terrainStub;
+
+            const transform = new Transform(0, 22, 0, 60, true);
+            transform.elevation = 200;
+            transform.center = new LngLat(10.0, 50.0);
+            transform.zoom = 14;
+            transform.resize(512, 512);
+            transform.updateElevation(map.style.terrain);
+            map.transform = transform;
+
+            expect(map.getCameraTargetElevation()).toBe(2000);
+        });
     });
 
     describe('#calculateCameraOptionsFromTo', () => {

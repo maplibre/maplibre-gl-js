@@ -4,6 +4,7 @@
 ### ✨ Features and improvements
 
 - *...Add new stuff here...*
+- Add map.getCameraTargetElevation() (#1558)
 
 ### 🐞 Bug fixes
 
