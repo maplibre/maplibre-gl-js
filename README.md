@@ -52,9 +52,9 @@ Check out the features through [examples](https://maplibre.org/maplibre-gl-js-do
 <br />
 
 ## Migrating from mapbox-gl to maplibre
-The libraries are very similar, but diverge with newer features happening from v2 in both libraries where mapbox turned proprietary.
+The libraries are very similar but diverge with newer features happening from v2 in both libraries where Mapbox turned proprietary.
 
-The overall migration happens by uninstalling `mapbox-gl` and installing `maplibre-gl` in your node packages (or see below for cdn links), and replace `mapboxgl` with `maplibregl` througout your TypeScript, JavaScript and HTML/CSS.
+The overall migration happens by uninstalling `mapbox-gl` and installing `maplibre-gl` in your node packages (or see below for CDN links), and replacing `mapboxgl` with `maplibregl` throughout your TypeScript, JavaScript and HTML/CSS.
 
 ```diff
 -    var map = new mapboxgl.Map({
@@ -66,7 +66,7 @@ The overall migration happens by uninstalling `mapbox-gl` and installing `maplib
 
 #### Compatibility branch
 
-Maplibre v1 is completely backwards compatible with Mapbox v1. This compatibility branch (named 1.x) is tagged v1 on npm, and it's current verison is 1.15.3. 
+Maplibre v1 is completely backward compatible with Mapbox v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current verison is 1.15.3. 
 
 #### CDN Links
 
@@ -115,7 +115,7 @@ If you depend on a free software alternative to `mapbox-gl-js`, please consider 
 
 ## Sponsors
 
-We thank everyone who supported us financially in the past and special thanks to the people and organizations who support us with recurring dontations:  
+We thank everyone who supported us financially in the past and special thanks to the people and organizations who support us with recurring donations:  
 
 [MIERUNE Inc.](https://www.mierune.co.jp/?lang=en) [@MIERUNE](https://github.com/MIERUNE), [@jawg](https://github.com/jawg), [@nekoyasan](https://github.com/nekoyasan), [@atierian](https://github.com/atierian), [@photoprism](https://github.com/photoprism), [@kaplanlior](https://github.com/kaplanlior), [@francois2metz](https://github.com/francois2metz), [@Schneider-Geo](https://github.com/Schneider-Geo), [@serghov](https://github.com/serghov), [@ambientlight](https://github.com/ambientlight), [@joschi77](https://github.com/joschi77), [@geoffhill](https://github.com/geoffhill), [@jasongode](https://github.com/jasongode)
 
@@ -123,7 +123,7 @@ We thank everyone who supported us financially in the past and special thanks to
 
 ## Thank you Mapbox 🙏🏽
 
-We'd like to acknowledge the amazing work Mapbox has contributed to open source. The open source community is sad to part ways with them, but we simultaneously feel grateful for everything they already contributed. `mapbox-gl-js` 1.x is an open source achievement which now lives on as `maplibre-gl`. We're proud to develop on the shoulders of giants, thank you Mapbox 🙇🏽‍♀️.
+We'd like to acknowledge the amazing work Mapbox has contributed to open source. The open source community is sad to part ways with them, but we simultaneously feel grateful for everything they already contributed. `mapbox-gl-js` 1.x is an open source achievement that now lives on as `maplibre-gl`. We're proud to develop on the shoulders of giants, thank you Mapbox 🙇🏽‍♀️.
 
 Please keep in mind: Unauthorized backports are the biggest threat to the MapLibre project. It is unacceptable to backport code from mapbox-gl-js, which is not covered by the former BSD-3 license. If you are unsure about this issue, [please ask](https://github.com/maplibre/maplibre-gl-js/discussions)!
 
