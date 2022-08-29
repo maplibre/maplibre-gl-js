@@ -865,7 +865,8 @@ class Transform {
         const furthestDistanceHorizon = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistanceHorizon + this.cameraToSeaLevelDistance;
 
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
-        const farZ = Math.min(furthestDistance, furthestDistanceHorizon) * 1.01;
+        // Provide a max to give a buffer for points below the sea level
+        const farZ = Math.max(Math.min(furthestDistance, furthestDistanceHorizon) * 1.01, 4000);
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)

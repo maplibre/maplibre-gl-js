@@ -14,7 +14,6 @@ export type TerrainPreludeUniformsType = {
     'u_terrain_dim': Uniform1f;
     'u_terrain_matrix': UniformMatrix4f;
     'u_terrain_unpack': Uniform4f;
-    'u_terrain_offset': Uniform1f;
     'u_terrain_exaggeration': Uniform1f;
 };
 
@@ -39,7 +38,6 @@ const terrainPreludeUniforms = (context: Context, locations: UniformLocations): 
     'u_terrain_dim': new Uniform1f(context, locations.u_terrain_dim),
     'u_terrain_matrix': new UniformMatrix4f(context, locations.u_terrain_matrix),
     'u_terrain_unpack': new Uniform4f(context, locations.u_terrain_unpack),
-    'u_terrain_offset': new Uniform1f(context, locations.u_terrain_offset),
     'u_terrain_exaggeration': new Uniform1f(context, locations.u_terrain_exaggeration)
 });
 

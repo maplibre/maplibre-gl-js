@@ -42,7 +42,6 @@
   ],
   "terrain": {
     "source": "terrain",
-    "exaggeration": 2,
-    "elevationOffset": 2000
+    "exaggeration": 2
   }
 }

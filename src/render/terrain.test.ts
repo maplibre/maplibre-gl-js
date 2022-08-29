@@ -84,7 +84,7 @@ describe('Terrain', () => {
         const terrain = new Terrain(
             style,
             sourceCache,
-            {exaggeration: 2, elevationOffset: 50} as any as TerrainSpecification,
+            {exaggeration: 2} as any as TerrainSpecification,
         );
 
         terrain.sourceCache._tiles[tileID.key] = tile;
@@ -113,7 +113,7 @@ describe('Terrain', () => {
         const terrain = new Terrain(
             style,
             sourceCache,
-            {exaggeration: 2, elevationOffset: 50} as any as TerrainSpecification,
+            {exaggeration: 2} as any as TerrainSpecification,
         );
 
         const minMaxNoTile = terrain.getMinMaxElevation(tileID);
@@ -145,7 +145,7 @@ describe('Terrain', () => {
         const terrain = new Terrain(
             style,
             sourceCache,
-            {exaggeration: 2, elevationOffset: 50} as any as TerrainSpecification,
+            {exaggeration: 2} as any as TerrainSpecification,
         );
         const minMaxNoDEM = terrain.getMinMaxElevation(tileID);
 

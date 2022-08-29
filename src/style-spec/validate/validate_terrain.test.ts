@@ -26,7 +26,7 @@ describe('Validate Terrain', () => {
     });
 
     test('Should return errors according to spec violations', () => {
-        const errors = validateTerrain({value: {source: 1 as any, exaggeration: {} as any, elevationOffset: 'ex2' as any}, styleSpec: v8, style: {} as any});
+        const errors = validateTerrain({value: {source: 1 as any, exaggeration: {} as any}, styleSpec: v8, style: {} as any});
         expect(errors).toHaveLength(3);
         expect(errors[0].message).toContain('number');
         expect(errors[0].message).toContain('string');
@@ -36,11 +36,10 @@ describe('Validate Terrain', () => {
         expect(errors[1].message).toContain('exaggeration');
         expect(errors[2].message).toContain('number');
         expect(errors[2].message).toContain('string');
-        expect(errors[2].message).toContain('elevationOffset');
     });
 
     test('Should pass if everything is according to spec', () => {
-        const errors = validateTerrain({value: {source: 'source-id', elevationOffset: 1, exaggeration: 0.2}, styleSpec: v8, style: {} as any});
+        const errors = validateTerrain({value: {source: 'source-id', exaggeration: 0.2}, styleSpec: v8, style: {} as any});
         expect(errors).toHaveLength(0);
     });
 });
