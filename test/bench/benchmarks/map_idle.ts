@@ -11,7 +11,8 @@ export default class MapIdle extends Benchmark {
 
         // This is a longer running test and the duration will vary by device and network.
         // To keep the test time more reasonable, lower the minimum number of measurements.
-        this.minimumMeasurements = 40;
+        // 55 measurements => 10 observations for regression.
+        this.minimumMeasurements = 55;
     }
 
     /**
