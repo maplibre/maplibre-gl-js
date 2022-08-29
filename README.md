@@ -75,7 +75,7 @@ If you are OK with changes that integrate non-backward compatible features, inst
   }
 ```
 
-And replace `mapboxgl` with `maplibregl` in your JavaScript and optionally in your HTML/CSS code:
+And replace `mapboxgl` with `maplibregl` in your JavaScript and your HTML/CSS code:
 
 > MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more informations please see [MapLibre GL is on unpkg.com](./docs/README-unpkg.md#maplibre-gl-on-unpkgcom).
 
