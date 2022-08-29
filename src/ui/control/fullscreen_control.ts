@@ -56,7 +56,7 @@ class FullscreenControl implements IControl {
     onAdd(map: Map) {
         this._map = map;
         if (!this._container) this._container = this._map.getContainer();
-        this._controlContainer = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group mapboxgl-ctrl mapboxgl-ctrl-group');
+        this._controlContainer = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
         if (this._checkFullscreenSupport()) {
             this._setupUI();
         } else {
@@ -82,8 +82,8 @@ class FullscreenControl implements IControl {
     }
 
     _setupUI() {
-        const button = this._fullscreenButton = DOM.create('button', (('maplibregl-ctrl-fullscreen mapboxgl-ctrl-fullscreen')), this._controlContainer);
-        DOM.create('span', 'maplibregl-ctrl-icon mapboxgl-ctrl-icon', button).setAttribute('aria-hidden', 'true');
+        const button = this._fullscreenButton = DOM.create('button', (('maplibregl-ctrl-fullscreen')), this._controlContainer);
+        DOM.create('span', 'maplibregl-ctrl-icon', button).setAttribute('aria-hidden', 'true');
         button.type = 'button';
         this._updateTitle();
         this._fullscreenButton.addEventListener('click', this._onClickFullscreen);
@@ -114,9 +114,7 @@ class FullscreenControl implements IControl {
         if ((fullscreenElement === this._container) !== this._fullscreen) {
             this._fullscreen = !this._fullscreen;
             this._fullscreenButton.classList.toggle('maplibregl-ctrl-shrink');
-            this._fullscreenButton.classList.toggle('mapboxgl-ctrl-shrink');
             this._fullscreenButton.classList.toggle('maplibregl-ctrl-fullscreen');
-            this._fullscreenButton.classList.toggle('mapboxgl-ctrl-fullscreen');
             this._updateTitle();
         }
     }

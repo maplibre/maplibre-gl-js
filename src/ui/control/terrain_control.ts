@@ -37,9 +37,9 @@ export default class TerrainControl implements IControl {
 
     onAdd(map: Map) {
         this._map = map;
-        this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group mapboxgl-ctrl mapboxgl-ctrl-group');
-        this._terrainButton = DOM.create('button', 'maplibregl-ctrl-terrain mapboxgl-ctrl-terrain', this._container);
-        DOM.create('span', 'maplibregl-ctrl-icon mapboxgl-ctrl-icon', this._terrainButton).setAttribute('aria-hidden', 'true');
+        this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
+        this._terrainButton = DOM.create('button', 'maplibregl-ctrl-terrain', this._container);
+        DOM.create('span', 'maplibregl-ctrl-icon', this._terrainButton).setAttribute('aria-hidden', 'true');
         this._terrainButton.type = 'button';
         this._terrainButton.addEventListener('click', this._toggleTerrain);
 
@@ -64,13 +64,13 @@ export default class TerrainControl implements IControl {
     }
 
     _updateTerrainIcon() {
-        this._terrainButton.classList.remove('maplibregl-ctrl-terrain', 'mapboxgl-ctrl-terrain');
-        this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled', 'mapboxgl-ctrl-terrain-enabled');
+        this._terrainButton.classList.remove('maplibregl-ctrl-terrain');
+        this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled');
         if (this._map.style.terrain) {
-            this._terrainButton.classList.add('maplibregl-ctrl-terrain-enabled', 'mapboxgl-ctrl-terrain-enabled');
+            this._terrainButton.classList.add('maplibregl-ctrl-terrain-enabled');
             this._terrainButton.title = this._map._getUIString('TerrainControl.disableTerrain');
         } else {
-            this._terrainButton.classList.add('maplibregl-ctrl-terrain', 'mapboxgl-ctrl-terrain');
+            this._terrainButton.classList.add('maplibregl-ctrl-terrain');
             this._terrainButton.title = this._map._getUIString('TerrainControl.enableTerrain');
         }
     }

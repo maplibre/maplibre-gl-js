@@ -52,11 +52,11 @@ class AttributionControl implements IControl {
     onAdd(map: Map) {
         this._map = map;
         this._compact = this.options && this.options.compact;
-        this._container = DOM.create('details', 'maplibregl-ctrl maplibregl-ctrl-attrib mapboxgl-ctrl mapboxgl-ctrl-attrib');
-        this._compactButton = DOM.create('summary', 'maplibregl-ctrl-attrib-button mapboxgl-ctrl-attrib-button', this._container);
+        this._container = DOM.create('details', 'maplibregl-ctrl maplibregl-ctrl-attrib');
+        this._compactButton = DOM.create('summary', 'maplibregl-ctrl-attrib-button', this._container);
         this._compactButton.addEventListener('click', this._toggleAttribution);
         this._setElementTitle(this._compactButton, 'ToggleAttribution');
-        this._innerContainer = DOM.create('div', 'maplibregl-ctrl-attrib-inner mapboxgl-ctrl-attrib-inner', this._container);
+        this._innerContainer = DOM.create('div', 'maplibregl-ctrl-attrib-inner', this._container);
 
         this._updateAttributions();
         this._updateCompact();
@@ -94,9 +94,9 @@ class AttributionControl implements IControl {
         if (this._container.classList.contains('maplibregl-compact')) {
             if (this._container.classList.contains('maplibregl-compact-show')) {
                 this._container.setAttribute('open', '');
-                this._container.classList.remove('maplibregl-compact-show', 'mapboxgl-compact-show');
+                this._container.classList.remove('maplibregl-compact-show');
             } else {
-                this._container.classList.add('maplibregl-compact-show', 'mapboxgl-compact-show');
+                this._container.classList.add('maplibregl-compact-show');
                 this._container.removeAttribute('open');
             }
         }
@@ -162,9 +162,9 @@ class AttributionControl implements IControl {
 
         if (attributions.length) {
             this._innerContainer.innerHTML = attribHTML;
-            this._container.classList.remove('maplibregl-attrib-empty', 'mapboxgl-attrib-empty');
+            this._container.classList.remove('maplibregl-attrib-empty');
         } else {
-            this._container.classList.add('maplibregl-attrib-empty', 'mapboxgl-attrib-empty');
+            this._container.classList.add('maplibregl-attrib-empty');
         }
         this._updateCompact();
         // remove old DOM node from _editLink
@@ -177,12 +177,12 @@ class AttributionControl implements IControl {
                 this._container.setAttribute('open', '');
             } else if (!this._container.classList.contains('maplibregl-compact') && !this._container.classList.contains('maplibregl-attrib-empty')) {
                 this._container.setAttribute('open', '');
-                this._container.classList.add('maplibregl-compact', 'mapboxgl-compact', 'maplibregl-compact-show', 'mapboxgl-compact-show');
+                this._container.classList.add('maplibregl-compact', 'maplibregl-compact-show');
             }
         } else {
             this._container.setAttribute('open', '');
             if (this._container.classList.contains('maplibregl-compact')) {
-                this._container.classList.remove('maplibregl-compact', 'maplibregl-compact-show', 'mapboxgl-compact', 'mapboxgl-compact-show');
+                this._container.classList.remove('maplibregl-compact', 'maplibregl-compact-show');
             }
         }
     }
@@ -190,7 +190,7 @@ class AttributionControl implements IControl {
     _updateCompactMinimize() {
         if (this._container.classList.contains('maplibregl-compact')) {
             if (this._container.classList.contains('maplibregl-compact-show')) {
-                this._container.classList.remove('maplibregl-compact-show', 'mapboxgl-compact-show');
+                this._container.classList.remove('maplibregl-compact-show');
             }
         }
     }
