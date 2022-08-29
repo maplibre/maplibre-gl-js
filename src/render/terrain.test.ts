@@ -90,8 +90,8 @@ describe('Terrain', () => {
         terrain.sourceCache._tiles[tileID.key] = tile;
         const {minElevation, maxElevation} = terrain.getMinMaxElevation(tileID);
 
-        expect(minElevation).toBe(100);
-        expect(maxElevation).toBe(300);
+        expect(minElevation).toBe(0);
+        expect(maxElevation).toBe(200);
     });
 
     test('Return null elevation values when no tile', () => {

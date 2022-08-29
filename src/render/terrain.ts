@@ -134,7 +134,7 @@ export default class Terrain {
      * @returns {number} - the elevation
      */
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
-        if (!(x >= 0 && x < extent && y >= 0 && y < extent)) throw Error('Not fulfilled: !(x >= 0 && x < extent && y >= 0 && y < extent)');
+        if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return 0;
         let elevation = 0;
         const terrain = this.getTerrainData(tileID);
         if (terrain.tile && terrain.tile.dem) {
