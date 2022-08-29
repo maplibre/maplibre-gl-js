@@ -5,6 +5,7 @@
 
 - *...Add new stuff here...*
 - Add map.getCameraTargetElevation() (#1558)
+- Remove deprecated mapboxgl css classes
 
 ### 🐞 Bug fixes
 
