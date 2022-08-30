@@ -12,6 +12,7 @@ import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
+import MercatorCoordinate from '../geo/mercator_coordinate';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -772,6 +773,41 @@ abstract class Camera extends Evented {
         }
 
         return this.fire(new Event('moveend', eventData));
+    }
+
+    /**
+     * Calculates pitch, zoom and bearing for looking at @param newCenter with the camera position being @param newCenter
+     * and returns them as Cameraoptions.
+     * @memberof Map#
+     * @param from The camera to look from
+     * @param altitudeFrom The altitude of the camera to look from
+     * @param to The center to look at
+     * @param altitudeTo Optional altitude of the center to look at. If none given the ground height will be used.
+     * @returns {CameraOptions} the calculated camera options
+     */
+    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo: number = 0) : CameraOptions {
+        const fromMerc = MercatorCoordinate.fromLngLat(from, altitudeFrom);
+        const toMerc = MercatorCoordinate.fromLngLat(to, altitudeTo);
+        const dx = toMerc.x - fromMerc.x;
+        const dy = toMerc.y - fromMerc.y;
+        const dz = toMerc.z - fromMerc.z;
+
+        const distance3D = Math.hypot(dx, dy, dz);
+        if (distance3D === 0) throw new Error('Can\'t calculate camera options with same From and To');
+
+        const groundDistance = Math.hypot(dx, dy);
+
+        const zoom = this.transform.scaleZoom(this.transform.cameraToCenterDistance / distance3D / this.transform.tileSize);
+        const bearing = (Math.atan2(dx, -dy) * 180) / Math.PI;
+        let pitch = (Math.acos(groundDistance / distance3D) * 180) / Math.PI;
+        pitch = dz < 0 ? 90 - pitch : 90 + pitch;
+
+        return {
+            center: toMerc.toLngLat(),
+            zoom,
+            pitch,
+            bearing
+        };
     }
 
     /**

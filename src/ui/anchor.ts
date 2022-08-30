@@ -17,7 +17,7 @@ export const anchorTranslate: {
 export function applyAnchorClass(element: HTMLElement, anchor: PositionAnchor, prefix: string) {
     const classList = element.classList;
     for (const key in anchorTranslate) {
-        classList.remove(`maplibregl-${prefix}-anchor-${key}`, `mapboxgl-${prefix}-anchor-${key}`);
+        classList.remove(`maplibregl-${prefix}-anchor-${key}`);
     }
-    classList.add(`maplibregl-${prefix}-anchor-${anchor}`, `mapboxgl-${prefix}-anchor-${anchor}`);
+    classList.add(`maplibregl-${prefix}-anchor-${anchor}`);
 }

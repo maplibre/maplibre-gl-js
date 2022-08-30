@@ -104,6 +104,7 @@ export class MapEventHandler implements Handler {
 export class BlockableMapEventHandler {
     _map: Map;
     _delayContextMenu: boolean;
+    _ignoreContextMenu: boolean;
     _contextMenuEvent: MouseEvent;
 
     constructor(map: Map) {
@@ -112,6 +113,7 @@ export class BlockableMapEventHandler {
 
     reset() {
         this._delayContextMenu = false;
+        this._ignoreContextMenu = true;
         delete this._contextMenuEvent;
     }
 
@@ -122,6 +124,7 @@ export class BlockableMapEventHandler {
 
     mousedown() {
         this._delayContextMenu = true;
+        this._ignoreContextMenu = false;
     }
 
     mouseup() {
@@ -135,7 +138,7 @@ export class BlockableMapEventHandler {
         if (this._delayContextMenu) {
             // Mac: contextmenu fired on mousedown; we save it until mouseup for consistency's sake
             this._contextMenuEvent = e;
-        } else {
+        } else if (!this._ignoreContextMenu) {
             // Windows: contextmenu fired on mouseup, so fire event now
             this._map.fire(new MapMouseEvent(e.type, this._map, e));
         }
