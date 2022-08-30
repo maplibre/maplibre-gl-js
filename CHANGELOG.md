@@ -5,11 +5,11 @@
 
 - *...Add new stuff here...*
 - Add map.getCameraTargetElevation() (#1558)
-- Remove deprecated mapboxgl css classes
+- [Breaking] Remove deprecated mapboxgl css classes
 
 ### 🐞 Bug fixes
 
-- Make geojson data source a required field to align with the docs (#1396) 
+- [Breaking] Make geojson data source a required field to align with the docs (#1396) 
 - *...Add new stuff here...*
 
 ## 2.4.0
