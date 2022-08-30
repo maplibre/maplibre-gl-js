@@ -1,4 +1,3 @@
-import assert from 'assert';
 
 class DictionaryCoder {
     _stringToNumber: {[_: string]: number};
@@ -15,12 +14,11 @@ class DictionaryCoder {
     }
 
     encode(string: string) {
-        assert(string in this._stringToNumber);
         return this._stringToNumber[string];
     }
 
     decode(n: number) {
-        assert(n < this._numberToString.length);
+        if (n >= this._numberToString.length) throw new Error(`Out of bounds. Index requested n=${n} can't be >= this._numberToString.length ${this._numberToString.length}`);
         return this._numberToString[n];
     }
 }

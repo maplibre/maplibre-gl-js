@@ -1,9 +1,10 @@
 import composite from './composite';
+import {LineLayerSpecification} from './types.g';
 
 describe('composite', () => {
     test('composites Mapbox vector sources', () => {
         const result = composite({
-            'version': 7,
+            'version': 7 as any,
             'sources': {
                 'mapbox-a': {
                     'type': 'vector',
@@ -32,13 +33,13 @@ describe('composite', () => {
             }
         });
 
-        expect(result.layers[0].source).toBe('a,b');
-        expect(result.layers[1].source).toBe('a,b');
+        expect((result.layers[0] as LineLayerSpecification).source).toBe('a,b');
+        expect((result.layers[1] as LineLayerSpecification).source).toBe('a,b');
     });
 
     test('does not composite vector + raster', () => {
         const result = composite({
-            'version': 7,
+            'version': 7 as any,
             'sources': {
                 'a': {
                     'type': 'vector',
@@ -57,7 +58,7 @@ describe('composite', () => {
 
     test('incorrect url match', () => {
         const result = composite({
-            'version': 7,
+            'version': 7 as any,
             'sources': {
                 'a': {
                     'type': 'vector',
@@ -77,7 +78,7 @@ describe('composite', () => {
     test('composites Mapbox vector sources with conflicting source layer names', () => {
         expect(() => {
             composite({
-                'version': 7,
+                'version': 7 as any,
                 'sources': {
                     'mapbox-a': {
                         'type': 'vector',

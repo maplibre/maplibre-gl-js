@@ -5,7 +5,6 @@ import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
-import assert from 'assert';
 import {Debug} from '../util/debug';
 
 import type Transform from '../geo/transform';
@@ -13,6 +12,7 @@ import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
+import MercatorCoordinate from '../geo/mercator_coordinate';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -776,6 +776,41 @@ abstract class Camera extends Evented {
     }
 
     /**
+     * Calculates pitch, zoom and bearing for looking at @param newCenter with the camera position being @param newCenter
+     * and returns them as Cameraoptions.
+     * @memberof Map#
+     * @param from The camera to look from
+     * @param altitudeFrom The altitude of the camera to look from
+     * @param to The center to look at
+     * @param altitudeTo Optional altitude of the center to look at. If none given the ground height will be used.
+     * @returns {CameraOptions} the calculated camera options
+     */
+    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo: number = 0) : CameraOptions {
+        const fromMerc = MercatorCoordinate.fromLngLat(from, altitudeFrom);
+        const toMerc = MercatorCoordinate.fromLngLat(to, altitudeTo);
+        const dx = toMerc.x - fromMerc.x;
+        const dy = toMerc.y - fromMerc.y;
+        const dz = toMerc.z - fromMerc.z;
+
+        const distance3D = Math.hypot(dx, dy, dz);
+        if (distance3D === 0) throw new Error('Can\'t calculate camera options with same From and To');
+
+        const groundDistance = Math.hypot(dx, dy);
+
+        const zoom = this.transform.scaleZoom(this.transform.cameraToCenterDistance / distance3D / this.transform.tileSize);
+        const bearing = (Math.atan2(dx, -dy) * 180) / Math.PI;
+        let pitch = (Math.acos(groundDistance / distance3D) * 180) / Math.PI;
+        pitch = dz < 0 ? 90 - pitch : 90 + pitch;
+
+        return {
+            center: toMerc.toLngLat(),
+            zoom,
+            pitch,
+            bearing
+        };
+    }
+
+    /**
      * Changes any combination of `center`, `zoom`, `bearing`, `pitch`, and `padding` with an animated transition
      * between old and new values. The map will retain its current values for any
      * details not specified in `options`.
@@ -1273,19 +1308,10 @@ function addAssertions(camera: Camera) { //eslint-disable-line
             inProgress[name] = false;
 
             camera.on(`${name}start`, () => {
-                assert(!inProgress[name], `"${name}start" fired twice without a "${name}end"`);
                 inProgress[name] = true;
-                assert(inProgress.move);
-            });
-
-            camera.on(name, () => {
-                assert(inProgress[name]);
-                assert(inProgress.move);
             });
 
             camera.on(`${name}end`, () => {
-                assert(inProgress.move);
-                assert(inProgress[name]);
                 inProgress[name] = false;
             });
         });

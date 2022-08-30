@@ -30,13 +30,13 @@ export default class SymbolLayout extends Layout {
             promise = promise.then(() => {
                 for (const bucket of tileResult.buckets) {
                     if (bucket instanceof SymbolBucket) {
-                        performSymbolLayout(bucket,
-                            tileResult.glyphMap,
-                            tileResult.glyphPositions,
-                            tileResult.iconMap,
-                            tileResult.imageAtlas.iconPositions,
-                            false,
-                            tileResult.featureIndex.tileID.canonical);
+                        performSymbolLayout({bucket,
+                            glyphMap: tileResult.glyphMap,
+                            glyphPositions: tileResult.glyphPositions,
+                            imageMap: tileResult.iconMap,
+                            imagePositions: tileResult.imageAtlas.iconPositions,
+                            showCollisionBoxes: false,
+                            canonical: tileResult.featureIndex.tileID.canonical});
                     }
                 }
             });

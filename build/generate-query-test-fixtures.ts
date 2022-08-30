@@ -26,9 +26,10 @@ function generateFixtureJson(rootDirectory: string, suiteDirectory: string, outp
     const imagePaths = globs[1];
     //Extract the filedata into a flat dictionary
     const allFiles = {};
-    let allPaths = glob.sync(jsonPaths);
+    // Using replace() to fixup Windows paths so they are compatible with glob sync.
+    let allPaths = glob.sync(jsonPaths.replace(/\\/g, '/'));
     if (includeImages) {
-        allPaths = allPaths.concat(glob.sync(imagePaths));
+        allPaths = allPaths.concat(glob.sync(imagePaths.replace(/\\/g, '/')));
     }
 
     //A Set that stores test names that are malformed so they can be removed later

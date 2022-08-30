@@ -1,6 +1,7 @@
 import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
+import packageJSON from '../../package.json' assert {type: 'json'};
 import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
 import Style from '../style/style';
@@ -9,7 +10,7 @@ import Painter from '../render/painter';
 import Transform from '../geo/transform';
 import Hash from './hash';
 import HandlerManager from './handler_manager';
-import Camera from './camera';
+import Camera, {CameraOptions} from './camera';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
@@ -58,6 +59,8 @@ import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import emptyStyle from '../style-spec/empty';
+
+const version = packageJSON.version;
 
 /* eslint-enable no-use-before-define */
 export type MapOptions = {
@@ -601,6 +604,13 @@ class Map extends Camera {
         return this._controls.indexOf(control) > -1;
     }
 
+    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number) : CameraOptions {
+        if (altitudeTo == null && this.style.terrain) {
+            altitudeTo = this.transform.getElevation(to, this.style.terrain);
+        }
+        return super.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+    }
+
     /**
      * Resizes the map according to the dimensions of its
      * `container` element.
@@ -1062,7 +1072,7 @@ class Map extends Camera {
      * | [`dataabort`](#map.event:dataabort)                       |                           |
      * | [`sourcedataabort`](#map.event:sourcedataabort)           |                           |
      *
-     * @param {string | Listener} layerIdOrListener The ID of a style layer or a listener if no ID is provided. Event will only be triggered if its location
+     * @param {string | Listener} layer The ID of a style layer or a listener if no ID is provided. Event will only be triggered if its location
      * is within a visible feature in this layer. The event will have a `features` property containing
      * an array of the matching features. If `layerIdOrListener` is not supplied, the event will not have a `features` property.
      * Please note that many event types are not compatible with the optional `layerIdOrListener` parameter.
@@ -1152,7 +1162,7 @@ class Map extends Camera {
      * a visible portion of the specified layer from outside that layer or outside the map canvas. `mouseleave`
      * and `mouseout` events are triggered when the cursor leaves a visible portion of the specified layer, or leaves
      * the map canvas.
-     * @param {string} layerIdOrListener The ID of a style layer or a listener if no ID is provided. Only events whose location is within a visible
+     * @param {string} layer The ID of a style layer or a listener if no ID is provided. Only events whose location is within a visible
      * feature in this layer will trigger the listener. The event will have a `features` property containing
      * an array of the matching features.
      * @param {Function} listener The function to be called when the event is fired.
@@ -1196,7 +1206,7 @@ class Map extends Camera {
      * Removes an event listener for layer-specific events previously added with `Map#on`.
      *
      * @param {string} type The event type previously used to install the listener.
-     * @param {string} layerIdOrListener The layer ID or listener previously used to install the listener.
+     * @param {string} layer The layer ID or listener previously used to install the listener.
      * @param {Function} listener The function previously installed as a listener.
      * @returns {Map} `this`
      */
@@ -1937,7 +1947,8 @@ class Map extends Camera {
      * A layer defines how data from a specified source will be styled. Read more about layer types
      * and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layers).
      *
-     * @param {(LayerSpecification & {source?: string | SourceSpecification}) | CustomLayerInterface} layer The layer to add,
+     * TODO: JSDoc can't pass @param {(LayerSpecification & {source?: string | SourceSpecification}) | CustomLayerInterface} layer The layer to add,
+     * @param {Object} layer
      * conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layers) or,
      * less commonly, the {@link CustomLayerInterface} specification.
      * The MapLibre Style Specification's layer definition is appropriate for most layers.
@@ -2431,14 +2442,14 @@ class Map extends Camera {
 
     _setupContainer() {
         const container = this._container;
-        container.classList.add('maplibregl-map', 'mapboxgl-map');
+        container.classList.add('maplibregl-map');
 
-        const canvasContainer = this._canvasContainer = DOM.create('div', 'maplibregl-canvas-container mapboxgl-canvas-container', container);
+        const canvasContainer = this._canvasContainer = DOM.create('div', 'maplibregl-canvas-container', container);
         if (this._interactive) {
-            canvasContainer.classList.add('maplibregl-interactive', 'mapboxgl-interactive');
+            canvasContainer.classList.add('maplibregl-interactive');
         }
 
-        this._canvas = DOM.create('canvas', 'maplibregl-canvas mapboxgl-canvas', canvasContainer);
+        this._canvas = DOM.create('canvas', 'maplibregl-canvas', canvasContainer);
         this._canvas.addEventListener('webglcontextlost', this._contextLost, false);
         this._canvas.addEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.setAttribute('tabindex', '0');
@@ -2448,10 +2459,10 @@ class Map extends Camera {
         const dimensions = this._containerDimensions();
         this._resizeCanvas(dimensions[0], dimensions[1], this.getPixelRatio());
 
-        const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container mapboxgl-control-container', container);
+        const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
         const positions = this._controlPositions = {};
         ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach((positionName) => {
-            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName} mapboxgl-ctrl-${positionName}`, controlContainer);
+            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName} `, controlContainer);
         });
 
         this._container.addEventListener('scroll', this._onMapScroll, false);
@@ -2483,7 +2494,7 @@ class Map extends Camera {
             this._onCooperativeGesture(e, this._metaPress, 1);
         }, false);
         // Remove the traditional pan classes
-        this._canvasContainer.classList.remove('mapboxgl-touch-drag-pan', 'maplibregl-touch-drag-pan');
+        this._canvasContainer.classList.remove('maplibregl-touch-drag-pan');
     }
 
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
@@ -2804,7 +2815,7 @@ class Map extends Camera {
         if (this._cooperativeGestures) {
             DOM.remove(this._cooperativeGesturesScreen);
         }
-        this._container.classList.remove('maplibregl-map', 'mapboxgl-map');
+        this._container.classList.remove('maplibregl-map');
 
         PerformanceUtils.clearMetrics();
 
@@ -2946,6 +2957,24 @@ class Map extends Camera {
     // for cache browser tests
     _setCacheLimits(limit: number, checkThreshold: number) {
         setCacheLimits(limit, checkThreshold);
+    }
+
+    /**
+     * Returns the package version of the library
+     * @returns {string} Package version of the library
+     */
+    get version(): string {
+        return version;
+    }
+
+    /**
+     * Returns the elevation for the point where the camera is looking.
+     * This value corresponds to:
+     * ("meters above sea level" + "elevation offset (style-spec v8 defualts to 450 m)") * "exaggeration"
+     * @returns {number} * The elevation.
+     */
+    getCameraTargetElevation(): number {
+        return this.transform.elevation;
     }
 }
 
