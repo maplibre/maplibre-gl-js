@@ -46,6 +46,19 @@ describe('ajax', () => {
         server.respond();
     });
 
+    test('getArrayBuffer, 204', done => {
+        server.respondWith(request => {
+            request.respond(204, undefined, '');
+        });
+        getArrayBuffer({url: 'http://example.com/test.bin'}, async (error, body) => {
+            if (error) done(`get image failed with error ${error.message}`);
+            expect(body).toBeInstanceOf(ArrayBuffer);
+            expect(body.byteLength).toBe(0);
+            done();
+        });
+        server.respond();
+    });
+
     test('getJSON', done => {
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
@@ -184,7 +197,7 @@ describe('ajax', () => {
 
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, 'something'));
 
         stubAjaxGetImage(() => Promise.resolve(new ImageBitmap()));
 
@@ -204,13 +217,33 @@ describe('ajax', () => {
 
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, 'something'));
 
         stubAjaxGetImage(undefined);
 
         getImage({url: ''}, (err, img, expiry) => {
             if (err) done(`get image failed with error ${err.message}`);
             expect(img).toBeInstanceOf(HTMLImageElement);
+            expect(expiry.cacheControl).toBe('cache');
+            expect(expiry.expires).toBe('expires');
+            done();
+        });
+
+        server.respond();
+    });
+
+    test('getImage returns null image on empty response', done => {
+        resetImageRequestQueue();
+
+        server.respondWith(request => {
+            request.respond(204, {
+                'Cache-Control': 'cache',
+                'Expires': 'expires'}, '');
+        });
+
+        getImage({url: ''}, (err, img, expiry) => {
+            if (err) done(`get image failed with error ${err.message}`);
+            expect(img).toBeNull();
             expect(expiry.cacheControl).toBe('cache');
             expect(expiry.expires).toBe('expires');
             done();

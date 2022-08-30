@@ -136,6 +136,14 @@ class RasterTileSource extends Evented implements Source {
                 cacheEntryPossiblyAdded(this.dispatcher);
 
                 callback(null);
+            } else {
+                if (this.map._refreshExpiredTiles) tile.setExpiryData(expiry);
+
+                tile.state = 'empty';
+
+                cacheEntryPossiblyAdded(this.dispatcher);
+
+                callback(new Error('204 No Content: Empty tile'));
             }
         });
     }

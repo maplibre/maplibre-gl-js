@@ -411,11 +411,16 @@ export const getImage = function(
             const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
                 if (imgErr != null) {
                     callback(imgErr);
-                } else if (imgResult != null) {
-                    callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
+                } else {
+                    callback(null, imgResult as (HTMLImageElement | ImageBitmap | null), {cacheControl, expires});
                 }
             };
-            arrayBufferToCanvasImageSource(data, decoratedCallback);
+            if (data.byteLength === 0) {
+                // no data - probably was 204 response
+                decoratedCallback(null, null);
+            } else {
+                arrayBufferToCanvasImageSource(data, decoratedCallback);
+            }
         }
     });
 
