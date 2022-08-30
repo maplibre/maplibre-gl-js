@@ -149,9 +149,15 @@ abstract class Camera extends Evented {
     _onEaseEnd: (easeId?: string) => void;
     _easeFrameId: TaskID;
 
+    // holds the geographical coordinate of the target
     _elevationCenter: LngLat;
-    _elevationStart: number;
+    // holds the targ altitude value, = center elevation of the target.
+    // This value may changes during flight, because new terrain-tiles loads during flight.
     _elevationTarget: number;
+    // holds the start altitude value, = center elevation before animation begins
+    // this value will recalculated during flight in respect of changing _elevationTarget values,
+    // so the linear interpolation between start and target keeps smooth and without jumps.
+    _elevationStart: number;
 
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
@@ -935,13 +941,15 @@ abstract class Camera extends Evented {
     }
 
     _updateElevation(k: number) {
-         const elevation = this.transform.getElevation(this._elevationCenter, this.terrain);
-         // target terrain updated during flight, slowly move camera to new height
-         if (elevation != this._elevationTarget) {
-            this._elevationStart += (this._elevationTarget - elevation) * 1 / k; // FIXME! is this correct?
+        const elevation = this.transform.getElevation(this._elevationCenter, this.terrain);
+        // target terrain updated during flight, slowly move camera to new height
+        if (k < 1 && elevation !== this._elevationTarget) {
+            const pitch1 = this._elevationTarget - this._elevationStart;
+            const pitch2 = (elevation - (pitch1 * k + this._elevationStart)) / (1 - k);
+            this._elevationStart += k * (pitch1 - pitch2);
             this._elevationTarget = elevation;
-         }
-         this.transform.elevation = interpolate(this._elevationStart, this._elevationTarget, k);
+        }
+        this.transform.elevation = interpolate(this._elevationStart, this._elevationTarget, k);
     }
 
     _finalizeElevation() {
