@@ -22,7 +22,7 @@ describe('@maplibre/maplibre-gl-style-spec npm package', () => {
 
                     // Windows (path could start with drive letter: for example c:\)
                     const windowsFullPath: boolean = /^[c-zC-Z]:\\/.test(id);
-                    
+
                     if (
                         slashOrDot ||
                         windowsFullPath ||
