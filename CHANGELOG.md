@@ -1,9 +1,12 @@
 ## main
+- Add `reparseOverscaled` option to Vector Tile Source constructor ([#](https://github.com/maplibre/maplibre-gl-js/pull/2081))
+
 
 ### ✨ Features and improvements
 - Add `setiClusterOptions` to update cluster properties of the added sources: fixing these issues ([#429](https://github.com/maplibre/maplibre-gl-js/issues/429)) and ([1384](https://github.com/maplibre/maplibre-gl-js/issues/1384))
 - Add types for `workerOptions` and `_options` in `geojson_source.ts`
 - *...Add new stuff here...*
+
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
 ## 3.0.0-pre.3
@@ -27,6 +30,7 @@
 - Speed up the cross tile symbol index in certain circumstances ([#1755](https://github.com/maplibre/maplibre-gl-js/pull/1755))
 - Improve rendering speed in scenes with many colliding symbolic icons and labels ([#1757](https://github.com/maplibre/maplibre-gl-js/pull/1757))
 - Make request for ImageSource cancelable ([#1802](https://github.com/maplibre/maplibre-gl-js/pull/1802))
+
 
 ### 🐞 Bug fixes
 - Remove dependency on `@rollup/plugin-json`, which was in conflict with `rollup-plugin-import-assert`

@@ -8,6 +8,7 @@ import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' assert {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher} from '../util/test/util';
 import Map from '../ui/map';
+import {VectorSourceSpecification} from '../style-spec/types.g';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
@@ -351,5 +352,15 @@ describe('VectorTileSource', () => {
         expect(clearTiles.mock.calls).toHaveLength(0);
         await source.once('data');
         expect(clearTiles.mock.calls).toHaveLength(1);
+    });
+
+    test('constructor picks up the reparseOverscaled option', () => {
+        // Prove that VectorSource reparseOverscaled defaults to true
+        const sourceA = createSource({} as VectorSourceSpecification);
+        expect(sourceA.reparseOverscaled).toBe(true);
+
+        // Prove that it can be set to false
+        const sourceB = createSource({reparseOverscaled: false} as VectorSourceSpecification);
+        expect(sourceB.reparseOverscaled).toBe(false);
     });
 });

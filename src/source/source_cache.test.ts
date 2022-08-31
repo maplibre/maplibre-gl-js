@@ -1415,6 +1415,80 @@ describe('SourceCache#tilesIn', () => {
         sourceCache.onAdd(undefined);
     });
 
+    test('honours reparse overscaled option turned off for tiles', () => {
+        const sourceCache = createSourceCache({
+            loadTile(tile, callback) {
+                tile.state = 'loaded';
+                tile.additionalRadius = 0;
+                callback();
+            },
+            reparseOverscaled: false,
+            minzoom: 1,
+            maxzoom: 1, // Max zoom is set to 1
+            tileSize: 512
+        });
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+
+                const transform1 = new Transform();
+                transform1.resize(512, 512);
+                transform1.zoom = 1.0;
+                transform1.center = new LngLat(10, 10);
+                sourceCache.update(transform1);
+
+                const topLeftTileKey = new OverscaledTileID(1, 0, 1, 0, 0).key;
+                const topRightTileKey = new OverscaledTileID(1, 0, 1, 1, 0).key;
+                const lowerLeftTileKey = new OverscaledTileID(1, 0, 1, 0, 1).key;
+                const lowerRightTileKey = new OverscaledTileID(1, 0, 1, 1, 1).key;
+
+                const expectedTileIDs = [
+                    lowerRightTileKey,
+                    lowerLeftTileKey,
+                    topRightTileKey,
+                    topLeftTileKey
+                ];
+
+                expect(sourceCache.getIds()).toEqual(expectedTileIDs);
+
+                const tilesBefore = sourceCache.tilesIn([
+                    new Point(0, 0),
+                    new Point(0, 1)
+                ], 1, true) as any[];
+
+                console.log(expectedTileIDs);
+                tilesBefore.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
+                tilesBefore.forEach((result) => { delete result.tile.uid; });
+
+                expect(tilesBefore[0].tile.tileID.key).toBe(topLeftTileKey);
+                expect(tilesBefore[1].tile.tileID.key).toBe(topRightTileKey);
+                // Changing the zoom should have no affect to existing tiles
+                // when reparseOverscaled is set to false
+                const transform = new Transform();
+                transform.resize(1024, 1024);
+                transform.zoom = 2.0; // Max zoom changed
+                transform.center = new LngLat(10, 10);
+                sourceCache.update(transform);
+
+                // Expect the tiles to be retained despite the transform
+                expect(sourceCache.getIds()).toEqual(expectedTileIDs);
+
+                const tiles = sourceCache.tilesIn([
+                    new Point(0, 0),
+                    new Point(1024, 512)
+                ], 1, true);
+
+                tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
+                tiles.forEach((result) => { delete result.tile.uid; });
+
+                expect(tiles[0].tile.tileID.key).toBe(topLeftTileKey);
+                expect(tiles[1].tile.tileID.key).toBe(topRightTileKey);
+
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+
     test('overscaled tiles', done => {
         const sourceCache = createSourceCache({
             loadTile(tile, callback) { tile.state = 'loaded'; callback(); },
@@ -1424,13 +1498,14 @@ describe('SourceCache#tilesIn', () => {
             tileSize: 512
         });
 
+        expect(sourceCache.getSource().reparseOverscaled).toBe(false);
+
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
                 const transform = new Transform();
                 transform.resize(512, 512);
                 transform.zoom = 2.0;
                 sourceCache.update(transform);
-
                 done();
             }
         });

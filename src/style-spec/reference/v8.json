@@ -200,6 +200,11 @@
         }
       }
     },
+    "reparseOverscaled": {
+      "type": "boolean",
+      "default": true,
+      "doc": "`true` if tiles should be sent back to the worker for each overzoomed zoom."
+    },
     "*": {
       "type": "*",
       "doc": "Other keys to configure the data source."

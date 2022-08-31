@@ -171,7 +171,7 @@
     "test-render": "ts-node test/integration/render/render.test.ts",
     "test-query": "jest -c ./jest.config.e2e.ts --roots ./test/integration/query",
     "test-expression": "jest --roots ./test/integration/expression",
-    "test-unit": "jest --roots ./src  -c ./jest.config.ts ",
+    "test-unit": "jest --roots ./src  -c ./jest.config.ts",
     "test-unit-ci": "jest --roots ./src  -c ./jest.config.ts --ci --coverage --testLocationInResults",
     "test-watch-roots": "jest --watch  -c ./jest.config.ts --roots ",
     "codegen": "npm run generate-style-code && npm run generate-struct-arrays && npm run generate-style-spec && npm run generate-shaders",
