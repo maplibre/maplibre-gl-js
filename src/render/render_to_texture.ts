@@ -77,7 +77,7 @@ export default class RenderToTexture {
         // remove cached textures
         if (terrain.needsRerenderAll()) {
             terrain.sourceCache.getAllTiles().forEach(tile => tile.clearTextures(this.painter));
-            this._renderableTiles.forEach(tile => this._rerender[tile.tileID.key] = true);
+            this._renderableTiles.forEach(tile => { this._rerender[tile.tileID.key] = true; });
         } else {
             this._renderableTiles.forEach(tile => {
                 for (const source in this._coordsDescendingInvStr) {
