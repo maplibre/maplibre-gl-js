@@ -16,14 +16,18 @@ describe('render to texture', () => {
                     needsRerenderAll: () => false
                 },
                 _order: []
+            },
+            transform: {
+                zoom: 0
             }
         } as any as Painter;
         const uut = new RenderToTexture(painterMock);
         const lineLayer = {
             id: 'maine-line',
             type: 'line',
-            source: 'maine'
-        } as LineStyleLayer;
+            source: 'maine',
+            isHidden: () => false
+        } as any as LineStyleLayer;
         const symbolLayer = {
             id: 'maine-text',
             type: 'symbol',
@@ -31,12 +35,11 @@ describe('render to texture', () => {
             layout: {
                 'text-field': 'maine',
                 'symbol-placement': 'line'
-            }
+            },
+            isHidden: () => false
         } as any as SymbolStyleLayer;
 
         expect(uut.renderLayer(lineLayer)).toBeTruthy();
-        painterMock.style._order = ['maine-line', 'maine-text'];
-        painterMock.currentLayer = 1;
         expect(uut.renderLayer(symbolLayer)).toBeFalsy();
     });
 });
