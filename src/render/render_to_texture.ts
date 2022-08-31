@@ -29,6 +29,8 @@ export default class RenderToTexture {
     _rerender: {[_: string]: boolean};
     // a list of tiles that can potentially rendered
     _renderableTiles: Array<Tile>;
+    // a list of all layer-ids which should be rendered
+    _renderableLayerIds: Array<string>;
 
     constructor(painter: Painter) {
         this.painter = painter;
@@ -39,6 +41,7 @@ export default class RenderToTexture {
         this._prevType = null;
         this._rerender = {};
         this._renderableTiles = painter.style.terrain.sourceCache.getRenderableTiles();
+        this._renderableLayerIds = painter.style._order.filter(id => !painter.style._layers[id].isHidden(painter.transform.zoom));
         this._init();
     }
 
@@ -108,15 +111,13 @@ export default class RenderToTexture {
 
         const type = layer.type;
         const painter = this.painter;
-        const layerIds = painter.style._order;
-        const currentLayer = painter.currentLayer;
-        const isLastLayer = currentLayer + 1 === layerIds.length;
+        const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
 
         // remember background, fill, line & raster layer to render into a stack
         if (this._renderToTexture[type]) {
             if (!this._prevType || !this._renderToTexture[this._prevType]) this._stacks.push([]);
             this._prevType = type;
-            this._stacks[this._stacks.length - 1].push(layerIds[currentLayer]);
+            this._stacks[this._stacks.length - 1].push(layer.id);
             // rendering is done later, all in once
             if (!isLastLayer) return true;
         }
@@ -143,7 +144,7 @@ export default class RenderToTexture {
             // the hillshading layer is a special case because it changes on every camera-movement
             // so rerender it in any case.
             if (type === 'hillshade') {
-                this._stacks.push([layerIds[currentLayer]]);
+                this._stacks.push([layer.id]);
                 for (const tile of this._renderableTiles) {
                     const coords = this._coordsDescendingInv[layer.source][tile.tileID.key];
                     prepareTerrain(painter, painter.style.terrain, tile, this._stacks.length - 1);

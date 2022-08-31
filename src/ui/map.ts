@@ -2645,8 +2645,8 @@ class Map extends Camera {
         }
 
         // update terrain stuff
-        if (this.style.terrain) this.style.terrain.sourceCache.update(this.transform, this.style.terrain);
-        this.transform.updateElevation(this.style.terrain);
+        if (this.style && this.style.terrain) this.style.terrain.sourceCache.update(this.transform, this.style.terrain);
+        this.transform.updateElevation(this.style && this.style.terrain);
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 
