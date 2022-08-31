@@ -524,7 +524,7 @@ class Style extends Evented {
                     if (e.sourceId === options.source) {
                         this.map.transform.updateElevation(this.terrain);
                         this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
-                    } else if (e.source.type === 'geojson') {
+                    } else if (e.source.type) {
                         this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
                     }
                 }
