@@ -56,7 +56,7 @@ map.addControl(new maplibregl.FullscreenControl());
 map.on('load', function() {
     map.addSource('geojson', {
         'type': 'geojson',
-        'data': '/test/integration/data/linestring.geojson',
+        'data': '../integration/assets/data/linestring.geojson',
         'attribution': 'GeoJSON Attribution'
     });
     map.addLayer({
