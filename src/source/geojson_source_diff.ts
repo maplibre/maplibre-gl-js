@@ -3,7 +3,7 @@ export type GeoJSONFeatureId = number | string;
 export interface GeoJSONSourceDiff {
     removeAll?: boolean;
     removed?: Array<GeoJSONFeatureId>;
-    add?: Array<GeoJSON.Feature<DirectGeometry> & {id: GeoJSONFeatureId}>;
+    add?: Array<FeatureWithId>;
     update?: Array<GeoJSONFeatureDiff>;
 }
 
@@ -15,8 +15,10 @@ export interface GeoJSONFeatureDiff {
     addOrUpdateProperties?: Array<{key: string; value: any}>;
 }
 
+export type FeatureWithId = GeoJSON.Feature<DirectGeometry> & {id: GeoJSONFeatureId};
+
 export type DirectGeometry = GeoJSON.Point | GeoJSON.MultiPoint | GeoJSON.LineString | GeoJSON.MultiLineString | GeoJSON.Polygon | GeoJSON.MultiPolygon;
-export type UpdateableGeoJSON = GeoJSON.Feature<DirectGeometry> & {id: GeoJSONFeatureId} | GeoJSON.FeatureCollection<DirectGeometry> & {features: {id: GeoJSONFeatureId}[]};
+export type UpdateableGeoJSON = FeatureWithId | GeoJSON.FeatureCollection<DirectGeometry> & {features: {id: GeoJSONFeatureId}[]};
 
 export function isDirectGeometry(geometry: GeoJSON.Geometry): geometry is DirectGeometry {
     return geometry.type !== 'GeometryCollection';
@@ -38,8 +40,8 @@ export function isUpdateable(data: string | GeoJSON.GeoJSON): data is Updateable
     return false;
 }
 
-export function getUpdateable(data: UpdateableGeoJSON): {[id: GeoJSONFeatureId]: GeoJSON.Feature<DirectGeometry> & {id: GeoJSONFeatureId}} {
-    const result: {[id: GeoJSONFeatureId]: GeoJSON.Feature<DirectGeometry> & {id: GeoJSONFeatureId}} = {};
+export function getUpdateable(data: UpdateableGeoJSON): {[id: GeoJSONFeatureId]: FeatureWithId} {
+    const result: {[id: GeoJSONFeatureId]: FeatureWithId} = {};
     if (data.type === 'Feature') {
         result[data.id] = data;
     } else {
@@ -50,7 +52,8 @@ export function getUpdateable(data: UpdateableGeoJSON): {[id: GeoJSONFeatureId]:
     return result;
 }
 
-export function applySourceDiff(updateable: {[id: string]: GeoJSON.Feature<DirectGeometry>}, diff: GeoJSONSourceDiff) {
+// may mutate updateable, but may also return a completely different object entirely
+export function applySourceDiff(updateable: {[id: string]: FeatureWithId}, diff: GeoJSONSourceDiff) {
     if (diff.removeAll) {
         updateable = {};
     }
@@ -99,9 +102,7 @@ export function applySourceDiff(updateable: {[id: string]: GeoJSON.Feature<Direc
 
             if (update.removeAllProperties) {
                 feature.properties = {};
-            }
-
-            if (update.removeProperties?.length > 0) {
+            } else if (update.removeProperties?.length > 0) {
                 for (const prop of update.removeProperties) {
                     if (Object.prototype.hasOwnProperty.call(feature.properties, prop)) {
                         delete feature.properties[prop];

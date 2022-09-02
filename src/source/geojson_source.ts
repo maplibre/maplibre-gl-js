@@ -13,7 +13,7 @@ import type Actor from '../util/actor';
 import type {Callback} from '../types/callback';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types.g';
 import type {MapSourceDataType} from '../ui/events';
-import {applySourceDiff, type DirectGeometry, type GeoJSONSourceDiff, getUpdateable, isUpdateable} from './geojson_source_diff';
+import {applySourceDiff, type GeoJSONSourceDiff, getUpdateable, isUpdateable, type FeatureWithId} from './geojson_source_diff';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: any;
@@ -78,7 +78,7 @@ class GeoJSONSource extends Evented implements Source {
     isTileClipped: boolean;
     reparseOverscaled: boolean;
     _data: GeoJSON.GeoJSON | string | undefined;
-    _dataUpdateable: {[id: string]: GeoJSON.Feature<DirectGeometry>} | undefined;
+    _dataUpdateable: {[id: string]: FeatureWithId} | undefined;
     _options: any;
     workerOptions: any;
     map: Map;
@@ -110,10 +110,12 @@ class GeoJSONSource extends Evented implements Source {
         this.actor = dispatcher.getActor();
         this.setEventedParent(eventedParent);
 
-        if (isUpdateable(options.data as any)) {
-            this._dataUpdateable = getUpdateable(options.data as any);
+        const data = options.data as any;
+
+        if (isUpdateable(data)) {
+            this._dataUpdateable = getUpdateable(data);
         } else {
-            this._data = (options.data as any);
+            this._data = data;
         }
 
         this._options = extend({}, options);
@@ -187,7 +189,7 @@ class GeoJSONSource extends Evented implements Source {
     }
 
     updateData(diff: GeoJSONSourceDiff) {
-        if (this._dataUpdateable == null) {
+        if (this._data != null) {
             throw new Error('Cannot call updateData with the existing data');
         }
 
