@@ -4,6 +4,7 @@ import TaskQueue, {TaskID} from '../util/task_queue';
 import browser from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
+import Terrain from '../render/terrain';
 
 beforeEach(() => {
     setMatchMedia();
@@ -1563,16 +1564,18 @@ describe('#flyTo', () => {
         const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
-        camera.setCenter([-10, 0]);
-        let freeze = 0;
+        const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
+        camera.terrain = {} as Terrain;
+        camera._prepareElevation = () => { terrainCallbacks.prepare++; };
+        camera._updateElevation = () => { terrainCallbacks.update++; };
+        camera._finalizeElevation = () => { terrainCallbacks.finalize++; };
 
-        camera.on('freezeElevation', (e) => {
-            if (e.freeze && freeze === 0) freeze++;
-            if (!e.freeze && freeze === 1) freeze++;
-        });
+        camera.setCenter([-10, 0]);
 
         camera.on('moveend', () => {
-            expect(freeze).toBe(2);
+            expect(terrainCallbacks.prepare).toBe(1);
+            expect(terrainCallbacks.update).toBe(0);
+            expect(terrainCallbacks.finalize).toBe(1);
             done();
         });
 
@@ -1588,6 +1591,32 @@ describe('#flyTo', () => {
                 camera.simulateFrame();
             }, 0);
         }, 0);
+    });
+
+    test('check elevation callbacks', done => {
+        const camera = createCamera();
+        camera.transform = {
+            elevation: 0,
+            freezeElevation: false,
+            getElevation: () => 100,
+            recalculateZoom: () => true
+        };
+
+        camera._prepareElevation([10, 0]);
+        // expect(camera._elevationCenter).toBe([10, 0]);
+        expect(camera._elevationStart).toBe(0);
+        expect(camera._elevationTarget).toBe(100);
+        expect(camera.transform.freezeElevation).toBeTruthy();
+
+        camera.transform.getElevation = () => 200;
+        camera._updateElevation(0.5);
+        expect(camera._elevationStart).toBe(-100);
+        expect(camera._elevationTarget).toBe(200);
+
+        camera._finalizeElevation();
+        expect(camera.transform.freezeElevation).toBeFalsy();
+
+        done();
     });
 
 });

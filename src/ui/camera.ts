@@ -874,7 +874,7 @@ abstract class Camera extends Evented {
 
         this._easeId = options.easeId;
         this._prepareEase(options, eventData, options.noMoveStart, currently);
-        this._prepareElevation(center);
+        if (this.terrain) this._prepareElevation(center);
 
         this._ease((k) => {
             if (this._zooming) {
@@ -893,7 +893,7 @@ abstract class Camera extends Evented {
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
 
-            if (!options.freezeElevation) this._updateElevation(k);
+            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
 
             if (around) {
                 tr.setLocationAtPoint(around, aroundPoint);
@@ -910,7 +910,7 @@ abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
-            this._finalizeElevation();
+            if (this.terrain) this._finalizeElevation();
             this._afterEase(options, eventData, interruptingEaseId);
         }, options as any);
 
@@ -1186,7 +1186,7 @@ abstract class Camera extends Evented {
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
         this._prepareEase(options, eventData, false);
-        this._prepareElevation(center);
+        if (this.terrain) this._prepareElevation(center);
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfuls.
@@ -1207,7 +1207,7 @@ abstract class Camera extends Evented {
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
 
-            if (!options.freezeElevation) this._updateElevation(k);
+            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
 
             const newCenter = k === 1 ? center : tr.unproject(from.add(delta.mult(u(s))).mult(scale));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
@@ -1215,7 +1215,7 @@ abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, () => {
-            this._finalizeElevation();
+            if (this.terrain) this._finalizeElevation();
             this._afterEase(options, eventData);
         }, options);
 
