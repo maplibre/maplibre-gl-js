@@ -10,7 +10,7 @@ import Painter from '../render/painter';
 import Transform from '../geo/transform';
 import Hash from './hash';
 import HandlerManager from './handler_manager';
-import Camera from './camera';
+import Camera, {CameraOptions} from './camera';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
@@ -601,6 +601,13 @@ class Map extends Camera {
      */
     hasControl(control: IControl) {
         return this._controls.indexOf(control) > -1;
+    }
+
+    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number) : CameraOptions {
+        if (altitudeTo == null && this.style.terrain) {
+            altitudeTo = this.transform.getElevation(to, this.style.terrain);
+        }
+        return super.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
 
     /**
@@ -2412,14 +2419,14 @@ class Map extends Camera {
 
     _setupContainer() {
         const container = this._container;
-        container.classList.add('maplibregl-map', 'mapboxgl-map');
+        container.classList.add('maplibregl-map');
 
-        const canvasContainer = this._canvasContainer = DOM.create('div', 'maplibregl-canvas-container mapboxgl-canvas-container', container);
+        const canvasContainer = this._canvasContainer = DOM.create('div', 'maplibregl-canvas-container', container);
         if (this._interactive) {
-            canvasContainer.classList.add('maplibregl-interactive', 'mapboxgl-interactive');
+            canvasContainer.classList.add('maplibregl-interactive');
         }
 
-        this._canvas = DOM.create('canvas', 'maplibregl-canvas mapboxgl-canvas', canvasContainer);
+        this._canvas = DOM.create('canvas', 'maplibregl-canvas', canvasContainer);
         this._canvas.addEventListener('webglcontextlost', this._contextLost, false);
         this._canvas.addEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.setAttribute('tabindex', '0');
@@ -2429,10 +2436,10 @@ class Map extends Camera {
         const dimensions = this._containerDimensions();
         this._resizeCanvas(dimensions[0], dimensions[1], this.getPixelRatio());
 
-        const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container mapboxgl-control-container', container);
+        const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
         const positions = this._controlPositions = {};
         ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach((positionName) => {
-            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName} mapboxgl-ctrl-${positionName}`, controlContainer);
+            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName} `, controlContainer);
         });
 
         this._container.addEventListener('scroll', this._onMapScroll, false);
@@ -2464,7 +2471,7 @@ class Map extends Camera {
             this._onCooperativeGesture(e, this._metaPress, 1);
         }, false);
         // Remove the traditional pan classes
-        this._canvasContainer.classList.remove('mapboxgl-touch-drag-pan', 'maplibregl-touch-drag-pan');
+        this._canvasContainer.classList.remove('maplibregl-touch-drag-pan');
     }
 
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
@@ -2785,7 +2792,7 @@ class Map extends Camera {
         if (this._cooperativeGestures) {
             DOM.remove(this._cooperativeGesturesScreen);
         }
-        this._container.classList.remove('maplibregl-map', 'mapboxgl-map');
+        this._container.classList.remove('maplibregl-map');
 
         PerformanceUtils.clearMetrics();
 
@@ -2935,6 +2942,16 @@ class Map extends Camera {
      */
     get version(): string {
         return version;
+    }
+
+    /**
+     * Returns the elevation for the point where the camera is looking.
+     * This value corresponds to:
+     * ("meters above sea level" + "elevation offset (style-spec v8 defualts to 450 m)") * "exaggeration"
+     * @returns {number} * The elevation.
+     */
+    getCameraTargetElevation(): number {
+        return this.transform.elevation;
     }
 }
 

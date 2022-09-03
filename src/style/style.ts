@@ -497,6 +497,7 @@ class Style extends Evented {
 
         // remove terrain
         if (!options) {
+            if (this.terrain) this.terrain.sourceCache.destruct();
             this.terrain = null;
             this.map.terrain = null;
             this.map.transform.updateElevation(this.terrain);
