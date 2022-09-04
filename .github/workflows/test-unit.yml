@@ -31,4 +31,12 @@ jobs:
           node-version: ${{ matrix.node_version }}
           architecture: ${{ matrix.architecture }}
       - run: npm ci
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci
+      - uses: ArtiomTr/jest-coverage-report-action@v2
+        id: coverage
+        with:
+          output: report-markdown
+          annotations: coverage
+          test-script: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci            
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: ${{ steps.coverage.outputs.report }}
