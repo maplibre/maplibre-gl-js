@@ -76,10 +76,10 @@ export default class RenderToTexture {
 
         // remove cached textures
         if (terrain.needsRerenderAll()) {
-            terrain.sourceCache.getAllTiles().forEach(tile => tile.clearTextures(this.painter));
-            this._renderableTiles.forEach(tile => { this._rerender[tile.tileID.key] = true; });
+            for (const tile of terrain.sourceCache.getAllTiles()) tile.clearTextures(this.painter);
+            for (const tile of this._renderableTiles) this._rerender[tile.tileID.key] = true;
         } else {
-            this._renderableTiles.forEach(tile => {
+            for (const tile of this._renderableTiles) {
                 for (const source in this._coordsDescendingInvStr) {
                     // rerender if there are more coords to render than in the last rendering
                     const coords = this._coordsDescendingInvStr[source][tile.tileID.key];
@@ -88,7 +88,7 @@ export default class RenderToTexture {
                     if (terrain.needsRerender(source, tile.tileID)) tile.clearTextures(this.painter);
                 }
                 this._rerender[tile.tileID.key] = !tile.textures.length;
-            });
+            }
         }
         terrain.clearRerenderCache();
         terrain.sourceCache.removeOutdated(this.painter);
@@ -115,30 +115,37 @@ export default class RenderToTexture {
 
         // remember background, fill, line & raster layer to render into a stack
         if (this._renderToTexture[type]) {
+            // create a new stack if previous layer was not rendered to texture (f.e. symbols)
             if (!this._prevType || !this._renderToTexture[this._prevType]) this._stacks.push([]);
+            // push current render-to-texture layer to render-stack
             this._prevType = type;
             this._stacks[this._stacks.length - 1].push(layer.id);
             // rendering is done later, all in once
             if (!isLastLayer) return true;
         }
 
-        // in case a stack is finished render all collected stack-layers into a texture
+        // in case a stack is finished render all current stack-layers into a texture
         if (this._renderToTexture[this._prevType] || type === 'hillshade' || (this._renderToTexture[type] && isLastLayer)) {
             this._prevType = type;
-            const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
-            if (this._stacks.length) for (const tile of this._renderableTiles) {
-                prepareTerrain(painter, painter.style.terrain, tile, stack);
-                if (this._rerender[tile.tileID.key]) {
-                    painter.context.clear({color: Color.transparent});
-                    for (let l = 0; l < layers.length; l++) {
-                        const layer = painter.style._layers[layers[l]];
-                        const coords = layer.source ? this._coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
-                        painter._renderTileClippingMasks(layer, coords);
-                        painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
-                        if (layer.source) tile.textureCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tile.tileID.key];
+
+            // render stack collected before the actual layer
+            if (this._stacks.length) { // if first layer is a hillshading layer stacks is still empty
+                const stack = this._stacks.length - 1;
+                const layers = this._stacks[stack] || [];
+                for (const tile of this._renderableTiles) {
+                    prepareTerrain(painter, painter.style.terrain, tile, stack);
+                    if (this._rerender[tile.tileID.key]) {
+                        painter.context.clear({color: Color.transparent});
+                        for (let l = 0; l < layers.length; l++) {
+                            const layer = painter.style._layers[layers[l]];
+                            const coords = layer.source ? this._coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
+                            painter._renderTileClippingMasks(layer, coords);
+                            painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
+                            if (layer.source) tile.textureCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tile.tileID.key];
+                        }
                     }
+                    drawTerrain(painter, painter.style.terrain, tile);
                 }
-                drawTerrain(painter, painter.style.terrain, tile);
             }
 
             // the hillshading layer is a special case because it changes on every camera-movement
@@ -159,6 +166,7 @@ export default class RenderToTexture {
             return this._renderToTexture[type];
         }
 
+        this._prevType = type;
         return false;
     }
 
