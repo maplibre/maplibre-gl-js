@@ -114,10 +114,9 @@ export type FitBoundsOptions = FlyToOptions & {
  * @property {boolean} animate If `false`, no animation will occur.
  * @property {boolean} essential If `true`, then the animation is considered essential and will not be affected by
  *   [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
- * @property {boolean} freezeElevation When doing a map-animation in terrain, and because the camera calcalates its
- *   height based on the center-altitude, it happens that the camera walks up and down during the animation.
- *   If you want to avoid this behaviour, with this setting you can freeze the camera always in the same height during
- *   animation. After the animation is done the zoomlevel is re-calculated in respect of the current center-altitude.
+ * @property {boolean} freezeElevation Default false. Needed in 3D maps to let the camera stay in a constant
+ *   height based on sea-level. After the animation finished the zoom-level will be recalculated in respect of
+ *   the distance from the camera to the center-coordinate-altitude.
  */
 export type AnimationOptions = {
     duration?: number;
@@ -909,7 +908,7 @@ abstract class Camera extends Evented {
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
         this._easeId = options.easeId;
-        this._prepareEase(options, eventData, options.noMoveStart, currently);
+        this._prepareEase(eventData, options.noMoveStart, currently);
         if (this.terrain) this._prepareElevation(center);
 
         this._ease((k) => {
@@ -947,13 +946,13 @@ abstract class Camera extends Evented {
 
         }, (interruptingEaseId?: string) => {
             if (this.terrain) this._finalizeElevation();
-            this._afterEase(options, eventData, interruptingEaseId);
+            this._afterEase(eventData, interruptingEaseId);
         }, options as any);
 
         return this;
     }
 
-    _prepareEase(options: any, eventData: any, noMoveStart: boolean, currently: any = {}) {
+    _prepareEase(eventData: any, noMoveStart: boolean, currently: any = {}) {
         this._moving = true;
         if (!noMoveStart && !currently.moving) {
             this.fire(new Event('movestart', eventData));
@@ -1006,7 +1005,7 @@ abstract class Camera extends Evented {
         }
     }
 
-    _afterEase(options: any, eventData?: any, easeId?: string) {
+    _afterEase(eventData?: any, easeId?: string) {
         // if this easing is being stopped to start another easing with
         // the same id then don't fire any events to avoid extra start/stop events
         if (this._easeId && easeId && this._easeId === easeId) {
@@ -1221,7 +1220,7 @@ abstract class Camera extends Evented {
         this._pitching = (pitch !== startPitch);
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
-        this._prepareEase(options, eventData, false);
+        this._prepareEase(eventData, false);
         if (this.terrain) this._prepareElevation(center);
 
         this._ease((k) => {
@@ -1252,7 +1251,7 @@ abstract class Camera extends Evented {
 
         }, () => {
             if (this.terrain) this._finalizeElevation();
-            this._afterEase(options, eventData);
+            this._afterEase(eventData);
         }, options);
 
         return this;
