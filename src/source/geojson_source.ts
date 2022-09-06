@@ -13,7 +13,7 @@ import type Actor from '../util/actor';
 import type {Callback} from '../types/callback';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types.g';
 import type {MapSourceDataType} from '../ui/events';
-import type {GeoJSONSourceDiff} from './geojson_source_diff';
+import type {GeoJSONSourceDiff, GeoJSONSourceDiffWithAddIds, GeoJSONFeatureId} from './geojson_source_diff';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: any;
@@ -173,8 +173,11 @@ class GeoJSONSource extends Evented implements Source {
         return this;
     }
 
-    updateData(diff: GeoJSONSourceDiff) {
-        this._updateWorkerData('content', diff);
+    updateData(diff: GeoJSONSourceDiff, getId: (feature: GeoJSON.Feature) => GeoJSONFeatureId) {
+        this._updateWorkerData('content', {
+            ...diff,
+            addIds: diff.add != null ? diff.add.map(getId) : undefined
+        });
 
         return this;
     }
@@ -243,7 +246,7 @@ class GeoJSONSource extends Evented implements Source {
      * handles loading the geojson data and preparing to serve it up as tiles,
      * using geojson-vt or supercluster as appropriate.
      */
-    _updateWorkerData(sourceDataType: MapSourceDataType, diff?: GeoJSONSourceDiff) {
+    _updateWorkerData(sourceDataType: MapSourceDataType, diff?: GeoJSONSourceDiffWithAddIds) {
         const options = extend({}, this.workerOptions);
         if (diff != null) {
             options.dataDiff = diff;

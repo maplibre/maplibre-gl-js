@@ -21,12 +21,12 @@ import type {LoadVectorDataCallback} from './vector_tile_worker_source';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
-import {getUpdateable, isUpdateable, type GeoJSONSourceDiff, applySourceDiff, type FeatureWithId} from './geojson_source_diff';
+import {getUpdateable, isUpdateable, type GeoJSONSourceDiffWithAddIds, applySourceDiff} from './geojson_source_diff';
 
 export type LoadGeoJSONParameters = {
     request?: RequestParameters;
     data?: string;
-    dataDiff?: GeoJSONSourceDiff;
+    dataDiff?: GeoJSONSourceDiffWithAddIds;
     source: string;
     cluster: boolean;
     superclusterOptions?: any;
@@ -91,7 +91,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }>;
     _pendingRequest: Cancelable;
     _geoJSONIndex: GeoJSONIndex;
-    _dataUpdateable: {[id: string]: FeatureWithId} | undefined;
+    _dataUpdateable: {[id: string]: GeoJSON.Feature} | undefined;
 
     /**
      * @param [loadGeoJSON] Optional method for custom loading/parsing of

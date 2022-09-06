@@ -3,8 +3,12 @@ export type GeoJSONFeatureId = number | string;
 export interface GeoJSONSourceDiff {
     removeAll?: boolean;
     removed?: Array<GeoJSONFeatureId>;
-    add?: Array<FeatureWithId>;
+    add?: Array<GeoJSON.Feature>;
     update?: Array<GeoJSONFeatureDiff>;
+}
+
+export interface GeoJSONSourceDiffWithAddIds extends GeoJSONSourceDiff {
+    addIds?: Array<GeoJSONFeatureId>;
 }
 
 export interface GeoJSONFeatureDiff {
@@ -15,9 +19,7 @@ export interface GeoJSONFeatureDiff {
     addOrUpdateProperties?: Array<{key: string; value: any}>;
 }
 
-export type FeatureWithId = GeoJSON.Feature & {id: GeoJSONFeatureId};
-
-export type UpdateableGeoJSON = FeatureWithId | GeoJSON.FeatureCollection & {features: {id: GeoJSONFeatureId}[]};
+export type UpdateableGeoJSON = GeoJSON.Feature | GeoJSON.FeatureCollection;
 
 export function isUpdateable(data: string | GeoJSON.GeoJSON): data is UpdateableGeoJSON {
     if (typeof data === 'string') {
@@ -35,8 +37,8 @@ export function isUpdateable(data: string | GeoJSON.GeoJSON): data is Updateable
     return false;
 }
 
-export function getUpdateable(data: UpdateableGeoJSON): {[id: GeoJSONFeatureId]: FeatureWithId} {
-    const result: {[id: GeoJSONFeatureId]: FeatureWithId} = {};
+export function getUpdateable(data: UpdateableGeoJSON): {[id: GeoJSONFeatureId]: GeoJSON.Feature} {
+    const result: {[id: GeoJSONFeatureId]: GeoJSON.Feature} = {};
     if (data.type === 'Feature') {
         result[data.id] = data;
     } else {
@@ -48,7 +50,7 @@ export function getUpdateable(data: UpdateableGeoJSON): {[id: GeoJSONFeatureId]:
 }
 
 // may mutate updateable, but may also return a completely different object entirely
-export function applySourceDiff(updateable: {[id: string]: FeatureWithId}, diff: GeoJSONSourceDiff) {
+export function applySourceDiff(updateable: {[id: string]: GeoJSON.Feature}, diff: GeoJSONSourceDiffWithAddIds) {
     if (diff.removeAll) {
         updateable = {};
     }
@@ -64,11 +66,19 @@ export function applySourceDiff(updateable: {[id: string]: FeatureWithId}, diff:
     }
 
     if (diff.add != null) {
-        for (const feature of diff.add) {
-            if (updateable[feature.id] != null) {
-                throw new Error(`Cannot add '${feature.id}' because it already exists`);
+        if (diff.addIds == null || diff.addIds.length !== diff.add.length) {
+            throw new Error('Cannot add data without corresponding ids');
+        }
+
+        for (let i = 0; i < diff.add.length; i++) {
+            const feature = diff.add[i];
+            const id = diff.addIds[i];
+
+            if (updateable[id] != null) {
+                throw new Error(`Cannot add '${id}' because it already exists`);
             }
-            updateable[feature.id] = feature;
+
+            updateable[id] = feature;
         }
     }
 
