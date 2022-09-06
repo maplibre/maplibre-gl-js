@@ -32,7 +32,11 @@ jobs:
           architecture: ${{ matrix.architecture }}
       - run: npm ci
       - uses: ArtiomTr/jest-coverage-report-action@v2
+        id: coverage
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          annotations: none
-          test-script: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci
+          output: report-markdown
+          annotations: coverage
+          test-script: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci            
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: ${{ steps.coverage.outputs.report }}
