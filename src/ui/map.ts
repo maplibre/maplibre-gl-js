@@ -1476,7 +1476,7 @@ class Map extends Camera {
     }
 
     _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
-        const previousStyle = this.style ? this.style.serialize() : undefined;
+        const previousStyle = this.style && options.stylePatch ? this.style.serialize() : undefined;
         if (this.style) {
             this.style.setEventedParent(null);
             this.style._remove();
