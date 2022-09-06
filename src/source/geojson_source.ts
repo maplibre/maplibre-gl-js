@@ -13,7 +13,7 @@ import type Actor from '../util/actor';
 import type {Callback} from '../types/callback';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types.g';
 import type {MapSourceDataType} from '../ui/events';
-import {applySourceDiff, type GeoJSONSourceDiff, getUpdateable, isUpdateable, type FeatureWithId} from './geojson_source_diff';
+import type {GeoJSONSourceDiff} from './geojson_source_diff';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: any;
@@ -78,7 +78,6 @@ class GeoJSONSource extends Evented implements Source {
     isTileClipped: boolean;
     reparseOverscaled: boolean;
     _data: GeoJSON.GeoJSON | string | undefined;
-    _dataUpdateable: {[id: string]: FeatureWithId} | undefined;
     _options: any;
     workerOptions: any;
     map: Map;
@@ -110,14 +109,7 @@ class GeoJSONSource extends Evented implements Source {
         this.actor = dispatcher.getActor();
         this.setEventedParent(eventedParent);
 
-        const data = options.data as any;
-
-        if (isUpdateable(data)) {
-            this._dataUpdateable = getUpdateable(data);
-        } else {
-            this._data = data;
-        }
-
+        this._data = options.data as any;
         this._options = extend({}, options);
 
         this._collectResourceTiming = options.collectResourceTiming;
@@ -175,26 +167,13 @@ class GeoJSONSource extends Evented implements Source {
      * @returns {GeoJSONSource} this
      */
     setData(data: GeoJSON.GeoJSON | string) {
-        if (isUpdateable(data)) {
-            this._data = undefined;
-            this._dataUpdateable = getUpdateable(data);
-        } else {
-            this._data = data;
-            this._dataUpdateable = undefined;
-        }
-
+        this._data = data;
         this._updateWorkerData('content');
 
         return this;
     }
 
     updateData(diff: GeoJSONSourceDiff) {
-        if (this._data != null) {
-            throw new Error('Cannot call updateData with the existing data');
-        }
-
-        this._dataUpdateable = applySourceDiff(this._dataUpdateable, diff);
-
         this._updateWorkerData('content', diff);
 
         return this;
@@ -266,12 +245,8 @@ class GeoJSONSource extends Evented implements Source {
      */
     _updateWorkerData(sourceDataType: MapSourceDataType, diff?: GeoJSONSourceDiff) {
         const options = extend({}, this.workerOptions);
-        if (this._dataUpdateable != null) {
-            if (diff != null) {
-                options.dataDiff = diff;
-            } else {
-                options.data = JSON.stringify({type: 'FeatureCollection', features: Object.values(this._dataUpdateable)});
-            }
+        if (diff != null) {
+            options.dataDiff = diff;
         } else if (typeof this._data === 'string') {
             options.request = this.map._requestManager.transformRequest(browser.resolveURL(this._data as string), ResourceType.Source);
             options.request.collectResourceTiming = this._collectResourceTiming;
@@ -369,9 +344,7 @@ class GeoJSONSource extends Evented implements Source {
     serialize() {
         return extend({}, this._options, {
             type: this.type,
-            data: this._dataUpdateable != null ?
-                {type: 'FeatureCollection', features: Object.values(this._dataUpdateable)} :
-                this._data,
+            data: this._data,
         });
     }
 
