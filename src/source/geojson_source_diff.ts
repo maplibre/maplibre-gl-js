@@ -21,32 +21,8 @@ export interface GeoJSONFeatureDiff {
 
 export type UpdateableGeoJSON = GeoJSON.Feature | GeoJSON.FeatureCollection;
 
-export function isUpdateable(data: string | GeoJSON.GeoJSON): data is UpdateableGeoJSON {
-    if (typeof data === 'string') {
-        return false;
-    }
-
-    if (data.type === 'Feature' && data.id != null) {
-        return true;
-    }
-
-    if (data.type === 'FeatureCollection' && data.features.every(feature => feature.id != null)) {
-        return true;
-    }
-
-    return false;
-}
-
-export function getUpdateable(data: UpdateableGeoJSON): {[id: GeoJSONFeatureId]: GeoJSON.Feature} {
-    const result: {[id: GeoJSONFeatureId]: GeoJSON.Feature} = {};
-    if (data.type === 'Feature') {
-        result[data.id] = data;
-    } else {
-        for (const feature of data.features) {
-            data[feature.id] = feature;
-        }
-    }
-    return result;
+export function isEmptyFeatureCollection(data: string | GeoJSON.GeoJSON): data is UpdateableGeoJSON {
+    return (typeof data !== 'string' && data.type === 'FeatureCollection' && data.features.length === 0);
 }
 
 // may mutate updateable, but may also return a completely different object entirely
@@ -87,7 +63,7 @@ export function applySourceDiff(updateable: {[id: string]: GeoJSON.Feature}, dif
             let feature = updateable[update.id];
 
             if (feature == null) {
-                throw new Error(`Cannot update '${feature.id}' which does not exist`);
+                throw new Error(`Cannot update '${update.id}' which does not exist`);
             }
 
             // be careful to clone the feature and/or properties objects to avoid mutating our input
@@ -112,7 +88,7 @@ export function applySourceDiff(updateable: {[id: string]: GeoJSON.Feature}, dif
                     if (Object.prototype.hasOwnProperty.call(feature.properties, prop)) {
                         delete feature.properties[prop];
                     } else {
-                        throw new Error(`Cannot delete property ${prop} on feature ${feature.id} because it does not exist`);
+                        throw new Error(`Cannot delete property ${prop} on feature ${update.id} because it does not exist`);
                     }
                 }
             }

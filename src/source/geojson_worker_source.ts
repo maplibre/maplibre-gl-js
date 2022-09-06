@@ -21,7 +21,7 @@ import type {LoadVectorDataCallback} from './vector_tile_worker_source';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
-import {getUpdateable, isUpdateable, type GeoJSONSourceDiffWithAddIds, applySourceDiff} from './geojson_source_diff';
+import {isEmptyFeatureCollection, type GeoJSONSourceDiffWithAddIds, applySourceDiff} from './geojson_source_diff';
 
 export type LoadGeoJSONParameters = {
     request?: RequestParameters;
@@ -221,15 +221,12 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
         // ie: /foo/bar.json or http://example.com/bar.json
         // but not ../foo/bar.json
         if (params.request) {
+            this._dataUpdateable = undefined;
             return getJSON(params.request, callback);
         } else if (typeof params.data === 'string') {
             try {
                 const parsed = JSON.parse(params.data);
-                if (isUpdateable(parsed)) {
-                    this._dataUpdateable = getUpdateable(parsed);
-                } else {
-                    this._dataUpdateable = undefined;
-                }
+                this._dataUpdateable = isEmptyFeatureCollection(parsed) ? {} : undefined;
                 callback(null, parsed);
             } catch (e) {
                 callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
