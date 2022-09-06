@@ -216,7 +216,7 @@ export type StylePatchFunction = (
     preserveLayer: PreserveLayerFunction,
     updatePaintProperty: UpdatePaintPropertyFunction,
     updateLayoutProperty: UpdateLayoutPropertyFunction,
-    updateFilter: (layerId: string, filter: FilterSpecification | null, options?: StyleSetterOptions) => void
+    updateFilter: UpdateFilterFunction
 ) => void;
 
 export type StyleSwapOptions = {

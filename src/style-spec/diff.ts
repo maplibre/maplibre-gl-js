@@ -1,7 +1,7 @@
 
-import Style from '../style/style';
+import Style, {StyleSetterOptions} from '../style/style';
 import {warnOnce} from '../util/util';
-import {LayerSpecification, SourceSpecification} from './types.g';
+import {FilterSpecification, LayerSpecification, SourceSpecification} from './types.g';
 import isEqual from './util/deep_equal';
 
 const operations = {
@@ -108,7 +108,7 @@ const operations = {
 
 };
 
-export type DiffOperation = { command: keyof typeof operations; args: (string | LayerSpecification | SourceSpecification | {validate: boolean})[] };
+export type DiffOperation = { command: keyof typeof operations; args: (string | LayerSpecification | SourceSpecification | FilterSpecification | StyleSetterOptions | null)[] };
 
 function addSource(sourceId, after, commands) {
     commands.push({command: operations.addSource, args: [sourceId, after[sourceId]]});

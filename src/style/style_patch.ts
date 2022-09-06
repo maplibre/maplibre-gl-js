@@ -1,7 +1,7 @@
 import {DiffOperation} from '../style-spec/diff';
-import {LayerSpecification, StyleSpecification} from '../style-spec/types.g';
+import {FilterSpecification, LayerSpecification, StyleSpecification} from '../style-spec/types.g';
 import {warnOnce} from '../util/util';
-import {StylePatchFunction} from './style';
+import {StylePatchFunction, StyleSetterOptions} from './style';
 
 export default function buildPatchOperations(prev: StyleSpecification, next: StyleSpecification, stylePatch: StylePatchFunction, isDiff: boolean): { patchOperations: DiffOperation[]; preservedSources: string[]; preservedLayers: string[] } {
     const patchOperations: DiffOperation[] = [];
@@ -54,9 +54,9 @@ export default function buildPatchOperations(prev: StyleSpecification, next: Sty
         }
     };
 
-    const updateFilter = (layerId: string, name: string, value: any) => {
+    const updateFilter = (layerId: string, filter: FilterSpecification | null, options?: StyleSetterOptions) => {
         if (layerId in nextLayerIndex || preservedLayers.includes(layerId)) {
-            patchOperations.push({command: 'setFilter', args: [layerId, name, value, {validate: true}]});
+            patchOperations.push({command: 'setFilter', args: [layerId, filter, options]});
         } else {
             warnOnce(`Cannot update filter on layer ${layerId} that is not in the next style.`);
         }
@@ -64,9 +64,9 @@ export default function buildPatchOperations(prev: StyleSpecification, next: Sty
 
     stylePatch(prev,
         next,
-        preserveLayer.bind(this),
-        updatePaintProperty.bind(this),
-        updateLayoutProperty.bind(this),
-        updateFilter.bind(this));
+        preserveLayer,
+        updatePaintProperty,
+        updateLayoutProperty,
+        updateFilter);
     return {patchOperations, preservedSources, preservedLayers};
 }
