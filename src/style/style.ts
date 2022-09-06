@@ -6,7 +6,7 @@ import ImageManager from '../render/image_manager';
 import GlyphManager from '../render/glyph_manager';
 import Light from './light';
 import LineAtlas from '../render/line_atlas';
-import {pick, clone, extend, deepEqual, filterObject, mapObject, warnOnce} from '../util/util';
+import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
@@ -20,7 +20,7 @@ import styleSpec from '../style-spec/reference/latest';
 import getWorkerPool from '../util/global_worker_pool';
 import deref from '../style-spec/deref';
 import emptyStyle from '../style-spec/empty';
-import diffStyles, {operations as diffOperations} from '../style-spec/diff';
+import diffStyles, {operations as diffOperations, applyStyleOperation} from '../style-spec/diff';
 import {
     registerForPluginStateChange,
     evented as rtlTextPluginEvented,
@@ -62,6 +62,7 @@ import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';
 import Terrain from '../render/terrain';
+import buildPatchOperations from './style_patch';
 
 const supportedDiffOperations = pick(diffOperations, [
     'moveLayer',
@@ -160,9 +161,9 @@ export type UpdateLayoutPropertyFunction = (layerId: string, name: string, value
  *
  * @typedef {Function} UpdateFilterFunction
  * @param {string} layerId ID of the layer from next style that should be updated.
- * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
+ * @param {FilterSpecification | null} filter The filter, conforming to the MapLibre Style Specification's
  *   [filter definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
- * @param {Object} [options] Options object.
+ * @param {StyleSetterOptions} [options] Options object.
  *
  * @example
  * map.setStyle('https://demotiles.maplibre.org/style.json', {
@@ -183,8 +184,8 @@ export type UpdateFilterFunction = (layerId: string, filter: FilterSpecification
  *      when a desired target style is a certain combination of previous and incoming style.
  *
  * @typedef {Function} StylePatchFunction
- * @param {Object} previousStyle The current style.
- * @param {Object} nextStyle The next style which is to be applied.
+ * @param {StyleSpecification} previousStyle The current style.
+ * @param {StyleSpecification} nextStyle The next style which is to be applied.
  * @param {PreserveLayerFunction} preserveLayer Preserve a layer from the previous style in the next style.
  * @param {UpdatePaintPropertyFunction} updatePaintProperty Modify paint properties of a layer in the next style before the style is applied.
  * @param {UpdateLayoutPropertyFunction} updateLayoutProperty Modify layout properties of a layer in the next style before the style is applied.
@@ -338,7 +339,7 @@ class Style extends Evented {
         });
     }
 
-    loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}) {
+    loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         options.validate = typeof options.validate === 'boolean' ?
@@ -350,18 +351,18 @@ class Style extends Evented {
             if (error) {
                 this.fire(new ErrorEvent(error));
             } else if (json) {
-                this._load(json, options);
+                this._load(json, options, previousStyle);
             }
         });
     }
 
-    loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}) {
+    loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         this._request = browser.frame(() => {
             this._request = null;
             options.validate = options.validate !== false;
-            this._load(json, options);
+            this._load(json, options, previousStyle);
         });
     }
 
@@ -370,17 +371,12 @@ class Style extends Evented {
         this._load(empty, {validate: false});
     }
 
-    _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions) {
+    _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification) {
         if (options.validate && emitValidationErrors(this, validateStyle(json))) {
             return;
         }
 
-        let patchOperations: { command: string; args: (string | LayerSpecification | {validate: boolean})[] }[] = [];
-        if (options.stylePatch) {
-            patchOperations = this._buildStylePatch(json, options);
-            this.sourceCaches = {};
-        }
-
+        const {patchOperations} = options.stylePatch ? buildPatchOperations(previousStyle, json, options.stylePatch, false) : {patchOperations: []};
         this._loaded = true;
         this.stylesheet = json;
 
@@ -412,8 +408,8 @@ class Style extends Evented {
 
         this.light = new Light(this.stylesheet.light);
 
-        patchOperations.filter(op => op.command !== diffOperations.moveLayer).forEach((op) => {
-            this[op.command](...op.args);
+        patchOperations.forEach((op) => {
+            applyStyleOperation(this, op);
         });
 
         this.setTerrain(this.stylesheet.terrain);
@@ -686,34 +682,7 @@ class Style extends Evented {
         nextState = clone(nextState);
         nextState.layers = deref(nextState.layers);
 
-        let patchOperations: { command: string; args: (string | LayerSpecification | {validate: boolean})[] }[] = [];
-        const preservedLayers: {} = {};
-        const preservedSources: {} = {};
-        if (options.stylePatch) {
-            patchOperations = this._buildStylePatch(
-                nextState,
-                options);
-        }
-
-        patchOperations = patchOperations.filter((op: {command: string; args: any[]}) => {
-            if (op.command === diffOperations.addLayer &&
-                op.args[0].id in this._serializedLayers) {
-                preservedLayers[op.args[0].id] = true;
-                return false;
-            }
-            if (op.command === diffOperations.moveLayer &&
-                op.args[0] in this._serializedLayers) {
-                preservedLayers[op.args[0]] = true;
-                return true;
-            }
-            if (op.command === diffOperations.addSource &&
-                op.args[0] in this.sourceCaches) {
-                preservedSources[op.args[0]] = true;
-                return false;
-            }
-            return true;
-        });
-
+        const {patchOperations, preservedSources, preservedLayers} = options.stylePatch ? buildPatchOperations(this.serialize(), nextState, options.stylePatch, true) : {patchOperations: [], preservedSources: [], preservedLayers: []};
         let changes = diffStyles(this.serialize(), nextState)
             .filter(op => !(op.command in ignoredDiffOperations));
         changes = changes.concat(patchOperations);
@@ -732,13 +701,13 @@ class Style extends Evented {
                 // `this.stylesheet`, which we update below
                 return;
             }
-            if (op.command === diffOperations.removeLayer && op.args[0] in preservedLayers) {
+            if (op.command === diffOperations.removeLayer && preservedLayers.includes(op.args[0])) {
                 return;
             }
-            if ((op.command === diffOperations.addSource || op.command === diffOperations.removeSource) && op.args[0] in preservedSources) {
+            if (op.command === diffOperations.removeSource && preservedSources.includes(op.args[0])) {
                 return;
             }
-            this[op.command](...op.args);
+            applyStyleOperation(this, op);
         });
 
         this.stylesheet = nextState;
@@ -1240,74 +1209,6 @@ class Style extends Evented {
         } else {
             return empty;
         }
-    }
-
-    _buildStylePatch(next: StyleSpecification, options: StyleSwapOptions): { command: string; args: (string | LayerSpecification | {validate: boolean})[] }[] {
-        const patchOperations: { command: string; args: (string | LayerSpecification | {validate: boolean})[] }[] = [];
-        const preservedSources: string[] = [];
-        const preservedLayers: string[] = [];
-        const nextLayerIndex = next.layers.reduce((p: { [layerId: string]: LayerSpecification }, c: LayerSpecification) => {
-            p[c.id] = c;
-            return p;
-        }, {});
-
-        const preserveLayer = (layerId: string, before?: string) => {
-            if (this.hasLayer(layerId)) {
-                const preservedLayer: LayerSpecification = this._serializedLayers[layerId];
-                if (preservedLayer.type !== 'background' && !(preservedLayer.source in next.sources) && !preservedSources.includes(preservedLayer.source)) {
-                    patchOperations.push({command: 'addSource', args: [preservedLayer.source, this.sourceCaches[preservedLayer.source].serialize(), {validate: false}]});
-                    preservedSources.push(preservedLayer.source);
-                }
-
-                if (layerId in nextLayerIndex) {
-                    patchOperations.push({command: 'removeLayer', args: [layerId]});
-                }
-
-                before = (before in nextLayerIndex || preservedLayers.find(layerId => layerId === before)) ? before : undefined;
-                // Hackish. If style diff is enabled, and succeeds, moveLayer will be applied and addLayer will be ignored.
-                // If style diff is disabled, or fails, addLayer will be applied and moveLayer will be ignored.
-                patchOperations.push({command: 'moveLayer', args: [preservedLayer.id, before, {validate: true}]});
-                patchOperations.push({command: 'addLayer', args: [preservedLayer, before, {validate: true}]});
-                preservedLayers.push(layerId);
-            } else {
-                warnOnce(`Cannot preserve layer ${layerId} that is not in the previous style.`);
-            }
-        };
-
-        const updatePaintProperty = (layerId: string, name: string, value: any) => {
-            if (layerId in nextLayerIndex || preservedLayers.includes(layerId)) {
-                patchOperations.push({command: 'setPaintProperty', args: [layerId, name, value, {validate: true}]});
-            } else {
-                warnOnce(`Cannot update paint property on layer ${layerId} that is not in the next style.`);
-            }
-        };
-
-        const updateLayoutProperty = (layerId: string, name: string, value: any) => {
-            if (layerId in nextLayerIndex || preservedLayers.includes(layerId)) {
-                patchOperations.push({command: 'setLayoutProperty', args: [layerId, name, value, {validate: true}]});
-            } else {
-                warnOnce(`Cannot update layout property on layer ${layerId} that is not in the next style.`);
-            }
-        };
-
-        const updateFilter = (layerId: string, name: string, value: any) => {
-            if (layerId in nextLayerIndex || preservedLayers.includes(layerId)) {
-                patchOperations.push({command: 'setFilter', args: [layerId, name, value, {validate: true}]});
-            } else {
-                warnOnce(`Cannot update filter on layer ${layerId} that is not in the next style.`);
-            }
-        };
-
-        if (options.stylePatch) {
-            options.stylePatch(this.serialize(),
-                next,
-                preserveLayer.bind(this),
-                updatePaintProperty.bind(this),
-                updateLayoutProperty.bind(this),
-                updateFilter.bind(this));
-        }
-
-        return patchOperations;
     }
 
     _updateLayer(layer: StyleLayer) {

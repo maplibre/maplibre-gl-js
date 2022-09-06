@@ -58,7 +58,6 @@ import type {
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import emptyStyle from '../style-spec/empty';
 
 const version = packageJSON.version;
 
@@ -1477,35 +1476,25 @@ class Map extends Camera {
     }
 
     _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
-        if (!options.stylePatch) {
-            if (this.style) {
-                this.style.setEventedParent(null);
-                this.style._remove();
-            }
+        const previousStyle = this.style ? this.style.serialize() : undefined;
+        if (this.style) {
+            this.style.setEventedParent(null);
+            this.style._remove();
+        }
 
-            if (!style) {
-                delete this.style;
-                return this;
-            } else {
-                this.style = new Style(this, options || {});
-            }
-
-            this.style.setEventedParent(this, {style: this.style});
+        if (!style) {
+            delete this.style;
+            return this;
         } else {
-            if (!style) {
-                style = emptyStyle() as StyleSpecification;
-            }
+            this.style = new Style(this, options || {});
         }
 
-        if (!this.style) {
-            this.style = new Style(this, options);
-            this.style.setEventedParent(this, {style: this.style});
-        }
+        this.style.setEventedParent(this, {style: this.style});
 
         if (typeof style === 'string') {
-            this.style.loadURL(style, options);
+            this.style.loadURL(style, options, previousStyle);
         } else {
-            this.style.loadJSON(style, options);
+            this.style.loadJSON(style, options, previousStyle);
         }
 
         return this;

@@ -1,4 +1,7 @@
 
+import Style from '../style/style';
+import {warnOnce} from '../util/util';
+import {LayerSpecification, SourceSpecification} from './types.g';
 import isEqual from './util/deep_equal';
 
 const operations = {
@@ -104,6 +107,8 @@ const operations = {
     setLight: 'setLight'
 
 };
+
+export type DiffOperation = { command: keyof typeof operations; args: (string | LayerSpecification | SourceSpecification | {validate: boolean})[] };
 
 function addSource(sourceId, after, commands) {
     commands.push({command: operations.addSource, args: [sourceId, after[sourceId]]});
@@ -394,5 +399,58 @@ function diffStyles(before, after) {
     return commands;
 }
 
+function applyStyleOperation(style: Style, operation: DiffOperation) {
+    let operationFn: Function | null = null;
+    switch (operation.command) {
+        case operations.addLayer:
+            operationFn = style.addLayer;
+            break;
+        case operations.moveLayer:
+            operationFn = style.moveLayer;
+            break;
+        case operations.removeLayer:
+            operationFn = style.removeLayer;
+            break;
+        case operations.setPaintProperty:
+            operationFn = style.setPaintProperty;
+            break;
+        case operations.setLayoutProperty:
+            operationFn = style.setLayoutProperty;
+            break;
+        case operations.setFilter:
+            operationFn = style.setFilter;
+            break;
+        case operations.addSource:
+            operationFn = style.addSource;
+            break;
+        case operations.removeSource:
+            operationFn = style.removeSource;
+            break;
+        case operations.setGeoJSONSourceData:
+            operationFn = style.setGeoJSONSourceData;
+            break;
+        case operations.setLayerZoomRange:
+            operationFn = style.setLayerZoomRange;
+            break;
+        case operations.setLight:
+            operationFn = style.setLight;
+            break;
+            // case operations.setLayerProperty:
+            // case operations.setCenter:
+            // case operations.setZoom:
+            // case operations.setBearing:
+            // case operations.setPitch:
+            // case operations.setSprite:
+            // case operations.setGlyphs:
+            // case operations.setTransition:
+        default:
+            warnOnce(`${operation.command} is not supported.`);
+    }
+
+    if (operationFn) {
+        operationFn.apply(style, operation.args);
+    }
+}
+
 export default diffStyles;
-export {operations};
+export {operations, applyStyleOperation};
