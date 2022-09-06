@@ -9,31 +9,26 @@ export interface GeoJSONSourceDiff {
 
 export interface GeoJSONFeatureDiff {
     id: GeoJSONFeatureId;
-    newGeometry?: DirectGeometry;
+    newGeometry?: GeoJSON.Geometry;
     removeAllProperties?: boolean;
     removeProperties?: Array<string>;
     addOrUpdateProperties?: Array<{key: string; value: any}>;
 }
 
-export type FeatureWithId = GeoJSON.Feature<DirectGeometry> & {id: GeoJSONFeatureId};
+export type FeatureWithId = GeoJSON.Feature & {id: GeoJSONFeatureId};
 
-export type DirectGeometry = GeoJSON.Point | GeoJSON.MultiPoint | GeoJSON.LineString | GeoJSON.MultiLineString | GeoJSON.Polygon | GeoJSON.MultiPolygon;
-export type UpdateableGeoJSON = FeatureWithId | GeoJSON.FeatureCollection<DirectGeometry> & {features: {id: GeoJSONFeatureId}[]};
-
-export function isDirectGeometry(geometry: GeoJSON.Geometry): geometry is DirectGeometry {
-    return geometry.type !== 'GeometryCollection';
-}
+export type UpdateableGeoJSON = FeatureWithId | GeoJSON.FeatureCollection & {features: {id: GeoJSONFeatureId}[]};
 
 export function isUpdateable(data: string | GeoJSON.GeoJSON): data is UpdateableGeoJSON {
     if (typeof data === 'string') {
         return false;
     }
 
-    if (data.type === 'Feature' && data.id != null && isDirectGeometry(data.geometry)) {
+    if (data.type === 'Feature' && data.id != null) {
         return true;
     }
 
-    if (data.type === 'FeatureCollection' && data.features.every(feature => feature.id != null && isDirectGeometry(feature.geometry))) {
+    if (data.type === 'FeatureCollection' && data.features.every(feature => feature.id != null)) {
         return true;
     }
 
