@@ -3,12 +3,9 @@ import {FilterSpecification, LayerSpecification, StyleSpecification} from '../st
 import {warnOnce} from '../util/util';
 import {StylePatchFunction, StyleSetterOptions} from './style';
 
-export default function buildPatchOperations(prev: StyleSpecification, next: StyleSpecification, stylePatch: StylePatchFunction, isDiff: boolean): { patchOperations: DiffOperation[]; preservedSources: string[]; preservedLayers: string[]; removedLayers: string[] } {
+export default function buildPatchOperations(prev: StyleSpecification, next: StyleSpecification, stylePatch: StylePatchFunction, isDiff: boolean): { patchOperations: DiffOperation[]; preservedSources: string[] } {
     const patchOperations: DiffOperation[] = [];
     const preservedSources: string[] = [];
-    const preservedLayers: string[] = [];
-    // layer ids that should removed from the next style
-    const removedLayers: string[] = [];
     const nextLayerIndex = next.layers.reduce((p: { [layerId: string]: LayerSpecification }, c: LayerSpecification) => ({
         ...p,
         [c.id]: c
@@ -24,29 +21,24 @@ export default function buildPatchOperations(prev: StyleSpecification, next: Sty
                 preservedSources.push(preservedLayer.source);
             }
 
+            // remove the layer from incoming style if we have id collision with preserved layer
             if (layerId in nextLayerIndex) {
-                if (!isDiff) {
-                    patchOperations.push({command: 'removeLayer', args: [layerId]});
-                }
-                removedLayers.push(layerId);
+                patchOperations.push({command: 'removeLayer', args: [layerId]});
             }
 
-            // preservedLayer are added on top of layers in next style
-            // so even in diff mode, add moveLayer operation for each preservedLayer
-            before = before && (before in nextLayerIndex || preservedLayers.includes(before)) ? before : undefined;
-            if (isDiff) {
-                patchOperations.push({command: 'moveLayer', args: [preservedLayer.id, before, {validate: true}]});
-            } else {
-                patchOperations.push({command: 'addLayer', args: [preservedLayer, before, {validate: true}]});
-            }
-            preservedLayers.push(layerId);
+            // preservedLayer are added on top of layers in next style if the before is unset
+            // NOTE: diffing will result in original preserved layer being removed
+            before = before && (before in nextLayerIndex) ? before : undefined;
+            patchOperations.push({command: 'addLayer', args: [preservedLayer, before, {validate: true}]});
+
+            nextLayerIndex[layerId] = preservedLayer;
         } else {
             warnOnce(`Cannot preserve layer ${layerId} that is not in the previous style.`);
         }
     };
 
     const updatePaintProperty = (layerId: string, name: string, value: any) => {
-        if (layerId in nextLayerIndex || preservedLayers.includes(layerId)) {
+        if (layerId in nextLayerIndex) {
             patchOperations.push({command: 'setPaintProperty', args: [layerId, name, value, {validate: true}]});
         } else {
             warnOnce(`Cannot update paint property on layer ${layerId} that is not in the next style.`);
@@ -54,7 +46,7 @@ export default function buildPatchOperations(prev: StyleSpecification, next: Sty
     };
 
     const updateLayoutProperty = (layerId: string, name: string, value: any) => {
-        if (layerId in nextLayerIndex || preservedLayers.includes(layerId)) {
+        if (layerId in nextLayerIndex) {
             patchOperations.push({command: 'setLayoutProperty', args: [layerId, name, value, {validate: true}]});
         } else {
             warnOnce(`Cannot update layout property on layer ${layerId} that is not in the next style.`);
@@ -62,7 +54,7 @@ export default function buildPatchOperations(prev: StyleSpecification, next: Sty
     };
 
     const updateFilter = (layerId: string, filter: FilterSpecification | null, options?: StyleSetterOptions) => {
-        if (layerId in nextLayerIndex || preservedLayers.includes(layerId)) {
+        if (layerId in nextLayerIndex) {
             patchOperations.push({command: 'setFilter', args: [layerId, filter, options]});
         } else {
             warnOnce(`Cannot update filter on layer ${layerId} that is not in the next style.`);
@@ -75,5 +67,5 @@ export default function buildPatchOperations(prev: StyleSpecification, next: Sty
         updatePaintProperty,
         updateLayoutProperty,
         updateFilter);
-    return {patchOperations, preservedSources, preservedLayers, removedLayers};
+    return {patchOperations, preservedSources};
 }
