@@ -6,7 +6,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {Event, ErrorEvent} from '../util/evented';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {LayerSpecification, SourceSpecification, StyleSpecification} from '../style-spec/types.g';
+import {CircleLayerSpecification, LayerSpecification, SourceSpecification, StyleSpecification, VectorSourceSpecification} from '../style-spec/types.g';
 import {RequestTransformFunction} from '../util/request_manager';
 import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
@@ -17,8 +17,6 @@ import {CameraOptions} from './camera';
 import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
-import {CircleLayoutProps, CirclePaintProps} from '../style/style_layer/circle_style_layer_properties.g';
-import CircleStyleLayer from '../style/style_layer/circle_style_layer';
 
 function createStyleSource() {
     return {
@@ -319,26 +317,62 @@ describe('Map', () => {
 
             const map = createMap({style});
             map.setStyle(createStyle(), {
+                diff: false,
                 stylePatch: (prevStyle, nextStyle, preserveLayer) => {
                     preserveLayer(prevStyle.layers[0].id);
                 }
             });
 
-            let initialStyleDidLoad = false;
             map.on('style.load', () => {
-                if (!initialStyleDidLoad) {
-                    initialStyleDidLoad = true;
-                } else {
-                    const loadedStyle = map.style.serialize();
-                    expect('maplibre' in loadedStyle.sources).toBeTruthy();
-                    expect(loadedStyle.layers[0].id).toBe(style.layers[0].id);
-                    expect(loadedStyle.layers).toHaveLength(1);
-                    done();
-                }
+                const loadedStyle = map.style.serialize();
+                expect('maplibre' in loadedStyle.sources).toBeTruthy();
+                expect(loadedStyle.layers[0].id).toBe(style.layers[0].id);
+                expect(loadedStyle.layers).toHaveLength(1);
+                done();
             });
         });
 
-        test('style patch with updatePaintProperty should update the target layer paint property accordingly', done => {
+        test('delayed setStyle with style patch with preserveLayer call should copy the source and the layer into next style with diffing', done => {
+            const style = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'layerId0',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }, {
+                    id: 'layerId1',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }]
+            });
+
+            const map = createMap({style});
+            window.setTimeout(() => {
+                map.setStyle(createStyle(), {
+                    diff: true,
+                    stylePatch: (prevStyle, nextStyle, preserveLayer) => {
+                        preserveLayer(prevStyle.layers[0].id);
+                    }
+                });
+
+                const loadedStyle = map.style.serialize();
+                expect('maplibre' in loadedStyle.sources).toBeTruthy();
+                expect(loadedStyle.layers[0].id).toBe(style.layers[0].id);
+                expect(loadedStyle.layers).toHaveLength(1);
+                done();
+            }, 100);
+        });
+
+        test('style patch with updatePaintProperty, updateLayoutProperty, updateFilter should update the target layer accordingly', done => {
             const style = extend(createStyle(), {
                 sources: {
                     maplibre: {
@@ -361,97 +395,163 @@ describe('Map', () => {
 
             const map = createMap();
             map.setStyle(style, {
-                stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty) => {
-                    updatePaintProperty(nextStyle.layers[0].id, 'circle-color', '#FF0000');
-                }
-            });
-
-            let initialStyleDidLoad = false;
-            map.on('style.load', () => {
-                if (!initialStyleDidLoad) {
-                    initialStyleDidLoad = true;
-                } else {
-                    const paint = map.style.serialize().layers[0].paint as CirclePaintProps;
-                    expect(paint).toBeDefined();
-                    expect(paint['circle-color']).toBe('#FF0000');
-                    done();
-                }
-            });
-        });
-
-        test('style patch with updateLayoutProperty should update the target layer layout property accordingly', done => {
-            const style = extend(createStyle(), {
-                sources: {
-                    maplibre: {
-                        type: 'vector',
-                        minzoom: 1,
-                        maxzoom: 10,
-                        tiles: ['http://example.com/{z}/{x}/{y}.png']
-                    }
-                },
-                layers: [{
-                    id: 'layerId0',
-                    type: 'circle',
-                    source: 'maplibre',
-                    'source-layer': 'sourceLayer'
-                }]
-            });
-
-            const map = createMap();
-            map.setStyle(style, {
-                stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty) => {
-                    updateLayoutProperty(nextStyle.layers[0].id, 'visibility', 'none');
-                }
-            });
-
-            let initialStyleDidLoad = false;
-            map.on('style.load', () => {
-                if (!initialStyleDidLoad) {
-                    initialStyleDidLoad = true;
-                } else {
-                    const layout = map.style.serialize().layers[0].layout as CircleLayoutProps;
-                    expect(layout).toBeDefined();
-                    expect(layout['visibility']).toBe('none');
-                    done();
-                }
-            });
-        });
-
-        test('style patch with updateFilter should update the target layer filter accordingly', done => {
-            const style = extend(createStyle(), {
-                sources: {
-                    maplibre: {
-                        type: 'vector',
-                        minzoom: 1,
-                        maxzoom: 10,
-                        tiles: ['http://example.com/{z}/{x}/{y}.png']
-                    }
-                },
-                layers: [{
-                    id: 'layerId0',
-                    type: 'circle',
-                    source: 'maplibre',
-                    'source-layer': 'sourceLayer'
-                }]
-            });
-
-            const map = createMap();
-            map.setStyle(style, {
+                diff: false,
                 stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+                    updatePaintProperty(nextStyle.layers[0].id, 'circle-color', '#FF0000');
+                    updateLayoutProperty(nextStyle.layers[0].id, 'visibility', 'none');
                     updateFilter(nextStyle.layers[0].id, ['!=', ['get', 'sample_property'], 'sample_value']);
                 }
             });
 
-            let initialStyleDidLoad = false;
             map.on('style.load', () => {
-                if (!initialStyleDidLoad) {
-                    initialStyleDidLoad = true;
-                } else {
-                    const layer = map.style.serialize().layers[0] as CircleStyleLayer;
-                    expect(layer.filter).toStrictEqual(['!=', ['get', 'sample_property'], 'sample_value']);
-                    done();
-                }
+                const layer = map.style.serialize().layers[0] as CircleLayerSpecification;
+                expect(layer.paint).toBeDefined();
+                expect(layer.paint ? layer.paint['circle-color'] : undefined).toBe('#FF0000');
+                expect(layer.layout ? layer.layout['visibility'] : undefined).toBe('none');
+                expect(layer.filter).toStrictEqual(['!=', ['get', 'sample_property'], 'sample_value']);
+                done();
             });
+        });
+
+        test('delayed setStyle with style patch with updatePaintProperty, updateLayoutProperty, updateFilter should update the target layer accordingly with diffing', done => {
+            const style = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'layerId0',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer',
+                    paint: {
+                        'circle-color': '#000000'
+                    }
+                }]
+            });
+
+            const map = createMap();
+            window.setTimeout(() => {
+                map.setStyle(style, {
+                    diff: true,
+                    stylePatch: (prevStyle, nextStyle, preserveLayer, updatePaintProperty, updateLayoutProperty, updateFilter) => {
+                        updatePaintProperty(nextStyle.layers[0].id, 'circle-color', '#FF0000');
+                        updateLayoutProperty(nextStyle.layers[0].id, 'visibility', 'none');
+                        updateFilter(nextStyle.layers[0].id, ['!=', ['get', 'sample_property'], 'sample_value']);
+                    }
+                });
+
+                const layer = map.style.serialize().layers[0] as CircleLayerSpecification;
+                expect(layer.paint).toBeDefined();
+                expect(layer.paint ? layer.paint['circle-color'] : undefined).toBe('#FF0000');
+                expect(layer.layout ? layer.layout['visibility'] : undefined).toBe('none');
+                expect(layer.filter).toStrictEqual(['!=', ['get', 'sample_property'], 'sample_value']);
+                done();
+            }, 100);
+        });
+
+        test('style patch with preserved layer collision and source collision should keep the new source, while preserving the old layer', done => {
+            const initial = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://first.example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'test',
+                    source: 'maplibre',
+                    'source-layer': 'source-layer',
+                    type: 'line'
+                }]
+            });
+
+            const next = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://second.example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'test',
+                    source: 'maplibre',
+                    'source-layer': 'source-layer',
+                    type: 'fill'
+                }]
+            });
+
+            const map = createMap({style: initial});
+            map.setStyle(next, {
+                diff: false,
+                stylePatch: (prevStyle, nextStyle, preserveLayer) => preserveLayer(prevStyle.layers[0].id)
+            });
+
+            map.on('style.load', () => {
+                const style = map.style.serialize();
+                const source = style.sources['maplibre'] as VectorSourceSpecification;
+                expect(style.layers[0].type).toBe('line');
+                expect(source.tiles ? source.tiles[0] : undefined).toBe('http://second.example.com/{z}/{x}/{y}.png');
+                done();
+            });
+        });
+
+        test('style patch with preserved layer collision and source collision should keep the new source, while preserving the old layer with diffing', done => {
+            const initial = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://first.example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'test',
+                    source: 'maplibre',
+                    'source-layer': 'source-layer',
+                    type: 'line'
+                }]
+            });
+
+            const next = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://second.example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'test',
+                    source: 'maplibre',
+                    'source-layer': 'source-layer',
+                    type: 'fill'
+                }]
+            });
+
+            const map = createMap({style: initial});
+            setTimeout(() => {
+                map.setStyle(next, {
+                    diff: true,
+                    stylePatch: (prevStyle, nextStyle, preserveLayer) => preserveLayer(prevStyle.layers[0].id)
+                });
+
+                const style = map.style.serialize();
+                const source = style.sources['maplibre'] as VectorSourceSpecification;
+                expect(style.layers[0].type).toBe('line');
+                expect(source.tiles ? source.tiles[0] : undefined).toBe('http://second.example.com/{z}/{x}/{y}.png');
+                done();
+            }, 100);
         });
     });
 
