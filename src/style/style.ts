@@ -376,7 +376,7 @@ class Style extends Evented {
             return;
         }
 
-        const {patchOperations} = options.stylePatch ? buildPatchOperations(previousStyle, json, options.stylePatch, false) : {patchOperations: []};
+        const {patchOperations} = options.stylePatch && previousStyle ? buildPatchOperations(previousStyle, json, options.stylePatch, false) : {patchOperations: []};
         this._loaded = true;
         this.stylesheet = json;
 
