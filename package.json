@@ -54,7 +54,7 @@
     "@types/earcut": "^2.1.1",
     "@types/eslint": "^8.4.6",
     "@types/gl": "^4.1.1",
-    "@types/glob": "^7.2.0",
+    "@types/glob": "^8.0.0",
     "@types/jest": "^28.1.7",
     "@types/jsdom": "^20.0.0",
     "@types/minimist": "^1.2.2",
