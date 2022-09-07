@@ -1476,8 +1476,8 @@ class Map extends Camera {
     }
 
     _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
-        // stylePatch relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded 
-        if(options.stylePatch && !this.style._loaded){
+        // stylePatch relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
+        if (options.stylePatch && !this.style._loaded) {
             this.style.once('style.load', () => this._updateStyle(style, options));
             return;
         }
