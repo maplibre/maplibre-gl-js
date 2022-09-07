@@ -3,10 +3,12 @@ import {FilterSpecification, LayerSpecification, StyleSpecification} from '../st
 import {warnOnce} from '../util/util';
 import {StylePatchFunction, StyleSetterOptions} from './style';
 
-export default function buildPatchOperations(prev: StyleSpecification, next: StyleSpecification, stylePatch: StylePatchFunction, isDiff: boolean): { patchOperations: DiffOperation[]; preservedSources: string[]; preservedLayers: string[] } {
+export default function buildPatchOperations(prev: StyleSpecification, next: StyleSpecification, stylePatch: StylePatchFunction, isDiff: boolean): { patchOperations: DiffOperation[]; preservedSources: string[]; preservedLayers: string[]; removedLayers: string[] } {
     const patchOperations: DiffOperation[] = [];
     const preservedSources: string[] = [];
     const preservedLayers: string[] = [];
+    // layer ids that should removed from the next style
+    const removedLayers: string[] = [];
     const nextLayerIndex = next.layers.reduce((p: { [layerId: string]: LayerSpecification }, c: LayerSpecification) => ({
         ...p,
         [c.id]: c
@@ -23,10 +25,15 @@ export default function buildPatchOperations(prev: StyleSpecification, next: Sty
             }
 
             if (layerId in nextLayerIndex) {
-                patchOperations.push({command: 'removeLayer', args: [layerId]});
+                if (!isDiff) {
+                    patchOperations.push({command: 'removeLayer', args: [layerId]});
+                }
+                removedLayers.push(layerId);
             }
 
-            before = (before in nextLayerIndex || preservedLayers.includes(before)) ? before : undefined;
+            // preservedLayer are added on top of layers in next style
+            // so even in diff mode, add moveLayer operation for each preservedLayer
+            before = before && (before in nextLayerIndex || preservedLayers.includes(before)) ? before : undefined;
             if (isDiff) {
                 patchOperations.push({command: 'moveLayer', args: [preservedLayer.id, before, {validate: true}]});
             } else {
@@ -68,5 +75,5 @@ export default function buildPatchOperations(prev: StyleSpecification, next: Sty
         updatePaintProperty,
         updateLayoutProperty,
         updateFilter);
-    return {patchOperations, preservedSources, preservedLayers};
+    return {patchOperations, preservedSources, preservedLayers, removedLayers};
 }

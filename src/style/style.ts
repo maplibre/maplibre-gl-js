@@ -681,7 +681,7 @@ class Style extends Evented {
         nextState = clone(nextState);
         nextState.layers = deref(nextState.layers);
 
-        const {patchOperations, preservedSources, preservedLayers} = options.stylePatch ? buildPatchOperations(this.serialize(), nextState, options.stylePatch, true) : {patchOperations: [], preservedSources: [], preservedLayers: []};
+        const {patchOperations, preservedSources, preservedLayers, removedLayers} = options.stylePatch ? buildPatchOperations(this.serialize(), nextState, options.stylePatch, true) : {patchOperations: [], preservedSources: [], preservedLayers: [], removedLayers: []};
         let changes = diffStyles(this.serialize(), nextState)
             .filter(op => !(op.command in ignoredDiffOperations));
         changes = changes.concat(patchOperations);
@@ -704,6 +704,9 @@ class Style extends Evented {
                 return;
             }
             if (op.command === diffOperations.removeSource && preservedSources.includes(op.args[0])) {
+                return;
+            }
+            if (op.command === diffOperations.addLayer && removedLayers.includes(op.args[0].id)) {
                 return;
             }
             applyStyleOperation(this, op);
