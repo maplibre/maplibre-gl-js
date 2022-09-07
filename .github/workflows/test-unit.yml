@@ -35,7 +35,7 @@ jobs:
         id: coverage
         with:
           output: report-markdown
-          annotations: ${{ github.event.pull_request.head.repo.full_name == github.event.repository.name && 'coverage' || 'none' }}
+          annotations: none
           test-script: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci            
       - uses: marocchino/sticky-pull-request-comment@v2
         with:
