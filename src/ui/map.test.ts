@@ -332,6 +332,47 @@ describe('Map', () => {
             });
         });
 
+        test('style patch with preserveLayer call should copy the source and the layer into next style with layer1 inserted before layer0', done => {
+            const style = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'layerId0',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }, {
+                    id: 'layerId1',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }]
+            });
+
+            const map = createMap({style});
+            map.setStyle(createStyle(), {
+                diff: false,
+                stylePatch: (prevStyle, nextStyle, preserveLayer) => {
+                    preserveLayer(prevStyle.layers[0].id);
+                    preserveLayer(prevStyle.layers[1].id, prevStyle.layers[0].id);
+                }
+            });
+
+            map.on('style.load', () => {
+                const loadedStyle = map.style.serialize();
+                expect('maplibre' in loadedStyle.sources).toBeTruthy();
+                expect(loadedStyle.layers[0].id).toBe(style.layers[1].id);
+                expect(loadedStyle.layers).toHaveLength(2);
+                done();
+            });
+        });
+
         test('delayed setStyle with style patch with preserveLayer call should copy the source and the layer into next style with diffing', done => {
             const style = extend(createStyle(), {
                 sources: {
