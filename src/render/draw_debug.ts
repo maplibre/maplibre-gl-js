@@ -77,7 +77,7 @@ function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: Oversc
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
     const id = '$debug';
-    const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
+    const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
     context.activeTexture.set(gl.TEXTURE0);
     // Bind the empty texture for drawing outlines

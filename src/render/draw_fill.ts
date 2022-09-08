@@ -89,7 +89,7 @@ function drawFillTiles(
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(programName, programConfiguration);
-        const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);
