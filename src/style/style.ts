@@ -220,8 +220,8 @@ export type StylePatchFunction = (
 ) => void;
 
 export type StyleSwapOptions = {
-    diff?: boolean
-    stylePatch?: StylePatchFunction
+    diff?: boolean;
+    stylePatch?: StylePatchFunction;
 }
 
 /**
