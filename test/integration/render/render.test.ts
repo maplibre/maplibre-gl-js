@@ -218,9 +218,7 @@ function mockXhr() {
 
             let body: Buffer = null;
             try {
-                if (relativePath.startsWith('mapbox-gl-styles')) {
-                    body = fs.readFileSync(path.join(path.dirname(require.resolve('@mapbox/mapbox-gl-styles')), '..', relativePath));
-                } else if (relativePath.startsWith('mvt-fixtures')) {
+                if (relativePath.startsWith('mvt-fixtures')) {
                     body = fs.readFileSync(path.join(path.dirname(require.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
                 } else {
                     body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));

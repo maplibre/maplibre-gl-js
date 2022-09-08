@@ -17,12 +17,7 @@ export default function localizeURLs(style: any, port: number, baseTestsDir: str
                 let styleJSON;
                 try {
                     const relativePath = op[1].replace(/^local:\/\//, '');
-                    if (relativePath.startsWith('mapbox-gl-styles')) {
-                        styleJSON = fs.readFileSync(path.join(path.dirname(requireFn.resolve('@mapbox/mapbox-gl-styles')), '..', relativePath));
-                    } else {
-                        styleJSON = fs.readFileSync(path.join(baseTestsDir, 'assets', relativePath));
-                    }
-
+                    styleJSON = fs.readFileSync(path.join(baseTestsDir, 'assets', relativePath));
                 } catch (error) {
                     console.log(`* ${error}`);
                     return;
