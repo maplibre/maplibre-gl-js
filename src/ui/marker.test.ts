@@ -780,7 +780,7 @@ describe('marker', () => {
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
-        map.style.terrain = {
+        map.terrain = {
             getElevation: () => 0
         } as any as Terrain;
 

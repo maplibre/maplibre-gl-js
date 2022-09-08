@@ -45,7 +45,14 @@ function draw(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLa
     }
 }
 
-function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMode, colorMode) {
+function drawExtrusionTiles(
+    painter: Painter,
+    source: SourceCache,
+    layer: FillExtrusionStyleLayer,
+    coords: OverscaledTileID[],
+    depthMode: DepthMode,
+    stencilMode: Readonly<StencilMode>,
+    colorMode: Readonly<ColorMode>) {
     const context = painter.context;
     const gl = context.gl;
     const patternProperty = layer.paint.get('fill-extrusion-pattern');
@@ -58,7 +65,7 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
         const bucket: FillExtrusionBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
-        const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration);
 
@@ -89,6 +96,6 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
             bucket.segments, layer.paint, painter.transform.zoom,
-            programConfiguration, painter.style.terrain && bucket.centroidVertexBuffer);
+            programConfiguration, painter.style.map.terrain && bucket.centroidVertexBuffer);
     }
 }

@@ -1,5 +1,3 @@
-import assert from 'assert';
-
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import StyleLayer from './style_layer';
 import createStyleLayer from './create_style_layer';
@@ -116,7 +114,6 @@ class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
-    terrain: Terrain;
 
     _request: Cancelable;
     _spriteRequest: Cancelable;
@@ -128,7 +125,6 @@ class Style extends Evented {
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
     _terrainDataCallback: (e: any) => any;
-    _terrainfreezeElevationCallback: (e: any) => any;
     _changed: boolean;
     _updatedSources: {[_: string]: 'clear' | 'reload'};
     _updatedLayers: {[_: string]: true};
@@ -402,11 +398,13 @@ class Style extends Evented {
             }
             for (const id in this._updatedSources) {
                 const action = this._updatedSources[id];
-                assert(action === 'reload' || action === 'clear');
+
                 if (action === 'reload') {
                     this._reloadSource(id);
                 } else if (action === 'clear') {
                     this._clearSource(id);
+                } else {
+                    throw new Error(`Invalid action ${action}`);
                 }
             }
 
@@ -441,7 +439,7 @@ class Style extends Evented {
         for (const sourceId in sourcesUsedBefore) {
             const sourceCache = this.sourceCaches[sourceId];
             if (sourcesUsedBefore[sourceId] !== sourceCache.used) {
-                sourceCache.fire(new Event('data', {sourceDataType: 'visibility', dataType:'source', sourceId}));
+                sourceCache.fire(new Event('data', {sourceDataType: 'visibility', dataType: 'source', sourceId}));
             }
         }
 
@@ -495,38 +493,29 @@ class Style extends Evented {
 
         // clear event handlers
         if (this._terrainDataCallback) this.off('data', this._terrainDataCallback);
-        if (this._terrainfreezeElevationCallback) this.map.off('freezeElevation', this._terrainfreezeElevationCallback);
 
         // remove terrain
         if (!options) {
-            this.terrain = null;
-            this.map.transform.updateElevation(this.terrain);
+            if (this.map.terrain) this.map.terrain.sourceCache.destruct();
+            this.map.terrain = null;
+            this.map.transform.updateElevation(this.map.terrain);
 
         // add terrain
         } else {
             const sourceCache = this.sourceCaches[options.source];
             if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
-            this.terrain = new Terrain(this, sourceCache, options);
-            this.map.transform.updateElevation(this.terrain);
-            this._terrainfreezeElevationCallback = (e: any) => {
-                if (e.freeze) {
-                    this.map.transform.freezeElevation = true;
-                } else {
-                    this.map.transform.freezeElevation = false;
-                    this.map.transform.recalculateZoom(this.terrain);
-                }
-            };
+            this.map.terrain = new Terrain(this, sourceCache, options);
+            this.map.transform.updateElevation(this.map.terrain);
             this._terrainDataCallback = e => {
                 if (!e.tile) return;
                 if (e.sourceId === options.source) {
-                    this.map.transform.updateElevation(this.terrain);
-                    this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
+                    this.map.transform.updateElevation(this.map.terrain);
+                    this.map.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
                 } else if (e.source.type === 'geojson') {
-                    this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
+                    this.map.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
                 }
             };
             this.on('data', this._terrainDataCallback);
-            this.map.on('freezeElevation', this._terrainfreezeElevationCallback);
         }
 
         this.map.fire(new Event('terrain', {terrain: options}));
@@ -663,7 +652,7 @@ class Style extends Evented {
         const sourceCache = this.sourceCaches[id];
         delete this.sourceCaches[id];
         delete this._updatedSources[id];
-        sourceCache.fire(new Event('data', {sourceDataType: 'metadata', dataType:'source', sourceId: id}));
+        sourceCache.fire(new Event('data', {sourceDataType: 'metadata', dataType: 'source', sourceId: id}));
         sourceCache.setEventedParent(null);
         sourceCache.onRemove(this.map);
         this._changed = true;
@@ -677,9 +666,9 @@ class Style extends Evented {
     setGeoJSONSourceData(id: string, data: GeoJSON.GeoJSON | string) {
         this._checkLoaded();
 
-        assert(this.sourceCaches[id] !== undefined, 'There is no source with this ID');
+        if (this.sourceCaches[id] === undefined) throw new Error(`There is no source with this ID=${id}`);
         const geojsonSource: GeoJSONSource = (this.sourceCaches[id].getSource() as any);
-        assert(geojsonSource.type === 'geojson');
+        if (geojsonSource.type !== 'geojson') throw new Error(`geojsonSource.type is ${geojsonSource.type}, which is !== 'geojson`);
 
         geojsonSource.setData(data);
         this._changed = true;
@@ -1313,7 +1302,7 @@ class Style extends Evented {
 
     _updateSources(transform: Transform) {
         for (const id in this.sourceCaches) {
-            this.sourceCaches[id].update(transform, this.terrain);
+            this.sourceCaches[id].update(transform, this.map.terrain);
         }
     }
 
@@ -1354,7 +1343,7 @@ class Style extends Evented {
         forceFullPlacement = forceFullPlacement || this._layerOrderChanged || fadeDuration === 0;
 
         if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(browser.now(), transform.zoom))) {
-            this.pauseablePlacement = new PauseablePlacement(transform, this.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
+            this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
 

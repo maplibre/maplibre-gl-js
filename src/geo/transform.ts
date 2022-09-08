@@ -493,7 +493,7 @@ class Transform {
      * get the elevation from terrain for the current zoomlevel.
      * @param lnglat the location
      * @param terrain the terrain
-     * @returns {Number} elevation in meters
+     * @returns {number} elevation in meters
      */
     getElevation(lnglat: LngLat, terrain: Terrain) {
         const merc = MercatorCoordinate.fromLngLat(lnglat);
@@ -651,8 +651,8 @@ class Transform {
     /**
      * Given a coordinate, return the screen point that corresponds to it
      * @param {Coordinate} coord
-     * @params {number} elevation default = 0
-     * @params {mat4} pixelMatrix, default = this.pixelMatrix
+     * @param {number} elevation default = 0
+     * @param {mat4} pixelMatrix, default = this.pixelMatrix
      * @returns {Point} screen point
      * @private
      */
@@ -919,7 +919,7 @@ class Transform {
             dx = x - Math.round(x) + angleCos * xShift + angleSin * yShift,
             dy = y - Math.round(y) + angleCos * yShift + angleSin * xShift;
         const alignedM = new Float64Array(m) as any as mat4;
-        mat4.translate(alignedM, alignedM, [ dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0 ]);
+        mat4.translate(alignedM, alignedM, [dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0]);
         this.alignedProjMatrix = alignedM;
 
         // inverse matrix for conversion from screen coordinaes to location

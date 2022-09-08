@@ -4,7 +4,7 @@ import simulate from '../../../test/unit/lib/simulate_interaction';
 import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
 
 function createMap() {
-    return new Map({interactive: false, container: DOM.create('div', '', window.document.body)} as any as MapOptions);
+    return new Map({interactive: true, container: DOM.create('div', '', window.document.body)} as any as MapOptions);
 }
 
 beforeEach(() => {
@@ -92,5 +92,69 @@ describe('map events', () => {
         expect(drag).toHaveBeenCalledTimes(1);
 
         map.remove();
+    });
+
+    test('MapEvent handler fires contextmenu on MacOS/Linux, but only at mouseup', () => {
+        const map = createMap();
+        const target = map.getCanvas();
+        map.dragPan.enable();
+
+        const contextmenu = jest.fn();
+
+        map.on('contextmenu', contextmenu);
+
+        simulate.mousedown(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
+        simulate.contextmenu(map.getCanvas(), {target}); // triggered immediately after mousedown
+        expect(contextmenu).toHaveBeenCalledTimes(0);
+        simulate.mouseup(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
+        expect(contextmenu).toHaveBeenCalledTimes(1);
+    });
+
+    test('MapEvent handler does not fire contextmenu on MacOS/Linux, when moved', () => {
+        const map = createMap();
+        const target = map.getCanvas();
+        map.dragPan.enable();
+
+        const contextmenu = jest.fn();
+
+        map.on('contextmenu', contextmenu);
+
+        simulate.mousedown(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
+        simulate.contextmenu(map.getCanvas(), {target}); // triggered immediately after mousedown
+        simulate.mousemove(map.getCanvas(), {target, buttons: 2, clientX: 50, clientY: 10});
+        simulate.mouseup(map.getCanvas(), {target, button: 2, clientX: 70, clientY: 10});
+        expect(contextmenu).toHaveBeenCalledTimes(0);
+    });
+
+    test('MapEvent handler fires contextmenu on Windows', () => {
+        const map = createMap();
+        const target = map.getCanvas();
+        map.dragPan.enable();
+
+        const contextmenu = jest.fn();
+
+        map.on('contextmenu', contextmenu);
+
+        simulate.mousedown(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
+        simulate.mouseup(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
+        expect(contextmenu).toHaveBeenCalledTimes(0);
+        simulate.contextmenu(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10}); // triggered only after mouseup
+        expect(contextmenu).toHaveBeenCalledTimes(1);
+    });
+
+    test('MapEvent handler does not fire contextmenu on Windows, when moved', () => {
+        const map = createMap();
+        const target = map.getCanvas();
+        map.dragPan.enable();
+
+        const contextmenu = jest.fn();
+
+        map.on('contextmenu', contextmenu);
+
+        simulate.mousedown(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
+        simulate.mousemove(map.getCanvas(), {target, buttons: 2, clientX: 50, clientY: 10});
+        simulate.mouseup(map.getCanvas(), {target, button: 2, clientX: 50, clientY: 10});
+        simulate.contextmenu(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10}); // triggered only after mouseup
+        expect(contextmenu).toHaveBeenCalledTimes(0);
     });
 });

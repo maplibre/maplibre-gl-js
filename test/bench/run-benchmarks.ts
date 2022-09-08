@@ -67,7 +67,7 @@ try {
         );
         // @ts-ignore
         const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
-        const output = versions.map((v) => formatTime(results[v].summary.trimmedMean).padStart(timeWidth) + formatRegression(results[v].regression));
+        const output = versions.map((v) => results[v] ? formatTime(results[v].summary.trimmedMean).padStart(timeWidth) + formatRegression(results[v].regression) : ''.padStart(timeWidth + 1));
         if (versions.length === 2) {
             const [main, current] = versions;
             const delta = results[current].summary.trimmedMean - results[main].summary.trimmedMean;

@@ -5,6 +5,9 @@ import {OverscaledTileID} from '../source/tile_id';
 import {prepareTerrain, drawTerrain} from './draw_terrain';
 import type StyleLayer from '../style/style_layer';
 
+/**
+ * RenderToTexture
+ */
 export default class RenderToTexture {
     painter: Painter;
     // this object holds a lookup table which layers should rendered to texture
@@ -35,13 +38,13 @@ export default class RenderToTexture {
         this._stacks = [];
         this._prevType = null;
         this._rerender = {};
-        this._renderableTiles = painter.style.terrain.sourceCache.getRenderableTiles();
+        this._renderableTiles = painter.style.map.terrain.sourceCache.getRenderableTiles();
         this._init();
     }
 
     _init() {
         const style = this.painter.style;
-        const terrain = style.terrain;
+        const terrain = style.map.terrain;
 
         // fill _coordsDescendingInv
         for (const id in style.sourceCaches) {
@@ -116,7 +119,7 @@ export default class RenderToTexture {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
             for (const tile of this._renderableTiles) {
-                prepareTerrain(painter, painter.style.terrain, tile, stack);
+                prepareTerrain(painter, painter.style.map.terrain, tile, stack);
                 if (this._rerender[tile.tileID.key]) {
                     painter.context.clear({color: Color.transparent});
                     for (let l = 0; l < layers.length; l++) {
@@ -127,7 +130,7 @@ export default class RenderToTexture {
                         if (layer.source) tile.textureCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tile.tileID.key];
                     }
                 }
-                drawTerrain(painter, painter.style.terrain, tile);
+                drawTerrain(painter, painter.style.map.terrain, tile);
             }
 
             // the hillshading layer is a special case because it changes on every camera-movement
@@ -136,11 +139,11 @@ export default class RenderToTexture {
                 this._stacks.push([layerIds[currentLayer]]);
                 for (const tile of this._renderableTiles) {
                     const coords = this._coordsDescendingInv[layer.source][tile.tileID.key];
-                    prepareTerrain(painter, painter.style.terrain, tile, this._stacks.length - 1);
+                    prepareTerrain(painter, painter.style.map.terrain, tile, this._stacks.length - 1);
                     painter.context.clear({color: Color.transparent});
                     painter._renderTileClippingMasks(layer, coords);
                     painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
-                    drawTerrain(painter, painter.style.terrain, tile);
+                    drawTerrain(painter, painter.style.map.terrain, tile);
                 }
                 return true;
             }

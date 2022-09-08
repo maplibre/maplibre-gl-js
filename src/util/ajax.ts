@@ -1,6 +1,5 @@
 import {extend, warnOnce, isWorker} from './util';
 import config from './config';
-import assert from 'assert';
 import {cacheGet, cachePut} from './tile_request_cache';
 import webpSupported from './webp_supported';
 
@@ -341,7 +340,7 @@ function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | nu
     });
 }
 
-export type ExpiryData = {cacheControl?: string | null; expires?: string | null};
+export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
 
 function arrayBufferToCanvasImageSource(data: ArrayBuffer, callback: Callback<CanvasImageSource>) {
     const imageBitmapSupported = typeof createImageBitmap === 'function';
@@ -390,7 +389,7 @@ export const getImage = function(
         if (advanced) return;
         advanced = true;
         numImageRequests--;
-        assert(numImageRequests >= 0);
+
         while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) { // eslint-disable-line
             const request = imageQueue.shift();
             const {requestParameters, callback, cancelled} = request;

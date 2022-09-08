@@ -1,6 +1,7 @@
 import simulate, {window} from '../../test/unit/lib/simulate_interaction';
 import StyleLayer from '../style/style_layer';
 import {createMap, setPerformance, setWebGlContext} from '../util/test/util';
+import {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import {MapLayerEventType} from './events';
 
 beforeEach(() => {
@@ -37,10 +38,10 @@ describe('map events', () => {
 
     test('Map#on adds a listener for an event on a given layer', () => {
         const map = createMap();
-        const features = [{}];
+        const features = [{} as MapGeoJSONFeature];
 
         jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-        jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((point, options) => {
+        jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
             expect(options).toEqual({layers: ['layer']});
             return features;
         });
@@ -79,7 +80,7 @@ describe('map events', () => {
     test('Map#on adds a listener not triggered when the specified layer does not exiist', () => {
         const map = createMap();
 
-        jest.spyOn(map, 'getLayer').mockReturnValue(null);
+        jest.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
 
         const spy = jest.fn();
 
@@ -94,7 +95,7 @@ describe('map events', () => {
         const map = createMap();
 
         jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
         const spyDown = jest.fn((e) => {
             expect(e.type).toBe('mousedown');
@@ -114,11 +115,11 @@ describe('map events', () => {
 
     test('Map#on distinguishes distinct layers', () => {
         const map = createMap();
-        const featuresA = [{}];
-        const featuresB = [{}];
+        const featuresA = [{} as MapGeoJSONFeature];
+        const featuresB = [{} as MapGeoJSONFeature];
 
         jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-        jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((point, options) => {
+        jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
             return (options as any).layers[0] === 'A' ? featuresA : featuresB;
         });
 
@@ -142,7 +143,7 @@ describe('map events', () => {
         const map = createMap();
 
         jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
         const spyA = jest.fn();
         const spyB = jest.fn();
@@ -159,7 +160,7 @@ describe('map events', () => {
         const map = createMap();
 
         jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
         const spy = jest.fn();
 
@@ -175,7 +176,7 @@ describe('map events', () => {
         const map = createMap();
 
         jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
         const spy = jest.fn((e) => {
             expect(e.type).toBe('mousedown');
@@ -191,7 +192,7 @@ describe('map events', () => {
 
     test('Map#off distinguishes distinct layers', () => {
         const map = createMap();
-        const featuresA = [{}];
+        const featuresA = [{} as MapGeoJSONFeature];
 
         jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
         jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((point, options) => {
@@ -215,7 +216,7 @@ describe('map events', () => {
         const map = createMap();
 
         jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+        jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
         const spyA = jest.fn();
         const spyB = jest.fn();
@@ -233,7 +234,7 @@ describe('map events', () => {
         test(`Map#on ${event} does not fire if the specified layer does not exist`, () => {
             const map = createMap();
 
-            jest.spyOn(map, 'getLayer').mockReturnValue(null);
+            jest.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
 
             const spy = jest.fn();
 
@@ -247,10 +248,10 @@ describe('map events', () => {
 
         test(`Map#on ${event} fires when entering the specified layer`, () => {
             const map = createMap();
-            const features = [{}];
+            const features = [{} as MapGeoJSONFeature];
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((point, options) => {
+            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
                 expect(options).toEqual({layers: ['layer']});
                 return features;
             });
@@ -272,7 +273,7 @@ describe('map events', () => {
             const map = createMap();
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
             const spy = jest.fn();
 
@@ -288,9 +289,9 @@ describe('map events', () => {
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
             jest.spyOn(map, 'queryRenderedFeatures')
-                .mockReturnValueOnce([{}])
+                .mockReturnValueOnce([{} as MapGeoJSONFeature])
                 .mockReturnValueOnce([])
-                .mockReturnValueOnce([{}]);
+                .mockReturnValueOnce([{} as MapGeoJSONFeature]);
 
             const spy = jest.fn();
 
@@ -306,7 +307,7 @@ describe('map events', () => {
             const map = createMap();
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
             const spy = jest.fn();
 
@@ -320,11 +321,11 @@ describe('map events', () => {
 
         test(`Map#on ${event} distinguishes distinct layers`, () => {
             const map = createMap();
-            const featuresA = [{}];
-            const featuresB = [{}];
+            const featuresA = [{} as MapGeoJSONFeature];
+            const featuresB = [{} as MapGeoJSONFeature];
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((point, options) => {
+            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
                 return (options as any).layers[0] === 'A' ? featuresA : featuresB;
             });
 
@@ -350,7 +351,7 @@ describe('map events', () => {
             const map = createMap();
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
             const spyA = jest.fn();
             const spyB = jest.fn();
@@ -367,7 +368,7 @@ describe('map events', () => {
             const map = createMap();
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
             const spy = jest.fn();
 
@@ -381,10 +382,10 @@ describe('map events', () => {
 
         test(`Map#off ${event} distinguishes distinct layers`, () => {
             const map = createMap();
-            const featuresA = [{}];
+            const featuresA = [{} as MapGeoJSONFeature];
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((point, options) => {
+            jest.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
                 expect(options).toEqual({layers: ['A']});
                 return featuresA;
             });
@@ -405,7 +406,7 @@ describe('map events', () => {
             const map = createMap();
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
             const spyA = jest.fn();
             const spyB = jest.fn();
@@ -424,7 +425,7 @@ describe('map events', () => {
         test(`Map#on ${event} does not fire if the specified layer does not exiist`, () => {
             const map = createMap();
 
-            jest.spyOn(map, 'getLayer').mockReturnValue(null);
+            jest.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
 
             const spy = jest.fn();
 
@@ -440,7 +441,7 @@ describe('map events', () => {
             const map = createMap();
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
             const spy = jest.fn();
 
@@ -457,7 +458,7 @@ describe('map events', () => {
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
             jest.spyOn(map, 'queryRenderedFeatures')
-                .mockReturnValueOnce([{}])
+                .mockReturnValueOnce([{} as MapGeoJSONFeature])
                 .mockReturnValueOnce([]);
 
             const spy = jest.fn(function (e) {
@@ -477,7 +478,7 @@ describe('map events', () => {
             const map = createMap();
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{}]);
+            jest.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
             const spy = jest.fn(function (e) {
                 expect(this).toBe(map);
@@ -497,7 +498,7 @@ describe('map events', () => {
 
             jest.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
             jest.spyOn(map, 'queryRenderedFeatures')
-                .mockReturnValueOnce([{}])
+                .mockReturnValueOnce([{} as MapGeoJSONFeature])
                 .mockReturnValueOnce([]);
 
             const spy = jest.fn();

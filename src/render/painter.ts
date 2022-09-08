@@ -273,7 +273,7 @@ class Painter {
 
         for (const tileID of tileIDs) {
             const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;
-            const terrainData = this.style.terrain && this.style.terrain.getTerrainData(tileID);
+            const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
@@ -378,7 +378,7 @@ class Painter {
 
         const layerIds = this.style._order;
         const sourceCaches = this.style.sourceCaches;
-        const renderToTexture = this.style.terrain && new RenderToTexture(this);
+        const renderToTexture = this.style.map.terrain && new RenderToTexture(this);
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -412,13 +412,13 @@ class Painter {
             this.opaquePassCutoff = 0;
 
             // update coords/depth-framebuffer on camera movement, or tile reloading
-            const newTiles = this.style.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
+            const newTiles = this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
             if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
                 mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
                 this.terrainFacilitator.renderTime = Date.now();
                 this.terrainFacilitator.dirty = false;
-                drawDepth(this, this.style.terrain);
-                drawCoords(this, this.style.terrain);
+                drawDepth(this, this.style.map.terrain);
+                drawCoords(this, this.style.map.terrain);
             }
         }
 
@@ -639,7 +639,7 @@ class Painter {
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
             (this._showOverdrawInspector ? '/overdraw' : '') +
-            (this.style.terrain ? '/terrain' : '');
+            (this.style.map.terrain ? '/terrain' : '');
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,
@@ -648,7 +648,7 @@ class Painter {
                 programConfiguration,
                 programUniforms[name],
                 this._showOverdrawInspector,
-                this.style.terrain
+                this.style.map.terrain
             );
         }
         return this.cache[key];

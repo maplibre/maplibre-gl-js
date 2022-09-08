@@ -2,6 +2,7 @@ import {createExpression} from '../expression';
 import type {GlobalProperties, Feature} from '../expression';
 import type {CanonicalTileID} from '../../source/tile_id';
 import {StylePropertySpecification} from '../style-spec';
+import {ExpressionFilterSpecification} from '../types.g';
 
 type FilterExpression = (
     globalProperties: GlobalProperties,
@@ -17,7 +18,7 @@ export type FeatureFilter = {
 export default createFilter;
 export {isExpressionFilter};
 
-function isExpressionFilter(filter: any) {
+function isExpressionFilter(filter: any): filter is ExpressionFilterSpecification {
     if (filter === true || filter === false) {
         return true;
     }

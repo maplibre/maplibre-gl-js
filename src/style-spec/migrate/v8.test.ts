@@ -21,7 +21,7 @@ describe('migrate v8', () => {
                     }
                 }
             ]
-        };
+        } as any;
 
         const output = {
             'version': 8,
@@ -66,7 +66,7 @@ describe('migrate v8', () => {
                     }
                 }
             ]
-        };
+        } as any;
 
         const output = {
             'version': 8,
@@ -101,7 +101,7 @@ describe('migrate v8', () => {
                 }
             },
             'layers': []
-        };
+        } as any;
 
         const output = {
             'version': 8,
@@ -138,7 +138,7 @@ describe('migrate v8', () => {
                     }
                 }
             }]
-        };
+        } as any;
 
         const output = {
             'version': 8,
@@ -185,7 +185,7 @@ describe('migrate v8', () => {
                     }
                 }
             }]
-        };
+        } as any;
 
         const output = {
             'version': 8,
@@ -231,7 +231,7 @@ describe('migrate v8', () => {
                     }
                 }
             ]
-        };
+        } as any;
 
         const output = {
             'version': 8,
@@ -274,7 +274,7 @@ describe('migrate v8', () => {
                     }
                 }
             ]
-        };
+        } as any;
 
         const output = {
             'version': 8,
@@ -326,7 +326,7 @@ describe('migrate v8', () => {
                     }
                 }
             ]
-        };
+        } as any;
 
         const output = {
             'version': 8,
@@ -387,7 +387,7 @@ describe('migrate v8', () => {
                     }
                 }
             ]
-        };
+        } as any;
 
         const output = {
             'version': 8,
@@ -443,7 +443,7 @@ describe('migrate v8', () => {
                     }
                 }
             ]
-        };
+        } as any;
 
         const output = {
             'version': 8,
@@ -477,7 +477,7 @@ describe('migrate v8', () => {
             'version': 7,
             'glyphs': 'mapbox://fontstack/{fontstack}/{range}.pbf',
             'layers': []
-        };
+        } as any;
 
         const output = {
             'version': 8,
@@ -493,7 +493,7 @@ describe('migrate v8', () => {
             'version': 7,
             'glyphs': 'mapbox://fonts/v1/boxmap/{fontstack}/{range}.pbf',
             'layers': []
-        };
+        } as any;
 
         const output = {
             'version': 8,
