@@ -604,8 +604,8 @@ class Map extends Camera {
     }
 
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number) : CameraOptions {
-        if (altitudeTo == null && this.style.terrain) {
-            altitudeTo = this.transform.getElevation(to, this.style.terrain);
+        if (altitudeTo == null && this.terrain) {
+            altitudeTo = this.transform.getElevation(to, this.terrain);
         }
         return super.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
@@ -910,7 +910,7 @@ class Map extends Camera {
      * var point = map.project(coordinate);
      */
     project(lnglat: LngLatLike) {
-        return this.transform.locationPoint(LngLat.convert(lnglat), this.style && this.style.terrain);
+        return this.transform.locationPoint(LngLat.convert(lnglat), this.style && this.terrain);
     }
 
     /**
@@ -926,7 +926,7 @@ class Map extends Camera {
      * });
      */
     unproject(point: PointLike) {
-        return this.transform.pointLocation(Point.convert(point), this.style && this.style.terrain);
+        return this.transform.pointLocation(Point.convert(point), this.terrain);
     }
 
     /**
@@ -1627,7 +1627,7 @@ class Map extends Camera {
      * map.getTerrain(); // { source: 'terrain' };
      */
     getTerrain(): TerrainSpecification {
-        return this.style.terrain && this.style.terrain.options;
+        return this.terrain && this.terrain.options;
     }
 
     /**
@@ -2652,8 +2652,8 @@ class Map extends Camera {
         }
 
         // update terrain stuff
-        if (this.style.terrain) this.style.terrain.sourceCache.update(this.transform, this.style.terrain);
-        this.transform.updateElevation(this.style.terrain);
+        if (this.terrain) this.terrain.sourceCache.update(this.transform, this.terrain);
+        this.transform.updateElevation(this.terrain);
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 

@@ -5,7 +5,8 @@
 
 - *...Add new stuff here...*
 - Add map.getCameraTargetElevation() (#1558)
-- [Breaking] Remove deprecated mapboxgl css classes
+- Add `freezeElevation` to `AnimationOptions` to allow smooth camera movement in 3D (#1514, #1492)
+- [Breaking] Remove deprecated mapboxgl css classes (#1575)
 
 ### 🐞 Bug fixes
 

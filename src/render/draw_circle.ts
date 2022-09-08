@@ -68,7 +68,7 @@ function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleSt
         const program = painter.useProgram('circle', programConfiguration);
         const layoutVertexBuffer = bucket.layoutVertexBuffer;
         const indexBuffer = bucket.indexBuffer;
-        const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const uniformValues = circleUniformValues(painter, coord, tile, layer);
 
         const state: TileRenderState = {

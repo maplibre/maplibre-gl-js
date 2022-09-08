@@ -477,7 +477,7 @@ export default class Marker extends Evented {
 
         // in case of 3D, ask the terrain coords-framebuffer for this pos and check if the marker is visible
         // call this logic in setTimeout with a timeout of 100ms to save performance in map-movement
-        if (this._map.style && this._map.style.terrain && !this._opacityTimeout) this._opacityTimeout = setTimeout(() => {
+        if (this._map.terrain && !this._opacityTimeout) this._opacityTimeout = setTimeout(() => {
             const lnglat = this._map.unproject(this._pos);
             const metresPerPixel = 40075016.686 * Math.abs(Math.cos(this._lngLat.lat * Math.PI / 180)) / Math.pow(2, this._map.transform.tileZoom + 8);
             this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? '0.2' : '1.0';

@@ -6,6 +6,7 @@ import LngLatBounds from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
 import {Debug} from '../util/debug';
+import Terrain from '../render/terrain';
 
 import type Transform from '../geo/transform';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -113,6 +114,9 @@ export type FitBoundsOptions = FlyToOptions & {
  * @property {boolean} animate If `false`, no animation will occur.
  * @property {boolean} essential If `true`, then the animation is considered essential and will not be affected by
  *   [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
+ * @property {boolean} freezeElevation Default false. Needed in 3D maps to let the camera stay in a constant
+ *   height based on sea-level. After the animation finished the zoom-level will be recalculated in respect of
+ *   the distance from the camera to the center-coordinate-altitude.
  */
 export type AnimationOptions = {
     duration?: number;
@@ -120,10 +124,13 @@ export type AnimationOptions = {
     offset?: PointLike;
     animate?: boolean;
     essential?: boolean;
+    freezeElevation?: boolean;
 };
 
 abstract class Camera extends Evented {
     transform: Transform;
+    terrain: Terrain;
+
     _moving: boolean;
     _zooming: boolean;
     _rotating: boolean;
@@ -141,6 +148,16 @@ abstract class Camera extends Evented {
     _onEaseFrame: (_: number) => void;
     _onEaseEnd: (easeId?: string) => void;
     _easeFrameId: TaskID;
+
+    // holds the geographical coordinate of the target
+    _elevationCenter: LngLat;
+    // holds the targ altitude value, = center elevation of the target.
+    // This value may changes during flight, because new terrain-tiles loads during flight.
+    _elevationTarget: number;
+    // holds the start altitude value, = center elevation before animation begins
+    // this value will recalculated during flight in respect of changing _elevationTarget values,
+    // so the linear interpolation between start and target keeps smooth and without jumps.
+    _elevationStart: number;
 
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
@@ -892,6 +909,7 @@ abstract class Camera extends Evented {
 
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
+        if (this.terrain) this._prepareElevation(center);
 
         this._ease((k) => {
             if (this._zooming) {
@@ -910,6 +928,8 @@ abstract class Camera extends Evented {
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
 
+            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
+
             if (around) {
                 tr.setLocationAtPoint(around, aroundPoint);
             } else {
@@ -925,6 +945,7 @@ abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
+            if (this.terrain) this._finalizeElevation();
             this._afterEase(eventData, interruptingEaseId);
         }, options as any);
 
@@ -933,8 +954,6 @@ abstract class Camera extends Evented {
 
     _prepareEase(eventData: any, noMoveStart: boolean, currently: any = {}) {
         this._moving = true;
-        this.fire(new Event('freezeElevation', {freeze: true}));
-
         if (!noMoveStart && !currently.moving) {
             this.fire(new Event('movestart', eventData));
         }
@@ -947,6 +966,30 @@ abstract class Camera extends Evented {
         if (this._pitching && !currently.pitching) {
             this.fire(new Event('pitchstart', eventData));
         }
+    }
+
+    _prepareElevation(center: LngLat) {
+        this._elevationCenter = center;
+        this._elevationStart = this.transform.elevation;
+        this._elevationTarget = this.transform.getElevation(center, this.terrain);
+        this.transform.freezeElevation = true;
+    }
+
+    _updateElevation(k: number) {
+        const elevation = this.transform.getElevation(this._elevationCenter, this.terrain);
+        // target terrain updated during flight, slowly move camera to new height
+        if (k < 1 && elevation !== this._elevationTarget) {
+            const pitch1 = this._elevationTarget - this._elevationStart;
+            const pitch2 = (elevation - (pitch1 * k + this._elevationStart)) / (1 - k);
+            this._elevationStart += k * (pitch1 - pitch2);
+            this._elevationTarget = elevation;
+        }
+        this.transform.elevation = interpolate(this._elevationStart, this._elevationTarget, k);
+    }
+
+    _finalizeElevation() {
+        this.transform.freezeElevation = false;
+        this.transform.recalculateZoom(this.terrain);
     }
 
     _fireMoveEvents(eventData?: any) {
@@ -969,7 +1012,6 @@ abstract class Camera extends Evented {
             return;
         }
         delete this._easeId;
-        this.fire(new Event('freezeElevation', {freeze: false}));
 
         const wasZooming = this._zooming;
         const wasRotating = this._rotating;
@@ -1179,6 +1221,7 @@ abstract class Camera extends Evented {
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
         this._prepareEase(eventData, false);
+        if (this.terrain) this._prepareElevation(center);
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfuls.
@@ -1199,12 +1242,17 @@ abstract class Camera extends Evented {
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
 
+            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
+
             const newCenter = k === 1 ? center : tr.unproject(from.add(delta.mult(u(s))).mult(scale));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
 
             this._fireMoveEvents(eventData);
 
-        }, () => this._afterEase(eventData), options);
+        }, () => {
+            if (this.terrain) this._finalizeElevation();
+            this._afterEase(eventData);
+        }, options);
 
         return this;
     }

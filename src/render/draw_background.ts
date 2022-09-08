@@ -33,7 +33,7 @@ function drawBackground(painter: Painter, sourceCache: SourceCache, layer: Backg
     const depthMode = painter.depthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
     const program = painter.useProgram(image ? 'backgroundPattern' : 'background');
-    const tileIDs = coords ? coords : transform.coveringTiles({tileSize, terrain: painter.style.terrain});
+    const tileIDs = coords ? coords : transform.coveringTiles({tileSize, terrain: painter.style.map.terrain});
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);
@@ -46,7 +46,7 @@ function drawBackground(painter: Painter, sourceCache: SourceCache, layer: Backg
         const uniformValues = image ?
             backgroundPatternUniformValues(matrix, opacity, painter, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(matrix, opacity, color);
-        const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(tileID);
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(tileID);
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
             uniformValues, terrainData, layer.id, painter.tileExtentBuffer,
