@@ -277,7 +277,7 @@ function getTestStyles(options: RenderOptions, directory: string): StyleWithTest
                 console.log(`* skipped ${test.id}`);
                 return false;
             }
-            localizeURLs(style, 2900, path.join(__dirname, '../'), require);
+            localizeURLs(style, 2900, path.join(__dirname, '../'));
             return true;
         });
     return sequence;

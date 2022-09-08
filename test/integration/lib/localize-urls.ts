@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import {StyleSpecification} from '../../../src/style-spec/types.g';
 
-export default function localizeURLs(style: any, port: number, baseTestsDir: string, requireFn: any) {
+export default function localizeURLs(style: any, port: number, baseTestsDir: string) {
     localizeStyleURLs(style, port);
     if (style.metadata && style.metadata.test && style.metadata.test.operations) {
         style.metadata.test.operations.forEach((op) => {
