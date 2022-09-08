@@ -98,7 +98,6 @@
     "jest-playwright-preset": "^2.0.0",
     "jsdom": "^20.0.0",
     "json-stringify-pretty-compact": "^4.0.0",
-    "mapbox-gl-styles": "^2.0.2",
     "minimist": "^1.2.6",
     "mock-geolocation": "^1.0.11",
     "nise": "^5.1.1",
