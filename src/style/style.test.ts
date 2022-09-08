@@ -390,7 +390,7 @@ describe('Style#loadJSON', () => {
         }));
 
         style.on('style.load', () => {
-            expect(style.terrain).toBeDefined();
+            expect(style.map.terrain).toBeDefined();
             expect(map.transform.updateElevation).toHaveBeenCalled();
             done();
         });

@@ -2145,14 +2145,14 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             const transform = new Transform(0, 22, 0, 60, true);
             transform.elevation = 200;
             transform.center = new LngLat(10.0, 50.0);
             transform.zoom = 14;
             transform.resize(512, 512);
-            transform.updateElevation(map.style.terrain);
+            transform.updateElevation(map.terrain);
             map.transform = transform;
 
             expect(map.getCameraTargetElevation()).toBe(2000);
@@ -2168,7 +2168,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             // distance between lng x and lng x+1 is 111.2km at same lat
             // altitude same as center elevation => 90° pitch
@@ -2185,7 +2185,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
             // distance between lng x and lng x+1 is 111.2km at same lat
             // (elevation difference of cam and center) / 2 = grounddistance =>
             // acos(111.2 / sqrt(111.2² + (111.2 * 2)²)) = acos(1/sqrt(5)) => 63.435 + 90 = 153.435
@@ -2202,7 +2202,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             // distance between lng x and lng x+1 is 111.2km at same lat
             // (elevation difference of cam and center) * 2 = grounddistance =>
@@ -2220,7 +2220,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             const expectedZoom = Math.log2(map.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / map.transform.tileSize);
             const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(0, 0));
@@ -2237,7 +2237,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(0, 0), 1000);
 
@@ -2252,7 +2252,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(1, 0), 0);
 

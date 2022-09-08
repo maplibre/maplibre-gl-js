@@ -77,7 +77,7 @@ function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: S
                 posMatrix,
                 painter.transform,
                 tile),
-            painter.style.terrain && painter.style.terrain.getTerrainData(coord),
+            painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);
@@ -135,7 +135,7 @@ function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: S
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
             uniforms,
-            painter.style.terrain && painter.style.terrain.getTerrainData(batch.coord),
+            painter.style.map.terrain && painter.style.map.terrain.getTerrainData(batch.coord),
             layer.id,
             vertexBuffer,
             indexBuffer,

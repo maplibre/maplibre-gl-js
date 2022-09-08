@@ -158,9 +158,9 @@
               disableRoute = true;
               if (e.originalEvent.altKey) {
                   if (!this.first) {
-                      this.first = map.transform.pointCoordinate(e.point, map.style.terrain);
+                      this.first = map.transform.pointCoordinate(e.point, map.terrain);
                   } else {
-                      const last = map.transform.pointCoordinate(e.point, map.style.terrain);
+                      const last = map.transform.pointCoordinate(e.point, map.terrain);
                       const co = map.calculateCameraOptionsFromTo(last.toLngLat(), last.z, this.first.toLngLat());
                       if (e.originalEvent.ctrlKey) {
                           map.jumpTo(co);

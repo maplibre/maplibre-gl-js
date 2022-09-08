@@ -53,7 +53,7 @@ function renderHillshade(
     if (!fbo) return;
 
     const program = painter.useProgram('hillshade');
-    const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
+    const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
