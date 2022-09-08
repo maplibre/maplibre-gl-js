@@ -220,13 +220,8 @@ export type StylePatchFunction = (
 ) => void;
 
 export type StyleSwapOptions = {
-    /** should style diffing be applied that may allow smooth transitions between styles */
-    diff?: boolean;
-
-    /**
-     * a style patch function that will perform a side-effect after a style is fetched but before it is committed to the map state
-     */
-    stylePatch?: StylePatchFunction;
+    diff?: boolean
+    stylePatch?: StylePatchFunction
 }
 
 /**
@@ -687,6 +682,7 @@ class Style extends Evented {
         if (changes.length === 0) {
             return false;
         }
+        console.log(changes);
 
         const unimplementedOps = changes.filter(op => !(op.command in supportedDiffOperations));
         if (unimplementedOps.length > 0) {
