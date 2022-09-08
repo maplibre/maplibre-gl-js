@@ -7,12 +7,14 @@ describe('render to texture', () => {
     test('should render text after a line by not adding the text to the stack', () => {
         const painterMock = {
             style: {
-                terrain: {
-                    sourceCache: {
-                        getRenderableTiles: () => [],
-                        removeOutdated: () => {}
+                map: {
+                    terrain: {
+                        sourceCache: {
+                            getRenderableTiles: () => [],
+                            removeOutdated: () => {}
+                        },
+                        clearRerenderCache: () => {}
                     },
-                    clearRerenderCache: () => {}
                 },
                 _order: []
             }

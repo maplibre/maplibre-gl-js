@@ -413,7 +413,7 @@ class HandlerManager {
     _updateMapTransform(combinedResult: any, combinedEventsInProgress: any, deactivatedHandlers: any) {
         const map = this._map;
         const tr = map.transform;
-        const terrain = map.style && map.style.terrain;
+        const terrain = map.terrain;
 
         if (!hasChange(combinedResult) && !(terrain && this._drag)) {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
