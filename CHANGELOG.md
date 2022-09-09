@@ -10,7 +10,8 @@
 
 ### 🐞 Bug fixes
 
-- [Breaking] Make geojson data source a required field to align with the docs (#1396) 
+- [Breaking] Make geojson data source a required field to align with the docs (#1396)
+- Fix `match` expression type (#1631)
 - *...Add new stuff here...*
 
 ## 2.4.0
