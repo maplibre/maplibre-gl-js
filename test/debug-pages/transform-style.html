@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MapLibre GL JS debug page</title>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+
+<body>
+<div id='map'></div>
+
+<script src='../../dist/maplibre-gl-dev.js'></script>
+<script>
+
+const style = {
+    version: 8,
+    sources: {
+        osm: {
+            type: 'raster',
+            tiles: [
+                'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+            ],
+            tileSize: 256
+        },
+
+    },
+    layers: [{
+        id: 'osm',
+        type: 'raster',
+        source: 'osm',
+        minzoom: 0,
+        maxzoom: 19
+    }]
+};
+
+const map = new maplibregl.Map({
+    container: 'map',
+    zoom: 12.5,
+    center: [-77.01866, 38.888],
+    style,
+    hash: true
+});
+
+map.setStyle('https://demotiles.maplibre.org/style.json', {
+    // transformStyle can be used to compose a desired style representation on runtime before the style gets applied to map
+    // based on the previous style and the style that is being set.
+    // this can be handy when previous and incoming style need to be combined in a certain way
+    // or a partial visual state needs to move from one style to another
+    //
+    // let's use the hypothetical example when we want to show the countries shown in different colours (demotiles)
+    // while for US we display the original OSM basemap
+    transformStyle: (previousStyle, nextStyle) => ({
+        ...nextStyle,
+        sources: {
+            ...nextStyle.sources,
+            // preserve the OSM basemap from original style, place it above the background layer (below the next level above background)
+            'osm': previousStyle.sources.osm
+        },
+        layers: [
+            // background layer
+            nextStyle.layers[0],
+            // osm layer
+            previousStyle.layers[0],
+            // other layers from the next style
+            ...nextStyle.layers.slice(1).map(layer => {
+                // hide the layers we don't need from demotiles style
+                if (layer.id.startsWith('geolines')) {
+                    layer.layout = {...layer.layout || {}, visibility: 'none'};
+                // filter out US polygons
+                } else if (layer.id.startsWith('coastline') || layer.id.startsWith('countries')) {
+                    layer.filter = ['!=', ['get', 'ADM0_A3'], 'USA'];
+                }
+                return layer;
+            })
+        ]
+    })
+});
+
+</script>
+</body>
+</html>

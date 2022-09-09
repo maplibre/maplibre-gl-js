@@ -103,6 +103,11 @@ export type StyleSetterOptions = {
     validate?: boolean;
 };
 
+export type StyleSwapOptions = {
+    diff?: boolean;
+    transformStyle?: (previous: StyleSpecification, next: StyleSpecification) => StyleSpecification;
+}
+
 /**
  * @private
  */
@@ -211,12 +216,10 @@ class Style extends Evented {
         });
     }
 
-    loadURL(url: string, options: {
-        validate?: boolean;
-    } = {}) {
+    loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
-        const validate = typeof options.validate === 'boolean' ?
+        options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
 
         const request = this.map._requestManager.transformRequest(url, ResourceType.Style);
@@ -225,44 +228,46 @@ class Style extends Evented {
             if (error) {
                 this.fire(new ErrorEvent(error));
             } else if (json) {
-                this._load(json, validate);
+                this._load(json, options, previousStyle);
             }
         });
     }
 
-    loadJSON(json: StyleSpecification, options: StyleSetterOptions = {}) {
+    loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         this._request = browser.frame(() => {
             this._request = null;
-            this._load(json, options.validate !== false);
+            options.validate = options.validate !== false;
+            this._load(json, options, previousStyle);
         });
     }
 
     loadEmpty() {
         this.fire(new Event('dataloading', {dataType: 'style'}));
-        this._load(empty, false);
+        this._load(empty, {validate: false});
     }
 
-    _load(json: StyleSpecification, validate: boolean) {
-        if (validate && emitValidationErrors(this, validateStyle(json))) {
+    _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification) {
+        const nextState = options.transformStyle && previousStyle ? options.transformStyle(previousStyle, json) : json;
+        if (options.validate && emitValidationErrors(this, validateStyle(nextState))) {
             return;
         }
 
         this._loaded = true;
-        this.stylesheet = json;
+        this.stylesheet = nextState;
 
-        for (const id in json.sources) {
-            this.addSource(id, json.sources[id], {validate: false});
+        for (const id in nextState.sources) {
+            this.addSource(id, nextState.sources[id], {validate: false});
         }
 
-        if (json.sprite) {
-            this._loadSprite(json.sprite);
+        if (nextState.sprite) {
+            this._loadSprite(nextState.sprite);
         } else {
             this.imageManager.setLoaded(true);
         }
 
-        this.glyphManager.setURL(json.glyphs);
+        this.glyphManager.setURL(nextState.glyphs);
 
         const layers = deref(this.stylesheet.layers);
 
@@ -531,9 +536,10 @@ class Style extends Evented {
      * @returns {boolean} true if any changes were made; false otherwise
      * @private
      */
-    setState(nextState: StyleSpecification) {
+    setState(nextState: StyleSpecification, options: StyleSwapOptions = {}) {
         this._checkLoaded();
 
+        nextState = options.transformStyle ? options.transformStyle(this.serialize(), nextState) : nextState;
         if (emitValidationErrors(this, validateStyle(nextState))) return false;
 
         nextState = clone(nextState);

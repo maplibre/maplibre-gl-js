@@ -4,7 +4,7 @@ import DOM from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
 import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
-import Style from '../style/style';
+import Style, {StyleSwapOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
 import Transform from '../geo/transform';
@@ -1419,9 +1419,7 @@ class Map extends Camera {
      * map.setStyle("https://demotiles.maplibre.org/style.json");
      *
      */
-    setStyle(style: StyleSpecification | string | null, options?: {
-        diff?: boolean;
-    } & StyleOptions) {
+    setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions & StyleOptions) {
         options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {
@@ -1458,9 +1456,14 @@ class Map extends Camera {
         return str;
     }
 
-    _updateStyle(style: StyleSpecification | string | null,  options?: {
-        diff?: boolean;
-    } & StyleOptions) {
+    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
+        // transformStyle relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
+        if (options.transformStyle && !this.style._loaded) {
+            this.style.once('style.load', () => this._updateStyle(style, options));
+            return;
+        }
+
+        const previousStyle = this.style && options.transformStyle ? this.style.serialize() : undefined;
         if (this.style) {
             this.style.setEventedParent(null);
             this.style._remove();
@@ -1476,9 +1479,9 @@ class Map extends Camera {
         this.style.setEventedParent(this, {style: this.style});
 
         if (typeof style === 'string') {
-            this.style.loadURL(style);
+            this.style.loadURL(style, options, previousStyle);
         } else {
-            this.style.loadJSON(style);
+            this.style.loadJSON(style, options, previousStyle);
         }
 
         return this;
@@ -1492,9 +1495,7 @@ class Map extends Camera {
         }
     }
 
-    _diffStyle(style: StyleSpecification | string,  options?: {
-        diff?: boolean;
-    } & StyleOptions) {
+    _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
             const request = this._requestManager.transformRequest(url, ResourceType.Style);
@@ -1510,11 +1511,9 @@ class Map extends Camera {
         }
     }
 
-    _updateDiff(style: StyleSpecification,  options?: {
-        diff?: boolean;
-    } & StyleOptions) {
+    _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions) {
         try {
-            if (this.style.setState(style)) {
+            if (this.style.setState(style, options)) {
                 this._update(true);
             }
         } catch (e) {
