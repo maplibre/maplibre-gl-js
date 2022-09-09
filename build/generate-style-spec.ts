@@ -191,7 +191,7 @@ export type ExpressionSpecification =
     | ['match', ExpressionInputType | ExpressionSpecification, 
         ExpressionInputType | ExpressionInputType[], ExpressionInputType | ExpressionSpecification, 
         ...(ExpressionInputType | ExpressionInputType[] | ExpressionSpecification)[], // repeated as above
-        ExpressionInputType]
+        ExpressionInputType | ExpressionSpecification]
     | ['within', unknown | ExpressionSpecification]
     // Ramps, scales, curves
     | ['interpolate', InterpolationSpecification, number | ExpressionSpecification, 
