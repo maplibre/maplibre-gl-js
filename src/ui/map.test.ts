@@ -291,6 +291,102 @@ describe('Map', () => {
             map.setStyle(null);
             expect(style._remove).toHaveBeenCalledTimes(1);
         });
+
+        test('transformStyle should copy the source and the layer into next style', done => {
+            const style = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'layerId0',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }, {
+                    id: 'layerId1',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }]
+            });
+
+            const map = createMap({style});
+            map.setStyle(createStyle(), {
+                diff: false,
+                transformStyle: (prevStyle, nextStyle) => ({
+                    ...nextStyle,
+                    sources: {
+                        ...nextStyle.sources,
+                        maplibre: prevStyle.sources.maplibre
+                    },
+                    layers: [
+                        ...nextStyle.layers,
+                        prevStyle.layers[0]
+                    ]
+                })
+            });
+
+            map.on('style.load', () => {
+                const loadedStyle = map.style.serialize();
+                expect('maplibre' in loadedStyle.sources).toBeTruthy();
+                expect(loadedStyle.layers[0].id).toBe(style.layers[0].id);
+                expect(loadedStyle.layers).toHaveLength(1);
+                done();
+            });
+        });
+
+        test('delayed setStyle with transformStyle should copy the source and the layer into next style with diffing', done => {
+            const style = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'layerId0',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }, {
+                    id: 'layerId1',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }]
+            });
+
+            const map = createMap({style});
+            window.setTimeout(() => {
+                map.setStyle(createStyle(), {
+                    diff: true,
+                    transformStyle: (prevStyle, nextStyle) => ({
+                        ...nextStyle,
+                        sources: {
+                            ...nextStyle.sources,
+                            maplibre: prevStyle.sources.maplibre
+                        },
+                        layers: [
+                            ...nextStyle.layers,
+                            prevStyle.layers[0]
+                        ]
+                    })
+                });
+
+                const loadedStyle = map.style.serialize();
+                expect('maplibre' in loadedStyle.sources).toBeTruthy();
+                expect(loadedStyle.layers[0].id).toBe(style.layers[0].id);
+                expect(loadedStyle.layers).toHaveLength(1);
+                done();
+            }, 100);
+        });
     });
 
     describe('#setTransformRequest', () => {
