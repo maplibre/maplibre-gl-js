@@ -103,9 +103,52 @@ export type StyleSetterOptions = {
     validate?: boolean;
 };
 
+/**
+ * Part of {@link Map#setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state
+ * this function exposes previous and next styles, it can be commonly used to support a range of functionalities like:
+ *      when previous style carries certain 'state' that needs to be carried over to a new style gracefully
+ *      when a desired style is a certain combination of previous and incoming style
+ *      when an incoming style requires modification based on external state
+ *
+ * @typedef {Function} TransformStyleFunction
+ * @param {StyleSpecification} previousStyle The current style.
+ * @param {StyleSpecification} nextStyle The next style.
+ * @returns {boolean} resulting style that will to be applied to the map
+ *
+ * @example
+ * map.setStyle('https://demotiles.maplibre.org/style.json', {
+ *   transformStyle: (previousStyle, nextStyle) => ({
+ *       ...nextStyle,
+ *       sources: {
+ *           ...nextStyle.sources,
+ *           // copy a source from previous style
+ *           'osm': previousStyle.sources.osm
+ *       },
+ *       layers: [
+ *           // background layer
+ *           nextStyle.layers[0],
+ *           // copy a layer from previous style
+ *           previousStyle.layers[0],
+ *           // other layers from the next style
+ *           ...nextStyle.layers.slice(1).map(layer => {
+ *               // hide the layers we don't need from demotiles style
+ *               if (layer.id.startsWith('geolines')) {
+ *                   layer.layout = {...layer.layout || {}, visibility: 'none'};
+ *               // filter out US polygons
+ *               } else if (layer.id.startsWith('coastline') || layer.id.startsWith('countries')) {
+ *                   layer.filter = ['!=', ['get', 'ADM0_A3'], 'USA'];
+ *               }
+ *               return layer;
+ *           })
+ *       ]
+ *   })
+ * });
+ */
+export type TransformStyleFunction = (previous: StyleSpecification, next: StyleSpecification) => StyleSpecification;
+
 export type StyleSwapOptions = {
     diff?: boolean;
-    transformStyle?: (previous: StyleSpecification, next: StyleSpecification) => StyleSpecification;
+    transformStyle?: TransformStyleFunction;
 }
 
 /**

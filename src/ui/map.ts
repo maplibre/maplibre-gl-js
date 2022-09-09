@@ -1413,11 +1413,40 @@ class Map extends Camera {
      *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      *   Set to `false`, to enable font settings from the map's style for these glyph ranges.
      *   Forces a full update.
+     * @param {TransformStyleFunction} [options.stylePatch=undefined] A style patch function
+     *   that will perform a side-effect after a style is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
      * @returns {Map} `this`
      *
      * @example
      * map.setStyle("https://demotiles.maplibre.org/style.json");
      *
+     * map.setStyle('https://demotiles.maplibre.org/style.json', {
+     *   transformStyle: (previousStyle, nextStyle) => ({
+     *       ...nextStyle,
+     *       sources: {
+     *           ...nextStyle.sources,
+     *           // copy a source from previous style
+     *           'osm': previousStyle.sources.osm
+     *       },
+     *       layers: [
+     *           // background layer
+     *           nextStyle.layers[0],
+     *           // copy a layer from previous style
+     *           previousStyle.layers[0],
+     *           // other layers from the next style
+     *           ...nextStyle.layers.slice(1).map(layer => {
+     *               // hide the layers we don't need from demotiles style
+     *               if (layer.id.startsWith('geolines')) {
+     *                   layer.layout = {...layer.layout || {}, visibility: 'none'};
+     *               // filter out US polygons
+     *               } else if (layer.id.startsWith('coastline') || layer.id.startsWith('countries')) {
+     *                   layer.filter = ['!=', ['get', 'ADM0_A3'], 'USA'];
+     *               }
+     *               return layer;
+     *           })
+     *       ]
+     *   })
+     * });
      */
     setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions & StyleOptions) {
         options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
