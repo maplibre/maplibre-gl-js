@@ -1,0 +1,38 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256
+    }
+  },
+  "center": [
+    13.418056,
+    52.499167
+  ],
+  "zoom": 0,
+  "sources": {
+    "mapbox": {
+      "type": "raster",
+      "tiles": [
+        "local://tiles/sparse/{z}-{x}-{y}.png"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background-layer",
+      "type": "background",
+      "paint": {
+        "background-color": "forestgreen"
+      }
+    },
+    {
+      "id": "raster-layer",
+      "type": "raster",
+      "source": "mapbox",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    }
+  ]
+}
