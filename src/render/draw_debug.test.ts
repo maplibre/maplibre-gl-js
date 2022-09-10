@@ -21,8 +21,8 @@ const defaultSources: { [_: string]: SourceSpecification } = {
 };
 
 const buildMockPainter = (layers, sources = defaultSources) => {
-    const mockPainter = new Painter();
-    mockPainter.style = new Style();
+    const mockPainter = new Painter(null, null);
+    mockPainter.style = new Style(null);
     mockPainter.transform = {zoom: 14} as any;
     mockPainter.style.sourceCaches = Object.fromEntries(
         Object.entries(sources).map(
