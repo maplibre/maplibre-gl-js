@@ -8,6 +8,7 @@ import ColorMode from '../gl/color_mode';
 import type Painter from './painter';
 import type SourceCache from '../source/source_cache';
 import type {OverscaledTileID} from '../source/tile_id';
+import Style from '../style/style';
 
 export default drawDebug;
 
@@ -123,14 +124,14 @@ function drawTextToOverlay(painter: Painter, text: string) {
     painter.debugOverlayTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 }
 
-export function selectDebugSource(painter: Painter): SourceCache | null {
+export function selectDebugSource(style: Style, zoom: number): SourceCache | null {
     // Use vector source with highest maxzoom
     // Else use source with highest maxzoom of any type
     let selectedSource: SourceCache = null;
-    const layers = Object.values(painter.style._layers);
+    const layers = Object.values(style._layers);
     const sources = layers.flatMap((layer) => {
-        if (layer.source && !layer.isHidden(painter.transform.zoom)) {
-            const sourceCache = painter.style.sourceCaches[layer.source];
+        if (layer.source && !layer.isHidden(zoom)) {
+            const sourceCache = style.sourceCaches[layer.source];
             return [sourceCache];
         } else {
             return [];

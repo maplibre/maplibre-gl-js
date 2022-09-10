@@ -483,7 +483,7 @@ class Painter {
         }
 
         if (this.options.showTileBoundaries) {
-            const selectedSource = selectDebugSource(this);
+            const selectedSource = selectDebugSource(this.style, this.transform.zoom);
             if (selectedSource) {
                 draw.debug(this, selectedSource, selectedSource.getVisibleCoordinates());
             }

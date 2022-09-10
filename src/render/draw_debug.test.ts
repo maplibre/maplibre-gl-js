@@ -4,10 +4,10 @@ import Style from '../style/style';
 import FillStyleLayer from '../style/style_layer/fill_style_layer';
 import RasterStyleLayer from '../style/style_layer/raster_style_layer';
 import {selectDebugSource} from './draw_debug';
-import Painter from './painter';
 
 jest.mock('../style/style');
-jest.mock('./painter');
+
+const zoom = 14;
 
 const defaultSources: { [_: string]: SourceSpecification } = {
     'raster_tiles': {
@@ -20,15 +20,13 @@ const defaultSources: { [_: string]: SourceSpecification } = {
     }
 };
 
-const buildMockPainter = (layers, sources = defaultSources) => {
-    const mockPainter = new Painter(null, null);
-    mockPainter.style = new Style(null);
-    mockPainter.transform = {zoom: 14} as any;
-    mockPainter.style.sourceCaches = Object.fromEntries(
+const buildMockStyle = (layers, sources = defaultSources) => {
+    const style = new Style(null);
+    style.sourceCaches = Object.fromEntries(
         Object.entries(sources).map(
             ([id, spec]) => [id, {id, getSource: () => spec} as SourceCache]));
-    mockPainter.style._layers = layers;
-    return mockPainter;
+    style._layers = layers;
+    return style;
 };
 
 describe('selectDebugSource', () => {
@@ -39,8 +37,8 @@ describe('selectDebugSource', () => {
             '2': new FillStyleLayer(
                 {id: '2', type: 'fill', source: 'vector_tiles'}),
         };
-        const mockPainter = buildMockPainter(layers);
-        const source = selectDebugSource(mockPainter);
+        const mockStyle = buildMockStyle(layers);
+        const source = selectDebugSource(mockStyle, zoom);
         expect(source).toHaveProperty('id', 'vector_tiles');
     });
 
@@ -51,8 +49,8 @@ describe('selectDebugSource', () => {
             '2': new FillStyleLayer(
                 {id: '2', type: 'fill', source: 'vector_tiles', maxzoom: 13}),
         };
-        const mockPainter = buildMockPainter(layers);
-        const source = selectDebugSource(mockPainter);
+        const mockStyle = buildMockStyle(layers);
+        const source = selectDebugSource(mockStyle, zoom);
         expect(source).toHaveProperty('id', 'raster_tiles');
     });
 
@@ -63,8 +61,8 @@ describe('selectDebugSource', () => {
             '2': new FillStyleLayer(
                 {id: '2', type: 'fill', source: 'vector_tiles', layout: {visibility: 'none'}}),
         };
-        const mockPainter = buildMockPainter(layers);
-        const source = selectDebugSource(mockPainter);
+        const style = buildMockStyle(layers);
+        const source = selectDebugSource(style, zoom);
         expect(source).toHaveProperty('id', 'raster_tiles');
     });
 
@@ -73,8 +71,8 @@ describe('selectDebugSource', () => {
             '1': new RasterStyleLayer(
                 {id: '1', type: 'raster', source: 'raster_tiles'}),
         };
-        const mockPainter = buildMockPainter(layers);
-        const source = selectDebugSource(mockPainter);
+        const mockStyle = buildMockStyle(layers);
+        const source = selectDebugSource(mockStyle, zoom);
         expect(source).toHaveProperty('id', 'raster_tiles');
     });
 
@@ -95,8 +93,8 @@ describe('selectDebugSource', () => {
             'fill_14': new FillStyleLayer(
                 {id: 'fill_14', type: 'fill', source: 'vector_14'}),
         };
-        const mockPainter = buildMockPainter(layers, sources);
-        const source = selectDebugSource(mockPainter);
+        const mockStyle = buildMockStyle(layers, sources);
+        const source = selectDebugSource(mockStyle, zoom);
         expect(source).toHaveProperty('id', 'vector_14');
     });
 
@@ -117,8 +115,8 @@ describe('selectDebugSource', () => {
             'raster_14': new RasterStyleLayer(
                 {id: 'raster_14', type: 'raster', source: 'raster_14'}),
         };
-        const mockPainter = buildMockPainter(layers, sources);
-        const source = selectDebugSource(mockPainter);
+        const mockStyle = buildMockStyle(layers, sources);
+        const source = selectDebugSource(mockStyle, zoom);
         expect(source).toHaveProperty('id', 'raster_14');
     });
 });
