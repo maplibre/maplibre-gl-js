@@ -11,6 +11,7 @@
 ### 🐞 Bug fixes
 
 - [Breaking] Make geojson data source a required field to align with the docs (#1396) 
+- Fix showTileBoundaries to show the first vector source [#1395](https://github.com/maplibre/maplibre-gl-js/pull/1395)
 - *...Add new stuff here...*
 
 ## 2.4.0
