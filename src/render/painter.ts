@@ -29,7 +29,7 @@ import fillExtrusion from './draw_fill_extrusion';
 import hillshade from './draw_hillshade';
 import raster from './draw_raster';
 import background from './draw_background';
-import debug, {drawDebugPadding} from './draw_debug';
+import debug, {drawDebugPadding, selectDebugSource} from './draw_debug';
 import custom from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
@@ -483,29 +483,7 @@ class Painter {
         }
 
         if (this.options.showTileBoundaries) {
-            // Use vector source with highest maxzoom
-            // Else use source with highest maxzoom of any type
-            let selectedSource;
-            const layers = Object.values(this.style._layers);
-            const sources = layers.flatMap((layer) => {
-                if (layer.source && !layer.isHidden(this.transform.zoom)) {
-                    const sourceCache = this.style.sourceCaches[layer.source];
-                    return [sourceCache];
-                } else {
-                    return [];
-                }
-            });
-            const vectorSources = sources.filter((source) => source.getSource().type === 'vector');
-            const otherSources = sources.filter((source) => source.getSource().type !== 'vector');
-            const considerSource = (source) => {
-                if (!selectedSource || (selectedSource.getSource().maxzoom < source.getSource().maxzoom)) {
-                    selectedSource = source;
-                }
-            };
-            vectorSources.forEach((source) => considerSource(source));
-            if (!selectedSource) {
-                otherSources.forEach((source) => considerSource(source));
-            }
+            const selectedSource = selectDebugSource(this);
             if (selectedSource) {
                 draw.debug(this, selectedSource, selectedSource.getVisibleCoordinates());
             }
