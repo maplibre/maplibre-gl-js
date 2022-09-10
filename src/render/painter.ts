@@ -29,7 +29,7 @@ import fillExtrusion from './draw_fill_extrusion';
 import hillshade from './draw_hillshade';
 import raster from './draw_raster';
 import background from './draw_background';
-import debug, {drawDebugPadding} from './draw_debug';
+import debug, {drawDebugPadding, selectDebugSource} from './draw_debug';
 import custom from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
@@ -483,20 +483,7 @@ class Painter {
         }
 
         if (this.options.showTileBoundaries) {
-            //Use source with highest maxzoom
-            let selectedSource;
-            let sourceCache;
-            const layers = Object.values(this.style._layers);
-            layers.forEach((layer) => {
-                if (layer.source && !layer.isHidden(this.transform.zoom)) {
-                    if (layer.source !== (sourceCache && sourceCache.id)) {
-                        sourceCache = this.style.sourceCaches[layer.source];
-                    }
-                    if (!selectedSource || (selectedSource.getSource().maxzoom < sourceCache.getSource().maxzoom)) {
-                        selectedSource = sourceCache;
-                    }
-                }
-            });
+            const selectedSource = selectDebugSource(this.style, this.transform.zoom);
             if (selectedSource) {
                 draw.debug(this, selectedSource, selectedSource.getVisibleCoordinates());
             }
