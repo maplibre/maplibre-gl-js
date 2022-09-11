@@ -847,10 +847,8 @@ class Transform {
         // In case of negative elevation (e.g. the dead see) use the lower plane for calculation
         const elevationInPixelSpaceNonAbsolute = this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
         this.cameraToSeaLevelDistance = this.cameraToCenterDistance + elevationInPixelSpaceNonAbsolute;
-        const lowestPlane = elevationInPixelSpaceNonAbsolute > 0 
-            ? this.cameraToSeaLevelDistance
-            : this.cameraToSeaLevelDistance - elevationInPixelSpaceNonAbsolute;
-        
+        const lowestPlane = elevationInPixelSpaceNonAbsolute > 0 ? this.cameraToSeaLevelDistance : this.cameraToSeaLevelDistance - elevationInPixelSpaceNonAbsolute;
+
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
