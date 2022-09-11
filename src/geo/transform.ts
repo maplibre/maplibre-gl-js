@@ -845,9 +845,8 @@ class Transform {
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         // In case of negative elevation (e.g. the dead see) use the lower plane for calculation
-        const elevationInPixelSpaceNonAbsolute = this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
-        this.cameraToSeaLevelDistance = this.cameraToCenterDistance + elevationInPixelSpaceNonAbsolute;
-        const lowestPlane = elevationInPixelSpaceNonAbsolute > 0 ? this.cameraToSeaLevelDistance : this.cameraToSeaLevelDistance - elevationInPixelSpaceNonAbsolute;
+        this.cameraToSeaLevelDistance = this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
+        const lowestPlane = this._elevation < 0 ? this.cameraToCenterDistance : this.cameraToSeaLevelDistance;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
