@@ -436,7 +436,7 @@ describe('Style#loadJSON', () => {
             expect(style.stylesheet.layers).toHaveLength(1);
             done();
         });
-    })
+    });
 });
 
 describe('Style#_remove', () => {
@@ -661,7 +661,7 @@ describe('Style#setState', () => {
                         prevStyle.layers[0]
                     ]
                 })
-            })
+            });
 
             expect(didChange).toBeTruthy();
             expect('base' in style.stylesheet.sources).toBeTruthy();
