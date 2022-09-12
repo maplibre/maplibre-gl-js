@@ -35,6 +35,7 @@ describe('filter', () => {
         ]);
         compileTimeCheck(['match', ['get', 'TYPE'], ['TARGETPOINT:HOSPITAL'], true, false]);
         compileTimeCheck(['match', ['get', 'TYPE'], ['ADIZ', 'AMA', 'AWY', 'CLASS', 'NO-FIR', 'OCA', 'OTA', 'P', 'RAS', 'RCA', 'UTA', 'UTA-P'], true, false]);
+        compileTimeCheck(['match', ['get', 'id'], 'exampleID', ['get', 'iconNameFocused'], ['get', 'iconName']]);
         compileTimeCheck(['==', ['get', 'MILITARYAIRPORT'], 1]);
         compileTimeCheck(['interpolate', ['linear'], ['line-progress'], 0, 10, 0.5, 100, 1, 1000]); // number output
         compileTimeCheck(['interpolate', ['linear'], ['line-progress'], 0, 'red', 0.5, 'green', 1, 'blue']); // color output
