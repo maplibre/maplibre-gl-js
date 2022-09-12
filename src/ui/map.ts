@@ -1413,8 +1413,8 @@ class Map extends Camera {
      *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      *   Set to `false`, to enable font settings from the map's style for these glyph ranges.
      *   Forces a full update.
-     * @param {TransformStyleFunction} [options.stylePatch=undefined] A style patch function
-     *   that will perform a side-effect after a style is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
+     * @param {TransformStyleFunction} [options.transformStyle=undefined] transformStyle is a convenience function
+     *   that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
      * @returns {Map} `this`
      *
      * @example
@@ -1448,7 +1448,7 @@ class Map extends Camera {
      *   })
      * });
      */
-    setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions & StyleOptions) {
+    setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
         options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {
