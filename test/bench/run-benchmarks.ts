@@ -15,8 +15,10 @@ if (!fs.existsSync(dir)) {
 
 const url = new URL('http://localhost:9966/bench/versions');
 
-for (const compare of [].concat(argv.compare).filter(Boolean))
-    url.searchParams.append('compare', compare);
+if (argv.compare !== true && argv.compare !== undefined) { // handle --compare without argument as the default
+    for (const compare of [].concat(argv.compare))
+        url.searchParams.append('compare', compare || '');
+}
 
 console.log(`Starting headeless chrome at: ${url.toString()}`);
 
