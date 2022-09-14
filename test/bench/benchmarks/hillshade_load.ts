@@ -10,6 +10,12 @@ export default class HillshadeLoad extends Benchmark {
 
     constructor() {
         super();
+
+        // This is a longer running test and the duration will vary by device and network.
+        // To keep the test time more reasonable, lower the minimum number of measurements.
+        // 55 measurements => 10 observations for regression.
+        this.minimumMeasurements = 55;
+
         this.style = {
             'version': 8,
             'name': 'Hillshade-only',

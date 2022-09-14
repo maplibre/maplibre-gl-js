@@ -15,8 +15,10 @@ if (!fs.existsSync(dir)) {
 
 const url = new URL('http://localhost:9966/bench/versions');
 
-for (const compare of [].concat(argv.compare).filter(Boolean))
-    url.searchParams.append('compare', compare);
+if (argv.compare !== true && argv.compare !== undefined) { // handle --compare without argument as the default
+    for (const compare of [].concat(argv.compare))
+        url.searchParams.append('compare', compare || '');
+}
 
 console.log(`Starting headeless chrome at: ${url.toString()}`);
 
@@ -75,7 +77,7 @@ try {
         }
         console.log(...output);
 
-        merger.add(await webPage.pdf({
+        await merger.add(await webPage.pdf({
             format: 'a4',
             path: `${dir}/${name}.pdf`,
             printBackground: true,
@@ -95,5 +97,5 @@ try {
         console.log('Could not connect to server. Please run \'npm run start-bench\'.');
     }
 } finally {
-    browser.close();
+    await browser.close();
 }
