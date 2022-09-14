@@ -12,9 +12,8 @@ export default class StyleValidate extends Benchmark {
         this.style = style;
     }
 
-    setup(): Promise<void> {
-        return fetchStyle(this.style)
-            .then(json => { this.json = json; });
+    async setup() {
+        this.json = await fetchStyle(this.style);
     }
 
     bench() {

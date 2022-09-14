@@ -16,23 +16,21 @@ export default class Paint extends Benchmark {
         this.locations = locations;
     }
 
-    setup(): Promise<void> {
-        return Promise.all(this.locations.map(location => {
-            return createMap({
-                zoom: location.zoom,
-                width,
-                height,
-                center: location.center,
-                style: this.style,
-                idle: true
-            });
-        }))
-            .then(maps => {
-                this.maps = maps;
-            })
-            .catch(error => {
-                console.error(error);
-            });
+    async setup() {
+        try {
+            this.maps = await Promise.all(this.locations.map(location => {
+                return createMap({
+                    zoom: location.zoom,
+                    width,
+                    height,
+                    center: location.center,
+                    style: this.style,
+                    idle: true
+                });
+            }));
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     bench() {
