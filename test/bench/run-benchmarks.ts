@@ -77,7 +77,7 @@ try {
         }
         console.log(...output);
 
-        merger.add(await webPage.pdf({
+        await merger.add(await webPage.pdf({
             format: 'a4',
             path: `${dir}/${name}.pdf`,
             printBackground: true,
@@ -97,5 +97,5 @@ try {
         console.log('Could not connect to server. Please run \'npm run start-bench\'.');
     }
 } finally {
-    browser.close();
+    await browser.close();
 }
