@@ -19,7 +19,6 @@
             try {
                 const params = new URLSearchParams(location.search.slice(1));
                 let versions = [];
-                console.log(params);
                 if (params.has('compare')) {
                     versions = params.getAll('compare').filter(Boolean);
                 } else {
