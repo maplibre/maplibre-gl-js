@@ -17,22 +17,20 @@ export default class QueryBox extends Benchmark {
         this.locations = locations;
     }
 
-    setup(): Promise<void> {
-        return Promise.all(this.locations.map(location => {
-            return createMap({
-                zoom: location.zoom,
-                width,
-                height,
-                center: location.center,
-                style: this.style
-            });
-        }))
-            .then(maps => {
-                this.maps = maps;
-            })
-            .catch(error => {
-                console.error(error);
-            });
+    async setup() {
+        try {
+            this.maps = await Promise.all(this.locations.map(location => {
+                return createMap({
+                    zoom: location.zoom,
+                    width,
+                    height,
+                    center: location.center,
+                    style: this.style
+                });
+            }));
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     bench() {

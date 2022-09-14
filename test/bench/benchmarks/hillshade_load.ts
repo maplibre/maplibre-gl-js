@@ -36,16 +36,15 @@ export default class HillshadeLoad extends Benchmark {
         };
     }
 
-    bench() {
-        return createMap({
+    async bench() {
+        const map = await createMap({
             width: 1024,
             height: 1024,
             style: this.style,
             stubRender: false,
             showMap: true,
             idle: true
-        }).then((map) => {
-            map.remove();
         });
+        map.remove();
     }
 }
