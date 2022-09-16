@@ -58,6 +58,8 @@ import type {
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import Terrain from '../render/terrain';
+import RenderToTexture from '../render/render_to_texture';
 
 const version = packageJSON.version;
 
@@ -326,6 +328,7 @@ class Map extends Camera {
     _removed: boolean;
     _clickTolerance: number;
     _pixelRatio: number;
+    _terrainDataCallback: (e: any) => any;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -1644,7 +1647,38 @@ class Map extends Camera {
      * map.setTerrain({ source: 'terrain' });
      */
     setTerrain(options: TerrainSpecification): Map {
-        this.style.setTerrain(options);
+        this.style._checkLoaded();
+
+        // clear event handlers
+        if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
+
+        // remove terrain
+        if (!options) {
+            if (this.terrain) this.terrain.sourceCache.destruct();
+            this.terrain = null;
+            this.painter.rtt.destruct();
+            this.painter.rtt = null;
+            this.transform.updateElevation(this.terrain);
+
+        // add terrain
+        } else {
+            const sourceCache = this.style.sourceCaches[options.source];
+            if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
+            this.terrain = new Terrain(this.style, sourceCache, options);
+            this.painter.rtt = new RenderToTexture(this.painter, this.terrain);
+            this.transform.updateElevation(this.terrain);
+            this._terrainDataCallback = e => {
+                if (e.dataType === 'style') {
+                    this.painter.rtt.freeRttIds(this.terrain.sourceCache.getRttIds());
+                } else if (e.dataType === 'source' && e.tile) {
+                    if (e.sourceId === options.source) this.transform.updateElevation(this.terrain);
+                    this.painter.rtt.freeRttIds(this.terrain.sourceCache.getRttIds(e.tile.tileID));
+                }
+            };
+            this.style.on('data', this._terrainDataCallback);
+        }
+
+        this.fire(new Event('terrain', {terrain: options}));
         return this;
     }
 

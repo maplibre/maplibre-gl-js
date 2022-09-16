@@ -2,22 +2,109 @@ import Painter from './painter';
 import Tile from '../source/tile';
 import Color from '../style-spec/util/color';
 import {OverscaledTileID} from '../source/tile_id';
-import {prepareTerrain, drawTerrain} from './draw_terrain';
+import {drawTerrain} from './draw_terrain';
 import type StyleLayer from '../style/style_layer';
+import Framebuffer from '../gl/framebuffer';
+import Texture from './texture';
+import Context from '../gl/context';
+import Style from '../style/style';
+import Terrain from './terrain';
+
+// lookup table which layers should rendered to texture
+const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
+   background: true,
+   fill: true,
+   line: true,
+   raster: true,
+   hillshade: true
+};
+
+const POOL_SIZE = 30; // must by divide by 2
+
+type PoolObject = {
+   id: number;
+   fbo: Framebuffer;
+   texture: Texture;
+   inUseTime: number;
+};
+
+export class RenderPool {
+    objs: Array<PoolObject>;
+    tileSize: number;
+    context: Context;
+
+    constructor(context: Context, tileSize: number) {
+        this.context = context;
+        this.tileSize = tileSize;
+        this.objs = [];
+    }
+
+    destruct() {
+        for (const obj of this.objs) {
+            obj.texture.destroy();
+            obj.fbo.destroy();
+        }
+    }
+
+    getObject(id: number): PoolObject {
+        return this.objs[id] && this.objs[id].inUseTime && this.objs[id];
+    }
+
+    useObject(id: number) {
+        if (this.objs[id]) this.objs[id].inUseTime = Date.now();
+    }
+
+    createObject(id: number): PoolObject {
+        const fbo = this.context.createFramebuffer(this.tileSize, this.tileSize, true);
+        const texture = new Texture(this.context, { width: this.tileSize, height: this.tileSize, data: null }, this.context.gl.RGBA);
+        texture.bind(this.context.gl.LINEAR, this.context.gl.CLAMP_TO_EDGE);
+        fbo.depthAttachment.set(this.context.createRenderbuffer(this.context.gl.DEPTH_COMPONENT16, this.tileSize, this.tileSize));
+        fbo.colorAttachment.set(texture.texture);
+        return { id: id, fbo: fbo, texture: texture, inUseTime: 0 };
+    }
+
+    isFull(): boolean {
+        if (this.objs.length < POOL_SIZE) return false;
+        for (const obj of this.objs)
+            if (!obj.inUseTime) return false;
+        return true;
+    }
+
+    getFreeObject(): PoolObject {
+        // check for free existing objects
+        for (let i = 0; i < this.objs.length; i++) {
+            if (!this.objs[i].inUseTime) {
+                this.useObject(i);
+                return this.objs[i];
+            }
+        }
+        if (!this.isFull()) {
+            const obj = this.createObject(this.objs.length);
+            this.useObject(obj.id);
+            this.objs.push(obj);
+            return obj;
+        }
+        return null;
+    }
+
+    freeObject(id: number) {
+        if (this.objs[id]) this.objs[id].inUseTime = 0;
+    }
+}
 
 /**
  * RenderToTexture
  */
 export default class RenderToTexture {
     painter: Painter;
-    // this object holds a lookup table which layers should rendered to texture
-    _renderToTexture: {[keyof in StyleLayer['type']]?: boolean};
+    terrain: Terrain;
+    pool: RenderPool;
     // coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
     // e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
-    _coordsDescendingInv: {[_: string]: {[_:string]: Array<OverscaledTileID>}} = {};
+    _coordsDescendingInv: {[_: string]: {[_:string]: Array<OverscaledTileID>}};
     // create a string representation of all to tiles rendered to render-to-texture tiles
     // this string representation is used to check if tile should be re-rendered.
-    _coordsDescendingInvStr: {[_: string]: {[_:string]: string}} = {};
+    _coordsDescendingInvStr: {[_: string]: {[_:string]: string}};
     // store for render-stacks
     // a render stack is a set of layers which should be rendered into one texture
     // every stylesheet can have multipe stacks. A new stack is created if layers which should
@@ -25,33 +112,51 @@ export default class RenderToTexture {
     _stacks: Array<Array<string>>;
     // remember the previous processed layer to check if a new stack is needed
     _prevType: string;
-    // create a lookup which tiles should rendered to texture
-    _rerender: {[_: string]: boolean};
     // a list of tiles that can potentially rendered
     _renderableTiles: Array<Tile>;
+    // a list of tiles that should be rendered to screen in the next render-call
+    _rttTiles: Array<Tile>;
+    // a list of all layer-ids which should be rendered
+    _renderableLayerIds: Array<string>;
 
-    constructor(painter: Painter) {
+    constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
-        this._renderToTexture = {background: true, fill: true, line: true, raster: true};
-        this._coordsDescendingInv = {};
-        this._coordsDescendingInvStr = {};
-        this._stacks = [];
-        this._prevType = null;
-        this._rerender = {};
-        this._renderableTiles = painter.style.map.terrain.sourceCache.getRenderableTiles();
-        this._init();
+        this.terrain = terrain;
+        this.pool = new RenderPool(painter.context, terrain.sourceCache.tileSize * terrain.qualityFactor);
     }
 
-    _init() {
-        const style = this.painter.style;
-        const terrain = style.map.terrain;
+    destruct() {
+        this.pool.destruct();
+    }
 
-        // fill _coordsDescendingInv
+    getTexture(tile: Tile) {
+        const rtt = this.pool.getObject(tile.rtt[this._stacks.length - 1]);
+        return rtt && rtt.texture;
+    }
+
+    freeRttIds(ids: Array<number>) {
+        for (const id of ids) this.pool.freeObject(id);
+        for (const key in this.terrain.sourceCache._tiles) {
+            const tile = this.terrain.sourceCache._tiles[key];
+            for (let i = 0; i < tile.rtt.length; i++) {
+                if (!this.pool.getObject(tile.rtt[i])) tile.rtt[i] = null;
+            }
+        }
+    }
+
+    initialize(style: Style, zoom: number) {
+        this._stacks = [];
+        this._prevType = null;
+        this._rttTiles = [];
+        this._renderableTiles = this.terrain.sourceCache.getRenderableTiles();
+        this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
+
+        this._coordsDescendingInv = {};
         for (const id in style.sourceCaches) {
             this._coordsDescendingInv[id] = {};
             const tileIDs = style.sourceCaches[id].getVisibleCoordinates();
             for (const tileID of tileIDs) {
-                const keys = terrain.sourceCache.getTerrainCoords(tileID);
+                const keys = this.terrain.sourceCache.getTerrainCoords(tileID);
                 for (const key in keys) {
                     if (!this._coordsDescendingInv[id][key]) this._coordsDescendingInv[id][key] = [];
                     this._coordsDescendingInv[id][key].push(keys[key]);
@@ -59,10 +164,10 @@ export default class RenderToTexture {
             }
         }
 
-        // fill _coordsDescendingInvStr
+        this._coordsDescendingInvStr = {};
         for (const id of style._order) {
             const layer = style._layers[id], source = layer.source;
-            if (this._renderToTexture[layer.type]) {
+            if (LAYERS[layer.type]) {
                 if (!this._coordsDescendingInvStr[source]) {
                     this._coordsDescendingInvStr[source] = {};
                     for (const key in this._coordsDescendingInv[source])
@@ -71,21 +176,19 @@ export default class RenderToTexture {
             }
         }
 
-        // remove cached textures
-        this._renderableTiles.forEach(tile => {
+        // check tiles to render
+        for (const tile of this._renderableTiles) {
             for (const source in this._coordsDescendingInvStr) {
                 // rerender if there are more coords to render than in the last rendering
                 const coords = this._coordsDescendingInvStr[source][tile.tileID.key];
-                if (coords && coords !== tile.textureCoords[source]) tile.clearTextures(this.painter);
-                // rerender if tile is marked for rerender
-                if (terrain.needsRerender(source, tile.tileID)) tile.clearTextures(this.painter);
+                if (coords && coords !== tile.rttCoords[source]) tile.rtt = [];
             }
-            this._rerender[tile.tileID.key] = !tile.textures.length;
-        });
-        terrain.clearRerenderCache();
-        terrain.sourceCache.removeOutdated(this.painter);
+        }
 
-        return this;
+        // free used rtt objs in pool
+        const inUse = {};
+        for (const id of this.terrain.sourceCache.getRttIds()) inUse[id] = true;
+        for (const obj of this.pool.objs) if (!inUse[obj.id]) this.pool.freeObject(obj.id);
     }
 
     /**
@@ -99,56 +202,58 @@ export default class RenderToTexture {
      * @returns {boolean} if true layer is rendered to texture, otherwise false
      */
     renderLayer(layer: StyleLayer): boolean {
+        if (layer.isHidden(this.painter.transform.zoom)) return false;
+
         const type = layer.type;
         const painter = this.painter;
-        const layerIds = painter.style._order;
-        const currentLayer = painter.currentLayer;
-        const isLastLayer = currentLayer + 1 === layerIds.length;
+        const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
 
         // remember background, fill, line & raster layer to render into a stack
-        if (this._renderToTexture[type]) {
-            if (!this._prevType || !this._renderToTexture[this._prevType]) this._stacks.push([]);
+        if (LAYERS[type]) {
+            // create a new stack if previous layer was not rendered to texture (f.e. symbols)
+            if (!this._prevType || !LAYERS[this._prevType]) this._stacks.push([]);
+            // push current render-to-texture layer to render-stack
             this._prevType = type;
-            this._stacks[this._stacks.length - 1].push(layerIds[currentLayer]);
+            this._stacks[this._stacks.length - 1].push(layer.id);
             // rendering is done later, all in once
             if (!isLastLayer) return true;
         }
 
         // in case a stack is finished render all collected stack-layers into a texture
-        if (this._renderToTexture[this._prevType] || type === 'hillshade' || (this._renderToTexture[type] && isLastLayer)) {
+        if (LAYERS[this._prevType] || (LAYERS[type] && isLastLayer)) {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
             for (const tile of this._renderableTiles) {
-                prepareTerrain(painter, painter.style.map.terrain, tile, stack);
-                if (this._rerender[tile.tileID.key]) {
-                    painter.context.clear({color: Color.transparent});
-                    for (let l = 0; l < layers.length; l++) {
-                        const layer = painter.style._layers[layers[l]];
-                        const coords = layer.source ? this._coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
-                        painter._renderTileClippingMasks(layer, coords);
-                        painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
-                        if (layer.source) tile.textureCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tile.tileID.key];
-                    }
+                if (this.pool.getObject(tile.rtt[stack])) { // layer is rendered in an previous pass
+                    this._rttTiles.push(tile);
+                    this.pool.useObject(tile.rtt[stack]);
+                    continue;
                 }
-                drawTerrain(painter, painter.style.map.terrain, tile);
-            }
-
-            // the hillshading layer is a special case because it changes on every camera-movement
-            // so rerender it in any case.
-            if (type === 'hillshade') {
-                this._stacks.push([layerIds[currentLayer]]);
-                for (const tile of this._renderableTiles) {
-                    const coords = this._coordsDescendingInv[layer.source][tile.tileID.key];
-                    prepareTerrain(painter, painter.style.map.terrain, tile, this._stacks.length - 1);
-                    painter.context.clear({color: Color.transparent});
+                if (this.pool.isFull()) {
+                    drawTerrain(this.painter, this.terrain, this._rttTiles);
+                    this._rttTiles = [];
+                    // free the oldest 50% pool objects
+                    const rttIds = this.pool.objs.slice().sort((a, b) => b.inUseTime - a.inUseTime).map(obj => obj.id);
+                    this.freeRttIds(rttIds.slice(0, POOL_SIZE / 2));
+                }
+                this._rttTiles.push(tile);
+                const rtt = this.pool.getFreeObject();
+                tile.rtt[stack] = rtt.id;
+                painter.context.bindFramebuffer.set(rtt.fbo.framebuffer);
+                painter.context.viewport.set([0, 0, rtt.fbo.width, rtt.fbo.height]);
+                painter.context.clear({color: Color.transparent});
+                for (let l = 0; l < layers.length; l++) {
+                    const layer = painter.style._layers[layers[l]];
+                    const coords = layer.source ? this._coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
                     painter._renderTileClippingMasks(layer, coords);
                     painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
-                    drawTerrain(painter, painter.style.map.terrain, tile);
+                    if (layer.source) tile.rttCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tile.tileID.key];
                 }
-                return true;
             }
+            drawTerrain(this.painter, this.terrain, this._rttTiles);
+            this._rttTiles = [];
 
-            return this._renderToTexture[type];
+            return LAYERS[type];
         }
 
         return false;
