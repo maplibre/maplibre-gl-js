@@ -843,8 +843,10 @@ class Transform {
         mat4.scale(m, m, [2 / this.width, 2 / this.height, 1]);
         this.glCoordMatrix = m;
 
-        // calculate the camera to sea-level distance in pixel in respect of terrain
+        // Calculate the camera to sea-level distance in pixel in respect of terrain
+        // In case of negative elevation (e.g. the dead see) use the lower plane for calculation
         this.cameraToSeaLevelDistance = this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
+        const lowestPlane = this._elevation < 0 ? this.cameraToCenterDistance : this.cameraToSeaLevelDistance;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
@@ -852,20 +854,18 @@ class Transform {
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
         const groundAngle = Math.PI / 2 + this._pitch;
         const fovAboveCenter = this._fov * (0.5 + offset.y / this.height);
-        const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * this.cameraToSeaLevelDistance / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
+        const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
 
         // Find the distance from the center point to the horizon
         const horizon = this.getHorizon();
         const horizonAngle = Math.atan(horizon / this.cameraToCenterDistance);
         const fovCenterToHorizon = 2 * horizonAngle * (0.5 + offset.y / (horizon * 2));
-        const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * this.cameraToSeaLevelDistance / Math.sin(clamp(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
+        const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
 
         // Calculate z distance of the farthest fragment that should be rendered.
-        const furthestDistance = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistance + this.cameraToSeaLevelDistance;
-        const furthestDistanceHorizon = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistanceHorizon + this.cameraToSeaLevelDistance;
-
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
-        const farZ = Math.min(furthestDistance, furthestDistanceHorizon) * 1.01;
+        const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
+        const farZ = (Math.cos(Math.PI / 2 - this._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)

@@ -403,8 +403,15 @@ describe('transform', () => {
         transform.recalculateZoom(null);
         expect(transform.zoom).toBe(14.127997275621933);
         expect(transform.elevation).toBe(400);
+
         expect(transform._center.lng).toBe(10.00000000000071);
         expect(transform._center.lat).toBe(50.00000000000017);
+
+        // expect new zoom because of elevation change to point below sea level
+        transform.getElevation = () => -200;
+        transform.recalculateZoom(null);
+        expect(transform.zoom).toBe(13.773740316343467);
+        expect(transform.elevation).toBe(-200);
     });
 
     test('pointCoordinate with terrain when returning null should fall back to 2D', () => {
