@@ -317,6 +317,27 @@ export default class Terrain {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
+        // add an extra frame around the mesh to avoid stiching on tile boundaries with different zoomlevels
+        // encode z-coordinate into x-coordinate by using x values outside EXTENT
+        // first code-block is for top-bottom frame and second for left-right frame
+        let offset = vertexArray.length, offset2 = offset + (meshSize + 1) * 2;
+        for (let y = 0; y <= 1; y++) for (let x = 0; x <= meshSize; x++) for (let z = 0; z <= 1; z++)
+            vertexArray.emplaceBack(x * delta + z * (EXTENT + 1), y * EXTENT);
+        for (let x = 0; x < meshSize * 2; x += 2) {
+            indexArray.emplaceBack(offset2 + x, offset2 + x + 1, offset2 + x + 3);
+            indexArray.emplaceBack(offset2 + x, offset2 + x + 3, offset2 + x + 2);
+            indexArray.emplaceBack(offset + x, offset + x + 3, offset + x + 1);
+            indexArray.emplaceBack(offset + x, offset + x + 2, offset + x + 3);
+        }
+        offset = vertexArray.length; offset2 = offset + (meshSize + 1) * 2;
+        for (let x = 0; x <= 1; x++) for (let y = 0; y <= meshSize; y++) for (let z = 0; z <= 1; z++)
+            vertexArray.emplaceBack(x * EXTENT + z * (EXTENT + 1), y * delta);
+        for (let y = 0; y < meshSize * 2; y += 2) {
+            indexArray.emplaceBack(offset + y, offset + y + 1, offset + y + 3);
+            indexArray.emplaceBack(offset + y, offset + y + 3, offset + y + 2);
+            indexArray.emplaceBack(offset2 + y, offset2 + y + 3, offset2 + y + 1);
+            indexArray.emplaceBack(offset2 + y, offset2 + y + 2, offset2 + y + 3);
+        }
         this._mesh = {
             indexBuffer: context.createIndexBuffer(indexArray),
             vertexBuffer: context.createVertexBuffer(vertexArray, posAttributes.members),
