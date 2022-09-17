@@ -8,6 +8,7 @@
 - Add `freezeElevation` to `AnimationOptions` to allow smooth camera movement in 3D (#1514, #1492)
 - [Breaking] Remove deprecated mapboxgl css classes (#1575)
 - Add map.setStyle's transformStyle option (#1632)
+- [Breaking] Improve rendering of areas below sea level, and remove elevationOffset workaround (#1578)
 
 ### 🐞 Bug fixes
 
