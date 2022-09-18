@@ -130,7 +130,7 @@
           });
 
           this.renderer.autoClear = false;
-  },
+      },
       render (gl, matrix) {
           var rotationX = new THREE.Matrix4().makeRotationAxis(
               new THREE.Vector3(1, 0, 0),
@@ -167,7 +167,7 @@
           this.renderer.state.reset();
           this.renderer.render(this.scene, this.camera);
           this.map.triggerRepaint();
-  },
+      },
   };
 
   map.on('style.load', function () {
