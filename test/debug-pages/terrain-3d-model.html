@@ -17,160 +17,160 @@
 <div id="map"></div>
 <script>
   var map = (window.map = new maplibregl.Map({
-    container: 'map',
-    style: {
-      version: 8,
-      sources: {
-        osm: {
-          type: 'raster',
-          tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
-          tileSize: 256,
-          attribution: '&copy; OpenStreetMap Contributors',
-          maxzoom: 19,
-        },
-        terrainSource: {
-          type: 'raster-dem',
-          tiles: [
-            'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+      container: 'map',
+      style: {
+          version: 8,
+          sources: {
+              osm: {
+                  type: 'raster',
+                  tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                  tileSize: 256,
+                  attribution: '&copy; OpenStreetMap Contributors',
+                  maxzoom: 19,
+              },
+              terrainSource: {
+                  type: 'raster-dem',
+                  tiles: [
+                      'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+                  ],
+                  encoding: 'terrarium',
+                  tileSize: 256,
+                  maxzoom: 15,
+              },
+              hillshadeSource: {
+                  type: 'raster-dem',
+                  url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                  tileSize: 256,
+              },
+          },
+          layers: [
+              {
+                  id: 'osm',
+                  type: 'raster',
+                  source: 'osm',
+              },
+              {
+                  id: 'hills',
+                  type: 'hillshade',
+                  source: 'hillshadeSource',
+                  layout: {visibility: 'visible'},
+                  paint: {'hillshade-shadow-color': '#473B24'},
+              },
           ],
-          encoding: 'terrarium',
-          tileSize: 256,
-          maxzoom: 15,
-        },
-        hillshadeSource: {
-          type: 'raster-dem',
-          url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
-          tileSize: 256,
-        },
+          terrain: {
+              source: 'terrainSource',
+              exaggeration: 1,
+          },
       },
-      layers: [
-        {
-          id: 'osm',
-          type: 'raster',
-          source: 'osm',
-        },
-        {
-          id: 'hills',
-          type: 'hillshade',
-          source: 'hillshadeSource',
-          layout: { visibility: 'visible' },
-          paint: { 'hillshade-shadow-color': '#473B24' },
-        },
-      ],
-      terrain: {
-        source: 'terrainSource',
-        exaggeration: 1,
-      },
-    },
-    zoom: 18,
-    center: [148.9819, -35.3981],
-    pitch: 60,
-    antialias: true, // create the gl context with MSAA antialiasing, so custom layers are antialiased
-  }))
+      zoom: 18,
+      center: [148.9819, -35.3981],
+      pitch: 60,
+      antialias: true, // create the gl context with MSAA antialiasing, so custom layers are antialiased
+  }));
 
   // parameters to ensure the model is georeferenced correctly on the map
-  var modelOrigin = [148.9819, -35.39847]
-  var modelAltitude = 0
-  var modelRotate = [Math.PI / 2, 0, 0]
+  var modelOrigin = [148.9819, -35.39847];
+  var modelAltitude = 0;
+  var modelRotate = [Math.PI / 2, 0, 0];
 
   var modelAsMercatorCoordinate = maplibregl.MercatorCoordinate.fromLngLat(
-    modelOrigin,
-    modelAltitude
-  )
+      modelOrigin,
+      modelAltitude
+  );
 
   // transformation parameters to position, rotate and scale the 3D model onto the map
   var modelTransform = {
-    translateX: modelAsMercatorCoordinate.x,
-    translateY: modelAsMercatorCoordinate.y,
-    translateZ: modelAsMercatorCoordinate.z,
-    rotateX: modelRotate[0],
-    rotateY: modelRotate[1],
-    rotateZ: modelRotate[2],
-    /* Since our 3D model is in real world meters, a scale transform needs to be
+      translateX: modelAsMercatorCoordinate.x,
+      translateY: modelAsMercatorCoordinate.y,
+      translateZ: modelAsMercatorCoordinate.z,
+      rotateX: modelRotate[0],
+      rotateY: modelRotate[1],
+      rotateZ: modelRotate[2],
+      /* Since our 3D model is in real world meters, a scale transform needs to be
      * applied since the CustomLayerInterface expects units in MercatorCoordinates.
      */
-    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits(),
-  }
+      scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits(),
+  };
 
-  var THREE = window.THREE
+  var THREE = window.THREE;
 
   // configuration of the custom layer for a 3D model per the CustomLayerInterface
   var customLayer = {
-    id: '3d-model',
-    type: 'custom',
-    renderingMode: '3d',
-    onAdd: function (map, gl) {
-      this.camera = new THREE.Camera()
-      this.scene = new THREE.Scene()
+      id: '3d-model',
+      type: 'custom',
+      renderingMode: '3d',
+      onAdd (map, gl) {
+          this.camera = new THREE.Camera();
+          this.scene = new THREE.Scene();
 
-      // create two three.js lights to illuminate the model
-      var directionalLight = new THREE.DirectionalLight(0xffffff)
-      directionalLight.position.set(0, -70, 100).normalize()
-      this.scene.add(directionalLight)
+          // create two three.js lights to illuminate the model
+          var directionalLight = new THREE.DirectionalLight(0xffffff);
+          directionalLight.position.set(0, -70, 100).normalize();
+          this.scene.add(directionalLight);
 
-      var directionalLight2 = new THREE.DirectionalLight(0xffffff)
-      directionalLight2.position.set(0, 70, 100).normalize()
-      this.scene.add(directionalLight2)
+          var directionalLight2 = new THREE.DirectionalLight(0xffffff);
+          directionalLight2.position.set(0, 70, 100).normalize();
+          this.scene.add(directionalLight2);
 
-      // use the three.js GLTF loader to add the 3D model to the three.js scene
-      var loader = new THREE.GLTFLoader()
-      loader.load(
-        'https://maplibre.org/maplibre-gl-js-docs/assets/34M_17/34M_17.gltf',
-        function (gltf) {
-          this.scene.add(gltf.scene)
-        }.bind(this)
-      )
-      this.map = map
+          // use the three.js GLTF loader to add the 3D model to the three.js scene
+          var loader = new THREE.GLTFLoader();
+          loader.load(
+              'https://maplibre.org/maplibre-gl-js-docs/assets/34M_17/34M_17.gltf',
+              function (gltf) {
+                  this.scene.add(gltf.scene);
+              }.bind(this)
+          );
+          this.map = map;
 
-      // use the MapLibre GL JS map canvas for three.js
-      this.renderer = new THREE.WebGLRenderer({
-        canvas: map.getCanvas(),
-        context: gl,
-        antialias: true,
-      })
+          // use the MapLibre GL JS map canvas for three.js
+          this.renderer = new THREE.WebGLRenderer({
+              canvas: map.getCanvas(),
+              context: gl,
+              antialias: true,
+          });
 
-      this.renderer.autoClear = false
-    },
-    render: function (gl, matrix) {
-      var rotationX = new THREE.Matrix4().makeRotationAxis(
-        new THREE.Vector3(1, 0, 0),
-        modelTransform.rotateX
-      )
-      var rotationY = new THREE.Matrix4().makeRotationAxis(
-        new THREE.Vector3(0, 1, 0),
-        modelTransform.rotateY
-      )
-      var rotationZ = new THREE.Matrix4().makeRotationAxis(
-        new THREE.Vector3(0, 0, 1),
-        modelTransform.rotateZ
-      )
+          this.renderer.autoClear = false;
+  },
+      render (gl, matrix) {
+          var rotationX = new THREE.Matrix4().makeRotationAxis(
+              new THREE.Vector3(1, 0, 0),
+              modelTransform.rotateX
+          );
+          var rotationY = new THREE.Matrix4().makeRotationAxis(
+              new THREE.Vector3(0, 1, 0),
+              modelTransform.rotateY
+          );
+          var rotationZ = new THREE.Matrix4().makeRotationAxis(
+              new THREE.Vector3(0, 0, 1),
+              modelTransform.rotateZ
+          );
 
-      var m = new THREE.Matrix4().fromArray(matrix)
-      var l = new THREE.Matrix4()
-        .makeTranslation(
-          modelTransform.translateX,
-          modelTransform.translateY,
-          modelTransform.translateZ
-        )
-        .scale(
-          new THREE.Vector3(
-            modelTransform.scale,
-            -modelTransform.scale,
-            modelTransform.scale
-          )
-        )
-        .multiply(rotationX)
-        .multiply(rotationY)
-        .multiply(rotationZ)
+          var m = new THREE.Matrix4().fromArray(matrix);
+          var l = new THREE.Matrix4()
+              .makeTranslation(
+                  modelTransform.translateX,
+                  modelTransform.translateY,
+                  modelTransform.translateZ
+              )
+              .scale(
+                  new THREE.Vector3(
+                      modelTransform.scale,
+                      -modelTransform.scale,
+                      modelTransform.scale
+                  )
+              )
+              .multiply(rotationX)
+              .multiply(rotationY)
+              .multiply(rotationZ);
 
-      this.camera.projectionMatrix = m.multiply(l)
-      this.renderer.state.reset()
-      this.renderer.render(this.scene, this.camera)
-      this.map.triggerRepaint()
-    },
-  }
+          this.camera.projectionMatrix = m.multiply(l);
+          this.renderer.state.reset();
+          this.renderer.render(this.scene, this.camera);
+          this.map.triggerRepaint();
+  },
+  };
 
   map.on('style.load', function () {
-    map.addLayer(customLayer)
-  })
+      map.addLayer(customLayer);
+  });
 </script>
