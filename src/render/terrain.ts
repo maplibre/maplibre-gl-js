@@ -33,6 +33,8 @@ export type TerrainData = {
 }
 
 export type TerrainMesh = {
+    vertexArray: PosArray;
+    indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
     vertexBuffer: VertexBuffer;
     segments: SegmentVector;
@@ -353,12 +355,45 @@ export default class Terrain {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
+        // add an extra frame around the mesh to avoid stiching on tile boundaries with different zoomlevels
+        // encode z-coordinate into x-coordinate by using x values outside EXTENT
+        // first code-block is for top-bottom frame and second for left-right frame
+        const offsetTop = vertexArray.length, offsetBottom = offsetTop + (meshSize + 1) * 2;
+        for (const y of [0, 1]) for (let x = 0; x <= meshSize; x++) for (const z of [0, 1])
+            vertexArray.emplaceBack(x * delta + z * (EXTENT + 1), y * EXTENT);
+        for (let x = 0; x < meshSize * 2; x += 2) {
+            indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 1, offsetBottom + x + 3);
+            indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 3, offsetBottom + x + 2);
+            indexArray.emplaceBack(offsetTop + x, offsetTop + x + 3, offsetTop + x + 1);
+            indexArray.emplaceBack(offsetTop + x, offsetTop + x + 2, offsetTop + x + 3);
+        }
+        const offsetLeft = vertexArray.length, offsetRight = offsetLeft + (meshSize + 1) * 2;
+        for (const x of [0, 1]) for (let y = 0; y <= meshSize; y++) for (const z of [0, 1])
+            vertexArray.emplaceBack(x * EXTENT + z * (EXTENT + 1), y * delta);
+        for (let y = 0; y < meshSize * 2; y += 2) {
+            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 1, offsetLeft + y + 3);
+            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 3, offsetLeft + y + 2);
+            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
+            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
+        }
         this._mesh = {
+            indexArray,
+            vertexArray,
             indexBuffer: context.createIndexBuffer(indexArray),
             vertexBuffer: context.createVertexBuffer(vertexArray, posAttributes.members),
             segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
         };
         return this._mesh;
+    }
+
+    /**
+     * Calculates a height of the frame around the terrain-mesh to avoid stiching between
+     * tile boundaries in different zoomlevels.
+     * @param zoom current zoomlevel
+     * @returns the elevation delta in meters
+     */
+    getMeshFrameDelta(zoom: number) {
+        return 40000000 / Math.pow(2, zoom) / 5;
     }
 
     /**
