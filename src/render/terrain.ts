@@ -4,8 +4,8 @@ import {mat4, vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
-import {PosArray, TriangleIndexArray} from '../data/array_types.g';
-import posAttributes from '../data/pos_attributes';
+import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
+import pos3dAttributes from '../data/pos3d_attributes';
 import SegmentVector from '../data/segment';
 import VertexBuffer from '../gl/vertex_buffer';
 import IndexBuffer from '../gl/index_buffer';
@@ -33,8 +33,10 @@ export type TerrainData = {
 }
 
 export type TerrainMesh = {
-    vertexArray: PosArray;
+    // this variables are only used for unit-tests
+    vertexArray: Pos3dArray;
     indexArray: TriangleIndexArray;
+    // this variables contains the WebGLBuffers
     indexBuffer: IndexBuffer;
     vertexBuffer: VertexBuffer;
     segments: SegmentVector;
@@ -347,20 +349,19 @@ export default class Terrain {
     getTerrainMesh(): TerrainMesh {
         if (this._mesh) return this._mesh;
         const context = this.style.map.painter.context;
-        const vertexArray = new PosArray(), indexArray = new TriangleIndexArray();
+        const vertexArray = new Pos3dArray(), indexArray = new TriangleIndexArray();
         const meshSize = this.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
         for (let y = 0; y <= meshSize; y++) for (let x = 0; x <= meshSize; x++)
-            vertexArray.emplaceBack(x * delta, y * delta);
+            vertexArray.emplaceBack(x * delta, y * delta, 0);
         for (let y = 0; y < meshSize2; y += meshSize + 1) for (let x = 0; x < meshSize; x++) {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
         // add an extra frame around the mesh to avoid stiching on tile boundaries with different zoomlevels
-        // encode z-coordinate into x-coordinate by using x values outside EXTENT
         // first code-block is for top-bottom frame and second for left-right frame
         const offsetTop = vertexArray.length, offsetBottom = offsetTop + (meshSize + 1) * 2;
         for (const y of [0, 1]) for (let x = 0; x <= meshSize; x++) for (const z of [0, 1])
-            vertexArray.emplaceBack(x * delta + z * (EXTENT + 1), y * EXTENT);
+            vertexArray.emplaceBack(x * delta, y * EXTENT, z);
         for (let x = 0; x < meshSize * 2; x += 2) {
             indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 1, offsetBottom + x + 3);
             indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 3, offsetBottom + x + 2);
@@ -369,7 +370,7 @@ export default class Terrain {
         }
         const offsetLeft = vertexArray.length, offsetRight = offsetLeft + (meshSize + 1) * 2;
         for (const x of [0, 1]) for (let y = 0; y <= meshSize; y++) for (const z of [0, 1])
-            vertexArray.emplaceBack(x * EXTENT + z * (EXTENT + 1), y * delta);
+            vertexArray.emplaceBack(x * EXTENT, y * delta, z);
         for (let y = 0; y < meshSize * 2; y += 2) {
             indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 1, offsetLeft + y + 3);
             indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 3, offsetLeft + y + 2);
@@ -380,7 +381,7 @@ export default class Terrain {
             indexArray,
             vertexArray,
             indexBuffer: context.createIndexBuffer(indexArray),
-            vertexBuffer: context.createVertexBuffer(vertexArray, posAttributes.members),
+            vertexBuffer: context.createVertexBuffer(vertexArray, pos3dAttributes.members),
             segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
         };
         return this._mesh;
