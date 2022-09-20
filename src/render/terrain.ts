@@ -19,6 +19,7 @@ import SourceCache from '../source/source_cache';
 import EXTENT from '../data/extent';
 import {number as mix} from '../style-spec/util/interpolate';
 import type {TerrainSpecification} from '../style-spec/types.g';
+import {earthRadius} from '../geo/lng_lat';
 
 export type TerrainData = {
     'u_depth': number;
@@ -33,10 +34,6 @@ export type TerrainData = {
 }
 
 export type TerrainMesh = {
-    // this variables are only used for unit-tests
-    vertexArray: Pos3dArray;
-    indexArray: TriangleIndexArray;
-    // this variables contains the WebGLBuffers
     indexBuffer: IndexBuffer;
     vertexBuffer: VertexBuffer;
     segments: SegmentVector;
@@ -378,8 +375,6 @@ export default class Terrain {
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
         }
         this._mesh = {
-            indexArray,
-            vertexArray,
             indexBuffer: context.createIndexBuffer(indexArray),
             vertexBuffer: context.createVertexBuffer(vertexArray, pos3dAttributes.members),
             segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
@@ -394,7 +389,8 @@ export default class Terrain {
      * @returns the elevation delta in meters
      */
     getMeshFrameDelta(zoom: number) {
-        return 40000000 / Math.pow(2, zoom) / 5;
+        // divide by 5 is evaluated by trial & error to get a frame in the right height
+        return 2 * Math.PI * earthRadius / Math.pow(2, zoom) / 5;
     }
 
     /**
