@@ -12,7 +12,6 @@ import type {TerrainSpecification} from '../../style-spec/types.g';
  * @param {Object} [options]
  * @param {string} [options.id] The ID of the raster-dem source to use.
  * @param {Object} [options.options]
- * @param {number} [options.options.elevationOffset]
  * @param {number} [options.options.exaggeration]
  * @example
  * var map = new maplibregl.Map({TerrainControl: false})

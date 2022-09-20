@@ -84,14 +84,14 @@ describe('Terrain', () => {
         const terrain = new Terrain(
             style,
             sourceCache,
-            {exaggeration: 2, elevationOffset: 50} as any as TerrainSpecification,
+            {exaggeration: 2} as any as TerrainSpecification,
         );
 
         terrain.sourceCache._tiles[tileID.key] = tile;
         const {minElevation, maxElevation} = terrain.getMinMaxElevation(tileID);
 
-        expect(minElevation).toBe(100);
-        expect(maxElevation).toBe(300);
+        expect(minElevation).toBe(0);
+        expect(maxElevation).toBe(200);
     });
 
     test('Return null elevation values when no tile', () => {
@@ -113,7 +113,7 @@ describe('Terrain', () => {
         const terrain = new Terrain(
             style,
             sourceCache,
-            {exaggeration: 2, elevationOffset: 50} as any as TerrainSpecification,
+            {exaggeration: 2} as any as TerrainSpecification,
         );
 
         const minMaxNoTile = terrain.getMinMaxElevation(tileID);
@@ -145,7 +145,7 @@ describe('Terrain', () => {
         const terrain = new Terrain(
             style,
             sourceCache,
-            {exaggeration: 2, elevationOffset: 50} as any as TerrainSpecification,
+            {exaggeration: 2} as any as TerrainSpecification,
         );
         const minMaxNoDEM = terrain.getMinMaxElevation(tileID);
 

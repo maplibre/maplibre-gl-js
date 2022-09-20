@@ -26,7 +26,6 @@ export type TerrainData = {
     'u_terrain_dim': number;
     'u_terrain_matrix': mat4;
     'u_terrain_unpack': number[];
-    'u_terrain_offset': number;
     'u_terrain_exaggeration': number;
     texture: WebGLTexture;
     depthTexture: WebGLTexture;
@@ -78,8 +77,6 @@ export default class Terrain {
     meshSize: number;
     // multiplicator for the elevation. Used to make terrain more "extrem".
     exaggeration: number;
-    // defines the global offset of putting negative elevations (e.g. dead-sea) into positive values.
-    elevationOffset: number;
     // to not see pixels in the render-to-texture tiles it is good to render them bigger
     // this number is the multiplicator (must be a power of 2) for the current tileSize.
     // So to get good results with not too much memory footprint a value of 2 should be fine.
@@ -113,7 +110,6 @@ export default class Terrain {
         this.sourceCache = new TerrainSourceCache(sourceCache);
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
-        this.elevationOffset = typeof options.elevationOffset === 'number' ? options.elevationOffset : 450; // ~ dead-sea
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = {};
@@ -130,7 +126,7 @@ export default class Terrain {
      * @returns {number} - the elevation
      */
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
-        if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return this.elevationOffset;
+        if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return 0;
         let elevation = 0;
         const terrain = this.getTerrainData(tileID);
         if (terrain.tile && terrain.tile.dem) {
@@ -147,7 +143,7 @@ export default class Terrain {
     }
 
     /**
-     * get the Elevation for given coordinate in respect of elevationOffset and exaggeration.
+     * get the Elevation for given coordinate in respect of exaggeration.
      * @param {OverscaledTileID} tileID - the tile id
      * @param {number} x between 0 .. EXTENT
      * @param {number} y between 0 .. EXTENT
@@ -155,7 +151,7 @@ export default class Terrain {
      * @returns {number} - the elevation
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
-        return (this.getDEMElevation(tileID, x, y, extent) + this.elevationOffset) * this.exaggeration;
+        return this.getDEMElevation(tileID, x, y, extent) * this.exaggeration;
     }
 
     /**
@@ -207,7 +203,6 @@ export default class Terrain {
             'u_terrain_dim': sourceTile && sourceTile.dem && sourceTile.dem.dim || 1,
             'u_terrain_matrix': matrixKey ? this._demMatrixCache[tileID.key].matrix : this._emptyDemMatrix,
             'u_terrain_unpack': sourceTile && sourceTile.dem && sourceTile.dem.getUnpackVector() || this._emptyDemUnpack,
-            'u_terrain_offset': this.elevationOffset,
             'u_terrain_exaggeration': this.exaggeration,
             texture: (sourceTile && sourceTile.demTexture || this._emptyDemTexture).texture,
             depthTexture: (this._fboDepthTexture || this._emptyDepthTexture).texture,
@@ -326,19 +321,19 @@ export default class Terrain {
     }
 
     /**
-     * Get the minimum and maximum elevation contained in a tile. This includes any elevation offset
-     * and exaggeration included in the terrain.
+     * Get the minimum and maximum elevation contained in a tile. This includes any
+     * exaggeration included in the terrain.
      *
      * @param tileID Id of the tile to be used as a source for the min/max elevation
      * @returns {Object} Minimum and maximum elevation found in the tile, including the terrain's
-     * elevation offset and exaggeration
+     * exaggeration
      */
     getMinMaxElevation(tileID: OverscaledTileID): {minElevation: number | null; maxElevation: number | null} {
         const tile = this.getTerrainData(tileID).tile;
         const minMax = {minElevation: null, maxElevation: null};
         if (tile && tile.dem) {
-            minMax.minElevation = (tile.dem.min + this.elevationOffset) * this.exaggeration;
-            minMax.maxElevation = (tile.dem.max + this.elevationOffset) * this.exaggeration;
+            minMax.minElevation = tile.dem.min * this.exaggeration;
+            minMax.maxElevation = tile.dem.max * this.exaggeration;
         }
         return minMax;
     }
