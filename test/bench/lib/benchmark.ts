@@ -32,6 +32,13 @@ class Benchmark {
      */
     teardown(): Promise<void> | void {}
 
+    /**
+     * The minimum number of measurements affects how many statistical observations can be made on the benchmark e.g,
+     * 210 measurement samples => 20 observations for regression because the sum of 1 to 20 = 210. See regression() in statistics.ts.
+     * The minimum number of measurements also affects the runtime: more measurements means a longer running beanchmark.
+     */
+    public minimumMeasurements = 210;
+
     _elapsed: number;
     _measurements: Array<Measurement>;
     _iterationsPerMeasurement: number;
@@ -52,8 +59,7 @@ class Benchmark {
     }
 
     private _done() {
-        // 210 samples => 20 observations for regression
-        return this._elapsed >= 500 && this._measurements.length > 210;
+        return this._elapsed >= 500 && this._measurements.length > this.minimumMeasurements;
     }
 
     private _begin(): Promise<Array<Measurement>> {

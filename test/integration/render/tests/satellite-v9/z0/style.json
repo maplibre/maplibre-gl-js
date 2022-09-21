@@ -5,7 +5,35 @@
       "width": 512,
       "height": 512,
       "operations": [
-        ["setStyle", "local://mapbox-gl-styles/styles/satellite-v9.json"],
+        ["setStyle", 
+        {
+          "version": 8,
+          "name": "Satellite",
+          "sources": {
+            "satellite": {
+              "type": "raster",
+              "url": "mapbox://mapbox.satellite",
+              "tileSize": 256
+            }
+          },
+          "sprite": "mapbox://sprites/mapbox/satellite-v9",
+          "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+          "layers": [
+            {
+              "id": "background",
+              "type": "background",
+              "paint": {
+                "background-color": "rgb(4,7,14)"
+              }
+            },
+            {
+              "id": "satellite",
+              "type": "raster",
+              "source": "satellite",
+              "source-layer": "mapbox_satellite_full"
+            }
+          ]
+        }],
         ["wait"],
         ["setPaintProperty",
          "satellite",

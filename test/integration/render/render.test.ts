@@ -218,9 +218,7 @@ function mockXhr() {
 
             let body: Buffer = null;
             try {
-                if (relativePath.startsWith('mapbox-gl-styles')) {
-                    body = fs.readFileSync(path.join(path.dirname(require.resolve('mapbox-gl-styles')), '..', relativePath));
-                } else if (relativePath.startsWith('mvt-fixtures')) {
+                if (relativePath.startsWith('mvt-fixtures')) {
                     body = fs.readFileSync(path.join(path.dirname(require.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
                 } else {
                     body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
@@ -230,7 +228,7 @@ function mockXhr() {
                 } else {
                     req.response = body;
                 }
-                req.setStatus(200);
+                req.setStatus(req.response.length > 0 ? 200 : 204);
                 req.onload();
             } catch (ex) {
                 req.setStatus(404); // file not found
@@ -279,7 +277,7 @@ function getTestStyles(options: RenderOptions, directory: string): StyleWithTest
                 console.log(`* skipped ${test.id}`);
                 return false;
             }
-            localizeURLs(style, 2900, path.join(__dirname, '../'), require);
+            localizeURLs(style, 2900, path.join(__dirname, '../'));
             return true;
         });
     return sequence;

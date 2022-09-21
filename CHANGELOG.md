@@ -5,10 +5,16 @@
 
 - *...Add new stuff here...*
 - Add map.getCameraTargetElevation() (#1558)
-- Remove deprecated mapboxgl css classes
+- Add `freezeElevation` to `AnimationOptions` to allow smooth camera movement in 3D (#1514, #1492)
+- [Breaking] Remove deprecated mapboxgl css classes (#1575)
+- Add map.setStyle's transformStyle option (#1632)
+- [Breaking] Improve rendering of areas below sea level, and remove elevationOffset workaround (#1578)
 
 ### 🐞 Bug fixes
 
+- [Breaking] Make geojson data source a required field to align with the docs (#1396)
+- Fix showTileBoundaries to show the first vector source [#1395](https://github.com/maplibre/maplibre-gl-js/pull/1395)
+- Fix `match` expression type (#1631)
 - *...Add new stuff here...*
 
 ## 2.4.0

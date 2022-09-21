@@ -1,5 +1,5 @@
 
-import style from '../data/empty.json';
+import emptystyle from '../data/empty.json';
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 
@@ -27,41 +27,37 @@ export default class PaintStates extends Benchmark {
         this.center = center;
     }
 
-    setup() {
-        return fetch('/bench/data/naturalearth-land.json')
-            .then(response => response.json())
-            .then(data => {
-                this.numFeatures = data.features.length;
-                return Object.assign({}, style, {
-                    sources: {'land': {'type': 'geojson', data, 'maxzoom': 23}},
-                    layers: generateLayers({
-                        'id': 'layer',
-                        'type': 'fill',
-                        'source': 'land',
-                        'paint': {
-                            'fill-color': [
-                                'case',
-                                ['boolean', ['feature-state', 'bench'], false],
-                                ['rgb', 21, 210, 210],
-                                ['rgb', 233, 233, 233]
-                            ]
-                        }
-                    })
-                });
+    async setup() {
+        const response = await fetch('/bench/data/naturalearth-land.json');
+        const data = await response.json();
+        this.numFeatures = data.features.length;
+        const style = Object.assign({}, emptystyle, {
+            sources: {'land': {'type': 'geojson', data, 'maxzoom': 23}},
+            layers: generateLayers({
+                'id': 'layer',
+                'type': 'fill',
+                'source': 'land',
+                'paint': {
+                    'fill-color': [
+                        'case',
+                        ['boolean', ['feature-state', 'bench'], false],
+                        ['rgb', 21, 210, 210],
+                        ['rgb', 233, 233, 233]
+                    ]
+                }
             })
-            .then((style) => {
-                return createMap({
-                    zoom,
-                    width,
-                    height,
-                    center: this.center,
-                    style
-                }).then(map => {
-                    this.map = map;
-                }).catch(error => {
-                    console.error(error);
-                });
+        });
+        try {
+            this.map = await createMap({
+                zoom,
+                width,
+                height,
+                center: this.center,
+                style
             });
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     bench() {

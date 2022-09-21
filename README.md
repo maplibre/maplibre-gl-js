@@ -12,14 +12,14 @@ It originated as an open-source fork of [mapbox-gl-js](https://github.com/mapbox
 
 ## Getting Started
 
-Include the JavaScript and CSS files in the <head> of your HTML file.
+Include the JavaScript and CSS files in the `<head>` of your HTML file.
 
 ``` html
 <script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'></script>
 <link href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' rel='stylesheet' />
 ```
 
-Include the following code in the <body> of your HTML file.
+Include the following code in the `<body>` of your HTML file.
 
 ``` html
 <div id='map' style='width: 400px; height: 300px;'></div>

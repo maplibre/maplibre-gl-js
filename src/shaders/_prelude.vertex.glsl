@@ -79,7 +79,6 @@ uniform sampler2D u_terrain;
 uniform float u_terrain_dim;
 uniform mat4 u_terrain_matrix;
 uniform vec4 u_terrain_unpack;
-uniform float u_terrain_offset;
 uniform float u_terrain_exaggeration;
 uniform highp sampler2D u_depth;
 #endif
@@ -142,7 +141,7 @@ float get_elevation(vec2 pos) {
         float bl = ele(c + vec2(0.0, d));
         float br = ele(c + vec2(d, d));
         float elevation = mix(mix(tl, tr, f.x), mix(bl, br, f.x), f.y);
-        return (elevation + u_terrain_offset) * u_terrain_exaggeration;
+        return elevation * u_terrain_exaggeration;
     #else
         return 0.0;
     #endif

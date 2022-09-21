@@ -31,8 +31,5 @@ jobs:
           node-version: ${{ matrix.node_version }}
           architecture: ${{ matrix.architecture }}
       - run: npm ci
-      - uses: ArtiomTr/jest-coverage-report-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          annotations: none
-          test-script: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci
+

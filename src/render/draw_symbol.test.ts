@@ -44,7 +44,9 @@ describe('drawSymbol', () => {
         painterMock.renderPass = 'translucent';
         painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
         painterMock.options = {} as any;
-        painterMock.style = {} as any as Style;
+        painterMock.style = {
+            map: {}
+        } as any as Style;
 
         const layerSpec = {
             id: 'mock-layer',
@@ -145,7 +147,9 @@ describe('drawSymbol', () => {
         const sourceCacheMock = new SourceCache(null, null, null);
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
-        painterMock.style = {} as any as Style;
+        painterMock.style = {
+            map: {}
+        } as any as Style;
 
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
         drawSymbol(painterMock, sourceCacheMock, layer, [tileId], null);

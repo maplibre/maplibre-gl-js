@@ -56,7 +56,7 @@ export default function drawLine(painter: Painter, sourceCache: SourceCache, lay
         const prevProgram = painter.context.program.get();
         const program = painter.useProgram(programId, programConfiguration);
         const programChanged = firstTile || program.program !== prevProgram;
-        const terrainData = painter.style.terrain &&  painter.style.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain &&  painter.style.map.terrain.getTerrainData(coord);
 
         const constantPattern = patternProperty.constantOr(null);
         if (constantPattern && tile.imageAtlas) {

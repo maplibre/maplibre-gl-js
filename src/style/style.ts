@@ -104,6 +104,54 @@ export type StyleSetterOptions = {
 };
 
 /**
+ * Part of {@link Map#setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state
+ * this function exposes previous and next styles, it can be commonly used to support a range of functionalities like:
+ *      when previous style carries certain 'state' that needs to be carried over to a new style gracefully
+ *      when a desired style is a certain combination of previous and incoming style
+ *      when an incoming style requires modification based on external state
+ *
+ * @typedef {Function} TransformStyleFunction
+ * @param {StyleSpecification} previousStyle The current style.
+ * @param {StyleSpecification} nextStyle The next style.
+ * @returns {boolean} resulting style that will to be applied to the map
+ *
+ * @example
+ * map.setStyle('https://demotiles.maplibre.org/style.json', {
+ *   transformStyle: (previousStyle, nextStyle) => ({
+ *       ...nextStyle,
+ *       sources: {
+ *           ...nextStyle.sources,
+ *           // copy a source from previous style
+ *           'osm': previousStyle.sources.osm
+ *       },
+ *       layers: [
+ *           // background layer
+ *           nextStyle.layers[0],
+ *           // copy a layer from previous style
+ *           previousStyle.layers[0],
+ *           // other layers from the next style
+ *           ...nextStyle.layers.slice(1).map(layer => {
+ *               // hide the layers we don't need from demotiles style
+ *               if (layer.id.startsWith('geolines')) {
+ *                   layer.layout = {...layer.layout || {}, visibility: 'none'};
+ *               // filter out US polygons
+ *               } else if (layer.id.startsWith('coastline') || layer.id.startsWith('countries')) {
+ *                   layer.filter = ['!=', ['get', 'ADM0_A3'], 'USA'];
+ *               }
+ *               return layer;
+ *           })
+ *       ]
+ *   })
+ * });
+ */
+export type TransformStyleFunction = (previous: StyleSpecification, next: StyleSpecification) => StyleSpecification;
+
+export type StyleSwapOptions = {
+    diff?: boolean;
+    transformStyle?: TransformStyleFunction;
+}
+
+/**
  * @private
  */
 class Style extends Evented {
@@ -114,7 +162,6 @@ class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
-    terrain: Terrain;
 
     _request: Cancelable;
     _spriteRequest: Cancelable;
@@ -126,7 +173,6 @@ class Style extends Evented {
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
     _terrainDataCallback: (e: any) => any;
-    _terrainfreezeElevationCallback: (e: any) => any;
     _changed: boolean;
     _updatedSources: {[_: string]: 'clear' | 'reload'};
     _updatedLayers: {[_: string]: true};
@@ -213,12 +259,10 @@ class Style extends Evented {
         });
     }
 
-    loadURL(url: string, options: {
-        validate?: boolean;
-    } = {}) {
+    loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
-        const validate = typeof options.validate === 'boolean' ?
+        options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
 
         const request = this.map._requestManager.transformRequest(url, ResourceType.Style);
@@ -227,44 +271,46 @@ class Style extends Evented {
             if (error) {
                 this.fire(new ErrorEvent(error));
             } else if (json) {
-                this._load(json, validate);
+                this._load(json, options, previousStyle);
             }
         });
     }
 
-    loadJSON(json: StyleSpecification, options: StyleSetterOptions = {}) {
+    loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         this._request = browser.frame(() => {
             this._request = null;
-            this._load(json, options.validate !== false);
+            options.validate = options.validate !== false;
+            this._load(json, options, previousStyle);
         });
     }
 
     loadEmpty() {
         this.fire(new Event('dataloading', {dataType: 'style'}));
-        this._load(empty, false);
+        this._load(empty, {validate: false});
     }
 
-    _load(json: StyleSpecification, validate: boolean) {
-        if (validate && emitValidationErrors(this, validateStyle(json))) {
+    _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification) {
+        const nextState = options.transformStyle && previousStyle ? options.transformStyle(previousStyle, json) : json;
+        if (options.validate && emitValidationErrors(this, validateStyle(nextState))) {
             return;
         }
 
         this._loaded = true;
-        this.stylesheet = json;
+        this.stylesheet = nextState;
 
-        for (const id in json.sources) {
-            this.addSource(id, json.sources[id], {validate: false});
+        for (const id in nextState.sources) {
+            this.addSource(id, nextState.sources[id], {validate: false});
         }
 
-        if (json.sprite) {
-            this._loadSprite(json.sprite);
+        if (nextState.sprite) {
+            this._loadSprite(nextState.sprite);
         } else {
             this.imageManager.setLoaded(true);
         }
 
-        this.glyphManager.setURL(json.glyphs);
+        this.glyphManager.setURL(nextState.glyphs);
 
         const layers = deref(this.stylesheet.layers);
 
@@ -495,39 +541,29 @@ class Style extends Evented {
 
         // clear event handlers
         if (this._terrainDataCallback) this.off('data', this._terrainDataCallback);
-        if (this._terrainfreezeElevationCallback) this.map.off('freezeElevation', this._terrainfreezeElevationCallback);
 
         // remove terrain
         if (!options) {
-            if (this.terrain) this.terrain.sourceCache.destruct();
-            this.terrain = null;
-            this.map.transform.updateElevation(this.terrain);
+            if (this.map.terrain) this.map.terrain.sourceCache.destruct();
+            this.map.terrain = null;
+            this.map.transform.updateElevation(this.map.terrain);
 
         // add terrain
         } else {
             const sourceCache = this.sourceCaches[options.source];
             if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
-            this.terrain = new Terrain(this, sourceCache, options);
-            this.map.transform.updateElevation(this.terrain);
-            this._terrainfreezeElevationCallback = (e: any) => {
-                if (e.freeze) {
-                    this.map.transform.freezeElevation = true;
-                } else {
-                    this.map.transform.freezeElevation = false;
-                    this.map.transform.recalculateZoom(this.terrain);
-                }
-            };
+            this.map.terrain = new Terrain(this, sourceCache, options);
+            this.map.transform.updateElevation(this.map.terrain);
             this._terrainDataCallback = e => {
                 if (!e.tile) return;
                 if (e.sourceId === options.source) {
-                    this.map.transform.updateElevation(this.terrain);
-                    this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
+                    this.map.transform.updateElevation(this.map.terrain);
+                    this.map.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
                 } else if (e.source.type === 'geojson') {
-                    this.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
+                    this.map.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
                 }
             };
             this.on('data', this._terrainDataCallback);
-            this.map.on('freezeElevation', this._terrainfreezeElevationCallback);
         }
 
         this.map.fire(new Event('terrain', {terrain: options}));
@@ -543,9 +579,10 @@ class Style extends Evented {
      * @returns {boolean} true if any changes were made; false otherwise
      * @private
      */
-    setState(nextState: StyleSpecification) {
+    setState(nextState: StyleSpecification, options: StyleSwapOptions = {}) {
         this._checkLoaded();
 
+        nextState = options.transformStyle ? options.transformStyle(this.serialize(), nextState) : nextState;
         if (emitValidationErrors(this, validateStyle(nextState))) return false;
 
         nextState = clone(nextState);
@@ -1207,8 +1244,8 @@ class Style extends Evented {
     querySourceFeatures(
         sourceID: string,
         params?: {
-            sourceLayer: string;
-            filter: Array<any>;
+            sourceLayer?: string;
+            filter?: FilterSpecification;
             validate?: boolean;
         }
     ) {
@@ -1314,7 +1351,7 @@ class Style extends Evented {
 
     _updateSources(transform: Transform) {
         for (const id in this.sourceCaches) {
-            this.sourceCaches[id].update(transform, this.terrain);
+            this.sourceCaches[id].update(transform, this.map.terrain);
         }
     }
 
@@ -1355,7 +1392,7 @@ class Style extends Evented {
         forceFullPlacement = forceFullPlacement || this._layerOrderChanged || fadeDuration === 0;
 
         if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(browser.now(), transform.zoom))) {
-            this.pauseablePlacement = new PauseablePlacement(transform, this.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
+            this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
 

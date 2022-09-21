@@ -40,7 +40,7 @@ map.addControl(new maplibregl.NavigationControl());
 map.on('load', function () {
     map.addSource('points', {
         'type': 'geojson',
-        'data': '../test/integration/assets/data/chinese.geojson'
+        'data': '../integration/assets/data/chinese.geojson'
     });
 
     map.addLayer({

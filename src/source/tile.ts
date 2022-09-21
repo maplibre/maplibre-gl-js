@@ -151,6 +151,7 @@ class Tile {
      * GeoJSON tile, no-op but still set loaded to true.
      * @param {Object} data
      * @param painter
+     * @param justReloaded
      * @returns {undefined}
      * @private
      */
@@ -315,8 +316,8 @@ class Tile {
     }
 
     querySourceFeatures(result: Array<GeoJSONFeature>, params?: {
-        sourceLayer: string;
-        filter: Array<any>;
+        sourceLayer?: string;
+        filter?: FilterSpecification;
         validate?: boolean;
     }) {
         const featureIndex = this.latestFeatureIndex;
@@ -324,7 +325,7 @@ class Tile {
 
         const vtLayers = featureIndex.loadVTLayers();
 
-        const sourceLayer = params ? params.sourceLayer : '';
+        const sourceLayer = params && params.sourceLayer ? params.sourceLayer : '';
         const layer = vtLayers._geojsonTileLayer || vtLayers[sourceLayer];
 
         if (!layer) return;
