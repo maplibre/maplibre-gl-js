@@ -21,18 +21,19 @@ import type {LoadVectorDataCallback} from './vector_tile_worker_source';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
-import {isEmptyFeatureCollection, type GeoJSONSourceDiffWithAddIds, applySourceDiff} from './geojson_source_diff';
+import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable} from './geojson_source_diff';
 
 export type LoadGeoJSONParameters = {
     request?: RequestParameters;
     data?: string;
-    dataDiff?: GeoJSONSourceDiffWithAddIds;
+    dataDiff?: GeoJSONSourceDiff;
     source: string;
     cluster: boolean;
     superclusterOptions?: any;
     geojsonVtOptions?: any;
     clusterProperties?: any;
     filter?: Array<unknown>;
+    promoteId?: string;
 };
 
 export type LoadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>) => Cancelable;
@@ -91,7 +92,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }>;
     _pendingRequest: Cancelable;
     _geoJSONIndex: GeoJSONIndex;
-    _dataUpdateable: {[id: string]: GeoJSON.Feature} | undefined;
+    _dataUpdateable: {[id: string]: GeoJSON.Feature} | undefined = {};
 
     /**
      * @param [loadGeoJSON] Optional method for custom loading/parsing of
@@ -216,24 +217,33 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @private
      */
     loadGeoJSON(params: LoadGeoJSONParameters, callback: ResponseCallback<any>): Cancelable {
+        const {promoteId} = params;
         // Because of same origin issues, urls must either include an explicit
         // origin or absolute path.
         // ie: /foo/bar.json or http://example.com/bar.json
         // but not ../foo/bar.json
         if (params.request) {
             this._dataUpdateable = undefined;
-            return getJSON(params.request, callback);
+            return getJSON(params.request, (
+                error?: Error,
+                data?: any,
+                cacheControl?: string,
+                expires?: string
+            ) => {
+                this._dataUpdateable = isUpdateableGeoJSON(data, promoteId) ? toUpdateable(data, promoteId) : undefined;
+                callback(error, data, cacheControl, expires);
+            });
         } else if (typeof params.data === 'string') {
             try {
                 const parsed = JSON.parse(params.data);
-                this._dataUpdateable = isEmptyFeatureCollection(parsed) ? {} : undefined;
+                this._dataUpdateable = isUpdateableGeoJSON(parsed, promoteId) ? toUpdateable(parsed, promoteId) : undefined;
                 callback(null, parsed);
             } catch (e) {
                 callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
             }
-        } else if (params.dataDiff != null) {
-            if (this._dataUpdateable != null) {
-                this._dataUpdateable = applySourceDiff(this._dataUpdateable, params.dataDiff);
+        } else if (params.dataDiff) {
+            if (this._dataUpdateable) {
+                this._dataUpdateable = applySourceDiff(this._dataUpdateable, params.dataDiff, promoteId);
                 callback(null, {type: 'FeatureCollection', features: Object.values(this._dataUpdateable)});
             } else {
                 callback(new Error(`Cannot update existing geojson data in ${params.source}`));

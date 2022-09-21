@@ -13,11 +13,12 @@ import type Actor from '../util/actor';
 import type {Callback} from '../types/callback';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types.g';
 import type {MapSourceDataType} from '../ui/events';
-import type {GeoJSONSourceDiff, GeoJSONSourceDiffWithAddIds, GeoJSONFeatureId} from './geojson_source_diff';
+import type {GeoJSONSourceDiff} from './geojson_source_diff';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: any;
     collectResourceTiming: boolean;
+
 }
 
 /**
@@ -145,8 +146,12 @@ class GeoJSONSource extends Evented implements Source {
                 generateId: options.generateId || false
             },
             clusterProperties: options.clusterProperties,
-            filter: options.filter
+            filter: options.filter,
         }, options.workerOptions);
+
+        if (typeof this.promoteId === 'string') {
+            this.workerOptions.promoteId = this.promoteId;
+        }
     }
 
     load() {
@@ -173,11 +178,8 @@ class GeoJSONSource extends Evented implements Source {
         return this;
     }
 
-    updateData(diff: GeoJSONSourceDiff, getId: (feature: GeoJSON.Feature) => GeoJSONFeatureId) {
-        this._updateWorkerData('content', {
-            ...diff,
-            addIds: diff.add != null ? diff.add.map(getId) : undefined
-        });
+    updateData(diff: GeoJSONSourceDiff) {
+        this._updateWorkerData('content', diff);
 
         return this;
     }
@@ -246,9 +248,9 @@ class GeoJSONSource extends Evented implements Source {
      * handles loading the geojson data and preparing to serve it up as tiles,
      * using geojson-vt or supercluster as appropriate.
      */
-    _updateWorkerData(sourceDataType: MapSourceDataType, diff?: GeoJSONSourceDiffWithAddIds) {
+    _updateWorkerData(sourceDataType: MapSourceDataType, diff?: GeoJSONSourceDiff) {
         const options = extend({}, this.workerOptions);
-        if (diff != null) {
+        if (diff) {
             options.dataDiff = diff;
         } else if (typeof this._data === 'string') {
             options.request = this.map._requestManager.transformRequest(browser.resolveURL(this._data as string), ResourceType.Source);

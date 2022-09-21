@@ -174,7 +174,7 @@
           }
 
           const source = map.getSource('data');
-          source.updateData(updateRequest, (feature) => feature.id);
+          source.updateData(updateRequest);
           currentBucket = (currentBucket + 1) % pointCloud.length;
       };
       const interval = window.setInterval(doAnimation, 100);
