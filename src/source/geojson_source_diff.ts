@@ -1,6 +1,4 @@
-
 export type GeoJSONFeatureId = number | string;
-export type GeoJSONFeatureWithId = GeoJSON.Feature & {id: GeoJSONFeatureId};
 export interface GeoJSONSourceDiff {
     removeAll?: boolean;
     removed?: Array<GeoJSONFeatureId>;
@@ -68,18 +66,14 @@ export function toUpdateable(data: UpdateableGeoJSON, promoteId?: string) {
 }
 
 // may mutate updateable, but may also return a completely different object entirely
-export function applySourceDiff(updateable: {[id: string]: GeoJSON.Feature}, diff: GeoJSONSourceDiff, promoteId?: string) {
+export function applySourceDiff(updateable: {[id: GeoJSONFeatureId]: GeoJSON.Feature}, diff: GeoJSONSourceDiff, promoteId?: string) {
     if (diff.removeAll) {
         updateable = {};
     }
 
     if (diff.removed) {
         for (const id of diff.removed) {
-            if (Object.prototype.hasOwnProperty.call(updateable, id)) {
-                delete updateable[id];
-            } else {
-                throw new Error(`Cannot delete feature ${id} because it does not exist`);
-            }
+            delete updateable[id];
         }
     }
 
@@ -87,15 +81,9 @@ export function applySourceDiff(updateable: {[id: string]: GeoJSON.Feature}, dif
         for (const feature of diff.add) {
             const id = getFeatureId(feature, promoteId);
 
-            if (id == null) {
-                throw new Error('Cannot add feature without an id');
+            if (id != null) {
+                updateable[id] = feature;
             }
-
-            if (updateable[id]) {
-                throw new Error(`Cannot add '${id}' because it already exists`);
-            }
-
-            updateable[id] = feature;
         }
     }
 
@@ -104,7 +92,7 @@ export function applySourceDiff(updateable: {[id: string]: GeoJSON.Feature}, dif
             let feature = updateable[update.id];
 
             if (feature == null) {
-                throw new Error(`Cannot update '${update.id}' which does not exist`);
+                continue;
             }
 
             // be careful to clone the feature and/or properties objects to avoid mutating our input
@@ -128,8 +116,6 @@ export function applySourceDiff(updateable: {[id: string]: GeoJSON.Feature}, dif
                 for (const prop of update.removeProperties) {
                     if (Object.prototype.hasOwnProperty.call(feature.properties, prop)) {
                         delete feature.properties[prop];
-                    } else {
-                        throw new Error(`Cannot delete property ${prop} on feature ${update.id} because it does not exist`);
                     }
                 }
             }
