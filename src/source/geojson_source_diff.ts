@@ -34,18 +34,18 @@ export function isUpdateableGeoJSON(data: string | GeoJSON.GeoJSON, promoteId?: 
     // a feature collection can be updated if every feature has an id, and the ids are all unique
     // this prevents us from silently dropping features if ids get reused
     if (data.type === 'FeatureCollection') {
-        const seenIds: {[id: GeoJSONFeatureId]: boolean} = {};
+        const seenIds = new Set<GeoJSONFeatureId>();
         for (const feature of data.features) {
             const id = getFeatureId(feature, promoteId);
             if (id == null) {
                 return false;
             }
 
-            if (seenIds[id]) {
+            if (seenIds.has(id)) {
                 return false;
             }
 
-            seenIds[id] = true;
+            seenIds.add(id);
         }
     }
 
@@ -53,27 +53,27 @@ export function isUpdateableGeoJSON(data: string | GeoJSON.GeoJSON, promoteId?: 
 }
 
 export function toUpdateable(data: UpdateableGeoJSON, promoteId?: string) {
-    const result: {[id: GeoJSONFeatureId]: GeoJSON.Feature} = {};
+    const result = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
     if (data.type === 'Feature') {
-        result[getFeatureId(data, promoteId)!] = data;
+        result.set(getFeatureId(data, promoteId)!, data);
     } else {
         for (const feature of data.features) {
-            result[getFeatureId(feature, promoteId)!] = feature;
+            result.set(getFeatureId(feature, promoteId)!, feature);
         }
     }
 
     return result;
 }
 
-// may mutate updateable, but may also return a completely different object entirely
-export function applySourceDiff(updateable: {[id: GeoJSONFeatureId]: GeoJSON.Feature}, diff: GeoJSONSourceDiff, promoteId?: string) {
+// mutates updateable
+export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Feature>, diff: GeoJSONSourceDiff, promoteId?: string): void {
     if (diff.removeAll) {
-        updateable = {};
+        updateable.clear();
     }
 
     if (diff.removed) {
         for (const id of diff.removed) {
-            delete updateable[id];
+            updateable.delete(id);
         }
     }
 
@@ -82,14 +82,14 @@ export function applySourceDiff(updateable: {[id: GeoJSONFeatureId]: GeoJSON.Fea
             const id = getFeatureId(feature, promoteId);
 
             if (id != null) {
-                updateable[id] = feature;
+                updateable.set(id, feature);
             }
         }
     }
 
     if (diff.update) {
         for (const update of diff.update) {
-            let feature = updateable[update.id];
+            let feature = updateable.get(update.id);
 
             if (feature == null) {
                 continue;
@@ -100,7 +100,7 @@ export function applySourceDiff(updateable: {[id: GeoJSONFeatureId]: GeoJSON.Fea
             const cloneProperties = update.removeProperties?.length > 0 || update.addOrUpdateProperties?.length > 0;
             if (cloneFeature || cloneProperties) {
                 feature = {...feature};
-                updateable[update.id] = feature;
+                updateable.set(update.id, feature);
                 if (cloneProperties) {
                     feature.properties = {...feature.properties};
                 }
@@ -127,6 +127,4 @@ export function applySourceDiff(updateable: {[id: GeoJSONFeatureId]: GeoJSON.Fea
             }
         }
     }
-
-    return updateable;
 }

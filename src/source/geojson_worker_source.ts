@@ -92,7 +92,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }>;
     _pendingRequest: Cancelable;
     _geoJSONIndex: GeoJSONIndex;
-    _dataUpdateable: {[id: GeoJSONFeatureId]: GeoJSON.Feature} | undefined = {};
+    _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
 
     /**
      * @param [loadGeoJSON] Optional method for custom loading/parsing of
@@ -242,7 +242,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
             }
         } else if (params.dataDiff) {
             if (this._dataUpdateable) {
-                this._dataUpdateable = applySourceDiff(this._dataUpdateable, params.dataDiff, promoteId);
+                applySourceDiff(this._dataUpdateable, params.dataDiff, promoteId);
                 callback(null, {type: 'FeatureCollection', features: Object.values(this._dataUpdateable)});
             } else {
                 callback(new Error(`Cannot update existing geojson data in ${params.source}`));
