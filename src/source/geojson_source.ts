@@ -18,7 +18,6 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: any;
     collectResourceTiming: boolean;
-
 }
 
 /**
@@ -110,7 +109,7 @@ class GeoJSONSource extends Evented implements Source {
         this.actor = dispatcher.getActor();
         this.setEventedParent(eventedParent);
 
-        this._data = options.data as any;
+        this._data = (options.data as any);
         this._options = extend({}, options);
 
         this._collectResourceTiming = options.collectResourceTiming;
@@ -146,9 +145,10 @@ class GeoJSONSource extends Evented implements Source {
                 generateId: options.generateId || false
             },
             clusterProperties: options.clusterProperties,
-            filter: options.filter,
+            filter: options.filter
         }, options.workerOptions);
 
+        // send the promoteId to the worker to have more flexible updates, but only if it is a string
         if (typeof this.promoteId === 'string') {
             this.workerOptions.promoteId = this.promoteId;
         }
@@ -349,7 +349,7 @@ class GeoJSONSource extends Evented implements Source {
     serialize() {
         return extend({}, this._options, {
             type: this.type,
-            data: this._data,
+            data: this._data
         });
     }
 
