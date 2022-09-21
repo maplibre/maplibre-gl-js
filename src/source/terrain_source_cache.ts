@@ -81,24 +81,20 @@ export default class TerrainSourceCache extends Evented {
         }
         // free unused tiles
         for (const key in this._tiles) {
-            if (!keys[key]) delete(this._tiles[key]);
+            if (!keys[key]) delete this._tiles[key];
         }
     }
 
     /**
-     * get a list of all RttIds sorted by newest loaded tiles
-     * @param {TileID} tileID optional, handle only tiles which corresponds to tileID.
-     * @returns  {Array<number>} a list of rtt obj-ids
+     * Free render to texture cache
+     * @param {TileID} tileID optional, free only corresponding to tileID.
      */
-    getRttIds(tileID?: OverscaledTileID): Array<number> {
-        let ids = [] as Array<number>;
-        let tiles = Object.values(this._tiles).sort((a, b) => b.timeAdded - a.timeAdded);
-        for (const tile of tiles) {
-            if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID)) {
-                ids = ids.concat(tile.rtt);
-            }
+    freeRtt(tileID?: OverscaledTileID) {
+        for (const key in this._tiles) {
+            const tile = this._tiles[key];
+            if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
+                tile.rtt = [];
         }
-        return ids;
     }
 
     /**

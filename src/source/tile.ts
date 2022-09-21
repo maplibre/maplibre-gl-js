@@ -92,7 +92,7 @@ class Tile {
     hasSymbolBuckets: boolean;
     hasRTLText: boolean;
     dependencies: any;
-    rtt: Array<number>;
+    rtt: Array<[number, number]>;
     rttCoords: {[_:string]: string};
 
     /**

@@ -12,31 +12,36 @@ import Terrain from './terrain';
 
 // lookup table which layers should rendered to texture
 const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
-   background: true,
-   fill: true,
-   line: true,
-   raster: true,
-   hillshade: true
+    background: true,
+    fill: true,
+    line: true,
+    raster: true,
+    hillshade: true
 };
 
 const POOL_SIZE = 30; // must by divide by 2
 
 type PoolObject = {
-   id: number;
-   fbo: Framebuffer;
-   texture: Texture;
-   inUseTime: number;
+    id: number;
+    fbo: Framebuffer;
+    texture: Texture;
+    stamp: number;
+    inUse: boolean;
 };
 
 export class RenderPool {
-    objs: Array<PoolObject>;
-    tileSize: number;
     context: Context;
+    tileSize: number;
+    objs: Array<PoolObject>;
+    recentlyUsed: Array<number>;
+    stamp: number;
 
     constructor(context: Context, tileSize: number) {
         this.context = context;
         this.tileSize = tileSize;
         this.objs = [];
+        this.recentlyUsed = [];
+        this.stamp = 0;
     }
 
     destruct() {
@@ -46,49 +51,53 @@ export class RenderPool {
         }
     }
 
-    getObject(id: number): PoolObject {
-        return this.objs[id] && this.objs[id].inUseTime && this.objs[id];
-    }
-
-    useObject(id: number) {
-        if (this.objs[id]) this.objs[id].inUseTime = Date.now();
-    }
-
     createObject(id: number): PoolObject {
         const fbo = this.context.createFramebuffer(this.tileSize, this.tileSize, true);
-        const texture = new Texture(this.context, { width: this.tileSize, height: this.tileSize, data: null }, this.context.gl.RGBA);
+        const texture = new Texture(this.context, {width: this.tileSize, height: this.tileSize, data: null}, this.context.gl.RGBA);
         texture.bind(this.context.gl.LINEAR, this.context.gl.CLAMP_TO_EDGE);
         fbo.depthAttachment.set(this.context.createRenderbuffer(this.context.gl.DEPTH_COMPONENT16, this.tileSize, this.tileSize));
         fbo.colorAttachment.set(texture.texture);
-        return { id: id, fbo: fbo, texture: texture, inUseTime: 0 };
+        return {id, fbo, texture, stamp: -1, inUse: false};
+    }
+
+    getObjectForId(id: number): PoolObject {
+        return this.objs[id];
+    }
+
+    useObject(obj: PoolObject) {
+        obj.inUse = true;
+        this.recentlyUsed.push(obj.id);
+        while (this.recentlyUsed.length > POOL_SIZE) this.recentlyUsed.shift();
+    }
+
+    stampObject(obj: PoolObject) {
+        obj.stamp = ++this.stamp;
+    }
+
+    getFreeObject(): PoolObject {
+        // check for free existing objects
+        for (const id of this.recentlyUsed) {
+            if (!this.objs[id].inUse) return this.objs[id];
+        }
+        // create new object
+        const obj = this.createObject(this.objs.length);
+        this.objs.push(obj);
+        return obj;
+    }
+
+    freeObject(obj: PoolObject) {
+        obj.inUse = false;
+    }
+
+    freeObjects() {
+        for (const obj of this.objs) this.freeObject(obj);
     }
 
     isFull(): boolean {
         if (this.objs.length < POOL_SIZE) return false;
         for (const obj of this.objs)
-            if (!obj.inUseTime) return false;
+            if (!obj.inUse) return false;
         return true;
-    }
-
-    getFreeObject(): PoolObject {
-        // check for free existing objects
-        for (let i = 0; i < this.objs.length; i++) {
-            if (!this.objs[i].inUseTime) {
-                this.useObject(i);
-                return this.objs[i];
-            }
-        }
-        if (!this.isFull()) {
-            const obj = this.createObject(this.objs.length);
-            this.useObject(obj.id);
-            this.objs.push(obj);
-            return obj;
-        }
-        return null;
-    }
-
-    freeObject(id: number) {
-        if (this.objs[id]) this.objs[id].inUseTime = 0;
     }
 }
 
@@ -130,18 +139,7 @@ export default class RenderToTexture {
     }
 
     getTexture(tile: Tile) {
-        const rtt = this.pool.getObject(tile.rtt[this._stacks.length - 1]);
-        return rtt && rtt.texture;
-    }
-
-    freeRttIds(ids: Array<number>) {
-        for (const id of ids) this.pool.freeObject(id);
-        for (const key in this.terrain.sourceCache._tiles) {
-            const tile = this.terrain.sourceCache._tiles[key];
-            for (let i = 0; i < tile.rtt.length; i++) {
-                if (!this.pool.getObject(tile.rtt[i])) tile.rtt[i] = null;
-            }
-        }
+        return this.pool.getObjectForId(tile.rtt[this._stacks.length - 1][0]).texture;
     }
 
     initialize(style: Style, zoom: number) {
@@ -184,11 +182,6 @@ export default class RenderToTexture {
                 if (coords && coords !== tile.rttCoords[source]) tile.rtt = [];
             }
         }
-
-        // free used rtt objs in pool
-        const inUse = {};
-        for (const id of this.terrain.sourceCache.getRttIds()) inUse[id] = true;
-        for (const obj of this.pool.objs) if (!inUse[obj.id]) this.pool.freeObject(obj.id);
     }
 
     /**
@@ -224,27 +217,34 @@ export default class RenderToTexture {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
             for (const tile of this._renderableTiles) {
-                if (this.pool.getObject(tile.rtt[stack])) { // layer is rendered in an previous pass
-                    this._rttTiles.push(tile);
-                    this.pool.useObject(tile.rtt[stack]);
-                    continue;
-                }
+                // if render pool is full draw current tiles to screen and free pool
                 if (this.pool.isFull()) {
                     drawTerrain(this.painter, this.terrain, this._rttTiles);
                     this._rttTiles = [];
-                    // free the oldest 50% pool objects
-                    const rttIds = this.pool.objs.slice().sort((a, b) => b.inUseTime - a.inUseTime).map(obj => obj.id);
-                    this.freeRttIds(rttIds.slice(0, POOL_SIZE / 2));
+                    this.pool.freeObjects();
                 }
                 this._rttTiles.push(tile);
-                const rtt = this.pool.getFreeObject();
-                tile.rtt[stack] = rtt.id;
-                painter.context.bindFramebuffer.set(rtt.fbo.framebuffer);
-                painter.context.viewport.set([0, 0, rtt.fbo.width, rtt.fbo.height]);
+                // check for cached PoolObject
+                if (tile.rtt[stack]) {
+                    const [id, stamp] = tile.rtt[stack];
+                    const obj = this.pool.getObjectForId(id);
+                    if (obj.stamp === stamp) {
+                        this.pool.useObject(obj);
+                        continue;
+                    }
+                }
+                // get free PoolObject
+                const obj = this.pool.getFreeObject();
+                this.pool.useObject(obj);
+                this.pool.stampObject(obj);
+                tile.rtt[stack] = [obj.id, obj.stamp];
+                // prepare PoolObject for rendering
+                painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent});
                 for (let l = 0; l < layers.length; l++) {
                     const layer = painter.style._layers[layers[l]];
                     const coords = layer.source ? this._coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
+                    painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords);
                     painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
                     if (layer.source) tile.rttCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tile.tileID.key];
@@ -252,6 +252,7 @@ export default class RenderToTexture {
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles);
             this._rttTiles = [];
+            this.pool.freeObjects();
 
             return LAYERS[type];
         }

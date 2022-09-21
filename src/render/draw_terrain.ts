@@ -4,7 +4,6 @@ import {terrainUniformValues, terrainDepthUniformValues, terrainCoordsUniformVal
 import type Painter from './painter';
 import type Tile from '../source/tile';
 import CullFaceMode from '../gl/cull_face_mode';
-import Texture from './texture';
 import Color from '../style-spec/util/color';
 import ColorMode from '../gl/color_mode';
 import Terrain from './terrain';
@@ -69,26 +68,25 @@ function drawCoords(painter: Painter, terrain: Terrain) {
 }
 
 function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>) {
-   const context = painter.context;
-   const gl = context.gl;
-   const colorMode = painter.colorModeForRenderPass();
-   const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D);
-   const program = painter.useProgram('terrain');
-   const mesh = terrain.getTerrainMesh();
+    const context = painter.context;
+    const gl = context.gl;
+    const colorMode = painter.colorModeForRenderPass();
+    const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D);
+    const program = painter.useProgram('terrain');
+    const mesh = terrain.getTerrainMesh();
 
-   context.bindFramebuffer.set(null);
-   context.viewport.set([0, 0, painter.width, painter.height]);
+    context.bindFramebuffer.set(null);
+    context.viewport.set([0, 0, painter.width, painter.height]);
 
-   for (const tile of tiles) {
-       const texture = painter.rtt.getTexture(tile);
-       if (!texture) continue; // tile will be rendered later
-       const terrainData = terrain.getTerrainData(tile.tileID);
-       context.activeTexture.set(gl.TEXTURE0);
-       gl.bindTexture(gl.TEXTURE_2D, texture.texture);
-       const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
-       const uniformValues = terrainUniformValues(posMatrix);
-       program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
-   }
+    for (const tile of tiles) {
+        const texture = painter.rtt.getTexture(tile);
+        const terrainData = terrain.getTerrainData(tile.tileID);
+        context.activeTexture.set(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture.texture);
+        const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
+        const uniformValues = terrainUniformValues(posMatrix);
+        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+    }
 
 }
 

@@ -1669,10 +1669,10 @@ class Map extends Camera {
             this.transform.updateElevation(this.terrain);
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
-                    this.painter.rtt.freeRttIds(this.terrain.sourceCache.getRttIds());
+                    this.terrain.sourceCache.freeRtt();
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source) this.transform.updateElevation(this.terrain);
-                    this.painter.rtt.freeRttIds(this.terrain.sourceCache.getRttIds(e.tile.tileID));
+                    this.terrain.sourceCache.freeRtt(e.tile.tileID);
                 }
             };
             this.style.on('data', this._terrainDataCallback);
