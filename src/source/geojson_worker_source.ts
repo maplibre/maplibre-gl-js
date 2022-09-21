@@ -216,7 +216,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @returns {Cancelable} A Cancelable object.
      * @private
      */
-    loadGeoJSON(params: LoadGeoJSONParameters, callback: ResponseCallback<any>): Cancelable {
+    loadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>): Cancelable => {
         const {promoteId} = params;
         // Because of same origin issues, urls must either include an explicit
         // origin or absolute path.
@@ -252,7 +252,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
         }
 
         return {cancel: () => {}};
-    }
+    };
 
     removeSource(params: {
         source: string;
