@@ -1204,8 +1204,8 @@ class Style extends Evented {
     querySourceFeatures(
         sourceID: string,
         params?: {
-            sourceLayer: string;
-            filter: Array<any>;
+            sourceLayer?: string;
+            filter?: FilterSpecification;
             validate?: boolean;
         }
     ) {
