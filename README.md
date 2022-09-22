@@ -115,9 +115,26 @@ If you depend on a free software alternative to `mapbox-gl-js`, please consider 
 
 ## Sponsors
 
-We thank everyone who supported us financially in the past and special thanks to the people and organizations who support us with recurring donations:  
+We thank everyone who supported us financially in the past and special thanks to the people and organizations who support us with recurring donations!
 
-[MIERUNE Inc.](https://www.mierune.co.jp/?lang=en) [@MIERUNE](https://github.com/MIERUNE), [@jawg](https://github.com/jawg), [@nekoyasan](https://github.com/nekoyasan), [@atierian](https://github.com/atierian), [@photoprism](https://github.com/photoprism), [@kaplanlior](https://github.com/kaplanlior), [@francois2metz](https://github.com/francois2metz), [@Schneider-Geo](https://github.com/Schneider-Geo), [@serghov](https://github.com/serghov), [@ambientlight](https://github.com/ambientlight), [@joschi77](https://github.com/joschi77), [@geoffhill](https://github.com/geoffhill), [@jasongode](https://github.com/jasongode)
+Read more about the MapLibre Sponsorship Program at [https://maplibre.org/sponsors/](https://maplibre.org/sponsors/).
+
+Platinum:
+
+<img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/>
+
+
+Silver:
+
+<img src="https://maplibre.org/img/meta-logo.svg" alt="Logo Meta" width="50%"/>
+
+Stone:
+
+[MIERUNE Inc.](https://www.mierune.co.jp/?lang=en)
+
+Recurring donations:
+
+[@jawg](https://github.com/jawg), [@nekoyasan](https://github.com/nekoyasan), [@atierian](https://github.com/atierian), [@photoprism](https://github.com/photoprism), [@kaplanlior](https://github.com/kaplanlior), [@francois2metz](https://github.com/francois2metz), [@Schneider-Geo](https://github.com/Schneider-Geo), [@serghov](https://github.com/serghov), [@ambientlight](https://github.com/ambientlight), [@joschi77](https://github.com/joschi77), [@geoffhill](https://github.com/geoffhill), [@jasongode](https://github.com/jasongode)
 
 <br />
 
