@@ -67,7 +67,10 @@
                         type: 'hillshade',
                         source: 'hillshadeSource',
                         layout: {'visibility': 'visible'},
-                        paint: {'hillshade-shadow-color': '#473B24'}
+                        paint: {
+                            'hillshade-shadow-color': '#473B24',
+                            'hillshade-illumination-anchor': 'map'
+                        }
                     }
                 ],
                 terrain: {
