@@ -1,4 +1,4 @@
-import GeoJSONWorkerSource, {LoadGeoJSONParameters} from './geojson_worker_source';
+import GeoJSONWorkerSource, {LoadGeoJSON, LoadGeoJSONParameters} from './geojson_worker_source';
 import StyleLayerIndex from '../style/style_layer_index';
 import {OverscaledTileID} from './tile_id';
 import perf from '../util/performance';
@@ -6,6 +6,7 @@ import {LayerSpecification} from '../style-spec/types.g';
 import Actor from '../util/actor';
 import {WorkerTileParameters} from './worker_source';
 import {setPerformance} from '../util/test/util';
+import {type FakeServer, fakeServer} from 'nise';
 
 const actor = {send: () => {}} as any as Actor;
 
@@ -196,6 +197,15 @@ describe('resourceTiming', () => {
 });
 
 describe('loadData', () => {
+    let server: FakeServer;
+    beforeEach(() => {
+        global.fetch = null;
+        server = fakeServer.create();
+    });
+    afterEach(() => {
+        server.restore();
+    });
+
     const layers = [
         {
             id: 'layer1',
@@ -215,6 +225,16 @@ describe('loadData', () => {
             'type': 'Point',
             'coordinates': [0, 0]
         }
+    } as GeoJSON.GeoJSON;
+
+    const updateableGeoJson = {
+        type: 'Feature',
+        id: 'point',
+        geometry: {
+            type: 'Point',
+            coordinates: [0, 0],
+        },
+        properties: {},
     } as GeoJSON.GeoJSON;
 
     const layerIndex = new StyleLayerIndex(layers);
@@ -267,7 +287,78 @@ describe('loadData', () => {
             expect(loadDataCallbackHasRun).toBeTruthy();
             done();
         });
-
     });
 
+    test('loadData with geojson creates an non-updateable source', done => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, _result) => {
+            expect(err).toBeNull();
+            expect(worker._dataUpdateable).toBeUndefined();
+            done();
+        });
+    });
+
+    test('loadData with geojson creates an updateable source', done => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters, (err, _result) => {
+            expect(err).toBeNull();
+            expect(worker._dataUpdateable).toBeDefined();
+            done();
+        });
+    });
+
+    test('loadData with geojson network call creates an updateable source', done => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(updateableGeoJson));
+        });
+
+        worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters, (err, _result) => {
+            expect(err).toBeNull();
+            expect(worker._dataUpdateable).toBeDefined();
+            done();
+        });
+
+        server.respond();
+    });
+
+    test('loadData with geojson network call creates a non-updateable source', done => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(geoJson));
+        });
+
+        worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters, (err, _result) => {
+            expect(err).toBeNull();
+            expect(worker._dataUpdateable).toBeUndefined();
+            done();
+        });
+
+        server.respond();
+    });
+
+    test('loadData with diff updates', done => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters, (err, _result) => {
+            expect(err).toBeNull();
+            expect(worker._dataUpdateable.size).toBe(1);
+        });
+
+        worker.loadData({source: 'source1', dataDiff: {
+            add: [{
+                type: 'Feature',
+                id: 'update_point',
+                geometry: {type: 'Point', coordinates: [0, 0]},
+                properties: {}
+            }]}} as LoadGeoJSONParameters, (err, _result) => {
+            expect(err).toBeNull();
+            expect(worker._dataUpdateable.size).toBe(2);
+            done();
+        });
+    });
 });
