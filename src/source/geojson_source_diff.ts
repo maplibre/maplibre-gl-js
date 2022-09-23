@@ -27,8 +27,8 @@ export function isUpdateableGeoJSON(data: string | GeoJSON.GeoJSON, promoteId?: 
     }
 
     // a single feature with an id can be updated, need to explicitly check against null because 0 is a valid feature id that is falsy
-    if (data.type === 'Feature' && getFeatureId(data, promoteId) != null) {
-        return true;
+    if (data.type === 'Feature') {
+        return getFeatureId(data, promoteId) != null;
     }
 
     // a feature collection can be updated if every feature has an id, and the ids are all unique

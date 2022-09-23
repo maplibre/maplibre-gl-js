@@ -243,7 +243,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
         } else if (params.dataDiff) {
             if (this._dataUpdateable) {
                 applySourceDiff(this._dataUpdateable, params.dataDiff, promoteId);
-                callback(null, {type: 'FeatureCollection', features: Object.values(this._dataUpdateable)});
+                callback(null, {type: 'FeatureCollection', features: Array.from(this._dataUpdateable.values())});
             } else {
                 callback(new Error(`Cannot update existing geojson data in ${params.source}`));
             }
