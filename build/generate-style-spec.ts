@@ -128,7 +128,7 @@ export type ResolvedImageSpecification = string;
 
 export type PromoteIdSpecification = {[_: string]: string} | string;
 
-export type ExpressionInputType = string | number | boolean;
+export type ExpressionInputType = string | number | boolean | null;
 
 export type CollatorExpressionSpecification = 
     ['collator', {
