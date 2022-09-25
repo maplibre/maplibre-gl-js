@@ -9,6 +9,7 @@
 - [Breaking] Remove deprecated mapboxgl css classes (#1575)
 - Add map.setStyle's transformStyle option (#1632)
 - [Breaking] Improve rendering of areas below sea level, and remove elevationOffset workaround (#1578)
+- Add pseudo (CSS) fullscreen as a fallback for iphones (#1678)
 
 ### 🐞 Bug fixes
 
