@@ -1656,7 +1656,7 @@ class Map extends Camera {
         if (!options) {
             if (this.terrain) this.terrain.sourceCache.destruct();
             this.terrain = null;
-            this.painter.rtt.destruct();
+            if (this.painter.rtt) this.painter.rtt.destruct();
             this.painter.rtt = null;
             this.transform.updateElevation(this.terrain);
 
