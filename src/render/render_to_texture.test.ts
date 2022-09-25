@@ -21,7 +21,7 @@ describe('render to texture', () => {
             _order: []
         } as any as Style;
         const painterMock = {
-            style,  
+            style,
             transform: {
                 zoom: 10
             }
