@@ -1,5 +1,10 @@
 ## main
 
+### ✨ Features and improvements
+
+### 🐞 Bug fixes
+
+## 3.0.0-pre.0
 
 ### ✨ Features and improvements
 
@@ -10,6 +15,7 @@
 - Add map.setStyle's transformStyle option (#1632)
 - [Breaking] Improve rendering of areas below sea level, and remove elevationOffset workaround (#1578)
 - Add pseudo (CSS) fullscreen as a fallback for iphones (#1678)
+- [Breaking] Move terrain object from style.terrain to map.terrain (#1628)
 
 ### 🐞 Bug fixes
 
