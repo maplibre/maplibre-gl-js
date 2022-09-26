@@ -14,7 +14,7 @@
 - [Breaking] Remove deprecated mapboxgl css classes (#1575)
 - Add map.setStyle's transformStyle option (#1632)
 - [Breaking] Improve rendering of areas below sea level, and remove elevationOffset workaround (#1578)
-- Move terrain object from style.terrain to map.terrain (#1628)
+- [Breaking] Move terrain object from style.terrain to map.terrain (#1628)
 
 ### 🐞 Bug fixes
 
