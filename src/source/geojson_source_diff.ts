@@ -14,13 +14,18 @@ export interface GeoJSONFeatureDiff {
     addOrUpdateProperties?: Array<{key: string; value: any}>;
 }
 
-export type UpdateableGeoJSON = GeoJSON.Feature | GeoJSON.FeatureCollection;
+export type UpdateableGeoJSON = GeoJSON.Feature | GeoJSON.FeatureCollection | undefined;
 
 function getFeatureId(feature: GeoJSON.Feature, promoteId?: string): GeoJSONFeatureId | undefined {
     return promoteId ? feature.properties[promoteId] : feature.id;
 }
 
-export function isUpdateableGeoJSON(data: string | GeoJSON.GeoJSON, promoteId?: string): data is UpdateableGeoJSON {
+export function isUpdateableGeoJSON(data: string | GeoJSON.GeoJSON | undefined, promoteId?: string): data is UpdateableGeoJSON {
+    // null can be updated
+    if (data == null) {
+        return true;
+    }
+
     // strings are not updateable
     if (typeof data === 'string') {
         return false;
@@ -54,7 +59,9 @@ export function isUpdateableGeoJSON(data: string | GeoJSON.GeoJSON, promoteId?: 
 
 export function toUpdateable(data: UpdateableGeoJSON, promoteId?: string) {
     const result = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
-    if (data.type === 'Feature') {
+    if (data == null) {
+        // empty result
+    } else if (data.type === 'Feature') {
         result.set(getFeatureId(data, promoteId)!, data);
     } else {
         for (const feature of data.features) {
