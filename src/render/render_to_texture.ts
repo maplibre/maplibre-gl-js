@@ -20,8 +20,6 @@ const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
     hillshade: true
 };
 
-export const POOL_SIZE = 30; // must by divide by 2
-
 type PoolObject = {
     id: number;
     fbo: Framebuffer;
@@ -32,13 +30,15 @@ type PoolObject = {
 
 export class RenderPool {
     context: Context;
+    size: number
     tileSize: number;
     objs: Array<PoolObject>;
     recentlyUsed: Array<number>;
     stamp: number;
 
-    constructor(context: Context, tileSize: number) {
+    constructor(context: Context, size: number, tileSize: number) {
         this.context = context;
+        this.size = size;
         this.tileSize = tileSize;
         this.objs = [];
         this.recentlyUsed = [];
@@ -67,8 +67,9 @@ export class RenderPool {
 
     useObject(obj: PoolObject) {
         obj.inUse = true;
+        this.recentlyUsed = this.recentlyUsed.filter(id => obj.id != id);
         this.recentlyUsed.push(obj.id);
-        while (this.recentlyUsed.length > POOL_SIZE) this.recentlyUsed.shift();
+        while (this.recentlyUsed.length > this.size) this.recentlyUsed.shift();
     }
 
     stampObject(obj: PoolObject) {
@@ -80,6 +81,7 @@ export class RenderPool {
         for (const id of this.recentlyUsed) {
             if (!this.objs[id].inUse) return this.objs[id];
         }
+        if (this.objs.length > this.size) throw new Error("no free object available");
         // create new object
         const obj = this.createObject(this.objs.length);
         this.objs.push(obj);
@@ -95,7 +97,7 @@ export class RenderPool {
     }
 
     isFull(): boolean {
-        if (this.objs.length < POOL_SIZE) return false;
+        if (this.objs.length < this.size) return false;
         for (const obj of this.objs)
             if (!obj.inUse) return false;
         return true;
@@ -132,7 +134,7 @@ export default class RenderToTexture {
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
-        this.pool = new RenderPool(painter.context, terrain.sourceCache.tileSize * terrain.qualityFactor);
+        this.pool = new RenderPool(painter.context, 30, terrain.sourceCache.tileSize * terrain.qualityFactor);
     }
 
     destruct() {
