@@ -1,4 +1,4 @@
-import RenderToTexture, {RenderPool, POOL_SIZE} from './render_to_texture';
+import RenderToTexture, {RenderPool} from './render_to_texture';
 import type Painter from './painter';
 import type LineStyleLayer from '../style/style_layer/line_style_layer';
 import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
@@ -18,19 +18,23 @@ import HillshadeStyleLayer from '../style/style_layer/hillshade_style_layer';
 import BackgroundStyleLayer from '../style/style_layer/background_style_layer';
 
 describe('render to texture pool', () => {
-    const pool = new RenderPool(new Context(gl(1, 1)), 512);
-    for (let i = 0; i < POOL_SIZE; i++) {
+    const pool = new RenderPool(new Context(gl(1, 1)), 3, 512);
+    for (let i = 0; i < pool.size; i++) {
         pool.useObject(pool.getFreeObject());
     }
     expect(pool.isFull()).toBeTruthy();
+    expect(pool.recentlyUsed).toStrictEqual([0, 1, 2]);
     const obj = pool.getObjectForId(0);
+    pool.useObject(obj);
+    pool.useObject(obj);
+    expect(pool.recentlyUsed).toStrictEqual([1, 2, 0]);
     pool.freeObject(obj);
     expect(pool.isFull()).toBeFalsy();
     expect(obj.stamp).toBe(-1);
     pool.stampObject(obj);
     expect(obj.stamp).toBe(1);
     pool.freeObjects();
-    expect(pool.getFreeObject().id).toBe(0);
+    expect(pool.getFreeObject().id).toBe(1);
     pool.destruct();
     expect(pool.getObjectForId(0).texture.texture).toBeNull();
 });
