@@ -19,7 +19,7 @@ const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
     hillshade: true
 };
 
-const POOL_SIZE = 30; // must by divide by 2
+export const POOL_SIZE = 30; // must by divide by 2
 
 type PoolObject = {
     id: number;
