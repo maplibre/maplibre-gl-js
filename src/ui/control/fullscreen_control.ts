@@ -1,6 +1,6 @@
 import DOM from '../../util/dom';
 
-import {bindAll, warnOnce} from '../../util/util';
+import {warnOnce} from '../../util/util';
 
 import type Map from '../map';
 import type {IControl} from './control';
@@ -40,11 +40,6 @@ class FullscreenControl implements IControl {
                 warnOnce('Full screen control \'container\' must be a DOM element.');
             }
         }
-
-        bindAll([
-            '_onClickFullscreen',
-            '_onFullscreenChange'
-        ], this);
 
         if ('onfullscreenchange' in document) {
             this._fullscreenchange = 'fullscreenchange';
@@ -94,7 +89,7 @@ class FullscreenControl implements IControl {
         return this._fullscreen;
     }
 
-    _onFullscreenChange() {
+    _onFullscreenChange = () => {
         const fullscreenElement =
             window.document.fullscreenElement ||
             (window.document as any).mozFullScreenElement ||
@@ -104,7 +99,7 @@ class FullscreenControl implements IControl {
         if ((fullscreenElement === this._container) !== this._fullscreen) {
             this._handleFullscreenChange();
         }
-    }
+    };
 
     _handleFullscreenChange() {
         this._fullscreen = !this._fullscreen;
@@ -113,13 +108,13 @@ class FullscreenControl implements IControl {
         this._updateTitle();
     }
 
-    _onClickFullscreen() {
+    _onClickFullscreen = () => {
         if (this._isFullscreen()) {
             this._exitFullscreen();
         } else {
             this._requestFullscreen();
         }
-    }
+    };
 
     _exitFullscreen() {
         if (window.document.exitFullscreen) {
