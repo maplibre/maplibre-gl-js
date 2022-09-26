@@ -53,10 +53,9 @@ export class RenderPool {
     }
 
     createObject(id: number): PoolObject {
-        const fbo = this.context.createFramebuffer(this.tileSize, this.tileSize, false);
+        const fbo = this.context.createFramebuffer(this.tileSize, this.tileSize, true, true);
         const texture = new Texture(this.context, {width: this.tileSize, height: this.tileSize, data: null}, this.context.gl.RGBA);
         texture.bind(this.context.gl.LINEAR, this.context.gl.CLAMP_TO_EDGE);
-        fbo.depthAttachment = new DepthStencilAttachment(this.context, fbo.framebuffer);
         fbo.depthAttachment.set(this.context.createRenderbuffer(this.context.gl.DEPTH_STENCIL, this.tileSize, this.tileSize));
         fbo.colorAttachment.set(texture.texture);
         return {id, fbo, texture, stamp: -1, inUse: false};
@@ -243,7 +242,7 @@ export default class RenderToTexture {
                 // prepare PoolObject for rendering
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});
-                painter.currentStencilSource = null;
+                painter.currentStencilSource = undefined;
                 for (let l = 0; l < layers.length; l++) {
                     const layer = painter.style._layers[layers[l]];
                     const coords = layer.source ? this._coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
