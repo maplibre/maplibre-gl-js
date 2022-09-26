@@ -30,7 +30,7 @@ type PoolObject = {
 
 export class RenderPool {
     context: Context;
-    size: number
+    size: number;
     tileSize: number;
     objs: Array<PoolObject>;
     recentlyUsed: Array<number>;
@@ -67,7 +67,7 @@ export class RenderPool {
 
     useObject(obj: PoolObject) {
         obj.inUse = true;
-        this.recentlyUsed = this.recentlyUsed.filter(id => obj.id != id);
+        this.recentlyUsed = this.recentlyUsed.filter(id => obj.id !== id);
         this.recentlyUsed.push(obj.id);
         while (this.recentlyUsed.length > this.size) this.recentlyUsed.shift();
     }
@@ -81,7 +81,6 @@ export class RenderPool {
         for (const id of this.recentlyUsed) {
             if (!this.objs[id].inUse) return this.objs[id];
         }
-        if (this.objs.length > this.size) throw new Error("no free object available");
         // create new object
         const obj = this.createObject(this.objs.length);
         this.objs.push(obj);
