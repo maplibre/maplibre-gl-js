@@ -73,7 +73,7 @@
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
     "acorn-import-assertions": "^1.8.0",
-    "address": "^1.2.0",
+    "address": "^1.2.1",
     "benchmark": "^2.1.4",
     "canvas": "^2.10.1",
     "cssnano": "^5.1.13",
