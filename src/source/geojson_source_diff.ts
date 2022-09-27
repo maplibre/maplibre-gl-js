@@ -52,9 +52,11 @@ export function isUpdateableGeoJSON(data: string | GeoJSON.GeoJSON | undefined, 
 
             seenIds.add(id);
         }
+
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 export function toUpdateable(data: UpdateableGeoJSON, promoteId?: string) {

@@ -153,6 +153,11 @@ describe('isUpdateableGeoJSON', () => {
         })).toBe(false);
         done();
     });
+
+    test('geometries are not updateable', done => {
+        expect(isUpdateableGeoJSON({type: 'Point', coordinates: [0, 0]})).toBe(false);
+        done();
+    });
 });
 
 describe('toUpdateable', () => {
