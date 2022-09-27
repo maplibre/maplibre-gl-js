@@ -40,15 +40,6 @@
       {
         "error": "Expected value to be of type number, but found string instead."
       }
-    ],
-    "serialized": [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      0,
-      ["interpolate", ["linear"], ["number", ["get", "p"]], 0, 0, 1, 1],
-      1,
-      ["interpolate", ["linear"], ["number", ["get", "p"]], 0, 2, 1, 3]
     ]
   }
 }

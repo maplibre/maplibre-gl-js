@@ -1,3 +1,18 @@
+## 17.0.1
+
+* Generated typings file as not created in the build process and was added in this version [#1470](https://github.com/maplibre/maplibre-gl-js/pull/1470)
+
+## 17.0.0
+
+### Breaking changes
+
+* Renamed `ParsingError` to `ExpressionParsingError` as there were two with the same name and added typescript typings [#1468](https://github.com/maplibre/maplibre-gl-js/pull/1468)
+
+## 16.1.0
+
+### ✨ Features and improvements
+* Update `icon-padding` symbol layout property to support asymmetric padding [#1289](https://github.com/maplibre/maplibre-gl-js/pull/1289)
+
 ## 16.0.0
 
 ### Breaking changes
@@ -40,7 +55,7 @@
 ## 13.16.0
 
 ### ✨ Features and improvements
-* Added `volatile` source property to control storing the tiles in local storage. ([9702](https://github.com/mapbox/mapbox-gl-js/pull/9702))
+* Added `volatile` source property to control storing the tiles in local storage. ([#9702](https://github.com/mapbox/mapbox-gl-js/pull/9702))
 
 * Added `clusterMinPoints` option for clustered GeoJSON sources that defines the minimum number of points to form a cluster. ([#9748](https://github.com/mapbox/mapbox-gl-js/pull/9748))
 

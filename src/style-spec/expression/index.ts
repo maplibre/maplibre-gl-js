@@ -1,7 +1,6 @@
-import assert from 'assert';
 
 import extend from '../util/extend';
-import ParsingError from './parsing_error';
+import ExpressionParsingError from './parsing_error';
 import ParsingContext from './parsing_context';
 import EvaluationContext from './evaluation_context';
 import CompoundExpression from './compound_expression';
@@ -135,7 +134,7 @@ export function isExpression(expression: unknown) {
  *
  * @private
  */
-export function createExpression(expression: unknown, propertySpec?: StylePropertySpecification | null): Result<StyleExpression, Array<ParsingError>> {
+export function createExpression(expression: unknown, propertySpec?: StylePropertySpecification | null): Result<StyleExpression, Array<ExpressionParsingError>> {
     const parser = new ParsingContext(definitions, [], propertySpec ? getExpectedType(propertySpec) : undefined);
 
     // For string-valued properties, coerce to string at the top level rather than asserting.
@@ -143,7 +142,6 @@ export function createExpression(expression: unknown, propertySpec?: StyleProper
         propertySpec && propertySpec.type === 'string' ? {typeAnnotation: 'coerce'} : undefined);
 
     if (!parsed) {
-        assert(parser.errors.length > 0);
         return error(parser.errors);
     }
 
@@ -287,7 +285,7 @@ export type CompositeExpression = {
 
 export type StylePropertyExpression = ConstantExpression | SourceExpression | CameraExpression | CompositeExpression;
 
-export function createPropertyExpression(expressionInput: unknown, propertySpec: StylePropertySpecification): Result<StylePropertyExpression, Array<ParsingError>> {
+export function createPropertyExpression(expressionInput: unknown, propertySpec: StylePropertySpecification): Result<StylePropertyExpression, Array<ExpressionParsingError>> {
     const expression = createExpression(expressionInput, propertySpec);
     if (expression.result === 'error') {
         return expression;
@@ -297,21 +295,21 @@ export function createPropertyExpression(expressionInput: unknown, propertySpec:
 
     const isFeatureConstant = isConstant.isFeatureConstant(parsed);
     if (!isFeatureConstant && !supportsPropertyExpression(propertySpec)) {
-        return error([new ParsingError('', 'data expressions not supported')]);
+        return error([new ExpressionParsingError('', 'data expressions not supported')]);
     }
 
     const isZoomConstant = isConstant.isGlobalPropertyConstant(parsed, ['zoom']);
     if (!isZoomConstant && !supportsZoomExpression(propertySpec)) {
-        return error([new ParsingError('', 'zoom expressions not supported')]);
+        return error([new ExpressionParsingError('', 'zoom expressions not supported')]);
     }
 
     const zoomCurve = findZoomCurve(parsed);
     if (!zoomCurve && !isZoomConstant) {
-        return error([new ParsingError('', '"zoom" expression may only be used as input to a top-level "step" or "interpolate" expression.')]);
-    } else if (zoomCurve instanceof ParsingError) {
+        return error([new ExpressionParsingError('', '"zoom" expression may only be used as input to a top-level "step" or "interpolate" expression.')]);
+    } else if (zoomCurve instanceof ExpressionParsingError) {
         return error([zoomCurve]);
     } else if (zoomCurve instanceof Interpolate && !supportsInterpolation(propertySpec)) {
-        return error([new ParsingError('', '"interpolate" expressions cannot be used with this property')]);
+        return error([new ExpressionParsingError('', '"interpolate" expressions cannot be used with this property')]);
     }
 
     if (!zoomCurve) {
@@ -379,8 +377,10 @@ export function normalizePropertyExpression<T>(
 
     } else {
         let constant: any = value;
-        if (typeof value === 'string' && specification.type === 'color') {
+        if (specification.type === 'color' && typeof value === 'string') {
             constant = Color.parse(value);
+        } else if (specification.type === 'padding' && (typeof value === 'number' || Array.isArray(value))) {
+            constant = Padding.parse(value as (number | number[]));
         }
         return {
             kind: 'constant',
@@ -392,7 +392,7 @@ export function normalizePropertyExpression<T>(
 // Zoom-dependent expressions may only use ["zoom"] as the input to a top-level "step" or "interpolate"
 // expression (collectively referred to as a "curve"). The curve may be wrapped in one or more "let" or
 // "coalesce" expressions.
-function findZoomCurve(expression: Expression): Step | Interpolate | ParsingError | null {
+function findZoomCurve(expression: Expression): Step | Interpolate | ExpressionParsingError | null {
     let result = null;
     if (expression instanceof Let) {
         result = findZoomCurve(expression.result);
@@ -412,25 +412,26 @@ function findZoomCurve(expression: Expression): Step | Interpolate | ParsingErro
         result = expression;
     }
 
-    if (result instanceof ParsingError) {
+    if (result instanceof ExpressionParsingError) {
         return result;
     }
 
     expression.eachChild((child) => {
         const childResult = findZoomCurve(child);
-        if (childResult instanceof ParsingError) {
+        if (childResult instanceof ExpressionParsingError) {
             result = childResult;
         } else if (!result && childResult) {
-            result = new ParsingError('', '"zoom" expression may only be used as input to a top-level "step" or "interpolate" expression.');
+            result = new ExpressionParsingError('', '"zoom" expression may only be used as input to a top-level "step" or "interpolate" expression.');
         } else if (result && childResult && result !== childResult) {
-            result = new ParsingError('', 'Only one zoom-based "step" or "interpolate" subexpression may be used in an expression.');
+            result = new ExpressionParsingError('', 'Only one zoom-based "step" or "interpolate" subexpression may be used in an expression.');
         }
     });
 
     return result;
 }
 
-import {ColorType, StringType, NumberType, BooleanType, ValueType, FormattedType, ResolvedImageType, array} from './types';
+import {ColorType, StringType, NumberType, BooleanType, ValueType, FormattedType, PaddingType, ResolvedImageType, array} from './types';
+import Padding from '../util/padding';
 
 function getExpectedType(spec: StylePropertySpecification): Type {
     const types = {
@@ -440,6 +441,7 @@ function getExpectedType(spec: StylePropertySpecification): Type {
         enum: StringType,
         boolean: BooleanType,
         formatted: FormattedType,
+        padding: PaddingType,
         resolvedImage: ResolvedImageType
     };
 
@@ -458,6 +460,8 @@ function getDefaultValue(spec: StylePropertySpecification): Value {
         return new Color(0, 0, 0, 0);
     } else if (spec.type === 'color') {
         return Color.parse(spec.default) || null;
+    } else if (spec.type === 'padding') {
+        return Padding.parse(spec.default) || null;
     } else if (spec.default === undefined) {
         return null;
     } else {

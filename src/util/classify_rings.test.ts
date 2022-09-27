@@ -16,11 +16,11 @@ describe('classifyRings', () => {
 
         geometry = [
             [
-                {x:0, y:0},
-                {x:0, y:40},
-                {x:40, y:40},
-                {x:40, y:0},
-                {x:0, y:0}
+                {x: 0, y: 0},
+                {x: 0, y: 40},
+                {x: 40, y: 40},
+                {x: 40, y: 0},
+                {x: 0, y: 0}
             ]
         ];
         classified = classifyRings(geometry, undefined);
@@ -29,18 +29,18 @@ describe('classifyRings', () => {
 
         geometry = [
             [
-                {x:0, y:0},
-                {x:0, y:40},
-                {x:40, y:40},
-                {x:40, y:0},
-                {x:0, y:0}
+                {x: 0, y: 0},
+                {x: 0, y: 40},
+                {x: 40, y: 40},
+                {x: 40, y: 0},
+                {x: 0, y: 0}
             ],
             [
-                {x:60, y:0},
-                {x:60, y:40},
-                {x:100, y:40},
-                {x:100, y:0},
-                {x:60, y:0}
+                {x: 60, y: 0},
+                {x: 60, y: 40},
+                {x: 100, y: 40},
+                {x: 100, y: 0},
+                {x: 60, y: 0}
             ]
         ];
         classified = classifyRings(geometry, undefined);
@@ -50,17 +50,17 @@ describe('classifyRings', () => {
 
         geometry = [
             [
-                {x:0, y:0},
-                {x:0, y:40},
-                {x:40, y:40},
-                {x:40, y:0},
-                {x:0, y:0}
+                {x: 0, y: 0},
+                {x: 0, y: 40},
+                {x: 40, y: 40},
+                {x: 40, y: 0},
+                {x: 0, y: 0}
             ],
             [
-                {x:10, y:10},
-                {x:20, y:10},
-                {x:20, y:20},
-                {x:10, y:10}
+                {x: 10, y: 10},
+                {x: 20, y: 10},
+                {x: 20, y: 20},
+                {x: 10, y: 10}
             ]
         ];
         classified = classifyRings(geometry, undefined);
@@ -80,11 +80,11 @@ describe('classifyRings + maxRings', () => {
     function createGeometry(options?) {
         const geometry = [
             // Outer ring, area = 3200
-            [ {x:0, y:0}, {x:0, y:40}, {x:40, y:40}, {x:40, y:0}, {x:0, y:0} ],
+            [{x: 0, y: 0}, {x: 0, y: 40}, {x: 40, y: 40}, {x: 40, y: 0}, {x: 0, y: 0}],
             // Inner ring, area = 100
-            [ {x:30, y:30}, {x:32, y:30}, {x:32, y:32}, {x:30, y:30} ],
+            [{x: 30, y: 30}, {x: 32, y: 30}, {x: 32, y: 32}, {x: 30, y: 30}],
             // Inner ring, area = 4
-            [ {x:10, y:10}, {x:20, y:10}, {x:20, y:20}, {x:10, y:10} ]
+            [{x: 10, y: 10}, {x: 20, y: 10}, {x: 20, y: 20}, {x: 10, y: 10}]
         ] as Point[][];
         if (options && options.reverse) {
             geometry[0].reverse();

@@ -25,18 +25,6 @@
       "isZoomConstant": true,
       "type": "string"
     },
-    "outputs": ["Apple", "Apple", "Banana", "Banana", "Kumquat"],
-    "serialized": [
-      "string",
-      [
-        "match",
-        ["string", ["get", "x"]],
-        ["A", "a"],
-        "Apple",
-        ["B", "b"],
-        "Banana",
-        "Kumquat"
-      ]
-    ]
+    "outputs": ["Apple", "Apple", "Banana", "Banana", "Kumquat"]
   }
 }

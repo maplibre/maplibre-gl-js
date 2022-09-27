@@ -24,7 +24,6 @@
       "a",
       "b",
       "c"
-    ],
-    "serialized": ["string", ["get", "p"]]
+    ]
   }
 }

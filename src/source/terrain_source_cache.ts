@@ -50,7 +50,7 @@ export default class TerrainSourceCache extends Evented {
         this.maxzoom = 22;
         this.tileSize = 512;
         this.deltaZoom = 1;
-        this.renderHistorySize = 150;
+        this.renderHistorySize = sourceCache._cache.max;
         sourceCache.usedForTerrain = true;
         sourceCache.tileSize = this.tileSize * 2 ** this.deltaZoom;
     }
@@ -98,15 +98,19 @@ export default class TerrainSourceCache extends Evented {
     removeOutdated(painter: Painter) {
         // create lookuptable for actual needed tiles
         const tileIDs = {};
+        // remove duplicates from renderHistory and chop to renderHistorySize
+        this.renderHistory = this.renderHistory.filter((i, p) => {
+            return this.renderHistory.indexOf(i) === p;
+        }).slice(0, this.renderHistorySize);
+        // fill lookuptable with current rendered tiles
         for (const key of this._renderableTilesKeys) tileIDs[key] = true;
-        // remove duplicates from renderHistory
-        this.renderHistory = this.renderHistory.filter((i, p) => this.renderHistory.indexOf(i) === p);
+        // fill lookuptable with most recent rendered tiles outside the viewport
+        for (const key of this.renderHistory) tileIDs[key] = true;
         // free (GPU) memory from previously rendered not needed tiles
-        while (this.renderHistory.length > this.renderHistorySize) {
-            const tile = this.sourceCache._tiles[this.renderHistory.shift()];
-            if (tile && !tileIDs[tile.tileID.key]) {
-                tile.clearTextures(painter);
-                delete this.sourceCache._tiles[tile.tileID.key];
+        for (const key in this._tiles) {
+            if (!tileIDs[key]) {
+                this._tiles[key].clearTextures(painter);
+                delete this._tiles[key];
             }
         }
     }
@@ -129,11 +133,11 @@ export default class TerrainSourceCache extends Evented {
     }
 
     /**
-     * searches for the corresponding current renderable terrain-tiles
+     * Searches for the corresponding current renderable terrain-tiles
      * @param {OverscaledTileID} tileID - the tile to look for
-     * @returns {[_:string]: Tile} - the tiles that were found
+     * @returns {Record<string, OverscaledTileID>} - the tiles that were found
      */
-    getTerrainCoords(tileID: OverscaledTileID): {[_: string]: OverscaledTileID} {
+    getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
         const coords = {};
         for (const key of this._renderableTilesKeys) {
             const _tileID = this._tiles[key].tileID;
@@ -185,7 +189,7 @@ export default class TerrainSourceCache extends Evented {
         let tile = this.sourceCache.getTileByID(this._sourceTileCache[tileID.key]);
         // during tile-loading phase look if parent tiles (with loaded dem) are available.
         if (!(tile && tile.dem) && searchForDEM)
-            while (z > source.minzoom && !(tile && tile.dem))
+            while (z >= source.minzoom && !(tile && tile.dem))
                 tile = this.sourceCache.getTileByID(tileID.scaledTo(z--).key);
         return tile;
     }

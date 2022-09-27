@@ -1,7 +1,6 @@
 import StyleLayer from '../style_layer';
 
-import assert from 'assert';
-import SymbolBucket from '../../data/bucket/symbol_bucket';
+import SymbolBucket, {SymbolFeature} from '../../data/bucket/symbol_bucket';
 import resolveTokens from '../../util/resolve_tokens';
 import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
 
@@ -25,7 +24,7 @@ import type {BucketParameters} from '../../data/bucket';
 import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
 import type EvaluationParameters from '../evaluation_parameters';
 import type {LayerSpecification} from '../../style-spec/types.g';
-import type {Feature, SourceExpression, CompositeExpression} from '../../style-spec/expression';
+import type {Feature, SourceExpression} from '../../style-spec/expression';
 import type {Expression} from '../../style-spec/expression/expression';
 import type {CanonicalTileID} from '../../source/tile_id';
 import {FormattedType} from '../../style-spec/expression/types';
@@ -110,8 +109,7 @@ class SymbolStyleLayer extends StyleLayer {
     }
 
     queryIntersectsFeature(): boolean {
-        assert(false); // Should take a different path in FeatureIndex
-        return false;
+        throw new Error('Should take a different path in FeatureIndex');
     }
 
     _setPaintOverrides() {
@@ -124,12 +122,11 @@ class SymbolStyleLayer extends StyleLayer {
             const styleExpression = new StyleExpression(override, overriden.property.specification);
             let expression = null;
             if (overriden.value.kind === 'constant' || overriden.value.kind === 'source') {
-                expression = (new ZoomConstantExpression('source', styleExpression) as SourceExpression);
+                expression = new ZoomConstantExpression('source', styleExpression) as SourceExpression;
             } else {
-                expression = (new ZoomDependentExpression('composite',
+                expression = new ZoomDependentExpression('composite',
                     styleExpression,
-                    overriden.value.zoomStops,
-                    (overriden.value as any)._interpolationType) as CompositeExpression);
+                    overriden.value.zoomStops);
             }
             this.paint._values[overridable] = new PossiblyEvaluatedPropertyValue(overriden.property,
                 expression,
@@ -202,6 +199,21 @@ export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, Symb
     }
 
     return result;
+}
+
+export type SymbolPadding = [number, number, number, number];
+
+export function getIconPadding(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, feature: SymbolFeature, canonical: CanonicalTileID, pixelRatio = 1): SymbolPadding {
+    // Support text-padding in addition to icon-padding? Unclear how to apply asymmetric text-padding to the radius for collision circles.
+    const result = layout.get('icon-padding').evaluate(feature, {}, canonical);
+    const values = result && result.values;
+
+    return [
+        values[0] * pixelRatio,
+        values[1] * pixelRatio,
+        values[2] * pixelRatio,
+        values[3] * pixelRatio,
+    ];
 }
 
 export default SymbolStyleLayer;

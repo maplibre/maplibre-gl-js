@@ -24,7 +24,6 @@
       "otherwise",
       "otherwise",
       "otherwise"
-    ],
-    "serialized": ["match", ["get", "x"], 0, "match", "otherwise"]
+    ]
   }
 }

@@ -21,7 +21,6 @@
       {"error": "Could not parse color from value 'null'"},
       [0, 0, 1, 1],
       {"error": "Could not parse color from value '0'"}
-    ],
-    "serialized": ["to-color", ["get", "p"]]
+    ]
   }
 }

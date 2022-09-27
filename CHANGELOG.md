@@ -2,12 +2,111 @@
 
 ### ✨ Features and improvements
 
+### 🐞 Bug fixes
+
+## 3.0.0-pre.0
+
+### ✨ Features and improvements
+
 - *...Add new stuff here...*
+- Add map.getCameraTargetElevation() (#1558)
+- Add `freezeElevation` to `AnimationOptions` to allow smooth camera movement in 3D (#1514, #1492)
+- [Breaking] Remove deprecated mapboxgl css classes (#1575)
+- Add map.setStyle's transformStyle option (#1632)
+- [Breaking] Improve rendering of areas below sea level, and remove elevationOffset workaround (#1578)
+- [Breaking] Move terrain object from style.terrain to map.terrain (#1628)
 
 ### 🐞 Bug fixes
 
+- [Breaking] Make geojson data source a required field to align with the docs (#1396)
+- Fix showTileBoundaries to show the first vector source [#1395](https://github.com/maplibre/maplibre-gl-js/pull/1395)
+- Fix `match` expression type (#1631)
 - *...Add new stuff here...*
-- Hide arrow displayed in default `summary` styles on the attribution control ([#1258](https://github.com/maplibre/maplibre-gl-js/pull/1258))
+
+## 2.4.0
+
+### ✨ Features and improvements
+- Added calculateCameraOptionsFromTo to camera (#1427)
+- Improve expression types (#1510)
+- Improve performance for primitive size selection (#1508)
+- Upgrade target from ES2017 to ES2019 (#1499)
+- Improve error handling (#1485)
+- Removed `_interpolationType` unused field (#264)
+
+### 🐞 Bug fixes
+- Fix query tests on windows (#1506)
+- Fix attribution not being displayed for terrain (#1516)
+- No triggering of contextmenu after rotate, pitch, etc. also on Windows (#1537)
+
+## 2.3.1-pre.2
+
+### ✨ Features and improvements
+- Improve expression types (#1510)
+- Improve performance for primitive size selection (#1508)
+- Upgrade target from ES2017 to ES2019 (#1499)
+
+### 🐞 Bug fixes
+- Fix query tests on windows (#1506)
+
+## 2.3.1-pre.1
+
+### ✨ Features and improvements
+- Improve error handling (#1485)
+
+## 2.3.0
+
+### ✨ Features and improvements
+
+- Re-enable method to get library version. Either with `import {version} from 'maplibre-gl'`, or on a Map instance as `map.version`.
+
+## 2.2.1
+
+### 🐞 Bug fixes
+
+- Fix types generation and make sure they run as part of the CI (#1462, #1465)
+
+## 2.2.0
+
+Everything from the four previous pre-releases:
+
+### ✨ Features and improvements
+
+- Update `icon-padding` symbol layout property to support asymmetric padding (#1289)
+- Added `cooperativeGestures` option when instantiating map to prevent inadvertent scrolling/panning when navigating a page where map is embedded inline (#234)
+- Improve filter specification typings (#1390)
+- Add internal support for Node 18 (#1431)
+- Add 3D terrain capabilities  (#165, #1022)
+- Cancel pending GeoJSON requests when `GeoJSONSource.setData()` is called instead of waiting for any pending request to complete before issuing the request for the new URL (#1102)
+
+### 🐞 Bug fixes
+
+- Fix compact attribution style when using global CSS that sets `box-sizing: border-box;` (#1250)
+- Handle maxBounds which cross the meridian at longitude ±180° (#1298, #1299)
+- Hide arrow displayed in default `summary` styles on the attribution control (#1258)
+- Fix memory usage in terrain 3D (#1291, #1302)
+- Fix disappearence of closest tiles when 3D terrain is enabled (#1241, #1300)
+
+## 2.2.0-pre.4
+
+### ✨ Features and improvements
+
+- Update `icon-padding` symbol layout property to support asymmetric padding (#1289)
+- Added `cooperativeGestures` option when instantiating map to prevent inadvertent scrolling/panning when navigating a page where map is embedded inline (#234)
+- Improve filter specification typings (#1390)
+- Add internal support for Node 18 (#1431)
+
+### 🐞 Bug fixes
+
+- Fix compact attribution style when using global CSS that sets `box-sizing: border-box;` (#1250)
+
+## 2.2.0-pre.3
+
+### 🐞 Bug fixes
+
+- Handle maxBounds which cross the meridian at longitude ±180° (#1298, #1299)
+- Hide arrow displayed in default `summary` styles on the attribution control (#1258)
+- Fix memory usage in terrain 3D (#1291, #1302)
+- Fix disappearence of closest tiles when 3D terrain is enabled (#1241, #1300)
 
 ## 2.2.0-pre.2
 
@@ -37,7 +136,7 @@
 
 - Fix missing `touchmove` in `MapTouchEvent["type"]` (#1131)
 - Type CustomLayerInterface renderingMode, onRemove, onAdd, and prerender optional (#1122)
- 
+
 ## 2.1.8-pre.3
 
 ### 🐞 Bug fixes

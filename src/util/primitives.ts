@@ -7,12 +7,12 @@ class Frustum {
     public static fromInvProjectionMatrix(invProj: mat4, worldSize: number, zoom: number): Frustum {
         const clipSpaceCorners = [
             [-1, 1, -1, 1],
-            [ 1, 1, -1, 1],
-            [ 1, -1, -1, 1],
+            [1, 1, -1, 1],
+            [1, -1, -1, 1],
             [-1, -1, -1, 1],
             [-1, 1, 1, 1],
-            [ 1, 1, 1, 1],
-            [ 1, -1, 1, 1],
+            [1, 1, 1, 1],
+            [1, -1, 1, 1],
             [-1, -1, 1, 1]
         ];
 

@@ -32,7 +32,7 @@ describe('getAnchors', () => {
         expect(anchors).toEqual([
             {x: 1, y: 2, angle: 1.5707963267948966, segment: 1},
             {x: 1, y: 5, angle: 1.5707963267948966, segment: 4},
-            {x: 1, y: 8, angle: 1.5707963267948966, segment: 7} ]);
+            {x: 1, y: 8, angle: 1.5707963267948966, segment: 7}]);
 
         expect(
             labelLength / 2 + 1 <= anchors[0].y && anchors[0].y < labelLength / 2 + 3 * glyphSize + 1
@@ -46,7 +46,7 @@ describe('getAnchors', () => {
         expect(anchors).toEqual([
             {x: 1, y: 2, angle: 1.5707963267948966, segment: 1},
             {x: 1, y: 5, angle: 1.5707963267948966, segment: 3},
-            {x: 1, y: 7, angle: 1.5707963267948966, segment: 6} ]);
+            {x: 1, y: 7, angle: 1.5707963267948966, segment: 6}]);
 
     });
 
@@ -56,7 +56,7 @@ describe('getAnchors', () => {
         expect(anchors).toEqual([
             {x: 1, y: 2, angle: 1.5707963267948966, segment: 1},
             {x: 1, y: 5, angle: 1.5707963267948966, segment: 4},
-            {x: 1, y: 8, angle: 1.5707963267948966, segment: 7} ]);
+            {x: 1, y: 8, angle: 1.5707963267948966, segment: 7}]);
 
     });
 
@@ -66,7 +66,7 @@ describe('getAnchors', () => {
         expect(anchors).toEqual([
             {x: 1, y: 1, angle: 1.5707963267948966, segment: 1},
             {x: 1, y: 4, angle: 1.5707963267948966, segment: 3},
-            {x: 1, y: 6, angle: 1.5707963267948966, segment: 6} ]);
+            {x: 1, y: 6, angle: 1.5707963267948966, segment: 6}]);
 
     });
 

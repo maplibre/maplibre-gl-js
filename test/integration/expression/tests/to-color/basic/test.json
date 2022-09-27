@@ -24,7 +24,6 @@
       {
         "error": "Invalid rbga value [0,255]: expected an array containing either three or four numeric values."
       }
-    ],
-    "serialized": ["to-color", ["get", "x"]]
+    ]
   }
 }

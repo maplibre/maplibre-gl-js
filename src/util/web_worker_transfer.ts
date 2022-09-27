@@ -1,5 +1,3 @@
-import assert from 'assert';
-
 import TransferableGridIndex from './transferable_grid_index';
 import Color from '../style-spec/util/color';
 import {StylePropertyFunction, StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '../style-spec/expression';
@@ -51,7 +49,7 @@ export function register<T extends any>(
     },
     options: RegisterOptions<T> = {}
 ) {
-    assert(!registry[name], `${name} is already registered.`);
+    if (registry[name]) throw new Error(`${name} is already registered.`);
     ((Object.defineProperty as any))(klass, '_classRegistryKey', {
         value: name,
         writeable: false
@@ -159,7 +157,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         if (!name) {
             throw new Error('can\'t serialize object of unregistered class');
         }
-        assert(registry[name]);
+        if (!registry[name]) throw new Error(`${name} is not registered.`);
 
         const properties: SerializedObject = klass.serialize ?
             // (Temporary workaround) allow a class to provide static
@@ -185,8 +183,9 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
                 properties.message = input.message;
             }
         } else {
-            // make sure statically serialized object survives transfer of $name property
-            assert(!transferables || properties as any !== transferables[transferables.length - 1]);
+            if (transferables && properties as any === transferables[transferables.length - 1]) {
+                throw new Error('statically serialized object won\'t survive transfer of $name property');
+            }
         }
 
         if (properties.$name) {

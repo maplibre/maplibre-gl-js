@@ -44,13 +44,13 @@
     "no-invalid-this": "off",
     "no-buffer-constructor": "off",
 
-    "array-bracket-spacing": "off",
+    "array-bracket-spacing": "error",
     "consistent-return": "off",
     "global-require": "off",
     "import/no-commonjs": "error",
     // TSC throws an error on unresolved imports; eslint doesn't understand .js extension in import statement
     "import/no-unresolved": "off",
-    "key-spacing": "off",
+    "key-spacing": "error",
     "no-eq-null": "off",
     "no-lonely-if": "off",
     "no-new": "off",
@@ -109,7 +109,7 @@
   "ignorePatterns": ["build/*.js", "*.json"],
   "overrides": [
     {
-      "files": ["debug/**", "test/**", "src/style-spec/**"],
+      "files": ["test/**", "src/style-spec/**"],
       "rules": {
         "jsdoc/check-param-names": "off",
         "jsdoc/require-param": "off",

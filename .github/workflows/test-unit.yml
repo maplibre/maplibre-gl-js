@@ -6,28 +6,6 @@ on:
   pull_request:
 
 jobs:
-  test_unit_win_mac:
-    strategy:
-      matrix:
-        os:
-          - macos-latest
-          - windows-latest
-        node_version:
-          - 16
-        architecture:
-          - x64
-
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node_version }}
-          architecture: ${{ matrix.architecture }}
-      - run: npm ci
-      - run: npm run test-unit
 
   test_unit_ubuntu:
     strategy:
@@ -40,13 +18,18 @@ jobs:
           - x64
 
     name: ${{ matrix.os }}
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: write
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3.4.1
         with:
           node-version: ${{ matrix.node_version }}
           architecture: ${{ matrix.architecture }}
       - run: npm ci
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit
+      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci
+

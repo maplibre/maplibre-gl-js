@@ -49,6 +49,12 @@ sudo apt-get update &&
 sudo apt-get install build-essential git libglew-dev libxi-dev default-jre default-jdk
 ```
 
+If prebuilt binaries for canvas and gl aren’t available, you will also need:
+
+```bash
+sudo apt-get install python-is-python3 pkg-config libpixman-1-dev libcairo2-dev libpango1.0-dev libgif-dev
+```
+
 Install [nvm](https://github.com/nvm-sh/nvm)
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
@@ -99,7 +105,7 @@ Start the debug server
 npm run start-debug
 ```
 
-Open the debug page at [http://localhost:9966/debug](http://localhost:9966/debug)
+Open the debug page at [http://localhost:9966/test/debug-pages](http://localhost:9966/test/debug-pages)
 
 ## Creating a Standalone Build
 

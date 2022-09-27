@@ -2,11 +2,20 @@ import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 import type {StyleSpecification} from '../../../src/style-spec/types.g';
 
+/**
+ * Measures how long it takes the map to reach the idle state when only using hill shade tiles.
+ */
 export default class HillshadeLoad extends Benchmark {
     style: StyleSpecification;
 
     constructor() {
         super();
+
+        // This is a longer running test and the duration will vary by device and network.
+        // To keep the test time more reasonable, lower the minimum number of measurements.
+        // 55 measurements => 10 observations for regression.
+        this.minimumMeasurements = 55;
+
         this.style = {
             'version': 8,
             'name': 'Hillshade-only',
@@ -33,16 +42,15 @@ export default class HillshadeLoad extends Benchmark {
         };
     }
 
-    bench() {
-        return createMap({
+    async bench() {
+        const map = await createMap({
             width: 1024,
             height: 1024,
             style: this.style,
             stubRender: false,
             showMap: true,
             idle: true
-        }).then((map) => {
-            map.remove();
         });
+        map.remove();
     }
 }

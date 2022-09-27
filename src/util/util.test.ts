@@ -6,11 +6,11 @@ describe('util', () => {
     expect(easeCubicInOut(0.2)).toBe(0.03200000000000001);
     expect(easeCubicInOut(0.5)).toBe(0.5);
     expect(easeCubicInOut(1)).toBe(1);
-    expect(keysDifference({a:1}, {})).toEqual(['a']);
-    expect(keysDifference({a:1}, {a:1})).toEqual([]);
-    expect(extend({a:1}, {b:2})).toEqual({a:1, b:2});
-    expect(pick({a:1, b:2, c:3}, ['a', 'c'])).toEqual({a:1, c:3});
-    expect(pick({a:1, b:2, c:3}, ['a', 'c', 'd'])).toEqual({a:1, c:3});
+    expect(keysDifference({a: 1}, {})).toEqual(['a']);
+    expect(keysDifference({a: 1}, {a: 1})).toEqual([]);
+    expect(extend({a: 1}, {b: 2})).toEqual({a: 1, b: 2});
+    expect(pick({a: 1, b: 2, c: 3}, ['a', 'c'])).toEqual({a: 1, c: 3});
+    expect(pick({a: 1, b: 2, c: 3}, ['a', 'c', 'd'])).toEqual({a: 1, c: 3});
     expect(typeof uniqueId() === 'number').toBeTruthy();
 
     test('bindAll', done => {

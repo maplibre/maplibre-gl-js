@@ -31,23 +31,6 @@
       "isZoomConstant": false,
       "type": "number"
     },
-    "outputs": [-1, 0, 0, 0, 1, 1, -1],
-    "serialized": [
-      "step",
-      ["zoom"],
-      [
-        "case",
-        ["==", ["typeof", ["get", "p"]], "number"],
-        ["step", ["number", ["get", "p"]], 0, 1, 1],
-        -1
-      ],
-      1,
-      [
-        "case",
-        ["==", ["typeof", ["get", "p"]], "number"],
-        ["step", ["number", ["get", "p"]], 2, 1, 3],
-        -1
-      ]
-    ]
+    "outputs": [-1, 0, 0, 0, 1, 1, -1]
   }
 }

@@ -22,7 +22,6 @@
       {
         "error": "Expected arguments for \"<\" to be (string, string) or (number, number), but found (number, string) instead."
       }
-    ],
-    "serialized": ["<", ["get", "x"], ["get", "y"]]
+    ]
   }
 }

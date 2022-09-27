@@ -1,15 +1,6 @@
 {
-  "expression": [
-    "format",
-    ["image", "monument-15"],
-    ["image", "beach-11"]
-  ],
-  "inputs": [
-    [
-      {"availableImages": ["monument-15"]},
-      {}
-    ]
-  ],
+  "expression": ["format", ["image", "monument-15"], ["image", "beach-11"]],
+  "inputs": [[{"availableImages": ["monument-15"]}, {}]],
   "expected": {
     "compiled": {
       "result": "success",
@@ -36,19 +27,6 @@
           }
         ]
       }
-    ],
-    "serialized": [
-      "format",
-      [
-        "image",
-        "monument-15"
-      ],
-      {},
-      [
-        "image",
-        "beach-11"
-      ],
-      {}
     ]
   }
 }

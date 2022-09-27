@@ -19,7 +19,7 @@ describe('VideoSource', () => {
     // Attribution File:Volcano Lava Sample.webm: U.S. Geological Survey (USGS), Public domain, via Wikimedia Commons
     const source = createSource({
         type: 'video',
-        urls : [ 'cropped.mp4', 'https://upload.wikimedia.org/wikipedia/commons/2/22/Volcano_Lava_Sample.webm' ],
+        urls: ['cropped.mp4', 'https://upload.wikimedia.org/wikipedia/commons/2/22/Volcano_Lava_Sample.webm'],
         coordinates: [
             [-76.54, 39.18],
             [-76.52, 39.18],
@@ -50,7 +50,7 @@ describe('VideoSource', () => {
         const source = createSource({
             type: 'video',
             video: el,
-            urls : [ 'cropped.mp4', 'https://upload.wikimedia.org/wikipedia/commons/2/22/Volcano_Lava_Sample.webm' ],
+            urls: ['cropped.mp4', 'https://upload.wikimedia.org/wikipedia/commons/2/22/Volcano_Lava_Sample.webm'],
             coordinates: [
                 [-76.54, 39.18],
                 [-76.52, 39.18],

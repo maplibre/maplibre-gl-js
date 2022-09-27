@@ -16,7 +16,6 @@
       "isZoomConstant": false,
       "type": "number"
     },
-    "outputs": [20],
-    "serialized": ["interpolate", ["linear"], ["zoom"], 0, 10, 1, 20, 2, 30]
+    "outputs": [20]
   }
 }

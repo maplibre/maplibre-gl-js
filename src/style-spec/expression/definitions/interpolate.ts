@@ -135,6 +135,7 @@ class Interpolate implements Expression {
 
         if (outputType.kind !== 'number' &&
             outputType.kind !== 'color' &&
+            outputType.kind !== 'padding' &&
             !(
                 outputType.kind === 'array' &&
                 outputType.itemType.kind === 'number' &&
@@ -191,31 +192,6 @@ class Interpolate implements Expression {
 
     outputDefined(): boolean {
         return this.outputs.every(out => out.outputDefined());
-    }
-
-    serialize(): Array<unknown> {
-        let interpolation;
-        if (this.interpolation.name === 'linear') {
-            interpolation = ['linear'];
-        } else if (this.interpolation.name === 'exponential') {
-            if  (this.interpolation.base === 1) {
-                interpolation = ['linear'];
-            } else {
-                interpolation = ['exponential', this.interpolation.base];
-            }
-        } else {
-            interpolation = ['cubic-bezier' as unknown].concat(this.interpolation.controlPoints);
-        }
-
-        const serialized = [this.operator, interpolation, this.input.serialize()];
-
-        for (let i = 0; i < this.labels.length; i++) {
-            serialized.push(
-                this.labels[i],
-                this.outputs[i].serialize()
-            );
-        }
-        return serialized;
     }
 }
 

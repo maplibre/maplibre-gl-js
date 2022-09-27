@@ -10,7 +10,6 @@
       "isZoomConstant": true,
       "type": "string"
     },
-    "outputs": ["LineString"],
-    "serialized": ["geometry-type"]
+    "outputs": ["LineString"]
   }
 }

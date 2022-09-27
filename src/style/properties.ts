@@ -1,4 +1,3 @@
-import assert from 'assert';
 import {clone, extend, easeCubicInOut} from '../util/util';
 import * as interpolate from '../style-spec/util/interpolate';
 import Color from '../style-spec/util/color';
@@ -488,7 +487,7 @@ export class DataConstantProperty<T> implements Property<T, T> {
     }
 
     possiblyEvaluate(value: PropertyValue<T, T>, parameters: EvaluationParameters): T {
-        assert(!value.isDataDriven());
+        if (value.isDataDriven()) throw new Error('Value should not be data driven');
         return value.expression.evaluate(parameters);
     }
 
@@ -668,7 +667,6 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
             const constant = value.expression.evaluate(parameters, null, {}, canonical, availableImages);
             return this._calculate(constant, constant, constant, parameters);
         } else {
-            assert(!value.isDataDriven());
             return this._calculate(
                 value.expression.evaluate(new EvaluationParameters(Math.floor(parameters.zoom - 1.0), parameters)),
                 value.expression.evaluate(new EvaluationParameters(Math.floor(parameters.zoom), parameters)),

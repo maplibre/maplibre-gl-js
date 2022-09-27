@@ -15,7 +15,7 @@ export default function expressions(style: StyleSpecification) {
 
     eachLayer(style, (layer: LayerSpecification & { filter?: FilterSpecification }) => {
         if (layer.filter) {
-            layer.filter = (convertFilter(layer.filter) as any);
+            layer.filter = convertFilter(layer.filter);
         }
     });
 

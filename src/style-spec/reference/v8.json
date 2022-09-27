@@ -62,8 +62,7 @@
       "doc": "The terrain configuration.",
       "example": {
         "source": "raster-dem-source",
-        "exaggeration": 0.5,
-        "elevationOffset": 100
+        "exaggeration": 0.5
       }
     },
     "sources": {
@@ -380,6 +379,7 @@
       "doc": "The data type of the GeoJSON source."
     },
     "data": {
+      "required": true,
       "type": "*",
       "doc": "A URL to a GeoJSON file, or inline GeoJSON."
     },
@@ -1466,11 +1466,10 @@
       "property-type": "data-driven"
     },
     "icon-padding": {
-      "type": "number",
-      "default": 2,
-      "minimum": 0,
+      "type": "padding",
+      "default": [2],
       "units": "pixels",
-      "doc": "Size of the additional area around the icon bounding box used for detecting symbol collisions.",
+      "doc": "Size of additional area round the icon bounding box used for detecting symbol collisions. Values are declared using CSS margin shorthand syntax: a single value applies to all four sides; two values apply to [top/bottom, left/right]; three values apply to [top, left/right, bottom]; four values apply to [top, right, bottom, left]. For backwards compatibility, a single bare number is accepted, and treated the same as a one-element array - padding applied to all sides.",
       "requires": [
         "icon-image"
       ],
@@ -1480,15 +1479,19 @@
           "android": "2.0.1",
           "ios": "2.0.0",
           "macos": "0.1.0"
+        },
+        "data-driven styling": {
+          "js": "2.2.0"
         }
       },
       "expression": {
         "interpolated": true,
         "parameters": [
-          "zoom"
+          "zoom",
+          "feature"
         ]
       },
-      "property-type": "data-constant"
+      "property-type": "data-driven"
     },
     "icon-keep-upright": {
       "type": "boolean",
@@ -3835,16 +3838,6 @@
       "minimum": 0,
       "doc": "The exaggeration of the terrain - how high it will look.",
       "default": 1.0,
-      "sdk-support": {
-        "basic functionality": {
-          "js": "2.2.0"
-        }
-      }
-    },
-    "elevationOffset": {
-      "type": "number",
-      "doc": "The elevation offset.",
-      "default": 450,
       "sdk-support": {
         "basic functionality": {
           "js": "2.2.0"

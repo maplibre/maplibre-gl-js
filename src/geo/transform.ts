@@ -438,12 +438,9 @@ class Transform {
                 let quadrant = it.aabb.quadrant(i);
                 if (options.terrain) {
                     const tileID = new OverscaledTileID(childZ, it.wrap, childZ, childX, childY);
-                    const tile = options.terrain.getTerrainData(tileID).tile;
-                    let minElevation = this.elevation, maxElevation = this.elevation;
-                    if (tile && tile.dem) {
-                        minElevation = tile.dem.min * options.terrain.exaggeration;
-                        maxElevation = tile.dem.max * options.terrain.exaggeration;
-                    }
+                    const minMax = options.terrain.getMinMaxElevation(tileID);
+                    const minElevation = minMax.minElevation ?? this.elevation;
+                    const maxElevation = minMax.maxElevation ?? this.elevation;
                     quadrant = new Aabb(
                         [quadrant.min[0], quadrant.min[1], minElevation] as vec3,
                         [quadrant.max[0], quadrant.max[1], maxElevation] as vec3
@@ -496,7 +493,7 @@ class Transform {
      * get the elevation from terrain for the current zoomlevel.
      * @param lnglat the location
      * @param terrain the terrain
-     * @returns {Number} elevation in meters
+     * @returns {number} elevation in meters
      */
     getElevation(lnglat: LngLat, terrain: Terrain) {
         const merc = MercatorCoordinate.fromLngLat(lnglat);
@@ -654,8 +651,8 @@ class Transform {
     /**
      * Given a coordinate, return the screen point that corresponds to it
      * @param {Coordinate} coord
-     * @params {number} elevation default = 0
-     * @params {mat4} pixelMatrix, default = this.pixelMatrix
+     * @param {number} elevation default = 0
+     * @param {mat4} pixelMatrix, default = this.pixelMatrix
      * @returns {Point} screen point
      * @private
      */
@@ -766,8 +763,20 @@ class Transform {
 
         if (this.lngRange) {
             const lngRange = this.lngRange;
-            minX = mercatorXfromLng(lngRange[0]) * this.worldSize;
-            maxX = mercatorXfromLng(lngRange[1]) * this.worldSize;
+
+            minX = wrap(
+                mercatorXfromLng(lngRange[0]) * this.worldSize,
+                0,
+                this.worldSize
+            );
+            maxX = wrap(
+                mercatorXfromLng(lngRange[1]) * this.worldSize,
+                0,
+                this.worldSize
+            );
+
+            if (maxX < minX) maxX += this.worldSize;
+
             sx = maxX - minX < size.x ? size.x / (maxX - minX) : 0;
         }
 
@@ -795,8 +804,9 @@ class Transform {
         }
 
         if (this.lngRange) {
-            const x = point.x,
-                w2 = size.x / 2;
+            const centerX = (minX + maxX) / 2;
+            const x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+            const w2 = size.x / 2;
 
             if (x - w2 < minX) x2 = minX + w2;
             if (x + w2 > maxX) x2 = maxX - w2;
@@ -806,7 +816,7 @@ class Transform {
         if (x2 !== undefined || y2 !== undefined) {
             this.center = this.unproject(new Point(
                 x2 !== undefined ? x2 : point.x,
-                y2 !== undefined ? y2 : point.y));
+                y2 !== undefined ? y2 : point.y)).wrap();
         }
 
         this._unmodified = unmodified;
@@ -833,8 +843,10 @@ class Transform {
         mat4.scale(m, m, [2 / this.width, 2 / this.height, 1]);
         this.glCoordMatrix = m;
 
-        // calculate the camera to sea-level distance in pixel in respect of terrain
+        // Calculate the camera to sea-level distance in pixel in respect of terrain
+        // In case of negative elevation (e.g. the dead see) use the lower plane for calculation
         this.cameraToSeaLevelDistance = this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
+        const lowestPlane = this._elevation < 0 ? this.cameraToCenterDistance : this.cameraToSeaLevelDistance;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
@@ -842,20 +854,18 @@ class Transform {
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
         const groundAngle = Math.PI / 2 + this._pitch;
         const fovAboveCenter = this._fov * (0.5 + offset.y / this.height);
-        const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * this.cameraToSeaLevelDistance / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
+        const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
 
         // Find the distance from the center point to the horizon
         const horizon = this.getHorizon();
         const horizonAngle = Math.atan(horizon / this.cameraToCenterDistance);
         const fovCenterToHorizon = 2 * horizonAngle * (0.5 + offset.y / (horizon * 2));
-        const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * this.cameraToSeaLevelDistance / Math.sin(clamp(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
+        const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
 
         // Calculate z distance of the farthest fragment that should be rendered.
-        const furthestDistance = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistance + this.cameraToSeaLevelDistance;
-        const furthestDistanceHorizon = Math.cos(Math.PI / 2 - this._pitch) * topHalfSurfaceDistanceHorizon + this.cameraToSeaLevelDistance;
-
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
-        const farZ = Math.min(furthestDistance, furthestDistanceHorizon) * 1.01;
+        const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
+        const farZ = (Math.cos(Math.PI / 2 - this._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
@@ -909,7 +919,7 @@ class Transform {
             dx = x - Math.round(x) + angleCos * xShift + angleSin * yShift,
             dy = y - Math.round(y) + angleCos * yShift + angleSin * xShift;
         const alignedM = new Float64Array(m) as any as mat4;
-        mat4.translate(alignedM, alignedM, [ dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0 ]);
+        mat4.translate(alignedM, alignedM, [dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0]);
         this.alignedProjMatrix = alignedM;
 
         // inverse matrix for conversion from screen coordinaes to location

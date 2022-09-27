@@ -31,15 +31,6 @@
       "isZoomConstant": true,
       "type": "color"
     },
-    "outputs": [[0.5, 0, 0, 1]],
-    "serialized": [
-      "interpolate",
-      ["linear"],
-      ["heatmap-density"],
-      0,
-      ["rgba", 0, 0, 0, 1],
-      1,
-      ["rgba", 255, 0, 0, 1]
-    ]
+    "outputs": [[0.5, 0, 0, 1]]
   }
 }

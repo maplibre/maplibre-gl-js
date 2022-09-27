@@ -28,6 +28,9 @@ export type CollatorTypeT = {
 export type FormattedTypeT = {
     kind: 'formatted';
 };
+export type PaddingTypeT = {
+    kind: 'padding';
+};
 export type ResolvedImageTypeT = {
     kind: 'resolvedImage';
 };
@@ -35,7 +38,7 @@ export type ResolvedImageTypeT = {
 export type EvaluationKind = 'constant' | 'source' | 'camera' | 'composite';
 
 export type Type = NullTypeT | NumberTypeT | StringTypeT | BooleanTypeT | ColorTypeT | ObjectTypeT | ValueTypeT | // eslint-disable-line no-use-before-define
-ArrayType | ErrorTypeT | CollatorTypeT | FormattedTypeT | ResolvedImageTypeT;
+ArrayType | ErrorTypeT | CollatorTypeT | FormattedTypeT | PaddingTypeT | ResolvedImageTypeT;
 
 export type ArrayType = {
     kind: 'array';
@@ -55,6 +58,7 @@ export const ValueType = {kind: 'value'} as ValueTypeT;
 export const ErrorType = {kind: 'error'} as ErrorTypeT;
 export const CollatorType = {kind: 'collator'} as CollatorTypeT;
 export const FormattedType = {kind: 'formatted'} as FormattedTypeT;
+export const PaddingType = {kind: 'padding'} as PaddingTypeT;
 export const ResolvedImageType = {kind: 'resolvedImage'} as ResolvedImageTypeT;
 
 export function array(itemType: Type, N?: number | null): ArrayType {
@@ -85,6 +89,7 @@ const valueMemberTypes = [
     FormattedType,
     ObjectType,
     array(ValueType),
+    PaddingType,
     ResolvedImageType
 ];
 

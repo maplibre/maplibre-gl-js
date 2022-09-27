@@ -16,7 +16,7 @@ const debugUniforms = (context: Context, locations: UniformLocations): DebugUnif
     'u_color': new UniformColor(context, locations.u_color),
     'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_overlay': new Uniform1i(context, locations.u_overlay),
-    'u_overlay_scale':  new Uniform1f(context, locations.u_overlay_scale)
+    'u_overlay_scale': new Uniform1f(context, locations.u_overlay_scale)
 });
 
 const debugUniformValues = (matrix: mat4, color: Color, scaleRatio: number = 1): UniformValues<DebugUniformsType> => ({

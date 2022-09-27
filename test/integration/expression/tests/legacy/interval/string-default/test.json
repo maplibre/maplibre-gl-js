@@ -26,12 +26,6 @@
       "isZoomConstant": true,
       "type": "string"
     },
-    "outputs": ["default", "0", "0", "0", "1", "1", "default"],
-    "serialized": [
-      "case",
-      ["==", ["typeof", ["get", "p"]], "number"],
-      ["step", ["number", ["get", "p"]], "0", 1, "1"],
-      "default"
-    ]
+    "outputs": ["default", "0", "0", "0", "1", "1", "default"]
   }
 }

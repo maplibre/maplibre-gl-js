@@ -6,7 +6,6 @@ import GeoJSONWrapper from './geojson_wrapper';
 import vtpbf from 'vt-pbf';
 import Supercluster from 'supercluster';
 import geojsonvt from 'geojson-vt';
-import assert from 'assert';
 import VectorTileWorkerSource from './vector_tile_worker_source';
 import {createExpression} from '../style-spec/expression';
 
@@ -291,9 +290,6 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: { supe
         const mapExpressionParsed = createExpression(mapExpression);
         const reduceExpressionParsed = createExpression(
             typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator);
-
-        assert(mapExpressionParsed.result === 'success');
-        assert(reduceExpressionParsed.result === 'success');
 
         mapExpressions[key] = mapExpressionParsed.value;
         reduceExpressions[key] = reduceExpressionParsed.value;

@@ -20,11 +20,7 @@
       false,
       false,
       true,
-      {"error":"Expected value to be of type string, but found null instead."}
-    ],
-    "serialized": [
-      "boolean",
-      ["in", ["get", "substr"], ["string", ["get", "str"]]]
+      {"error": "Expected value to be of type string, but found null instead."}
     ]
   }
 }

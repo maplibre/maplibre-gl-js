@@ -19,7 +19,6 @@
       "isZoomConstant": true,
       "type": "array<number>"
     },
-    "outputs": [[-1], [0], [1], [-1]],
-    "serialized": ["array", "number", null, ["get", "p"], ["literal", [-1]]]
+    "outputs": [[-1], [0], [1], [-1]]
   }
 }

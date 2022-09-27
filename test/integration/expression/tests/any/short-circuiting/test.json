@@ -8,7 +8,6 @@
       "isZoomConstant": true,
       "type": "boolean"
     },
-    "outputs": [true],
-    "serialized": ["any", true, ["error", "unreachable"]]
+    "outputs": [true]
   }
 }

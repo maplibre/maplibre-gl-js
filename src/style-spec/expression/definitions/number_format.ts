@@ -112,21 +112,4 @@ export default class NumberFormat implements Expression {
     outputDefined() {
         return false;
     }
-
-    serialize() {
-        const options = {};
-        if (this.locale) {
-            options['locale'] = this.locale.serialize();
-        }
-        if (this.currency) {
-            options['currency'] = this.currency.serialize();
-        }
-        if (this.minFractionDigits) {
-            options['min-fraction-digits'] = this.minFractionDigits.serialize();
-        }
-        if (this.maxFractionDigits) {
-            options['max-fraction-digits'] = this.maxFractionDigits.serialize();
-        }
-        return ['number-format', this.number.serialize(), options];
-    }
 }

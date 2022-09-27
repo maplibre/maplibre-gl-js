@@ -1,4 +1,3 @@
-import assert from 'assert';
 
 import {
     ObjectType,
@@ -69,7 +68,7 @@ class Assertion implements Expression {
 
             type = array(itemType, N);
         } else {
-            assert(types[name], name);
+            if (!types[name]) throw new Error(`Types doesn't contain name = ${name}`);
             type = types[name];
         }
 
@@ -94,8 +93,7 @@ class Assertion implements Expression {
             }
         }
 
-        assert(false);
-        return null;
+        throw new Error();
     }
 
     eachChild(fn: (_: Expression) => void) {
@@ -104,24 +102,6 @@ class Assertion implements Expression {
 
     outputDefined(): boolean {
         return this.args.every(arg => arg.outputDefined());
-    }
-
-    serialize(): Array<unknown> {
-        const type = this.type;
-        const serialized = [type.kind as unknown];
-        if (type.kind === 'array') {
-            const itemType = type.itemType;
-            if (itemType.kind === 'string' ||
-                itemType.kind === 'number' ||
-                itemType.kind === 'boolean') {
-                serialized.push(itemType.kind);
-                const N = type.N;
-                if (typeof N === 'number' || this.args.length > 1) {
-                    serialized.push(N);
-                }
-            }
-        }
-        return serialized.concat(this.args.map(arg => arg.serialize()));
     }
 }
 

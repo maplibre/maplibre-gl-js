@@ -1,8 +1,6 @@
 {
   "expression": ["get", "p"],
-  "propertySpec": {
-    "type": "formatted"
-  },
+  "propertySpec": {"type": "formatted"},
   "inputs": [
     [{}, {"properties": {}}],
     [{}, {"properties": {"p": 0}}],
@@ -49,11 +47,6 @@
           }
         ]
       }
-    ],
-    "serialized": [
-      "format",
-      ["get", "p"],
-      {}
     ]
   }
 }

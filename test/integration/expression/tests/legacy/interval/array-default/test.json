@@ -28,12 +28,6 @@
       "isZoomConstant": true,
       "type": "array<number, 1>"
     },
-    "outputs": [[-1], [0], [0], [0], [1], [1], [-1]],
-    "serialized": [
-      "case",
-      ["==", ["typeof", ["get", "p"]], "number"],
-      ["step", ["number", ["get", "p"]], ["literal", [0]], 1, ["literal", [1]]],
-      ["literal", [-1]]
-    ]
+    "outputs": [[-1], [0], [0], [0], [1], [1], [-1]]
   }
 }

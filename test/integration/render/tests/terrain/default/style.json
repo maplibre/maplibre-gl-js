@@ -1,0 +1,47 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256
+    }
+  },
+  "center": [-113.33496, 35.96022],
+  "zoom": 13,
+  "pitch": 60,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 15,
+      "tileSize": 256
+    },
+    "satellite": {
+      "type": "raster",
+      "tiles": ["local://tiles/{z}-{x}-{y}.satellite.png"],
+      "maxzoom": 17,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "raster",
+      "type": "raster",
+      "source": "satellite",
+      "paint": {
+        "raster-opacity": 1.0
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  }
+}

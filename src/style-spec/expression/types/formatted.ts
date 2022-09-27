@@ -46,27 +46,4 @@ export default class Formatted {
         if (this.sections.length === 0) return '';
         return this.sections.map(section => section.text).join('');
     }
-
-    serialize(): Array<unknown> {
-        const serialized: Array<unknown> = ['format'];
-        for (const section of this.sections) {
-            if (section.image) {
-                serialized.push(['image', section.image.name]);
-                continue;
-            }
-            serialized.push(section.text);
-            const options: {[key: string]: unknown} = {};
-            if (section.fontStack) {
-                options['text-font'] = ['literal', section.fontStack.split(',')];
-            }
-            if (section.scale) {
-                options['font-scale'] = section.scale;
-            }
-            if (section.textColor) {
-                options['text-color'] = (['rgba'] as Array<unknown>).concat(section.textColor.toArray());
-            }
-            serialized.push(options);
-        }
-        return serialized;
-    }
 }

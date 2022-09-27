@@ -122,38 +122,38 @@ describe('browser tests', () => {
                             }
                         },
                     },
-                    'layers':[
+                    'layers': [
                         {
-                            'id':'sample-text-left',
-                            'type':'symbol',
-                            'source':'sample',
-                            'layout':{
-                                'text-anchor':'top',
-                                'text-field':'{name_ja}{name_en}',
-                                'text-font':['Open Sans Regular'],
-                                'text-offset':[-10, 0],
+                            'id': 'sample-text-left',
+                            'type': 'symbol',
+                            'source': 'sample',
+                            'layout': {
+                                'text-anchor': 'top',
+                                'text-field': '{name_ja}{name_en}',
+                                'text-font': ['Open Sans Regular'],
+                                'text-offset': [-10, 0],
                             }
                         },
                         {
-                            'id':'sample-text-center',
-                            'type':'symbol',
-                            'source':'sample',
-                            'layout':{
-                                'text-anchor':'top',
-                                'text-field':'{name_ch}{name_kr}',
-                                'text-font':['Open Sans Regular'],
-                                'text-offset':[0, 0],
+                            'id': 'sample-text-center',
+                            'type': 'symbol',
+                            'source': 'sample',
+                            'layout': {
+                                'text-anchor': 'top',
+                                'text-field': '{name_ch}{name_kr}',
+                                'text-font': ['Open Sans Regular'],
+                                'text-offset': [0, 0],
                             }
                         },
                         {
-                            'id':'sample-text-right',
-                            'type':'symbol',
-                            'source':'sample',
-                            'layout':{
-                                'text-anchor':'top',
-                                'text-field':'{name_en}{name_ja}',
-                                'text-font':['Open Sans Regular'],
-                                'text-offset':[10, 0],
+                            'id': 'sample-text-right',
+                            'type': 'symbol',
+                            'source': 'sample',
+                            'layout': {
+                                'text-anchor': 'top',
+                                'text-field': '{name_en}{name_ja}',
+                                'text-font': ['Open Sans Regular'],
+                                'text-offset': [10, 0],
                             }
                         },
                     ]
@@ -169,8 +169,16 @@ describe('browser tests', () => {
 
             const pageWithImage = `<html><head></head><body><img src="${image}" width="800" height="600" /></body></html>`.replace(/\s/g, '');
 
-            const expectedHtml = fs.readFileSync(path.join(__dirname, 'fixtures/expected-base64-image.html'), 'utf8').replace(/\s/g, '');
-            expect(pageWithImage).toBe(expectedHtml);
+            function getFixture(platform: string): string {
+                return fs.readFileSync(path.join(__dirname, `fixtures/cjk-expected-base64-image/${platform}.html`), 'utf8').replace(/\s/g, '');
+            }
+
+            expect(
+                pageWithImage === getFixture('ubuntu-runner') ||
+                pageWithImage === getFixture('macos-runner') ||
+                pageWithImage === getFixture('macos-local')
+            ).toBeTruthy();
+
         }, 20000);
     });
 

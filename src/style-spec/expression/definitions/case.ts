@@ -1,4 +1,3 @@
-import assert from 'assert';
 
 import {BooleanType} from '../types';
 
@@ -48,7 +47,7 @@ class Case implements Expression {
         const otherwise = context.parse(args[args.length - 1], args.length - 1, outputType);
         if (!otherwise) return null;
 
-        assert(outputType);
+        if (!outputType) throw new Error('Can\'t infer output type');
         return new Case((outputType as any), branches, otherwise);
     }
 
@@ -71,12 +70,6 @@ class Case implements Expression {
 
     outputDefined(): boolean {
         return this.branches.every(([_, out]) => out.outputDefined()) && this.otherwise.outputDefined();
-    }
-
-    serialize() {
-        const serialized = ['case' as unknown];
-        this.eachChild(child => { serialized.push(child.serialize()); });
-        return serialized;
     }
 }
 

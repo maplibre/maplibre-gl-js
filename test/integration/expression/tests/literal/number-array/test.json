@@ -8,7 +8,6 @@
       "isZoomConstant": true,
       "type": "array<number, 2>"
     },
-    "outputs": [[1, 2]],
-    "serialized": ["literal", [1, 2]]
+    "outputs": [[1, 2]]
   }
 }

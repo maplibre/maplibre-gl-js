@@ -17,7 +17,6 @@
       "isZoomConstant": true,
       "type": "color"
     },
-    "outputs": [[1, 0, 0, 1], [0, 0, 1, 1], [1, 0, 0, 1]],
-    "serialized": ["to-color", ["get", "p"], "red"]
+    "outputs": [[1, 0, 0, 1], [0, 0, 1, 1], [1, 0, 0, 1]]
   }
 }

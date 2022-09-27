@@ -23,7 +23,6 @@
       "isZoomConstant": true,
       "type": "string"
     },
-    "outputs": ["-1", "0", "1", "-1"],
-    "serialized": ["match", ["get", "p"], "0", "0", "1", "1", "-1"]
+    "outputs": ["-1", "0", "1", "-1"]
   }
 }

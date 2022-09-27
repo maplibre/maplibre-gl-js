@@ -1,5 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import DOM from '../../util/dom';
+import type Map from '../map';
 
 class TwoTouchHandler {
 
@@ -23,7 +24,6 @@ class TwoTouchHandler {
     _move(points: [Point, Point], pinchAround: Point, e: TouchEvent) { return {}; } //eslint-disable-line
 
     touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
-        //console.log(e.target, e.targetTouches.length ? e.targetTouches[0].target : null);
         //log('touchstart', points, e.target.innerHTML, e.targetTouches.length ? e.targetTouches[0].target.innerHTML: undefined);
         if (this._firstTwoTouches || mapTouches.length < 2) return;
 
@@ -203,12 +203,24 @@ export class TouchPitchHandler extends TwoTouchHandler {
     _valid: boolean | void;
     _firstMove: number;
     _lastPoints: [Point, Point];
+    _map: Map;
+    _currentTouchCount: number;
+
+    constructor(map: Map) {
+        super();
+        this._map = map;
+    }
 
     reset() {
         super.reset();
         this._valid = undefined;
         delete this._firstMove;
         delete this._lastPoints;
+    }
+
+    touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+        super.touchstart(e, points, mapTouches);
+        this._currentTouchCount = mapTouches.length;
     }
 
     _start(points: [Point, Point]) {
@@ -221,6 +233,11 @@ export class TouchPitchHandler extends TwoTouchHandler {
     }
 
     _move(points: [Point, Point], center: Point, e: TouchEvent) {
+        // If cooperative gestures is enabled, we need a 3-finger minimum for this gesture to register
+        if (this._map._cooperativeGestures && this._currentTouchCount < 3) {
+            return;
+        }
+
         const vectorA = points[0].sub(this._lastPoints[0]);
         const vectorB = points[1].sub(this._lastPoints[1]);
 

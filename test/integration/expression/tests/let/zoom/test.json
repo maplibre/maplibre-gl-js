@@ -23,22 +23,6 @@
       "isZoomConstant": false,
       "type": "number"
     },
-    "outputs": [20],
-    "serialized": [
-      "let",
-      "z0_value",
-      ["number", ["get", "a"]],
-      "z20_value",
-      ["number", ["get", "b"]],
-      [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        0,
-        ["var", "z0_value"],
-        20,
-        ["var", "z20_value"]
-      ]
-    ]
+    "outputs": [20]
   }
 }

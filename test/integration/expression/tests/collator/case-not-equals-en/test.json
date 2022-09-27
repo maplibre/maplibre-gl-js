@@ -23,18 +23,6 @@
       "isZoomConstant": true,
       "type": "boolean"
     },
-    "outputs": [false, true, false],
-    "serialized": [
-      "!",
-      [
-        "!=",
-        ["string", ["get", "lhs"]],
-        ["get", "rhs"],
-        [
-          "collator",
-          {"case-sensitive": false, "diacritic-sensitive": true, "locale": "en"}
-        ]
-      ]
-    ]
+    "outputs": [false, true, false]
   }
 }

@@ -1,5 +1,4 @@
 import shaders from '../shaders/shaders';
-import assert from 'assert';
 import ProgramConfiguration from '../data/program_configuration';
 import VertexArrayObject from './vertex_array_object';
 import Context from '../gl/context';
@@ -84,7 +83,6 @@ class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(fragmentShader, fragmentSource);
         gl.compileShader(fragmentShader);
-        assert(gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS), (gl.getShaderInfoLog(fragmentShader) as any));
         gl.attachShader(this.program, fragmentShader);
 
         const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -94,7 +92,6 @@ class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(vertexShader, vertexSource);
         gl.compileShader(vertexShader);
-        assert(gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS), (gl.getShaderInfoLog(vertexShader) as any));
         gl.attachShader(this.program, vertexShader);
 
         this.attributes = {};
@@ -110,7 +107,6 @@ class Program<Us extends UniformBindings> {
         }
 
         gl.linkProgram(this.program);
-        assert(gl.getProgramParameter(this.program, gl.LINK_STATUS), (gl.getProgramInfoLog(this.program) as any));
 
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
@@ -178,11 +174,18 @@ class Program<Us extends UniformBindings> {
             configuration.setUniforms(context, this.binderUniforms, currentProperties, {zoom: (zoom as any)});
         }
 
-        const primitiveSize = {
-            [gl.LINES]: 2,
-            [gl.TRIANGLES]: 3,
-            [gl.LINE_STRIP]: 1
-        }[drawMode];
+        let primitiveSize = 0;
+        switch (drawMode) {
+            case gl.LINES:
+                primitiveSize = 2;
+                break;
+            case gl.TRIANGLES:
+                primitiveSize = 3;
+                break;
+            case gl.LINE_STRIP:
+                primitiveSize = 1;
+                break;
+        }
 
         for (const segment of segments.get()) {
             const vaos = segment.vaos || (segment.vaos = {});

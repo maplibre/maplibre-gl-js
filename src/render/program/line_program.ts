@@ -186,7 +186,7 @@ function calculateTileRatio(tile: Tile, transform: Transform) {
     return 1 / pixelsToTileUnits(tile, 1, transform.tileZoom);
 }
 
-function calculateMatrix(painter, tile, layer, coord) {
+function calculateMatrix(painter: Painter, tile: Tile, layer: LineStyleLayer, coord: OverscaledTileID) {
     return painter.translatePosMatrix(
         coord ? coord.posMatrix : tile.tileID.posMatrix,
         tile,

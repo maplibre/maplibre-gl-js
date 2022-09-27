@@ -48,7 +48,7 @@ events['dblclick'] = function (target, options) {
     };
 });
 
-[ 'mouseup', 'mousedown', 'mouseover', 'mousemove', 'mouseout' ].forEach((event) => {
+['mouseup', 'mousedown', 'mouseover', 'mousemove', 'mouseout', 'contextmenu'].forEach((event) => {
     events[event] = function (target, options) {
         options = Object.assign({bubbles: true}, options);
         const MouseEvent = window(target).MouseEvent;
@@ -56,7 +56,7 @@ events['dblclick'] = function (target, options) {
     };
 });
 
-[ 'wheel', 'mousewheel' ].forEach((event) => {
+['wheel', 'mousewheel'].forEach((event) => {
     events[event] = function (target, options) {
         options = Object.assign({bubbles: true}, options);
         const WheelEvent = window(target).WheelEvent;
@@ -68,7 +68,7 @@ events['dblclick'] = function (target, options) {
 // (rather than a trackpad)
 events['magicWheelZoomDelta'] = 4.000244140625;
 
-[ 'touchstart', 'touchend', 'touchmove', 'touchcancel' ].forEach((event) => {
+['touchstart', 'touchend', 'touchmove', 'touchcancel'].forEach((event) => {
     events[event] = function (target, options) {
         // Should be using Touch constructor here, but https://github.com/jsdom/jsdom/issues/2152.
         const defaultTouches = event.endsWith('end') || event.endsWith('cancel') ? [] : [{clientX: 0, clientY: 0}];
@@ -86,4 +86,28 @@ events['magicWheelZoomDelta'] = 4.000244140625;
     };
 });
 
-export default events;
+interface EventsInterface {
+    click: Function;
+    drag: Function;
+    dblclick: Function;
+    keydown: Function;
+    keyup: Function;
+    keypress: Function;
+    mouseup: Function;
+    mousedown: Function;
+    mouseover: Function;
+    mousemove: Function;
+    mouseout: Function;
+    contextmenu: Function;
+    wheel: Function;
+    mousewheel: Function;
+    magicWheelZoomDelta: Number;
+    touchstart: Function;
+    touchend: Function;
+    touchmove: Function;
+    touchcancel: Function;
+    focus: Function;
+    blur: Function;
+}
+
+export default events as EventsInterface;

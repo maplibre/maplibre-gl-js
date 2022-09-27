@@ -155,7 +155,9 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     actualImg.data = data as any;
 
     // there may be multiple expected images, covering different platforms
-    const expectedPaths = glob.sync(path.join(dir, 'expected*.png'));
+    let globPattern = path.join(dir, 'expected*.png');
+    globPattern = globPattern.replace(/\\/g, '/'); // ensure a Windows path is converted to a glob compatible pattern.
+    const expectedPaths = glob.sync(globPattern);
 
     if (!process.env.UPDATE && expectedPaths.length === 0) {
         throw new Error('No expected*.png files found; did you mean to run tests with UPDATE=true?');
@@ -216,9 +218,7 @@ function mockXhr() {
 
             let body: Buffer = null;
             try {
-                if (relativePath.startsWith('mapbox-gl-styles')) {
-                    body = fs.readFileSync(path.join(path.dirname(require.resolve('mapbox-gl-styles')), '..', relativePath));
-                } else if (relativePath.startsWith('mvt-fixtures')) {
+                if (relativePath.startsWith('mvt-fixtures')) {
                     body = fs.readFileSync(path.join(path.dirname(require.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
                 } else {
                     body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
@@ -228,7 +228,7 @@ function mockXhr() {
                 } else {
                     req.response = body;
                 }
-                req.setStatus(200);
+                req.setStatus(req.response.length > 0 ? 200 : 204);
                 req.onload();
             } catch (ex) {
                 req.setStatus(404); // file not found
@@ -248,7 +248,8 @@ function mockXhr() {
 function getTestStyles(options: RenderOptions, directory: string): StyleWithTestData[] {
     const tests = options.tests || [];
 
-    const sequence = glob.sync('**/style.json', {cwd: directory})
+    const globCwd = directory.replace(/\\/g, '/'); // ensure a Windows path is converted to a glob compatible pattern.
+    const sequence = glob.sync('**/style.json', {cwd: globCwd})
         .map(fixture => {
             const id = path.dirname(fixture);
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;
@@ -276,7 +277,7 @@ function getTestStyles(options: RenderOptions, directory: string): StyleWithTest
                 console.log(`* skipped ${test.id}`);
                 return false;
             }
-            localizeURLs(style, 2900, path.join(__dirname, '../'), require);
+            localizeURLs(style, 2900, path.join(__dirname, '../'));
             return true;
         });
     return sequence;

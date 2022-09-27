@@ -1,6 +1,7 @@
 import Color from '../style-spec/util/color';
 import DepthMode from '../gl/depth_mode';
 import CullFaceMode from '../gl/cull_face_mode';
+import ColorMode from '../gl/color_mode';
 import {
     fillUniformValues,
     fillPatternUniformValues,
@@ -56,7 +57,14 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
     }
 }
 
-function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, isOutline) {
+function drawFillTiles(
+    painter: Painter,
+    sourceCache: SourceCache,
+    layer: FillStyleLayer,
+    coords: Array<OverscaledTileID>,
+    depthMode: Readonly<DepthMode>,
+    colorMode: Readonly<ColorMode>,
+    isOutline: boolean) {
     const gl = painter.context.gl;
 
     const patternProperty = layer.paint.get('fill-pattern');
@@ -81,7 +89,7 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(programName, programConfiguration);
-        const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);

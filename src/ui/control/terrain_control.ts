@@ -11,14 +11,15 @@ import type {TerrainSpecification} from '../../style-spec/types.g';
  * @implements {IControl}
  * @param {Object} [options]
  * @param {string} [options.id] The ID of the raster-dem source to use.
- * @param {exaggeration: number; elevationOffset: number} [options.options] Allowed options are exaggeration: number; elevationOffset: number
+ * @param {Object} [options.options]
+ * @param {number} [options.options.exaggeration]
  * @example
  * var map = new maplibregl.Map({TerrainControl: false})
  *     .addControl(new maplibregl.TerrainControl({
  *         source: "terrain"
  *     }));
  */
-class TerrainControl implements IControl {
+export default class TerrainControl implements IControl {
     options: TerrainSpecification;
     _map: Map;
     _container: HTMLElement;
@@ -35,9 +36,9 @@ class TerrainControl implements IControl {
 
     onAdd(map: Map) {
         this._map = map;
-        this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group mapboxgl-ctrl mapboxgl-ctrl-group');
-        this._terrainButton = DOM.create('button', 'maplibregl-ctrl-terrain mapboxgl-ctrl-terrain', this._container);
-        DOM.create('span', 'maplibregl-ctrl-icon mapboxgl-ctrl-icon', this._terrainButton).setAttribute('aria-hidden', 'true');
+        this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
+        this._terrainButton = DOM.create('button', 'maplibregl-ctrl-terrain', this._container);
+        DOM.create('span', 'maplibregl-ctrl-icon', this._terrainButton).setAttribute('aria-hidden', 'true');
         this._terrainButton.type = 'button';
         this._terrainButton.addEventListener('click', this._toggleTerrain);
 
@@ -62,16 +63,14 @@ class TerrainControl implements IControl {
     }
 
     _updateTerrainIcon() {
-        this._terrainButton.classList.remove('maplibregl-ctrl-terrain', 'mapboxgl-ctrl-terrain');
-        this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled', 'mapboxgl-ctrl-terrain-enabled');
-        if (this._map.style.terrain) {
-            this._terrainButton.classList.add('maplibregl-ctrl-terrain-enabled', 'mapboxgl-ctrl-terrain-enabled');
+        this._terrainButton.classList.remove('maplibregl-ctrl-terrain');
+        this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled');
+        if (this._map.terrain) {
+            this._terrainButton.classList.add('maplibregl-ctrl-terrain-enabled');
             this._terrainButton.title = this._map._getUIString('TerrainControl.disableTerrain');
         } else {
-            this._terrainButton.classList.add('maplibregl-ctrl-terrain', 'mapboxgl-ctrl-terrain');
+            this._terrainButton.classList.add('maplibregl-ctrl-terrain');
             this._terrainButton.title = this._map._getUIString('TerrainControl.enableTerrain');
         }
     }
 }
-
-export default TerrainControl;

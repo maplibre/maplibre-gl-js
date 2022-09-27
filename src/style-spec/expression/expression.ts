@@ -2,8 +2,9 @@ import type {Type} from './types';
 import type ParsingContext from './parsing_context';
 import type EvaluationContext from './evaluation_context';
 
-type SerializedExpression = Array<unknown> | string | number | boolean | null;
-
+/**
+ * Expression
+ */
 export interface Expression {
     readonly type: Type;
     evaluate(ctx: EvaluationContext): any;
@@ -13,7 +14,6 @@ export interface Expression {
      * false if the complete set of outputs is statically undecidable, otherwise true.
      */
     outputDefined(): boolean;
-    serialize(): SerializedExpression;
 }
 
 export type ExpressionParser = (args: ReadonlyArray<unknown>, context: ParsingContext) => Expression;

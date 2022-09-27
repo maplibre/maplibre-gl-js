@@ -101,7 +101,7 @@ function getGlCoordMatrix(posMatrix: mat4,
     }
 }
 
-function project(point: Point, matrix: mat4, getElevation: (x: number, y: number) => number) {
+function project(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
     let pos;
     if (getElevation) { // slow because of handle z-index
         pos = [point.x, point.y, getElevation(point.x, point.y), 1] as vec4;

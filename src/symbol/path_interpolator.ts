@@ -1,6 +1,5 @@
 import {clamp} from '../util/util';
 import Point from '@mapbox/point-geometry';
-import assert from 'assert';
 
 class PathInterpolator {
     points: Array<Point>;
@@ -30,7 +29,6 @@ class PathInterpolator {
     }
 
     lerp(t: number): Point {
-        assert(this.points.length > 0);
         if (this.points.length === 1) {
             return this.points[0];
         }

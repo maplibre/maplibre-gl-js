@@ -1,5 +1,3 @@
-import assert from 'assert';
-
 export type TaskID = number; // can't mark opaque due to https://github.com/flowtype/flow-remove-types/pull/61
 
 type Task = {
@@ -40,7 +38,7 @@ class TaskQueue {
     }
 
     run(timeStamp: number = 0) {
-        assert(!this._currentlyRunning);
+        if (this._currentlyRunning) throw new Error('Attempting to run(), but is already running.');
         const queue = this._currentlyRunning = this._queue;
 
         // Tasks queued by callbacks in the current queue should be executed

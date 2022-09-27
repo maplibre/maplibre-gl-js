@@ -22,15 +22,6 @@
       "isZoomConstant": true,
       "type": "array<string>"
     },
-    "outputs": [],
-    "serialized": [
-      "match",
-      ["number", ["get", "x"]],
-      0,
-      ["literal", ["one"]],
-      10,
-      ["literal", ["one", "two"]],
-      ["literal", ["one", "two", "three"]]
-    ]
+    "outputs": []
   }
 }

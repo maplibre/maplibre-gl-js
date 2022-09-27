@@ -13,7 +13,6 @@
       "isZoomConstant": true,
       "type": "array<number, 2>"
     },
-    "outputs": [],
-    "serialized": ["array", "number", 2, ["get", "x"]]
+    "outputs": []
   }
 }

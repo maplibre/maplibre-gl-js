@@ -6,18 +6,18 @@ import validate from './validate_style';
 describe('migrate', () => {
     test('does not migrate from version 5', () => {
         expect(() => {
-            migrate({version: 5, layers: []});
+            migrate({version: 5, layers: []} as any);
         }).toThrow(new Error('Cannot migrate from 5'));
     });
 
     test('does not migrate from version 6', () => {
         expect(() => {
-            migrate({version: 6, layers: []});
+            migrate({version: 6, layers: []} as any);
         }).toThrow(new Error('Cannot migrate from 6'));
     });
 
     test('migrates to latest version from version 7', () => {
-        expect(migrate({version: 7, layers: []}).version).toEqual(spec.latest.$version);
+        expect(migrate({version: 7, layers: []} as any).version).toEqual(spec.latest.$version);
     });
 
     test('converts token strings to expressions', () => {
@@ -28,7 +28,7 @@ describe('migrate', () => {
                 type: 'symbol',
                 layout: {'text-field': 'a{x}', 'icon-image': '{y}'}
             }]
-        });
+        } as any);
         expect(migrated.layers[0].layout['text-field']).toEqual(['concat', 'a', ['get', 'x']]);
         expect(migrated.layers[0].layout['icon-image']).toEqual(['to-string', ['get', 'y']]);
     });
@@ -55,7 +55,7 @@ describe('migrate', () => {
                     }
                 }
             }]
-        });
+        } as any);
         expect(migrated.layers[0].paint['background-opacity']).toEqual([
             'interpolate',
             ['linear'],
@@ -99,10 +99,10 @@ describe('migrate', () => {
                     }
                 }
             }]
-        });
+        } as any);
         expect(migrated.layers[0].layout['icon-image']).toEqual([
             'match',
-            ['get', 'type' ],
+            ['get', 'type'],
             'park',
             'some-icon',
             ''

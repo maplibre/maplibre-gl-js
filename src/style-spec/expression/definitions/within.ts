@@ -329,11 +329,6 @@ class Within implements Expression {
     outputDefined(): boolean {
         return true;
     }
-
-    serialize(): Array<unknown> {
-        return ['within', this.geojson];
-    }
-
 }
 
 export default Within;

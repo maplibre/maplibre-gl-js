@@ -1,6 +1,7 @@
 import {createFunction} from './index';
 import Color from '../util/color';
 import Formatted from '../expression/types/formatted';
+import Padding from '../util/padding';
 
 describe('binary search', () => {
     test('will eventually terminate.', () => {
@@ -233,6 +234,19 @@ describe('exponential function', () => {
             type: 'color'
         });
         expect(params).toEqual(paramsCopy);
+    });
+
+    test('padding', () => {
+        const f = createFunction({
+            type: 'exponential',
+            stops: [[1, 2], [11, [2, 5, 2, 7]]]
+        }, {
+            type: 'padding'
+        }).evaluate;
+
+        expect(f({zoom: 0}, undefined)).toEqual(new Padding([2, 2, 2, 2]));
+        expect(f({zoom: 5}, undefined)).toEqual(new Padding([2, 3.2, 2, 4]));
+        expect(f({zoom: 11}, undefined)).toEqual(new Padding([2, 5, 2, 7]));
     });
 
     test('property present', () => {
@@ -532,9 +546,22 @@ describe('interval function', () => {
         }).evaluate;
 
         expect(f({zoom: 0}, undefined)).toEqual(new Color(1, 0, 0, 1));
-        expect(f({zoom: 0}, undefined)).toEqual(new Color(1, 0, 0, 1));
+        expect(f({zoom: 10}, undefined)).toEqual(new Color(1, 0, 0, 1));
         expect(f({zoom: 11}, undefined)).toEqual(new Color(0, 0, 1, 1));
 
+    });
+
+    test('padding', () => {
+        const f = createFunction({
+            type: 'interval',
+            stops: [[1, 2], [11, 4]]
+        }, {
+            type: 'padding'
+        }).evaluate;
+
+        expect(f({zoom: 0}, undefined)).toEqual(new Padding([2, 2, 2, 2]));
+        expect(f({zoom: 10}, undefined)).toEqual(new Padding([2, 2, 2, 2]));
+        expect(f({zoom: 11}, undefined)).toEqual(new Padding([4, 4, 4, 4]));
     });
 
     test('property present', () => {
@@ -746,6 +773,47 @@ describe('categorical function', () => {
 
     });
 
+    test('padding', () => {
+        const f = createFunction({
+            property: 'foo',
+            type: 'categorical',
+            stops: [[0, 2], [1, 4]]
+        }, {
+            type: 'padding'
+        }).evaluate;
+
+        expect(f({zoom: 0}, {properties: {foo: 0}})).toEqual(new Padding([2, 2, 2, 2]));
+        expect(f({zoom: 1}, {properties: {foo: 1}})).toEqual(new Padding([4, 4, 4, 4]));
+    });
+
+    test('padding function default', () => {
+        const f = createFunction({
+            property: 'foo',
+            type: 'categorical',
+            stops: [[0, 2], [1, 4]],
+            default: 6
+        }, {
+            type: 'padding'
+        }).evaluate;
+
+        expect(f({zoom: 0}, {properties: {}})).toEqual(new Padding([6, 6, 6, 6]));
+        expect(f({zoom: 0}, {properties: {foo: 3}})).toEqual(new Padding([6, 6, 6, 6]));
+    });
+
+    test('padding spec default', () => {
+        const f = createFunction({
+            property: 'foo',
+            type: 'categorical',
+            stops: [[0, 2], [1, 4]]
+        }, {
+            type: 'padding',
+            default: 6
+        }).evaluate;
+
+        expect(f({zoom: 0}, {properties: {}})).toEqual(new Padding([6, 6, 6, 6]));
+        expect(f({zoom: 0}, {properties: {foo: 3}})).toEqual(new Padding([6, 6, 6, 6]));
+    });
+
     test('boolean', () => {
         const f = createFunction({
             property: 'foo',
@@ -851,6 +919,54 @@ describe('identity function', () => {
 
         expect(f({zoom: 0}, {properties: {foo: 'invalid'}})).toEqual(new Color(1, 0, 0, 1));
 
+    });
+
+    test('padding', () => {
+        const f = createFunction({
+            property: 'foo',
+            type: 'identity'
+        }, {
+            type: 'padding'
+        }).evaluate;
+
+        expect(f({zoom: 0}, {properties: {foo: 3}})).toEqual(new Padding([3, 3, 3, 3]));
+        expect(f({zoom: 1}, {properties: {foo: [3, 4]}})).toEqual(new Padding([3, 4, 3, 4]));
+    });
+
+    test('padding function default', () => {
+        const f = createFunction({
+            property: 'foo',
+            type: 'identity',
+            default: [1, 2, 3, 4]
+        }, {
+            type: 'padding'
+        }).evaluate;
+
+        expect(f({zoom: 0}, {properties: {}})).toEqual(new Padding([1, 2, 3, 4]));
+    });
+
+    test('padding spec default', () => {
+        const f = createFunction({
+            property: 'foo',
+            type: 'identity'
+        }, {
+            type: 'padding',
+            default: [1, 2, 3, 4]
+        }).evaluate;
+
+        expect(f({zoom: 0}, {properties: {}})).toEqual(new Padding([1, 2, 3, 4]));
+    });
+
+    test('padding invalid', () => {
+        const f = createFunction({
+            property: 'foo',
+            type: 'identity'
+        }, {
+            type: 'padding',
+            default: [1, 2, 3, 4]
+        }).evaluate;
+
+        expect(f({zoom: 0}, {properties: {foo: 'invalid'}})).toEqual(new Padding([1, 2, 3, 4]));
     });
 
     test('property type mismatch, function default', () => {

@@ -19,12 +19,6 @@
       "isZoomConstant": true,
       "type": "array<string>"
     },
-    "outputs": [],
-    "serialized": [
-      "case",
-      ["boolean", ["get", "x"]],
-      ["literal", ["one"]],
-      ["literal", ["one", "two"]]
-    ]
+    "outputs": []
   }
 }

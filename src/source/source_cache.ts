@@ -10,7 +10,6 @@ import Context from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import browser from '../util/browser';
 import {OverscaledTileID} from './tile_id';
-import assert from 'assert';
 import SourceFeatureState from './source_state';
 
 import type {Source} from './source';
@@ -492,7 +491,7 @@ class SourceCache extends Evented {
      * are inside the viewport.
      * @private
      */
-    update(transform: Transform, terrain: Terrain) {
+    update(transform: Transform, terrain?: Terrain) {
         this.transform = transform;
         this.terrain = terrain;
         if (!this._sourceLoaded || this._paused) { return; }
@@ -556,7 +555,6 @@ class SourceCache extends Evented {
             const ids = Object.keys(retain);
             for (const id of ids) {
                 const tileID = retain[id];
-                assert(tileID.key === id);
 
                 const tile = this._tiles[id];
                 if (!tile || tile.fadeEndTime && tile.fadeEndTime <= browser.now()) continue;

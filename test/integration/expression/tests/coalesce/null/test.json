@@ -9,7 +9,6 @@
       "isZoomConstant": true,
       "type": "value"
     },
-    "outputs": [1, 0],
-    "serialized": ["coalesce", ["get", "z"], 0]
+    "outputs": [1, 0]
   }
 }

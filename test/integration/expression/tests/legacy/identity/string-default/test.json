@@ -18,7 +18,6 @@
       "isZoomConstant": true,
       "type": "string"
     },
-    "outputs": ["default", "0", "1", "default"],
-    "serialized": ["string", ["get", "p"], "default"]
+    "outputs": ["default", "0", "1", "default"]
   }
 }

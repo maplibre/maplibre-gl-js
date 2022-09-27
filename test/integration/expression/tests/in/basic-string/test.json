@@ -1,8 +1,5 @@
 {
-  "expression": [
-    "boolean",
-    ["in", ["get", "substr"], ["get", "str"]]
-  ],
+  "expression": ["boolean", ["in", ["get", "substr"], ["get", "str"]]],
   "inputs": [
     [{}, {"properties": {"substr": null, "str": "helloworld"}}],
     [{}, {"properties": {"substr": "foo", "str": "helloworld"}}],
@@ -19,18 +16,6 @@
       "isZoomConstant": true,
       "type": "boolean"
     },
-    "outputs": [
-      false,
-      false,
-      true,
-      true,
-      true,
-      true,
-      false
-    ],
-    "serialized": [
-      "boolean",
-      ["in", ["get", "substr"], ["get", "str"]]
-    ]
+    "outputs": [false, false, true, true, true, true, false]
   }
 }

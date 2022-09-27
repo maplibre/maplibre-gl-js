@@ -155,7 +155,7 @@ describe('shapeIcon', () => {
     });
 
     test('text-anchor: center', () => {
-        expect(shapeIcon(imagePosition, [ 0, 0 ], 'center')).toEqual({
+        expect(shapeIcon(imagePosition, [0, 0], 'center')).toEqual({
             top: -10,
             bottom: 10,
             left: -10,
@@ -163,7 +163,7 @@ describe('shapeIcon', () => {
             image
         });
 
-        expect(shapeIcon(imagePosition, [ 4, 7 ], 'center')).toEqual({
+        expect(shapeIcon(imagePosition, [4, 7], 'center')).toEqual({
             top: -3,
             bottom: 17,
             left: -6,
@@ -174,7 +174,7 @@ describe('shapeIcon', () => {
     });
 
     test('text-anchor: left', () => {
-        expect(shapeIcon(imagePosition, [ 0, 0 ], 'left')).toEqual({
+        expect(shapeIcon(imagePosition, [0, 0], 'left')).toEqual({
             top: -10,
             bottom: 10,
             left: 0,
@@ -182,7 +182,7 @@ describe('shapeIcon', () => {
             image
         });
 
-        expect(shapeIcon(imagePosition, [ 4, 7 ], 'left')).toEqual({
+        expect(shapeIcon(imagePosition, [4, 7], 'left')).toEqual({
             top: -3,
             bottom: 17,
             left: 4,
@@ -193,7 +193,7 @@ describe('shapeIcon', () => {
     });
 
     test('text-anchor: bottom-right', () => {
-        expect(shapeIcon(imagePosition, [ 0, 0 ], 'bottom-right')).toEqual({
+        expect(shapeIcon(imagePosition, [0, 0], 'bottom-right')).toEqual({
             top: -20,
             bottom: 0,
             left: -20,
@@ -201,7 +201,7 @@ describe('shapeIcon', () => {
             image
         });
 
-        expect(shapeIcon(imagePosition, [ 4, 7 ], 'bottom-right')).toEqual({
+        expect(shapeIcon(imagePosition, [4, 7], 'bottom-right')).toEqual({
             top: -13,
             bottom: 7,
             left: -16,
@@ -223,7 +223,7 @@ describe('fitIconToText', () => {
         collisionPadding: undefined,
         image: Object.freeze({
             pixelRatio: 1,
-            displaySize: [ 20, 20 ],
+            displaySize: [20, 20],
             paddedRect: Object.freeze({x: 0, y: 0, w: 22, h: 22})
         })
     }) as PositionedIcon;
@@ -271,7 +271,7 @@ describe('fitIconToText', () => {
 
         // Ignores padding for top/bottom, since the icon is only stretched to the text's width but not height
         expect(
-            fitIconToText(shapedIcon, shapedText, 'width', [ 5, 10, 5, 10 ], [0, 0], 12 / glyphSize)
+            fitIconToText(shapedIcon, shapedText, 'width', [5, 10, 5, 10], [0, 0], 12 / glyphSize)
         ).toEqual({
             image: shapedIcon.image,
             collisionPadding: undefined,
@@ -319,7 +319,7 @@ describe('fitIconToText', () => {
 
         // Ignores padding for left/right, since the icon is only stretched to the text's height but not width
         expect(
-            fitIconToText(shapedIcon, shapedText, 'height', [ 5, 10, 5, 10 ], [0, 0], 12 / glyphSize)
+            fitIconToText(shapedIcon, shapedText, 'height', [5, 10, 5, 10], [0, 0], 12 / glyphSize)
         ).toEqual({
             image: shapedIcon.image,
             collisionPadding: undefined,
@@ -366,7 +366,7 @@ describe('fitIconToText', () => {
         });
 
         expect(
-            fitIconToText(shapedIcon, shapedText, 'both', [ 5, 10, 5, 10 ], [0, 0], 12 / glyphSize)
+            fitIconToText(shapedIcon, shapedText, 'both', [5, 10, 5, 10], [0, 0], 12 / glyphSize)
         ).toEqual({
             image: shapedIcon.image,
             collisionPadding: undefined,
@@ -377,7 +377,7 @@ describe('fitIconToText', () => {
         });
 
         expect(
-            fitIconToText(shapedIcon, shapedText, 'both', [ 0, 5, 10, 15 ], [0, 0], 12 / glyphSize)
+            fitIconToText(shapedIcon, shapedText, 'both', [0, 5, 10, 15], [0, 0], 12 / glyphSize)
         ).toEqual({
             image: shapedIcon.image,
             collisionPadding: undefined,

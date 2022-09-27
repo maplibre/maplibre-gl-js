@@ -18,13 +18,6 @@
       "isZoomConstant": false,
       "type": "string"
     },
-    "outputs": ["0 a", "2", "0 "],
-    "serialized": [
-      "step",
-      ["zoom"],
-      ["concat", "0 ", ["get", "a"]],
-      1,
-      ["to-string", ["get", "b"]]
-    ]
+    "outputs": ["0 a", "2", "0 "]
   }
 }

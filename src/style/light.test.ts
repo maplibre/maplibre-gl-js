@@ -77,7 +77,7 @@ describe('Light#setLight', () => {
         const light = new Light({});
 
         const lightSpy = jest.spyOn(light, '_validate');
-        light.setLight({color: [999]}, {validate: false});
+        light.setLight({color: [999]} as any, {validate: false});
         light.updateTransitions({transition: false} as any as TransitionParameters);
         light.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
 

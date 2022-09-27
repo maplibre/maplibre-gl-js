@@ -698,7 +698,7 @@ function paintAttributeNames(property, type) {
 
 function getLayoutException(property) {
     const propertyExceptions = {
-        'line-pattern':{
+        'line-pattern': {
             'source': PatternLayoutArray,
             'composite': PatternLayoutArray
         },
@@ -706,7 +706,7 @@ function getLayoutException(property) {
             'source': PatternLayoutArray,
             'composite': PatternLayoutArray
         },
-        'fill-extrusion-pattern':{
+        'fill-extrusion-pattern': {
             'source': PatternLayoutArray,
             'composite': PatternLayoutArray
         }

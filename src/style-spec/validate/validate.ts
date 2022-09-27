@@ -21,6 +21,7 @@ import validateTerrain from './validate_terrain';
 import validateString from './validate_string';
 import validateFormatted from './validate_formatted';
 import validateImage from './validate_image';
+import validatePadding from './validate_padding';
 
 const VALIDATORS = {
     '*'() {
@@ -41,7 +42,8 @@ const VALIDATORS = {
     'terrain': validateTerrain,
     'string': validateString,
     'formatted': validateFormatted,
-    'resolvedImage': validateImage
+    'resolvedImage': validateImage,
+    'padding': validatePadding
 };
 
 // Main recursive validation function. Tracks:

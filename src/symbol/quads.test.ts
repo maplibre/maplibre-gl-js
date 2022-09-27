@@ -4,7 +4,7 @@ import {getIconQuads} from './quads';
 describe('getIconQuads', () => {
     const image = Object.freeze({
         pixelRatio: 1,
-        displaySize: Object.freeze([ 15, 11 ]),
+        displaySize: Object.freeze([15, 11]),
         paddedRect: Object.freeze({x: 0, y: 0, w: 17, h: 13})
     }) as ImagePosition;
 

@@ -1,0 +1,16 @@
+{
+  "version": 8,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 15,
+      "tileSize": 256
+    }
+  },
+  "layers": [],
+  "terrain": {
+    "source": 123,
+    "exaggeration": "2"
+  }
+}

@@ -390,8 +390,50 @@ describe('Style#loadJSON', () => {
         }));
 
         style.on('style.load', () => {
-            expect(style.terrain).toBeDefined();
+            expect(style.map.terrain).toBeDefined();
             expect(map.transform.updateElevation).toHaveBeenCalled();
+            done();
+        });
+    });
+
+    test('applies transformStyle function', (done) => {
+        const previousStyle = createStyleJSON({
+            sources: {
+                base: {
+                    type: 'geojson',
+                    data: {type: 'FeatureCollection', features: []}
+                }
+            },
+            layers: [{
+                id: 'layerId0',
+                type: 'circle',
+                source: 'base'
+            }, {
+                id: 'layerId1',
+                type: 'circle',
+                source: 'base'
+            }]
+        });
+
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON(), {
+            transformStyle: (prevStyle, nextStyle) => ({
+                ...nextStyle,
+                sources: {
+                    ...nextStyle.sources,
+                    base: prevStyle.sources.base
+                },
+                layers: [
+                    ...nextStyle.layers,
+                    prevStyle.layers[0]
+                ]
+            })
+        }, previousStyle);
+
+        style.on('style.load', () => {
+            expect('base' in style.stylesheet.sources).toBeTruthy();
+            expect(style.stylesheet.layers[0].id).toBe(previousStyle.layers[0].id);
+            expect(style.stylesheet.layers).toHaveLength(1);
             done();
         });
     });
@@ -579,6 +621,52 @@ describe('Style#setState', () => {
             expect(mockGeoJSONSourceSetData).toHaveBeenCalledWith(geoJSONSourceData);
             expect(didChange).toBeTruthy();
             expect(style.stylesheet).toEqual(nextState);
+            done();
+        });
+    });
+
+    test('updates stylesheet according to applied transformStyle function', done => {
+        const initialState = createStyleJSON({
+            sources: {
+                base: {
+                    type: 'geojson',
+                    data: {type: 'FeatureCollection', features: []}
+                }
+            },
+            layers: [{
+                id: 'layerId0',
+                type: 'circle',
+                source: 'base'
+            }, {
+                id: 'layerId1',
+                type: 'circle',
+                source: 'base'
+            }]
+        });
+
+        const nextState = createStyleJSON();
+        const style = new Style(getStubMap());
+        style.loadJSON(initialState);
+
+        style.on('style.load', () => {
+            const didChange = style.setState(nextState, {
+                transformStyle: (prevStyle, nextStyle) => ({
+                    ...nextStyle,
+                    sources: {
+                        ...nextStyle.sources,
+                        base: prevStyle.sources.base
+                    },
+                    layers: [
+                        ...nextStyle.layers,
+                        prevStyle.layers[0]
+                    ]
+                })
+            });
+
+            expect(didChange).toBeTruthy();
+            expect('base' in style.stylesheet.sources).toBeTruthy();
+            expect(style.stylesheet.layers[0].id).toBe(initialState.layers[0].id);
+            expect(style.stylesheet.layers).toHaveLength(1);
             done();
         });
     });
@@ -883,7 +971,7 @@ describe('Style#addLayer', () => {
                 'type': 'geojson',
                 'data': {
                     'type': 'Point',
-                    'coordinates': [ 0, 0]
+                    'coordinates': [0, 0]
                 }
             };
             const layer = {id: 'inline-source-layer', type: 'circle', source} as any as LayerSpecification;
@@ -1901,7 +1989,7 @@ describe('Style#queryRenderedFeatures', () => {
                 errors++;
             }
         });
-        style.queryRenderedFeatures([{x: 0, y: 0}], {layers:'string'}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0}], {layers: 'string'}, transform);
         expect(errors).toBe(1);
     });
 
@@ -1939,7 +2027,7 @@ describe('Style#queryRenderedFeatures', () => {
         jest.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error'] && event['error'].message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
         });
-        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers:['merp']}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['merp']}, transform);
         expect(errors).toBe(1);
         expect(results).toHaveLength(0);
     });

@@ -1,4 +1,3 @@
-import assert from 'assert';
 
 import type {
     StructArray,
@@ -14,11 +13,11 @@ import type Context from '../gl/context';
  * @readonly
  */
 const AttributeType = {
-    Int8:   'BYTE',
-    Uint8:  'UNSIGNED_BYTE',
-    Int16:  'SHORT',
+    Int8: 'BYTE',
+    Uint8: 'UNSIGNED_BYTE',
+    Int16: 'SHORT',
     Uint16: 'UNSIGNED_SHORT',
-    Int32:  'INT',
+    Int32: 'INT',
     Uint32: 'UNSIGNED_INT',
     Float32: 'FLOAT'
 };
@@ -62,7 +61,7 @@ class VertexBuffer {
     }
 
     updateData(array: StructArray) {
-        assert(array.length === this.length);
+        if (array.length !== this.length) throw new Error(`Length of new data is ${array.length}, which doesn't match current length of ${this.length}`);
         const gl = this.context.gl;
         this.bind();
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, array.arrayBuffer);

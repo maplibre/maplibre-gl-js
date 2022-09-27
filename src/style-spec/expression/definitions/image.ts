@@ -43,8 +43,4 @@ export default class ImageExpression implements Expression {
         // The output of image is determined by the list of available images in the evaluation context
         return false;
     }
-
-    serialize() {
-        return ['image', this.input.serialize()];
-    }
 }

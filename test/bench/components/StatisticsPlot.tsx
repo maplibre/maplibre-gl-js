@@ -131,7 +131,7 @@ export const StatisticsPlot = (props:StatisticsPlotProps) => {
                                         x={scale(i)}
                                         y={t(d)}
                                         style={{
-                                            stroke:color,
+                                            stroke: color,
                                             strokeWidth: i === argmin || i === argmax ? 2 : 1,
                                             fill: 'rgba(200, 0, 0, 0.5)'
                                         }}
