@@ -1,0 +1,14 @@
+{
+  "propertySpec": {"type": "color"},
+  "expression": "red",
+  "inputs": [[{}, {}]],
+  "expected": {
+    "compiled": {
+      "result": "success",
+      "isFeatureConstant": true,
+      "isZoomConstant": true,
+      "type": "color"
+    },
+    "outputs": [[1, 0, 0, 1]]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "checkJs": false,
+    "esModuleInterop": true,
+    "importHelpers": false,
+    "isolatedModules": true,
+    //"importsNotUsedAsValues": "preserve",
+    "jsx": "react",
+    "module": "esnext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "skipLibCheck": false,
+    "sourceMap": true,
+    "strict": false,
+    "target": "ES2019",
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": ["node", "jest", "geojson", "offscreencanvas"]
+  },
+  "include": [
+    "rollup.config.**",
+    "src/**/*.ts",
+    "test/bench/**/*.ts",
+    "test/bench/**/*.tsx",
+    "build/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib",
+    "dist",
+    "test/bench/**/*generated*",
+    "src/**/*.test.ts"
+  ]
+}

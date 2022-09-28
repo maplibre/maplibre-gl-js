@@ -1,5 +1,9 @@
 Hi, and thanks in advance for contributing to MapLibre GL. Here's how we work. Please follow these conventions when submitting an issue or pull request.
 
+## Do not violate Mapbox copyright!
+In December 2020 Mapbox decided to publish future versions of mapbox-gl-js under a proprietary license. **You are not allowed to backport code from Mapbox projects which has been contributed under this new license**. Unauthorized backports are the biggest threat to the MapLibre project. If you are unsure about this issue, [please ask](https://github.com/maplibre/maplibre-gl-js/discussions)!
+
+
 ## Preparing your Development Environment
 
 ### OSX
@@ -9,13 +13,9 @@ Install the Xcode Command Line Tools Package
 xcode-select --install
 ```
 
-Install [node.js](https://nodejs.org/) version ^10.15 ( Minimum 10.15 while sticking only to major version 10.0 )
+Install [node.js](https://nodejs.org/) version ^16
 ```bash
 brew install node
-```
-Install [yarn](https://yarnpkg.com/en/)
-```bash
-brew install yarn
 ```
 
 Clone the repository
@@ -23,25 +23,47 @@ Clone the repository
 git clone git@github.com:maplibre/maplibre-gl-js.git
 ```
 
+Install dependencies for node_canvas (https://github.com/Automattic/node-canvas)
+```bash
+brew install pkg-config cairo pango libpng jpeg giflib librsvg
+```
+
 Install node module dependencies
 ```bash
 cd maplibre-gl-js &&
-yarn install
+npm install
+```
+
+**Apple silicon**
+If you have one of the newer arm64 machines, you might find that canvas.node or webgl.node can't be found for your architecture. In that case go to node_modules/canvas and node_modules/gl and run:
+
+```
+npm install --build-from-source
 ```
 
 ### Linux
 
-Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^10.15), [GNU Make](http://www.gnu.org/software/make/), and libglew-dev
+Install [git](https://git-scm.com/), [GNU Make](http://www.gnu.org/software/make/), and libglew-dev
 ```bash
 sudo apt-get update &&
-sudo apt-get install build-essential git nodejs libglew-dev libxi-dev
+sudo apt-get install build-essential git libglew-dev libxi-dev default-jre default-jdk
 ```
 
-Install [yarn](https://yarnpkg.com/en/docs/install#linux-tab)
+If prebuilt binaries for canvas and gl aren’t available, you will also need:
+
 ```bash
-curl -o- -L https://yarnpkg.com/install.sh | bash
+sudo apt-get install python-is-python3 pkg-config libpixman-1-dev libcairo2-dev libpango1.0-dev libgif-dev
 ```
-(It is also possible to install yarn from Debian/Ubuntu packages. See [yarn's install instructions](https://yarnpkg.com/en/docs/install#linux-tab)).
+
+Install [nvm](https://github.com/nvm-sh/nvm)
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+```
+
+Install [Node.js](https://nodejs.org/) ^16
+```
+nvm install 16
+```
 
 Clone the repository
 ```bash
@@ -51,12 +73,12 @@ git clone git@github.com:maplibre/maplibre-gl-js.git
 Install node module dependencies
 ```bash
 cd maplibre-gl-js &&
-yarn install
+npm install
 ```
 
 ### Windows
 
-Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^10.15), [yarn](https://yarnpkg.com/en/docs/install#windows-tab), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
+Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^16), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
 
 Clone the repository
 ```bash
@@ -67,7 +89,7 @@ git clone git@github.com:maplibre/maplibre-gl-js.git
 Install node module dependencies
 ```bash
 cd maplibre-gl-js
-yarn install
+npm install
 ```
 
 Install headless-gl dependencies https://github.com/stackgl/headless-gl#windows
@@ -80,22 +102,22 @@ copy node_modules/headless-gl/deps/windows/dll/x64/*.dll c:\windows\system32
 Start the debug server
 
 ```bash
-MAPBOX_ACCESS_TOKEN={YOUR MAPBOX ACCESS TOKEN} yarn run start-debug
+npm run start-debug
 ```
 
-Open the debug page at [http://localhost:9966/debug](http://localhost:9966/debug)
+Open the debug page at [http://localhost:9966/test/debug-pages](http://localhost:9966/test/debug-pages)
 
 ## Creating a Standalone Build
 
-A standalone build allows you to turn the contents of this repository into `mapbox-gl.js` and `mapbox-gl.css` files that can be included on an html page.
+A standalone build allows you to turn the contents of this repository into `maplibre-gl.js` and `maplibre-gl.css` files that can be included on an html page.
 
 To create a standalone build, run
 ```bash
-yarn run build-prod-min
-yarn run build-css
+npm run build-prod
+npm run build-css
 ```
 
-Once those commands finish, you will have a standalone build at `dist/mapbox-gl.js` and `dist/mapbox-gl.css`
+Once those commands finish, you will have a standalone build at `dist/maplibre-gl.js` and `dist/maplibre-gl.css`
 
 ## Writing & Running Tests
 
@@ -103,7 +125,7 @@ See [`test/README.md`](./test/README.md).
 
 ## Writing & Running Benchmarks
 
-See [`bench/README.md`](./bench/README.md).
+See [`test/bench/README.md`](./test/bench/README.md).
 
 ## Code Conventions
 

@@ -1,0 +1,36 @@
+{
+  "expression": [
+    "within",
+    {
+      "type": "Polygon",
+      "coordinates": [[[-360, 60], [0, 60], [0, 65], [-360, 65], [-360, 60]]]
+    }
+  ],
+  "inputs": [
+    [
+      {"zoom": 0, "canonicalID": {"z": 0, "x": 0, "y": 0}},
+      {"geometry": {"type": "Point", "coordinates": [-183, 61]}}
+    ],
+    [
+      {"zoom": 0, "canonicalID": {"z": 0, "x": 0, "y": 0}},
+      {"geometry": {"type": "Point", "coordinates": [-361, 61]}}
+    ],
+    [
+      {"zoom": 0, "canonicalID": {"z": 0, "x": 0, "y": 0}},
+      {"geometry": {"type": "Point", "coordinates": [183, 62]}}
+    ],
+    [
+      {"zoom": 0, "canonicalID": {"z": 0, "x": 0, "y": 0}},
+      {"geometry": {"type": "Point", "coordinates": [55, 62]}}
+    ]
+  ],
+  "expected": {
+    "compiled": {
+      "result": "success",
+      "isFeatureConstant": false,
+      "isZoomConstant": true,
+      "type": "boolean"
+    },
+    "outputs": [true, true, true, true]
+  }
+}

@@ -1,0 +1,61 @@
+{
+    "version": 8,
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "sources": {
+        "sample": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [0, 0]
+                        },
+                        "properties": {
+                            "name_en": "abc",
+                            "name_ja": "あいう",
+                            "name_ch": "阿衣乌"
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "sample-text-left",
+            "type": "symbol",
+            "source": "sample",
+            "layout": {
+                "text-anchor": "top",
+                "text-field": "{name_ja}\n{name_en}",
+                "text-font": ["NotoCJK"],
+                "text-offset": [-10, 0]
+            }
+        },
+        {
+            "id": "sample-text-center",
+            "type": "symbol",
+            "source": "sample",
+            "layout": {
+                "text-anchor": "top",
+                "text-field": "{name_ja}{name_en}{name_ch}",
+                "text-font": ["NotoCJK"],
+                "text-offset": [0, 0]
+            }
+        },
+        {
+            "id": "sample-text-right",
+            "type": "symbol",
+            "source": "sample",
+            "layout": {
+                "text-anchor": "top",
+                "text-field": "{name_en}\n{name_ch}",
+                "text-font": ["NotoCJK"],
+                "text-offset": [10, 0]
+            }
+        }
+    ]
+}

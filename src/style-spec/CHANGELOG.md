@@ -1,3 +1,52 @@
+## 17.0.1
+
+* Generated typings file as not created in the build process and was added in this version [#1470](https://github.com/maplibre/maplibre-gl-js/pull/1470)
+
+## 17.0.0
+
+### Breaking changes
+
+* Renamed `ParsingError` to `ExpressionParsingError` as there were two with the same name and added typescript typings [#1468](https://github.com/maplibre/maplibre-gl-js/pull/1468)
+
+## 16.1.0
+
+### ✨ Features and improvements
+* Update `icon-padding` symbol layout property to support asymmetric padding [#1289](https://github.com/maplibre/maplibre-gl-js/pull/1289)
+
+## 16.0.0
+
+### Breaking changes
+
+* index.js has been renamed to index.cjs to fix the 'is treated as an ES module file' error in node 12+ [#1223](https://github.com/maplibre/maplibre-gl-js/pull/1223)
+
+## 15.1.0
+
+### ✨ Features and improvements
+* Add `icon-overlap` and `text-overlap` symbol layout properties [#347](https://github.com/maplibre/maplibre-gl-js/pull/347)
+* Deprecate `icon-allow-overlap` and `text-allow-overlap` symbol layout properties. `icon-overlap` and `text-overlap` are their replacements.
+
+## 15.0.0
+
+### Breaking changes
+
+* The migration to TypeScript [#209](https://github.com/maplibre/maplibre-gl-js/pull/209) removed support for the `mapbox://` protocol.
+
+## 14.0.2
+
+### ✨ Features and improvements
+* Fix node entry points [#400](https://github.com/maplibre/maplibre-gl-js/issues/400)
+
+## 14.0.1
+
+### ✨ Features and improvements
+* Migrate MapLibre GL JS and the style specification to TypeScript [#209](https://github.com/maplibre/maplibre-gl-js/pull/209)
+
+## 14.0.0
+
+### Breaking changes
+
+* Remove the `--mapbox-api-supported` option of the `gl-style-validate` utility.
+
 ## 13.17.0
 
 ### ✨ Features and improvements
@@ -6,7 +55,7 @@
 ## 13.16.0
 
 ### ✨ Features and improvements
-* Added `volatile` source property to control storing the tiles in local storage. ([9702](https://github.com/mapbox/mapbox-gl-js/pull/9702))
+* Added `volatile` source property to control storing the tiles in local storage. ([#9702](https://github.com/mapbox/mapbox-gl-js/pull/9702))
 
 * Added `clusterMinPoints` option for clustered GeoJSON sources that defines the minimum number of points to form a cluster. ([#9748](https://github.com/mapbox/mapbox-gl-js/pull/9748))
 

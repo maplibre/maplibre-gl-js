@@ -1,0 +1,38 @@
+name: Upload Benchmarks
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload_benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js 16 x64
+        uses: actions/setup-node@v3.4.1
+        with:
+          node-version: 16
+          architecture: x64
+
+      - name: Install
+        run: npm ci
+
+      - name: Build benchmarks
+        run: npm run build-benchmarks
+
+      - name: Copy benchmarks_generated.js
+        run: |
+          mkdir tmp
+          cp test/bench/versions/benchmarks_generated.js tmp
+          cp test/bench/versions/benchmarks_generated.js.map tmp
+
+      - name: Upload to GitHub Pages (main)
+        if: startsWith(github.ref, 'refs/heads/main')
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: tmp
+          destination_dir: benchmarks/main

@@ -1,3 +1,6 @@
+#ifdef GL_ES
+    precision highp float;
+#endif
 uniform vec2 u_texsize;
 uniform float u_fade;
 

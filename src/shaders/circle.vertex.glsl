@@ -8,6 +8,7 @@ uniform highp float u_camera_to_center_distance;
 attribute vec2 a_pos;
 
 varying vec3 v_data;
+varying float v_visibility;
 
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define mediump float radius
@@ -32,6 +33,9 @@ void main(void) {
     // multiply a_pos by 0.5, since we had it * 2 in order to sneak
     // in extrusion data
     vec2 circle_center = floor(a_pos * 0.5);
+    float ele = get_elevation(circle_center);
+    v_visibility = calculate_visibility(u_matrix * vec4(circle_center, ele, 1.0));
+
     if (u_pitch_with_map) {
         vec2 corner_position = circle_center;
         if (u_scale_with_map) {
@@ -44,9 +48,9 @@ void main(void) {
             corner_position += extrude * (radius + stroke_width) * u_extrude_scale * (projected_center.w / u_camera_to_center_distance);
         }
 
-        gl_Position = u_matrix * vec4(corner_position, 0, 1);
+        gl_Position = u_matrix * vec4(corner_position, ele, 1);
     } else {
-        gl_Position = u_matrix * vec4(circle_center, 0, 1);
+        gl_Position = u_matrix * vec4(circle_center, ele, 1);
 
         if (u_scale_with_map) {
             gl_Position.xy += extrude * (radius + stroke_width) * u_extrude_scale * u_camera_to_center_distance;

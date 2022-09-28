@@ -1,104 +1,67 @@
 name: Release
 
 on:
-  workflow_dispatch:
-  push:
-    tags:
-      - v*
-    paths-ignore:
-      - ".github/**"
-      - "**/*.md"
+  workflow_dispatch
 
 jobs:
-  lint_build_test:
-    name: Build, Lint and Test
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Use Node.js 10 x64
-        uses: actions/setup-node@v2
-        with:
-          node-version: 10
-          architecture: x64
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install
-        run: yarn install --frozen-lockfile
-
-      - name: Validate version tag
-        run: |
-          node build\version-utils.js validate-latest-tag
-
-      - name: Prepare
-        id: prepare
-        run: |
-          $LatestVersionTag=$(node build\version-utils.js latest-version-tag)
-          echo "Latest version tag=$LatestVersionTag"
-          echo "::set-output name=version_tag::$LatestVersionTag"
-
-      - name: Ensure correct revision
-        run: |
-          git checkout tags/${{ steps.prepare.outputs.version_tag }}
-
-      - name: Lint
-        run: |
-          yarn run lint
-          yarn run lint-docs
-          yarn run lint-css
-
-      - name: Test
-        run: |
-          yarn run test-flow
-          yarn run test-unit
-          yarn run test-render
-          yarn run test-query
-          yarn run test-expressions
-
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: lint_build_test
     defaults:
       run:
         shell: bash
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          ref: main
 
-      - name: Use Node.js 10 x64
-        uses: actions/setup-node@v2
+      - name: Use Node.js 16 x64
+        uses: actions/setup-node@v3.4.1
         with:
-          node-version: 10
+          node-version: 16
           architecture: x64
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install
-        run: yarn install --frozen-lockfile
+      - name: Get version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.2.3
 
-      - name: Validate version tag
-        run: |
-          build/version-utils.js validate-latest-tag
+      - name: Check tag does not exist yet
+        run: if git rev-list v${{ steps.package-version.outputs.current-version }}; then echo "Tag already exists. Aborting the release process."; exit 1; fi
+
+      - name: Tag commit and push
+        uses: mathieudutour/github-tag-action@v6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{ steps.package-version.outputs.current-version }}
+
+      - name: Install
+        run: npm ci
 
       - name: Prepare release
         id: prepare_release
         run: |
-          echo ::set-output name=version_tag::$( build/version-utils.js latest-version-tag)
-          echo ::set-output name=version::$( build/version-utils.js version-from-tags)
-          echo ::set-output name=release_type::$( build/version-utils.js version-type )
-
-      - name: Ensure correct revision
-        run: |
-          git checkout tags/${{ steps.prepare_release.outputs.version_tag }}
+          echo ::set-output name=version_tag::v${{ steps.package-version.outputs.current-version }}
+          echo ::set-output name=release_type::$(node -e "console.log(require('semver').prerelease('${{ steps.package-version.outputs.current-version }}') ? 'prerelease' : 'regular')")
 
       - name: Build
         run: |
-          yarn run build-prod-min
-          yarn run build-css
+          npm run build-prod
+          npm run build-csp
+          npm run build-dev
+          npm run build-css
+          npm run build-benchmarks
+          npm run generate-typings
+
+      - name: Empty postinstall.js
+        run: |
+          echo "// empty in published package" > postinstall.js
+
+      - name: Write dist/package.json
+        run: |
+          echo "{ \"type\": \"commonjs\", \"name\": \"maplibre-gl\" }" > dist/package.json
 
       - name: Create Archive
         run: |
@@ -159,17 +122,35 @@ jobs:
           asset_name: dist.zip
           asset_content_type: application/zip
 
+      - name: Copy benchmarks_generated.js
+        run: |
+          mkdir tmp
+          cp test/bench/versions/benchmarks_generated.js tmp
+          cp test/bench/versions/benchmarks_generated.js.map tmp
+
+      - name: Upload Benchmarks to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: tmp
+          destination_dir: benchmarks/${{ steps.prepare_release.outputs.version_tag }}
+          commit_message: 'deploy: ${{ steps.prepare_release.outputs.version_tag }}'
+
       - name: Clean up
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         run: |
           rm -f ${{ steps.prepare_release.outputs.release_notes }}
 
-      - name: Update NPM Package Version
+      - name: Publish NPM package (regular)
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         run: |
-          yarn version --non-interactive --no-git-tag-version --new-version ${{ steps.prepare_release.outputs.version }}
-
-      - name: Publish NPM package
-        run: |
-          yarn publish --non-interactive
+          npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
+
+      - name: Publish NPM package (pre-release)
+        if: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
+        run: |
+          npm publish --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}

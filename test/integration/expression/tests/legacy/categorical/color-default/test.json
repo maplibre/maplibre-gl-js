@@ -1,0 +1,28 @@
+{
+  "expression": {
+    "type": "categorical",
+    "property": "p",
+    "stops": [["0", "red"], ["1", "lime"]],
+    "default": "blue"
+  },
+  "propertySpec": {
+    "type": "color",
+    "property-type": "data-driven",
+    "expression": {"interpolated": false, "parameters": ["zoom", "feature"]}
+  },
+  "inputs": [
+    [{}, {"properties": {}}],
+    [{}, {"properties": {"p": "0"}}],
+    [{}, {"properties": {"p": "1"}}],
+    [{}, {"properties": {"p": 0}}]
+  ],
+  "expected": {
+    "compiled": {
+      "result": "success",
+      "isFeatureConstant": false,
+      "isZoomConstant": true,
+      "type": "color"
+    },
+    "outputs": [[0, 0, 1, 1], [1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 1]]
+  }
+}

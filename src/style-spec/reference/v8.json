@@ -57,14 +57,22 @@
         "intensity": 0.4
       }
     },
+    "terrain": {
+      "type": "terrain",
+      "doc": "The terrain configuration.",
+      "example": {
+        "source": "raster-dem-source",
+        "exaggeration": 0.5
+      }
+    },
     "sources": {
       "required": true,
       "type": "sources",
       "doc": "Data source specifications.",
       "example": {
-        "mapbox-streets": {
+        "maplibre-demotiles": {
           "type": "vector",
-          "url": "mapbox://mapbox.mapbox-streets-v6"
+          "url": "https://demotiles.maplibre.org/tiles/tiles.json"
         }
       }
     },
@@ -76,7 +84,7 @@
     "glyphs": {
       "type": "string",
       "doc": "A URL template for loading signed-distance-field glyph sets in PBF format. The URL must include `{fontstack}` and `{range}` tokens. This property is required if any layer uses the `text-field` layout property. The URL must be absolute, containing the [scheme, authority and path components](https://en.wikipedia.org/wiki/URL#Syntax).",
-      "example": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf"
+      "example": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf"
     },
     "transition": {
       "type": "transition",
@@ -131,7 +139,7 @@
     },
     "url": {
       "type": "string",
-      "doc": "A URL to a TileJSON resource. Supported protocols are `http:`, `https:`, and `mapbox://<Tileset ID>`."
+      "doc": "A URL to a TileJSON resource. Supported protocols are `http:` and `https:`."
     },
     "tiles": {
       "type": "array",
@@ -148,7 +156,7 @@
         180,
         85.051129
       ],
-      "doc": "An array containing the longitude and latitude of the southwest and northeast corners of the source's bounding box in the following order: `[sw.lng, sw.lat, ne.lng, ne.lat]`. When this property is included in a source, no tiles outside of the given bounds are requested by Mapbox GL."
+      "doc": "An array containing the longitude and latitude of the southwest and northeast corners of the source's bounding box in the following order: `[sw.lng, sw.lat, ne.lng, ne.lat]`. When this property is included in a source, no tiles outside of the given bounds are requested by MapLibre GL."
     },
     "scheme": {
       "type": "enum",
@@ -210,7 +218,7 @@
     },
     "url": {
       "type": "string",
-      "doc": "A URL to a TileJSON resource. Supported protocols are `http:`, `https:`, and `mapbox://<Tileset ID>`."
+      "doc": "A URL to a TileJSON resource. Supported protocols are `http:` and `https:`."
     },
     "tiles": {
       "type": "array",
@@ -227,7 +235,7 @@
         180,
         85.051129
       ],
-      "doc": "An array containing the longitude and latitude of the southwest and northeast corners of the source's bounding box in the following order: `[sw.lng, sw.lat, ne.lng, ne.lat]`. When this property is included in a source, no tiles outside of the given bounds are requested by Mapbox GL."
+      "doc": "An array containing the longitude and latitude of the southwest and northeast corners of the source's bounding box in the following order: `[sw.lng, sw.lat, ne.lng, ne.lat]`. When this property is included in a source, no tiles outside of the given bounds are requested by MapLibre GL."
     },
     "minzoom": {
       "type": "number",
@@ -291,7 +299,7 @@
     },
     "url": {
       "type": "string",
-      "doc": "A URL to a TileJSON resource. Supported protocols are `http:`, `https:`, and `mapbox://<Tileset ID>`."
+      "doc": "A URL to a TileJSON resource. Supported protocols are `http:` and `https:`."
     },
     "tiles": {
       "type": "array",
@@ -308,7 +316,7 @@
         180,
         85.051129
       ],
-      "doc": "An array containing the longitude and latitude of the southwest and northeast corners of the source's bounding box in the following order: `[sw.lng, sw.lat, ne.lng, ne.lat]`. When this property is included in a source, no tiles outside of the given bounds are requested by Mapbox GL."
+      "doc": "An array containing the longitude and latitude of the southwest and northeast corners of the source's bounding box in the following order: `[sw.lng, sw.lat, ne.lng, ne.lat]`. When this property is included in a source, no tiles outside of the given bounds are requested by MapLibre GL."
     },
     "minzoom": {
       "type": "number",
@@ -371,6 +379,7 @@
       "doc": "The data type of the GeoJSON source."
     },
     "data": {
+      "required": true,
       "type": "*",
       "doc": "A URL to a GeoJSON file, or inline GeoJSON."
     },
@@ -1065,7 +1074,7 @@
     "symbol-avoid-edges": {
       "type": "boolean",
       "default": false,
-      "doc": "If true, the symbols will not cross tile edges to avoid mutual collisions. Recommended in layers that don't have enough padding in the vector tile to prevent collisions, or if it is a point symbol layer placed after a line symbol layer. When using a client that supports global collision detection, like Mapbox GL JS version 0.42.0 or greater, enabling this property is not needed to prevent clipped labels at tile boundaries.",
+      "doc": "If true, the symbols will not cross tile edges to avoid mutual collisions. Recommended in layers that don't have enough padding in the vector tile to prevent collisions, or if it is a point symbol layer placed after a line symbol layer. When using a client that supports global collision detection, like MapLibre GL JS version 0.42.0 or greater, enabling this property is not needed to prevent clipped labels at tile boundaries.",
       "sdk-support": {
         "basic functionality": {
           "js": "0.10.0",
@@ -1144,7 +1153,10 @@
       "default": false,
       "doc": "If true, the icon will be visible even if it collides with other previously drawn symbols.",
       "requires": [
-        "icon-image"
+        "icon-image",
+        {
+          "!": "icon-overlap"
+        }
       ],
       "sdk-support": {
         "basic functionality": {
@@ -1152,6 +1164,36 @@
           "android": "2.0.1",
           "ios": "2.0.0",
           "macos": "0.1.0"
+        }
+      },
+      "expression": {
+        "interpolated": false,
+        "parameters": [
+          "zoom"
+        ]
+      },
+      "property-type": "data-constant"
+    },
+    "icon-overlap": {
+      "type": "enum",
+      "values": {
+        "never": {
+          "doc": "The icon will be hidden if it collides with any other previously drawn symbol."
+        },
+        "always": {
+          "doc": "The icon will be visible even if it collides with any other previously drawn symbol."
+        },
+        "cooperative": {
+          "doc": "If the icon collides with another previously drawn symbol, the overlap mode for that symbol is checked. If the previous symbol was placed using `never` overlap mode, the new icon is hidden. If the previous symbol was placed using `always` or `cooperative` overlap mode, the new icon is visible."
+        }
+      },
+      "doc": "Allows for control over whether to show an icon when it overlaps other symbols on the map. If `icon-overlap` is not set, `icon-allow-overlap` is used instead.",
+      "requires": [
+        "icon-image"
+      ],
+      "sdk-support": {
+        "basic functionality": {
+          "js": "2.1.0"
         }
       },
       "expression": {
@@ -1424,11 +1466,10 @@
       "property-type": "data-driven"
     },
     "icon-padding": {
-      "type": "number",
-      "default": 2,
-      "minimum": 0,
+      "type": "padding",
+      "default": [2],
       "units": "pixels",
-      "doc": "Size of the additional area around the icon bounding box used for detecting symbol collisions.",
+      "doc": "Size of additional area round the icon bounding box used for detecting symbol collisions. Values are declared using CSS margin shorthand syntax: a single value applies to all four sides; two values apply to [top/bottom, left/right]; three values apply to [top, left/right, bottom]; four values apply to [top, right, bottom, left]. For backwards compatibility, a single bare number is accepted, and treated the same as a one-element array - padding applied to all sides.",
       "requires": [
         "icon-image"
       ],
@@ -1438,15 +1479,19 @@
           "android": "2.0.1",
           "ios": "2.0.0",
           "macos": "0.1.0"
+        },
+        "data-driven styling": {
+          "js": "2.2.0"
         }
       },
       "expression": {
         "interpolated": true,
         "parameters": [
-          "zoom"
+          "zoom",
+          "feature"
         ]
       },
-      "property-type": "data-constant"
+      "property-type": "data-driven"
     },
     "icon-keep-upright": {
       "type": "boolean",
@@ -1657,6 +1702,9 @@
         "viewport": {
           "doc": "Produces glyphs whose x-axes are aligned with the x-axis of the viewport, regardless of the value of `symbol-placement`."
         },
+        "viewport-glyph": {
+          "doc": "When `symbol-placement` is set to `point`, aligns text to the x-axis of the viewport. When `symbol-placement` is set to `line` or `line-center`, aligns glyphs to the x-axis of the viewport and places them along the line."
+        },
         "auto": {
           "doc": "When `symbol-placement` is set to `point`, this is equivalent to `viewport`. When `symbol-placement` is set to `line` or `line-center`, this is equivalent to `map`."
         }
@@ -1678,6 +1726,9 @@
           "android": "4.2.0",
           "ios": "3.4.0",
           "macos": "0.3.0"
+        },
+        "`viewport-glyph` value": {
+          "js": "2.1.8"
         }
       },
       "expression": {
@@ -2309,7 +2360,10 @@
       "default": false,
       "doc": "If true, the text will be visible even if it collides with other previously drawn symbols.",
       "requires": [
-        "text-field"
+        "text-field",
+        {
+          "!": "text-overlap"
+        }
       ],
       "sdk-support": {
         "basic functionality": {
@@ -2317,6 +2371,36 @@
           "android": "2.0.1",
           "ios": "2.0.0",
           "macos": "0.1.0"
+        }
+      },
+      "expression": {
+        "interpolated": false,
+        "parameters": [
+          "zoom"
+        ]
+      },
+      "property-type": "data-constant"
+    },
+    "text-overlap": {
+      "type": "enum",
+      "values": {
+        "never": {
+          "doc": "The text will be hidden if it collides with any other previously drawn symbol."
+        },
+        "always": {
+          "doc": "The text will be visible even if it collides with any other previously drawn symbol."
+        },
+        "cooperative": {
+          "doc": "If the text collides with another previously drawn symbol, the overlap mode for that symbol is checked. If the previous symbol was placed using `never` overlap mode, the new text is hidden. If the previous symbol was placed using `always` or `cooperative` overlap mode, the new text is visible."
+        }
+      },
+      "doc": "Allows for control over whether to show symbol text when it overlaps other symbols on the map. If `text-overlap` is not set, `text-allow-overlap` is used instead",
+      "requires": [
+        "text-field"
+      ],
+      "sdk-support": {
+        "basic functionality": {
+          "js": "2.1.0"
         }
       },
       "expression": {
@@ -3062,7 +3146,7 @@
         }
       },
       "feature-state": {
-        "doc": "Retrieves a property value from the current feature's state. Returns null if the requested property is not present on the feature's state. A feature's state is not part of the GeoJSON or vector tile data, and must be set programmatically on each feature. Features are identified by their `id` attribute, which must be an integer or a string that can be cast to an integer. Note that [\"feature-state\"] can only be used with paint properties that support data-driven styling.",
+        "doc": "Retrieves a property value from the current feature's state. Returns null if the requested property is not present on the feature's state. A feature's state is not part of the GeoJSON or vector tile data, and must be set programmatically on each feature. When `source.promoteId` is not provided, features are identified by their `id` attribute, which must be an integer or a string that can be cast to an integer. When `source.promoteId` is provided, features are identified by their `promoteId` property, which may be a number, string, or any primitive data type. Note that [\"feature-state\"] can only be used with paint properties that support data-driven styling.",
         "group": "Feature data",
         "sdk-support": {
           "basic functionality": {
@@ -3571,7 +3655,7 @@
         }
       },
       "is-supported-script": {
-        "doc": "Returns `true` if the input string is expected to render legibly. Returns `false` if the input string contains sections that cannot be rendered without potential loss of meaning (e.g. Indic scripts that require complex text shaping, or right-to-left scripts if the the `mapbox-gl-rtl-text` plugin is not in use in Mapbox GL JS).",
+        "doc": "Returns `true` if the input string is expected to render legibly. Returns `false` if the input string contains sections that cannot be rendered without potential loss of meaning (e.g. Indic scripts that require complex text shaping, or right-to-left scripts if the the `mapbox-gl-rtl-text` plugin is not in use in MapLibre GL JS).",
         "group": "String",
         "sdk-support": {
           "basic functionality": {
@@ -3734,6 +3818,29 @@
           "android": "5.1.0",
           "ios": "3.6.0",
           "macos": "0.5.0"
+        }
+      }
+    }
+  },
+  "terrain": {
+    "source": {
+      "type": "string",
+      "doc": "The source for the terrain data.",
+      "required": true,
+      "sdk-support": {
+        "basic functionality": {
+          "js": "2.2.0"
+        }
+      }
+    },
+    "exaggeration": {
+      "type": "number",
+      "minimum": 0,
+      "doc": "The exaggeration of the terrain - how high it will look.",
+      "default": 1.0,
+      "sdk-support": {
+        "basic functionality": {
+          "js": "2.2.0"
         }
       }
     }

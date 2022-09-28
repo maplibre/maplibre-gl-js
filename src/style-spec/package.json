@@ -1,25 +1,26 @@
 {
-  "name": "@mapbox/mapbox-gl-style-spec",
-  "description": "a specification for mapbox gl styles",
-  "version": "13.18.0-dev",
-  "author": "Mapbox",
+  "name": "@maplibre/maplibre-gl-style-spec",
+  "description": "a specification for maplibre gl styles",
+  "version": "17.0.1",
+  "author": "MapLibre",
   "keywords": [
     "mapbox",
     "mapbox-gl",
-    "mapbox-gl-js"
+    "mapbox-gl-js",
+    "maplibre",
+    "maplibre-gl",
+    "maplibre-gl-js"
   ],
   "license": "ISC",
-  "main": "./dist/index.js",
-  "module": "./dist/index.es.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "type": "module",
   "scripts": {
-    "copy-flow-typed": "cp -R ../../flow-typed .",
-    "build": "../../node_modules/.bin/rollup -c && ../../node_modules/.bin/rollup -c --environment esm",
-    "prepublish": "git clean -fdx && yarn copy-flow-typed && yarn build",
-    "postpublish": "rm -r flow-typed dist/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:mapbox/mapbox-gl-js.git"
+    "url": "git@github.com:maplibre/maplibre-gl-js.git"
   },
   "bin": {
     "gl-style-migrate": "bin/gl-style-migrate",
@@ -30,7 +31,6 @@
   "dependencies": {
     "@mapbox/jsonlint-lines-primitives": "~2.0.2",
     "@mapbox/unitbezier": "^0.0.0",
-    "@mapbox/point-geometry": "^0.1.0",
     "csscolorparser": "~1.0.2",
     "json-stringify-pretty-compact": "^2.0.0",
     "minimist": "^1.2.5",

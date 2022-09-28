@@ -1,0 +1,19 @@
+{
+  "expression": [
+    "format",
+    "a",
+    {"text-font": ["array", ["string", ["get", "text-font"]]]}
+  ],
+  "inputs": [[{}, {"properties": {"text-font": "test"}}]],
+  "expected": {
+    "compiled": {
+      "result": "error",
+      "errors": [
+        {
+          "key": "[1]",
+          "error": "Expected array<string> but found array instead."
+        }
+      ]
+    }
+  }
+}

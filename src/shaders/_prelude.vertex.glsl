@@ -71,3 +71,78 @@ vec2 get_pattern_pos(const vec2 pixel_coord_upper, const vec2 pixel_coord_lower,
     vec2 offset = mod(mod(mod(pixel_coord_upper, pattern_size) * 256.0, pattern_size) * 256.0 + pixel_coord_lower, pattern_size);
     return (tile_units_to_pixels * pos + offset) / pattern_size;
 }
+
+// logic for terrain 3d
+
+#ifdef TERRAIN3D
+uniform sampler2D u_terrain;
+uniform float u_terrain_dim;
+uniform mat4 u_terrain_matrix;
+uniform vec4 u_terrain_unpack;
+uniform float u_terrain_exaggeration;
+uniform highp sampler2D u_depth;
+#endif
+
+// methods for pack/unpack depth value to texture rgba
+// https://stackoverflow.com/questions/34963366/encode-floating-point-data-in-a-rgba-texture
+const highp vec4 bitSh = vec4(256. * 256. * 256., 256. * 256., 256., 1.);
+const highp vec4 bitShifts = vec4(1.) / bitSh;
+
+highp float unpack(highp vec4 color) {
+   return dot(color , bitShifts);
+}
+
+// calculate the opacity behind terrain, returns a value between 0 and 1.
+highp float depthOpacity(vec3 frag) {
+    #ifdef TERRAIN3D
+        // create the delta between frag.z + terrain.z.
+        highp float d = unpack(texture2D(u_depth, frag.xy * 0.5 + 0.5)) + 0.0001 - frag.z;
+        // visibility range is between 0 and 0.002. 0 is visible, 0.002 is fully invisible.
+        return 1.0 - max(0.0, min(1.0, -d * 500.0));
+    #else
+        return 1.0;
+    #endif
+}
+
+// calculate the visibility of a coordinate in terrain and return an opacity value.
+// if a coordinate is behind the terrain reduce its opacity
+float calculate_visibility(vec4 pos) {
+    #ifdef TERRAIN3D
+        vec3 frag = pos.xyz / pos.w;
+        // check if coordingate is fully visible
+        highp float d = depthOpacity(frag);
+        if (d > 0.95) return 1.0;
+        // if not, go some pixel above and check it this point is visible
+        return (d + depthOpacity(frag + vec3(0.0, 0.01, 0.0))) / 2.0;
+    #else
+        return 1.0;
+    #endif
+}
+
+// grab an elevation value from a raster-dem texture
+float ele(vec2 pos) {
+    #ifdef TERRAIN3D
+        vec4 rgb = (texture2D(u_terrain, pos) * 255.0) * u_terrain_unpack;
+        return rgb.r + rgb.g + rgb.b - u_terrain_unpack.a;
+    #else
+        return 0.0;
+    #endif
+}
+
+// calculate the elevation with linear interpolation for  a coordinate
+float get_elevation(vec2 pos) {
+    #ifdef TERRAIN3D
+        vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 1.0;
+        vec2 f = fract(coord);
+        vec2 c = (floor(coord) + 0.5) / (u_terrain_dim + 2.0); // get the pixel center
+        float d = 1.0 / (u_terrain_dim + 2.0);
+        float tl = ele(c);
+        float tr = ele(c + vec2(d, 0.0));
+        float bl = ele(c + vec2(0.0, d));
+        float br = ele(c + vec2(d, d));
+        float elevation = mix(mix(tl, tr, f.x), mix(bl, br, f.x), f.y);
+        return elevation * u_terrain_exaggeration;
+    #else
+        return 0.0;
+    #endif
+}

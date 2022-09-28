@@ -5,16 +5,10 @@
 
 First you must configure your development environment per [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
 
-There are two test suites associated with Mapbox GL JS
+To run individual tests:
 
- - `yarn test` runs quick unit tests
- - `yarn run test-suite` runs slower integration tests
-
- To run individual tests:
-
- - Unit tests: `yarn test-unit path/to/file.test.js` where path *does not include* `test/unit/`
-   - e.g. `yarn test-unit ui/handler/scroll_zoom.test.js`
- - Render tests: `yarn test-render render-test-name` (e.g. `yarn test-render background-color/default`)
+ - Unit tests: `npx jest path/to/file.test.js` (e.g. `npx jest src/style/style_layer.test.ts`)
+ - Render tests: `npm run test-render -- render-test-name` (e.g. `npm run test-render -- text-rotation-alignment`)
 
 ## Integration Tests
 
@@ -28,10 +22,6 @@ See [`test/integration/README.md`](./integration/README.md).
  - **You should only test the return values and global side effects of methods.** You should not not test internal behavior, such as that another method is called with particular arguments. This ensures that method implementations may change without causing test failures.
  - **You must not make network requests in test cases.** This rule holds in cases when result isn't used or is expected to fail. You may use `window.useFakeXMLHttpRequest` and `window.server` per the [Sinon API](http://sinonjs.org/docs/#server) to simulate network requests. This ensures that tests are reliable, able to be run in an isolated environment, and performant.
  - **You should use clear [input space partitioning](http://crystal.uta.edu/~ylei/cse4321/data/isp.pdf) schemes.** Look for edge cases! This ensures that tests suites are comprehensive and easy to understand.
-
-## Browser Tests
-
-See [`test/browser/README.md`](./browser/README.md).
 
 ## Spies, Stubs, and Mocks
 
