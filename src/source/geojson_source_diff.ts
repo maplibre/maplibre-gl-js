@@ -1,7 +1,7 @@
 export type GeoJSONFeatureId = number | string;
 export interface GeoJSONSourceDiff {
     removeAll?: boolean;
-    removed?: Array<GeoJSONFeatureId>;
+    remove?: Array<GeoJSONFeatureId>;
     add?: Array<GeoJSON.Feature>;
     update?: Array<GeoJSONFeatureDiff>;
 }
@@ -80,8 +80,8 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
         updateable.clear();
     }
 
-    if (diff.removed) {
-        for (const id of diff.removed) {
+    if (diff.remove) {
+        for (const id of diff.remove) {
             updateable.delete(id);
         }
     }
@@ -106,7 +106,8 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
 
             // be careful to clone the feature and/or properties objects to avoid mutating our input
             const cloneFeature = update.newGeometry || update.removeAllProperties;
-            const cloneProperties = update.removeProperties?.length > 0 || update.addOrUpdateProperties?.length > 0;
+            // note: removeAllProperties gives us a new properties object, so we can skip the clone step
+            const cloneProperties = !update.removeAllProperties && (update.removeProperties?.length > 0 || update.addOrUpdateProperties?.length > 0);
             if (cloneFeature || cloneProperties) {
                 feature = {...feature};
                 updateable.set(update.id, feature);

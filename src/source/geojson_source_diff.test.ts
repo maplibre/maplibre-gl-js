@@ -299,7 +299,7 @@ describe('applySourceDiff', () => {
     test('removes a feature by its id', done => {
         const updateable = new Map([['point', point], ['point2', point2]]);
         applySourceDiff(updateable, {
-            removed: ['point2'],
+            remove: ['point2'],
         });
         expect(updateable.size).toBe(1);
         expect(updateable.has('point2')).toBeFalsy();
