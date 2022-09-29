@@ -18,6 +18,7 @@ import QueryBox from '../benchmarks/query_box';
 import {FunctionCreate, FunctionEvaluate, ExpressionCreate, ExpressionEvaluate} from '../benchmarks/expressions';
 import FilterCreate from '../benchmarks/filter_create';
 import FilterEvaluate from '../benchmarks/filter_evaluate';
+import CustomLayer from '../benchmarks/customlayer';
 import MapIdle from '../benchmarks/map_idle';
 
 import getWorkerPool from '../../../src/util/global_worker_pool';
@@ -71,6 +72,7 @@ register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => 
 register('FilterCreate', new FilterCreate());
 register('FilterEvaluate', new FilterEvaluate());
 register('HillshadeLoad', new HillshadeLoad());
+register('CustomLayer', new CustomLayer());
 register('MapIdle', new MapIdle());
 
 Promise.resolve().then(() => {
