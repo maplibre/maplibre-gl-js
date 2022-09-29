@@ -567,7 +567,7 @@ describe('Map', () => {
 
     });
 
-    test('#moveLayer', done => {
+    test('#moveLayer', async () => {
         const map = createMap({
             style: extend(createStyle(), {
                 sources: {
@@ -592,15 +592,13 @@ describe('Map', () => {
             })
         });
 
-        map.once('render', () => {
-            map.moveLayer('layerId1', 'layerId2');
-            expect(map.getLayer('layerId1').id).toBe('layerId1');
-            expect(map.getLayer('layerId2').id).toBe('layerId2');
-            done();
-        });
+        await map.once('render');
+        map.moveLayer('layerId1', 'layerId2');
+        expect(map.getLayer('layerId1').id).toBe('layerId1');
+        expect(map.getLayer('layerId2').id).toBe('layerId2');
     });
 
-    test('#getLayer', done => {
+    test('#getLayer', async () => {
         const layer = {
             id: 'layerId',
             type: 'circle',
@@ -621,13 +619,11 @@ describe('Map', () => {
             })
         });
 
-        map.once('render', () => {
-            const mapLayer = map.getLayer('layerId');
-            expect(mapLayer.id).toBe(layer.id);
-            expect(mapLayer.type).toBe(layer.type);
-            expect(mapLayer.source).toBe(layer.source);
-            done();
-        });
+        await map.once('render');
+        const mapLayer = map.getLayer('layerId');
+        expect(mapLayer.id).toBe(layer.id);
+        expect(mapLayer.type).toBe(layer.type);
+        expect(mapLayer.source).toBe(layer.source);
     });
 
     describe('#resize', () => {
@@ -1055,14 +1051,14 @@ describe('Map', () => {
         canvas.dispatchEvent(new window.Event('webglcontextlost'));
     });
 
-    test('#redraw', done => {
+    test('#redraw', async () => {
         const map = createMap();
 
-        map.once('idle', () => {
-            map.once('render', () => done());
+        await map.once('idle');
+        let renderPromise = map.once('render');
 
-            map.redraw();
-        });
+        map.redraw();
+        await renderPromise;
     });
 
     test('#addControl', () => {
@@ -1308,7 +1304,7 @@ describe('Map', () => {
             });
         });
 
-        test('fires a data event', done => {
+        test('fires a data event', async () => {
             // background layers do not have a source
             const map = createMap({
                 style: {
@@ -1324,15 +1320,11 @@ describe('Map', () => {
                 }
             });
 
-            map.once('style.load', () => {
-                map.once('data', (e) => {
-                    if (e.dataType === 'style') {
-                        done();
-                    }
-                });
-
-                map.setLayoutProperty('background', 'visibility', 'visible');
-            });
+            await map.once('style.load');
+            let dataPromise = map.once('data');
+            map.setLayoutProperty('background', 'visibility', 'visible');
+            let e = await dataPromise;
+            expect(e.dataType).toBe('style');
         });
 
         test('sets visibility on background layer', done => {
@@ -2020,17 +2012,14 @@ describe('Map', () => {
         });
     });
 
-    test('no idle event during move', done => {
+    test('no idle event during move', async () => {
         const style = createStyle();
         const map = createMap({style, fadeDuration: 0});
-        map.once('idle', () => {
-            map.zoomTo(0.5, {duration: 100});
-            expect(map.isMoving()).toBeTruthy();
-            map.once('idle', () => {
-                expect(!map.isMoving()).toBeTruthy();
-                done();
-            });
-        });
+        await map.once('idle');
+        map.zoomTo(0.5, {duration: 100});
+        expect(map.isMoving()).toBeTruthy();
+        await map.once('idle');
+        expect(map.isMoving()).toBeFalsy();
     });
 
     test('#removeLayer restores Map#loaded() to true', done => {
@@ -2226,10 +2215,11 @@ describe('Map', () => {
         expect(map.painter.height).toBe(1024);
     });
 
-    test('fires sourcedataabort event on dataabort event', done => {
+    test('fires sourcedataabort event on dataabort event', async () => {
         const map = createMap();
-        map.once('sourcedataabort', () => done());
+        let sourcePromise = map.once('sourcedataabort');
         map.fire(new Event('dataabort'));
+        await sourcePromise;
     });
 
     describe('getCameraTargetElevation', () => {

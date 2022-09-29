@@ -691,15 +691,16 @@ describe('Style#addSource', () => {
         });
     });
 
-    test('fires "data" event', done => {
+    test('fires "data" event', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON());
         const source = createSource();
-        style.once('data', () => { done(); });
+        let dataPriomse = style.once('data');
         style.on('style.load', () => {
             style.addSource('source-id', source);
             style.update({} as EvaluationParameters);
         });
+        await dataPriomse;
     });
 
     test('throws on duplicates', done => {
@@ -765,16 +766,17 @@ describe('Style#removeSource', () => {
         expect(() => style.removeSource('source-id')).toThrow(/load/i);
     });
 
-    test('fires "data" event', done => {
+    test('fires "data" event', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const source = createSource();
-        style.once('data', () => { done(); });
+        let dataPriomse = style.once('data');
         style.on('style.load', () => {
             style.addSource('source-id', source);
             style.removeSource('source-id');
             style.update({} as EvaluationParameters);
         });
+        await dataPriomse;
     });
 
     test('clears tiles', done => {
@@ -1081,17 +1083,18 @@ describe('Style#addLayer', () => {
 
     });
 
-    test('fires "data" event', done => {
+    test('fires "data" event', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        style.once('data', () => { done(); });
+        let dataPriomse = style.once('data');
 
         style.on('style.load', () => {
             style.addLayer(layer);
             style.update({} as EvaluationParameters);
         });
+        await dataPriomse;
     });
 
     test('emits error on duplicates', done => {
@@ -1207,18 +1210,20 @@ describe('Style#removeLayer', () => {
         expect(() => style.removeLayer('background')).toThrow(/load/i);
     });
 
-    test('fires "data" event', done => {
+    test('fires "data" event', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        style.once('data', () => { done(); });
+        let dataPriomse = style.once('data');
 
         style.on('style.load', () => {
             style.addLayer(layer);
             style.removeLayer('background');
             style.update({} as EvaluationParameters);
         });
+
+        await dataPriomse;
     });
 
     test('tears down layer event forwarding', done => {
@@ -1305,18 +1310,18 @@ describe('Style#moveLayer', () => {
         expect(() => style.moveLayer('background')).toThrow(/load/i);
     });
 
-    test('fires "data" event', done => {
+    test('fires "data" event', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        style.once('data', () => { done(); });
-
+        let dataPriomse = style.once('data');
         style.on('style.load', () => {
             style.addLayer(layer);
             style.moveLayer('background');
             style.update({} as EvaluationParameters);
         });
+        await dataPriomse;
     });
 
     test('fires an error on non-existence', done => {

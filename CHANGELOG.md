@@ -1,14 +1,15 @@
 ## main
 
 ### ✨ Features and improvements
+- Return a promise from `once` method to allow easier usage of async/await in this case
+- *...Add new stuff here...*
 
 ### 🐞 Bug fixes
-
+- *...Add new stuff here...*
 ## 3.0.0-pre.0
 
 ### ✨ Features and improvements
 
-- *...Add new stuff here...*
 - Add map.getCameraTargetElevation() ([#1558](https://github.com/maplibre/maplibre-gl-js/pull/1558))
 - Add `freezeElevation` to `AnimationOptions` to allow smooth camera movement in 3D ([#1514](https://github.com/maplibre/maplibre-gl-js/pull/1514), [#1492](https://github.com/maplibre/maplibre-gl-js/issues/1492))
 - [Breaking] Remove deprecated mapboxgl css classes ([#1575](https://github.com/maplibre/maplibre-gl-js/pull/1575))
@@ -21,7 +22,6 @@
 - [Breaking] Make geojson data source a required field to align with the docs ([#1396](https://github.com/maplibre/maplibre-gl-js/issue/1396))
 - Fix showTileBoundaries to show the first vector source [#1395](https://github.com/maplibre/maplibre-gl-js/pull/1395)
 - Fix `match` expression type ([#1631](https://github.com/maplibre/maplibre-gl-js/pull/1631))
-- *...Add new stuff here...*
 
 ## 2.4.0
 
