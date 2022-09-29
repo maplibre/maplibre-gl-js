@@ -695,12 +695,12 @@ describe('Style#addSource', () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON());
         const source = createSource();
-        const dataPriomse = style.once('data');
+        const dataPromise = style.once('data');
         style.on('style.load', () => {
             style.addSource('source-id', source);
             style.update({} as EvaluationParameters);
         });
-        await dataPriomse;
+        await dataPromise;
     });
 
     test('throws on duplicates', done => {
@@ -770,13 +770,13 @@ describe('Style#removeSource', () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const source = createSource();
-        const dataPriomse = style.once('data');
+        const dataPromise = style.once('data');
         style.on('style.load', () => {
             style.addSource('source-id', source);
             style.removeSource('source-id');
             style.update({} as EvaluationParameters);
         });
-        await dataPriomse;
+        await dataPromise;
     });
 
     test('clears tiles', done => {
@@ -1088,13 +1088,13 @@ describe('Style#addLayer', () => {
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        const dataPriomse = style.once('data');
+        const dataPromise = style.once('data');
 
         style.on('style.load', () => {
             style.addLayer(layer);
             style.update({} as EvaluationParameters);
         });
-        await dataPriomse;
+        await dataPromise;
     });
 
     test('emits error on duplicates', done => {
@@ -1215,7 +1215,7 @@ describe('Style#removeLayer', () => {
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        const dataPriomse = style.once('data');
+        const dataPromise = style.once('data');
 
         style.on('style.load', () => {
             style.addLayer(layer);
@@ -1223,7 +1223,7 @@ describe('Style#removeLayer', () => {
             style.update({} as EvaluationParameters);
         });
 
-        await dataPriomse;
+        await dataPromise;
     });
 
     test('tears down layer event forwarding', done => {
@@ -1315,13 +1315,13 @@ describe('Style#moveLayer', () => {
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        const dataPriomse = style.once('data');
+        const dataPromise = style.once('data');
         style.on('style.load', () => {
             style.addLayer(layer);
             style.moveLayer('background');
             style.update({} as EvaluationParameters);
         });
-        await dataPriomse;
+        await dataPromise;
     });
 
     test('fires an error on non-existence', done => {
