@@ -47,10 +47,10 @@ describe('FullscreenControl', () => {
             return Object.prototype.hasOwnProperty.call(ctrl, '_fullscreen');
         }) as FullscreenControl;
 
-        expect(mapContainer.classList.contains('maplibre-pseudo-fullscreen')).toBe(false);
+        expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
         control._onClickFullscreen();
-        expect(mapContainer.classList.contains('maplibre-pseudo-fullscreen')).toBe(true);
+        expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(true);
         control._onClickFullscreen();
-        expect(mapContainer.classList.contains('maplibre-pseudo-fullscreen')).toBe(false);
+        expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
     });
 });

@@ -145,7 +145,7 @@ class FullscreenControl implements IControl {
     }
 
     _togglePseudoFullScreen() {
-        this._container.classList.toggle('maplibre-pseudo-fullscreen');
+        this._container.classList.toggle('maplibregl-pseudo-fullscreen');
         this._handleFullscreenChange();
         this._map.resize();
     }
