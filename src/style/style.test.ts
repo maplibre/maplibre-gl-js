@@ -695,7 +695,7 @@ describe('Style#addSource', () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON());
         const source = createSource();
-        let dataPriomse = style.once('data');
+        const dataPriomse = style.once('data');
         style.on('style.load', () => {
             style.addSource('source-id', source);
             style.update({} as EvaluationParameters);
@@ -770,7 +770,7 @@ describe('Style#removeSource', () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const source = createSource();
-        let dataPriomse = style.once('data');
+        const dataPriomse = style.once('data');
         style.on('style.load', () => {
             style.addSource('source-id', source);
             style.removeSource('source-id');
@@ -1088,7 +1088,7 @@ describe('Style#addLayer', () => {
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        let dataPriomse = style.once('data');
+        const dataPriomse = style.once('data');
 
         style.on('style.load', () => {
             style.addLayer(layer);
@@ -1215,7 +1215,7 @@ describe('Style#removeLayer', () => {
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        let dataPriomse = style.once('data');
+        const dataPriomse = style.once('data');
 
         style.on('style.load', () => {
             style.addLayer(layer);
@@ -1315,7 +1315,7 @@ describe('Style#moveLayer', () => {
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        let dataPriomse = style.once('data');
+        const dataPriomse = style.once('data');
         style.on('style.load', () => {
             style.addLayer(layer);
             style.moveLayer('background');

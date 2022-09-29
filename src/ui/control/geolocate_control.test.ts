@@ -124,7 +124,7 @@ describe('GeolocateControl with no options', () => {
 
         const click = new window.Event('click');
 
-        let moveEndPromise = map.once('moveend');
+        const moveEndPromise = map.once('moveend');
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 1});
         await moveEndPromise;
@@ -152,7 +152,7 @@ describe('GeolocateControl with no options', () => {
 
         const click = new window.Event('click');
 
-        let moveEndPromise = map.once('moveend');
+        const moveEndPromise = map.once('moveend');
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 1});
         await moveEndPromise;
@@ -172,7 +172,7 @@ describe('GeolocateControl with no options', () => {
 
         const click = new window.Event('click');
 
-        let moveEndPromise = map.once('moveend');
+        const moveEndPromise = map.once('moveend');
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 1000});
         await moveEndPromise;
@@ -319,7 +319,7 @@ describe('GeolocateControl with no options', () => {
 
         const click = new window.Event('click');
 
-        let promise = geolocate.once('trackuserlocationstart');
+        const promise = geolocate.once('trackuserlocationstart');
         geolocate._geolocateButton.dispatchEvent(click);
         await promise;
         expect(map.getCenter()).toEqual({lng: 0, lat: 0});
@@ -333,7 +333,7 @@ describe('GeolocateControl with no options', () => {
 
         const click = new window.Event('click');
 
-        let geolocatePromise = geolocate.once('geolocate');
+        const geolocatePromise = geolocate.once('geolocate');
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
         await geolocatePromise;
@@ -350,7 +350,7 @@ describe('GeolocateControl with no options', () => {
 
         const click = new window.Event('click');
 
-        let geolocatePromise = geolocate.once('geolocate');
+        const geolocatePromise = geolocate.once('geolocate');
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
         await geolocatePromise;
@@ -371,14 +371,14 @@ describe('GeolocateControl with no options', () => {
 
         const click = new window.Event('click');
 
-        let geolocatePromise = geolocate.once('geolocate');
+        const geolocatePromise = geolocate.once('geolocate');
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 700});
         await geolocatePromise;
         map.jumpTo({
             center: [10, 20]
         });
-        let zoomendPromise = map.once('zoomend');
+        const zoomendPromise = map.once('zoomend');
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
         expect(!geolocate._circleElement.style.width).toBeTruthy();
@@ -393,7 +393,7 @@ describe('GeolocateControl with no options', () => {
 
         const click = new window.Event('click');
 
-        let geolocatePromise = geolocate.once('geolocate');
+        const geolocatePromise = geolocate.once('geolocate');
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 700});
         await geolocatePromise;
@@ -422,14 +422,14 @@ describe('GeolocateControl with no options', () => {
 
         const click = new window.Event('click');
 
-        let geolocatePromise = geolocate.once('geolocate');
+        const geolocatePromise = geolocate.once('geolocate');
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 700});
         await geolocatePromise;
         map.jumpTo({
             center: [10, 20]
         });
-        let zoomendPromise = map.once('zoomend');
+        const zoomendPromise = map.once('zoomend');
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
         expect(geolocate._circleElement.style.width).toBeTruthy();

@@ -1055,7 +1055,7 @@ describe('Map', () => {
         const map = createMap();
 
         await map.once('idle');
-        let renderPromise = map.once('render');
+        const renderPromise = map.once('render');
 
         map.redraw();
         await renderPromise;
@@ -1321,9 +1321,9 @@ describe('Map', () => {
             });
 
             await map.once('style.load');
-            let dataPromise = map.once('data');
+            const dataPromise = map.once('data');
             map.setLayoutProperty('background', 'visibility', 'visible');
-            let e = await dataPromise;
+            const e = await dataPromise;
             expect(e.dataType).toBe('style');
         });
 
@@ -2217,7 +2217,7 @@ describe('Map', () => {
 
     test('fires sourcedataabort event on dataabort event', async () => {
         const map = createMap();
-        let sourcePromise = map.once('sourcedataabort');
+        const sourcePromise = map.once('sourcedataabort');
         map.fire(new Event('dataabort'));
         await sourcePromise;
     });
