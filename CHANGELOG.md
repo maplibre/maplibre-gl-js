@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- Return a promise from `once` method to allow easier usage of async/await in this case
+- Return a promise from `once` method to allow easier usage of async/await in this case ([#1690(https://github.com/maplibre/maplibre-gl-js/pull/1690)) @HarelM
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
