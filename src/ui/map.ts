@@ -1168,16 +1168,16 @@ class Map extends Camera {
      * feature in this layer will trigger the listener. The event will have a `features` property containing
      * an array of the matching features.
      * @param {Function} listener The function to be called when the event is fired.
-     * @returns {Map} `this`
+     * @returns {Map | Promise} `this` if listener is provided, promise otherwise to allow easier usage of async/await
      */
     once<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
-        listener: (ev: MapLayerEventType[T] & Object) => void,
-    ): this;
-    once<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
-    once(type: MapEvent | string, listener: Listener): this;
-    once(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this {
+        listener?: (ev: MapLayerEventType[T] & Object) => void,
+    ): this | Promise<MapLayerEventType[T] & Object>;
+    once<T extends keyof MapEventType>(type: T, listener?: (ev: MapEventType[T] & Object) => void): this | Promise<any>;
+    once(type: MapEvent | string, listener?: Listener): this | Promise<any>;
+    once(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
 
         if (listener === undefined) {
             return super.once(type, layerIdOrListener as Listener);
