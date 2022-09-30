@@ -140,7 +140,7 @@ export default class RenderToTexture {
     }
 
     getTexture(tile: Tile) {
-        return this.pool.getObjectForId(tile.rtt[this._stacks.length - 1][0]).texture;
+        return this.pool.getObjectForId(tile.rtt[this._stacks.length - 1].id).texture;
     }
 
     initialize(style: Style, zoom: number) {
@@ -227,9 +227,8 @@ export default class RenderToTexture {
                 this._rttTiles.push(tile);
                 // check for cached PoolObject
                 if (tile.rtt[stack]) {
-                    const [id, stamp] = tile.rtt[stack];
-                    const obj = this.pool.getObjectForId(id);
-                    if (obj.stamp === stamp) {
+                    const obj = this.pool.getObjectForId(tile.rtt[stack].id);
+                    if (obj.stamp === tile.rtt[stack].stamp) {
                         this.pool.useObject(obj);
                         continue;
                     }
@@ -238,7 +237,7 @@ export default class RenderToTexture {
                 const obj = this.pool.getFreeObject();
                 this.pool.useObject(obj);
                 this.pool.stampObject(obj);
-                tile.rtt[stack] = [obj.id, obj.stamp];
+                tile.rtt[stack] = {id: obj.id, stamp: obj.stamp};
                 // prepare PoolObject for rendering
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent});
