@@ -20,15 +20,10 @@ function getFeatureId(feature: GeoJSON.Feature, promoteId?: string): GeoJSONFeat
     return promoteId ? feature.properties[promoteId] : feature.id;
 }
 
-export function isUpdateableGeoJSON(data: string | GeoJSON.GeoJSON | undefined, promoteId?: string): data is UpdateableGeoJSON {
+export function isUpdateableGeoJSON(data: GeoJSON.GeoJSON | undefined, promoteId?: string): data is UpdateableGeoJSON {
     // null can be updated
     if (data == null) {
         return true;
-    }
-
-    // strings are not updateable
-    if (typeof data === 'string') {
-        return false;
     }
 
     // a single feature with an id can be updated, need to explicitly check against null because 0 is a valid feature id that is falsy

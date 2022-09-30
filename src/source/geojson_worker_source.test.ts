@@ -1,4 +1,4 @@
-import GeoJSONWorkerSource, {LoadGeoJSON, LoadGeoJSONParameters} from './geojson_worker_source';
+import GeoJSONWorkerSource, {LoadGeoJSONParameters} from './geojson_worker_source';
 import StyleLayerIndex from '../style/style_layer_index';
 import {OverscaledTileID} from './tile_id';
 import perf from '../util/performance';
@@ -294,8 +294,10 @@ describe('loadData', () => {
 
         worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, _result) => {
             expect(err).toBeNull();
-            expect(worker._dataUpdateable).toBeUndefined();
-            done();
+            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters, (err, _result) => {
+                expect(err).toBeDefined();
+                done();
+            });
         });
     });
 
@@ -304,8 +306,10 @@ describe('loadData', () => {
 
         worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters, (err, _result) => {
             expect(err).toBeNull();
-            expect(worker._dataUpdateable).toBeDefined();
-            done();
+            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters, (err, _result) => {
+                expect(err).toBeNull();
+                done();
+            });
         });
     });
 
@@ -318,8 +322,10 @@ describe('loadData', () => {
 
         worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters, (err, _result) => {
             expect(err).toBeNull();
-            expect(worker._dataUpdateable).toBeDefined();
-            done();
+            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters, (err, _result) => {
+                expect(err).toBeNull();
+                done();
+            });
         });
 
         server.respond();
@@ -334,8 +340,10 @@ describe('loadData', () => {
 
         worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters, (err, _result) => {
             expect(err).toBeNull();
-            expect(worker._dataUpdateable).toBeUndefined();
-            done();
+            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters, (err, _result) => {
+                expect(err).toBeDefined();
+                done();
+            });
         });
 
         server.respond();
@@ -346,19 +354,16 @@ describe('loadData', () => {
 
         worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters, (err, _result) => {
             expect(err).toBeNull();
-            expect(worker._dataUpdateable.size).toBe(1);
-        });
-
-        worker.loadData({source: 'source1', dataDiff: {
-            add: [{
-                type: 'Feature',
-                id: 'update_point',
-                geometry: {type: 'Point', coordinates: [0, 0]},
-                properties: {}
-            }]}} as LoadGeoJSONParameters, (err, _result) => {
-            expect(err).toBeNull();
-            expect(worker._dataUpdateable.size).toBe(2);
-            done();
+            worker.loadData({source: 'source1', dataDiff: {
+                add: [{
+                    type: 'Feature',
+                    id: 'update_point',
+                    geometry: {type: 'Point', coordinates: [0, 0]},
+                    properties: {}
+                }]}} as LoadGeoJSONParameters, (err, _result) => {
+                expect(err).toBeNull();
+                done();
+            });
         });
     });
 });

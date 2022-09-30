@@ -6,11 +6,6 @@ beforeEach(() => {
 });
 
 describe('isUpdateableGeoJSON', () => {
-    test('strings are not updateable', done => {
-        expect(isUpdateableGeoJSON('http://example.org')).toBe(false);
-        done();
-    });
-
     test('feature without id is not updateable', done => {
         // no feature id -> false
         expect(isUpdateableGeoJSON({

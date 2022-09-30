@@ -178,6 +178,21 @@ class GeoJSONSource extends Evented implements Source {
         return this;
     }
 
+    /**
+     * Updates the source's GeoJSON, and re-renders the map.
+     *
+     * For sources with lots of features, this method can be used to make updates more quickly.
+     *
+     * This approach requires unique IDs for every feature in the source. The IDs can either be specified on the feature,
+     * or by using the promoteId option to specify which property should be used as the ID.
+     *
+     * It is an error to call updateData on a source that did not have unique IDs for each of its features already.
+     *
+     * Updates are applied on a best-effort basis, updating an ID that does not exist will not result in an error.
+     *
+     * @param {GeoJSONSourceDiff} diff The changes that need to be applied.
+     * @returns {GeoJSONSource} this
+     */
     updateData(diff: GeoJSONSourceDiff) {
         this._updateWorkerData('content', diff);
 
