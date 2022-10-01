@@ -3,10 +3,12 @@
 ### ✨ Features and improvements
 - Return a promise from `once` method to allow easier usage of async/await in this case ([#1690(https://github.com/maplibre/maplibre-gl-js/pull/1690)) @HarelM
 - Add pseudo (CSS) fullscreen as a fallback for iphones ([#1678](https://github.com/maplibre/maplibre-gl-js/pull/1678))
+- Add `updateData` to `GeoJSONSource` which allows for partial data updates ([#1605](https://github.com/maplibre/maplibre-gl-js/pull/1605))
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
+
 ## 3.0.0-pre.0
 
 ### ✨ Features and improvements

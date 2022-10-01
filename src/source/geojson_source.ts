@@ -13,6 +13,7 @@ import type Actor from '../util/actor';
 import type {Callback} from '../types/callback';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types.g';
 import type {MapSourceDataType} from '../ui/events';
+import type {GeoJSONSourceDiff} from './geojson_source_diff';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: any;
@@ -76,7 +77,7 @@ class GeoJSONSource extends Evented implements Source {
 
     isTileClipped: boolean;
     reparseOverscaled: boolean;
-    _data: GeoJSON.GeoJSON | string;
+    _data: GeoJSON.GeoJSON | string | undefined;
     _options: any;
     workerOptions: any;
     map: Map;
@@ -146,6 +147,11 @@ class GeoJSONSource extends Evented implements Source {
             clusterProperties: options.clusterProperties,
             filter: options.filter
         }, options.workerOptions);
+
+        // send the promoteId to the worker to have more flexible updates, but only if it is a string
+        if (typeof this.promoteId === 'string') {
+            this.workerOptions.promoteId = this.promoteId;
+        }
     }
 
     load() {
@@ -168,6 +174,27 @@ class GeoJSONSource extends Evented implements Source {
     setData(data: GeoJSON.GeoJSON | string) {
         this._data = data;
         this._updateWorkerData('content');
+
+        return this;
+    }
+
+    /**
+     * Updates the source's GeoJSON, and re-renders the map.
+     *
+     * For sources with lots of features, this method can be used to make updates more quickly.
+     *
+     * This approach requires unique IDs for every feature in the source. The IDs can either be specified on the feature,
+     * or by using the promoteId option to specify which property should be used as the ID.
+     *
+     * It is an error to call updateData on a source that did not have unique IDs for each of its features already.
+     *
+     * Updates are applied on a best-effort basis, updating an ID that does not exist will not result in an error.
+     *
+     * @param {GeoJSONSourceDiff} diff The changes that need to be applied.
+     * @returns {GeoJSONSource} this
+     */
+    updateData(diff: GeoJSONSourceDiff) {
+        this._updateWorkerData('content', diff);
 
         return this;
     }
@@ -236,14 +263,15 @@ class GeoJSONSource extends Evented implements Source {
      * handles loading the geojson data and preparing to serve it up as tiles,
      * using geojson-vt or supercluster as appropriate.
      */
-    _updateWorkerData(sourceDataType: MapSourceDataType) {
+    _updateWorkerData(sourceDataType: MapSourceDataType, diff?: GeoJSONSourceDiff) {
         const options = extend({}, this.workerOptions);
-        const data = this._data;
-        if (typeof data === 'string') {
-            options.request = this.map._requestManager.transformRequest(browser.resolveURL(data), ResourceType.Source);
+        if (diff) {
+            options.dataDiff = diff;
+        } else if (typeof this._data === 'string') {
+            options.request = this.map._requestManager.transformRequest(browser.resolveURL(this._data as string), ResourceType.Source);
             options.request.collectResourceTiming = this._collectResourceTiming;
         } else {
-            options.data = JSON.stringify(data);
+            options.data = JSON.stringify(this._data);
         }
 
         this._pendingLoads++;
