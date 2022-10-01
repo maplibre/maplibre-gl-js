@@ -9,14 +9,16 @@ export type PoolObject = {
     stamp: number;
     inUse: boolean;
 };
-
+/**
+ * RenderPool a resource pool for textures and framebuffers
+ */
 export default class RenderPool {
     private _objects: Array<PoolObject>;
     /**
-     * An index array of recently used pool objects.
+     * @property {Array<number>} _recentlyUsed An index array of recently used pool objects. 
      * Items that are used recently are last in the array
      */
-    private _recentlyUsed: Array<number>;
+    private _recentlyUsed: Array<number>; // 
     private _stamp: number;
 
     constructor(
