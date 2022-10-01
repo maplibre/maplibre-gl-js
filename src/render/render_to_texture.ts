@@ -58,7 +58,7 @@ export default class RenderToTexture {
         return this.pool.getObjectForId(tile.rtt[this._stacks.length - 1].id).texture;
     }
 
-    initialize(style: Style, zoom: number) {
+    prepareForRender(style: Style, zoom: number) {
         this._stacks = [];
         this._prevType = null;
         this._rttTiles = [];

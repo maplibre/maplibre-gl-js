@@ -1656,8 +1656,8 @@ class Map extends Camera {
         if (!options) {
             if (this.terrain) this.terrain.sourceCache.destruct();
             this.terrain = null;
-            if (this.painter.rtt) this.painter.rtt.destruct();
-            this.painter.rtt = null;
+            if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
+            this.painter.renderToTexture = null;
             this.transform.updateElevation(this.terrain);
 
         // add terrain
@@ -1665,7 +1665,7 @@ class Map extends Camera {
             const sourceCache = this.style.sourceCaches[options.source];
             if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
             this.terrain = new Terrain(this.painter, sourceCache, options);
-            this.painter.rtt = new RenderToTexture(this.painter, this.terrain);
+            this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this.transform.updateElevation(this.terrain);
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
