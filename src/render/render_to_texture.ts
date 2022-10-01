@@ -3,10 +3,11 @@ import Tile from '../source/tile';
 import Color from '../style-spec/util/color';
 import {OverscaledTileID} from '../source/tile_id';
 import {drawTerrain} from './draw_terrain';
-import type StyleLayer from '../style/style_layer';
 import Style from '../style/style';
 import Terrain from './terrain';
 import RenderPool from '../gl/render_pool';
+import Texture from './texture';
+import type StyleLayer from '../style/style_layer';
 
 // lookup table which layers should rendered to texture
 const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
@@ -54,7 +55,7 @@ export default class RenderToTexture {
         this.pool.destruct();
     }
 
-    getTexture(tile: Tile) {
+    getTexture(tile: Tile): Texture {
         return this.pool.getObjectForId(tile.rtt[this._stacks.length - 1].id).texture;
     }
 
