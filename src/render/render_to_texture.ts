@@ -4,11 +4,9 @@ import Color from '../style-spec/util/color';
 import {OverscaledTileID} from '../source/tile_id';
 import {drawTerrain} from './draw_terrain';
 import type StyleLayer from '../style/style_layer';
-import Framebuffer from '../gl/framebuffer';
-import Texture from './texture';
-import Context from '../gl/context';
 import Style from '../style/style';
 import Terrain from './terrain';
+import RenderPool from '../gl/render_pool';
 
 // lookup table which layers should rendered to texture
 const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
@@ -18,89 +16,6 @@ const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
     raster: true,
     hillshade: true
 };
-
-type PoolObject = {
-    id: number;
-    fbo: Framebuffer;
-    texture: Texture;
-    stamp: number;
-    inUse: boolean;
-};
-
-export class RenderPool {
-    context: Context;
-    size: number;
-    tileSize: number;
-    objs: Array<PoolObject>;
-    recentlyUsed: Array<number>;
-    stamp: number;
-
-    constructor(context: Context, size: number, tileSize: number) {
-        this.context = context;
-        this.size = size;
-        this.tileSize = tileSize;
-        this.objs = [];
-        this.recentlyUsed = [];
-        this.stamp = 0;
-    }
-
-    destruct() {
-        for (const obj of this.objs) {
-            obj.texture.destroy();
-            obj.fbo.destroy();
-        }
-    }
-
-    createObject(id: number): PoolObject {
-        const fbo = this.context.createFramebuffer(this.tileSize, this.tileSize, true);
-        const texture = new Texture(this.context, {width: this.tileSize, height: this.tileSize, data: null}, this.context.gl.RGBA);
-        texture.bind(this.context.gl.LINEAR, this.context.gl.CLAMP_TO_EDGE);
-        fbo.depthAttachment.set(this.context.createRenderbuffer(this.context.gl.DEPTH_COMPONENT16, this.tileSize, this.tileSize));
-        fbo.colorAttachment.set(texture.texture);
-        return {id, fbo, texture, stamp: -1, inUse: false};
-    }
-
-    getObjectForId(id: number): PoolObject {
-        return this.objs[id];
-    }
-
-    useObject(obj: PoolObject) {
-        obj.inUse = true;
-        this.recentlyUsed = this.recentlyUsed.filter(id => obj.id !== id);
-        this.recentlyUsed.push(obj.id);
-        while (this.recentlyUsed.length > this.size) this.recentlyUsed.shift();
-    }
-
-    stampObject(obj: PoolObject) {
-        obj.stamp = ++this.stamp;
-    }
-
-    getFreeObject(): PoolObject {
-        // check for free existing objects
-        for (const id of this.recentlyUsed) {
-            if (!this.objs[id].inUse) return this.objs[id];
-        }
-        // create new object
-        const obj = this.createObject(this.objs.length);
-        this.objs.push(obj);
-        return obj;
-    }
-
-    freeObject(obj: PoolObject) {
-        obj.inUse = false;
-    }
-
-    freeObjects() {
-        for (const obj of this.objs) this.freeObject(obj);
-    }
-
-    isFull(): boolean {
-        if (this.objs.length < this.size) return false;
-        for (const obj of this.objs)
-            if (!obj.inUse) return false;
-        return true;
-    }
-}
 
 /**
  * RenderToTexture
@@ -222,7 +137,7 @@ export default class RenderToTexture {
                 if (this.pool.isFull()) {
                     drawTerrain(this.painter, this.terrain, this._rttTiles);
                     this._rttTiles = [];
-                    this.pool.freeObjects();
+                    this.pool.freeAllObjects();
                 }
                 this._rttTiles.push(tile);
                 // check for cached PoolObject
@@ -234,7 +149,7 @@ export default class RenderToTexture {
                     }
                 }
                 // get free PoolObject
-                const obj = this.pool.getFreeObject();
+                const obj = this.pool.getOrCreateFreeObject();
                 this.pool.useObject(obj);
                 this.pool.stampObject(obj);
                 tile.rtt[stack] = {id: obj.id, stamp: obj.stamp};
@@ -252,7 +167,7 @@ export default class RenderToTexture {
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles);
             this._rttTiles = [];
-            this.pool.freeObjects();
+            this.pool.freeAllObjects();
 
             return LAYERS[type];
         }
