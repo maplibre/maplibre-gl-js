@@ -19,7 +19,7 @@ import LogoControl from './control/logo_control';
 import {supported} from '@mapbox/mapbox-gl-supported';
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
-import {MapEventType, MapLayerEventType, MapMouseEvent} from './events';
+import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent} from './events';
 import TaskQueue from '../util/task_queue';
 import webpSupported from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
@@ -58,6 +58,8 @@ import type {
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import Terrain from '../render/terrain';
+import RenderToTexture from '../render/render_to_texture';
 
 const version = packageJSON.version;
 
@@ -326,6 +328,7 @@ class Map extends Camera {
     _removed: boolean;
     _clickTolerance: number;
     _pixelRatio: number;
+    _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -1644,7 +1647,37 @@ class Map extends Camera {
      * map.setTerrain({ source: 'terrain' });
      */
     setTerrain(options: TerrainSpecification): Map {
-        this.style.setTerrain(options);
+        this.style._checkLoaded();
+
+        // clear event handlers
+        if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
+
+        if (!options) {
+            // remove terrain
+            if (this.terrain) this.terrain.sourceCache.destruct();
+            this.terrain = null;
+            if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
+            this.painter.renderToTexture = null;
+            this.transform.updateElevation(this.terrain);
+        } else {
+            // add terrain
+            const sourceCache = this.style.sourceCaches[options.source];
+            if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
+            this.terrain = new Terrain(this.painter, sourceCache, options);
+            this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
+            this.transform.updateElevation(this.terrain);
+            this._terrainDataCallback = e => {
+                if (e.dataType === 'style') {
+                    this.terrain.sourceCache.freeRtt();
+                } else if (e.dataType === 'source' && e.tile) {
+                    if (e.sourceId === options.source) this.transform.updateElevation(this.terrain);
+                    this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                }
+            };
+            this.style.on('data', this._terrainDataCallback);
+        }
+
+        this.fire(new Event('terrain', {terrain: options}));
         return this;
     }
 

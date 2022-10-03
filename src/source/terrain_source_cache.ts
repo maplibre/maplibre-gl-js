@@ -5,7 +5,6 @@ import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
 import type Transform from '../geo/transform';
 import type SourceCache from '../source/source_cache';
-import Painter from '../render/painter';
 import Terrain from '../render/terrain';
 
 /**
@@ -34,10 +33,6 @@ export default class TerrainSourceCache extends Evented {
     tileSize: number;
     // raster-dem tiles will load for performance the actualZoom - deltaZoom zoom-level.
     deltaZoom: number;
-    // each time a render-to-texture tile is rendered, its tileID.key is stored into this array
-    renderHistory: Array<string>;
-    // maximal size of render-history
-    renderHistorySize: number;
 
     constructor(sourceCache: SourceCache) {
         super();
@@ -45,12 +40,10 @@ export default class TerrainSourceCache extends Evented {
         this._tiles = {};
         this._renderableTilesKeys = [];
         this._sourceTileCache = {};
-        this.renderHistory = [];
         this.minzoom = 0;
         this.maxzoom = 22;
         this.tileSize = 512;
         this.deltaZoom = 1;
-        this.renderHistorySize = sourceCache._cache.max;
         sourceCache.usedForTerrain = true;
         sourceCache.tileSize = this.tileSize * 2 ** this.deltaZoom;
     }
@@ -58,11 +51,6 @@ export default class TerrainSourceCache extends Evented {
     destruct() {
         this.sourceCache.usedForTerrain = false;
         this.sourceCache.tileSize = null;
-        for (const key in this._tiles) {
-            const tile = this._tiles[key];
-            tile.textures.forEach(t => t.destroy());
-            tile.textures = [];
-        }
     }
 
     /**
@@ -75,6 +63,7 @@ export default class TerrainSourceCache extends Evented {
         this.sourceCache.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
         this._renderableTilesKeys = [];
+        const keys = {};
         for (const tileID of transform.coveringTiles({
             tileSize: this.tileSize,
             minzoom: this.minzoom,
@@ -82,6 +71,7 @@ export default class TerrainSourceCache extends Evented {
             reparseOverscaled: false,
             terrain
         })) {
+            keys[tileID.key] = true;
             this._renderableTilesKeys.push(tileID.key);
             if (!this._tiles[tileID.key]) {
                 tileID.posMatrix = new Float64Array(16) as any;
@@ -89,29 +79,21 @@ export default class TerrainSourceCache extends Evented {
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
             }
         }
+        // free unused tiles
+        for (const key in this._tiles) {
+            if (!keys[key]) delete this._tiles[key];
+        }
     }
 
     /**
-     * This method should called before each render-to-texture step to free old cached tiles
-     * @param {Painter} painter - the painter
+     * Free render to texture cache
+     * @param {TileID} tileID optional, free only corresponding to tileID.
      */
-    removeOutdated(painter: Painter) {
-        // create lookuptable for actual needed tiles
-        const tileIDs = {};
-        // remove duplicates from renderHistory and chop to renderHistorySize
-        this.renderHistory = this.renderHistory.filter((i, p) => {
-            return this.renderHistory.indexOf(i) === p;
-        }).slice(0, this.renderHistorySize);
-        // fill lookuptable with current rendered tiles
-        for (const key of this._renderableTilesKeys) tileIDs[key] = true;
-        // fill lookuptable with most recent rendered tiles outside the viewport
-        for (const key of this.renderHistory) tileIDs[key] = true;
-        // free (GPU) memory from previously rendered not needed tiles
+    freeRtt(tileID?: OverscaledTileID) {
         for (const key in this._tiles) {
-            if (!tileIDs[key]) {
-                this._tiles[key].clearTextures(painter);
-                delete this._tiles[key];
-            }
+            const tile = this._tiles[key];
+            if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
+                tile.rtt = [];
         }
     }
 
@@ -200,6 +182,6 @@ export default class TerrainSourceCache extends Evented {
      * @returns {Array<Tile>} - the relevant tiles
      */
     tilesAfterTime(time = Date.now()): Array<Tile> {
-        return Object.values(this._tiles).filter(t => t.timeLoaded >= time);
+        return Object.values(this._tiles).filter(t => t.timeAdded >= time);
     }
 }

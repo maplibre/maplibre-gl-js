@@ -30,6 +30,8 @@ class StubMap extends Evented {
             }
         } as any as RequestManager;
     }
+
+    setTerrain() {}
 }
 
 function createSource(options, transformCallback?) {

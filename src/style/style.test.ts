@@ -65,6 +65,8 @@ class StubMap extends Evented {
     getPixelRatio() {
         return 1;
     }
+
+    setTerrain() { }
 }
 
 const getStubMap = () => new StubMap() as any;
@@ -383,15 +385,14 @@ describe('Style#loadJSON', () => {
     test('sets terrain if defined', (done) => {
         const map = getStubMap();
         const style = new Style(map);
-        map.transform.updateElevation = jest.fn();
+        map.setTerrain = jest.fn();
         style.loadJSON(createStyleJSON({
             sources: {'source-id': createGeoJSONSource()},
             terrain: {source: 'source-id', exaggeration: 0.33}
         }));
 
         style.on('style.load', () => {
-            expect(style.map.terrain).toBeDefined();
-            expect(map.transform.updateElevation).toHaveBeenCalled();
+            expect(style.map.setTerrain).toHaveBeenCalled();
             done();
         });
     });
