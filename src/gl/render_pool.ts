@@ -54,8 +54,6 @@ export default class RenderPool {
         obj.inUse = true;
         this._recentlyUsed = this._recentlyUsed.filter(id => obj.id !== id);
         this._recentlyUsed.push(obj.id);
-        while (this._recentlyUsed.length > this._size)
-            this._recentlyUsed.shift();
     }
 
     public stampObject(obj: PoolObject) {
@@ -63,11 +61,13 @@ export default class RenderPool {
     }
 
     public getOrCreateFreeObject(): PoolObject {
-        // check for free existing objects
+        // check for free existing object
         for (const id of this._recentlyUsed) {
             if (!this._objects[id].inUse)
                 return this._objects[id];
         }
+        if (this._objects.length >= this._size)
+            throw new Error('No free RenderPool available, call freeAllObjects() required!');
         // create new object
         const obj = this._createObject(this._objects.length);
         this._objects.push(obj);

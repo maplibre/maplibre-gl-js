@@ -14,8 +14,13 @@ describe('render pool', () => {
     }
 
     test('create pool should not be full', () =>  {
-        const pool = new RenderPool(new Context(gl(1, 1)), 3, 512);
+        const pool = new RenderPool(new Context(gl(1, 1)), POOL_SIZE, 512);
         expect(pool.isFull()).toBeFalsy();
+    });
+
+    test('create pool should be full', () =>  {
+        const pool = createAndFillPool();
+        expect(() => pool.getOrCreateFreeObject()).toThrow('No free RenderPool available, call freeAllObjects() required!');
     });
 
     test('create pool and fill it', () =>  {
