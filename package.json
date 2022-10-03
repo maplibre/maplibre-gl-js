@@ -72,7 +72,7 @@
     "@types/supercluster": "^7.1.0",
     "@types/window-or-global": "^1.0.4",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
-    "@typescript-eslint/parser": "^5.38.0",
+    "@typescript-eslint/parser": "^5.38.1",
     "acorn-import-assertions": "^1.8.0",
     "address": "^1.2.1",
     "benchmark": "^2.1.4",
