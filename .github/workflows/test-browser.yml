@@ -17,7 +17,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install fonts-noto-cjk
       - name: Use Node.js 16 x64
-        uses: actions/setup-node@v3.4.1
+        uses: actions/setup-node@v3.5.0
         with:
           node-version: 16
           architecture: x64
