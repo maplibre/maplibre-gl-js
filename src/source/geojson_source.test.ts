@@ -305,6 +305,24 @@ describe('GeoJSONSource#update', () => {
         source.load();
     });
 
+    test('fires metadata data event even when initial request is aborted', done => {
+        let requestCount = 0;
+        const mockDispatcher = wrapDispatcher({
+            send(message, args, callback) {
+                setTimeout(() => callback(null, {abandoned: requestCount++ === 0}));
+            }
+        });
+
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+
+        source.on('data', e => {
+            if (e.sourceDataType === 'metadata') done();
+        });
+
+        source.load();
+        source.setData({} as GeoJSON.GeoJSON);
+    });
+
     test('fires "error"', done => {
         const mockDispatcher = wrapDispatcher({
             send(message, args, callback) {
