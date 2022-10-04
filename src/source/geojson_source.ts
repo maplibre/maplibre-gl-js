@@ -155,9 +155,7 @@ class GeoJSONSource extends Evented implements Source {
     }
 
     load() {
-        // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
-        // know its ok to start requesting tiles.
-        this._updateWorkerData('metadata');
+        this._updateWorkerData();
     }
 
     onAdd(map: Map) {
@@ -173,7 +171,7 @@ class GeoJSONSource extends Evented implements Source {
      */
     setData(data: GeoJSON.GeoJSON | string) {
         this._data = data;
-        this._updateWorkerData('content');
+        this._updateWorkerData();
 
         return this;
     }
@@ -194,7 +192,7 @@ class GeoJSONSource extends Evented implements Source {
      * @returns {GeoJSONSource} this
      */
     updateData(diff: GeoJSONSourceDiff) {
-        this._updateWorkerData('content', diff);
+        this._updateWorkerData(diff);
 
         return this;
     }
@@ -263,7 +261,7 @@ class GeoJSONSource extends Evented implements Source {
      * handles loading the geojson data and preparing to serve it up as tiles,
      * using geojson-vt or supercluster as appropriate.
      */
-    _updateWorkerData(sourceDataType: MapSourceDataType, diff?: GeoJSONSourceDiff) {
+    _updateWorkerData(diff?: GeoJSONSourceDiff) {
         const options = extend({}, this.workerOptions);
         if (diff) {
             options.dataDiff = diff;
@@ -284,7 +282,7 @@ class GeoJSONSource extends Evented implements Source {
             this._pendingLoads--;
 
             if (this._removed || (result && result.abandoned)) {
-                this.fire(new Event('dataabort', {dataType: 'source', sourceDataType}));
+                this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
 
@@ -297,11 +295,14 @@ class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            const data: any = {dataType: 'source', sourceDataType};
+            const data: any = {dataType: 'source'};
             if (this._collectResourceTiming && resourceTiming && resourceTiming.length > 0)
                 extend(data, {resourceTiming});
 
-            this.fire(new Event('data', data));
+            // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
+            // know its ok to start requesting tiles.
+            this.fire(new Event('data', {...data, sourceDataType: 'metadata'}));
+            this.fire(new Event('data', {...data, sourceDataType: 'content'}));
         });
     }
 
