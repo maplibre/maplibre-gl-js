@@ -305,8 +305,11 @@ export default class Terrain {
     getTerrainMesh(): TerrainMesh {
         if (this._mesh) return this._mesh;
         const context = this.painter.context;
-        const vertexArray = new Pos3dArray(), indexArray = new TriangleIndexArray();
-        const meshSize = this.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
+        const vertexArray = new Pos3dArray();
+        const indexArray = new TriangleIndexArray();
+        const meshSize = this.meshSize;
+        const delta = EXTENT / meshSize;
+        const meshSize2 = meshSize * meshSize;
         for (let y = 0; y <= meshSize; y++) for (let x = 0; x <= meshSize; x++)
             vertexArray.emplaceBack(x * delta, y * delta, 0);
         for (let y = 0; y < meshSize2; y += meshSize + 1) for (let x = 0; x < meshSize; x++) {
