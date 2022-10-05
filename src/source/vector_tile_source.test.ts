@@ -344,14 +344,12 @@ describe('VectorTileSource', () => {
         });
     });
 
-    test('setTiles only clears the cache once the TileJSON has reloaded', done => {
+    test('setTiles only clears the cache once the TileJSON has reloaded', async () => {
         const clearTiles = jest.fn();
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']}, undefined, clearTiles);
         source.setTiles(['http://example2.com/{z}/{x}/{y}.pbf']);
         expect(clearTiles.mock.calls).toHaveLength(0);
-        source.once('data', () => {
-            expect(clearTiles.mock.calls).toHaveLength(1);
-            done();
-        });
+        await source.once('data');
+        expect(clearTiles.mock.calls).toHaveLength(1);
     });
 });

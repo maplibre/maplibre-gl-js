@@ -85,6 +85,7 @@ type PainterOptions = {
 class Painter {
     context: Context;
     transform: Transform;
+    renderToTexture: RenderToTexture;
     _tileTextures: {
         [_: number]: Array<Texture>;
     };
@@ -378,7 +379,6 @@ class Painter {
 
         const layerIds = this.style._order;
         const sourceCaches = this.style.sourceCaches;
-        const renderToTexture = this.style.map.terrain && new RenderToTexture(this);
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -407,7 +407,8 @@ class Painter {
             }
         }
 
-        if (renderToTexture) {
+        if (this.renderToTexture) {
+            this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
             // this is disabled, because render-to-texture is rendering all layers from bottom to top.
             this.opaquePassCutoff = 0;
 
@@ -450,7 +451,7 @@ class Painter {
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
-        if (!renderToTexture) {
+        if (!this.renderToTexture) {
             this.renderPass = 'opaque';
 
             for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
@@ -471,7 +472,7 @@ class Painter {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
 
-            if (renderToTexture && renderToTexture.renderLayer(layer)) continue;
+            if (this.renderToTexture && this.renderToTexture.renderLayer(layer)) continue;
 
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render

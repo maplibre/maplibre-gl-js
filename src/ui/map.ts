@@ -19,7 +19,7 @@ import LogoControl from './control/logo_control';
 import {supported} from '@mapbox/mapbox-gl-supported';
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
-import {MapEventType, MapLayerEventType, MapMouseEvent} from './events';
+import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent} from './events';
 import TaskQueue from '../util/task_queue';
 import webpSupported from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
@@ -58,6 +58,8 @@ import type {
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import Terrain from '../render/terrain';
+import RenderToTexture from '../render/render_to_texture';
 
 const version = packageJSON.version;
 
@@ -326,6 +328,7 @@ class Map extends Camera {
     _removed: boolean;
     _clickTolerance: number;
     _pixelRatio: number;
+    _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -1165,16 +1168,16 @@ class Map extends Camera {
      * feature in this layer will trigger the listener. The event will have a `features` property containing
      * an array of the matching features.
      * @param {Function} listener The function to be called when the event is fired.
-     * @returns {Map} `this`
+     * @returns {Map | Promise} `this` if listener is provided, promise otherwise to allow easier usage of async/await
      */
     once<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
-        listener: (ev: MapLayerEventType[T] & Object) => void,
-    ): this;
-    once<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
-    once(type: MapEvent | string, listener: Listener): this;
-    once(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this {
+        listener?: (ev: MapLayerEventType[T] & Object) => void,
+    ): this | Promise<MapLayerEventType[T] & Object>;
+    once<T extends keyof MapEventType>(type: T, listener?: (ev: MapEventType[T] & Object) => void): this | Promise<any>;
+    once(type: MapEvent | string, listener?: Listener): this | Promise<any>;
+    once(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
 
         if (listener === undefined) {
             return super.once(type, layerIdOrListener as Listener);
@@ -1386,8 +1389,8 @@ class Map extends Camera {
      *
      */
     querySourceFeatures(sourceId: string, parameters?: {
-        sourceLayer: string;
-        filter: Array<any>;
+        sourceLayer?: string;
+        filter?: FilterSpecification;
         validate?: boolean;
     } | null): MapGeoJSONFeature[] {
         return this.style.querySourceFeatures(sourceId, parameters);
@@ -1644,7 +1647,37 @@ class Map extends Camera {
      * map.setTerrain({ source: 'terrain' });
      */
     setTerrain(options: TerrainSpecification): Map {
-        this.style.setTerrain(options);
+        this.style._checkLoaded();
+
+        // clear event handlers
+        if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
+
+        if (!options) {
+            // remove terrain
+            if (this.terrain) this.terrain.sourceCache.destruct();
+            this.terrain = null;
+            if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
+            this.painter.renderToTexture = null;
+            this.transform.updateElevation(this.terrain);
+        } else {
+            // add terrain
+            const sourceCache = this.style.sourceCaches[options.source];
+            if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
+            this.terrain = new Terrain(this.painter, sourceCache, options);
+            this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
+            this.transform.updateElevation(this.terrain);
+            this._terrainDataCallback = e => {
+                if (e.dataType === 'style') {
+                    this.terrain.sourceCache.freeRtt();
+                } else if (e.dataType === 'source' && e.tile) {
+                    if (e.sourceId === options.source) this.transform.updateElevation(this.terrain);
+                    this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                }
+            };
+            this.style.on('data', this._terrainDataCallback);
+        }
+
+        this.fire(new Event('terrain', {terrain: options}));
         return this;
     }
 

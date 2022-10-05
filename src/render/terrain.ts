@@ -9,7 +9,7 @@ import pos3dAttributes from '../data/pos3d_attributes';
 import SegmentVector from '../data/segment';
 import VertexBuffer from '../gl/vertex_buffer';
 import IndexBuffer from '../gl/index_buffer';
-import Style from '../style/style';
+import Painter from './painter';
 import Texture from '../render/texture';
 import type Framebuffer from '../gl/framebuffer';
 import Point from '@mapbox/point-geometry';
@@ -69,7 +69,7 @@ export type TerrainMesh = {
 
 export default class Terrain {
     // The style this terrain crresponds to
-    style: Style;
+    painter: Painter;
     // the sourcecache this terrain is based on
     sourceCache: TerrainSourceCache;
     // the TerrainSpecification object passed to this instance
@@ -105,16 +105,9 @@ export default class Terrain {
     // as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
     // matrices to transform from vector-tile coords to raster-dem-tile coords.
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
-    // because of overzooming raster-dem tiles this cache holds the corresponding
-    // framebuffer-object to render tiles to texture
-    _rttFramebuffer: Framebuffer;
-    // loading raster-dem tiles foreach render-to-texture tile results in loading
-    // a lot of terrain-dem tiles with very low visual advantage. So with this setting
-    // remember all tiles which contains new data for a spezific source and tile-key.
-    _rerender: {[_: string]: {[_: number]: boolean}};
 
-    constructor(style: Style, sourceCache: SourceCache, options: TerrainSpecification) {
-        this.style = style;
+    constructor(painter: Painter, sourceCache: SourceCache, options: TerrainSpecification) {
+        this.painter = painter;
         this.sourceCache = new TerrainSourceCache(sourceCache);
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
@@ -123,7 +116,6 @@ export default class Terrain {
         this._demMatrixCache = {};
         this.coordsIndex = [];
         this._coordsTextureSize = 1024;
-        this.clearRerenderCache();
     }
 
     /**
@@ -151,25 +143,6 @@ export default class Terrain {
         return elevation;
     }
 
-    rememberForRerender(source: string, tileID: OverscaledTileID) {
-        for (const key in this.sourceCache._tiles) {
-            const tile = this.sourceCache._tiles[key];
-            if (tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID)) {
-                if (source === this.sourceCache.sourceCache.id) tile.timeLoaded = Date.now();
-                this._rerender[source] = this._rerender[source] || {};
-                this._rerender[source][tile.tileID.key] = true;
-            }
-        }
-    }
-
-    needsRerender(source: string, tileID: OverscaledTileID) {
-        return this._rerender[source] && this._rerender[source][tileID.key];
-    }
-
-    clearRerenderCache() {
-        this._rerender = {};
-    }
-
     /**
      * get the Elevation for given coordinate in respect of exaggeration.
      * @param {OverscaledTileID} tileID - the tile id
@@ -191,7 +164,7 @@ export default class Terrain {
         // create empty DEM Obejcts, which will used while raster-dem tiles are loading.
         // creates an empty depth-buffer texture which is needed, during the initialisation process of the 3d mesh..
         if (!this._emptyDemTexture) {
-            const context = this.style.map.painter.context;
+            const context = this.painter.context;
             const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4));
             this._emptyDepthTexture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
             this._emptyDemUnpack = [0, 0, 0, 0];
@@ -202,8 +175,8 @@ export default class Terrain {
         // find covering dem tile and prepare demTexture
         const sourceTile = this.sourceCache.getSourceTile(tileID, true);
         if (sourceTile && sourceTile.dem && (!sourceTile.demTexture || sourceTile.needsTerrainPrepare)) {
-            const context = this.style.map.painter.context;
-            sourceTile.demTexture = this.style.map.painter.getTileTexture(sourceTile.dem.stride);
+            const context = this.painter.context;
+            sourceTile.demTexture = this.painter.getTileTexture(sourceTile.dem.stride);
             if (sourceTile.demTexture) sourceTile.demTexture.update(sourceTile.dem.getPixels(), {premultiply: false});
             else sourceTile.demTexture = new Texture(context, sourceTile.dem.getPixels(), context.gl.RGBA, {premultiply: false});
             sourceTile.demTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
@@ -239,26 +212,12 @@ export default class Terrain {
     }
 
     /**
-     * create the render-to-texture framebuffer
-     * @returns {Framebuffer} - the frame buffer
-     */
-    getRTTFramebuffer() {
-        const painter = this.style.map.painter;
-        if (!this._rttFramebuffer) {
-            const size = this.sourceCache.tileSize * this.qualityFactor;
-            this._rttFramebuffer = painter.context.createFramebuffer(size, size, true);
-            this._rttFramebuffer.depthAttachment.set(painter.context.createRenderbuffer(painter.context.gl.DEPTH_COMPONENT16, size, size));
-        }
-        return this._rttFramebuffer;
-    }
-
-    /**
      * get a framebuffer as big as the map-div, which will be used to render depth & coords into a texture
      * @param {string} texture - the texture
      * @returns {Framebuffer} the frame buffer
      */
     getFramebuffer(texture: string): Framebuffer {
-        const painter = this.style.map.painter;
+        const painter = this.painter;
         const width = painter.width / devicePixelRatio;
         const height = painter.height / devicePixelRatio;
         if (this._fbo && (this._fbo.width !== width || this._fbo.height !== height)) {
@@ -296,7 +255,7 @@ export default class Terrain {
      * @returns {Texture} - the texture
      */
     getCoordsTexture(): Texture {
-        const context = this.style.map.painter.context;
+        const context = this.painter.context;
         if (this._coordsTexture) return this._coordsTexture;
         const data = new Uint8Array(this._coordsTextureSize * this._coordsTextureSize * 4);
         for (let y = 0, i = 0; y < this._coordsTextureSize; y++) for (let x = 0; x < this._coordsTextureSize; x++, i += 4) {
@@ -319,10 +278,10 @@ export default class Terrain {
      */
     pointCoordinate(p: Point): MercatorCoordinate {
         const rgba = new Uint8Array(4);
-        const painter = this.style.map.painter, context = painter.context, gl = context.gl;
+        const context = this.painter.context, gl = context.gl;
         // grab coordinate pixel from coordinates framebuffer
         context.bindFramebuffer.set(this.getFramebuffer('coords').framebuffer);
-        gl.readPixels(p.x, painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+        gl.readPixels(p.x, this.painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
         context.bindFramebuffer.set(null);
         // decode coordinates (encoding see getCoordsTexture)
         const x = rgba[0] + ((rgba[2] >> 4) << 8);
@@ -345,7 +304,7 @@ export default class Terrain {
      */
     getTerrainMesh(): TerrainMesh {
         if (this._mesh) return this._mesh;
-        const context = this.style.map.painter.context;
+        const context = this.painter.context;
         const vertexArray = new Pos3dArray(), indexArray = new TriangleIndexArray();
         const meshSize = this.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
         for (let y = 0; y <= meshSize; y++) for (let x = 0; x <= meshSize; x++)

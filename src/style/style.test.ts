@@ -65,6 +65,8 @@ class StubMap extends Evented {
     getPixelRatio() {
         return 1;
     }
+
+    setTerrain() { }
 }
 
 const getStubMap = () => new StubMap() as any;
@@ -383,15 +385,14 @@ describe('Style#loadJSON', () => {
     test('sets terrain if defined', (done) => {
         const map = getStubMap();
         const style = new Style(map);
-        map.transform.updateElevation = jest.fn();
+        map.setTerrain = jest.fn();
         style.loadJSON(createStyleJSON({
             sources: {'source-id': createGeoJSONSource()},
             terrain: {source: 'source-id', exaggeration: 0.33}
         }));
 
         style.on('style.load', () => {
-            expect(style.map.terrain).toBeDefined();
-            expect(map.transform.updateElevation).toHaveBeenCalled();
+            expect(style.map.setTerrain).toHaveBeenCalled();
             done();
         });
     });
@@ -691,15 +692,16 @@ describe('Style#addSource', () => {
         });
     });
 
-    test('fires "data" event', done => {
+    test('fires "data" event', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON());
         const source = createSource();
-        style.once('data', () => { done(); });
+        const dataPromise = style.once('data');
         style.on('style.load', () => {
             style.addSource('source-id', source);
             style.update({} as EvaluationParameters);
         });
+        await dataPromise;
     });
 
     test('throws on duplicates', done => {
@@ -765,16 +767,17 @@ describe('Style#removeSource', () => {
         expect(() => style.removeSource('source-id')).toThrow(/load/i);
     });
 
-    test('fires "data" event', done => {
+    test('fires "data" event', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const source = createSource();
-        style.once('data', () => { done(); });
+        const dataPromise = style.once('data');
         style.on('style.load', () => {
             style.addSource('source-id', source);
             style.removeSource('source-id');
             style.update({} as EvaluationParameters);
         });
+        await dataPromise;
     });
 
     test('clears tiles', done => {
@@ -1081,17 +1084,18 @@ describe('Style#addLayer', () => {
 
     });
 
-    test('fires "data" event', done => {
+    test('fires "data" event', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        style.once('data', () => { done(); });
+        const dataPromise = style.once('data');
 
         style.on('style.load', () => {
             style.addLayer(layer);
             style.update({} as EvaluationParameters);
         });
+        await dataPromise;
     });
 
     test('emits error on duplicates', done => {
@@ -1207,18 +1211,20 @@ describe('Style#removeLayer', () => {
         expect(() => style.removeLayer('background')).toThrow(/load/i);
     });
 
-    test('fires "data" event', done => {
+    test('fires "data" event', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        style.once('data', () => { done(); });
+        const dataPromise = style.once('data');
 
         style.on('style.load', () => {
             style.addLayer(layer);
             style.removeLayer('background');
             style.update({} as EvaluationParameters);
         });
+
+        await dataPromise;
     });
 
     test('tears down layer event forwarding', done => {
@@ -1305,18 +1311,18 @@ describe('Style#moveLayer', () => {
         expect(() => style.moveLayer('background')).toThrow(/load/i);
     });
 
-    test('fires "data" event', done => {
+    test('fires "data" event', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const layer = {id: 'background', type: 'background'} as LayerSpecification;
 
-        style.once('data', () => { done(); });
-
+        const dataPromise = style.once('data');
         style.on('style.load', () => {
             style.addLayer(layer);
             style.moveLayer('background');
             style.update({} as EvaluationParameters);
         });
+        await dataPromise;
     });
 
     test('fires an error on non-existence', done => {

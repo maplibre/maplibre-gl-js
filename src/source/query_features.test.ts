@@ -29,7 +29,7 @@ describe('QueryFeatures#source', () => {
                 };
             }
         } as any as Dispatcher);
-        const result = querySourceFeatures(sourceCache, {} as any);
+        const result = querySourceFeatures(sourceCache, {});
         expect(result).toEqual([]);
     });
 

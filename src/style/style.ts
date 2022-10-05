@@ -56,12 +56,10 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
-    TerrainSpecification
 } from '../style-spec/types.g';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';
-import Terrain from '../render/terrain';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',
@@ -172,7 +170,6 @@ class Style extends Evented {
     zoomHistory: ZoomHistory;
     _loaded: boolean;
     _rtlTextPluginCallback: (a: any) => any;
-    _terrainDataCallback: (e: any) => any;
     _changed: boolean;
     _updatedSources: {[_: string]: 'clear' | 'reload'};
     _updatedLayers: {[_: string]: true};
@@ -328,7 +325,7 @@ class Style extends Evented {
 
         this.light = new Light(this.stylesheet.light);
 
-        this.setTerrain(this.stylesheet.terrain);
+        this.map.setTerrain(this.stylesheet.terrain);
 
         this.fire(new Event('data', {dataType: 'style'}));
         this.fire(new Event('style.load'));
@@ -530,43 +527,6 @@ class Style extends Evented {
         this._updatedPaintProps = {};
 
         this._changedImages = {};
-    }
-
-    /**
-     * Loads a 3D terrain mesh, based on a "raster-dem" source.
-     * @param {TerrainSpecification} [options] Options object.
-     */
-    setTerrain(options?: TerrainSpecification) {
-        this._checkLoaded();
-
-        // clear event handlers
-        if (this._terrainDataCallback) this.off('data', this._terrainDataCallback);
-
-        // remove terrain
-        if (!options) {
-            if (this.map.terrain) this.map.terrain.sourceCache.destruct();
-            this.map.terrain = null;
-            this.map.transform.updateElevation(this.map.terrain);
-
-        // add terrain
-        } else {
-            const sourceCache = this.sourceCaches[options.source];
-            if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
-            this.map.terrain = new Terrain(this, sourceCache, options);
-            this.map.transform.updateElevation(this.map.terrain);
-            this._terrainDataCallback = e => {
-                if (!e.tile) return;
-                if (e.sourceId === options.source) {
-                    this.map.transform.updateElevation(this.map.terrain);
-                    this.map.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
-                } else if (e.source.type === 'geojson') {
-                    this.map.terrain.rememberForRerender(e.sourceId, e.tile.tileID);
-                }
-            };
-            this.on('data', this._terrainDataCallback);
-        }
-
-        this.map.fire(new Event('terrain', {terrain: options}));
     }
 
     /**
@@ -1244,8 +1204,8 @@ class Style extends Evented {
     querySourceFeatures(
         sourceID: string,
         params?: {
-            sourceLayer: string;
-            filter: Array<any>;
+            sourceLayer?: string;
+            filter?: FilterSpecification;
             validate?: boolean;
         }
     ) {
