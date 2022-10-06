@@ -12,7 +12,7 @@
     "sources": {
         "repeat": {
             "type": "raster",
-            "tiles": ["local://tiles/white-with-x.png"],
+            "tiles": ["local://tiles/white-with-x.png?{z}{x}{y}"],
             "tileSize": 256
         },
         "terrain": {
