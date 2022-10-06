@@ -213,7 +213,7 @@ function mockXhr() {
     // @ts-ignore
     XMLHttpRequest.onCreate = (req: any) => {
         setTimeout(() => {
-            const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '')
+            const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
 
             let body: Buffer = null;
             try {
@@ -227,10 +227,21 @@ function mockXhr() {
                 } else {
                     req.response = body;
                 }
-                req.setStatus(req.response.length > 0 ? 200 : 204);
+                try {
+                    req.setStatus(req.response.length > 0 ? 200 : 204);
+                } catch (ex) {
+                    console.log("falied setting status: " + req.url);
+                    throw ex;
+                }
+                
                 req.onload();
             } catch (ex) {
-                req.setStatus(404); // file not found
+                try {
+                    req.setStatus(404); // file not found
+                } catch (ex) {
+                    console.log("falied setting status: " + req.url);
+                    throw ex;
+                }
                 req.onload();
             }
         }, 15);
