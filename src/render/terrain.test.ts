@@ -141,8 +141,8 @@ describe('Terrain', () => {
         let actualVertexArray;
         const painter = {
             context: {
-                createIndexBuffer: array => { actualIndexArray = Array.from(array.uint16) },
-                createVertexBuffer: array => { actualVertexArray = Array.from(array.int16) }
+                createIndexBuffer: array => { actualIndexArray = Array.from(array.uint16); },
+                createVertexBuffer: array => { actualVertexArray = Array.from(array.int16); }
             },
             width: 1,
             height: 1,

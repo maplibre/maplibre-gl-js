@@ -350,7 +350,7 @@ export default class Terrain {
      * @param zoom current zoomlevel
      * @returns the elevation delta in meters
      */
-     getMeshFrameDelta(zoom: number) {
+    getMeshFrameDelta(zoom: number) {
         // divide by 5 is evaluated by trial & error to get a frame in the right height
         return 2 * Math.PI * earthRadius / Math.pow(2, zoom) / 5;
     }
