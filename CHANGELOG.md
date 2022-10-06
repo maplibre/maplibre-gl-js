@@ -8,6 +8,7 @@
 
 ### 🐞 Bug fixes
 - Fix `GeoJSONSource` appearing to never finish loading when calling its `setData` method immediately after adding it to a `Map` due to it not firing a `metadata` `data` event ([#1693](https://github.com/maplibre/maplibre-gl-js/issues/1693))
+- Fix the gap between terrain elevated tiles ([#1602](https://github.com/maplibre/maplibre-gl-js/issues/1602))
 - *...Add new stuff here...*
 
 ## 3.0.0-pre.0
