@@ -7,7 +7,7 @@ import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import glob from 'glob';
-import nise, { FakeXMLHttpRequest } from 'nise';
+import nise, {FakeXMLHttpRequest} from 'nise';
 import {createRequire} from 'module';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import localizeURLs from '../lib/localize-urls';
@@ -211,11 +211,12 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 function mockXhr() {
     global.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest() as any;
     // @ts-ignore
-    XMLHttpRequest.onCreate = (req: any) => {
+    XMLHttpRequest.onCreate = (req: FakeXMLHttpRequest & XMLHttpRequest & { setStatus: Function, response: any }) => {
         setTimeout(() => {
+            if (req.readyState === 0) return; // aborted...
             const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
 
-            let body: Buffer = null;
+            let body: Buffer | null = null;
             try {
                 if (relativePath.startsWith('mvt-fixtures')) {
                     body = fs.readFileSync(path.join(path.dirname(require.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
@@ -228,13 +229,11 @@ function mockXhr() {
                     req.response = body;
                 }
                 req.setStatus(req.response.length > 0 ? 200 : 204);
-                
-                req.onload();
+                req.onload(undefined as any);
             } catch (ex) {
-                if (req.readyState > 0) {
-                    req.setStatus(404); // file not found
-                    req.onload();
-                }
+
+                req.setStatus(404); // file not found
+                req.onload(null as any);
             }
         }, 0);
     };
