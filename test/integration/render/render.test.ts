@@ -7,7 +7,7 @@ import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import glob from 'glob';
-import nise from 'nise';
+import nise, { FakeXMLHttpRequest } from 'nise';
 import {createRequire} from 'module';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import localizeURLs from '../lib/localize-urls';
@@ -227,24 +227,16 @@ function mockXhr() {
                 } else {
                     req.response = body;
                 }
-                try {
-                    req.setStatus(req.response.length > 0 ? 200 : 204);
-                } catch (ex) {
-                    console.log("falied setting status: " + req.url);
-                    throw ex;
-                }
+                req.setStatus(req.response.length > 0 ? 200 : 204);
                 
                 req.onload();
             } catch (ex) {
-                try {
+                if (req.readyState > 0) {
                     req.setStatus(404); // file not found
-                } catch (ex) {
-                    console.log("falied setting status: " + req.url);
-                    throw ex;
+                    req.onload();
                 }
-                req.onload();
             }
-        }, 15);
+        }, 0);
     };
 }
 
