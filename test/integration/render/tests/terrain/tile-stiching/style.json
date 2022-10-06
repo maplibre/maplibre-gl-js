@@ -17,7 +17,7 @@
         },
         "terrain": {
           "type": "raster-dem",
-          "tiles": ["local://tiles/{z}-{x}-{y}.terrain.png"],
+          "tiles": ["local://tiles/terrain/{z}-{x}-{y}.terrain.png"],
           "encoding": "terrarium",
           "maxzoom": 15,
           "tileSize": 256
