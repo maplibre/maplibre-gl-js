@@ -29,6 +29,8 @@ class StubMap extends Evented {
     getPixelRatio() {
         return devicePixelRatio;
     }
+
+    setTerrain() {}
 }
 
 function createStyle(styleJSON: StyleSpecification): Promise<Style> {
