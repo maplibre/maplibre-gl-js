@@ -20,7 +20,7 @@ import type Map from '../../../src/ui/map';
 import type {StyleSpecification} from '../../../src/style-spec/types.g';
 import type {PointLike} from '../../../src/ui/camera';
 
-const {fakeServer} = nise;
+const {fakeXhr} = nise;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
 const {registerFont} = canvas;
 
@@ -209,15 +209,11 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
  * Mocks XHR request and simply pulls file from the file system.
  */
 function mockXhr() {
-    const server = fakeServer.create();
-    global.XMLHttpRequest = (server as any).xhr;
+    global.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest() as any;
     // @ts-ignore
     XMLHttpRequest.onCreate = (req: any) => {
         setTimeout(() => {
-            const relativePath = req.url
-                .replace(/^http:\/\/localhost:(\d+)\//, '')
-                .replace(/\?.*/, '')
-                .replace(/(white-with-x\.png).*/, "$1")
+            const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '')
 
             let body: Buffer = null;
             try {
@@ -237,7 +233,7 @@ function mockXhr() {
                 req.setStatus(404); // file not found
                 req.onload();
             }
-        }, 0);
+        }, 15);
     };
 }
 
