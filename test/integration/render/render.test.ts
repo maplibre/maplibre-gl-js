@@ -211,7 +211,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 function mockXhr() {
     global.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest() as any;
     // @ts-ignore
-    XMLHttpRequest.onCreate = (req: FakeXMLHttpRequest & XMLHttpRequest & { setStatus: Function, response: any }) => {
+    XMLHttpRequest.onCreate = (req: FakeXMLHttpRequest & XMLHttpRequest & { response: any }) => {
         setTimeout(() => {
             if (req.readyState === 0) return; // aborted...
             const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
@@ -228,12 +228,11 @@ function mockXhr() {
                 } else {
                     req.response = body;
                 }
-                req.setStatus(req.response.length > 0 ? 200 : 204);
+                req.status = req.response.length > 0 ? 200 : 204;
                 req.onload(undefined as any);
             } catch (ex) {
-
-                req.setStatus(404); // file not found
-                req.onload(null as any);
+                req.status = 404; // file not found
+                req.onload(undefined as any);
             }
         }, 0);
     };
