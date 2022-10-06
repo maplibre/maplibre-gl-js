@@ -7,7 +7,7 @@ import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import glob from 'glob';
-import nise from 'nise';
+import nise, {FakeXMLHttpRequest} from 'nise';
 import {createRequire} from 'module';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import localizeURLs from '../lib/localize-urls';
@@ -20,7 +20,7 @@ import type Map from '../../../src/ui/map';
 import type {StyleSpecification} from '../../../src/style-spec/types.g';
 import type {PointLike} from '../../../src/ui/camera';
 
-const {fakeServer} = nise;
+const {fakeXhr} = nise;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
 const {registerFont} = canvas;
 
@@ -209,14 +209,14 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
  * Mocks XHR request and simply pulls file from the file system.
  */
 function mockXhr() {
-    const server = fakeServer.create();
-    global.XMLHttpRequest = (server as any).xhr;
+    global.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest() as any;
     // @ts-ignore
-    XMLHttpRequest.onCreate = (req: any) => {
+    XMLHttpRequest.onCreate = (req: FakeXMLHttpRequest & XMLHttpRequest & { response: any }) => {
         setTimeout(() => {
+            if (req.readyState === 0) return; // aborted...
             const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
 
-            let body: Buffer = null;
+            let body: Buffer | null = null;
             try {
                 if (relativePath.startsWith('mvt-fixtures')) {
                     body = fs.readFileSync(path.join(path.dirname(require.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
@@ -228,11 +228,11 @@ function mockXhr() {
                 } else {
                     req.response = body;
                 }
-                req.setStatus(req.response.length > 0 ? 200 : 204);
-                req.onload();
+                req.status = req.response.length > 0 ? 200 : 204;
+                req.onload(undefined as any);
             } catch (ex) {
-                req.setStatus(404); // file not found
-                req.onload();
+                req.status = 404; // file not found
+                req.onload(undefined as any);
             }
         }, 0);
     };
