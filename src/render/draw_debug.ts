@@ -8,6 +8,7 @@ import ColorMode from '../gl/color_mode';
 import type Painter from './painter';
 import type SourceCache from '../source/source_cache';
 import type {OverscaledTileID} from '../source/tile_id';
+import Style from '../style/style';
 
 export default drawDebug;
 
@@ -77,7 +78,7 @@ function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: Oversc
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
     const id = '$debug';
-    const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
+    const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
     context.activeTexture.set(gl.TEXTURE0);
     // Bind the empty texture for drawing outlines
@@ -121,4 +122,31 @@ function drawTextToOverlay(painter: Painter, text: string) {
 
     painter.debugOverlayTexture.update(canvas);
     painter.debugOverlayTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+}
+
+export function selectDebugSource(style: Style, zoom: number): SourceCache | null {
+    // Use vector source with highest maxzoom
+    // Else use source with highest maxzoom of any type
+    let selectedSource: SourceCache = null;
+    const layers = Object.values(style._layers);
+    const sources = layers.flatMap((layer) => {
+        if (layer.source && !layer.isHidden(zoom)) {
+            const sourceCache = style.sourceCaches[layer.source];
+            return [sourceCache];
+        } else {
+            return [];
+        }
+    });
+    const vectorSources = sources.filter((source) => source.getSource().type === 'vector');
+    const otherSources = sources.filter((source) => source.getSource().type !== 'vector');
+    const considerSource = (source: SourceCache) => {
+        if (!selectedSource || (selectedSource.getSource().maxzoom < source.getSource().maxzoom)) {
+            selectedSource = source;
+        }
+    };
+    vectorSources.forEach((source) => considerSource(source));
+    if (!selectedSource) {
+        otherSources.forEach((source) => considerSource(source));
+    }
+    return selectedSource;
 }

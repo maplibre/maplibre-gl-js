@@ -7,17 +7,18 @@ import createMap from '../lib/create_map';
  * using an empty style with no sources or layers.
  */
 export default class MapLoad extends Benchmark {
-    bench() {
-        return createMap({
-            style: {
-                version: 8,
-                sources: {},
-                layers: []
-            }
-        })
-            .then(map => map.remove())
-            .catch(error => {
-                console.error(error);
+    async bench() {
+        try {
+            const map = await createMap({
+                style: {
+                    version: 8,
+                    sources: {},
+                    layers: []
+                }
             });
+            map.remove();
+        } catch (error) {
+            console.error(error);
+        }
     }
 }

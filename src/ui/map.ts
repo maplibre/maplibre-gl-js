@@ -4,7 +4,7 @@ import DOM from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
 import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
-import Style from '../style/style';
+import Style, {StyleSwapOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
 import Transform from '../geo/transform';
@@ -19,7 +19,7 @@ import LogoControl from './control/logo_control';
 import {supported} from '@mapbox/mapbox-gl-supported';
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
-import {MapEventType, MapLayerEventType, MapMouseEvent} from './events';
+import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent} from './events';
 import TaskQueue from '../util/task_queue';
 import webpSupported from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
@@ -58,6 +58,8 @@ import type {
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import Terrain from '../render/terrain';
+import RenderToTexture from '../render/render_to_texture';
 
 const version = packageJSON.version;
 
@@ -326,6 +328,7 @@ class Map extends Camera {
     _removed: boolean;
     _clickTolerance: number;
     _pixelRatio: number;
+    _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -604,8 +607,8 @@ class Map extends Camera {
     }
 
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number) : CameraOptions {
-        if (altitudeTo == null && this.style.terrain) {
-            altitudeTo = this.transform.getElevation(to, this.style.terrain);
+        if (altitudeTo == null && this.terrain) {
+            altitudeTo = this.transform.getElevation(to, this.terrain);
         }
         return super.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
@@ -910,7 +913,7 @@ class Map extends Camera {
      * var point = map.project(coordinate);
      */
     project(lnglat: LngLatLike) {
-        return this.transform.locationPoint(LngLat.convert(lnglat), this.style && this.style.terrain);
+        return this.transform.locationPoint(LngLat.convert(lnglat), this.style && this.terrain);
     }
 
     /**
@@ -926,7 +929,7 @@ class Map extends Camera {
      * });
      */
     unproject(point: PointLike) {
-        return this.transform.pointLocation(Point.convert(point), this.style && this.style.terrain);
+        return this.transform.pointLocation(Point.convert(point), this.terrain);
     }
 
     /**
@@ -1165,16 +1168,16 @@ class Map extends Camera {
      * feature in this layer will trigger the listener. The event will have a `features` property containing
      * an array of the matching features.
      * @param {Function} listener The function to be called when the event is fired.
-     * @returns {Map} `this`
+     * @returns {Map | Promise} `this` if listener is provided, promise otherwise to allow easier usage of async/await
      */
     once<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
-        listener: (ev: MapLayerEventType[T] & Object) => void,
-    ): this;
-    once<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
-    once(type: MapEvent | string, listener: Listener): this;
-    once(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this {
+        listener?: (ev: MapLayerEventType[T] & Object) => void,
+    ): this | Promise<MapLayerEventType[T] & Object>;
+    once<T extends keyof MapEventType>(type: T, listener?: (ev: MapEventType[T] & Object) => void): this | Promise<any>;
+    once(type: MapEvent | string, listener?: Listener): this | Promise<any>;
+    once(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
 
         if (listener === undefined) {
             return super.once(type, layerIdOrListener as Listener);
@@ -1386,8 +1389,8 @@ class Map extends Camera {
      *
      */
     querySourceFeatures(sourceId: string, parameters?: {
-        sourceLayer: string;
-        filter: Array<any>;
+        sourceLayer?: string;
+        filter?: FilterSpecification;
         validate?: boolean;
     } | null): MapGeoJSONFeature[] {
         return this.style.querySourceFeatures(sourceId, parameters);
@@ -1413,15 +1416,42 @@ class Map extends Camera {
      *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      *   Set to `false`, to enable font settings from the map's style for these glyph ranges.
      *   Forces a full update.
+     * @param {TransformStyleFunction} [options.transformStyle=undefined] transformStyle is a convenience function
+     *   that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
      * @returns {Map} `this`
      *
      * @example
      * map.setStyle("https://demotiles.maplibre.org/style.json");
      *
+     * map.setStyle('https://demotiles.maplibre.org/style.json', {
+     *   transformStyle: (previousStyle, nextStyle) => ({
+     *       ...nextStyle,
+     *       sources: {
+     *           ...nextStyle.sources,
+     *           // copy a source from previous style
+     *           'osm': previousStyle.sources.osm
+     *       },
+     *       layers: [
+     *           // background layer
+     *           nextStyle.layers[0],
+     *           // copy a layer from previous style
+     *           previousStyle.layers[0],
+     *           // other layers from the next style
+     *           ...nextStyle.layers.slice(1).map(layer => {
+     *               // hide the layers we don't need from demotiles style
+     *               if (layer.id.startsWith('geolines')) {
+     *                   layer.layout = {...layer.layout || {}, visibility: 'none'};
+     *               // filter out US polygons
+     *               } else if (layer.id.startsWith('coastline') || layer.id.startsWith('countries')) {
+     *                   layer.filter = ['!=', ['get', 'ADM0_A3'], 'USA'];
+     *               }
+     *               return layer;
+     *           })
+     *       ]
+     *   })
+     * });
      */
-    setStyle(style: StyleSpecification | string | null, options?: {
-        diff?: boolean;
-    } & StyleOptions) {
+    setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
         options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {
@@ -1458,9 +1488,14 @@ class Map extends Camera {
         return str;
     }
 
-    _updateStyle(style: StyleSpecification | string | null,  options?: {
-        diff?: boolean;
-    } & StyleOptions) {
+    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
+        // transformStyle relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
+        if (options.transformStyle && !this.style._loaded) {
+            this.style.once('style.load', () => this._updateStyle(style, options));
+            return;
+        }
+
+        const previousStyle = this.style && options.transformStyle ? this.style.serialize() : undefined;
         if (this.style) {
             this.style.setEventedParent(null);
             this.style._remove();
@@ -1476,9 +1511,9 @@ class Map extends Camera {
         this.style.setEventedParent(this, {style: this.style});
 
         if (typeof style === 'string') {
-            this.style.loadURL(style);
+            this.style.loadURL(style, options, previousStyle);
         } else {
-            this.style.loadJSON(style);
+            this.style.loadJSON(style, options, previousStyle);
         }
 
         return this;
@@ -1492,9 +1527,7 @@ class Map extends Camera {
         }
     }
 
-    _diffStyle(style: StyleSpecification | string,  options?: {
-        diff?: boolean;
-    } & StyleOptions) {
+    _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
             const request = this._requestManager.transformRequest(url, ResourceType.Style);
@@ -1510,11 +1543,9 @@ class Map extends Camera {
         }
     }
 
-    _updateDiff(style: StyleSpecification,  options?: {
-        diff?: boolean;
-    } & StyleOptions) {
+    _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions) {
         try {
-            if (this.style.setState(style)) {
+            if (this.style.setState(style, options)) {
                 this._update(true);
             }
         } catch (e) {
@@ -1616,7 +1647,37 @@ class Map extends Camera {
      * map.setTerrain({ source: 'terrain' });
      */
     setTerrain(options: TerrainSpecification): Map {
-        this.style.setTerrain(options);
+        this.style._checkLoaded();
+
+        // clear event handlers
+        if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
+
+        if (!options) {
+            // remove terrain
+            if (this.terrain) this.terrain.sourceCache.destruct();
+            this.terrain = null;
+            if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
+            this.painter.renderToTexture = null;
+            this.transform.updateElevation(this.terrain);
+        } else {
+            // add terrain
+            const sourceCache = this.style.sourceCaches[options.source];
+            if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
+            this.terrain = new Terrain(this.painter, sourceCache, options);
+            this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
+            this.transform.updateElevation(this.terrain);
+            this._terrainDataCallback = e => {
+                if (e.dataType === 'style') {
+                    this.terrain.sourceCache.freeRtt();
+                } else if (e.dataType === 'source' && e.tile) {
+                    if (e.sourceId === options.source) this.transform.updateElevation(this.terrain);
+                    this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                }
+            };
+            this.style.on('data', this._terrainDataCallback);
+        }
+
+        this.fire(new Event('terrain', {terrain: options}));
         return this;
     }
 
@@ -1627,7 +1688,7 @@ class Map extends Camera {
      * map.getTerrain(); // { source: 'terrain' };
      */
     getTerrain(): TerrainSpecification {
-        return this.style.terrain && this.style.terrain.options;
+        return this.terrain && this.terrain.options;
     }
 
     /**
@@ -2652,8 +2713,8 @@ class Map extends Camera {
         }
 
         // update terrain stuff
-        if (this.style.terrain) this.style.terrain.sourceCache.update(this.transform, this.style.terrain);
-        this.transform.updateElevation(this.style.terrain);
+        if (this.terrain) this.terrain.sourceCache.update(this.transform, this.terrain);
+        this.transform.updateElevation(this.terrain);
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 
@@ -2947,7 +3008,7 @@ class Map extends Camera {
     /**
      * Returns the elevation for the point where the camera is looking.
      * This value corresponds to:
-     * ("meters above sea level" + "elevation offset (style-spec v8 defualts to 450 m)") * "exaggeration"
+     * "meters above sea level" * "exaggeration"
      * @returns {number} * The elevation.
      */
     getCameraTargetElevation(): number {

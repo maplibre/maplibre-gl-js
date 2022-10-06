@@ -12,7 +12,6 @@ import type {TerrainSpecification} from '../../style-spec/types.g';
  * @param {Object} [options]
  * @param {string} [options.id] The ID of the raster-dem source to use.
  * @param {Object} [options.options]
- * @param {number} [options.options.elevationOffset]
  * @param {number} [options.options.exaggeration]
  * @example
  * var map = new maplibregl.Map({TerrainControl: false})
@@ -66,7 +65,7 @@ export default class TerrainControl implements IControl {
     _updateTerrainIcon() {
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain');
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled');
-        if (this._map.style.terrain) {
+        if (this._map.terrain) {
             this._terrainButton.classList.add('maplibregl-ctrl-terrain-enabled');
             this._terrainButton.title = this._map._getUIString('TerrainControl.disableTerrain');
         } else {

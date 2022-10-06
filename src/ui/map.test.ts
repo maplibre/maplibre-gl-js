@@ -291,6 +291,102 @@ describe('Map', () => {
             map.setStyle(null);
             expect(style._remove).toHaveBeenCalledTimes(1);
         });
+
+        test('transformStyle should copy the source and the layer into next style', done => {
+            const style = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'layerId0',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }, {
+                    id: 'layerId1',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }]
+            });
+
+            const map = createMap({style});
+            map.setStyle(createStyle(), {
+                diff: false,
+                transformStyle: (prevStyle, nextStyle) => ({
+                    ...nextStyle,
+                    sources: {
+                        ...nextStyle.sources,
+                        maplibre: prevStyle.sources.maplibre
+                    },
+                    layers: [
+                        ...nextStyle.layers,
+                        prevStyle.layers[0]
+                    ]
+                })
+            });
+
+            map.on('style.load', () => {
+                const loadedStyle = map.style.serialize();
+                expect('maplibre' in loadedStyle.sources).toBeTruthy();
+                expect(loadedStyle.layers[0].id).toBe(style.layers[0].id);
+                expect(loadedStyle.layers).toHaveLength(1);
+                done();
+            });
+        });
+
+        test('delayed setStyle with transformStyle should copy the source and the layer into next style with diffing', done => {
+            const style = extend(createStyle(), {
+                sources: {
+                    maplibre: {
+                        type: 'vector',
+                        minzoom: 1,
+                        maxzoom: 10,
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                layers: [{
+                    id: 'layerId0',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }, {
+                    id: 'layerId1',
+                    type: 'circle',
+                    source: 'maplibre',
+                    'source-layer': 'sourceLayer'
+                }]
+            });
+
+            const map = createMap({style});
+            window.setTimeout(() => {
+                map.setStyle(createStyle(), {
+                    diff: true,
+                    transformStyle: (prevStyle, nextStyle) => ({
+                        ...nextStyle,
+                        sources: {
+                            ...nextStyle.sources,
+                            maplibre: prevStyle.sources.maplibre
+                        },
+                        layers: [
+                            ...nextStyle.layers,
+                            prevStyle.layers[0]
+                        ]
+                    })
+                });
+
+                const loadedStyle = map.style.serialize();
+                expect('maplibre' in loadedStyle.sources).toBeTruthy();
+                expect(loadedStyle.layers[0].id).toBe(style.layers[0].id);
+                expect(loadedStyle.layers).toHaveLength(1);
+                done();
+            }, 100);
+        });
     });
 
     describe('#setTransformRequest', () => {
@@ -471,7 +567,7 @@ describe('Map', () => {
 
     });
 
-    test('#moveLayer', done => {
+    test('#moveLayer', async () => {
         const map = createMap({
             style: extend(createStyle(), {
                 sources: {
@@ -496,15 +592,13 @@ describe('Map', () => {
             })
         });
 
-        map.once('render', () => {
-            map.moveLayer('layerId1', 'layerId2');
-            expect(map.getLayer('layerId1').id).toBe('layerId1');
-            expect(map.getLayer('layerId2').id).toBe('layerId2');
-            done();
-        });
+        await map.once('render');
+        map.moveLayer('layerId1', 'layerId2');
+        expect(map.getLayer('layerId1').id).toBe('layerId1');
+        expect(map.getLayer('layerId2').id).toBe('layerId2');
     });
 
-    test('#getLayer', done => {
+    test('#getLayer', async () => {
         const layer = {
             id: 'layerId',
             type: 'circle',
@@ -525,13 +619,11 @@ describe('Map', () => {
             })
         });
 
-        map.once('render', () => {
-            const mapLayer = map.getLayer('layerId');
-            expect(mapLayer.id).toBe(layer.id);
-            expect(mapLayer.type).toBe(layer.type);
-            expect(mapLayer.source).toBe(layer.source);
-            done();
-        });
+        await map.once('render');
+        const mapLayer = map.getLayer('layerId');
+        expect(mapLayer.id).toBe(layer.id);
+        expect(mapLayer.type).toBe(layer.type);
+        expect(mapLayer.source).toBe(layer.source);
     });
 
     describe('#resize', () => {
@@ -959,14 +1051,14 @@ describe('Map', () => {
         canvas.dispatchEvent(new window.Event('webglcontextlost'));
     });
 
-    test('#redraw', done => {
+    test('#redraw', async () => {
         const map = createMap();
 
-        map.once('idle', () => {
-            map.once('render', () => done());
+        await map.once('idle');
+        const renderPromise = map.once('render');
 
-            map.redraw();
-        });
+        map.redraw();
+        await renderPromise;
     });
 
     test('#addControl', () => {
@@ -1212,7 +1304,7 @@ describe('Map', () => {
             });
         });
 
-        test('fires a data event', done => {
+        test('fires a data event', async () => {
             // background layers do not have a source
             const map = createMap({
                 style: {
@@ -1228,15 +1320,11 @@ describe('Map', () => {
                 }
             });
 
-            map.once('style.load', () => {
-                map.once('data', (e) => {
-                    if (e.dataType === 'style') {
-                        done();
-                    }
-                });
-
-                map.setLayoutProperty('background', 'visibility', 'visible');
-            });
+            await map.once('style.load');
+            const dataPromise = map.once('data');
+            map.setLayoutProperty('background', 'visibility', 'visible');
+            const e = await dataPromise;
+            expect(e.dataType).toBe('style');
         });
 
         test('sets visibility on background layer', done => {
@@ -1924,17 +2012,14 @@ describe('Map', () => {
         });
     });
 
-    test('no idle event during move', done => {
+    test('no idle event during move', async () => {
         const style = createStyle();
         const map = createMap({style, fadeDuration: 0});
-        map.once('idle', () => {
-            map.zoomTo(0.5, {duration: 100});
-            expect(map.isMoving()).toBeTruthy();
-            map.once('idle', () => {
-                expect(!map.isMoving()).toBeTruthy();
-                done();
-            });
-        });
+        await map.once('idle');
+        map.zoomTo(0.5, {duration: 100});
+        expect(map.isMoving()).toBeTruthy();
+        await map.once('idle');
+        expect(map.isMoving()).toBeFalsy();
     });
 
     test('#removeLayer restores Map#loaded() to true', done => {
@@ -2130,10 +2215,11 @@ describe('Map', () => {
         expect(map.painter.height).toBe(1024);
     });
 
-    test('fires sourcedataabort event on dataabort event', done => {
+    test('fires sourcedataabort event on dataabort event', async () => {
         const map = createMap();
-        map.once('sourcedataabort', () => done());
+        const sourcePromise = map.once('sourcedataabort');
         map.fire(new Event('dataabort'));
+        await sourcePromise;
     });
 
     describe('getCameraTargetElevation', () => {
@@ -2145,14 +2231,14 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             const transform = new Transform(0, 22, 0, 60, true);
             transform.elevation = 200;
             transform.center = new LngLat(10.0, 50.0);
             transform.zoom = 14;
             transform.resize(512, 512);
-            transform.updateElevation(map.style.terrain);
+            transform.updateElevation(map.terrain);
             map.transform = transform;
 
             expect(map.getCameraTargetElevation()).toBe(2000);
@@ -2168,7 +2254,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             // distance between lng x and lng x+1 is 111.2km at same lat
             // altitude same as center elevation => 90° pitch
@@ -2185,7 +2271,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
             // distance between lng x and lng x+1 is 111.2km at same lat
             // (elevation difference of cam and center) / 2 = grounddistance =>
             // acos(111.2 / sqrt(111.2² + (111.2 * 2)²)) = acos(1/sqrt(5)) => 63.435 + 90 = 153.435
@@ -2202,7 +2288,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             // distance between lng x and lng x+1 is 111.2km at same lat
             // (elevation difference of cam and center) * 2 = grounddistance =>
@@ -2220,7 +2306,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             const expectedZoom = Math.log2(map.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / map.transform.tileSize);
             const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(0, 0));
@@ -2237,7 +2323,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(0, 0), 1000);
 
@@ -2252,7 +2338,7 @@ describe('Map', () => {
 
             const terrainStub = {} as Terrain;
             terrainStub.getElevation = mockedGetElevation;
-            map.style.terrain = terrainStub;
+            map.terrain = terrainStub;
 
             const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(1, 0), 0);
 

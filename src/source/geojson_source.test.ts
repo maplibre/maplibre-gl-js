@@ -71,15 +71,14 @@ describe('GeoJSONSource#setData', () => {
         expect(source.setData({} as GeoJSON.GeoJSON)).toBe(source);
     });
 
-    test('fires "data" event', done => {
+    test('fires "data" event', async () => {
         const source = createSource();
-        source.once('data', () => {
-            source.once('data', () => {
-                done();
-            });
-            source.setData({} as GeoJSON.GeoJSON);
-        });
+        const loadPromise = source.once('data');
         source.load();
+        await loadPromise;
+        const setDataPromise = source.once('data');
+        source.setData({} as GeoJSON.GeoJSON);
+        await setDataPromise;
     });
 
     test('fires "dataloading" event', done => {
@@ -119,35 +118,32 @@ describe('GeoJSONSource#setData', () => {
         source.setData('http://localhost/nonexistent');
     });
 
-    test('only marks source as loaded when there are no pending loads', done => {
+    test('only marks source as loaded when there are no pending loads', async () => {
         const source = createSource();
-        source.once('data', () => {
-            expect(source.loaded()).toBeFalsy();
-            source.once('data', () => {
-                expect(source.loaded()).toBeTruthy();
-                done();
-            });
-        });
+        const setDataPromise = source.once('data');
         source.setData({} as GeoJSON.GeoJSON);
         source.setData({} as GeoJSON.GeoJSON);
+        await setDataPromise;
+        expect(source.loaded()).toBeFalsy();
+        const setDataPromise2 = source.once('data');
+        await setDataPromise2;
+        expect(source.loaded()).toBeTruthy();
     });
 
-    test('marks source as not loaded before firing "dataloading" event', done => {
+    test('marks source as not loaded before firing "dataloading" event', async () => {
         const source = createSource();
-        source.once('dataloading', () => {
-            expect(source.loaded()).toBeFalsy();
-            done();
-        });
+        const setDataPromise = source.once('dataloading');
         source.setData({} as GeoJSON.GeoJSON);
+        await setDataPromise;
+        expect(source.loaded()).toBeFalsy();
     });
 
-    test('marks source as loaded before firing "data" event', done => {
+    test('marks source as loaded before firing "data" event', async () => {
         const source = createSource();
-        source.once('data', () => {
-            expect(source.loaded()).toBeTruthy();
-            done();
-        });
+        const dataPromise = source.once('data');
         source.setData({} as GeoJSON.GeoJSON);
+        await dataPromise;
+        expect(source.loaded()).toBeTruthy();
     });
 
     test('marks source as loaded before firing "dataabort" event', done => {
@@ -307,6 +303,24 @@ describe('GeoJSONSource#update', () => {
         });
 
         source.load();
+    });
+
+    test('fires metadata data event even when initial request is aborted', done => {
+        let requestCount = 0;
+        const mockDispatcher = wrapDispatcher({
+            send(message, args, callback) {
+                setTimeout(() => callback(null, {abandoned: requestCount++ === 0}));
+            }
+        });
+
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+
+        source.on('data', e => {
+            if (e.sourceDataType === 'metadata') done();
+        });
+
+        source.load();
+        source.setData({} as GeoJSON.GeoJSON);
     });
 
     test('fires "error"', done => {

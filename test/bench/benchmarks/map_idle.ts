@@ -18,16 +18,17 @@ export default class MapIdle extends Benchmark {
     /**
      * Waits for map's idle event before returning.
      */
-    async createMap(): Promise<void> {
-        return createMap({
-            idle: true,
-            center: [-77.032194, 38.912753],
-            zoom: 15
-        })
-            .then(map => map.remove())
-            .catch(error => {
-                console.error(error);
+    async createMap() {
+        try {
+            const map = await createMap({
+                idle: true,
+                center: [-77.032194, 38.912753],
+                zoom: 15
             });
+            map.remove();
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     setup(): Promise<void> {

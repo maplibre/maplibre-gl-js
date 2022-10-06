@@ -62,8 +62,7 @@
       "doc": "The terrain configuration.",
       "example": {
         "source": "raster-dem-source",
-        "exaggeration": 0.5,
-        "elevationOffset": 100
+        "exaggeration": 0.5
       }
     },
     "sources": {
@@ -3839,16 +3838,6 @@
       "minimum": 0,
       "doc": "The exaggeration of the terrain - how high it will look.",
       "default": 1.0,
-      "sdk-support": {
-        "basic functionality": {
-          "js": "2.2.0"
-        }
-      }
-    },
-    "elevationOffset": {
-      "type": "number",
-      "doc": "The elevation offset.",
-      "default": 450,
       "sdk-support": {
         "basic functionality": {
           "js": "2.2.0"

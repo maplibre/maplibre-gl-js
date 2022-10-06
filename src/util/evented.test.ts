@@ -22,6 +22,16 @@ describe('Evented', () => {
 
     });
 
+    test('returns a promise when no listener is provided to "once" method', async () => {
+        const evented = new Evented();
+        const promise = evented.once('a');
+        evented.fire(new Event('a'));
+        evented.fire(new Event('a'));
+        await promise;
+        expect(evented.listens('a')).toBeFalsy();
+
+    });
+
     test('passes data to listeners', () => {
         const evented = new Evented();
         evented.on('a', (data) => {
