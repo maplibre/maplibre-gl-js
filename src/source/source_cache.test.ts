@@ -336,7 +336,7 @@ describe('SourceCache#removeTile', () => {
         sourceCache._addTile(tileID);
     });
 
-    test('fires dataabort event', done => {
+    test('fires dataabort event', async () => {
         const sourceCache = createSourceCache({
             loadTile() {
                 // Do not call back in order to make sure the tile is removed before it is loaded.
@@ -344,13 +344,12 @@ describe('SourceCache#removeTile', () => {
         });
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const tile = sourceCache._addTile(tileID);
-        sourceCache.once('dataabort', event => {
-            expect(event.dataType).toBe('source');
-            expect(event.tile).toBe(tile);
-            expect(event.coord).toBe(tileID);
-            done();
-        });
+        const abortPromise = sourceCache.once('dataabort');
         sourceCache._removeTile(tileID.key);
+        const event = await abortPromise;
+        expect(event.dataType).toBe('source');
+        expect(event.tile).toBe(tile);
+        expect(event.coord).toBe(tileID);
     });
 
     test('does not fire dataabort event when the tile has already been loaded', () => {

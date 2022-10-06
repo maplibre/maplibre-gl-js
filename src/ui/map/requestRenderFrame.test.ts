@@ -16,26 +16,22 @@ describe('requestRenderFrame', () => {
         map.remove();
     });
 
-    test('Map#_requestRenderFrame queues a task for the next render frame', done => {
+    test('Map#_requestRenderFrame queues a task for the next render frame', async () => {
         const map = createMap();
         const cb = jest.fn();
         map._requestRenderFrame(cb);
-        map.once('render', () => {
-            expect(cb).toHaveBeenCalledTimes(1);
-            map.remove();
-            done();
-        });
+        await map.once('render');
+        expect(cb).toHaveBeenCalledTimes(1);
+        map.remove();
     });
 
-    test('Map#_cancelRenderFrame cancels a queued task', done => {
+    test('Map#_cancelRenderFrame cancels a queued task', async () => {
         const map = createMap();
         const cb = jest.fn();
         const id = map._requestRenderFrame(cb);
         map._cancelRenderFrame(id);
-        map.once('render', () => {
-            expect(cb).toHaveBeenCalledTimes(0);
-            map.remove();
-            done();
-        });
+        await map.once('render');
+        expect(cb).toHaveBeenCalledTimes(0);
+        map.remove();
     });
 });

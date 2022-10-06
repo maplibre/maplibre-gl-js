@@ -1,4 +1,4 @@
-import RenderToTexture, {RenderPool} from './render_to_texture';
+import RenderToTexture from './render_to_texture';
 import type Painter from './painter';
 import type LineStyleLayer from '../style/style_layer/line_style_layer';
 import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
@@ -16,28 +16,6 @@ import FillStyleLayer from '../style/style_layer/fill_style_layer';
 import RasterStyleLayer from '../style/style_layer/raster_style_layer';
 import HillshadeStyleLayer from '../style/style_layer/hillshade_style_layer';
 import BackgroundStyleLayer from '../style/style_layer/background_style_layer';
-
-describe('render to texture pool', () => {
-    const pool = new RenderPool(new Context(gl(1, 1)), 3, 512);
-    for (let i = 0; i < pool.size; i++) {
-        pool.useObject(pool.getFreeObject());
-    }
-    expect(pool.isFull()).toBeTruthy();
-    expect(pool.recentlyUsed).toStrictEqual([0, 1, 2]);
-    const obj = pool.getObjectForId(0);
-    pool.useObject(obj);
-    pool.useObject(obj);
-    expect(pool.recentlyUsed).toStrictEqual([1, 2, 0]);
-    pool.freeObject(obj);
-    expect(pool.isFull()).toBeFalsy();
-    expect(obj.stamp).toBe(-1);
-    pool.stampObject(obj);
-    expect(obj.stamp).toBe(1);
-    pool.freeObjects();
-    expect(pool.getFreeObject().id).toBe(1);
-    pool.destruct();
-    expect(pool.getObjectForId(0).texture.texture).toBeNull();
-});
 
 describe('render to texture', () => {
     const backgroundLayer = {
@@ -122,8 +100,8 @@ describe('render to texture', () => {
     map.terrain = terrain;
 
     const rtt = new RenderToTexture(painter, terrain);
-    rtt.initialize(style, 0);
-    painter.rtt = rtt;
+    rtt.prepareForRender(style, 0);
+    painter.renderToTexture = rtt;
 
     test('check state', () => {
         expect(rtt._renderableTiles.map(t => t.tileID.key)).toStrictEqual(['923']);
@@ -133,7 +111,7 @@ describe('render to texture', () => {
 
     test('should render text after a line by not adding the text to the stack', () => {
         style._order = ['maine-fill', 'maine-symbol'];
-        rtt.initialize(style, 0);
+        rtt.prepareForRender(style, 0);
         layersDrawn = 0;
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-fill', 'maine-symbol']);
         expect(rtt.renderLayer(fillLayer)).toBeTruthy();
@@ -143,7 +121,7 @@ describe('render to texture', () => {
 
     test('render symbol inbetween of rtt layers', () => {
         style._order = ['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
-        rtt.initialize(style, 0);
+        rtt.prepareForRender(style, 0);
         layersDrawn = 0;
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
         expect(rtt.renderLayer(backgroundLayer)).toBeTruthy();
@@ -158,7 +136,7 @@ describe('render to texture', () => {
 
     test('render more symbols inbetween of rtt layers', () => {
         style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
-        rtt.initialize(style, 0);
+        rtt.prepareForRender(style, 0);
         layersDrawn = 0;
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
         expect(rtt.renderLayer(backgroundLayer)).toBeTruthy();
