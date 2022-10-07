@@ -4,8 +4,8 @@ import {mat4, vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
-import {PosArray, TriangleIndexArray} from '../data/array_types.g';
-import posAttributes from '../data/pos_attributes';
+import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
+import pos3dAttributes from '../data/pos3d_attributes';
 import SegmentVector from '../data/segment';
 import VertexBuffer from '../gl/vertex_buffer';
 import IndexBuffer from '../gl/index_buffer';
@@ -19,6 +19,7 @@ import SourceCache from '../source/source_cache';
 import EXTENT from '../data/extent';
 import {number as mix} from '../style-spec/util/interpolate';
 import type {TerrainSpecification} from '../style-spec/types.g';
+import {earthRadius} from '../geo/lng_lat';
 
 export type TerrainData = {
     'u_depth': number;
@@ -304,20 +305,54 @@ export default class Terrain {
     getTerrainMesh(): TerrainMesh {
         if (this._mesh) return this._mesh;
         const context = this.painter.context;
-        const vertexArray = new PosArray(), indexArray = new TriangleIndexArray();
-        const meshSize = this.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
+        const vertexArray = new Pos3dArray();
+        const indexArray = new TriangleIndexArray();
+        const meshSize = this.meshSize;
+        const delta = EXTENT / meshSize;
+        const meshSize2 = meshSize * meshSize;
         for (let y = 0; y <= meshSize; y++) for (let x = 0; x <= meshSize; x++)
-            vertexArray.emplaceBack(x * delta, y * delta);
+            vertexArray.emplaceBack(x * delta, y * delta, 0);
         for (let y = 0; y < meshSize2; y += meshSize + 1) for (let x = 0; x < meshSize; x++) {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
+        // add an extra frame around the mesh to avoid stiching on tile boundaries with different zoomlevels
+        // first code-block is for top-bottom frame and second for left-right frame
+        const offsetTop = vertexArray.length, offsetBottom = offsetTop + (meshSize + 1) * 2;
+        for (const y of [0, 1]) for (let x = 0; x <= meshSize; x++) for (const z of [0, 1])
+            vertexArray.emplaceBack(x * delta, y * EXTENT, z);
+        for (let x = 0; x < meshSize * 2; x += 2) {
+            indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 1, offsetBottom + x + 3);
+            indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 3, offsetBottom + x + 2);
+            indexArray.emplaceBack(offsetTop + x, offsetTop + x + 3, offsetTop + x + 1);
+            indexArray.emplaceBack(offsetTop + x, offsetTop + x + 2, offsetTop + x + 3);
+        }
+        const offsetLeft = vertexArray.length, offsetRight = offsetLeft + (meshSize + 1) * 2;
+        for (const x of [0, 1]) for (let y = 0; y <= meshSize; y++) for (const z of [0, 1])
+            vertexArray.emplaceBack(x * EXTENT, y * delta, z);
+        for (let y = 0; y < meshSize * 2; y += 2) {
+            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 1, offsetLeft + y + 3);
+            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 3, offsetLeft + y + 2);
+            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
+            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
+        }
         this._mesh = {
             indexBuffer: context.createIndexBuffer(indexArray),
-            vertexBuffer: context.createVertexBuffer(vertexArray, posAttributes.members),
+            vertexBuffer: context.createVertexBuffer(vertexArray, pos3dAttributes.members),
             segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
         };
         return this._mesh;
+    }
+
+    /**
+     * Calculates a height of the frame around the terrain-mesh to avoid stiching between
+     * tile boundaries in different zoomlevels.
+     * @param zoom current zoomlevel
+     * @returns the elevation delta in meters
+     */
+    getMeshFrameDelta(zoom: number) {
+        // divide by 5 is evaluated by trial & error to get a frame in the right height
+        return 2 * Math.PI * earthRadius / Math.pow(2, zoom) / 5;
     }
 
     /**
