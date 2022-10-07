@@ -5,17 +5,8 @@ import minimist from 'minimist';
 
 const argv = minimist(process.argv.slice(2));
 
-const formatTime = (v) => {
-    return (typeof v === 'number') ? `${v.toFixed(4)} ms` : '';
-};
-
-const formatRegression = (v) => {
-    if (v) {
-        return v.correlation < 0.9 ? '\u2620\uFE0F' : v.correlation < 0.99 ? '\u26A0\uFE0F' : ' ';
-    } else {
-        return '';
-    }
-};
+const formatTime = (v) => `${v.toFixed(4)} ms`;
+const formatRegression = (v) => v.correlation < 0.9 ? '\u2620\uFE0F' : v.correlation < 0.99 ? '\u26A0\uFE0F' : ' ';
 
 const dir = './test/bench/results';
 if (!fs.existsSync(dir)) {
