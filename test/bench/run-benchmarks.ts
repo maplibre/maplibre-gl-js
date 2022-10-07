@@ -45,6 +45,7 @@ try {
     const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allNames[0]);
 
     const toRun = argv._.length > 0 ? argv._ : allNames;
+    toRun.sort();
 
     const nameWidth = Math.max(...toRun.map(v => v.length)) + 1;
     const timeWidth = Math.max(...versions.map(v => v.length), 16);
@@ -69,10 +70,10 @@ try {
         );
         // @ts-ignore
         const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
-        const output = versions.map((v) => results[v] ? formatTime(results[v].summary.trimmedMean).padStart(timeWidth) + formatRegression(results[v].regression) : ''.padStart(timeWidth + 1));
+        const output = versions.map((v) => results[v] ? formatTime(results[v]?.summary.trimmedMean).padStart(timeWidth) + formatRegression(results[v].regression) : ''.padStart(timeWidth + 1));
         if (versions.length === 2) {
             const [main, current] = versions;
-            const delta = results[current].summary.trimmedMean - results[main].summary.trimmedMean;
+            const delta = results[current]?.summary.trimmedMean - results[main]?.summary.trimmedMean;
             output.push(((delta > 0 ? '+' : '') + formatTime(delta)).padStart(15));
         }
         console.log(...output);
