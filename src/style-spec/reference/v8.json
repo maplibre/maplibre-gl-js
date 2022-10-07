@@ -57,6 +57,13 @@
         "intensity": 0.4
       }
     },
+    "sky": {
+      "type": "sky",
+      "doc": "Tho map sky.",
+      "example": {
+          "sky-color": "#0000ff"
+      }
+    },
     "terrain": {
       "type": "terrain",
       "doc": "The terrain configuration.",
@@ -3818,6 +3825,64 @@
           "android": "5.1.0",
           "ios": "3.6.0",
           "macos": "0.5.0"
+        }
+      }
+    }
+  },
+  "sky": {
+    "sky-color": {
+      "type": "color",
+      "property-type": "data-constant",
+      "default": "#ddf4ff",
+      "expression": {
+        "interpolated": true,
+        "parameters": [
+          "zoom"
+        ]
+      },
+      "transition": true,
+      "doc": "Base color for sky.",
+      "sdk-support": {
+        "basic functionality": {
+          "js": "3.0.0"
+        }
+      }
+    },
+    "fog-color": {
+      "type": "color",
+      "property-type": "data-constant",
+      "default": "#ffffff",
+      "expression": {
+        "interpolated": true,
+        "parameters": [
+          "zoom"
+        ]
+      },
+      "transition": true,
+      "doc": "Base color for fog.",
+      "sdk-support": {
+        "basic functionality": {
+          "js": "3.0.0"
+        }
+      }
+    },
+    "horizon-blend": {
+      "type": "number",
+      "property-type": "data-constant",
+      "default": 0.3,
+      "minimum": 0,
+      "maximum": 1,
+      "expression": {
+        "interpolated": true,
+        "parameters": [
+          "zoom"
+        ]
+      },
+      "transition": true,
+      "doc": "Blend sky and fog color on horizon",
+      "sdk-support": {
+        "basic functionality": {
+          "js": "3.0.0"
         }
       }
     }

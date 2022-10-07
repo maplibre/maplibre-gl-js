@@ -53,7 +53,8 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
-    TerrainSpecification
+    TerrainSpecification,
+    SkySpecification
 } from '../style-spec/types.g';
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
@@ -2299,6 +2300,30 @@ class Map extends Camera {
      */
     getLight() {
         return this.style.getLight();
+    }
+
+    /**
+     * Loads a Sky onto the map.
+     * @param sky Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sky).
+     * @param {Object} [options] Options object.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @returns {Map} `this`
+     * @example
+     * map.setSky({ 'sky-color': '#00f' });
+     */
+    setSky(sky: SkySpecification, options: StyleSetterOptions = {}) {
+        this._lazyInitEmptyStyle();
+        this.style.setSky(sky, options);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the value of the sky object.
+     *
+     * @returns {Object} sky Sky properties of the style.
+     */
+    getSky() {
+        return this.style.getSky();
     }
 
     // eslint-disable-next-line jsdoc/require-returns

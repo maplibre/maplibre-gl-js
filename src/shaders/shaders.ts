@@ -57,6 +57,8 @@ import terrainDepthFrag from './terrain_depth.fragment.glsl.g';
 import terrainCoordsFrag from './terrain_coords.fragment.glsl.g';
 import terrainFrag from './terrain.fragment.glsl.g';
 import terrainVert from './terrain.vertex.glsl.g';
+import skyFrag from './sky.fragment.glsl.g';
+import skyVert from './sky.vertex.glsl.g';
 
 const shaders = {
     prelude: compile(preludeFrag, preludeVert),
@@ -87,7 +89,8 @@ const shaders = {
     symbolTextAndIcon: compile(symbolTextAndIconFrag, symbolTextAndIconVert),
     terrain: compile(terrainFrag, terrainVert),
     terrainDepth: compile(terrainDepthFrag, terrainVert),
-    terrainCoords: compile(terrainCoordsFrag, terrainVert)
+    terrainCoords: compile(terrainCoordsFrag, terrainVert),
+    sky: compile(skyFrag, skyVert)
 };
 
 export default shaders;

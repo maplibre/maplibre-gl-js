@@ -56,10 +56,12 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
+    SkySpecification,
 } from '../style-spec/types.g';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';
+import Sky from './sky';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',
@@ -160,6 +162,7 @@ class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
+    sky: Sky;
 
     _request: Cancelable;
     _spriteRequest: Cancelable;
@@ -325,6 +328,8 @@ class Style extends Evented {
 
         this.light = new Light(this.stylesheet.light);
 
+        this.sky = new Sky(this.map.painter.context, this.stylesheet.sky);
+
         this.map.setTerrain(this.stylesheet.terrain);
 
         this.fire(new Event('data', {dataType: 'style'}));
@@ -460,6 +465,7 @@ class Style extends Evented {
             }
 
             this.light.updateTransitions(parameters);
+            this.sky.updateTransitions(parameters);
 
             this._resetUpdates();
         }
@@ -489,6 +495,7 @@ class Style extends Evented {
         }
 
         this.light.recalculate(parameters);
+        this.sky.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {
@@ -1260,6 +1267,35 @@ class Style extends Evented {
 
         this.light.setLight(lightOptions, options);
         this.light.updateTransitions(parameters);
+    }
+
+    getSky() {
+        return this.sky.getSky();
+    }
+
+    setSky(skyOptions: SkySpecification, options: StyleSetterOptions = {}) {
+        this._checkLoaded();
+
+        const sky = this.sky.getSky();
+        let _update = false;
+        for (const key in skyOptions) {
+            if (!deepEqual(skyOptions[key], sky[key])) {
+                _update = true;
+                break;
+            }
+        }
+        if (!_update) return;
+
+        const parameters = {
+            now: browser.now(),
+            transition: extend({
+                duration: 300,
+                delay: 0
+            }, this.stylesheet.transition)
+        };
+
+        this.sky.setSky(skyOptions, options);
+        this.sky.updateTransitions(parameters);
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {

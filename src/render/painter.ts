@@ -62,6 +62,7 @@ import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type ResolvedImage from '../style-spec/expression/types/resolved_image';
 import type {RGBAImage} from '../util/image';
 import RenderToTexture from './render_to_texture';
+import drawSky from './draw_sky';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -482,6 +483,8 @@ class Painter {
             this._renderTileClippingMasks(layer, coordsAscending[layer.source]);
             this.renderLayer(this, sourceCache, layer, coords);
         }
+
+        if (this.style.sky) drawSky(this, this.style.sky);
 
         if (this.options.showTileBoundaries) {
             const selectedSource = selectDebugSource(this.style, this.transform.zoom);
