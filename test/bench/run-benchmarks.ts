@@ -5,8 +5,17 @@ import minimist from 'minimist';
 
 const argv = minimist(process.argv.slice(2));
 
-const formatTime = (v) => `${v.toFixed(4)} ms`;
-const formatRegression = (v) => v.correlation < 0.9 ? '\u2620\uFE0F' : v.correlation < 0.99 ? '\u26A0\uFE0F' : ' ';
+const formatTime = (v) => {
+    return (typeof v === 'number') ? `${v.toFixed(4)} ms` : '';
+};
+
+const formatRegression = (v) => {
+    if (v) {
+        return v.correlation < 0.9 ? '\u2620\uFE0F' : v.correlation < 0.99 ? '\u26A0\uFE0F' : ' ';
+    } else {
+        return '';
+    }
+};
 
 const dir = './test/bench/results';
 if (!fs.existsSync(dir)) {
@@ -70,7 +79,7 @@ try {
         );
         // @ts-ignore
         const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
-        const output = versions.map((v) => results[v] ? formatTime(results[v]?.summary.trimmedMean).padStart(timeWidth) + formatRegression(results[v].regression) : ''.padStart(timeWidth + 1));
+        const output = versions.map((v) => results[v] ? formatTime(results[v].summary?.trimmedMean).padStart(timeWidth) + formatRegression(results[v].regression) : ''.padStart(timeWidth + 1));
         if (versions.length === 2) {
             const [main, current] = versions;
             const delta = results[current]?.summary.trimmedMean - results[main]?.summary.trimmedMean;
