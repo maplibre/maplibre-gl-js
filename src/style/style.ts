@@ -61,6 +61,7 @@ import type {
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';
+import { layer } from '../style-spec/validate_style';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',
@@ -73,9 +74,9 @@ const supportedDiffOperations = pick(diffOperations, [
     'setLayerZoomRange',
     'setLight',
     'setTransition',
-    'setGeoJSONSourceData'
-    // 'setGlyphs',
-    // 'setSprite',
+    'setGeoJSONSourceData',
+    'setGlyphs',
+    'setSprite',
 ]);
 
 const ignoredDiffOperations = pick(diffOperations, [
@@ -348,7 +349,11 @@ class Style extends Evented {
                         const imageId = spriteId === 'default' ? id : `${spriteId}:${id}`;
                         // save all the sprite's images' ids to be able to delete them in `removeSprite`
                         this._spritesImagesIds[spriteId].push(imageId);
-                        this.imageManager.addImage(imageId, images[spriteId][id]);
+                        if(imageId in this.imageManager.images){
+                            this.imageManager.updateImage(imageId, images[spriteId][id]);
+                        } else {
+                            this.imageManager.addImage(imageId, images[spriteId][id]);
+                        }
                     }
                 }
             }
@@ -1509,6 +1514,37 @@ class Style extends Evented {
 
     getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
         return makeRequest(params, callback);
+    }
+
+    setGlyphs(glyphsUrl: string | null){
+        this.stylesheet.glyphs = glyphsUrl;
+        this.glyphManager.entries = {};
+        this.glyphManager.setURL(glyphsUrl);
+        
+        const sourcesToUpdate = new Set(Object.values(this._layers)
+            .filter(layer => layer.type === 'symbol')
+            .map(layer => layer.source));
+        sourcesToUpdate.forEach(sourceId => {
+            if(this.sourceCaches[sourceId]){
+                this.sourceCaches[sourceId].reload();
+            }
+        });
+    }
+
+    setSprite(spriteUrl: string | null){
+        this.stylesheet.sprite = spriteUrl;
+        if(spriteUrl){
+            this._loadSprite(spriteUrl);
+        }
+
+        const sourcesToUpdate = new Set(Object.values(this._layers)
+            .filter(layer => layer.type === 'symbol')
+            .map(layer => layer.source));
+        sourcesToUpdate.forEach(sourceId => {
+            if(this.sourceCaches[sourceId]){
+                this.sourceCaches[sourceId].reload();
+            }
+        });
     }
 }
 
