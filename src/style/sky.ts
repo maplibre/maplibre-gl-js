@@ -1,6 +1,6 @@
 import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import posAttributes from '../data/pos_attributes';
-import Style, {StyleSetterOptions} from './style';
+import {StyleSetterOptions} from './style';
 import VertexBuffer from '../gl/vertex_buffer';
 import IndexBuffer from '../gl/index_buffer';
 import SegmentVector from '../data/segment';
@@ -18,23 +18,25 @@ import {extend} from '../util/util';
 type Props = {
     'sky-color': DataConstantProperty<Color>;
     'fog-color': DataConstantProperty<Color>;
+    'fog-blend': DataConstantProperty<number>;
     'horizon-blend': DataConstantProperty<number>;
 };
 
 type PropsPossiblyEvaluated = {
     'sky-color': Color;
     'fog-color': Color;
+    'fog-blend': number;
     'horizon-blend': number;
 };
 
 const properties: Properties<Props> = new Properties({
     'sky-color': new DataConstantProperty(styleSpec.sky['sky-color'] as StylePropertySpecification),
     'fog-color': new DataConstantProperty(styleSpec.sky['fog-color'] as StylePropertySpecification),
+    'fog-blend': new DataConstantProperty(styleSpec.sky['fog-blend'] as StylePropertySpecification),
     'horizon-blend': new DataConstantProperty(styleSpec.sky['horizon-blend'] as StylePropertySpecification),
 });
 
 export default class Sky extends Evented {
-    style: Style;
     properties: PossiblyEvaluated<Props, PropsPossiblyEvaluated>;
 
     _transitionable: Transitionable<Props>;

@@ -3866,6 +3866,26 @@
         }
       }
     },
+    "fog-blend": {
+      "type": "number",
+      "property-type": "data-constant",
+      "default": 0.7,
+      "minimum": 0,
+      "maximum": 1,
+      "expression": {
+        "interpolated": true,
+        "parameters": [
+          "zoom"
+        ]
+      },
+      "transition": true,
+      "doc": "Blend fog over terrain3d.",
+      "sdk-support": {
+        "basic functionality": {
+          "js": "3.0.0"
+        }
+      }
+    },
     "horizon-blend": {
       "type": "number",
       "property-type": "data-constant",
