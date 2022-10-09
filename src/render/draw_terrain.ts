@@ -27,7 +27,7 @@ function drawDepth(painter: Painter, terrain: Terrain) {
     for (const tile of tiles) {
         const terrainData = terrain.getTerrainData(tile.tileID);
         const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
-        const uniformValues = terrainDepthUniformValues(posMatrix);
+        const uniformValues = terrainDepthUniformValues(posMatrix, terrain.getMeshFrameDelta(painter.transform.zoom));
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
     context.bindFramebuffer.set(null);
@@ -59,7 +59,7 @@ function drawCoords(painter: Painter, terrain: Terrain) {
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, coords.texture);
         const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
-        const uniformValues = terrainCoordsUniformValues(posMatrix, 255 - terrain.coordsIndex.length);
+        const uniformValues = terrainCoordsUniformValues(posMatrix, 255 - terrain.coordsIndex.length, terrain.getMeshFrameDelta(painter.transform.zoom));
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
         terrain.coordsIndex.push(tile.tileID.key);
     }
@@ -83,9 +83,10 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>) {
         const terrainData = terrain.getTerrainData(tile.tileID);
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
+        const eleDelta = terrain.getMeshFrameDelta(painter.transform.zoom);
         const fogMatrix = painter.transform.calculateFogMatrix(tile.tileID.toUnwrapped());
         const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
-        const uniformValues = terrainUniformValues(posMatrix, fogMatrix, painter.style.sky, painter.transform.pitch);
+        const uniformValues = terrainUniformValues(posMatrix, eleDelta, fogMatrix, painter.style.sky, painter.transform.pitch);
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
