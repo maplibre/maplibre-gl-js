@@ -60,6 +60,7 @@ import type {
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';
+import { layer } from '../style-spec/validate_style';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',
@@ -72,9 +73,9 @@ const supportedDiffOperations = pick(diffOperations, [
     'setLayerZoomRange',
     'setLight',
     'setTransition',
-    'setGeoJSONSourceData'
-    // 'setGlyphs',
-    // 'setSprite',
+    'setGeoJSONSourceData',
+    'setGlyphs',
+    'setSprite',
 ]);
 
 const ignoredDiffOperations = pick(diffOperations, [
@@ -338,7 +339,11 @@ class Style extends Evented {
                 this.fire(new ErrorEvent(err));
             } else if (images) {
                 for (const id in images) {
-                    this.imageManager.addImage(id, images[id]);
+                    if(id in this.imageManager.images){
+                        this.imageManager.updateImage(id, images[id]);
+                    } else {
+                        this.imageManager.addImage(id, images[id]);
+                    }
                 }
             }
 
@@ -1437,6 +1442,37 @@ class Style extends Evented {
 
     getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
         return makeRequest(params, callback);
+    }
+
+    setGlyphs(glyphsUrl: string | null){
+        this.stylesheet.glyphs = glyphsUrl;
+        this.glyphManager.entries = {};
+        this.glyphManager.setURL(glyphsUrl);
+        
+        const sourcesToUpdate = new Set(Object.values(this._layers)
+            .filter(layer => layer.type === 'symbol')
+            .map(layer => layer.source));
+        sourcesToUpdate.forEach(sourceId => {
+            if(this.sourceCaches[sourceId]){
+                this.sourceCaches[sourceId].reload();
+            }
+        });
+    }
+
+    setSprite(spriteUrl: string | null){
+        this.stylesheet.sprite = spriteUrl;
+        if(spriteUrl){
+            this._loadSprite(spriteUrl);
+        }
+
+        const sourcesToUpdate = new Set(Object.values(this._layers)
+            .filter(layer => layer.type === 'symbol')
+            .map(layer => layer.source));
+        sourcesToUpdate.forEach(sourceId => {
+            if(this.sourceCaches[sourceId]){
+                this.sourceCaches[sourceId].reload();
+            }
+        });
     }
 }
 
