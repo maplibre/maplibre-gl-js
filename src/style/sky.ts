@@ -107,4 +107,10 @@ export default class Sky extends Evented {
             styleSpec
         })));
     }
+
+    calculateFogBlendOpacity(pitch) {
+        if (pitch < 60) return 0; // disable
+        if (pitch < 70) return (pitch - 60) / 10; // fade in
+        return 1;
+    }
 }

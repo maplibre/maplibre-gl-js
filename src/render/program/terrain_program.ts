@@ -3,12 +3,14 @@ import {
     Uniform1f,
     Uniform4f,
     UniformMatrix4f,
-    UniformColor
+    UniformColor,
+    Uniform2f
 } from '../uniform_binding';
 import type Context from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../../render/uniform_binding';
 import {mat4} from 'gl-matrix';
 import Sky from '../../style/sky';
+import { transform } from 'typescript';
 
 export type TerrainPreludeUniformsType = {
     'u_depth': Uniform1i;
@@ -24,7 +26,7 @@ export type TerrainUniformsType = {
     'u_texture': Uniform1i;
     'u_fog_matrix': UniformMatrix4f;
     'u_fog_color': UniformColor;
-    'u_fog_blend': Uniform1f;
+    'u_fog_blend': Uniform2f;
 };
 
 export type TerrainDepthUniformsType = {
@@ -51,7 +53,7 @@ const terrainUniforms = (context: Context, locations: UniformLocations): Terrain
     'u_texture': new Uniform1i(context, locations.u_texture),
     'u_fog_matrix': new UniformMatrix4f(context, locations.u_fog_matrix),
     'u_fog_color': new UniformColor(context, locations.u_fog_color),
-    'u_fog_blend': new Uniform1f(context, locations.u_fog_blend),
+    'u_fog_blend': new Uniform2f(context, locations.u_fog_blend),
 });
 
 const terrainDepthUniforms = (context: Context, locations: UniformLocations): TerrainDepthUniformsType => ({
@@ -67,13 +69,14 @@ const terrainCoordsUniforms = (context: Context, locations: UniformLocations): T
 const terrainUniformValues = (
     matrix: mat4,
     fogMatrix: mat4,
-    sky: Sky
+    sky: Sky,
+    pitch: number
 ): UniformValues<TerrainUniformsType> => ({
     'u_matrix': matrix,
     'u_texture': 0,
     'u_fog_matrix': fogMatrix,
     'u_fog_color': sky.properties.get('fog-color'),
-    'u_fog_blend': sky.properties.get('fog-blend')
+    'u_fog_blend': [sky.properties.get('fog-blend'), sky.calculateFogBlendOpacity(pitch)]
 });
 
 const terrainDepthUniformValues = (
