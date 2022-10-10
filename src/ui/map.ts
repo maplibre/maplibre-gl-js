@@ -449,10 +449,7 @@ class Map extends Camera {
         ], this);
 
         this._setupContainer();
-        const setupPainterMessage = this._setupPainter();
-        if (this.painter === undefined) {
-            throw new Error(`Failed to initialize WebGL. No painter.${setupPainterMessage}`);
-        }
+        this._setupPainter();
 
         this.on('move', () => this._update(false));
         this.on('moveend', () => this._update(false));
@@ -2545,35 +2542,32 @@ class Map extends Camera {
         this._canvas.style.height = `${height}px`;
     }
 
-    _setupPainter(): string {
+    _setupPainter() {
         const attributes = extend({}, supported.webGLContextAttributes, {
             failIfMajorPerformanceCaveat: this._failIfMajorPerformanceCaveat,
             preserveDrawingBuffer: this._preserveDrawingBuffer,
             antialias: this._antialias || false
         });
 
-        let webglcontextcreationerrorDetails = null;
         this._canvas.addEventListener('webglcontextcreationerror', (args: WebGLContextEvent) => {
             const errorDetails: any = {requestedAttributes: attributes};
             if (args) {
                 errorDetails.statusMessage = args.statusMessage;
                 errorDetails.type = args.type;
             }
-            webglcontextcreationerrorDetails = JSON.stringify(errorDetails);
+            throw new Error(JSON.stringify(errorDetails));
         }, {once: true});
 
         const gl = this._canvas.getContext('webgl', attributes) ||
             this._canvas.getContext('experimental-webgl', attributes);
 
         if (!gl) {
-            return webglcontextcreationerrorDetails;
+            return;
         }
 
         this.painter = new Painter(gl as WebGLRenderingContext, this.transform);
 
         webpSupported.testSupport(gl as WebGLRenderingContext);
-
-        return webglcontextcreationerrorDetails;
     }
 
     _contextLost(event: any) {
