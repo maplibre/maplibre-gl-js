@@ -1,6 +1,5 @@
 import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import posAttributes from '../data/pos_attributes';
-import {StyleSetterOptions} from './style';
 import VertexBuffer from '../gl/vertex_buffer';
 import IndexBuffer from '../gl/index_buffer';
 import SegmentVector from '../data/segment';
@@ -36,6 +35,8 @@ const properties: Properties<Props> = new Properties({
     'horizon-blend': new DataConstantProperty(styleSpec.sky['horizon-blend'] as StylePropertySpecification),
 });
 
+const TRANSITION_SUFFIX = '-transition';
+
 export default class Sky extends Evented {
     properties: PossiblyEvaluated<Props, PropsPossiblyEvaluated>;
 
@@ -67,13 +68,16 @@ export default class Sky extends Evented {
         this.segments = SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length);
     }
 
-    setSky(sky?: SkySpecification, options: StyleSetterOptions = {}) {
-        if (this._validate(validateSky, sky, options)) {
-            return;
-        }
+    setSky(sky?: SkySpecification) {
+        if (this._validate(validateSky, sky)) return;
 
         for (const name in sky) {
-            this._transitionable.setValue(name as keyof Props, sky[name]);
+            const value = sky[name];
+            if (name.endsWith(TRANSITION_SUFFIX)) {
+                this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof Props, value);
+            } else {
+                this._transitionable.setValue(name as keyof Props, value);
+            }
         }
     }
 
@@ -93,13 +97,7 @@ export default class Sky extends Evented {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    _validate(validate: Function, value: unknown, options?: {
-        validate?: boolean;
-    }) {
-        if (options && options.validate === false) {
-            return false;
-        }
-
+    _validate(validate: Function, value: unknown) {
         return emitValidationErrors(this, validate.call(validateStyle, extend({
             value,
             // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407

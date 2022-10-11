@@ -2311,9 +2311,9 @@ class Map extends Camera {
      * @example
      * map.setSky({ 'sky-color': '#00f' });
      */
-    setSky(sky: SkySpecification, options: StyleSetterOptions = {}) {
+    setSky(sky: SkySpecification) {
         this._lazyInitEmptyStyle();
-        this.style.setSky(sky, options);
+        this.style.setSky(sky);
         return this._update(true);
     }
 

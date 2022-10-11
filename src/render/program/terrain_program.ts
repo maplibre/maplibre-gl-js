@@ -9,6 +9,7 @@ import type Context from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../../render/uniform_binding';
 import {mat4} from 'gl-matrix';
 import Sky from '../../style/sky';
+import Color from '../../style-spec/util/color';
 
 export type TerrainPreludeUniformsType = {
     'u_depth': Uniform1i;
@@ -83,9 +84,9 @@ const terrainUniformValues = (
     'u_texture': 0,
     'u_ele_delta': eleDelta,
     'u_fog_matrix': fogMatrix,
-    'u_fog_color': sky.properties.get('fog-color'),
-    'u_fog_blend': sky.properties.get('fog-blend'),
-    'u_fog_blend_opacity': sky.calculateFogBlendOpacity(pitch)
+    'u_fog_color': sky ? sky.properties.get('fog-color') : Color.white,
+    'u_fog_blend': sky ? sky.properties.get('fog-blend') : 1,
+    'u_fog_blend_opacity': sky ? sky.calculateFogBlendOpacity(pitch) : 0
 });
 
 const terrainDepthUniformValues = (

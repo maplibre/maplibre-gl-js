@@ -328,7 +328,7 @@ class Style extends Evented {
 
         this.light = new Light(this.stylesheet.light);
 
-        this.sky = new Sky(this.map.painter.context, this.stylesheet.sky);
+        if (this.stylesheet.sky) this.setSky(this.stylesheet.sky);
 
         this.map.setTerrain(this.stylesheet.terrain);
 
@@ -408,6 +408,10 @@ class Style extends Evented {
             return true;
         }
 
+        if (this.sky && this.sky.hasTransition()) {
+            return true;
+        }
+
         for (const id in this.sourceCaches) {
             if (this.sourceCaches[id].hasTransition()) {
                 return true;
@@ -465,7 +469,7 @@ class Style extends Evented {
             }
 
             this.light.updateTransitions(parameters);
-            this.sky.updateTransitions(parameters);
+            if (this.sky) this.sky.updateTransitions(parameters);
 
             this._resetUpdates();
         }
@@ -495,7 +499,7 @@ class Style extends Evented {
         }
 
         this.light.recalculate(parameters);
-        this.sky.recalculate(parameters);
+        if (this.sky) this.sky.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {
@@ -1270,32 +1274,25 @@ class Style extends Evented {
     }
 
     getSky() {
-        return this.sky.getSky();
+        return this.sky && this.sky.getSky();
     }
 
-    setSky(skyOptions: SkySpecification, options: StyleSetterOptions = {}) {
+    setSky(skyOptions?: SkySpecification) {
         this._checkLoaded();
 
-        const sky = this.sky.getSky();
-        let _update = false;
-        for (const key in skyOptions) {
-            if (!deepEqual(skyOptions[key], sky[key])) {
-                _update = true;
-                break;
-            }
+        if (!skyOptions) {
+            this.sky = null;
+        } else {
+            if (this.sky) this.sky.setSky(skyOptions);
+            else this.sky = new Sky(this.map.painter.context, skyOptions);
+            this.sky.updateTransitions({
+                now: browser.now(),
+                transition: extend({
+                    duration: 300,
+                    delay: 0
+                }, this.stylesheet.transition)
+            });
         }
-        if (!_update) return;
-
-        const parameters = {
-            now: browser.now(),
-            transition: extend({
-                duration: 300,
-                delay: 0
-            }, this.stylesheet.transition)
-        };
-
-        this.sky.setSky(skyOptions, options);
-        this.sky.updateTransitions(parameters);
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {

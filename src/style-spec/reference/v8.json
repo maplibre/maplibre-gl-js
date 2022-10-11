@@ -61,7 +61,7 @@
       "type": "sky",
       "doc": "Tho map sky.",
       "example": {
-          "sky-color": "#0000ff"
+          "sky-color": "#199EF3"
       }
     },
     "terrain": {
@@ -3833,7 +3833,7 @@
     "sky-color": {
       "type": "color",
       "property-type": "data-constant",
-      "default": "#ddf4ff",
+      "default": "#88C6FC",
       "expression": {
         "interpolated": true,
         "parameters": [
@@ -3869,7 +3869,7 @@
     "fog-blend": {
       "type": "number",
       "property-type": "data-constant",
-      "default": 0.7,
+      "default": 0.5,
       "minimum": 0,
       "maximum": 1,
       "expression": {
@@ -3879,7 +3879,7 @@
         ]
       },
       "transition": true,
-      "doc": "Blend fog over terrain3d.",
+      "doc": "Blend fog over terrain3d. A value between 0 and 1. 0 is map center and 1 is the horizon",
       "sdk-support": {
         "basic functionality": {
           "js": "3.0.0"
@@ -3889,7 +3889,7 @@
     "horizon-blend": {
       "type": "number",
       "property-type": "data-constant",
-      "default": 0.3,
+      "default": 0.8,
       "minimum": 0,
       "maximum": 1,
       "expression": {
@@ -3899,7 +3899,7 @@
         ]
       },
       "transition": true,
-      "doc": "Blend sky and fog color on horizon",
+      "doc": "Blend fog and sky color at horizon. A value between 0 and 1. 0 is the horizon and 1 is map-height / 2",
       "sdk-support": {
         "basic functionality": {
           "js": "3.0.0"
