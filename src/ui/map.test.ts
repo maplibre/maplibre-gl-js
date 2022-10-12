@@ -1,5 +1,5 @@
 import Map, {MapOptions} from './map';
-import {createMap, setMatchMedia, setPerformance, setWebGlContext} from '../util/test/util';
+import {createMap, setMatchMedia, setPerformance, setWebGlContext, setErrorWebGlContext} from '../util/test/util';
 import LngLat from '../geo/lng_lat';
 import Tile from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
@@ -177,7 +177,7 @@ describe('Map', () => {
                 expect(error).toBeFalsy();
 
                 const events = [];
-                function recordEvent(event) { events.push(event.type); }
+                function recordEvent(event) {events.push(event.type);}
 
                 map.on('error', recordEvent);
                 map.on('data', recordEvent);
@@ -201,7 +201,7 @@ describe('Map', () => {
                 expect(error).toBeFalsy();
 
                 const events = [];
-                function recordEvent(event) { events.push(event.type); }
+                function recordEvent(event) {events.push(event.type);}
 
                 map.on('styledata', recordEvent);
                 map.on('styledataloading', recordEvent);
@@ -391,7 +391,7 @@ describe('Map', () => {
 
     describe('#setTransformRequest', () => {
         test('returns self', () => {
-            const transformRequest  = (() => { }) as any as RequestTransformFunction;
+            const transformRequest = (() => {}) as any as RequestTransformFunction;
             const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
             expect(map.setTransformRequest(transformRequest)).toBe(map);
             expect(map._requestManager._transformRequestFn).toBe(transformRequest);
@@ -400,7 +400,7 @@ describe('Map', () => {
         test('can be called more than once', () => {
             const map = createMap();
 
-            const transformRequest = (() => { }) as any as RequestTransformFunction;
+            const transformRequest = (() => {}) as any as RequestTransformFunction;
             map.setTransformRequest(transformRequest);
             map.setTransformRequest(transformRequest);
         });
@@ -657,7 +657,7 @@ describe('Map', () => {
 
         test('listen to window resize event', done => {
             const original = global.addEventListener;
-            global.addEventListener = function(type) {
+            global.addEventListener = function (type) {
                 if (type === 'resize') {
                     //restore original function not to mess with other tests
                     global.addEventListener = original;
@@ -991,7 +991,7 @@ describe('Map', () => {
         const map = createMap();
         const control = {
             onRemove: jest.fn(),
-            onAdd (_) {
+            onAdd(_) {
                 return window.document.createElement('div');
             }
         };
@@ -1009,7 +1009,7 @@ describe('Map', () => {
                 onRemoveCalled++;
                 expect(map.getStyle()).toEqual(style);
             },
-            onAdd (_) {
+            onAdd(_) {
                 return window.document.createElement('div');
             }
         };
@@ -1259,9 +1259,9 @@ describe('Map', () => {
             });
 
             map.on('style.load', () => {
-                map.style.dispatcher.broadcast = function(key, value: any) {
+                map.style.dispatcher.broadcast = function (key, value: any) {
                     expect(key).toBe('updateLayers');
-                    expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
+                    expect(value.layers.map((layer) => {return layer.id;})).toEqual(['symbol']);
                 };
 
                 map.setLayoutProperty('symbol', 'text-transform', 'lowercase');
@@ -2344,6 +2344,22 @@ describe('Map', () => {
 
             expect(cameraOptions).toBeDefined();
             expect(mockedGetElevation.mock.calls).toHaveLength(0);
+        });
+
+        test('WebGL error while creating map', () => {
+            setErrorWebGlContext();
+            try {
+                createMap();
+            } catch (e) {
+                const errorMessageObject = JSON.parse(e.message);
+
+                // this message is from map code
+                expect(errorMessageObject.message).toBe('Failed to initialize WebGL');
+
+                // this is from test mock
+                expect(errorMessageObject.statusMessage).toBe('mocked webglcontextcreationerror message');
+            }
+
         });
     });
 

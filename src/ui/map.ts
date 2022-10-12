@@ -603,7 +603,7 @@ class Map extends Camera {
         return this._controls.indexOf(control) > -1;
     }
 
-    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number) : CameraOptions {
+    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions {
         if (altitudeTo == null && this.terrain) {
             altitudeTo = this.transform.getElevation(to, this.terrain);
         }
@@ -759,7 +759,7 @@ class Map extends Camera {
      * @example
      * var minZoom = map.getMinZoom();
      */
-    getMinZoom() { return this.transform.minZoom; }
+    getMinZoom() {return this.transform.minZoom;}
 
     /**
      * Sets or clears the map's maximum zoom level.
@@ -794,7 +794,7 @@ class Map extends Camera {
      * @example
      * var maxZoom = map.getMaxZoom();
      */
-    getMaxZoom() { return this.transform.maxZoom; }
+    getMaxZoom() {return this.transform.maxZoom;}
 
     /**
      * Sets or clears the map's minimum pitch.
@@ -829,7 +829,7 @@ class Map extends Camera {
      *
      * @returns {number} minPitch
      */
-    getMinPitch() { return this.transform.minPitch; }
+    getMinPitch() {return this.transform.minPitch;}
 
     /**
      * Sets or clears the map's maximum pitch.
@@ -864,7 +864,7 @@ class Map extends Camera {
      *
      * @returns {number} maxPitch
      */
-    getMaxPitch() { return this.transform.maxPitch; }
+    getMaxPitch() {return this.transform.maxPitch;}
 
     /**
      * Returns the state of `renderWorldCopies`. If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
@@ -877,7 +877,7 @@ class Map extends Camera {
      * var worldCopiesRendered = map.getRenderWorldCopies();
      * @see [Render world copies](https://maplibre.org/maplibre-gl-js-docs/example/render-world-copies/)
      */
-    getRenderWorldCopies() { return this.transform.renderWorldCopies; }
+    getRenderWorldCopies() {return this.transform.renderWorldCopies;}
 
     /**
      * Sets the state of `renderWorldCopies`.
@@ -959,8 +959,7 @@ class Map extends Camera {
         return this._rotating || this.handlers.isRotating();
     }
 
-    _createDelegatedListener(type: MapEvent | string, layerId: string, listener: Listener):
-    {
+    _createDelegatedListener(type: MapEvent | string, layerId: string, listener: Listener): {
         layer: string;
         listener: Listener;
         delegates: {[type in keyof MapEventType]?: (e: any) => void};
@@ -2199,7 +2198,7 @@ class Map extends Camera {
      *
      * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js-docs/example/timeline-animation/)
      */
-    setFilter(layerId: string, filter?: FilterSpecification | null,  options: StyleSetterOptions = {}) {
+    setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}) {
         this.style.setFilter(layerId, filter, options);
         return this._update(true);
     }
@@ -2549,20 +2548,26 @@ class Map extends Camera {
             antialias: this._antialias || false
         });
 
+        let webglcontextcreationerrorDetailObject: any = null;
         this._canvas.addEventListener('webglcontextcreationerror', (args: WebGLContextEvent) => {
-            const errorDetails: any = {requestedAttributes: attributes};
+            webglcontextcreationerrorDetailObject = {requestedAttributes: attributes};
             if (args) {
-                errorDetails.statusMessage = args.statusMessage;
-                errorDetails.type = args.type;
+                webglcontextcreationerrorDetailObject.statusMessage = args.statusMessage;
+                webglcontextcreationerrorDetailObject.type = args.type;
             }
-            throw new Error(JSON.stringify(errorDetails));
         }, {once: true});
 
         const gl = this._canvas.getContext('webgl', attributes) ||
             this._canvas.getContext('experimental-webgl', attributes);
 
         if (!gl) {
-            return;
+            const msg = 'Failed to initialize WebGL';
+            if (webglcontextcreationerrorDetailObject) {
+                webglcontextcreationerrorDetailObject.message = msg;
+                throw new Error(JSON.stringify(webglcontextcreationerrorDetailObject));
+            } else {
+                throw new Error(msg);
+            }
         }
 
         this.painter = new Painter(gl as WebGLRenderingContext, this.transform);
@@ -2910,7 +2915,7 @@ class Map extends Camera {
      * @example
      * map.showTileBoundaries = true;
      */
-    get showTileBoundaries(): boolean { return !!this._showTileBoundaries; }
+    get showTileBoundaries(): boolean {return !!this._showTileBoundaries;}
     set showTileBoundaries(value: boolean) {
         if (this._showTileBoundaries === value) return;
         this._showTileBoundaries = value;
@@ -2926,7 +2931,7 @@ class Map extends Camera {
      * @instance
      * @memberof Map
      */
-    get showPadding(): boolean { return !!this._showPadding; }
+    get showPadding(): boolean {return !!this._showPadding;}
     set showPadding(value: boolean) {
         if (this._showPadding === value) return;
         this._showPadding = value;
@@ -2944,7 +2949,7 @@ class Map extends Camera {
      * @instance
      * @memberof Map
      */
-    get showCollisionBoxes(): boolean { return !!this._showCollisionBoxes; }
+    get showCollisionBoxes(): boolean {return !!this._showCollisionBoxes;}
     set showCollisionBoxes(value: boolean) {
         if (this._showCollisionBoxes === value) return;
         this._showCollisionBoxes = value;
@@ -2970,7 +2975,7 @@ class Map extends Camera {
      * @instance
      * @memberof Map
      */
-    get showOverdrawInspector(): boolean { return !!this._showOverdrawInspector; }
+    get showOverdrawInspector(): boolean {return !!this._showOverdrawInspector;}
     set showOverdrawInspector(value: boolean) {
         if (this._showOverdrawInspector === value) return;
         this._showOverdrawInspector = value;
@@ -2986,7 +2991,7 @@ class Map extends Camera {
      * @instance
      * @memberof Map
      */
-    get repaint(): boolean { return !!this._repaint; }
+    get repaint(): boolean {return !!this._repaint;}
     set repaint(value: boolean) {
         if (this._repaint !== value) {
             this._repaint = value;
@@ -2994,8 +2999,8 @@ class Map extends Camera {
         }
     }
     // show vertices
-    get vertices(): boolean { return !!this._vertices; }
-    set vertices(value: boolean) { this._vertices = value; this._update(); }
+    get vertices(): boolean {return !!this._vertices;}
+    set vertices(value: boolean) {this._vertices = value; this._update();}
 
     // for cache browser tests
     _setCacheLimits(limit: number, checkThreshold: number) {

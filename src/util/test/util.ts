@@ -56,6 +56,24 @@ export function setWebGlContext() {
     global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 }
 
+// mock failed webgl context by dispatching "webglcontextcreationerror" event
+// and returning null
+export function setErrorWebGlContext() {
+    const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
+
+    function imitateErrorWebGlGetContext(type, attributes) {
+        if (type === 'webgl') {
+            const errorEvent = new Event('webglcontextcreationerror');
+            (errorEvent as any).statusMessage = 'mocked webglcontextcreationerror message';
+            this.dispatchEvent(errorEvent);
+            return null;
+        }
+        // Fallback to existing HTMLCanvasElement getContext behaviour
+        return originalGetContext.call(this, type, attributes);
+    }
+    global.HTMLCanvasElement.prototype.getContext = imitateErrorWebGlGetContext;
+}
+
 export function setPerformance() {
     window.performance.mark = jest.fn();
     window.performance.clearMeasures = jest.fn();
@@ -105,7 +123,7 @@ export function stubAjaxGetImage(createImageBitmap) {
     global.createImageBitmap = createImageBitmap;
 
     global.URL.revokeObjectURL = () => {};
-    global.URL.createObjectURL = (_) => { return null; };
+    global.URL.createObjectURL = (_) => {return null;};
 
     // eslint-disable-next-line accessor-pairs
     Object.defineProperty(global.Image.prototype, 'src', {
