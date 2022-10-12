@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - *...Add new stuff here...*
+- Listen to webglcontextcreationerror event and give detailed debug info when it fails ([#1715](https://github.com/maplibre/maplibre-gl-js/pull/1715))
 
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
@@ -12,7 +13,6 @@
 - Return a promise from `once` method to allow easier usage of async/await in this case ([#1690(https://github.com/maplibre/maplibre-gl-js/pull/1690))
 - Add pseudo (CSS) fullscreen as a fallback for iphones ([#1678](https://github.com/maplibre/maplibre-gl-js/pull/1678))
 - Add `updateData` to `GeoJSONSource` which allows for partial data updates ([#1605](https://github.com/maplibre/maplibre-gl-js/pull/1605))
-- Listen to webglcontextcreationerror event and give detailed debug info when it fails ([#1715](https://github.com/maplibre/maplibre-gl-js/pull/1715))
 
 ### 🐞 Bug fixes
 - Fix `GeoJSONSource` appearing to never finish loading when calling its `setData` method immediately after adding it to a `Map` due to it not firing a `metadata` `data` event ([#1693](https://github.com/maplibre/maplibre-gl-js/issues/1693))
