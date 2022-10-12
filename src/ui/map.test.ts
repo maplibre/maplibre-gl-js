@@ -177,7 +177,7 @@ describe('Map', () => {
                 expect(error).toBeFalsy();
 
                 const events = [];
-                function recordEvent(event) {events.push(event.type);}
+                function recordEvent(event) { events.push(event.type); }
 
                 map.on('error', recordEvent);
                 map.on('data', recordEvent);
@@ -201,7 +201,7 @@ describe('Map', () => {
                 expect(error).toBeFalsy();
 
                 const events = [];
-                function recordEvent(event) {events.push(event.type);}
+                function recordEvent(event) { events.push(event.type); }
 
                 map.on('styledata', recordEvent);
                 map.on('styledataloading', recordEvent);
@@ -1261,7 +1261,7 @@ describe('Map', () => {
             map.on('style.load', () => {
                 map.style.dispatcher.broadcast = function (key, value: any) {
                     expect(key).toBe('updateLayers');
-                    expect(value.layers.map((layer) => {return layer.id;})).toEqual(['symbol']);
+                    expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
                 };
 
                 map.setLayoutProperty('symbol', 'text-transform', 'lowercase');
