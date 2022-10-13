@@ -14,6 +14,7 @@ import {createLayout, viewTypes} from '../src/util/struct_array';
 import type {ViewType, StructArrayLayout} from '../src/util/struct_array';
 
 import posAttributes from '../src/data/pos_attributes';
+import pos3dAttributes from '../src/data/pos3d_attributes';
 import rasterBoundsAttributes from '../src/data/raster_bounds_attributes';
 import circleAttributes from '../src/data/bucket/circle_attributes';
 import fillAttributes from '../src/data/bucket/fill_attributes';
@@ -134,6 +135,7 @@ function camelize (str) {
 }
 
 createStructArrayType('pos', posAttributes);
+createStructArrayType('pos3d', pos3dAttributes);
 createStructArrayType('raster_bounds', rasterBoundsAttributes);
 
 // layout vertex arrays
