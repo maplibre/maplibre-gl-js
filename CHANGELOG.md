@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
+- Add dev version for csp build ([#1730](https://github.com/maplibre/maplibre-gl-js/pull/1730))
 
 ## 3.0.0-pre.1
 
