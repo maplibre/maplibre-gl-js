@@ -7,6 +7,7 @@
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
 - Add dev version for csp build ([#1730](https://github.com/maplibre/maplibre-gl-js/pull/1730))
+- Fix headless benchmark execution especially on VM ([#1732](https://github.com/maplibre/maplibre-gl-js/pull/1732))
 
 ## 3.0.0-pre.1
 
