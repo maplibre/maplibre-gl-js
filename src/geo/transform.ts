@@ -196,7 +196,7 @@ class Transform {
 
     get zoom(): number { return this._zoom; }
     set zoom(zoom: number) {
-        const z = Math.min(Math.max(zoom, this.minZoom), this.maxZoom);
+        const z = Math.min(Math.max(zoom, this.minZoom, 0), this.maxZoom);
         if (this._zoom === z) return;
         this._unmodified = false;
         this._zoom = z;
