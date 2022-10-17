@@ -46,7 +46,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^14.1.0",
     "@rollup/plugin-replace": "^4.0.0",
-    "@rollup/plugin-strip": "^2.1.0",
+    "@rollup/plugin-strip": "^3.0.0",
     "@rollup/plugin-typescript": "^8.5.0",
     "@types/benchmark": "^2.1.2",
     "@types/cssnano": "^5.0.0",
