@@ -37,7 +37,7 @@ class NullIsland {
     }
 
     render(gl, matrix) {
-        const vertexArray = new Float32Array([ 0.5, 0.5, 0.0 ]);
+        const vertexArray = new Float32Array([0.5, 0.5, 0.0]);
         gl.useProgram(this.program);
         const vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
