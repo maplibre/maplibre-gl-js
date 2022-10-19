@@ -789,6 +789,7 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
     opacity: 0;
     pointer-events: none;
     transition: opacity 1s ease 1s;
+    z-index: 99999;
 }
 
 .maplibregl-cooperative-gesture-screen.maplibregl-show {
