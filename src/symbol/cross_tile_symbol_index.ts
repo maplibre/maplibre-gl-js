@@ -1,3 +1,4 @@
+import KDBush from 'kdbush';
 import EXTENT from '../data/extent';
 
 import {SymbolInstanceArray} from '../data/array_types.g';
@@ -25,22 +26,24 @@ import type Tile from '../source/tile';
 // Round anchor positions to roughly 4 pixel grid
 const roundingFactor = 512 / EXTENT / 2;
 
+interface IndexedSymbolInstance {
+    crossTileID: number;
+    coord: {
+        x: number;
+        y: number;
+    };
+}
+
 class TileLayerIndex {
     tileID: OverscaledTileID;
-    indexedSymbolInstances: {
-        [_: number]: Array<{
-            crossTileID: number;
-            coord: {
-                x: number;
-                y: number;
-            };
-        }>;
-    };
+    indexedSymbolInstances: { [_: number]: Array<IndexedSymbolInstance> };
+    indexedSymbolIndexes: { [_: number]: KDBush<IndexedSymbolInstance> };
     bucketInstanceId: number;
 
     constructor(tileID: OverscaledTileID, symbolInstances: SymbolInstanceArray, bucketInstanceId: number) {
         this.tileID = tileID;
         this.indexedSymbolInstances = {};
+        this.indexedSymbolIndexes = {};
         this.bucketInstanceId = bucketInstanceId;
 
         for (let i = 0; i < symbolInstances.length; i++) {
@@ -55,6 +58,11 @@ class TileLayerIndex {
                 crossTileID: symbolInstance.crossTileID,
                 coord: this.getScaledCoordinates(symbolInstance, tileID)
             });
+        }
+
+        // create kdbush indexes on the indexedSymbolInstances data for faster findMatches
+        for (const [key, value] of Object.entries(this.indexedSymbolInstances)) {
+            this.indexedSymbolIndexes[key] = new KDBush(value, v => v.coord.x, v => v.coord.y);
         }
     }
 
@@ -86,19 +94,26 @@ class TileLayerIndex {
             }
 
             const indexedInstances = this.indexedSymbolInstances[symbolInstance.key];
-            if (!indexedInstances) {
+            const instanceIndex = this.indexedSymbolIndexes[symbolInstance.key];
+            if (!indexedInstances || !instanceIndex) {
                 // No symbol with this key in this bucket
                 continue;
             }
 
             const scaledSymbolCoord = this.getScaledCoordinates(symbolInstance, newTileID);
 
-            for (const thisTileSymbol of indexedInstances) {
-                // Return any symbol with the same keys whose coordinates are within 1
-                // grid unit. (with a 4px grid, this covers a 12px by 12px area)
-                if (Math.abs(thisTileSymbol.coord.x - scaledSymbolCoord.x) <= tolerance &&
-                    Math.abs(thisTileSymbol.coord.y - scaledSymbolCoord.y) <= tolerance &&
-                    !zoomCrossTileIDs[thisTileSymbol.crossTileID]) {
+            // Return any symbol with the same keys whose coordinates are within 1
+            // grid unit. (with a 4px grid, this covers a 12px by 12px area)
+            const indexes = instanceIndex.range(
+                scaledSymbolCoord.x - tolerance,
+                scaledSymbolCoord.y - tolerance,
+                scaledSymbolCoord.x + tolerance,
+                scaledSymbolCoord.y + tolerance); // .sort();
+
+            for (const i of indexes) {
+                const thisTileSymbol = indexedInstances[i];
+
+                if (!zoomCrossTileIDs[thisTileSymbol.crossTileID]) {
                     // Once we've marked ourselves duplicate against this parent symbol,
                     // don't let any other symbols at the same zoom level duplicate against
                     // the same parent (see issue #5993)
