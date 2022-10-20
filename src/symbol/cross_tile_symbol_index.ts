@@ -41,12 +41,13 @@ class TileLayerIndex {
         for (let i = 0; i < symbolInstances.length; i++) {
             const symbolInstance = symbolInstances.get(i);
             const key = symbolInstance.key;
-            if (!symbolInstancesByKey.has(key)) {
-                symbolInstancesByKey.set(key, [symbolInstance]);
-            } else {
+            const instances = symbolInstancesByKey.get(key);
+            if (instances) {
                 // This tile may have multiple symbol instances with the same key
                 // Store each one along with its coordinates
-                symbolInstancesByKey.get(key).push(symbolInstance);
+                instances.push(symbolInstance);
+            } else {
+                symbolInstancesByKey.set(key, [symbolInstance]);
             }
         }
 
