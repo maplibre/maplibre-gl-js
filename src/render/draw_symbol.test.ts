@@ -71,7 +71,8 @@ describe('drawSymbol', () => {
             },
             segments: {
                 get: () => [1]
-            }
+            },
+            hasVisibleVertices: true
         } as any;
         bucketMock.iconSizeData = {
             kind: 'constant',
@@ -132,7 +133,8 @@ describe('drawSymbol', () => {
             },
             segments: {
                 get: () => [1]
-            }
+            },
+            hasVisibleVertices: true
         } as any;
         bucketMock.iconSizeData = {
             kind: 'constant',
