@@ -108,6 +108,7 @@ export type MapOptions = {
     style: StyleSpecification | string;
     pitchWithRotate?: boolean;
     pixelRatio?: number;
+    refreshServerErrorTiles?: number;
 };
 
 export type GestureOptions = {
@@ -174,7 +175,8 @@ const defaultOptions = {
     localIdeographFontFamily: 'sans-serif',
     transformRequest: null,
     fadeDuration: 300,
-    crossSourceCollisions: true
+    crossSourceCollisions: true,
+    refreshServerErrorTiles: 0,
 } as CompleteMapOptions;
 
 /**
@@ -311,6 +313,7 @@ class Map extends Camera {
     _failIfMajorPerformanceCaveat: boolean;
     _antialias: boolean;
     _refreshExpiredTiles: boolean;
+    _refreshServerErrorTiles: number;
     _hash: Hash;
     _delegatedListeners: any;
     _fadeDuration: number;
@@ -409,6 +412,7 @@ class Map extends Camera {
         this._trackResize = options.trackResize;
         this._bearingSnap = options.bearingSnap;
         this._refreshExpiredTiles = options.refreshExpiredTiles;
+        this._refreshServerErrorTiles = options.refreshServerErrorTiles;
         this._fadeDuration = options.fadeDuration;
         this._crossSourceCollisions = options.crossSourceCollisions;
         this._crossFadingFactor = 1;

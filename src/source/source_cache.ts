@@ -265,7 +265,17 @@ class SourceCache extends Evented {
     _tileLoaded(tile: Tile, id: string, previousState: TileState, err?: Error | null) {
         if (err) {
             tile.state = 'errored';
-            if ((err as any).status !== 404) this._source.fire(new ErrorEvent(err, {tile}));
+            if ((err as any).status !== 404) {
+                this._source.fire(new ErrorEvent(err, {tile}));
+
+                // we may retry tiles that failed with server errors after a configurable time
+                const delay = this.map._refreshServerErrorTiles;
+                if (delay > 0 && (err as any).status >= 500 && (err as any).status < 600) {
+                    tile.timeAdded = browser.now();
+                    tile.setExpiryData({expires: new Date(Date.now() + delay)});
+                    this._setTileReloadTimer(id, tile);
+                }
+            }
             // continue to try loading parent/children tiles if a tile doesn't exist (404)
             else this.update(this.transform, this.terrain);
             return;
