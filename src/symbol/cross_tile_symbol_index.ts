@@ -29,11 +29,11 @@ const roundingFactor = 512 / EXTENT / 2;
 const KDBUSH_THRESHHOLD = 10;
 
 class TileLayerIndex {
-    symbolsByKey = new Map<number, {
+    symbolsByKey: Record<number, {
         index?: KDBush<unknown>;
         positions?: {x: number; y: number}[];
         crossTileIDs: Uint32Array;
-    }>();
+    }> = {};
 
     constructor(public tileID: OverscaledTileID, symbolInstances: SymbolInstanceArray, public bucketInstanceId: number) {
         // group the symbolInstances by key
@@ -54,7 +54,7 @@ class TileLayerIndex {
         for (const [key, symbols] of symbolInstancesByKey) {
             const positions = symbols.map(symbolInstance => ({x: Math.floor(symbolInstance.anchorX * roundingFactor), y: Math.floor(symbolInstance.anchorY * roundingFactor)}));
             const crossTileIDs = new Uint32Array(symbols.map(v => v.crossTileID));
-            this.symbolsByKey.set(key, {positions, crossTileIDs});
+            this.symbolsByKey[key] = {positions, crossTileIDs};
         }
     }
 
@@ -94,7 +94,7 @@ class TileLayerIndex {
                 continue;
             }
 
-            const entry = this.symbolsByKey.get(symbolInstance.key);
+            const entry = this.symbolsByKey[symbolInstance.key];
             if (!entry) {
                 // No symbol with this key in this bucket
                 continue;
@@ -270,7 +270,7 @@ class CrossTileSymbolLayerIndex {
     }
 
     removeBucketCrossTileIDs(zoom: string | number, removedBucket: TileLayerIndex) {
-        for (const {crossTileIDs} of removedBucket.symbolsByKey.values()) {
+        for (const {crossTileIDs} of Object.values(removedBucket.symbolsByKey)) {
             for (const crossTileID of crossTileIDs) {
                 delete this.usedCrossTileIDs[zoom][crossTileID];
             }
