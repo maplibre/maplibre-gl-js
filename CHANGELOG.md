@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 - *...Add new stuff here...*
 - Listen to webglcontextcreationerror event and give detailed debug info when it fails ([#1715](https://github.com/maplibre/maplibre-gl-js/pull/1715))
+- Make sure `cooperativeGestures` overlay is always "on top" (z-index) of map features ([#1753](https://github.com/maplibre/maplibre-gl-js/pull/1753))
 
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
