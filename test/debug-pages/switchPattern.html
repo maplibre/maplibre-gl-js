@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Test page for switching fill-patter or line-pattern</title>
+    <title>Test page for switching fill-patter or fill-extrusion-pattern</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
     <script src='../../dist/maplibre-gl-dev.js'></script>
     <link href='../../dist/maplibre-gl.css' rel='stylesheet' />
@@ -28,8 +28,6 @@
           <label for="polygon">polygon</label><br>
           <input type="radio" id="polygonex" name="testcase" onclick="refreshTest()" value="polygonex">
           <label for="polygonex">polygon extrusion</label><br>
-          <input type="radio" id="line" name="testcase" onclick="refreshTest()" value="line">
-          <label for="line">line</label><br>
         <br>
     </div>
     <div>
@@ -67,24 +65,12 @@
                 'type': 'Polygon',
                 'coordinates': [
                     [
-                        [-30, -25],
-                        [-30, 35],
-                        [30, 35],
-                        [30, -25],
-                        [-30, -25]
+                        [-50, -50],
+                        [-50, 50],
+                        [50, 50],
+                        [50, -50],
+                        [-50, -50]
                     ]
-                ]
-            }
-        };
-
-        const lineData = {
-            'type': 'Feature',
-            'properties': {},
-            'geometry': {
-                'type': 'LineString',
-                'coordinates': [
-                    [-100, 0],
-                    [100, 0]
                 ]
             }
         };
@@ -111,34 +97,18 @@
             }
         };
 
-        // line layer
-        const lineLayerSpec = {
-            'id': testLayerId,
-            'type': 'line',
-            'source': testSourceId,
-            'layout': {
-                'line-join': 'bevel',
-                'line-cap': 'butt'
-            },
-            'paint': {
-                'line-pattern': 'pattern0',
-                'line-width': 200
-            }
-        };
-
         function getCurrentTestCase() {
             return document.querySelector('input[name="testcase"]:checked').value;
         }
 
         function addOrUpdateDataSource() {
             var testSource = map.getSource(testSourceId);
-            var testData = getCurrentTestCase() === 'line' ? lineData : polygonData;
             if (testSource) {
-                testSource.setData(testData);
+                testSource.setData(polygonData);
             } else {
                 map.addSource(testSourceId, {
                     'type': 'geojson',
-                    'data': testData
+                    'data': polygonData
                 });
             }
         }
@@ -157,13 +127,10 @@
                 map.removeLayer(testLayerId);
             }
 
-            const currentTestCase = getCurrentTestCase();
-            if (currentTestCase === 'polygon') {
+            if (getCurrentTestCase() === 'polygon') {
                 map.addLayer(polygonLayerSpec);
-            } else if (currentTestCase === 'polygonex') {
-                map.addLayer(polygonExLayerSpec);
             } else {
-                map.addLayer(lineLayerSpec);
+                map.addLayer(polygonExLayerSpec);
             }
             patternIndex = 0;
         }
@@ -175,13 +142,10 @@
                 patternIndex = 0;
             }
 
-            const currentTestCase = getCurrentTestCase();
-            if (currentTestCase === 'polygon') {
+            if (getCurrentTestCase() === 'polygon') {
                 map.setPaintProperty(testLayerId, 'fill-pattern', 'pattern' + patternIndex);
-            } else if (currentTestCase === 'polygonex') {
-                map.setPaintProperty(testLayerId, 'fill-extrusion-pattern', 'pattern' + patternIndex);
             } else {
-                map.setPaintProperty(testLayerId, 'line-pattern', 'pattern' + patternIndex);
+                map.setPaintProperty(testLayerId, 'fill-extrusion-pattern', 'pattern' + patternIndex);
             }
         }
 
