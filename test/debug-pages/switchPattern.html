@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Test page for switching fill-patter or line-pattern</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <link href='../../dist/maplibre-gl.css' rel='stylesheet' />
+    <style>
+        body {
+            margin: 10px;
+            padding: 10px;
+        }
+
+        #map {
+            width: 1024px;
+            height: 768px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div>
+        <p>Please select test case:</p>
+          <input type="radio" id="polygon" name="testcase" onclick="refreshTest()" value="polygon" checked>
+          <label for="polygon">polygon</label><br>
+          <input type="radio" id="polygonex" name="testcase" onclick="refreshTest()" value="polygonex">
+          <label for="polygonex">polygon extrusion</label><br>
+          <input type="radio" id="line" name="testcase" onclick="refreshTest()" value="line">
+          <label for="line">line</label><br>
+        <br>
+    </div>
+    <div>
+        <p>Both patterns are created with pixelRatio of 2. Upon clicking the button, expect the pattern to be switched
+            in place without shifting</p>
+        <p><button onclick="switchPattern()">Switch pattern</button></p>
+    </div>
+    <script>
+        // original example:
+        // https://maplibre.org/maplibre-gl-js-docs/example/fill-pattern/
+        const map = new maplibregl.Map({
+            fadeDuration: 0,
+            container: 'map',
+            style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+            zoom: 1
+        });
+
+        // the one and only test layerId
+        const testLayerId = 'testLayer';
+
+        // the one and only test sourceId
+        const testSourceId = 'testSource';
+
+        // use two existing assets from render tests
+        const pattern0Path = '../integration/render/tests/circle-blur/default/expected.png';
+        const pattern1Path = '../integration/render/tests/circle-blur/blending/expected.png';
+        let pattern0Image;
+        let pattern1Image;
+        let patternIndex = 0;
+
+        const polygonData = {
+            'type': 'Feature',
+            'properties': {},
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [
+                    [
+                        [-30, -25],
+                        [-30, 35],
+                        [30, 35],
+                        [30, -25],
+                        [-30, -25]
+                    ]
+                ]
+            }
+        };
+
+        const lineData = {
+            'type': 'Feature',
+            'properties': {},
+            'geometry': {
+                'type': 'LineString',
+                'coordinates': [
+                    [-100, 0],
+                    [100, 0]
+                ]
+            }
+        };
+
+        // ordinary polygon
+        const polygonLayerSpec = {
+            'id': testLayerId,
+            'type': 'fill',
+            'source': testSourceId,
+            'paint': {
+                'fill-pattern': 'pattern0'
+            }
+        };
+
+        // Extrude polygons
+        const polygonExLayerSpec = {
+            'id': testLayerId,
+            'type': 'fill-extrusion',
+            'source': testSourceId,
+            'paint': {
+                'fill-extrusion-pattern': 'pattern0',
+                'fill-extrusion-height': 1000,
+                'fill-extrusion-base': 0
+            }
+        };
+
+        // line layer
+        const lineLayerSpec = {
+            'id': testLayerId,
+            'type': 'line',
+            'source': testSourceId,
+            'layout': {
+                'line-join': 'bevel',
+                'line-cap': 'butt'
+            },
+            'paint': {
+                'line-pattern': 'pattern0',
+                'line-width': 200
+            }
+        };
+
+        function getCurrentTestCase() {
+            return document.querySelector('input[name="testcase"]:checked').value;
+        }
+
+        function addOrUpdateDataSource() {
+            var testSource = map.getSource(testSourceId);
+            var testData = getCurrentTestCase() === 'line' ? lineData : polygonData;
+            if (testSource) {
+                testSource.setData(testData);
+            } else {
+                map.addSource(testSourceId, {
+                    'type': 'geojson',
+                    'data': testData
+                });
+            }
+        }
+
+        function addOrUpdateLayer(pattern0Image, pattern1Image) {
+            // add both images to map at pixelRation of 2 (intentional)
+            if (!map.hasImage('pattern0')) {
+                map.addImage('pattern0', pattern0Image, {pixelRatio: 2});
+            }
+            if (!map.hasImage('pattern1')) {
+                map.addImage('pattern1', pattern1Image, {pixelRatio: 2});
+            }
+
+            // remove it if already there
+            if (map.getLayer(testLayerId)) {
+                map.removeLayer(testLayerId);
+            }
+
+            const currentTestCase = getCurrentTestCase();
+            if (currentTestCase === 'polygon') {
+                map.addLayer(polygonLayerSpec);
+            } else if (currentTestCase === 'polygonex') {
+                map.addLayer(polygonExLayerSpec);
+            } else {
+                map.addLayer(lineLayerSpec);
+            }
+            patternIndex = 0;
+        }
+
+        function switchPattern() {
+            if (patternIndex === 0) {
+                patternIndex = 1;
+            } else {
+                patternIndex = 0;
+            }
+
+            const currentTestCase = getCurrentTestCase();
+            if (currentTestCase === 'polygon') {
+                map.setPaintProperty(testLayerId, 'fill-pattern', 'pattern' + patternIndex);
+            } else if (currentTestCase === 'polygonex') {
+                map.setPaintProperty(testLayerId, 'fill-extrusion-pattern', 'pattern' + patternIndex);
+            } else {
+                map.setPaintProperty(testLayerId, 'line-pattern', 'pattern' + patternIndex);
+            }
+        }
+
+        function refreshTest() {
+            addOrUpdateDataSource();
+            addOrUpdateLayer(pattern0Image, pattern1Image);
+        }
+
+        function startTest() {
+            // eslint-disable-next-line handle-callback-err
+            function pattern0Loaded(err, img0) {
+
+                // Throw an error if something went wrong
+                if (err) {
+                    throw err;
+                }
+
+                pattern0Image = img0;
+
+                // load pattern1
+                map.loadImage(pattern1Path,
+                    function (err, img1) {
+                        // Throw an error if something went wrong
+                        if (err) {
+                            throw err;
+                        }
+
+                        pattern1Image = img1;
+                        refreshTest();
+                    }
+                );
+            }
+            map.loadImage(pattern0Path, pattern0Loaded);
+        }
+
+        map.on('load', startTest);
+
+    </script>
+
+</body>
+
+</html>
