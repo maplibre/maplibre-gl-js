@@ -15,10 +15,10 @@ import type FillExtrusionStyleLayer from '../style/style_layer/fill_extrusion_st
 import type FillStyleLayer from '../style/style_layer/fill_style_layer';
 import type FillBucket from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
-import {CrossFaded} from '../style/properties';
-import ResolvedImage from '../style-spec/expression/types/resolved_image';
-import Tile from '../source/tile';
-import ProgramConfiguration from '../data/program_configuration';
+import type {CrossFaded} from '../style/properties';
+import type ResolvedImage from '../style-spec/expression/types/resolved_image';
+import type Tile from '../source/tile';
+import type ProgramConfiguration from '../data/program_configuration';
 
 function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>) {
     const color = layer.paint.get('fill-color');
@@ -137,8 +137,6 @@ function drawFillTiles(
  * tile.imageAtlas has been updated by worker to holds the new pattern only, but code here is still looking for previous images,
  * causing a few corrupted frames in which setConstantPatternPositions method is not called and pixelRatio is always the
  * default of 1, instead of actual values set by original map.addImage
- *
- * @internal
  *
  * @param propertyName - 'fill-pattern' or 'fill-extrusion-pattern' property key
  * @param constantPattern - either 'fill-pattern' or 'fill-extrusion-pattern' property value
