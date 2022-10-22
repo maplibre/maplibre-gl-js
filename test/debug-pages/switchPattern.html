@@ -5,45 +5,64 @@
     <meta charset="utf-8" />
     <title>Test page for switching fill-patter or fill-extrusion-pattern</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
     <link href='../../dist/maplibre-gl.css' rel='stylesheet' />
     <style>
         body {
-            margin: 10px;
-            padding: 10px;
+            padding: 0px 5px;
+            font-family: Arial, Helvetica, sans-serif;
         }
 
         #map {
             width: 1024px;
             height: 768px;
         }
+
+        div {
+            padding: 10px 0;
+        }
+
+        span {
+            padding: 0 10px;
+        }
     </style>
 </head>
 
 <body>
+    <div>
+        <span>Please select script version:</span>
+        <span>
+            <input type="radio" id="before" name="scriptVersion" onclick="reloadPage()" value="before">
+            <label for="before">Before (2.4.0)</label>
+        </span>
+        <span>
+            <input type="radio" id="current" name="scriptVersion" onclick="reloadPage()" value="current">
+            <label for="current">Current</label>
+        </span>
+    </div>
     <div id="map"></div>
     <div>
-        <p>Please select test case:</p>
-          <input type="radio" id="polygon" name="testcase" onclick="refreshTest()" value="polygon" checked>
-          <label for="polygon">polygon</label><br>
-          <input type="radio" id="polygonex" name="testcase" onclick="refreshTest()" value="polygonex">
-          <label for="polygonex">polygon extrusion</label><br>
-        <br>
+        <span>Please select test case:</span>
+        <span>
+            <input type="radio" id="polygon" name="testcase" onclick="refreshTest()" value="polygon" checked>
+            <label for="polygon">Polygon</label>
+        </span>
+        <span>
+            <input type="radio" id="polygonex" name="testcase" onclick="refreshTest()" value="polygonex">
+            <label for="polygonex">Extruded Polygon</label>
+        </span>
     </div>
     <div>
-        <p>Both patterns are created with pixelRatio of 2. Upon clicking the button, expect the pattern to be switched
-            in place without shifting</p>
-        <p><button onclick="switchPattern()">Switch pattern</button></p>
+        <ul>
+            <li><b>Setup:</b> patterns are created with pixelRatio of 2. Select either Polygon or Extruded Polygon</li>
+            <li><b>Expected:</b> Upon clicking the Switch Pattern button, expect fill-pattern to be switched
+                in place without shifting</li>
+            <li><b>Actual:</b> in 2.4.0, during switching there are several corrupted frames where the patterns are
+                blurry and misplaced</li>
+        </ul>
+        <p><button onclick="switchPattern()">Switch Pattern</button></p>
     </div>
     <script>
-        // original example:
-        // https://maplibre.org/maplibre-gl-js-docs/example/fill-pattern/
-        const map = new maplibregl.Map({
-            fadeDuration: 0,
-            container: 'map',
-            style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
-            zoom: 1
-        });
+        let map;
 
         // the one and only test layerId
         const testLayerId = 'testLayer';
@@ -181,7 +200,43 @@
             map.loadImage(pattern0Path, pattern0Loaded);
         }
 
-        map.on('load', startTest);
+        function startLoadingMap() {
+            // original example:
+            // https://maplibre.org/maplibre-gl-js-docs/example/fill-pattern/
+            map = new maplibregl.Map({
+                fadeDuration: 0,
+                container: 'map',
+                style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                zoom: 1
+            });
+            map.on('load', startTest);
+        }
+
+        // when script selection changes, reload the map
+        function reloadPage() {
+            const selectedVersion = document.querySelector('input[name="scriptVersion"]:checked').value;
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('version', selectedVersion);
+            window.location = currentUrl.toString();
+        }
+
+        // parse url and update UX
+        const currentUrl = new URL(window.location);
+        const version = currentUrl.searchParams.get('version');
+        let scriptUrl;
+
+        if (version === 'current') {
+            document.getElementById('current').checked = true;
+            scriptUrl = '../../dist/maplibre-gl-dev.js';
+        } else {
+            document.getElementById('before').checked = true;
+            scriptUrl = 'https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js';
+        }
+
+        const scriptElement = document.createElement('script');
+        scriptElement.setAttribute('src', scriptUrl);
+        scriptElement.onload = startLoadingMap;
+        document.body.appendChild(scriptElement);
 
     </script>
 
