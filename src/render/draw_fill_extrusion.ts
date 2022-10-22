@@ -13,6 +13,8 @@ import type FillExtrusionStyleLayer from '../style/style_layer/fill_extrusion_st
 import type FillExtrusionBucket from '../data/bucket/fill_extrusion_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 
+import {findPatternPositions} from './draw_fill';
+
 export default draw;
 
 function draw(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>) {
@@ -55,11 +57,12 @@ function drawExtrusionTiles(
     colorMode: Readonly<ColorMode>) {
     const context = painter.context;
     const gl = context.gl;
-    const patternProperty = layer.paint.get('fill-extrusion-pattern');
+    const fillPropertyName = 'fill-extrusion-pattern';
+    const patternProperty = layer.paint.get(fillPropertyName);
     const image = patternProperty.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
     const opacity = layer.paint.get('fill-extrusion-opacity');
-
+    const constantPattern = patternProperty.constantOr(null);
     for (const coord of coords) {
         const tile = source.getTile(coord);
         const bucket: FillExtrusionBucket = (tile.getBucket(layer) as any);
@@ -74,13 +77,8 @@ function drawExtrusionTiles(
             tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             programConfiguration.updatePaintBuffers(crossfade);
         }
-        const constantPattern = patternProperty.constantOr(null);
-        if (constantPattern && tile.imageAtlas) {
-            const atlas = tile.imageAtlas;
-            const posTo = atlas.patternPositions[constantPattern.to.toString()];
-            const posFrom = atlas.patternPositions[constantPattern.from.toString()];
-            if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
-        }
+
+        findPatternPositions(fillPropertyName, constantPattern, tile, layer, programConfiguration);
 
         const matrix = painter.translatePosMatrix(
             coord.posMatrix,

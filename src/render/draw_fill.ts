@@ -11,11 +11,14 @@ import {
 
 import type Painter from './painter';
 import type SourceCache from '../source/source_cache';
+import type FillExtrusionStyleLayer from '../style/style_layer/fill_extrusion_style_layer';
 import type FillStyleLayer from '../style/style_layer/fill_style_layer';
 import type FillBucket from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
-
-export default drawFill;
+import {CrossFaded} from '../style/properties';
+import ResolvedImage from '../style-spec/expression/types/resolved_image';
+import Tile from '../source/tile';
+import ProgramConfiguration from '../data/program_configuration';
 
 function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>) {
     const color = layer.paint.get('fill-color');
@@ -30,8 +33,8 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
         (!pattern.constantOr(1 as any) &&
-        color.constantOr(Color.transparent).a === 1 &&
-        opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
+            color.constantOr(Color.transparent).a === 1 &&
+            opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
 
     // Draw fill
     if (painter.renderPass === pass) {
@@ -66,8 +69,8 @@ function drawFillTiles(
     colorMode: Readonly<ColorMode>,
     isOutline: boolean) {
     const gl = painter.context.gl;
-
-    const patternProperty = layer.paint.get('fill-pattern');
+    const fillPropertyName = 'fill-pattern';
+    const patternProperty = layer.paint.get(fillPropertyName);
     const image = patternProperty && patternProperty.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
@@ -79,6 +82,8 @@ function drawFillTiles(
         programName = image && !layer.getPaintProperty('fill-outline-color') ? 'fillOutlinePattern' : 'fillOutline';
         drawMode = gl.LINES;
     }
+
+    const constantPattern = patternProperty.constantOr(null);
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
@@ -97,13 +102,7 @@ function drawFillTiles(
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
-        const constantPattern = patternProperty.constantOr(null);
-        if (constantPattern && tile.imageAtlas) {
-            const atlas = tile.imageAtlas;
-            const posTo = atlas.patternPositions[constantPattern.to.toString()];
-            const posFrom = atlas.patternPositions[constantPattern.from.toString()];
-            if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
-        }
+        findPatternPositions(fillPropertyName, constantPattern, tile, layer, programConfiguration);
 
         const terrainCoord = terrainData ? coord : null;
         const posMatrix = terrainCoord ? terrainCoord.posMatrix : coord.posMatrix;
@@ -131,3 +130,46 @@ function drawFillTiles(
             layer.paint, painter.transform.zoom, programConfiguration);
     }
 }
+
+/**
+ * Simple helper function shared by draw_fill and draw_fill_extrusions to correctly find images from tile.imageAtlas.
+ * For transtionable properties, especially 'fill-pattern' and 'fill-extrusion-pattern', at certain frames
+ * tile.imageAtlas has been updated by worker to holds the new pattern only, but code here is still looking for previous images,
+ * causing a few corrupted frames in which setConstantPatternPositions method is not called and pixelRatio is always the
+ * default of 1, instead of actual values set by original map.addImage
+ *
+ * @internal
+ *
+ * @param propertyName - 'fill-pattern' or 'fill-extrusion-pattern' property key
+ * @param constantPattern - either 'fill-pattern' or 'fill-extrusion-pattern' property value
+ * @param tile - current tile being drawn
+ * @param layer - current layer being rendered
+ * @param programConfiguration - to be used to set patttern poistion and device pixel ratio.
+ */
+function findPatternPositions(
+    propertyName: 'fill-pattern' | 'fill-extrusion-pattern',
+    constantPattern: CrossFaded<ResolvedImage>,
+    tile: Tile,
+    layer: FillStyleLayer | FillExtrusionStyleLayer,
+    programConfiguration: ProgramConfiguration): void {
+
+    if (constantPattern && tile.imageAtlas) {
+        const patternPositions = tile.imageAtlas.patternPositions;
+        let posTo = patternPositions[constantPattern.to.toString()];
+        let posFrom = patternPositions[constantPattern.from.toString()];
+
+        // try again in case patternPositions has been updated by worker
+        if (!posTo || !posFrom) {
+            const transitioned = layer.getPaintProperty(propertyName) as string;
+            posTo = patternPositions[transitioned];
+            posFrom = patternPositions[transitioned];
+        }
+
+        if (posTo && posFrom) {
+            programConfiguration.setConstantPatternPositions(posTo, posFrom);
+        }
+    }
+}
+
+export {drawFill as fill};
+export {findPatternPositions};
