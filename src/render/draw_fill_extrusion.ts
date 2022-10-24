@@ -13,7 +13,7 @@ import type FillExtrusionStyleLayer from '../style/style_layer/fill_extrusion_st
 import type FillExtrusionBucket from '../data/bucket/fill_extrusion_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 
-import {findPatternPositions} from './draw_fill';
+import findPatternPositions from './draw_fill_helper';
 
 export default draw;
 

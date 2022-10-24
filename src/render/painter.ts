@@ -24,7 +24,7 @@ import symbol from './draw_symbol';
 import circle from './draw_circle';
 import heatmap from './draw_heatmap';
 import line from './draw_line';
-import {fill} from './draw_fill';
+import fill from './draw_fill';
 import fillExtrusion from './draw_fill_extrusion';
 import hillshade from './draw_hillshade';
 import raster from './draw_raster';
