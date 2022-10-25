@@ -14,6 +14,7 @@ import type SourceCache from '../source/source_cache';
 import type FillStyleLayer from '../style/style_layer/fill_style_layer';
 import type FillBucket from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
+import updatePatternPositionsInProgram from './update_pattern_positions_in_program';
 
 export default drawFill;
 
@@ -30,8 +31,8 @@ function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLa
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
         (!pattern.constantOr(1 as any) &&
-        color.constantOr(Color.transparent).a === 1 &&
-        opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
+            color.constantOr(Color.transparent).a === 1 &&
+            opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
 
     // Draw fill
     if (painter.renderPass === pass) {
@@ -66,8 +67,8 @@ function drawFillTiles(
     colorMode: Readonly<ColorMode>,
     isOutline: boolean) {
     const gl = painter.context.gl;
-
-    const patternProperty = layer.paint.get('fill-pattern');
+    const fillPropertyName = 'fill-pattern';
+    const patternProperty = layer.paint.get(fillPropertyName);
     const image = patternProperty && patternProperty.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
@@ -79,6 +80,8 @@ function drawFillTiles(
         programName = image && !layer.getPaintProperty('fill-outline-color') ? 'fillOutlinePattern' : 'fillOutline';
         drawMode = gl.LINES;
     }
+
+    const constantPattern = patternProperty.constantOr(null);
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
@@ -97,13 +100,7 @@ function drawFillTiles(
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
-        const constantPattern = patternProperty.constantOr(null);
-        if (constantPattern && tile.imageAtlas) {
-            const atlas = tile.imageAtlas;
-            const posTo = atlas.patternPositions[constantPattern.to.toString()];
-            const posFrom = atlas.patternPositions[constantPattern.from.toString()];
-            if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
-        }
+        updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
         const terrainCoord = terrainData ? coord : null;
         const posMatrix = terrainCoord ? terrainCoord.posMatrix : coord.posMatrix;
