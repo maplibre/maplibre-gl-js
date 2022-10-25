@@ -1,4 +1,4 @@
-import type { CrossFaded } from '../style/properties';
+import type {CrossFaded} from '../style/properties';
 import type ResolvedImage from '../style-spec/expression/types/resolved_image';
 import type Tile from '../source/tile';
 import type ProgramConfiguration from '../data/program_configuration';
