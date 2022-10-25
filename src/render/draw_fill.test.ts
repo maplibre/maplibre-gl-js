@@ -22,7 +22,7 @@ jest.mock('../source/tile');
 jest.mock('../data/bucket/symbol_bucket');
 jest.mock('../symbol/projection');
 
-describe('drawSymbol', () => {
+describe('drawFill', () => {
     test('should call programConfiguration.setConstantPatternPositions for transitioning fill-pattern', () => {
 
         const painterMock: Painter = constructMockPainer();
