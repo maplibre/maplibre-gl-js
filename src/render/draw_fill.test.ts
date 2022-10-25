@@ -25,20 +25,30 @@ jest.mock('../symbol/projection');
 describe('drawSymbol', () => {
     test('should call programConfiguration.setConstantPatternPositions for transitioning fill-pattern', () => {
 
-        const painterMock = new Painter(null as any, null as any);
-        painterMock.context = {
-            gl: {},
-            activeTexture: {
-                set: () => {}
-            }
-        } as any;
-        painterMock.renderPass = 'translucent';
-        painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
-        painterMock.options = {} as any;
-        painterMock.style = {
-            map: {}
-        } as any as Style;
+        const painterMock: Painter = constructMockPainer();
+        const layer: FillStyleLayer = constructMockLayer();
 
+        const programMock = new Program(null as any, null as any, null as any, null as any, null as any, null as any, null as any);
+        (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
+
+        const mockTile = constructMockTile(layer);
+
+        const sourceCacheMock = new SourceCache(null as any, null as any, null as any);
+        (sourceCacheMock.getTile as jest.Mock).mockReturnValue(mockTile);
+        sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
+
+        drawFill(painterMock, sourceCacheMock, layer, [mockTile.tileID]);
+
+        // twice: first for fill, second for stroke
+        expect(programMock.draw).toHaveBeenCalledTimes(2);
+
+        const bucket: FillBucket = (mockTile.getBucket(layer) as any);
+        const programConfiguration = bucket.programConfigurations.get(layer.id);
+
+        expect(programConfiguration.setConstantPatternPositions).toHaveBeenCalled();
+    });
+
+    function constructMockLayer(): FillStyleLayer {
         const layerSpec = {
             id: 'mock-layer',
             source: 'empty-source',
@@ -60,25 +70,26 @@ describe('drawSymbol', () => {
             return 'pattern1';
         };
 
-        const programMock = new Program(null as any, null as any, null as any, null as any, null as any, null as any, null as any);
-        (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
+        return layer;
+    }
 
-        const mockTile = constructMockTile(layer);
+    function constructMockPainer(): Painter {
+        const painterMock = new Painter(null as any, null as any);
+        painterMock.context = {
+            gl: {},
+            activeTexture: {
+                set: () => {}
+            }
+        } as any;
+        painterMock.renderPass = 'translucent';
+        painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
+        painterMock.options = {} as any;
+        painterMock.style = {
+            map: {}
+        } as any as Style;
 
-        const sourceCacheMock = new SourceCache(null as any, null as any, null as any);
-        (sourceCacheMock.getTile as jest.Mock).mockReturnValue(mockTile);
-        sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
-
-        drawFill(painterMock, sourceCacheMock, layer, [mockTile.tileID]);
-
-        // twice: first for fill, second for stroke
-        expect(programMock.draw).toHaveBeenCalledTimes(2);
-
-        const bucket: FillBucket = (mockTile.getBucket(layer) as any);
-        const programConfiguration = bucket.programConfigurations.get(layer.id);
-
-        expect(programConfiguration.setConstantPatternPositions).toHaveBeenCalled();
-    });
+        return painterMock;
+    }
 
     function constructMockTile(layer: FillStyleLayer): Tile {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);

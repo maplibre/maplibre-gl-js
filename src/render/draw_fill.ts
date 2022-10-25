@@ -14,7 +14,7 @@ import type SourceCache from '../source/source_cache';
 import type FillStyleLayer from '../style/style_layer/fill_style_layer';
 import type FillBucket from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
-import findPatternPositions from './draw_fill_helper';
+import updatePatternPositionsInProgram from './update_pattern_positions_in_program';
 
 export default drawFill;
 
@@ -100,7 +100,7 @@ function drawFillTiles(
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
-        findPatternPositions(fillPropertyName, constantPattern, tile, layer, programConfiguration);
+        updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
         const terrainCoord = terrainData ? coord : null;
         const posMatrix = terrainCoord ? terrainCoord.posMatrix : coord.posMatrix;
