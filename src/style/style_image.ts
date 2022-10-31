@@ -13,7 +13,7 @@ export enum ContentAspectRatioMatchingMode {
     none = 'none',
     height = 'height',
     width = 'width'
-};
+}
 
 export type StyleImageMetadata = {
     pixelRatio: number;
