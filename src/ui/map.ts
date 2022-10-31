@@ -1815,14 +1815,15 @@ class Map extends Camera {
             sdf = false,
             stretchX,
             stretchY,
-            content
+            content,
+            contentMatch
         }: Partial<StyleImageMetadata> = {}) {
         this._lazyInitEmptyStyle();
         const version = 0;
 
         if (image instanceof HTMLImageElement || isImageBitmap(image)) {
             const {width, height, data} = browser.getImageData(image);
-            this.style.addImage(id, {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, sdf, version});
+            this.style.addImage(id, {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, contentMatch, sdf, version});
         } else if (image.width === undefined || image.height === undefined) {
             return this.fire(new ErrorEvent(new Error(
                 'Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, ' +
@@ -1837,6 +1838,7 @@ class Map extends Camera {
                 stretchX,
                 stretchY,
                 content,
+                contentMatch,
                 sdf,
                 version,
                 userImage

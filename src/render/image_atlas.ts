@@ -4,6 +4,7 @@ import {register} from '../util/web_worker_transfer';
 import potpack from 'potpack';
 
 import type {StyleImage} from '../style/style_image';
+import {ContentAspectRatioMatchingMode} from '../style/style_image';
 import type ImageManager from './image_manager';
 import type Texture from './texture';
 import type {Rect} from './glyph_atlas';
@@ -18,19 +19,22 @@ export class ImagePosition {
     stretchY: Array<[number, number]>;
     stretchX: Array<[number, number]>;
     content: [number, number, number, number];
+    contentMatch: ContentAspectRatioMatchingMode;
 
     constructor(paddedRect: Rect, {
         pixelRatio,
         version,
         stretchX,
         stretchY,
-        content
+        content,
+        contentMatch
     }: StyleImage) {
         this.paddedRect = paddedRect;
         this.pixelRatio = pixelRatio;
         this.stretchX = stretchX;
         this.stretchY = stretchY;
         this.content = content;
+        this.contentMatch = contentMatch;
         this.version = version;
     }
 

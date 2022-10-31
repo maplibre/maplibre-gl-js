@@ -20,6 +20,42 @@
     "sdf": false,
     "content": [10, 10, 30, 30]
   },
+  "nine-part-content-match-off": {
+    "x": 0,
+    "y": 0,
+    "width": 40,
+    "height": 40,
+    "pixelRatio": 2,
+    "stretchX": [[10, 30]],
+    "stretchY": [[10, 30]],
+    "sdf": false,
+    "content": [10, 10, 30, 30],
+    "contentMatch": "none"
+  },
+  "nine-part-content-match-height": {
+    "x": 0,
+    "y": 0,
+    "width": 40,
+    "height": 40,
+    "pixelRatio": 2,
+    "stretchX": [[10, 30]],
+    "stretchY": [[10, 30]],
+    "sdf": false,
+    "content": [10, 10, 30, 30],
+    "contentMatch": "height"
+  },
+  "nine-part-content-match-width": {
+    "x": 0,
+    "y": 0,
+    "width": 40,
+    "height": 40,
+    "pixelRatio": 2,
+    "stretchX": [[10, 30]],
+    "stretchY": [[10, 30]],
+    "sdf": false,
+    "content": [10, 10, 30, 30],
+    "contentMatch": "width"
+  },
   "fifteen-part": {
     "x": 50,
     "y": 0,

@@ -43,10 +43,10 @@ export default function loadSprite(
             const result = {};
 
             for (const id in json) {
-                const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
+                const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content, contentMatch} = json[id];
                 const data = new RGBAImage({width, height});
                 RGBAImage.copy(imageData, data, {x, y}, {x: 0, y: 0}, {width, height});
-                result[id] = {data, pixelRatio, sdf, stretchX, stretchY, content};
+                result[id] = {data, pixelRatio, sdf, stretchX, stretchY, content, contentMatch};
             }
 
             callback(null, result);

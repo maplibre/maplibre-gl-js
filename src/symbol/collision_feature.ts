@@ -2,6 +2,7 @@ import type {CollisionBoxArray} from '../data/array_types.g';
 import Point from '@mapbox/point-geometry';
 import type Anchor from './anchor';
 import {SymbolPadding} from '../style/style_layer/symbol_style_layer';
+import {applyContentMatch} from './shaping';
 
 /**
  * A CollisionFeature represents the area of the tile covered by a single label.
@@ -60,18 +61,27 @@ class CollisionFeature {
                 this.circleDiameter = height;
             }
         } else {
+            const icon = shaped.image?.contentMatch && shaped.image.content ?
+                applyContentMatch(shaped) :
+                {
+                    x1: shaped.left,
+                    y1: shaped.top,
+                    x2: shaped.right,
+                    y2: shaped.bottom
+                };
+
             // margin is in CSS order: [top, right, bottom, left]
-            let y1 = shaped.top * boxScale - padding[0];
-            let y2 = shaped.bottom * boxScale + padding[2];
-            let x1 = shaped.left * boxScale - padding[3];
-            let x2 = shaped.right * boxScale + padding[1];
+            icon.y1 = icon.y1 * boxScale - padding[0];
+            icon.x2 = icon.x2 * boxScale + padding[1];
+            icon.y2 = icon.y2 * boxScale + padding[2];
+            icon.x1 = icon.x1 * boxScale - padding[3];
 
             const collisionPadding = shaped.collisionPadding;
             if (collisionPadding) {
-                x1 -= collisionPadding[0] * boxScale;
-                y1 -= collisionPadding[1] * boxScale;
-                x2 += collisionPadding[2] * boxScale;
-                y2 += collisionPadding[3] * boxScale;
+                icon.x1 -= collisionPadding[0] * boxScale;
+                icon.y1 -= collisionPadding[1] * boxScale;
+                icon.x2 += collisionPadding[2] * boxScale;
+                icon.y2 += collisionPadding[3] * boxScale;
             }
 
             if (rotate) {
@@ -79,10 +89,10 @@ class CollisionFeature {
                 // See https://github.com/mapbox/mapbox-gl-js/issues/6075
                 // Doesn't account for icon-text-fit
 
-                const tl = new Point(x1, y1);
-                const tr = new Point(x2, y1);
-                const bl = new Point(x1, y2);
-                const br = new Point(x2, y2);
+                const tl = new Point(icon.x1, icon.y1);
+                const tr = new Point(icon.x2, icon.y1);
+                const bl = new Point(icon.x1, icon.y2);
+                const br = new Point(icon.x2, icon.y2);
 
                 const rotateRadians = rotate * Math.PI / 180;
 
@@ -94,12 +104,12 @@ class CollisionFeature {
                 // Collision features require an "on-axis" geometry,
                 // so take the envelope of the rotated geometry
                 // (may be quite large for wide labels rotated 45 degrees)
-                x1 = Math.min(tl.x, tr.x, bl.x, br.x);
-                x2 = Math.max(tl.x, tr.x, bl.x, br.x);
-                y1 = Math.min(tl.y, tr.y, bl.y, br.y);
-                y2 = Math.max(tl.y, tr.y, bl.y, br.y);
+                icon.x1 = Math.min(tl.x, tr.x, bl.x, br.x);
+                icon.x2 = Math.max(tl.x, tr.x, bl.x, br.x);
+                icon.y1 = Math.min(tl.y, tr.y, bl.y, br.y);
+                icon.y2 = Math.max(tl.y, tr.y, bl.y, br.y);
             }
-            collisionBoxArray.emplaceBack(anchor.x, anchor.y, x1, y1, x2, y2, featureIndex, sourceLayerIndex, bucketIndex);
+            collisionBoxArray.emplaceBack(anchor.x, anchor.y, icon.x1, icon.y1, icon.x2, icon.y2, featureIndex, sourceLayerIndex, bucketIndex);
         }
 
         this.boxEndIndex = collisionBoxArray.length;

@@ -4,7 +4,7 @@ import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
 
 import type Anchor from './anchor';
 import type {PositionedIcon, Shaping} from './shaping';
-import {SHAPING_DEFAULT_OFFSET} from './shaping';
+import {SHAPING_DEFAULT_OFFSET, applyContentMatch} from './shaping';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
 import type {Feature} from '../style-spec/expression';
@@ -68,8 +68,12 @@ export function getIconQuads(
     const imageWidth = image.paddedRect.w - 2 * border;
     const imageHeight = image.paddedRect.h - 2 * border;
 
-    const iconWidth = shapedIcon.right - shapedIcon.left;
-    const iconHeight = shapedIcon.bottom - shapedIcon.top;
+    let icon = {
+        x1: shapedIcon.left,
+        y1: shapedIcon.top,
+        x2: shapedIcon.right,
+        y2: shapedIcon.bottom
+    };
 
     const stretchX = image.stretchX || [[0, imageWidth]];
     const stretchY = image.stretchY || [[0, imageHeight]];
@@ -91,28 +95,39 @@ export function getIconQuads(
 
     if (image.content && hasIconTextFit) {
         const content = image.content;
+        const contentWidth = content[2] - content[0];
+        const contentHeight = content[3] - content[1];
+        // Constrict content area to fit target aspect ratio
+        if (image.contentMatch && image.content) {
+            icon = applyContentMatch(shapedIcon);
+        }
         stretchOffsetX = sumWithinRange(stretchX, 0, content[0]);
         stretchOffsetY = sumWithinRange(stretchY, 0, content[1]);
         stretchContentWidth = sumWithinRange(stretchX, content[0], content[2]);
         stretchContentHeight = sumWithinRange(stretchY, content[1], content[3]);
         fixedOffsetX = content[0] - stretchOffsetX;
         fixedOffsetY = content[1] - stretchOffsetY;
-        fixedContentWidth = content[2] - content[0] - stretchContentWidth;
-        fixedContentHeight = content[3] - content[1] - stretchContentHeight;
+        fixedContentWidth = contentWidth - stretchContentWidth;
+        fixedContentHeight = contentHeight - stretchContentHeight;
     }
+
+    const iconLeft = icon.x1;
+    const iconTop = icon.y1;
+    const iconWidth = icon.x2 - iconLeft;
+    const iconHeight = icon.y2 - iconTop;
 
     const makeBox = (left, top, right, bottom) => {
 
-        const leftEm = getEmOffset(left.stretch - stretchOffsetX, stretchContentWidth, iconWidth, shapedIcon.left);
+        const leftEm = getEmOffset(left.stretch - stretchOffsetX, stretchContentWidth, iconWidth, iconLeft);
         const leftPx = getPxOffset(left.fixed - fixedOffsetX, fixedContentWidth, left.stretch, stretchWidth);
 
-        const topEm = getEmOffset(top.stretch - stretchOffsetY, stretchContentHeight, iconHeight, shapedIcon.top);
+        const topEm = getEmOffset(top.stretch - stretchOffsetY, stretchContentHeight, iconHeight, iconTop);
         const topPx = getPxOffset(top.fixed - fixedOffsetY, fixedContentHeight, top.stretch, stretchHeight);
 
-        const rightEm = getEmOffset(right.stretch - stretchOffsetX, stretchContentWidth, iconWidth, shapedIcon.left);
+        const rightEm = getEmOffset(right.stretch - stretchOffsetX, stretchContentWidth, iconWidth, iconLeft);
         const rightPx = getPxOffset(right.fixed - fixedOffsetX, fixedContentWidth, right.stretch, stretchWidth);
 
-        const bottomEm = getEmOffset(bottom.stretch - stretchOffsetY, stretchContentHeight, iconHeight, shapedIcon.top);
+        const bottomEm = getEmOffset(bottom.stretch - stretchOffsetY, stretchContentHeight, iconHeight, iconTop);
         const bottomPx = getPxOffset(bottom.fixed - fixedOffsetY, fixedContentHeight, bottom.stretch, stretchHeight);
 
         const tl = new Point(leftEm, topEm);

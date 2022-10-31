@@ -194,6 +194,7 @@ class ImageManager extends Evented {
                     stretchX: image.stretchX,
                     stretchY: image.stretchY,
                     content: image.content,
+                    contentMatch: image.contentMatch,
                     hasRenderCallback: Boolean(image.userImage && image.userImage.render)
                 };
             } else {

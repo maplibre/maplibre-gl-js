@@ -9,12 +9,19 @@ export type StyleImageData = {
     userImage?: StyleImageInterface;
 };
 
+export enum ContentAspectRatioMatchingMode {
+    none = 'none',
+    height = 'height',
+    width = 'width'
+};
+
 export type StyleImageMetadata = {
     pixelRatio: number;
     sdf: boolean;
     stretchX?: Array<[number, number]>;
     stretchY?: Array<[number, number]>;
     content?: [number, number, number, number];
+    contentMatch?: ContentAspectRatioMatchingMode;
 };
 
 export type StyleImage = StyleImageData & StyleImageMetadata;

@@ -10,6 +10,7 @@ import {warnOnce} from '../util/util';
 
 import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
+import {ContentAspectRatioMatchingMode} from '../style/style_image';
 import type {ImagePosition} from '../render/image_atlas';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
@@ -23,7 +24,7 @@ enum WritingMode {
 }
 
 const SHAPING_DEFAULT_OFFSET = -17;
-export {shapeText, shapeIcon, fitIconToText, getAnchorAlignment, WritingMode, SHAPING_DEFAULT_OFFSET};
+export {shapeText, shapeIcon, applyContentMatch, fitIconToText, getAnchorAlignment, WritingMode, SHAPING_DEFAULT_OFFSET};
 
 // The position of a glyph relative to the text's anchor point.
 export type PositionedGlyph = {
@@ -800,6 +801,48 @@ function shapeIcon(
     const y1 = dy - image.displaySize[1] * verticalAlign;
     const y2 = y1 + image.displaySize[1];
     return {image, top: y1, bottom: y2, left: x1, right: x2};
+}
+
+/**
+ * Called when shapedIcon.image.contentMatch is set.
+ * Determines the dimensions of a content rectangle using the value in contentMatch.
+ * @param shapedIcon The icon that will be resized.
+ * @returns Extents of the shapedIcon with contentMatch adjustments if necessary.
+ */
+function applyContentMatch(shapedIcon: PositionedIcon): {x1: number; y1: number; x2: number; y2: number} {
+
+    // Assume shapedIcon.image.contentMatch is true or this wouldn't be called.
+
+    let iconLeft = shapedIcon.left;
+    let iconTop = shapedIcon.top;
+    let iconWidth = shapedIcon.right - iconLeft;
+    let iconHeight = shapedIcon.bottom - iconTop;
+
+    const contentWidth = shapedIcon.image.content[2] - shapedIcon.image.content[0];
+    const contentHeight = shapedIcon.image.content[3] - shapedIcon.image.content[1];
+
+    // Constrict content area to fit target aspect ratio
+    if (contentHeight !== 0 && iconWidth !== 0 && iconHeight !== 0) {
+        // Reverse calculate the content aspect ratio.
+        const contentAspectRatio = contentWidth / contentHeight;
+        if (shapedIcon.image.contentMatch === ContentAspectRatioMatchingMode.height) {
+            if (iconWidth / iconHeight < contentAspectRatio) {
+                // Target aspect ratio is height matched, adjust width
+                const newIconWidth = iconHeight * contentAspectRatio;
+                iconLeft *= newIconWidth / iconWidth;
+                iconWidth = newIconWidth;
+            }
+        } else if (shapedIcon.image.contentMatch === ContentAspectRatioMatchingMode.width) {
+            if (contentAspectRatio !== 0 && iconWidth / iconHeight > contentAspectRatio) {
+                // Target aspect ratio is width matched, adjust height
+                const newIconHeight = iconWidth / contentAspectRatio;
+                iconTop *= newIconHeight / newIconHeight;
+                iconHeight = newIconHeight;
+            }
+        }
+    }
+
+    return {x1: iconLeft, y1: iconTop, x2: iconLeft + iconWidth, y2: iconTop + iconHeight};
 }
 
 function fitIconToText(
