@@ -15,15 +15,127 @@
 <div id='map'></div>
 
 <script src='../../dist/maplibre-gl-dev.js'></script>
+<script src='./multi-sprite-demotiles.js'></script>
 <script>
-var style = './v9_map_style.json';
+var style = window.multispritedemotiles;
 
 var map = window.map = new maplibregl.Map({
     container: 'map',
-    zoom: 17,
-    center: [-77.01866, 38.888],
+    zoom: 5,
+    center: [0, 52],
     style,
     hash: style
+});
+
+var sourceData = {
+    'type': 'FeatureCollection',
+    'features': [{
+        'type': 'Feature',
+        'properties': {
+            'name': 'Dennis',
+            'featureclass': 'top'
+        },
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [0, 52]
+        },
+        'id': 163
+    }, {
+        'type': 'Feature',
+        'properties': {
+            'name': 'Point A',
+            'featureclass': 'base'
+        },
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [0, 52]
+        },
+        'id': 163
+    }, {
+        'type': 'Feature',
+        'properties': {
+            'name': 'Point B',
+            'featureclass': 'base'
+        },
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [0, 52]
+        },
+        'id': 164
+    }, {
+        'type': 'Feature',
+        'properties': {
+            'name': 'Point C',
+            'featureclass': 'base'
+        },
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [0, 52]
+        },
+        'id': 165
+    }, {
+        'type': 'Feature',
+        'properties': {
+            'name': 'Point D',
+            'featureclass': 'base'
+        },
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [0, 52]
+        },
+        'id': 166
+    }]
+};
+
+map.on('load', function () {
+    map.addSource('places', {
+        'type': 'geojson',
+        'data': sourceData
+    });
+
+    map.addLayer({
+        'id': 'top_labels',
+        'type': 'symbol',
+        'source': 'places',
+        'filter': ['!=', ['get', 'featureclass'], 'base'],
+        'layout': {
+            'text-overlap': 'never',
+            'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
+            'text-field': ['get', 'name'],
+            'text-offset': [1.2, 1.4],
+            'text-size': 12
+        },
+        'paint': {
+            'text-halo-color': '#fff',
+            'text-halo-width': 2
+        }
+    });
+
+    map.addLayer({
+        'id': 'top_icons',
+        'type': 'symbol',
+        'source': 'places',
+        'filter': ['!=', ['get', 'featureclass'], 'base'],
+        'layout': {
+            'icon-overlap': 'cooperative',
+            'icon-image': 'airport',
+            'icon-padding': 0
+        }
+    });
+
+    map.addLayer({
+        'id': 'base_icons',
+        'type': 'symbol',
+        'source': 'places',
+        'filter': ['==', ['get', 'featureclass'], 'base'],
+        'layout': {
+            'icon-overlap': 'cooperative',
+            'icon-image': 'airport',
+            'icon-padding': 0
+        }
+    });
+
+    map.showCollisionBoxes = true;
 });
 
 </script>
