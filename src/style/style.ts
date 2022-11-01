@@ -337,12 +337,13 @@ class Style extends Evented {
             if (err) {
                 this.fire(new ErrorEvent(err));
             } else if (images) {
-                for (const spriteImage in images) {
-                    for (const id in images[spriteImage]) {
+                for (const spriteName in images) {
+                    for (const id in images[spriteName]) {
                         try {
-                            this.imageManager.addImage(spriteImage + id, images[spriteImage][id]);
+                            // TODO: if a single URL, don't prefix
+                            this.imageManager.addImage(`${spriteName}:${id}`, images[spriteName][id]);
                         } catch  {
-                            //
+                            // TODO: think what to do with duplicates
                         }
                     }
                 }

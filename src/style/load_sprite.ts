@@ -12,7 +12,7 @@ export default function loadSprite(
     baseURL: string,
     requestManager: RequestManager,
     pixelRatio: number,
-    callback: Callback<{[_: string]: StyleImage}>
+    callback: Callback<{[spriteName: string]: {[id: string]: StyleImage}}>
 ): Cancelable {
     let error;
     const format = pixelRatio > 1 ? '@2x' : '';
@@ -24,21 +24,24 @@ export default function loadSprite(
     const jsonsMap: {[baseURL: string]: any} = {};
     const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
 
-    for (const baseURL in baseURLs) {
-        const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURLs[baseURL], format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
+    for (const spriteNameAndBaseURL of baseURLs) {
+        // TODO: if something's missing in the resulting array, emit an error
+        const [spriteName, baseURL] = spriteNameAndBaseURL.split('\t');
+
+        const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURL, format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
             jsonRequests.splice(newJsonRequestsLength, 1);
             if (!error) {
                 error = err;
-                jsonsMap[baseURLs[baseURL]] = data;
+                jsonsMap[spriteName] = data;
                 maybeComplete();
             }
         }));
 
-        const newImageRequestsLength = imageRequests.push(getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURLs[baseURL], format, '.png'), ResourceType.SpriteImage), (err, img) => {
+        const newImageRequestsLength = imageRequests.push(getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURL, format, '.png'), ResourceType.SpriteImage), (err, img) => {
             imageRequests.splice(newImageRequestsLength, 1);
             if (!error) {
                 error = err;
-                imagesMap[baseURLs[baseURL]] = img;
+                imagesMap[spriteName] = img;
                 maybeComplete();
             }
         }));
@@ -54,17 +57,17 @@ export default function loadSprite(
 
             const result = {};
 
-            for (const baseURL in jsonsMap) {
-                result[baseURL] = {};
+            for (const spriteName in jsonsMap) {
+                result[spriteName] = {};
 
-                const imageData = browser.getImageData(imagesMap[baseURL]);
-                const json = jsonsMap[baseURL];
+                const imageData = browser.getImageData(imagesMap[spriteName]);
+                const json = jsonsMap[spriteName];
 
                 for (const id in json) {
                     const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
                     const data = new RGBAImage({width, height});
                     RGBAImage.copy(imageData, data, {x, y}, {x: 0, y: 0}, {width, height});
-                    result[baseURL][id] = {data, pixelRatio, sdf, stretchX, stretchY, content};
+                    result[spriteName][id] = {data, pixelRatio, sdf, stretchX, stretchY, content};
                 }
             }
 

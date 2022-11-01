@@ -43,7 +43,7 @@ var sourceData = {
     }, {
         'type': 'Feature',
         'properties': {
-            'name': 'Point A',
+            'name': 'sprite1/alcohol',
             'featureclass': 'base'
         },
         'geometry': {
@@ -73,17 +73,6 @@ var sourceData = {
             'coordinates': [0.03, 52]
         },
         'id': 165
-    }, {
-        'type': 'Feature',
-        'properties': {
-            'name': 'Point D',
-            'featureclass': 'base'
-        },
-        'geometry': {
-            'type': 'Point',
-            'coordinates': [0.04, 52]
-        },
-        'id': 166
     }]
 };
 
@@ -99,7 +88,6 @@ map.on('load', function () {
         'source': 'places',
         'filter': ['!=', ['get', 'featureclass'], 'base'],
         'layout': {
-            'text-overlap': 'never',
             'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
             'text-field': ['get', 'name'],
             'text-offset': [1.2, 1.4],
@@ -118,7 +106,7 @@ map.on('load', function () {
         'filter': ['!=', ['get', 'featureclass'], 'base'],
         'layout': {
             'icon-overlap': 'cooperative',
-            'icon-image': 'http://localhost:9966/test/debug-pages/sprite2airport',
+            'icon-image': 'sprite2:airport',
             'icon-padding': 0
         }
     });
@@ -130,7 +118,7 @@ map.on('load', function () {
         'filter': ['==', ['get', 'featureclass'], 'base'],
         'layout': {
             'icon-overlap': 'cooperative',
-            'icon-image': 'http://localhost:9966/test/debug-pages/sprite2airport',
+            'icon-image': 'sprite1:alcohol',
             'icon-padding': 0
         }
     });
