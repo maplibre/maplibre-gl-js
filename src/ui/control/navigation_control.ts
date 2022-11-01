@@ -43,7 +43,7 @@ class NavigationControl implements IControl {
     _compassIcon: HTMLElement;
     _handler: MouseRotateWrapper;
 
-    constructor(options: NavigationOptions) {
+    constructor(options?: NavigationOptions) {
         this.options = extend({}, defaultOptions, options);
 
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Test page for switching fill-patter or fill-extrusion-pattern</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <link href='../../dist/maplibre-gl.css' rel='stylesheet' />
+    <style>
+        body {
+            padding: 0px 5px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        #map {
+            width: 1024px;
+            height: 768px;
+        }
+
+        div {
+            padding: 10px 0;
+        }
+
+        span {
+            padding: 0 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <span>Please select script version:</span>
+        <span>
+            <input type="radio" id="before" name="scriptVersion" onclick="reloadPage()" value="before">
+            <label for="before">Before (2.4.0)</label>
+        </span>
+        <span>
+            <input type="radio" id="current" name="scriptVersion" onclick="reloadPage()" value="current">
+            <label for="current">Current</label>
+        </span>
+    </div>
+    <div id="map"></div>
+    <div>
+        <span>Please select test case:</span>
+        <span>
+            <input type="radio" id="polygon" name="testcase" onclick="refreshTest()" value="polygon" checked>
+            <label for="polygon">Polygon</label>
+        </span>
+        <span>
+            <input type="radio" id="polygonex" name="testcase" onclick="refreshTest()" value="polygonex">
+            <label for="polygonex">Extruded Polygon</label>
+        </span>
+    </div>
+    <div>
+        <ul>
+            <li><b>Setup:</b> patterns are created with pixelRatio of 2. Select either Polygon or Extruded Polygon</li>
+            <li><b>Expected:</b> Upon clicking the Switch Pattern button, expect fill-pattern to be switched
+                in place without shifting</li>
+            <li><b>Actual:</b> in 2.4.0, several transitioning frames are corrupted, which are fixed in current version.</li>
+        </ul>
+        <p><button onclick="switchPattern()">Switch Pattern</button></p>
+    </div>
+    <script>
+        let map;
+
+        // the one and only test layerId
+        const testLayerId = 'testLayer';
+
+        // the one and only test sourceId
+        const testSourceId = 'testSource';
+
+        // use two existing assets from render tests
+        const pattern0Path = '../integration/render/tests/circle-blur/default/expected.png';
+        const pattern1Path = '../integration/render/tests/circle-blur/blending/expected.png';
+        let pattern0Image;
+        let pattern1Image;
+        let patternIndex = 0;
+
+        const polygonData = {
+            'type': 'Feature',
+            'properties': {},
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [
+                    [
+                        [-50, -50],
+                        [-50, 50],
+                        [50, 50],
+                        [50, -50],
+                        [-50, -50]
+                    ]
+                ]
+            }
+        };
+
+        // ordinary polygon
+        const polygonLayerSpec = {
+            'id': testLayerId,
+            'type': 'fill',
+            'source': testSourceId,
+            'paint': {
+                'fill-pattern': 'pattern0'
+            }
+        };
+
+        // Extrude polygons
+        const polygonExLayerSpec = {
+            'id': testLayerId,
+            'type': 'fill-extrusion',
+            'source': testSourceId,
+            'paint': {
+                'fill-extrusion-pattern': 'pattern0',
+                'fill-extrusion-height': 1000,
+                'fill-extrusion-base': 0
+            }
+        };
+
+        function getCurrentTestCase() {
+            return document.querySelector('input[name="testcase"]:checked').value;
+        }
+
+        function addOrUpdateDataSource() {
+            var testSource = map.getSource(testSourceId);
+            if (testSource) {
+                testSource.setData(polygonData);
+            } else {
+                map.addSource(testSourceId, {
+                    'type': 'geojson',
+                    'data': polygonData
+                });
+            }
+        }
+
+        function addOrUpdateLayer(pattern0Image, pattern1Image) {
+            // add both images to map at pixelRation of 2 (intentional)
+            if (!map.hasImage('pattern0')) {
+                map.addImage('pattern0', pattern0Image, {pixelRatio: 2});
+            }
+            if (!map.hasImage('pattern1')) {
+                map.addImage('pattern1', pattern1Image, {pixelRatio: 2});
+            }
+
+            // remove it if already there
+            if (map.getLayer(testLayerId)) {
+                map.removeLayer(testLayerId);
+            }
+
+            if (getCurrentTestCase() === 'polygon') {
+                map.addLayer(polygonLayerSpec);
+            } else {
+                map.addLayer(polygonExLayerSpec);
+            }
+            patternIndex = 0;
+        }
+
+        function switchPattern() {
+            if (patternIndex === 0) {
+                patternIndex = 1;
+            } else {
+                patternIndex = 0;
+            }
+
+            if (getCurrentTestCase() === 'polygon') {
+                map.setPaintProperty(testLayerId, 'fill-pattern', 'pattern' + patternIndex);
+            } else {
+                map.setPaintProperty(testLayerId, 'fill-extrusion-pattern', 'pattern' + patternIndex);
+            }
+        }
+
+        function refreshTest() {
+            addOrUpdateDataSource();
+            addOrUpdateLayer(pattern0Image, pattern1Image);
+        }
+
+        function startTest() {
+            // eslint-disable-next-line handle-callback-err
+            function pattern0Loaded(err, img0) {
+
+                // Throw an error if something went wrong
+                if (err) {
+                    throw err;
+                }
+
+                pattern0Image = img0;
+
+                // load pattern1
+                map.loadImage(pattern1Path,
+                    function (err, img1) {
+                        // Throw an error if something went wrong
+                        if (err) {
+                            throw err;
+                        }
+
+                        pattern1Image = img1;
+                        refreshTest();
+                    }
+                );
+            }
+            map.loadImage(pattern0Path, pattern0Loaded);
+        }
+
+        function startLoadingMap() {
+            // original example:
+            // https://maplibre.org/maplibre-gl-js-docs/example/fill-pattern/
+            map = new maplibregl.Map({
+                fadeDuration: 0,
+                container: 'map',
+                style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                zoom: 1
+            });
+            map.on('load', startTest);
+        }
+
+        // when script selection changes, reload the map
+        function reloadPage() {
+            const selectedVersion = document.querySelector('input[name="scriptVersion"]:checked').value;
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('version', selectedVersion);
+            window.location = currentUrl.toString();
+        }
+
+        // parse url and update UX
+        const currentUrl = new URL(window.location);
+        const version = currentUrl.searchParams.get('version');
+        let scriptUrl;
+
+        if (version === 'current') {
+            document.getElementById('current').checked = true;
+            scriptUrl = '../../dist/maplibre-gl-dev.js';
+        } else {
+            document.getElementById('before').checked = true;
+            scriptUrl = 'https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js';
+        }
+
+        const scriptElement = document.createElement('script');
+        scriptElement.setAttribute('src', scriptUrl);
+        scriptElement.onload = startLoadingMap;
+        document.body.appendChild(scriptElement);
+
+    </script>
+
+</body>
+
+</html>
