@@ -22,7 +22,7 @@ var style = window.multispritedemotiles;
 var map = window.map = new maplibregl.Map({
     container: 'map',
     zoom: 5,
-    center: [0, 52],
+    center: [0.02, 52],
     style,
     hash: style
 });
@@ -32,7 +32,7 @@ var sourceData = {
     'features': [{
         'type': 'Feature',
         'properties': {
-            'name': 'Dennis',
+            'name': 'aprite2/aeroport',
             'featureclass': 'top'
         },
         'geometry': {
@@ -48,7 +48,7 @@ var sourceData = {
         },
         'geometry': {
             'type': 'Point',
-            'coordinates': [0, 52]
+            'coordinates': [0.01, 52]
         },
         'id': 163
     }, {
@@ -59,7 +59,7 @@ var sourceData = {
         },
         'geometry': {
             'type': 'Point',
-            'coordinates': [0, 52]
+            'coordinates': [0.02, 52]
         },
         'id': 164
     }, {
@@ -70,7 +70,7 @@ var sourceData = {
         },
         'geometry': {
             'type': 'Point',
-            'coordinates': [0, 52]
+            'coordinates': [0.03, 52]
         },
         'id': 165
     }, {
@@ -81,7 +81,7 @@ var sourceData = {
         },
         'geometry': {
             'type': 'Point',
-            'coordinates': [0, 52]
+            'coordinates': [0.04, 52]
         },
         'id': 166
     }]
@@ -118,7 +118,7 @@ map.on('load', function () {
         'filter': ['!=', ['get', 'featureclass'], 'base'],
         'layout': {
             'icon-overlap': 'cooperative',
-            'icon-image': 'airport',
+            'icon-image': 'http://localhost:9966/test/debug-pages/sprite2airport',
             'icon-padding': 0
         }
     });
@@ -130,7 +130,7 @@ map.on('load', function () {
         'filter': ['==', ['get', 'featureclass'], 'base'],
         'layout': {
             'icon-overlap': 'cooperative',
-            'icon-image': 'airport',
+            'icon-image': 'http://localhost:9966/test/debug-pages/sprite2airport',
             'icon-padding': 0
         }
     });

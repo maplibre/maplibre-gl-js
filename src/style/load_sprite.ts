@@ -14,39 +14,58 @@ export default function loadSprite(
     pixelRatio: number,
     callback: Callback<{[_: string]: StyleImage}>
 ): Cancelable {
-    let json: any, image, error;
+    let error;
     const format = pixelRatio > 1 ? '@2x' : '';
 
-    let jsonRequest = getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURL, format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
-        jsonRequest = null;
-        if (!error) {
-            error = err;
-            json = data;
-            maybeComplete();
-        }
-    });
+    const baseURLs = baseURL.split('\n');
+    const jsonRequests: Cancelable[] = [];
+    const imageRequests: Cancelable[] = [];
 
-    let imageRequest = getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURL, format, '.png'), ResourceType.SpriteImage), (err, img) => {
-        imageRequest = null;
-        if (!error) {
-            error = err;
-            image = img;
-            maybeComplete();
-        }
-    });
+    const jsonsMap: {[baseURL: string]: any} = {};
+    const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
+
+    for (const baseURL in baseURLs) {
+        const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURLs[baseURL], format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
+            jsonRequests.splice(newJsonRequestsLength, 1);
+            if (!error) {
+                error = err;
+                jsonsMap[baseURLs[baseURL]] = data;
+                maybeComplete();
+            }
+        }));
+
+        const newImageRequestsLength = imageRequests.push(getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURLs[baseURL], format, '.png'), ResourceType.SpriteImage), (err, img) => {
+            imageRequests.splice(newImageRequestsLength, 1);
+            if (!error) {
+                error = err;
+                imagesMap[baseURLs[baseURL]] = img;
+                maybeComplete();
+            }
+        }));
+    }
 
     function maybeComplete() {
+        const jsonsLength = Object.values(jsonsMap).length;
+        const imagesLength = Object.values(imagesMap).length;
+
         if (error) {
             callback(error);
-        } else if (json && image) {
-            const imageData = browser.getImageData(image);
+        } else if (baseURLs.length === jsonsLength && jsonsLength === imagesLength) {
+
             const result = {};
 
-            for (const id in json) {
-                const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
-                const data = new RGBAImage({width, height});
-                RGBAImage.copy(imageData, data, {x, y}, {x: 0, y: 0}, {width, height});
-                result[id] = {data, pixelRatio, sdf, stretchX, stretchY, content};
+            for (const baseURL in jsonsMap) {
+                result[baseURL] = {};
+
+                const imageData = browser.getImageData(imagesMap[baseURL]);
+                const json = jsonsMap[baseURL];
+
+                for (const id in json) {
+                    const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
+                    const data = new RGBAImage({width, height});
+                    RGBAImage.copy(imageData, data, {x, y}, {x: 0, y: 0}, {width, height});
+                    result[baseURL][id] = {data, pixelRatio, sdf, stretchX, stretchY, content};
+                }
             }
 
             callback(null, result);
@@ -55,14 +74,14 @@ export default function loadSprite(
 
     return {
         cancel() {
-            if (jsonRequest) {
-                jsonRequest.cancel();
-                jsonRequest = null;
-            }
-            if (imageRequest) {
-                imageRequest.cancel();
-                imageRequest = null;
-            }
+            // if (jsonRequest) {
+            //     jsonRequest.cancel();
+            //     jsonRequest = null;
+            // }
+            // if (imageRequest) {
+            //     imageRequest.cancel();
+            //     imageRequest = null;
+            // }
         }
     };
 }

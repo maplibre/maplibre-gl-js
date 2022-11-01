@@ -337,8 +337,14 @@ class Style extends Evented {
             if (err) {
                 this.fire(new ErrorEvent(err));
             } else if (images) {
-                for (const id in images) {
-                    this.imageManager.addImage(id, images[id]);
+                for (const spriteImage in images) {
+                    for (const id in images[spriteImage]) {
+                        try {
+                            this.imageManager.addImage(spriteImage + id, images[spriteImage][id]);
+                        } catch  {
+                            //
+                        }
+                    }
                 }
             }
 
