@@ -336,10 +336,8 @@ class Style extends Evented {
         this._spriteRequest = loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
             this._spriteRequest = null;
             if (err) {
-                console.log(err);
                 this.fire(new ErrorEvent(err));
             } else if (images) {
-                console.log(images);
                 for (const spriteName in images) {
                     for (const id in images[spriteName]) {
                         try {
