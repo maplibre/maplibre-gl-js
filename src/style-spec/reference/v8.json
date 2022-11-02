@@ -77,9 +77,9 @@
       }
     },
     "sprite": {
-      "type": "string",
-      "doc": "A base URL for retrieving the sprite image and metadata. The extensions `.png`, `.json` and scale factor `@2x.png` will be automatically appended. This property is required if any layer uses the `background-pattern`, `fill-pattern`, `line-pattern`, `fill-extrusion-pattern`, or `icon-image` properties. The URL must be absolute, containing the [scheme, authority and path components](https://en.wikipedia.org/wiki/URL#Syntax).",
-      "example": "mapbox://sprites/mapbox/bright-v8"
+      "type": "sprite",
+      "doc": "TO FILL",
+      "example": "[{id: 'default', url: 'mapbox://sprites/mapbox/bright-v8'}]"
     },
     "glyphs": {
       "type": "string",
