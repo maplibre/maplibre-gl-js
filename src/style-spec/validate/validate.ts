@@ -45,10 +45,7 @@ const VALIDATORS = {
     'formatted': validateFormatted,
     'resolvedImage': validateImage,
     'padding': validatePadding,
-    // 'sprite': validateSprite,
-    // 'sprite_single': validateSprite,
-    // 'sprite_multi': validateSprite,
-    // 'sprite_multi_entry': validateSprite
+    'sprite': validateSprite,
 };
 
 // Main recursive validation function. Tracks:

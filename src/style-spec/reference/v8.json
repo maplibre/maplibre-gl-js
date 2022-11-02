@@ -505,30 +505,6 @@
       }
     }
   },
-  "sprite": {
-    "type": "enum",
-    "values": [
-      "sprite_single",
-      "sprite_multi"
-    ]
-  },
-  "sprite_single": {
-    "type": "string"
-  },
-  "sprite_multi": {
-    "type": "array",
-    "value": "sprite_multi_entry"
-  },
-  "sprite_multi_entry": {
-    "id": {
-      "type": "string",
-      "required": true
-    },
-    "url": {
-      "type": "string",
-      "required": true
-    }
-  },
   "layer": {
     "id": {
       "type": "string",

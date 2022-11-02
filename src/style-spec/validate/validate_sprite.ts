@@ -1,43 +1,41 @@
-import ValidationError from '../error/validation_error';
-import getType from '../util/get_type';
+import validateObject from './validate_object';
 import validateString from './validate_string';
-import validateSpec from './validate';
 
 export default function validateSprite(options) {
-    const errors = [];
+    let errors = [];
 
     const sprite = options.value;
     const key = options.key;
     const style = options.style;
     const styleSpec = options.styleSpec;
 
-    console.log('HERE');
-    console.log(sprite);
-    console.log(key);
-    console.log(style);
-    console.log(styleSpec);
+    if (Array.isArray(sprite)) {
+        for (const pair of sprite) {
+            const pairSpec = {
+                id: {
+                    type: 'string',
+                    required: true,
+                },
+                url: {
+                    type: 'string',
+                    required: true,
+                }
+            };
 
-    return validateSpec({
-        key: `${key}.type`,
-        value: sprite,
-        valueSpec: styleSpec.sprite,
-        style: options.style,
-        styleSpec: options.styleSpec,
-        object: sprite,
-        objectKey: 'type'
-    });
+            errors = errors.concat(validateObject({
+                key,
+                value: pair,
+                valueSpec: pairSpec,
+                style,
+                styleSpec
+            }));
+        }
 
-    // if (sprite === 'array') {
-    //
-    //     // const sprite = Sprite.parse(value);
-    //     // if (!sprite) errors.push(new ValidationError(key, value, 'bad sprite'));
-    //
-    //     return errors;
-    // } else {
-    //     return validateString({
-    //         key,
-    //         sprite,
-    //         valueSpec: {}
-    //     });
-    // }
+        return errors;
+    } else {
+        return validateString({
+            key,
+            value: sprite
+        });
+    }
 }
