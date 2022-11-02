@@ -340,10 +340,11 @@ class Style extends Evented {
                 for (const spriteName in images) {
                     for (const id in images[spriteName]) {
                         try {
-                            // TODO: if a single URL, don't prefix
-                            this.imageManager.addImage(`${spriteName}:${id}`, images[spriteName][id]);
-                        } catch  {
-                            // TODO: think what to do with duplicates
+                            // don't prefix images of the "default" sprite
+                            const imageId = spriteName === 'default' ? id : `${spriteName}:${id}`;
+                            this.imageManager.addImage(imageId, images[spriteName][id]);
+                        } catch (err) {
+                            // what to do with the duplicates? This empty catch-clause simply ignores them
                         }
                     }
                 }

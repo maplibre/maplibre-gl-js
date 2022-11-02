@@ -25,8 +25,20 @@ export default function loadSprite(
     const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
 
     for (const spriteNameAndBaseURL of baseURLs) {
-        // TODO: if something's missing in the resulting array, emit an error
-        const [spriteName, baseURL] = spriteNameAndBaseURL.split('\t');
+        let [spriteName, baseURL] = spriteNameAndBaseURL.split('\t');
+
+        if (!baseURL) { // meaning that in fact there's the sprite name missing, because if there were no "\t" in the string, then .split will return `["something", undefined]`
+            if (baseURLs.length === 1) {
+                // treat what's inside the string the base URL
+                baseURL = spriteName;
+                // if there's no sprite name provided for the sprite url, check whether there's a single url. If so, use the "default" prefix
+                spriteName = 'default';
+            } else {
+                // if no, then it's an unrecoverable error
+                callback(new Error(`No sprite name provided for the "${spriteName}" url!`));
+                break;
+            }
+        }
 
         const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURL, format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
             jsonRequests.splice(newJsonRequestsLength, 1);
