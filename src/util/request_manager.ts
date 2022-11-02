@@ -41,7 +41,6 @@ export class RequestManager {
 const urlRe = /^(\w+):\/\/([^/?]*)(\/[^?]+)?\??(.+)?/;
 
 function parseUrl(url: string): UrlObject {
-    console.log(url);
     const parts = url.match(urlRe);
     if (!parts) {
         throw new Error(`Unable to parse URL "${url}"`);
