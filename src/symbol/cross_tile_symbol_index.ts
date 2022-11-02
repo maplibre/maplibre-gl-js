@@ -26,7 +26,7 @@ import type Tile from '../source/tile';
 // Round anchor positions to roughly 4 pixel grid
 const roundingFactor = 512 / EXTENT / 2;
 
-export const KDBUSH_THRESHHOLD = 32;
+export const KDBUSH_THRESHHOLD = 128;
 
 class TileLayerIndex {
     symbolsByKey: Record<number, {
