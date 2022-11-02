@@ -228,7 +228,7 @@ function mockXhr() {
                 } else {
                     req.response = body;
                 }
-                req.status = req.response.length > 0 ? 200 : 204;
+                req.setStatus(req.response.length > 0 ? 200 : 204);
                 req.onload(undefined as any);
             } catch (ex) {
                 req.status = 404; // file not found
