@@ -89,14 +89,19 @@ export default function loadSprite(
 
     return {
         cancel() {
-            // if (jsonRequest) {
-            //     jsonRequest.cancel();
-            //     jsonRequest = null;
-            // }
-            // if (imageRequest) {
-            //     imageRequest.cancel();
-            //     imageRequest = null;
-            // }
+            if (jsonRequests.length) {
+                for (const jsonRequest of jsonRequests) {
+                    jsonRequest.cancel();
+                    jsonRequests.splice(jsonRequests.indexOf(jsonRequest), 1);
+                }
+            }
+
+            if (imageRequests.length) {
+                for (const imageRequest of imageRequests) {
+                    imageRequest.cancel();
+                    imageRequests.splice(imageRequests.indexOf(imageRequest), 1);
+                }
+            }
         }
     };
 }
