@@ -26,7 +26,7 @@ import type Tile from '../source/tile';
 // Round anchor positions to roughly 4 pixel grid
 const roundingFactor = 512 / EXTENT / 2;
 
-const KDBUSH_THRESHHOLD = 10;
+export const KDBUSH_THRESHHOLD = 32;
 
 class TileLayerIndex {
     symbolsByKey: Record<number, {
@@ -103,7 +103,7 @@ class TileLayerIndex {
 
             // once we get too many symbols for a given key, it becomes much faster to index it before queries
             if (entry.positions && entry.positions.length > KDBUSH_THRESHHOLD) {
-                const index = new KDBush(entry.positions, v => v.x, v => v.y, 16, Uint16Array as any);
+                const index = new KDBush(entry.positions, v => v.x, v => v.y, 16, Uint16Array);
                 // clear all references to the original positions data
                 delete index.points;
                 delete entry.positions;

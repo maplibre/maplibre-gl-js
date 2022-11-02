@@ -59,7 +59,7 @@
     "@types/glob": "^8.0.0",
     "@types/jest": "^28.1.7",
     "@types/jsdom": "^20.0.0",
-    "@types/kdbush": "^3.0.1",
+    "@types/kdbush": "^3.0.2",
     "@types/minimist": "^1.2.2",
     "@types/murmurhash-js": "^1.0.3",
     "@types/nise": "^1.4.0",
