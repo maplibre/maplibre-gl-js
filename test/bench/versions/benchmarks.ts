@@ -20,6 +20,7 @@ import FilterCreate from '../benchmarks/filter_create';
 import FilterEvaluate from '../benchmarks/filter_evaluate';
 import CustomLayer from '../benchmarks/customlayer';
 import MapIdle from '../benchmarks/map_idle';
+import GetImageData from '../benchmarks/get_image_data';
 
 import getWorkerPool from '../../../src/util/global_worker_pool';
 
@@ -74,6 +75,7 @@ register('FilterEvaluate', new FilterEvaluate());
 register('HillshadeLoad', new HillshadeLoad());
 register('CustomLayer', new CustomLayer());
 register('MapIdle', new MapIdle());
+register('GetImageData', new GetImageData());
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits
