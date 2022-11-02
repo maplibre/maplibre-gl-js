@@ -3,57 +3,43 @@ import {getJSON, getImage, ResourceType} from '../util/ajax';
 import browser from '../util/browser';
 import {RGBAImage} from '../util/image';
 
+import type {SpriteSpecification} from '../style-spec/types.g';
 import type {StyleImage} from './style_image';
 import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 
 export default function loadSprite(
-    baseURL: string,
+    originalSprite: SpriteSpecification,
     requestManager: RequestManager,
     pixelRatio: number,
     callback: Callback<{[spriteName: string]: {[id: string]: StyleImage}}>
 ): Cancelable {
-    let error;
+    const sprite: Exclude<SpriteSpecification, string> = typeof originalSprite === 'string' ? [{id: 'default', url: originalSprite}] : originalSprite;
     const format = pixelRatio > 1 ? '@2x' : '';
 
-    const baseURLs = baseURL.split('\n');
+    let error;
     const jsonRequests: Cancelable[] = [];
     const imageRequests: Cancelable[] = [];
 
     const jsonsMap: {[baseURL: string]: any} = {};
     const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
 
-    for (const spriteNameAndBaseURL of baseURLs) {
-        let [spriteName, baseURL] = spriteNameAndBaseURL.split('\t');
-
-        if (!baseURL) { // meaning that in fact there's the sprite name missing, because if there were no "\t" in the string, then .split will return `["something", undefined]`
-            if (baseURLs.length === 1) {
-                // treat what's inside the string the base URL
-                baseURL = spriteName;
-                // if there's no sprite name provided for the sprite url, check whether there's a single url. If so, use the "default" prefix
-                spriteName = 'default';
-            } else {
-                // if no, then it's an unrecoverable error
-                callback(new Error(`No sprite name provided for the "${spriteName}" url!`));
-                break;
-            }
-        }
-
-        const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURL, format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
+    for (const {id, url} of sprite) {
+        const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
             jsonRequests.splice(newJsonRequestsLength, 1);
             if (!error) {
                 error = err;
-                jsonsMap[spriteName] = data;
+                jsonsMap[id] = data;
                 maybeComplete();
             }
         }));
 
-        const newImageRequestsLength = imageRequests.push(getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURL, format, '.png'), ResourceType.SpriteImage), (err, img) => {
+        const newImageRequestsLength = imageRequests.push(getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage), (err, img) => {
             imageRequests.splice(newImageRequestsLength, 1);
             if (!error) {
                 error = err;
-                imagesMap[spriteName] = img;
+                imagesMap[id] = img;
                 maybeComplete();
             }
         }));
@@ -65,8 +51,7 @@ export default function loadSprite(
 
         if (error) {
             callback(error);
-        } else if (baseURLs.length === jsonsLength && jsonsLength === imagesLength) {
-
+        } else if (sprite.length === jsonsLength && jsonsLength === imagesLength) {
             const result = {};
 
             for (const spriteName in jsonsMap) {

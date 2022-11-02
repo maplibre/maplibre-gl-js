@@ -184,7 +184,6 @@ import {
 
 import type Color from '../../style-spec/util/color';
 import type Padding from '../../style-spec/util/padding';
-import type Sprite from '../../style-spec/util/sprite';
 
 import type Formatted from '../../style-spec/expression/types/formatted';
 

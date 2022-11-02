@@ -56,6 +56,7 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
+    SpriteSpecification,
 } from '../style-spec/types.g';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
@@ -331,12 +332,14 @@ class Style extends Evented {
         this.fire(new Event('style.load'));
     }
 
-    _loadSprite(url: string) {
-        this._spriteRequest = loadSprite(url, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
+    _loadSprite(sprite: SpriteSpecification) {
+        this._spriteRequest = loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
             this._spriteRequest = null;
             if (err) {
+                console.log(err);
                 this.fire(new ErrorEvent(err));
             } else if (images) {
+                console.log(images);
                 for (const spriteName in images) {
                     for (const id in images[spriteName]) {
                         try {

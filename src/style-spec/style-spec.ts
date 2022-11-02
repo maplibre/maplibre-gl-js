@@ -79,6 +79,7 @@ import featureFilter, {isExpressionFilter} from './feature_filter';
 import convertFilter from './feature_filter/convert';
 import Color from './util/color';
 import Padding from './util/padding';
+
 import {createFunction, isFunction} from './function';
 import convertFunction from './function/convert';
 import {eachSource, eachLayer, eachProperty} from './visit';

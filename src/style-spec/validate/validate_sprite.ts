@@ -1,5 +1,5 @@
+import ValidationError from '../error/validation_error';
 import getType from '../util/get_type';
-import validate from './validate';
 import validateString from './validate_string';
 
 export default function validateSprite(options) {
@@ -7,21 +7,13 @@ export default function validateSprite(options) {
     const value = options.value;
     const type = getType(value);
 
-    console.log(options);
-
     if (type === 'array') {
-        const arrayElementSpec = {
-            type: 'number'
-        };
 
-        let errors = [];
-        for (let i = 0; i < value.length; i++) {
-            errors = errors.concat(validate({
-                key: `${key}[${i}]`,
-                value: value[i],
-                valueSpec: arrayElementSpec
-            }));
-        }
+        const errors = [];
+
+        // const sprite = Sprite.parse(value);
+        // if (!sprite) errors.push(new ValidationError(key, value, 'bad sprite'));
+
         return errors;
     } else {
         return validateString({
