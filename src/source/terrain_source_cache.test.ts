@@ -13,7 +13,7 @@ import {OverscaledTileID} from './tile_id';
 import Tile from './tile';
 import DEMData from '../data/dem_data';
 
-const context = new Context(gl(10, 10));
+const context = new Context(gl(10, 10) as any);
 const transform = new Transform();
 
 class StubMap extends Evented {

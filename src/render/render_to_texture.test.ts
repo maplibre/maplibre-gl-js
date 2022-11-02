@@ -62,7 +62,7 @@ describe('render to texture', () => {
     let layersDrawn = 0;
     const painter = {
         layersDrawn: 0,
-        context: new Context(gl(1, 1)),
+        context: new Context(gl(1, 1) as any),
         transform: {zoom: 10, calculatePosMatrix: () => {}},
         colorModeForRenderPass: () => ColorMode.alphaBlended,
         useProgram: () => { return {draw: () => { layersDrawn++; }}; },
