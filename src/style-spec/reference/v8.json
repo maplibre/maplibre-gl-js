@@ -78,7 +78,7 @@
     },
     "sprite": {
       "type": "sprite",
-      "doc": "TO FILL",
+      "doc": "An array of `{id: 'my-sprite', url: 'https://example.com/sprite'} object. Each object should represent a unique URL to load a sprite from and and a unique ID to use as a prefix when referencing images from that sprite (i.e. 'my-sprite:image'). If the `id` field is equal to 'default', the prefix is omitted (just 'image' instead of 'default:image'). All the IDs and URLs must be unique. For backwards compatibility, instead of an array, one can also provide a single string that represent a url to load the sprite from.",
       "example": "[{id: 'default', url: 'mapbox://sprites/mapbox/bright-v8'}]"
     },
     "glyphs": {

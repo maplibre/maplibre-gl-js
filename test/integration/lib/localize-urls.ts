@@ -44,7 +44,7 @@ function localizeURL(url: string, port: number) {
 }
 
 function localizeMapboxSpriteURL(url: string, port: number) {
-    return url.replace(/^mapbox:\/\//, `http://localhost:${port}/`);
+    // return url.replace(/^mapbox:\/\//, `http://localhost:${port}/`);
 }
 
 function localizeMapboxFontsURL(url: string, port: number) {
@@ -86,8 +86,8 @@ function localizeStyleURLs(style: StyleSpecification, port: number) {
     }
 
     if (style.sprite) {
-        style.sprite = localizeMapboxSpriteURL(style.sprite, port);
-        style.sprite = localizeURL(style.sprite, port);
+        // style.sprite = localizeMapboxSpriteURL(style.sprite, port);
+        // style.sprite = localizeURL(style.sprite, port);
     }
 
     if (style.glyphs) {
