@@ -1,3 +1,5 @@
+import {TileBitmask} from '../util/tile_bitmask';
+
 export type GeoJSONFeatureId = number | string;
 export interface GeoJSONSourceDiff {
     removeAll?: boolean;
@@ -70,13 +72,16 @@ export function toUpdateable(data: UpdateableGeoJSON, promoteId?: string) {
 }
 
 // mutates updateable
-export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Feature>, diff: GeoJSONSourceDiff, promoteId?: string): void {
+export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Feature>, diff: GeoJSONSourceDiff, invalidated: TileBitmask, promoteId?: string): void {
     if (diff.removeAll) {
+        invalidated.mark(0, 0, 0);
         updateable.clear();
     }
 
     if (diff.remove) {
         for (const id of diff.remove) {
+            const existing = updateable.get(id);
+            markInvalidated(invalidated, existing);
             updateable.delete(id);
         }
     }
@@ -86,6 +91,10 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
             const id = getFeatureId(feature, promoteId);
 
             if (id != null) {
+                // just in case someone uses the add path as an update, invalidate any preexisting feature
+                markInvalidated(invalidated, updateable.get(id));
+
+                markInvalidated(invalidated, feature);
                 updateable.set(id, feature);
             }
         }
@@ -98,6 +107,9 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
             if (feature == null) {
                 continue;
             }
+
+            // invalidate the original feature
+            markInvalidated(invalidated, feature);
 
             // be careful to clone the feature and/or properties objects to avoid mutating our input
             const cloneFeature = update.newGeometry || update.removeAllProperties;
@@ -112,6 +124,8 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
             }
 
             if (update.newGeometry) {
+                // need to clear the bbox when we change the geometry, it'll be recalculated on demand
+                delete feature.bbox;
                 feature.geometry = update.newGeometry;
             }
 
@@ -130,6 +144,105 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
                     feature.properties[key] = value;
                 }
             }
+
+            // invalidate the updated feature
+            markInvalidated(invalidated, feature);
         }
     }
+}
+
+function markInvalidated(invalidated: TileBitmask, feature: GeoJSON.Feature | undefined) {
+    if (!feature || !feature.geometry) {
+        return;
+    }
+
+    let bbox = feature.bbox;
+    if (!bbox || bbox.length !== 4) {
+        if (bbox && bbox.length === 6) {
+            // downgrade a 3d -> 2d bbox
+            bbox = [bbox[0], bbox[1], bbox[3], bbox[4]];
+        } else {
+            // create a bbox from scratch
+            bbox = getBbox(feature.geometry);
+        }
+
+        // store off the bbox for reuse later
+        feature.bbox = bbox;
+    }
+
+    const [minX, minY, maxX, maxY] = bbox;
+    let minTileX = convertToTileCoord(minX);
+    let minTileY = convertToTileCoord(minY);
+    let maxTileX = convertToTileCoord(maxX);
+    let maxTileY = convertToTileCoord(maxY);
+    let zoom = TileBitmask.MaxZoom;
+    // zoom out here to avoid having to compact ancestors in the tile bitmask
+    while (zoom > 0 && maxTileX > 2 + minTileX && maxTileY > 2 + minTileY) {
+        zoom--;
+        minTileX >>= 1;
+        minTileY >>= 1;
+        maxTileX >>= 1;
+        maxTileY >>= 1;
+    }
+    for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+        for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+            invalidated.mark(zoom, tileX, tileY);
+        }
+    }
+}
+
+function convertToTileCoord(val: number): number {
+    const result = Math.floor(val * TileBitmask.MaxZoomTiles);
+    if (result < 0) {
+        return 0;
+    } else if (result > TileBitmask.MaxZoomTiles) {
+        return TileBitmask.MaxZoomTiles;
+    } else {
+        return result;
+    }
+}
+
+function getBbox(geometry: GeoJSON.Geometry, bbox: [number, number, number, number] = [Infinity, Infinity, -Infinity, -Infinity]): [number, number, number, number] {
+    switch (geometry.type) {
+        case 'Point':
+            updateBbox(bbox, geometry.coordinates);
+            break;
+        case 'LineString':
+        case 'MultiPoint':
+            for (const pos of geometry.coordinates) {
+                updateBbox(bbox, pos);
+            }
+            break;
+        case 'Polygon':
+        case 'MultiLineString':
+            for (const ring of geometry.coordinates) {
+                for (const pos of ring) {
+                    updateBbox(bbox, pos);
+                }
+            }
+            break;
+        case 'MultiPolygon':
+            for (const polygon of geometry.coordinates) {
+                for (const ring of polygon) {
+                    for (const pos of ring) {
+                        updateBbox(bbox, pos);
+                    }
+                }
+            }
+            break;
+        case 'GeometryCollection':
+            for (const geom of geometry.geometries) {
+                getBbox(geom, bbox);
+            }
+            break;
+    }
+
+    return bbox;
+}
+
+function updateBbox(bbox: [number, number, number, number], [x, y]: GeoJSON.Position) {
+    bbox[0] = Math.min(bbox[0], x);
+    bbox[1] = Math.min(bbox[1], y);
+    bbox[2] = Math.max(bbox[2], x);
+    bbox[3] = Math.max(bbox[3], y);
 }

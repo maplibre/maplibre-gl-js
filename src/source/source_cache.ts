@@ -22,6 +22,7 @@ import type {Callback} from '../types/callback';
 import type {SourceSpecification} from '../style-spec/types.g';
 import type {MapSourceDataEvent} from '../ui/events';
 import Terrain from '../render/terrain';
+import {TileBitmask} from '../util/tile_bitmask';
 
 /**
  * `SourceCache` is responsible for
@@ -81,7 +82,7 @@ class SourceCache extends Evented {
             // for sources with mutable data, this event fires when the underlying data
             // to a source is changed. (i.e. GeoJSONSource#setData and ImageSource#serCoordinates)
             if (this._sourceLoaded && !this._paused && e.dataType === 'source' && e.sourceDataType === 'content') {
-                this.reload();
+                this.reload(e.invalidated);
                 if (this.transform) {
                     this.update(this.transform, this.terrain);
                 }
@@ -230,16 +231,26 @@ class SourceCache extends Evented {
             !this._coveredTiles[id] && (symbolLayer || !this._tiles[id].holdingForFade());
     }
 
-    reload() {
+    reload(invalidated?: TileBitmask) {
         if (this._paused) {
             this._shouldReloadOnResume = true;
             return;
         }
 
-        this._cache.reset();
+        if (invalidated) {
+            this._cache.filter((tile) => !invalidated.isMarked(tile.tileID.canonical));
+            for (const i in this._tiles) {
+                const tile = this._tiles[i];
+                if (tile.state !== 'errored' && invalidated.isMarked(tile.tileID.canonical)) {
+                    this._reloadTile(i, 'reloading');
+                }
+            }
+        } else {
+            this._cache.reset();
 
-        for (const i in this._tiles) {
-            if (this._tiles[i].state !== 'errored') this._reloadTile(i, 'reloading');
+            for (const i in this._tiles) {
+                if (this._tiles[i].state !== 'errored') this._reloadTile(i, 'reloading');
+            }
         }
     }
 

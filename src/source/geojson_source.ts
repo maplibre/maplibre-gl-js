@@ -13,6 +13,7 @@ import type Actor from '../util/actor';
 import type {Callback} from '../types/callback';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types.g';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
+import {TileBitmask} from '../util/tile_bitmask';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: any;
@@ -294,7 +295,7 @@ class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            const data: any = {dataType: 'source'};
+            const data: any = {dataType: 'source', invalidated: result.invalidated ? TileBitmask.deserialize(result.invalidated) : undefined};
             if (this._collectResourceTiming && resourceTiming && resourceTiming.length > 0)
                 extend(data, {resourceTiming});
 

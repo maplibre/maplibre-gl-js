@@ -7,6 +7,7 @@ import {extend} from '../util/util';
 import type Map from './map';
 import type LngLat from '../geo/lng_lat';
 import {SourceSpecification} from '../style-spec/types.g';
+import { TileBitmask } from '../util/tile_bitmask';
 
 export type MapLayerMouseEvent = MapMouseEvent & { features?: GeoJSON.Feature[] };
 
@@ -48,6 +49,7 @@ export interface MapSourceDataEvent extends MapLibreEvent {
     sourceId: string;
     sourceDataType: MapSourceDataType;
     tile: any;
+    invalidated?: TileBitmask;
 }
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.

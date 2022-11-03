@@ -22,6 +22,7 @@ import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, GeoJSONFeatureId} from './geojson_source_diff';
+import {SerializedTileBitmask, TileBitmask} from '../util/tile_bitmask';
 
 export type LoadGeoJSONParameters = {
     request?: RequestParameters;
@@ -93,6 +94,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     _pendingRequest: Cancelable;
     _geoJSONIndex: GeoJSONIndex;
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
+    _invalidated: TileBitmask | undefined;
 
     /**
      * @param [loadGeoJSON] Optional method for custom loading/parsing of
@@ -140,6 +142,8 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
         this._pendingRequest = this.loadGeoJSON(params, (err?: Error | null, data?: any | null) => {
             delete this._pendingCallback;
             delete this._pendingRequest;
+            const invalidated = this._invalidated;
+            this._invalidated = undefined;
 
             if (err || !data) {
                 return callback(err);
@@ -167,7 +171,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
                 this.loaded = {};
 
-                const result = {} as { resourceTiming: any };
+                const result = {} as { resourceTiming: any; invalidated?: SerializedTileBitmask };
                 if (perf) {
                     const resourceTimingData = perf.finish();
                     // it's necessary to eval the result of getEntriesByName() here via parse/stringify
@@ -176,6 +180,9 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
                         result.resourceTiming = {};
                         result.resourceTiming[params.source] = JSON.parse(JSON.stringify(resourceTimingData));
                     }
+                }
+                if (invalidated) {
+                    result.invalidated = invalidated.serialize();
                 }
                 callback(null, result);
             }
@@ -242,7 +249,9 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
             }
         } else if (params.dataDiff) {
             if (this._dataUpdateable) {
-                applySourceDiff(this._dataUpdateable, params.dataDiff, promoteId);
+                const invalidated = new TileBitmask();
+                applySourceDiff(this._dataUpdateable, params.dataDiff, invalidated, promoteId);
+                this._invalidated = invalidated;
                 callback(null, {type: 'FeatureCollection', features: Array.from(this._dataUpdateable.values())});
             } else {
                 callback(new Error(`Cannot update existing geojson data in ${params.source}`));
