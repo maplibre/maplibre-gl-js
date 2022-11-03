@@ -28,12 +28,14 @@ const roundingFactor = 512 / EXTENT / 2;
 
 export const KDBUSH_THRESHHOLD = 128;
 
+interface SymbolsByKeyEntry {
+    index?: KDBush<never>;
+    positions?: {x: number; y: number}[];
+    crossTileIDs: number[];
+}
+
 class TileLayerIndex {
-    symbolsByKey: Record<number, {
-        index?: KDBush<unknown>;
-        positions?: {x: number; y: number}[];
-        crossTileIDs: Uint32Array;
-    }> = {};
+    _symbolsByKey: Record<number, SymbolsByKeyEntry> = {};
 
     constructor(public tileID: OverscaledTileID, symbolInstances: SymbolInstanceArray, public bucketInstanceId: number) {
         // group the symbolInstances by key
@@ -54,8 +56,19 @@ class TileLayerIndex {
         // index the SymbolInstances in this each bucket
         for (const [key, symbols] of symbolInstancesByKey) {
             const positions = symbols.map(symbolInstance => ({x: Math.floor(symbolInstance.anchorX * roundingFactor), y: Math.floor(symbolInstance.anchorY * roundingFactor)}));
-            const crossTileIDs = new Uint32Array(symbols.map(v => v.crossTileID));
-            this.symbolsByKey[key] = {positions, crossTileIDs};
+            const crossTileIDs = symbols.map(v => v.crossTileID);
+            const entry: SymbolsByKeyEntry = {positions, crossTileIDs};
+
+            // once we get too many symbols for a given key, it becomes much faster to index it before queries
+            if (entry.positions.length > KDBUSH_THRESHHOLD) {
+                const index = new KDBush(entry.positions, v => v.x, v => v.y, 16, Uint16Array) as KDBush<never>;
+                // clear all references to the original positions data
+                delete index.points;
+                delete entry.positions;
+                entry.index = index;
+            }
+
+            this._symbolsByKey[key] = entry;
         }
     }
 
@@ -65,7 +78,7 @@ class TileLayerIndex {
     // (2) converted to the z-scale of this TileLayerIndex
     // (3) down-sampled by "roundingFactor" from tile coordinate precision in order to be
     //     more tolerant of small differences between tiles.
-    getScaledCoordinates(symbolInstance: SymbolInstance, childTileID: OverscaledTileID) {
+    getScaledCoordinates(symbolInstance: SymbolInstance, childTileID: OverscaledTileID): {x: number; y: number} {
         const {x: localX, y: localY, z: localZ} = this.tileID.canonical;
         const {x, y, z} = childTileID.canonical;
 
@@ -95,19 +108,10 @@ class TileLayerIndex {
                 continue;
             }
 
-            const entry = this.symbolsByKey[symbolInstance.key];
+            const entry = this._symbolsByKey[symbolInstance.key];
             if (!entry) {
                 // No symbol with this key in this bucket
                 continue;
-            }
-
-            // once we get too many symbols for a given key, it becomes much faster to index it before queries
-            if (entry.positions && entry.positions.length > KDBUSH_THRESHHOLD) {
-                const index = new KDBush(entry.positions, v => v.x, v => v.y, 16, Uint16Array);
-                // clear all references to the original positions data
-                delete index.points;
-                delete entry.positions;
-                entry.index = index;
             }
 
             const scaledSymbolCoord = this.getScaledCoordinates(symbolInstance, newTileID);
@@ -153,6 +157,10 @@ class TileLayerIndex {
                 }
             }
         }
+    }
+
+    getCrossTileIDsLists() {
+        return Object.values(this._symbolsByKey).map(({crossTileIDs}) => crossTileIDs);
     }
 }
 
@@ -271,7 +279,7 @@ class CrossTileSymbolLayerIndex {
     }
 
     removeBucketCrossTileIDs(zoom: string | number, removedBucket: TileLayerIndex) {
-        for (const {crossTileIDs} of Object.values(removedBucket.symbolsByKey)) {
+        for (const crossTileIDs of removedBucket.getCrossTileIDsLists()) {
             for (const crossTileID of crossTileIDs) {
                 delete this.usedCrossTileIDs[zoom][crossTileID];
             }
