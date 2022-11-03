@@ -14,12 +14,12 @@ export default function validateSprite(options) {
         const allSpriteIds = [];
         const allSpriteURLs = [];
 
-        for (const pair of sprite) {
-            if (allSpriteIds.includes(pair.id)) errors.push(new ValidationError(key, sprite, `all the sprites' ids must be unique, but ${pair.id} is duplicated`));
-            allSpriteIds.push(pair.id);
+        for (const i in sprite) {
+            if (sprite[i].id && allSpriteIds.includes(sprite[i].id)) errors.push(new ValidationError(key, sprite, `all the sprites' ids must be unique, but ${sprite[i].id} is duplicated`));
+            allSpriteIds.push(sprite[i].id);
 
-            if (allSpriteURLs.includes(pair.url)) errors.push(new ValidationError(key, sprite, `all the sprites' URLs must be unique, but ${pair.url} is duplicated`));
-            allSpriteURLs.push(pair.url);
+            if (sprite[i].url && allSpriteURLs.includes(sprite[i].url)) errors.push(new ValidationError(key, sprite, `all the sprites' URLs must be unique, but ${sprite[i].url} is duplicated`));
+            allSpriteURLs.push(sprite[i].url);
 
             const pairSpec = {
                 id: {
@@ -33,8 +33,8 @@ export default function validateSprite(options) {
             };
 
             errors = errors.concat(validateObject({
-                key,
-                value: pair,
+                key: `${key}[${i}]`,
+                value: sprite[i],
                 valueSpec: pairSpec,
                 style,
                 styleSpec
