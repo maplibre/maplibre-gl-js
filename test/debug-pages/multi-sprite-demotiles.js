@@ -2,7 +2,10 @@ window.multispritedemotiles = {
     'id': 'light-demotiles',
     'name': 'MapLibre Light',
     'zoom': 0.8619833357855968,
-    'sprite': [{id: 'id', url: 'url'}, {id: 'id', url: 'url'}],
+    'sprite': [
+        {id: 'default', url: 'http://localhost:9966/test/debug-pages/sprite1'},
+        {id: 'sprite2', url: 'http://localhost:9966/test/debug-pages/sprite2'}
+    ],
     'pitch': 0,
     'center': [
         17.65431710431244,
