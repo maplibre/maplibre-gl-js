@@ -26,6 +26,7 @@ export default function loadSprite(
     const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
 
     for (const {id, url} of sprite) {
+        // eslint-disable-next-line no-loop-func
         const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
             jsonRequests.splice(newJsonRequestsLength, 1);
             if (!error) {
@@ -35,6 +36,7 @@ export default function loadSprite(
             }
         }));
 
+        // eslint-disable-next-line no-loop-func
         const newImageRequestsLength = imageRequests.push(getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage), (err, img) => {
             imageRequests.splice(newImageRequestsLength, 1);
             if (!error) {
