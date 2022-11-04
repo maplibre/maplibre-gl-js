@@ -81,7 +81,7 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
     if (diff.remove) {
         for (const id of diff.remove) {
             const existing = updateable.get(id);
-            markInvalidated(invalidated, existing);
+            markInvalidated(updateable, id, invalidated, existing);
             updateable.delete(id);
         }
     }
@@ -92,9 +92,9 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
 
             if (id != null) {
                 // just in case someone uses the add path as an update, invalidate any preexisting feature
-                markInvalidated(invalidated, updateable.get(id));
+                markInvalidated(updateable, id, invalidated, updateable.get(id));
 
-                markInvalidated(invalidated, feature);
+                markInvalidated(updateable, id, invalidated, feature);
                 updateable.set(id, feature);
             }
         }
@@ -109,7 +109,7 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
             }
 
             // invalidate the original feature
-            markInvalidated(invalidated, feature);
+            markInvalidated(updateable, update.id, invalidated, feature);
 
             // be careful to clone the feature and/or properties objects to avoid mutating our input
             const cloneFeature = update.newGeometry || update.removeAllProperties;
@@ -146,12 +146,12 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
             }
 
             // invalidate the updated feature
-            markInvalidated(invalidated, feature);
+            markInvalidated(updateable, update.id, invalidated, feature);
         }
     }
 }
 
-function markInvalidated(invalidated: TileBitmask, feature: GeoJSON.Feature | undefined) {
+function markInvalidated(updateable: Map<GeoJSONFeatureId, GeoJSON.Feature>, id: GeoJSONFeatureId, invalidated: TileBitmask, feature: GeoJSON.Feature | undefined) {
     if (!feature || !feature.geometry) {
         return;
     }
@@ -167,7 +167,8 @@ function markInvalidated(invalidated: TileBitmask, feature: GeoJSON.Feature | un
         }
 
         // store off the bbox for reuse later
-        feature.bbox = bbox;
+        feature = {...feature, bbox};
+        updateable.set(id, feature);
     }
 
     const [minX, minY, maxX, maxY] = bbox;

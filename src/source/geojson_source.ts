@@ -295,7 +295,7 @@ class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            const data: any = {dataType: 'source', invalidated: result.invalidated ? TileBitmask.deserialize(result.invalidated) : undefined};
+            const data: any = {dataType: 'source', invalidated: result?.invalidated ? TileBitmask.deserialize(result.invalidated) : undefined};
             if (this._collectResourceTiming && resourceTiming && resourceTiming.length > 0)
                 extend(data, {resourceTiming});
 
