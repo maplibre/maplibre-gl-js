@@ -1,7 +1,6 @@
 import {getJSON, getImage, ResourceType} from '../util/ajax';
 
 import browser from '../util/browser';
-import {RGBAImage} from '../util/image';
 
 import type {StyleImage} from './style_image';
 import type {RequestManager} from '../util/request_manager';
@@ -39,14 +38,12 @@ export default function loadSprite(
         if (error) {
             callback(error);
         } else if (json && image) {
-            const imageData = browser.getImageData(image);
+            const context = browser.getImageCanvasContext(image);
             const result = {};
 
             for (const id in json) {
-                const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
-                const data = new RGBAImage({width, height});
-                RGBAImage.copy(imageData, data, {x, y}, {x: 0, y: 0}, {width, height});
-                result[id] = {data, pixelRatio, sdf, stretchX, stretchY, content};
+                const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];                
+                result[id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, width, height, context, x , y};
             }
 
             callback(null, result);

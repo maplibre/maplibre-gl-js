@@ -24,7 +24,12 @@ const exported = {
     },
 
     getImageData(img: CanvasImageSource, padding: number = 0): ImageData {
-        const canvas = window.document.createElement('canvas');
+        const context = this.getImageCanvasContext(img);
+        return context.getImageData(-padding, -padding, img.width as number + 2 * padding, img.height as number + 2 * padding);
+    },
+    
+    getImageCanvasContext(img: CanvasImageSource): CanvasRenderingContext2D {
+        const canvas = window.document.createElement('canvas') as HTMLCanvasElement;
         const context = canvas.getContext('2d');
         if (!context) {
             throw new Error('failed to create canvas 2d context');
@@ -32,9 +37,9 @@ const exported = {
         canvas.width = img.width as number;
         canvas.height = img.height as number;
         context.drawImage(img, 0, 0, img.width as number, img.height as number);
-        return context.getImageData(-padding, -padding, img.width as number + 2 * padding, img.height as number + 2 * padding);
+        return context;
     },
-
+    
     resolveURL(path: string) {
         if (!linkEl) linkEl = document.createElement('a');
         linkEl.href = path;

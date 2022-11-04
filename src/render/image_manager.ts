@@ -123,10 +123,12 @@ class ImageManager extends Evented {
     _validateContent(content: [number, number, number, number], image: StyleImage) {
         if (!content) return true;
         if (content.length !== 4) return false;
-        if (content[0] < 0 || image.data.width < content[0]) return false;
-        if (content[1] < 0 || image.data.height < content[1]) return false;
-        if (content[2] < 0 || image.data.width < content[2]) return false;
-        if (content[3] < 0 || image.data.height < content[3]) return false;
+        const width = image.width || image.data.width;
+        const height = image.height || image.data.height;
+        if (content[0] < 0 || width < content[0]) return false;
+        if (content[1] < 0 || height < content[1]) return false;
+        if (content[2] < 0 || width < content[2]) return false;
+        if (content[3] < 0 || height < content[3]) return false;
         if (content[2] < content[0]) return false;
         if (content[3] < content[1]) return false;
         return true;
@@ -185,6 +187,16 @@ class ImageManager extends Evented {
             }
             const image = this.images[id];
             if (image) {
+
+                // Extract sprite image data on demand
+                if (!image.data && image.context) {
+                    image.data = new RGBAImage({
+                        width: image.width,
+                        height: image.height
+                    }, image.context.getImageData(image.x, image.y, image.width, image.height).data);                    
+                    image.context = null;
+                }
+
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
                 response[id] = {
                     data: image.data.clone(),

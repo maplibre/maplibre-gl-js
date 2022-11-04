@@ -15,6 +15,11 @@ export type StyleImageMetadata = {
     stretchX?: Array<[number, number]>;
     stretchY?: Array<[number, number]>;
     content?: [number, number, number, number];
+    width?: number;
+    height?: number;
+    x?: number;
+    y?: number;
+    context?: CanvasRenderingContext2D;
 };
 
 export type StyleImage = StyleImageData & StyleImageMetadata;
