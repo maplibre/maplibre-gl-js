@@ -1,4 +1,5 @@
 import {setPerformance} from '../util/test/util';
+import {TileBitmask} from '../util/tile_bitmask';
 import {type GeoJSONFeatureId, isUpdateableGeoJSON, toUpdateable, applySourceDiff} from './geojson_source_diff';
 
 beforeEach(() => {
@@ -272,10 +273,11 @@ describe('applySourceDiff', () => {
 
     test('adds a feature using the feature id', done => {
         const updateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
+        const invalidated = new TileBitmask();
 
         applySourceDiff(updateable, {
             add: [point]
-        });
+        }, invalidated);
         expect(updateable.size).toBe(1);
         expect(updateable.has('point')).toBeTruthy();
         done();
@@ -283,9 +285,10 @@ describe('applySourceDiff', () => {
 
     test('adds a feature using the promoteId', done => {
         const updateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
+        const invalidated = new TileBitmask();
         applySourceDiff(updateable, {
             add: [point2]
-        }, 'promoteId');
+        }, invalidated, 'promoteId');
         expect(updateable.size).toBe(1);
         expect(updateable.has('point2')).toBeTruthy();
         done();
@@ -293,9 +296,10 @@ describe('applySourceDiff', () => {
 
     test('removes a feature by its id', done => {
         const updateable = new Map([['point', point], ['point2', point2]]);
+        const invalidated = new TileBitmask();
         applySourceDiff(updateable, {
             remove: ['point2'],
-        });
+        }, invalidated);
         expect(updateable.size).toBe(1);
         expect(updateable.has('point2')).toBeFalsy();
         done();
@@ -303,6 +307,7 @@ describe('applySourceDiff', () => {
 
     test('updates a feature geometry', done => {
         const updateable = new Map([['point', point]]);
+        const invalidated = new TileBitmask();
         // update -> new geometry
         applySourceDiff(updateable, {
             update: [{
@@ -312,7 +317,7 @@ describe('applySourceDiff', () => {
                     coordinates: [1, 0]
                 }
             }]
-        });
+        }, invalidated);
         expect(updateable.size).toBe(1);
         expect((updateable.get('point')?.geometry as GeoJSON.Point).coordinates[0]).toBe(1);
         done();
@@ -320,6 +325,7 @@ describe('applySourceDiff', () => {
 
     test('adds properties', done => {
         const updateable = new Map([['point', point]]);
+        const invalidated = new TileBitmask();
         applySourceDiff(updateable, {
             update: [{
                 id: 'point',
@@ -328,7 +334,7 @@ describe('applySourceDiff', () => {
                     {key: 'prop2', value: 'value2'}
                 ]
             }]
-        });
+        }, invalidated);
         expect(updateable.size).toBe(1);
         const properties = updateable.get('point')?.properties!;
         expect(Object.keys(properties)).toHaveLength(2);
@@ -339,6 +345,7 @@ describe('applySourceDiff', () => {
 
     test('updates properties', done => {
         const updateable = new Map([['point', {...point, properties: {prop: 'value', prop2: 'value2'}}]]);
+        const invalidated = new TileBitmask();
         applySourceDiff(updateable, {
             update: [{
                 id: 'point',
@@ -346,7 +353,7 @@ describe('applySourceDiff', () => {
                     {key: 'prop2', value: 'value3'}
                 ]
             }]
-        });
+        }, invalidated);
         expect(updateable.size).toBe(1);
         const properties2 = updateable.get('point')?.properties!;
         expect(Object.keys(properties2)).toHaveLength(2);
@@ -357,12 +364,13 @@ describe('applySourceDiff', () => {
 
     test('removes properties', done => {
         const updateable = new Map([['point', {...point, properties: {prop: 'value', prop2: 'value2'}}]]);
+        const invalidated = new TileBitmask();
         applySourceDiff(updateable, {
             update: [{
                 id: 'point',
                 removeProperties: ['prop2']
             }]
-        });
+        }, invalidated);
         expect(updateable.size).toBe(1);
         const properties3 = updateable.get('point')?.properties!;
         expect(Object.keys(properties3)).toHaveLength(1);
@@ -372,12 +380,13 @@ describe('applySourceDiff', () => {
 
     test('removes all properties', done => {
         const updateable = new Map([['point', {...point, properties: {prop: 'value', prop2: 'value2'}}]]);
+        const invalidated = new TileBitmask();
         applySourceDiff(updateable, {
             update: [{
                 id: 'point',
                 removeAllProperties: true,
             }]
-        });
+        }, invalidated);
         expect(updateable.size).toBe(1);
         expect(Object.keys(updateable.get('point')?.properties!)).toHaveLength(0);
         done();
