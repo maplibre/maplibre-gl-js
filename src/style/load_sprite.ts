@@ -39,11 +39,12 @@ export default function loadSprite(
             callback(error);
         } else if (json && image) {
             const context = browser.getImageCanvasContext(image);
-            const result = {};
+            const result = {} as {[_: string]: StyleImage};
 
             for (const id in json) {
-                const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];                
-                result[id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, width, height, context, x , y};
+                const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
+                const spriteData = {width, height, x, y, context};
+                result[id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, spriteData};
             }
 
             callback(null, result);

@@ -83,7 +83,23 @@ class ImageManager extends Evented {
     }
 
     getImage(id: string): StyleImage {
-        return this.images[id];
+        const image = this.images[id];
+
+        // Extract sprite image data on demand
+        if (image && !image.data && image.spriteData) {
+            const spriteData = image.spriteData;
+            image.data = new RGBAImage({
+                width: spriteData.width,
+                height: spriteData.height
+            }, spriteData.context.getImageData(
+                spriteData.x,
+                spriteData.y,
+                spriteData.width,
+                spriteData.height).data);                    
+            image.spriteData = null;
+        }
+
+        return image;
     }
 
     addImage(id: string, image: StyleImage) {
@@ -123,8 +139,9 @@ class ImageManager extends Evented {
     _validateContent(content: [number, number, number, number], image: StyleImage) {
         if (!content) return true;
         if (content.length !== 4) return false;
-        const width = image.width || image.data.width;
-        const height = image.height || image.data.height;
+        const spriteData = image.spriteData;
+        const width = (spriteData && spriteData.width) || image.data.width;
+        const height = (spriteData && spriteData.height) || image.data.height;
         if (content[0] < 0 || width < content[0]) return false;
         if (content[1] < 0 || height < content[1]) return false;
         if (content[2] < 0 || width < content[2]) return false;
@@ -182,20 +199,9 @@ class ImageManager extends Evented {
         const response = {};
 
         for (const id of ids) {
-            if (!this.images[id]) {
-                this.fire(new Event('styleimagemissing', {id}));
-            }
-            const image = this.images[id];
-            if (image) {
-
-                // Extract sprite image data on demand
-                if (!image.data && image.context) {
-                    image.data = new RGBAImage({
-                        width: image.width,
-                        height: image.height
-                    }, image.context.getImageData(image.x, image.y, image.width, image.height).data);                    
-                    image.context = null;
-                }
+            const image = this.getImage(id);
+            
+            if (image) {              
 
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
                 response[id] = {
@@ -209,6 +215,7 @@ class ImageManager extends Evented {
                     hasRenderCallback: Boolean(image.userImage && image.userImage.render)
                 };
             } else {
+                this.fire(new Event('styleimagemissing', {id}));
                 warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.`);
             }
         }
