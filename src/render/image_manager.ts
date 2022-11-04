@@ -95,7 +95,7 @@ class ImageManager extends Evented {
                 spriteData.x,
                 spriteData.y,
                 spriteData.width,
-                spriteData.height).data);                    
+                spriteData.height).data);
             image.spriteData = null;
         }
 
@@ -200,8 +200,8 @@ class ImageManager extends Evented {
 
         for (const id of ids) {
             const image = this.getImage(id);
-            
-            if (image) {              
+
+            if (image) {
 
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
                 response[id] = {

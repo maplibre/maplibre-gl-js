@@ -23,7 +23,7 @@ export type StyleImageMetadata = {
     sdf: boolean;
     stretchX?: Array<[number, number]>;
     stretchY?: Array<[number, number]>;
-    content?: [number, number, number, number];    
+    content?: [number, number, number, number];
 };
 
 export type StyleImage = StyleImageData & StyleImageMetadata;

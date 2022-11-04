@@ -27,7 +27,7 @@ const exported = {
         const context = this.getImageCanvasContext(img);
         return context.getImageData(-padding, -padding, img.width as number + 2 * padding, img.height as number + 2 * padding);
     },
-    
+
     getImageCanvasContext(img: CanvasImageSource): CanvasRenderingContext2D {
         const canvas = window.document.createElement('canvas') as HTMLCanvasElement;
         const context = canvas.getContext('2d');
@@ -39,7 +39,7 @@ const exported = {
         context.drawImage(img, 0, 0, img.width as number, img.height as number);
         return context;
     },
-    
+
     resolveURL(path: string) {
         if (!linkEl) linkEl = document.createElement('a');
         linkEl.href = path;

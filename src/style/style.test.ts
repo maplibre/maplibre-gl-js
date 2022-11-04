@@ -294,15 +294,15 @@ describe('Style#loadJSON', () => {
             style.once('data', (e) => {
                 expect(e.target).toBe(style);
                 expect(e.dataType).toBe('style');
-                style.imageManager.getImages(["image1"], (error, response)=>{
-                    const image = response["image1"];
+                style.imageManager.getImages(['image1'], (error, response) => {
+                    const image = response['image1'];
                     expect(image).toBeDefined();
                     expect(image.data).toBeDefined();
                     expect(image.data.width).toBe(1);
                     expect(image.data.height).toBe(1);
                     expect(image.pixelRatio).toBe(1);
                     done();
-                 });                
+                });
             });
 
             respond();
