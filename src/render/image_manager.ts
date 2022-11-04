@@ -152,7 +152,7 @@ class ImageManager extends Evented {
     }
 
     updateImage(id: string, image: StyleImage) {
-        const oldImage = this.images[id];
+        const oldImage = this.getImage(id);
         if (oldImage.data.width !== image.data.width || oldImage.data.height !== image.data.height) {
             throw new Error(`size mismatch between old image (${oldImage.data.width}x${oldImage.data.height}) and new image (${image.data.width}x${image.data.height}).`);
         }
@@ -284,7 +284,7 @@ class ImageManager extends Evented {
             const {bin} = this.patterns[id];
             const x = bin.x + padding;
             const y = bin.y + padding;
-            const src = this.images[id].data;
+            const src = this.getImage(id).data;
             const w = src.width;
             const h = src.height;
 
@@ -311,7 +311,7 @@ class ImageManager extends Evented {
             if (this.callbackDispatchedThisFrame[id]) continue;
             this.callbackDispatchedThisFrame[id] = true;
 
-            const image = this.images[id];
+            const image = this.getImage(id);
             if (!image) warnOnce(`Image with ID: "${id}" was not found`);
 
             const updated = renderStyleImage(image);
