@@ -6,15 +6,6 @@ function packTileCoord(zoom: number, x: number, y: number): number {
     return (zoom << (2 * InvalidationTreeDepth)) | (x << InvalidationTreeDepth) | y;
 }
 
-function unpackTileCoord(coord: number): { zoom: number; x: number; y: number } {
-    const mask = (1 << InvalidationTreeDepth) - 1;
-    return {
-        zoom: coord >> (2 * InvalidationTreeDepth),
-        x: (coord >> InvalidationTreeDepth) & mask,
-        y: coord & mask,
-    };
-}
-
 enum Composition {
     MIXED = 0,
     MARKED = 1,
@@ -60,9 +51,9 @@ export class TileBitmask {
     /**
      * Clears all descendants of a tile from the tree.  This can be used after setting the composition of a tile
      * to MARKED (since that implies that all descendants are also MARKED)
-     * @param zoom
-     * @param x
-     * @param y
+     * @param zoom tile zoom
+     * @param x tile x
+     * @param y tile y
      */
     private clearDescendants(zoom: number, x: number, y: number) {
         if (zoom >= TileBitmask.MaxZoom) {
@@ -83,9 +74,9 @@ export class TileBitmask {
     /**
      * Used after marking a tile to compact the quadtree for the case where all 4 children of a tile are marked, by
      * replacing the 4 marked children with a single marked parent.
-     * @param zoom
-     * @param x
-     * @param y
+     * @param zoom tile zoom
+     * @param x tile x
+     * @param y tile y
      */
     private compactAncestors(zoom: number, x: number, y: number) {
         while (zoom > 0) {
@@ -137,20 +128,6 @@ export class TileBitmask {
             }
         }
         throw new Error(`Invalid quadtree: Mark request for ${zoom} ${x} ${y} ran off the end of the tree`);
-    }
-
-    /**
-     * Slow debugging method that gets all definitively marked tiles.
-     */
-    public getMarkedTiles() {
-        const markedTiles = [];
-        for (const [key, val] of this.tree.entries()) {
-            if (val !== Composition.MARKED) {
-                continue;
-            }
-            markedTiles.push(unpackTileCoord(key));
-        }
-        return markedTiles;
     }
 
     public serialize(): SerializedTileBitmask {

@@ -7,7 +7,7 @@ import {extend} from '../util/util';
 import type Map from './map';
 import type LngLat from '../geo/lng_lat';
 import {SourceSpecification} from '../style-spec/types.g';
-import { TileBitmask } from '../util/tile_bitmask';
+import {TileBitmask} from '../util/tile_bitmask';
 
 export type MapLayerMouseEvent = MapMouseEvent & { features?: GeoJSON.Feature[] };
 
