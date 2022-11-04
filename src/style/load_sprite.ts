@@ -15,7 +15,7 @@ export default function loadSprite(
     pixelRatio: number,
     callback: Callback<{[spriteName: string]: {[id: string]: StyleImage}}>
 ): Cancelable {
-    const sprite: Exclude<SpriteSpecification, string> = typeof originalSprite === 'string' ? [{id: 'default', url: originalSprite}] : originalSprite;
+    const sprite = typeof originalSprite === 'string' ? [{id: 'default', url: originalSprite}] : originalSprite;
     const format = pixelRatio > 1 ? '@2x' : '';
 
     let error;
