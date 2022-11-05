@@ -2,15 +2,24 @@ import validateObject from './validate_object';
 import validateString from './validate_string';
 import ValidationError from '../error/validation_error';
 
-export default function validateSprite(options) {
+interface ValidateSpriteOptions {
+    key: 'sprite';
+    value: unknown; // we don't know how the user defined the "sprite"
+}
+
+export default function validateSprite(options: ValidateSpriteOptions) {
     let errors = [];
 
     const sprite = options.value;
     const key = options.key;
-    const style = options.style;
-    const styleSpec = options.styleSpec;
 
-    if (Array.isArray(sprite)) {
+    if (!Array.isArray(sprite)) {
+        return validateString({
+            key,
+            value: sprite
+        });
+
+    } else {
         const allSpriteIds = [];
         const allSpriteURLs = [];
 
@@ -36,16 +45,9 @@ export default function validateSprite(options) {
                 key: `${key}[${i}]`,
                 value: sprite[i],
                 valueSpec: pairSpec,
-                style,
-                styleSpec
             }));
         }
 
         return errors;
-    } else {
-        return validateString({
-            key,
-            value: sprite
-        });
     }
 }
