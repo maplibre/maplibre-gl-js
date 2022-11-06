@@ -10,6 +10,17 @@ To run individual tests:
  - Unit tests: `npx jest path/to/file.test.js` (e.g. `npx jest src/style/style_layer.test.ts`)
  - Render tests: `npm run test-render -- render-test-name` (e.g. `npm run test-render -- text-rotation-alignment`)
 
+ ## Debugging Tests on Windows
+
+Steps to use Visual Studio Code:
+
+ - Install VS Code.
+ - Open MapLibre root folder with VS Code UI.
+ - Start debugging:
+<br />
+   ![Start debugging](assets/docs/debug_test_in_vscode.png)
+   Before debugging, you might want to set break points in sources.
+
 ## Integration Tests
 
 See [`test/integration/README.md`](./integration/README.md).
@@ -22,6 +33,7 @@ See [`test/integration/README.md`](./integration/README.md).
  - **You should only test the return values and global side effects of methods.** You should not not test internal behavior, such as that another method is called with particular arguments. This ensures that method implementations may change without causing test failures.
  - **You must not make network requests in test cases.** This rule holds in cases when result isn't used or is expected to fail. You may use `window.useFakeXMLHttpRequest` and `window.server` per the [Sinon API](http://sinonjs.org/docs/#server) to simulate network requests. This ensures that tests are reliable, able to be run in an isolated environment, and performant.
  - **You should use clear [input space partitioning](http://crystal.uta.edu/~ylei/cse4321/data/isp.pdf) schemes.** Look for edge cases! This ensures that tests suites are comprehensive and easy to understand.
+ - Before submit or modify tests, suggest to run the tests and verify your results on both Windows and Linux CI (e.g. WSL).
 
 ## Spies, Stubs, and Mocks
 
