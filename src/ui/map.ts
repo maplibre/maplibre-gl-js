@@ -517,11 +517,44 @@ class Map extends Camera {
     }
 
     /*
-    * Returns a unique number for this map instance which is used for the MapLoadEvent
-    * to make sure we only fire one event per instantiated map object.
-    * @private
-    * @returns {number}
-    */
+     * Returns a Map instance in an async manner with retry mechanism to avoid temporary WebGL context lost at this creation time.
+     * @public
+     * @returns {Map}
+     */
+    public static build(options: MapOptions): Promise<Map> {
+        // Async instantiate and return a class
+        return new Promise<Map>((resolve) => {
+            const retryTimeMax = 90000;
+            const retryInterval = 1000;
+            let retriedTime = 0;
+            const retry = () => {
+                const map = new Map(options);
+                // If WebGL context -> painter created successfully
+                if (map?.painter)
+                {
+                    resolve(map);
+                }
+                else
+                {
+                    // If tried longer than 1.5 minute, quit
+                    retriedTime += retryInterval;
+                    if (retriedTime > retryTimeMax){
+                        resolve(null);
+                    }
+                    // Retry
+                    setTimeout(retry, retryInterval);
+                }
+            };
+            retry();
+        });
+    }
+
+    /*
+     * Returns a unique number for this map instance which is used for the MapLoadEvent
+     * to make sure we only fire one event per instantiated map object.
+     * @private
+     * @returns {number}
+     */
     _getMapId() {
         return this._mapId;
     }
