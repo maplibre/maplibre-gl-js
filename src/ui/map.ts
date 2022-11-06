@@ -532,8 +532,7 @@ class Map extends Camera {
                 // If WebGL context -> painter created successfully
                 if (map?.painter) {
                     resolve(map);
-                }
-                else {
+                } else {
                     // If tried longer than 1.5 minute, quit
                     retriedTime += retryInterval;
                     if (retriedTime > retryTimeMax) {
