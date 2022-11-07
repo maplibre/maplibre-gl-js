@@ -11,9 +11,10 @@ class NullIsland {
 
     onAdd(map, gl: WebGLRenderingContext) {
         const vertexSource = `
+        attribute vec3 aPos;
         uniform mat4 u_matrix;
         void main() {
-            gl_Position = u_matrix * vec4(0.5, 0.5, 0.0, 1.0);
+            gl_Position = u_matrix * vec4(aPos, 1.0);
             gl_PointSize = 20.0;
         }`;
 
@@ -36,7 +37,14 @@ class NullIsland {
     }
 
     render(gl, matrix) {
+        const vertexArray = new Float32Array([0.5, 0.5, 0.0]);
         gl.useProgram(this.program);
+        const vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
+        const posAttrib = gl.getAttribLocation(this.program, 'aPos');
+        gl.enableVertexAttribArray(posAttrib);
+        gl.vertexAttribPointer(posAttrib, 3, gl.FLOAT, false, 0, 0);
         gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, matrix);
         gl.drawArrays(gl.POINTS, 0, 1);
     }
