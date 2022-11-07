@@ -387,6 +387,41 @@ describe('Map', () => {
                 done();
             }, 100);
         });
+
+        test('transformStyle should get called when passed to setStyle after the map is initialised without a style', done => {
+            const map = createMap({deleteStyle: true});
+            map.setStyle(createStyle(), {
+                diff: true,
+                transformStyle: (prevStyle, nextStyle) => {
+                    expect(prevStyle).toBeUndefined();
+
+                    return {
+                        ...nextStyle,
+                        sources: {
+                            maplibre: {
+                                type: 'vector',
+                                minzoom: 1,
+                                maxzoom: 10,
+                                tiles: ['http://example.com/{z}/{x}/{y}.png']
+                            }
+                        },
+                        layers: [{
+                            id: 'layerId0',
+                            type: 'circle',
+                            source: 'maplibre',
+                            'source-layer': 'sourceLayer'
+                        }]
+                    };
+                }
+            });
+
+            map.on('style.load', () => {
+                const loadedStyle = map.style.serialize();
+                expect('maplibre' in loadedStyle.sources).toBeTruthy();
+                expect(loadedStyle.layers[0].id).toBe('layerId0');
+                done();
+            });
+        });
     });
 
     describe('#setTransformRequest', () => {
