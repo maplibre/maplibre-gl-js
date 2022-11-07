@@ -65,14 +65,25 @@
                       id: 'points',
                       source: 'data',
                       filter: ['==', ['geometry-type'], 'Point'],
-                      type: 'circle',
-                      paint: {'circle-radius': 6, 'circle-color': '#007cbf', 'circle-stroke-width': 2, 'circle-stroke-color': 'white'}
+                      type: 'symbol',
+                      paint: {},
+                      layout: {
+                          'icon-image': 'blue',
+                      }
                   }
               ]
           },
           maxZoom: 18,
           maxPitch: 85
       });
+
+      // directly build a 10x10px blue square
+      const px = new Uint8ClampedArray(10 * 10 * 4);
+      for (let i = 0; i < px.length; i += 4) {
+          px[i + 2] = 0xff; // blue
+          px[i + 3] = 0xff; // alpha
+      }
+      map.addImage('blue', new ImageData(px, 10, 10));
 
       map.fitBounds([-180, -90, 180, 90]);
 

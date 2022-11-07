@@ -1,4 +1,4 @@
-import CrossTileSymbolIndex from './cross_tile_symbol_index';
+import CrossTileSymbolIndex, {KDBUSH_THRESHHOLD} from './cross_tile_symbol_index';
 import {OverscaledTileID} from '../source/tile_id';
 import StyleLayer from '../style/style_layer';
 
@@ -213,6 +213,28 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
     });
 
+    test('indexes data for findMatches perf', () => {
+        const index = new CrossTileSymbolIndex();
+
+        const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
+        const childID = new OverscaledTileID(7, 0, 7, 16, 16);
+
+        const mainInstances: any[] = [];
+        const childInstances: any[] = [];
+
+        for (let i = 0; i < KDBUSH_THRESHHOLD + 1; i++) {
+            mainInstances.push(makeSymbolInstance(0, 0, ''));
+            childInstances.push(makeSymbolInstance(0, 0, ''));
+        }
+        const mainTile = makeTile(mainID, mainInstances);
+        const childTile = makeTile(childID, childInstances);
+        index.addLayer(styleLayer, [mainTile], 0);
+        index.addLayer(styleLayer, [childTile], 0);
+
+        // check that we matched the parent tile
+        expect(childInstances[0].crossTileID).toBe(1);
+
+    });
 });
 
 describe('CrossTileSymbolIndex.pruneUnusedLayers', () => {
