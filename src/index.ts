@@ -34,6 +34,7 @@ import RasterDEMTileSource from './source/raster_dem_tile_source';
 import RasterTileSource from './source/raster_tile_source';
 import VectorTileSource from './source/vector_tile_source';
 import VideoSource from './source/video_source';
+import RGBAImage from './util/image';
 
 const version = packageJSON.version;
 
@@ -66,6 +67,7 @@ const exported = {
     RasterTileSource,
     VectorTileSource,
     VideoSource,
+    RGBAImage,
     /**
      * Initializes resources like WebWorkers that can be shared across maps to lower load
      * times in some situations. `maplibregl.workerUrl` and `maplibregl.workerCount`, if being
