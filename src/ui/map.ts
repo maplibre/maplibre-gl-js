@@ -450,9 +450,6 @@ class Map extends Camera {
 
         this._setupContainer();
         this._setupPainter();
-        if (this.painter === undefined) {
-            throw new Error('Failed to initialize WebGL.');
-        }
 
         this.on('move', () => this._update(false));
         this.on('moveend', () => this._update(false));
@@ -606,7 +603,7 @@ class Map extends Camera {
         return this._controls.indexOf(control) > -1;
     }
 
-    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number) : CameraOptions {
+    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions {
         if (altitudeTo == null && this.terrain) {
             altitudeTo = this.transform.getElevation(to, this.terrain);
         }
@@ -962,8 +959,7 @@ class Map extends Camera {
         return this._rotating || this.handlers.isRotating();
     }
 
-    _createDelegatedListener(type: MapEvent | string, layerId: string, listener: Listener):
-    {
+    _createDelegatedListener(type: MapEvent | string, layerId: string, listener: Listener): {
         layer: string;
         listener: Listener;
         delegates: {[type in keyof MapEventType]?: (e: any) => void};
@@ -2202,7 +2198,7 @@ class Map extends Camera {
      *
      * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js-docs/example/timeline-animation/)
      */
-    setFilter(layerId: string, filter?: FilterSpecification | null,  options: StyleSetterOptions = {}) {
+    setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}) {
         this.style.setFilter(layerId, filter, options);
         return this._update(true);
     }
@@ -2552,12 +2548,26 @@ class Map extends Camera {
             antialias: this._antialias || false
         });
 
+        let webglcontextcreationerrorDetailObject: any = null;
+        this._canvas.addEventListener('webglcontextcreationerror', (args: WebGLContextEvent) => {
+            webglcontextcreationerrorDetailObject = {requestedAttributes: attributes};
+            if (args) {
+                webglcontextcreationerrorDetailObject.statusMessage = args.statusMessage;
+                webglcontextcreationerrorDetailObject.type = args.type;
+            }
+        }, {once: true});
+
         const gl = this._canvas.getContext('webgl', attributes) ||
             this._canvas.getContext('experimental-webgl', attributes);
 
         if (!gl) {
-            this.fire(new ErrorEvent(new Error('Failed to initialize WebGL')));
-            return;
+            const msg = 'Failed to initialize WebGL';
+            if (webglcontextcreationerrorDetailObject) {
+                webglcontextcreationerrorDetailObject.message = msg;
+                throw new Error(JSON.stringify(webglcontextcreationerrorDetailObject));
+            } else {
+                throw new Error(msg);
+            }
         }
 
         this.painter = new Painter(gl as WebGLRenderingContext, this.transform);
