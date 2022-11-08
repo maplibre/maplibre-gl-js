@@ -429,9 +429,10 @@ describe('Map', () => {
                 diff: true,
                 transformStyle: (prevStyle, nextStyle) => {
                     expect(prevStyle).toBeUndefined();
-                    return createStyle()
+                    expect(nextStyle).toBeDefined();
+                    return createStyle();
                 }
-            })
+            });
             map.on('load', () => done());
         });
     });
