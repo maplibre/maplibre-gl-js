@@ -4,7 +4,7 @@
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
-- *...Add new stuff here...*
+- Fix the exception that would be thrown on `map.setStyle` when it is passed with transformStyle option and map is initialized without an initial style. ([#1824](https://github.com/maplibre/maplibre-gl-js/pull/1824))
 
 ## 3.0.0-pre.1
 
