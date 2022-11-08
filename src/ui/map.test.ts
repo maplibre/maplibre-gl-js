@@ -422,6 +422,18 @@ describe('Map', () => {
                 done();
             });
         });
+
+        test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', done => {
+            const map = createMap({deleteStyle: true});
+            map.setStyle({version: 8, sources: {}, layers: []}, {
+                diff: true,
+                transformStyle: (prevStyle, nextStyle) => {
+                    expect(prevStyle).toBeUndefined();
+                    return createStyle()
+                }
+            })
+            map.on('load', () => done());
+        });
     });
 
     describe('#setTransformRequest', () => {
