@@ -13,7 +13,7 @@
 - Add dev version for csp build ([#1730](https://github.com/maplibre/maplibre-gl-js/pull/1730))
 - Fix headless benchmark execution especially on VM ([#1732](https://github.com/maplibre/maplibre-gl-js/pull/1732))
 - fix issue [#860](https://github.com/maplibre/maplibre-gl-js/issues/860) fill-pattern with pixelRatio > 1 is now switched correctly at runtime. ([#1765](https://github.com/maplibre/maplibre-gl-js/pull/1765))
-
+- Fix the exception that would be thrown on `map.setStyle` when it is passed with transformStyle option and map is initialized without an initial style. ([#1824](https://github.com/maplibre/maplibre-gl-js/pull/1824))
 ## 3.0.0-pre.1
 
 ### ✨ Features and improvements
