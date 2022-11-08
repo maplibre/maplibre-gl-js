@@ -525,7 +525,7 @@ class Map extends Camera {
         // Async instantiate and return a class
         return new Promise<Map>((resolve) => {
             const retryTimeMax = 90000;
-            const retryInterval = 1000;
+            let retryInterval = 1000;
             let retriedTime = 0;
             const retry = () => {
                 const map = new Map(options);
@@ -534,7 +534,9 @@ class Map extends Camera {
                     resolve(map);
                 } else {
                     // If tried longer than 1.5 minute, quit
+                    // Binary exponential backoff, will retry maximally 7 times during 90 seconds period
                     retriedTime += retryInterval;
+                    retryInterval *= 2;
                     if (retriedTime > retryTimeMax) {
                         resolve(null);
                     }
