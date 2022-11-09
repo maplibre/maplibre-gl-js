@@ -110,7 +110,7 @@ export type StyleSetterOptions = {
  *      when an incoming style requires modification based on external state
  *
  * @typedef {Function} TransformStyleFunction
- * @param {StyleSpecification} previousStyle The current style.
+ * @param {StyleSpecification | undefined} previousStyle The current style.
  * @param {StyleSpecification} nextStyle The next style.
  * @returns {boolean} resulting style that will to be applied to the map
  *
@@ -143,7 +143,7 @@ export type StyleSetterOptions = {
  *   })
  * });
  */
-export type TransformStyleFunction = (previous: StyleSpecification, next: StyleSpecification) => StyleSpecification;
+export type TransformStyleFunction = (previous: StyleSpecification | undefined, next: StyleSpecification) => StyleSpecification;
 
 export type StyleSwapOptions = {
     diff?: boolean;
@@ -290,7 +290,7 @@ class Style extends Evented {
     }
 
     _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification) {
-        const nextState = options.transformStyle && previousStyle ? options.transformStyle(previousStyle, json) : json;
+        const nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
         if (options.validate && emitValidationErrors(this, validateStyle(nextState))) {
             return;
         }
