@@ -2,9 +2,9 @@
 
 # MapLibre GL JS
 
-**[MapLibre GL JS](https://maplibre.org/maplibre-gl-js-docs/api/)** is an open-source library for publishing maps on your websites. Fast displaying of maps is possible thanks to GPU-accelerated vector tile rendering. 
+**[MapLibre GL JS](https://maplibre.org/maplibre-gl-js-docs/api/)** is an open-source library for publishing maps on your websites or webview based apps. Fast displaying of maps is possible thanks to GPU-accelerated vector tile rendering. 
 
-It originated as an open-source fork of [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js), before their switch to a non-OSS license in December 2020. The library is intended to be a drop-in replacement for the Mapbox’s version with additional functionality.
+It originated as an open-source fork of [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js), before their switch to a non-OSS license in December 2020. The library's initial versions (1.x) were intended to be a drop-in replacement for the Mapbox’s OSS version (1.x) with additional functionality, but have evolved a lot since then.
 
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg?style=flat)](LICENSE.txt)[![Version](https://img.shields.io/npm/v/maplibre-gl?style=flat)](https://www.npmjs.com/package/maplibre-gl)[![CI](https://github.com/maplibre/maplibre-gl-js/actions/workflows/ci.yml/badge.svg)](https://github.com/maplibre/maplibre-gl-js/actions/workflows/ci.yml)[![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://opensource.org/licenses/BSD-3-Clause)
 
@@ -99,6 +99,7 @@ Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs
 ### Getting Involved
 
 Join the #maplibre slack channel at OSMUS: get an invite at https://osmus-slack.herokuapp.com/
+Read the [CONTRIBUTING.md](CONTRIBUTING.md) guide in order to get familiar with how we do things around here.
 
 ### Community Leadership
 
