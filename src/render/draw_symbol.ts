@@ -251,6 +251,18 @@ function getSymbolProgramName(isSDF: boolean, isText: boolean, bucket: SymbolBuc
     }
 }
 
+// this is broken out into its own function so it can be mocked by unit tests
+function hasVisibleVertices(
+    buffers: SymbolBuffers) {
+    return buffers.hasVisibleVertices;
+}
+
+// to allow mocking, the function above is embedded in a mockable object
+// reference: https://medium.com/@qjli/how-to-mock-specific-module-function-in-jest-715e39a391f4
+export const mockableFunctions = {
+    hasVisibleVertices
+};
+
 function drawLayerSymbols(
     painter: Painter,
     sourceCache: SourceCache,
@@ -291,7 +303,8 @@ function drawLayerSymbols(
         const bucket = tile.getBucket(layer) as SymbolBucket;
         if (!bucket) continue;
         const buffers = isText ? bucket.text : bucket.icon;
-        if (!buffers || !buffers.segments.get().length || !buffers.hasVisibleVertices) continue;
+
+        if (!buffers || !buffers.segments.get().length || !mockableFunctions.hasVisibleVertices(buffers)) continue;
         const programConfiguration = buffers.programConfigurations.get(layer.id);
 
         const isSDF = isText || bucket.sdfIcons;

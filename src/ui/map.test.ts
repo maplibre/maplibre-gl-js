@@ -17,6 +17,7 @@ import {CameraOptions} from './camera';
 import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
+import { mockableFunctions as drawSymbolMocks } from '../render/draw_symbol';
 
 function createStyleSource() {
     return {
@@ -1231,6 +1232,128 @@ describe('Map', () => {
             expect(map.queryRenderedFeatures()).toEqual([]);
         });
 
+        test('is not affected by transparent symbol layer optimization', async () => {
+            // create a style with two layers where one occludes the other, causing it to be hidden via transparency
+            const styleSpec = {
+                'version': 8,
+                'metadata': {
+                    'test': {
+                        'height': 64,
+                        'width': 64
+                    }
+                },
+                'center': [0, 30],
+                'zoom': 1,
+                'sources': {
+                    'geojson': {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'FeatureCollection',
+                            'features': [
+                                {
+                                    'type': 'Feature',
+                                    'geometry': {
+                                        'type': 'Point',
+                                        'coordinates': [
+                                            1,
+                                            34
+                                        ]
+                                    }
+                                },
+                                {
+                                    'type': 'Feature',
+                                    'geometry': {
+                                        'type': 'Point',
+                                        'coordinates': [
+                                            1,
+                                            30
+                                        ]
+                                    }
+                                },
+                                {
+                                    'type': 'Feature',
+                                    'geometry': {
+                                        'type': 'Point',
+                                        'coordinates': [
+                                            -1,
+                                            32
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                'layers': [
+                    {
+                        'id': 'icon1',
+                        'type': 'symbol',
+                        'source': 'geojson',
+                        'layout': {
+                            'icon-allow-overlap': false,
+                            'icon-image': 'icon'
+                        }
+                    },
+                    {
+                        'id': 'icon2',
+                        'type': 'symbol',
+                        'source': 'geojson',
+                        'layout': {
+                            'icon-allow-overlap': false,
+                            'icon-image': 'icon'
+                        }
+                    }
+                ]
+            } as any;
+
+            for (let i = 0; i < 2; i++) {
+
+                const map = createMap({ style: styleSpec });
+
+                let optimizationUnusedCount = 0;
+                let optimizationUsedCount = 0;
+                let enableOptimization = i > 0;
+
+                // mock draw_symbol's hasVisibleVertices function so the optimization can be disabled/enabled on subsequent iterations
+                const hasVisibleVerticesSpy = jest.spyOn(drawSymbolMocks, 'hasVisibleVertices').mockImplementation((buffers) => {
+                    let result = enableOptimization ? buffers.hasVisibleVertices : true;
+                    if (result) {
+                        optimizationUnusedCount++;
+                    } else {
+                        optimizationUsedCount++;
+                    }
+                    return result;
+                });
+
+                map.addImage('icon', { width: 1, height: 1, data: new Uint8Array(4) });
+
+                await map.once('idle');
+                const renderPromise = map.once('render');
+
+                map.redraw();
+                await renderPromise;
+
+                const output = map.queryRenderedFeatures();
+
+                // queryRenderedFeatures should return the same number of features regardless of whether the optimization was used or not
+                expect(output.length).toEqual(6);
+
+                // confirm that the optimization had the opportunity to be used at all
+                expect(hasVisibleVerticesSpy).toHaveBeenCalled();
+
+                // confirm that at least some features were allowed to be rendered by the optimization
+                expect(optimizationUnusedCount).toBeGreaterThan(0);
+
+                // confirm that the optimization is used when enabled; unused otherwise
+                if (enableOptimization) {
+                    expect(optimizationUsedCount).toBeGreaterThan(0);
+                } else {
+                    expect(optimizationUsedCount).toBe(0);
+                }
+
+                hasVisibleVerticesSpy.mockRestore();
+            }
+        });
     });
 
     describe('#setLayoutProperty', () => {
