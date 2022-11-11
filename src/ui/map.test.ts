@@ -17,7 +17,7 @@ import {CameraOptions} from './camera';
 import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
-import { mockableFunctions as drawSymbolMocks } from '../render/draw_symbol';
+import {mockableFunctions as drawSymbolMocks} from '../render/draw_symbol';
 
 function createStyleSource() {
     return {
@@ -1356,15 +1356,15 @@ describe('Map', () => {
 
             for (let i = 0; i < 2; i++) {
 
-                const map = createMap({ style: styleSpec });
+                const map = createMap({style: styleSpec});
 
                 let optimizationUnusedCount = 0;
                 let optimizationUsedCount = 0;
-                let enableOptimization = i > 0;
+                const enableOptimization = i > 0;
 
                 // mock draw_symbol's hasVisibleVertices function so the optimization can be disabled/enabled on subsequent iterations
                 const hasVisibleVerticesSpy = jest.spyOn(drawSymbolMocks, 'hasVisibleVertices').mockImplementation((buffers) => {
-                    let result = enableOptimization ? buffers.hasVisibleVertices : true;
+                    const result = enableOptimization ? buffers.hasVisibleVertices : true;
                     if (result) {
                         optimizationUnusedCount++;
                     } else {
@@ -1373,7 +1373,7 @@ describe('Map', () => {
                     return result;
                 });
 
-                map.addImage('icon', { width: 1, height: 1, data: new Uint8Array(4) });
+                map.addImage('icon', {width: 1, height: 1, data: new Uint8Array(4)});
 
                 await map.once('idle');
                 const renderPromise = map.once('render');
@@ -1384,7 +1384,7 @@ describe('Map', () => {
                 const output = map.queryRenderedFeatures();
 
                 // queryRenderedFeatures should return the same number of features regardless of whether the optimization was used or not
-                expect(output.length).toEqual(6);
+                expect(output).toHaveLength(6);
 
                 // confirm that the optimization had the opportunity to be used at all
                 expect(hasVisibleVerticesSpy).toHaveBeenCalled();
