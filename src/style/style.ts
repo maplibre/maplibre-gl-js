@@ -698,6 +698,24 @@ class Style extends Evented {
     }
 
     /**
+     * Add a sprite.
+     * @param {string} id id of the desired sprite
+     * @param {string} url url to load the desired sprite from
+     * @param {StyleSetterOptions} options
+     */
+    addSprite(id: string, url: string, options: StyleSetterOptions = {}) {
+        const spriteToAdd = {id, url};
+        let serializedSprite = this.serialize().sprite;
+        if (typeof serializedSprite === 'string') serializedSprite = [{id: 'default', url: serializedSprite}];
+        const updatedSprite = serializedSprite.concat([spriteToAdd]);
+
+        if (this._validate(validateStyle.sprite, 'sprite', updatedSprite, null, options)) return;
+
+        this._loadSprite([spriteToAdd]);
+        this.stylesheet.sprite = updatedSprite;
+    }
+
+    /**
      * Add a layer to the map style. The layer will be inserted before the layer with
      * ID `before`, or appended if `before` is omitted.
      * @param {Object | CustomLayerInterface} layerObject The style layer to add.

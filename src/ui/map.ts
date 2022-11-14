@@ -1618,6 +1618,16 @@ class Map extends Camera {
     }
 
     /**
+     *
+     * @param {strting} id id of the desired sprite
+     * @param {string} url url to load the desired sprite from
+     */
+    addSprite(id: string, url: string) {
+        this.style.addSprite(id, url);
+        return this._update(true);
+    }
+
+    /**
      * Returns a Boolean indicating whether the source is loaded. Returns `true` if the source with
      * the given ID in the map's style has no outstanding network requests, otherwise `false`.
      *

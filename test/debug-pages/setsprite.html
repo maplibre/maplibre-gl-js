@@ -120,6 +120,10 @@ map.on('load', function () {
 
     map.showCollisionBoxes = true;
 
+    setTimeout(() => {
+        map.addSprite('sprite2', 'http://localhost:9966/test/debug-pages/sprite2');
+    }, 2000);
+
     // 'sprite': 'http://localhost:9966/test/debug-pages/sprite1',
     //
     // 'sprite': [
