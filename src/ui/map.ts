@@ -2277,6 +2277,59 @@ class Map extends Camera {
     }
 
     /**
+     * Sets the value of the style's glyphs property.
+     *
+     * @param glyphsUrl Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/glyphs/).
+     * @param {Object} [options] Options object.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @returns {Map} `this`
+     * @example
+     * map.setGlyphs('https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf');
+     */
+    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}) {
+        this._lazyInitEmptyStyle();
+        this.style.setGlyphs(glyphsUrl, options);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the value of the style's glyphs URL
+     *
+     * @returns {string | null} glyphs Style's glyphs url
+     */
+    getGlyphs() {
+        return this.style.getGlyphsUrl();
+    }
+
+    /**
+     * Sets the value of the style's sprite property.
+     *
+     * @param spriteUrl Sprite URL to set.
+     * @param {Object} [options] Options object.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @returns {Map} `this`
+     * @example
+     * map.setSprite('YOUR_SPRITE_URL');
+     */
+    setSprite(spriteUrl: string | null, options: StyleSetterOptions = {}) {
+        this._lazyInitEmptyStyle();
+        this.style.setSprite(spriteUrl, options, (err) => {
+            if (!err) {
+                this._update(true);
+            }
+        });
+    }
+
+    /**
+     * Returns the value of the style's sprite URL
+     *
+     * @returns {string | null} sprite Style's sprite url
+     */
+    getSprite() {
+        return this.style.getSpriteUrl();
+    }
+
+    /**
      * Sets the any combination of light values.
      *
      * @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#light).

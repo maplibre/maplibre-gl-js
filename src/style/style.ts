@@ -10,7 +10,7 @@ import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/u
 import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
-import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
+import {validateStyle, validateGlyphsUrl, emitValidationErrors as _emitValidationErrors, validateSprite} from './validate_style';
 import {getSourceType, setSourceType, Source} from '../source/source';
 import type {SourceClass} from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
@@ -60,7 +60,6 @@ import type {
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';
-import { layer } from '../style-spec/validate_style';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',
@@ -176,8 +175,12 @@ class Style extends Evented {
     _updatedLayers: {[_: string]: true};
     _removedLayers: {[_: string]: StyleLayer};
     _changedImages: {[_: string]: true};
+    _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
+    // image ids of images loaded from style's sprite
+    _spriteImages: Array<string>;
+    // image ids of all images loaded (sprite + user)
     _availableImages: Array<string>;
 
     crossTileSymbolIndex: CrossTileSymbolIndex;
@@ -332,26 +335,58 @@ class Style extends Evented {
         this.fire(new Event('style.load'));
     }
 
-    _loadSprite(url: string) {
+    _loadSprite(url: string, isUpdate: boolean = false, completion: (err: Error) => void = undefined) {
         this._spriteRequest = loadSprite(url, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
             this._spriteRequest = null;
             if (err) {
                 this.fire(new ErrorEvent(err));
             } else if (images) {
                 for (const id in images) {
-                    if(id in this.imageManager.images){
-                        this.imageManager.updateImage(id, images[id]);
+                    if (id in this.imageManager.images) {
+                        this.imageManager.updateImage(id, images[id], false);
                     } else {
                         this.imageManager.addImage(id, images[id]);
+                    }
+
+                    if (isUpdate) {
+                        this._changedImages[id] = true;
                     }
                 }
             }
 
+            // remove old sprite's loaded images that are not in new sprite
+            const imagesToRemove = this._spriteImages ? this._spriteImages.filter(id => !(id in images)) : [];
+            for (const id of imagesToRemove) {
+                this.imageManager.removeImage(id);
+                this._changedImages[id] = true;
+            }
+
+            this._spriteImages = Object.keys(images);
             this.imageManager.setLoaded(true);
             this._availableImages = this.imageManager.listImages();
+            if (isUpdate) {
+                this._changed = true;
+            }
+
             this.dispatcher.broadcast('setImages', this._availableImages);
             this.fire(new Event('data', {dataType: 'style'}));
+            if (completion) {
+                completion(err);
+            }
         });
+    }
+
+    _unloadSprite() {
+        for (const id of this._spriteImages) {
+            this.imageManager.removeImage(id);
+            this._changedImages[id] = true;
+        }
+
+        this._spriteImages = [];
+        this._availableImages = this.imageManager.listImages();
+        this._changed = true;
+        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.fire(new Event('data', {dataType: 'style'}));
     }
 
     _validateLayer(layer: StyleLayer) {
@@ -459,6 +494,7 @@ class Style extends Evented {
             }
 
             this._updateTilesForChangedImages();
+            this._updateTilesForChangedGlyphs();
 
             for (const id in this._updatedPaintProps) {
                 this._layers[id].updateTransitions(parameters);
@@ -515,6 +551,15 @@ class Style extends Evented {
         }
     }
 
+    _updateTilesForChangedGlyphs() {
+        if (this._glyphsDidChange) {
+            for (const name in this.sourceCaches) {
+                this.sourceCaches[name].reloadTilesForDependencies(['glyphs'], ['']);
+            }
+            this._glyphsDidChange = false;
+        }
+    }
+
     _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
         this.dispatcher.broadcast('updateLayers', {
             layers: this._serializeLayers(updatedIds),
@@ -532,6 +577,7 @@ class Style extends Evented {
         this._updatedPaintProps = {};
 
         this._changedImages = {};
+        this._glyphsDidChange = false;
     }
 
     /**
@@ -1434,45 +1480,60 @@ class Style extends Evented {
 
     getGlyphs(
         mapId: string,
-        params: {stacks: {[_: string]: Array<number>}},
+        params: {
+            stacks: {[_: string]: Array<number>};
+            source: string;
+            tileID: OverscaledTileID;
+            type: string;
+        },
         callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
     ) {
         this.glyphManager.getGlyphs(params.stacks, callback);
+        const sourceCache = this.sourceCaches[params.source];
+        if (sourceCache) {
+            // we are not setting stacks as dependencies since for now
+            // we just need to know which tiles have glyph dependencies
+            sourceCache.setDependencies(params.tileID.key, params.type, ['']);
+        }
     }
 
     getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
         return makeRequest(params, callback);
     }
 
-    setGlyphs(glyphsUrl: string | null){
+    getGlyphsUrl() {
+        return this.stylesheet.glyphs || null;
+    }
+
+    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}) {
+        this._checkLoaded();
+        if (glyphsUrl && options.validate && emitValidationErrors(this, validateGlyphsUrl({key: 'glyphs', value: glyphsUrl}))) {
+            return;
+        }
+
+        this._glyphsDidChange = true;
         this.stylesheet.glyphs = glyphsUrl;
         this.glyphManager.entries = {};
         this.glyphManager.setURL(glyphsUrl);
-        
-        const sourcesToUpdate = new Set(Object.values(this._layers)
-            .filter(layer => layer.type === 'symbol')
-            .map(layer => layer.source));
-        sourcesToUpdate.forEach(sourceId => {
-            if(this.sourceCaches[sourceId]){
-                this.sourceCaches[sourceId].reload();
-            }
-        });
     }
 
-    setSprite(spriteUrl: string | null){
-        this.stylesheet.sprite = spriteUrl;
-        if(spriteUrl){
-            this._loadSprite(spriteUrl);
+    getSpriteUrl() {
+        return this.stylesheet.sprite || null;
+    }
+
+    setSprite(spriteUrl: string | null, options: StyleSetterOptions = {}, completion: (err: Error) => void) {
+        this._checkLoaded();
+        if (spriteUrl && options.validate && emitValidationErrors(this, validateSprite({key: 'sprite', value: spriteUrl}))) {
+            return;
         }
 
-        const sourcesToUpdate = new Set(Object.values(this._layers)
-            .filter(layer => layer.type === 'symbol')
-            .map(layer => layer.source));
-        sourcesToUpdate.forEach(sourceId => {
-            if(this.sourceCaches[sourceId]){
-                this.sourceCaches[sourceId].reload();
-            }
-        });
+        this.stylesheet.sprite = spriteUrl;
+        if (spriteUrl) {
+            this._loadSprite(spriteUrl, true, completion);
+        } else {
+            this._unloadSprite();
+            completion(null);
+        }
     }
 }
 
