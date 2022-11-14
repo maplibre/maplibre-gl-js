@@ -101,8 +101,6 @@ export default class GlyphManager {
             }
 
             if (!this.url) {
-                console.trace();
-                console.log(stack, range);
                 callback(new Error('glyphsUrl is not set'));
                 return;
             }
