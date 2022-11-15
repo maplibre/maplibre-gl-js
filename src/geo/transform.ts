@@ -201,7 +201,7 @@ class Transform {
         this._unmodified = false;
         this._zoom = z;
         this.scale = this.zoomScale(z);
-        this.tileZoom = Math.floor(z);
+        this.tileZoom = Math.max(0, Math.floor(z));
         this.zoomFraction = z - this.tileZoom;
         this._constrain();
         this._calcMatrices();
