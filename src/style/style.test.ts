@@ -872,6 +872,129 @@ describe('Style#removeSource', () => {
     });
 });
 
+describe('Style#addSprite', () => {
+    test('throw before loaded', () => {
+        const style = new Style(getStubMap());
+        expect(() => style.addSprite('test', 'https://example.com/sprite')).toThrow(/load/i);
+    });
+
+    test('validates input and fires an error if there\'s already an existing sprite with the same id', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        style.on('style.load', () => {
+            style.on('error', (error) => {
+                expect(error.error.message).toMatch(/sprite: all the sprites' ids must be unique, but test is duplicated/);
+                done();
+            });
+
+            style.addSprite('test', 'https://example.com/sprite');
+            style.addSprite('test', 'https://example.com/sprite2');
+        });
+    });
+
+    test('adds a new sprite to the stylesheet when there\'s no sprite at all', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        style.on('style.load', () => {
+            style.addSprite('test', 'https://example.com/sprite');
+            expect(style.stylesheet.sprite).toStrictEqual([{id: 'test', url: 'https://example.com/sprite'}]);
+            done();
+        });
+    });
+
+    test('adds a new sprite to the stylesheet when there\'s a stringy sprite existing', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sprite: 'https://example.com/default'}));
+        style.on('style.load', () => {
+            style.addSprite('test', 'https://example.com/sprite');
+            expect(style.stylesheet.sprite).toStrictEqual([
+                {id: 'default', url: 'https://example.com/default'},
+                {id: 'test', url: 'https://example.com/sprite'}
+            ]);
+            done();
+        });
+    });
+
+    test('adds a new sprite to the stylesheet when there\'s an array-sprite existing', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sprite: [{id: 'default', url: 'https://example.com/default'}]}));
+        style.on('style.load', () => {
+            style.addSprite('test', 'https://example.com/sprite');
+            expect(style.stylesheet.sprite).toStrictEqual([
+                {id: 'default', url: 'https://example.com/default'},
+                {id: 'test', url: 'https://example.com/sprite'}
+            ]);
+            done();
+        });
+    });
+});
+
+describe('Style#removeSprite', () => {
+    test('throw before loaded', () => {
+        const style = new Style(getStubMap());
+        expect(() => style.removeSprite('test')).toThrow(/load/i);
+    });
+
+    test('fires an error when trying to delete an non-existing sprite (sprite: undefined)', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        style.on('style.load', () => {
+            style.on('error', (error) => {
+                expect(error.error.message).toMatch(/Sprite \"test\" doesn't exists on this map./);
+                done();
+            });
+
+            style.removeSprite('test');
+        });
+    });
+
+    test('fires an error when trying to delete an non-existing sprite (sprite: single url)', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sprite: 'https://example.com/sprite'}));
+        style.on('style.load', () => {
+            style.on('error', (error) => {
+                expect(error.error.message).toMatch(/Sprite \"test\" doesn't exists on this map./);
+                done();
+            });
+
+            style.removeSprite('test');
+        });
+    });
+
+    test('fires an error when trying to delete an non-existing sprite (sprite: array)', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sprite: [{id: 'default', url: 'https://example.com/sprite'}]}));
+        style.on('style.load', () => {
+            style.on('error', (error) => {
+                expect(error.error.message).toMatch(/Sprite \"test\" doesn't exists on this map./);
+                done();
+            });
+
+            style.removeSprite('test');
+        });
+    });
+
+    test('removes the sprite when it\'s a single URL', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sprite: 'https://example.com/test'}));
+        style.on('style.load', () => {
+            style.removeSprite('default');
+            expect(style.stylesheet.sprite).toBeUndefined();
+            done();
+        });
+    });
+
+    test('removes the sprite when it\'s an array', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON([{id: 'default', url: 'https://example.com/sprite'}]));
+        style.on('style.load', () => {
+            style.removeSprite('default');
+            expect(style.stylesheet.sprite).toBeUndefined();
+            done();
+        });
+    });
+});
+
 describe('Style#setGeoJSONSourceData', () => {
     const geoJSON = {type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON;
 

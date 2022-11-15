@@ -15,9 +15,9 @@
 <div id='map'></div>
 
 <script src='../../dist/maplibre-gl-dev.js'></script>
-<script src='./multi-sprite-demotiles.js'></script>
+<script src='./light-demotiles.js'></script>
 <script>
-var style = window.multispritedemotiles;
+var style = window.lightdemotiles;
 
 var map = window.map = new maplibregl.Map({
     container: 'map',
@@ -120,9 +120,8 @@ map.on('load', function () {
 
     map.showCollisionBoxes = true;
 
-    setTimeout(() => {
-        map.addSprite('sprite2', 'http://localhost:9966/test/debug-pages/sprite2');
-    }, 2000);
+    map.addSprite('default', 'http://localhost:9966/test/debug-pages/sprite1');
+    map.addSprite('sprite2', 'http://localhost:9966/test/debug-pages/sprite2');
 
     // 'sprite': 'http://localhost:9966/test/debug-pages/sprite1',
     //

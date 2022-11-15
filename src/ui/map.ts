@@ -1618,12 +1618,33 @@ class Map extends Camera {
     }
 
     /**
+     * Adds a sprite to the map's style.
      *
-     * @param {strting} id id of the desired sprite
-     * @param {string} url url to load the desired sprite from
+     * @param {string} id The ID of the sprite to add. Must not conflict with existing sprites.
+     * @param {string} url The URL to load the sprite from
+     * @fires style
+     * @returns {Map} `this`
+     * @example
+     * map.addSprite('sprite-two', 'http://example.com/sprite-two');
      */
     addSprite(id: string, url: string) {
         this.style.addSprite(id, url);
+        return this._update(true);
+    }
+
+    /**
+     * Removes the sprite from the map's style.
+     *
+     * @param {string} id The ID of the sprite to remove. If the sprite is declared as a single URL, the ID must be "default".
+     * @fires style
+     * @returns {Map} `this`
+     * @example
+     * map.addSprite('sprite-two');
+     * @example
+     * map.addSprite('default');
+     */
+    removeSprite(id: string) {
+        this.style.removeSprite(id);
         return this._update(true);
     }
 

@@ -164,6 +164,7 @@ class Style extends Evented {
 
     _request: Cancelable;
     _spriteRequest: Cancelable;
+    _spritesImagesIds: {[spriteId: string]: string[]};
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: any};
     _order: Array<string>;
@@ -201,6 +202,7 @@ class Style extends Evented {
         this.lineAtlas = new LineAtlas(256, 512);
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
+        this._spritesImagesIds = {};
         this._layers = {};
         this._serializedLayers = {};
         this._order  = [];
@@ -338,11 +340,15 @@ class Style extends Evented {
             if (err) {
                 this.fire(new ErrorEvent(err));
             } else if (images) {
-                for (const spriteName in images) {
-                    for (const id in images[spriteName]) {
+                for (const spriteId in images) {
+                    this._spritesImagesIds[spriteId] = [];
+
+                    for (const id in images[spriteId]) {
                         // don't prefix images of the "default" sprite
-                        const imageId = spriteName === 'default' ? id : `${spriteName}:${id}`;
-                        this.imageManager.addImage(imageId, images[spriteName][id]);
+                        const imageId = spriteId === 'default' ? id : `${spriteId}:${id}`;
+                        // save all the sprite's images' ids to be able to delete them in `removeSprite`
+                        this._spritesImagesIds[spriteId].push(imageId);
+                        this.imageManager.addImage(imageId, images[spriteId][id]);
                     }
                 }
             }
@@ -704,15 +710,58 @@ class Style extends Evented {
      * @param {StyleSetterOptions} options
      */
     addSprite(id: string, url: string, options: StyleSetterOptions = {}) {
-        const spriteToAdd = {id, url};
-        let serializedSprite = this.serialize().sprite;
-        if (typeof serializedSprite === 'string') serializedSprite = [{id: 'default', url: serializedSprite}];
-        const updatedSprite = serializedSprite.concat([spriteToAdd]);
+        this._checkLoaded();
+
+        if (!this.stylesheet.sprite) this.stylesheet.sprite = [];
+
+        const spriteToAdd = [{id, url}];
+        if (typeof this.stylesheet.sprite === 'string') this.stylesheet.sprite = [{id: 'default', url: this.stylesheet.sprite}];
+        const updatedSprite = this.stylesheet.sprite.concat(spriteToAdd);
 
         if (this._validate(validateStyle.sprite, 'sprite', updatedSprite, null, options)) return;
 
-        this._loadSprite([spriteToAdd]);
+        this._loadSprite(spriteToAdd);
         this.stylesheet.sprite = updatedSprite;
+    }
+
+    /**
+     * Remove a sprite by its id.
+     * @param id the id of the sprite to remove
+     */
+    removeSprite(id: string) {
+        this._checkLoaded();
+
+        if (
+            (typeof this.stylesheet.sprite === 'string' && id !== 'default') ||
+            (Array.isArray(this.stylesheet.sprite) && !this.stylesheet.sprite.find(sprite => sprite.id === id)) ||
+            (this.stylesheet.sprite === undefined)
+        ) {
+            this.fire(new ErrorEvent(new Error(`Sprite "${id}" doesn't exists on this map.`)));
+            return;
+        }
+
+        if (this._spritesImagesIds[id]) {
+            for (const imageId of this._spritesImagesIds[id]) {
+                this.imageManager.removeImage(imageId);
+            }
+        }
+
+        console.log(this.stylesheet.sprite);
+
+        if (typeof this.stylesheet.sprite === 'string') {
+            this.stylesheet.sprite = undefined;
+        } else {
+            this.stylesheet.sprite.splice(this.stylesheet.sprite.findIndex(sprite => sprite.id === id), 1);
+            if (this.stylesheet.sprite.length === 0) this.stylesheet.sprite = undefined;
+        }
+
+        delete this._spritesImagesIds[id];
+
+        console.log(this.stylesheet.sprite);
+
+        this._availableImages = this.imageManager.listImages();
+        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.fire(new Event('data', {dataType: 'style'}));
     }
 
     /**
