@@ -169,7 +169,7 @@ describe('drawSymbol', () => {
             }
         } as any;
         painterMock.renderPass = 'translucent';
-        painterMock.transform = { pitch: 0, labelPlaneMatrix: mat4.create() } as any as Transform;
+        painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
         painterMock.options = {} as any;
         painterMock.style = {
             map: {}
@@ -185,7 +185,7 @@ describe('drawSymbol', () => {
             }
         } as SymbolLayerSpecification;
         const layer = new SymbolStyleLayer(layerSpec);
-        layer.recalculate({ zoom: 0, zoomHistory: {} as ZoomHistory } as EvaluationParameters, []);
+        layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.posMatrix = mat4.create();
@@ -213,7 +213,7 @@ describe('drawSymbol', () => {
         (tile.getBucket as jest.Mock).mockReturnValue(bucketMock);
         const sourceCacheMock = new SourceCache(null, null, null);
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
-        sourceCacheMock.map = { showCollisionBoxes: false } as any as Map;
+        sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 
         drawSymbol(painterMock, sourceCacheMock, layer, [tileId], null);
 
