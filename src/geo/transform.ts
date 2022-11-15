@@ -29,7 +29,6 @@ class Transform {
     height: number;
     angle: number;
     rotationMatrix: mat2;
-    zoomFraction: number;
     pixelsToGLUnits: [number, number];
     cameraToCenterDistance: number;
     cameraToSeaLevelDistance: number;
@@ -196,13 +195,12 @@ class Transform {
 
     get zoom(): number { return this._zoom; }
     set zoom(zoom: number) {
-        const z = Math.min(Math.max(zoom, this.minZoom), this.maxZoom);
-        if (this._zoom === z) return;
+        const constrainedZoom = Math.min(Math.max(zoom, this.minZoom), this.maxZoom);
+        if (this._zoom === constrainedZoom) return;
         this._unmodified = false;
-        this._zoom = z;
-        this.scale = this.zoomScale(z);
-        this.tileZoom = Math.max(0, Math.floor(z));
-        this.zoomFraction = z - this.tileZoom;
+        this._zoom = constrainedZoom;
+        this.tileZoom = Math.max(0, Math.floor(constrainedZoom));
+        this.scale = this.zoomScale(constrainedZoom);
         this._constrain();
         this._calcMatrices();
     }
