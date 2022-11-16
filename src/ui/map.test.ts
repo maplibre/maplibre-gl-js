@@ -1278,6 +1278,7 @@ describe('Map', () => {
             const map = createMap({style: undefined});
             expect(map.queryRenderedFeatures()).toEqual([]);
         });
+
     });
 
     describe('#setLayoutProperty', () => {
