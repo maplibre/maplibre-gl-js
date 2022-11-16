@@ -351,12 +351,50 @@ function arrayBufferToCanvasImageSource(data: ArrayBuffer, callback: Callback<Ca
     }
 }
 
-let imageQueue, numImageRequests;
+let imageQueue;
+let currentParallelImageRequests = 0;
 export const resetImageRequestQueue = () => {
     imageQueue = [];
-    numImageRequests = 0;
+    currentParallelImageRequests = 0;
 };
 resetImageRequestQueue();
+
+// By default, the image queue will process requests as quickly as it can while limiting
+// the number of concurrent requests to MAX_PARALLEL_IMAGE_REQUESTS. The default behavior
+// ensures that static views of the map can be rendered with minimal delay.
+// However, the default behavior can prevent dynamic views of the map from rendering
+// smoothly.
+//
+// Therefore, when the view of the map is moving dynamically, smoother frame rates can be
+// achieved by throttling the number of items processed by the queue per frame. This can be
+// accomplished by using installImageQueueThrottleControlCallback() to allow the caller to
+// use a lambda function to determine when the queue should be throttled (e.g. when isMoving())
+// and manually calling processImageRequestQueue() in the render loop.
+
+export type ImageQueueThrottleControlCallback = () => boolean;
+
+let imageQueueThrottleControlCallbackHandleCounter: number = 0;
+const imageQueueThrottleControlCallbacks = [];
+
+// Install a callback to control when image queue throttling is desired (e.g. when the map view is moving).
+export const installImageQueueThrottleControlCallback = function (callback: ImageQueueThrottleControlCallback): number /*callbackHandle*/ {
+    const handle = imageQueueThrottleControlCallbackHandleCounter++;
+    imageQueueThrottleControlCallbacks[handle] = callback;
+    return handle;
+};
+
+// Remove a previously installed callback by passing in the handle returned by installImageQueueThrottleControlCallback().
+export const removeImageQueueThrottleControlCallback = function (callbackHandle: number) {
+    const index = imageQueueThrottleControlCallbacks.indexOf(callbackHandle, 0);
+    if (index >= 0) {
+        imageQueueThrottleControlCallbacks.splice(index, 1);
+    }
+};
+
+// Check to see if any of the installed callbacks are requesting the queue to be throttled.
+export const isImageQueueThrottled = function (): boolean {
+    return imageQueueThrottleControlCallbacks.some(item => item());
+};
 
 export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
 
@@ -371,40 +409,32 @@ export const getImage = function(
         requestParameters.headers.accept = 'image/webp,*/*';
     }
 
-    // limit concurrent image loads to help with raster sources performance on big screens
-    if (numImageRequests >= config.MAX_PARALLEL_IMAGE_REQUESTS) {
-        const queued = {
-            requestParameters,
-            callback,
-            cancelled: false,
-            cancel() { this.cancelled = true; }
-        };
-        imageQueue.push(queued);
-        return queued;
-    }
-    numImageRequests++;
+    const queued = {
+        requestParameters,
+        callback,
+        cancelled: false,
+        completed: false,
+        cancel() {
+            this.cancelled = true;
 
-    let advanced = false;
-    const advanceImageRequestQueue = () => {
-        if (advanced) return;
-        advanced = true;
-        numImageRequests--;
-
-        while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) { // eslint-disable-line
-            const request = imageQueue.shift();
-            const {requestParameters, callback, cancelled} = request;
-            if (!cancelled) {
-                request.cancel = getImage(requestParameters, callback).cancel;
+            if (!isImageQueueThrottled()) {
+                processImageRequestQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
             }
         }
     };
+    imageQueue.push(queued);
 
+    if (!isImageQueueThrottled()) {
+        processImageRequestQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
+    }
+
+    return queued;
+};
+
+function doArrayRequest(requestParameters: RequestParameters, callback: GetImageCallback, request: any): Cancelable {
     // request the image with XHR to work around caching issues
     // see https://github.com/mapbox/mapbox-gl-js/issues/1470
-    const request = getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
-
-        advanceImageRequestQueue();
-
+    return getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
         if (err) {
             callback(err);
         } else if (data) {
@@ -417,14 +447,57 @@ export const getImage = function(
             };
             arrayBufferToCanvasImageSource(data, decoratedCallback);
         }
-    });
 
-    return {
-        cancel: () => {
-            request.cancel();
-            advanceImageRequestQueue();
+        if (!request.cancelled) {
+            request.completed = true;
+            currentParallelImageRequests--;
+
+            if (!isImageQueueThrottled()) {
+                processImageRequestQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
+            }
+        }
+    });
+}
+
+export const processImageRequestQueue = function (
+    maxImageRequests: number) {
+
+    if (!maxImageRequests) {
+        maxImageRequests = Math.max(0, config.MAX_PARALLEL_IMAGE_REQUESTS - currentParallelImageRequests);
+    }
+
+    const cancelRequest = function () {
+        if (!this.completed && !this.cancelled) {
+            currentParallelImageRequests--;
+            this.cancelled = true;
+            this.innerRequest.cancel();
+
+            if (!isImageQueueThrottled()) {
+                processImageRequestQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
+            }
         }
     };
+
+    // limit concurrent image loads to help with raster sources performance on big screens
+
+    for (let numImageRequests = currentParallelImageRequests; numImageRequests < maxImageRequests && imageQueue.length; numImageRequests++) {
+
+        const request = imageQueue.shift();
+        const {requestParameters, callback, cancelled} = request;
+
+        if (cancelled) {
+            continue;
+        }
+
+        const innerRequest = doArrayRequest(requestParameters, callback, request);
+
+        currentParallelImageRequests++;
+
+        request.innerRequest = innerRequest;
+        request.cancel = function () { cancelRequest(); };
+    }
+
+    return imageQueue.length;
 };
 
 export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVideoElement>): Cancelable {

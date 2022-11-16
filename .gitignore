@@ -32,3 +32,4 @@ yarn-debug.log
 npm-debug.log
 .idea
 *.iml
+/.vs/
