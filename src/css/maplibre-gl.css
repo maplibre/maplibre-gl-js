@@ -16,6 +16,10 @@
     height: 100%;
 }
 
+.maplibregl-ctrl-group button.maplibregl-ctrl-compass {
+    touch-action: none;
+}
+
 .maplibregl-canvas-container.maplibregl-interactive,
 .maplibregl-ctrl-group button.maplibregl-ctrl-compass {
     cursor: grab;
