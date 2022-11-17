@@ -392,7 +392,7 @@ export const removeImageQueueThrottleControlCallback = function (callbackHandle:
 };
 
 // Check to see if any of the installed callbacks are requesting the queue to be throttled.
-export const isImageQueueThrottled = function (): boolean {
+const isImageQueueThrottled = function (): boolean {
     return imageQueueThrottleControlCallbacks.some(item => item());
 };
 
