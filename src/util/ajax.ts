@@ -466,11 +466,11 @@ export const processImageRequestQueue = function (
         maxImageRequests = Math.max(0, config.MAX_PARALLEL_IMAGE_REQUESTS - currentParallelImageRequests);
     }
 
-    const cancelRequest = function () {
-        if (!this.completed && !this.cancelled) {
+    const cancelRequest = function (request: any) {
+        if (!request.completed && !request.cancelled) {
             currentParallelImageRequests--;
-            this.cancelled = true;
-            this.innerRequest.cancel();
+            request.cancelled = true;
+            request.innerRequest.cancel();
 
             if (!isImageQueueThrottled()) {
                 processImageRequestQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
@@ -494,7 +494,7 @@ export const processImageRequestQueue = function (
         currentParallelImageRequests++;
 
         request.innerRequest = innerRequest;
-        request.cancel = function () { cancelRequest(); };
+        request.cancel = function () { cancelRequest(request); };
     }
 
     return imageQueue.length;
