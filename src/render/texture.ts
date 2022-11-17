@@ -81,7 +81,7 @@ class Texture {
         const {gl} = context;
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
-        if (minFilter === gl.LINEAR_MIPMAP_NEAREST && !this.isSizePowerOfTwo()) {
+        if (!this.useMipmap || (minFilter === gl.LINEAR_MIPMAP_NEAREST && !this.isSizePowerOfTwo())) {
             minFilter = gl.LINEAR;
         }
 

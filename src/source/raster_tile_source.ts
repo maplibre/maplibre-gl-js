@@ -19,6 +19,7 @@ import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
 } from '../style-spec/types.g';
+import config from '../util/config';
 
 class RasterTileSource extends Evented implements Source {
     type: 'raster' | 'raster-dem';
@@ -39,6 +40,7 @@ class RasterTileSource extends Evented implements Source {
     _loaded: boolean;
     _options: RasterSourceSpecification | RasterDEMSourceSpecification;
     _tileJSONRequest: Cancelable;
+    useMipmap: boolean;
 
     constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
@@ -53,6 +55,7 @@ class RasterTileSource extends Evented implements Source {
         this.scheme = 'xyz';
         this.tileSize = 512;
         this._loaded = false;
+        this.useMipmap = config.ENABLE_RASTER_MIPMAPS;
 
         this._options = extend({type: 'raster'}, options);
         extend(this, pick(options, ['url', 'scheme', 'tileSize']));
@@ -121,10 +124,10 @@ class RasterTileSource extends Evented implements Source {
                 const gl = context.gl;
                 tile.texture = this.map.painter.getTileTexture(img.width);
                 if (tile.texture) {
-                    tile.texture.update(img, {useMipmap: true});
+                    tile.texture.update(img, {useMipmap: this.useMipmap});
                 } else {
-                    tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: true});
-                    tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+                    tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: this.useMipmap});
+                    tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, this.useMipmap ? gl.LINEAR_MIPMAP_NEAREST : gl.LINEAR);
 
                     if (context.extTextureFilterAnisotropic) {
                         gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, context.extTextureFilterAnisotropicMax);

@@ -213,6 +213,21 @@ const exported = {
      */
     removeProtocol(customProtocol: string) {
         delete config.REGISTERED_PROTOCOLS[customProtocol];
+    },
+
+    /**
+     * Sets whether raster layers will generate mipmaps. Default is true.
+     * @var {string} isRasterMipmapsEnabled
+     * @returns {boolean} True if raster layers will generate mipmaps.
+     * @example
+     * maplibregl.isRasterMipmapsEnabled = false;
+     */
+    get isRasterMipmapsEnabled(): boolean {
+        return config.ENABLE_RASTER_MIPMAPS;
+    },
+
+    set isRasterMipmapsEnabled(isEnabled: boolean) {
+        config.ENABLE_RASTER_MIPMAPS = isEnabled;
     }
 };
 
