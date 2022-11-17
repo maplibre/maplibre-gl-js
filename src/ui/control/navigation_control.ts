@@ -164,6 +164,7 @@ class MouseRotateWrapper {
         bindAll(['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend', 'reset'], this);
         DOM.addEventListener(element, 'mousedown', this.mousedown);
         DOM.addEventListener(element, 'touchstart', this.touchstart, {passive: false});
+        DOM.addEventListener(element, 'touchcancel', this.reset);
     }
 
     down(e: MouseEvent, point: Point) {
