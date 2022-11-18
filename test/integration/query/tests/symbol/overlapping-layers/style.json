@@ -1,0 +1,85 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 256,
+      "operations": [
+        [
+          "setCenter",
+          [
+            8,
+            8
+          ]
+        ]
+      ],
+      "queryGeometry": [
+        [ 0, 0 ],
+        [ 256, 256 ]
+      ]
+    }
+  },
+  "center": [ 0, 0 ],
+  "zoom": 3,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                1,
+                1
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                8,
+                8
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                4,
+                4
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "sprite": "local://sprites/sprite",
+  "layers": [
+    {
+      "id": "icon1",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "icon-allow-overlap": false,
+        "icon-image": "cliff-sm"
+      }
+    },
+    {
+      "id": "icon2",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "icon-allow-overlap": false,
+        "icon-image": "cliff-sm"
+      }
+    }
+  ]
+}
