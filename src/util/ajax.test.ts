@@ -225,12 +225,12 @@ describe('ajax', () => {
     test('when throttling enabled, getImage queues requests for later processing', done => {
         resetImageRequestQueue();
 
-        server.respondWith(request => request.respond(200, { 'Content-Type': 'image/png' }, ''));
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
-        let isThrottling = true;
-        let callbackHandle = installImageQueueThrottleControlCallback(() => isThrottling);
+        const isThrottling = true;
+        const callbackHandle = installImageQueueThrottleControlCallback(() => isThrottling);
 
         let isProcessingRequests = false;
         function callback(err) {
@@ -242,7 +242,7 @@ describe('ajax', () => {
         }
 
         for (let i = 0; i < maxRequests + 1; i++) {
-            getImage({ url: '' }, callback);
+            getImage({url: ''}, callback);
         }
 
         // with throttling enabled, no requests should have been proessed yet
