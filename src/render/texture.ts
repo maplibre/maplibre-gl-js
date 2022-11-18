@@ -22,7 +22,7 @@ class Texture {
     format: TextureFormat;
     filter: TextureFilter;
     wrap: TextureWrap;
-    useMipmap: boolean;
+    private useMipmap: boolean;
 
     constructor(context: Context, image: TextureImage, format: TextureFormat, options?: {
         premultiply?: boolean;
@@ -71,7 +71,10 @@ class Texture {
             }
         }
 
-        if (this.useMipmap && this.isSizePowerOfTwo()) {
+        // Assuming mipmaps are only supported for textures with dimensions that are powers of two.
+        this.useMipmap = this.useMipmap && this.isSizePowerOfTwo();
+
+        if (this.useMipmap) {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
     }
@@ -81,7 +84,8 @@ class Texture {
         const {gl} = context;
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
-        if (!this.useMipmap || (minFilter === gl.LINEAR_MIPMAP_NEAREST && !this.isSizePowerOfTwo())) {
+        // If a mipmap filter is being requested, but mipmaps aren't generated, fallback to a non-mipmap filter.
+        if (minFilter === gl.LINEAR_MIPMAP_NEAREST && !this.useMipmap) {
             minFilter = gl.LINEAR;
         }
 
