@@ -216,7 +216,7 @@ const exported = {
     },
 
     /**
-     * Sets whether raster layers will generate mipmaps. Default is true.
+     * Gets and sets whether raster layers will generate mipmaps for their textures. Default is true.
      * @var {string} isRasterMipmapsEnabled
      * @returns {boolean} True if raster layers will generate mipmaps.
      * @example
