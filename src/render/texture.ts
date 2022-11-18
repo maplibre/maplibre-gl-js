@@ -22,7 +22,7 @@ class Texture {
     format: TextureFormat;
     filter: TextureFilter;
     wrap: TextureWrap;
-    private useMipmap: boolean;
+    useMipmap: boolean;
 
     constructor(context: Context, image: TextureImage, format: TextureFormat, options?: {
         premultiply?: boolean;
