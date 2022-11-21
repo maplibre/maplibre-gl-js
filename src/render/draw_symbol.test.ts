@@ -71,7 +71,8 @@ describe('drawSymbol', () => {
             },
             segments: {
                 get: () => [1]
-            }
+            },
+            hasVisibleVertices: true
         } as any;
         bucketMock.iconSizeData = {
             kind: 'constant',
@@ -132,7 +133,8 @@ describe('drawSymbol', () => {
             },
             segments: {
                 get: () => [1]
-            }
+            },
+            hasVisibleVertices: true
         } as any;
         bucketMock.iconSizeData = {
             kind: 'constant',
@@ -156,4 +158,66 @@ describe('drawSymbol', () => {
 
         expect(spy.mock.calls[0][9]).toBeFalsy(); // rotateToLine === false
     });
+
+    test('transparent tile optimization should prevent program.draw from being called', () => {
+
+        const painterMock = new Painter(null, null);
+        painterMock.context = {
+            gl: {},
+            activeTexture: {
+                set: () => { }
+            }
+        } as any;
+        painterMock.renderPass = 'translucent';
+        painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
+        painterMock.options = {} as any;
+        painterMock.style = {
+            map: {}
+        } as any as Style;
+
+        const layerSpec = {
+            id: 'mock-layer',
+            source: 'empty-source',
+            type: 'symbol',
+            layout: {},
+            paint: {
+                'text-opacity': 1
+            }
+        } as SymbolLayerSpecification;
+        const layer = new SymbolStyleLayer(layerSpec);
+        layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
+
+        const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
+        tileId.posMatrix = mat4.create();
+        const programMock = new Program(null, null, null, null, null, null, null);
+        (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
+        const bucketMock = new SymbolBucket(null);
+        bucketMock.icon = {
+            programConfigurations: {
+                get: () => { }
+            },
+            segments: {
+                get: () => [1]
+            },
+            hasVisibleVertices: false // nark this bucket as having no visible vertices
+        } as any;
+        bucketMock.iconSizeData = {
+            kind: 'constant',
+            layoutSize: 1
+        };
+        const tile = new Tile(tileId, 256);
+        tile.tileID = tileId;
+        tile.imageAtlasTexture = {
+            bind: () => { }
+        } as any;
+        (tile.getBucket as jest.Mock).mockReturnValue(bucketMock);
+        const sourceCacheMock = new SourceCache(null, null, null);
+        (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
+        sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
+
+        drawSymbol(painterMock, sourceCacheMock, layer, [tileId], null);
+
+        expect(programMock.draw).toHaveBeenCalledTimes(0);
+    });
+
 });
