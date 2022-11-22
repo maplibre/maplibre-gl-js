@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>MapLibre GL JS debug page</title>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <script>
+        var makeShieldImage = () => {
+            var c = document.createElement('canvas');
+            c.width = 44;
+            c.height = 45;
+            var ctx = c.getContext('2d');
+            ctx.fillStyle = '#00FF00';
+            ctx.fillRect(0, 0, 44, 45);
+            ctx.fillStyle = '#F7F4F2';
+            ctx.fill(new Path2D('M20.83339,42.55591C7.058044,40.12455,0.8589624,30.91732-0.349619,23.11212c-1.371855-8.886002,1.526255-15.43293,3.643491-20.21579L4.596513-0.03904374l2.516547,1.307965C9.381146,2.445558,11.18426,3.18029,13.16839,3.18029c1.96816,0,4.120892-0.729408,6.775864-2.296482L21.29659,0.08163692l1.354109,0.7986221c2.654974,1.567074,4.809479,2.296482,6.774088,2.296482c1.984133,0,3.789017-0.7311826,6.055332-1.911369l2.516544-1.307965l1.299091,2.940704c2.113686,4.781084,5.015347,11.32801,3.645264,20.21223c-1.20858,7.803425-7.409435,17.01243-21.18655,19.44201L21.29659,42.634L20.83339,42.55591z'));
+            ctx.fillStyle = '#F86061';
+            ctx.fill(new Path2D('M39.66312,10.95c-1.034657-2.298257-2.092388-5.363191-2.954899-7.322477c-4.731392,2.461531-8.594948,3.570728-15.41695-0.4543273c-6.816683,4.028605-10.67669,2.919407-15.40808,0.4543273C5.017121,5.586805,3.854682,8.623343,2.928281,10.95H39.66312z'));
+            ctx.fillStyle = '#7B7CB4';
+            ctx.fill(new Path2D('M2.55914,12.28103c-0.4561019,1.30619-0.7808747,7.159204-0.2768557,10.4229C2.993945,27.30755,6.793612,37.37729,21.29659,39.9311c14.50298-2.553814,18.30264-12.62355,19.01431-17.22717c0.5040169-3.260153,0.179245-9.11494-0.2768555-10.4229H2.55914z'));
+            return ctx.getImageData(0, 0, 44, 45);  // 24x24
+        };
+
+        var map = window.map = new maplibregl.Map({
+            container: 'map',
+            zoom: 12,
+            center: [-122.907451, 46.360962],
+            style: {
+                version: 8,
+                glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+                layers: [],
+                sources: {
+                    sampleSource1: {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'FeatureCollection',
+                            'features': [{
+                                'type': 'Feature',
+                                'geometry': {
+                                    'type': 'Point',
+                                    'coordinates': [-122.907451, 46.360962]
+                                },
+                                'properties': {
+                                    'text': '5',
+                                    'size': 36,
+                                    'color': '255,0,0'
+                                }
+                            }]
+                        }
+                    },
+                    sampleSource2: {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'FeatureCollection',
+                            'features': [{
+                                'type': 'Feature',
+                                'geometry': {
+                                    'type': 'Point',
+                                    'coordinates': [-122.909386, 46.330776]
+                                },
+                                'properties': {
+                                    'text': '5',
+                                    'size': 36,
+                                    'color': '255,0,0'
+                                }
+                            }]
+                        }
+                    }
+                },
+            },
+            hash: true
+        });
+        map.on('load', function () {
+            map.addImage('with-match', makeShieldImage(), {
+                content: [7, 13, 37, 36],
+                contentMatch: 'height',
+                height: 45,
+                pixelRatio: 2,
+                visible: true,
+                width: 44,
+                x: 0,
+                y: 0
+            });
+            map.addImage('without-match', makeShieldImage(), {
+                content: [7, 13, 37, 36],
+                height: 45,
+                pixelRatio: 2,
+                visible: true,
+                width: 44,
+                x: 0,
+                y: 0
+            });
+            map.addLayer({
+                id: 'sampleShields1',
+                layout: {
+                    'icon-image': 'with-match',
+                    'icon-padding': 0,
+                    'icon-text-fit': 'both',
+                    'text-field': ['get', 'text'],
+                    'text-size': 18,
+                },
+                paint: {
+                    'text-color': '#FFFFFF'
+                },
+                source: 'sampleSource1',
+                type: 'symbol',
+            });
+            map.addLayer({
+                id: 'sampleShields2',
+                layout: {
+                    'icon-image': 'without-match',
+                    'icon-padding': 0,
+                    'icon-text-fit': 'both',
+                    'text-field': ['get', 'text'],
+                    'text-size': 18,
+                },
+                paint: {
+                    'text-color': '#FFFFFF'
+                },
+                source: 'sampleSource2',
+                type: 'symbol',
+            });
+        });
+    </script>
+</body>
+
+</html>
