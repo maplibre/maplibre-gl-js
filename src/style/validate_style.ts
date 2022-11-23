@@ -2,6 +2,8 @@ import validateStyleMin from '../style-spec/validate_style.min';
 import {ErrorEvent} from '../util/evented';
 
 import type {Evented} from '../util/evented';
+import validateGlyphsUrl from '../style-spec/validate/validate_glyphs_url';
+import validateString from '../style-spec/validate/validate_string';
 
 type ValidationError = {
     message: string;
@@ -31,6 +33,8 @@ export const validateTerrain = validateStyle.terrain;
 export const validateFilter = validateStyle.filter;
 export const validatePaintProperty = validateStyle.paintProperty;
 export const validateLayoutProperty = validateStyle.layoutProperty;
+export {validateString as validateSprite};
+export {validateGlyphsUrl};
 
 export function emitValidationErrors(
     emitter: Evented,
