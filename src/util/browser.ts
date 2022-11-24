@@ -44,7 +44,11 @@ const exported = {
     hardwareConcurrency: typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 4,
 
     get prefersReducedMotion(): boolean {
-        if (!matchMedia) return false;
+        try {
+            if (!matchMedia) return false;
+        } catch (err) {
+            return false;
+        }
         //Lazily initialize media query
         if (reducedMotionQuery == null) {
             reducedMotionQuery = matchMedia('(prefers-reduced-motion: reduce)');
