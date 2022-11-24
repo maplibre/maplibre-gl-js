@@ -78,6 +78,8 @@ npm install
 
 ### Windows
 
+Consider using WSL and follow the above Linux guide or follow the next steps
+
 Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^16), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
 
 Clone the repository
@@ -130,8 +132,7 @@ See [`test/bench/README.md`](./test/bench/README.md).
 ## Code Conventions
 
 * We use [`error` events](https://www.mapbox.com/mapbox-gl-js/api/#Map.event:error) to report user errors.
-* We use [`assert`](https://nodejs.org/api/assert.html) to check invariants that are not likely to be caused by user error. These `assert` statements are stripped out of production builds.
-* We use the following ES6 features:
+* We use the latest feature that the TypeScript language has to offer including, but not limited to:
   * `let`/`const`
   * `for...of` loops (for arraylike iteration only, i.e. what is supported by [Bublé's `dangerousForOf` transform](https://buble.surge.sh/guide/#dangerous-transforms))
   * Arrow functions
@@ -142,10 +143,6 @@ See [`test/bench/README.md`](./test/bench/README.md).
   * Rest parameters
   * Destructuring
   * Modules
-* The following ES6 features are not to be used, in order to maintain support for IE 11 and older mobile browsers. This may change in the future.
-  * Spread (`...`) operator (because it requires Object.assign)
-  * Iterators and generators
-  * "Library" features such as `Map`, `Set`, `array.find`, etc.
 
 The conventions for module exports are:
 
@@ -154,8 +151,6 @@ The conventions for module exports are:
 * Anything else should be a named export.
 
 ### Version Control Conventions
-
-* We use [rebase merging](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) (as opposed to [basic merging](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging#Basic-Merging)) to merge branches
 
 Here is a recommended way to get setup:
 1. Fork this project
@@ -182,22 +177,6 @@ How to add your changelog?
 - Any changelog entry should be descriptive and concise; it should explain the change to a reader without context
 - Any changelog entry should be added to the pull request in the following format: `<changelog>Changelog description</changelog>`
 - Any change that does not require a changelog should be labelled `skip changelog`
-
-### Github Issue Labels
-
-Our labeling system is
-
- - **minimalistic:** Labels' usefulness are inversely proportional to how many we have.
- - **objective:** Labels should be objective enough that any two people would agree on a labeling decision.
- - **useful:** Labels should track state or capture semantic meaning that would otherwise be hard to search.
-
-We have divided our labels into categories to make them easier to use.
-
- - type (blue)
- - actionable status (red)
- - non-actionable status (grey)
- - importance / urgency (green)
- - topic / project / misc (yellow)
 
 ## Recommended Reading
 
