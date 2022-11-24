@@ -2353,9 +2353,9 @@ class Map extends Camera {
      * @fires style
      * @returns {Map} `this`
      * @example
-     * map.addSprite('sprite-two');
+     * map.removeSprite('sprite-two');
      * @example
-     * map.addSprite('default');
+     * map.removeSprite('default');
      */
     removeSprite(id: string) {
         this._lazyInitEmptyStyle();
