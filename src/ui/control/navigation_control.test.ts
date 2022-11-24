@@ -153,4 +153,88 @@ describe('NavigationControl', () => {
         expect(spySetPitch).toHaveBeenCalled();
         expect(spySetBearing).toHaveBeenCalled();
     });
+
+    test('compass button touch drag horizontal', () => {
+        const navControl = new NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        });
+        map.addControl(navControl);
+
+        const spySetPitch = jest.spyOn(map, 'setPitch');
+        const spySetBearing = jest.spyOn(map, 'setBearing');
+
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+        const navRect = navButton.getClientRects();
+
+        const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+
+        simulate.touchstart(navButton, {touches: [{clientX: buttonX, clientY: buttonY}], targetTouches: [{clientX: buttonX, clientY: buttonY}]});
+        simulate.touchmove(window, {touches: [{clientX: buttonX - 50, clientY: buttonY}], targetTouches: [{clientX: buttonX - 50, clientY: buttonY}]});
+        simulate.touchmove(window, {touches: [{clientX: buttonX - 100, clientY: buttonY}], targetTouches: [{clientX: buttonX - 100, clientY: buttonY}]});
+        simulate.touchend(window);
+
+        map._renderTaskQueue.run();
+
+        expect(spySetPitch).not.toHaveBeenCalled();
+        expect(spySetBearing).toHaveBeenCalled();
+    });
+
+    test('compass button touch drag vertical', () => {
+        const navControl = new NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        });
+        map.addControl(navControl);
+
+        const spySetPitch = jest.spyOn(map, 'setPitch');
+        const spySetBearing = jest.spyOn(map, 'setBearing');
+
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+        const navRect = navButton.getClientRects();
+
+        const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+
+        simulate.touchstart(navButton, {touches: [{clientX: buttonX, clientY: buttonY}], targetTouches: [{clientX: buttonX, clientY: buttonY}]});
+        simulate.touchmove(window, {touches: [{clientX: buttonX, clientY: buttonY - 50}], targetTouches: [{clientX: buttonX, clientY: buttonY - 50}]});
+        simulate.touchmove(window, {touches: [{clientX: buttonX, clientY: buttonY - 100}], targetTouches: [{clientX: buttonX, clientY: buttonY - 100}]});
+        simulate.touchend(window);
+
+        map._renderTaskQueue.run();
+
+        expect(spySetPitch).toHaveBeenCalled();
+        expect(spySetBearing).not.toHaveBeenCalled();
+    });
+
+    test('compass button touch drag diagonal', () => {
+        const navControl = new NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        });
+        map.addControl(navControl);
+
+        const spySetPitch = jest.spyOn(map, 'setPitch');
+        const spySetBearing = jest.spyOn(map, 'setBearing');
+
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+        const navRect = navButton.getClientRects();
+
+        const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+
+        simulate.touchstart(navButton, {touches: [{clientX: buttonX, clientY: buttonY}], targetTouches: [{clientX: buttonX, clientY: buttonY}]});
+        simulate.touchmove(window, {touches: [{clientX: buttonX - 50, clientY: buttonY - 50}], targetTouches: [{clientX: buttonX - 50, clientY: buttonY - 50}]});
+        simulate.touchmove(window, {touches: [{clientX: buttonX - 100, clientY: buttonY - 100}], targetTouches: [{clientX: buttonX - 100, clientY: buttonY - 100}]});
+        simulate.touchend(window);
+
+        map._renderTaskQueue.run();
+
+        expect(spySetPitch).toHaveBeenCalled();
+        expect(spySetBearing).toHaveBeenCalled();
+    });
 });
