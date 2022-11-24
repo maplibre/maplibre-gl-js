@@ -1,3 +1,4 @@
+import simulate from '../../../test/unit/lib/simulate_interaction';
 import {createMap as globalCreateMap, setWebGlContext, setPerformance} from '../../util/test/util';
 import NavigationControl from './navigation_control';
 
@@ -54,5 +55,23 @@ describe('NavigationControl', () => {
         expect(
             map.getContainer().querySelectorAll('.maplibregl-ctrl-compass')
         ).toHaveLength(1);
+    });
+
+    test('compass button reset action', () => {
+        map.setPitch(10);
+        map.setBearing(10);
+
+        map.addControl(new NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        }));
+        const spyReset = jest.spyOn(map, 'resetNorthPitch');
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+
+        simulate.click(navButton);
+        map._renderTaskQueue.run();
+
+        expect(spyReset).toHaveBeenCalledTimes(1);
     });
 });
