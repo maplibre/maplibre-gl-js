@@ -3,13 +3,7 @@ import {createMap as globalCreateMap, setWebGlContext, setPerformance} from '../
 import NavigationControl from './navigation_control';
 
 function createMap() {
-    return globalCreateMap({
-        style: {
-            version: 8,
-            owner: 'mapblibre',
-            id: 'demotiles',
-        }
-    });
+    return globalCreateMap({});
 }
 
 let map;
@@ -73,5 +67,89 @@ describe('NavigationControl', () => {
         map._renderTaskQueue.run();
 
         expect(spyReset).toHaveBeenCalledTimes(1);
+    });
+
+    test('compass button drag horizontal', () => {
+        const navControl = new NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        });
+        map.addControl(navControl);
+
+        const spySetPitch = jest.spyOn(map, 'setPitch');
+        const spySetBearing = jest.spyOn(map, 'setBearing');
+
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+        const navRect = navButton.getClientRects();
+
+        const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+
+        simulate.mousedown(navButton, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX - 50, clientY: buttonY});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX - 100, clientY: buttonY});
+        simulate.mouseup(window,   {button: 0, clientX: buttonX - 100, clientY: buttonY});
+
+        map._renderTaskQueue.run();
+
+        expect(spySetPitch).not.toHaveBeenCalled();
+        expect(spySetBearing).toHaveBeenCalled();
+    });
+
+    test('compass button drag vertical', () => {
+        const navControl = new NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        });
+        map.addControl(navControl);
+
+        const spySetPitch = jest.spyOn(map, 'setPitch');
+        const spySetBearing = jest.spyOn(map, 'setBearing');
+
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+        const navRect = navButton.getClientRects();
+
+        const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+
+        simulate.mousedown(navButton, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY - 50});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY - 100});
+        simulate.mouseup(window,   {button: 0, clientX: buttonX, clientY: buttonY - 100});
+
+        map._renderTaskQueue.run();
+
+        expect(spySetPitch).toHaveBeenCalled();
+        expect(spySetBearing).not.toHaveBeenCalled();
+    });
+
+    test('compass button drag diagonal', () => {
+        const navControl = new NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        });
+        map.addControl(navControl);
+
+        const spySetPitch = jest.spyOn(map, 'setPitch');
+        const spySetBearing = jest.spyOn(map, 'setBearing');
+
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+        const navRect = navButton.getClientRects();
+
+        const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+
+        simulate.mousedown(navButton, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX - 50, clientY: buttonY - 50});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX - 100, clientY: buttonY - 100});
+        simulate.mouseup(window,   {button: 0, clientX: buttonX - 100, clientY: buttonY - 100});
+
+        map._renderTaskQueue.run();
+
+        expect(spySetPitch).toHaveBeenCalled();
+        expect(spySetBearing).toHaveBeenCalled();
     });
 });
