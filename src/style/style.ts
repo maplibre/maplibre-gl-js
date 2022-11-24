@@ -10,7 +10,7 @@ import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/u
 import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
-import {validateStyle, validateGlyphsUrl, emitValidationErrors as _emitValidationErrors, validateSprite} from './validate_style';
+import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {getSourceType, setSourceType, Source} from '../source/source';
 import type {SourceClass} from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
@@ -359,7 +359,7 @@ class Style extends Evented {
                         // save all the sprite's images' ids to be able to delete them in `removeSprite`
                         this._spritesImagesIds[spriteId].push(imageId);
                         if(imageId in this.imageManager.images){
-                            this.imageManager.updateImage(imageId, images[spriteId][id]);
+                            this.imageManager.updateImage(imageId, images[spriteId][id], false);
                         } else {
                             this.imageManager.addImage(imageId, images[spriteId][id]);
                         }
@@ -758,19 +758,17 @@ class Style extends Evented {
      * @param {string} url url to load the desired sprite from
      * @param {StyleSetterOptions} options
      */
-    addSprite(id: string, url: string, options: StyleSetterOptions = {}) {
+    addSprite(id: string, url: string, options: StyleSetterOptions = {}, completion: (err: Error) => void) {
         this._checkLoaded();
 
-        if (!this.stylesheet.sprite) this.stylesheet.sprite = [];
-
         const spriteToAdd = [{id, url}];
-        if (typeof this.stylesheet.sprite === 'string') this.stylesheet.sprite = [{id: 'default', url: this.stylesheet.sprite}];
-        const updatedSprite = this.stylesheet.sprite.concat(spriteToAdd);
-
+        const updatedSprite = [
+            ...(typeof this.stylesheet.sprite === 'string' ? [{id: 'default', url: this.stylesheet.sprite}] : this.stylesheet.sprite || []), 
+            ...spriteToAdd]
         if (this._validate(validateStyle.sprite, 'sprite', updatedSprite, null, options)) return;
 
-        this._loadSprite(spriteToAdd);
         this.stylesheet.sprite = updatedSprite;
+        this._loadSprite(spriteToAdd, true, completion);
     }
 
     /**
@@ -792,6 +790,7 @@ class Style extends Evented {
         if (this._spritesImagesIds[id]) {
             for (const imageId of this._spritesImagesIds[id]) {
                 this.imageManager.removeImage(imageId);
+                this._changedImages[imageId] = true;
             }
         }
 
@@ -804,6 +803,7 @@ class Style extends Evented {
 
         delete this._spritesImagesIds[id];
         this._availableImages = this.imageManager.listImages();
+        this._changed = true;
         this.dispatcher.broadcast('setImages', this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
@@ -1572,7 +1572,7 @@ class Style extends Evented {
 
     setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}) {
         this._checkLoaded();
-        if (glyphsUrl && options.validate && emitValidationErrors(this, validateGlyphsUrl({key: 'glyphs', value: glyphsUrl}))) {
+        if (glyphsUrl && this._validate(validateStyle.glyphs, 'glyphs', glyphsUrl, null, options)) {
             return;
         }
 
@@ -1582,14 +1582,13 @@ class Style extends Evented {
         this.glyphManager.setURL(glyphsUrl);
     }
 
-    getSpriteUrl() {
+    getSprite() {
         return this.stylesheet.sprite || null;
     }
 
     setSprite(sprite: SpriteSpecification, options: StyleSetterOptions = {}, completion: (err: Error) => void) {
         this._checkLoaded();
-        // TODO: validation
-        if (sprite && options.validate && emitValidationErrors(this, validateSprite({key: 'sprite', value: sprite}))) {
+        if (sprite && this._validate(validateStyle.sprite, 'sprite', sprite, null, options)) {
             return;
         }
 

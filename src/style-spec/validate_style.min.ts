@@ -13,6 +13,7 @@ import validatePaintProperty from './validate/validate_paint_property';
 import validateLayoutProperty from './validate/validate_layout_property';
 import type {StyleSpecification} from './types.g';
 import validateSprite from './validate/validate_sprite';
+import validateGlyphsUrl from './validate/validate_glyphs_url';
 
 /**
  * Validate a MapLibre GL style against the style specification. This entrypoint,
@@ -61,6 +62,7 @@ function validateStyleMin(style: StyleSpecification, styleSpec = latestStyleSpec
 
 validateStyleMin.source = wrapCleanErrors(validateSource);
 validateStyleMin.sprite = wrapCleanErrors(validateSprite);
+validateStyleMin.glyphs = wrapCleanErrors(validateGlyphsUrl);
 validateStyleMin.light = wrapCleanErrors(validateLight);
 validateStyleMin.terrain = wrapCleanErrors(validateTerrain);
 validateStyleMin.layer = wrapCleanErrors(validateLayer);

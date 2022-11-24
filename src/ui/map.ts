@@ -2314,15 +2314,16 @@ class Map extends Camera {
                 this._update(true);
             }
         });
+        return this;
     }
 
     /**
      * Returns the value of the style's sprite URL
      *
-     * @returns {string | null} sprite Style's sprite url
+     * @returns {SpriteSpecification | null} sprite Style's sprite url
      */
     getSprite() {
-        return this.style.getSpriteUrl();
+        return this.style.getSprite();
     }
 
     /**
@@ -2335,9 +2336,14 @@ class Map extends Camera {
      * @example
      * map.addSprite('sprite-two', 'http://example.com/sprite-two');
      */
-     addSprite(id: string, url: string) {
-        this.style.addSprite(id, url);
-        return this._update(true);
+    addSprite(id: string, url: string, options: StyleSetterOptions = {}) {
+        this._lazyInitEmptyStyle();
+        this.style.addSprite(id, url, options, (err) => {
+            if (!err) {
+                this._update(true);
+            }
+        });
+        return this;
     }
 
     /**
@@ -2352,6 +2358,7 @@ class Map extends Camera {
      * map.addSprite('default');
      */
     removeSprite(id: string) {
+        this._lazyInitEmptyStyle();
         this.style.removeSprite(id);
         return this._update(true);
     }
