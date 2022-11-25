@@ -1,14 +1,9 @@
-import {createMap as globalCreateMap, setWebGlContext, setPerformance} from '../../util/test/util';
+import simulate from '../../../test/unit/lib/simulate_interaction';
+import {createMap as globalCreateMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
 import NavigationControl from './navigation_control';
 
 function createMap() {
-    return globalCreateMap({
-        style: {
-            version: 8,
-            owner: 'mapblibre',
-            id: 'demotiles',
-        }
-    });
+    return globalCreateMap({});
 }
 
 let map;
@@ -16,6 +11,7 @@ let map;
 beforeEach(() => {
     setWebGlContext();
     setPerformance();
+    setMatchMedia();
     map = createMap();
 });
 
@@ -54,5 +50,107 @@ describe('NavigationControl', () => {
         expect(
             map.getContainer().querySelectorAll('.maplibregl-ctrl-compass')
         ).toHaveLength(1);
+    });
+
+    test('compass button reset action', () => {
+        map.setPitch(10);
+        map.setBearing(10);
+
+        map.addControl(new NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        }));
+        const spyReset = jest.spyOn(map, 'resetNorthPitch');
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+
+        simulate.click(navButton);
+        map._renderTaskQueue.run();
+
+        expect(spyReset).toHaveBeenCalledTimes(1);
+    });
+
+    test('compass button drag horizontal', () => {
+        const navControl = new NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        });
+        map.addControl(navControl);
+
+        const spySetPitch = jest.spyOn(map, 'setPitch');
+        const spySetBearing = jest.spyOn(map, 'setBearing');
+
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+        const navRect = navButton.getClientRects();
+
+        const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+
+        simulate.mousedown(navButton, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX - 50, clientY: buttonY});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX - 100, clientY: buttonY});
+        simulate.mouseup(window,   {button: 0, clientX: buttonX - 100, clientY: buttonY});
+
+        map._renderTaskQueue.run();
+
+        expect(spySetPitch).not.toHaveBeenCalled();
+        expect(spySetBearing).toHaveBeenCalled();
+    });
+
+    test('compass button drag vertical', () => {
+        const navControl = new NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        });
+        map.addControl(navControl);
+
+        const spySetPitch = jest.spyOn(map, 'setPitch');
+        const spySetBearing = jest.spyOn(map, 'setBearing');
+
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+        const navRect = navButton.getClientRects();
+
+        const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+
+        simulate.mousedown(navButton, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY - 50});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY - 100});
+        simulate.mouseup(window,   {button: 0, clientX: buttonX, clientY: buttonY - 100});
+
+        map._renderTaskQueue.run();
+
+        expect(spySetPitch).toHaveBeenCalled();
+        expect(spySetBearing).not.toHaveBeenCalled();
+    });
+
+    test('compass button drag diagonal', () => {
+        const navControl = new NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        });
+        map.addControl(navControl);
+
+        const spySetPitch = jest.spyOn(map, 'setPitch');
+        const spySetBearing = jest.spyOn(map, 'setBearing');
+
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+        const navRect = navButton.getClientRects();
+
+        const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2;
+
+        simulate.mousedown(navButton, {buttons: 1, button: 0, clientX: buttonX, clientY: buttonY});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX - 50, clientY: buttonY - 50});
+        simulate.mousemove(window, {buttons: 1, button: 0, clientX: buttonX - 100, clientY: buttonY - 100});
+        simulate.mouseup(window,   {button: 0, clientX: buttonX - 100, clientY: buttonY - 100});
+
+        map._renderTaskQueue.run();
+
+        expect(spySetPitch).toHaveBeenCalled();
+        expect(spySetBearing).toHaveBeenCalled();
     });
 });
