@@ -20,7 +20,7 @@ export default class TwoFingersTouchZoomRotateHandler {
     /**
      * @private
     */
-    constructor(el: HTMLElement, touchZoom: TwoFingersTouchZoomHandler, touchRotate: TwoFingerTouchRotateHandler, tapDragZoom: TapDragZoomHandler) {
+    constructor(el: HTMLElement, touchZoom: TwoFingersTouchZoomHandler, touchRotate: TwoFingersTouchRotateHandler, tapDragZoom: TapDragZoomHandler) {
         this._el = el;
         this._touchZoom = touchZoom;
         this._touchRotate = touchRotate;
