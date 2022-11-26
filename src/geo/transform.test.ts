@@ -75,6 +75,18 @@ describe('transform', () => {
         expect(transform.tileZoom).toBe(transform.zoom);
     });
 
+    test('set zoom inits tileZoom with zoom value', () => {
+        const transform = new Transform(0, 22, 0, 60);
+        transform.zoom = 5;
+        expect(transform.tileZoom).toBe(5);
+    });
+
+    test('set zoom clamps tileZoom to non negative value ', () => {
+        const transform = new Transform(-2, 22, 0, 60);
+        transform.zoom = -2;
+        expect(transform.tileZoom).toBe(0);
+    });
+
     test('set fov', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.fov = 10;
