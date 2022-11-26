@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import DOM from '../../util/dom';
 import {extend, bindAll} from '../../util/util';
 import {MouseRotateHandler, MousePitchHandler} from '../handler/mouse';
-import {TouchButtonRotateHandler, TouchButtonPitchHandler} from '../handler/touch_button_pitch_rotate';
+import {OneFingerTouchHandler} from '../handler/one_finger_touch_drag';
 
 import type Map from '../map';
 import type {IControl} from './control';
@@ -150,22 +150,39 @@ class MouseRotateWrapper {
     map: Map;
     _clickTolerance: number;
     element: HTMLElement;
+    // Rotation and pitch handlers are separated due to different _clickTolerance values
     mouseRotate: MouseRotateHandler;
+    touchRotate: OneFingerTouchHandler;
     mousePitch: MousePitchHandler;
-    touchRotate: TouchButtonRotateHandler;
-    touchPitch: TouchButtonPitchHandler;
+    touchPitch: OneFingerTouchHandler;
     _startPos: Point;
     _lastPos: Point;
 
     constructor(map: Map, element: HTMLElement, pitch: boolean = false) {
         this._clickTolerance = 10;
+        const mapRotateTolerance = map.dragRotate._mouseRotate._clickTolerance;
+        const mapPitchTolerance = map.dragRotate._mousePitch._clickTolerance;
         this.element = element;
-        this.mouseRotate = new MouseRotateHandler({clickTolerance: map.dragRotate._mouseRotate._clickTolerance});
-        this.touchRotate = new TouchButtonRotateHandler({clickTolerance: map.dragRotate._mouseRotate._clickTolerance});
+        this.mouseRotate = new MouseRotateHandler({clickTolerance: mapRotateTolerance});
+        this.touchRotate = new OneFingerTouchHandler({
+            clickTolerance: mapRotateTolerance,
+            move: (lastPoint: Point, point: Point) => {
+                const bearingDegreesPerPixelMoved = 0.8;
+                const bearingDelta = (point.x - lastPoint.x) * bearingDegreesPerPixelMoved;
+                return {bearingDelta: bearingDelta || undefined};
+            }
+        });
         this.map = map;
         if (pitch) {
-            this.mousePitch = new MousePitchHandler({clickTolerance: map.dragRotate._mousePitch._clickTolerance});
-            this.touchPitch = new TouchButtonPitchHandler({clickTolerance: map.dragRotate._mousePitch._clickTolerance});
+            this.mousePitch = new MousePitchHandler({clickTolerance: mapPitchTolerance});
+            this.touchPitch = new OneFingerTouchHandler({
+                clickTolerance: mapPitchTolerance,
+                move: (lastPoint: Point, point: Point) => {
+                    const pitchDegreesPerPixelMoved = -0.5;
+                    const pitchDelta = (point.y - lastPoint.y) * pitchDegreesPerPixelMoved;
+                    return {pitchDelta: pitchDelta || undefined};
+                }
+            });
         }
 
         bindAll(['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend', 'reset'], this);
@@ -188,21 +205,21 @@ class MouseRotateWrapper {
 
     moveMouse(e: MouseEvent, point: Point) {
         const map = this.map;
-        const r = this.mouseRotate.mousemoveWindow(e, point) as any;
-        if (r && r.bearingDelta) map.setBearing(map.getBearing() + r.bearingDelta);
+        const {bearingDelta} = this.mouseRotate.mousemoveWindow(e, point) || {};
+        if (bearingDelta) map.setBearing(map.getBearing() + bearingDelta);
         if (this.mousePitch) {
-            const p = this.mousePitch.mousemoveWindow(e, point) as any;
-            if (p && p.pitchDelta) map.setPitch(map.getPitch() + p.pitchDelta);
+            const {pitchDelta} = this.mousePitch.mousemoveWindow(e, point) || {};
+            if (pitchDelta) map.setPitch(map.getPitch() + pitchDelta);
         }
     }
 
     moveTouch(e: TouchEvent, point: Point) {
         const map = this.map;
-        const r = this.touchRotate.touchmoveWindow(e, point) as any;
-        if (r && r.bearingDelta) map.setBearing(map.getBearing() + r.bearingDelta);
+        const {bearingDelta} = this.touchRotate.touchmoveWindow(e, point) || {};
+        if (bearingDelta) map.setBearing(map.getBearing() + bearingDelta);
         if (this.touchPitch) {
-            const p = this.touchPitch.touchmoveWindow(e, point) as any;
-            if (p && p.pitchDelta) map.setPitch(map.getPitch() + p.pitchDelta);
+            const {pitchDelta} = this.touchPitch.touchmoveWindow(e, point) || {};
+            if (pitchDelta) map.setPitch(map.getPitch() + pitchDelta);
         }
     }
 

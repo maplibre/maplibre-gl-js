@@ -1,7 +1,16 @@
 import DOM from '../../util/dom';
 import type Point from '@mapbox/point-geometry';
 
-class TouchButtonHandler {
+interface OneFingerTouchMoveResults {
+    bearingDelta?: number;
+    pitchDelta?: number;
+}
+
+type MoveFunction = (lastPoint: Point, point: Point) => OneFingerTouchMoveResults;
+
+const defaultMove: MoveFunction = (lastPoint: Point, point: Point) => ({});
+
+export class OneFingerTouchHandler {
 
     _enabled: boolean;
     _active: boolean;
@@ -9,12 +18,23 @@ class TouchButtonHandler {
     _firstTouch: number;
     _moved: boolean;
     _clickTolerance: number;
+    _moveFunction: MoveFunction;
 
     constructor(options: {
         clickTolerance: number;
+        move: MoveFunction;
     }) {
         this.reset();
         this._clickTolerance = options.clickTolerance || 1;
+        this._move = options.move || defaultMove;
+    }
+
+    _move(...params: Parameters<MoveFunction>) {
+        const move = this._moveFunction(...params);
+        if (move.bearingDelta || move.pitchDelta) {
+            this._active = true;
+        }
+        return move;
     }
 
     reset() {
@@ -26,10 +46,6 @@ class TouchButtonHandler {
 
     _correctTouch(e: TouchEvent) {
         return e.targetTouches.length === 1;
-    }
-
-    _move(lastPoint: Point, point: Point) {  //eslint-disable-line
-        return {}; // implemented by child
     }
 
     touchstart(e: TouchEvent, point: Point) {
@@ -46,7 +62,7 @@ class TouchButtonHandler {
         if (!lastPoint) return;
         e.preventDefault();
 
-        if (!this._correctTouch(e) || e.targetTouches[0].identifier !== this._firstTouch)  {
+        if (!this._correctTouch(e) || e.targetTouches[0].identifier !== this._firstTouch) {
             this.reset();
             return;
         }
@@ -81,27 +97,5 @@ class TouchButtonHandler {
 
     isActive() {
         return this._active;
-    }
-}
-
-export class TouchButtonRotateHandler extends TouchButtonHandler {
-    _move(lastPoint: Point, point: Point) {
-        const degreesPerPixelMoved = 0.8;
-        const bearingDelta = (point.x - lastPoint.x) * degreesPerPixelMoved;
-        if (bearingDelta) {
-            this._active = true;
-            return {bearingDelta};
-        }
-    }
-}
-
-export class TouchButtonPitchHandler extends TouchButtonHandler {
-    _move(lastPoint: Point, point: Point) {
-        const degreesPerPixelMoved = -0.5;
-        const pitchDelta = (point.y - lastPoint.y) * degreesPerPixelMoved;
-        if (pitchDelta) {
-            this._active = true;
-            return {pitchDelta};
-        }
     }
 }
