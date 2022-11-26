@@ -1,7 +1,7 @@
 import DOM from '../../util/dom';
 import type Point from '@mapbox/point-geometry';
 
-class TouchHandler {
+class TouchButtonHandler {
 
     _enabled: boolean;
     _active: boolean;
@@ -84,7 +84,7 @@ class TouchHandler {
     }
 }
 
-export class TouchRotateHandler extends TouchHandler {
+export class TouchButtonRotateHandler extends TouchButtonHandler {
     _move(lastPoint: Point, point: Point) {
         const degreesPerPixelMoved = 0.8;
         const bearingDelta = (point.x - lastPoint.x) * degreesPerPixelMoved;
@@ -95,7 +95,7 @@ export class TouchRotateHandler extends TouchHandler {
     }
 }
 
-export class TouchPitchHandler extends TouchHandler {
+export class TouchButtonPitchHandler extends TouchButtonHandler {
     _move(lastPoint: Point, point: Point) {
         const degreesPerPixelMoved = -0.5;
         const pitchDelta = (point.y - lastPoint.y) * degreesPerPixelMoved;

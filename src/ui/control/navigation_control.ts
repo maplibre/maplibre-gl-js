@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import DOM from '../../util/dom';
 import {extend, bindAll} from '../../util/util';
 import {MouseRotateHandler, MousePitchHandler} from '../handler/mouse';
-import {TouchRotateHandler, TouchPitchHandler} from '../handler/touch_button_pitch_rotate';
+import {TouchButtonRotateHandler, TouchButtonPitchHandler} from '../handler/touch_button_pitch_rotate';
 
 import type Map from '../map';
 import type {IControl} from './control';
@@ -152,8 +152,8 @@ class MouseRotateWrapper {
     element: HTMLElement;
     mouseRotate: MouseRotateHandler;
     mousePitch: MousePitchHandler;
-    touchRotate: TouchRotateHandler;
-    touchPitch: TouchPitchHandler;
+    touchRotate: TouchButtonRotateHandler;
+    touchPitch: TouchButtonPitchHandler;
     _startPos: Point;
     _lastPos: Point;
 
@@ -161,11 +161,11 @@ class MouseRotateWrapper {
         this._clickTolerance = 10;
         this.element = element;
         this.mouseRotate = new MouseRotateHandler({clickTolerance: map.dragRotate._mouseRotate._clickTolerance});
-        this.touchRotate = new TouchRotateHandler({clickTolerance: map.dragRotate._mouseRotate._clickTolerance});
+        this.touchRotate = new TouchButtonRotateHandler({clickTolerance: map.dragRotate._mouseRotate._clickTolerance});
         this.map = map;
         if (pitch) {
             this.mousePitch = new MousePitchHandler({clickTolerance: map.dragRotate._mousePitch._clickTolerance});
-            this.touchPitch = new TouchPitchHandler({clickTolerance: map.dragRotate._mousePitch._clickTolerance});
+            this.touchPitch = new TouchButtonPitchHandler({clickTolerance: map.dragRotate._mousePitch._clickTolerance});
         }
 
         bindAll(['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend', 'reset'], this);
