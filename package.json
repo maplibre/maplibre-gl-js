@@ -170,6 +170,7 @@
     "test-expression": "jest --roots ./test/integration/expression",
     "test-unit": "jest --roots ./src  -c ./jest.config.ts ",
     "test-unit-ci": "jest --roots ./src  -c ./jest.config.ts --ci --coverage --testLocationInResults",
+    "test-watch-roots": "jest --watch  -c ./jest.config.ts --roots ",
     "codegen": "npm run generate-style-code && npm run generate-struct-arrays && npm run generate-style-spec && npm run generate-shaders && npm run generate-debug-index-file",
     "benchmark": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/run-benchmarks.ts",
     "gl-stats": "node --loader ts-node/esm --experimental-specifier-resolution=node test/bench/gl-stats.ts",
@@ -181,5 +182,9 @@
     "dist/*",
     "src/",
     "postinstall.js"
-  ]
+  ],
+  "engines" : { 
+    "npm" : ">=8.1.0",
+    "node" : ">=16.14.0"
+  }
 }
