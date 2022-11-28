@@ -22,7 +22,15 @@ class Texture {
     format: TextureFormat;
     filter: TextureFilter;
     wrap: TextureWrap;
-    useMipmap: boolean;
+    private _useMipmap: boolean;
+
+    public get useMipmap(): boolean {
+        return this._useMipmap;
+    }
+
+    private set useMipmap(value: boolean) {
+        this._useMipmap = value;
+    }
 
     constructor(context: Context, image: TextureImage, format: TextureFormat, options?: {
         premultiply?: boolean;
