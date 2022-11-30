@@ -1,7 +1,7 @@
 
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import style from '../data/empty.json';
+import style from '../data/empty.json' assert {type: 'json'};
 
 const width = 1024;
 const height = 768;

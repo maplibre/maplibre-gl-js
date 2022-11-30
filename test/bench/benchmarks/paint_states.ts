@@ -1,5 +1,5 @@
 
-import emptystyle from '../data/empty.json';
+import emptystyle from '../data/empty.json' assert {type: 'json'};
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 
