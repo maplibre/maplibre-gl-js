@@ -175,6 +175,7 @@ export class SymbolBuffers {
 
     opacityVertexArray: SymbolOpacityArray;
     opacityVertexBuffer: VertexBuffer;
+    hasVisibleVertices: boolean;
 
     collisionVertexArray: CollisionVertexArray;
     collisionVertexBuffer: VertexBuffer;
@@ -188,6 +189,7 @@ export class SymbolBuffers {
         this.segments = new SegmentVector();
         this.dynamicLayoutVertexArray = new SymbolDynamicLayoutArray();
         this.opacityVertexArray = new SymbolOpacityArray();
+        this.hasVisibleVertices = false;
         this.placedSymbolArray = new PlacedSymbolArray();
     }
 

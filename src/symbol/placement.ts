@@ -946,8 +946,14 @@ export class Placement {
     updateBucketOpacities(bucket: SymbolBucket, seenCrossTileIDs: {
         [k in string | number]: boolean;
     }, collisionBoxArray?: CollisionBoxArray | null) {
-        if (bucket.hasTextData()) bucket.text.opacityVertexArray.clear();
-        if (bucket.hasIconData()) bucket.icon.opacityVertexArray.clear();
+        if (bucket.hasTextData()) {
+            bucket.text.opacityVertexArray.clear();
+            bucket.text.hasVisibleVertices = false;
+        }
+        if (bucket.hasIconData()) {
+            bucket.icon.opacityVertexArray.clear();
+            bucket.icon.hasVisibleVertices = false;
+        }
         if (bucket.hasIconCollisionBoxData()) bucket.iconCollisionBox.collisionVertexArray.clear();
         if (bucket.hasTextCollisionBoxData()) bucket.textCollisionBox.collisionVertexArray.clear();
 
@@ -976,6 +982,7 @@ export class Placement {
             for (let i = 0; i < numVertices / 4; i++) {
                 iconOrText.opacityVertexArray.emplaceBack(opacity);
             }
+            iconOrText.hasVisibleVertices = iconOrText.hasVisibleVertices || (opacity !== PACKED_HIDDEN_OPACITY);
         };
 
         for (let s = 0; s < bucket.symbolInstances.length; s++) {
