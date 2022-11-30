@@ -10,7 +10,7 @@ const BUTTONS_FLAGS = {
     [RIGHT_BUTTON]: 2
 };
 
-function buttonStillPressed(e: MouseEvent, button: number) {
+function buttonNoLongerPressed(e: MouseEvent, button: number) {
     const flag = BUTTONS_FLAGS[button];
     return e.buttons === undefined || (e.buttons & flag) !== flag;
 }
@@ -61,7 +61,7 @@ class MouseHandler {
         if (!lastPoint) return;
         e.preventDefault();
 
-        if (buttonStillPressed(e, this._eventButton)) {
+        if (buttonNoLongerPressed(e, this._eventButton)) {
             // Some browsers don't fire a `mouseup` when the mouseup occurs outside
             // the window or iframe:
             // https://github.com/mapbox/mapbox-gl-js/issues/4622

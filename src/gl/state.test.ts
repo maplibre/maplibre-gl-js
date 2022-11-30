@@ -4,7 +4,7 @@ import Color from '../style-spec/util/color';
 import {deepEqual} from '../util/util';
 import gl from 'gl';
 
-const context = new Context(gl(10, 10));
+const context = new Context(gl(10, 10) as any);
 
 const valueTest = (Constructor: new (...args:any[]) => any, options) => {
     test('#constructor', () => {
