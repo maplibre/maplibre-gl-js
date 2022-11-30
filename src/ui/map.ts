@@ -2331,6 +2331,7 @@ class Map extends Camera {
      *
      * @param {string} id The ID of the sprite to add. Must not conflict with existing sprites.
      * @param {string} url The URL to load the sprite from
+     * @param {Object} [options] Options object.
      * @fires style
      * @returns {Map} `this`
      * @example

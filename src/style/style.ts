@@ -346,7 +346,7 @@ class Style extends Evented {
                 for (const spriteId in images) {
                     this._spritesImagesIds[spriteId] = [];
 
-                     // remove old sprite's loaded images (for the same sprite id) that are not in new sprite
+                    // remove old sprite's loaded images (for the same sprite id) that are not in new sprite
                     const imagesToRemove = this._spritesImagesIds[spriteId] ? this._spritesImagesIds[spriteId].filter(id => !(id in images)) : [];
                     for (const id of imagesToRemove) {
                         this.imageManager.removeImage(id);
@@ -358,12 +358,12 @@ class Style extends Evented {
                         const imageId = spriteId === 'default' ? id : `${spriteId}:${id}`;
                         // save all the sprite's images' ids to be able to delete them in `removeSprite`
                         this._spritesImagesIds[spriteId].push(imageId);
-                        if(imageId in this.imageManager.images){
+                        if (imageId in this.imageManager.images) {
                             this.imageManager.updateImage(imageId, images[spriteId][id], false);
                         } else {
                             this.imageManager.addImage(imageId, images[spriteId][id]);
                         }
-    
+
                         if (isUpdate) {
                             this._changedImages[imageId] = true;
                         }
@@ -756,15 +756,16 @@ class Style extends Evented {
      * Add a sprite.
      * @param {string} id id of the desired sprite
      * @param {string} url url to load the desired sprite from
-     * @param {StyleSetterOptions} options
+     * @param {StyleSetterOptions} options Style setter options.
+     * @param completion completion handler
      */
     addSprite(id: string, url: string, options: StyleSetterOptions = {}, completion: (err: Error) => void) {
         this._checkLoaded();
 
         const spriteToAdd = [{id, url}];
         const updatedSprite = [
-            ...(typeof this.stylesheet.sprite === 'string' ? [{id: 'default', url: this.stylesheet.sprite}] : this.stylesheet.sprite || []), 
-            ...spriteToAdd]
+            ...(typeof this.stylesheet.sprite === 'string' ? [{id: 'default', url: this.stylesheet.sprite}] : this.stylesheet.sprite || []),
+            ...spriteToAdd];
         if (this._validate(validateStyle.sprite, 'sprite', updatedSprite, null, options)) return;
 
         this.stylesheet.sprite = updatedSprite;

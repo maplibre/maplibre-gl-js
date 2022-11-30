@@ -2,7 +2,6 @@
 import validateConstants from './validate/validate_constants';
 import validate from './validate/validate';
 import latestStyleSpec from './reference/latest';
-import validateGlyphsURL from './validate/validate_glyphs_url';
 
 import validateSource from './validate/validate_source';
 import validateLight from './validate/validate_light';
