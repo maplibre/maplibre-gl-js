@@ -73,9 +73,9 @@ const supportedDiffOperations = pick(diffOperations, [
     'setLayerZoomRange',
     'setLight',
     'setTransition',
-    'setGeoJSONSourceData'
-    // 'setGlyphs',
-    // 'setSprite',
+    'setGeoJSONSourceData',
+    'setGlyphs',
+    'setSprite',
 ]);
 
 const ignoredDiffOperations = pick(diffOperations, [
@@ -164,7 +164,6 @@ class Style extends Evented {
 
     _request: Cancelable;
     _spriteRequest: Cancelable;
-    _spritesImagesIds: {[spriteId: string]: string[]};
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: any};
     _order: Array<string>;
@@ -177,8 +176,12 @@ class Style extends Evented {
     _updatedLayers: {[_: string]: true};
     _removedLayers: {[_: string]: StyleLayer};
     _changedImages: {[_: string]: true};
+    _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
+    // image ids of images loaded from style's sprite
+    _spritesImagesIds: {[spriteId: string]: string[]};
+    // image ids of all images loaded (sprite + user)
     _availableImages: Array<string>;
 
     crossTileSymbolIndex: CrossTileSymbolIndex;
@@ -334,7 +337,7 @@ class Style extends Evented {
         this.fire(new Event('style.load'));
     }
 
-    _loadSprite(sprite: SpriteSpecification) {
+    _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined) {
         this._spriteRequest = loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
             this._spriteRequest = null;
             if (err) {
@@ -343,21 +346,56 @@ class Style extends Evented {
                 for (const spriteId in images) {
                     this._spritesImagesIds[spriteId] = [];
 
+                    // remove old sprite's loaded images (for the same sprite id) that are not in new sprite
+                    const imagesToRemove = this._spritesImagesIds[spriteId] ? this._spritesImagesIds[spriteId].filter(id => !(id in images)) : [];
+                    for (const id of imagesToRemove) {
+                        this.imageManager.removeImage(id);
+                        this._changedImages[id] = true;
+                    }
+
                     for (const id in images[spriteId]) {
                         // don't prefix images of the "default" sprite
                         const imageId = spriteId === 'default' ? id : `${spriteId}:${id}`;
                         // save all the sprite's images' ids to be able to delete them in `removeSprite`
                         this._spritesImagesIds[spriteId].push(imageId);
-                        this.imageManager.addImage(imageId, images[spriteId][id]);
+                        if (imageId in this.imageManager.images) {
+                            this.imageManager.updateImage(imageId, images[spriteId][id], false);
+                        } else {
+                            this.imageManager.addImage(imageId, images[spriteId][id]);
+                        }
+
+                        if (isUpdate) {
+                            this._changedImages[imageId] = true;
+                        }
                     }
                 }
             }
 
             this.imageManager.setLoaded(true);
             this._availableImages = this.imageManager.listImages();
+            if (isUpdate) {
+                this._changed = true;
+            }
+
             this.dispatcher.broadcast('setImages', this._availableImages);
             this.fire(new Event('data', {dataType: 'style'}));
+            if (completion) {
+                completion(err);
+            }
         });
+    }
+
+    _unloadSprite() {
+        for (const id of Object.values(this._spritesImagesIds).reduce((flattened, ids) => [...flattened, ...ids], [])) {
+            this.imageManager.removeImage(id);
+            this._changedImages[id] = true;
+        }
+
+        this._spritesImagesIds = {};
+        this._availableImages = this.imageManager.listImages();
+        this._changed = true;
+        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.fire(new Event('data', {dataType: 'style'}));
     }
 
     _validateLayer(layer: StyleLayer) {
@@ -465,6 +503,7 @@ class Style extends Evented {
             }
 
             this._updateTilesForChangedImages();
+            this._updateTilesForChangedGlyphs();
 
             for (const id in this._updatedPaintProps) {
                 this._layers[id].updateTransitions(parameters);
@@ -521,6 +560,15 @@ class Style extends Evented {
         }
     }
 
+    _updateTilesForChangedGlyphs() {
+        if (this._glyphsDidChange) {
+            for (const name in this.sourceCaches) {
+                this.sourceCaches[name].reloadTilesForDependencies(['glyphs'], ['']);
+            }
+            this._glyphsDidChange = false;
+        }
+    }
+
     _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
         this.dispatcher.broadcast('updateLayers', {
             layers: this._serializeLayers(updatedIds),
@@ -538,6 +586,7 @@ class Style extends Evented {
         this._updatedPaintProps = {};
 
         this._changedImages = {};
+        this._glyphsDidChange = false;
     }
 
     /**
@@ -707,21 +756,20 @@ class Style extends Evented {
      * Add a sprite.
      * @param {string} id id of the desired sprite
      * @param {string} url url to load the desired sprite from
-     * @param {StyleSetterOptions} options
+     * @param {StyleSetterOptions} options Style setter options.
+     * @param completion completion handler
      */
-    addSprite(id: string, url: string, options: StyleSetterOptions = {}) {
+    addSprite(id: string, url: string, options: StyleSetterOptions = {}, completion: (err: Error) => void) {
         this._checkLoaded();
 
-        if (!this.stylesheet.sprite) this.stylesheet.sprite = [];
-
         const spriteToAdd = [{id, url}];
-        if (typeof this.stylesheet.sprite === 'string') this.stylesheet.sprite = [{id: 'default', url: this.stylesheet.sprite}];
-        const updatedSprite = this.stylesheet.sprite.concat(spriteToAdd);
-
+        const updatedSprite = [
+            ...(typeof this.stylesheet.sprite === 'string' ? [{id: 'default', url: this.stylesheet.sprite}] : this.stylesheet.sprite || []),
+            ...spriteToAdd];
         if (this._validate(validateStyle.sprite, 'sprite', updatedSprite, null, options)) return;
 
-        this._loadSprite(spriteToAdd);
         this.stylesheet.sprite = updatedSprite;
+        this._loadSprite(spriteToAdd, true, completion);
     }
 
     /**
@@ -743,10 +791,9 @@ class Style extends Evented {
         if (this._spritesImagesIds[id]) {
             for (const imageId of this._spritesImagesIds[id]) {
                 this.imageManager.removeImage(imageId);
+                this._changedImages[imageId] = true;
             }
         }
-
-        console.log(this.stylesheet.sprite);
 
         if (typeof this.stylesheet.sprite === 'string') {
             this.stylesheet.sprite = undefined;
@@ -756,10 +803,8 @@ class Style extends Evented {
         }
 
         delete this._spritesImagesIds[id];
-
-        console.log(this.stylesheet.sprite);
-
         this._availableImages = this.imageManager.listImages();
+        this._changed = true;
         this.dispatcher.broadcast('setImages', this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
@@ -1501,14 +1546,60 @@ class Style extends Evented {
 
     getGlyphs(
         mapId: string,
-        params: {stacks: {[_: string]: Array<number>}},
+        params: {
+            stacks: {[_: string]: Array<number>};
+            source: string;
+            tileID: OverscaledTileID;
+            type: string;
+        },
         callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
     ) {
         this.glyphManager.getGlyphs(params.stacks, callback);
+        const sourceCache = this.sourceCaches[params.source];
+        if (sourceCache) {
+            // we are not setting stacks as dependencies since for now
+            // we just need to know which tiles have glyph dependencies
+            sourceCache.setDependencies(params.tileID.key, params.type, ['']);
+        }
     }
 
     getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
         return makeRequest(params, callback);
+    }
+
+    getGlyphsUrl() {
+        return this.stylesheet.glyphs || null;
+    }
+
+    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}) {
+        this._checkLoaded();
+        if (glyphsUrl && this._validate(validateStyle.glyphs, 'glyphs', glyphsUrl, null, options)) {
+            return;
+        }
+
+        this._glyphsDidChange = true;
+        this.stylesheet.glyphs = glyphsUrl;
+        this.glyphManager.entries = {};
+        this.glyphManager.setURL(glyphsUrl);
+    }
+
+    getSprite() {
+        return this.stylesheet.sprite || null;
+    }
+
+    setSprite(sprite: SpriteSpecification, options: StyleSetterOptions = {}, completion: (err: Error) => void) {
+        this._checkLoaded();
+        if (sprite && this._validate(validateStyle.sprite, 'sprite', sprite, null, options)) {
+            return;
+        }
+
+        this.stylesheet.sprite = sprite;
+        if (sprite) {
+            this._loadSprite(sprite, true, completion);
+        } else {
+            this._unloadSprite();
+            completion(null);
+        }
     }
 }
 

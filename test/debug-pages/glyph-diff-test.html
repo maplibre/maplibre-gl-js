@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MapLibre GL JS debug page</title>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+
+<body>
+<div id='map'></div>
+
+<script src='../../dist/maplibre-gl-dev.js'></script>
+<script>
+
+const map = new maplibregl.Map({
+    container: 'map',
+    zoom: 12.5,
+    center: [-77.01866, 38.888],
+    style: 'https://demotiles.maplibre.org/style.json',
+    hash: true
+});
+
+map.showTileBoundaries = true;
+
+window.setTimeout(() => {
+
+    // set glyphs and update symbol layers to new fonts
+    map.setGlyphs('https://atlas.microsoft.com/styling/glyphs/{fontstack}/{range}.pbf?api-version=2.0', {
+        validate: true
+    });
+    map.getStyle().layers
+        .forEach(layer => {
+            if (layer.type === 'symbol') {
+                map.setLayoutProperty(layer.id, 'text-font', ["StandardFont-Bold"]);
+            }
+        });
+
+    // move to a new style without glyphs and symbol layers
+    window.setTimeout(() => {
+        map.setStyle('https://demotiles.maplibre.org/style.json', {
+            transformStyle: (previousStyle, nextStyle) => {
+                const targetStyle = ({
+                    ...nextStyle,
+                    layers: nextStyle.layers.filter(layer => layer.type !== 'symbol')
+                });
+                delete targetStyle.glyphs;
+                return targetStyle;
+            }
+        });
+    }, 5000);
+
+}, 5000);
+
+</script>
+</body>
+</html>
