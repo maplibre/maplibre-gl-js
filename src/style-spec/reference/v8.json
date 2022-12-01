@@ -3520,7 +3520,7 @@
         }
       },
       "~": {
-        "doc": "Returns `true` if the input values are matching with regex, `false` otherwise. The comparison is strictly typed: only strings may be used. Regexp is case sensitive.",
+        "doc": "Returns `true` if the input values are matching with regex, `false` otherwise. Regex - ECMA-262 (JavaScript) standard. The comparison is strictly typed: only strings may be used. Regexp is case sensitive, regex builed as `new RegExp(pattern)`.",
         "group": "Decision",
         "sdk-support": {
           "basic functionality": {
