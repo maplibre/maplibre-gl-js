@@ -3,12 +3,12 @@ import fs from 'fs';
 import zlib from 'zlib';
 import {execSync} from 'child_process';
 
-const maplibreGLJSSrc = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
-const maplibreGLCSSSrc = fs.readFileSync('dist/maplibre-gl.css', 'utf8');
+const maplibreGLJSSrc = fs.readFileSync('dist/maplibre-gl.js');
+const maplibreGLCSSSrc = fs.readFileSync('dist/maplibre-gl.css');
 const benchSrc = fs.readFileSync('test/bench/gl-stats.html', 'utf8');
 
 const benchHTML = benchSrc
-    .replace(/<script src="..\/dist\/maplibre-gl.js"><\/script>/, `<script>${maplibreGLJSSrc}</script>`);
+    .replace('<script src="/dist\/maplibre-gl.js"></script>', `<script src="data:text/javascript;base64,${maplibreGLJSSrc.toString('base64')}"></script>`);
 
 function waitForConsole(page) {
     return new Promise((resolve) => {

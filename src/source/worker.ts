@@ -4,9 +4,9 @@ import StyleLayerIndex from '../style/style_layer_index';
 import VectorTileWorkerSource from './vector_tile_worker_source';
 import RasterDEMTileWorkerSource from './raster_dem_tile_worker_source';
 import GeoJSONWorkerSource from './geojson_worker_source';
-import assert from 'assert';
 import {plugin as globalRTLTextPlugin} from './rtl_text_plugin';
 import {enforceCacheSizeLimit} from '../util/tile_request_cache';
+import {isWorker} from '../util/util';
 
 import type {
     WorkerSource,
@@ -120,7 +120,6 @@ export default class Worker {
     loadTile(mapId: string, params: WorkerTileParameters & {
         type: string;
     }, callback: WorkerTileCallback) {
-        assert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).loadTile(params, callback);
     }
 
@@ -131,21 +130,18 @@ export default class Worker {
     reloadTile(mapId: string, params: WorkerTileParameters & {
         type: string;
     }, callback: WorkerTileCallback) {
-        assert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).reloadTile(params, callback);
     }
 
     abortTile(mapId: string, params: TileParameters & {
         type: string;
     }, callback: WorkerTileCallback) {
-        assert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).abortTile(params, callback);
     }
 
     removeTile(mapId: string, params: TileParameters & {
         type: string;
     }, callback: WorkerTileCallback) {
-        assert(params.type);
         this.getWorkerSource(mapId, params.type, params.source).removeTile(params, callback);
     }
 
@@ -158,8 +154,6 @@ export default class Worker {
     } & {
         type: string;
     }, callback: WorkerTileCallback) {
-        assert(params.type);
-        assert(params.source);
 
         if (!this.workerSources[mapId] ||
             !this.workerSources[mapId][params.type] ||
@@ -267,9 +261,6 @@ export default class Worker {
     }
 }
 
-/* global self, WorkerGlobalScope */
-if (typeof WorkerGlobalScope !== 'undefined' &&
-    typeof self !== 'undefined' &&
-    self instanceof WorkerGlobalScope) {
+if (isWorker()) {
     (self as any).worker = new Worker(self as any);
 }

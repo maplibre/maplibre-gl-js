@@ -25,7 +25,7 @@ const exported = {
 
     getImageData(img: CanvasImageSource, padding: number = 0): ImageData {
         const canvas = window.document.createElement('canvas');
-        const context = canvas.getContext('2d');
+        const context = canvas.getContext('2d', {willReadFrequently: true});
         if (!context) {
             throw new Error('failed to create canvas 2d context');
         }
@@ -44,6 +44,7 @@ const exported = {
     hardwareConcurrency: typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 4,
 
     get prefersReducedMotion(): boolean {
+        // In case your test crashes when checking matchMedia, call setMatchMedia from 'src/util/test/util'
         if (!matchMedia) return false;
         //Lazily initialize media query
         if (reducedMotionQuery == null) {

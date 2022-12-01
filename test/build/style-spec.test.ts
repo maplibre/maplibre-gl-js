@@ -16,8 +16,16 @@ describe('@maplibre/maplibre-gl-style-spec npm package', () => {
             plugins: [{
                 name: 'test-checker',
                 resolveId: (id, importer) => {
+
+                    // linux (path starts with slash or dot)
+                    const slashOrDot: boolean = /^[\/\.]/.test(id);
+
+                    // Windows (path could start with drive letter: for example c:\)
+                    const windowsFullPath: boolean = /^[c-zC-Z]:\\/.test(id);
+
                     if (
-                        /^[\/\.]/.test(id) ||
+                        slashOrDot ||
+                        windowsFullPath ||
                         isBuiltin(id) ||
                         /node_modules/.test(importer)
                     ) {

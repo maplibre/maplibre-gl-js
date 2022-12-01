@@ -43,7 +43,7 @@ function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterSty
         tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
 
         const parentTile = sourceCache.findLoadedParent(coord, 0),
-            fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, painter.style.terrain);
+            fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, painter.style.map.terrain);
 
         let parentScaleBy, parentTL;
 
@@ -63,7 +63,7 @@ function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterSty
             tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
         }
 
-        const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const terrainCoord = terrainData ? coord : null;
         const posMatrix = terrainCoord ? terrainCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
         const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer);

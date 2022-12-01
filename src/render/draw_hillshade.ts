@@ -2,6 +2,8 @@ import Texture from './texture';
 import StencilMode from '../gl/stencil_mode';
 import DepthMode from '../gl/depth_mode';
 import CullFaceMode from '../gl/cull_face_mode';
+import ColorMode from '../gl/color_mode';
+import Tile from '../source/tile';
 import {
     hillshadeUniformValues,
     hillshadeUniformPrepareValues
@@ -37,14 +39,21 @@ function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: Hillsh
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
 
-function renderHillshade(painter, coord, tile, layer, depthMode, stencilMode, colorMode) {
+function renderHillshade(
+    painter: Painter,
+    coord: OverscaledTileID,
+    tile: Tile,
+    layer: HillshadeStyleLayer,
+    depthMode: Readonly<DepthMode>,
+    stencilMode: Readonly<StencilMode>,
+    colorMode: Readonly<ColorMode>) {
     const context = painter.context;
     const gl = context.gl;
     const fbo = tile.fbo;
     if (!fbo) return;
 
     const program = painter.useProgram('hillshade');
-    const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
+    const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
@@ -58,7 +67,13 @@ function renderHillshade(painter, coord, tile, layer, depthMode, stencilMode, co
 
 // hillshade rendering is done in two steps. the prepare step first calculates the slope of the terrain in the x and y
 // directions for each pixel, and saves those values to a framebuffer texture in the r and g channels.
-function prepareHillshade(painter, tile, layer, depthMode, stencilMode, colorMode) {
+function prepareHillshade(
+    painter: Painter,
+    tile: Tile,
+    layer: HillshadeStyleLayer,
+    depthMode: Readonly<DepthMode>,
+    stencilMode: Readonly<StencilMode>,
+    colorMode: Readonly<ColorMode>) {
     const context = painter.context;
     const gl = context.gl;
     const dem = tile.dem;

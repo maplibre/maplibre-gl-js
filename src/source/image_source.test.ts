@@ -150,4 +150,30 @@ describe('ImageSource', () => {
         expect(serialized.url).toBe('/image.png');
         expect(serialized.coordinates).toEqual([[0, 0], [1, 0], [1, 1], [0, 1]]);
     });
+
+    test('allows using updateImage before initial image is loaded', () => {
+        const source = createSource({url: '/image.png'});
+        const map = new StubMap() as any;
+
+        source.onAdd(map);
+
+        requests.shift();
+        expect(source.image).toBeUndefined();
+        source.updateImage({url: '/image2.png'});
+        respond();
+        expect(source.image).toBeTruthy();
+    });
+
+    test('cancels request if updateImage is used', () => {
+        const source = createSource({url: '/image.png'});
+        const map = new StubMap() as any;
+
+        source.onAdd(map);
+
+        const request = requests.shift() as any;
+        const spy = jest.spyOn(request, 'abort');
+
+        source.updateImage({url: '/image2.png'});
+        expect(spy).toHaveBeenCalled();
+    });
 });

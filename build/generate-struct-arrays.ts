@@ -14,6 +14,7 @@ import {createLayout, viewTypes} from '../src/util/struct_array';
 import type {ViewType, StructArrayLayout} from '../src/util/struct_array';
 
 import posAttributes from '../src/data/pos_attributes';
+import pos3dAttributes from '../src/data/pos3d_attributes';
 import rasterBoundsAttributes from '../src/data/raster_bounds_attributes';
 import circleAttributes from '../src/data/bucket/circle_attributes';
 import fillAttributes from '../src/data/bucket/fill_attributes';
@@ -134,6 +135,7 @@ function camelize (str) {
 }
 
 createStructArrayType('pos', posAttributes);
+createStructArrayType('pos3d', pos3dAttributes);
 createStructArrayType('raster_bounds', rasterBoundsAttributes);
 
 // layout vertex arrays
@@ -409,7 +411,6 @@ export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
      * @private
      */
     get(index: number): ${structTypeClass} {
-        assert(!this.isTransferred);
         return new ${structTypeClass}(this, index);
     }`);
     }
@@ -425,7 +426,6 @@ register('${structArrayClass}', ${structArrayClass});
 fs.writeFileSync('src/data/array_types.g.ts',
     `// This file is generated. Edit build/generate-struct-arrays.ts, then run \`npm run codegen\`.
 
-import assert from 'assert';
 import {Struct, StructArray} from '../util/struct_array';
 import {register} from '../util/web_worker_transfer';
 import Point from '@mapbox/point-geometry';

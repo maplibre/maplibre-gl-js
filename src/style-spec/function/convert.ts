@@ -1,4 +1,4 @@
-import assert from 'assert';
+
 import type {StylePropertySpecification} from '../style-spec';
 
 export default convertFunction;
@@ -138,7 +138,6 @@ function convertPropertyFunction(parameters, propertySpec, stops) {
     const type = getFunctionType(parameters, propertySpec);
     const get = ['get', parameters.property];
     if (type === 'categorical' && typeof stops[0][0] === 'boolean') {
-        assert(parameters.stops.length > 0 && parameters.stops.length <= 2);
         const expression: any = ['case'];
         for (const stop of stops) {
             expression.push(['==', get, stop[0]], stop[1]);
@@ -236,7 +235,6 @@ function getFunctionType(parameters, propertySpec) {
     if (parameters.type) {
         return parameters.type;
     } else {
-        assert(propertySpec.expression);
         return (propertySpec.expression as any).interpolated ? 'exponential' : 'interval';
     }
 }

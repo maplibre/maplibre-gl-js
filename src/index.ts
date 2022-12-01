@@ -1,6 +1,5 @@
-import assert from 'assert';
 import {supported} from '@mapbox/mapbox-gl-supported';
-
+import packageJSON from '../package.json' assert {type: 'json'};
 import Map from './ui/map';
 import NavigationControl from './ui/control/navigation_control';
 import GeolocateControl from './ui/control/geolocate_control';
@@ -35,6 +34,8 @@ import RasterDEMTileSource from './source/raster_dem_tile_source';
 import RasterTileSource from './source/raster_tile_source';
 import VectorTileSource from './source/vector_tile_source';
 import VideoSource from './source/video_source';
+
+const version = packageJSON.version;
 
 const exported = {
     supported,
@@ -98,6 +99,14 @@ const exported = {
      * maplibregl.clearPrewarmedResources()
      */
     clearPrewarmedResources,
+
+    /**
+     * Returns the package version of the library
+     * @returns {string} Package version of the library
+     */
+    get version(): string {
+        return version;
+    },
 
     /**
      * Gets and sets the number of web workers instantiated on a page with GL JS maps.
@@ -252,5 +261,4 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
  */
 
 export default exported;
-// canary assert: used to confirm that asserts have been removed from production build
-assert(true, 'canary assert');
+

@@ -19,7 +19,6 @@ import TouchZoomRotateHandler from './handler/shim/touch_zoom_rotate';
 import {bindAll, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import LngLat from '../geo/lng_lat';
-import assert from 'assert';
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
 
@@ -299,7 +298,6 @@ class HandlerManager {
         }
 
         this._updatingCamera = true;
-        assert(e.timeStamp !== undefined);
 
         const inputEvent = e.type === 'renderFrame' ? undefined : (e as any as InputEvent);
 
@@ -415,7 +413,7 @@ class HandlerManager {
     _updateMapTransform(combinedResult: any, combinedEventsInProgress: any, deactivatedHandlers: any) {
         const map = this._map;
         const tr = map.transform;
-        const terrain = map.style && map.style.terrain;
+        const terrain = map.terrain;
 
         if (!hasChange(combinedResult) && !(terrain && this._drag)) {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
@@ -454,10 +452,11 @@ class HandlerManager {
                     point: around,
                     handlerName: combinedEventsInProgress.drag.handlerName
                 };
-                map.fire(new Event('freezeElevation', {freeze: true}));
+                tr.freezeElevation = true;
             // when dragging ends, recalcuate the zoomlevel for the new center coordinate
             } else if (this._drag && deactivatedHandlers[this._drag.handlerName]) {
-                map.fire(new Event('freezeElevation', {freeze: false}));
+                tr.freezeElevation = false;
+                tr.recalculateZoom(map.terrain);
                 this._drag = null;
             // drag map
             } else if (combinedEventsInProgress.drag && this._drag) {
@@ -531,6 +530,7 @@ class HandlerManager {
                 if (shouldSnapToNorth(inertialEase.bearing || this._map.getBearing())) {
                     inertialEase.bearing = 0;
                 }
+                inertialEase.freezeElevation = true;
                 this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
                 this._map.fire(new Event('moveend', {originalEvent: originalEndEvent}));

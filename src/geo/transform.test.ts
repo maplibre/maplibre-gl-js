@@ -75,6 +75,18 @@ describe('transform', () => {
         expect(transform.tileZoom).toBe(transform.zoom);
     });
 
+    test('set zoom inits tileZoom with zoom value', () => {
+        const transform = new Transform(0, 22, 0, 60);
+        transform.zoom = 5;
+        expect(transform.tileZoom).toBe(5);
+    });
+
+    test('set zoom clamps tileZoom to non negative value ', () => {
+        const transform = new Transform(-2, 22, 0, 60);
+        transform.zoom = -2;
+        expect(transform.tileZoom).toBe(0);
+    });
+
     test('set fov', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.fov = 10;
@@ -403,8 +415,15 @@ describe('transform', () => {
         transform.recalculateZoom(null);
         expect(transform.zoom).toBe(14.127997275621933);
         expect(transform.elevation).toBe(400);
+
         expect(transform._center.lng).toBe(10.00000000000071);
         expect(transform._center.lat).toBe(50.00000000000017);
+
+        // expect new zoom because of elevation change to point below sea level
+        transform.getElevation = () => -200;
+        transform.recalculateZoom(null);
+        expect(transform.zoom).toBe(13.773740316343467);
+        expect(transform.elevation).toBe(-200);
     });
 
     test('pointCoordinate with terrain when returning null should fall back to 2D', () => {

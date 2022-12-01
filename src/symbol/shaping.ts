@@ -1,4 +1,3 @@
-import assert from 'assert';
 import {
     charHasUprightVerticalOrientation,
     charAllowsIdeographicBreaking,
@@ -811,9 +810,6 @@ function fitIconToText(
     iconOffset: [number, number],
     fontScale: number
 ): PositionedIcon {
-    assert(textFit !== 'none');
-    assert(Array.isArray(padding) && padding.length === 4);
-    assert(Array.isArray(iconOffset) && iconOffset.length === 2);
 
     const image = shapedIcon.image;
 

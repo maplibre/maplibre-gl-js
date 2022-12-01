@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>MapLibre GL JS debug page for terrian</title>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='map'></div>
+
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <script>
+        var map = window.map = new maplibregl.Map({
+            container: 'map',
+            zoom: 12,
+            center: [11.39085, 47.27574],
+            pitch: 52,
+            hash: true,
+            style: {
+                version: 8,
+                sources: {
+                    osm: {
+                        type: 'raster',
+                        tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        tileSize: 256,
+                        attribution: '&copy; OpenStreetMap Contributors',
+                        maxzoom: 19
+                    },
+                    terrainSource: {
+                        type: 'raster-dem',
+                        tiles: [
+                            'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+                        ],
+                        encoding: 'terrarium',
+                        tileSize: 256,
+                        maxzoom: 15,
+                    },
+                    hillshadeSource: {
+                        type: 'raster-dem',
+                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tileSize: 256
+                    },
+                },
+                layers: [
+                    {
+                        id: 'osm',
+                        type: 'raster',
+                        source: 'osm'
+                    },
+                    {
+                        id: 'hills',
+                        type: 'hillshade',
+                        source: 'hillshadeSource',
+                        layout: {'visibility': 'visible'},
+                        paint: {'hillshade-shadow-color': '#473B24'}
+                    }
+                ],
+                terrain: {
+                    source: 'terrainSource',
+                    exaggeration: 1
+                }
+            },
+            maxZoom: 18,
+            maxPitch: 85
+        });
+
+        map.addControl(new maplibregl.NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        }));
+
+        map.addControl(
+            new maplibregl.TerrainControl({
+                source: 'terrainSource',
+                exaggeration: 1
+            })
+        );
+    </script>
+</body>
+
+</html>

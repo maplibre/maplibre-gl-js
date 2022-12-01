@@ -1,4 +1,3 @@
-import assert from 'assert';
 
 import Color from '../util/color';
 import Collator from './types/collator';
@@ -107,7 +106,6 @@ export function typeOf(value: Value): Type {
 
         return array(itemType || ValueType, length);
     } else {
-        assert(typeof value === 'object');
         return ObjectType;
     }
 }

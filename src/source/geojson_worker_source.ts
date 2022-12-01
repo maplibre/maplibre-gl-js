@@ -6,7 +6,6 @@ import GeoJSONWrapper from './geojson_wrapper';
 import vtpbf from 'vt-pbf';
 import Supercluster from 'supercluster';
 import geojsonvt from 'geojson-vt';
-import assert from 'assert';
 import VectorTileWorkerSource from './vector_tile_worker_source';
 import {createExpression} from '../style-spec/expression';
 
@@ -22,16 +21,19 @@ import type {LoadVectorDataCallback} from './vector_tile_worker_source';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
+import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, GeoJSONFeatureId} from './geojson_source_diff';
 
 export type LoadGeoJSONParameters = {
     request?: RequestParameters;
     data?: string;
+    dataDiff?: GeoJSONSourceDiff;
     source: string;
     cluster: boolean;
     superclusterOptions?: any;
     geojsonVtOptions?: any;
     clusterProperties?: any;
     filter?: Array<unknown>;
+    promoteId?: string;
 };
 
 export type LoadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>) => Cancelable;
@@ -90,6 +92,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }>;
     _pendingRequest: Cancelable;
     _geoJSONIndex: GeoJSONIndex;
+    _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
 
     /**
      * @param [loadGeoJSON] Optional method for custom loading/parsing of
@@ -213,25 +216,43 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @returns {Cancelable} A Cancelable object.
      * @private
      */
-    loadGeoJSON(params: LoadGeoJSONParameters, callback: ResponseCallback<any>): Cancelable {
+    loadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>): Cancelable => {
+        const {promoteId} = params;
         // Because of same origin issues, urls must either include an explicit
         // origin or absolute path.
         // ie: /foo/bar.json or http://example.com/bar.json
         // but not ../foo/bar.json
         if (params.request) {
-            return getJSON(params.request, callback);
+            return getJSON(params.request, (
+                error?: Error,
+                data?: any,
+                cacheControl?: string,
+                expires?: string
+            ) => {
+                this._dataUpdateable = isUpdateableGeoJSON(data, promoteId) ? toUpdateable(data, promoteId) : undefined;
+                callback(error, data, cacheControl, expires);
+            });
         } else if (typeof params.data === 'string') {
             try {
-                callback(null, JSON.parse(params.data));
+                const parsed = JSON.parse(params.data);
+                this._dataUpdateable = isUpdateableGeoJSON(parsed, promoteId) ? toUpdateable(parsed, promoteId) : undefined;
+                callback(null, parsed);
             } catch (e) {
                 callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
+            }
+        } else if (params.dataDiff) {
+            if (this._dataUpdateable) {
+                applySourceDiff(this._dataUpdateable, params.dataDiff, promoteId);
+                callback(null, {type: 'FeatureCollection', features: Array.from(this._dataUpdateable.values())});
+            } else {
+                callback(new Error(`Cannot update existing geojson data in ${params.source}`));
             }
         } else {
             callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
         }
 
         return {cancel: () => {}};
-    }
+    };
 
     removeSource(params: {
         source: string;
@@ -291,9 +312,6 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: { supe
         const mapExpressionParsed = createExpression(mapExpression);
         const reduceExpressionParsed = createExpression(
             typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator);
-
-        assert(mapExpressionParsed.result === 'success');
-        assert(reduceExpressionParsed.result === 'success');
 
         mapExpressions[key] = mapExpressionParsed.value;
         reduceExpressions[key] = reduceExpressionParsed.value;

@@ -62,8 +62,7 @@
       "doc": "The terrain configuration.",
       "example": {
         "source": "raster-dem-source",
-        "exaggeration": 0.5,
-        "elevationOffset": 100
+        "exaggeration": 0.5
       }
     },
     "sources": {
@@ -380,6 +379,7 @@
       "doc": "The data type of the GeoJSON source."
     },
     "data": {
+      "required": true,
       "type": "*",
       "doc": "A URL to a GeoJSON file, or inline GeoJSON."
     },
@@ -2822,7 +2822,7 @@
         }
       },
       "interpolate": {
-        "doc": "Produces continuous, smooth results by interpolating between pairs of input and output values (\"stops\"). The `input` may be any numeric expression (e.g., `[\"get\", \"population\"]`). Stop inputs must be numeric literals in strictly ascending order. The output type must be `number`, `array<number>`, or `color`.\n\nInterpolation types:\n- `[\"linear\"]`: Interpolates linearly between the pair of stops just less than and just greater than the input.\n- `[\"exponential\", base]`: Interpolates exponentially between the stops just less than and just greater than the input. `base` controls the rate at which the output increases: higher values make the output increase more towards the high end of the range. With values close to 1 the output increases linearly.\n- `[\"cubic-bezier\", x1, y1, x2, y2]`: Interpolates using the cubic bezier curve defined by the given control points.",
+        "doc": "Produces continuous, smooth results by interpolating between pairs of input and output values (\"stops\"). The `input` may be any numeric expression (e.g., `[\"get\", \"population\"]`). Stop inputs must be numeric literals in strictly ascending order. The output type must be `number`, `array<number>`, or `color`.\n\nInterpolation types:\n- `[\"linear\"]`, or an expression returning one of those types: Interpolates linearly between the pair of stops just less than and just greater than the input.\n- `[\"exponential\", base]`: Interpolates exponentially between the stops just less than and just greater than the input. `base` controls the rate at which the output increases: higher values make the output increase more towards the high end of the range. With values close to 1 the output increases linearly.\n- `[\"cubic-bezier\", x1, y1, x2, y2]`: Interpolates using the cubic bezier curve defined by the given control points.",
         "group": "Ramps, scales, curves",
         "sdk-support": {
           "basic functionality": {
@@ -3850,16 +3850,6 @@
       "minimum": 0,
       "doc": "The exaggeration of the terrain - how high it will look.",
       "default": 1.0,
-      "sdk-support": {
-        "basic functionality": {
-          "js": "2.2.0"
-        }
-      }
-    },
-    "elevationOffset": {
-      "type": "number",
-      "doc": "The elevation offset.",
-      "default": 450,
       "sdk-support": {
         "basic functionality": {
           "js": "2.2.0"

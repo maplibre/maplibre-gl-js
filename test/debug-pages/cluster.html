@@ -28,7 +28,7 @@ var map = window.map = new maplibregl.Map({
 map.on('load', () => {
     map.addSource('geojson', {
         'type': 'geojson',
-        'data': '/test/integration/data/places.geojson',
+        'data': '../integration/assets/data/places.geojson',
         'cluster': true,
         'clusterRadius': 50,
         'clusterProperties': {

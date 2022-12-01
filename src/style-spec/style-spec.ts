@@ -1,7 +1,7 @@
 type ExpressionType = 'data-driven' | 'cross-faded' | 'cross-faded-data-driven' | 'color-ramp' | 'data-constant' | 'constant';
 type ExpressionParameters = Array<'zoom' | 'feature' | 'feature-state' | 'heatmap-density' | 'line-progress'>;
 
-type ExpressionSpecification = {
+type ExpressionSpecificationDefinition = {
     interpolated: boolean;
     parameters: ExpressionParameters;
 };
@@ -9,33 +9,33 @@ type ExpressionSpecification = {
 export type StylePropertySpecification = {
     type: 'number';
     'property-type': ExpressionType;
-    expression?: ExpressionSpecification;
+    expression?: ExpressionSpecificationDefinition;
     transition: boolean;
     default?: number;
 } | {
     type: 'string';
     'property-type': ExpressionType;
-    expression?: ExpressionSpecification;
+    expression?: ExpressionSpecificationDefinition;
     transition: boolean;
     default?: string;
     tokens?: boolean;
 } | {
     type: 'boolean';
     'property-type': ExpressionType;
-    expression?: ExpressionSpecification;
+    expression?: ExpressionSpecificationDefinition;
     transition: boolean;
     default?: boolean;
 } | {
     type: 'enum';
     'property-type': ExpressionType;
-    expression?: ExpressionSpecification;
+    expression?: ExpressionSpecificationDefinition;
     values: {[_: string]: {}};
     transition: boolean;
     default?: string;
 } | {
     type: 'color';
     'property-type': ExpressionType;
-    expression?: ExpressionSpecification;
+    expression?: ExpressionSpecificationDefinition;
     transition: boolean;
     default?: string;
     overridable: boolean;
@@ -43,7 +43,7 @@ export type StylePropertySpecification = {
     type: 'array';
     value: 'number';
     'property-type': ExpressionType;
-    expression?: ExpressionSpecification;
+    expression?: ExpressionSpecificationDefinition;
     length?: number;
     transition: boolean;
     default?: Array<number>;
@@ -51,19 +51,20 @@ export type StylePropertySpecification = {
     type: 'array';
     value: 'string';
     'property-type': ExpressionType;
-    expression?: ExpressionSpecification;
+    expression?: ExpressionSpecificationDefinition;
     length?: number;
     transition: boolean;
     default?: Array<string>;
 } | {
     type: 'padding';
     'property-type': ExpressionType;
-    expression?: ExpressionSpecification;
+    expression?: ExpressionSpecificationDefinition;
     transition: boolean;
     default?: number | Array<number>;
 };
 
-import v8 from './reference/v8.json';
+import v8Spec from './reference/v8.json' assert {type: 'json'};
+const v8 = v8Spec as any;
 import latest from './reference/latest';
 import format from './format';
 import migrate from './migrate';

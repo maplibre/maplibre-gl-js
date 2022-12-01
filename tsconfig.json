@@ -11,15 +11,14 @@
     "module": "esnext",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "sourceMap": true,
     "strict": false,
-    "target": "es2017",
+    "target": "ES2019",
     "lib": [
       "ESNext",
       "DOM",
-      "DOM.Iterable",
-      "WebWorker"
+      "DOM.Iterable"
     ],
     "types": ["node", "jest", "geojson", "offscreencanvas"]
   },

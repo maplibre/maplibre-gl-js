@@ -13,6 +13,8 @@ import type FillExtrusionStyleLayer from '../style/style_layer/fill_extrusion_st
 import type FillExtrusionBucket from '../data/bucket/fill_extrusion_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 
+import updatePatternPositionsInProgram from './update_pattern_positions_in_program';
+
 export default draw;
 
 function draw(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>) {
@@ -45,20 +47,28 @@ function draw(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLa
     }
 }
 
-function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMode, colorMode) {
+function drawExtrusionTiles(
+    painter: Painter,
+    source: SourceCache,
+    layer: FillExtrusionStyleLayer,
+    coords: OverscaledTileID[],
+    depthMode: DepthMode,
+    stencilMode: Readonly<StencilMode>,
+    colorMode: Readonly<ColorMode>) {
     const context = painter.context;
     const gl = context.gl;
-    const patternProperty = layer.paint.get('fill-extrusion-pattern');
+    const fillPropertyName = 'fill-extrusion-pattern';
+    const patternProperty = layer.paint.get(fillPropertyName);
     const image = patternProperty.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
     const opacity = layer.paint.get('fill-extrusion-opacity');
-
+    const constantPattern = patternProperty.constantOr(null);
     for (const coord of coords) {
         const tile = source.getTile(coord);
         const bucket: FillExtrusionBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
-        const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration);
 
@@ -67,13 +77,8 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
             tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             programConfiguration.updatePaintBuffers(crossfade);
         }
-        const constantPattern = patternProperty.constantOr(null);
-        if (constantPattern && tile.imageAtlas) {
-            const atlas = tile.imageAtlas;
-            const posTo = atlas.patternPositions[constantPattern.to.toString()];
-            const posFrom = atlas.patternPositions[constantPattern.from.toString()];
-            if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
-        }
+
+        updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
         const matrix = painter.translatePosMatrix(
             coord.posMatrix,
@@ -89,6 +94,6 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
             bucket.segments, layer.paint, painter.transform.zoom,
-            programConfiguration, painter.style.terrain && bucket.centroidVertexBuffer);
+            programConfiguration, painter.style.map.terrain && bucket.centroidVertexBuffer);
     }
 }

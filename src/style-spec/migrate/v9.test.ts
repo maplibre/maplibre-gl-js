@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import migrate from './v9';
 
 describe('migrate v9', () => {
@@ -18,7 +16,7 @@ describe('migrate v9', () => {
                 id: 'child',
                 ref: 'parent'
             }]
-        };
+        } as any;
 
         expect(migrate(input)).toEqual({
             version: 9,
@@ -58,7 +56,7 @@ describe('migrate v9', () => {
                     'fill-color': 'blue'
                 }
             }]
-        };
+        } as any;
 
         expect(migrate(input)).toEqual({
             version: 9,

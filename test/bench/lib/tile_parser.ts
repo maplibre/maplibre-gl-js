@@ -1,6 +1,5 @@
 import Protobuf from 'pbf';
 import VT from '@mapbox/vector-tile';
-import assert from 'assert';
 
 import deref from '../../../src/style-spec/deref';
 import Style from '../../../src/style/style';
@@ -30,6 +29,8 @@ class StubMap extends Evented {
     getPixelRatio() {
         return devicePixelRatio;
     }
+
+    setTerrain() {}
 }
 
 function createStyle(styleJSON: StyleSpecification): Promise<Style> {
@@ -97,7 +98,7 @@ export default class TileParser {
                         parser.loadImages(params, callback);
                     } else if (action === 'getGlyphs') {
                         parser.loadGlyphs(params, callback);
-                    } else assert(false);
+                    } else throw new Error(`Invalid action ${action}`);
                 }, 0);
             }
         };

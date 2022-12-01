@@ -17,7 +17,7 @@ export default class WorkerTransfer extends Benchmark {
         this.style = style;
     }
 
-    setup(): Promise<void> {
+    async setup(): Promise<void> {
         const src = `
         onmessage = (e) => {
             postMessage(e.data);
@@ -33,23 +33,16 @@ export default class WorkerTransfer extends Benchmark {
             new OverscaledTileID(13, 0, 13, 2412, 3079)
         ];
 
-        return fetchStyle(this.style)
-            .then((styleJSON) => {
-                this.parser = new TileParser(styleJSON, 'openmaptiles');
-                return this.parser.setup();
-            })
-            .then(() => {
-                return Promise.all(tileIDs.map(tileID => this.parser.fetchTile(tileID)));
-            })
-            .then((tiles) => {
-                return Promise.all(tiles.map(tile => this.parser.parseTile(tile)));
-            }).then((tileResults) => {
-                const payload = tileResults
-                    .concat(Object.values(this.parser.icons))
-                    .concat(Object.values(this.parser.glyphs)).map((obj) => serialize(obj, []));
-                this.payloadJSON = payload.map(barePayload);
-                this.payloadTiles = payload.slice(0, tileResults.length);
-            });
+        const styleJSON = await fetchStyle(this.style);
+        this.parser = new TileParser(styleJSON, 'openmaptiles');
+        await this.parser.setup();
+        const tiles = await Promise.all(tileIDs.map(tileID => this.parser.fetchTile(tileID)));
+        const tileResults = await Promise.all(tiles.map(tile => this.parser.parseTile(tile)));
+        const payload = tileResults
+            .concat(Object.values(this.parser.icons))
+            .concat(Object.values(this.parser.glyphs)).map((obj) => serialize(obj, []));
+        this.payloadJSON = payload.map(barePayload);
+        this.payloadTiles = payload.slice(0, tileResults.length);
     }
 
     sendPayload(obj: any): Promise<void> {
@@ -59,22 +52,16 @@ export default class WorkerTransfer extends Benchmark {
         });
     }
 
-    bench(): Promise<void> {
-        let promise: Promise<void> = Promise.resolve();
-
+    async bench(): Promise<void> {
         // benchmark sending raw JSON payload
         for (const obj of this.payloadJSON) {
-            promise = promise.then(() => {
-                return this.sendPayload(obj);
-            });
+            await this.sendPayload(obj);
         }
 
-        return promise.then(() => {
-            // benchmark deserializing full tile payload because it happens on the main thread
-            for (const obj of this.payloadTiles) {
-                deserialize(obj);
-            }
-        });
+        // benchmark deserializing full tile payload because it happens on the main thread
+        for (const obj of this.payloadTiles) {
+            deserialize(obj);
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 import Scope from './scope';
 import {checkSubtype} from './types';
-import ParsingError from './parsing_error';
+import ExpressionParsingError from './parsing_error';
 import Literal from './definitions/literal';
 import Assertion from './definitions/assertion';
 import Coercion from './definitions/coercion';
@@ -23,7 +23,7 @@ class ParsingContext {
     path: Array<number>;
     key: string;
     scope: Scope;
-    errors: Array<ParsingError>;
+    errors: Array<ExpressionParsingError>;
 
     // The expected type of this expression. Provided only to allow Expression
     // implementations to infer argument types: Expression#parse() need not
@@ -36,7 +36,7 @@ class ParsingContext {
         path: Array<number> = [],
         expectedType?: Type | null,
         scope: Scope = new Scope(),
-        errors: Array<ParsingError> = []
+        errors: Array<ExpressionParsingError> = []
     ) {
         this.registry = registry;
         this.path = path;
@@ -183,7 +183,7 @@ class ParsingContext {
      */
     error(error: string, ...keys: Array<number>) {
         const key = `${this.key}${keys.map(k => `[${k}]`).join('')}`;
-        this.errors.push(new ParsingError(key, error));
+        this.errors.push(new ExpressionParsingError(key, error));
     }
 
     /**
