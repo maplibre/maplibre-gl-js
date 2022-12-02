@@ -19,6 +19,7 @@ import type {
     ImageSourceSpecification,
     VideoSourceSpecification
 } from '../style-spec/types.g';
+import {Cancelable} from '../types/cancelable';
 
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 
@@ -81,6 +82,7 @@ class ImageSource extends Evented implements Source {
     boundsBuffer: VertexBuffer;
     boundsSegments: SegmentVector;
     _loaded: boolean;
+    _request: Cancelable;
 
     /**
      * @private
@@ -109,8 +111,10 @@ class ImageSource extends Evented implements Source {
 
         this.url = this.options.url;
 
-        getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), (err, image) => {
+        this._request = getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), (err, image) => {
+            this._request = null;
             this._loaded = true;
+
             if (err) {
                 this.fire(new ErrorEvent(err));
             } else if (image) {
@@ -146,9 +150,15 @@ class ImageSource extends Evented implements Source {
         url: string;
         coordinates?: Coordinates;
     }) {
-        if (!this.image || !options.url) {
+        if (!options.url) {
             return this;
         }
+
+        if (this._request) {
+            this._request.cancel();
+            this._request = null;
+        }
+
         this.options.url = options.url;
         this.load(options.coordinates, () => { this.texture = null; });
         return this;
@@ -164,6 +174,13 @@ class ImageSource extends Evented implements Source {
     onAdd(map: Map) {
         this.map = map;
         this.load();
+    }
+
+    onRemove() {
+        if (this._request) {
+            this._request.cancel();
+            this._request = null;
+        }
     }
 
     /**
