@@ -98,4 +98,26 @@ export class OneFingerTouchHandler {
     isActive() {
         return this._active;
     }
+
+    static generateRotationHandler({clickTolerance, bearingDegreesPerPixelMoved = 0.8}: {
+        clickTolerance: number;
+        bearingDegreesPerPixelMoved?: number;
+    }) {
+        return new OneFingerTouchHandler({
+            clickTolerance,
+            move: (lastPoint: Point, point: Point) =>
+                ({bearingDelta: (point.x - lastPoint.x) * bearingDegreesPerPixelMoved}),
+        });
+    }
+
+    static generatePitchHandler({clickTolerance, pitchDegreesPerPixelMoved = -0.5}: {
+        clickTolerance: number;
+        pitchDegreesPerPixelMoved?: number;
+    }) {
+        return new OneFingerTouchHandler({
+            clickTolerance,
+            move: (lastPoint: Point, point: Point) =>
+                ({pitchDelta: (point.y - lastPoint.y) * pitchDegreesPerPixelMoved}),
+        });
+    }
 }
