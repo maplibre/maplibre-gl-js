@@ -759,7 +759,7 @@ class Style extends Evented {
      * @param {StyleSetterOptions} options Style setter options.
      * @param completion completion handler
      */
-    addSprite(id: string, url: string, options: StyleSetterOptions = {}, completion: (err: Error) => void) {
+    addSprite(id: string, url: string, options: StyleSetterOptions = {}, completion?: (err: Error) => void) {
         this._checkLoaded();
 
         const spriteToAdd = [{id, url}];
