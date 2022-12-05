@@ -1,4 +1,4 @@
-import type {MousePanHandler} from '../mouse';
+import type {MouseHandler} from '../mouse';
 import type TouchPanHandler from './../touch_pan';
 
 export type DragPanOptions = {
@@ -15,14 +15,14 @@ export type DragPanOptions = {
 export default class DragPanHandler {
 
     _el: HTMLElement;
-    _mousePan: MousePanHandler;
+    _mousePan: MouseHandler;
     _touchPan: TouchPanHandler;
     _inertiaOptions: DragPanOptions;
 
     /**
      * @private
     */
-    constructor(el: HTMLElement, mousePan: MousePanHandler, touchPan: TouchPanHandler) {
+    constructor(el: HTMLElement, mousePan: MouseHandler, touchPan: TouchPanHandler) {
         this._el = el;
         this._mousePan = mousePan;
         this._touchPan = touchPan;

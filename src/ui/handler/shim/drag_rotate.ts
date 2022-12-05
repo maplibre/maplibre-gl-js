@@ -1,4 +1,4 @@
-import type {MouseRotateHandler, MousePitchHandler} from '../mouse';
+import type {MouseHandler} from '../mouse';
 
 /**
  * The `DragRotateHandler` allows the user to rotate the map by clicking and
@@ -6,8 +6,8 @@ import type {MouseRotateHandler, MousePitchHandler} from '../mouse';
  */
 export default class DragRotateHandler {
 
-    _mouseRotate: MouseRotateHandler;
-    _mousePitch: MousePitchHandler;
+    _mouseRotate: MouseHandler;
+    _mousePitch: MouseHandler;
     _pitchWithRotate: boolean;
 
     /**
@@ -19,7 +19,7 @@ export default class DragRotateHandler {
      */
     constructor(options: {
         pitchWithRotate: boolean;
-    }, mouseRotate: MouseRotateHandler, mousePitch: MousePitchHandler) {
+    }, mouseRotate: MouseHandler, mousePitch: MouseHandler) {
         this._pitchWithRotate = options.pitchWithRotate;
         this._mouseRotate = mouseRotate;
         this._mousePitch = mousePitch;

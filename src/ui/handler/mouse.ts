@@ -8,6 +8,11 @@ interface MouseMovementResult {
     panDelta?: Point;
 }
 
+type MoveFunction = (lastPoint: Point, point: Point) => MouseMovementResult;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const defaultMove: MoveFunction = (lastPoint: Point, point: Point) => ({});
+
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;
 
@@ -22,20 +27,36 @@ function buttonNoLongerPressed(e: MouseEvent, button: number) {
     return e.buttons === undefined || (e.buttons & flag) !== flag;
 }
 
-class MouseHandler {
-
+export class MouseHandler {
+    contextmenu?: (e: MouseEvent) => void;
     _enabled: boolean;
     _active: boolean;
     _lastPoint: Point;
     _eventButton: number;
     _moved: boolean;
     _clickTolerance: number;
+    _moveFunction: MoveFunction;
+    _correctButton: (e: MouseEvent, button: number) => boolean;
+    _activateOnMouseDown: boolean;
 
     constructor(options: {
         clickTolerance: number;
+        move: MoveFunction;
+        checkCorrectButton: (e: MouseEvent, button: number) => boolean;
+        preventContextMenu?: boolean;
+        activateOnMouseDown?: boolean;
     }) {
         this.reset();
         this._clickTolerance = options.clickTolerance || 1;
+        this._moveFunction = options.move || defaultMove;
+        this._activateOnMouseDown = !!options.activateOnMouseDown;
+        this._correctButton = options.checkCorrectButton;
+
+        if (options.preventContextMenu) {
+            this.contextmenu = (e: MouseEvent) => {
+                e.preventDefault();
+            };
+        }
     }
 
     reset() {
@@ -45,12 +66,12 @@ class MouseHandler {
         delete this._eventButton;
     }
 
-    _correctButton(e: MouseEvent, button: number) {  //eslint-disable-line
-        return false; // implemented by child
-    }
-
-    _move(lastPoint: Point, point: Point): MouseMovementResult {  //eslint-disable-line
-        return {}; // implemented by child
+    _move(...params: Parameters<MoveFunction>) {
+        const move = this._moveFunction(...params);
+        if (move.bearingDelta || move.pitchDelta || move.around || move.panDelta) {
+            this._active = true;
+            return move;
+        }
     }
 
     mousedown(e: MouseEvent, point: Point) {
@@ -61,6 +82,8 @@ class MouseHandler {
 
         this._lastPoint = point;
         this._eventButton = eventButton;
+
+        if (this._activateOnMouseDown && this._lastPoint) this._active = true;
     }
 
     mousemoveWindow(e: MouseEvent, point: Point) {
@@ -111,64 +134,49 @@ class MouseHandler {
     isActive() {
         return this._active;
     }
-}
 
-export class MousePanHandler extends MouseHandler {
-
-    mousedown(e: MouseEvent, point: Point) {
-        super.mousedown(e, point);
-        if (this._lastPoint) this._active = true;
-    }
-    _correctButton(e: MouseEvent, button: number) {
-        return button === LEFT_BUTTON && !e.ctrlKey;
-    }
-
-    _move(lastPoint: Point, point: Point): MouseMovementResult {
-        return {
-            around: point,
-            panDelta: point.sub(lastPoint)
-        };
-    }
-}
-
-export class MouseRotateHandler extends MouseHandler {
-    _correctButton(e: MouseEvent, button: number) {
-        return (button === LEFT_BUTTON && e.ctrlKey) || (button === RIGHT_BUTTON);
+    static generatePanHandler({clickTolerance,}: {
+        clickTolerance: number;
+    }) {
+        return new MouseHandler({
+            clickTolerance,
+            move: (lastPoint: Point, point: Point) =>
+                ({around: point, panDelta: point.sub(lastPoint)}),
+            activateOnMouseDown: true,
+            checkCorrectButton: (e: MouseEvent, button: number) =>
+                button === LEFT_BUTTON && !e.ctrlKey,
+        });
     }
 
-    _move(lastPoint: Point, point: Point): MouseMovementResult {
-        const degreesPerPixelMoved = 0.8;
-        const bearingDelta = (point.x - lastPoint.x) * degreesPerPixelMoved;
-        if (bearingDelta) {
-            this._active = true;
-            return {bearingDelta};
-        }
+    static generateRotationHandler({clickTolerance, bearingDegreesPerPixelMoved = 0.8}: {
+        clickTolerance: number;
+        bearingDegreesPerPixelMoved?: number;
+    }) {
+        return new MouseHandler({
+            clickTolerance,
+            move: (lastPoint: Point, point: Point) =>
+                ({bearingDelta: (point.x - lastPoint.x) * bearingDegreesPerPixelMoved}),
+            // prevent browser context menu when necessary; we don't allow it with rotation
+            // because we can't discern rotation gesture start from contextmenu on Mac
+            preventContextMenu: true,
+            checkCorrectButton: (e: MouseEvent, button: number) =>
+                (button === LEFT_BUTTON && e.ctrlKey) || (button === RIGHT_BUTTON),
+        });
     }
 
-    contextmenu(e: MouseEvent) {
-        // prevent browser context menu when necessary; we don't allow it with rotation
-        // because we can't discern rotation gesture start from contextmenu on Mac
-        e.preventDefault();
-    }
-}
-
-export class MousePitchHandler extends MouseHandler {
-    _correctButton(e: MouseEvent, button: number) {
-        return (button === LEFT_BUTTON && e.ctrlKey) || (button === RIGHT_BUTTON);
-    }
-
-    _move(lastPoint: Point, point: Point): MouseMovementResult {
-        const degreesPerPixelMoved = -0.5;
-        const pitchDelta = (point.y - lastPoint.y) * degreesPerPixelMoved;
-        if (pitchDelta) {
-            this._active = true;
-            return {pitchDelta};
-        }
-    }
-
-    contextmenu(e: MouseEvent) {
-        // prevent browser context menu when necessary; we don't allow it with rotation
-        // because we can't discern rotation gesture start from contextmenu on Mac
-        e.preventDefault();
+    static generatePitchHandler({clickTolerance, pitchDegreesPerPixelMoved = -0.5}: {
+        clickTolerance: number;
+        pitchDegreesPerPixelMoved?: number;
+    }) {
+        return new MouseHandler({
+            clickTolerance,
+            move: (lastPoint: Point, point: Point) =>
+                ({pitchDelta: (point.y - lastPoint.y) * pitchDegreesPerPixelMoved}),
+            // prevent browser context menu when necessary; we don't allow it with rotation
+            // because we can't discern rotation gesture start from contextmenu on Mac
+            preventContextMenu: true,
+            checkCorrectButton: (e: MouseEvent, button: number) =>
+                (button === LEFT_BUTTON && e.ctrlKey) || (button === RIGHT_BUTTON),
+        });
     }
 }

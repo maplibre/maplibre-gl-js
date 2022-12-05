@@ -2,7 +2,7 @@ import Point from '@mapbox/point-geometry';
 
 import DOM from '../../util/dom';
 import {extend, bindAll} from '../../util/util';
-import {MouseRotateHandler, MousePitchHandler} from '../handler/mouse';
+import {MouseHandler} from '../handler/mouse';
 import {OneFingerTouchHandler} from '../handler/one_finger_touch_drag';
 
 import type Map from '../map';
@@ -151,9 +151,9 @@ class MouseRotateWrapper {
     _clickTolerance: number;
     element: HTMLElement;
     // Rotation and pitch handlers are separated due to different _clickTolerance values
-    mouseRotate: MouseRotateHandler;
+    mouseRotate: MouseHandler;
     touchRotate: OneFingerTouchHandler;
-    mousePitch: MousePitchHandler;
+    mousePitch: MouseHandler;
     touchPitch: OneFingerTouchHandler;
     _startPos: Point;
     _lastPos: Point;
@@ -163,11 +163,11 @@ class MouseRotateWrapper {
         const mapRotateTolerance = map.dragRotate._mouseRotate._clickTolerance;
         const mapPitchTolerance = map.dragRotate._mousePitch._clickTolerance;
         this.element = element;
-        this.mouseRotate = new MouseRotateHandler({clickTolerance: mapRotateTolerance});
+        this.mouseRotate = MouseHandler.generateRotationHandler({clickTolerance: mapRotateTolerance});
         this.touchRotate = OneFingerTouchHandler.generateRotationHandler({clickTolerance: mapRotateTolerance});
         this.map = map;
         if (pitch) {
-            this.mousePitch = new MousePitchHandler({clickTolerance: mapPitchTolerance});
+            this.mousePitch = MouseHandler.generatePitchHandler({clickTolerance: mapPitchTolerance});
             this.touchPitch = OneFingerTouchHandler.generatePitchHandler({clickTolerance: mapPitchTolerance});
         }
 
