@@ -2,7 +2,7 @@ import Point from '@mapbox/point-geometry';
 import DOM from '../../util/dom';
 import type Map from '../map';
 
-class TwoTouchHandler {
+class TwoFingersTouchHandler {
 
     _enabled: boolean;
     _active: boolean;
@@ -104,7 +104,7 @@ function getZoomDelta(distance, lastDistance) {
     return Math.log(distance / lastDistance) / Math.LN2;
 }
 
-export class TouchZoomHandler extends TwoTouchHandler {
+export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
 
     _distance: number;
     _startDistance: number;
@@ -139,7 +139,7 @@ function getBearingDelta(a, b) {
     return a.angleWith(b) * 180 / Math.PI;
 }
 
-export class TouchRotateHandler extends TwoTouchHandler {
+export class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
     _minDiameter: number;
 
     reset() {
@@ -170,7 +170,7 @@ export class TouchRotateHandler extends TwoTouchHandler {
     _isBelowThreshold(vector: Point) {
         /*
          * The threshold before a rotation actually happens is configured in
-         * pixels alongth circumference of the circle formed by the two fingers.
+         * pixels along the circumference of the circle formed by the two fingers.
          * This makes the threshold in degrees larger when the fingers are close
          * together and smaller when the fingers are far apart.
          *
@@ -196,9 +196,9 @@ function isVertical(vector) {
 const ALLOWED_SINGLE_TOUCH_TIME = 100;
 
 /**
- * The `TouchPitchHandler` allows the user to pitch the map by dragging up and down with two fingers.
+ * The `TwoFingersTouchPitchHandler` allows the user to pitch the map by dragging up and down with two fingers.
  */
-export class TouchPitchHandler extends TwoTouchHandler {
+export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
 
     _valid: boolean | void;
     _firstMove: number;
@@ -285,7 +285,7 @@ export class TouchPitchHandler extends TwoTouchHandler {
     /**
      * Returns a Boolean indicating whether the "drag to pitch" interaction is enabled.
      *
-     * @memberof TouchPitchHandler
+     * @memberof TwoFingersTouchPitchHandler
      * @name isEnabled
      * @instance
      * @returns {boolean} `true` if the "drag to pitch" interaction is enabled.
@@ -294,7 +294,7 @@ export class TouchPitchHandler extends TwoTouchHandler {
     /**
      * Returns a Boolean indicating whether the "drag to pitch" interaction is active, i.e. currently being used.
      *
-     * @memberof TouchPitchHandler
+     * @memberof TwoFingersTouchPitchHandler
      * @name isActive
      * @instance
      * @returns {boolean} `true` if the "drag to pitch" interaction is active.
@@ -303,7 +303,7 @@ export class TouchPitchHandler extends TwoTouchHandler {
     /**
      * Enables the "drag to pitch" interaction.
      *
-     * @memberof TouchPitchHandler
+     * @memberof TwoFingersTouchPitchHandler
      * @name enable
      * @instance
      * @example
@@ -313,7 +313,7 @@ export class TouchPitchHandler extends TwoTouchHandler {
     /**
      * Disables the "drag to pitch" interaction.
      *
-     * @memberof TouchPitchHandler
+     * @memberof TwoFingersTouchPitchHandler
      * @name disable
      * @instance
      * @example

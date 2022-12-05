@@ -98,7 +98,7 @@ Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs
 
 ### Getting Involved
 
-Join the #maplibre slack channel at OSMUS: get an invite at https://osmus-slack.herokuapp.com/
+Join the #maplibre slack channel at OSMUS: get an invite at https://slack.openstreetmap.us/
 Read the [CONTRIBUTING.md](CONTRIBUTING.md) guide in order to get familiar with how we do things around here.
 
 ### Community Leadership
