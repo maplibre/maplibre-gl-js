@@ -496,11 +496,11 @@ function getImageFromStyle(style: StyleWithTestData): Promise<Uint8Array> {
  */
 function printProgress(test: TestData, total: number, index: number) {
     if (test.error) {
-        console.log(`${index}/${total}: errored ${test.id} ${test.error.message}`);
+        console.log('\x1b[31m', `${index}/${total}: errored ${test.id} ${test.error.message}`);
     } else if (!test.ok) {
-        console.log(`${index}/${total}: failed ${test.id} ${test.difference}`);
+        console.log('\x1b[31m', `${index}/${total}: failed ${test.id} ${test.difference}`);
     } else {
-        console.log(`${index}/${total}: passed ${test.id}`);
+        console.log('\x1b[0m', `${index}/${total}: passed ${test.id}`);
     }
 }
 
