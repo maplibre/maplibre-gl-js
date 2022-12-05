@@ -8,6 +8,7 @@ interface OneFingerTouchMoveResults {
 
 type MoveFunction = (lastPoint: Point, point: Point) => OneFingerTouchMoveResults;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const defaultMove: MoveFunction = (lastPoint: Point, point: Point) => ({});
 
 export class OneFingerTouchHandler {
@@ -26,15 +27,15 @@ export class OneFingerTouchHandler {
     }) {
         this.reset();
         this._clickTolerance = options.clickTolerance || 1;
-        this._move = options.move || defaultMove;
+        this._moveFunction = options.move || defaultMove;
     }
 
     _move(...params: Parameters<MoveFunction>) {
         const move = this._moveFunction(...params);
         if (move.bearingDelta || move.pitchDelta) {
             this._active = true;
+            return move;
         }
-        return move;
     }
 
     reset() {
