@@ -89,7 +89,7 @@ const highp vec4 bitSh = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);
 const highp vec4 bitShifts = vec4(1.0) / bitSh;
 
 highp float unpack(highp vec4 color) {
-    return dot(color, bitShifts) * 2.0 - 1.0;
+    return dot(color, bitShifts);
 }
 
 // calculate the opacity behind terrain, returns a value between 0 and 1.

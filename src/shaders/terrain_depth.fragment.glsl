@@ -5,7 +5,7 @@ varying float v_depth;
 const highp vec4 bitSh = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);
 const highp vec4 bitMsk = vec4(0.0, vec3(1.0 / 256.0));
 highp vec4 pack(highp float value) {
-    highp vec4 comp = fract((value * 0.5 + 0.5) * bitSh);
+    highp vec4 comp = fract(value * bitSh);
     comp -= comp.xxyz * bitMsk;
     return comp;
 }

@@ -447,6 +447,9 @@ class Painter {
         this.context.clear({color: options.showOverdrawInspector ? Color.black : Color.transparent, depth: 1});
         this.clearStencil();
 
+        // draw sky first to not overwrite symbols
+        if (this.style.sky) drawSky(this, this.style.sky);
+
         this._showOverdrawInspector = options.showOverdrawInspector;
         this.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];
 
@@ -483,8 +486,6 @@ class Painter {
             this._renderTileClippingMasks(layer, coordsAscending[layer.source]);
             this.renderLayer(this, sourceCache, layer, coords);
         }
-
-        if (this.style.sky) drawSky(this, this.style.sky);
 
         if (this.options.showTileBoundaries) {
             const selectedSource = selectDebugSource(this.style, this.transform.zoom);

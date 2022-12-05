@@ -1,5 +1,4 @@
 uniform sampler2D u_texture;
-uniform highp sampler2D u_depth;
 uniform vec4 u_fog_color;
 uniform float u_fog_blend;
 uniform float u_fog_blend_opacity;

@@ -59,7 +59,7 @@
     },
     "sky": {
       "type": "sky",
-      "doc": "Tho map sky.",
+      "doc": "The map sky.",
       "example": {
           "sky-color": "#199EF3"
       }

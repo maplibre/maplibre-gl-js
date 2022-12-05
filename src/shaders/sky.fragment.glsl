@@ -1,5 +1,3 @@
-
-
 uniform vec4 u_sky_color;
 uniform vec4 u_fog_color;
 uniform float u_horizon;
