@@ -62,7 +62,6 @@ import Terrain from '../render/terrain';
 import RenderToTexture from '../render/render_to_texture';
 
 const version = packageJSON.version;
-
 /* eslint-enable no-use-before-define */
 export type MapOptions = {
     hash?: boolean | string;
@@ -1241,7 +1240,7 @@ class Map extends Camera {
         return this;
     }
 
-    /**
+    /** 
      * Returns an array of MapGeoJSONFeature objects
      * representing visible features that satisfy the query parameters.
      *
@@ -1255,6 +1254,7 @@ class Map extends Camera {
      *   Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
      * @param {Array} [options.filter] A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
      *   to limit query results.
+     * @param {Array<string>} [options.availableImages] An array of string representing the available images
      * @param {boolean} [options.validate=true] Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
      * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
@@ -1316,7 +1316,12 @@ class Map extends Camera {
      * var features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
      * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/queryrenderedfeatures/)
      */
-    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike], options?: any): MapGeoJSONFeature[] {
+    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike], options?: {
+        filter: FilterSpecification;
+        layers: Array<string>;
+        availableImages: Array<string>;
+        validate?: boolean,
+    }): MapGeoJSONFeature[] {
         // The first parameter can be omitted entirely, making this effectively an overloaded method
         // with two signatures:
         //
