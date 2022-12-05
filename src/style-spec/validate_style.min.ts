@@ -40,7 +40,7 @@ function validateStyleMin(style: StyleSpecification, styleSpec = latestStyleSpec
         styleSpec,
         style,
         objectElementValidators: {
-            glyphs: validateGlyphsURL,
+            glyphs: validateGlyphsUrl,
             '*'() {
                 return [];
             }
