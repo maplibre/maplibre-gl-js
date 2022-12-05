@@ -8,10 +8,10 @@ interface MouseMovementResult {
     panDelta?: Point;
 }
 
-type MoveFunction = (lastPoint: Point, point: Point) => MouseMovementResult;
+type MouseMoveFunction = (lastPoint: Point, point: Point) => MouseMovementResult;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const defaultMove: MoveFunction = (lastPoint: Point, point: Point) => ({});
+const defaultMouseMove: MouseMoveFunction = (lastPoint: Point, point: Point) => ({});
 
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;
@@ -35,20 +35,20 @@ export class MouseHandler {
     _eventButton: number;
     _moved: boolean;
     _clickTolerance: number;
-    _moveFunction: MoveFunction;
+    _moveFunction: MouseMoveFunction;
     _correctButton: (e: MouseEvent, button: number) => boolean;
     _activateOnMouseDown: boolean;
 
     constructor(options: {
         clickTolerance: number;
-        move: MoveFunction;
+        move: MouseMoveFunction;
         checkCorrectButton: (e: MouseEvent, button: number) => boolean;
         preventContextMenu?: boolean;
         activateOnMouseDown?: boolean;
     }) {
         this.reset();
         this._clickTolerance = options.clickTolerance || 1;
-        this._moveFunction = options.move || defaultMove;
+        this._moveFunction = options.move || defaultMouseMove;
         this._activateOnMouseDown = !!options.activateOnMouseDown;
         this._correctButton = options.checkCorrectButton;
 
@@ -66,7 +66,7 @@ export class MouseHandler {
         delete this._eventButton;
     }
 
-    _move(...params: Parameters<MoveFunction>) {
+    _move(...params: Parameters<MouseMoveFunction>) {
         const move = this._moveFunction(...params);
         if (move.bearingDelta || move.pitchDelta || move.around || move.panDelta) {
             this._active = true;
