@@ -8,7 +8,7 @@ interface OneFingerTouchMoveResults {
 
 type MoveFunction = (lastPoint: Point, point: Point) => OneFingerTouchMoveResults;
 
-const defaultMove: MoveFunction = (lastPoint: Point, point: Point) => ({});
+const defaultMove: MoveFunction = (_lastPoint: Point, _point: Point) => ({});
 
 export class OneFingerTouchHandler {
 
