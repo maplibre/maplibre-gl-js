@@ -7,7 +7,7 @@ on:
 
 jobs:
   test_render:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
