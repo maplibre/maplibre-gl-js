@@ -112,7 +112,7 @@
     "playwright": "^1.27.1",
     "pngjs": "^6.0.0",
     "postcss": "^8.4.19",
-    "postcss-cli": "^10.0.0",
+    "postcss-cli": "^10.1.0",
     "postcss-inline-svg": "^5.0.0",
     "pretty-bytes": "^6.0.0",
     "react": "^18.2.0",
