@@ -4,6 +4,8 @@ import st from 'st';
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import pixelmatch from 'pixelmatch';
+import {PNG} from 'pngjs';
 
 const ip = address.ip();
 const port = 9968;
@@ -167,17 +169,22 @@ describe('browser tests', () => {
                 });
             });
 
-            const pageWithImage = `<html><head></head><body><img src="${image}" width="800" height="600" /></body></html>`.replace(/\s/g, '');
+            const actualBuff = Buffer.from((image as string).replace(/data:.*;base64,/, ''), 'base64');
+            const actualPng = PNG.sync.read(actualBuff);
 
-            function getFixture(platform: string): string {
-                return fs.readFileSync(path.join(__dirname, `fixtures/cjk-expected-base64-image/${platform}.html`), 'utf8').replace(/\s/g, '');
+            const expectedPlatforms = ['ubuntu-runner', 'macos-runner', 'macos-local'];
+            let minDiff = Infinity;
+            for (const expected of expectedPlatforms) {
+
+                const diff = compareByPixelmatch(actualPng, expected, 800, 600);
+
+                if (diff < minDiff) {
+                    minDiff = diff;
+                }
+                console.log(diff, expected);
             }
 
-            expect(
-                pageWithImage === getFixture('ubuntu-runner') ||
-                pageWithImage === getFixture('macos-runner') ||
-                pageWithImage === getFixture('macos-local')
-            ).toBeTruthy();
+            expect(minDiff <= 0.0125).toBeTruthy();
 
         }, 20000);
     });
@@ -191,4 +198,22 @@ describe('browser tests', () => {
             server.close();
         }
     });
+
+    function compareByPixelmatch(actualPng:PNG, platform: string, width:number, height:number): number {
+        const platformFixtureBase64 = fs.readFileSync(
+            path.join(__dirname, `fixtures/cjk-expected-base64-image/${platform}-base64.txt`), 'utf8')
+            .replace(/\s/g, '')
+            .replace(/data:.*;base64,/, '');
+
+        const expectedBuff = Buffer.from(platformFixtureBase64, 'base64');
+        const expectedPng = PNG.sync.read(expectedBuff);
+
+        const diffImg = new PNG({width, height});
+
+        const diff = pixelmatch(
+            actualPng.data, expectedPng.data, diffImg.data,
+            width, height, {threshold: 0.1285}) / (width * height);
+
+        return diff;
+    }
 });
