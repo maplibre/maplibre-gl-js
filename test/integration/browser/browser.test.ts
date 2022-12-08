@@ -60,44 +60,44 @@ describe('browser tests', () => {
 
     [chromium].forEach((impl) => {
 
-        test(`${impl.name()} - Drag to the left`, async () => {
+        // test(`${impl.name()} - Drag to the left`, async () => {
 
-            await newTest(impl);
+        //     await newTest(impl);
 
-            const canvas = await page.$('.maplibregl-canvas');
-            const canvasBB = await canvas.boundingBox();
+        //     const canvas = await page.$('.maplibregl-canvas');
+        //     const canvasBB = await canvas.boundingBox();
 
-            // Perform drag action, wait a bit the end to avoid the momentum mode.
-            await page.mouse.move(canvasBB.x, canvasBB.y);
-            await page.mouse.down();
-            await page.mouse.move(100, 0);
-            await new Promise(r => setTimeout(r, 200));
-            await page.mouse.up();
+        //     // Perform drag action, wait a bit the end to avoid the momentum mode.
+        //     await page.mouse.move(canvasBB.x, canvasBB.y);
+        //     await page.mouse.down();
+        //     await page.mouse.move(100, 0);
+        //     await new Promise(r => setTimeout(r, 200));
+        //     await page.mouse.up();
 
-            const center = await page.evaluate(() => {
-                return map.getCenter();
-            });
+        //     const center = await page.evaluate(() => {
+        //         return map.getCenter();
+        //     });
 
-            expect(center.lng).toBeCloseTo(-35.15625, 4);
-            expect(center.lat).toBeCloseTo(0, 7);
-        }, 20000);
+        //     expect(center.lng).toBeCloseTo(-35.15625, 4);
+        //     expect(center.lat).toBeCloseTo(0, 7);
+        // }, 20000);
 
-        test(`${impl.name()} Zoom: Double click at the center`, async () => {
+        // test(`${impl.name()} Zoom: Double click at the center`, async () => {
 
-            await newTest(impl);
-            const canvas = await page.$('.maplibregl-canvas');
-            const canvasBB = await canvas.boundingBox();
-            await page.mouse.dblclick(canvasBB.x, canvasBB.y);
+        //     await newTest(impl);
+        //     const canvas = await page.$('.maplibregl-canvas');
+        //     const canvasBB = await canvas.boundingBox();
+        //     await page.mouse.dblclick(canvasBB.x, canvasBB.y);
 
-            // Wait until the map has settled, then report the zoom level back.
-            const zoom = await page.evaluate(() => {
-                return new Promise((resolve, _reject) => {
-                    map.once('idle', () => resolve(map.getZoom()));
-                });
-            });
+        //     // Wait until the map has settled, then report the zoom level back.
+        //     const zoom = await page.evaluate(() => {
+        //         return new Promise((resolve, _reject) => {
+        //             map.once('idle', () => resolve(map.getZoom()));
+        //         });
+        //     });
 
-            expect(zoom).toBe(2);
-        }, 20000);
+        //     expect(zoom).toBe(2);
+        // }, 20000);
 
         test(`${impl.name()} - CJK Characters`, async () => {
             await newTest(impl);
@@ -170,7 +170,9 @@ describe('browser tests', () => {
             });
 
             const actualBuff = Buffer.from((image as string).replace(/data:.*;base64,/, ''), 'base64');
-            const actualPng = PNG.sync.read(actualBuff);
+
+            const actualPng = new PNG({height: 600, width: 800});
+            actualPng.parse(actualBuff);
 
             const expectedPlatforms = ['ubuntu-runner', 'macos-runner', 'macos-local'];
             let minDiff = Infinity;
@@ -206,7 +208,9 @@ describe('browser tests', () => {
             .replace(/data:.*;base64,/, '');
 
         const expectedBuff = Buffer.from(platformFixtureBase64, 'base64');
-        const expectedPng = PNG.sync.read(expectedBuff);
+
+        const expectedPng = new PNG({height: 600, width: 800});
+        expectedPng.parse(expectedBuff);
 
         const diffImg = new PNG({width, height});
 
