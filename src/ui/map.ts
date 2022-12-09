@@ -125,6 +125,13 @@ type Complete<T> = {
 // This type is used inside map since all properties are assigned a default value.
 export type CompleteMapOptions = Complete<MapOptions>;
 
+type RenderedFeaturesOptions = {
+    layers?: Array<string>;
+    filter?: FilterSpecification;
+    availableImages?: Array<string>;
+    validate?: boolean;
+};
+
 const defaultMinZoom = -2;
 const defaultMaxZoom = 22;
 
@@ -1244,18 +1251,19 @@ class Map extends Camera {
      * Returns an array of MapGeoJSONFeature objects
      * representing visible features that satisfy the query parameters.
      *
-     * @param {PointLike|Array<PointLike>} [geometry] - The geometry of the query region:
+     * @param {PointLike|Array<PointLike>|RenderedFeaturesOptions} [geometry] (optional) The geometry of the query region:
      * either a single point or southwest and northeast points describing a bounding box.
      * Omitting this parameter (i.e. calling {@link Map#queryRenderedFeatures} with zero arguments,
      * or with only a `options` argument) is equivalent to passing a bounding box encompassing the entire
      * map viewport.
-     * @param {Object} [options] Options object.
-     * @param {Array<string>} [options.layers] An array of [style layer IDs](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-id) for the query to inspect.
+     * The geometry can receive a RenderedFeaturesOptions only to support a situation where the function receives only one parameter which is the options parameter.
+     * @param {RenderedFeaturesOptions} [options] (optional) Options object.
+     * @param {Array<string>} [options.layers] (optional) An array of [style layer IDs](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-id) for the query to inspect.
      *   Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
-     * @param {Array} [options.filter] A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
+     * @param {FilterSpecification} [options.filter] (optional) A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
      *   to limit query results.
-     * @param {Array<string>} [options.availableImages] An array of string representing the available images
-     * @param {boolean} [options.validate=true] Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {Array<string>} [options.availableImages] (optional) An array of string representing the available images
+     * @param {boolean} [options.validate=true] (optional) Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
      * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
      *
@@ -1277,7 +1285,7 @@ class Map extends Camera {
      * 0.
      *
      * The topmost rendered feature appears first in the returned array, and subsequent features are sorted by
-     * descending z-order. Features that are rendered multiple times (due to wrapping across the antimeridian at low
+     * descending z-order. Features that are rendered multiple times (due to wrapping across the antemeridian at low
      * zoom levels) are returned only once (though subject to the following caveat).
      *
      * Because features come from tiled vector data or GeoJSON data that is converted to tiles internally, feature
@@ -1316,12 +1324,7 @@ class Map extends Camera {
      * var features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
      * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/queryrenderedfeatures/)
      */
-    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike], options?: {
-        filter: FilterSpecification;
-        layers: Array<string>;
-        availableImages: Array<string>;
-        validate?: boolean,
-    }): MapGeoJSONFeature[] {
+    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike] | RenderedFeaturesOptions, options?: RenderedFeaturesOptions): MapGeoJSONFeature[] {
         // The first parameter can be omitted entirely, making this effectively an overloaded method
         // with two signatures:
         //
