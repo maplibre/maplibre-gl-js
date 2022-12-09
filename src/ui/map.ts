@@ -125,7 +125,7 @@ type Complete<T> = {
 // This type is used inside map since all properties are assigned a default value.
 export type CompleteMapOptions = Complete<MapOptions>;
 
-type RenderedFeaturesOptions = {
+type QueryRenderedFeaturesOptions = {
     layers?: Array<string>;
     filter?: FilterSpecification;
     availableImages?: Array<string>;
@@ -1251,13 +1251,13 @@ class Map extends Camera {
      * Returns an array of MapGeoJSONFeature objects
      * representing visible features that satisfy the query parameters.
      *
-     * @param {PointLike|Array<PointLike>|RenderedFeaturesOptions} [geometry] (optional) The geometry of the query region:
+     * @param {PointLike|Array<PointLike>|QueryRenderedFeaturesOptions} [geometry] (optional) The geometry of the query region:
      * either a single point or southwest and northeast points describing a bounding box.
      * Omitting this parameter (i.e. calling {@link Map#queryRenderedFeatures} with zero arguments,
      * or with only a `options` argument) is equivalent to passing a bounding box encompassing the entire
      * map viewport.
-     * The geometry can receive a RenderedFeaturesOptions only to support a situation where the function receives only one parameter which is the options parameter.
-     * @param {RenderedFeaturesOptions} [options] (optional) Options object.
+     * The geometry can receive a QueryRenderedFeaturesOptions only to support a situation where the function receives only one parameter which is the options parameter.
+     * @param {QueryRenderedFeaturesOptions} [options] (optional) Options object.
      * @param {Array<string>} [options.layers] (optional) An array of [style layer IDs](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-id) for the query to inspect.
      *   Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
      * @param {FilterSpecification} [options.filter] (optional) A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
@@ -1324,7 +1324,7 @@ class Map extends Camera {
      * var features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
      * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/queryrenderedfeatures/)
      */
-    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike] | RenderedFeaturesOptions, options?: RenderedFeaturesOptions): MapGeoJSONFeature[] {
+    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): MapGeoJSONFeature[] {
         // The first parameter can be omitted entirely, making this effectively an overloaded method
         // with two signatures:
         //
