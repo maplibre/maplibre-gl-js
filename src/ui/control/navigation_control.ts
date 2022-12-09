@@ -2,8 +2,8 @@ import Point from '@mapbox/point-geometry';
 
 import DOM from '../../util/dom';
 import {extend, bindAll} from '../../util/util';
-import {MouseHandler} from '../handler/mouse';
-import {OneFingerTouchHandler} from '../handler/one_finger_touch_drag';
+import {MouseHandler, MousePitchHandler, MouseRotateHandler} from '../handler/mouse';
+import {OneFingerTouchHandler, OneFingerTouchPitchHandler, OneFingerTouchRotateHandler} from '../handler/one_finger_touch_drag';
 
 import type Map from '../map';
 import type {IControl} from './control';
@@ -151,10 +151,10 @@ class MouseRotateWrapper {
     _clickTolerance: number;
     element: HTMLElement;
     // Rotation and pitch handlers are separated due to different _clickTolerance values
-    mouseRotate: MouseHandler;
-    touchRotate: OneFingerTouchHandler;
-    mousePitch: MouseHandler;
-    touchPitch: OneFingerTouchHandler;
+    mouseRotate: MouseRotateHandler;
+    touchRotate: OneFingerTouchRotateHandler;
+    mousePitch: MousePitchHandler;
+    touchPitch: OneFingerTouchPitchHandler;
     _startPos: Point;
     _lastPos: Point;
 

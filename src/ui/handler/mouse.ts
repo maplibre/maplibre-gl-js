@@ -8,10 +8,37 @@ interface MouseMovementResult {
     panDelta?: Point;
 }
 
-type MouseMoveFunction = (lastPoint: Point, point: Point) => MouseMovementResult;
+interface MousePanResult extends MouseMovementResult {
+    around: Point;
+    panDelta: Point;
+}
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const defaultMouseMove: MouseMoveFunction = (lastPoint: Point, point: Point) => ({});
+interface MouseRotateResult extends MouseMovementResult {
+    bearingDelta: number;
+}
+
+interface MousePitchResult extends MouseMovementResult {
+    pitchDelta: number;
+}
+
+type MouseMoveFunction<T extends MouseMovementResult> = (lastPoint: Point, point: Point) => T;
+
+interface MouseMoveHandler<T extends MouseMovementResult> {
+    _clickTolerance: number;
+    _moveFunction: MouseMoveFunction<T>;
+    reset: () => void;
+    mousedown: (e: MouseEvent, point: Point) => void;
+    mousemoveWindow: (e: MouseEvent, point: Point) => T | void;
+    mouseupWindow: (e: MouseEvent) => void;
+    enable: () => void;
+    disable: () => void;
+    isEnabled: () => boolean;
+    isActive: () => boolean;
+}
+
+export interface MousePanHandler extends MouseMoveHandler<MousePanResult> {}
+export interface MouseRotateHandler extends MouseMoveHandler<MouseRotateResult> {}
+export interface MousePitchHandler extends MouseMoveHandler<MousePitchResult> {}
 
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;
@@ -27,7 +54,7 @@ function buttonNoLongerPressed(e: MouseEvent, button: number) {
     return e.buttons === undefined || (e.buttons & flag) !== flag;
 }
 
-export class MouseHandler {
+export class MouseHandler<T extends MouseMovementResult> implements MouseMoveHandler<T> {
     contextmenu?: (e: MouseEvent) => void;
     _enabled: boolean;
     _active: boolean;
@@ -35,20 +62,20 @@ export class MouseHandler {
     _eventButton: number;
     _moved: boolean;
     _clickTolerance: number;
-    _moveFunction: MouseMoveFunction;
+    _moveFunction: MouseMoveFunction<T>;
     _correctButton: (e: MouseEvent, button: number) => boolean;
     _activateOnMouseDown: boolean;
 
     constructor(options: {
         clickTolerance: number;
-        move: MouseMoveFunction;
+        move: MouseMoveFunction<T>;
         checkCorrectButton: (e: MouseEvent, button: number) => boolean;
         preventContextMenu?: boolean;
         activateOnMouseDown?: boolean;
     }) {
         this.reset();
         this._clickTolerance = options.clickTolerance || 1;
-        this._moveFunction = options.move || defaultMouseMove;
+        this._moveFunction = options.move;
         this._activateOnMouseDown = !!options.activateOnMouseDown;
         this._correctButton = options.checkCorrectButton;
 
@@ -66,7 +93,7 @@ export class MouseHandler {
         delete this._eventButton;
     }
 
-    _move(...params: Parameters<MouseMoveFunction>) {
+    _move(...params: Parameters<MouseMoveFunction<T>>) {
         const move = this._moveFunction(...params);
         if (move.bearingDelta || move.pitchDelta || move.around || move.panDelta) {
             this._active = true;
@@ -137,8 +164,8 @@ export class MouseHandler {
 
     static generatePanHandler({clickTolerance,}: {
         clickTolerance: number;
-    }) {
-        return new MouseHandler({
+    }): MousePanHandler {
+        return new MouseHandler<MousePanResult>({
             clickTolerance,
             move: (lastPoint: Point, point: Point) =>
                 ({around: point, panDelta: point.sub(lastPoint)}),
@@ -151,8 +178,8 @@ export class MouseHandler {
     static generateRotationHandler({clickTolerance, bearingDegreesPerPixelMoved = 0.8}: {
         clickTolerance: number;
         bearingDegreesPerPixelMoved?: number;
-    }) {
-        return new MouseHandler({
+    }): MouseRotateHandler {
+        return new MouseHandler<MouseRotateResult>({
             clickTolerance,
             move: (lastPoint: Point, point: Point) =>
                 ({bearingDelta: (point.x - lastPoint.x) * bearingDegreesPerPixelMoved}),
@@ -167,8 +194,8 @@ export class MouseHandler {
     static generatePitchHandler({clickTolerance, pitchDegreesPerPixelMoved = -0.5}: {
         clickTolerance: number;
         pitchDegreesPerPixelMoved?: number;
-    }) {
-        return new MouseHandler({
+    }): MousePitchHandler {
+        return new MouseHandler<MousePitchResult>({
             clickTolerance,
             move: (lastPoint: Point, point: Point) =>
                 ({pitchDelta: (point.y - lastPoint.y) * pitchDegreesPerPixelMoved}),

@@ -6,12 +6,33 @@ interface OneFingerTouchMoveResults {
     pitchDelta?: number;
 }
 
-type OneFingerTouchMoveFunction = (lastPoint: Point, point: Point) => OneFingerTouchMoveResults;
+interface OneFingerTouchRotateResults extends OneFingerTouchMoveResults {
+    bearingDelta: number;
+}
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const defaultOneFingerTouchMove: OneFingerTouchMoveFunction = (lastPoint: Point, point: Point) => ({});
+interface OneFingerTouchPitchResults extends OneFingerTouchMoveResults {
+    pitchDelta: number;
+}
 
-export class OneFingerTouchHandler {
+type OneFingerTouchMoveFunction<T extends OneFingerTouchMoveResults> = (lastPoint: Point, point: Point) => T;
+
+interface OneFingerTouchMoveHandler<T extends OneFingerTouchMoveResults> {
+    _clickTolerance: number;
+    _moveFunction: OneFingerTouchMoveFunction<T>;
+    reset: () => void;
+    touchstart: (e: TouchEvent, point: Point) => void;
+    touchmoveWindow: (e: TouchEvent, point: Point) => T | void;
+    touchendWindow: (e: TouchEvent) => void;
+    enable: () => void;
+    disable: () => void;
+    isEnabled: () => boolean;
+    isActive: () => boolean;
+}
+
+export interface OneFingerTouchRotateHandler extends OneFingerTouchMoveHandler<OneFingerTouchRotateResults> {}
+export interface OneFingerTouchPitchHandler extends OneFingerTouchMoveHandler<OneFingerTouchPitchResults> {}
+
+export class OneFingerTouchHandler<T extends OneFingerTouchMoveResults> implements OneFingerTouchMoveHandler<T> {
 
     _enabled: boolean;
     _active: boolean;
@@ -19,18 +40,18 @@ export class OneFingerTouchHandler {
     _firstTouch: number;
     _moved: boolean;
     _clickTolerance: number;
-    _moveFunction: OneFingerTouchMoveFunction;
+    _moveFunction: OneFingerTouchMoveFunction<T>;
 
     constructor(options: {
         clickTolerance: number;
-        move: OneFingerTouchMoveFunction;
+        move: OneFingerTouchMoveFunction<T>;
     }) {
         this.reset();
         this._clickTolerance = options.clickTolerance || 1;
-        this._moveFunction = options.move || defaultOneFingerTouchMove;
+        this._moveFunction = options.move;
     }
 
-    _move(...params: Parameters<OneFingerTouchMoveFunction>) {
+    _move(...params: Parameters<OneFingerTouchMoveFunction<T>>) {
         const move = this._moveFunction(...params);
         if (move.bearingDelta || move.pitchDelta) {
             this._active = true;
@@ -103,8 +124,8 @@ export class OneFingerTouchHandler {
     static generateRotationHandler({clickTolerance, bearingDegreesPerPixelMoved = 0.8}: {
         clickTolerance: number;
         bearingDegreesPerPixelMoved?: number;
-    }) {
-        return new OneFingerTouchHandler({
+    }): OneFingerTouchRotateHandler {
+        return new OneFingerTouchHandler<OneFingerTouchRotateResults>({
             clickTolerance,
             move: (lastPoint: Point, point: Point) =>
                 ({bearingDelta: (point.x - lastPoint.x) * bearingDegreesPerPixelMoved}),
@@ -114,8 +135,8 @@ export class OneFingerTouchHandler {
     static generatePitchHandler({clickTolerance, pitchDegreesPerPixelMoved = -0.5}: {
         clickTolerance: number;
         pitchDegreesPerPixelMoved?: number;
-    }) {
-        return new OneFingerTouchHandler({
+    }): OneFingerTouchPitchHandler {
+        return new OneFingerTouchHandler<OneFingerTouchPitchResults>({
             clickTolerance,
             move: (lastPoint: Point, point: Point) =>
                 ({pitchDelta: (point.y - lastPoint.y) * pitchDegreesPerPixelMoved}),
