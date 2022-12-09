@@ -184,8 +184,8 @@ describe('browser tests', () => {
                 }
             }
 
-            // a very low threashold
-            expect(minDiff <= 0.00125).toBeTruthy();
+            // At least one platform should be identical
+            expect(minDiff).toBe(0);
 
         }, 20000);
     });
@@ -215,7 +215,7 @@ describe('browser tests', () => {
 
         const diff = pixelmatch(
             actualPng.data, expectedPng.data, diffImg.data,
-            width, height, {threshold: 0.1285}) / (width * height);
+            width, height, {threshold: 0}) / (width * height);
 
         return diff;
     }
