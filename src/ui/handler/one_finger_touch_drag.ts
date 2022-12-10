@@ -17,8 +17,6 @@ interface OneFingerTouchPitchResults extends OneFingerTouchMoveResults {
 type OneFingerTouchMoveFunction<T extends OneFingerTouchMoveResults> = (lastPoint: Point, point: Point) => T;
 
 interface OneFingerTouchMoveHandler<T extends OneFingerTouchMoveResults> {
-    _clickTolerance: number;
-    _moveFunction: OneFingerTouchMoveFunction<T>;
     reset: () => void;
     touchstart: (e: TouchEvent, point: Point) => void;
     touchmoveWindow: (e: TouchEvent, point: Point) => T | void;
@@ -39,16 +37,16 @@ export class OneFingerTouchHandler<T extends OneFingerTouchMoveResults> implemen
     _lastPoint: Point;
     _firstTouch: number;
     _moved: boolean;
-    _clickTolerance: number;
     _moveFunction: OneFingerTouchMoveFunction<T>;
+    _clickTolerance: number;
 
     constructor(options: {
         clickTolerance: number;
         move: OneFingerTouchMoveFunction<T>;
     }) {
         this.reset();
-        this._clickTolerance = options.clickTolerance || 1;
         this._moveFunction = options.move;
+        this._clickTolerance = options.clickTolerance || 1;
     }
 
     _move(...params: Parameters<OneFingerTouchMoveFunction<T>>) {

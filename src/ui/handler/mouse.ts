@@ -24,8 +24,6 @@ interface MousePitchResult extends MouseMovementResult {
 type MouseMoveFunction<T extends MouseMovementResult> = (lastPoint: Point, point: Point) => T;
 
 interface MouseMoveHandler<T extends MouseMovementResult> {
-    _clickTolerance: number;
-    _moveFunction: MouseMoveFunction<T>;
     reset: () => void;
     mousedown: (e: MouseEvent, point: Point) => void;
     mousemoveWindow: (e: MouseEvent, point: Point) => T | void;
@@ -34,6 +32,7 @@ interface MouseMoveHandler<T extends MouseMovementResult> {
     disable: () => void;
     isEnabled: () => boolean;
     isActive: () => boolean;
+    getClickTolerance: () => number;
 }
 
 export interface MousePanHandler extends MouseMoveHandler<MousePanResult> {}
@@ -160,6 +159,10 @@ export class MouseHandler<T extends MouseMovementResult> implements MouseMoveHan
 
     isActive() {
         return this._active;
+    }
+
+    getClickTolerance() {
+        return this._clickTolerance;
     }
 
     static generatePanHandler({clickTolerance,}: {
