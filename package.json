@@ -157,9 +157,9 @@
     "start": "run-p watch-css start-server",
     "start-debug": "run-p watch-css watch-dev start-server",
     "start-bench": "run-p watch-css watch-benchmarks start-server-at-test",
-    "lint": "eslint --cache --ext \".ts,.tsx,.js,.html\" --ignore-path .gitignore src test build",
+    "lint": "eslint --cache --ext '.ts,.tsx,.js,.html' --ignore-path .gitignore .",
     "lint-docs": "documentation lint src/index.ts",
-    "lint-css": "stylelint \"src/css/maplibre-gl.css\"",
+    "lint-css": "stylelint 'src/css/maplibre-gl.css'",
     "test": "run-s lint lint-css lint-docs test-unit",
     "test-build": "jest -c ./jest.config.builds.ts --roots ./test/build",
     "test-symbol-shaping": "jest --roots ./test/integration/symbol-shaping",
@@ -183,8 +183,8 @@
     "src/",
     "postinstall.js"
   ],
-  "engines" : { 
-    "npm" : ">=8.1.0",
-    "node" : ">=16.14.0"
+  "engines": {
+    "npm": ">=8.1.0",
+    "node": ">=16.14.0"
   }
 }

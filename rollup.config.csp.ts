@@ -25,7 +25,9 @@ const config = (input: InputOption, file: string, format: ModuleFormat): RollupO
     plugins: plugins(production)
 });
 
-export default [
+const configs = [
     config('src/index.ts', `dist/maplibre-gl-csp${outputPostfix}.js`, 'umd'),
     config('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.js`, 'iife')
 ];
+
+export default configs;
