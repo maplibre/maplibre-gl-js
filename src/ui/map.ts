@@ -1247,16 +1247,16 @@ class Map extends Camera {
         return this;
     }
 
-    /** 
+    /**
      * Returns an array of MapGeoJSONFeature objects
      * representing visible features that satisfy the query parameters.
      *
-     * @param {PointLike|Array<PointLike>|QueryRenderedFeaturesOptions} [geometry] (optional) The geometry of the query region:
+     * @param {PointLike|Array<PointLike>|QueryRenderedFeaturesOptions} [geometryOrOptions] (optional) The geometry of the query region:
      * either a single point or southwest and northeast points describing a bounding box.
      * Omitting this parameter (i.e. calling {@link Map#queryRenderedFeatures} with zero arguments,
      * or with only a `options` argument) is equivalent to passing a bounding box encompassing the entire
      * map viewport.
-     * The geometry can receive a QueryRenderedFeaturesOptions only to support a situation where the function receives only one parameter which is the options parameter.
+     * The geometryOrOptions can receive a QueryRenderedFeaturesOptions only to support a situation where the function receives only one parameter which is the options parameter.
      * @param {QueryRenderedFeaturesOptions} [options] (optional) Options object.
      * @param {Array<string>} [options.layers] (optional) An array of [style layer IDs](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-id) for the query to inspect.
      *   Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
@@ -1324,29 +1324,15 @@ class Map extends Camera {
      * var features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
      * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/queryrenderedfeatures/)
      */
-    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): MapGeoJSONFeature[] {
-        // The first parameter can be omitted entirely, making this effectively an overloaded method
-        // with two signatures:
-        //
-        //     queryRenderedFeatures(geometry: PointLike | [PointLike, PointLike], options?: Object)
-        //     queryRenderedFeatures(options?: Object)
-        //
-        // There no way to express that in a way that's compatible with both flow and documentation.js.
-        // Related: https://github.com/facebook/flow/issues/1556
-
+    queryRenderedFeatures(geometryOrOptions?: PointLike | [PointLike, PointLike] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): MapGeoJSONFeature[] {
         if (!this.style) {
             return [];
         }
-
-        if (options === undefined && geometry !== undefined && !(geometry instanceof Point) && !Array.isArray(geometry)) {
-            options = geometry;
-            geometry = undefined;
-        }
-
-        options = options || {};
-        geometry = geometry || [[0, 0], [this.transform.width, this.transform.height]];
-
         let queryGeometry;
+        const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
+        const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this.transform.width, this.transform.height]];
+        options = options || (isGeometry ? {} : geometryOrOptions);
+
         if (geometry instanceof Point || typeof geometry[0] === 'number') {
             queryGeometry = [Point.convert(geometry as PointLike)];
         } else {
