@@ -365,8 +365,8 @@ resetImageRequestQueue();
 // However, the default behavior can prevent dynamic views of the map from rendering
 // smoothly.
 //
-// Therefore, when the view of the map is moving dynamically, smoother frame rates can be
-// achieved by throttling the number of items processed by the queue per frame. This can be
+// When the view of the map is moving dynamically, smoother frame rates can be achieved
+// by throttling the number of items processed by the queue per frame. This can be
 // accomplished by using installImageQueueThrottleControlCallback() to allow the caller to
 // use a lambda function to determine when the queue should be throttled (e.g. when isMoving())
 // and manually calling processImageRequestQueue() in the render loop.
