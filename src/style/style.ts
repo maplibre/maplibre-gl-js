@@ -386,7 +386,7 @@ class Style extends Evented {
     }
 
     _unloadSprite() {
-        for (const id of Object.values(this._spritesImagesIds).reduce((flattened, ids) => [...flattened, ...ids], [])) {
+        for (const id of Object.values(this._spritesImagesIds).flat()) {
             this.imageManager.removeImage(id);
             this._changedImages[id] = true;
         }
