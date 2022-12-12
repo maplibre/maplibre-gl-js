@@ -1331,7 +1331,7 @@ class Map extends Camera {
         let queryGeometry;
         const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
         const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this.transform.width, this.transform.height]];
-        options = options || (isGeometry ? {} : geometryOrOptions);
+        options = options || (isGeometry ? {} : geometryOrOptions) || {};
 
         if (geometry instanceof Point || typeof geometry[0] === 'number') {
             queryGeometry = [Point.convert(geometry as PointLike)];
