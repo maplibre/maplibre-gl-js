@@ -2731,7 +2731,7 @@ class Map extends Camera {
         if (this.terrain) this.terrain.sourceCache.update(this.transform, this.terrain);
         this.transform.updateElevation(this.terrain);
 
-        this._imageRequestQueueDirty = processImageRequestQueue(this.isMoving() ? 1 : config.MAX_PARALLEL_IMAGE_REQUESTS) > 0;
+        this._imageRequestQueueDirty = processImageRequestQueue() > 0;
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 

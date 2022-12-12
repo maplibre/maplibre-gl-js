@@ -460,10 +460,10 @@ function doArrayRequest(requestParameters: RequestParameters, callback: GetImage
 }
 
 export const processImageRequestQueue = function (
-    maxImageRequests: number) {
+    maxImageRequests: number = 0) {
 
     if (!maxImageRequests) {
-        maxImageRequests = Math.max(0, config.MAX_PARALLEL_IMAGE_REQUESTS - currentParallelImageRequests);
+        maxImageRequests = Math.max(0, (isImageQueueThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_WHILE_THROTTLED : config.MAX_PARALLEL_IMAGE_REQUESTS) - currentParallelImageRequests);
     }
 
     const cancelRequest = function (request: any) {
@@ -473,7 +473,7 @@ export const processImageRequestQueue = function (
             request.innerRequest.cancel();
 
             if (!isImageQueueThrottled()) {
-                processImageRequestQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
+                processImageRequestQueue();
             }
         }
     };
