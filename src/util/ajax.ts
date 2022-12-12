@@ -463,7 +463,7 @@ export const processImageRequestQueue = function (
     maxImageRequests: number = 0) {
 
     if (!maxImageRequests) {
-        maxImageRequests = Math.max(0, (isImageQueueThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_WHILE_THROTTLED : config.MAX_PARALLEL_IMAGE_REQUESTS) - currentParallelImageRequests);
+        maxImageRequests = Math.max(0, (isImageQueueThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED : config.MAX_PARALLEL_IMAGE_REQUESTS) - currentParallelImageRequests);
     }
 
     const cancelRequest = function (request: any) {

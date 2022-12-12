@@ -227,7 +227,7 @@ describe('ajax', () => {
 
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED;
 
         const isThrottling = true;
         const callbackHandle = installImageQueueThrottleControlCallback(() => isThrottling);
