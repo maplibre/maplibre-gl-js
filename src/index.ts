@@ -144,6 +144,25 @@ const exported = {
     },
 
     /**
+     * Gets and sets the maximum number of images (raster tiles, sprites, icons) to load in parallel
+     * per frame while image loading is throttled (e.g. while the map view is moving, panning, zooming, etc.).
+     * Lower values tend to increase frame rate fluidity at the expense of increasing image load time.
+     * 8 by default.
+     *
+     * @var {string} maxParallelImageRequestsPerFrameWhileThrottled
+     * @returns {number} Number of parallel requests currently configured while image loading is throttled.
+     * @example
+     * maplibregl.maxParallelImageRequests = 4;
+     */
+    get maxParallelImageRequestsPerFrameWhileThrottled(): number {
+        return config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED;
+    },
+
+    set maxParallelImageRequestsPerFrameWhileThrottled(numRequests: number) {
+        config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED = numRequests;
+    },
+
+    /**
      * Clears browser storage used by this library. Using this method flushes the MapLibre tile
      * cache that is managed by this library. Tiles may still be cached by the browser
      * in some cases.
