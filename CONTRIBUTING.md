@@ -150,6 +150,15 @@ The conventions for module exports are:
 * If a module exports something with the same name as the file name (modulo case), it should be the default export.
 * Anything else should be a named export.
 
+To keep code uniformly styled and avoid common mistakes, you can check some files with the following scripts:
+
+```bash
+npm run lint
+npm run lint-css
+```
+
+Additionally, if you're using VSCode, the "Format Document" action or "Editor: Format on Save" should enforce the js, ts, and css formatting for this project by default.
+
 ### Version Control Conventions
 
 Here is a recommended way to get setup:
