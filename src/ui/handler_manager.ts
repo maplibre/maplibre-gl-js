@@ -5,7 +5,7 @@ import HandlerInertia from './handler_inertia';
 import {MapEventHandler, BlockableMapEventHandler} from './handler/map_event';
 import BoxZoomHandler from './handler/box_zoom';
 import TapZoomHandler from './handler/tap_zoom';
-import {MouseHandler} from './handler/mouse';
+import {generateMouseRotationHandler, generateMousePitchHandler, generateMousePanHandler} from './handler/mouse';
 import TouchPanHandler from './handler/touch_pan';
 import {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import KeyboardHandler from './handler/keyboard';
@@ -197,13 +197,13 @@ class HandlerManager {
         const touchPitch = map.touchPitch = new TwoFingersTouchPitchHandler(map);
         this._add('touchPitch', touchPitch);
 
-        const mouseRotate = MouseHandler.generateRotationHandler(options);
-        const mousePitch = MouseHandler.generatePitchHandler(options);
+        const mouseRotate = generateMouseRotationHandler(options);
+        const mousePitch = generateMousePitchHandler(options);
         map.dragRotate = new DragRotateHandler(options, mouseRotate, mousePitch);
         this._add('mouseRotate', mouseRotate, ['mousePitch']);
         this._add('mousePitch', mousePitch, ['mouseRotate']);
 
-        const mousePan = MouseHandler.generatePanHandler(options);
+        const mousePan = generateMousePanHandler(options);
         const touchPan = new TouchPanHandler(options, map);
         map.dragPan = new DragPanHandler(el, mousePan, touchPan);
         this._add('mousePan', mousePan);
