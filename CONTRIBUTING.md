@@ -183,9 +183,8 @@ What warrants a changelog entry?
 
 How to add your changelog?
 
+- Edit the [`CHANGELOG.md`](CHANGELOG.md) file directly, inserting a new entry at the top of the appropriate list
 - Any changelog entry should be descriptive and concise; it should explain the change to a reader without context
-- Any changelog entry should be added to the pull request in the following format: `<changelog>Changelog description</changelog>`
-- Any change that does not require a changelog should be labelled `skip changelog`
 
 ## Recommended Reading
 
