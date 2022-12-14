@@ -10,6 +10,7 @@
 - Speed up the cross tile symbol index in certain circumstances ([#1755](https://github.com/maplibre/maplibre-gl-js/pull/1755))
 - Improve rendering speed in scenes with many colliding symbolic icons and labels ([#1757](https://github.com/maplibre/maplibre-gl-js/pull/1757))
 - Make request for ImageSource cancelable ([#1802](https://github.com/maplibre/maplibre-gl-js/pull/1802))
+- Throttle the image request queue while the map is moving to improve performance ([#1856](https://github.com/maplibre/maplibre-gl-js/pull/1856))
 
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
