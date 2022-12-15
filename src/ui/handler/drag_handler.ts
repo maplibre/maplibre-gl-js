@@ -43,11 +43,10 @@ export interface DragMoveHandler<T extends DragMovementResult, E extends Event> 
  * @param {Object} options
  * @param {number} options.clickTolerance If the movement is shorter than this value, consider it a click.
  * @param {string} options.move The move function to run on a valid movement.
- * @param {DragMoveStateManager<E>} moveStateManager A class used to manage the state of the drag event - start, checking valid moves, end. See the class documentation for more details.
+ * @param {DragMoveStateManager<E>} options.moveStateManager A class used to manage the state of the drag event - start, checking valid moves, end. See the class documentation for more details.
  * @param {function} options.assignEvent A method used to assign the dragStart, dragMove, and dragEnd methods to the relevant event handlers, as well as assigning the contextmenu handler
  * @param {boolean} [options.activateOnStart] Should the move start on the "start" event, or should it start on the first valid move.
  * @param {boolean} [options.enable] If true, handler will be enabled during construction
- * @example
  */
 export class DragHandler<T extends DragMovementResult, E extends Event> implements DragMoveHandler<T, E> {
     // Event handlers that may be assigned by the implementations of this class
