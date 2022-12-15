@@ -24,7 +24,7 @@ describe('mouse rotate', () => {
         jest.spyOn(browser, 'now').mockReturnValue(0);
         expect(mouseRotate.isActive()).toBe(false);
 
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 0, clientY: 0});
         map._renderTaskQueue.run();
         expect(mouseRotate.isActive()).toBe(false);
 
