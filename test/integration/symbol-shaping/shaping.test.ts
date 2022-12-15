@@ -3,7 +3,7 @@ import path from 'path';
 import {WritingMode, shapeIcon, shapeText, fitIconToText, PositionedIcon, Shaping} from '../../../src/symbol/shaping';
 import Formatted, {FormattedSection} from '../../../src/style-spec/expression/types/formatted';
 import ResolvedImage from '../../../src/style-spec/expression/types/resolved_image';
-import expectedJson from './tests/text-shaping-linebreak.json';
+import expectedJson from './tests/text-shaping-linebreak.json' assert {type: 'json'};
 import {ImagePosition} from '../../../src/render/image_atlas';
 import {StyleImage} from '../../../src/style/style_image';
 
