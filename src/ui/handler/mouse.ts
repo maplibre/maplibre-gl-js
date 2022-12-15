@@ -11,11 +11,12 @@ export interface MousePitchHandler extends DragMoveHandler<DragPitchResult, Mous
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;
 
-export const generateMousePanHandler = ({clickTolerance,}: {
+export const generateMousePanHandler = ({enable, clickTolerance,}: {
     clickTolerance: number;
+    enable?: boolean;
 }): MousePanHandler => {
     const mouseMoveStateManager = new MouseMoveStateManager({
-        checkCorrectButton: (e: MouseEvent) => DOM.mouseButton(e) === LEFT_BUTTON && !e.ctrlKey,
+        checkCorrectEvent: (e: MouseEvent) => DOM.mouseButton(e) === LEFT_BUTTON && !e.ctrlKey,
     });
     return new DragHandler<DragPanResult, MouseEvent>({
         clickTolerance,
@@ -23,15 +24,17 @@ export const generateMousePanHandler = ({clickTolerance,}: {
             ({around: point, panDelta: point.sub(lastPoint)}),
         activateOnStart: true,
         moveStateManager: mouseMoveStateManager,
+        enable,
     });
 };
 
-export const generateMouseRotationHandler = ({clickTolerance, bearingDegreesPerPixelMoved = 0.8}: {
+export const generateMouseRotationHandler = ({enable, clickTolerance, bearingDegreesPerPixelMoved = 0.8}: {
     clickTolerance: number;
     bearingDegreesPerPixelMoved?: number;
+    enable?: boolean;
 }): MouseRotateHandler => {
     const mouseMoveStateManager = new MouseMoveStateManager({
-        checkCorrectButton: (e: MouseEvent): boolean =>
+        checkCorrectEvent: (e: MouseEvent): boolean =>
             (DOM.mouseButton(e) === LEFT_BUTTON && e.ctrlKey) ||
             (DOM.mouseButton(e) === RIGHT_BUTTON),
     });
@@ -43,15 +46,17 @@ export const generateMouseRotationHandler = ({clickTolerance, bearingDegreesPerP
         // because we can't discern rotation gesture start from contextmenu on Mac
         preventContextMenu: true,
         moveStateManager: mouseMoveStateManager,
+        enable,
     });
 };
 
-export const generateMousePitchHandler = ({clickTolerance, pitchDegreesPerPixelMoved = -0.5}: {
+export const generateMousePitchHandler = ({enable, clickTolerance, pitchDegreesPerPixelMoved = -0.5}: {
     clickTolerance: number;
     pitchDegreesPerPixelMoved?: number;
+    enable?: boolean;
 }): MousePitchHandler => {
     const mouseMoveStateManager = new MouseMoveStateManager({
-        checkCorrectButton: (e: MouseEvent): boolean =>
+        checkCorrectEvent: (e: MouseEvent): boolean =>
             (DOM.mouseButton(e) === LEFT_BUTTON && e.ctrlKey) ||
             (DOM.mouseButton(e) === RIGHT_BUTTON),
     });
@@ -63,5 +68,6 @@ export const generateMousePitchHandler = ({clickTolerance, pitchDegreesPerPixelM
         // because we can't discern rotation gesture start from contextmenu on Mac
         preventContextMenu: true,
         moveStateManager: mouseMoveStateManager,
+        enable,
     });
 };

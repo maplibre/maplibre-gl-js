@@ -14,6 +14,22 @@ function buttonNoLongerPressed(e: MouseEvent, button: number) {
     return e.buttons === undefined || (e.buttons & flag) !== flag;
 }
 
+/*
+ * Drag events are initiated by specific interaction which needs to be tracked until it ends.
+ * This requires some state management:
+ * 1. registering the initiating event,
+ * 2. tracking that it was not canceled / not confusing it with another event firing.
+ * 3. recognizing the ending event and cleaning up any internal state
+ *
+ * Concretely, we implement two state managers:
+ * 1. MouseMoveStateManager
+ *      Receives a functions that is used to recognize mouse events that should be registered as the
+ *      relevant drag interactions - i.e. dragging with the right mouse button, or while CTRL is pressed.
+ * 2. OneFingerTouchMoveStateManager
+ *      Checks if a drag event is using one finger, and continuously tracking that this is the same event
+ *      (i.e. to make sure not additional finger has started interacting with the screen before raising
+ *      the first finger).
+ */
 export interface DragMoveStateManager<E extends Event> {
     startMove: (e: E) => void;
     endMove: (e?: E) => void;
@@ -24,12 +40,12 @@ export interface DragMoveStateManager<E extends Event> {
 
 export class MouseMoveStateManager implements DragMoveStateManager<MouseEvent> {
     _eventButton: number | undefined;
-    _correctButton: (e: MouseEvent) => boolean;
+    _correctEvent: (e: MouseEvent) => boolean;
 
     constructor(options: {
-        checkCorrectButton: (e: MouseEvent) => boolean;
+        checkCorrectEvent: (e: MouseEvent) => boolean;
     }) {
-        this._correctButton = options.checkCorrectButton;
+        this._correctEvent = options.checkCorrectEvent;
     }
 
     startMove(e: MouseEvent) {
@@ -42,7 +58,7 @@ export class MouseMoveStateManager implements DragMoveStateManager<MouseEvent> {
     }
 
     isValidStartEvent(e: MouseEvent) {
-        return this._correctButton(e);
+        return this._correctEvent(e);
     }
 
     isValidMoveEvent(e: MouseEvent) {
@@ -97,4 +113,3 @@ export class OneFingerTouchMoveStateManager implements DragMoveStateManager<Touc
         return this._isOneFingerTouch(e) && this._isSameTouchEvent(e);
     }
 }
-

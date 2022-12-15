@@ -39,10 +39,10 @@ export interface DragMoveHandler<T extends DragMovementResult, E extends Event> 
 export class DragHandler<T extends DragMovementResult, E extends Event> implements DragMoveHandler<T, E> {
     contextmenu?: (e: E) => void;
     mousedown?: (e: E, point: Point) => void;
-    mousemove?: (e: E, point: Point) => void;
+    mousemoveWindow?: (e: E, point: Point) => void;
     mouseup?: (e: E) => void;
     touchstart?: (e: E, point: Point) => void;
-    touchmove?: (e: E, point: Point) => void;
+    touchmoveWindow?: (e: E, point: Point) => void;
     touchend?: (e: E) => void;
     _clickTolerance: number;
     _moveFunction: DragMoveFunction<T>;
@@ -59,8 +59,9 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         preventContextMenu?: boolean;
         activateOnStart?: boolean;
         moveStateManager: DragMoveStateManager<E>;
+        enable?: boolean;
     }) {
-        this._enabled = false;
+        this._enabled = !!options.enable;
         this._moveStateManager = options.moveStateManager;
         this._clickTolerance = options.clickTolerance || 1;
         this._moveFunction = options.move;
@@ -73,11 +74,11 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
                 };
             }
             this.mousedown = this.dragStart;
-            this.mousemove = this.dragMove;
+            this.mousemoveWindow = this.dragMove;
             this.mouseup = this.dragEnd;
         } else if (this._moveStateManager instanceof OneFingerTouchMoveStateManager) {
             this.touchstart = this.dragStart;
-            this.touchmove = this.dragMove;
+            this.touchmoveWindow = this.dragMove;
             this.touchend = this.dragEnd;
         } else {
             throw new Error(`Unexpected drag movement type ${this._moveStateManager}`);
