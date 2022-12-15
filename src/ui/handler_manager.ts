@@ -46,12 +46,15 @@ export interface Handler {
     // They are called with dom events whenever those dom evens are received.
     readonly touchstart?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
     readonly touchmove?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+    readonly touchmoveWindow?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
     readonly touchend?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
     readonly touchcancel?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
     readonly mousedown?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly mousemove?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly mousemoveWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly mouseup?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly dblclick?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly contextmenu?: (e: MouseEvent) => HandlerResult | void;
     readonly wheel?: (e: WheelEvent, point: Point) => HandlerResult | void;
     readonly keydown?: (e: KeyboardEvent) => HandlerResult | void;
     readonly keyup?: (e: KeyboardEvent) => HandlerResult | void;

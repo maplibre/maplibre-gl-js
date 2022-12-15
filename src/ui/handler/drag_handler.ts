@@ -1,6 +1,7 @@
 import DOM from '../../util/dom';
 import type Point from '@mapbox/point-geometry';
-import {DragMoveStateManager, MouseMoveStateManager, OneFingerTouchMoveStateManager} from './drag_move_state_manager';
+import {DragMoveStateManager} from './drag_move_state_manager';
+import {Handler} from '../handler_manager';
 
 interface DragMovementResult {
     bearingDelta?: number;
@@ -24,7 +25,7 @@ export interface DragPitchResult extends DragMovementResult {
 
 type DragMoveFunction<T extends DragMovementResult> = (lastPoint: Point, point: Point) => T;
 
-export interface DragMoveHandler<T extends DragMovementResult, E extends Event> {
+export interface DragMoveHandler<T extends DragMovementResult, E extends Event> extends Handler {
     reset: (e?: E) => void;
     dragStart: (e: E, point: Point) => void;
     dragMove: (e: E, point: Point) => T | void;
@@ -36,14 +37,28 @@ export interface DragMoveHandler<T extends DragMovementResult, E extends Event> 
     getClickTolerance: () => number;
 }
 
+/**
+ * A generic class to create handlers for drag events, from both mouse and touch events.
+ * @implements {DragMoveHandler<T, E>}
+ * @param {Object} options
+ * @param {number} options.clickTolerance If the movement is shorter than this value, consider it a click.
+ * @param {string} options.move The move function to run on a valid movement.
+ * @param {DragMoveStateManager<E>} moveStateManager A class used to manage the state of the drag event - start, checking valid moves, end. See the class documentation for more details.
+ * @param {function} options.assignEvent A method used to assign the dragStart, dragMove, and dragEnd methods to the relevant event handlers, as well as assigning the contextmenu handler
+ * @param {boolean} [options.activateOnStart] Should the move start on the "start" event, or should it start on the first valid move.
+ * @param {boolean} [options.enable] If true, handler will be enabled during construction
+ * @example
+ */
 export class DragHandler<T extends DragMovementResult, E extends Event> implements DragMoveHandler<T, E> {
-    contextmenu?: (e: E) => void;
-    mousedown?: (e: E, point: Point) => void;
-    mousemoveWindow?: (e: E, point: Point) => void;
-    mouseup?: (e: E) => void;
-    touchstart?: (e: E, point: Point) => void;
-    touchmoveWindow?: (e: E, point: Point) => void;
-    touchend?: (e: E) => void;
+    // Event handlers that may be assigned by the implementations of this class
+    contextmenu?: Handler['contextmenu'];
+    mousedown?: Handler['mousedown'];
+    mousemoveWindow?: Handler['mousemoveWindow'];
+    mouseup?: Handler['mouseup'];
+    touchstart?: Handler['touchstart'];
+    touchmoveWindow?: Handler['touchmoveWindow'];
+    touchend?: Handler['touchend'];
+
     _clickTolerance: number;
     _moveFunction: DragMoveFunction<T>;
     _activateOnStart: boolean;
@@ -56,9 +71,9 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
     constructor(options: {
         clickTolerance: number;
         move: DragMoveFunction<T>;
-        preventContextMenu?: boolean;
-        activateOnStart?: boolean;
         moveStateManager: DragMoveStateManager<E>;
+        assignEvents: (handler: DragMoveHandler<T, E>) => void;
+        activateOnStart?: boolean;
         enable?: boolean;
     }) {
         this._enabled = !!options.enable;
@@ -67,22 +82,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         this._moveFunction = options.move;
         this._activateOnStart = !!options.activateOnStart;
 
-        if (this._moveStateManager instanceof MouseMoveStateManager) {
-            if (options.preventContextMenu) {
-                this.contextmenu = function(e: E) {
-                    e.preventDefault();
-                };
-            }
-            this.mousedown = this.dragStart;
-            this.mousemoveWindow = this.dragMove;
-            this.mouseup = this.dragEnd;
-        } else if (this._moveStateManager instanceof OneFingerTouchMoveStateManager) {
-            this.touchstart = this.dragStart;
-            this.touchmoveWindow = this.dragMove;
-            this.touchend = this.dragEnd;
-        } else {
-            throw new Error(`Unexpected drag movement type ${this._moveStateManager}`);
-        }
+        options.assignEvents(this);
 
         this.reset();
     }
@@ -102,18 +102,22 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         }
     }
 
-    dragStart(e: E, point: Point) {
+    dragStart(e: E, point: Point);
+    dragStart(e: E, point: Point[]);
+    dragStart(e: E, point: Point | Point[]) {
         if (!this.isEnabled() || this._lastPoint) return;
 
         if (!this._moveStateManager.isValidStartEvent(e)) return;
         this._moveStateManager.startMove(e);
 
-        this._lastPoint = point;
+        this._lastPoint = point['length'] ? point[0] : point;
 
         if (this._activateOnStart && this._lastPoint) this._active = true;
     }
 
-    dragMove(e: E, point: Point) {
+    dragMove(e: E, point: Point);
+    dragMove(e: E, point: Point[]);
+    dragMove(e: E, point: Point | Point[]) {
         if (!this.isEnabled()) return;
         const lastPoint = this._lastPoint;
         if (!lastPoint) return;
@@ -124,11 +128,13 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
             return;
         }
 
-        if (!this._moved && point.dist(lastPoint) < this._clickTolerance) return;
-        this._moved = true;
-        this._lastPoint = point;
+        const movePoint = point['length'] ? point[0] : point;
 
-        return this._move(lastPoint, point);
+        if (!this._moved && movePoint.dist(lastPoint) < this._clickTolerance) return;
+        this._moved = true;
+        this._lastPoint = movePoint;
+
+        return this._move(lastPoint, movePoint);
     }
 
     dragEnd(e: E) {

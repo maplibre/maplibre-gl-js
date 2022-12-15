@@ -11,6 +11,15 @@ export interface MousePitchHandler extends DragMoveHandler<DragPitchResult, Mous
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;
 
+const assignEvents = (handler: DragHandler<DragPanResult, MouseEvent>) => {
+    handler.mousedown = handler.dragStart;
+    handler.mousemoveWindow = handler.dragMove;
+    handler.mouseup = handler.dragEnd;
+    handler.contextmenu = function(e: MouseEvent) {
+        e.preventDefault();
+    };
+};
+
 export const generateMousePanHandler = ({enable, clickTolerance,}: {
     clickTolerance: number;
     enable?: boolean;
@@ -25,6 +34,7 @@ export const generateMousePanHandler = ({enable, clickTolerance,}: {
         activateOnStart: true,
         moveStateManager: mouseMoveStateManager,
         enable,
+        assignEvents,
     });
 };
 
@@ -44,9 +54,9 @@ export const generateMouseRotationHandler = ({enable, clickTolerance, bearingDeg
             ({bearingDelta: (point.x - lastPoint.x) * bearingDegreesPerPixelMoved}),
         // prevent browser context menu when necessary; we don't allow it with rotation
         // because we can't discern rotation gesture start from contextmenu on Mac
-        preventContextMenu: true,
         moveStateManager: mouseMoveStateManager,
         enable,
+        assignEvents,
     });
 };
 
@@ -66,8 +76,8 @@ export const generateMousePitchHandler = ({enable, clickTolerance, pitchDegreesP
             ({pitchDelta: (point.y - lastPoint.y) * pitchDegreesPerPixelMoved}),
         // prevent browser context menu when necessary; we don't allow it with rotation
         // because we can't discern rotation gesture start from contextmenu on Mac
-        preventContextMenu: true,
         moveStateManager: mouseMoveStateManager,
         enable,
+        assignEvents,
     });
 };

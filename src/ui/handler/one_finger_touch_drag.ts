@@ -6,6 +6,12 @@ import {OneFingerTouchMoveStateManager} from './drag_move_state_manager';
 export interface OneFingerTouchRotateHandler extends DragMoveHandler<DragRotateResult, TouchEvent> {}
 export interface OneFingerTouchPitchHandler extends DragMoveHandler<DragPitchResult, TouchEvent> {}
 
+const assignEvents = (handler: DragHandler<DragRotateResult, TouchEvent>) => {
+    handler.touchstart = handler.dragStart;
+    handler.touchmoveWindow = handler.dragMove;
+    handler.touchend = handler.dragEnd;
+};
+
 export const generateOneFingerTouchRotationHandler = ({enable, clickTolerance, bearingDegreesPerPixelMoved = 0.8}: {
     clickTolerance: number;
     bearingDegreesPerPixelMoved?: number;
@@ -18,6 +24,7 @@ export const generateOneFingerTouchRotationHandler = ({enable, clickTolerance, b
             ({bearingDelta: (point.x - lastPoint.x) * bearingDegreesPerPixelMoved}),
         moveStateManager: touchMoveStateManager,
         enable,
+        assignEvents,
     });
 };
 
@@ -33,5 +40,6 @@ export const generateOneFingerTouchPitchHandler = ({enable, clickTolerance, pitc
             ({pitchDelta: (point.y - lastPoint.y) * pitchDegreesPerPixelMoved}),
         moveStateManager: touchMoveStateManager,
         enable,
+        assignEvents,
     });
 };
