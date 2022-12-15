@@ -1,18 +1,18 @@
-import type {TouchZoomHandler, TouchRotateHandler} from '../touch_zoom_rotate';
+import type {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler} from '../two_fingers_touch';
 import type TapDragZoomHandler from '../tap_drag_zoom';
 
 /**
- * The `TouchZoomRotateHandler` allows the user to zoom and rotate the map by
+ * The `TwoFingersTouchZoomRotateHandler` allows the user to zoom and rotate the map by
  * pinching on a touchscreen.
  *
  * They can zoom with one finger by double tapping and dragging. On the second tap,
  * hold the finger down and drag up or down to zoom in or out.
  */
-export default class TouchZoomRotateHandler {
+export default class TwoFingersTouchZoomRotateHandler {
 
     _el: HTMLElement;
-    _touchZoom: TouchZoomHandler;
-    _touchRotate: TouchRotateHandler;
+    _touchZoom: TwoFingersTouchZoomHandler;
+    _touchRotate: TwoFingersTouchRotateHandler;
     _tapDragZoom: TapDragZoomHandler;
     _rotationDisabled: boolean;
     _enabled: boolean;
@@ -20,7 +20,7 @@ export default class TouchZoomRotateHandler {
     /**
      * @private
     */
-    constructor(el: HTMLElement, touchZoom: TouchZoomHandler, touchRotate: TouchRotateHandler, tapDragZoom: TapDragZoomHandler) {
+    constructor(el: HTMLElement, touchZoom: TwoFingersTouchZoomHandler, touchRotate: TwoFingersTouchRotateHandler, tapDragZoom: TapDragZoomHandler) {
         this._el = el;
         this._touchZoom = touchZoom;
         this._touchRotate = touchRotate;

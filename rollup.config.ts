@@ -26,7 +26,7 @@ const config: RollupOptions[] = [{
         chunkFileNames: 'shared.js'
     },
     treeshake: production,
-    acornInjectPlugins: [ importAssertions ],
+    acornInjectPlugins: [importAssertions],
     plugins: plugins(production)
 }, {
     // Next, bundle together the three "chunks" produced in the previous pass

@@ -16,7 +16,7 @@ beforeEach(() => {
 
 describe('touch zoom rotate', () => {
 
-    test('TouchZoomRotateHandler fires zoomstart, zoom, and zoomend events at appropriate times in response to a pinch-zoom gesture', () => {
+    test('TwoFingersTouchZoomRotateHandler fires zoomstart, zoom, and zoomend events at appropriate times in response to a pinch-zoom gesture', () => {
         const map = createMap();
         const target = map.getCanvas();
 
@@ -60,7 +60,7 @@ describe('touch zoom rotate', () => {
         map.remove();
     });
 
-    test('TouchZoomRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a pinch-rotate gesture', () => {
+    test('TwoFingersTouchZoomRotateHandler fires rotatestart, rotate, and rotateend events at appropriate times in response to a pinch-rotate gesture', () => {
         const map = createMap();
         const target = map.getCanvas();
 
@@ -99,7 +99,7 @@ describe('touch zoom rotate', () => {
         map.remove();
     });
 
-    test('TouchZoomRotateHandler does not begin a gesture if preventDefault is called on the touchstart event', () => {
+    test('TwoFingersTouchZoomRotateHandler does not begin a gesture if preventDefault is called on the touchstart event', () => {
         const map = createMap();
         const target = map.getCanvas();
 
@@ -122,7 +122,7 @@ describe('touch zoom rotate', () => {
         map.remove();
     });
 
-    test('TouchZoomRotateHandler starts zoom immediately when rotation disabled', () => {
+    test('TwoFingersTouchZoomRotateHandler starts zoom immediately when rotation disabled', () => {
         const map = createMap();
         const target = map.getCanvas();
         map.touchZoomRotate.disableRotation();
@@ -165,7 +165,7 @@ describe('touch zoom rotate', () => {
         map.remove();
     });
 
-    test('TouchZoomRotateHandler adds css class used for disabling default touch behavior in some browsers', () => {
+    test('TwoFingersTouchZoomRotateHandler adds css class used for disabling default touch behavior in some browsers', () => {
         const map = createMap();
 
         const className = 'maplibregl-touch-zoom-rotate';
@@ -176,7 +176,7 @@ describe('touch zoom rotate', () => {
         expect(map.getCanvasContainer().classList.contains(className)).toBeTruthy();
     });
 
-    test('TouchZoomRotateHandler zooms when touching two markers on the same map', () => {
+    test('TwoFingersTouchZoomRotateHandler zooms when touching two markers on the same map', () => {
         const map = createMap();
 
         const marker1 = new Marker()
@@ -229,7 +229,7 @@ describe('touch zoom rotate', () => {
         map.remove();
     });
 
-    test('TouchZoomRotateHandler does not zoom when touching an element not on the map', () => {
+    test('TwoFingersTouchZoomRotateHandler does not zoom when touching an element not on the map', () => {
         const map = createMap();
 
         const marker1 = new Marker()

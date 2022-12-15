@@ -37,13 +37,13 @@ import type {StyleImageInterface, StyleImageMetadata} from '../style/style_image
 import type {PointLike} from './camera';
 import type ScrollZoomHandler from './handler/scroll_zoom';
 import type BoxZoomHandler from './handler/box_zoom';
-import type {TouchPitchHandler} from './handler/touch_zoom_rotate';
+import type {TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import type DragRotateHandler from './handler/shim/drag_rotate';
 import DragPanHandler, {DragPanOptions} from './handler/shim/drag_pan';
 
 import type KeyboardHandler from './handler/keyboard';
 import type DoubleClickZoomHandler from './handler/shim/dblclick_zoom';
-import type TouchZoomRotateHandler from './handler/shim/touch_zoom_rotate';
+import type TwoFingersTouchZoomRotateHandler from './handler/shim/two_fingers_touch';
 import defaultLocale from './default_locale';
 import type {TaskID} from '../util/task_queue';
 import type {Cancelable} from '../types/cancelable';
@@ -62,7 +62,6 @@ import Terrain from '../render/terrain';
 import RenderToTexture from '../render/render_to_texture';
 
 const version = packageJSON.version;
-
 /* eslint-enable no-use-before-define */
 export type MapOptions = {
     hash?: boolean | string;
@@ -125,6 +124,13 @@ type Complete<T> = {
 
 // This type is used inside map since all properties are assigned a default value.
 export type CompleteMapOptions = Complete<MapOptions>;
+
+type QueryRenderedFeaturesOptions = {
+    layers?: Array<string>;
+    filter?: FilterSpecification;
+    availableImages?: Array<string>;
+    validate?: boolean;
+};
 
 const defaultMinZoom = -2;
 const defaultMaxZoom = 22;
@@ -227,8 +233,8 @@ const defaultOptions = {
  * @param {boolean|Object} [options.dragPan=true] If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler#enable}.
  * @param {boolean} [options.keyboard=true] If `true`, keyboard shortcuts are enabled (see {@link KeyboardHandler}).
  * @param {boolean} [options.doubleClickZoom=true] If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
- * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TouchZoomRotateHandler#enable}.
- * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TouchPitchHandler#enable}.
+ * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchZoomRotateHandler#enable}.
+ * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler#enable}.
  * @param {boolean|GestureOptions} [options.cooperativeGestures=undefined] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
  * A valid options object includes the following properties to customize the text on the informational screen. The values below are the defaults.
  * {
@@ -368,16 +374,16 @@ class Map extends Camera {
     doubleClickZoom: DoubleClickZoomHandler;
 
     /**
-     * The map's {@link TouchZoomRotateHandler}, which allows the user to zoom or rotate the map with touch gestures.
-     * Find more details and examples using `touchZoomRotate` in the {@link TouchZoomRotateHandler} section.
+     * The map's {@link TwoFingersTouchZoomRotateHandler}, which allows the user to zoom or rotate the map with touch gestures.
+     * Find more details and examples using `touchZoomRotate` in the {@link TwoFingersTouchZoomRotateHandler} section.
      */
-    touchZoomRotate: TouchZoomRotateHandler;
+    touchZoomRotate: TwoFingersTouchZoomRotateHandler;
 
     /**
-     * The map's {@link TouchPitchHandler}, which allows the user to pitch the map with touch gestures.
-     * Find more details and examples using `touchPitch` in the {@link TouchPitchHandler} section.
+     * The map's {@link TwoFingersTouchPitchHandler}, which allows the user to pitch the map with touch gestures.
+     * Find more details and examples using `touchPitch` in the {@link TwoFingersTouchPitchHandler} section.
      */
-    touchPitch: TouchPitchHandler;
+    touchPitch: TwoFingersTouchPitchHandler;
 
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
@@ -1245,17 +1251,19 @@ class Map extends Camera {
      * Returns an array of MapGeoJSONFeature objects
      * representing visible features that satisfy the query parameters.
      *
-     * @param {PointLike|Array<PointLike>} [geometry] - The geometry of the query region:
+     * @param {PointLike|Array<PointLike>|QueryRenderedFeaturesOptions} [geometryOrOptions] (optional) The geometry of the query region:
      * either a single point or southwest and northeast points describing a bounding box.
      * Omitting this parameter (i.e. calling {@link Map#queryRenderedFeatures} with zero arguments,
      * or with only a `options` argument) is equivalent to passing a bounding box encompassing the entire
      * map viewport.
-     * @param {Object} [options] Options object.
-     * @param {Array<string>} [options.layers] An array of [style layer IDs](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-id) for the query to inspect.
+     * The geometryOrOptions can receive a QueryRenderedFeaturesOptions only to support a situation where the function receives only one parameter which is the options parameter.
+     * @param {QueryRenderedFeaturesOptions} [options] (optional) Options object.
+     * @param {Array<string>} [options.layers] (optional) An array of [style layer IDs](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-id) for the query to inspect.
      *   Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
-     * @param {Array} [options.filter] A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
+     * @param {FilterSpecification} [options.filter] (optional) A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
      *   to limit query results.
-     * @param {boolean} [options.validate=true] Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {Array<string>} [options.availableImages] (optional) An array of string representing the available images
+     * @param {boolean} [options.validate=true] (optional) Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
      * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
      *
@@ -1277,7 +1285,7 @@ class Map extends Camera {
      * 0.
      *
      * The topmost rendered feature appears first in the returned array, and subsequent features are sorted by
-     * descending z-order. Features that are rendered multiple times (due to wrapping across the antimeridian at low
+     * descending z-order. Features that are rendered multiple times (due to wrapping across the antemeridian at low
      * zoom levels) are returned only once (though subject to the following caveat).
      *
      * Because features come from tiled vector data or GeoJSON data that is converted to tiles internally, feature
@@ -1316,29 +1324,15 @@ class Map extends Camera {
      * var features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
      * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/queryrenderedfeatures/)
      */
-    queryRenderedFeatures(geometry?: PointLike | [PointLike, PointLike], options?: any): MapGeoJSONFeature[] {
-        // The first parameter can be omitted entirely, making this effectively an overloaded method
-        // with two signatures:
-        //
-        //     queryRenderedFeatures(geometry: PointLike | [PointLike, PointLike], options?: Object)
-        //     queryRenderedFeatures(options?: Object)
-        //
-        // There no way to express that in a way that's compatible with both flow and documentation.js.
-        // Related: https://github.com/facebook/flow/issues/1556
-
+    queryRenderedFeatures(geometryOrOptions?: PointLike | [PointLike, PointLike] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): MapGeoJSONFeature[] {
         if (!this.style) {
             return [];
         }
-
-        if (options === undefined && geometry !== undefined && !(geometry instanceof Point) && !Array.isArray(geometry)) {
-            options = geometry;
-            geometry = undefined;
-        }
-
-        options = options || {};
-        geometry = geometry || [[0, 0], [this.transform.width, this.transform.height]];
-
         let queryGeometry;
+        const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
+        const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this.transform.width, this.transform.height]];
+        options = options || (isGeometry ? {} : geometryOrOptions) || {};
+
         if (geometry instanceof Point || typeof geometry[0] === 'number') {
             queryGeometry = [Point.convert(geometry as PointLike)];
         } else {
@@ -1486,7 +1480,7 @@ class Map extends Camera {
 
     _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
         // transformStyle relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
-        if (options.transformStyle && !this.style._loaded) {
+        if (options.transformStyle && this.style && !this.style._loaded) {
             this.style.once('style.load', () => this._updateStyle(style, options));
             return;
         }

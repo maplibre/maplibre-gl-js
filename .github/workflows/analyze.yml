@@ -41,8 +41,8 @@ jobs:
       - name: Get build info
         id: build_info
         run: |
-          echo "::set-output name=pr_number::$(cat build-info/pull_request_number)"
-          echo "::set-output name=base_sha::$(cat build-info/base_sha)"
+          echo "pr_number=$(cat build-info/pull_request_number)" >> $GITHUB_OUTPUT
+          echo "base_sha=$(cat build-info/base_sha)" >> $GITHUB_OUTPUT
       - name: Download base artifact
         uses: dawidd6/action-download-artifact@v2
         with:

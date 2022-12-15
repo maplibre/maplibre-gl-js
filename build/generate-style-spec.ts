@@ -130,19 +130,19 @@ export type PromoteIdSpecification = {[_: string]: string} | string;
 
 export type ExpressionInputType = string | number | boolean;
 
-export type CollatorExpressionSpecification = 
+export type CollatorExpressionSpecification =
     ['collator', {
-        'case-sensitive'?: boolean | ExpressionSpecification, 
-        'diacritic-sensitive'?: boolean | ExpressionSpecification, 
+        'case-sensitive'?: boolean | ExpressionSpecification,
+        'diacritic-sensitive'?: boolean | ExpressionSpecification,
         locale?: string | ExpressionSpecification}
     ]; // collator
 
 export type InterpolationSpecification =
-    | ['linear'] 
-    | ['exponential', number | ExpressionSpecification] 
+    | ['linear']
+    | ['exponential', number | ExpressionSpecification]
     | ['cubic-bezier', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification]
 
-export type ExpressionSpecification = 
+export type ExpressionSpecification =
     // types
     | ['array', unknown | ExpressionSpecification] // array
     | ['array', ExpressionInputType | ExpressionSpecification, unknown | ExpressionSpecification] // array
@@ -185,20 +185,20 @@ export type ExpressionSpecification =
     | ['>=', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, CollatorExpressionSpecification?] // boolean
     | ['all', ...(boolean | ExpressionSpecification)[]] // boolean
     | ['any', ...(boolean | ExpressionSpecification)[]] // boolean
-    | ['case', boolean | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, 
+    | ['case', boolean | ExpressionSpecification, ExpressionInputType | ExpressionSpecification,
         ...(boolean | ExpressionInputType | ExpressionSpecification)[], ExpressionInputType | ExpressionSpecification]
     | ['coalesce', ...(ExpressionInputType | ExpressionSpecification)[]] // at least two inputs required
-    | ['match', ExpressionInputType | ExpressionSpecification, 
-        ExpressionInputType | ExpressionInputType[], ExpressionInputType | ExpressionSpecification, 
+    | ['match', ExpressionInputType | ExpressionSpecification,
+        ExpressionInputType | ExpressionInputType[], ExpressionInputType | ExpressionSpecification,
         ...(ExpressionInputType | ExpressionInputType[] | ExpressionSpecification)[], // repeated as above
         ExpressionInputType | ExpressionSpecification]
     | ['within', unknown | ExpressionSpecification]
     // Ramps, scales, curves
-    | ['interpolate', InterpolationSpecification, number | ExpressionSpecification, 
-        ...(number | number[] | ColorSpecification)[]] // alternating number and number | number[] | ColorSpecification
-    | ['interpolate-hcl', InterpolationSpecification, number | ExpressionSpecification, 
+    | ['interpolate', InterpolationSpecification, number | ExpressionSpecification,
+        ...(number | number[] | ColorSpecification | ExpressionSpecification)[]] // alternating number and number | number[] | ColorSpecification
+    | ['interpolate-hcl', InterpolationSpecification, number | ExpressionSpecification,
         ...(number | ColorSpecification)[]] // alternating number and ColorSpecificaton
-    | ['interpolate-lab', InterpolationSpecification, number | ExpressionSpecification, 
+    | ['interpolate-lab', InterpolationSpecification, number | ExpressionSpecification,
         ...(number | ColorSpecification)[]] // alternating number and ColorSpecification
     | ['step', number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification,
         ...(number | ExpressionInputType | ExpressionSpecification)[]] // alternating number and ExpressionInputType | ExpressionSpecification
