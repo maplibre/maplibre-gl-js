@@ -1,7 +1,6 @@
 import path, {dirname} from 'path';
 import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
 import {fileURLToPath, pathToFileURL} from 'url';
 import {RollupOptions} from 'rollup';
 import {nodeResolve} from './build/rollup_plugins';
@@ -49,7 +48,6 @@ const config: RollupOptions[] = [{
             }
         }),
         importAssertionsPlugin(),
-        json(),
         nodeResolve,
         typescript(),
         commonjs()
