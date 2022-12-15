@@ -167,9 +167,13 @@ To add a new render test:
 5. Commit the new `style.json` and `expected.png` :rocket:
 
 ## Updating results of query-tests
-You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled:
+You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled, for exmple on Linux:
 ```
 UPDATE=true npm run test-query
+```
+Or on Windows PowerShell:
+```
+$env:UPDATE=$true; npm run test-render -- raster-resampling/function
 ```
 You have to regenerate the fixture afterwards
 ```
