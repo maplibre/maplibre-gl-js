@@ -1,5 +1,4 @@
 
-import validate from './validate';
 import ValidationError from '../error/validation_error';
 import getType from '../util/get_type';
 import {isFunction} from '../function';
@@ -8,6 +7,7 @@ import {supportsPropertyExpression} from '../util/properties';
 
 export default function validateProperty(options, propertyType) {
     const key = options.key;
+    const validateSpec = options.validateSpec;
     const style = options.style;
     const styleSpec = options.styleSpec;
     const value = options.value;
@@ -18,7 +18,7 @@ export default function validateProperty(options, propertyType) {
 
     const transitionMatch = propertyKey.match(/^(.*)-transition$/);
     if (propertyType === 'paint' && transitionMatch && layerSpec[transitionMatch[1]] && layerSpec[transitionMatch[1]].transition) {
-        return validate({
+        return validateSpec({
             key,
             value,
             valueSpec: styleSpec.transition,
@@ -51,7 +51,7 @@ export default function validateProperty(options, propertyType) {
         }
     }
 
-    return errors.concat(validate({
+    return errors.concat(validateSpec({
         key: options.key,
         value,
         valueSpec,

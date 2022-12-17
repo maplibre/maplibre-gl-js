@@ -1,7 +1,6 @@
 
 import ValidationError from '../error/validation_error';
 import getType from '../util/get_type';
-import validateSpec from './validate';
 
 export default function validateObject(options): Array<ValidationError> {
     const key = options.key;
@@ -10,6 +9,7 @@ export default function validateObject(options): Array<ValidationError> {
     const elementValidators = options.objectElementValidators || {};
     const style = options.style;
     const styleSpec = options.styleSpec;
+    const validateSpec = options.validateSpec;
     let errors = [] as Array<ValidationError>;
 
     const type = getType(object);
@@ -42,7 +42,8 @@ export default function validateObject(options): Array<ValidationError> {
             style,
             styleSpec,
             object,
-            objectKey
+            objectKey,
+            validateSpec,
         }, object));
     }
 

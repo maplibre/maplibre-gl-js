@@ -51,20 +51,30 @@ function validateStyleMin(style: StyleSpecification, styleSpec = latestStyleSpec
             key: 'constants',
             value: style['constants'],
             style,
-            styleSpec
+            styleSpec,
+            validateSpec: validate,
         }));
     }
 
     return sortErrors(errors);
 }
 
-validateStyleMin.source = wrapCleanErrors(validateSource);
-validateStyleMin.light = wrapCleanErrors(validateLight);
-validateStyleMin.terrain = wrapCleanErrors(validateTerrain);
-validateStyleMin.layer = wrapCleanErrors(validateLayer);
-validateStyleMin.filter = wrapCleanErrors(validateFilter);
-validateStyleMin.paintProperty = wrapCleanErrors(validatePaintProperty);
-validateStyleMin.layoutProperty = wrapCleanErrors(validateLayoutProperty);
+validateStyleMin.source = wrapCleanErrors(injectValidateSpec(validateSource));
+validateStyleMin.light = wrapCleanErrors(injectValidateSpec(validateLight));
+validateStyleMin.terrain = wrapCleanErrors(injectValidateSpec(validateTerrain));
+validateStyleMin.layer = wrapCleanErrors(injectValidateSpec(validateLayer));
+validateStyleMin.filter = wrapCleanErrors(injectValidateSpec(validateFilter));
+validateStyleMin.paintProperty = wrapCleanErrors(injectValidateSpec(validatePaintProperty));
+validateStyleMin.layoutProperty = wrapCleanErrors(injectValidateSpec(validateLayoutProperty));
+
+function injectValidateSpec(validator: (options: object) => any) {
+    return function(options) {
+        return validator({
+            ...options,
+            validateSpec: validate,
+        });
+    };
+}
 
 function sortErrors(errors) {
     return [].concat(errors).sort((a, b) => {
