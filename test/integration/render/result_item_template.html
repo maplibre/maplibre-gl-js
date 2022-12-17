@@ -14,20 +14,20 @@
         document.addEventListener('mouseout', handleHover);
 
         function handleHover(e) {
-            var el = e.target;
+            const el = e.target;
             if (el.tagName === 'IMG' && el.dataset.altSrc) {
-                var tmp = el.src;
+                const tmp = el.src;
                 el.src = el.dataset.altSrc;
                 el.dataset.altSrc = tmp;
             }
         }
 
-        document.getElementById('toggle-failed').addEventListener('click', function (e) {
+        document.getElementById('toggle-failed').addEventListener('click', () => {
             for (const row of document.querySelectorAll('.tests.failed .test')) {
                 row.classList.toggle('hide');
             }
         });
-        document.getElementById('toggle-errored').addEventListener('click', function (e) {
+        document.getElementById('toggle-errored').addEventListener('click', () => {
             for (const row of document.querySelectorAll('.tests.errored .test.')) {
                 row.classList.toggle('hide');
             }

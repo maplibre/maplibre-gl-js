@@ -88,7 +88,7 @@ Same parameter can be used to view results for a single test...
 $ npm run test-render circle-radius/literal -- --report
 ```
 
-## Updating results of render test results
+### Updating results of render test results
 On Linux:
 ```
 UPDATE=true npm run test-render

@@ -613,8 +613,8 @@ if (options.report) {
     const erroredItems = testStats.errored.map(t => getReportItem(t));
     const failedItems = testStats.failed.map(t => getReportItem(t));
 
+    // write HTML reports
     let resultData: string;
-
     if (erroredItems.length || failedItems.length) {
         const resultItemTemplate = fs.readFileSync(path.join(__dirname, 'result_item_template.html')).toString();
         resultData = resultItemTemplate
@@ -631,6 +631,20 @@ if (options.report) {
 
     const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : 'results.html');
     fs.writeFileSync(p, resultsContent, 'utf8');
+
+    // write text report of just the error/failed id
+    if (testStats.errored?.length > 0) {
+        const erroredItemIds = testStats.errored.map(t => t.id);
+        const p = path.join(__dirname, 'results-errored-caseIds.txt');
+        fs.writeFileSync(p, erroredItemIds.join('\n'), 'utf8');
+    }
+
+    if (testStats.failed?.length > 0) {
+        const failedItemIds = testStats.failed.map(t => t.id);
+        const p = path.join(__dirname, 'results-failed-caseIds.txt');
+        fs.writeFileSync(p, failedItemIds.join('\n'), 'utf8');
+    }
+
     console.log(`Results logged to '${p}'`);
 }
 
