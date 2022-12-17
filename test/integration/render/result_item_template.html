@@ -1,0 +1,35 @@
+`
+    <div class="tests failed">
+        <h1 style="color: red"><button id="toggle-failed">Toggle</button> Failed Tests (${failedItemsLength})</h1>
+        ${failedItems}
+    </div>
+
+    <div class="tests errored">
+        <h1 style="color: black"><button id="toggle-errored">Toggle</button> Errored Tests (${erroredItemsLength})</h1>
+        ${erroredItems}
+    </div>
+
+    <script>
+        document.addEventListener('mouseover', handleHover);
+        document.addEventListener('mouseout', handleHover);
+
+        function handleHover(e) {
+            var el = e.target;
+            if (el.tagName === 'IMG' && el.dataset.altSrc) {
+                var tmp = el.src;
+                el.src = el.dataset.altSrc;
+                el.dataset.altSrc = tmp;
+            }
+        }
+
+        document.getElementById('toggle-failed').addEventListener('click', function (e) {
+            for (const row of document.querySelectorAll('.tests.failed .test')) {
+                row.classList.toggle('hide');
+            }
+        });
+        document.getElementById('toggle-errored').addEventListener('click', function (e) {
+            for (const row of document.querySelectorAll('.tests.errored .test.')) {
+                row.classList.toggle('hide');
+            }
+        });
+    </script>
