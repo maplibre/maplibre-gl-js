@@ -631,21 +631,24 @@ if (options.report) {
 
     const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : 'results.html');
     fs.writeFileSync(p, resultsContent, 'utf8');
+    console.log(`\nFull html report is logged to '${p}'`);
 
     // write text report of just the error/failed id
     if (testStats.errored?.length > 0) {
         const erroredItemIds = testStats.errored.map(t => t.id);
-        const p = path.join(__dirname, 'results-errored-caseIds.txt');
-        fs.writeFileSync(p, erroredItemIds.join('\n'), 'utf8');
+        const caseIdFileName = path.join(__dirname, 'results-errored-caseIds.txt');
+        fs.writeFileSync(caseIdFileName, erroredItemIds.join('\n'), 'utf8');
+
+        console.log(`\n${testStats.errored?.length} errored test case IDs are logged to '${caseIdFileName}'`);
     }
 
     if (testStats.failed?.length > 0) {
         const failedItemIds = testStats.failed.map(t => t.id);
-        const p = path.join(__dirname, 'results-failed-caseIds.txt');
-        fs.writeFileSync(p, failedItemIds.join('\n'), 'utf8');
-    }
+        const caseIdFileName = path.join(__dirname, 'results-failed-caseIds.txt');
+        fs.writeFileSync(caseIdFileName, failedItemIds.join('\n'), 'utf8');
 
-    console.log(`Results logged to '${p}'`);
+        console.log(`\n${testStats.failed?.length} failed test case IDs are logged to '${caseIdFileName}'`);
+    }
 }
 
 process.exit(success ? 0 : 1);
