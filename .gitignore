@@ -17,6 +17,7 @@ test/integration/**/actual.png
 test/integration/**/actual.json
 test/integration/**/diff.png
 test/integration/**/test-results.xml
+test/integration/**/results*.txt
 test/integration/dist/**/*.js
 test/integration/dist/**/*.json
 test/integration/query/dist/fixtures.json
