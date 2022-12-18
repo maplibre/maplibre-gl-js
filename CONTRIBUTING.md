@@ -80,7 +80,7 @@ npm install
 
 Consider using WSL and follow the above Linux guide or follow the next steps
 
-Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^16), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
+Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^18), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
 
 Clone the repository
 ```bash
