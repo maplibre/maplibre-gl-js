@@ -5,8 +5,7 @@ import {fileURLToPath, pathToFileURL} from 'url';
 import {RollupOptions} from 'rollup';
 import {nodeResolve} from './build/rollup_plugins';
 import typescript from '@rollup/plugin-typescript';
-import {importAssertions} from 'acorn-import-assertions';
-import {importAssertionsPlugin} from 'rollup-plugin-import-assert';
+import json from '@rollup/plugin-json';
 
 const esm = 'esm' in process.env;
 
@@ -18,8 +17,8 @@ const config: RollupOptions[] = [{
         format: esm ? 'esm' : 'umd',
         sourcemap: true
     },
-    acornInjectPlugins: [importAssertions],
     plugins: [
+        json(),
         {
             name: 'dep-checker',
             resolveId(source, importer) {
@@ -47,7 +46,6 @@ const config: RollupOptions[] = [{
                 '_token_stack:': ''
             }
         }),
-        importAssertionsPlugin(),
         nodeResolve,
         typescript(),
         commonjs()

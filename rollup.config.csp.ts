@@ -1,7 +1,6 @@
 import {plugins} from './build/rollup_plugins';
 import banner from './build/banner';
 import {InputOption, ModuleFormat, RollupOptions} from 'rollup';
-import {importAssertions} from 'acorn-import-assertions';
 
 // a config for generating a special GL JS bundle with static web worker code (in a separate file)
 // https://github.com/mapbox/mapbox-gl-js/issues/6058
@@ -21,7 +20,6 @@ const config = (input: InputOption, file: string, format: ModuleFormat): RollupO
         banner
     },
     treeshake: production,
-    acornInjectPlugins: [importAssertions],
     plugins: plugins(production)
 });
 
