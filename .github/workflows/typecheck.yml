@@ -15,7 +15,7 @@ jobs:
       - name: Use Node.js 16 x64
         uses: actions/setup-node@v3.5.1
         with:
-          node-version: 16
+          node-version: 18
           architecture: x64
       - run: npm ci
       - run: npm run typecheck
