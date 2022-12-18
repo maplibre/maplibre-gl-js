@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js 16 x64
+      - name: Use Node.js 18 x64
         uses: actions/setup-node@v3.5.1
         with:
           node-version: 18
