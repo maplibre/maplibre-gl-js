@@ -1,5 +1,5 @@
 import fs from 'fs';
-import sourcemaps from 'rollup-plugin-sourcemaps';
+import sourcemaps from 'rollup-plugin-include-sourcemaps';
 import replace from '@rollup/plugin-replace';
 import {plugins, nodeResolve} from '../../build/rollup_plugins';
 import commonjs from '@rollup/plugin-commonjs';
