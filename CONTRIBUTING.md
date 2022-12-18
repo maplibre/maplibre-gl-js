@@ -13,7 +13,7 @@ Install the Xcode Command Line Tools Package
 xcode-select --install
 ```
 
-Install [node.js](https://nodejs.org/) version ^16
+Install [node.js](https://nodejs.org/) version ^18
 ```bash
 brew install node
 ```
@@ -60,9 +60,9 @@ Install [nvm](https://github.com/nvm-sh/nvm)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
 ```
 
-Install [Node.js](https://nodejs.org/) ^16
+Install [Node.js](https://nodejs.org/) ^18
 ```
-nvm install 16
+nvm install 18
 ```
 
 Clone the repository
