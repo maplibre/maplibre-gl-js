@@ -44,6 +44,10 @@ function checkGeolocationSupport(callback) {
         window.navigator.permissions.query({name: 'geolocation'}).then((p) => {
             supportsGeolocation = p.state !== 'denied';
             callback(supportsGeolocation);
+        }).catch(() => {
+            // Fix for iOS16 which rejects query but still supports geolocation
+            supportsGeolocation = !!window.navigator.geolocation;
+            callback(supportsGeolocation);
         });
 
     } else {
