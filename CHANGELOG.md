@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - *...Add new stuff here...*
+- Fix geolocate control permissions failure on IOS16 web view with fallback to `window.navigator.geolocation`
 - `QueryRenderedFeaturesOptions` type added to both of the params in queryRenderedFeatures in map.ts ([#1900](https://github.com/maplibre/maplibre-gl-js/issues/1900))
 - NavigationControlOptions is now optional when creating an instance of NavigationControl ([#1754](https://github.com/maplibre/maplibre-gl-js/issues/1754))
 - Listen to webglcontextcreationerror event and give detailed debug info when it fails ([#1715](https://github.com/maplibre/maplibre-gl-js/pull/1715))
