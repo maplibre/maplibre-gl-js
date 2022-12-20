@@ -20,7 +20,16 @@
       "DOM",
       "DOM.Iterable"
     ],
-    "types": ["node", "jest", "geojson", "offscreencanvas"]
+    "types": [
+      "node",
+      "jest",
+      "geojson",
+      "offscreencanvas"
+    ]
+  },
+  "ts-node": {
+    "experimentalSpecifierResolution": "node",
+    "esm": true
   },
   "include": [
     "rollup.config.**",
