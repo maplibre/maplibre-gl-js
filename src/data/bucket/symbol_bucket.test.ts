@@ -16,7 +16,7 @@ import {RGBAImage} from '../../util/image';
 import {ImagePosition} from '../../render/image_atlas';
 import {IndexedFeature, PopulateParameters} from '../bucket';
 import {StyleImage} from '../../style/style_image';
-import glyphs from '../../../test/unit/assets/fontstack-glyphs.json';
+import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' assert {type: 'json'};
 import {StyleGlyph} from '../../style/style_glyph';
 
 // Load a point feature from fixture tile.

@@ -10,6 +10,7 @@ fs.writeFileSync('test/debug-pages/index.html', `
 <html>
 <head>
     <title>Debug Pages</title>
+    <link rel="icon" href="about:blank">
 </head>
 <body>
     <h1>Debug Pages</h1>

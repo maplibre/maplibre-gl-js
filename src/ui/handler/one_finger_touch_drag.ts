@@ -1,123 +1,45 @@
-import DOM from '../../util/dom';
 import type Point from '@mapbox/point-geometry';
 
-interface OneFingerTouchMoveResults {
-    bearingDelta?: number;
-    pitchDelta?: number;
-}
+import {DragMoveHandler, DragRotateResult, DragPitchResult, DragHandler} from './drag_handler';
+import {OneFingerTouchMoveStateManager} from './drag_move_state_manager';
 
-type MoveFunction = (lastPoint: Point, point: Point) => OneFingerTouchMoveResults;
+export interface OneFingerTouchRotateHandler extends DragMoveHandler<DragRotateResult, TouchEvent> {}
+export interface OneFingerTouchPitchHandler extends DragMoveHandler<DragPitchResult, TouchEvent> {}
 
-const defaultMove: MoveFunction = (lastPoint: Point, point: Point) => ({});
+const assignEvents = (handler: DragHandler<DragRotateResult, TouchEvent>) => {
+    handler.touchstart = handler.dragStart;
+    handler.touchmoveWindow = handler.dragMove;
+    handler.touchend = handler.dragEnd;
+};
 
-export class OneFingerTouchHandler {
+export const generateOneFingerTouchRotationHandler = ({enable, clickTolerance, bearingDegreesPerPixelMoved = 0.8}: {
+    clickTolerance: number;
+    bearingDegreesPerPixelMoved?: number;
+    enable?: boolean;
+}): OneFingerTouchRotateHandler => {
+    const touchMoveStateManager = new OneFingerTouchMoveStateManager();
+    return new DragHandler<DragRotateResult, TouchEvent>({
+        clickTolerance,
+        move: (lastPoint: Point, point: Point) =>
+            ({bearingDelta: (point.x - lastPoint.x) * bearingDegreesPerPixelMoved}),
+        moveStateManager: touchMoveStateManager,
+        enable,
+        assignEvents,
+    });
+};
 
-    _enabled: boolean;
-    _active: boolean;
-    _lastPoint: Point;
-    _firstTouch: number;
-    _moved: boolean;
-    _clickTolerance: number;
-    _moveFunction: MoveFunction;
-
-    constructor(options: {
-        clickTolerance: number;
-        move: MoveFunction;
-    }) {
-        this.reset();
-        this._clickTolerance = options.clickTolerance || 1;
-        this._move = options.move || defaultMove;
-    }
-
-    _move(...params: Parameters<MoveFunction>) {
-        const move = this._moveFunction(...params);
-        if (move.bearingDelta || move.pitchDelta) {
-            this._active = true;
-        }
-        return move;
-    }
-
-    reset() {
-        this._active = false;
-        this._moved = false;
-        delete this._lastPoint;
-        delete this._firstTouch;
-    }
-
-    _correctTouch(e: TouchEvent) {
-        return e.targetTouches.length === 1;
-    }
-
-    touchstart(e: TouchEvent, point: Point) {
-        if (this._lastPoint) return;
-
-        if (!this._correctTouch(e)) return;
-
-        this._lastPoint = point;
-        this._firstTouch = e.targetTouches[0].identifier;
-    }
-
-    touchmoveWindow(e: TouchEvent, point: Point) {
-        const lastPoint = this._lastPoint;
-        if (!lastPoint) return;
-        e.preventDefault();
-
-        if (!this._correctTouch(e) || e.targetTouches[0].identifier !== this._firstTouch) {
-            this.reset();
-            return;
-        }
-
-        if (!this._moved && point.dist(lastPoint) < this._clickTolerance) return;
-        this._moved = true;
-        this._lastPoint = point;
-
-        // implemented by child class
-        return this._move(lastPoint, point);
-    }
-
-    touchendWindow(e: TouchEvent) {
-        if (!this._lastPoint) return;
-        if (!this._correctTouch(e) || e.targetTouches[0].identifier !== this._firstTouch) return;
-        if (this._moved) DOM.suppressClick();
-        this.reset();
-    }
-
-    enable() {
-        this._enabled = true;
-    }
-
-    disable() {
-        this._enabled = false;
-        this.reset();
-    }
-
-    isEnabled() {
-        return this._enabled;
-    }
-
-    isActive() {
-        return this._active;
-    }
-
-    static generateRotationHandler({clickTolerance, bearingDegreesPerPixelMoved = 0.8}: {
-        clickTolerance: number;
-        bearingDegreesPerPixelMoved?: number;
-    }) {
-        return new OneFingerTouchHandler({
-            clickTolerance,
-            move: (lastPoint: Point, point: Point) =>
-                ({bearingDelta: (point.x - lastPoint.x) * bearingDegreesPerPixelMoved}),
-        });
-    }
-
-    static generatePitchHandler({clickTolerance, pitchDegreesPerPixelMoved = -0.5}: {
-        clickTolerance: number;
-        pitchDegreesPerPixelMoved?: number;
-    }) {
-        return new OneFingerTouchHandler({
-            clickTolerance,
-            move: (lastPoint: Point, point: Point) =>
-                ({pitchDelta: (point.y - lastPoint.y) * pitchDegreesPerPixelMoved}),
-        });
-    }
-}
+export const generateOneFingerTouchPitchHandler = ({enable, clickTolerance, pitchDegreesPerPixelMoved = -0.5}: {
+    clickTolerance: number;
+    pitchDegreesPerPixelMoved?: number;
+    enable?: boolean;
+}): OneFingerTouchPitchHandler => {
+    const touchMoveStateManager = new OneFingerTouchMoveStateManager();
+    return new DragHandler<DragPitchResult, TouchEvent>({
+        clickTolerance,
+        move: (lastPoint: Point, point: Point) =>
+            ({pitchDelta: (point.y - lastPoint.y) * pitchDegreesPerPixelMoved}),
+        moveStateManager: touchMoveStateManager,
+        enable,
+        assignEvents,
+    });
+};

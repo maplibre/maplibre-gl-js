@@ -13,7 +13,7 @@ Install the Xcode Command Line Tools Package
 xcode-select --install
 ```
 
-Install [node.js](https://nodejs.org/) version ^16
+Install [node.js](https://nodejs.org/) version ^18
 ```bash
 brew install node
 ```
@@ -60,9 +60,9 @@ Install [nvm](https://github.com/nvm-sh/nvm)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
 ```
 
-Install [Node.js](https://nodejs.org/) ^16
+Install [Node.js](https://nodejs.org/) ^18
 ```
-nvm install 16
+nvm install 18
 ```
 
 Clone the repository
@@ -80,7 +80,7 @@ npm install
 
 Consider using WSL and follow the above Linux guide or follow the next steps
 
-Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^16), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
+Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^18), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
 
 Clone the repository
 ```bash
@@ -150,6 +150,15 @@ The conventions for module exports are:
 * If a module exports something with the same name as the file name (modulo case), it should be the default export.
 * Anything else should be a named export.
 
+To keep code uniformly styled and avoid common mistakes, you can check some files with the following scripts:
+
+```bash
+npm run lint
+npm run lint-css
+```
+
+Additionally, if you're using VSCode, the "Format Document" action or "Editor: Format on Save" should enforce the js, ts, and css formatting for this project by default.
+
 ### Version Control Conventions
 
 Here is a recommended way to get setup:
@@ -174,9 +183,8 @@ What warrants a changelog entry?
 
 How to add your changelog?
 
+- Edit the [`CHANGELOG.md`](CHANGELOG.md) file directly, inserting a new entry at the top of the appropriate list
 - Any changelog entry should be descriptive and concise; it should explain the change to a reader without context
-- Any changelog entry should be added to the pull request in the following format: `<changelog>Changelog description</changelog>`
-- Any change that does not require a changelog should be labelled `skip changelog`
 
 ## Recommended Reading
 
