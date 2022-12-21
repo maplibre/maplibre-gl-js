@@ -12,27 +12,27 @@ let status = 0;
 
 if (argv.help || argv.h || (!argv._.length && process.stdin.isTTY)) {
     help();
-}
-
-if (!argv._.length) {
-    argv._.push('/dev/stdin');
-}
-
-argv._.forEach((file) => {
-    const errors = validate(rw.readFileSync(file, 'utf8'));
-    if (errors.length) {
-        if (argv.json) {
-            process.stdout.write(JSON.stringify(errors, null, 2));
-        } else {
-            errors.forEach((e) => {
-                console.log('%s:%d: %s', file, e.line, e.message);
-            });
-        }
-        status = 1;
+} else {
+    if (!argv._.length) {
+        argv._.push('/dev/stdin');
     }
-});
 
-process.exit(status);
+    argv._.forEach((file) => {
+        const errors = validate(rw.readFileSync(file, 'utf8'));
+        if (errors.length) {
+            if (argv.json) {
+                process.stdout.write(JSON.stringify(errors, null, 2));
+            } else {
+                errors.forEach((e) => {
+                    console.log('%s:%d: %s', file, e.line, e.message);
+                });
+            }
+            status = 1;
+        }
+    });
+
+    process.exit(status);
+}
 
 function help() {
     console.log('usage:');
