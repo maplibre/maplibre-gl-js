@@ -1,4 +1,5 @@
-import {getImage, ResourceType} from '../util/ajax';
+import {ResourceType} from '../util/ajax';
+import {getImage} from '../util/image_request_queue';
 import {extend, isImageBitmap} from '../util/util';
 import {Evented} from '../util/evented';
 import browser from '../util/browser';
