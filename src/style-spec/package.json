@@ -23,10 +23,10 @@
     "url": "git@github.com:maplibre/maplibre-gl-js.git"
   },
   "bin": {
-    "gl-style-migrate": "bin/gl-style-migrate.cjs",
-    "gl-style-validate": "bin/gl-style-validate.cjs",
-    "gl-style-format": "bin/gl-style-format.cjs",
-    "gl-style-composite": "bin/gl-style-composite.cjs"
+    "gl-style-migrate": "bin/gl-style-migrate.js",
+    "gl-style-validate": "bin/gl-style-validate.js",
+    "gl-style-format": "bin/gl-style-format.js",
+    "gl-style-composite": "bin/gl-style-composite.js"
   },
   "dependencies": {
     "@mapbox/jsonlint-lines-primitives": "~2.0.2",
