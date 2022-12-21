@@ -124,10 +124,6 @@ Query tests can be run in the browser, the server for serving up the test page a
 ```
 npm run start
 ```
-OR
-```
-npm run start-debug
-```
 
 If you want to run only the test server run:
 ```
