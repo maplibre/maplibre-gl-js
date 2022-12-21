@@ -77,12 +77,24 @@ export type HandlerResult = {
     cameraAnimation?: (map: Map) => any;
     // The last three properties are needed by only one handler: scrollzoom.
     // The DOM event to be used as the `originalEvent` on any camera change events.
-    originalEvent?: any;
+    originalEvent?: Event;
     // Makes the manager trigger a frame, allowing the handler to return multiple results over time (see scrollzoom).
     needsRenderFrame?: boolean;
     // The camera changes won't get recorded for inertial zooming.
     noInertia?: boolean;
 };
+
+export type EventInProgress = {
+    handlerName: string;
+    originalEvent: Event;
+}
+
+export type EventsInProgress = {
+    zoom?: EventInProgress;
+    pitch?: EventInProgress;
+    rotate?: EventInProgress;
+    drag?: EventInProgress;
+}
 
 function hasChange(result: HandlerResult) {
     return (result.panDelta && result.panDelta.mag()) || result.zoomDelta || result.bearingDelta || result.pitchDelta;
@@ -94,15 +106,15 @@ class HandlerManager {
     _handlers: Array<{
         handlerName: string;
         handler: Handler;
-        allowed: any;
+        allowed: Array<string>;
     }>;
-    _eventsInProgress: any;
+    _eventsInProgress: EventsInProgress;
     _frameId: number;
     _inertia: HandlerInertia;
     _bearingSnap: number;
     _handlersById: {[x: string]: Handler};
     _updatingCamera: boolean;
-    _changes: Array<[HandlerResult, any, any]>;
+    _changes: Array<[HandlerResult, EventsInProgress, {[handlerName: string]: Event}]>;
     _drag: {center: Point; lngLat: LngLat; point: Point; handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
@@ -293,7 +305,7 @@ class HandlerManager {
         return mapTouches as any as TouchList;
     }
 
-    handleEvent(e: InputEvent | RenderFrameEvent, eventName?: string) {
+    handleEvent(e: Event, eventName?: string) {
 
         if (e.type === 'blur') {
             this.stop(true);
@@ -302,7 +314,7 @@ class HandlerManager {
 
         this._updatingCamera = true;
 
-        const inputEvent = e.type === 'renderFrame' ? undefined : (e as any as InputEvent);
+        const inputEvent = e.type === 'renderFrame' ? undefined : e as InputEvent;
 
         /*
          * We don't call e.preventDefault() for any events by default.
@@ -310,12 +322,12 @@ class HandlerManager {
          */
 
         const mergedHandlerResult: HandlerResult = {needsRenderFrame: false};
-        const eventsInProgress = {};
+        const eventsInProgress: EventsInProgress = {};
         const activeHandlers = {};
-        const eventTouches = (e as any as TouchEvent).touches;
+        const eventTouches = (e as TouchEvent).touches;
 
         const mapTouches = eventTouches ? this._getMapTouches(eventTouches) : undefined;
-        const points = mapTouches ? DOM.touchPos(this._el, mapTouches) : DOM.mousePos(this._el, ((e as any as MouseEvent)));
+        const points = mapTouches ? DOM.touchPos(this._el, mapTouches) : DOM.mousePos(this._el, ((e as MouseEvent)));
 
         for (const {handlerName, handler, allowed} of this._handlers) {
             if (!handler.isEnabled()) continue;
@@ -339,7 +351,7 @@ class HandlerManager {
             }
         }
 
-        const deactivatedHandlers = {};
+        const deactivatedHandlers: {[handlerName: string]: Event} = {};
         for (const name in this._previousActiveHandlers) {
             if (!activeHandlers[name]) {
                 deactivatedHandlers[name] = inputEvent;
@@ -367,7 +379,11 @@ class HandlerManager {
         }
     }
 
-    mergeHandlerResult(mergedHandlerResult: HandlerResult, eventsInProgress: any, handlerResult: HandlerResult, name: string, e?: InputEvent) {
+    mergeHandlerResult(mergedHandlerResult: HandlerResult,
+        eventsInProgress: EventsInProgress,
+        handlerResult: HandlerResult,
+        name: string,
+        e?: InputEvent) {
         if (!handlerResult) return;
 
         extend(mergedHandlerResult, handlerResult);
@@ -391,8 +407,8 @@ class HandlerManager {
     }
 
     _applyChanges() {
-        const combined: {[k: string]: any} = {};
-        const combinedEventsInProgress = {};
+        const combined: HandlerResult = {};
+        const combinedEventsInProgress: EventsInProgress = {};
         const combinedDeactivatedHandlers = {};
 
         for (const [change, eventsInProgress, deactivatedHandlers] of this._changes) {
@@ -413,7 +429,9 @@ class HandlerManager {
         this._changes = [];
     }
 
-    _updateMapTransform(combinedResult: any, combinedEventsInProgress: any, deactivatedHandlers: any) {
+    _updateMapTransform(combinedResult: HandlerResult,
+        combinedEventsInProgress: EventsInProgress,
+        deactivatedHandlers: {[handlerName: string]: Event}) {
         const map = this._map;
         const tr = map.transform;
         const terrain = map.terrain;
@@ -437,7 +455,7 @@ class HandlerManager {
         if (pitchDelta) tr.pitch += pitchDelta;
         if (zoomDelta) tr.zoom += zoomDelta;
 
-        if (!terrain) {
+        if (!terrain || !combinedEventsInProgress.drag) {
             tr.setLocationAtPoint(loc, around);
         } else {
             // when 3d-terrain is enabled act a little different:
@@ -473,7 +491,7 @@ class HandlerManager {
 
     }
 
-    _fireEvents(newEventsInProgress: {[x: string]: any}, deactivatedHandlers: any, allowEndAnimation: boolean) {
+    _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean) {
 
         const wasMoving = isMoving(this._eventsInProgress);
         const nowMoving = isMoving(newEventsInProgress);
@@ -546,7 +564,7 @@ class HandlerManager {
 
     }
 
-    _fireEvent(type: string, e: any) {
+    _fireEvent(type: string, e?: Event) {
         this._map.fire(new Event(type, e ? {originalEvent: e} : {}));
     }
 

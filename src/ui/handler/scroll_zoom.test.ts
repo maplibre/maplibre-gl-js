@@ -273,4 +273,28 @@ describe('ScrollZoomHandler', () => {
 
     });
 
+    test('Zooms for single mouse wheel tick while not in the center of the map and terrain is on, should zoom according to mouse position', () => {
+        const browserNow = jest.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap();
+        map._renderTaskQueue.run();
+        map.terrain = {
+            pointCoordinate: () => null
+        } as any;
+
+        // simulate a single 'wheel' event
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta, clientX: 1000, clientY: 1000});
+        map._renderTaskQueue.run();
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lat).toBeCloseTo(-11.6371, 3);
+        expect(map.getCenter().lng).toBeCloseTo(11.0286, 3);
+        console.log(map.getCenter());
+        map.remove();
+    });
 });
