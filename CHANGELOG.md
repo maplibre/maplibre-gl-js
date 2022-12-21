@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - *...Add new stuff here...*
 ### 🐞 Bug fixes
+- Fix issue [#1024](https://github.com/maplibre/maplibre-gl-js/pull/1024) - Zoom center not under cursor when terrain is on 
 - *...Add new stuff here...*
 - 
 ## 3.0.0-pre.2
@@ -19,7 +20,7 @@
 
 ### 🐞 Bug fixes
 - Remove dependency on `@rollup/plugin-json`, which was in conflict with `rollup-plugin-import-assert`
-- Remove dependency on `@mapbox/gazetteer` which caused some build warnings ([#1898](https://github.com/maplibre/maplibre-gl-js/pull/1757)[#1898](https://github.com/maplibre/maplibre-gl-js/pull/1898))
+- Remove dependency on `@mapbox/gazetteer` which caused some build warnings ([#1757](https://github.com/maplibre/maplibre-gl-js/pull/1757) [#1898](https://github.com/maplibre/maplibre-gl-js/pull/1898))
 - Fix `getElevation()` causing uncaught error ([#1650](https://github.com/maplibre/maplibre-gl-js/issues/1650)).
 - Add dev version for csp build ([#1730](https://github.com/maplibre/maplibre-gl-js/pull/1730))
 - Fix headless benchmark execution especially on VM ([#1732](https://github.com/maplibre/maplibre-gl-js/pull/1732))
