@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
+import minimist from 'minimist';
+import rw from 'rw';
+import {validate} from '@maplibre/maplibre-gl-style-spec';
 
-var argv = require('minimist')(process.argv.slice(2), {
-        boolean: 'json',
-    }),
-    validate = require('../').validate,
-    rw = require('rw'),
-    status = 0;
+const argv = minimist('minimist')(process.argv.slice(2), {
+    boolean: 'json',
+});
+let status = 0;
 
 if (argv.help || argv.h || (!argv._.length && process.stdin.isTTY)) {
     return help();
@@ -16,13 +17,13 @@ if (!argv._.length) {
     argv._.push('/dev/stdin');
 }
 
-argv._.forEach(function(file) {
-    var errors = validate(rw.readFileSync(file, 'utf8'));
+argv._.forEach((file) => {
+    const errors = validate(rw.readFileSync(file, 'utf8'));
     if (errors.length) {
         if (argv.json) {
             process.stdout.write(JSON.stringify(errors, null, 2));
         } else {
-            errors.forEach(function (e) {
+            errors.forEach((e) => {
                 console.log('%s:%d: %s', file, e.line, e.message);
             });
         }

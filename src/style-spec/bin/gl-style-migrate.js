@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-
-var fs = require('fs'),
-    argv = require('minimist')(process.argv.slice(2)),
-    format = require('../').format,
-    migrate = require('../').migrate;
+import fs from 'fs';
+import minimist from 'minimist';
+import {format, migrate} from '@maplibre/maplibre-gl-style-spec';
+const argv = minimist(process.argv.slice(2));
 
 if (argv.help || argv.h || (!argv._.length && process.stdin.isTTY)) {
     return help();
