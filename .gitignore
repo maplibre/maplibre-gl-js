@@ -21,7 +21,6 @@ test/integration/**/results*.txt
 test/integration/dist/**/*.js
 test/integration/dist/**/*.json
 test/integration/query/dist/fixtures.json
-test/debug-pages/index.html
 */**/*.g.ts
 .eslintcache
 src/style-spec/dist/index.cjs
