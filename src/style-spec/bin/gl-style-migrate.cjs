@@ -14,7 +14,6 @@ console.log(format(migrate(JSON.parse(fs.readFileSync(argv._[0])))));
 
 function help() {
     console.log('usage:');
-    console.log('  gl-style-migrate file.json');
-    console.log('  gl-style-migrate < file.json');
+    console.log('  gl-style-migrate v7.json > v8.json');
 }
 
