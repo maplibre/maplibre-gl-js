@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-process-exit */
 
 import minimist from 'minimist';
 import rw from 'rw';
