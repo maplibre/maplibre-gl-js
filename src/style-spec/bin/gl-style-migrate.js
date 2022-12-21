@@ -6,7 +6,7 @@ import {format, migrate} from '@maplibre/maplibre-gl-style-spec';
 const argv = minimist(process.argv.slice(2));
 
 if (argv.help || argv.h || (!argv._.length && process.stdin.isTTY)) {
-    return help();
+    help();
 }
 
 console.log(format(migrate(JSON.parse(fs.readFileSync(argv._[0])))));

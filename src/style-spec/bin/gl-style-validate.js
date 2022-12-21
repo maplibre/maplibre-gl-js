@@ -11,7 +11,7 @@ const argv = minimist('minimist')(process.argv.slice(2), {
 let status = 0;
 
 if (argv.help || argv.h || (!argv._.length && process.stdin.isTTY)) {
-    return help();
+    help();
 }
 
 if (!argv._.length) {
