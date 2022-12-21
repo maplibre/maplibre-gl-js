@@ -2,8 +2,8 @@ import Point from '@mapbox/point-geometry';
 
 import DOM from '../../util/dom';
 import {extend, bindAll} from '../../util/util';
-import {MouseRotateHandler, MousePitchHandler} from '../handler/mouse';
-import {OneFingerTouchHandler} from '../handler/one_finger_touch_drag';
+import {generateMousePitchHandler, generateMouseRotationHandler, MousePitchHandler, MouseRotateHandler} from '../handler/mouse';
+import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandler, OneFingerTouchPitchHandler, OneFingerTouchRotateHandler} from '../handler/one_finger_touch_drag';
 
 import type Map from '../map';
 import type {IControl} from './control';
@@ -152,23 +152,23 @@ class MouseRotateWrapper {
     element: HTMLElement;
     // Rotation and pitch handlers are separated due to different _clickTolerance values
     mouseRotate: MouseRotateHandler;
-    touchRotate: OneFingerTouchHandler;
+    touchRotate: OneFingerTouchRotateHandler;
     mousePitch: MousePitchHandler;
-    touchPitch: OneFingerTouchHandler;
+    touchPitch: OneFingerTouchPitchHandler;
     _startPos: Point;
     _lastPos: Point;
 
     constructor(map: Map, element: HTMLElement, pitch: boolean = false) {
         this._clickTolerance = 10;
-        const mapRotateTolerance = map.dragRotate._mouseRotate._clickTolerance;
-        const mapPitchTolerance = map.dragRotate._mousePitch._clickTolerance;
+        const mapRotateTolerance = map.dragRotate._mouseRotate.getClickTolerance();
+        const mapPitchTolerance = map.dragRotate._mousePitch.getClickTolerance();
         this.element = element;
-        this.mouseRotate = new MouseRotateHandler({clickTolerance: mapRotateTolerance});
-        this.touchRotate = OneFingerTouchHandler.generateRotationHandler({clickTolerance: mapRotateTolerance});
+        this.mouseRotate = generateMouseRotationHandler({clickTolerance: mapRotateTolerance, enable: true});
+        this.touchRotate = generateOneFingerTouchRotationHandler({clickTolerance: mapRotateTolerance, enable: true});
         this.map = map;
         if (pitch) {
-            this.mousePitch = new MousePitchHandler({clickTolerance: mapPitchTolerance});
-            this.touchPitch = OneFingerTouchHandler.generatePitchHandler({clickTolerance: mapPitchTolerance});
+            this.mousePitch = generateMousePitchHandler({clickTolerance: mapPitchTolerance, enable: true});
+            this.touchPitch = generateOneFingerTouchPitchHandler({clickTolerance: mapPitchTolerance, enable: true});
         }
 
         bindAll(['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend', 'reset'], this);
@@ -178,33 +178,33 @@ class MouseRotateWrapper {
     }
 
     startMouse(e: MouseEvent, point: Point) {
-        this.mouseRotate.mousedown(e, point);
-        if (this.mousePitch) this.mousePitch.mousedown(e, point);
+        this.mouseRotate.dragStart(e, point);
+        if (this.mousePitch) this.mousePitch.dragStart(e, point);
         DOM.disableDrag();
     }
 
     startTouch(e: TouchEvent, point: Point) {
-        this.touchRotate.touchstart(e, point);
-        if (this.touchPitch) this.touchPitch.touchstart(e, point);
+        this.touchRotate.dragStart(e, point);
+        if (this.touchPitch) this.touchPitch.dragStart(e, point);
         DOM.disableDrag();
     }
 
     moveMouse(e: MouseEvent, point: Point) {
         const map = this.map;
-        const {bearingDelta} = this.mouseRotate.mousemoveWindow(e, point) || {};
+        const {bearingDelta} = this.mouseRotate.dragMove(e, point) || {};
         if (bearingDelta) map.setBearing(map.getBearing() + bearingDelta);
         if (this.mousePitch) {
-            const {pitchDelta} = this.mousePitch.mousemoveWindow(e, point) || {};
+            const {pitchDelta} = this.mousePitch.dragMove(e, point) || {};
             if (pitchDelta) map.setPitch(map.getPitch() + pitchDelta);
         }
     }
 
     moveTouch(e: TouchEvent, point: Point) {
         const map = this.map;
-        const {bearingDelta} = this.touchRotate.touchmoveWindow(e, point) || {};
+        const {bearingDelta} = this.touchRotate.dragMove(e, point) || {};
         if (bearingDelta) map.setBearing(map.getBearing() + bearingDelta);
         if (this.touchPitch) {
-            const {pitchDelta} = this.touchPitch.touchmoveWindow(e, point) || {};
+            const {pitchDelta} = this.touchPitch.dragMove(e, point) || {};
             if (pitchDelta) map.setPitch(map.getPitch() + pitchDelta);
         }
     }
@@ -238,8 +238,8 @@ class MouseRotateWrapper {
     }
 
     mouseup(e: MouseEvent) {
-        this.mouseRotate.mouseupWindow(e);
-        if (this.mousePitch) this.mousePitch.mouseupWindow(e);
+        this.mouseRotate.dragEnd(e);
+        if (this.mousePitch) this.mousePitch.dragEnd(e);
         this.offTemp();
     }
 

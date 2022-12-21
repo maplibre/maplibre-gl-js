@@ -3,7 +3,6 @@ import sourcemaps from 'rollup-plugin-sourcemaps';
 import {plugins} from './build/rollup_plugins';
 import banner from './build/banner';
 import {RollupOptions} from 'rollup';
-import {importAssertions} from 'acorn-import-assertions';
 
 const {BUILD} = process.env;
 const production = BUILD === 'production';
@@ -26,7 +25,6 @@ const config: RollupOptions[] = [{
         chunkFileNames: 'shared.js'
     },
     treeshake: production,
-    acornInjectPlugins: [importAssertions],
     plugins: plugins(production)
 }, {
     // Next, bundle together the three "chunks" produced in the previous pass
