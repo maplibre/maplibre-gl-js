@@ -108,4 +108,99 @@ describe('loadSprite', () => {
         requests[3].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite2.png')).buffer;
         requests[3].onload();
     });
+
+    test('error in callback', done => {
+        const transform = jest.fn().mockImplementation((url, type) => {
+            return {url, type};
+        });
+
+        const manager = new RequestManager(transform);
+
+        const requests = [];
+        fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
+
+        loadSprite([{id: 'sprite1', url: 'http://localhost:9966/test/unit/assets/sprite1'}], manager, 1, (err, result) => {
+            expect(err).toBeTruthy();
+            expect(result).toBeUndefined();
+
+            done();
+        });
+
+        expect(requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
+        requests[0].setStatus(500);
+        requests[0].response = undefined;
+        requests[0].onload();
+    });
+
+    test('request canceling', done => {
+        const transform = jest.fn().mockImplementation((url, type) => {
+            return {url, type};
+        });
+
+        const manager = new RequestManager(transform);
+
+        const requests = [];
+        fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
+
+        const cancelable = loadSprite([{id: 'sprite1', url: 'http://localhost:9966/test/unit/assets/sprite1'}], manager, 1, () => {});
+
+        setTimeout(() => {
+            cancelable.cancel();
+
+            expect(requests[0].aborted).toBeTruthy();
+            expect(requests[1].aborted).toBeTruthy();
+
+            done();
+        });
+
+        setTimeout(() => {
+            expect(requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
+            requests[0].setStatus(200);
+            requests[0].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json'));
+            requests[0].onload();
+
+            expect(requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
+            requests[1].setStatus(200);
+            requests[1].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png')).buffer;
+            requests[1].onload();
+        }, 10);
+    });
+
+    test('pixelRatio is respected', done => {
+        const transform = jest.fn().mockImplementation((url, type) => {
+            return {url, type};
+        });
+
+        const manager = new RequestManager(transform);
+
+        const requests = [];
+        fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
+
+        loadSprite('http://localhost:9966/test/unit/assets/sprite1', manager, 2, (err, result) => {
+            expect(err).toBeFalsy();
+
+            expect(transform).toHaveBeenCalledTimes(2);
+            expect(transform).toHaveBeenNthCalledWith(1, 'http://localhost:9966/test/unit/assets/sprite1@2x.json', 'SpriteJSON');
+            expect(transform).toHaveBeenNthCalledWith(2, 'http://localhost:9966/test/unit/assets/sprite1@2x.png', 'SpriteImage');
+
+            expect(Object.keys(result)).toHaveLength(1);
+            expect(Object.keys(result)[0]).toBe('default');
+
+            Object.values(result['default']).forEach(styleImage => {
+                expect(styleImage.data).toBeInstanceOf(RGBAImage);
+            });
+
+            done();
+        });
+
+        expect(requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1@2x.json');
+        requests[0].setStatus(200);
+        requests[0].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json'));
+        requests[0].onload();
+
+        expect(requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1@2x.png');
+        requests[1].setStatus(200);
+        requests[1].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png')).buffer;
+        requests[1].onload();
+    });
 });
