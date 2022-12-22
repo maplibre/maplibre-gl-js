@@ -25,8 +25,7 @@
   "bin": {
     "gl-style-migrate": "bin/gl-style-migrate.js",
     "gl-style-validate": "bin/gl-style-validate.js",
-    "gl-style-format": "bin/gl-style-format.js",
-    "gl-style-composite": "bin/gl-style-composite.js"
+    "gl-style-format": "bin/gl-style-format.js"
   },
   "dependencies": {
     "@mapbox/jsonlint-lines-primitives": "~2.0.2",
