@@ -8,11 +8,12 @@ import {validate} from '@maplibre/maplibre-gl-style-spec';
 const argv = minimist(process.argv.slice(2), {
     boolean: 'json',
 });
-let status = 0;
 
 if (argv.help || argv.h || (!argv._.length && process.stdin.isTTY)) {
     help();
 } else {
+    let status = 0;
+
     if (!argv._.length) {
         argv._.push('/dev/stdin');
     }
