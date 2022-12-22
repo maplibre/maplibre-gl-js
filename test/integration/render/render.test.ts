@@ -613,119 +613,42 @@ if (options.report) {
     const erroredItems = testStats.errored.map(t => getReportItem(t));
     const failedItems = testStats.failed.map(t => getReportItem(t));
 
+    // write HTML reports
     let resultData: string;
-
     if (erroredItems.length || failedItems.length) {
-        resultData = `
-    <div class="tests failed">
-        <h1 style="color: red"><button id="toggle-failed">Toggle</button> Failed Tests (${failedItems.length})</h1>
-        ${failedItems.join('\n')}
-    </div>
-
-    <div class="tests errored">
-        <h1 style="color: black"><button id="toggle-errored">Toggle</button> Errored Tests (${erroredItems.length})</h1>
-        ${erroredItems.join('\n')}
-    </div>
-
-    <script>
-        document.addEventListener('mouseover', handleHover);
-        document.addEventListener('mouseout', handleHover);
-
-        function handleHover(e) {
-            var el = e.target;
-            if (el.tagName === 'IMG' && el.dataset.altSrc) {
-                var tmp = el.src;
-                el.src = el.dataset.altSrc;
-                el.dataset.altSrc = tmp;
-            }
-        }
-
-        document.getElementById('toggle-failed').addEventListener('click', function (e) {
-            for (const row of document.querySelectorAll('.tests.failed .test')) {
-                row.classList.toggle('hide');
-            }
-        });
-        document.getElementById('toggle-errored').addEventListener('click', function (e) {
-            for (const row of document.querySelectorAll('.tests.errored .test.')) {
-                row.classList.toggle('hide');
-            }
-        });
-    </script>`;
+        const resultItemTemplate = fs.readFileSync(path.join(__dirname, 'result_item_template.html')).toString();
+        resultData = resultItemTemplate
+            .replace('${failedItemsLength}', failedItems.length.toString())
+            .replace('${failedItems}', failedItems.join('\n'))
+            .replace('${erroredItemsLength}', failedItems.length.toString())
+            .replace('${erroredItems}', erroredItems.join('\n'));
     } else {
         resultData = '<h1 style="color: green">All tests passed!</h1>';
     }
 
-    const resultsContent = `
-<!doctype html>
-<html lang="en">
-<head>
-<title>Render Test Results</title>
-<style>
-    body {
-        font: 18px/1.2 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-        padding: 10px;
-    }
-    h1 {
-        font-size: 32px;
-        margin-bottom: 0;
-    }
-    button {
-        vertical-align: middle;
-    }
-    h2 {
-        font-size: 24px;
-        font-weight: normal;
-        margin: 10px 0 10px;
-        line-height: 1;
-    }
-    img {
-        margin: 0 10px 10px 0;
-        border: 1px dotted #ccc;
-    }
-    .stats {
-        margin-top: 10px;
-    }
-    .test {
-        border-bottom: 1px dotted #bbb;
-        padding-bottom: 5px;
-    }
-    .tests {
-        border-top: 1px dotted #bbb;
-        margin-top: 10px;
-    }
-    .diff {
-        color: #777;
-    }
-    .test p, .test pre {
-        margin: 0 0 10px;
-    }
-    .test pre {
-        font-size: 14px;
-    }
-    .label {
-        color: white;
-        font-size: 18px;
-        padding: 2px 6px 3px;
-        border-radius: 3px;
-        margin-right: 3px;
-        vertical-align: bottom;
-        display: inline-block;
-    }
-    .hide {
-        display: none;
-    }
-</style>
-</head>
-
-<body>
-${resultData}
-</body>
-</html>
-`;
+    const reportTemplate = fs.readFileSync(path.join(__dirname, 'report_template.html')).toString();
+    const resultsContent = reportTemplate.replace('${resultData}', resultData);
 
     const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : 'results.html');
     fs.writeFileSync(p, resultsContent, 'utf8');
-    console.log(`Results logged to '${p}'`);
+    console.log(`\nFull html report is logged to '${p}'`);
+
+    // write text report of just the error/failed id
+    if (testStats.errored?.length > 0) {
+        const erroredItemIds = testStats.errored.map(t => t.id);
+        const caseIdFileName = path.join(__dirname, 'results-errored-caseIds.txt');
+        fs.writeFileSync(caseIdFileName, erroredItemIds.join('\n'), 'utf8');
+
+        console.log(`\n${testStats.errored?.length} errored test case IDs are logged to '${caseIdFileName}'`);
+    }
+
+    if (testStats.failed?.length > 0) {
+        const failedItemIds = testStats.failed.map(t => t.id);
+        const caseIdFileName = path.join(__dirname, 'results-failed-caseIds.txt');
+        fs.writeFileSync(caseIdFileName, failedItemIds.join('\n'), 'utf8');
+
+        console.log(`\n${testStats.failed?.length} failed test case IDs are logged to '${caseIdFileName}'`);
+    }
 }
 
 process.exit(success ? 0 : 1);

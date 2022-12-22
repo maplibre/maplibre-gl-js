@@ -1,7 +1,14 @@
 ## main
-
 ### ✨ Features and improvements
 - *...Add new stuff here...*
+### 🐞 Bug fixes
+- Fix geolocate control permissions failure on IOS16 web view with fallback to `window.navigator.geolocation`
+- *...Add new stuff here...*
+- 
+## 3.0.0-pre.2
+
+### ✨ Features and improvements
+- Move to rollup 3 ([#1949](https://github.com/maplibre/maplibre-gl-js/pull/1949))
 - `QueryRenderedFeaturesOptions` type added to both of the params in queryRenderedFeatures in map.ts ([#1900](https://github.com/maplibre/maplibre-gl-js/issues/1900))
 - NavigationControlOptions is now optional when creating an instance of NavigationControl ([#1754](https://github.com/maplibre/maplibre-gl-js/issues/1754))
 - Listen to webglcontextcreationerror event and give detailed debug info when it fails ([#1715](https://github.com/maplibre/maplibre-gl-js/pull/1715))
@@ -12,8 +19,6 @@
 - Make request for ImageSource cancelable ([#1802](https://github.com/maplibre/maplibre-gl-js/pull/1802))
 
 ### 🐞 Bug fixes
-- *...Add new stuff here...*
-- Fix geolocate control permissions failure on IOS16 web view with fallback to `window.navigator.geolocation`
 - Remove dependency on `@rollup/plugin-json`, which was in conflict with `rollup-plugin-import-assert`
 - Remove dependency on `@mapbox/gazetteer` which caused some build warnings ([#1898](https://github.com/maplibre/maplibre-gl-js/pull/1757)[#1898](https://github.com/maplibre/maplibre-gl-js/pull/1898))
 - Fix `getElevation()` causing uncaught error ([#1650](https://github.com/maplibre/maplibre-gl-js/issues/1650)).

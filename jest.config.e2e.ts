@@ -1,7 +1,6 @@
-import type {InitialOptionsTsJest} from 'ts-jest';
-import {defaults as tsjPreset} from 'ts-jest/presets';
+import type {JestConfigWithTsJest} from 'ts-jest';
 
-const config: InitialOptionsTsJest = {
+const config: JestConfigWithTsJest = {
     roots: [
         '<rootDir>/src',
         '<rootDir>/test',
@@ -10,19 +9,13 @@ const config: InitialOptionsTsJest = {
         '**/__tests__/**/*.+(ts|tsx|js)',
         '**/?(*.)+(spec|test).+(ts|tsx|js)'
     ],
-    transform: {
-        ...tsjPreset.transform,
-    },
-    transformIgnorePatterns: [
-        '/node_modules/@mapbox/jsonlint-lines-primitives/lib/jsonlint.js'
-    ],
     preset: 'jest-playwright-preset',
-
-    globals: {
-        'ts-jest': {
+    transform: {
+        '[.](js|ts)x?$': ['ts-jest', {
             isolatedModules: true
-        }
+        }],
     },
+    transformIgnorePatterns: [],
     setupFiles: ['jest-canvas-mock'],
 };
 
