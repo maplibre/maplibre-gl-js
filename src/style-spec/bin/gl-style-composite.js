@@ -13,6 +13,6 @@ if (argv.help || argv.h || (!argv._.length && process.stdin.isTTY)) {
 
 function help() {
     console.log('usage:');
-    console.log('  gl-style-composite style.json');
+    console.log('  gl-style-composite style.json > style-composite.json');
 }
 
