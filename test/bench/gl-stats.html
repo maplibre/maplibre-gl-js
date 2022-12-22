@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="about:blank">
 <script>
 // stub performance.now for deterministic rendering per-frame;
 // we'll later increment the value by 16 on every frame (16ms per frame for 60fps)
 let now = performance.now(); //eslint-disable-line prefer-const
 window.performance.now = () => now;
 </script>
-<script src="../dist/maplibre-gl.js"></script>
+<script src="/dist/maplibre-gl.js"></script>
 </head>
 <body style="margin: 0; padding: 0"><div id="map" style="width: 500px; height: 500px"></div></body>
 <script>
@@ -16,7 +17,7 @@ maplibregl.workerCount = 1;
 
 const map = new maplibregl.Map({
     container: document.getElementById('map'),
-    style: 'https://api.maptiler.com/maps/streets/style.json?key=get_a_key_at_maptiler_cloud',
+    style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
     center: [-77.07842066675323, 38.890315130853566],
     zoom: 11
 });

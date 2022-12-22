@@ -48,7 +48,7 @@ events['dblclick'] = function (target, options) {
     };
 });
 
-['mouseup', 'mousedown', 'mouseover', 'mousemove', 'mouseout'].forEach((event) => {
+['mouseup', 'mousedown', 'mouseover', 'mousemove', 'mouseout', 'contextmenu'].forEach((event) => {
     events[event] = function (target, options) {
         options = Object.assign({bubbles: true}, options);
         const MouseEvent = window(target).MouseEvent;
@@ -98,6 +98,7 @@ interface EventsInterface {
     mouseover: Function;
     mousemove: Function;
     mouseout: Function;
+    contextmenu: Function;
     wheel: Function;
     mousewheel: Function;
     magicWheelZoomDelta: Number;

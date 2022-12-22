@@ -5,8 +5,25 @@ import minimist from 'minimist';
 
 const argv = minimist(process.argv.slice(2));
 
-const formatTime = (v) => `${v.toFixed(4)} ms`;
-const formatRegression = (v) => v.correlation < 0.9 ? '\u2620\uFE0F' : v.correlation < 0.99 ? '\u26A0\uFE0F' : ' ';
+const formatTime = (v) => {
+    if (typeof v === 'number' && !isNaN(v)) {
+        return `${v.toFixed(4)} ms`;
+    } else {
+        return '';
+    }
+};
+
+const formatRegression = (v) => {
+    if (v) {
+        const correlation = v.correlation;
+        if (correlation < 0.9) {
+            return '\u2620\uFE0F';
+        } else if (correlation < 0.99) {
+            return '\u26A0\uFE0F';
+        }
+    }
+    return ' ';
+};
 
 const dir = './test/bench/results';
 if (!fs.existsSync(dir)) {
@@ -15,8 +32,10 @@ if (!fs.existsSync(dir)) {
 
 const url = new URL('http://localhost:9966/bench/versions');
 
-for (const compare of [].concat(argv.compare).filter(Boolean))
-    url.searchParams.append('compare', compare);
+if (argv.compare !== true && argv.compare !== undefined) { // handle --compare without argument as the default
+    for (const compare of [].concat(argv.compare))
+        url.searchParams.append('compare', compare || '');
+}
 
 console.log(`Starting headeless chrome at: ${url.toString()}`);
 
@@ -43,6 +62,7 @@ try {
     const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allNames[0]);
 
     const toRun = argv._.length > 0 ? argv._ : allNames;
+    toRun.sort();
 
     const nameWidth = Math.max(...toRun.map(v => v.length)) + 1;
     const timeWidth = Math.max(...versions.map(v => v.length), 16);
@@ -67,15 +87,24 @@ try {
         );
         // @ts-ignore
         const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
-        const output = versions.map((v) => formatTime(results[v].summary.trimmedMean).padStart(timeWidth) + formatRegression(results[v].regression));
+        const output = versions.map((v) => {
+            if (v && results[v]) {
+                const trimmedMean = results[v].summary?.trimmedMean;
+                const regression = results[v].regression;
+                const result = formatTime(trimmedMean).padStart(timeWidth) + formatRegression(regression);
+                return result;
+            } else {
+                return ''.padStart(timeWidth + 1);
+            }
+        });
         if (versions.length === 2) {
             const [main, current] = versions;
-            const delta = results[current].summary.trimmedMean - results[main].summary.trimmedMean;
+            const delta = results[current]?.summary?.trimmedMean - results[main]?.summary?.trimmedMean;
             output.push(((delta > 0 ? '+' : '') + formatTime(delta)).padStart(15));
         }
         console.log(...output);
 
-        merger.add(await webPage.pdf({
+        await merger.add(await webPage.pdf({
             format: 'a4',
             path: `${dir}/${name}.pdf`,
             printBackground: true,
@@ -95,5 +124,5 @@ try {
         console.log('Could not connect to server. Please run \'npm run start-bench\'.');
     }
 } finally {
-    browser.close();
+    await browser.close();
 }

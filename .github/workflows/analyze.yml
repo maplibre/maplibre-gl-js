@@ -18,10 +18,10 @@ jobs:
       # report status back to pull request
       - uses: haya14busa/action-workflow_run-status@v1
       - uses: actions/checkout@v3
-      - name: Use Node.js 16 x64
-        uses: actions/setup-node@v3.4.1
+      - name: Use Node.js 18 x64
+        uses: actions/setup-node@v3.5.1
         with:
-          node-version: 16
+          node-version: 18
           architecture: x64
       - run: npm ci
       - name: Download branch artifact
@@ -41,8 +41,8 @@ jobs:
       - name: Get build info
         id: build_info
         run: |
-          echo "::set-output name=pr_number::$(cat build-info/pull_request_number)"
-          echo "::set-output name=base_sha::$(cat build-info/base_sha)"
+          echo "pr_number=$(cat build-info/pull_request_number)" >> $GITHUB_OUTPUT
+          echo "base_sha=$(cat build-info/base_sha)" >> $GITHUB_OUTPUT
       - name: Download base artifact
         uses: dawidd6/action-download-artifact@v2
         with:

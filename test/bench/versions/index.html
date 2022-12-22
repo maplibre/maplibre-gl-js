@@ -5,6 +5,7 @@
 
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="about:blank">
 
     <script src='https://unpkg.com/url-search-params@0.10.0/build/url-search-params.js'></script>
 </head>
@@ -19,7 +20,6 @@
             try {
                 const params = new URLSearchParams(location.search.slice(1));
                 let versions = [];
-                console.log(params);
                 if (params.has('compare')) {
                     versions = params.getAll('compare').filter(Boolean);
                 } else {
@@ -34,8 +34,8 @@
                     await loadScript(script);
                 }
                 const benchmarks = [];
-
-                for (const name in window.maplibreglBenchmarks) {
+                const benchmarkNameList = Object.keys(window.maplibreglBenchmarks).sort();
+                for (const name of benchmarkNameList) {
                     const versions = [];
 
                     // also handle benchmarks from mapboxgl releases

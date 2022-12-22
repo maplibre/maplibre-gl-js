@@ -3,10 +3,8 @@ import fs from 'fs';
 import glob from 'glob';
 import localizeURLs from '../test/integration/lib/localize-urls';
 import {fileURLToPath} from 'url';
-import {createRequire} from 'module';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const requireFn = createRequire(import.meta.url);
 const OUTPUT_FILE = 'fixtures.json';
 const rootFixturePath = 'test/integration/query/';
 const suitePath = 'tests';
@@ -106,7 +104,7 @@ function pngToBase64Str(filePath) {
 
 function processStyle(testName, style) {
     const clone = JSON.parse(JSON.stringify(style));
-    localizeURLs(clone, 7357, path.join(__dirname, '../test/integration'), requireFn);
+    localizeURLs(clone, 7357, path.join(__dirname, '../test/integration'));
 
     clone.metadata = clone.metadata || {};
 

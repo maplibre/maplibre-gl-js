@@ -7,7 +7,7 @@ import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import glob from 'glob';
-import nise from 'nise';
+import nise, {FakeXMLHttpRequest} from 'nise';
 import {createRequire} from 'module';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import localizeURLs from '../lib/localize-urls';
@@ -20,7 +20,7 @@ import type Map from '../../../src/ui/map';
 import type {StyleSpecification} from '../../../src/style-spec/types.g';
 import type {PointLike} from '../../../src/ui/camera';
 
-const {fakeServer} = nise;
+const {fakeXhr} = nise;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
 const {registerFont} = canvas;
 
@@ -209,18 +209,16 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
  * Mocks XHR request and simply pulls file from the file system.
  */
 function mockXhr() {
-    const server = fakeServer.create();
-    global.XMLHttpRequest = (server as any).xhr;
+    global.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest() as any;
     // @ts-ignore
-    XMLHttpRequest.onCreate = (req: any) => {
+    XMLHttpRequest.onCreate = (req: FakeXMLHttpRequest & XMLHttpRequest & { response: any }) => {
         setTimeout(() => {
+            if (req.readyState === 0) return; // aborted...
             const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
 
-            let body: Buffer = null;
+            let body: Buffer | null = null;
             try {
-                if (relativePath.startsWith('mapbox-gl-styles')) {
-                    body = fs.readFileSync(path.join(path.dirname(require.resolve('mapbox-gl-styles')), '..', relativePath));
-                } else if (relativePath.startsWith('mvt-fixtures')) {
+                if (relativePath.startsWith('mvt-fixtures')) {
                     body = fs.readFileSync(path.join(path.dirname(require.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
                 } else {
                     body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
@@ -230,11 +228,11 @@ function mockXhr() {
                 } else {
                     req.response = body;
                 }
-                req.setStatus(200);
-                req.onload();
+                req.setStatus(req.response.length > 0 ? 200 : 204);
+                req.onload(undefined as any);
             } catch (ex) {
-                req.setStatus(404); // file not found
-                req.onload();
+                req.status = 404; // file not found
+                req.onload(undefined as any);
             }
         }, 0);
     };
@@ -279,7 +277,7 @@ function getTestStyles(options: RenderOptions, directory: string): StyleWithTest
                 console.log(`* skipped ${test.id}`);
                 return false;
             }
-            localizeURLs(style, 2900, path.join(__dirname, '../'), require);
+            localizeURLs(style, 2900, path.join(__dirname, '../'));
             return true;
         });
     return sequence;
@@ -498,9 +496,9 @@ function getImageFromStyle(style: StyleWithTestData): Promise<Uint8Array> {
  */
 function printProgress(test: TestData, total: number, index: number) {
     if (test.error) {
-        console.log(`${index}/${total}: errored ${test.id} ${test.error.message}`);
+        console.log('\x1b[31m', `${index}/${total}: errored ${test.id} ${test.error.message}`, '\x1b[0m');
     } else if (!test.ok) {
-        console.log(`${index}/${total}: failed ${test.id} ${test.difference}`);
+        console.log('\x1b[31m', `${index}/${total}: failed ${test.id} ${test.difference}`, '\x1b[0m');
     } else {
         console.log(`${index}/${total}: passed ${test.id}`);
     }
@@ -615,119 +613,42 @@ if (options.report) {
     const erroredItems = testStats.errored.map(t => getReportItem(t));
     const failedItems = testStats.failed.map(t => getReportItem(t));
 
+    // write HTML reports
     let resultData: string;
-
     if (erroredItems.length || failedItems.length) {
-        resultData = `
-    <div class="tests failed">
-        <h1 style="color: red"><button id="toggle-failed">Toggle</button> Failed Tests (${failedItems.length})</h1>
-        ${failedItems.join('\n')}
-    </div>
-
-    <div class="tests errored">
-        <h1 style="color: black"><button id="toggle-errored">Toggle</button> Errored Tests (${erroredItems.length})</h1>
-        ${erroredItems.join('\n')}
-    </div>
-
-    <script>
-        document.addEventListener('mouseover', handleHover);
-        document.addEventListener('mouseout', handleHover);
-
-        function handleHover(e) {
-            var el = e.target;
-            if (el.tagName === 'IMG' && el.dataset.altSrc) {
-                var tmp = el.src;
-                el.src = el.dataset.altSrc;
-                el.dataset.altSrc = tmp;
-            }
-        }
-
-        document.getElementById('toggle-failed').addEventListener('click', function (e) {
-            for (const row of document.querySelectorAll('.tests.failed .test')) {
-                row.classList.toggle('hide');
-            }
-        });
-        document.getElementById('toggle-errored').addEventListener('click', function (e) {
-            for (const row of document.querySelectorAll('.tests.errored .test.')) {
-                row.classList.toggle('hide');
-            }
-        });
-    </script>`;
+        const resultItemTemplate = fs.readFileSync(path.join(__dirname, 'result_item_template.html')).toString();
+        resultData = resultItemTemplate
+            .replace('${failedItemsLength}', failedItems.length.toString())
+            .replace('${failedItems}', failedItems.join('\n'))
+            .replace('${erroredItemsLength}', failedItems.length.toString())
+            .replace('${erroredItems}', erroredItems.join('\n'));
     } else {
         resultData = '<h1 style="color: green">All tests passed!</h1>';
     }
 
-    const resultsContent = `
-<!doctype html>
-<html lang="en">
-<head>
-<title>Render Test Results</title>
-<style>
-    body {
-        font: 18px/1.2 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-        padding: 10px;
-    }
-    h1 {
-        font-size: 32px;
-        margin-bottom: 0;
-    }
-    button {
-        vertical-align: middle;
-    }
-    h2 {
-        font-size: 24px;
-        font-weight: normal;
-        margin: 10px 0 10px;
-        line-height: 1;
-    }
-    img {
-        margin: 0 10px 10px 0;
-        border: 1px dotted #ccc;
-    }
-    .stats {
-        margin-top: 10px;
-    }
-    .test {
-        border-bottom: 1px dotted #bbb;
-        padding-bottom: 5px;
-    }
-    .tests {
-        border-top: 1px dotted #bbb;
-        margin-top: 10px;
-    }
-    .diff {
-        color: #777;
-    }
-    .test p, .test pre {
-        margin: 0 0 10px;
-    }
-    .test pre {
-        font-size: 14px;
-    }
-    .label {
-        color: white;
-        font-size: 18px;
-        padding: 2px 6px 3px;
-        border-radius: 3px;
-        margin-right: 3px;
-        vertical-align: bottom;
-        display: inline-block;
-    }
-    .hide {
-        display: none;
-    }
-</style>
-</head>
-
-<body>
-${resultData}
-</body>
-</html>
-`;
+    const reportTemplate = fs.readFileSync(path.join(__dirname, 'report_template.html')).toString();
+    const resultsContent = reportTemplate.replace('${resultData}', resultData);
 
     const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : 'results.html');
     fs.writeFileSync(p, resultsContent, 'utf8');
-    console.log(`Results logged to '${p}'`);
+    console.log(`\nFull html report is logged to '${p}'`);
+
+    // write text report of just the error/failed id
+    if (testStats.errored?.length > 0) {
+        const erroredItemIds = testStats.errored.map(t => t.id);
+        const caseIdFileName = path.join(__dirname, 'results-errored-caseIds.txt');
+        fs.writeFileSync(caseIdFileName, erroredItemIds.join('\n'), 'utf8');
+
+        console.log(`\n${testStats.errored?.length} errored test case IDs are logged to '${caseIdFileName}'`);
+    }
+
+    if (testStats.failed?.length > 0) {
+        const failedItemIds = testStats.failed.map(t => t.id);
+        const caseIdFileName = path.join(__dirname, 'results-failed-caseIds.txt');
+        fs.writeFileSync(caseIdFileName, failedItemIds.join('\n'), 'utf8');
+
+        console.log(`\n${testStats.failed?.length} failed test case IDs are logged to '${caseIdFileName}'`);
+    }
 }
 
 process.exit(success ? 0 : 1);

@@ -5,9 +5,9 @@ import HandlerInertia from './handler_inertia';
 import {MapEventHandler, BlockableMapEventHandler} from './handler/map_event';
 import BoxZoomHandler from './handler/box_zoom';
 import TapZoomHandler from './handler/tap_zoom';
-import {MousePanHandler, MouseRotateHandler, MousePitchHandler} from './handler/mouse';
+import {generateMouseRotationHandler, generateMousePitchHandler, generateMousePanHandler} from './handler/mouse';
 import TouchPanHandler from './handler/touch_pan';
-import {TouchZoomHandler, TouchRotateHandler, TouchPitchHandler} from './handler/touch_zoom_rotate';
+import {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import KeyboardHandler from './handler/keyboard';
 import ScrollZoomHandler from './handler/scroll_zoom';
 import DoubleClickZoomHandler from './handler/shim/dblclick_zoom';
@@ -15,7 +15,7 @@ import ClickZoomHandler from './handler/click_zoom';
 import TapDragZoomHandler from './handler/tap_drag_zoom';
 import DragPanHandler from './handler/shim/drag_pan';
 import DragRotateHandler from './handler/shim/drag_rotate';
-import TouchZoomRotateHandler from './handler/shim/touch_zoom_rotate';
+import TouchZoomRotateHandler from './handler/shim/two_fingers_touch';
 import {bindAll, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import LngLat from '../geo/lng_lat';
@@ -46,12 +46,15 @@ export interface Handler {
     // They are called with dom events whenever those dom evens are received.
     readonly touchstart?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
     readonly touchmove?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+    readonly touchmoveWindow?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
     readonly touchend?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
     readonly touchcancel?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
     readonly mousedown?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly mousemove?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly mousemoveWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly mouseup?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly dblclick?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly contextmenu?: (e: MouseEvent) => HandlerResult | void;
     readonly wheel?: (e: WheelEvent, point: Point) => HandlerResult | void;
     readonly keydown?: (e: KeyboardEvent) => HandlerResult | void;
     readonly keyup?: (e: KeyboardEvent) => HandlerResult | void;
@@ -194,23 +197,23 @@ class HandlerManager {
         const tapDragZoom = new TapDragZoomHandler();
         this._add('tapDragZoom', tapDragZoom);
 
-        const touchPitch = map.touchPitch = new TouchPitchHandler(map);
+        const touchPitch = map.touchPitch = new TwoFingersTouchPitchHandler(map);
         this._add('touchPitch', touchPitch);
 
-        const mouseRotate = new MouseRotateHandler(options);
-        const mousePitch = new MousePitchHandler(options);
+        const mouseRotate = generateMouseRotationHandler(options);
+        const mousePitch = generateMousePitchHandler(options);
         map.dragRotate = new DragRotateHandler(options, mouseRotate, mousePitch);
         this._add('mouseRotate', mouseRotate, ['mousePitch']);
         this._add('mousePitch', mousePitch, ['mouseRotate']);
 
-        const mousePan = new MousePanHandler(options);
+        const mousePan = generateMousePanHandler(options);
         const touchPan = new TouchPanHandler(options, map);
         map.dragPan = new DragPanHandler(el, mousePan, touchPan);
         this._add('mousePan', mousePan);
         this._add('touchPan', touchPan, ['touchZoom', 'touchRotate']);
 
-        const touchRotate = new TouchRotateHandler();
-        const touchZoom = new TouchZoomHandler();
+        const touchRotate = new TwoFingersTouchRotateHandler();
+        const touchZoom = new TwoFingersTouchZoomHandler();
         map.touchZoomRotate = new TouchZoomRotateHandler(el, touchZoom, touchRotate, tapDragZoom);
         this._add('touchRotate', touchRotate, ['touchPan', 'touchZoom']);
         this._add('touchZoom', touchZoom, ['touchPan', 'touchRotate']);
@@ -413,7 +416,7 @@ class HandlerManager {
     _updateMapTransform(combinedResult: any, combinedEventsInProgress: any, deactivatedHandlers: any) {
         const map = this._map;
         const tr = map.transform;
-        const terrain = map.style && map.style.terrain;
+        const terrain = map.terrain;
 
         if (!hasChange(combinedResult) && !(terrain && this._drag)) {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
@@ -437,7 +440,7 @@ class HandlerManager {
         if (!terrain) {
             tr.setLocationAtPoint(loc, around);
         } else {
-            // when 3d-terrain is enabled act a litte different:
+            // when 3d-terrain is enabled act a little different:
             //    - draging do not drag the picked point itself, instead it drags the map by pixel-delta.
             //      With this approach it is no longer possible to pick a point from somewhere near
             //      the horizon to the center in one move.
@@ -452,10 +455,11 @@ class HandlerManager {
                     point: around,
                     handlerName: combinedEventsInProgress.drag.handlerName
                 };
-                map.fire(new Event('freezeElevation', {freeze: true}));
+                tr.freezeElevation = true;
             // when dragging ends, recalcuate the zoomlevel for the new center coordinate
             } else if (this._drag && deactivatedHandlers[this._drag.handlerName]) {
-                map.fire(new Event('freezeElevation', {freeze: false}));
+                tr.freezeElevation = false;
+                tr.recalculateZoom(map.terrain);
                 this._drag = null;
             // drag map
             } else if (combinedEventsInProgress.drag && this._drag) {
@@ -529,6 +533,7 @@ class HandlerManager {
                 if (shouldSnapToNorth(inertialEase.bearing || this._map.getBearing())) {
                     inertialEase.bearing = 0;
                 }
+                inertialEase.freezeElevation = true;
                 this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
                 this._map.fire(new Event('moveend', {originalEvent: originalEndEvent}));

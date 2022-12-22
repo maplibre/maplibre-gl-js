@@ -2,7 +2,7 @@ import ValidationError from '../error/validation_error';
 import getType from '../util/get_type';
 import validate from './validate';
 import type {StyleSpecification, TerrainSpecification} from '../types.g';
-import type v8 from '../reference/v8.json';
+import v8 from '../reference/v8.json' assert {type: 'json'};
 
 export default function validateTerrain(
     options: {value: TerrainSpecification; styleSpec: typeof v8; style: StyleSpecification}

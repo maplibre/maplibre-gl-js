@@ -1,7 +1,7 @@
 
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import style from '../data/empty.json';
+import style from '../data/empty.json' assert {type: 'json'};
 
 const width = 1024;
 const height = 768;
@@ -21,18 +21,18 @@ export class LayerBenchmark extends Benchmark {
     layerStyle: any;
     map: any;
 
-    setup() {
-        return createMap({
-            zoom: 16,
-            width,
-            height,
-            center: [-77.032194, 38.912753],
-            style: this.layerStyle
-        }).then(map => {
-            this.map = map;
-        }).catch(error => {
+    async setup() {
+        try {
+            this.map = await createMap({
+                zoom: 16,
+                width,
+                height,
+                center: [-77.032194, 38.912753],
+                style: this.layerStyle
+            });
+        } catch (error) {
             console.error(error);
-        });
+        }
     }
 
     bench() {
@@ -110,44 +110,42 @@ export class LayerFillExtrusion extends LayerBenchmark {
 }
 
 export class LayerHeatmap extends LayerBenchmark {
-    setup() {
-        return fetch('/bench/data/naturalearth-land.json')
-            .then(response => response.json())
-            .then(data => {
-                this.layerStyle = Object.assign({}, style, {
-                    sources: {
-                        'heatmap': {
-                            'type': 'geojson',
-                            data,
-                            'maxzoom': 23
-                        }
+    async setup() {
+        const response = await fetch('/bench/data/naturalearth-land.json');
+        const data = await response.json();
+        this.layerStyle = Object.assign({}, style, {
+            sources: {
+                'heatmap': {
+                    'type': 'geojson',
+                    data,
+                    'maxzoom': 23
+                }
+            },
+            layers: generateLayers({
+                'id': 'layer',
+                'type': 'heatmap',
+                'source': 'heatmap',
+                'paint': {
+                    'heatmap-radius': 50,
+                    'heatmap-weight': {
+                        'stops': [[0, 0.5], [4, 2]]
                     },
-                    layers: generateLayers({
-                        'id': 'layer',
-                        'type': 'heatmap',
-                        'source': 'heatmap',
-                        'paint': {
-                            'heatmap-radius': 50,
-                            'heatmap-weight': {
-                                'stops': [[0, 0.5], [4, 2]]
-                            },
-                            'heatmap-intensity': 0.9,
-                            'heatmap-color': [
-                                'interpolate',
-                                ['linear'],
-                                ['heatmap-density'],
-                                0, 'rgba(0, 0, 255, 0)',
-                                0.1, 'royalblue',
-                                0.3, 'cyan',
-                                0.5, 'lime',
-                                0.7, 'yellow',
-                                1, 'red'
-                            ]
-                        }
-                    })
-                });
+                    'heatmap-intensity': 0.9,
+                    'heatmap-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['heatmap-density'],
+                        0, 'rgba(0, 0, 255, 0)',
+                        0.1, 'royalblue',
+                        0.3, 'cyan',
+                        0.5, 'lime',
+                        0.7, 'yellow',
+                        1, 'red'
+                    ]
+                }
             })
-            .then(() => super.setup());
+        });
+        await super.setup();
     }
 }
 

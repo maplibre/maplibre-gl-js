@@ -17,10 +17,10 @@ jobs:
           fetch-depth: 0
           ref: main
 
-      - name: Use Node.js 16 x64
-        uses: actions/setup-node@v3.4.1
+      - name: Use Node.js 18 x64
+        uses: actions/setup-node@v3.5.1
         with:
-          node-version: 16
+          node-version: 18
           architecture: x64
           registry-url: 'https://registry.npmjs.org'
 
@@ -32,7 +32,7 @@ jobs:
         run: if git rev-list v${{ steps.package-version.outputs.current-version }}; then echo "Tag already exists. Aborting the release process."; exit 1; fi
 
       - name: Tag commit and push
-        uses: mathieudutour/github-tag-action@v6.0
+        uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           custom_tag: ${{ steps.package-version.outputs.current-version }}
@@ -43,8 +43,9 @@ jobs:
       - name: Prepare release
         id: prepare_release
         run: |
-          echo ::set-output name=version_tag::v${{ steps.package-version.outputs.current-version }}
-          echo ::set-output name=release_type::$(node -e "console.log(require('semver').prerelease('${{ steps.package-version.outputs.current-version }}') ? 'prerelease' : 'regular')")
+          echo "version_tag=v${{ steps.package-version.outputs.current-version }}" >> $GITHUB_OUTPUT
+          RELEASE_TYPE=$(node -e "console.log(require('semver').prerelease('${{ steps.package-version.outputs.current-version }}') ? 'prerelease' : 'regular')")
+          echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
 
       - name: Build
         run: |
@@ -73,7 +74,7 @@ jobs:
         run: |
           RELEASE_NOTES_PATH="${PWD}/release_notes.txt"
           ./build/release-notes.js > ${RELEASE_NOTES_PATH}
-          echo ::set-output name=release_notes::${RELEASE_NOTES_PATH}
+          echo "release_notes=${RELEASE_NOTES_PATH}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release (regular)
         id: create_regular_release

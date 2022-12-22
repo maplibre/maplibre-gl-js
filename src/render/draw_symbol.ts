@@ -149,7 +149,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
 
         if (size) {
             const tileScale = Math.pow(2, tr.zoom - tile.tileID.overscaledZ);
-            const getElevation = painter.style.terrain ? (x: number, y: number) => painter.style.terrain.getElevation(coord, x, y) : null;
+            const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets,
                 tr, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, getElevation);
         }
@@ -291,7 +291,8 @@ function drawLayerSymbols(
         const bucket = tile.getBucket(layer) as SymbolBucket;
         if (!bucket) continue;
         const buffers = isText ? bucket.text : bucket.icon;
-        if (!buffers || !buffers.segments.get().length) continue;
+
+        if (!buffers || !buffers.segments.get().length || !buffers.hasVisibleVertices) continue;
         const programConfiguration = buffers.programConfigurations.get(layer.id);
 
         const isSDF = isText || bucket.sdfIcons;
@@ -301,7 +302,7 @@ function drawLayerSymbols(
 
         const program = painter.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
         const size = evaluateSizeForZoom(sizeData, tr.zoom);
-        const terrainData = painter.style.terrain && painter.style.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
         let texSize: [number, number];
         let texSizeIcon: [number, number] = [0, 0];
@@ -338,7 +339,7 @@ function drawLayerSymbols(
             bucket.hasIconData();
 
         if (alongLine) {
-            const getElevation = painter.style.terrain ? (x: number, y: number) => painter.style.terrain.getElevation(coord, x, y) : null;
+            const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
             symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, rotateToLine, getElevation);
         }

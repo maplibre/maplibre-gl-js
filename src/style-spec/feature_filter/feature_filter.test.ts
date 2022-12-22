@@ -18,6 +18,7 @@ describe('filter', () => {
         compileTimeCheck(['case', ['has', 'color'], ['get', 'color'], 'white']);
         compileTimeCheck(['case', ['all', ['has', 'point_count'], ['<', ['get', 'point_count'], 3]], ['get', 'cluster_routes'], '']);
         compileTimeCheck(['interpolate', ['linear'], ['get', 'point_count'], 2, 18.0, 10, 24.0]);
+        compileTimeCheck(['interpolate', ['linear'], ['get', 'point_count'], 2, ['/', 2, ['get', 'point_count']], 10, ['*', 4, ['get', 'point_count']]]);
         compileTimeCheck(['case', ['has', 'point_count'], ['interpolate', ['linear'], ['get', 'point_count'], 2, 18.0, 10, 24.0], 12.0]);
         compileTimeCheck([
             'case',
@@ -35,6 +36,7 @@ describe('filter', () => {
         ]);
         compileTimeCheck(['match', ['get', 'TYPE'], ['TARGETPOINT:HOSPITAL'], true, false]);
         compileTimeCheck(['match', ['get', 'TYPE'], ['ADIZ', 'AMA', 'AWY', 'CLASS', 'NO-FIR', 'OCA', 'OTA', 'P', 'RAS', 'RCA', 'UTA', 'UTA-P'], true, false]);
+        compileTimeCheck(['match', ['get', 'id'], 'exampleID', ['get', 'iconNameFocused'], ['get', 'iconName']]);
         compileTimeCheck(['==', ['get', 'MILITARYAIRPORT'], 1]);
         compileTimeCheck(['interpolate', ['linear'], ['line-progress'], 0, 10, 0.5, 100, 1, 1000]); // number output
         compileTimeCheck(['interpolate', ['linear'], ['line-progress'], 0, 'red', 0.5, 'green', 1, 'blue']); // color output
