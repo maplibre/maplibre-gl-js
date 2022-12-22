@@ -481,8 +481,16 @@ export function isImageBitmap(image: any): image is ImageBitmap {
     return typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap;
 }
 
-// both this and `arrayBufferToImage` are moved to util.ts to be able to spy on them and mock them when testing other
-// implementations that rely on them (like loadSprite e.g.)
+/**
+ * Converts an ArrayBuffer to an ImageBitmap.
+ *
+ * Used mostly for testing purposes only, because mocking libs don't know how to work with ArrayBuffers, but work
+ * perfectly fine with ImageBitmaps. Might also be used for environments (other than testing) not supporting
+ * ArrayBuffers.
+ *
+ * @param data {ArrayBuffer} Data to convert
+ * @param callback A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image bitmap (when no error) as the second
+ */
 export function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) {
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     createImageBitmap(blob).then((imgBitmap) => {
@@ -494,9 +502,16 @@ export function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Err
 
 const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=';
 
-// both this and `arrayBufferToImageBitmap` are moved to util.ts to be able to spy on them and mock them when testing other
-// implementations that rely on them (like loadSprite e.g.). In fact, this one is not mocked by jest, but rather moved here
-// for consistency with `arrayBufferToImageBitmap`
+/**
+ * Converts an ArrayBuffer to an HTMLImageElement.
+ *
+ * Used mostly for testing purposes only, because mocking libs don't know how to work with ArrayBuffers, but work
+ * perfectly fine with ImageBitmaps. Might also be used for environments (other than testing) not supporting
+ * ArrayBuffers.
+ *
+ * @param data {ArrayBuffer} Data to convert
+ * @param callback A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image element (when no error) as the second
+ */
 export function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | null, image?: HTMLImageElement | null) => void) {
     const img: HTMLImageElement = new Image();
     img.onload = () => {
