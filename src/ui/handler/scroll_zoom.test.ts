@@ -294,7 +294,7 @@ describe('ScrollZoomHandler', () => {
 
         expect(map.getCenter().lat).toBeCloseTo(-11.6371, 3);
         expect(map.getCenter().lng).toBeCloseTo(11.0286, 3);
-        
+
         map.remove();
     });
 });

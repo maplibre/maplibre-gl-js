@@ -18,7 +18,6 @@ import DragRotateHandler from './handler/shim/drag_rotate';
 import TouchZoomRotateHandler from './handler/shim/two_fingers_touch';
 import {bindAll, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
-import LngLat from '../geo/lng_lat';
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
 
@@ -464,13 +463,13 @@ class HandlerManager {
             //      With this approach it is no longer possible to pick a point from somewhere near
             //      the horizon to the center in one move.
             //      So this logic avoids the problem, that in such cases you easily loose orientation.
-            if (!this._terrainMovement && 
+            if (!this._terrainMovement &&
                 (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
                 // When starting to drag or move, flag it and register moveend to clear flagging
                 this._terrainMovement = true;
                 tr.freezeElevation = true;
                 tr.setLocationAtPoint(loc, around);
-                this._map.once("moveend", () => {
+                this._map.once('moveend', () => {
                     tr.freezeElevation = false;
                     this._terrainMovement = false;
                     tr.recalculateZoom(map.terrain);
