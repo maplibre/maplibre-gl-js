@@ -115,7 +115,8 @@ class HandlerManager {
     _handlersById: {[x: string]: Handler};
     _updatingCamera: boolean;
     _changes: Array<[HandlerResult, EventsInProgress, {[handlerName: string]: Event}]>;
-    _drag: {center: Point; lngLat: LngLat; point: Point; handlerName: string};
+    _terrainMovement: boolean;
+    _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
         passive?: boolean;
@@ -436,7 +437,7 @@ class HandlerManager {
         const tr = map.transform;
         const terrain = map.terrain;
 
-        if (!hasChange(combinedResult) && !(terrain && this._drag)) {
+        if (!hasChange(combinedResult) && !(terrain && this._terrainMovement)) {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
         }
 
@@ -455,7 +456,7 @@ class HandlerManager {
         if (pitchDelta) tr.pitch += pitchDelta;
         if (zoomDelta) tr.zoom += zoomDelta;
 
-        if (!terrain || !combinedEventsInProgress.drag) {
+        if (!terrain) {
             tr.setLocationAtPoint(loc, around);
         } else {
             // when 3d-terrain is enabled act a little different:
@@ -463,25 +464,22 @@ class HandlerManager {
             //      With this approach it is no longer possible to pick a point from somewhere near
             //      the horizon to the center in one move.
             //      So this logic avoids the problem, that in such cases you easily loose orientation.
-            //    - scrollzoom does not zoom into the mouse-point, instead it zooms into map-center
-            //      this should be fixed in future-version
-            // when dragging starts, remember mousedown-location and panDelta from this point
-            if (combinedEventsInProgress.drag && !this._drag) {
-                this._drag = {
-                    center: tr.centerPoint,
-                    lngLat: tr.pointLocation(around),
-                    point: around,
-                    handlerName: combinedEventsInProgress.drag.handlerName
-                };
+            if (!this._terrainMovement && 
+                (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+                // When starting to drag or move, flag it and register moveend to clear flagging
+                this._terrainMovement = true;
                 tr.freezeElevation = true;
-            // when dragging ends, recalcuate the zoomlevel for the new center coordinate
-            } else if (this._drag && deactivatedHandlers[this._drag.handlerName]) {
-                tr.freezeElevation = false;
-                tr.recalculateZoom(map.terrain);
-                this._drag = null;
-            // drag map
-            } else if (combinedEventsInProgress.drag && this._drag) {
+                tr.setLocationAtPoint(loc, around);
+                this._map.once("moveend", () => {
+                    tr.freezeElevation = false;
+                    this._terrainMovement = false;
+                    tr.recalculateZoom(map.terrain);
+                });
+            } else if (combinedEventsInProgress.drag && this._terrainMovement) {
+                // drag map
                 tr.center = tr.pointLocation(tr.centerPoint.sub(panDelta));
+            } else {
+                tr.setLocationAtPoint(loc, around);
             }
         }
 
