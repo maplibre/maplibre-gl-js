@@ -29,6 +29,7 @@
 - fix issue [#1582](https://github.com/maplibre/maplibre-gl-js/issues/1582) source maps are now properly generated
 - Fix the behavior of the compass button on touch devices.
 
+
 ## 3.0.0-pre.1
 
 ### ✨ Features and improvements
