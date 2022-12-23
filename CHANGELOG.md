@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - *...Add new stuff here...*
 ### 🐞 Bug fixes
+- Fix errors when running style-spec bin scripts and added missing help. Removed unnecessary script 'gl-style-composite'. ([#1971](https://github.com/maplibre/maplibre-gl-js/pull/1971))
 - *...Add new stuff here...*
 - 
 ## 3.0.0-pre.2
