@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - *...Add new stuff here...*
 ### 🐞 Bug fixes
+- Fix errors when running style-spec bin scripts and added missing help. Removed unnecessary script 'gl-style-composite'. ([#1971](https://github.com/maplibre/maplibre-gl-js/pull/1971))
 - *...Add new stuff here...*
 - 
 ## 3.0.0-pre.2
@@ -27,7 +28,6 @@
 - Fix the exception that would be thrown on `map.setStyle` when it is passed with transformStyle option and map is initialized without an initial style. ([#1824](https://github.com/maplibre/maplibre-gl-js/pull/1824))
 - fix issue [#1582](https://github.com/maplibre/maplibre-gl-js/issues/1582) source maps are now properly generated
 - Fix the behavior of the compass button on touch devices.
-- Fix errors when running style-spec bin scripts and added missing help. Removed unnecessary script 'gl-style-composite'. ([#1971](https://github.com/maplibre/maplibre-gl-js/pull/1971))
 
 ## 3.0.0-pre.1
 
