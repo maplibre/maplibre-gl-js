@@ -170,7 +170,7 @@
     "benchmark": "ts-node test/bench/run-benchmarks.ts",
     "gl-stats": "ts-node test/bench/gl-stats.ts",
     "prepare": "npm run codegen && npm run generate-query-test-fixtures",
-    "typecheck": "tsc --project tsconfig.typecheck.json"
+    "typecheck": "tsc --noEmit"
   },
   "files": [
     "build/",
