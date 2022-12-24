@@ -22,6 +22,16 @@ const wheelZoomRate = 1 / 450;
 const maxScalePerFrame = 2;
 
 /**
+ * The scroll zoom hanlder options object
+ */
+export type ScrollZoomHandlerOptions = {
+    /**
+     * If "center" is passed, map will zoom around the center of map
+     */
+    around?: 'center';
+};
+
+/**
  * The `ScrollZoomHandler` allows the user to zoom the map by scrolling.
  */
 class ScrollZoomHandler {
@@ -120,15 +130,15 @@ class ScrollZoomHandler {
     /**
      * Enables the "scroll to zoom" interaction.
      *
-     * @param {Object} [options] Options object.
-     * @param {string} [options.around] If "center" is passed, map will zoom around center of map
+     * @param {ScrollZoomHandlerOptions} [options] Options object.
+     * @param {string} [options.around] If "center" is passed, map will zoom around the center of map
      *
      * @example
      *   map.scrollZoom.enable();
      * @example
      *  map.scrollZoom.enable({ around: 'center' })
      */
-    enable(options?: any) {
+    enable(options?: ScrollZoomHandlerOptions) {
         if (this.isEnabled()) return;
         this._enabled = true;
         this._aroundCenter = options && options.around === 'center';
@@ -205,7 +215,7 @@ class ScrollZoomHandler {
         e.preventDefault();
     }
 
-    _onTimeout(initialEvent: any) {
+    _onTimeout(initialEvent: MouseEvent) {
         this._type = 'wheel';
         this._delta -= this._lastValue;
         if (!this._active) {
@@ -213,7 +223,7 @@ class ScrollZoomHandler {
         }
     }
 
-    _start(e: any) {
+    _start(e: MouseEvent) {
         if (!this._delta) return;
 
         if (this._frameId) {

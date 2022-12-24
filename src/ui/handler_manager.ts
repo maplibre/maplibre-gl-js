@@ -18,7 +18,6 @@ import DragRotateHandler from './handler/shim/drag_rotate';
 import TouchZoomRotateHandler from './handler/shim/two_fingers_touch';
 import {bindAll, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
-import LngLat from '../geo/lng_lat';
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
 
@@ -77,12 +76,24 @@ export type HandlerResult = {
     cameraAnimation?: (map: Map) => any;
     // The last three properties are needed by only one handler: scrollzoom.
     // The DOM event to be used as the `originalEvent` on any camera change events.
-    originalEvent?: any;
+    originalEvent?: Event;
     // Makes the manager trigger a frame, allowing the handler to return multiple results over time (see scrollzoom).
     needsRenderFrame?: boolean;
     // The camera changes won't get recorded for inertial zooming.
     noInertia?: boolean;
 };
+
+export type EventInProgress = {
+    handlerName: string;
+    originalEvent: Event;
+}
+
+export type EventsInProgress = {
+    zoom?: EventInProgress;
+    pitch?: EventInProgress;
+    rotate?: EventInProgress;
+    drag?: EventInProgress;
+}
 
 function hasChange(result: HandlerResult) {
     return (result.panDelta && result.panDelta.mag()) || result.zoomDelta || result.bearingDelta || result.pitchDelta;
@@ -94,16 +105,17 @@ class HandlerManager {
     _handlers: Array<{
         handlerName: string;
         handler: Handler;
-        allowed: any;
+        allowed: Array<string>;
     }>;
-    _eventsInProgress: any;
+    _eventsInProgress: EventsInProgress;
     _frameId: number;
     _inertia: HandlerInertia;
     _bearingSnap: number;
     _handlersById: {[x: string]: Handler};
     _updatingCamera: boolean;
-    _changes: Array<[HandlerResult, any, any]>;
-    _drag: {center: Point; lngLat: LngLat; point: Point; handlerName: string};
+    _changes: Array<[HandlerResult, EventsInProgress, {[handlerName: string]: Event}]>;
+    _terrainMovement: boolean;
+    _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
         passive?: boolean;
@@ -293,7 +305,7 @@ class HandlerManager {
         return mapTouches as any as TouchList;
     }
 
-    handleEvent(e: InputEvent | RenderFrameEvent, eventName?: string) {
+    handleEvent(e: Event, eventName?: string) {
 
         if (e.type === 'blur') {
             this.stop(true);
@@ -302,7 +314,7 @@ class HandlerManager {
 
         this._updatingCamera = true;
 
-        const inputEvent = e.type === 'renderFrame' ? undefined : (e as any as InputEvent);
+        const inputEvent = e.type === 'renderFrame' ? undefined : e as InputEvent;
 
         /*
          * We don't call e.preventDefault() for any events by default.
@@ -310,12 +322,12 @@ class HandlerManager {
          */
 
         const mergedHandlerResult: HandlerResult = {needsRenderFrame: false};
-        const eventsInProgress = {};
+        const eventsInProgress: EventsInProgress = {};
         const activeHandlers = {};
-        const eventTouches = (e as any as TouchEvent).touches;
+        const eventTouches = (e as TouchEvent).touches;
 
         const mapTouches = eventTouches ? this._getMapTouches(eventTouches) : undefined;
-        const points = mapTouches ? DOM.touchPos(this._el, mapTouches) : DOM.mousePos(this._el, ((e as any as MouseEvent)));
+        const points = mapTouches ? DOM.touchPos(this._el, mapTouches) : DOM.mousePos(this._el, ((e as MouseEvent)));
 
         for (const {handlerName, handler, allowed} of this._handlers) {
             if (!handler.isEnabled()) continue;
@@ -339,7 +351,7 @@ class HandlerManager {
             }
         }
 
-        const deactivatedHandlers = {};
+        const deactivatedHandlers: {[handlerName: string]: Event} = {};
         for (const name in this._previousActiveHandlers) {
             if (!activeHandlers[name]) {
                 deactivatedHandlers[name] = inputEvent;
@@ -367,7 +379,11 @@ class HandlerManager {
         }
     }
 
-    mergeHandlerResult(mergedHandlerResult: HandlerResult, eventsInProgress: any, handlerResult: HandlerResult, name: string, e?: InputEvent) {
+    mergeHandlerResult(mergedHandlerResult: HandlerResult,
+        eventsInProgress: EventsInProgress,
+        handlerResult: HandlerResult,
+        name: string,
+        e?: InputEvent) {
         if (!handlerResult) return;
 
         extend(mergedHandlerResult, handlerResult);
@@ -391,8 +407,8 @@ class HandlerManager {
     }
 
     _applyChanges() {
-        const combined: {[k: string]: any} = {};
-        const combinedEventsInProgress = {};
+        const combined: HandlerResult = {};
+        const combinedEventsInProgress: EventsInProgress = {};
         const combinedDeactivatedHandlers = {};
 
         for (const [change, eventsInProgress, deactivatedHandlers] of this._changes) {
@@ -413,12 +429,14 @@ class HandlerManager {
         this._changes = [];
     }
 
-    _updateMapTransform(combinedResult: any, combinedEventsInProgress: any, deactivatedHandlers: any) {
+    _updateMapTransform(combinedResult: HandlerResult,
+        combinedEventsInProgress: EventsInProgress,
+        deactivatedHandlers: {[handlerName: string]: Event}) {
         const map = this._map;
         const tr = map.transform;
         const terrain = map.terrain;
 
-        if (!hasChange(combinedResult) && !(terrain && this._drag)) {
+        if (!hasChange(combinedResult) && !(terrain && this._terrainMovement)) {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
         }
 
@@ -445,25 +463,22 @@ class HandlerManager {
             //      With this approach it is no longer possible to pick a point from somewhere near
             //      the horizon to the center in one move.
             //      So this logic avoids the problem, that in such cases you easily loose orientation.
-            //    - scrollzoom does not zoom into the mouse-point, instead it zooms into map-center
-            //      this should be fixed in future-version
-            // when dragging starts, remember mousedown-location and panDelta from this point
-            if (combinedEventsInProgress.drag && !this._drag) {
-                this._drag = {
-                    center: tr.centerPoint,
-                    lngLat: tr.pointLocation(around),
-                    point: around,
-                    handlerName: combinedEventsInProgress.drag.handlerName
-                };
+            if (!this._terrainMovement &&
+                (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+                // When starting to drag or move, flag it and register moveend to clear flagging
+                this._terrainMovement = true;
                 tr.freezeElevation = true;
-            // when dragging ends, recalcuate the zoomlevel for the new center coordinate
-            } else if (this._drag && deactivatedHandlers[this._drag.handlerName]) {
-                tr.freezeElevation = false;
-                tr.recalculateZoom(map.terrain);
-                this._drag = null;
-            // drag map
-            } else if (combinedEventsInProgress.drag && this._drag) {
+                tr.setLocationAtPoint(loc, around);
+                this._map.once('moveend', () => {
+                    tr.freezeElevation = false;
+                    this._terrainMovement = false;
+                    tr.recalculateZoom(map.terrain);
+                });
+            } else if (combinedEventsInProgress.drag && this._terrainMovement) {
+                // drag map
                 tr.center = tr.pointLocation(tr.centerPoint.sub(panDelta));
+            } else {
+                tr.setLocationAtPoint(loc, around);
             }
         }
 
@@ -473,7 +488,7 @@ class HandlerManager {
 
     }
 
-    _fireEvents(newEventsInProgress: {[x: string]: any}, deactivatedHandlers: any, allowEndAnimation: boolean) {
+    _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean) {
 
         const wasMoving = isMoving(this._eventsInProgress);
         const nowMoving = isMoving(newEventsInProgress);
@@ -546,7 +561,7 @@ class HandlerManager {
 
     }
 
-    _fireEvent(type: string, e: any) {
+    _fireEvent(type: string, e?: Event) {
         this._map.fire(new Event(type, e ? {originalEvent: e} : {}));
     }
 
