@@ -32,7 +32,7 @@
     "esm": true
   },
   "include": [
-    "rollup.config.**",
+    "rollup.config.*",
     "src/**/*",
     "test/bench/**/*",
     "build/**/*"

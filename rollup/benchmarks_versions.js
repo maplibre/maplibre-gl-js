@@ -1,3 +1,3 @@
-import './build/benchmarks/versions/shared';
-import './build/benchmarks/versions/worker';
-import './build/benchmarks/versions/benchmarks';
+import '../staging/benchmarks/versions/shared';
+import '../staging/benchmarks/versions/worker';
+import '../staging/benchmarks/versions/benchmarks';

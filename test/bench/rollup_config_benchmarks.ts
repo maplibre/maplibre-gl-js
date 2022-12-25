@@ -32,7 +32,7 @@ const intro = fs.readFileSync('rollup/bundle_prelude.js', 'utf8');
 const splitConfig = (name: string): RollupOptions[] => [{
     input: [`test/bench/${name}/benchmarks.ts`, 'src/source/worker.ts'],
     output: {
-        dir: `rollup/build/benchmarks/${name}`,
+        dir: `staging/benchmarks/${name}`,
         format: 'amd',
         indent: false,
         sourcemap: 'inline',
