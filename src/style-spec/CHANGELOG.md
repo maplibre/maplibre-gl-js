@@ -1,3 +1,7 @@
+## 17.0.2
+
+* Fix errors when running style-spec bin scripts and added missing help. Removed unnecessary script 'gl-style-composite'. ([#1971](https://github.com/maplibre/maplibre-gl-js/pull/1971))
+
 ## 17.0.1
 
 * Generated typings file as not created in the build process and was added in this version [#1470](https://github.com/maplibre/maplibre-gl-js/pull/1470)
