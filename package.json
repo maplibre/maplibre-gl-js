@@ -144,7 +144,7 @@
     "build-csp": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts --bundleConfigAsCjs",
     "build-csp-dev": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts --environment BUILD:dev --bundleConfigAsCjs",
     "build-css": "postcss -o dist/maplibre-gl.css src/css/maplibre-gl.css",
-    "build-style-spec": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.style-spec.ts --bundleConfigAsCjs && rollup --configPlugin @rollup/plugin-typescript -c rollup.config.style-spec.ts --environment esm --bundleConfigAsCjs",
+    "build-style-spec": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.style-spec.ts --bundleConfigAsCjs",
     "build-diagrams": "cd docs/diagrams; ls *.plantuml | xargs -I {} puml generate --svg {} -o {}.svg",
     "watch-css": "postcss --watch -o dist/maplibre-gl.css src/css/maplibre-gl.css",
     "build-benchmarks": "npm run build-dev && rollup --configPlugin @rollup/plugin-typescript -c test/bench/rollup_config_benchmarks.ts --bundleConfigAsCjs",
