@@ -25,7 +25,12 @@
       "jest",
       "geojson",
       "offscreencanvas"
+    ],
+    "paths": {
+      "@maplibre/maplibre-gl-style-spec": [
+        "./src/style-spec/style-spec.ts"
     ]
+    }
   },
   "ts-node": {
     "experimentalSpecifierResolution": "node",
