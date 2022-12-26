@@ -86,8 +86,15 @@ function localizeStyleURLs(style: StyleSpecification, port: number) {
     }
 
     if (style.sprite) {
-        style.sprite = localizeMapboxSpriteURL(style.sprite, port);
-        style.sprite = localizeURL(style.sprite, port);
+        if (typeof style.sprite === 'string') {
+            style.sprite = localizeMapboxSpriteURL(style.sprite, port);
+            style.sprite = localizeURL(style.sprite, port);
+        } else if (Array.isArray(style.sprite)) {
+            for (const sprite of style.sprite) {
+                sprite.url = localizeMapboxSpriteURL(sprite.url, port);
+                sprite.url = localizeURL(sprite.url, port);
+            }
+        }
     }
 
     if (style.glyphs) {

@@ -77,9 +77,9 @@
       }
     },
     "sprite": {
-      "type": "string",
-      "doc": "A base URL for retrieving the sprite image and metadata. The extensions `.png`, `.json` and scale factor `@2x.png` will be automatically appended. This property is required if any layer uses the `background-pattern`, `fill-pattern`, `line-pattern`, `fill-extrusion-pattern`, or `icon-image` properties. The URL must be absolute, containing the [scheme, authority and path components](https://en.wikipedia.org/wiki/URL#Syntax).",
-      "example": "mapbox://sprites/mapbox/bright-v8"
+      "type": "sprite",
+      "doc": "An array of `{id: 'my-sprite', url: 'https://example.com/sprite'} objects. Each object should represent a unique URL to load a sprite from and and a unique ID to use as a prefix when referencing images from that sprite (i.e. 'my-sprite:image'). All the URLs are internally extended to load both .json and .png files. If the `id` field is equal to 'default', the prefix is omitted (just 'image' instead of 'default:image'). All the IDs and URLs must be unique. For backwards compatibility, instead of an array, one can also provide a single string that represent a URL to load the sprite from. The images in this case won't be prefixed.",
+      "example": "https://api.maptiler.com/maps/openstreetmap/sprite"
     },
     "glyphs": {
       "type": "string",
