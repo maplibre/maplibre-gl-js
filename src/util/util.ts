@@ -1,7 +1,6 @@
 import UnitBezier from '@mapbox/unitbezier';
 import Point from '@mapbox/point-geometry';
 import type {Callback} from '../types/callback';
-import type {SpriteSpecification} from '../style-spec/types.g';
 
 /**
  * @module util
@@ -525,14 +524,4 @@ export function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | n
     img.onerror = () => callback(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
-}
-
-/**
- * Takes a SpriteSpecification value and returns it in its array form. If `undefined` is passed as an input value, an
- * empty array is returned.
- *
- * @param [sprite] {SpriteSpecification} optional sprite to coerce
- */
-export function coerceSpriteToArray(sprite?: SpriteSpecification): {id: string; url: string}[] {
-    return typeof sprite === 'string' ? [{id: 'default', url: sprite}] : (sprite ?? []);
 }

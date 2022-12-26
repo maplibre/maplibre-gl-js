@@ -6,7 +6,8 @@ import ImageManager from '../render/image_manager';
 import GlyphManager from '../render/glyph_manager';
 import Light from './light';
 import LineAtlas from '../render/line_atlas';
-import {pick, clone, extend, deepEqual, filterObject, mapObject, coerceSpriteToArray} from '../util/util';
+import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
+import {coerceSpriteToArray} from '../util/style';
 import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
@@ -1575,12 +1576,8 @@ class Style extends Evented {
             }
         }
 
-        if (spriteInternalRepresentation.length < 1) {
-            this.stylesheet.sprite = undefined;
-        } else {
-            spriteInternalRepresentation.splice(spriteInternalRepresentation.findIndex(sprite => sprite.id === id), 1);
-            this.stylesheet.sprite = spriteInternalRepresentation;
-        }
+        spriteInternalRepresentation.splice(spriteInternalRepresentation.findIndex(sprite => sprite.id === id), 1);
+        this.stylesheet.sprite = spriteInternalRepresentation;
 
         delete this._spritesImagesIds[id];
         this._availableImages = this.imageManager.listImages();
@@ -1590,10 +1587,12 @@ class Style extends Evented {
     }
 
     /**
-     * Get the current sprite value. Returned without coercion to array, i.e. "as is".
+     * Get the current sprite value.
+     *
+     * @returns {Array} empty array when no sprite is set; id-url pairs otherwise
      */
     getSprite() {
-        return this.stylesheet.sprite || null;
+        return coerceSpriteToArray(this.stylesheet.sprite);
     }
 
     /**

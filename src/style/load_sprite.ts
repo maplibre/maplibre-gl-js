@@ -2,7 +2,7 @@ import {getJSON, getImage, ResourceType} from '../util/ajax';
 
 import browser from '../util/browser';
 import {RGBAImage} from '../util/image';
-import {coerceSpriteToArray} from '../util/util';
+import {coerceSpriteToArray} from '../util/style';
 
 import type {SpriteSpecification} from '../style-spec/types.g';
 import type {StyleImage} from './style_image';
