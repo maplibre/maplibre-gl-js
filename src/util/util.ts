@@ -1,8 +1,7 @@
 import UnitBezier from '@mapbox/unitbezier';
-
 import Point from '@mapbox/point-geometry';
-
 import type {Callback} from '../types/callback';
+import type {SpriteSpecification} from '../style-spec/types.g';
 
 /**
  * @module util
@@ -257,7 +256,6 @@ export function filterObject(input: any, iterator: Function, context?: any): any
 }
 
 import deepEqual from '../style-spec/util/deep_equal';
-import {SpriteSpecification} from '../style-spec/types.g';
 export {deepEqual};
 
 /**
