@@ -6,7 +6,7 @@ import ImageManager from '../render/image_manager';
 import GlyphManager from '../render/glyph_manager';
 import Light from './light';
 import LineAtlas from '../render/line_atlas';
-import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
+import {pick, clone, extend, deepEqual, filterObject, mapObject, coerceSpriteToArray} from '../util/util';
 import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
@@ -375,12 +375,14 @@ class Style extends Evented {
 
             this.imageManager.setLoaded(true);
             this._availableImages = this.imageManager.listImages();
+
             if (isUpdate) {
                 this._changed = true;
             }
 
             this.dispatcher.broadcast('setImages', this._availableImages);
             this.fire(new Event('data', {dataType: 'style'}));
+
             if (completion) {
                 completion(err);
             }
@@ -752,63 +754,6 @@ class Style extends Evented {
      */
     getSource(id: string): Source | undefined {
         return this.sourceCaches[id] && this.sourceCaches[id].getSource();
-    }
-
-    /**
-     * Add a sprite.
-     * @param {string} id id of the desired sprite
-     * @param {string} url url to load the desired sprite from
-     * @param {StyleSetterOptions} options Style setter options.
-     * @param completion completion handler
-     */
-    addSprite(id: string, url: string, options: StyleSetterOptions = {}, completion?: (err: Error) => void) {
-        this._checkLoaded();
-
-        const spriteToAdd = [{id, url}];
-        const updatedSprite = [
-            ...(typeof this.stylesheet.sprite === 'string' ? [{id: 'default', url: this.stylesheet.sprite}] : this.stylesheet.sprite || []),
-            ...spriteToAdd];
-        if (this._validate(validateStyle.sprite, 'sprite', updatedSprite, null, options)) return;
-
-        this.stylesheet.sprite = updatedSprite;
-        this._loadSprite(spriteToAdd, true, completion);
-    }
-
-    /**
-     * Remove a sprite by its id.
-     * @param id the id of the sprite to remove
-     */
-    removeSprite(id: string) {
-        this._checkLoaded();
-
-        if (
-            (typeof this.stylesheet.sprite === 'string' && id !== 'default') ||
-            (Array.isArray(this.stylesheet.sprite) && !this.stylesheet.sprite.find(sprite => sprite.id === id)) ||
-            (this.stylesheet.sprite === undefined)
-        ) {
-            this.fire(new ErrorEvent(new Error(`Sprite "${id}" doesn't exists on this map.`)));
-            return;
-        }
-
-        if (this._spritesImagesIds[id]) {
-            for (const imageId of this._spritesImagesIds[id]) {
-                this.imageManager.removeImage(imageId);
-                this._changedImages[imageId] = true;
-            }
-        }
-
-        if (typeof this.stylesheet.sprite === 'string') {
-            this.stylesheet.sprite = undefined;
-        } else {
-            this.stylesheet.sprite.splice(this.stylesheet.sprite.findIndex(sprite => sprite.id === id), 1);
-            if (this.stylesheet.sprite.length === 0) this.stylesheet.sprite = undefined;
-        }
-
-        delete this._spritesImagesIds[id];
-        this._availableImages = this.imageManager.listImages();
-        this._changed = true;
-        this.dispatcher.broadcast('setImages', this._availableImages);
-        this.fire(new Event('data', {dataType: 'style'}));
     }
 
     /**
@@ -1585,17 +1530,88 @@ class Style extends Evented {
         this.glyphManager.setURL(glyphsUrl);
     }
 
+    /**
+     * Add a sprite.
+     *
+     * @param {string} id id of the desired sprite
+     * @param {string} url url to load the desired sprite from
+     * @param {StyleSetterOptions} [options] style setter options
+     * @param [completion] completion handler
+     */
+    addSprite(id: string, url: string, options: StyleSetterOptions = {}, completion?: (err: Error) => void) {
+        this._checkLoaded();
+
+        const spriteToAdd = [{id, url}];
+        const updatedSprite = [
+            ...coerceSpriteToArray(this.stylesheet.sprite),
+            ...spriteToAdd
+        ];
+
+        if (this._validate(validateStyle.sprite, 'sprite', updatedSprite, null, options)) return;
+
+        this.stylesheet.sprite = updatedSprite;
+        this._loadSprite(spriteToAdd, true, completion);
+    }
+
+    /**
+     * Remove a sprite by its id.
+     *
+     * @param id the id of the sprite to remove
+     */
+    removeSprite(id: string) {
+        this._checkLoaded();
+
+        const spriteInternalRepresentation = coerceSpriteToArray(this.stylesheet.sprite);
+
+        if (spriteInternalRepresentation.find(sprite => sprite.id === id)) {
+            this.fire(new ErrorEvent(new Error(`Sprite "${id}" doesn't exist on this map.`)));
+            return;
+        }
+
+        if (this._spritesImagesIds[id]) {
+            for (const imageId of this._spritesImagesIds[id]) {
+                this.imageManager.removeImage(imageId);
+                this._changedImages[imageId] = true;
+            }
+        }
+
+        if (spriteInternalRepresentation.length < 1) {
+            this.stylesheet.sprite = undefined;
+        } else {
+            spriteInternalRepresentation.splice(spriteInternalRepresentation.findIndex(sprite => sprite.id === id), 1);
+            this.stylesheet.sprite = spriteInternalRepresentation;
+        }
+
+        delete this._spritesImagesIds[id];
+        this._availableImages = this.imageManager.listImages();
+        this._changed = true;
+        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.fire(new Event('data', {dataType: 'style'}));
+    }
+
+    /**
+     * Get the current sprite value. Returned without coercion to array, i.e. "as is".
+     */
     getSprite() {
         return this.stylesheet.sprite || null;
     }
 
+    /**
+     * Set a new value for the style's sprite.
+     *
+     * @param {SpriteSpecification} sprite new sprite value
+     * @param {StyleSetterOptions} [options] style setter options
+     * @param completion completion handler
+     */
     setSprite(sprite: SpriteSpecification, options: StyleSetterOptions = {}, completion: (err: Error) => void) {
         this._checkLoaded();
+
         if (sprite && this._validate(validateStyle.sprite, 'sprite', sprite, null, options)) {
             return;
         }
 
         this.stylesheet.sprite = sprite;
+
         if (sprite) {
             this._loadSprite(sprite, true, completion);
         } else {

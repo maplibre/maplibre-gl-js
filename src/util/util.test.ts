@@ -1,4 +1,4 @@
-import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, nextPowerOfTwo, isPowerOfTwo} from './util';
+import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, nextPowerOfTwo, isPowerOfTwo, coerceSpriteToArray} from './util';
 import Point from '@mapbox/point-geometry';
 
 describe('util', () => {
@@ -306,4 +306,22 @@ describe('util parseCacheControl', () => {
         done();
     });
 
+});
+
+describe('style utils', () => {
+    describe('#coerceSpriteToArray', () => {
+        test('input === output when array', () => {
+            const sprite = [{id: 'id', url: 'url'}];
+            expect(coerceSpriteToArray(sprite)).toBe(sprite);
+        });
+
+        test('coerced to array when string', () => {
+            const expected = [{id: 'default', url: 'url'}];
+            expect(coerceSpriteToArray('url')).toEqual(expected);
+        });
+
+        test('returns an empty array when nothing\'s passed in', () => {
+            expect(coerceSpriteToArray()).toEqual([]);
+        });
+    });
 });

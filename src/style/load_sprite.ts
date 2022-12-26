@@ -2,6 +2,7 @@ import {getJSON, getImage, ResourceType} from '../util/ajax';
 
 import browser from '../util/browser';
 import {RGBAImage} from '../util/image';
+import {coerceSpriteToArray} from '../util/util';
 
 import type {SpriteSpecification} from '../style-spec/types.g';
 import type {StyleImage} from './style_image';
@@ -15,7 +16,7 @@ export default function loadSprite(
     pixelRatio: number,
     callback: Callback<{[spriteName: string]: {[id: string]: StyleImage}}>
 ): Cancelable {
-    const sprite = typeof originalSprite === 'string' ? [{id: 'default', url: originalSprite}] : originalSprite;
+    const sprite = coerceSpriteToArray(originalSprite);
     const format = pixelRatio > 1 ? '@2x' : '';
 
     let error;

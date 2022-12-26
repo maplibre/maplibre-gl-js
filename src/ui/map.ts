@@ -2270,7 +2270,7 @@ class Map extends Camera {
      * Sets the value of the style's glyphs property.
      *
      * @param glyphsUrl Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/glyphs/).
-     * @param {Object} [options] Options object.
+     * @param {StyleSetterOptions} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
@@ -2292,40 +2292,11 @@ class Map extends Camera {
     }
 
     /**
-     * Sets the value of the style's sprite property.
-     *
-     * @param spriteUrl Sprite URL to set.
-     * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-     * @returns {Map} `this`
-     * @example
-     * map.setSprite('YOUR_SPRITE_URL');
-     */
-    setSprite(spriteUrl: string | null, options: StyleSetterOptions = {}) {
-        this._lazyInitEmptyStyle();
-        this.style.setSprite(spriteUrl, options, (err) => {
-            if (!err) {
-                this._update(true);
-            }
-        });
-        return this;
-    }
-
-    /**
-     * Returns the value of the style's sprite URL
-     *
-     * @returns {SpriteSpecification | null} sprite Style's sprite url
-     */
-    getSprite() {
-        return this.style.getSprite();
-    }
-
-    /**
      * Adds a sprite to the map's style.
      *
      * @param {string} id The ID of the sprite to add. Must not conflict with existing sprites.
      * @param {string} url The URL to load the sprite from
-     * @param {Object} [options] Options object.
+     * @param {StyleSetterOptions} [options] Options object.
      * @fires style
      * @returns {Map} `this`
      * @example
@@ -2356,6 +2327,35 @@ class Map extends Camera {
         this._lazyInitEmptyStyle();
         this.style.removeSprite(id);
         return this._update(true);
+    }
+
+    /**
+     * Returns the as-is value of the style's sprite.
+     *
+     * @returns {SpriteSpecification | undefined} style's sprite url or a list of id-url pairs
+     */
+    getSprite() {
+        return this.style.getSprite();
+    }
+
+    /**
+     * Sets the value of the style's sprite property.
+     *
+     * @param spriteUrl Sprite URL to set.
+     * @param {StyleSetterOptions} [options] Options object.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @returns {Map} `this`
+     * @example
+     * map.setSprite('YOUR_SPRITE_URL');
+     */
+    setSprite(spriteUrl: string | null, options: StyleSetterOptions = {}) {
+        this._lazyInitEmptyStyle();
+        this.style.setSprite(spriteUrl, options, (err) => {
+            if (!err) {
+                this._update(true);
+            }
+        });
+        return this;
     }
 
     /**
