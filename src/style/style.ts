@@ -1555,7 +1555,8 @@ class Style extends Evented {
     }
 
     /**
-     * Remove a sprite by its id.
+     * Remove a sprite by its id. When the last sprite is removed, the whole `this.stylesheet.sprite` object becomes
+     * `undefined`. This falsy `undefined` value later prevents attempts to load the sprite when it's absent.
      *
      * @param id the id of the sprite to remove
      */
