@@ -440,6 +440,40 @@ describe('Style#loadJSON', () => {
     });
 });
 
+describe('Style#_load', () => {
+    test('initiates sprite loading when it\'s present', () => {
+        const style = new Style(getStubMap());
+
+        const prevStyleSpec = createStyleJSON({
+            sprite: 'https://example.com/test1'
+        });
+
+        const nextStyleSpec = createStyleJSON({
+            sprite: 'https://example.com/test2'
+        });
+
+        const _loadSpriteSpyOn = jest.spyOn(style, '_loadSprite');
+        style._load(nextStyleSpec, {}, prevStyleSpec);
+
+        expect(_loadSpriteSpyOn).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not initiate sprite loading when it\'s absent (undefined)', () => {
+        const style = new Style(getStubMap());
+
+        const prevStyleSpec = createStyleJSON({
+            sprite: 'https://example.com/test1'
+        });
+
+        const nextStyleSpec = createStyleJSON({sprite: undefined});
+
+        const _loadSpriteSpyOn = jest.spyOn(style, '_loadSprite');
+        style._load(nextStyleSpec, {}, prevStyleSpec);
+
+        expect(_loadSpriteSpyOn).not.toHaveBeenCalled();
+    });
+});
+
 describe('Style#_remove', () => {
     test('removes cache sources and clears their tiles', done => {
         const style = new Style(getStubMap());
