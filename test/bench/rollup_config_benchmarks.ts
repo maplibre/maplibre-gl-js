@@ -40,7 +40,7 @@ const splitConfig = (name: string): RollupOptions[] => [{
     },
     plugins: allPlugins
 }, {
-    input: `rollup/benchmarks_${name}.js`,
+    input: `test/bench/rollup/benchmarks_${name}.js`,
     output: {
         file: `test/bench/${name}/benchmarks_generated.js`,
         format: 'umd',

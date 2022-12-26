@@ -30,14 +30,14 @@ const config: RollupOptions[] = [{
     // Next, bundle together the three "chunks" produced in the previous pass
     // into a single, final bundle. See rollup/bundle_prelude.js and
     // rollup/maplibregl.js for details.
-    input: 'rollup/maplibregl.js',
+    input: 'build/rollup/maplibregl.js',
     output: {
         name: 'maplibregl',
         file: outputFile,
         format: 'umd',
         sourcemap: production ? true : 'inline',
         indent: false,
-        intro: fs.readFileSync('./rollup/bundle_prelude.js', 'utf8'),
+        intro: fs.readFileSync('build/rollup/bundle_prelude.js', 'utf8'),
         banner
     },
     treeshake: false,
