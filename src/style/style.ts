@@ -1562,10 +1562,10 @@ class Style extends Evented {
     removeSprite(id: string) {
         this._checkLoaded();
 
-        const spriteInternalRepresentation = coerceSpriteToArray(this.stylesheet.sprite);
+        const internalSpriteRepresentation = coerceSpriteToArray(this.stylesheet.sprite);
 
-        if (spriteInternalRepresentation.find(sprite => sprite.id === id)) {
-            this.fire(new ErrorEvent(new Error(`Sprite "${id}" doesn't exist on this map.`)));
+        if (!internalSpriteRepresentation.find(sprite => sprite.id === id)) {
+            this.fire(new ErrorEvent(new Error(`Sprite "${id}" doesn't exists on this map.`)));
             return;
         }
 
@@ -1576,8 +1576,8 @@ class Style extends Evented {
             }
         }
 
-        spriteInternalRepresentation.splice(spriteInternalRepresentation.findIndex(sprite => sprite.id === id), 1);
-        this.stylesheet.sprite = spriteInternalRepresentation;
+        internalSpriteRepresentation.splice(internalSpriteRepresentation.findIndex(sprite => sprite.id === id), 1);
+        this.stylesheet.sprite = internalSpriteRepresentation.length > 0 ? internalSpriteRepresentation : undefined;
 
         delete this._spritesImagesIds[id];
         this._availableImages = this.imageManager.listImages();
