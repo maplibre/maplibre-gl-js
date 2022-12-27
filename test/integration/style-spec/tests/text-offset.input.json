@@ -1,0 +1,92 @@
+{
+  "version": 8,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sources": {
+    "point": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "font-scale-override": 2.0,
+              "text-font-override": ["Arial"]
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "numeric offset - valid",
+      "type": "symbol",
+      "source": "point",
+      "layout": {
+        "text-offset": [
+          10,
+          5
+        ]
+      }
+    },
+    {
+      "id": "numeric offset with negative values - valid",
+      "type": "symbol",
+      "source": "point",
+      "layout": {
+        "text-offset": [
+          -10,
+          -5
+        ]
+      }
+    },
+    {
+      "id": "numeric offset with three numbers - invalid",
+      "type": "symbol",
+      "source": "point",
+      "layout": {
+        "text-offset": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "expression get - valid",
+      "type": "symbol",
+      "source": "point",
+      "layout": {
+        "text-offset": [
+          "get",
+          "population"
+        ]
+      }
+    },
+    {
+      "id": "expression interpolate - valid",
+      "type": "symbol",
+      "source": "point",
+      "layout": {
+        "text-offset": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          16,
+          ["literal", [0, 1]],
+          17,
+          ["literal", [0, 2]],
+          18,
+          ["literal", [0, 3]],
+          19,
+          ["literal", [0, 4]]
+        ]
+      }
+    }
+  ]
+}
