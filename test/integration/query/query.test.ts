@@ -3,7 +3,7 @@
 // refer build/generate-query-test-fixtures.ts
 import {Browser, chromium, Page} from 'playwright';
 
-import fixtures from './dist/fixtures.json';
+import fixtures from './dist/fixtures.json' assert {type: 'json'};
 import {deepEqual} from '../lib/json-diff';
 import st from 'st';
 import http from 'http';

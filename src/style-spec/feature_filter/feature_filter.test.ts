@@ -18,6 +18,7 @@ describe('filter', () => {
         compileTimeCheck(['case', ['has', 'color'], ['get', 'color'], 'white']);
         compileTimeCheck(['case', ['all', ['has', 'point_count'], ['<', ['get', 'point_count'], 3]], ['get', 'cluster_routes'], '']);
         compileTimeCheck(['interpolate', ['linear'], ['get', 'point_count'], 2, 18.0, 10, 24.0]);
+        compileTimeCheck(['interpolate', ['linear'], ['get', 'point_count'], 2, ['/', 2, ['get', 'point_count']], 10, ['*', 4, ['get', 'point_count']]]);
         compileTimeCheck(['case', ['has', 'point_count'], ['interpolate', ['linear'], ['get', 'point_count'], 2, 18.0, 10, 24.0], 12.0]);
         compileTimeCheck([
             'case',

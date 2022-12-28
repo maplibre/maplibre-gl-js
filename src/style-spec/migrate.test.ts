@@ -1,6 +1,6 @@
 import migrate from './migrate';
 import * as spec from './style-spec';
-import v8 from './reference/v8.json';
+import v8 from './reference/v8.json' assert {type: 'json'};
 import validate from './validate_style';
 
 describe('migrate', () => {

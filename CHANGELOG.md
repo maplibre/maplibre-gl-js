@@ -1,23 +1,34 @@
 ## main
-
 ### ✨ Features and improvements
 - *...Add new stuff here...*
+### 🐞 Bug fixes
+- *...Add new stuff here...*
+- 
+## 3.0.0-pre.2
+
+### ✨ Features and improvements
+- Move to rollup 3 ([#1949](https://github.com/maplibre/maplibre-gl-js/pull/1949))
+- `QueryRenderedFeaturesOptions` type added to both of the params in queryRenderedFeatures in map.ts ([#1900](https://github.com/maplibre/maplibre-gl-js/issues/1900))
 - NavigationControlOptions is now optional when creating an instance of NavigationControl ([#1754](https://github.com/maplibre/maplibre-gl-js/issues/1754))
 - Listen to webglcontextcreationerror event and give detailed debug info when it fails ([#1715](https://github.com/maplibre/maplibre-gl-js/pull/1715))
 - Make sure `cooperativeGestures` overlay is always "on top" (z-index) of map features ([#1753](https://github.com/maplibre/maplibre-gl-js/pull/1753))
 - Use `willReadFrequently` hint to optimize 2D canvas usage and remove warnings ([#1808](https://github.com/maplibre/maplibre-gl-js/pull/1808))
 - Speed up the cross tile symbol index in certain circumstances ([#1755](https://github.com/maplibre/maplibre-gl-js/pull/1755))
 - Improve rendering speed in scenes with many colliding symbolic icons and labels ([#1757](https://github.com/maplibre/maplibre-gl-js/pull/1757))
+- Make request for ImageSource cancelable ([#1802](https://github.com/maplibre/maplibre-gl-js/pull/1802))
 
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
 - Fix the `slice` expression type ([#1886](https://github.com/maplibre/maplibre-gl-js/issues/1886))
+- Remove dependency on `@rollup/plugin-json`, which was in conflict with `rollup-plugin-import-assert`
+- Remove dependency on `@mapbox/gazetteer` which caused some build warnings ([#1898](https://github.com/maplibre/maplibre-gl-js/pull/1757)[#1898](https://github.com/maplibre/maplibre-gl-js/pull/1898))
 - Fix `getElevation()` causing uncaught error ([#1650](https://github.com/maplibre/maplibre-gl-js/issues/1650)).
 - Add dev version for csp build ([#1730](https://github.com/maplibre/maplibre-gl-js/pull/1730))
 - Fix headless benchmark execution especially on VM ([#1732](https://github.com/maplibre/maplibre-gl-js/pull/1732))
 - fix issue [#860](https://github.com/maplibre/maplibre-gl-js/issues/860) fill-pattern with pixelRatio > 1 is now switched correctly at runtime. ([#1765](https://github.com/maplibre/maplibre-gl-js/pull/1765))
 - Fix the exception that would be thrown on `map.setStyle` when it is passed with transformStyle option and map is initialized without an initial style. ([#1824](https://github.com/maplibre/maplibre-gl-js/pull/1824))
 - fix issue [#1582](https://github.com/maplibre/maplibre-gl-js/issues/1582) source maps are now properly generated
+- Fix the behavior of the compass button on touch devices.
 
 
 ## 3.0.0-pre.1
