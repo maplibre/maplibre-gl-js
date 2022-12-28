@@ -18,7 +18,6 @@
 - Make request for ImageSource cancelable ([#1802](https://github.com/maplibre/maplibre-gl-js/pull/1802))
 
 ### 🐞 Bug fixes
-- *...Add new stuff here...*
 - Fix the `slice` expression type ([#1886](https://github.com/maplibre/maplibre-gl-js/issues/1886))
 - Remove dependency on `@rollup/plugin-json`, which was in conflict with `rollup-plugin-import-assert`
 - Remove dependency on `@mapbox/gazetteer` which caused some build warnings ([#1898](https://github.com/maplibre/maplibre-gl-js/pull/1757)[#1898](https://github.com/maplibre/maplibre-gl-js/pull/1898))
