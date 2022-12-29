@@ -176,7 +176,7 @@ export type ExpressionSpecification =
     | ['in', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification]
     | ['index-of', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification] // number
     | ['length', string | ExpressionSpecification]
-    | ['slice', string | ExpressionSpecification, number | ExpressionSpecification]
+    | ['slice', string | ExpressionSpecification, number | ExpressionSpecification, (number | ExpressionSpecification)?]
     // Decision
     | ['!', boolean | ExpressionSpecification] // boolean
     | ['!=', ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, CollatorExpressionSpecification?] // boolean

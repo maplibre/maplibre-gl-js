@@ -44,6 +44,10 @@ describe('filter', () => {
         compileTimeCheck(['interpolate', ['linear'], ['line-progress'], 0, [10, 20, 30], 0.5, [20, 30, 40], 1, [30, 40, 80]]); // number array output!
         compileTimeCheck(['interpolate-hcl', ['linear'], ['line-progress'], 0, 'red', 0.5, 'green', 1, 'blue']);
         compileTimeCheck(['interpolate-lab', ['linear'], ['line-progress'], 0, 'red', 0.5, 'green', 1, 'blue']);
+        compileTimeCheck(['slice', 'myString', 0]);
+        compileTimeCheck(['slice', ['literal', [0]], 0]);
+        compileTimeCheck(['slice', 'myString', 0, 1]);
+        compileTimeCheck(['slice', ['literal', [0, 1, 2]], 0, 1]);
         compileTimeCheck(['step', ['get', 'point_count'], '#df2d43', 50, '#df2d43', 200, '#df2d43']);
         compileTimeCheck(['step', ['get', 'point_count'], 20, 50, 30, 200, 40]);
         compileTimeCheck(['step', ['get', 'point_count'], 0.6, 50, 0.7, 200, 0.8]);
