@@ -88,6 +88,16 @@ Same parameter can be used to view results for a single test...
 $ npm run test-render circle-radius/literal -- --report
 ```
 
+### Updating results of render test results
+On Linux:
+```
+UPDATE=true npm run test-render
+```
+Or on Windows PowerShell:
+```
+$env:UPDATE=$true; npm run test-render
+```
+
 ## Notes on the query integration tests
 
 In test/integration/lib/query-browser-jest.test.ts a web server is automatically started to expose static assets from the integration folder. In order to start a similar server manually, run:
@@ -113,10 +123,6 @@ generateDiffLog(fixture.expected, actual);
 Query tests can be run in the browser, the server for serving up the test page and test fixtures starts when you run
 ```
 npm run start
-```
-OR
-```
-npm run start-debug
 ```
 
 If you want to run only the test server run:
@@ -167,7 +173,7 @@ To add a new render test:
 5. Commit the new `style.json` and `expected.png` :rocket:
 
 ## Updating results of query-tests
-You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled:
+You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled, for exmple on Linux:
 ```
 UPDATE=true npm run test-query
 ```

@@ -2,7 +2,6 @@
 import validateConstants from './validate/validate_constants';
 import validate from './validate/validate';
 import latestStyleSpec from './reference/latest';
-import validateGlyphsURL from './validate/validate_glyphs_url';
 
 import validateSource from './validate/validate_source';
 import validateLight from './validate/validate_light';
@@ -12,6 +11,8 @@ import validateFilter from './validate/validate_filter';
 import validatePaintProperty from './validate/validate_paint_property';
 import validateLayoutProperty from './validate/validate_layout_property';
 import type {StyleSpecification} from './types.g';
+import validateSprite from './validate/validate_sprite';
+import validateGlyphsUrl from './validate/validate_glyphs_url';
 
 /**
  * Validate a MapLibre GL style against the style specification. This entrypoint,
@@ -39,7 +40,7 @@ function validateStyleMin(style: StyleSpecification, styleSpec = latestStyleSpec
         styleSpec,
         style,
         objectElementValidators: {
-            glyphs: validateGlyphsURL,
+            glyphs: validateGlyphsUrl,
             '*'() {
                 return [];
             }
@@ -60,6 +61,8 @@ function validateStyleMin(style: StyleSpecification, styleSpec = latestStyleSpec
 }
 
 validateStyleMin.source = wrapCleanErrors(injectValidateSpec(validateSource));
+validateStyleMin.sprite = wrapCleanErrors(injectValidateSpec(validateSprite));
+validateStyleMin.glyphs = wrapCleanErrors(injectValidateSpec(validateGlyphsUrl));
 validateStyleMin.light = wrapCleanErrors(injectValidateSpec(validateLight));
 validateStyleMin.terrain = wrapCleanErrors(injectValidateSpec(validateTerrain));
 validateStyleMin.layer = wrapCleanErrors(injectValidateSpec(validateLayer));

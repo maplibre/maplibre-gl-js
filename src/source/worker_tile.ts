@@ -140,7 +140,7 @@ class WorkerTile {
 
         const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
         if (Object.keys(stacks).length) {
-            actor.send('getGlyphs', {uid: this.uid, stacks}, (err, result) => {
+            actor.send('getGlyphs', {uid: this.uid, stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}, (err, result) => {
                 if (!error) {
                     error = err;
                     glyphMap = result;
