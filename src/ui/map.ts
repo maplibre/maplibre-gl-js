@@ -319,6 +319,7 @@ class Map extends Camera {
     // accounts for placement finishing as well
     _fullyLoaded: boolean;
     _trackResize: boolean;
+    _resizeObserver: ResizeObserver;
     _preserveDrawingBuffer: boolean;
     _failIfMajorPerformanceCaveat: boolean;
     _antialias: boolean;
@@ -457,7 +458,6 @@ class Map extends Camera {
 
         bindAll([
             '_onWindowOnline',
-            '_onWindowResize',
             '_onMapScroll',
             '_contextLost',
             '_contextRestored'
@@ -476,8 +476,6 @@ class Map extends Camera {
 
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
-            addEventListener('resize', this._onWindowResize, false);
-            addEventListener('orientationchange', this._onWindowResize, false);
         }
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
@@ -529,6 +527,14 @@ class Map extends Camera {
         this.on('dataabort', (event: MapDataEvent) => {
             this.fire(new Event('sourcedataabort', event));
         });
+
+        if (window.ResizeObserver) {
+            this._resizeObserver = new window.ResizeObserver((entries) => {
+                if (this._trackResize)
+                    this.resize(entries);
+            });
+            this._resizeObserver.observe(this._container);
+        }
     }
 
     /*
@@ -2946,13 +2952,12 @@ class Map extends Camera {
         delete this.handlers;
         this.setStyle(null);
         if (typeof window !== 'undefined') {
-            removeEventListener('resize', this._onWindowResize, false);
-            removeEventListener('orientationchange', this._onWindowResize, false);
             removeEventListener('online', this._onWindowOnline, false);
         }
 
         ImageRequest.removeThrottleControl(this._imageQueueHandle);
 
+        this._resizeObserver?.disconnect();
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension) extension.loseContext();
         this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
@@ -2991,12 +2996,6 @@ class Map extends Camera {
 
     _onWindowOnline() {
         this._update();
-    }
-
-    _onWindowResize(event: Event) {
-        if (this._trackResize) {
-            this.resize({originalEvent: event})._update();
-        }
     }
 
     /**

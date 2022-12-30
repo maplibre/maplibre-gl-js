@@ -702,47 +702,6 @@ describe('Map', () => {
             expect(events).toEqual(['movestart', 'move', 'resize', 'moveend']);
 
         });
-
-        test('listen to window resize event', done => {
-            const original = global.addEventListener;
-            global.addEventListener = function (type) {
-                if (type === 'resize') {
-                    //restore original function not to mess with other tests
-                    global.addEventListener = original;
-
-                    done();
-                }
-            };
-
-            createMap();
-        });
-
-        test('do not resize if trackResize is false', () => {
-            const map = createMap({trackResize: false});
-
-            const spyA = jest.spyOn(map, 'stop');
-            const spyB = jest.spyOn(map, '_update');
-            const spyC = jest.spyOn(map, 'resize');
-
-            map._onWindowResize(undefined);
-
-            expect(spyA).not.toHaveBeenCalled();
-            expect(spyB).not.toHaveBeenCalled();
-            expect(spyC).not.toHaveBeenCalled();
-        });
-
-        test('do resize if trackResize is true (default)', () => {
-            const map = createMap();
-
-            const spyA = jest.spyOn(map, '_update');
-            const spyB = jest.spyOn(map, 'resize');
-
-            map._onWindowResize(undefined);
-
-            expect(spyA).toHaveBeenCalled();
-            expect(spyB).toHaveBeenCalled();
-        });
-
     });
 
     describe('#getBounds', () => {

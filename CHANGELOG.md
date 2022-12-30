@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 - Add `setiClusterOptions` to update cluster properties of the added sources: fixing these issues ([#429](https://github.com/maplibre/maplibre-gl-js/issues/429)) and ([1384](https://github.com/maplibre/maplibre-gl-js/issues/1384))
 - Add types for `workerOptions` and `_options` in `geojson_source.ts`
+- Resize map when container element is resized.  ([#2013](https://github.com/maplibre/maplibre-gl-js/pull/2013))
 - *...Add new stuff here...*
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
