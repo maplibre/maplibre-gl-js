@@ -5,6 +5,7 @@ import ValidationError from '../error/validation_error';
 interface ValidateSpriteOptions {
     key: 'sprite';
     value: unknown; // we don't know how the user defined the "sprite"
+    validateSpec: Function;
 }
 
 export default function validateSprite(options: ValidateSpriteOptions) {
@@ -45,6 +46,7 @@ export default function validateSprite(options: ValidateSpriteOptions) {
                 key: `${key}[${i}]`,
                 value: sprite[i],
                 valueSpec: pairSpec,
+                validateSpec: options.validateSpec,
             }));
         }
 

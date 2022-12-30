@@ -39,6 +39,7 @@ function validateStyleMin(style: StyleSpecification, styleSpec = latestStyleSpec
         valueSpec: styleSpec.$root,
         styleSpec,
         style,
+        validateSpec: validate,
         objectElementValidators: {
             glyphs: validateGlyphsUrl,
             '*'() {
