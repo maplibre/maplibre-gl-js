@@ -62,6 +62,7 @@ export default function validate(options) {
     const value = options.value;
     const valueSpec = options.valueSpec;
     const styleSpec = options.styleSpec;
+    options.validateSpec = validate;
 
     if (valueSpec.expression && isFunction(unbundle(value))) {
         return validateFunction(options);

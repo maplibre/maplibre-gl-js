@@ -5,7 +5,6 @@ import validateObject from './validate_object';
 import validateFilter from './validate_filter';
 import validatePaintProperty from './validate_paint_property';
 import validateLayoutProperty from './validate_layout_property';
-import validateSpec from './validate';
 import extend from '../util/extend';
 
 export default function validateLayer(options) {
@@ -81,6 +80,7 @@ export default function validateLayer(options) {
         valueSpec: styleSpec.layer,
         style: options.style,
         styleSpec: options.styleSpec,
+        validateSpec: options.validateSpec,
         objectElementValidators: {
             '*'() {
                 return [];
@@ -88,12 +88,13 @@ export default function validateLayer(options) {
             // We don't want to enforce the spec's `"requires": true` for backward compatibility with refs;
             // the actual requirement is validated above. See https://github.com/mapbox/mapbox-gl-js/issues/5772.
             type() {
-                return validateSpec({
+                return options.validateSpec({
                     key: `${key}.type`,
                     value: layer.type,
                     valueSpec: styleSpec.layer.type,
                     style: options.style,
                     styleSpec: options.styleSpec,
+                    validateSpec: options.validateSpec,
                     object: layer,
                     objectKey: 'type'
                 });
@@ -106,6 +107,7 @@ export default function validateLayer(options) {
                     value: options.value,
                     style: options.style,
                     styleSpec: options.styleSpec,
+                    validateSpec: options.validateSpec,
                     objectElementValidators: {
                         '*'(options) {
                             return validateLayoutProperty(extend({layerType: type}, options));
@@ -120,6 +122,7 @@ export default function validateLayer(options) {
                     value: options.value,
                     style: options.style,
                     styleSpec: options.styleSpec,
+                    validateSpec: options.validateSpec,
                     objectElementValidators: {
                         '*'(options) {
                             return validatePaintProperty(extend({layerType: type}, options));

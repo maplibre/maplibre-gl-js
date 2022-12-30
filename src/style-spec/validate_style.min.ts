@@ -39,6 +39,7 @@ function validateStyleMin(style: StyleSpecification, styleSpec = latestStyleSpec
         valueSpec: styleSpec.$root,
         styleSpec,
         style,
+        validateSpec: validate,
         objectElementValidators: {
             glyphs: validateGlyphsUrl,
             '*'() {
@@ -52,22 +53,32 @@ function validateStyleMin(style: StyleSpecification, styleSpec = latestStyleSpec
             key: 'constants',
             value: style['constants'],
             style,
-            styleSpec
+            styleSpec,
+            validateSpec: validate,
         }));
     }
 
     return sortErrors(errors);
 }
 
-validateStyleMin.source = wrapCleanErrors(validateSource);
-validateStyleMin.sprite = wrapCleanErrors(validateSprite);
-validateStyleMin.glyphs = wrapCleanErrors(validateGlyphsUrl);
-validateStyleMin.light = wrapCleanErrors(validateLight);
-validateStyleMin.terrain = wrapCleanErrors(validateTerrain);
-validateStyleMin.layer = wrapCleanErrors(validateLayer);
-validateStyleMin.filter = wrapCleanErrors(validateFilter);
-validateStyleMin.paintProperty = wrapCleanErrors(validatePaintProperty);
-validateStyleMin.layoutProperty = wrapCleanErrors(validateLayoutProperty);
+validateStyleMin.source = wrapCleanErrors(injectValidateSpec(validateSource));
+validateStyleMin.sprite = wrapCleanErrors(injectValidateSpec(validateSprite));
+validateStyleMin.glyphs = wrapCleanErrors(injectValidateSpec(validateGlyphsUrl));
+validateStyleMin.light = wrapCleanErrors(injectValidateSpec(validateLight));
+validateStyleMin.terrain = wrapCleanErrors(injectValidateSpec(validateTerrain));
+validateStyleMin.layer = wrapCleanErrors(injectValidateSpec(validateLayer));
+validateStyleMin.filter = wrapCleanErrors(injectValidateSpec(validateFilter));
+validateStyleMin.paintProperty = wrapCleanErrors(injectValidateSpec(validatePaintProperty));
+validateStyleMin.layoutProperty = wrapCleanErrors(injectValidateSpec(validateLayoutProperty));
+
+function injectValidateSpec(validator: (options: object) => any) {
+    return function(options) {
+        return validator({
+            ...options,
+            validateSpec: validate,
+        });
+    };
+}
 
 function sortErrors(errors) {
     return [].concat(errors).sort((a, b) => {
