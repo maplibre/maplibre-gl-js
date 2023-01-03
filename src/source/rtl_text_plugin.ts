@@ -1,5 +1,5 @@
 import {Event, Evented} from '../util/evented';
-import {getArrayBuffer} from '../util/ajax';
+import {getArrayBufferNew} from '../util/ajax';
 import browser from '../util/browser';
 import {isWorker} from '../util/util';
 
@@ -80,13 +80,13 @@ export const downloadRTLTextPlugin = function() {
     pluginStatus = status.loading;
     sendPluginStateToWorker();
     if (pluginURL) {
-        getArrayBuffer({url: pluginURL}, (error) => {
-            if (error) {
-                triggerPluginCompletionEvent(error);
-            } else {
-                pluginStatus = status.loaded;
-                sendPluginStateToWorker();
-            }
+        const request = getArrayBufferNew({url: pluginURL});
+
+        request.response.then(() => {
+            pluginStatus = status.loaded;
+            sendPluginStateToWorker();
+        }).catch(err => {
+            triggerPluginCompletionEvent(err);
         });
     }
 };
