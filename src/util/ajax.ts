@@ -1,4 +1,4 @@
-import {extend, warnOnce, isWorker, arrayBufferToImageBitmap, arrayBufferToImage} from './util';
+import {extend, isWorker, arrayBufferToImageBitmap, arrayBufferToImage} from './util';
 import config from './config';
 import webpSupported from './webp_supported';
 
@@ -130,102 +130,114 @@ export const getReferrer = isWorker() ?
 // via a file:// URL.
 const isFileURL = url => /^file:/.test(url) || (/^file:/.test(getReferrer()) && !/^\w+:/.test(url));
 
-function makeFetchRequest(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    const controller = new AbortController();
-    const request = new Request(requestParameters.url, {
-        method: requestParameters.method || 'GET',
-        body: requestParameters.body,
-        credentials: requestParameters.credentials,
-        headers: requestParameters.headers,
-        referrer: getReferrer(),
-        signal: controller.signal
-    });
-    let complete = false;
-    let aborted = false;
+type MapLibreRequestParameters = RequestInit & { url: string };
+enum MapLibreRequestDataType {
+    'string' = 'string',
+    'json' = 'json',
+    'arrayBuffer' = 'arrayBuffer'
+}
+export type MapLibreRequest<T> = {response: Promise<T>} & Cancelable;
+export type MapLibreResponse<T> = {
+    data: T;
+    cacheControl?: string;
+    expires?: string;
+}
 
-    if (requestParameters.type === 'json') {
+function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
+    const abortController = new AbortController();
+
+    const request = new Request(requestParameters.url, extend({}, requestParameters, {
+        referrer: getReferrer(),
+        signal: abortController.signal
+    }));
+
+    if (requestDataType === 'json') {
         request.headers.set('Accept', 'application/json');
     }
 
-    const validateOrFetch = () => {
-        if (aborted) return;
+    return {
+        response: (async (): Promise<MapLibreResponse<T>> => {
+            try {
+                const response = await fetch(request);
 
-        fetch(request).then(response => {
-            if (response.ok) {
-                return finishRequest(response);
+                if (response.ok) {
+                    const data: T = await (requestDataType === 'arrayBuffer' ? response.arrayBuffer() : requestDataType === 'json' ? response.json() : response.text());
 
-            } else {
-                return response.blob().then(body => callback(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
+                    return {
+                        data,
+                        cacheControl: response.headers.get('Cache-Control'),
+                        expires: response.headers.get('Expires')
+                    };
+
+                } else {
+                    throw new AJAXError(response.status, response.statusText, requestParameters.url, await response.blob());
+                }
+            } catch (err) {
+                if (err.code === 20) return;
+
+                if (err instanceof AJAXError) {
+                    throw err;
+                } else {
+                    throw new Error(err.message);
+                }
             }
-        }).catch(error => {
-            if (error.code === 20) {
-                // silence expected AbortError
-                return;
-            }
-            callback(new Error(error.message));
-        });
+        })(),
+
+        cancel: () => abortController.abort()
     };
-
-    const finishRequest = (response) => {
-        (
-            requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
-                requestParameters.type === 'json' ? response.json() :
-                    response.text()
-        ).then(result => {
-            if (aborted) return;
-            complete = true;
-
-            callback(null, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
-        }).catch(err => {
-            if (!aborted) callback(new Error(err.message));
-        });
-    };
-
-    validateOrFetch();
-
-    return {cancel: () => {
-        aborted = true;
-        if (!complete) controller.abort();
-    }};
 }
 
-function makeXMLHttpRequest(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
+function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
     const xhr: XMLHttpRequest = new XMLHttpRequest();
-
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
-    if (requestParameters.type === 'arrayBuffer') {
+
+    if (requestDataType === 'arrayBuffer') {
         xhr.responseType = 'arraybuffer';
     }
+
     for (const k in requestParameters.headers) {
         xhr.setRequestHeader(k, requestParameters.headers[k]);
     }
-    if (requestParameters.type === 'json') {
+
+    if (requestDataType === 'json') {
         xhr.responseType = 'text';
         xhr.setRequestHeader('Accept', 'application/json');
     }
+
     xhr.withCredentials = requestParameters.credentials === 'include';
-    xhr.onerror = () => {
-        callback(new Error(xhr.statusText));
-    };
-    xhr.onload = () => {
-        if (((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) && xhr.response !== null) {
-            let data: unknown = xhr.response;
-            if (requestParameters.type === 'json') {
-                // We're manually parsing JSON here to get better error messages.
-                try {
-                    data = JSON.parse(xhr.response);
-                } catch (err) {
-                    return callback(err);
+
+    xhr.send(requestParameters.body?.toString());
+
+    return {
+        response: new Promise<MapLibreResponse<T>>((res, rej) => {
+            xhr.onload = () => {
+                if (((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) && xhr.response !== null) {
+                    let data: T = xhr.response;
+
+                    if (requestDataType === 'json') {
+                        try {
+                            data = JSON.parse(xhr.response);
+                        } catch (err) {
+                            return rej(err);
+                        }
+                    }
+
+                    res({
+                        data,
+                        cacheControl: xhr.getResponseHeader('Cache-Control'),
+                        expires: xhr.getResponseHeader('Expires')
+                    });
+                } else {
+                    const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
+                    rej(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
                 }
-            }
-            callback(null, data, xhr.getResponseHeader('Cache-Control'), xhr.getResponseHeader('Expires'));
-        } else {
-            const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
-            callback(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
-        }
+            };
+
+            xhr.onerror = rej;
+        }),
+
+        cancel: () => xhr.abort()
     };
-    xhr.send(requestParameters.body);
-    return {cancel: () => xhr.abort()};
 }
 
 export const makeRequest = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
@@ -236,26 +248,61 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
     //   some versions (see https://bugs.webkit.org/show_bug.cgi?id=174980#c2)
     // - Requests for resources with the file:// URI scheme don't work with the Fetch API either. In
     //   this case we unconditionally use XHR on the current thread since referrers don't matter.
+
+    function makeFetchRequestTmpWrapper(requestParameters, callback) {
+        const request = makeFetchRequest(requestParameters, requestParameters.type);
+        request.response.then(response => {
+            callback(null, response.data, response.cacheControl, response.expires);
+        })
+            .catch(err => callback(err));
+        return request;
+    }
+
+    function makeXMLHttpRequestTmpWrapper(requestParameters, callback) {
+        const request = makeXMLHttpRequest(requestParameters, requestParameters.type);
+        request.response.then(response => {
+            callback(null, response.data, response.cacheControl, response.expires);
+        })
+            .catch(err => callback(err));
+        return request;
+    }
+
+    // if the url does not start with `http[s]:` or `file:`
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
+        // and if the request made from inside a worker
         if (isWorker() && (self as any).worker && (self as any).worker.actor) {
+            // ask the main thread to make the request from there
             return (self as any).worker.actor.send('getResource', requestParameters, callback);
         }
+
+        // if it's not a worker
         if (!isWorker()) {
+            // check the protocol, and if there exists a custom handler for the protocol, then execute the custom
+            // handler. Otherwise, make a fetch request
             const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
-            const action = config.REGISTERED_PROTOCOLS[protocol] || makeFetchRequest;
+            const action = config.REGISTERED_PROTOCOLS[protocol] || makeFetchRequestTmpWrapper;
             return action(requestParameters, callback);
         }
     }
+
+    // if the protocol is not `file://`
     if (!isFileURL(requestParameters.url)) {
+        // and if Fetch API is supported by the target environment
         if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
-            return makeFetchRequest(requestParameters, callback);
+            // then make a fetch request
+            return makeFetchRequestTmpWrapper(requestParameters, callback);
         }
+
+        // if the function is called from a worker
         if (isWorker() && (self as any).worker && (self as any).worker.actor) {
+            // ask the main thread to make the request
             const queueOnMainThread = true;
             return (self as any).worker.actor.send('getResource', requestParameters, callback, undefined, queueOnMainThread);
         }
     }
-    return makeXMLHttpRequest(requestParameters, callback);
+
+    // fallback to XMLHttpRequest
+    return makeXMLHttpRequestTmpWrapper(requestParameters, callback);
 };
 
 export const getJSON = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {

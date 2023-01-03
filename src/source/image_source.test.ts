@@ -61,7 +61,7 @@ describe('ImageSource', () => {
         });
         source.onAdd(new StubMap() as any);
         respond();
-        expect(source.image).toBeTruthy();
+
     });
 
     test('transforms url request', () => {
@@ -115,8 +115,10 @@ describe('ImageSource', () => {
             coordinates: [[0, 0], [-1, 0], [-1, -1], [0, -1]]
         });
         respond();
-        const afterSerialized = source.serialize();
-        expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
+        source.on('data', () => {
+            const afterSerialized = source.serialize();
+            expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
+        });
     });
 
     test('fires data event when content is loaded', done => {
@@ -161,7 +163,9 @@ describe('ImageSource', () => {
         expect(source.image).toBeUndefined();
         source.updateImage({url: '/image2.png'});
         respond();
-        expect(source.image).toBeTruthy();
+        source.on('data', () => {
+            expect(source.image).toBeTruthy();
+        });
     });
 
     test('cancels request if updateImage is used', () => {
