@@ -4,7 +4,7 @@ type Config = {
 };
 
 const config: Config = {
-    MAX_PARALLEL_IMAGE_REQUESTS: 16,
+    MAX_PARALLEL_IMAGE_REQUESTS: 2,
     REGISTERED_PROTOCOLS: {},
 };
 
