@@ -143,38 +143,16 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
     let complete = false;
     let aborted = false;
 
-    const cacheIgnoringSearch = false;
-
     if (requestParameters.type === 'json') {
         request.headers.set('Accept', 'application/json');
     }
 
-    const validateOrFetch = (err, cachedResponse?, responseIsFresh?) => {
+    const validateOrFetch = () => {
         if (aborted) return;
-
-        if (err) {
-            // Do fetch in case of cache error.
-            // HTTP pages in Edge trigger a security error that can be ignored.
-            if (err.message !== 'SecurityError') {
-                warnOnce(err);
-            }
-        }
-
-        if (cachedResponse && responseIsFresh) {
-            return finishRequest(cachedResponse);
-        }
-
-        if (cachedResponse) {
-            // We can't do revalidation with 'If-None-Match' because then the
-            // request doesn't have simple cors headers.
-        }
-
-        const requestTime = Date.now();
 
         fetch(request).then(response => {
             if (response.ok) {
-                const cacheableResponse = cacheIgnoringSearch ? response.clone() : null;
-                return finishRequest(response, cacheableResponse, requestTime);
+                return finishRequest(response);
 
             } else {
                 return response.blob().then(body => callback(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
@@ -188,33 +166,22 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         });
     };
 
-    const finishRequest = (response, cacheableResponse?, requestTime?) => {
+    const finishRequest = (response) => {
         (
             requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
                 requestParameters.type === 'json' ? response.json() :
                     response.text()
         ).then(result => {
             if (aborted) return;
-            if (cacheableResponse && requestTime) {
-                // The response needs to be inserted into the cache after it has completely loaded.
-                // Until it is fully loaded there is a chance it will be aborted. Aborting while
-                // reading the body can cause the cache insertion to error. We could catch this error
-                // in most browsers but in Firefox it seems to sometimes crash the tab. Adding
-                // it to the cache here avoids that error.
-                // cachePut(request, cacheableResponse, requestTime);
-            }
             complete = true;
+
             callback(null, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
         }).catch(err => {
             if (!aborted) callback(new Error(err.message));
         });
     };
 
-    if (cacheIgnoringSearch) {
-        // cacheGet(request, validateOrFetch);
-    } else {
-        validateOrFetch(null, null);
-    }
+    validateOrFetch();
 
     return {cancel: () => {
         aborted = true;
