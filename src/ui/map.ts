@@ -1950,7 +1950,13 @@ class Map extends Camera {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image/)
      */
     loadImage(url: string, callback: GetImageCallback) {
-        getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
+        const request = getImage(this._requestManager.transformRequest(url, ResourceType.Image));
+
+        request.response.then(response => {
+            callback(null, response.data);
+        }).catch(err => {
+            callback(err);
+        });
     }
 
     /**

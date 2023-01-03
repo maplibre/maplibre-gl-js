@@ -1,6 +1,6 @@
 import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import {getImage, ResourceType} from '../util/ajax';
+import {getImage, MapLibreRequest, MapLibreResponse, ResourceType} from '../util/ajax';
 import EXTENT from '../data/extent';
 import {RasterBoundsArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
@@ -82,7 +82,7 @@ class ImageSource extends Evented implements Source {
     boundsBuffer: VertexBuffer;
     boundsSegments: SegmentVector;
     _loaded: boolean;
-    _request: Cancelable;
+    _request: MapLibreRequest<MapLibreResponse<HTMLImageElement | ImageBitmap>>;
 
     /**
      * @private
@@ -111,22 +111,24 @@ class ImageSource extends Evented implements Source {
 
         this.url = this.options.url;
 
-        this._request = getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), (err, image) => {
+        this._request = getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image));
+
+        this._request.response.then(response => {
             this._request = null;
             this._loaded = true;
 
-            if (err) {
-                this.fire(new ErrorEvent(err));
-            } else if (image) {
-                this.image = image;
-                if (newCoordinates) {
-                    this.coordinates = newCoordinates;
-                }
-                if (successCallback) {
-                    successCallback();
-                }
-                this._finishLoading();
+            this.image = response.data;
+            if (newCoordinates) {
+                this.coordinates = newCoordinates;
             }
+            if (successCallback) {
+                successCallback();
+            }
+            this._finishLoading();
+        }).catch(err => {
+            this._request = null;
+            this._loaded = true;
+            this.fire(new ErrorEvent(err));
         });
     }
 

@@ -38,7 +38,13 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        tile.request = getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), imageLoaded.bind(this));
+        tile.request = getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile));
+
+        tile.request.response.then((response) => {
+            imageLoaded.bind(this)(null, response.data);
+        }).catch(err => {
+            imageLoaded.bind(this)(err, null);
+        });
 
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
         function imageLoaded(err, img) {

@@ -286,16 +286,6 @@ export function makeRequest <T>(requestParameters: MapLibreRequestParameters, re
     return makeXMLHttpRequest(requestParameters, requestDataType);
 }
 
-function makeRequestTmpAdapter(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    const request = makeRequest(requestParameters, MapLibreRequestDataType[requestParameters.type]);
-    request.response.then(response => {
-        callback(null, response.data, response.cacheControl, response.expires);
-    }).catch(err => {
-        callback(err);
-    });
-    return request;
-}
-
 function sameOrigin(url) {
     const a: HTMLAnchorElement = window.document.createElement('a');
     a.href = url;
@@ -313,13 +303,6 @@ function arrayBufferToCanvasImageSource(data: ArrayBuffer, callback: Callback<Ca
     }
 }
 
-let imageQueue, numImageRequests;
-export const resetImageRequestQueue = () => {
-    imageQueue = [];
-    numImageRequests = 0;
-};
-resetImageRequestQueue();
-
 export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
 
 export function getJSON<T = Record<string, unknown> | unknown[]>(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<T>> {
@@ -330,73 +313,40 @@ export function getArrayBuffer(requestParameters: RequestParameters): MapLibreRe
     return makeRequest(requestParameters, MapLibreRequestDataType.arrayBuffer);
 }
 
-export const getImage = function(
-    requestParameters: RequestParameters,
-    callback: GetImageCallback
-): Cancelable {
+export function getImage(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<HTMLImageElement | ImageBitmap>> {
     if (webpSupported.supported) {
-        if (!requestParameters.headers) {
-            requestParameters.headers = {};
-        }
+        if (!requestParameters.headers) requestParameters.headers = {};
         requestParameters.headers.accept = 'image/webp,*/*';
     }
 
-    // limit concurrent image loads to help with raster sources performance on big screens
-    if (numImageRequests >= config.MAX_PARALLEL_IMAGE_REQUESTS) {
-        const queued = {
-            requestParameters,
-            callback,
-            cancelled: false,
-            cancel() { this.cancelled = true; }
-        };
-        imageQueue.push(queued);
-        return queued;
-    }
-    numImageRequests++;
-
-    let advanced = false;
-    const advanceImageRequestQueue = () => {
-        if (advanced) return;
-        advanced = true;
-        numImageRequests--;
-
-        while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) { // eslint-disable-line
-            const request = imageQueue.shift();
-            const {requestParameters, callback, cancelled} = request;
-            if (!cancelled) {
-                request.cancel = getImage(requestParameters, callback).cancel;
-            }
-        }
-    };
-
-    // request the image with XHR to work around caching issues
-    // see https://github.com/mapbox/mapbox-gl-js/issues/1470
     const request = getArrayBuffer(requestParameters);
 
-    request.response.then((response) => {
-        advanceImageRequestQueue();
-
-        const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
-            if (imgErr != null) {
-                callback(imgErr);
-            } else if (imgResult != null) {
-                callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl: response.cacheControl, expires: response.expires});
-            }
-        };
-
-        arrayBufferToCanvasImageSource(response.data, decoratedCallback);
-    }).catch(err => {
-        advanceImageRequestQueue();
-        callback(err);
-    });
-
     return {
-        cancel: () => {
-            request.cancel();
-            advanceImageRequestQueue();
-        }
+        response: (async () => {
+            const response = await request.response;
+
+            const image = await new Promise<HTMLImageElement | ImageBitmap>((res, rej) => {
+                function decoratedCallback(err, result) {
+                    if (err) {
+                        rej(err);
+                    } else {
+                        res(result);
+                    }
+                }
+
+                arrayBufferToCanvasImageSource(response.data, decoratedCallback);
+            });
+
+            return {
+                data: image,
+                cacheControl: response.cacheControl,
+                expires: response.expires
+            };
+        })(),
+
+        cancel: request.cancel
     };
-};
+}
 
 export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVideoElement>): Cancelable {
     const video: HTMLVideoElement = window.document.createElement('video');

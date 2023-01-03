@@ -1,4 +1,4 @@
-import {getJSON, getImage, ResourceType} from '../util/ajax';
+import {getJSON, ResourceType, getImage} from '../util/ajax';
 
 import browser from '../util/browser';
 import {RGBAImage} from '../util/image';
@@ -43,15 +43,21 @@ export default function loadSprite(
             maybeComplete();
         });
 
+        const imageRequest = getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage));
+        const newImageRequestsLength = imageRequests.push(imageRequest);
+
         // eslint-disable-next-line no-loop-func
-        const newImageRequestsLength = imageRequests.push(getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage), (err, img) => {
+        imageRequest.response.then((response) => {
             imageRequests.splice(newImageRequestsLength, 1);
             if (!error) {
-                error = err;
-                imagesMap[id] = img;
+                imagesMap[id] = response.data;
                 maybeComplete();
             }
-        }));
+            // eslint-disable-next-line no-loop-func
+        }).catch(err => {
+            error = err;
+            maybeComplete();
+        });
     }
 
     function maybeComplete() {
