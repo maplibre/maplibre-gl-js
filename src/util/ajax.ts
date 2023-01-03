@@ -307,6 +307,10 @@ export const getArrayBuffer = function(
     return makeRequestTmpAdapter(extend(requestParameters, {type: 'arrayBuffer'}), callback);
 };
 
+export function getArrayBufferNew(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<ArrayBuffer>> {
+    return makeRequest(requestParameters, MapLibreRequestDataType.arrayBuffer);
+}
+
 export const postData = function(requestParameters: RequestParameters, callback: ResponseCallback<string>): Cancelable {
     return makeRequestTmpAdapter(extend(requestParameters, {method: 'POST'}), callback);
 };
@@ -378,22 +382,23 @@ export const getImage = function(
 
     // request the image with XHR to work around caching issues
     // see https://github.com/mapbox/mapbox-gl-js/issues/1470
-    const request = getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
+    const request = getArrayBufferNew(requestParameters);
 
+    request.response.then((response) => {
         advanceImageRequestQueue();
 
-        if (err) {
-            callback(err);
-        } else if (data) {
-            const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
-                if (imgErr != null) {
-                    callback(imgErr);
-                } else if (imgResult != null) {
-                    callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
-                }
-            };
-            arrayBufferToCanvasImageSource(data, decoratedCallback);
-        }
+        const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
+            if (imgErr != null) {
+                callback(imgErr);
+            } else if (imgResult != null) {
+                callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl: response.cacheControl, expires: response.expires});
+            }
+        };
+
+        arrayBufferToCanvasImageSource(response.data, decoratedCallback);
+    }).catch(err => {
+        advanceImageRequestQueue();
+        callback(err);
     });
 
     return {
