@@ -130,8 +130,8 @@ export const getReferrer = isWorker() ?
 // via a file:// URL.
 const isFileURL = url => /^file:/.test(url) || (/^file:/.test(getReferrer()) && !/^\w+:/.test(url));
 
-type MapLibreRequestParameters = RequestInit & { url: string };
-enum MapLibreRequestDataType {
+export type MapLibreRequestParameters = RequestInit & { url: string };
+export enum MapLibreRequestDataType {
     'string' = 'string',
     'json' = 'json',
     'arrayBuffer' = 'arrayBuffer'
@@ -187,7 +187,7 @@ function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters, reque
     };
 }
 
-function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
+function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
     const xhr: XMLHttpRequest = new XMLHttpRequest();
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
 
@@ -240,7 +240,7 @@ function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, req
     };
 }
 
-export const makeRequest = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
+export function makeRequest <T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
     // We're trying to use the Fetch API if possible. However, in some situations we can't use it:
     // - IE11 doesn't support it at all. In this case, we dispatch the request to the main thread so
     //   that we can get an accruate referrer header.
@@ -249,30 +249,12 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
     // - Requests for resources with the file:// URI scheme don't work with the Fetch API either. In
     //   this case we unconditionally use XHR on the current thread since referrers don't matter.
 
-    function makeFetchRequestTmpWrapper(requestParameters, callback) {
-        const request = makeFetchRequest(requestParameters, requestParameters.type);
-        request.response.then(response => {
-            callback(null, response.data, response.cacheControl, response.expires);
-        })
-            .catch(err => callback(err));
-        return request;
-    }
-
-    function makeXMLHttpRequestTmpWrapper(requestParameters, callback) {
-        const request = makeXMLHttpRequest(requestParameters, requestParameters.type);
-        request.response.then(response => {
-            callback(null, response.data, response.cacheControl, response.expires);
-        })
-            .catch(err => callback(err));
-        return request;
-    }
-
     // if the url does not start with `http[s]:` or `file:`
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
         // and if the request made from inside a worker
         if (isWorker() && (self as any).worker && (self as any).worker.actor) {
             // ask the main thread to make the request from there
-            return (self as any).worker.actor.send('getResource', requestParameters, callback);
+            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
         }
 
         // if it's not a worker
@@ -280,8 +262,8 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
             // check the protocol, and if there exists a custom handler for the protocol, then execute the custom
             // handler. Otherwise, make a fetch request
             const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
-            const action = config.REGISTERED_PROTOCOLS[protocol] || makeFetchRequestTmpWrapper;
-            return action(requestParameters, callback);
+            const action = config.REGISTERED_PROTOCOLS[protocol] || makeFetchRequest;
+            return action(requestParameters, requestDataType);
         }
     }
 
@@ -290,34 +272,43 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
         // and if Fetch API is supported by the target environment
         if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
             // then make a fetch request
-            return makeFetchRequestTmpWrapper(requestParameters, callback);
+            return makeFetchRequest(requestParameters, requestDataType);
         }
 
         // if the function is called from a worker
         if (isWorker() && (self as any).worker && (self as any).worker.actor) {
             // ask the main thread to make the request
-            const queueOnMainThread = true;
-            return (self as any).worker.actor.send('getResource', requestParameters, callback, undefined, queueOnMainThread);
+            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
         }
     }
 
     // fallback to XMLHttpRequest
-    return makeXMLHttpRequestTmpWrapper(requestParameters, callback);
-};
+    return makeXMLHttpRequest(requestParameters, requestDataType);
+}
+
+function makeRequestTmpAdapter(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
+    const request = makeRequest(requestParameters, MapLibreRequestDataType[requestParameters.type]);
+    request.response.then(response => {
+        callback(null, response.data, response.cacheControl, response.expires);
+    }).catch(err => {
+        callback(err);
+    });
+    return request;
+}
 
 export const getJSON = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    return makeRequest(extend(requestParameters, {type: 'json'}), callback);
+    return makeRequestTmpAdapter(extend(requestParameters, {type: 'json'}), callback);
 };
 
 export const getArrayBuffer = function(
     requestParameters: RequestParameters,
     callback: ResponseCallback<ArrayBuffer>
 ): Cancelable {
-    return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), callback);
+    return makeRequestTmpAdapter(extend(requestParameters, {type: 'arrayBuffer'}), callback);
 };
 
 export const postData = function(requestParameters: RequestParameters, callback: ResponseCallback<string>): Cancelable {
-    return makeRequest(extend(requestParameters, {method: 'POST'}), callback);
+    return makeRequestTmpAdapter(extend(requestParameters, {method: 'POST'}), callback);
 };
 
 function sameOrigin(url) {

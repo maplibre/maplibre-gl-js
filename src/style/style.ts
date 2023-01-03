@@ -8,7 +8,14 @@ import Light from './light';
 import LineAtlas from '../render/line_atlas';
 import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
-import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
+import {
+    getJSON,
+    getReferrer,
+    makeRequest,
+    MapLibreRequest, MapLibreRequestDataType,
+    MapLibreRequestParameters, MapLibreResponse,
+    ResourceType
+} from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
@@ -1511,8 +1518,8 @@ class Style extends Evented {
         }
     }
 
-    getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-        return makeRequest(params, callback);
+    getResource<T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
+        return makeRequest(requestParameters, requestDataType);
     }
 
     getGlyphsUrl() {
