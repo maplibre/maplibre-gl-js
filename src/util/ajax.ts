@@ -300,14 +300,7 @@ export function getJSON<T = Record<string, unknown> | unknown[]>(requestParamete
     return makeRequest<T>(requestParameters, MapLibreRequestDataType.json);
 }
 
-export const getArrayBuffer = function(
-    requestParameters: RequestParameters,
-    callback: ResponseCallback<ArrayBuffer>
-): Cancelable {
-    return makeRequestTmpAdapter(extend(requestParameters, {type: 'arrayBuffer'}), callback);
-};
-
-export function getArrayBufferNew(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<ArrayBuffer>> {
+export function getArrayBuffer(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<ArrayBuffer>> {
     return makeRequest(requestParameters, MapLibreRequestDataType.arrayBuffer);
 }
 
@@ -382,7 +375,7 @@ export const getImage = function(
 
     // request the image with XHR to work around caching issues
     // see https://github.com/mapbox/mapbox-gl-js/issues/1470
-    const request = getArrayBufferNew(requestParameters);
+    const request = getArrayBuffer(requestParameters);
 
     request.response.then((response) => {
         advanceImageRequestQueue();

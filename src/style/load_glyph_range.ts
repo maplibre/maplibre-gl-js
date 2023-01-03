@@ -1,4 +1,4 @@
-import {getArrayBufferNew, ResourceType} from '../util/ajax';
+import {getArrayBuffer, ResourceType} from '../util/ajax';
 
 import parseGlyphPBF from './parse_glyph_pbf';
 
@@ -16,7 +16,7 @@ export default function loadGlyphRange(fontstack: string,
     const begin = range * 256;
     const end = begin + 255;
 
-    const request = getArrayBufferNew(requestManager.transformRequest(
+    const request = getArrayBuffer(requestManager.transformRequest(
         urlTemplate.replace('{fontstack}', fontstack).replace('{range}', `${begin}-${end}`),
         ResourceType.Glyphs
     ));

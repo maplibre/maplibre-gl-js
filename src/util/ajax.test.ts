@@ -1,5 +1,5 @@
 import {
-    getArrayBufferNew,
+    getArrayBuffer,
     getJSON,
     postData,
     getImage,
@@ -79,7 +79,7 @@ describe('ajax', () => {
             });
 
             try {
-                const request = getArrayBufferNew({url: ''});
+                const request = getArrayBuffer({url: ''});
                 server.respond();
 
                 const response = await request.response;
@@ -95,7 +95,7 @@ describe('ajax', () => {
                 request.respond(404);
             });
 
-            const request = getArrayBufferNew({url: ''});
+            const request = getArrayBuffer({url: ''});
             server.respond();
 
             await expect(request.response).rejects.toBeInstanceOf(AJAXError);

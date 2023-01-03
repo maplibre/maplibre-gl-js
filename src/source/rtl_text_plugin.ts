@@ -1,5 +1,5 @@
 import {Event, Evented} from '../util/evented';
-import {getArrayBufferNew} from '../util/ajax';
+import {getArrayBuffer} from '../util/ajax';
 import browser from '../util/browser';
 import {isWorker} from '../util/util';
 
@@ -80,7 +80,7 @@ export const downloadRTLTextPlugin = function() {
     pluginStatus = status.loading;
     sendPluginStateToWorker();
     if (pluginURL) {
-        const request = getArrayBufferNew({url: pluginURL});
+        const request = getArrayBuffer({url: pluginURL});
 
         request.response.then(() => {
             pluginStatus = status.loaded;
