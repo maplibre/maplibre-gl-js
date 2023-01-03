@@ -1,6 +1,6 @@
 import {
     getArrayBuffer,
-    getJSON,
+    getJSONNew,
     postData,
     getImage,
     resetImageRequestQueue,
@@ -10,6 +10,7 @@ import config from './config';
 import webpSupported from './webp_supported';
 import {fakeServer, FakeServer} from 'nise';
 import {stubAjaxGetImage} from './test/util';
+import expect from 'expect';
 
 function readAsText(blob) {
     return new Promise((resolve, reject) => {
@@ -46,43 +47,45 @@ describe('ajax', () => {
         server.respond();
     });
 
-    test('getJSON', done => {
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
-        });
-        getJSON({url: ''}, (error, body) => {
-            expect(error).toBeFalsy();
-            expect(body).toEqual({foo: 'bar'});
-            done();
-        });
-        server.respond();
-    });
+    describe('getJSON', () => {
+        test('ok', async () => {
+            server.respondWith(request => {
+                request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
+            });
 
-    test('getJSON, invalid syntax', done => {
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
-        });
-        getJSON({url: ''}, (error) => {
-            expect(error).toBeTruthy();
-            done();
-        });
-        server.respond();
-    });
+            try {
+                const request = getJSONNew({url: ''});
+                server.respond();
 
-    test('getJSON, 404', done => {
-        server.respondWith(request => {
-            request.respond(404, undefined, '404 Not Found');
+                const response = await request.response;
+                expect(response.data).toEqual({foo: 'bar'});
+            } catch (err) {
+                // should never execute
+                expect(true).toBe(false);
+            }
         });
-        getJSON({url: 'http://example.com/test.json'}, async (error) => {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.json');
-            expect(body).toBe('404 Not Found');
-            done();
+
+        test('404', async () => {
+            server.respondWith(request => {
+                request.respond(404);
+            });
+
+            const request = getJSONNew({url: ''});
+            server.respond();
+
+            await expect(request.response).rejects.toBeInstanceOf(AJAXError);
         });
-        server.respond();
+
+        test('invalid json', async () => {
+            server.respondWith(request => {
+                request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
+            });
+
+            const request = getJSONNew({url: ''});
+            server.respond();
+
+            await expect(request.response).rejects.toBeInstanceOf(SyntaxError);
+        });
     });
 
     test('postData, 204(no content): no error', done => {
