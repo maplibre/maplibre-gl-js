@@ -6,8 +6,6 @@ import loadTileJSON from './load_tilejson';
 import TileBounds from './tile_bounds';
 import Texture from '../render/texture';
 
-import {cacheEntryPossiblyAdded} from '../util/tile_request_cache';
-
 import type {Source} from './source';
 import type {OverscaledTileID} from './tile_id';
 import type Map from '../ui/map';
@@ -132,8 +130,6 @@ class RasterTileSource extends Evented implements Source {
                 }
 
                 tile.state = 'loaded';
-
-                cacheEntryPossiblyAdded(this.dispatcher);
 
                 callback(null);
             }

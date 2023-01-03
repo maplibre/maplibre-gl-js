@@ -1,6 +1,5 @@
 import {extend, warnOnce, isWorker, arrayBufferToImageBitmap, arrayBufferToImage} from './util';
 import config from './config';
-import {cacheGet, cachePut} from './tile_request_cache';
 import webpSupported from './webp_supported';
 
 import type {Callback} from '../types/callback';
@@ -202,7 +201,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
                 // reading the body can cause the cache insertion to error. We could catch this error
                 // in most browsers but in Firefox it seems to sometimes crash the tab. Adding
                 // it to the cache here avoids that error.
-                cachePut(request, cacheableResponse, requestTime);
+                // cachePut(request, cacheableResponse, requestTime);
             }
             complete = true;
             callback(null, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
@@ -212,7 +211,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
     };
 
     if (cacheIgnoringSearch) {
-        cacheGet(request, validateOrFetch);
+        // cacheGet(request, validateOrFetch);
     } else {
         validateOrFetch(null, null);
     }
