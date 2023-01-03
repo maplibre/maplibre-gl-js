@@ -1,14 +1,19 @@
 ## main
+
+### ✨ Features and improvements
+- *...Add new stuff here...*
+
+### 🐞 Bug fixes
+- *...Add new stuff here...*
+## 3.0.0-pre.3
+
 ### ✨ Features and improvements
 - Add support for multiple `sprite` declarations in one style file ([#1805](https://github.com/maplibre/maplibre-gl-js/pull/1805))
-- *...Add new stuff here...*
-- 
+
 ### 🐞 Bug fixes
 - Fix issue [#1024](https://github.com/maplibre/maplibre-gl-js/pull/1024) - Zoom center not under cursor when terrain is on 
 - Fix errors when running style-spec bin scripts and added missing help. Removed unnecessary script 'gl-style-composite'. ([#1971](https://github.com/maplibre/maplibre-gl-js/pull/1971))
-- *...Add new stuff here...*
 - Fix the `slice` expression type ([#1886](https://github.com/maplibre/maplibre-gl-js/issues/1886))
-- 
 ## 3.0.0-pre.2
 
 ### ✨ Features and improvements
