@@ -1,7 +1,6 @@
 import {
     getArrayBuffer,
     getJSON,
-    postData,
     getImage,
     resetImageRequestQueue,
     AJAXError
@@ -100,17 +99,6 @@ describe('ajax', () => {
 
             await expect(request.response).rejects.toBeInstanceOf(AJAXError);
         });
-    });
-
-    test('postData, 204(no content): no error', done => {
-        server.respondWith(request => {
-            request.respond(204, undefined, undefined);
-        });
-        postData({url: 'api.mapbox.com'}, (error) => {
-            expect(error).toBeNull();
-            done();
-        });
-        server.respond();
     });
 
     test('getImage respects maxParallelImageRequests', done => {

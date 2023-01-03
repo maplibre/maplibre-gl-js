@@ -296,18 +296,6 @@ function makeRequestTmpAdapter(requestParameters: RequestParameters, callback: R
     return request;
 }
 
-export function getJSON<T = Record<string, unknown> | unknown[]>(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<T>> {
-    return makeRequest<T>(requestParameters, MapLibreRequestDataType.json);
-}
-
-export function getArrayBuffer(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<ArrayBuffer>> {
-    return makeRequest(requestParameters, MapLibreRequestDataType.arrayBuffer);
-}
-
-export const postData = function(requestParameters: RequestParameters, callback: ResponseCallback<string>): Cancelable {
-    return makeRequestTmpAdapter(extend(requestParameters, {method: 'POST'}), callback);
-};
-
 function sameOrigin(url) {
     const a: HTMLAnchorElement = window.document.createElement('a');
     a.href = url;
@@ -333,6 +321,14 @@ export const resetImageRequestQueue = () => {
 resetImageRequestQueue();
 
 export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
+
+export function getJSON<T = Record<string, unknown> | unknown[]>(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<T>> {
+    return makeRequest<T>(requestParameters, MapLibreRequestDataType.json);
+}
+
+export function getArrayBuffer(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<ArrayBuffer>> {
+    return makeRequest(requestParameters, MapLibreRequestDataType.arrayBuffer);
+}
 
 export const getImage = function(
     requestParameters: RequestParameters,
