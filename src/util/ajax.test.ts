@@ -1,5 +1,5 @@
 import {
-    getArrayBuffer,
+    getArrayBufferNew,
     getJSON,
     postData,
     getImage,
@@ -29,22 +29,6 @@ describe('ajax', () => {
     });
     afterEach(() => {
         server.restore();
-    });
-
-    test('getArrayBuffer, 404', done => {
-        server.respondWith(request => {
-            request.respond(404, undefined, '404 Not Found');
-        });
-        getArrayBuffer({url: 'http://example.com/test.bin'}, async (error) => {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.bin');
-            expect(body).toBe('404 Not Found');
-            done();
-        });
-        server.respond();
     });
 
     describe('getJSON', () => {
@@ -85,6 +69,36 @@ describe('ajax', () => {
             server.respond();
 
             await expect(request.response).rejects.toBeInstanceOf(SyntaxError);
+        });
+    });
+
+    describe('getArrayBuffer', () => {
+        test('ok', async () => {
+            server.respondWith(request => {
+                request.respond(200, undefined, new ArrayBuffer(0)[Symbol.toStringTag]);
+            });
+
+            try {
+                const request = getArrayBufferNew({url: ''});
+                server.respond();
+
+                const response = await request.response;
+                expect(response.data).toBeInstanceOf(ArrayBuffer);
+            } catch (err) {
+                // should never execute
+                expect(true).toBe(false);
+            }
+        });
+
+        test('404', async () => {
+            server.respondWith(request => {
+                request.respond(404);
+            });
+
+            const request = getArrayBufferNew({url: ''});
+            server.respond();
+
+            await expect(request.response).rejects.toBeInstanceOf(AJAXError);
         });
     });
 
