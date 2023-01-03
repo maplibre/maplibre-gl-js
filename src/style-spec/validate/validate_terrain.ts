@@ -1,11 +1,10 @@
 import ValidationError from '../error/validation_error';
 import getType from '../util/get_type';
-import validate from './validate';
 import type {StyleSpecification, TerrainSpecification} from '../types.g';
 import v8 from '../reference/v8.json' assert {type: 'json'};
 
 export default function validateTerrain(
-    options: {value: TerrainSpecification; styleSpec: typeof v8; style: StyleSpecification}
+    options: {value: TerrainSpecification; styleSpec: typeof v8; style: StyleSpecification; validateSpec: Function}
 ): ValidationError[] {
 
     const terrain = options.value;
@@ -25,10 +24,11 @@ export default function validateTerrain(
 
     for (const key in terrain) {
         if (terrainSpec[key]) {
-            errors = errors.concat(validate({
+            errors = errors.concat(options.validateSpec({
                 key,
                 value: terrain[key],
                 valueSpec: terrainSpec[key],
+                validateSpec: options.validateSpec,
                 style,
                 styleSpec
             }));

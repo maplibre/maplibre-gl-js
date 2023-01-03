@@ -1,7 +1,5 @@
-
 import ValidationError from '../error/validation_error';
 import getType from '../util/get_type';
-import validate from './validate';
 
 export default function validateLight(options) {
     const light = options.value;
@@ -23,18 +21,20 @@ export default function validateLight(options) {
         const transitionMatch = key.match(/^(.*)-transition$/);
 
         if (transitionMatch && lightSpec[transitionMatch[1]] && lightSpec[transitionMatch[1]].transition) {
-            errors = errors.concat(validate({
+            errors = errors.concat(options.validateSpec({
                 key,
                 value: light[key],
                 valueSpec: styleSpec.transition,
+                validateSpec: options.validateSpec,
                 style,
                 styleSpec
             }));
         } else if (lightSpec[key]) {
-            errors = errors.concat(validate({
+            errors = errors.concat(options.validateSpec({
                 key,
                 value: light[key],
                 valueSpec: lightSpec[key],
+                validateSpec: options.validateSpec,
                 style,
                 styleSpec
             }));

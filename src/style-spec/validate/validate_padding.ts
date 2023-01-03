@@ -1,6 +1,5 @@
 import ValidationError from '../error/validation_error';
 import getType from '../util/get_type';
-import validate from './validate';
 import validateNumber from './validate_number';
 
 export default function validatePadding(options) {
@@ -19,9 +18,10 @@ export default function validatePadding(options) {
 
         let errors = [];
         for (let i = 0; i < value.length; i++) {
-            errors = errors.concat(validate({
+            errors = errors.concat(options.validateSpec({
                 key: `${key}[${i}]`,
                 value: value[i],
+                validateSpec: options.validateSpec,
                 valueSpec: arrayElementSpec
             }));
         }
