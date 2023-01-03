@@ -1,4 +1,4 @@
-import {getJSONNew} from '../util/ajax';
+import {getJSON} from '../util/ajax';
 
 import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';
@@ -224,7 +224,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
         // ie: /foo/bar.json or http://example.com/bar.json
         // but not ../foo/bar.json
         if (params.request) {
-            const request = getJSONNew<GeoJSON>(params.request);
+            const request = getJSON<GeoJSON>(params.request);
 
             request.response.then((response) => {
                 this._dataUpdateable = isUpdateableGeoJSON(response.data, promoteId) ? toUpdateable(response.data, promoteId) : undefined;

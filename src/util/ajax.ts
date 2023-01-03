@@ -296,11 +296,7 @@ function makeRequestTmpAdapter(requestParameters: RequestParameters, callback: R
     return request;
 }
 
-export const getJSON = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    return makeRequestTmpAdapter(extend(requestParameters, {type: 'json'}), callback);
-};
-
-export function getJSONNew<T = Record<string, unknown> | unknown[]>(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<T>> {
+export function getJSON<T = Record<string, unknown> | unknown[]>(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<T>> {
     return makeRequest<T>(requestParameters, MapLibreRequestDataType.json);
 }
 

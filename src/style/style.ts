@@ -9,7 +9,7 @@ import LineAtlas from '../render/line_atlas';
 import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
 import {
-    getJSONNew,
+    getJSON,
     getReferrer,
     makeRequest,
     MapLibreRequest, MapLibreRequestDataType,
@@ -275,7 +275,7 @@ class Style extends Evented {
         options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
 
-        this._request = getJSONNew<StyleSpecification>(this.map._requestManager.transformRequest(url, ResourceType.Style));
+        this._request = getJSON<StyleSpecification>(this.map._requestManager.transformRequest(url, ResourceType.Style));
 
         this._request.response.then((response) => {
             this._load(response.data, options, previousStyle);

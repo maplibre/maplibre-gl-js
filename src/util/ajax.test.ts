@@ -1,6 +1,6 @@
 import {
     getArrayBuffer,
-    getJSONNew,
+    getJSON,
     postData,
     getImage,
     resetImageRequestQueue,
@@ -54,7 +54,7 @@ describe('ajax', () => {
             });
 
             try {
-                const request = getJSONNew({url: ''});
+                const request = getJSON({url: ''});
                 server.respond();
 
                 const response = await request.response;
@@ -70,7 +70,7 @@ describe('ajax', () => {
                 request.respond(404);
             });
 
-            const request = getJSONNew({url: ''});
+            const request = getJSON({url: ''});
             server.respond();
 
             await expect(request.response).rejects.toBeInstanceOf(AJAXError);
@@ -81,7 +81,7 @@ describe('ajax', () => {
                 request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
             });
 
-            const request = getJSONNew({url: ''});
+            const request = getJSON({url: ''});
             server.respond();
 
             await expect(request.response).rejects.toBeInstanceOf(SyntaxError);
