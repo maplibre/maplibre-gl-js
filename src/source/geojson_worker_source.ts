@@ -1,4 +1,4 @@
-import {getJSON} from '../util/ajax';
+import {getJSONNew} from '../util/ajax';
 
 import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';
@@ -22,6 +22,7 @@ import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, GeoJSONFeatureId} from './geojson_source_diff';
+import {GeoJSON} from 'geojson';
 
 export type LoadGeoJSONParameters = {
     request?: RequestParameters;
@@ -223,15 +224,16 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
         // ie: /foo/bar.json or http://example.com/bar.json
         // but not ../foo/bar.json
         if (params.request) {
-            return getJSON(params.request, (
-                error?: Error,
-                data?: any,
-                cacheControl?: string,
-                expires?: string
-            ) => {
-                this._dataUpdateable = isUpdateableGeoJSON(data, promoteId) ? toUpdateable(data, promoteId) : undefined;
-                callback(error, data, cacheControl, expires);
+            const request = getJSONNew<GeoJSON>(params.request);
+
+            request.response.then((response) => {
+                this._dataUpdateable = isUpdateableGeoJSON(response.data, promoteId) ? toUpdateable(response.data, promoteId) : undefined;
+                callback(null, response.data, response.cacheControl, response.expires);
+            }).catch(err => {
+                callback(err);
             });
+
+            return request;
         } else if (typeof params.data === 'string') {
             try {
                 const parsed = JSON.parse(params.data);

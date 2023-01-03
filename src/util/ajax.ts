@@ -300,6 +300,10 @@ export const getJSON = function(requestParameters: RequestParameters, callback: 
     return makeRequestTmpAdapter(extend(requestParameters, {type: 'json'}), callback);
 };
 
+export function getJSONNew<T = Record<string, unknown> | unknown[]>(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<T>> {
+    return makeRequest<T>(requestParameters, MapLibreRequestDataType.json);
+}
+
 export const getArrayBuffer = function(
     requestParameters: RequestParameters,
     callback: ResponseCallback<ArrayBuffer>

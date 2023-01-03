@@ -57,7 +57,6 @@ import type {Callback} from '../types/callback';
 import type EvaluationParameters from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
 import type {Cancelable} from '../types/cancelable';
-import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {
     LayerSpecification,
     FilterSpecification,
