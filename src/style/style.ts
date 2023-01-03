@@ -9,7 +9,7 @@ import LineAtlas from '../render/line_atlas';
 import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
 import {
-    getJSON,
+    getJSONNew,
     getReferrer,
     makeRequest,
     MapLibreRequest, MapLibreRequestDataType,
@@ -169,7 +169,7 @@ class Style extends Evented {
     lineAtlas: LineAtlas;
     light: Light;
 
-    _request: Cancelable;
+    _request: MapLibreRequest<MapLibreResponse<StyleSpecification>>;
     _spriteRequest: Cancelable;
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: any};
@@ -275,20 +275,28 @@ class Style extends Evented {
         options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
 
-        const request = this.map._requestManager.transformRequest(url, ResourceType.Style);
-        this._request = getJSON(request, (error?: Error | null, json?: any | null) => {
+        this._request = getJSONNew<StyleSpecification>(this.map._requestManager.transformRequest(url, ResourceType.Style));
+
+        this._request.response.then((response) => {
+            this._load(response.data, options, previousStyle);
+        }).catch(err => {
+            this.fire(new ErrorEvent(err));
+        }).finally(() => {
             this._request = null;
-            if (error) {
-                this.fire(new ErrorEvent(error));
-            } else if (json) {
-                this._load(json, options, previousStyle);
-            }
         });
+
+        // this._request = getJSON(request, (error?: Error | null, json?: any | null) => {
+        //
+        // });
     }
 
     loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
+        // tmp ignoring the type mismatch. It's safe (for runtime execution) because the rest of the implementation
+        // doesn't rely on the missing in Cancelable "response" field and only cares about the "cancel" method, which is
+        // returned from `browser.frame`
+        // @ts-ignore
         this._request = browser.frame(() => {
             this._request = null;
             options.validate = options.validate !== false;
