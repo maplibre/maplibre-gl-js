@@ -12,7 +12,7 @@
 
 <body>
     <div id="benchmarks"></div>
-    <script src="/bench/benchmarks_view_generated.js"></script>
+    <script src="/test/bench/benchmarks_view_generated.js"></script>
     <script>
         runComparison();
 
@@ -29,7 +29,7 @@
                 }
                 console.log(`Comparing versions: ${versions}`);
                 const versionsScripts = versions.map(v => `https://maplibre.org/maplibre-gl-js/benchmarks/${v}/benchmarks_generated.js`)
-                    .concat('/bench/versions/benchmarks_generated.js');
+                    .concat('/test/bench/versions/benchmarks_generated.js');
                 for (const script of versionsScripts) {
                     await loadScript(script);
                 }
