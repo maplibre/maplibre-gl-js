@@ -2,7 +2,7 @@ import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
-import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
+import {getImage, GetImageCallback, getJSONNew, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
 import Style, {StyleSwapOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
@@ -1519,14 +1519,15 @@ class Map extends Camera {
     _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
-            const request = this._requestManager.transformRequest(url, ResourceType.Style);
-            getJSON(request, (error?: Error | null, json?: any | null) => {
-                if (error) {
-                    this.fire(new ErrorEvent(error));
-                } else if (json) {
-                    this._updateDiff(json, options);
-                }
+
+            const request = getJSONNew<StyleSpecification>(this._requestManager.transformRequest(url, ResourceType.Style));
+
+            request.response.then((response) => {
+                this._updateDiff(response.data, options);
+            }).catch(err => {
+                this.fire(new ErrorEvent(err));
             });
+
         } else if (typeof style === 'object') {
             this._updateDiff(style, options);
         }
