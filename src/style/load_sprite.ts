@@ -1,19 +1,17 @@
 import {getJSON, getImage} from '../util/ajax';
-import {MapLibreResourceType} from '../util/request_manager';
+import {RequestManager} from '../util/request_manager';
 
 import browser from '../util/browser';
 import {RGBAImage} from '../util/image';
-import {coerceSpriteToArray} from '../util/style';
 
+import {coerceSpriteToArray} from '../util/style';
 import type {SpriteSpecification} from '../style-spec/types.g';
 import type {StyleImage} from './style_image';
-import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 
 export default function loadSprite(
     originalSprite: SpriteSpecification,
-    requestManager: RequestManager,
     pixelRatio: number,
     callback: Callback<{[spriteName: string]: {[id: string]: StyleImage}}>
 ): Cancelable {
@@ -28,7 +26,8 @@ export default function loadSprite(
     const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
 
     for (const {id, url} of sprite) {
-        const jsonRequest = getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), MapLibreResourceType.SpriteJSON));
+        const normalizedJsonRequestParameters = {url: new RequestManager().normalizeSpriteURL(url, format, '.json')};
+        const jsonRequest = getJSON(normalizedJsonRequestParameters);
         const newJsonRequestsLength = jsonRequests.push(jsonRequest);
 
         // eslint-disable-next-line no-loop-func
@@ -44,7 +43,8 @@ export default function loadSprite(
             maybeComplete();
         });
 
-        const imageRequest = getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), MapLibreResourceType.SpriteImage));
+        const normalizedImageRequestParameters = {url: new RequestManager().normalizeSpriteURL(url, format, '.png')};
+        const imageRequest = getImage(normalizedImageRequestParameters);
         const newImageRequestsLength = imageRequests.push(imageRequest);
 
         // eslint-disable-next-line no-loop-func

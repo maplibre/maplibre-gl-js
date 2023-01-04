@@ -297,7 +297,7 @@ export function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters
  * @param {MapLibreRequestDataType} requestDataType Request data type
  * @returns {MapLibreRequest<MapLibreResponse>} Promised response and the `cancel` method
  */
-function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
+export function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
     const xhr: XMLHttpRequest = new XMLHttpRequest();
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
 
@@ -363,7 +363,7 @@ function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, req
  * @returns {Promise<ImageBitmap | HTMLImageElement>} A `Promise` that rejects with an `Error` in case it was impossible
  * to build the resulting image or resolves with the resulting image in case of success
  */
-async function arrayBufferToCanvasImageSource(data: ArrayBuffer): Promise<ImageBitmap | HTMLImageElement> {
+export async function arrayBufferToCanvasImageSource(data: ArrayBuffer): Promise<ImageBitmap | HTMLImageElement> {
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
 
     if (typeof createImageBitmap === 'function') {

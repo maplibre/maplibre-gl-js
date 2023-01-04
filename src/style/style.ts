@@ -355,7 +355,7 @@ class Style extends Evented {
     _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined) {
         this.imageManager.setLoaded(false);
 
-        this._spriteRequest = loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
+        this._spriteRequest = loadSprite(sprite, this.map.getPixelRatio(), (err, images) => {
             this._spriteRequest = null;
             if (err) {
                 this.fire(new ErrorEvent(err));
