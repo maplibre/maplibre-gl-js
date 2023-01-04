@@ -14,8 +14,8 @@ import {
     makeRequest,
     MapLibreRequest, MapLibreRequestDataType,
     MapLibreRequestParameters, MapLibreResponse,
-    MapLibreResourceType
 } from '../util/ajax';
+import {MapLibreResourceType} from '../util/request_manager';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';

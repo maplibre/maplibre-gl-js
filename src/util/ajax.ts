@@ -34,6 +34,17 @@ export enum MapLibreRequestDataType {
  * @typedef {MapLibreRequest}
  */
 export type MapLibreRequest<T> = {response: Promise<T>} & Cancelable;
+
+/**
+ * A generic type that represents a MapLibre asynchronous cancelable HTTP request's response.
+ *
+ * Represented by an object containing 3 fields:
+ *  - `data`: the response data
+ *  - `cacheControl`: the value of the response's "Cache-Control" header
+ *  - `expires`: the value of the response's "Expires" header
+ *
+ * @typedef {MapLibreResponse}
+ */
 export type MapLibreResponse<T> = {data: T} & ExpiryData;
 
 /**

@@ -2,7 +2,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 
 import {extend} from '../util/util';
 import EXTENT from '../data/extent';
-import {MapLibreResourceType} from '../util/ajax';
+import {MapLibreResourceType} from '../util/request_manager';
 import browser from '../util/browser';
 
 import type {Source} from './source';

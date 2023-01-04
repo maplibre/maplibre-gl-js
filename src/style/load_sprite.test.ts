@@ -4,15 +4,16 @@ import {RequestManager} from '../util/request_manager';
 import loadSprite from './load_sprite';
 import {fakeXhr} from 'nise';
 import {RGBAImage} from '../util/image';
-import * as util from '../util/util';
+import * as ajax from '../util/ajax';
 
 describe('loadSprite', () => {
-    jest.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation((data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) => {
-        createImageBitmap(new ImageData(1024, 824)).then((imgBitmap) => {
-            callback(null, imgBitmap);
-        }).catch((e) => {
-            callback(new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`));
-        });
+    // @ts-ignore
+    jest.spyOn(ajax, 'arrayBufferToCanvasImageSource').mockImplementation(async (data: ArrayBuffer) => {
+        try {
+            return createImageBitmap(new ImageData(1024, 824));
+        } catch (err) {
+            throw new Error(`Could not load image because of ${err.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
+        }
     });
     global.fetch = null;
 

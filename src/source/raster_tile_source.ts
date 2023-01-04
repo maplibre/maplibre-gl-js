@@ -1,6 +1,7 @@
 import {extend, pick} from '../util/util';
 
-import {getImage, MapLibreResourceType} from '../util/ajax';
+import {getImage} from '../util/ajax';
+import {MapLibreResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import loadTileJSON from './load_tilejson';
 import TileBounds from './tile_bounds';

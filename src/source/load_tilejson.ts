@@ -1,6 +1,7 @@
 import {pick, extend} from '../util/util';
 
-import {getJSON, MapLibreResourceType} from '../util/ajax';
+import {getJSON} from '../util/ajax';
+import {MapLibreResourceType} from '../util/request_manager';
 import browser from '../util/browser';
 
 import type {RequestManager} from '../util/request_manager';

@@ -229,21 +229,21 @@ describe('expiring tiles', () => {
         // it assumes it comes from a new HTTP response, so this is counted
         // as an extra expired tile request
         tile.setExpiryData({
-            expires: justNow
+            expires: justNow.toString()
         });
         expect(tile.getExpiryTimeout()).toBe(1000);
 
         tile.setExpiryData({
-            expires: justNow
+            expires: justNow.toString()
         });
         expect(tile.getExpiryTimeout()).toBe(2000);
         tile.setExpiryData({
-            expires: justNow
+            expires: justNow.toString()
         });
         expect(tile.getExpiryTimeout()).toBe(4000);
 
         tile.setExpiryData({
-            expires: justNow
+            expires: justNow.toString()
         });
         expect(tile.getExpiryTimeout()).toBe(8000);
 
