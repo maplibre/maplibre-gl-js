@@ -3,9 +3,8 @@ import {Evented} from '../util/evented';
 import Transform from '../geo/transform';
 import {extend} from '../util/util';
 import {fakeXhr} from 'nise';
-import {RequestManager} from '../util/request_manager';
+import {MapLibreResourceType, RequestManager} from '../util/request_manager';
 import Dispatcher from '../util/dispatcher';
-import {stubAjaxGetImage} from '../util/test/util';
 
 function createSource(options) {
     options = extend({
@@ -34,7 +33,6 @@ class StubMap extends Evented {
 describe('ImageSource', () => {
     const requests = [];
     fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
-    stubAjaxGetImage(undefined);
     beforeEach(() => {
         global.fetch = null;
     });
@@ -61,7 +59,6 @@ describe('ImageSource', () => {
         });
         source.onAdd(new StubMap() as any);
         respond();
-
     });
 
     test('transforms url request', () => {
@@ -72,7 +69,7 @@ describe('ImageSource', () => {
         respond();
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0]).toBe('/image.png');
-        expect(spy.mock.calls[0][1]).toBe('Image');
+        expect(spy.mock.calls[0][1]).toBe(MapLibreResourceType.Image);
     });
 
     test('updates url from updateImage', () => {
@@ -83,12 +80,12 @@ describe('ImageSource', () => {
         respond();
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0]).toBe('/image.png');
-        expect(spy.mock.calls[0][1]).toBe('Image');
+        expect(spy.mock.calls[0][1]).toBe(MapLibreResourceType.Image);
         source.updateImage({url: '/image2.png'});
         respond();
         expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[1][0]).toBe('/image2.png');
-        expect(spy.mock.calls[1][1]).toBe('Image');
+        expect(spy.mock.calls[1][1]).toBe(MapLibreResourceType.Image);
     });
 
     test('sets coordinates', () => {
@@ -115,8 +112,8 @@ describe('ImageSource', () => {
             coordinates: [[0, 0], [-1, 0], [-1, -1], [0, -1]]
         });
         respond();
+        const afterSerialized = source.serialize();
         source.on('data', () => {
-            const afterSerialized = source.serialize();
             expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
         });
     });
