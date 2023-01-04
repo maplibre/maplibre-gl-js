@@ -1,5 +1,5 @@
-import {makeFetchRequest, makeRequest, makeXMLHttpRequest, MapLibreRequestDataType} from './ajax';
 import * as ajax from './ajax';
+import {makeFetchRequest, makeRequest, makeXMLHttpRequest, MapLibreRequestDataType} from './ajax';
 import fetchMock from 'jest-fetch-mock';
 import {fakeServer, FakeServer} from 'nise';
 
@@ -121,15 +121,17 @@ describe('ajax', () => {
     // });*/
 
     describe('makeRequest', () => {
-        const makeFetchRequestSpy = jest.spyOn(ajax, 'makeFetchRequest');
-        const makeXMLHttpRequestSpy = jest.spyOn(ajax, 'makeXMLHttpRequest');
+        fetchMock.enableMocks();
+
+        beforeEach(() => {
+            fetchMock.resetMocks();
+        });
 
         test('calls some underlying function', async () => {
-            makeRequest({url: ''});
 
-            // expect(makeFetchRequestSpy).toHaveBeenCalledTimes(1);
+            const request = makeRequest({url: ''});
 
-            expect(makeFetchRequestSpy).toHaveBeenCalled();
+            await expect(request.response).resolves.toBe({data: ''});
         });
     });
 
