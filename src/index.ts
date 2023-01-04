@@ -23,8 +23,8 @@ import {setRTLTextPlugin, getRTLTextPluginStatus} from './source/rtl_text_plugin
 import WorkerPool from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {PerformanceUtils} from './util/performance';
-import {AJAXError} from './util/ajax';
-import type {RequestParameters, ResponseCallback} from './util/ajax';
+import {AJAXError, MapLibreRequest, MapLibreRequestDataType, MapLibreResponse} from './util/ajax';
+import type {MapLibreRequestParameters, ResponseCallback} from './util/ajax';
 import type {Cancelable} from './types/cancelable';
 import GeoJSONSource from './source/geojson_source';
 import CanvasSource from './source/canvas_source';
@@ -145,40 +145,58 @@ const exported = {
     workerUrl: '',
 
     /**
-     * Sets a custom load tile function that will be called when using a source that starts with a custom url schema.
-     * The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
-     * The function passed will receive the request parameters and should call the callback with the resulting request,
-     * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
+     * Sets a custom resource loading function that will be called when using a URL that starts with a custom protocol.
+     * The examples below will be triggered when trying to load a resource which URL starts with "custom://" or
+     * "errproto://" respectively.
+     *
+     * The handler function receives 2 arguments: the request parameters and the request data type. It should return
+     * an object containing 2 fields:
+     *  - `response`: a `Promise` that either rejects (presumably in case of an error) or resolves with a value of type
+     *  `MapLibreRequest`
+     *  - `cancel`: a function to cancel the request
      *
      * @function addProtocol
      * @param {string} customProtocol - the protocol to hook, for example 'custom'
-     * @param {Function} loadFn - the function to use when trying to fetch a tile specified by the customProtocol
+     * @param {Function} handler - the function to use when trying to fetch a resource specified by the `customProtocol`
      * @example
-     * // this will fetch a file using the fetch API (this is obviously a non iteresting example...)
-     * maplibre.addProtocol('custom', (params, callback) => {
-            fetch(`https://${params.url.split("://")[1]}`)
-                .then(t => {
-                    if (t.status == 200) {
-                        t.arrayBuffer().then(arr => {
-                            callback(null, arr, null, null);
-                        });
-                    } else {
-                        callback(new Error(`Tile fetch error: ${t.statusText}`));
-                    }
-                })
-                .catch(e => {
-                    callback(new Error(e));
-                });
-            return { cancel: () => { } };
-        });
-     * // the following is an example of a way to return an error when trying to load a tile
-     * maplibre.addProtocol('custom2', (params, callback) => {
-     *      callback(new Error('someErrorMessage'));
-     *      return { cancel: () => { } };
+     * // this will fetch a file using the fetch API
+     * maplibre.addProtocol('custom', (requestParameters, requestDataType) => {
+     *     const abortController = new AbortController();
+     *
+     *     return {
+     *         response: (async () => {
+     *             const response = await fetch(`https://${requestParameters.url.split('://')[1]}`, {signal: abortController.signal});
+     *
+     *             if (response.status === 200) {
+     *                 const arrayBuffer = await response.arrayBuffer();
+     *
+     *                 return {
+     *                     data: arrayBuffer,
+     *                     cacheControl: response.headers['Cache-Control'],
+     *                     expires: response.headers['Expires'],
+     *                 };
+     *             } else {
+     *                 throw new Error(`Resource fetch error: ${response.statusText}`);
+     *             }
+     *         })(),
+     *
+     *         cancel: () => abortController.abort()
+     *     };
+     * });
+     * @example
+     * // the following is an example of a way to return an error when trying to load a resource
+     * maplibre.addProtocol('errproto', (requestParameters, requestDataType) => {
+     *     return {
+     *         response: new Promise<MapLibreResponse<void>>((_res, rej) => {
+     *             rej(new Error('Some error message'));
+     *         }),
+     *
+     *         cancel: () => {}
+     *     };
      * });
      */
-    addProtocol(customProtocol: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
-        config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
+    addProtocol(customProtocol: string, handler: <T>(requestParameters: MapLibreRequestParameters, requestDataType: MapLibreRequestDataType) => MapLibreRequest<MapLibreResponse<T>>) {
+        config.REGISTERED_PROTOCOLS[customProtocol] = handler;
     },
 
     /**
