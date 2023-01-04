@@ -177,18 +177,12 @@ export function getVideo(urls: string[]): MapLibreRequest<MapLibreResponse<HTMLV
  * @param {MapLibreRequestDataType} requestDataType Request data type
  * @returns {MapLibreRequest<MapLibreResponse>} Promised response and the `cancel` method
  */
-export function makeRequest <T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
+export function makeRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
     /*
         See https://github.com/maplibre/maplibre-gl-js/discussions/2004
 
         TL;DR: for the time being, it's still impossible to completely give up on using the XMLHttpRequest API. But
-        that's a point to reconsider in the (hopefully near) future.
-
-        Additionally, the majority of all the existing unit tests use `fakeServer` which mocks the XMLHttpRequest API
-        (and not the Fetch API). On the other hand, there's `nise` that serves the same purpose, but for the Fetch API.
-        But completely removing `XMLHttpRequest`s would require to update all the unit tests accordingly.
-
-        // TODO: not true? Last paragraph...
+        that's a point to reconsider in the (hopefully near) future
      */
 
     // if the url does not start with `http[s]:` or `file:`
@@ -271,24 +265,21 @@ export function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters
 
     return {
         response: (async (): Promise<MapLibreResponse<T>> => {
-            try {
-                const response = await fetch(request);
+            const response = await fetch(request);
 
-                if (response.ok) {
-                    const data: T = await (requestDataType === MapLibreRequestDataType.ArrayBuffer ? response.arrayBuffer() : requestDataType === MapLibreRequestDataType.JSON ? response.json() : response.text());
+            if (abortController.signal.aborted) throw new Error('aborted');
 
-                    return {
-                        data,
-                        cacheControl: response.headers.get('Cache-Control'),
-                        expires: response.headers.get('Expires')
-                    };
+            if (response.ok) {
+                const data: T = await (requestDataType === MapLibreRequestDataType.ArrayBuffer ? response.arrayBuffer() : requestDataType === MapLibreRequestDataType.JSON ? response.json() : response.text());
 
-                } else {
-                    throw new Error('Failed to fetch URL'/*response.status, response.statusText, requestParameters.url, await response.blob()*/);
-                }
-            } catch (err) {
-                if (err.code === 20) return;
-                throw err;
+                return {
+                    data,
+                    cacheControl: response.headers.get('Cache-Control') ?? undefined,
+                    expires: response.headers.get('Expires') ?? undefined
+                };
+
+            } else {
+                throw new Error('Failed to fetch URL'/*response.status, response.statusText, requestParameters.url, await response.blob()*/);
             }
         })(),
 
@@ -358,7 +349,8 @@ export function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParamete
             };
 
             xhr.onerror = () => rej(new Error('Failed to Fetch URL'));
-            xhr.onabort = () => rej(new Error('cancel'));
+
+            xhr.onabort = () => rej(new Error('aborted'));
         }),
 
         cancel: () => xhr.abort()
@@ -404,6 +396,7 @@ export async function arrayBufferToCanvasImageSource(data: ArrayBuffer, _testFor
 
                 res(img);
             });
+
             img.addEventListener('error', () => {
                 rej(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
             });
