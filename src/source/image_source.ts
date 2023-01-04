@@ -19,7 +19,6 @@ import type {
     ImageSourceSpecification,
     VideoSourceSpecification
 } from '../style-spec/types.g';
-import {Cancelable} from '../types/cancelable';
 
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 

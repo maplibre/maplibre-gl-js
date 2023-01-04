@@ -193,11 +193,17 @@ class VectorTileSource extends Evented implements Source {
 
         if (!tile.actor || tile.state === 'expired') {
             tile.actor = this.dispatcher.getActor();
+            // the old code relies on `.cancel` only, so it's safe to assume that `MapLibreRequest` and `Cancelable`
+            // are interchangeable since we don't care about the `response` field
+            // @ts-ignore
             tile.request = tile.actor.send('loadTile', params, done.bind(this));
         } else if (tile.state === 'loading') {
             // schedule tile reloading after it has been loaded
             tile.reloadCallback = callback;
         } else {
+            // the old code relies on `.cancel` only, so it's safe to assume that `MapLibreRequest` and `Cancelable`
+            // are interchangeable since we don't care about the `response` field
+            // @ts-ignore
             tile.request = tile.actor.send('reloadTile', params, done.bind(this));
         }
 

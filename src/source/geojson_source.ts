@@ -327,6 +327,7 @@ class GeoJSONSource extends Evented implements Source {
 
         // `Cancelable` is assignable to `MapLibreRequest`. Both share the same `cancel` method, but the missing in
         // the `Cancelable` `response` is not used yet
+        // @ts-ignore
         tile.request = this.actor.send(message, params, (err, data) => {
             delete tile.request;
             tile.unloadVectorData();
