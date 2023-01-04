@@ -141,10 +141,22 @@ export function getVideo(urls: string[]): MapLibreRequest<MapLibreResponse<HTMLV
     return {
         response: new Promise((res, rej) => {
             video.onloadstart = () => res({data: video});
-            video.onerror = rej;
+            video.onerror = () => rej(new Error(`Failed to load the video from the following sources: ${urls.join(', ')}`));
         }),
 
-        cancel: () => {}
+        cancel: () => {},
+
+        // for testing purposes only!
+        // @ts-ignore
+        _testForceLoadStart: () => {
+            video.onloadstart(new Event('loadstart'));
+        },
+
+        // for testing purposes only!
+        // @ts-ignore
+        _testForceError: () => {
+            video.onerror(new Event('error'));
+        }
     };
 }
 
@@ -175,6 +187,8 @@ export function makeRequest <T>(requestParameters: MapLibreRequestParameters, re
         Additionally, the majority of all the existing unit tests use `fakeServer` which mocks the XMLHttpRequest API
         (and not the Fetch API). On the other hand, there's `nise` that serves the same purpose, but for the Fetch API.
         But completely removing `XMLHttpRequest`s would require to update all the unit tests accordingly.
+
+        // TODO: not true? Last paragraph...
      */
 
     // if the url does not start with `http[s]:` or `file:`
@@ -343,7 +357,8 @@ export function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParamete
                 }
             };
 
-            xhr.onerror = rej;
+            xhr.onerror = () => rej(new Error('Failed to Fetch URL'));
+            xhr.onabort = () => rej(new Error('cancel'));
         }),
 
         cancel: () => xhr.abort()
@@ -363,7 +378,7 @@ export function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParamete
  * @returns {Promise<ImageBitmap | HTMLImageElement>} A `Promise` that rejects with an `Error` in case it was impossible
  * to build the resulting image or resolves with the resulting image in case of success
  */
-export async function arrayBufferToCanvasImageSource(data: ArrayBuffer): Promise<ImageBitmap | HTMLImageElement> {
+export async function arrayBufferToCanvasImageSource(data: ArrayBuffer, _testForceImageLoad?: boolean): Promise<ImageBitmap | HTMLImageElement> {
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
 
     if (typeof createImageBitmap === 'function') {
@@ -383,18 +398,22 @@ export async function arrayBufferToCanvasImageSource(data: ArrayBuffer): Promise
         img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
 
         return new Promise((res, rej) => {
-            img.onload = () => {
-                // prevent image dataURI memory leak in Safari;
-                // but don't free the image immediately because it might be uploaded in the next frame
-                // https://github.com/mapbox/mapbox-gl-js/issues/10226
-                img.onload = null;
-
+            img.addEventListener('load', () => {
                 URL.revokeObjectURL(img.src);
                 window.requestAnimationFrame(() => { img.src = transparentPngUrl; });
 
                 res(img);
-            };
-            img.onerror = () => rej(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
+            });
+            img.addEventListener('error', () => {
+                rej(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
+            });
+
+            // for testing purposes only!
+            if (_testForceImageLoad === true) {
+                img.dispatchEvent(new Event('load'));
+            } else if (_testForceImageLoad === false) {
+                img.dispatchEvent(new Event('error'));
+            }
         });
     }
 }
