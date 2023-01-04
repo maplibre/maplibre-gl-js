@@ -305,18 +305,18 @@ function arrayBufferToCanvasImageSource(data: ArrayBuffer, callback: Callback<Ca
 
 export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
 
-export function getJSON<T = Record<string, unknown> | unknown[]>(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<T>> {
+export function getJSON<T = Record<string, unknown> | unknown[]>(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<T>> {
     return makeRequest<T>(requestParameters, MapLibreRequestDataType.json);
 }
 
-export function getArrayBuffer(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<ArrayBuffer>> {
+export function getArrayBuffer(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<ArrayBuffer>> {
     return makeRequest(requestParameters, MapLibreRequestDataType.arrayBuffer);
 }
 
-export function getImage(requestParameters: RequestParameters): MapLibreRequest<MapLibreResponse<HTMLImageElement | ImageBitmap>> {
+export function getImage(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<HTMLImageElement | ImageBitmap>> {
     if (webpSupported.supported) {
         if (!requestParameters.headers) requestParameters.headers = {};
-        requestParameters.headers.accept = 'image/webp,*/*';
+        requestParameters.headers['Accept'] = 'image/webp,*/*';
     }
 
     const request = getArrayBuffer(requestParameters);
@@ -348,19 +348,23 @@ export function getImage(requestParameters: RequestParameters): MapLibreRequest<
     };
 }
 
-export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVideoElement>): Cancelable {
+export function getVideo(urls: string[]): MapLibreRequest<HTMLVideoElement> {
     const video: HTMLVideoElement = window.document.createElement('video');
     video.muted = true;
-    video.onloadstart = function() {
-        callback(null, video);
-    };
-    for (let i = 0; i < urls.length; i++) {
+
+    urls.forEach(url => {
         const s: HTMLSourceElement = window.document.createElement('source');
-        if (!sameOrigin(urls[i])) {
-            video.crossOrigin = 'Anonymous';
-        }
-        s.src = urls[i];
+        if (!sameOrigin(url)) video.crossOrigin = 'Anonymous';
+        s.src = url;
         video.appendChild(s);
-    }
-    return {cancel: () => {}};
-};
+    });
+
+    return {
+        response: new Promise((res, rej) => {
+            video.onloadstart = () => res(video);
+            video.onerror = rej;
+        }),
+
+        cancel: () => {}
+    };
+}

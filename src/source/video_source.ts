@@ -69,26 +69,25 @@ class VideoSource extends ImageSource {
             this.urls.push(this.map._requestManager.transformRequest(url, ResourceType.Source).url);
         }
 
-        getVideo(this.urls, (err, video) => {
-            this._loaded = true;
-            if (err) {
-                this.fire(new ErrorEvent(err));
-            } else if (video) {
-                this.video = video;
-                this.video.loop = true;
+        const request = getVideo(this.urls);
 
-                // Start repainting when video starts playing. hasTransition() will then return
-                // true to trigger additional frames as long as the videos continues playing.
-                this.video.addEventListener('playing', () => {
-                    this.map.triggerRepaint();
-                });
+        request.response.then((response) => {
+            this.video = response;
+            this.video.loop = true;
 
-                if (this.map) {
-                    this.video.play();
-                }
+            // Start repainting when video starts playing. hasTransition() will then return
+            // true to trigger additional frames as long as the videos continues playing.
+            this.video.addEventListener('playing', () => {
+                this.map.triggerRepaint();
+            });
 
-                this._finishLoading();
+            if (this.map) {
+                this.video.play();
             }
+
+            this._finishLoading();
+        }).catch(err => {
+            this.fire(new ErrorEvent(err));
         });
     }
 
