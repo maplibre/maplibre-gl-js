@@ -56,14 +56,6 @@ jobs:
           npm run build-benchmarks
           npm run generate-typings
 
-      - name: Empty postinstall.js
-        run: |
-          echo "// empty in published package" > postinstall.js
-
-      - name: Write dist/package.json
-        run: |
-          echo "{ \"type\": \"commonjs\", \"name\": \"maplibre-gl\" }" > dist/package.json
-
       - name: Create Archive
         run: |
           zip -r dist dist
@@ -95,7 +87,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: dist.zip
+          files: ${{ steps.pack.outputs.filename }}
           repository: ${{ steps.create_regular_release.outputs.upload_url }}
 
       - name: Create GitHub Release (prerelease)

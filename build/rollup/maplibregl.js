@@ -14,7 +14,7 @@ define(['exports'], function (exports) {
     // names rewritten to avoid collisions, etc.)
 })
 */
-import './build/maplibregl/shared';
+import '../../staging/maplibregl/shared';
 
 // Worker and its unique dependencies, i.e.:
 /*
@@ -29,7 +29,7 @@ define(['./shared.js'], function (__shared__js) {
 // it gets stringified, together with the shared wrapper (using
 // Function.toString()), and the resulting string of code is made into a
 // Blob URL that gets used by the main module to create the web workers.
-import './build/maplibregl/worker';
+import '../../staging/maplibregl/worker';
 
 // Main module and its unique dependencies
 /*
@@ -42,6 +42,6 @@ define(['./shared.js'], function (__shared__js) {
     //  Returns the actual maplibregl (i.e. src/index.js)
 });
 */
-import './build/maplibregl/index';
+import '../../staging/maplibregl/index';
 
 export default maplibregl;

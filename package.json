@@ -130,6 +130,7 @@
     "typescript": "^4.9.4"
   },
   "scripts": {
+    "generate-dist-package": "ts-node build/generate-dist-package",
     "generate-shaders": "ts-node build/generate-shaders.ts",
     "generate-struct-arrays": "ts-node build/generate-struct-arrays.ts",
     "generate-style-code": "ts-node build/generate-style-code.ts",
@@ -143,7 +144,7 @@
     "build-csp": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts --bundleConfigAsCjs",
     "build-csp-dev": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts --environment BUILD:dev --bundleConfigAsCjs",
     "build-css": "postcss -o dist/maplibre-gl.css src/css/maplibre-gl.css",
-    "build-style-spec": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.style-spec.ts --bundleConfigAsCjs && rollup --configPlugin @rollup/plugin-typescript -c rollup.config.style-spec.ts --environment esm --bundleConfigAsCjs",
+    "build-style-spec": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.style-spec.ts --bundleConfigAsCjs",
     "build-diagrams": "cd docs/diagrams; ls *.plantuml | xargs -I {} puml generate --svg {} -o {}.svg",
     "watch-css": "postcss --watch -o dist/maplibre-gl.css src/css/maplibre-gl.css",
     "build-benchmarks": "npm run build-dev && rollup --configPlugin @rollup/plugin-typescript -c test/bench/rollup_config_benchmarks.ts --bundleConfigAsCjs",
@@ -169,14 +170,13 @@
     "codegen": "npm run generate-style-code && npm run generate-struct-arrays && npm run generate-style-spec && npm run generate-shaders",
     "benchmark": "ts-node test/bench/run-benchmarks.ts",
     "gl-stats": "ts-node test/bench/gl-stats.ts",
-    "postinstall": "node ./postinstall.js",
-    "typecheck": "tsc --project tsconfig.typecheck.json"
+    "prepare": "npm run generate-dist-package && npm run codegen && npm run generate-query-test-fixtures",
+    "typecheck": "tsc --noEmit"
   },
   "files": [
     "build/",
     "dist/*",
-    "src/",
-    "postinstall.js"
+    "src/"
   ],
   "engines": {
     "npm": ">=8.1.0",

@@ -8,7 +8,7 @@ const argv = minimist(process.argv.slice(2));
 if (argv.help || argv.h || (!argv._.length && process.stdin.isTTY)) {
     help();
 } else {
-    console.log(format(JSON.parse(fs.readFileSync(argv._[0])), argv.space));
+    console.log(format(JSON.parse(fs.readFileSync(argv._[0]).toString()), argv.space));
 }
 
 function help() {
