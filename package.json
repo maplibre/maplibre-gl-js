@@ -97,6 +97,7 @@
     "jest": "^29.3.1",
     "jest-canvas-mock": "^2.4.0",
     "jest-environment-jsdom": "^29.3.1",
+    "jest-fetch-mock": "^3.0.3",
     "jest-playwright-preset": "^3.0.1",
     "jsdom": "^20.0.2",
     "json-stringify-pretty-compact": "^4.0.0",
