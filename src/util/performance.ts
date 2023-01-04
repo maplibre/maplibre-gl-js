@@ -1,4 +1,4 @@
-import type {RequestParameters} from '../util/ajax';
+import type {MapLibreRequestParameters} from '../util/ajax';
 
 export type PerformanceMetrics = {
     loadTime: number;
@@ -71,7 +71,7 @@ export const PerformanceUtils = {
 /**
  * Safe wrapper for the performance resource timing API in web workers with graceful degradation
  *
- * @param {RequestParameters} request
+ * @param {MapLibreRequestParameters} request
  * @private
  */
 export class RequestPerformance {
@@ -81,7 +81,7 @@ export class RequestPerformance {
         measure: string;
     };
 
-    constructor (request: RequestParameters) {
+    constructor (request: MapLibreRequestParameters) {
         this._marks = {
             start: [request.url, 'start'].join('#'),
             end: [request.url, 'end'].join('#'),

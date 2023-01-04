@@ -1,4 +1,4 @@
-import {getImage, ResourceType} from '../util/ajax';
+import {getImage, MapLibreResourceType} from '../util/ajax';
 import {extend, isImageBitmap} from '../util/util';
 import {Evented} from '../util/evented';
 import browser from '../util/browser';
@@ -38,7 +38,7 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        tile.request = getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile));
+        tile.request = getImage(this.map._requestManager.transformRequest(url, MapLibreResourceType.Tile));
 
         tile.request.response.then((response) => {
             imageLoaded.bind(this)(null, response.data);

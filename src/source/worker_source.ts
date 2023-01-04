@@ -1,4 +1,4 @@
-import type {RequestParameters} from '../util/ajax';
+import type {MapLibreRequestParameters} from '../util/ajax';
 import type {RGBAImage, AlphaImage} from '../util/image';
 import type {GlyphPositions} from '../render/glyph_atlas';
 import type ImageAtlas from '../render/image_atlas';
@@ -18,7 +18,7 @@ export type TileParameters = {
 
 export type WorkerTileParameters = TileParameters & {
     tileID: OverscaledTileID;
-    request: RequestParameters;
+    request: MapLibreRequestParameters;
     zoom: number;
     maxZoom: number;
     tileSize: number;

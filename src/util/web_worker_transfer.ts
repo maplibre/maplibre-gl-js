@@ -4,7 +4,6 @@ import {StylePropertyFunction, StyleExpression, ZoomDependentExpression, ZoomCon
 import CompoundExpression from '../style-spec/expression/compound_expression';
 import expressions from '../style-spec/expression/definitions';
 import ResolvedImage from '../style-spec/expression/types/resolved_image';
-import {AJAXError} from './ajax';
 
 import type {Transferable} from '../types/transferable';
 import {isImageBitmap} from './util';
@@ -66,7 +65,6 @@ register('TransferableGridIndex', TransferableGridIndex);
 
 register('Color', Color);
 register('Error', Error);
-register('AJAXError', AJAXError);
 register('ResolvedImage', ResolvedImage);
 
 register('StylePropertyFunction', StylePropertyFunction);

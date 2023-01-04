@@ -1,149 +1,242 @@
-import {extend, isWorker, arrayBufferToImageBitmap, arrayBufferToImage} from './util';
+import type {Cancelable} from '../types/cancelable';
+import type {ExpiryData} from '../types/caching';
+import {extend, isWorker} from './util';
 import config from './config';
 import webpSupported from './webp_supported';
 
-import type {Callback} from '../types/callback';
-import type {Cancelable} from '../types/cancelable';
-
-export interface IResourceType {
-    Unknown: keyof this;
-    Style: keyof this;
-    Source: keyof this;
-    Tile: keyof this;
-    Glyphs: keyof this;
-    SpriteImage: keyof this;
-    SpriteJSON: keyof this;
-    Image: keyof this;
-}
-
 /**
- * The type of a resource.
- * @private
- * @readonly
- * @enum {string}
- */
-const ResourceType = {
-    Unknown: 'Unknown',
-    Style: 'Style',
-    Source: 'Source',
-    Tile: 'Tile',
-    Glyphs: 'Glyphs',
-    SpriteImage: 'SpriteImage',
-    SpriteJSON: 'SpriteJSON',
-    Image: 'Image'
-} as IResourceType;
-export {ResourceType};
-
-if (typeof Object.freeze == 'function') {
-    Object.freeze(ResourceType);
-}
-
-/**
- * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
- * @typedef {Object} RequestParameters
- * @property {string} url The URL to be requested.
- * @property {Object} headers The headers to be sent with the request.
- * @property {string} method Request method `'GET' | 'POST' | 'PUT'`.
- * @property {string} body Request body.
- * @property {string} type Response body type to be returned `'string' | 'json' | 'arrayBuffer'`.
- * @property {string} credentials `'same-origin'|'include'` Use 'include' to send cookies with cross-origin requests.
- * @property {boolean} collectResourceTiming If true, Resource Timing API information will be collected for these transformed requests and returned in a resourceTiming property of relevant data events.
- * @example
- * // use transformRequest to modify requests that begin with `http://myHost`
- * transformRequest: function(url, resourceType) {
- *  if (resourceType === 'Source' && url.indexOf('http://myHost') > -1) {
- *    return {
- *      url: url.replace('http', 'https'),
- *      headers: { 'my-custom-header': true },
- *      credentials: 'include'  // Include cookies for cross-origin requests
- *    }
- *   }
- *  }
+ * A type that represents parameters of an asynchronous HTTP request. The same as built-in `RequestInit`, but with
+ * required `url: string` and optional `collectResourceTiming?: boolean` additional properties.
  *
+ * @typedef MapLibreRequestParameters
  */
-export type RequestParameters = {
-    url: string;
-    headers?: any;
-    method?: 'GET' | 'POST' | 'PUT';
-    body?: string;
-    type?: 'string' | 'json' | 'arrayBuffer';
-    credentials?: 'same-origin' | 'include';
-    collectResourceTiming?: boolean;
-};
-
-export type ResponseCallback<T> = (
-    error?: Error | null,
-    data?: T | null,
-    cacheControl?: string | null,
-    expires?: string | null
-) => void;
+export type MapLibreRequestParameters = RequestInit & { url: string; collectResourceTiming?: boolean };
 
 /**
- * An error thrown when a HTTP request results in an error response.
- * @extends Error
- * @param {number} status The response's HTTP status code.
- * @param {string} statusText The response's HTTP status text.
- * @param {string} url The request's URL.
- * @param {Blob} body The response's body.
+ * A type that tells the `makeRequest` which modifications to apply to the request before making it and how to treat
+ * response of the request after it's loaded based on the type of the raw data being loaded.
+ *
+ * @enum MapLibreRequestDataType
  */
-export class AJAXError extends Error {
-    /**
-     * The response's HTTP status code.
-     */
-    status: number;
-
-    /**
-     * The response's HTTP status text.
-     */
-    statusText: string;
-
-    /**
-     * The request's URL.
-     */
-    url: string;
-
-    /**
-     * The response's body.
-     */
-    body: Blob;
-
-    constructor(status: number, statusText: string, url: string, body: Blob) {
-        super(`AJAXError: ${statusText} (${status}): ${url}`);
-        this.status = status;
-        this.statusText = statusText;
-        this.url = url;
-        this.body = body;
-    }
+export enum MapLibreRequestDataType {
+    'string',
+    'JSON',
+    'ArrayBuffer'
 }
 
-// Ensure that we're sending the correct referrer from blob URL worker bundles.
-// For files loaded from the local file system, `location.origin` will be set
-// to the string(!) "null" (Firefox), or "file://" (Chrome, Safari, Edge, IE),
-// and we will set an empty referrer. Otherwise, we're using the document's URL.
-/* global self */
-export const getReferrer = isWorker() ?
+/**
+ * A generic type that represents a MapLibre asynchronous cancelable HTTP request.
+ *
+ * Represented by an object containing 2 fields:
+ *  - `response`: a `Promise` that (possibly) resolves with the request's result
+ *  - `cancel`: a function to cancel the request
+ *
+ * @template T
+ * @typedef MapLibreRequest<T>
+ */
+export type MapLibreRequest<T> = {response: Promise<T>} & Cancelable;
+export type MapLibreResponse<T> = {data: T} & ExpiryData;
+
+/**
+ * A generic function that loads JSON and returns an object containing 2 fields:
+ *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
+ *  with the value of type `MapLibreResponse<T>`
+ *  - `cancel`: a method to cancel the request
+ *
+ * @function
+ * @template T
+ * @param {MapLibreRequestParameters} requestParameters Request parameters
+ * @returns {MapLibreRequest<MapLibreResponse<T>>} Promised response and the `cancel` method
+ */
+export function getJSON<T = Record<string, unknown> | unknown[]>(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<T>> {
+    return makeRequest<T>(requestParameters, MapLibreRequestDataType.JSON);
+}
+
+/**
+ * Loads data as the `ArrayBuffer` and returns an object containing 2 fields:
+ *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
+ *  with the value of type `MapLibreResponse<ArrayBuffer>`
+ *  - `cancel`: a method to cancel the request
+ *
+ * @function
+ * @param {MapLibreRequestParameters} requestParameters Request parameters
+ * @returns {MapLibreRequest<MapLibreResponse<ArrayBuffer>>} Promised response and the `cancel` method
+ */
+export function getArrayBuffer(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<ArrayBuffer>> {
+    return makeRequest(requestParameters, MapLibreRequestDataType.ArrayBuffer);
+}
+
+/**
+ * Loads an image as the `ImageBitmap` or `HTMLImageElement` (both the formats can be used as an image source for
+ * canvases) and returns an object containing 2 fields:
+ *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
+ *  with the value of type `MapLibreResponse<ImageBitmap | HTMLImageElement>`
+ *  - `cancel`: a method to cancel the request
+ *
+ * @function
+ * @param {MapLibreRequestParameters} requestParameters Request parameters
+ * @returns {MapLibreRequest<MapLibreResponse<ImageBitmap | HTMLImageElement>>} Promised response and the `cancel`
+ * method
+ */
+export function getImage(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<ImageBitmap | HTMLImageElement>> {
+    if (webpSupported.supported) {
+        if (!requestParameters.headers) requestParameters.headers = {};
+        requestParameters.headers['Accept'] = 'image/webp,*/*';
+    }
+
+    const request = getArrayBuffer(requestParameters);
+
+    return {
+        response: (async () => {
+            const response = await request.response;
+            const image = await arrayBufferToCanvasImageSource(response.data);
+
+            return {
+                data: image,
+                cacheControl: response.cacheControl,
+                expires: response.expires
+            };
+        })(),
+
+        cancel: request.cancel
+    };
+}
+
+/**
+ * Loads a video as the `HTMLVideoElement` from the provided URLs and returns an object containing 2 fields:
+ *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
+ *  with the value of type `MapLibreResponse<HTMLVideoElement>`
+ *  - `cancel`: a method to cancel the request
+ *
+ * @function
+ * @param {string[]} urls URLs to load the video from
+ * @returns {MapLibreRequest<MapLibreResponse<HTMLVideoElement>>} Promised response and the `cancel` method
+ */
+export function getVideo(urls: string[]): MapLibreRequest<MapLibreResponse<HTMLVideoElement>> {
+    const video: HTMLVideoElement = window.document.createElement('video');
+    video.muted = true;
+
+    function isSameOrigin(url: string) {
+        const a: HTMLAnchorElement = window.document.createElement('a'); a.href = url;
+        return a.origin === window.document.location.origin;
+    }
+
+    urls.forEach(url => {
+        const s: HTMLSourceElement = window.document.createElement('source');
+        if (!isSameOrigin(url)) video.crossOrigin = 'Anonymous';
+
+        s.src = url;
+        video.appendChild(s);
+    });
+
+    return {
+        response: new Promise((res, rej) => {
+            video.onloadstart = () => res({data: video});
+            video.onerror = rej;
+        }),
+
+        cancel: () => {}
+    };
+}
+
+/**
+ * A generic function that makes an asynchronous HTTP request using the most appropriate for the given circumstances
+ * API: either Fetch or XMLHttpRequest.
+ *
+ * The second argument - `requestDataType` - when present, applies certain modifications to the request headers and
+ * response data parsing.
+ *
+ * Returns an object containing 2 fields:
+ *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
+ *  with the value of type `MapLibreResponse<T>`
+ *  - `cancel`: a method to cancel the request
+ *
+ * @function
+ * @template T
+ * @param {MapLibreRequestParameters} requestParameters Request parameters
+ * @param {MapLibreRequestDataType} requestDataType Request data type
+ * @returns {MapLibreRequest<MapLibreResponse<T>>} Promised response and the `cancel` method
+ */
+export function makeRequest <T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
+    /*
+        See https://github.com/maplibre/maplibre-gl-js/discussions/2004
+
+        TL;DR: for the time being, it's still impossible to completely give up on using the XMLHttpRequest API. But
+        that's a point to reconsider in the (hopefully near) future.
+
+        Additionally, the majority of all the existing unit tests use `fakeServer` which mocks the XMLHttpRequest API
+        (and not the Fetch API). On the other hand, there's `nise` that serves the same purpose, but for the Fetch API.
+        But completely removing `XMLHttpRequest`s would require to update all the unit tests accordingly.
+     */
+
+    // if the url does not start with `http[s]:` or `file:`
+    if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
+        // and if the request is made from inside a worker
+        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
+            // then ask the main thread to make the request from there
+            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
+        }
+
+        // if it's not a worker
+        if (!isWorker()) {
+            // then check the protocol, and if there exists a custom handler for the protocol, then execute the custom
+            // handler. Otherwise, make the request using the Fetch API
+            const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
+            const action = config.REGISTERED_PROTOCOLS[protocol] || makeFetchRequest;
+
+            return action(requestParameters, requestDataType);
+        }
+    }
+
+    // if the protocol is not `file://` (in comparison with the `if` block above, it can now be `http[s]://`)
+    if (!requestParameters.url.startsWith('file://')) {
+        // and if Fetch API is supported by the target environment
+        if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
+            // then make a `fetch` request
+            return makeFetchRequest(requestParameters, requestDataType);
+        }
+
+        // if the function is called from a worker
+        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
+            // ask the main thread to make the request
+            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
+        }
+    }
+
+    // fallback to the XMLHttpRequest API
+    return makeXMLHttpRequest(requestParameters, requestDataType);
+}
+
+/**
+ * Returns the current `referrer`. It differs based on whether the function is invoked from the global code or from a
+ * worker.
+ *
+ * @returns {boolean | string} Result
+ */
+export const getReferrer: () => boolean | string = isWorker() ?
     () => (self as any).worker && (self as any).worker.referrer :
     () => (window.location.protocol === 'blob:' ? window.parent : window).location.href;
 
-// Determines whether a URL is a file:// URL. This is obviously the case if it begins
-// with file://. Relative URLs are also file:// URLs iff the original document was loaded
-// via a file:// URL.
-const isFileURL = url => /^file:/.test(url) || (/^file:/.test(getReferrer()) && !/^\w+:/.test(url));
+// private functions go below this line. Private functions are dependencies of the public function above and are
+// exported only to be able to be imported in the unit tests
 
-export type MapLibreRequestParameters = RequestInit & { url: string };
-export enum MapLibreRequestDataType {
-    'string' = 'string',
-    'json' = 'json',
-    'arrayBuffer' = 'arrayBuffer'
-}
-export type MapLibreRequest<T> = {response: Promise<T>} & Cancelable;
-export type MapLibreResponse<T> = {
-    data: T;
-    cacheControl?: string;
-    expires?: string;
-}
-
-function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
+/**
+ * @private
+ *
+ * A generic function that makes an asynchronous HTTP request using the Fetch API.
+ *
+ * Returns an object containing 2 fields:
+ *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
+ *  with the value of type `MapLibreResponse<T>`
+ *  - `cancel`: a method to cancel the request
+ *
+ * @function
+ * @template T
+ * @param {MapLibreRequestParameters} requestParameters Request parameters
+ * @param {MapLibreRequestDataType} requestDataType Request data type
+ * @returns {MapLibreRequest<MapLibreResponse<T>>} Promised response and the `cancel` method
+ */
+export function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
     const abortController = new AbortController();
 
     const request = new Request(requestParameters.url, extend({}, requestParameters, {
@@ -151,7 +244,7 @@ function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters, reque
         signal: abortController.signal
     }));
 
-    if (requestDataType === 'json') {
+    if (requestDataType === MapLibreRequestDataType.JSON) {
         request.headers.set('Accept', 'application/json');
     }
 
@@ -161,7 +254,7 @@ function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters, reque
                 const response = await fetch(request);
 
                 if (response.ok) {
-                    const data: T = await (requestDataType === 'arrayBuffer' ? response.arrayBuffer() : requestDataType === 'json' ? response.json() : response.text());
+                    const data: T = await (requestDataType === MapLibreRequestDataType.ArrayBuffer ? response.arrayBuffer() : requestDataType === MapLibreRequestDataType.JSON ? response.json() : response.text());
 
                     return {
                         data,
@@ -170,16 +263,11 @@ function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters, reque
                     };
 
                 } else {
-                    throw new AJAXError(response.status, response.statusText, requestParameters.url, await response.blob());
+                    throw new Error('Failed to fetch URL'/*response.status, response.statusText, requestParameters.url, await response.blob()*/);
                 }
             } catch (err) {
                 if (err.code === 20) return;
-
-                if (err instanceof AJAXError) {
-                    throw err;
-                } else {
-                    throw new Error(err.message);
-                }
+                throw err;
             }
         })(),
 
@@ -187,11 +275,27 @@ function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters, reque
     };
 }
 
+/**
+ * @private
+ *
+ * A generic function that makes an asynchronous HTTP request using the XMLHttpRequest API.
+ *
+ * Returns an object containing 2 fields:
+ *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
+ *  with the value of type `MapLibreResponse<T>`
+ *  - `cancel`: a method to cancel the request
+ *
+ * @function
+ * @template T
+ * @param {MapLibreRequestParameters} requestParameters Request parameters
+ * @param {MapLibreRequestDataType} requestDataType Request data type
+ * @returns {MapLibreRequest<MapLibreResponse<T>>} Promised response and the `cancel` method
+ */
 function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
     const xhr: XMLHttpRequest = new XMLHttpRequest();
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
 
-    if (requestDataType === 'arrayBuffer') {
+    if (requestDataType === MapLibreRequestDataType.ArrayBuffer) {
         xhr.responseType = 'arraybuffer';
     }
 
@@ -199,7 +303,7 @@ function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, req
         xhr.setRequestHeader(k, requestParameters.headers[k]);
     }
 
-    if (requestDataType === 'json') {
+    if (requestDataType === MapLibreRequestDataType.JSON) {
         xhr.responseType = 'text';
         xhr.setRequestHeader('Accept', 'application/json');
     }
@@ -214,7 +318,7 @@ function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, req
                 if (((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) && xhr.response !== null) {
                     let data: T = xhr.response;
 
-                    if (requestDataType === 'json') {
+                    if (requestDataType === MapLibreRequestDataType.JSON) {
                         try {
                             data = JSON.parse(xhr.response);
                         } catch (err) {
@@ -228,8 +332,8 @@ function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, req
                         expires: xhr.getResponseHeader('Expires')
                     });
                 } else {
-                    const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
-                    rej(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
+                    // const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
+                    rej(new Error('Failed to Fetch URL'/*xhr.status, xhr.statusText, requestParameters.url, body*/));
                 }
             };
 
@@ -240,131 +344,51 @@ function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, req
     };
 }
 
-export function makeRequest <T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
-    // We're trying to use the Fetch API if possible. However, in some situations we can't use it:
-    // - IE11 doesn't support it at all. In this case, we dispatch the request to the main thread so
-    //   that we can get an accruate referrer header.
-    // - Safari exposes window.AbortController, but it doesn't work actually abort any requests in
-    //   some versions (see https://bugs.webkit.org/show_bug.cgi?id=174980#c2)
-    // - Requests for resources with the file:// URI scheme don't work with the Fetch API either. In
-    //   this case we unconditionally use XHR on the current thread since referrers don't matter.
+/**
+ * @private
+ *
+ * Takes (presumably) a `ArrayBuffer`-encoded image and returns it represented as either the `ImageBitmap` or
+ * `HTMLImageElement` (in case `ImageBitmap`s are not supported by the target environment).
+ *
+ * Both the types are available to be used as an image source for canvases.
+ *
+ * @function
+ * @param {ArrayBuffer} data `ArrayBuffer`-encoded image
+ * @returns {Promise<ImageBitmap | HTMLImageElement>} A `Promise` that rejects with an `Error` in case it was impossible
+ * to build the resulting image or resolves with the resulting image in case of success
+ */
+async function arrayBufferToCanvasImageSource(data: ArrayBuffer): Promise<ImageBitmap | HTMLImageElement> {
+    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
 
-    // if the url does not start with `http[s]:` or `file:`
-    if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
-        // and if the request made from inside a worker
-        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
-            // ask the main thread to make the request from there
-            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
+    if (typeof createImageBitmap === 'function') {
+        // use `ImageBitmap` when it's supported
+
+        try {
+            return await createImageBitmap(blob);
+        } catch (err) {
+            throw new Error(`Could not load image because of ${err.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
         }
-
-        // if it's not a worker
-        if (!isWorker()) {
-            // check the protocol, and if there exists a custom handler for the protocol, then execute the custom
-            // handler. Otherwise, make a fetch request
-            const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
-            const action = config.REGISTERED_PROTOCOLS[protocol] || makeFetchRequest;
-            return action(requestParameters, requestDataType);
-        }
-    }
-
-    // if the protocol is not `file://`
-    if (!isFileURL(requestParameters.url)) {
-        // and if Fetch API is supported by the target environment
-        if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
-            // then make a fetch request
-            return makeFetchRequest(requestParameters, requestDataType);
-        }
-
-        // if the function is called from a worker
-        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
-            // ask the main thread to make the request
-            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
-        }
-    }
-
-    // fallback to XMLHttpRequest
-    return makeXMLHttpRequest(requestParameters, requestDataType);
-}
-
-function sameOrigin(url) {
-    const a: HTMLAnchorElement = window.document.createElement('a');
-    a.href = url;
-    return a.protocol === window.document.location.protocol && a.host === window.document.location.host;
-}
-
-export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
-
-function arrayBufferToCanvasImageSource(data: ArrayBuffer, callback: Callback<CanvasImageSource>) {
-    const imageBitmapSupported = typeof createImageBitmap === 'function';
-    if (imageBitmapSupported) {
-        arrayBufferToImageBitmap(data, callback);
     } else {
-        arrayBufferToImage(data, callback);
-    }
-}
+        // otherwise, just a plain HTML image element
 
-export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
+        const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=';
 
-export function getJSON<T = Record<string, unknown> | unknown[]>(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<T>> {
-    return makeRequest<T>(requestParameters, MapLibreRequestDataType.json);
-}
+        const img: HTMLImageElement = new Image();
+        img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
 
-export function getArrayBuffer(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<ArrayBuffer>> {
-    return makeRequest(requestParameters, MapLibreRequestDataType.arrayBuffer);
-}
+        return new Promise((res, rej) => {
+            img.onload = () => {
+                // prevent image dataURI memory leak in Safari;
+                // but don't free the image immediately because it might be uploaded in the next frame
+                // https://github.com/mapbox/mapbox-gl-js/issues/10226
+                img.onload = null;
 
-export function getImage(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<HTMLImageElement | ImageBitmap>> {
-    if (webpSupported.supported) {
-        if (!requestParameters.headers) requestParameters.headers = {};
-        requestParameters.headers['Accept'] = 'image/webp,*/*';
-    }
+                URL.revokeObjectURL(img.src);
+                window.requestAnimationFrame(() => { img.src = transparentPngUrl; });
 
-    const request = getArrayBuffer(requestParameters);
-
-    return {
-        response: (async () => {
-            const response = await request.response;
-
-            const image = await new Promise<HTMLImageElement | ImageBitmap>((res, rej) => {
-                function decoratedCallback(err, result) {
-                    if (err) {
-                        rej(err);
-                    } else {
-                        res(result);
-                    }
-                }
-
-                arrayBufferToCanvasImageSource(response.data, decoratedCallback);
-            });
-
-            return {
-                data: image,
-                cacheControl: response.cacheControl,
-                expires: response.expires
+                res(img);
             };
-        })(),
-
-        cancel: request.cancel
-    };
-}
-
-export function getVideo(urls: string[]): MapLibreRequest<HTMLVideoElement> {
-    const video: HTMLVideoElement = window.document.createElement('video');
-    video.muted = true;
-
-    urls.forEach(url => {
-        const s: HTMLSourceElement = window.document.createElement('source');
-        if (!sameOrigin(url)) video.crossOrigin = 'Anonymous';
-        s.src = url;
-        video.appendChild(s);
-    });
-
-    return {
-        response: new Promise((res, rej) => {
-            video.onloadstart = () => res(video);
-            video.onerror = rej;
-        }),
-
-        cancel: () => {}
-    };
+            img.onerror = () => rej(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
+        });
+    }
 }

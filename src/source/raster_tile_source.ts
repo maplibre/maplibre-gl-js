@@ -1,6 +1,6 @@
 import {extend, pick} from '../util/util';
 
-import {getImage, ResourceType} from '../util/ajax';
+import {getImage, MapLibreResourceType} from '../util/ajax';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import loadTileJSON from './load_tilejson';
 import TileBounds from './tile_bounds';
@@ -103,7 +103,7 @@ class RasterTileSource extends Evented implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        tile.request = getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile));
+        tile.request = getImage(this.map._requestManager.transformRequest(url, MapLibreResourceType.Tile));
 
         tile.request.response.then((response) => {
             delete tile.request;

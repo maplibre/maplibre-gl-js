@@ -3,7 +3,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend, pick} from '../util/util';
 import loadTileJSON from './load_tilejson';
 import TileBounds from './tile_bounds';
-import {ResourceType} from '../util/ajax';
+import {MapLibreResourceType} from '../util/ajax';
 
 import type {Source} from './source';
 import type {OverscaledTileID} from './tile_id';
@@ -178,7 +178,7 @@ class VectorTileSource extends Evented implements Source {
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params = {
-            request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
+            request: this.map._requestManager.transformRequest(url, MapLibreResourceType.Tile),
             uid: tile.uid,
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,

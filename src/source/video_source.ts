@@ -1,4 +1,4 @@
-import {getVideo, ResourceType} from '../util/ajax';
+import {getVideo, MapLibreResourceType} from '../util/ajax';
 
 import ImageSource from './image_source';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
@@ -66,13 +66,13 @@ class VideoSource extends ImageSource {
 
         this.urls = [];
         for (const url of options.urls) {
-            this.urls.push(this.map._requestManager.transformRequest(url, ResourceType.Source).url);
+            this.urls.push(this.map._requestManager.transformRequest(url, MapLibreResourceType.Source).url);
         }
 
         const request = getVideo(this.urls);
 
         request.response.then((response) => {
-            this.video = response;
+            this.video = response.data;
             this.video.loop = true;
 
             // Start repainting when video starts playing. hasTransition() will then return

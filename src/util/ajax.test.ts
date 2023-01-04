@@ -1,7 +1,6 @@
 import {
     getArrayBuffer,
     getJSON,
-    AJAXError
 } from './ajax';
 import config from './config';
 import webpSupported from './webp_supported';
@@ -54,7 +53,7 @@ describe('ajax', () => {
             const request = getJSON({url: ''});
             server.respond();
 
-            await expect(request.response).rejects.toBeInstanceOf(AJAXError);
+            await expect(request.response).rejects.toBeInstanceOf(Error);
         });
 
         test('invalid json', async () => {
@@ -95,7 +94,7 @@ describe('ajax', () => {
             const request = getArrayBuffer({url: ''});
             server.respond();
 
-            await expect(request.response).rejects.toBeInstanceOf(AJAXError);
+            await expect(request.response).rejects.toBeInstanceOf(Error);
         });
     });
 });

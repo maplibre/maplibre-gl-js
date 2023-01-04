@@ -18,14 +18,21 @@ import type Actor from '../util/actor';
 import type StyleLayerIndex from '../style/style_layer_index';
 
 import type {LoadVectorDataCallback} from './vector_tile_worker_source';
-import type {RequestParameters, ResponseCallback} from '../util/ajax';
+import type {MapLibreRequestParameters} from '../util/ajax';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, GeoJSONFeatureId} from './geojson_source_diff';
 import {GeoJSON} from 'geojson';
 
+export type ResponseCallback<T> = (
+    error?: Error | null,
+    data?: T | null,
+    cacheControl?: string | null,
+    expires?: string | null
+) => void;
+
 export type LoadGeoJSONParameters = {
-    request?: RequestParameters;
+    request?: MapLibreRequestParameters;
     data?: string;
     dataDiff?: GeoJSONSourceDiff;
     source: string;

@@ -14,7 +14,7 @@ import {
     makeRequest,
     MapLibreRequest, MapLibreRequestDataType,
     MapLibreRequestParameters, MapLibreResponse,
-    ResourceType
+    MapLibreResourceType
 } from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
@@ -275,7 +275,7 @@ class Style extends Evented {
         options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
 
-        this._request = getJSON<StyleSpecification>(this.map._requestManager.transformRequest(url, ResourceType.Style));
+        this._request = getJSON<StyleSpecification>(this.map._requestManager.transformRequest(url, MapLibreResourceType.Style));
 
         this._request.response.then((response) => {
             this._load(response.data, options, previousStyle);

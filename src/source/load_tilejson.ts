@@ -1,6 +1,6 @@
 import {pick, extend} from '../util/util';
 
-import {getJSON, ResourceType} from '../util/ajax';
+import {getJSON, MapLibreResourceType} from '../util/ajax';
 import browser from '../util/browser';
 
 import type {RequestManager} from '../util/request_manager';
@@ -34,7 +34,7 @@ export default function loadTileJson(
     };
 
     if (options.url) {
-        const request = getJSON(requestManager.transformRequest(options.url, ResourceType.Source));
+        const request = getJSON(requestManager.transformRequest(options.url, MapLibreResourceType.Source));
 
         request.response.then((response) => {
             loaded(null, response.data);

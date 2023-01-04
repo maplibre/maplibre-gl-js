@@ -2,7 +2,7 @@ import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
-import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
+import {getImage, getJSON, MapLibreResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
 import Style, {StyleSwapOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
@@ -59,6 +59,7 @@ import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import Terrain from '../render/terrain';
 import RenderToTexture from '../render/render_to_texture';
+import {ExpiryData} from '../types/caching';
 
 const version = packageJSON.version;
 /* eslint-enable no-use-before-define */
@@ -285,6 +286,9 @@ const defaultOptions = {
  * });
  * @see [Display a map](https://maplibre.org/maplibre-gl-js-docs/example/simple-map/)
  */
+
+export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
+
 class Map extends Camera {
     style: Style;
     painter: Painter;
@@ -1520,7 +1524,7 @@ class Map extends Camera {
         if (typeof style === 'string') {
             const url = style;
 
-            const request = getJSON<StyleSpecification>(this._requestManager.transformRequest(url, ResourceType.Style));
+            const request = getJSON<StyleSpecification>(this._requestManager.transformRequest(url, MapLibreResourceType.Style));
 
             request.response.then((response) => {
                 this._updateDiff(response.data, options);
@@ -1950,7 +1954,7 @@ class Map extends Camera {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image/)
      */
     loadImage(url: string, callback: GetImageCallback) {
-        const request = getImage(this._requestManager.transformRequest(url, ResourceType.Image));
+        const request = getImage(this._requestManager.transformRequest(url, MapLibreResourceType.Image));
 
         request.response.then(response => {
             callback(null, response.data);

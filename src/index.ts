@@ -23,9 +23,8 @@ import {setRTLTextPlugin, getRTLTextPluginStatus} from './source/rtl_text_plugin
 import WorkerPool from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {PerformanceUtils} from './util/performance';
-import {AJAXError, MapLibreRequest, MapLibreRequestDataType, MapLibreResponse} from './util/ajax';
-import type {MapLibreRequestParameters, ResponseCallback} from './util/ajax';
-import type {Cancelable} from './types/cancelable';
+import {MapLibreRequest, MapLibreRequestDataType, MapLibreResponse} from './util/ajax';
+import type {MapLibreRequestParameters} from './util/ajax';
 import GeoJSONSource from './source/geojson_source';
 import CanvasSource from './source/canvas_source';
 import ImageSource from './source/image_source';
@@ -56,7 +55,6 @@ const exported = {
     Point,
     MercatorCoordinate,
     Evented,
-    AJAXError,
     config,
     CanvasSource,
     GeoJSONSource,

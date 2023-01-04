@@ -32,7 +32,8 @@ import type {FilterSpecification} from '../style-spec/types.g';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {ExpiryData, MapLibreRequest, MapLibreResponse} from '../util/ajax';
+import {MapLibreRequest, MapLibreResponse} from '../util/ajax';
+import {ExpiryData} from '../types/caching';
 
 export type TileState = // Tile data is in the process of loading.
 'loading' | // Tile data has been loaded. Tile can be rendered.
