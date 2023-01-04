@@ -1,15 +1,14 @@
-
 import getType from '../util/get_type';
-import validate from './validate';
 import ValidationError from '../error/validation_error';
 
 export default function validateArray(options) {
     const array = options.value;
     const arraySpec = options.valueSpec;
+    const validateSpec = options.validateSpec;
     const style = options.style;
     const styleSpec = options.styleSpec;
     const key = options.key;
-    const validateArrayElement = options.arrayElementValidator || validate;
+    const validateArrayElement = options.arrayElementValidator || validateSpec;
 
     if (getType(array) !== 'array') {
         return [new ValidationError(key, array, `array expected, ${getType(array)} found`)];
@@ -43,6 +42,7 @@ export default function validateArray(options) {
             arrayIndex: i,
             value: array[i],
             valueSpec: arrayElementSpec,
+            validateSpec: options.validateSpec,
             style,
             styleSpec,
             key: `${key}[${i}]`

@@ -99,16 +99,6 @@ Install headless-gl dependencies https://github.com/stackgl/headless-gl#windows
 copy node_modules/headless-gl/deps/windows/dll/x64/*.dll c:\windows\system32
 ```
 
-## Serving the Debug Page
-
-Start the debug server
-
-```bash
-npm run start-debug
-```
-
-Open the debug page at [http://localhost:9966/test/debug-pages](http://localhost:9966/test/debug-pages)
-
 ## Creating a Standalone Build
 
 A standalone build allows you to turn the contents of this repository into `maplibre-gl.js` and `maplibre-gl.css` files that can be included on an html page.

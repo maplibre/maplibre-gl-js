@@ -1,7 +1,6 @@
 
 import ValidationError from '../error/validation_error';
 import getType from '../util/get_type';
-import validate from './validate';
 import validateObject from './validate_object';
 import validateArray from './validate_array';
 import validateNumber from './validate_number';
@@ -32,6 +31,7 @@ export default function validateFunction(options): Array<ValidationError> {
         key: options.key,
         value: options.value,
         valueSpec: options.styleSpec.function,
+        validateSpec: options.validateSpec,
         style: options.style,
         styleSpec: options.styleSpec,
         objectElementValidators: {
@@ -78,6 +78,7 @@ export default function validateFunction(options): Array<ValidationError> {
             key: options.key,
             value,
             valueSpec: options.valueSpec,
+            validateSpec: options.validateSpec,
             style: options.style,
             styleSpec: options.styleSpec,
             arrayElementValidator: validateFunctionStop
@@ -125,6 +126,7 @@ export default function validateFunction(options): Array<ValidationError> {
                 key: `${key}[0]`,
                 value: value[0],
                 valueSpec: {zoom: {}},
+                validateSpec: options.validateSpec,
                 style: options.style,
                 styleSpec: options.styleSpec,
                 objectElementValidators: {zoom: validateNumber, value: validateStopDomainValue}
@@ -134,6 +136,7 @@ export default function validateFunction(options): Array<ValidationError> {
                 key: `${key}[0]`,
                 value: value[0],
                 valueSpec: {},
+                validateSpec: options.validateSpec,
                 style: options.style,
                 styleSpec: options.styleSpec
             }, value));
@@ -143,10 +146,11 @@ export default function validateFunction(options): Array<ValidationError> {
             return errors.concat([new ValidationError(`${key}[1]`, value[1], 'expressions are not allowed in function stops.')]);
         }
 
-        return errors.concat(validate({
+        return errors.concat(options.validateSpec({
             key: `${key}[1]`,
             value: value[1],
             valueSpec: functionValueSpec,
+            validateSpec: options.validateSpec,
             style: options.style,
             styleSpec: options.styleSpec
         }));
@@ -196,10 +200,11 @@ export default function validateFunction(options): Array<ValidationError> {
     }
 
     function validateFunctionDefault(options): Array<ValidationError> {
-        return validate({
+        return options.validateSpec({
             key: options.key,
             value: options.value,
             valueSpec: functionValueSpec,
+            validateSpec: options.validateSpec,
             style: options.style,
             styleSpec: options.styleSpec
         });

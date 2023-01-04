@@ -13,6 +13,8 @@ export type Validator = (a: any) => ReadonlyArray<ValidationError>;
 
 type ValidateStyle = {
     source: Validator;
+    sprite: Validator;
+    glyphs: Validator;
     layer: Validator;
     light: Validator;
     terrain: Validator;

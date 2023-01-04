@@ -56,14 +56,6 @@ jobs:
           npm run build-benchmarks
           npm run generate-typings
 
-      - name: Empty postinstall.js
-        run: |
-          echo "// empty in published package" > postinstall.js
-
-      - name: Write dist/package.json
-        run: |
-          echo "{ \"type\": \"commonjs\", \"name\": \"maplibre-gl\" }" > dist/package.json
-
       - name: Create Archive
         run: |
           zip -r dist dist
@@ -79,26 +71,24 @@ jobs:
       - name: Create GitHub Release (regular)
         id: create_regular_release
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
-        uses: actions/create-release@v1
+        uses: ncipollo/release-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.prepare_release.outputs.version_tag }}
-          release_name: ${{steps.prepare_release.outputs.version_tag }}
-          body_path: ${{ steps.release_notes.outputs.release_notes }}
+          tag: ${{ steps.prepare_release.outputs.version_tag }}
+          name: ${{steps.prepare_release.outputs.version_tag }}
+          body: ${{ steps.release_notes.outputs.release_notes }}
           draft: false
           prerelease: false
 
       - name: Upload GitHub Release Assets (regular)
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_regular_release.outputs.upload_url }}
-          asset_path: ./dist.zip
-          asset_name: dist.zip
-          asset_content_type: application/zip
+          files: ${{ steps.pack.outputs.filename }}
+          repository: ${{ steps.create_regular_release.outputs.upload_url }}
 
       - name: Create GitHub Release (prerelease)
         id: create_prerelease

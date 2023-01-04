@@ -1,4 +1,4 @@
-import {extend, warnOnce, isWorker} from './util';
+import {extend, warnOnce, isWorker, arrayBufferToImageBitmap, arrayBufferToImage} from './util';
 import config from './config';
 import {cacheGet, cachePut} from './tile_request_cache';
 

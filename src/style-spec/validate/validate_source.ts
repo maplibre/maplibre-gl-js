@@ -16,6 +16,7 @@ export default function validateSource(options) {
     const key = options.key;
     const styleSpec = options.styleSpec;
     const style = options.style;
+    const validateSpec = options.validateSpec;
 
     if (!value.type) {
         return [new ValidationError(key, value, '"type" is required')];
@@ -34,7 +35,8 @@ export default function validateSource(options) {
                 valueSpec: styleSpec[`source_${type.replace('-', '_')}`],
                 style: options.style,
                 styleSpec,
-                objectElementValidators
+                objectElementValidators,
+                validateSpec,
             });
             return errors;
 
@@ -45,6 +47,7 @@ export default function validateSource(options) {
                 valueSpec: styleSpec.source_geojson,
                 style,
                 styleSpec,
+                validateSpec,
                 objectElementValidators
             });
             if (value.cluster) {
@@ -55,11 +58,13 @@ export default function validateSource(options) {
                     errors.push(...validateExpression({
                         key: `${key}.${prop}.map`,
                         value: mapExpr,
+                        validateSpec,
                         expressionContext: 'cluster-map'
                     }));
                     errors.push(...validateExpression({
                         key: `${key}.${prop}.reduce`,
                         value: reduceExpr,
+                        validateSpec,
                         expressionContext: 'cluster-reduce'
                     }));
                 }
@@ -72,6 +77,7 @@ export default function validateSource(options) {
                 value,
                 valueSpec: styleSpec.source_video,
                 style,
+                validateSpec,
                 styleSpec
             });
 
@@ -81,6 +87,7 @@ export default function validateSource(options) {
                 value,
                 valueSpec: styleSpec.source_image,
                 style,
+                validateSpec,
                 styleSpec
             });
 
@@ -93,6 +100,7 @@ export default function validateSource(options) {
                 value: value.type,
                 valueSpec: {values: ['vector', 'raster', 'raster-dem', 'geojson', 'video', 'image']},
                 style,
+                validateSpec,
                 styleSpec
             });
     }

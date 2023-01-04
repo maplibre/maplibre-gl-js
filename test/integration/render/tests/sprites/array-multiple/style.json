@@ -1,0 +1,79 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "pixelRatio": 1,
+      "width": 128,
+      "height": 64
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 0,
+  "sources": {
+    "source-one": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Point",
+              "coordinates": [25, 0]
+            }
+          }
+        ]
+      }
+    },
+    "source-two": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Point",
+              "coordinates": [-25, 0]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "sprite": [
+    {
+      "id": "default",
+      "url": "local://sprites/emerald"
+    },
+    {
+      "id": "sprite",
+      "url": "local://sprites/sprite"
+    }
+  ],
+  "layers": [
+    {
+      "id": "default-sprite-features",
+      "type": "symbol",
+      "source": "source-one",
+      "layout": {
+        "symbol-placement": "point",
+        "icon-image": "post_icon"
+      }
+    },
+    {
+      "id": "sprite-sprite-features",
+      "type": "symbol",
+      "source": "source-two",
+      "layout": {
+        "symbol-placement": "point",
+        "icon-image": "sprite:night-lighthouse-12"
+      }
+    }
+  ]
+}
