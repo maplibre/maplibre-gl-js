@@ -3,7 +3,7 @@ import SourceCache from '../source/source_cache';
 import StyleLayer from './style_layer';
 import Transform from '../geo/transform';
 import {extend} from '../util/util';
-import {RequestManager} from '../util/request_manager';
+import {MapLibreResourceType, RequestManager} from '../util/request_manager';
 import {Event, Evented} from '../util/evented';
 import {
     setRTLTextPlugin,
@@ -155,7 +155,7 @@ describe('Style#loadURL', () => {
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0]).toBe('style.json');
-        expect(spy.mock.calls[0][1]).toBe('Style');
+        expect(spy.mock.calls[0][1]).toBe(MapLibreResourceType.Style);
     });
 
     test('validates the style', done => {
@@ -306,25 +306,6 @@ describe('Style#loadJSON', () => {
                 'type': 'fill'
             }]
         });
-    });
-
-    test('transforms sprite json and image URLs before request', done => {
-        const map = getStubMap();
-        const transformSpy = jest.spyOn(map._requestManager, 'transformRequest');
-        const style = createStyle(map);
-
-        style.on('style.load', () => {
-            expect(transformSpy).toHaveBeenCalledTimes(2);
-            expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/sprites/bright-v8.json');
-            expect(transformSpy.mock.calls[0][1]).toBe('SpriteJSON');
-            expect(transformSpy.mock.calls[1][0]).toBe('http://example.com/sprites/bright-v8.png');
-            expect(transformSpy.mock.calls[1][1]).toBe('SpriteImage');
-            done();
-        });
-
-        style.loadJSON(extend(createStyleJSON(), {
-            'sprite': 'http://example.com/sprites/bright-v8'
-        }));
     });
 
     test('emits an error on non-existant vector source layer', done => {
