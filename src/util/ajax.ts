@@ -8,7 +8,7 @@ import webpSupported from './webp_supported';
  * A type that represents parameters of an asynchronous HTTP request. The same as built-in `RequestInit`, but with
  * required `url: string` and optional `collectResourceTiming?: boolean` additional properties.
  *
- * @typedef MapLibreRequestParameters
+ * @typedef {MapLibreRequestParameters}
  */
 export type MapLibreRequestParameters = RequestInit & { url: string; collectResourceTiming?: boolean };
 
@@ -16,7 +16,7 @@ export type MapLibreRequestParameters = RequestInit & { url: string; collectReso
  * A type that tells the `makeRequest` which modifications to apply to the request before making it and how to treat
  * response of the request after it's loaded based on the type of the raw data being loaded.
  *
- * @enum MapLibreRequestDataType
+ * @enum {MapLibreRequestDataType}
  */
 export enum MapLibreRequestDataType {
     'string',
@@ -31,8 +31,7 @@ export enum MapLibreRequestDataType {
  *  - `response`: a `Promise` that (possibly) resolves with the request's result
  *  - `cancel`: a function to cancel the request
  *
- * @template T
- * @typedef MapLibreRequest<T>
+ * @typedef {MapLibreRequest}
  */
 export type MapLibreRequest<T> = {response: Promise<T>} & Cancelable;
 export type MapLibreResponse<T> = {data: T} & ExpiryData;
@@ -44,9 +43,8 @@ export type MapLibreResponse<T> = {data: T} & ExpiryData;
  *  - `cancel`: a method to cancel the request
  *
  * @function
- * @template T
  * @param {MapLibreRequestParameters} requestParameters Request parameters
- * @returns {MapLibreRequest<MapLibreResponse<T>>} Promised response and the `cancel` method
+ * @returns {MapLibreRequest<MapLibreResponse>} Promised response and the `cancel` method
  */
 export function getJSON<T = Record<string, unknown> | unknown[]>(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<T>> {
     return makeRequest<T>(requestParameters, MapLibreRequestDataType.JSON);
@@ -152,10 +150,9 @@ export function getVideo(urls: string[]): MapLibreRequest<MapLibreResponse<HTMLV
  *  - `cancel`: a method to cancel the request
  *
  * @function
- * @template T
  * @param {MapLibreRequestParameters} requestParameters Request parameters
  * @param {MapLibreRequestDataType} requestDataType Request data type
- * @returns {MapLibreRequest<MapLibreResponse<T>>} Promised response and the `cancel` method
+ * @returns {MapLibreRequest<MapLibreResponse>} Promised response and the `cancel` method
  */
 export function makeRequest <T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
     /*
@@ -231,10 +228,9 @@ export const getReferrer: () => boolean | string = isWorker() ?
  *  - `cancel`: a method to cancel the request
  *
  * @function
- * @template T
  * @param {MapLibreRequestParameters} requestParameters Request parameters
  * @param {MapLibreRequestDataType} requestDataType Request data type
- * @returns {MapLibreRequest<MapLibreResponse<T>>} Promised response and the `cancel` method
+ * @returns {MapLibreRequest<MapLibreResponse>} Promised response and the `cancel` method
  */
 export function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
     const abortController = new AbortController();
@@ -286,10 +282,9 @@ export function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters
  *  - `cancel`: a method to cancel the request
  *
  * @function
- * @template T
  * @param {MapLibreRequestParameters} requestParameters Request parameters
  * @param {MapLibreRequestDataType} requestDataType Request data type
- * @returns {MapLibreRequest<MapLibreResponse<T>>} Promised response and the `cancel` method
+ * @returns {MapLibreRequest<MapLibreResponse>} Promised response and the `cancel` method
  */
 function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParameters, requestDataType?: MapLibreRequestDataType): MapLibreRequest<MapLibreResponse<T>> {
     const xhr: XMLHttpRequest = new XMLHttpRequest();
