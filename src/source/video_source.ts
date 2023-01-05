@@ -88,6 +88,7 @@ class VideoSource extends ImageSource {
 
             this._finishLoading();
         }).catch(err => {
+            if (err.message === 'aborted') return;
             this.fire(new ErrorEvent(err));
         });
     }

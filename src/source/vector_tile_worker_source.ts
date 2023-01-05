@@ -51,6 +51,7 @@ function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCa
             expires: response.expires
         });
     }).catch(err => {
+        if (err.message === 'aborted') return;
         callback(err);
     });
 

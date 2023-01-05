@@ -86,6 +86,7 @@ export const downloadRTLTextPlugin = function() {
             pluginStatus = status.loaded;
             sendPluginStateToWorker();
         }).catch(err => {
+            if (err.message === 'aborted') return;
             triggerPluginCompletionEvent(err);
         });
     }

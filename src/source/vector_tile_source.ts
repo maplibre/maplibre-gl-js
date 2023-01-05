@@ -208,6 +208,7 @@ class VectorTileSource extends Evented implements Source {
         }
 
         function done(err, data) {
+            if (err?.message === 'aborted') return;
             delete tile.request;
 
             if (tile.aborted)

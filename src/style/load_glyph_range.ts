@@ -31,6 +31,7 @@ export default function loadGlyphRange(fontstack: string,
 
         callback(null, glyphs);
     }).catch(err => {
+        if (err.message === 'aborted') return;
         callback(err);
     });
 }

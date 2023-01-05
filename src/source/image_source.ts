@@ -128,6 +128,7 @@ class ImageSource extends Evented implements Source {
         }).catch(err => {
             this._request = null;
             this._loaded = true;
+            if (err.message === 'aborted') return;
             this.fire(new ErrorEvent(err));
         });
     }

@@ -237,6 +237,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
                 this._dataUpdateable = isUpdateableGeoJSON(response.data, promoteId) ? toUpdateable(response.data, promoteId) : undefined;
                 callback(null, response.data, response.cacheControl, response.expires);
             }).catch(err => {
+                if (err.message === 'aborted') return;
                 callback(err);
             });
 

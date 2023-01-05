@@ -44,6 +44,7 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
         tile.request.response.then((response) => {
             imageLoaded.bind(this)(null, response.data);
         }).catch(err => {
+            if (err.message === 'aborted') return;
             imageLoaded.bind(this)(err, null);
         });
 

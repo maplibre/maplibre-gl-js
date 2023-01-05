@@ -280,6 +280,7 @@ class Style extends Evented {
         this._request.response.then((response) => {
             this._load(response.data, options, previousStyle);
         }).catch(err => {
+            if (err.message === 'aborted') return;
             this.fire(new ErrorEvent(err));
         }).finally(() => {
             this._request = null;

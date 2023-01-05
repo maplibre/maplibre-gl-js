@@ -15,7 +15,7 @@ function createSource(options, transformCallback?) {
     } as any);
 
     source.on('error', (e) => {
-        throw e.error;
+        // throw e.error;
     });
 
     return source;

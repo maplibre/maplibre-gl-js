@@ -1959,6 +1959,7 @@ class Map extends Camera {
         request.response.then(response => {
             callback(null, response.data);
         }).catch(err => {
+            if (err.message === 'aborted') return;
             callback(err);
         });
     }

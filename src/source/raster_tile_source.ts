@@ -129,6 +129,11 @@ class RasterTileSource extends Evented implements Source {
 
             callback(null);
         }).catch(err => {
+            if (err.message === 'aborted') {
+                console.log('her');
+                // return;
+            }
+
             if (tile.aborted) {
                 tile.state = 'unloaded';
                 callback(null);

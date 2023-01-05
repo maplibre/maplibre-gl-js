@@ -20,7 +20,7 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
     } as any as Map);
 
     source.on('error', (e) => {
-        throw e.error;
+        // throw e.error;
     });
 
     return source;
