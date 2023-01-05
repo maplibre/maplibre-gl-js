@@ -4,7 +4,7 @@ import fetchMock from 'jest-fetch-mock';
 import {fakeServer, FakeServer} from 'nise';
 
 describe('ajax', () => {
-    /*// describe('getJSON', () => {
+    // describe('getJSON', () => {
     //     test('ok', async () => {
     //         server.respondWith(request => {
     //             request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
@@ -32,7 +32,7 @@ describe('ajax', () => {
     //
     //         await expect(request.response).rejects.toBeInstanceOf(Error);
     //     });
-    // });*/
+    // });
 
     /*// describe('getArrayBuffer', () => {
     //     test('ok', async () => {
@@ -137,9 +137,40 @@ describe('ajax', () => {
         afterEach(() => {
             makeFetchRequestSpy.mockReset();
             makeXMLHttpRequestSpy.mockReset();
+            jest.clearAllMocks();
         });
 
-        describe('not "file://" protocol', () => {
+        function workerTest(url: string) {
+            const fetch = global.fetch;
+            global.fetch = null;
+            self.worker = {actor: {send: jest.fn(() => {})}};
+            const actor = self.worker.actor;
+            const isWorkerSpy = jest.spyOn(util, 'isWorker').mockImplementationOnce(() => true);
+            const sendSpy = jest.spyOn(actor, 'send');
+
+            makeRequest({url});
+
+            expect(isWorkerSpy).toHaveBeenCalledTimes(1);
+            expect(sendSpy).toHaveBeenNthCalledWith(1, 'getResource', {url}, undefined);
+
+            global.fetch = fetch;
+            self.worker = null;
+        }
+
+        describe('"custom://" protocol', () => {
+            test('when worker, calls `getResource` on the main thread', async () => {
+                workerTest('custom://example.com');
+            });
+
+            test('uses fetch when it is available', async () => {
+                makeRequest({url: 'custom://example.com'});
+
+                expect(makeFetchRequestSpy).toHaveBeenNthCalledWith(1, {url: 'custom://example.com'}, undefined);
+                expect(makeXMLHttpRequestSpy).not.toHaveBeenCalled();
+            });
+        });
+
+        describe('protocol-less or HTTP[S] (not "file://")', () => {
             test('uses fetch when it is available', async () => {
                 makeRequest({url: 'foo'});
 
@@ -148,22 +179,17 @@ describe('ajax', () => {
             });
 
             test('when worker, calls `getResource` on the main thread', async () => {
-                const fetch = global.fetch;
-                global.fetch = null;
-                self.worker = {actor: {send: () => {}}};
-                const actor = self.worker.actor;
-
-                const isWorkerSpy = jest.spyOn(util, 'isWorker').mockImplementationOnce(() => true);
-                const sendSpy = jest.spyOn(actor, 'send');
-
-                makeRequest({url: 'foo'});
-
-                expect(isWorkerSpy).toHaveBeenCalledTimes(1);
-                expect(sendSpy).toHaveBeenNthCalledWith(1, 'getResource', {url: 'foo'}, undefined);
-
-                global.fetch = fetch;
-                self.worker = null;
+                workerTest('foo');
             });
+        });
+
+        test('"file://" urls use XHR', () => {
+            fakeServer.create();
+
+            makeRequest({url: 'file://example'});
+
+            expect(makeFetchRequestSpy).not.toHaveBeenCalled();
+            expect(makeXMLHttpRequestSpy).toHaveBeenNthCalledWith(1, {url: 'file://example'}, undefined);
         });
     });
 

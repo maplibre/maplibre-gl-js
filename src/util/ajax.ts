@@ -58,7 +58,7 @@ export type MapLibreResponse<T> = {data: T} & ExpiryData;
  * @returns {MapLibreRequest<MapLibreResponse>} Promised response and the `cancel` method
  */
 export function getJSON<T = Record<string, unknown> | unknown[]>(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<T>> {
-    return makeRequest<T>(requestParameters, MapLibreRequestDataType.JSON);
+    return helper.makeRequest<T>(requestParameters, MapLibreRequestDataType.JSON);
 }
 
 /**
@@ -72,7 +72,7 @@ export function getJSON<T = Record<string, unknown> | unknown[]>(requestParamete
  * @returns {MapLibreRequest<MapLibreResponse<ArrayBuffer>>} Promised response and the `cancel` method
  */
 export function getArrayBuffer(requestParameters: MapLibreRequestParameters): MapLibreRequest<MapLibreResponse<ArrayBuffer>> {
-    return makeRequest(requestParameters, MapLibreRequestDataType.ArrayBuffer);
+    return helper.makeRequest(requestParameters, MapLibreRequestDataType.ArrayBuffer);
 }
 
 /**
@@ -185,7 +185,7 @@ export function makeRequest<T>(requestParameters: MapLibreRequestParameters, req
         that's a point to reconsider in the (hopefully near) future
      */
 
-    // if the url does not start with `http[s]:` or `file:`
+    // if the url uses some custom protocol. E.g. "custom://..."
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
         // and if the request is made from inside a worker
         if (isWorker() && (self as any).worker && (self as any).worker.actor) {
@@ -204,7 +204,8 @@ export function makeRequest<T>(requestParameters: MapLibreRequestParameters, req
         }
     }
 
-    // if the protocol is not `file://` (in comparison with the `if` block above, it can now be `http[s]://`)
+    // if there's no protocol at all or the protocol is not `file://` (in comparison with the `if` block above, it can
+    // now be `http[s]://`). E.g. "https://..." or "foo"
     if (!requestParameters.url.startsWith('file://')) {
         // and if Fetch API is supported by the target environment
         if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
@@ -219,7 +220,7 @@ export function makeRequest<T>(requestParameters: MapLibreRequestParameters, req
         }
     }
 
-    // fallback to the XMLHttpRequest API
+    // fallback to the XMLHttpRequest API. E.g. "file://..."
     return helper.makeXMLHttpRequest(requestParameters, requestDataType);
 }
 
@@ -411,4 +412,4 @@ export async function arrayBufferToCanvasImageSource(data: ArrayBuffer, _testFor
     }
 }
 
-export const helper = {makeFetchRequest, makeXMLHttpRequest};
+export const helper = {makeRequest, makeFetchRequest, makeXMLHttpRequest};
