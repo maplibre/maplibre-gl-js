@@ -198,7 +198,7 @@ export function makeRequest<T>(requestParameters: MapLibreRequestParameters, req
             // then check the protocol, and if there exists a custom handler for the protocol, then execute the custom
             // handler. Otherwise, make the request using the Fetch API
             const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
-            const action = config.REGISTERED_PROTOCOLS[protocol] || makeFetchRequest;
+            const action = config.REGISTERED_PROTOCOLS[protocol] || helper.makeFetchRequest;
 
             return action(requestParameters, requestDataType);
         }
@@ -209,7 +209,7 @@ export function makeRequest<T>(requestParameters: MapLibreRequestParameters, req
         // and if Fetch API is supported by the target environment
         if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
             // then make a `fetch` request
-            return makeFetchRequest(requestParameters, requestDataType);
+            return helper.makeFetchRequest(requestParameters, requestDataType);
         }
 
         // if the function is called from a worker
@@ -220,7 +220,7 @@ export function makeRequest<T>(requestParameters: MapLibreRequestParameters, req
     }
 
     // fallback to the XMLHttpRequest API
-    return makeXMLHttpRequest(requestParameters, requestDataType);
+    return helper.makeXMLHttpRequest(requestParameters, requestDataType);
 }
 
 /**
@@ -410,3 +410,5 @@ export async function arrayBufferToCanvasImageSource(data: ArrayBuffer, _testFor
         });
     }
 }
+
+export const helper = {makeFetchRequest, makeXMLHttpRequest};
