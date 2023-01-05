@@ -228,11 +228,19 @@ export function makeRequest<T>(requestParameters: MapLibreRequestParameters, req
  * Returns the current `referer`. It differs based on whether the function is invoked from the global code or from a
  * worker.
  *
- * @returns {boolean | string} Result
+ * @returns {string} Result
  */
-export const getReferer: () => boolean | string = isWorker() ?
-    () => (self as any).worker && (self as any).worker.referer :
-    () => (window.location.protocol === 'blob:' ? window.parent : window).location.href;
+export function getReferer(): string {
+    if (isWorker()) {
+        return (self as any).worker && (self as any).worker.referer;
+    } else {
+        if (window.location.protocol === 'blob:') {
+            return window.parent.location.href;
+        } else {
+            return window.location.href;
+        }
+    }
+}
 
 // private functions go below this line. Private functions are dependencies of the public function above and are
 // exported only to be able to be imported in the unit tests

@@ -99,6 +99,10 @@ describe('ajax', () => {
 
             self.worker = null;
         });
+
+        test('when not a worker and the current protocol is not "blob:", returns the window\'s href', async () => {
+            expect(getReferer()).toBe(window.location.href);
+        });
     });
 
     describe('makeRequest', () => {
