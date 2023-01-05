@@ -10,7 +10,7 @@ import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/u
 import {coerceSpriteToArray} from '../util/style';
 import {
     getJSON,
-    getReferrer,
+    getReferer,
     makeRequest,
     MapLibreRequest, MapLibreRequestDataType,
     MapLibreRequestParameters, MapLibreResponse,
@@ -223,7 +223,7 @@ class Style extends Evented {
 
         this._resetUpdates();
 
-        this.dispatcher.broadcast('setReferrer', getReferrer());
+        this.dispatcher.broadcast('setReferer', getReferer());
 
         const self = this;
         this._rtlTextPluginCallback = Style.registerForPluginStateChange((event) => {

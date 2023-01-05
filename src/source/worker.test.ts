@@ -118,11 +118,11 @@ describe('register RTLTextPlugin', () => {
     });
 });
 
-describe('set Referrer', () => {
-    test('Referrer is set', () => {
+describe('set Referer', () => {
+    test('Referer is set', () => {
         const worker = new Worker(_self);
-        worker.setReferrer('fakeId', 'myMap');
-        expect(worker.referrer).toBe('myMap');
+        worker.setReferer('fakeId', 'myMap');
+        expect(worker.referer).toBe('myMap');
     });
 });
 

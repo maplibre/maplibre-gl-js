@@ -93,7 +93,7 @@ export function getImage(requestParameters: MapLibreRequestParameters): MapLibre
         requestParameters.headers['Accept'] = 'image/webp,*/*';
     }
 
-    const request = getArrayBuffer(requestParameters);
+    const request = helper.getArrayBuffer(requestParameters);
 
     return {
         response: (async () => {
@@ -225,13 +225,13 @@ export function makeRequest<T>(requestParameters: MapLibreRequestParameters, req
 }
 
 /**
- * Returns the current `referrer`. It differs based on whether the function is invoked from the global code or from a
+ * Returns the current `referer`. It differs based on whether the function is invoked from the global code or from a
  * worker.
  *
  * @returns {boolean | string} Result
  */
-export const getReferrer: () => boolean | string = isWorker() ?
-    () => (self as any).worker && (self as any).worker.referrer :
+export const getReferer: () => boolean | string = isWorker() ?
+    () => (self as any).worker && (self as any).worker.referer :
     () => (window.location.protocol === 'blob:' ? window.parent : window).location.href;
 
 // private functions go below this line. Private functions are dependencies of the public function above and are
@@ -256,7 +256,7 @@ export function makeFetchRequest<T>(requestParameters: MapLibreRequestParameters
     const abortController = new AbortController();
 
     const request = new Request(requestParameters.url, extend({}, requestParameters, {
-        referrer: getReferrer(),
+        referer: getReferer(),
         signal: abortController.signal
     }));
 
@@ -412,4 +412,4 @@ export async function arrayBufferToCanvasImageSource(data: ArrayBuffer, _testFor
     }
 }
 
-export const helper = {makeRequest, makeFetchRequest, makeXMLHttpRequest};
+export const helper = {getArrayBuffer, makeRequest, makeFetchRequest, makeXMLHttpRequest};

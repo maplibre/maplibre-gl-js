@@ -1,143 +1,115 @@
-import {makeFetchRequest, makeRequest, makeXMLHttpRequest, MapLibreRequestDataType, helper} from './ajax';
+import {
+    getJSON,
+    getArrayBuffer,
+    getImage,
+    getVideo,
+    makeRequest,
+    getReferer,
+    makeFetchRequest,
+    makeXMLHttpRequest,
+    arrayBufferToCanvasImageSource,
+    helper,
+    MapLibreRequestDataType,
+} from './ajax';
 import * as util from './util';
 import fetchMock from 'jest-fetch-mock';
 import {fakeServer, FakeServer} from 'nise';
+import webpSupported from './webp_supported';
 
 describe('ajax', () => {
-    // describe('getJSON', () => {
-    //     test('ok', async () => {
-    //         server.respondWith(request => {
-    //             request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
-    //         });
-    //
-    //         try {
-    //             const request = getJSON({url: ''});
-    //             server.respond();
-    //
-    //             const response = await request.response;
-    //             expect(response.data).toEqual({foo: 'bar'});
-    //         } catch (err) {
-    //             // should never execute
-    //             expect(true).toBe(false);
-    //         }
-    //     });
-    //
-    //     test('404', async () => {
-    //         server.respondWith(request => {
-    //             request.respond(404);
-    //         });
-    //
-    //         const request = getJSON({url: ''});
-    //         server.respond();
-    //
-    //         await expect(request.response).rejects.toBeInstanceOf(Error);
-    //     });
-    // });
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
 
-    /*// describe('getArrayBuffer', () => {
-    //     test('ok', async () => {
-    //         server.respondWith(request => {
-    //             request.respond(200, undefined, new ArrayBuffer(0)[Symbol.toStringTag]);
-    //         });
-    //
-    //         try {
-    //             const request = getArrayBuffer({url: ''});
-    //             server.respond();
-    //
-    //             const response = await request.response;
-    //             expect(response.data).toBeInstanceOf(ArrayBuffer);
-    //         } catch (err) {
-    //             // should never execute
-    //             expect(true).toBe(false);
-    //         }
-    //     });
-    //
-    //     test('404', async () => {
-    //         server.respondWith(request => {
-    //             request.respond(404);
-    //         });
-    //
-    //         const request = getArrayBuffer({url: ''});
-    //         server.respond();
-    //
-    //         await expect(request.response).rejects.toBeInstanceOf(Error);
-    //     });
-    // });*/
+    describe('getJSON', () => {
+        test('calls `makeRequest`', async () => {
+            // @ts-ignore
+            const makeRequestSpy = jest.spyOn(helper, 'makeRequest').mockImplementationOnce(() => {});
 
-    /*// describe('getImage', () => {
-    //     test('ok', async () => {
-    //         server.respondWith(request => {
-    //             request.respond(200, undefined, new ArrayBuffer(0)[Symbol.toStringTag]);
-    //         });
-    //
-    //         try {
-    //             const request = getImage({url: ''});
-    //             server.respond();
-    //
-    //             const response = await request.response;
-    //             expect(response.data instanceof ImageBitmap || response.data instanceof HTMLImageElement).toBeTruthy();
-    //         } catch (err) {
-    //             // should never execute
-    //             expect(true).toBe(false);
-    //         }
-    //     });
-    //
-    //     test('404', async () => {
-    //         server.respondWith(request => {
-    //             request.respond(404);
-    //         });
-    //
-    //         const request = getImage({url: ''});
-    //         server.respond();
-    //
-    //         await expect(request.response).rejects.toBeInstanceOf(Error);
-    //     });
-    // });*/
+            getJSON({url: ''});
 
-    /*// describe('getVideo', () => {
-    //     test('ok', async () => {
-    //         try {
-    //             const request = getVideo(['https://example.com/video']);
-    //             // @ts-ignore
-    //             request._testForceLoadStart();
-    //
-    //             const response = await request.response;
-    //             expect(response.data).toBeInstanceOf(HTMLVideoElement);
-    //             expect(response.data.children).toHaveLength(1);
-    //             expect((response.data.children[0] as HTMLSourceElement).src).toBe('https://example.com/video');
-    //         } catch (err) {
-    //             // should never execute
-    //             expect(true).toBe(false);
-    //         }
-    //     });
-    //
-    //     test('error', async () => {
-    //         const request = getVideo(['https://example.com/video']);
-    //         // @ts-ignore
-    //         request._testForceError();
-    //
-    //         await expect(request.response).rejects.toBeInstanceOf(Error);
-    //     });
-    // });*/
+            expect(makeRequestSpy).toHaveBeenNthCalledWith(1, {url: ''}, MapLibreRequestDataType.JSON);
+        });
+    });
+
+    describe('getArrayBuffer', () => {
+        test('calls `makeRequest`', async () => {
+            // @ts-ignore
+            const makeRequestSpy = jest.spyOn(helper, 'makeRequest').mockImplementationOnce(() => {});
+
+            getArrayBuffer({url: ''});
+
+            expect(makeRequestSpy).toHaveBeenNthCalledWith(1, {url: ''}, MapLibreRequestDataType.ArrayBuffer);
+        });
+    });
+
+    describe('getImage', () => {
+        test('calls `getArrayBuffer`', async () => {
+            const getArrayBufferSpy = jest.spyOn(helper, 'getArrayBuffer');
+
+            getImage({url: ''});
+
+            expect(getArrayBufferSpy).toHaveBeenNthCalledWith(1, {url: ''});
+        });
+
+        test('respects .webp support', async () => {
+            webpSupported.supported = true;
+            const getArrayBufferSpy = jest.spyOn(helper, 'getArrayBuffer');
+
+            getImage({url: ''});
+
+            expect(getArrayBufferSpy).toHaveBeenNthCalledWith(1, {url: '', headers: {'Accept': 'image/webp,*/*'}});
+
+            webpSupported.supported = false;
+        });
+    });
+
+    describe('getVideo', () => {
+        test('ok', async () => {
+            try {
+                const request = getVideo(['https://example.com/video']);
+                // @ts-ignore
+                request._testForceLoadStart();
+
+                const response = await request.response;
+                expect(response.data).toBeInstanceOf(HTMLVideoElement);
+                expect(response.data.children).toHaveLength(1);
+                expect((response.data.children[0] as HTMLSourceElement).src).toBe('https://example.com/video');
+            } catch (err) {
+                // should never execute
+                expect(true).toBe(false);
+            }
+        });
+
+        test('error', async () => {
+            const request = getVideo(['https://example.com/video']);
+            // @ts-ignore
+            request._testForceError();
+
+            await expect(request.response).rejects.toBeInstanceOf(Error);
+        });
+    });
+
+    describe('getReferer', () => {
+        test('when worker, returns the worker\'s referer', async () => {
+            jest.spyOn(util, 'isWorker').mockImplementationOnce(() => true);
+            self.worker = {referer: 'foo'};
+
+            expect(getReferer()).toBe('foo');
+
+            self.worker = null;
+        });
+    });
 
     describe('makeRequest', () => {
         let makeFetchRequestSpy;
         let makeXMLHttpRequestSpy;
 
         beforeEach(() => {
-            makeFetchRequestSpy = jest.spyOn(helper, 'makeFetchRequest').mockImplementationOnce((...args) => {
-                return makeFetchRequest(...args);
-            });
-
-            makeXMLHttpRequestSpy = jest.spyOn(helper, 'makeXMLHttpRequest').mockImplementationOnce((...args) => {
-                return makeXMLHttpRequest(...args);
-            });
-        });
-
-        afterEach(() => {
-            makeFetchRequestSpy.mockReset();
-            makeXMLHttpRequestSpy.mockReset();
-            jest.clearAllMocks();
+            // @ts-ignore
+            makeFetchRequestSpy = jest.spyOn(helper, 'makeFetchRequest').mockImplementationOnce(() => {});
+            // @ts-ignore
+            makeXMLHttpRequestSpy = jest.spyOn(helper, 'makeXMLHttpRequest').mockImplementationOnce(() => {});
         });
 
         function workerTest(url: string) {
@@ -361,57 +333,57 @@ describe('ajax', () => {
         });
     });
 
-    /*// describe('arrayBufferToCanvasImageSource', () => {
-    //     test('ok (via ImageBitmap)', async () => {
-    //         const arrayBuffer = new ArrayBuffer(1);
-    //
-    //         try {
-    //             const promisedImage = arrayBufferToCanvasImageSource(arrayBuffer);
-    //
-    //             const image = await promisedImage;
-    //             expect(image).toBeInstanceOf(ImageBitmap);
-    //         } catch (err) {
-    //             // should never execute
-    //             expect(true).toBe(false);
-    //         }
-    //     });
-    //
-    //     test('error (bad input)', async () => {
-    //         global.createImageBitmap = () => { throw new Error(); };
-    //
-    //         const arrayBuffer = new ArrayBuffer(0);
-    //
-    //         const promisedImage = arrayBufferToCanvasImageSource(arrayBuffer);
-    //
-    //         await expect(promisedImage).rejects.toBeInstanceOf(Error);
-    //     });
-    //
-    //     test('ok (via HTMLImageElement)', async () => {
-    //         global.createImageBitmap = null;
-    //         global.URL.revokeObjectURL = () => {};
-    //
-    //         const arrayBuffer = new ArrayBuffer(0);
-    //
-    //         try {
-    //             const promisedImage = arrayBufferToCanvasImageSource(arrayBuffer, true);
-    //
-    //             const image = await promisedImage;
-    //             expect(image).toBeInstanceOf(HTMLImageElement);
-    //         } catch (err) {
-    //             // should never execute
-    //             expect(true).toBe(false);
-    //         }
-    //     });
-    //
-    //     test('error (via HTMLImageElement)', async () => {
-    //         global.createImageBitmap = null;
-    //         global.URL.revokeObjectURL = () => {};
-    //
-    //         const arrayBuffer = new ArrayBuffer(0);
-    //
-    //         const promisedImage = arrayBufferToCanvasImageSource(arrayBuffer, false);
-    //
-    //         await expect(promisedImage).rejects.toBeInstanceOf(Error);
-    //     });
-    // });*/
+    describe('arrayBufferToCanvasImageSource', () => {
+        test('ok (via ImageBitmap)', async () => {
+            const arrayBuffer = new ArrayBuffer(1);
+
+            try {
+                const promisedImage = arrayBufferToCanvasImageSource(arrayBuffer);
+
+                const image = await promisedImage;
+                expect(image).toBeInstanceOf(ImageBitmap);
+            } catch (err) {
+                // should never execute
+                expect(true).toBe(false);
+            }
+        });
+
+        test('error (bad input)', async () => {
+            global.createImageBitmap = () => { throw new Error(); };
+
+            const arrayBuffer = new ArrayBuffer(0);
+
+            const promisedImage = arrayBufferToCanvasImageSource(arrayBuffer);
+
+            await expect(promisedImage).rejects.toBeInstanceOf(Error);
+        });
+
+        test('ok (via HTMLImageElement)', async () => {
+            global.createImageBitmap = null;
+            global.URL.revokeObjectURL = () => {};
+
+            const arrayBuffer = new ArrayBuffer(0);
+
+            try {
+                const promisedImage = arrayBufferToCanvasImageSource(arrayBuffer, true);
+
+                const image = await promisedImage;
+                expect(image).toBeInstanceOf(HTMLImageElement);
+            } catch (err) {
+                // should never execute
+                expect(true).toBe(false);
+            }
+        });
+
+        test('error (via HTMLImageElement)', async () => {
+            global.createImageBitmap = null;
+            global.URL.revokeObjectURL = () => {};
+
+            const arrayBuffer = new ArrayBuffer(0);
+
+            const promisedImage = arrayBufferToCanvasImageSource(arrayBuffer, false);
+
+            await expect(promisedImage).rejects.toBeInstanceOf(Error);
+        });
+    });
 });

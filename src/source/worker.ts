@@ -46,7 +46,7 @@ export default class Worker {
             [_: string]: RasterDEMTileWorkerSource;
         };
     };
-    referrer: string;
+    referer: string;
 
     constructor(self: WorkerGlobalScopeInterface) {
         this.self = self;
@@ -88,8 +88,8 @@ export default class Worker {
         };
     }
 
-    setReferrer(mapID: string, referrer: string) {
-        this.referrer = referrer;
+    setReferer(mapID: string, referer: string) {
+        this.referer = referer;
     }
 
     setImages(mapId: string, images: Array<string>, callback: WorkerTileCallback) {
