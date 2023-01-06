@@ -416,14 +416,14 @@ class ImageRequestQueue {
             cancel() {
                 this.cancelled = true;
 
-                if (!isImageQueueThrottled()) {
+                if (!theQueue.isThrottled()) {
                     theQueue.processQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
                 }
             }
         };
         this.imageQueue.push(queued);
 
-        if (!isImageQueueThrottled()) {
+        if (!this.isThrottled()) {
             this.processQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
         }
 
@@ -451,7 +451,7 @@ class ImageRequestQueue {
                 request.completed = true;
                 this.currentParallelImageRequests--;
 
-                if (!isImageQueueThrottled()) {
+                if (!this.isThrottled()) {
                     this.processQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
                 }
             }
@@ -467,7 +467,7 @@ class ImageRequestQueue {
         maxImageRequests: number = 0): number {
 
         if (!maxImageRequests) {
-            maxImageRequests = Math.max(0, isImageQueueThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED : config.MAX_PARALLEL_IMAGE_REQUESTS);
+            maxImageRequests = Math.max(0, this.isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED : config.MAX_PARALLEL_IMAGE_REQUESTS);
         }
 
         const theQueue = this;
@@ -477,8 +477,8 @@ class ImageRequestQueue {
                 request.cancelled = true;
                 request.innerRequest.cancel();
 
-                if (!isImageQueueThrottled()) {
-                    processImageRequestQueue();
+                if (!theQueue.isThrottled()) {
+                    theQueue.processQueue();
                 }
             }
         };
@@ -542,9 +542,8 @@ export function removeImageQueueThrottleControlCallback(callbackHandle: number):
  * Check to see if any of the installed callbacks are requesting the queue
  * to be throttled.
  * @returns {boolean} true if any callback is causing the queue to be throttled.
- * @private
  */
-function isImageQueueThrottled(): boolean {
+export function isImageQueueThrottled(): boolean {
     return imageQueue.isThrottled();
 }
 
