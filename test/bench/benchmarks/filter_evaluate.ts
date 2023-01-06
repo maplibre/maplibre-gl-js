@@ -9,7 +9,7 @@ export default class FilterEvaluate extends Benchmark {
     layers: any[];
 
     async setup() {
-        const response = await fetch('/bench/data/785.vector.pbf');
+        const response = await fetch('/test/bench/data/785.vector.pbf');
         const data = await response.arrayBuffer();
         const tile = new VectorTile(new Pbf(data));
 
