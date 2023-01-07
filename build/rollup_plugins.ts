@@ -38,7 +38,8 @@ export const plugins = (production: boolean): Plugin[] => [
             // eslint-disable-next-line camelcase
             pure_getters: true,
             passes: 3
-        }
+        },
+        sourceMap: true
     }),
     nodeResolve,
     typescript(),
