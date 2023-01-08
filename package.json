@@ -112,7 +112,7 @@
     "pngjs": "^6.0.0",
     "postcss": "^8.4.20",
     "postcss-cli": "^10.1.0",
-    "postcss-inline-svg": "^5.0.0",
+    "postcss-svg-load": "^5.0.1",
     "pretty-bytes": "^6.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
