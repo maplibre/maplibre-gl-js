@@ -23,4 +23,4 @@ jobs:
           architecture: x64
       - run: npm ci
       - run: npm run build-dev
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-browser
+      - run: npm run test-browser

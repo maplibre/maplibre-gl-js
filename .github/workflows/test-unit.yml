@@ -31,5 +31,6 @@ jobs:
           node-version: ${{ matrix.node_version }}
           architecture: ${{ matrix.architecture }}
       - run: npm ci
-      - run: xvfb-run -s "-ac -screen 0 1280x1024x24" npm run test-unit-ci
+      - run: npm run test-unit-ci
 
+s
