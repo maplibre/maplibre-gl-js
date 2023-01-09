@@ -1,31 +1,30 @@
-import {JestConfigWithTsJest} from 'ts-jest';
+import {Config} from 'jest';
 
 const sharedConfig = {
     transform: {
-        '.*[.](ts|js)$': ['ts-jest', {
+        '[.](m|)(ts|js)x?$': ['ts-jest', {
             'isolatedModules': true,
         }],
     },
     transformIgnorePatterns: []
-} as any;
+} as Partial<Config>;
 
-const config: JestConfigWithTsJest = {
+const config: Config = {
     projects: [
         {
             displayName: 'e2e',
             testMatch: [
-                '<rootDir>/test/integration/browser/**/*.test.{ts,mts,js}',
-                '<rootDir>/test/integration/query/**/*.test.{ts,mts,js}',
+                '<rootDir>/test/integration/query/query.test.ts',
             ],
-            setupFiles: ['jest-canvas-mock'],
+            preset: 'jest-playwright-preset',
             ...sharedConfig,
         },
         {
             displayName: 'jsdom',
             testMatch: [
-                '<rootDir>/test/integration/**/*.test.{ts,mts,js}',
-                '<rootDir>/test/integration/**/*.test.{ts,mts,js}',
                 '<rootDir>/src/**/*.test.{ts,mts,js}',
+                '<rootDir>/test/integration/expression/expression.test.ts',
+                '<rootDir>/test/integration/symbol-shaping/shaping.test.ts',
             ],
             testEnvironment: 'jsdom',
             setupFiles: [
@@ -35,11 +34,14 @@ const config: JestConfigWithTsJest = {
             ...sharedConfig,
         },
         {
-            displayName: 'isolation',
+            displayName: 'bare',
+            testEnvironment: 'node',
             testMatch: [
+                '<rootDir>/test/integration/browser/browser.test.ts',
+                '<rootDir>/test/integration/style-spec/validate_spec.test.ts',
                 '<rootDir>/test/build/**/*.test.{ts,mts,js}',
             ],
-            setupFiles: ['jest-canvas-mock'],
+            setupFiles: [],
             ...sharedConfig,
         }
     ]
