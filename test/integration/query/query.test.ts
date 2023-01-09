@@ -131,10 +131,7 @@ function performQueryOnFixture(fixture)  {
 describe('query tests', () => {
 
     beforeAll(async () => {
-
-        browser = await chromium.launch({
-            headless: false,
-        });
+        browser = await chromium.launch();
     });
 
     beforeEach(async () => {

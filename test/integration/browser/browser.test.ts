@@ -30,9 +30,7 @@ async function getMapCanvas(url, page: Page) {
 }
 
 async function newTest(impl: BrowserType) {
-    browser = await impl.launch({
-        headless: false,
-    });
+    browser = await impl.launch();
 
     context = await browser.newContext({
         viewport: {width: testWidth, height: testHeight},
