@@ -129,6 +129,14 @@
     "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
   },
+  "overrides": {
+    "postcss-inline-svg": {
+      "css-select": "^5.1.0",
+      "dom-serializer": "^2.0.0",
+      "htmlparser2": "^8.0.1",
+      "postcss-value-parser": "^4.2.0"
+    }
+  },
   "scripts": {
     "generate-dist-package": "ts-node build/generate-dist-package",
     "generate-shaders": "ts-node build/generate-shaders.ts",
