@@ -2,7 +2,11 @@
   "expression": ["replace-all", ["get", "s"], ["get", "f"], ["get", "r"]],
   "inputs": [
     [{}, {"properties": {"s": "cats;dogs;ferrets", "f": ";", "r": " and "}}],
-    [{}, {"properties": {"s": "cats dogs  ferrets   ", "f": " ", "r": ""}}]
+    [{}, {"properties": {"s": "cats dogs  ferrets   ", "f": " ", "r": ""}}],
+    [{}, {"properties": {"s": "cats dogs ferrets", "f": "?", "r": ""}}],
+    [{}, {"properties": {"s": "cats dogs ferrets", "f": "", "r": ""}}],
+    [{}, {"properties": {"s": "", "f": "", "r": ""}}],
+    [{}, {"properties": {"s": "cats dogs ferrets", "f": "dogs", "r": "bats"}}]
   ],
   "expected": {
     "compiled": {
@@ -13,7 +17,11 @@
     },
     "outputs": [
       "cats and dogs and ferrets",
-      "catsdogsferrets"
+      "catsdogsferrets",
+      "cats dogs ferrets",
+      "cats dogs ferrets",
+      "",
+      "cats bats ferrets"
     ]
   }
 }
