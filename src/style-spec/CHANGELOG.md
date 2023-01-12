@@ -1,6 +1,6 @@
-## 17.0.3
+## main
 
-* Implement `replace-all` expression. ([#????](https://github.com/maplibre/maplibre-gl-js/pull/????))
+* Implement `replace-all` expression. ([#2059](https://github.com/maplibre/maplibre-gl-js/pull/2059))
 
 ## 17.0.2
 
