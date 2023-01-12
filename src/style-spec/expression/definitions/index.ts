@@ -557,7 +557,10 @@ CompoundExpression.register(expressions, {
     'replace-all': [
         StringType,
         [StringType, StringType, StringType],
-        (ctx, [s, regex, replacement]) => s.evaluate(ctx).replaceAll(regex.evaluate(ctx), replacement.evaluate(ctx))
+        (ctx, [s, regex, replacement]) => {
+            console.log(s.evaluate(ctx).replaceAll(regex.evaluate(ctx), replacement.evaluate(ctx)));
+            return s.evaluate(ctx).replaceAll(regex.evaluate(ctx), replacement.evaluate(ctx));
+        }
     ],
     'resolved-locale': [
         StringType,

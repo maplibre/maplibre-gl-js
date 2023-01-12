@@ -211,7 +211,7 @@ export type ExpressionSpecification =
     | ['concat', ...(ExpressionInputType | ExpressionSpecification)[]] // at least two inputs required -> string
     | ['downcase', string | ExpressionSpecification] // string
     | ['is-supported-script', string | ExpressionSpecification] // boolean
-    | ['replace-all', string | ExpressionSpecification, string, string | ExpressionSpecification ] // string
+    | ['replace-all', ExpressionInputType | ExpressionSpecification , ExpressionInputType | ExpressionSpecification, ExpressionInputType | ExpressionSpecification ] // string
     | ['resolved-locale', CollatorExpressionSpecification] // string
     | ['upcase', string | ExpressionSpecification] // string
     // Color
