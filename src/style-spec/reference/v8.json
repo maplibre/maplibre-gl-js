@@ -3711,6 +3711,15 @@
             "macos": "0.9.0"
           }
         }
+      },
+      "replace-all": {
+        "doc": "Returns a new string with all matches of a pattern replaced by a replacement. The pattern can be a string or a RegExp, and the replacement is a string to replace it with.",
+        "group": "String",
+        "sdk-support": {
+          "basic functionality": {
+            "js": "3.0.0"
+          }
+        }
       }
     }
   },

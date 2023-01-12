@@ -1,0 +1,13 @@
+{
+  "expression": ["replace-all", "cats;dogs;ferrets", ";", " and "],
+  "inputs": [[{}, {}, {}, {}]],
+  "expected": {
+    "compiled": {
+      "result": "success",
+      "isFeatureConstant": true,
+      "isZoomConstant": true,
+      "type": "string"
+    },
+    "outputs": ["cats and dogs and ferrets"]
+  }
+}
