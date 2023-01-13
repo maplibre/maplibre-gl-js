@@ -1,0 +1,13 @@
+{
+  "expression": ["split", ";", "a;b;c"],
+  "inputs": [[{}, {}, {}]],
+  "expected": {
+    "compiled": {
+      "result": "success",
+      "isFeatureConstant": true,
+      "isZoomConstant": true,
+      "type": "array<string>"
+    },
+    "outputs": [["a", "b", "c"]]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "expression": ["join", "/", ["get", "a"]],
+  "inputs": [
+    [{}, {"properties": {"a": ["a", "b", "c"]}}],
+    [{}, {"properties": {"a": ["a", "b"]}}],
+    [{}, {"properties": {"a": ["a"]}}],
+    [{}, {"properties": {"a": [""]}}]
+  ],
+  "expected": {
+    "compiled": {
+      "result": "success",
+      "isFeatureConstant": false,
+      "isZoomConstant": true,
+      "type": "string"
+    },
+    "outputs": [
+      "a/b/c",
+      "a/b",
+      "a",
+      ""
+    ]
+  }
+}

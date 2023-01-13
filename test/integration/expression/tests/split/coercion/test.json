@@ -1,0 +1,23 @@
+{
+  "expression": ["split", "/", ["get", "s"]],
+  "inputs": [
+    [{}, {"properties": {"s": "a/b/c"}}],
+    [{}, {"properties": {"s": "a/b"}}],
+    [{}, {"properties": {"s": "a"}}],
+    [{}, {"properties": {"s": ""}}]
+  ],
+  "expected": {
+    "compiled": {
+      "result": "success",
+      "isFeatureConstant": false,
+      "isZoomConstant": true,
+      "type": "array<string>"
+    },
+    "outputs": [
+      ["a", "b", "c"],
+      ["a", "b"],
+      ["a"],
+      [""]
+    ]
+  }
+}

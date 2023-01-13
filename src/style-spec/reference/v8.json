@@ -3711,6 +3711,24 @@
             "macos": "0.9.0"
           }
         }
+      },
+      "split": {
+        "doc": "Returns an array of strings split by the specified delimiter string",
+        "group": "String",
+        "sdk-support": {
+          "basic functionality": {
+            "js": "3.0.0"
+          }
+        }
+      },
+      "join": {
+        "doc": "Returns a string formed from joining the elements of an array with a specified delimiter in between",
+        "group": "String",
+        "sdk-support": {
+          "basic functionality": {
+            "js": "3.0.0"
+          }
+        }
       }
     }
   },
