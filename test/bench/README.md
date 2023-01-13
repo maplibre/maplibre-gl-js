@@ -75,7 +75,7 @@ minimum and maximum sample, and sample values at the first quartile, second quar
 We recommend installing a browser extension that can take full-page snapshots, e.g.
 [FireShot](https://chrome.google.com/webstore/detail/take-webpage-screenshots/mcbpblocgmgfnpjjppndjkmgjaogfceg).
 
-Alternatively there is a suitable pdf at `bench/results/all.pdf` after a successful run of `npm run benchmark`.
+Alternatively there is a suitable pdf at [`test/bench/results/all.pdf`](./results/all.pdf) after a successful run of `npm run benchmark`.
 
 ## GitHub Pages and the benchmarks
 
