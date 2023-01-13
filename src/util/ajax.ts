@@ -470,15 +470,14 @@ class ImageRequestQueue {
             maxImageRequests = Math.max(0, this.isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED : config.MAX_PARALLEL_IMAGE_REQUESTS);
         }
 
-        const theQueue = this;
         const cancelRequest = function (request: any) {
             if (!request.completed && !request.cancelled) {
-                theQueue.currentParallelImageRequests--;
+                this.currentParallelImageRequests--;
                 request.cancelled = true;
                 request.innerRequest.cancel();
 
-                if (!theQueue.isThrottled()) {
-                    theQueue.processQueue();
+                if (!this.isThrottled()) {
+                    this.processQueue();
                 }
             }
         };
