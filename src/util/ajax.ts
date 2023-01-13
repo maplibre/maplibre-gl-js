@@ -470,7 +470,7 @@ class ImageRequestQueue {
             maxImageRequests = Math.max(0, this.isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED : config.MAX_PARALLEL_IMAGE_REQUESTS);
         }
 
-        const cancelRequest = function (request: any) {
+        const cancelRequest = (request: any) => {
             if (!request.completed && !request.cancelled) {
                 this.currentParallelImageRequests--;
                 request.cancelled = true;
