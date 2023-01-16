@@ -74,7 +74,7 @@
     "@types/supercluster": "^7.1.0",
     "@types/window-or-global": "^1.0.4",
     "@typescript-eslint/eslint-plugin": "^5.48.0",
-    "@typescript-eslint/parser": "^5.48.0",
+    "@typescript-eslint/parser": "^5.48.1",
     "address": "^1.2.2",
     "benchmark": "^2.1.4",
     "canvas": "^2.11.0",
