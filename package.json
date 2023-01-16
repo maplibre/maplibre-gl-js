@@ -73,7 +73,7 @@
     "@types/shuffle-seed": "^1.1.0",
     "@types/supercluster": "^7.1.0",
     "@types/window-or-global": "^1.0.4",
-    "@typescript-eslint/eslint-plugin": "^5.48.0",
+    "@typescript-eslint/eslint-plugin": "^5.48.1",
     "@typescript-eslint/parser": "^5.48.0",
     "address": "^1.2.2",
     "benchmark": "^2.1.4",
