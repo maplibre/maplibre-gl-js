@@ -87,7 +87,7 @@
     "eslint": "^8.31.0",
     "eslint-config-mourner": "^3.0.0",
     "eslint-plugin-html": "^7.1.0",
-    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-import": "^2.27.4",
     "eslint-plugin-jest": "^27.2.1",
     "eslint-plugin-jsdoc": "^39.6.4",
     "eslint-plugin-react": "^7.31.11",
