@@ -49,7 +49,7 @@
     "@rollup/plugin-replace": "^5.0.2",
     "@rollup/plugin-strip": "^3.0.2",
     "@rollup/plugin-terser": "^0.3.0",
-    "@rollup/plugin-typescript": "^10.0.1",
+    "@rollup/plugin-typescript": "^11.0.0",
     "@types/benchmark": "^2.1.2",
     "@types/cssnano": "^5.0.0",
     "@types/d3": "^7.4.0",
@@ -74,7 +74,7 @@
     "@types/supercluster": "^7.1.0",
     "@types/window-or-global": "^1.0.4",
     "@typescript-eslint/eslint-plugin": "^5.48.0",
-    "@typescript-eslint/parser": "^5.47.1",
+    "@typescript-eslint/parser": "^5.48.0",
     "address": "^1.2.2",
     "benchmark": "^2.1.4",
     "canvas": "^2.11.0",
@@ -88,7 +88,7 @@
     "eslint-config-mourner": "^3.0.0",
     "eslint-plugin-html": "^7.1.0",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jest": "^27.2.0",
+    "eslint-plugin-jest": "^27.2.1",
     "eslint-plugin-jsdoc": "^39.6.4",
     "eslint-plugin-react": "^7.31.11",
     "gl": "^6.0.2",
@@ -99,7 +99,7 @@
     "jest-environment-jsdom": "^29.3.1",
     "jest-fetch-mock": "^3.0.3",
     "jest-playwright-preset": "^3.0.1",
-    "jsdom": "^20.0.2",
+    "jsdom": "^21.0.0",
     "json-stringify-pretty-compact": "^4.0.0",
     "minimist": "^1.2.7",
     "mock-geolocation": "^1.0.11",
@@ -109,9 +109,9 @@
     "npm-run-all": "^4.1.5",
     "pdf-merger-js": "^4.2.0",
     "pixelmatch": "^5.3.0",
-    "playwright": "^1.29.1",
+    "playwright": "^1.29.2",
     "pngjs": "^6.0.0",
-    "postcss": "^8.4.20",
+    "postcss": "^8.4.21",
     "postcss-cli": "^10.1.0",
     "postcss-inline-svg": "^5.0.0",
     "pretty-bytes": "^6.0.0",
@@ -129,6 +129,14 @@
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
+  },
+  "overrides": {
+    "postcss-inline-svg": {
+      "css-select": "^5.1.0",
+      "dom-serializer": "^2.0.0",
+      "htmlparser2": "^8.0.1",
+      "postcss-value-parser": "^4.2.0"
+    }
   },
   "scripts": {
     "generate-dist-package": "ts-node build/generate-dist-package",
