@@ -363,7 +363,7 @@ export const getImage = function(
         advanced = true;
         numImageRequests--;
 
-        while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) { // eslint-disable-line
+        while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) {
             const request = imageQueue.shift();
             const {requestParameters, callback, cancelled} = request;
             if (!cancelled) {
