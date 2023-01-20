@@ -28,7 +28,7 @@ export default class PaintStates extends Benchmark {
     }
 
     async setup() {
-        const response = await fetch('/bench/data/naturalearth-land.json');
+        const response = await fetch('/test/bench/data/naturalearth-land.json');
         const data = await response.json();
         this.numFeatures = data.features.length;
         const style = Object.assign({}, emptystyle, {

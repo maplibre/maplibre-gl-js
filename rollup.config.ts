@@ -35,7 +35,7 @@ const config: RollupOptions[] = [{
         name: 'maplibregl',
         file: outputFile,
         format: 'umd',
-        sourcemap: production ? true : 'inline',
+        sourcemap: true,
         indent: false,
         intro: fs.readFileSync('build/rollup/bundle_prelude.js', 'utf8'),
         banner

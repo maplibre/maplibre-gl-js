@@ -1,9 +1,7 @@
-import path, {dirname} from 'path';
 import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
-import {fileURLToPath, pathToFileURL} from 'url';
 import {RollupOptions} from 'rollup';
-import {nodeResolve} from './build/rollup_plugins';
+import resolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
 import json from '@rollup/plugin-json';
 
@@ -22,24 +20,14 @@ const config: RollupOptions[] = [{
     }],
     plugins: [
         json(),
-        {
-            name: 'dep-checker',
-            resolveId(source, importer) {
-                // Some users reference modules within style-spec package directly, instead of the bundle
-                // This means that files within the style-spec package should NOT import files from the parent maplibre-gl-js tree.
-                // This check will cause the build to fail on CI allowing these issues to be caught.
-                if (importer && !importer.includes('node_modules')) {
-                    const resolvedPath = path.join(importer, source);
-                    const importMetaUrl = pathToFileURL(__filename).toString();
-                    const fromRoot = path.relative(dirname(fileURLToPath(importMetaUrl)), resolvedPath);
-                    if (fromRoot.length > 2 && fromRoot.slice(0, 2) === '..') {
-                        throw new Error(`Module ${importer} imports ${source} from outside the style-spec package root directory.`);
-                    }
-                }
-
-                return null;
-            }
-        },
+        resolve({
+            browser: true,
+            preferBuiltins: false,
+            // Some users reference modules within style-spec package directly, instead of the bundle
+            // This means that files within the style-spec package should NOT import files from the parent maplibre-gl-js tree.
+            // This check will cause the build to fail on CI allowing these issues to be caught.
+            jail: 'src/style-spec/',
+        }),
         // https://github.com/zaach/jison/issues/351
         replace({
             preventAssignment: true,
@@ -49,7 +37,6 @@ const config: RollupOptions[] = [{
                 '_token_stack:': ''
             }
         }),
-        nodeResolve,
         typescript(),
         commonjs()
     ]
