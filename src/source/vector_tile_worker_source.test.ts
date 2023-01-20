@@ -137,7 +137,7 @@ describe('vector tile worker source', () => {
                 rawData: rawTileData
             });
         }
-        
+
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
             source: 'source',
@@ -146,9 +146,9 @@ describe('vector tile worker source', () => {
         }]);
 
         const source = new VectorTileWorkerSource(actor, layerIndex, [], loadVectorData);
-        
+
         // mock implementation of WorkerTile parse that would take some time to complete
-        WorkerTile.prototype.parse = jest.fn().mockImplementation(function(data, layerIndex, availableImages, actor, callback){
+        WorkerTile.prototype.parse = jest.fn().mockImplementation(function(data, layerIndex, availableImages, actor, callback) {
             this.status = 'parsing';
             window.setTimeout(() => callback(null, {}), 10);
         });
@@ -172,10 +172,10 @@ describe('vector tile worker source', () => {
         } as any as WorkerTileParameters, (err, res) => {
             expect(err).toBeFalsy();
             expect(res).toBeDefined();
-            expect(WorkerTile.prototype.parse).toBeCalledTimes(2);
+            expect(WorkerTile.prototype.parse).toHaveBeenCalledTimes(2);
             expect(loadCallbackCalled).toBeTruthy();
             done();
-        })
+        });
     });
 
     test('VectorTileWorkerSource#reloadTile handles multiple pending reloads', () => {
