@@ -130,7 +130,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource#loadTile reparses tile if the reloadTile has been called during parsing', (done) => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
+        const rawTileData = new Uint8Array([]);
         function loadVectorData(params, callback) {
             return callback(null, {
                 vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
