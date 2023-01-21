@@ -3,6 +3,7 @@ import type {ExpiryData} from '../types/caching';
 import {extend, isWorker} from './util';
 import config from './config';
 import webpSupported from './webp_supported';
+import pLimit from 'p-limit';
 
 /**
  * A type that represents parameters of an asynchronous HTTP request. The same as built-in `RequestInit`, but with
@@ -75,6 +76,8 @@ export function getArrayBuffer(requestParameters: MapLibreRequestParameters): Ma
     return helper.makeRequest(requestParameters, MapLibreRequestDataType.ArrayBuffer);
 }
 
+const imageRequestsQueue = pLimit(config.MAX_PARALLEL_IMAGE_REQUESTS);
+
 /**
  * Loads an image as the `ImageBitmap` or `HTMLImageElement` (both the formats can be used as an image source for
  * canvases) and returns an object containing 2 fields:
@@ -93,11 +96,20 @@ export function getImage(requestParameters: MapLibreRequestParameters): MapLibre
         requestParameters.headers['Accept'] = 'image/webp,*/*';
     }
 
-    const request = helper.getArrayBuffer(requestParameters);
+    const localAbortController = new AbortController();
+
+    const promisedResponse = imageRequestsQueue(() => {
+        if (!localAbortController.signal.aborted) {
+            const request = helper.getArrayBuffer(requestParameters);
+            localAbortController.signal.addEventListener('abort', () => request.cancel());
+
+            return request.response;
+        }
+    });
 
     return {
         response: (async () => {
-            const response = await request.response;
+            const response =  await promisedResponse;
             const image = await arrayBufferToCanvasImageSource(response.data);
 
             return {
@@ -107,7 +119,8 @@ export function getImage(requestParameters: MapLibreRequestParameters): MapLibre
             };
         })(),
 
-        cancel: request.cancel
+        cancel: () => localAbortController.abort()
+
     };
 }
 
