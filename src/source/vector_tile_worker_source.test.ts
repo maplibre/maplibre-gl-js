@@ -6,7 +6,7 @@ import {VectorTileWorkerSource} from '../source/vector_tile_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, FakeServer} from 'nise';
 import {Actor} from '../util/actor';
-import {TileParameters, WorkerTileParameters} from './worker_source';
+import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
 import {setPerformance} from '../util/test/util';
 
@@ -16,7 +16,6 @@ describe('vector tile worker source', () => {
     let originalGetEntriesByName;
     let originalMeasure;
     let originalMark;
-    let originalParse;
 
     beforeEach(() => {
         global.fetch = null;
@@ -25,7 +24,6 @@ describe('vector tile worker source', () => {
         originalGetEntriesByName = window.performance.getEntriesByName;
         originalMeasure = window.performance.measure;
         originalMark = window.performance.mark;
-        originalParse = WorkerTile.prototype.parse;
     });
 
     afterEach(() => {
@@ -34,7 +32,6 @@ describe('vector tile worker source', () => {
         window.performance.getEntriesByName = originalGetEntriesByName;
         window.performance.measure = originalMeasure;
         window.performance.mark = originalMark;
-        WorkerTile.prototype.parse = originalParse;
     });
     test('VectorTileWorkerSource#abortTile aborts pending request', () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
@@ -147,11 +144,12 @@ describe('vector tile worker source', () => {
 
         const source = new VectorTileWorkerSource(actor, layerIndex, [], loadVectorData);
 
-        // mock implementation of WorkerTile parse that would take some time to complete
-        WorkerTile.prototype.parse = jest.fn().mockImplementation(function(data, layerIndex, availableImages, actor, callback) {
-            this.status = 'parsing';
-            window.setTimeout(() => callback(null, {}), 10);
-        });
+        const parseWorkerTileMock = jest
+            .spyOn(WorkerTile.prototype, 'parse')
+            .mockImplementation(function(data, layerIndex, availableImages, actor, callback) {
+                this.status = 'parsing';
+                window.setTimeout(() => callback(null, {} as WorkerTileResult), 10);
+            });
 
         let loadCallbackCalled = false;
         source.loadTile({
@@ -172,7 +170,7 @@ describe('vector tile worker source', () => {
         } as any as WorkerTileParameters, (err, res) => {
             expect(err).toBeFalsy();
             expect(res).toBeDefined();
-            expect(WorkerTile.prototype.parse).toHaveBeenCalledTimes(2);
+            expect(parseWorkerTileMock).toHaveBeenCalledTimes(2);
             expect(loadCallbackCalled).toBeTruthy();
             done();
         });
