@@ -35,7 +35,7 @@ let responseConstructorSupportsReadableStream;
 function prepareBody(response: Response, callback) {
     if (responseConstructorSupportsReadableStream === undefined) {
         try {
-            new Response(new ReadableStream()); // eslint-disable-line no-undef
+            new Response(new ReadableStream());
             responseConstructorSupportsReadableStream = true;
         } catch (e) {
             // Edge
