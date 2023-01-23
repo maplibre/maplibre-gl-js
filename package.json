@@ -58,7 +58,7 @@
     "@types/eslint": "^8.4.10",
     "@types/gl": "^6.0.2",
     "@types/glob": "^8.0.0",
-    "@types/jest": "^29.2.5",
+    "@types/jest": "^29.2.6",
     "@types/jsdom": "^20.0.0",
     "@types/minimist": "^1.2.2",
     "@types/murmurhash-js": "^1.0.3",
