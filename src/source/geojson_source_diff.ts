@@ -1,3 +1,4 @@
+import { mercatorXfromLng, mercatorYfromLat } from '../geo/mercator_coordinate';
 import {TileBitmask} from '../util/tile_bitmask';
 
 export type GeoJSONFeatureId = number | string;
@@ -172,10 +173,10 @@ function markInvalidated(updateable: Map<GeoJSONFeatureId, GeoJSON.Feature>, id:
     }
 
     const [minX, minY, maxX, maxY] = bbox;
-    let minTileX = convertToTileCoord(minX);
-    let minTileY = convertToTileCoord(minY);
-    let maxTileX = convertToTileCoord(maxX);
-    let maxTileY = convertToTileCoord(maxY);
+    let minTileX = convertToTileCoord(mercatorXfromLng(minX));
+    let minTileY = convertToTileCoord(mercatorYfromLat(minY));
+    let maxTileX = convertToTileCoord(mercatorXfromLng(maxX));
+    let maxTileY = convertToTileCoord(mercatorYfromLat(maxY));
     let zoom = TileBitmask.MaxZoom;
     // zoom out here to avoid having to compact ancestors in the tile bitmask
     while (zoom > 0 && maxTileX > 2 + minTileX && maxTileY > 2 + minTileY) {
@@ -196,8 +197,8 @@ function convertToTileCoord(val: number): number {
     const result = Math.floor(val * TileBitmask.MaxZoomTiles);
     if (result < 0) {
         return 0;
-    } else if (result > TileBitmask.MaxZoomTiles) {
-        return TileBitmask.MaxZoomTiles;
+    } else if (result >= TileBitmask.MaxZoomTiles) {
+        return TileBitmask.MaxZoomTiles - 1;
     } else {
         return result;
     }
