@@ -173,6 +173,13 @@ function markInvalidated(updateable: Map<GeoJSONFeatureId, GeoJSON.Feature>, id:
     }
 
     const [minX, minY, maxX, maxY] = bbox;
+
+    // if the feature crosses the antimeridian, just give up and invalidate the world
+    if (minX < -180 || minY < -90 || maxX > 180 || maxY > 90) {
+        invalidated.mark(0, 0, 0);
+        return;
+    }
+
     let minTileX = convertToTileCoord(mercatorXfromLng(minX));
     let minTileY = convertToTileCoord(mercatorYfromLat(minY));
     let maxTileX = convertToTileCoord(mercatorXfromLng(maxX));
