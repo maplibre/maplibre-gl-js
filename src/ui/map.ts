@@ -2,7 +2,7 @@ import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
-import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
+import {getImage, GetImageCallback, processImageRequestQueue, installImageQueueThrottleControlCallback, removeImageQueueThrottleControlCallback, getJSON, ResourceType} from '../util/ajax';
 import {RequestManager} from '../util/request_manager';
 import Style, {StyleSwapOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
@@ -311,6 +311,7 @@ class Map extends Camera {
     _styleDirty: boolean;
     _sourcesDirty: boolean;
     _placementDirty: boolean;
+    _imageRequestQueueDirty: boolean;
     _loaded: boolean;
     // accounts for placement finishing as well
     _fullyLoaded: boolean;
@@ -335,6 +336,7 @@ class Map extends Camera {
     _clickTolerance: number;
     _pixelRatio: number;
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
+    _imageQueueThrottleControlCallbackHandle: number;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -428,6 +430,8 @@ class Map extends Camera {
         this._locale = extend({}, defaultLocale, options.locale);
         this._clickTolerance = options.clickTolerance;
         this._pixelRatio = options.pixelRatio ?? devicePixelRatio;
+
+        this._imageQueueThrottleControlCallbackHandle = installImageQueueThrottleControlCallback(() => this.isMoving());
 
         this._requestManager = new RequestManager(options.transformRequest);
 
@@ -942,7 +946,7 @@ class Map extends Camera {
      * var isMoving = map.isMoving();
      */
     isMoving(): boolean {
-        return this._moving || this.handlers.isMoving();
+        return this._moving || this.handlers?.isMoving();
     }
 
     /**
@@ -952,7 +956,7 @@ class Map extends Camera {
      * var isZooming = map.isZooming();
      */
     isZooming(): boolean {
-        return this._zooming || this.handlers.isZooming();
+        return this._zooming || this.handlers?.isZooming();
     }
 
     /**
@@ -962,7 +966,7 @@ class Map extends Camera {
      * map.isRotating();
      */
     isRotating(): boolean {
-        return this._rotating || this.handlers.isRotating();
+        return this._rotating || this.handlers?.isRotating();
     }
 
     _createDelegatedListener(type: MapEvent | string, layerId: string, listener: Listener): {
@@ -2812,6 +2816,8 @@ class Map extends Camera {
         if (this.terrain) this.terrain.sourceCache.update(this.transform, this.terrain);
         this.transform.updateElevation(this.terrain);
 
+        this._imageRequestQueueDirty = processImageRequestQueue() > 0;
+
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 
         // Actually draw
@@ -2877,7 +2883,7 @@ class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this._imageRequestQueueDirty;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
@@ -2939,6 +2945,8 @@ class Map extends Camera {
             removeEventListener('orientationchange', this._onWindowResize, false);
             removeEventListener('online', this._onWindowOnline, false);
         }
+
+        removeImageQueueThrottleControlCallback(this._imageQueueThrottleControlCallbackHandle);
 
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension) extension.loseContext();

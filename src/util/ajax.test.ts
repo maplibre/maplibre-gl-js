@@ -4,8 +4,12 @@ import {
     postData,
     getImage,
     resetImageRequestQueue,
+    processImageRequestQueue,
+    installImageQueueThrottleControlCallback,
+    removeImageQueueThrottleControlCallback,
     AJAXError
 } from './ajax';
+
 import config from './config';
 import webpSupported from './webp_supported';
 import {fakeServer, FakeServer} from 'nise';
@@ -217,6 +221,44 @@ describe('ajax', () => {
         });
 
         server.respond();
+    });
+
+    test('when throttling enabled, getImage queues requests for later processing', done => {
+        resetImageRequestQueue();
+
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED;
+
+        const isThrottling = true;
+        const callbackHandle = installImageQueueThrottleControlCallback(() => isThrottling);
+
+        let isProcessingRequests = false;
+        function callback(err) {
+            if (err) return;
+            // request processing is only allowed when explicitly called
+            if (!isProcessingRequests) {
+                done('test failed: requests processed automatically in spite of throttling being enabled');
+            }
+        }
+
+        for (let i = 0; i < maxRequests + 1; i++) {
+            getImage({url: ''}, callback);
+        }
+
+        // with throttling enabled, no requests should have been proessed yet
+        expect(server.requests).toHaveLength(0);
+
+        // process all of the pending requests
+        isProcessingRequests = true;
+        processImageRequestQueue(maxRequests + 1);
+
+        // all the pending requests should have been processed
+        expect(server.requests).toHaveLength(maxRequests + 1);
+
+        removeImageQueueThrottleControlCallback(callbackHandle);
+
+        done();
     });
 
 });

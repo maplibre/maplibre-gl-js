@@ -324,81 +324,249 @@ function arrayBufferToCanvasImageSource(data: ArrayBuffer, callback: Callback<Ca
     }
 }
 
-let imageQueue, numImageRequests;
-export const resetImageRequestQueue = () => {
-    imageQueue = [];
-    numImageRequests = 0;
-};
-resetImageRequestQueue();
-
 export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
 
-export const getImage = function(
-    requestParameters: RequestParameters,
-    callback: GetImageCallback
-): Cancelable {
-    if (webpSupported.supported) {
-        if (!requestParameters.headers) {
-            requestParameters.headers = {};
-        }
-        requestParameters.headers.accept = 'image/webp,*/*';
+export type ImageQueueThrottleControlCallback = () => boolean;
+
+/**
+ * By default, the image queue will process requests as quickly as it can while limiting
+ * the number of concurrent requests to MAX_PARALLEL_IMAGE_REQUESTS. The default behavior
+ * ensures that static views of the map can be rendered with minimal delay.
+ * However, the default behavior can prevent dynamic views of the map from rendering
+ * smoothly.
+ *
+ * When the view of the map is moving dynamically, smoother frame rates can be achieved
+ * by throttling the number of items processed by the queue per frame. This can be
+ * accomplished by using {@link installThrottleControlCallback} to allow the caller to
+ * use a lambda function to determine when the queue should be throttled (e.g. when isMoving())
+ * and manually calling {@link processQueue} in the render loop.
+ */
+class ImageRequestQueue {
+    private imageQueue = [];
+    private currentParallelImageRequests = 0;
+
+    private throttleControlCallbackHandleCounter: number = 0;
+    private throttleControlCallbacks = [];
+
+    /**
+     * Reset the image request queue, removing all pending requests.
+     */
+    public resetImageRequestQueue(): void {
+        this.imageQueue = [];
+        this.currentParallelImageRequests = 0;
     }
 
-    // limit concurrent image loads to help with raster sources performance on big screens
-    if (numImageRequests >= config.MAX_PARALLEL_IMAGE_REQUESTS) {
+    /**
+     * Install a callback to control when image queue throttling is desired.
+     * (e.g. when the map view is moving)
+     * @param {ImageQueueThrottleControlCallback} callback The callback function to install
+     * @returns {number} handle that identifies the installed callback.
+     */
+    public installThrottleControlCallback(callback: ImageQueueThrottleControlCallback): number /*callbackHandle*/ {
+        const handle = this.throttleControlCallbackHandleCounter++;
+        this.throttleControlCallbacks[handle] = callback;
+        return handle;
+    }
+
+    /**
+     * Remove a previously installed callback by passing in the handle returned
+     * by {@link installThrottleControlCallback}.
+     * @param {number} callbackHandle The handle for the callback to remove.
+     */
+    public removeThrottleControlCallback(callbackHandle: number): void {
+        const index = this.throttleControlCallbacks.indexOf(callbackHandle, 0);
+        if (index >= 0) {
+            this.throttleControlCallbacks.splice(index, 1);
+        }
+    }
+
+    /**
+     * Check to see if any of the installed callbacks are requesting the queue
+     * to be throttled.
+     * @returns {boolean} true if any callback is causing the queue to be throttled.
+     */
+    public isThrottled(): boolean {
+        return this.throttleControlCallbacks.some(item => item());
+    }
+
+    /**
+     * Request to load an image.
+     * @param {RequestParameters} requestParameters Request parameters.
+     * @param {GetImageCallback} callback Callback to issue when the request completes.
+     * @returns {Cancelable} Cancelable request.
+     */
+    public getImage(
+        requestParameters: RequestParameters,
+        callback: GetImageCallback
+    ): Cancelable {
+        if (webpSupported.supported) {
+            if (!requestParameters.headers) {
+                requestParameters.headers = {};
+            }
+            requestParameters.headers.accept = 'image/webp,*/*';
+        }
+
+        const theQueue = this;
         const queued = {
             requestParameters,
             callback,
             cancelled: false,
-            cancel() { this.cancelled = true; }
+            completed: false,
+            theQueue,
+            cancel() {
+                this.cancelled = true;
+
+                if (!theQueue.isThrottled()) {
+                    theQueue.processQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
+                }
+            }
         };
-        imageQueue.push(queued);
+        this.imageQueue.push(queued);
+
+        if (!this.isThrottled()) {
+            this.processQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
+        }
+
         return queued;
     }
-    numImageRequests++;
 
-    let advanced = false;
-    const advanceImageRequestQueue = () => {
-        if (advanced) return;
-        advanced = true;
-        numImageRequests--;
-
-        while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) {
-            const request = imageQueue.shift();
-            const {requestParameters, callback, cancelled} = request;
-            if (!cancelled) {
-                request.cancel = getImage(requestParameters, callback).cancel;
+    private doArrayRequest(requestParameters: RequestParameters, callback: GetImageCallback, request: any): Cancelable {
+        // request the image with XHR to work around caching issues
+        // see https://github.com/mapbox/mapbox-gl-js/issues/1470
+        return getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
+            if (err) {
+                callback(err);
+            } else if (data) {
+                const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
+                    if (imgErr != null) {
+                        callback(imgErr);
+                    } else if (imgResult != null) {
+                        callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
+                    }
+                };
+                arrayBufferToCanvasImageSource(data, decoratedCallback);
             }
-        }
-    };
 
-    // request the image with XHR to work around caching issues
-    // see https://github.com/mapbox/mapbox-gl-js/issues/1470
-    const request = getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
+            if (!request.cancelled) {
+                request.completed = true;
+                this.currentParallelImageRequests--;
 
-        advanceImageRequestQueue();
-
-        if (err) {
-            callback(err);
-        } else if (data) {
-            const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
-                if (imgErr != null) {
-                    callback(imgErr);
-                } else if (imgResult != null) {
-                    callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
+                if (!this.isThrottled()) {
+                    this.processQueue(config.MAX_PARALLEL_IMAGE_REQUESTS);
                 }
-            };
-            arrayBufferToCanvasImageSource(data, decoratedCallback);
-        }
-    });
+            }
+        });
+    }
 
-    return {
-        cancel: () => {
-            request.cancel();
-            advanceImageRequestQueue();
+    /**
+     * Process some number of items in the image request queue.
+     * @param {number} maxImageRequests The maximum number of request items to process. By default, up to {@link Config.MAX_PARALLEL_IMAGE_REQUESTS} will be procesed.
+     * @returns {number} The number of items remaining in the queue.
+     */
+    public processQueue(
+        maxImageRequests: number = 0): number {
+
+        if (!maxImageRequests) {
+            maxImageRequests = Math.max(0, this.isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED : config.MAX_PARALLEL_IMAGE_REQUESTS);
         }
-    };
-};
+
+        const cancelRequest = (request: any) => {
+            if (!request.completed && !request.cancelled) {
+                this.currentParallelImageRequests--;
+                request.cancelled = true;
+                request.innerRequest.cancel();
+
+                if (!this.isThrottled()) {
+                    this.processQueue();
+                }
+            }
+        };
+
+        // limit concurrent image loads to help with raster sources performance on big screens
+
+        for (let numImageRequests = this.currentParallelImageRequests; numImageRequests < maxImageRequests && this.imageQueue.length; numImageRequests++) {
+
+            const request = this.imageQueue.shift();
+            const {requestParameters, callback, cancelled} = request;
+
+            if (cancelled) {
+                continue;
+            }
+
+            const innerRequest = this.doArrayRequest(requestParameters, callback, request);
+
+            this.currentParallelImageRequests++;
+
+            request.innerRequest = innerRequest;
+            request.cancel = function () { cancelRequest(request); };
+        }
+
+        return this.imageQueue.length;
+    }
+}
+
+const imageQueue = new ImageRequestQueue();
+
+/**
+ * Reset the image request queue, removing all pending requests.
+ */
+export function resetImageRequestQueue(): void {
+    imageQueue.resetImageRequestQueue();
+}
+
+//export const resetImageRequestQueue = (): void => imageQueue.resetImageRequestQueue();
+
+resetImageRequestQueue();
+
+/**
+ * Install a callback to control when image queue throttling is desired.
+ * (e.g. when the map view is moving)
+ * @param {ImageQueueThrottleControlCallback} callback The callback to install.
+ * @returns {number} handle that identifies the installed callback.
+ */
+export function installImageQueueThrottleControlCallback(callback: ImageQueueThrottleControlCallback): number {
+    return imageQueue.installThrottleControlCallback(callback);
+}
+
+/**
+ * Remove a previously installed callback by passing in the handle returned
+ * by {@link installImageQueueThrottleControlCallback}.
+ * @param {number} callbackHandle The handle of the previously installed callback to remove.
+ */
+export function removeImageQueueThrottleControlCallback(callbackHandle: number): void {
+    imageQueue.removeThrottleControlCallback(callbackHandle);
+}
+
+/**
+ * Check to see if any of the installed callbacks are requesting the queue
+ * to be throttled.
+ * @returns {boolean} true if any callback is causing the queue to be throttled.
+ */
+export function isImageQueueThrottled(): boolean {
+    return imageQueue.isThrottled();
+}
+
+/**
+ * Request to load an image.
+ * @param {RequestParameters} requestParameters Request parameters.
+ * @param {GetImageCallback} callback Callback to issue when the request completes.
+ * @returns {Cancelable} Cancelable request.
+ */
+export function getImage(
+    requestParameters: RequestParameters,
+    callback: GetImageCallback
+): Cancelable {
+    return imageQueue.getImage(requestParameters, callback);
+}
+
+/**
+ * Process some number of items in the image request queue.
+ * @param {number} maxImageRequests The maximum number of request items to process. By default, up to {@link Config.MAX_PARALLEL_IMAGE_REQUESTS} will be procesed.
+ * @returns {number} The number of items remaining in the queue.
+ */
+export function processImageRequestQueue(maxImageRequests: number = 0): number {
+    return imageQueue.processQueue(maxImageRequests);
+}
 
 export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVideoElement>): Cancelable {
     const video: HTMLVideoElement = window.document.createElement('video');
