@@ -1,4 +1,4 @@
-import { mercatorXfromLng, mercatorYfromLat } from '../geo/mercator_coordinate';
+import {mercatorXfromLng, mercatorYfromLat} from '../geo/mercator_coordinate';
 import {TileBitmask} from '../util/tile_bitmask';
 
 export type GeoJSONFeatureId = number | string;
