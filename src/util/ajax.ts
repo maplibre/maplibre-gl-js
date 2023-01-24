@@ -76,8 +76,6 @@ export function getArrayBuffer(requestParameters: MapLibreRequestParameters): Ma
     return helper.makeRequest(requestParameters, MapLibreRequestDataType.ArrayBuffer);
 }
 
-const imageRequestsQueue = pLimit(config.MAX_PARALLEL_IMAGE_REQUESTS);
-
 /**
  * Loads an image as the `ImageBitmap` or `HTMLImageElement` (both the formats can be used as an image source for
  * canvases) and returns an object containing 2 fields:
@@ -98,12 +96,14 @@ export function getImage(requestParameters: MapLibreRequestParameters): MapLibre
 
     const localAbortController = new AbortController();
 
-    const promisedResponse = imageRequestsQueue(() => {
+    const promisedResponse = helper.imageRequestsQueue(() => {
         if (!localAbortController.signal.aborted) {
-            const request = helper.getArrayBuffer(requestParameters);
+            const request = getArrayBuffer(requestParameters);
             localAbortController.signal.addEventListener('abort', () => request.cancel());
 
             return request.response;
+        } else {
+            throw new Error('aborted');
         }
     });
 
@@ -120,7 +120,6 @@ export function getImage(requestParameters: MapLibreRequestParameters): MapLibre
         })(),
 
         cancel: () => localAbortController.abort()
-
     };
 }
 
@@ -433,4 +432,9 @@ export async function arrayBufferToCanvasImageSource(data: ArrayBuffer, _testFor
     }
 }
 
-export const helper = {getArrayBuffer, makeRequest, makeFetchRequest, makeXMLHttpRequest};
+export const helper = {
+    imageRequestsQueue: pLimit(config.MAX_PARALLEL_IMAGE_REQUESTS),
+    makeRequest,
+    makeFetchRequest,
+    makeXMLHttpRequest
+};

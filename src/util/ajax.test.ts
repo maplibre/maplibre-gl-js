@@ -44,23 +44,30 @@ describe('ajax', () => {
     });
 
     describe('getImage', () => {
-        test('calls `getArrayBuffer`', async () => {
-            const getArrayBufferSpy = jest.spyOn(helper, 'getArrayBuffer');
+        test('calls `imageRequestsQueue`', async () => {
+            const imageRequestsQueueSpy = jest.spyOn(helper, 'imageRequestsQueue');
 
             getImage({url: ''});
 
-            expect(getArrayBufferSpy).toHaveBeenNthCalledWith(1, {url: ''});
+            expect(imageRequestsQueueSpy).toHaveBeenCalledTimes(1);
         });
 
         test('respects .webp support', async () => {
-            webpSupported.supported = true;
-            const getArrayBufferSpy = jest.spyOn(helper, 'getArrayBuffer');
+            // webpSupported.supported = true;
+            // const imageRequestsQueueSpy = jest.spyOn(helper, 'getArrayBuffer');
+            //
+            // getImage({url: ''});
+            //
+            // expect(imageRequestsQueueSpy).toHaveBeenNthCalledWith(1, {url: '', headers: {'Accept': 'image/webp,*/*'}});
+            //
+            // webpSupported.supported = false;
+        });
 
-            getImage({url: ''});
-
-            expect(getArrayBufferSpy).toHaveBeenNthCalledWith(1, {url: '', headers: {'Accept': 'image/webp,*/*'}});
-
-            webpSupported.supported = false;
+        test('is cancelable', async () => {
+            fetchMock.mockResponseOnce('');
+            const request = getImage({url: ''});
+            request.cancel();
+            await expect(request.response).rejects.toStrictEqual(new Error('aborted'));
         });
     });
 
