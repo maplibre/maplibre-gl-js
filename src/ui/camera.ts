@@ -1365,7 +1365,7 @@ function addAssertions(camera: Camera) { //eslint-disable-line
         });
 
         // Canary used to test whether this function is stripped in prod build
-        canary = 'canary debug run'; // eslint-disable-line
+        canary = 'canary debug run';
     });
 }
 
