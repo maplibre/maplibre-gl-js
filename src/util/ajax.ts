@@ -381,8 +381,8 @@ export function makeXMLHttpRequest<T>(requestParameters: MapLibreRequestParamete
 /**
  * @private
  *
- * Takes (presumably) a `ArrayBuffer`-encoded image and returns it represented as either the `ImageBitmap` or
- * `HTMLImageElement` (in case `ImageBitmap`s are not supported by the target environment).
+ * Takes an `ArrayBuffer`-encoded image and returns it represented as either the `ImageBitmap` or `HTMLImageElement`
+ * (in case `ImageBitmap`s are not supported by the target environment).
  *
  * Both the types are available to be used as an image source for canvases.
  *
