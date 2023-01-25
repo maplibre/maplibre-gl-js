@@ -65,6 +65,8 @@ export default function loadSprite(
         const jsonsLength = Object.values(jsonsMap).length;
         const imagesLength = Object.values(imagesMap).length;
 
+        console.log(jsonsLength, imagesLength, !!error);
+
         if (error) {
             callback(error);
         } else if (sprite.length === jsonsLength && jsonsLength === imagesLength) {
