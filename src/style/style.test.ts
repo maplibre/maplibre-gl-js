@@ -218,15 +218,17 @@ describe('Style#loadJSON', () => {
         const requests = [];
         sinonFakeXMLServer.onCreate = req => { requests.push(req); };
         const respond = () => {
-            let req = requests.find(req => req.url === 'http://example.com/sprite.png');
-            req.setStatus(200);
-            req.response = new ArrayBuffer(8);
-            req.onload();
+            setTimeout(() => {
+                let req = requests.find(req => req.url === 'http://example.com/sprite.png');
+                req.setStatus(200);
+                req.response = new ArrayBuffer(8);
+                req.onload();
 
-            req = requests.find(req => req.url === 'http://example.com/sprite.json');
-            req.setStatus(200);
-            req.response = '{}';
-            req.onload();
+                req = requests.find(req => req.url === 'http://example.com/sprite.json');
+                req.setStatus(200);
+                req.response = '{}';
+                req.onload();
+            }, 10);
         };
 
         const style = new Style(getStubMap());
