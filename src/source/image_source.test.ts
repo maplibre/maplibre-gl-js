@@ -38,10 +38,12 @@ describe('ImageSource', () => {
     });
 
     const respond = () => {
-        const req = requests.shift();
-        req.setStatus(200);
-        req.response = new ArrayBuffer(1);
-        req.onload();
+        setTimeout(() => {
+            const req = requests.shift();
+            req.setStatus(200);
+            req.response = new ArrayBuffer(1);
+            req.onload();
+        }, 10);
     };
 
     test('constructor', () => {
@@ -171,10 +173,13 @@ describe('ImageSource', () => {
 
         source.onAdd(map);
 
-        const request = requests.shift() as any;
-        const spy = jest.spyOn(request, 'abort');
+        setTimeout(() => {
+            const request = requests.shift() as any;
+            const spy = jest.spyOn(request, 'cancel');
 
-        source.updateImage({url: '/image2.png'});
-        expect(spy).toHaveBeenCalled();
+            source.updateImage({url: '/image2.png'});
+            expect(spy).toHaveBeenCalled();
+        }, 10);
+
     });
 });
