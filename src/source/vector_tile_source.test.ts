@@ -217,7 +217,7 @@ describe('VectorTileSource', () => {
                 expect(tile.state).toBe('loading');
                 source.loadTile(tile, () => {
                     expect(events).toEqual(
-                        ['loadTile', 'tileLoaded', 'enforceCacheSizeLimit', 'reloadTile', 'tileLoaded']
+                        ['loadTile', 'tileLoaded', 'reloadTile', 'tileLoaded']
                     );
                     done();
                 });
