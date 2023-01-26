@@ -1,6 +1,5 @@
 import {extend, warnOnce, isWorker, arrayBufferToImageBitmap, arrayBufferToImage} from './util';
 import config from './config';
-import {cacheGet, cachePut} from './tile_request_cache';
 import webpSupported from './webp_supported';
 
 import type {Callback} from '../types/callback';
@@ -144,8 +143,6 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
     let complete = false;
     let aborted = false;
 
-    const cacheIgnoringSearch = false;
-
     if (requestParameters.type === 'json') {
         request.headers.set('Accept', 'application/json');
     }
@@ -170,12 +167,9 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
             // request doesn't have simple cors headers.
         }
 
-        const requestTime = Date.now();
-
         fetch(request).then(response => {
             if (response.ok) {
-                const cacheableResponse = cacheIgnoringSearch ? response.clone() : null;
-                return finishRequest(response, cacheableResponse, requestTime);
+                return finishRequest(response);
 
             } else {
                 return response.blob().then(body => callback(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
@@ -189,21 +183,13 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         });
     };
 
-    const finishRequest = (response, cacheableResponse?, requestTime?) => {
+    const finishRequest = (response) => {
         (
             requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
                 requestParameters.type === 'json' ? response.json() :
                     response.text()
         ).then(result => {
             if (aborted) return;
-            if (cacheableResponse && requestTime) {
-                // The response needs to be inserted into the cache after it has completely loaded.
-                // Until it is fully loaded there is a chance it will be aborted. Aborting while
-                // reading the body can cause the cache insertion to error. We could catch this error
-                // in most browsers but in Firefox it seems to sometimes crash the tab. Adding
-                // it to the cache here avoids that error.
-                cachePut(request, cacheableResponse, requestTime);
-            }
             complete = true;
             callback(null, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
         }).catch(err => {
@@ -211,11 +197,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         });
     };
 
-    if (cacheIgnoringSearch) {
-        cacheGet(request, validateOrFetch);
-    } else {
-        validateOrFetch(null, null);
-    }
+    validateOrFetch(null, null);
 
     return {cancel: () => {
         aborted = true;
