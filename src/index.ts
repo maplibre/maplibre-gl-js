@@ -142,6 +142,7 @@ const exported = {
         config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests;
     },
 
+    /**
      * Gets and sets the maximum number of images (raster tiles, sprites, icons) to load in parallel
      * per frame while image loading is throttled (e.g. while the map view is moving, panning, zooming, etc.).
      * Lower values tend to increase frame rate fluidity at the expense of increasing image load time.
@@ -160,7 +161,6 @@ const exported = {
         config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED = numRequests;
     },
 
-    /**
     workerUrl: '',
 
     /**
