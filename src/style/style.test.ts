@@ -5,6 +5,7 @@ import Transform from '../geo/transform';
 import {extend} from '../util/util';
 import {RequestManager} from '../util/request_manager';
 import {Event, Evented} from '../util/evented';
+import {RGBAImage} from '../util/image';
 import {
     setRTLTextPlugin,
     clearRTLTextPlugin,
@@ -296,8 +297,7 @@ describe('Style#loadJSON', () => {
                 expect(e.dataType).toBe('style');
                 style.imageManager.getImages(['image1'], (error, response) => {
                     const image = response['image1'];
-                    expect(image).toBeDefined();
-                    expect(image.data).toBeDefined();
+                    expect(image.data).toBeInstanceOf(RGBAImage);
                     expect(image.data.width).toBe(1);
                     expect(image.data.height).toBe(1);
                     expect(image.pixelRatio).toBe(1);

@@ -54,10 +54,10 @@ export default function loadSprite(
         if (error) {
             callback(error);
         } else if (sprite.length === jsonsLength && jsonsLength === imagesLength) {
-            const result = {};
+            const result = {} as {[spriteName: string]: {[id: string]: StyleImage}};
 
             for (const spriteName in jsonsMap) {
-                result[spriteName] = {} as {[_: string]: StyleImage};
+                result[spriteName] = {};
 
                 const context = browser.getImageCanvasContext(imagesMap[spriteName]);
                 const json = jsonsMap[spriteName];

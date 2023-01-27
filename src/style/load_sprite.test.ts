@@ -3,7 +3,6 @@ import path from 'path';
 import {RequestManager} from '../util/request_manager';
 import loadSprite from './load_sprite';
 import {fakeXhr} from 'nise';
-import {RGBAImage} from '../util/image';
 import * as util from '../util/util';
 
 describe('loadSprite', () => {
@@ -37,7 +36,8 @@ describe('loadSprite', () => {
             expect(Object.keys(result)[0]).toBe('default');
 
             Object.values(result['default']).forEach(styleImage => {
-                expect(styleImage.data).toBeInstanceOf(RGBAImage);
+                expect(styleImage.spriteData).toBeTruthy();
+                expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
             });
 
             done();
@@ -78,11 +78,13 @@ describe('loadSprite', () => {
             expect(Object.keys(result)[1]).toBe('sprite2');
 
             Object.values(result['sprite1']).forEach(styleImage => {
-                expect(styleImage.data).toBeInstanceOf(RGBAImage);
+                expect(styleImage.spriteData).toBeTruthy();
+                expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
             });
 
             Object.values(result['sprite2']).forEach(styleImage => {
-                expect(styleImage.data).toBeInstanceOf(RGBAImage);
+                expect(styleImage.spriteData).toBeTruthy();
+                expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
             });
 
             done();
@@ -187,7 +189,8 @@ describe('loadSprite', () => {
             expect(Object.keys(result)[0]).toBe('default');
 
             Object.values(result['default']).forEach(styleImage => {
-                expect(styleImage.data).toBeInstanceOf(RGBAImage);
+                expect(styleImage.spriteData).toBeTruthy();
+                expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
             });
 
             done();
