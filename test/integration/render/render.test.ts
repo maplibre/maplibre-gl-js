@@ -304,6 +304,26 @@ browser.getImageData = (img, padding = 0) => {
     return {width: width + 2 * padding, height: height + 2 * padding, data: dest};
 };
 
+// replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
+// @ts-ignore
+browser.getImageCanvasContext = (img) => {
+    return {
+        getImageData: (x, y, width, height) => {
+            const imgData = browser.getImageData(img);
+            const source = new Uint8Array(imgData.data);
+            const sourceWidth = imgData.width;
+            const dest = new Uint8Array(width * height * 4);
+
+            for (let i = 0; i < height; i++) {
+                const offset = sourceWidth * (y + i) * 4 + x * 4;
+                dest.set(source.slice(offset, offset + width * 4), 4 * width * i);
+            }
+
+            return {width, height, data: dest};
+        }
+    };
+};
+
 function createFakeCanvas(document: Document, id: string, imagePath: string): HTMLCanvasElement {
     const fakeCanvas = document.createElement('canvas');
     const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', imagePath)));
