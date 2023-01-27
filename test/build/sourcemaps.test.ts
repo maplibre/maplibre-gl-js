@@ -50,26 +50,41 @@ describe.each(distjs)('release file %s', (file) => {
 
 describe('main sourcemap', () => {
     test('should match source files', async () => {
-        const sourcemap = await getSourceMapForFile(pathToFileURL(packageJson.main));
-        const sourceFiles = await promisify(glob)('src/**/*.ts');
+        const sourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.main));
         const sourcemapDir = path.relative('.', dirname(packageJson.main));
-        const sourcemapFiles = sourcemap.sources.map(f => path.join(sourcemapDir, f));
 
-        const sourceFilesExpectedInMap = sourceFiles.filter(f => {
-            if (f.endsWith('.test.ts'))
+        // with expanded path
+        const sourcemapFiles = sourcemapJSON.sources.map(f => path.join(sourcemapDir, f));
+        const buildPathWin = 'build\\';
+        const buildPathLinux = 'build/';
+        const styleSpecPathWin = 'src\\style-spec';
+        const styleSpecPathLinux = 'src/style-spec';
+
+        // *.js.map file should have these files
+        const srcFiles = await promisify(glob)('src/**/*.ts');
+        const expectedSrcFilesInSourcemapJSON = srcFiles.filter(f => {
+            const lowerf = f.toLowerCase();
+            if (lowerf.endsWith('.test.ts')) {
                 return false;
-            if (f.startsWith('src/style-spec'))
+            }
+            if (lowerf.startsWith(styleSpecPathLinux) || lowerf.startsWith(styleSpecPathWin)) {
                 return false;
-            if (f.startsWith('build/'))
+            }
+            if (lowerf.startsWith(buildPathLinux) || lowerf.startsWith(buildPathWin)) {
                 return false;
+            }
             return true;
         });
 
-        const mapFilesExpectedInSource = sourcemapFiles.filter(f => {
-            if (f.startsWith('node_modules'))
+        // actual files from *.js.map
+        const actualFilesInSourcemapJSON = sourcemapFiles.filter(f => {
+            const lowerf = f.toLowerCase();
+            if (lowerf.startsWith('node_modules')) {
                 return false;
-            if (f.startsWith('src/style-spec'))
+            }
+            if (lowerf.startsWith(styleSpecPathLinux) || lowerf.startsWith(styleSpecPathWin)) {
                 return false;
+            }
             return true;
         });
 
@@ -78,9 +93,9 @@ describe('main sourcemap', () => {
             return a.filter(x => !sb.has(x));
         }
 
-        const s1 = setMinus(mapFilesExpectedInSource, sourceFilesExpectedInMap);
+        const s1 = setMinus(actualFilesInSourcemapJSON, expectedSrcFilesInSourcemapJSON);
         expect(s1.length).toBeLessThan(5);
-        const s2 = setMinus(sourceFilesExpectedInMap, mapFilesExpectedInSource);
+        const s2 = setMinus(expectedSrcFilesInSourcemapJSON, actualFilesInSourcemapJSON);
         expect(s2.length).toBeLessThan(15);
     });
 });
