@@ -157,7 +157,7 @@ class FeatureIndex {
                 styleLayers,
                 serializedLayers,
                 sourceFeatureState,
-                (feature: VectorTileFeature, styleLayer: StyleLayer, featureState: FeatureState) => { // eslint-disable-line no-loop-func
+                (feature: VectorTileFeature, styleLayer: StyleLayer, featureState: FeatureState) => {
                     if (!featureGeometry) {
                         featureGeometry = loadGeometry(feature);
                     }

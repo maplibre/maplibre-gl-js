@@ -1,6 +1,5 @@
-import {extend, warnOnce, isWorker} from './util';
+import {extend, warnOnce, isWorker, arrayBufferToImageBitmap, arrayBufferToImage} from './util';
 import config from './config';
-import {cacheGet, cachePut} from './tile_request_cache';
 import webpSupported from './webp_supported';
 
 import type {Callback} from '../types/callback';
@@ -144,8 +143,6 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
     let complete = false;
     let aborted = false;
 
-    const cacheIgnoringSearch = false;
-
     if (requestParameters.type === 'json') {
         request.headers.set('Accept', 'application/json');
     }
@@ -170,12 +167,9 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
             // request doesn't have simple cors headers.
         }
 
-        const requestTime = Date.now();
-
         fetch(request).then(response => {
             if (response.ok) {
-                const cacheableResponse = cacheIgnoringSearch ? response.clone() : null;
-                return finishRequest(response, cacheableResponse, requestTime);
+                return finishRequest(response);
 
             } else {
                 return response.blob().then(body => callback(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
@@ -189,21 +183,13 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         });
     };
 
-    const finishRequest = (response, cacheableResponse?, requestTime?) => {
+    const finishRequest = (response) => {
         (
             requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
                 requestParameters.type === 'json' ? response.json() :
                     response.text()
         ).then(result => {
             if (aborted) return;
-            if (cacheableResponse && requestTime) {
-                // The response needs to be inserted into the cache after it has completely loaded.
-                // Until it is fully loaded there is a chance it will be aborted. Aborting while
-                // reading the body can cause the cache insertion to error. We could catch this error
-                // in most browsers but in Firefox it seems to sometimes crash the tab. Adding
-                // it to the cache here avoids that error.
-                cachePut(request, cacheableResponse, requestTime);
-            }
             complete = true;
             callback(null, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
         }).catch(err => {
@@ -211,11 +197,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         });
     };
 
-    if (cacheIgnoringSearch) {
-        cacheGet(request, validateOrFetch);
-    } else {
-        validateOrFetch(null, null);
-    }
+    validateOrFetch(null, null);
 
     return {cancel: () => {
         aborted = true;
@@ -313,33 +295,6 @@ function sameOrigin(url) {
     return a.protocol === window.document.location.protocol && a.host === window.document.location.host;
 }
 
-const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=';
-
-function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | null, image?: HTMLImageElement | null) => void) {
-    const img: HTMLImageElement = new Image();
-    img.onload = () => {
-        callback(null, img);
-        URL.revokeObjectURL(img.src);
-        // prevent image dataURI memory leak in Safari;
-        // but don't free the image immediately because it might be uploaded in the next frame
-        // https://github.com/mapbox/mapbox-gl-js/issues/10226
-        img.onload = null;
-        window.requestAnimationFrame(() => { img.src = transparentPngUrl; });
-    };
-    img.onerror = () => callback(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
-    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
-    img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
-}
-
-function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) {
-    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
-    createImageBitmap(blob).then((imgBitmap) => {
-        callback(null, imgBitmap);
-    }).catch((e) => {
-        callback(new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`));
-    });
-}
-
 export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
 
 function arrayBufferToCanvasImageSource(data: ArrayBuffer, callback: Callback<CanvasImageSource>) {
@@ -390,7 +345,7 @@ export const getImage = function(
         advanced = true;
         numImageRequests--;
 
-        while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) { // eslint-disable-line
+        while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) {
             const request = imageQueue.shift();
             const {requestParameters, callback, cancelled} = request;
             if (!cancelled) {

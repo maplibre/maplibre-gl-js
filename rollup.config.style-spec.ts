@@ -1,44 +1,33 @@
-import path, {dirname} from 'path';
 import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
-import {fileURLToPath, pathToFileURL} from 'url';
 import {RollupOptions} from 'rollup';
-import {nodeResolve} from './build/rollup_plugins';
+import resolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
-import {importAssertions} from 'acorn-import-assertions';
-import {importAssertionsPlugin} from 'rollup-plugin-import-assert';
-
-const esm = 'esm' in process.env;
+import json from '@rollup/plugin-json';
 
 const config: RollupOptions[] = [{
     input: 'src/style-spec/style-spec.ts',
-    output: {
-        name: 'maplibreGlStyleSpecification',
-        file: `dist/style-spec/${esm ? 'index.mjs' : 'index.cjs'}`,
-        format: esm ? 'esm' : 'umd',
+    output: [{
+        file: 'dist/style-spec/index.mjs',
+        format: 'es',
         sourcemap: true
     },
-    acornInjectPlugins: [importAssertions],
+    {
+        name: 'maplibreGlStyleSpecification',
+        file: 'dist/style-spec/index.cjs',
+        format: 'umd',
+        sourcemap: true
+    }],
     plugins: [
-        {
-            name: 'dep-checker',
-            resolveId(source, importer) {
-                // Some users reference modules within style-spec package directly, instead of the bundle
-                // This means that files within the style-spec package should NOT import files from the parent maplibre-gl-js tree.
-                // This check will cause the build to fail on CI allowing these issues to be caught.
-                if (importer && !importer.includes('node_modules')) {
-                    const resolvedPath = path.join(importer, source);
-                    const importMetaUrl = pathToFileURL(__filename).toString();
-                    const fromRoot = path.relative(dirname(fileURLToPath(importMetaUrl)), resolvedPath);
-                    if (fromRoot.length > 2 && fromRoot.slice(0, 2) === '..') {
-                        throw new Error(`Module ${importer} imports ${source} from outside the style-spec package root directory.`);
-                    }
-                }
-
-                return null;
-            }
-        },
+        json(),
+        resolve({
+            browser: true,
+            preferBuiltins: false,
+            // Some users reference modules within style-spec package directly, instead of the bundle
+            // This means that files within the style-spec package should NOT import files from the parent maplibre-gl-js tree.
+            // This check will cause the build to fail on CI allowing these issues to be caught.
+            jail: 'src/style-spec/',
+        }),
         // https://github.com/zaach/jison/issues/351
         replace({
             preventAssignment: true,
@@ -48,9 +37,6 @@ const config: RollupOptions[] = [{
                 '_token_stack:': ''
             }
         }),
-        importAssertionsPlugin(),
-        json(),
-        nodeResolve,
         typescript(),
         commonjs()
     ]

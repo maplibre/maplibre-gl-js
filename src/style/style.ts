@@ -7,6 +7,7 @@ import GlyphManager from '../render/glyph_manager';
 import Light from './light';
 import LineAtlas from '../render/line_atlas';
 import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
+import {coerceSpriteToArray} from '../util/style';
 import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
@@ -56,6 +57,7 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
+    SpriteSpecification,
 } from '../style-spec/types.g';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
@@ -72,9 +74,9 @@ const supportedDiffOperations = pick(diffOperations, [
     'setLayerZoomRange',
     'setLight',
     'setTransition',
-    'setGeoJSONSourceData'
-    // 'setGlyphs',
-    // 'setSprite',
+    'setGeoJSONSourceData',
+    'setGlyphs',
+    'setSprite',
 ]);
 
 const ignoredDiffOperations = pick(diffOperations, [
@@ -109,7 +111,7 @@ export type StyleSetterOptions = {
  *      when an incoming style requires modification based on external state
  *
  * @typedef {Function} TransformStyleFunction
- * @param {StyleSpecification} previousStyle The current style.
+ * @param {StyleSpecification | undefined} previousStyle The current style.
  * @param {StyleSpecification} nextStyle The next style.
  * @returns {boolean} resulting style that will to be applied to the map
  *
@@ -142,7 +144,7 @@ export type StyleSetterOptions = {
  *   })
  * });
  */
-export type TransformStyleFunction = (previous: StyleSpecification, next: StyleSpecification) => StyleSpecification;
+export type TransformStyleFunction = (previous: StyleSpecification | undefined, next: StyleSpecification) => StyleSpecification;
 
 export type StyleSwapOptions = {
     diff?: boolean;
@@ -175,8 +177,12 @@ class Style extends Evented {
     _updatedLayers: {[_: string]: true};
     _removedLayers: {[_: string]: StyleLayer};
     _changedImages: {[_: string]: true};
+    _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
+    // image ids of images loaded from style's sprite
+    _spritesImagesIds: {[spriteId: string]: string[]};
+    // image ids of all images loaded (sprite + user)
     _availableImages: Array<string>;
 
     crossTileSymbolIndex: CrossTileSymbolIndex;
@@ -200,6 +206,7 @@ class Style extends Evented {
         this.lineAtlas = new LineAtlas(256, 512);
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
+        this._spritesImagesIds = {};
         this._layers = {};
         this._serializedLayers = {};
         this._order  = [];
@@ -289,7 +296,7 @@ class Style extends Evented {
     }
 
     _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification) {
-        const nextState = options.transformStyle && previousStyle ? options.transformStyle(previousStyle, json) : json;
+        const nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
         if (options.validate && emitValidationErrors(this, validateStyle(nextState))) {
             return;
         }
@@ -331,22 +338,69 @@ class Style extends Evented {
         this.fire(new Event('style.load'));
     }
 
-    _loadSprite(url: string) {
-        this._spriteRequest = loadSprite(url, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
+    _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined) {
+        this.imageManager.setLoaded(false);
+
+        this._spriteRequest = loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
             this._spriteRequest = null;
             if (err) {
                 this.fire(new ErrorEvent(err));
             } else if (images) {
-                for (const id in images) {
-                    this.imageManager.addImage(id, images[id]);
+                for (const spriteId in images) {
+                    this._spritesImagesIds[spriteId] = [];
+
+                    // remove old sprite's loaded images (for the same sprite id) that are not in new sprite
+                    const imagesToRemove = this._spritesImagesIds[spriteId] ? this._spritesImagesIds[spriteId].filter(id => !(id in images)) : [];
+                    for (const id of imagesToRemove) {
+                        this.imageManager.removeImage(id);
+                        this._changedImages[id] = true;
+                    }
+
+                    for (const id in images[spriteId]) {
+                        // don't prefix images of the "default" sprite
+                        const imageId = spriteId === 'default' ? id : `${spriteId}:${id}`;
+                        // save all the sprite's images' ids to be able to delete them in `removeSprite`
+                        this._spritesImagesIds[spriteId].push(imageId);
+                        if (imageId in this.imageManager.images) {
+                            this.imageManager.updateImage(imageId, images[spriteId][id], false);
+                        } else {
+                            this.imageManager.addImage(imageId, images[spriteId][id]);
+                        }
+
+                        if (isUpdate) {
+                            this._changedImages[imageId] = true;
+                        }
+                    }
                 }
             }
 
             this.imageManager.setLoaded(true);
             this._availableImages = this.imageManager.listImages();
+
+            if (isUpdate) {
+                this._changed = true;
+            }
+
             this.dispatcher.broadcast('setImages', this._availableImages);
             this.fire(new Event('data', {dataType: 'style'}));
+
+            if (completion) {
+                completion(err);
+            }
         });
+    }
+
+    _unloadSprite() {
+        for (const id of Object.values(this._spritesImagesIds).flat()) {
+            this.imageManager.removeImage(id);
+            this._changedImages[id] = true;
+        }
+
+        this._spritesImagesIds = {};
+        this._availableImages = this.imageManager.listImages();
+        this._changed = true;
+        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.fire(new Event('data', {dataType: 'style'}));
     }
 
     _validateLayer(layer: StyleLayer) {
@@ -454,6 +508,7 @@ class Style extends Evented {
             }
 
             this._updateTilesForChangedImages();
+            this._updateTilesForChangedGlyphs();
 
             for (const id in this._updatedPaintProps) {
                 this._layers[id].updateTransitions(parameters);
@@ -510,6 +565,15 @@ class Style extends Evented {
         }
     }
 
+    _updateTilesForChangedGlyphs() {
+        if (this._glyphsDidChange) {
+            for (const name in this.sourceCaches) {
+                this.sourceCaches[name].reloadTilesForDependencies(['glyphs'], ['']);
+            }
+            this._glyphsDidChange = false;
+        }
+    }
+
     _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
         this.dispatcher.broadcast('updateLayers', {
             layers: this._serializeLayers(updatedIds),
@@ -527,6 +591,7 @@ class Style extends Evented {
         this._updatedPaintProps = {};
 
         this._changedImages = {};
+        this._glyphsDidChange = false;
     }
 
     /**
@@ -1429,14 +1494,130 @@ class Style extends Evented {
 
     getGlyphs(
         mapId: string,
-        params: {stacks: {[_: string]: Array<number>}},
+        params: {
+            stacks: {[_: string]: Array<number>};
+            source: string;
+            tileID: OverscaledTileID;
+            type: string;
+        },
         callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
     ) {
         this.glyphManager.getGlyphs(params.stacks, callback);
+        const sourceCache = this.sourceCaches[params.source];
+        if (sourceCache) {
+            // we are not setting stacks as dependencies since for now
+            // we just need to know which tiles have glyph dependencies
+            sourceCache.setDependencies(params.tileID.key, params.type, ['']);
+        }
     }
 
     getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
         return makeRequest(params, callback);
+    }
+
+    getGlyphsUrl() {
+        return this.stylesheet.glyphs || null;
+    }
+
+    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}) {
+        this._checkLoaded();
+        if (glyphsUrl && this._validate(validateStyle.glyphs, 'glyphs', glyphsUrl, null, options)) {
+            return;
+        }
+
+        this._glyphsDidChange = true;
+        this.stylesheet.glyphs = glyphsUrl;
+        this.glyphManager.entries = {};
+        this.glyphManager.setURL(glyphsUrl);
+    }
+
+    /**
+     * Add a sprite.
+     *
+     * @param {string} id id of the desired sprite
+     * @param {string} url url to load the desired sprite from
+     * @param {StyleSetterOptions} [options] style setter options
+     * @param [completion] completion handler
+     */
+    addSprite(id: string, url: string, options: StyleSetterOptions = {}, completion?: (err: Error) => void) {
+        this._checkLoaded();
+
+        const spriteToAdd = [{id, url}];
+        const updatedSprite = [
+            ...coerceSpriteToArray(this.stylesheet.sprite),
+            ...spriteToAdd
+        ];
+
+        if (this._validate(validateStyle.sprite, 'sprite', updatedSprite, null, options)) return;
+
+        this.stylesheet.sprite = updatedSprite;
+        this._loadSprite(spriteToAdd, true, completion);
+    }
+
+    /**
+     * Remove a sprite by its id. When the last sprite is removed, the whole `this.stylesheet.sprite` object becomes
+     * `undefined`. This falsy `undefined` value later prevents attempts to load the sprite when it's absent.
+     *
+     * @param id the id of the sprite to remove
+     */
+    removeSprite(id: string) {
+        this._checkLoaded();
+
+        const internalSpriteRepresentation = coerceSpriteToArray(this.stylesheet.sprite);
+
+        if (!internalSpriteRepresentation.find(sprite => sprite.id === id)) {
+            this.fire(new ErrorEvent(new Error(`Sprite "${id}" doesn't exists on this map.`)));
+            return;
+        }
+
+        if (this._spritesImagesIds[id]) {
+            for (const imageId of this._spritesImagesIds[id]) {
+                this.imageManager.removeImage(imageId);
+                this._changedImages[imageId] = true;
+            }
+        }
+
+        internalSpriteRepresentation.splice(internalSpriteRepresentation.findIndex(sprite => sprite.id === id), 1);
+        this.stylesheet.sprite = internalSpriteRepresentation.length > 0 ? internalSpriteRepresentation : undefined;
+
+        delete this._spritesImagesIds[id];
+        this._availableImages = this.imageManager.listImages();
+        this._changed = true;
+        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.fire(new Event('data', {dataType: 'style'}));
+    }
+
+    /**
+     * Get the current sprite value.
+     *
+     * @returns {Array} empty array when no sprite is set; id-url pairs otherwise
+     */
+    getSprite() {
+        return coerceSpriteToArray(this.stylesheet.sprite);
+    }
+
+    /**
+     * Set a new value for the style's sprite.
+     *
+     * @param {SpriteSpecification} sprite new sprite value
+     * @param {StyleSetterOptions} [options] style setter options
+     * @param completion completion handler
+     */
+    setSprite(sprite: SpriteSpecification, options: StyleSetterOptions = {}, completion: (err: Error) => void) {
+        this._checkLoaded();
+
+        if (sprite && this._validate(validateStyle.sprite, 'sprite', sprite, null, options)) {
+            return;
+        }
+
+        this.stylesheet.sprite = sprite;
+
+        if (sprite) {
+            this._loadSprite(sprite, true, completion);
+        } else {
+            this._unloadSprite();
+            completion(null);
+        }
     }
 }
 

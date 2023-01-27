@@ -15,14 +15,6 @@ If you install this package globally, you will have access to several CLI tools.
 
     npm install @maplibre/maplibre-gl-style-spec --global
 
-
-### `gl-style-composite`
-```bash
-$ gl-style-composite style.json
-```
-
-Will take a non-composited style and produce a composite style.
-
 ### `gl-style-migrate`
 
 This repo contains scripts for migrating GL styles of any version to the latest version

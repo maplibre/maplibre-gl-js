@@ -1,50 +1,72 @@
 import {getJSON, getImage, ResourceType} from '../util/ajax';
 
 import browser from '../util/browser';
+import {coerceSpriteToArray} from '../util/style';
 
+import type {SpriteSpecification} from '../style-spec/types.g';
 import type {StyleImage} from './style_image';
 import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 
 export default function loadSprite(
-    baseURL: string,
+    originalSprite: SpriteSpecification,
     requestManager: RequestManager,
     pixelRatio: number,
-    callback: Callback<{[_: string]: StyleImage}>
+    callback: Callback<{[spriteName: string]: {[id: string]: StyleImage}}>
 ): Cancelable {
-    let json: any, image, error;
+    const sprite = coerceSpriteToArray(originalSprite);
     const format = pixelRatio > 1 ? '@2x' : '';
 
-    let jsonRequest = getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURL, format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
-        jsonRequest = null;
-        if (!error) {
-            error = err;
-            json = data;
-            maybeComplete();
-        }
-    });
+    let error;
+    const jsonRequests: Cancelable[] = [];
+    const imageRequests: Cancelable[] = [];
 
-    let imageRequest = getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(baseURL, format, '.png'), ResourceType.SpriteImage), (err, img) => {
-        imageRequest = null;
-        if (!error) {
-            error = err;
-            image = img;
-            maybeComplete();
-        }
-    });
+    const jsonsMap: {[baseURL: string]: any} = {};
+    const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
+
+    for (const {id, url} of sprite) {
+        // eslint-disable-next-line no-loop-func
+        const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
+            jsonRequests.splice(newJsonRequestsLength, 1);
+            if (!error) {
+                error = err;
+                jsonsMap[id] = data;
+                maybeComplete();
+            }
+        }));
+
+        // eslint-disable-next-line no-loop-func
+        const newImageRequestsLength = imageRequests.push(getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage), (err, img) => {
+            imageRequests.splice(newImageRequestsLength, 1);
+            if (!error) {
+                error = err;
+                imagesMap[id] = img;
+                maybeComplete();
+            }
+        }));
+    }
 
     function maybeComplete() {
+        const jsonsLength = Object.values(jsonsMap).length;
+        const imagesLength = Object.values(imagesMap).length;
+
         if (error) {
             callback(error);
-        } else if (json && image) {
-            const context = browser.getImageCanvasContext(image);
+        } else if (sprite.length === jsonsLength && jsonsLength === imagesLength) {
             const result = {} as {[_: string]: StyleImage};
 
-            for (const id in json) {
-                const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
-                const spriteData = {width, height, x, y, context};
-                result[id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, spriteData};
+            for (const spriteName in jsonsMap) {
+                result[spriteName] = {};
+
+                const context = browser.getImageCanvasContext(imagesMap[spriteName]);
+                const json = jsonsMap[spriteName];
+
+                for (const id in json) {
+                    const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
+                    const spriteData = {width, height, x, y, context};
+                    result[id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, spriteData};
+                }
             }
 
             callback(null, result);
@@ -53,13 +75,18 @@ export default function loadSprite(
 
     return {
         cancel() {
-            if (jsonRequest) {
-                jsonRequest.cancel();
-                jsonRequest = null;
+            if (jsonRequests.length) {
+                for (const jsonRequest of jsonRequests) {
+                    jsonRequest.cancel();
+                    jsonRequests.splice(jsonRequests.indexOf(jsonRequest), 1);
+                }
             }
-            if (imageRequest) {
-                imageRequest.cancel();
-                imageRequest = null;
+
+            if (imageRequests.length) {
+                for (const imageRequest of imageRequests) {
+                    imageRequest.cancel();
+                    imageRequests.splice(imageRequests.indexOf(imageRequest), 1);
+                }
             }
         }
     };

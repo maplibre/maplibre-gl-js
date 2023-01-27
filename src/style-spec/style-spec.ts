@@ -68,7 +68,6 @@ const v8 = v8Spec as any;
 import latest from './reference/latest';
 import format from './format';
 import migrate from './migrate';
-import composite from './composite';
 import derefLayers from './deref';
 import diff from './diff';
 import ValidationError from './error/validation_error';
@@ -110,7 +109,6 @@ export {
     latest,
     format,
     migrate,
-    composite,
     derefLayers,
     diff,
     ValidationError,

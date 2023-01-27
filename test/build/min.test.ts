@@ -1,6 +1,6 @@
 import fs from 'fs';
 import reference from '../../src/style-spec/reference/latest';
-import packageJson from '../../package.json';
+import packageJson from '../../package.json' assert {type: 'json'};
 
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 
@@ -33,4 +33,12 @@ describe('test min build', () => {
         }
     });
 
+    test('bundle size stays the same', async () => {
+        const bytes = (await fs.promises.stat('dist/maplibre-gl.js')).size;
+        const alpha = 0.05;
+        // feel free to update this value after you've checked that it has changed on purpose :-)
+        const expectedBytes = 756788;
+        expect(bytes).toBeLessThan(expectedBytes * (1 + alpha));
+        expect(bytes).toBeGreaterThan(expectedBytes * (1 - alpha));
+    });
 });

@@ -1,7 +1,5 @@
 import UnitBezier from '@mapbox/unitbezier';
-
 import Point from '@mapbox/point-geometry';
-
 import type {Callback} from '../types/callback';
 
 /**
@@ -479,4 +477,51 @@ export function b64DecodeUnicode(str: string) {
 
 export function isImageBitmap(image: any): image is ImageBitmap {
     return typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap;
+}
+
+/**
+ * Converts an ArrayBuffer to an ImageBitmap.
+ *
+ * Used mostly for testing purposes only, because mocking libs don't know how to work with ArrayBuffers, but work
+ * perfectly fine with ImageBitmaps. Might also be used for environments (other than testing) not supporting
+ * ArrayBuffers.
+ *
+ * @param data {ArrayBuffer} Data to convert
+ * @param callback A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image bitmap (when no error) as the second
+ */
+export function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) {
+    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
+    createImageBitmap(blob).then((imgBitmap) => {
+        callback(null, imgBitmap);
+    }).catch((e) => {
+        callback(new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`));
+    });
+}
+
+const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=';
+
+/**
+ * Converts an ArrayBuffer to an HTMLImageElement.
+ *
+ * Used mostly for testing purposes only, because mocking libs don't know how to work with ArrayBuffers, but work
+ * perfectly fine with ImageBitmaps. Might also be used for environments (other than testing) not supporting
+ * ArrayBuffers.
+ *
+ * @param data {ArrayBuffer} Data to convert
+ * @param callback A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image element (when no error) as the second
+ */
+export function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | null, image?: HTMLImageElement | null) => void) {
+    const img: HTMLImageElement = new Image();
+    img.onload = () => {
+        callback(null, img);
+        URL.revokeObjectURL(img.src);
+        // prevent image dataURI memory leak in Safari;
+        // but don't free the image immediately because it might be uploaded in the next frame
+        // https://github.com/mapbox/mapbox-gl-js/issues/10226
+        img.onload = null;
+        window.requestAnimationFrame(() => { img.src = transparentPngUrl; });
+    };
+    img.onerror = () => callback(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
+    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
+    img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
 }

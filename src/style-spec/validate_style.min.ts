@@ -2,7 +2,6 @@
 import validateConstants from './validate/validate_constants';
 import validate from './validate/validate';
 import latestStyleSpec from './reference/latest';
-import validateGlyphsURL from './validate/validate_glyphs_url';
 
 import validateSource from './validate/validate_source';
 import validateLight from './validate/validate_light';
@@ -12,6 +11,8 @@ import validateFilter from './validate/validate_filter';
 import validatePaintProperty from './validate/validate_paint_property';
 import validateLayoutProperty from './validate/validate_layout_property';
 import type {StyleSpecification} from './types.g';
+import validateSprite from './validate/validate_sprite';
+import validateGlyphsUrl from './validate/validate_glyphs_url';
 
 /**
  * Validate a MapLibre GL style against the style specification. This entrypoint,
@@ -38,8 +39,9 @@ function validateStyleMin(style: StyleSpecification, styleSpec = latestStyleSpec
         valueSpec: styleSpec.$root,
         styleSpec,
         style,
+        validateSpec: validate,
         objectElementValidators: {
-            glyphs: validateGlyphsURL,
+            glyphs: validateGlyphsUrl,
             '*'() {
                 return [];
             }
@@ -51,20 +53,32 @@ function validateStyleMin(style: StyleSpecification, styleSpec = latestStyleSpec
             key: 'constants',
             value: style['constants'],
             style,
-            styleSpec
+            styleSpec,
+            validateSpec: validate,
         }));
     }
 
     return sortErrors(errors);
 }
 
-validateStyleMin.source = wrapCleanErrors(validateSource);
-validateStyleMin.light = wrapCleanErrors(validateLight);
-validateStyleMin.terrain = wrapCleanErrors(validateTerrain);
-validateStyleMin.layer = wrapCleanErrors(validateLayer);
-validateStyleMin.filter = wrapCleanErrors(validateFilter);
-validateStyleMin.paintProperty = wrapCleanErrors(validatePaintProperty);
-validateStyleMin.layoutProperty = wrapCleanErrors(validateLayoutProperty);
+validateStyleMin.source = wrapCleanErrors(injectValidateSpec(validateSource));
+validateStyleMin.sprite = wrapCleanErrors(injectValidateSpec(validateSprite));
+validateStyleMin.glyphs = wrapCleanErrors(injectValidateSpec(validateGlyphsUrl));
+validateStyleMin.light = wrapCleanErrors(injectValidateSpec(validateLight));
+validateStyleMin.terrain = wrapCleanErrors(injectValidateSpec(validateTerrain));
+validateStyleMin.layer = wrapCleanErrors(injectValidateSpec(validateLayer));
+validateStyleMin.filter = wrapCleanErrors(injectValidateSpec(validateFilter));
+validateStyleMin.paintProperty = wrapCleanErrors(injectValidateSpec(validatePaintProperty));
+validateStyleMin.layoutProperty = wrapCleanErrors(injectValidateSpec(validateLayoutProperty));
+
+function injectValidateSpec(validator: (options: object) => any) {
+    return function(options) {
+        return validator({
+            ...options,
+            validateSpec: validate,
+        });
+    };
+}
 
 function sortErrors(errors) {
     return [].concat(errors).sort((a, b) => {

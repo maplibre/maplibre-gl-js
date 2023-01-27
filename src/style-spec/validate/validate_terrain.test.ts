@@ -1,9 +1,10 @@
+import validateSpec from './validate';
 import validateTerrain from './validate_terrain';
-import v8 from '../reference/v8.json';
+import v8 from '../reference/v8.json' assert {type: 'json'};
 
 describe('Validate Terrain', () => {
     test('Should return error in case terrain is not an object', () => {
-        const errors = validateTerrain({value: 1 as any, styleSpec: v8, style: {} as any});
+        const errors = validateTerrain({validateSpec, value: 1 as any, styleSpec: v8, style: {} as any});
         expect(errors).toHaveLength(1);
         expect(errors[0].message).toContain('number');
         expect(errors[0].message).toContain('object');
@@ -11,7 +12,7 @@ describe('Validate Terrain', () => {
     });
 
     test('Should return error in case terrain source is not a string', () => {
-        const errors = validateTerrain({value: {source: 1 as any}, styleSpec: v8, style: {} as any});
+        const errors = validateTerrain({validateSpec, value: {source: 1 as any}, styleSpec: v8, style: {} as any});
         expect(errors).toHaveLength(1);
         expect(errors[0].message).toContain('number');
         expect(errors[0].message).toContain('string');
@@ -19,14 +20,14 @@ describe('Validate Terrain', () => {
     });
 
     test('Should return error in case of unknown property', () => {
-        const errors = validateTerrain({value: {a: 1} as any, styleSpec: v8, style: {} as any});
+        const errors = validateTerrain({validateSpec, value: {a: 1} as any, styleSpec: v8, style: {} as any});
         expect(errors).toHaveLength(1);
         expect(errors[0].message).toContain('a');
         expect(errors[0].message).toContain('unknown');
     });
 
     test('Should return errors according to spec violations', () => {
-        const errors = validateTerrain({value: {source: 1 as any, exaggeration: {} as any}, styleSpec: v8, style: {} as any});
+        const errors = validateTerrain({validateSpec, value: {source: 1 as any, exaggeration: {} as any}, styleSpec: v8, style: {} as any});
         expect(errors).toHaveLength(2);
         expect(errors[0].message).toContain('number');
         expect(errors[0].message).toContain('string');
@@ -37,7 +38,7 @@ describe('Validate Terrain', () => {
     });
 
     test('Should pass if everything is according to spec', () => {
-        const errors = validateTerrain({value: {source: 'source-id', exaggeration: 0.2}, styleSpec: v8, style: {} as any});
+        const errors = validateTerrain({validateSpec, value: {source: 'source-id', exaggeration: 0.2}, styleSpec: v8, style: {} as any});
         expect(errors).toHaveLength(0);
     });
 });

@@ -29,6 +29,8 @@ function nativeType(property) {
             return 'Color';
         case 'padding':
             return 'Padding';
+        case 'sprite':
+            return 'Sprite';
         case 'formatted':
             return 'Formatted';
         case 'resolvedImage':
@@ -91,6 +93,8 @@ function runtimeType(property) {
             return 'ColorType';
         case 'padding':
             return 'PaddingType';
+        case 'sprite':
+            return 'SpriteType';
         case 'formatted':
             return 'FormattedType';
         case 'Image':

@@ -291,7 +291,8 @@ function drawLayerSymbols(
         const bucket = tile.getBucket(layer) as SymbolBucket;
         if (!bucket) continue;
         const buffers = isText ? bucket.text : bucket.icon;
-        if (!buffers || !buffers.segments.get().length) continue;
+
+        if (!buffers || !buffers.segments.get().length || !buffers.hasVisibleVertices) continue;
         const programConfiguration = buffers.programConfigurations.get(layer.id);
 
         const isSDF = isText || bucket.sdfIcons;

@@ -13,7 +13,7 @@ Install the Xcode Command Line Tools Package
 xcode-select --install
 ```
 
-Install [node.js](https://nodejs.org/) version ^16
+Install [node.js](https://nodejs.org/) version ^18
 ```bash
 brew install node
 ```
@@ -60,9 +60,9 @@ Install [nvm](https://github.com/nvm-sh/nvm)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
 ```
 
-Install [Node.js](https://nodejs.org/) ^16
+Install [Node.js](https://nodejs.org/) ^18
 ```
-nvm install 16
+nvm install 18
 ```
 
 Clone the repository
@@ -78,7 +78,9 @@ npm install
 
 ### Windows
 
-Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^16), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
+Consider using WSL and follow the above Linux guide or follow the next steps
+
+Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^18), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
 
 Clone the repository
 ```bash
@@ -96,16 +98,6 @@ Install headless-gl dependencies https://github.com/stackgl/headless-gl#windows
 ```
 copy node_modules/headless-gl/deps/windows/dll/x64/*.dll c:\windows\system32
 ```
-
-## Serving the Debug Page
-
-Start the debug server
-
-```bash
-npm run start-debug
-```
-
-Open the debug page at [http://localhost:9966/test/debug-pages](http://localhost:9966/test/debug-pages)
 
 ## Creating a Standalone Build
 
@@ -130,8 +122,7 @@ See [`test/bench/README.md`](./test/bench/README.md).
 ## Code Conventions
 
 * We use [`error` events](https://www.mapbox.com/mapbox-gl-js/api/#Map.event:error) to report user errors.
-* We use [`assert`](https://nodejs.org/api/assert.html) to check invariants that are not likely to be caused by user error. These `assert` statements are stripped out of production builds.
-* We use the following ES6 features:
+* We use the latest feature that the TypeScript language has to offer including, but not limited to:
   * `let`/`const`
   * `for...of` loops (for arraylike iteration only, i.e. what is supported by [Bublé's `dangerousForOf` transform](https://buble.surge.sh/guide/#dangerous-transforms))
   * Arrow functions
@@ -142,10 +133,6 @@ See [`test/bench/README.md`](./test/bench/README.md).
   * Rest parameters
   * Destructuring
   * Modules
-* The following ES6 features are not to be used, in order to maintain support for IE 11 and older mobile browsers. This may change in the future.
-  * Spread (`...`) operator (because it requires Object.assign)
-  * Iterators and generators
-  * "Library" features such as `Map`, `Set`, `array.find`, etc.
 
 The conventions for module exports are:
 
@@ -153,9 +140,16 @@ The conventions for module exports are:
 * If a module exports something with the same name as the file name (modulo case), it should be the default export.
 * Anything else should be a named export.
 
-### Version Control Conventions
+To keep code uniformly styled and avoid common mistakes, you can check some files with the following scripts:
 
-* We use [rebase merging](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) (as opposed to [basic merging](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging#Basic-Merging)) to merge branches
+```bash
+npm run lint
+npm run lint-css
+```
+
+Additionally, if you're using VSCode, the "Format Document" action or "Editor: Format on Save" should enforce the js, ts, and css formatting for this project by default.
+
+### Version Control Conventions
 
 Here is a recommended way to get setup:
 1. Fork this project
@@ -179,25 +173,8 @@ What warrants a changelog entry?
 
 How to add your changelog?
 
+- Edit the [`CHANGELOG.md`](CHANGELOG.md) file directly, inserting a new entry at the top of the appropriate list
 - Any changelog entry should be descriptive and concise; it should explain the change to a reader without context
-- Any changelog entry should be added to the pull request in the following format: `<changelog>Changelog description</changelog>`
-- Any change that does not require a changelog should be labelled `skip changelog`
-
-### Github Issue Labels
-
-Our labeling system is
-
- - **minimalistic:** Labels' usefulness are inversely proportional to how many we have.
- - **objective:** Labels should be objective enough that any two people would agree on a labeling decision.
- - **useful:** Labels should track state or capture semantic meaning that would otherwise be hard to search.
-
-We have divided our labels into categories to make them easier to use.
-
- - type (blue)
- - actionable status (red)
- - non-actionable status (grey)
- - importance / urgency (green)
- - topic / project / misc (yellow)
 
 ## Recommended Reading
 

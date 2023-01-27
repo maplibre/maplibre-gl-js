@@ -1,4 +1,5 @@
 {
+  "root": true,
   "extends": [
     "mourner",
     "plugin:import/recommended",
@@ -101,6 +102,7 @@
     "jest/no-large-snapshots": ["warn", { "maxSize": 50, "inlineMaxSize": 20 }],
     "jest/no-deprecated-functions": "warn"
   },
+  "reportUnusedDisableDirectives": true,
   "settings": {
     "jsdoc":{
       "ignorePrivate": true

@@ -6,7 +6,6 @@ import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import {execSync} from 'child_process';
 import {RollupOptions} from 'rollup';
-import {importAssertions} from 'acorn-import-assertions';
 
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
@@ -28,21 +27,20 @@ const replaceConfig = {
 };
 
 const allPlugins = plugins(true).concat(replace(replaceConfig));
-const intro = fs.readFileSync('rollup/bundle_prelude.js', 'utf8');
+const intro = fs.readFileSync('build/rollup/bundle_prelude.js', 'utf8');
 
 const splitConfig = (name: string): RollupOptions[] => [{
     input: [`test/bench/${name}/benchmarks.ts`, 'src/source/worker.ts'],
     output: {
-        dir: `rollup/build/benchmarks/${name}`,
+        dir: `staging/benchmarks/${name}`,
         format: 'amd',
         indent: false,
         sourcemap: 'inline',
         chunkFileNames: 'shared.js'
     },
-    acornInjectPlugins: [importAssertions],
     plugins: allPlugins
 }, {
-    input: `rollup/benchmarks_${name}.js`,
+    input: `test/bench/rollup/benchmarks_${name}.js`,
     output: {
         file: `test/bench/${name}/benchmarks_generated.js`,
         format: 'umd',

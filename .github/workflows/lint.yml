@@ -13,7 +13,7 @@ jobs:
         os:
           - ubuntu-latest
         node_version:
-          - 16
+          - 18
         architecture:
           - x64
 
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3.5.1
+        uses: actions/setup-node@v3.6.0
         with:
           node-version: ${{ matrix.node_version }}
           architecture: ${{ matrix.architecture }}

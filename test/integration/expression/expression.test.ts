@@ -39,7 +39,16 @@ describe('expression', () => {
 
                 const expected = fixture.expected;
                 const compileOk = deepEqual(result.compiled, expected.compiled, decimalSigFigs);
+                if (!compileOk) {
+                    console.log(`Expected ${JSON.stringify(expected.compiled)}`);
+                    console.log(`Result   ${JSON.stringify(result.compiled)}`);
+                }
+
                 const evalOk = compileOk && deepEqual(result.outputs, expected.outputs, decimalSigFigs);
+                if (!evalOk) {
+                    console.log(`Expected ${JSON.stringify(expected.outputs)}`);
+                    console.log(`Result   ${JSON.stringify(result.outputs)}`);
+                }
 
                 expect(compileOk).toBeTruthy();
                 expect(evalOk).toBeTruthy();

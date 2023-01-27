@@ -151,9 +151,9 @@ class ImageManager extends Evented {
         return true;
     }
 
-    updateImage(id: string, image: StyleImage) {
+    updateImage(id: string, image: StyleImage, validate = true) {
         const oldImage = this.getImage(id);
-        if (oldImage.data.width !== image.data.width || oldImage.data.height !== image.data.height) {
+        if (validate && (oldImage.data.width !== image.data.width || oldImage.data.height !== image.data.height)) {
             throw new Error(`size mismatch between old image (${oldImage.data.width}x${oldImage.data.height}) and new image (${image.data.width}x${image.data.height}).`);
         }
         image.version = oldImage.version + 1;
@@ -202,7 +202,6 @@ class ImageManager extends Evented {
             const image = this.getImage(id);
 
             if (image) {
-
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
                 response[id] = {
                     data: image.data.clone(),
