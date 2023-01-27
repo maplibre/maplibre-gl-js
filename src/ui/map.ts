@@ -23,7 +23,6 @@ import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapS
 import TaskQueue from '../util/task_queue';
 import webpSupported from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
-import {setCacheLimits} from '../util/tile_request_cache';
 import {Source} from '../source/source';
 import StyleLayer from '../style/style_layer';
 
@@ -3095,11 +3094,6 @@ class Map extends Camera {
     // show vertices
     get vertices(): boolean { return !!this._vertices; }
     set vertices(value: boolean) { this._vertices = value; this._update(); }
-
-    // for cache browser tests
-    _setCacheLimits(limit: number, checkThreshold: number) {
-        setCacheLimits(limit, checkThreshold);
-    }
 
     /**
      * Returns the package version of the library
