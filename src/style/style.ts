@@ -8,7 +8,8 @@ import Light from './light';
 import LineAtlas from '../render/line_atlas';
 import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
-import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
+import {getJSON, getReferrer, makeRequest} from '../util/ajax';
+import {MapLibreResourceType} from '../util/request_manager';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
@@ -269,7 +270,7 @@ class Style extends Evented {
         options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
 
-        const request = this.map._requestManager.transformRequest(url, ResourceType.Style);
+        const request = this.map._requestManager.transformRequest(url, MapLibreResourceType.Style);
         this._request = getJSON(request, (error?: Error | null, json?: any | null) => {
             this._request = null;
             if (error) {

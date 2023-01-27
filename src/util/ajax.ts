@@ -5,39 +5,6 @@ import webpSupported from './webp_supported';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 
-export interface IResourceType {
-    Unknown: keyof this;
-    Style: keyof this;
-    Source: keyof this;
-    Tile: keyof this;
-    Glyphs: keyof this;
-    SpriteImage: keyof this;
-    SpriteJSON: keyof this;
-    Image: keyof this;
-}
-
-/**
- * The type of a resource.
- * @private
- * @readonly
- * @enum {string}
- */
-const ResourceType = {
-    Unknown: 'Unknown',
-    Style: 'Style',
-    Source: 'Source',
-    Tile: 'Tile',
-    Glyphs: 'Glyphs',
-    SpriteImage: 'SpriteImage',
-    SpriteJSON: 'SpriteJSON',
-    Image: 'Image'
-} as IResourceType;
-export {ResourceType};
-
-if (typeof Object.freeze == 'function') {
-    Object.freeze(ResourceType);
-}
-
 /**
  * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
  * @typedef {Object} RequestParameters

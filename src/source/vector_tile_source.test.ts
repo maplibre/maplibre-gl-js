@@ -4,7 +4,7 @@ import VectorTileSource from './vector_tile_source';
 import Tile from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
-import {RequestManager} from '../util/request_manager';
+import {MapLibreResourceType, RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' assert {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher} from '../util/test/util';
 import Map from '../ui/map';
@@ -82,7 +82,7 @@ describe('VectorTileSource', () => {
 
         createSource({url: '/source.json'}, transformSpy);
         server.respond();
-        expect(transformSpy).toHaveBeenCalledWith('/source.json', 'Source');
+        expect(transformSpy).toHaveBeenCalledWith('/source.json', MapLibreResourceType.Source);
     });
 
     test('fires event with metadata property', done => {
@@ -181,7 +181,7 @@ describe('VectorTileSource', () => {
                 } as any as Tile;
                 source.loadTile(tile, () => {});
                 expect(transformSpy).toHaveBeenCalledTimes(1);
-                expect(transformSpy).toHaveBeenCalledWith('http://example.com/10/5/5.png', 'Tile');
+                expect(transformSpy).toHaveBeenCalledWith('http://example.com/10/5/5.png', MapLibreResourceType.Tile);
                 done();
             }
         });

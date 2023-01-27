@@ -1,7 +1,7 @@
 import {fakeServer, FakeServer} from 'nise';
 import RasterDEMTileSource from './raster_dem_tile_source';
 import {OverscaledTileID} from './tile_id';
-import {RequestManager} from '../util/request_manager';
+import {MapLibreResourceType, RequestManager} from '../util/request_manager';
 import Dispatcher from '../util/dispatcher';
 import Tile from './tile';
 
@@ -48,7 +48,7 @@ describe('RasterTileSource', () => {
         server.respond();
 
         expect(transformSpy.mock.calls[0][0]).toBe('/source.json');
-        expect(transformSpy.mock.calls[0][1]).toBe('Source');
+        expect(transformSpy.mock.calls[0][1]).toBe(MapLibreResourceType.Source);
         done();
     });
 
@@ -74,7 +74,7 @@ describe('RasterTileSource', () => {
 
                 expect(transformSpy).toHaveBeenCalledTimes(1);
                 expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/10/5/5.png');
-                expect(transformSpy.mock.calls[0][1]).toBe('Tile');
+                expect(transformSpy.mock.calls[0][1]).toBe(MapLibreResourceType.Tile);
                 done();
 
             }

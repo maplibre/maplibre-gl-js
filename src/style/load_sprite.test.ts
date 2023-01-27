@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {RequestManager} from '../util/request_manager';
+import {MapLibreResourceType, RequestManager} from '../util/request_manager';
 import loadSprite from './load_sprite';
 import {fakeXhr} from 'nise';
 import {RGBAImage} from '../util/image';
@@ -30,8 +30,8 @@ describe('loadSprite', () => {
             expect(err).toBeFalsy();
 
             expect(transform).toHaveBeenCalledTimes(2);
-            expect(transform).toHaveBeenNthCalledWith(1, 'http://localhost:9966/test/unit/assets/sprite1.json', 'SpriteJSON');
-            expect(transform).toHaveBeenNthCalledWith(2, 'http://localhost:9966/test/unit/assets/sprite1.png', 'SpriteImage');
+            expect(transform).toHaveBeenNthCalledWith(1, 'http://localhost:9966/test/unit/assets/sprite1.json', MapLibreResourceType.SpriteJSON);
+            expect(transform).toHaveBeenNthCalledWith(2, 'http://localhost:9966/test/unit/assets/sprite1.png', MapLibreResourceType.SpriteImage);
 
             expect(Object.keys(result)).toHaveLength(1);
             expect(Object.keys(result)[0]).toBe('default');
@@ -68,10 +68,10 @@ describe('loadSprite', () => {
             expect(err).toBeFalsy();
 
             expect(transform).toHaveBeenCalledTimes(4);
-            expect(transform).toHaveBeenNthCalledWith(1, 'http://localhost:9966/test/unit/assets/sprite1.json', 'SpriteJSON');
-            expect(transform).toHaveBeenNthCalledWith(2, 'http://localhost:9966/test/unit/assets/sprite1.png', 'SpriteImage');
-            expect(transform).toHaveBeenNthCalledWith(3, 'http://localhost:9966/test/unit/assets/sprite2.json', 'SpriteJSON');
-            expect(transform).toHaveBeenNthCalledWith(4, 'http://localhost:9966/test/unit/assets/sprite2.png', 'SpriteImage');
+            expect(transform).toHaveBeenNthCalledWith(1, 'http://localhost:9966/test/unit/assets/sprite1.json', MapLibreResourceType.SpriteJSON);
+            expect(transform).toHaveBeenNthCalledWith(2, 'http://localhost:9966/test/unit/assets/sprite1.png', MapLibreResourceType.SpriteImage);
+            expect(transform).toHaveBeenNthCalledWith(3, 'http://localhost:9966/test/unit/assets/sprite2.json', MapLibreResourceType.SpriteJSON);
+            expect(transform).toHaveBeenNthCalledWith(4, 'http://localhost:9966/test/unit/assets/sprite2.png', MapLibreResourceType.SpriteImage);
 
             expect(Object.keys(result)).toHaveLength(2);
             expect(Object.keys(result)[0]).toBe('sprite1');
@@ -180,8 +180,8 @@ describe('loadSprite', () => {
             expect(err).toBeFalsy();
 
             expect(transform).toHaveBeenCalledTimes(2);
-            expect(transform).toHaveBeenNthCalledWith(1, 'http://localhost:9966/test/unit/assets/sprite1@2x.json', 'SpriteJSON');
-            expect(transform).toHaveBeenNthCalledWith(2, 'http://localhost:9966/test/unit/assets/sprite1@2x.png', 'SpriteImage');
+            expect(transform).toHaveBeenNthCalledWith(1, 'http://localhost:9966/test/unit/assets/sprite1@2x.json', MapLibreResourceType.SpriteJSON);
+            expect(transform).toHaveBeenNthCalledWith(2, 'http://localhost:9966/test/unit/assets/sprite1@2x.png', MapLibreResourceType.SpriteImage);
 
             expect(Object.keys(result)).toHaveLength(1);
             expect(Object.keys(result)[0]).toBe('default');
