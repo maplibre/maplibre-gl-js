@@ -8,7 +8,7 @@ export enum MapLibreResourceType {
     Image = 'Image',
     Source = 'Source',
     SpriteImage = 'SpriteImage',
-    SpriteJSON = 'Sprite',
+    SpriteJSON = 'SpriteJSON',
     Style = 'Style',
     Tile = 'Tile',
     Unknown = 'Unknown',
