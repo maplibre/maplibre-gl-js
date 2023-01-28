@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {MapLibreResourceType, RequestManager} from '../util/request_manager';
+import {RequestManager} from '../util/request_manager';
 import loadGlyphRange from './load_glyph_range';
 import {fakeXhr} from 'nise';
 
@@ -19,7 +19,7 @@ test('loadGlyphRange', done => {
     loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager, (err, result) => {
         expect(err).toBeFalsy();
         expect(transform).toHaveBeenCalledTimes(1);
-        expect(transform).toHaveBeenCalledWith('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf', MapLibreResourceType.Glyphs);
+        expect(transform).toHaveBeenCalledWith('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf', 'Glyphs');
 
         expect(Object.keys(result)).toHaveLength(223);
         for (const key in result) {
