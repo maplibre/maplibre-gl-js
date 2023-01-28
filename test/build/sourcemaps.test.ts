@@ -51,10 +51,10 @@ describe.each(distjs)('release file %s', (file) => {
 describe('main sourcemap', () => {
     test('should match source files', async () => {
         const sourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.main));
-        const sourcemapDir = path.relative('.', dirname(packageJson.main));
+        const sourceMapEntryRootDir = path.relative('.', dirname(packageJson.main));
 
         const sourcemapEntriesNormalized = sourcemapJSON.sources.map(f => {
-            const joinedFilePath = path.join(sourcemapDir, f);
+            const joinedFilePath = path.join(sourceMapEntryRootDir, f);
 
             // joined path has back slashes on windows, normalize them to be consistant with
             // entries returned by glob
