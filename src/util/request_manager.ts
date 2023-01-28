@@ -4,14 +4,14 @@ import type {RequestParameters} from './ajax';
  * A type of MapLibre resource.
  */
 export enum MapLibreResourceType {
-    Glyphs,
-    Image,
-    Source,
-    SpriteImage,
-    SpriteJSON,
-    Style,
-    Tile,
-    Unknown,
+    Glyphs = 'Glyphs',
+    Image = 'Image',
+    Source = 'Source',
+    SpriteImage = 'SpriteImage',
+    SpriteJSON = 'Sprite',
+    Style = 'Style',
+    Tile = 'Tile',
+    Unknown = 'Unknown',
 }
 
 export type RequestTransformFunction = (url: string, resourceType?: MapLibreResourceType) => RequestParameters;
