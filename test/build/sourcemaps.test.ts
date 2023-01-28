@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import {pathToFileURL} from 'url';
 
 const distjs = glob.sync('dist/**/*.js');
-jest.setTimeout(1000000);
+
 async function getSourceMapForFile(url: string|URL) {
     const content = await fs.readFile(url, {encoding: 'utf-8'});
     const result = new RegExp('^//# sourceMappingURL=(.*)$', 'm').exec(content);
