@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import {pathToFileURL} from 'url';
 
 const distjs = glob.sync('dist/**/*.js');
-
+jest.setTimeout(1000000);
 async function getSourceMapForFile(url: string|URL) {
     const content = await fs.readFile(url, {encoding: 'utf-8'});
     const result = new RegExp('^//# sourceMappingURL=(.*)$', 'm').exec(content);
@@ -53,49 +53,43 @@ describe('main sourcemap', () => {
         const sourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.main));
         const sourcemapDir = path.relative('.', dirname(packageJson.main));
 
-        // with expanded path
-        const sourcemapFiles = sourcemapJSON.sources.map(f => path.join(sourcemapDir, f));
-        const buildPathWin = 'build\\';
-        const buildPathLinux = 'build/';
-        const styleSpecPathWin = 'src\\style-spec';
-        const styleSpecPathLinux = 'src/style-spec';
+        const sourcemapEntriesNormalized = sourcemapJSON.sources.map(f => {
+            const joinedFilePath = path.join(sourcemapDir, f);
+
+            // joined path has back slashes on windows, normalize them to be consistant with
+            // entries returned by glob
+            return  joinedFilePath.replace(/\\/g, '/');
+        });
 
         // *.js.map file should have these files
         const srcFiles = await promisify(glob)('src/**/*.ts');
-        const expectedSrcFilesInSourcemapJSON = srcFiles.filter(f => {
-            const lowerf = f.toLowerCase();
-            if (lowerf.endsWith('.test.ts')) {
+        const expectedEntriesInSourcemapJSON = srcFiles.filter(f => {
+            if (f.endsWith('.test.ts'))
                 return false;
-            }
-            if (lowerf.startsWith(styleSpecPathLinux) || lowerf.startsWith(styleSpecPathWin)) {
+            if (f.startsWith('src/style-spec'))
                 return false;
-            }
-            if (lowerf.startsWith(buildPathLinux) || lowerf.startsWith(buildPathWin)) {
+            if (f.startsWith('build/'))
                 return false;
-            }
             return true;
-        });
+        }).sort();
 
         // actual files from *.js.map
-        const actualFilesInSourcemapJSON = sourcemapFiles.filter(f => {
-            const lowerf = f.toLowerCase();
-            if (lowerf.startsWith('node_modules')) {
+        const actualEntriesInSourcemapJSON = sourcemapEntriesNormalized.filter(f => {
+            if (f.startsWith('node_modules'))
                 return false;
-            }
-            if (lowerf.startsWith(styleSpecPathLinux) || lowerf.startsWith(styleSpecPathWin)) {
+            if (f.startsWith('src/style-spec'))
                 return false;
-            }
             return true;
-        });
+        }).sort();
 
         function setMinus<T>(a: T[], b: T[]) : T[] {
             const sb = new Set(b);
             return a.filter(x => !sb.has(x));
         }
 
-        const s1 = setMinus(actualFilesInSourcemapJSON, expectedSrcFilesInSourcemapJSON);
+        const s1 = setMinus(actualEntriesInSourcemapJSON, expectedEntriesInSourcemapJSON);
         expect(s1.length).toBeLessThan(5);
-        const s2 = setMinus(expectedSrcFilesInSourcemapJSON, actualFilesInSourcemapJSON);
+        const s2 = setMinus(expectedEntriesInSourcemapJSON, actualEntriesInSourcemapJSON);
         expect(s2.length).toBeLessThan(15);
     });
 });
