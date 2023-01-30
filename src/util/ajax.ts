@@ -55,7 +55,9 @@ export const getJSON = function(requestParameters: RequestParameters, callback: 
 
     request.response
         .then(response => callback(null, response.data))
-        .catch(err => callback(err));
+        .catch(err => {
+            if (err.message !== 'aborted') callback(err);
+        });
 
     return request;
 };
@@ -68,7 +70,9 @@ export const getArrayBuffer = function(
 
     request.response
         .then(response => callback(null, response.data))
-        .catch(err => callback(err));
+        .catch(err => {
+            if (err.message !== 'aborted') callback(err);
+        });
 
     return request;
 };
@@ -145,7 +149,7 @@ export const getImage = function(
         advanceImageRequestQueue();
 
         if (err) {
-            callback(err);
+            if (err.message !== 'aborted') callback(err);
         } else if (data) {
             const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
                 if (imgErr != null) {
