@@ -5,39 +5,6 @@ import webpSupported from './webp_supported';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 
-/**
- * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
- * @typedef {Object} RequestParameters
- * @property {string} url The URL to be requested.
- * @property {Object} headers The headers to be sent with the request.
- * @property {string} method Request method `'GET' | 'POST' | 'PUT'`.
- * @property {string} body Request body.
- * @property {string} type Response body type to be returned `'string' | 'json' | 'arrayBuffer'`.
- * @property {string} credentials `'same-origin'|'include'` Use 'include' to send cookies with cross-origin requests.
- * @property {boolean} collectResourceTiming If true, Resource Timing API information will be collected for these transformed requests and returned in a resourceTiming property of relevant data events.
- * @example
- * // use transformRequest to modify requests that begin with `http://myHost`
- * transformRequest: function(url, resourceType) {
- *  if (resourceType === 'Source' && url.indexOf('http://myHost') > -1) {
- *    return {
- *      url: url.replace('http', 'https'),
- *      headers: { 'my-custom-header': true },
- *      credentials: 'include'  // Include cookies for cross-origin requests
- *    }
- *   }
- *  }
- *
- */
-export type RequestParameters = {
-    url: string;
-    headers?: any;
-    method?: 'GET' | 'POST' | 'PUT';
-    body?: string;
-    type?: 'string' | 'json' | 'arrayBuffer';
-    credentials?: 'same-origin' | 'include';
-    collectResourceTiming?: boolean;
-};
-
 export type ResponseCallback<T> = (
     error?: Error | null,
     data?: T | null,
@@ -83,177 +50,27 @@ export class AJAXError extends Error {
     }
 }
 
-// Ensure that we're sending the correct referrer from blob URL worker bundles.
-// For files loaded from the local file system, `location.origin` will be set
-// to the string(!) "null" (Firefox), or "file://" (Chrome, Safari, Edge, IE),
-// and we will set an empty referrer. Otherwise, we're using the document's URL.
-/* global self */
-export const getReferrer = isWorker() ?
-    () => (self as any).worker && (self as any).worker.referrer :
-    () => (window.location.protocol === 'blob:' ? window.parent : window).location.href;
-
-// Determines whether a URL is a file:// URL. This is obviously the case if it begins
-// with file://. Relative URLs are also file:// URLs iff the original document was loaded
-// via a file:// URL.
-const isFileURL = url => /^file:/.test(url) || (/^file:/.test(getReferrer()) && !/^\w+:/.test(url));
-
-function makeFetchRequest(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    const controller = new AbortController();
-    const request = new Request(requestParameters.url, {
-        method: requestParameters.method || 'GET',
-        body: requestParameters.body,
-        credentials: requestParameters.credentials,
-        headers: requestParameters.headers,
-        referrer: getReferrer(),
-        signal: controller.signal
-    });
-    let complete = false;
-    let aborted = false;
-
-    if (requestParameters.type === 'json') {
-        request.headers.set('Accept', 'application/json');
-    }
-
-    const validateOrFetch = (err, cachedResponse?, responseIsFresh?) => {
-        if (aborted) return;
-
-        if (err) {
-            // Do fetch in case of cache error.
-            // HTTP pages in Edge trigger a security error that can be ignored.
-            if (err.message !== 'SecurityError') {
-                warnOnce(err);
-            }
-        }
-
-        if (cachedResponse && responseIsFresh) {
-            return finishRequest(cachedResponse);
-        }
-
-        if (cachedResponse) {
-            // We can't do revalidation with 'If-None-Match' because then the
-            // request doesn't have simple cors headers.
-        }
-
-        fetch(request).then(response => {
-            if (response.ok) {
-                return finishRequest(response);
-
-            } else {
-                return response.blob().then(body => callback(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
-            }
-        }).catch(error => {
-            if (error.code === 20) {
-                // silence expected AbortError
-                return;
-            }
-            callback(new Error(error.message));
-        });
-    };
-
-    const finishRequest = (response) => {
-        (
-            requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
-                requestParameters.type === 'json' ? response.json() :
-                    response.text()
-        ).then(result => {
-            if (aborted) return;
-            complete = true;
-            callback(null, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
-        }).catch(err => {
-            if (!aborted) callback(new Error(err.message));
-        });
-    };
-
-    validateOrFetch(null, null);
-
-    return {cancel: () => {
-        aborted = true;
-        if (!complete) controller.abort();
-    }};
-}
-
-function makeXMLHttpRequest(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    const xhr: XMLHttpRequest = new XMLHttpRequest();
-
-    xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
-    if (requestParameters.type === 'arrayBuffer') {
-        xhr.responseType = 'arraybuffer';
-    }
-    for (const k in requestParameters.headers) {
-        xhr.setRequestHeader(k, requestParameters.headers[k]);
-    }
-    if (requestParameters.type === 'json') {
-        xhr.responseType = 'text';
-        xhr.setRequestHeader('Accept', 'application/json');
-    }
-    xhr.withCredentials = requestParameters.credentials === 'include';
-    xhr.onerror = () => {
-        callback(new Error(xhr.statusText));
-    };
-    xhr.onload = () => {
-        if (((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) && xhr.response !== null) {
-            let data: unknown = xhr.response;
-            if (requestParameters.type === 'json') {
-                // We're manually parsing JSON here to get better error messages.
-                try {
-                    data = JSON.parse(xhr.response);
-                } catch (err) {
-                    return callback(err);
-                }
-            }
-            callback(null, data, xhr.getResponseHeader('Cache-Control'), xhr.getResponseHeader('Expires'));
-        } else {
-            const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
-            callback(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
-        }
-    };
-    xhr.send(requestParameters.body);
-    return {cancel: () => xhr.abort()};
-}
-
-export const makeRequest = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    // We're trying to use the Fetch API if possible. However, in some situations we can't use it:
-    // - IE11 doesn't support it at all. In this case, we dispatch the request to the main thread so
-    //   that we can get an accruate referrer header.
-    // - Safari exposes window.AbortController, but it doesn't work actually abort any requests in
-    //   some versions (see https://bugs.webkit.org/show_bug.cgi?id=174980#c2)
-    // - Requests for resources with the file:// URI scheme don't work with the Fetch API either. In
-    //   this case we unconditionally use XHR on the current thread since referrers don't matter.
-    if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
-        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
-            return (self as any).worker.actor.send('getResource', requestParameters, callback);
-        }
-        if (!isWorker()) {
-            const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
-            const action = config.REGISTERED_PROTOCOLS[protocol] || makeFetchRequest;
-            return action(requestParameters, callback);
-        }
-    }
-    if (!isFileURL(requestParameters.url)) {
-        if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
-            return makeFetchRequest(requestParameters, callback);
-        }
-        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
-            const queueOnMainThread = true;
-            return (self as any).worker.actor.send('getResource', requestParameters, callback, undefined, queueOnMainThread);
-        }
-    }
-    return makeXMLHttpRequest(requestParameters, callback);
-};
-
 export const getJSON = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    return makeRequest(extend(requestParameters, {type: 'json'}), callback);
+    const request = makeRequest<any>(extend(requestParameters, {type: 'json'}));
+
+    request.response
+        .then(response => callback(null, response.data))
+        .catch(err => callback(err));
+
+    return request;
 };
 
 export const getArrayBuffer = function(
     requestParameters: RequestParameters,
     callback: ResponseCallback<ArrayBuffer>
 ): Cancelable {
-    return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), callback);
-};
+    const request = makeRequest<ArrayBuffer>(extend(requestParameters, {type: 'arrayBuffer'}));
 
-export const postData = function(requestParameters: RequestParameters, callback: ResponseCallback<string>): Cancelable {
-    return makeRequest(extend(requestParameters, {method: 'POST'}), callback);
+    request.response
+        .then(response => callback(null, response.data))
+        .catch(err => callback(err));
+
+    return request;
 };
 
 function sameOrigin(url) {
@@ -290,7 +107,7 @@ export const getImage = function(
         if (!requestParameters.headers) {
             requestParameters.headers = {};
         }
-        requestParameters.headers.accept = 'image/webp,*/*';
+        requestParameters.headers['Accept'] = 'image/webp,*/*';
     }
 
     // limit concurrent image loads to help with raster sources performance on big screens
@@ -364,4 +181,260 @@ export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVid
         video.appendChild(s);
     }
     return {cancel: () => {}};
+};
+
+// new impl.
+
+/**
+ * A type that represents parameters of an asynchronous HTTP request. The same as built-in `RequestInit`, but with
+ * required `url: string` and optional `collectResourceTiming?: boolean` additional properties.
+ *
+ * @typedef {RequestParameters}
+ */
+export type RequestParameters = RequestInit & { url: string; collectResourceTiming?: boolean };
+
+/**
+ * A type that tells the `makeRequest` which modifications to apply to the request before making it and how to treat
+ * response of the request after it's loaded based on the type of the raw data being loaded.
+ *
+ * @enum {RequestDataType}
+ */
+export const enum RequestDataType {
+    'string',
+    'JSON',
+    'ArrayBuffer'
+}
+
+/**
+ * A generic type that represents a MapLibre asynchronous cancelable HTTP request.
+ *
+ * Represented by an object containing 2 fields:
+ *  - `response`: a `Promise` that (possibly) resolves with the request's result
+ *  - `cancel`: a function to cancel the request
+ *
+ * @typedef {Request}
+ */
+export type Request<T> = {response: Promise<T>} & Cancelable;
+
+/**
+ * A generic type that represents a MapLibre asynchronous cancelable HTTP request's response.
+ *
+ * Represented by an object containing 3 fields:
+ *  - `data`: the response data
+ *  - `cacheControl`: the value of the response's "Cache-Control" header
+ *  - `expires`: the value of the response's "Expires" header
+ *
+ * @typedef {Response}
+ */
+export type Response<T> = {data: T} & ExpiryData;
+
+/**
+ * A generic function that makes an asynchronous HTTP request using the most appropriate for the given circumstances
+ * API: either Fetch or XMLHttpRequest.
+ *
+ * The second argument - `requestDataType` - when present, applies certain modifications to the request headers and
+ * response data parsing.
+ *
+ * Returns an object containing 2 fields:
+ *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
+ *  with the value of type `MapLibreResponse<T>`
+ *  - `cancel`: a method to cancel the request
+ *
+ * @function
+ * @param {RequestParameters} requestParameters Request parameters
+ * @param {RequestDataType} requestDataType Request data type
+ * @returns {Request<Response>} Promised response and the `cancel` method
+ */
+export function makeRequest<T>(requestParameters: RequestParameters, requestDataType?: RequestDataType): Request<Response<T>> {
+    /*
+        See https://github.com/maplibre/maplibre-gl-js/discussions/2004
+
+        TL;DR: for the time being, it's still impossible to completely give up on using the XMLHttpRequest API. But
+        that's a point to reconsider in the (hopefully near) future
+     */
+
+    // if the url uses some custom protocol. E.g. "custom://..."
+    if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
+        // and if the request is made from inside a worker
+        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
+            // then ask the main thread to make the request from there
+            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
+        }
+
+        // if it's not a worker
+        if (!isWorker()) {
+            // then check the protocol, and if there exists a custom handler for the protocol, then execute the custom
+            // handler. Otherwise, make the request using the Fetch API
+            const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
+            const action = config.REGISTERED_PROTOCOLS[protocol] || helper.makeFetchRequest;
+
+            return action(requestParameters, requestDataType);
+        }
+    }
+
+    // if there's no protocol at all or the protocol is not `file://` (in comparison with the `if` block above, it can
+    // now be `http[s]://`). E.g. "https://..." or "foo"
+    if (!requestParameters.url.startsWith('file://')) {
+        // and if Fetch API is supported by the target environment
+        if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
+            // then make a `fetch` request
+            return helper.makeFetchRequest(requestParameters, requestDataType);
+        }
+
+        // if the function is called from a worker
+        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
+            // ask the main thread to make the request
+            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
+        }
+    }
+
+    // fallback to the XMLHttpRequest API. E.g. "file://..."
+    return helper.makeXMLHttpRequest(requestParameters, requestDataType);
+}
+
+/**
+ * Returns the current `referrer`. It differs based on whether the function is invoked from the global code or from a
+ * worker.
+ *
+ * @returns {string} Result
+ */
+export function getReferrer(): string {
+    if (isWorker()) {
+        return (self as any).worker && (self as any).worker.referrer;
+    } else {
+        if (window.location.protocol === 'blob:') {
+            return window.parent.location.href;
+        } else {
+            return window.location.href;
+        }
+    }
+}
+
+// private functions go below this line. Private functions are dependencies of the public function above and are
+// exported only to be able to be imported in the unit tests
+
+/**
+ * @private
+ *
+ * A generic function that makes an asynchronous HTTP request using the Fetch API.
+ *
+ * Returns an object containing 2 fields:
+ *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
+ *  with the value of type `MapLibreResponse<T>`
+ *  - `cancel`: a method to cancel the request
+ *
+ * @function
+ * @param {RequestParameters} requestParameters Request parameters
+ * @param {RequestDataType} requestDataType Request data type
+ * @returns {Request<Response>} Promised response and the `cancel` method
+ */
+export function makeFetchRequest<T>(requestParameters: RequestParameters, requestDataType?: RequestDataType): Request<Response<T>> {
+    const abortController = new AbortController();
+
+    const request = new Request(requestParameters.url, extend({}, requestParameters, {
+        referrer: getReferrer(),
+        signal: abortController.signal
+    }));
+
+    if (requestDataType === RequestDataType.JSON) {
+        request.headers.set('Accept', 'application/json');
+    }
+
+    return {
+        response: (async (): Promise<Response<T>> => {
+            const response = await fetch(request);
+
+            if (abortController.signal.aborted) throw new Error('aborted');
+
+            if (response.ok) {
+                const data: T = await (requestDataType === RequestDataType.ArrayBuffer ? response.arrayBuffer() : requestDataType === RequestDataType.JSON ? response.json() : response.text());
+
+                return {
+                    data,
+                    cacheControl: response.headers.get('Cache-Control') ?? undefined,
+                    expires: response.headers.get('Expires') ?? undefined
+                };
+
+            } else {
+                throw new Error('Failed to fetch URL'/*response.status, response.statusText, requestParameters.url, await response.blob()*/);
+            }
+        })(),
+
+        cancel: () => abortController.abort()
+    };
+}
+
+/**
+ * @private
+ *
+ * A generic function that makes an asynchronous HTTP request using the XMLHttpRequest API.
+ *
+ * Returns an object containing 2 fields:
+ *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
+ *  with the value of type `MapLibreResponse<T>`
+ *  - `cancel`: a method to cancel the request
+ *
+ * @function
+ * @param {RequestParameters} requestParameters Request parameters
+ * @param {RequestDataType} requestDataType Request data type
+ * @returns {Request<Response>} Promised response and the `cancel` method
+ */
+export function makeXMLHttpRequest<T>(requestParameters: RequestParameters, requestDataType?: RequestDataType): Request<Response<T>> {
+    const xhr: XMLHttpRequest = new XMLHttpRequest();
+    xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
+
+    if (requestDataType === RequestDataType.ArrayBuffer) {
+        xhr.responseType = 'arraybuffer';
+    }
+
+    for (const k in requestParameters.headers) {
+        xhr.setRequestHeader(k, requestParameters.headers[k]);
+    }
+
+    if (requestDataType === RequestDataType.JSON) {
+        xhr.responseType = 'text';
+        xhr.setRequestHeader('Accept', 'application/json');
+    }
+
+    xhr.withCredentials = requestParameters.credentials === 'include';
+
+    xhr.send(requestParameters.body?.toString());
+
+    return {
+        response: new Promise<Response<T>>((res, rej) => {
+            xhr.onload = () => {
+                if (((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) && xhr.response !== null) {
+                    let data: T = xhr.response;
+
+                    if (requestDataType === RequestDataType.JSON) {
+                        try {
+                            data = JSON.parse(xhr.response);
+                        } catch (err) {
+                            return rej(err);
+                        }
+                    }
+
+                    res({
+                        data,
+                        cacheControl: xhr.getResponseHeader('Cache-Control'),
+                        expires: xhr.getResponseHeader('Expires')
+                    });
+                } else {
+                    // const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
+                    rej(new Error('Failed to Fetch URL'/*xhr.status, xhr.statusText, requestParameters.url, body*/));
+                }
+            };
+
+            xhr.onerror = () => rej(new Error('Failed to Fetch URL'));
+
+            xhr.onabort = () => rej(new Error('aborted'));
+        }),
+
+        cancel: () => xhr.abort()
+    };
+}
+
+export const helper = {
+    makeFetchRequest,
+    makeXMLHttpRequest
 };

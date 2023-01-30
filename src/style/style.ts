@@ -1513,7 +1513,13 @@ class Style extends Evented {
     }
 
     getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-        return makeRequest(params, callback);
+        const request = makeRequest(params);
+
+        request.response
+            .then(response => callback(null, response.data))
+            .catch(err => callback(err));
+
+        return request;
     }
 
     getGlyphsUrl() {
