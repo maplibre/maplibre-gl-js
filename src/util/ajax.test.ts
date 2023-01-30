@@ -1,222 +1,303 @@
 import {
-    getArrayBuffer,
     getJSON,
-    postData,
+    getArrayBuffer,
     getImage,
-    resetImageRequestQueue,
-    AJAXError
+    makeRequest,
+    getReferrer,
+    makeFetchRequest,
+    makeXMLHttpRequest,
+    helper,
+    RequestDataType,
 } from './ajax';
-import config from './config';
-import webpSupported from './webp_supported';
+import * as util from './util';
+import fetchMock from 'jest-fetch-mock';
 import {fakeServer, FakeServer} from 'nise';
-import {stubAjaxGetImage} from './test/util';
-
-function readAsText(blob) {
-    return new Promise((resolve, reject) => {
-        const fileReader = new FileReader();
-        fileReader.onload = () => resolve(fileReader.result);
-        fileReader.onerror = () => reject(fileReader.error);
-        fileReader.readAsText(blob);
-    });
-}
 
 describe('ajax', () => {
-    let server: FakeServer;
-    beforeEach(() => {
-        global.fetch = null;
-        server = fakeServer.create();
-    });
     afterEach(() => {
-        server.restore();
+        jest.clearAllMocks();
     });
 
-    test('getArrayBuffer, 404', done => {
-        server.respondWith(request => {
-            request.respond(404, undefined, '404 Not Found');
+    describe('getJSON', () => {
+        test('calls the callback with correct response', async () => {
+            // @ts-ignore
+            const callback = jest.fn(() => {});
+
+            getJSON({url: ''}, callback);
+
+            setTimeout(() => {
+                expect(callback).toHaveBeenNthCalledWith(1, null, 'response');
+            });
         });
-        getArrayBuffer({url: 'http://example.com/test.bin'}, async (error) => {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.bin');
-            expect(body).toBe('404 Not Found');
-            done();
-        });
-        server.respond();
     });
 
-    test('getJSON', done => {
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
+    describe('getArrayBuffer', () => {
+        test('calls the callback with correct response', async () => {
+            // @ts-ignore
+            const callback = jest.fn(() => {});
+
+            getArrayBuffer({url: ''}, callback);
+
+            setTimeout(() => {
+                expect(callback).toHaveBeenNthCalledWith(1, null, 'response');
+            });
         });
-        getJSON({url: ''}, (error, body) => {
-            expect(error).toBeFalsy();
-            expect(body).toEqual({foo: 'bar'});
-            done();
-        });
-        server.respond();
     });
 
-    test('getJSON, invalid syntax', done => {
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
+    describe('getImage', () => {
+        test('is cancelable', async () => {
+            fetchMock.mockResponseOnce('');
+            const callback = jest.fn(() => {});
+            const request = getImage({url: ''}, callback);
+            request.cancel();
+            await expect(callback).not.toHaveBeenCalled();
         });
-        getJSON({url: ''}, (error) => {
-            expect(error).toBeTruthy();
-            done();
-        });
-        server.respond();
     });
 
-    test('getJSON, 404', done => {
-        server.respondWith(request => {
-            request.respond(404, undefined, '404 Not Found');
+    describe('getReferrer', () => {
+        test('when worker, returns the worker\'s referrer', async () => {
+            jest.spyOn(util, 'isWorker').mockImplementationOnce(() => true);
+            self.worker = {referrer: 'foo'};
+
+            expect(getReferrer()).toBe('foo');
+
+            self.worker = null;
         });
-        getJSON({url: 'http://example.com/test.json'}, async (error) => {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.json');
-            expect(body).toBe('404 Not Found');
-            done();
+
+        test('when not a worker and the current protocol is not "blob:", returns the window\'s href', async () => {
+            expect(getReferrer()).toBe(window.location.href);
         });
-        server.respond();
     });
 
-    test('postData, 204(no content): no error', done => {
-        server.respondWith(request => {
-            request.respond(204, undefined, undefined);
+    describe('makeRequest', () => {
+        let makeFetchRequestSpy;
+        let makeXMLHttpRequestSpy;
+
+        beforeEach(() => {
+            // @ts-ignore
+            makeFetchRequestSpy = jest.spyOn(helper, 'makeFetchRequest').mockImplementationOnce(() => {});
+            // @ts-ignore
+            makeXMLHttpRequestSpy = jest.spyOn(helper, 'makeXMLHttpRequest').mockImplementationOnce(() => {});
         });
-        postData({url: 'api.mapbox.com'}, (error) => {
-            expect(error).toBeNull();
-            done();
-        });
-        server.respond();
-    });
 
-    test('getImage respects maxParallelImageRequests', done => {
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+        function workerTest(url: string) {
+            const fetch = global.fetch;
+            global.fetch = null;
+            self.worker = {actor: {send: jest.fn(() => {})}};
+            const actor = self.worker.actor;
+            const isWorkerSpy = jest.spyOn(util, 'isWorker').mockImplementationOnce(() => true);
+            const sendSpy = jest.spyOn(actor, 'send');
 
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
+            makeRequest({url});
 
-        function callback(err) {
-            if (err) return;
-            // last request is only added after we got a response from one of the previous ones
-            expect(server.requests).toHaveLength(maxRequests + 1);
-            done();
+            expect(isWorkerSpy).toHaveBeenCalledTimes(1);
+            expect(sendSpy).toHaveBeenNthCalledWith(1, 'getResource', {url}, undefined);
+
+            global.fetch = fetch;
+            self.worker = null;
         }
 
-        for (let i = 0; i < maxRequests + 1; i++) {
-            getImage({url: ''}, callback);
-        }
-        expect(server.requests).toHaveLength(maxRequests);
+        describe('"custom://" protocol', () => {
+            test('when worker, calls `getResource` on the main thread', async () => {
+                workerTest('custom://example.com');
+            });
 
-        server.requests[0].respond(undefined, undefined, undefined);
-    });
+            test('uses fetch when it is available', async () => {
+                makeRequest({url: 'custom://example.com'});
 
-    test('getImage cancelling frees up request for maxParallelImageRequests', done => {
-        resetImageRequestQueue();
-
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
-
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
-
-        for (let i = 0; i < maxRequests + 1; i++) {
-            getImage({url: ''}, () => done('test failed: getImage callback was called')).cancel();
-        }
-        expect(server.requests).toHaveLength(maxRequests + 1);
-        done();
-    });
-
-    test('getImage requests that were once queued are still abortable', done => {
-        resetImageRequestQueue();
-
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
-
-        const requests = [];
-        for (let i = 0; i < maxRequests; i++) {
-            requests.push(getImage({url: ''}, () => {}));
-        }
-
-        // the limit of allowed requests is reached
-        expect(server.requests).toHaveLength(maxRequests);
-
-        const queuedURL = 'this-is-the-queued-request';
-        const queued = getImage({url: queuedURL}, () => done('test failed: getImage callback was called'));
-
-        // the new requests is queued because the limit is reached
-        expect(server.requests).toHaveLength(maxRequests);
-
-        // cancel the first request to let the queued request start
-        requests[0].cancel();
-        expect(server.requests).toHaveLength(maxRequests + 1);
-
-        // abort the previously queued request and confirm that it is aborted
-        const queuedRequest = server.requests[server.requests.length - 1];
-        expect(queuedRequest.url).toBe(queuedURL);
-        expect((queuedRequest as any).aborted).toBeUndefined();
-        queued.cancel();
-        expect((queuedRequest as any).aborted).toBe(true);
-
-        done();
-    });
-
-    test('getImage sends accept/webp when supported', done => {
-        resetImageRequestQueue();
-
-        server.respondWith((request) => {
-            expect(request.requestHeaders.accept.includes('image/webp')).toBeTruthy();
-            request.respond(200, {'Content-Type': 'image/webp'}, '');
+                expect(makeFetchRequestSpy).toHaveBeenNthCalledWith(1, {url: 'custom://example.com'}, undefined);
+                expect(makeXMLHttpRequestSpy).not.toHaveBeenCalled();
+            });
         });
 
-        // mock webp support
-        webpSupported.supported = true;
+        describe('protocol-less or HTTP[S] (not "file://")', () => {
+            test('uses fetch when it is available', async () => {
+                makeRequest({url: 'foo'});
 
-        getImage({url: ''}, () => { done(); });
+                expect(makeFetchRequestSpy).toHaveBeenNthCalledWith(1, {url: 'foo'}, undefined);
+                expect(makeXMLHttpRequestSpy).not.toHaveBeenCalled();
+            });
 
-        server.respond();
-    });
-
-    test('getImage uses ImageBitmap when supported', done => {
-        resetImageRequestQueue();
-
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
-            'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
-
-        stubAjaxGetImage(() => Promise.resolve(new ImageBitmap()));
-
-        getImage({url: ''}, (err, img, expiry) => {
-            if (err) done(err);
-            expect(img).toBeInstanceOf(ImageBitmap);
-            expect(expiry.cacheControl).toBe('cache');
-            expect(expiry.expires).toBe('expires');
-            done();
+            test('when worker, calls `getResource` on the main thread', async () => {
+                workerTest('foo');
+            });
         });
 
-        server.respond();
+        test('"file://" urls use XHR', () => {
+            fakeServer.create();
+
+            makeRequest({url: 'file://example'});
+
+            expect(makeFetchRequestSpy).not.toHaveBeenCalled();
+            expect(makeXMLHttpRequestSpy).toHaveBeenNthCalledWith(1, {url: 'file://example'}, undefined);
+        });
     });
 
-    test('getImage uses HTMLImageElement when ImageBitmap is not supported', done => {
-        resetImageRequestQueue();
+    describe('makeFetchRequest', () => {
+        fetchMock.enableMocks();
 
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
-            'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
-
-        stubAjaxGetImage(undefined);
-
-        getImage({url: ''}, (err, img, expiry) => {
-            if (err) done(`get image failed with error ${err.message}`);
-            expect(img).toBeInstanceOf(HTMLImageElement);
-            expect(expiry.cacheControl).toBe('cache');
-            expect(expiry.expires).toBe('expires');
-            done();
+        beforeEach(() => {
+            fetchMock.resetMocks();
         });
 
-        server.respond();
+        test('ok', async () => {
+            fetchMock.mockResponseOnce(JSON.stringify({foo: 'bar'}));
+
+            try {
+                const request = makeFetchRequest({url: ''});
+
+                const response = await request.response;
+                expect(response.data).toEqual(JSON.stringify({foo: 'bar'}));
+            } catch (err) {
+                // should never execute
+                expect(true).toBe(false);
+            }
+        });
+
+        test('`requestDataType` "json" sets respective request headers', async () => {
+            fetchMock.doMockOnceIf(
+                (req) => { return req.headers.get('Accept') === 'application/json'; },
+                JSON.stringify({foo: 'bar'}),
+                {headers: {'Content-Type': 'application/json'}}
+            );
+
+            try {
+                const request = makeFetchRequest({url: ''}, RequestDataType.JSON);
+
+                const response = await request.response;
+                expect(response.data).toEqual({foo: 'bar'});
+            } catch (err) {
+                expect(true).toBe(false);
+            }
+        });
+
+        test('error when response status is not ok', async () => {
+            fetchMock.mockResponseOnce('', {status: 500});
+            const request = makeFetchRequest({url: ''});
+            await expect(request.response).rejects.toBeInstanceOf(Error);
+        });
+
+        test('is cancelable', async () => {
+            fetchMock.mockResponseOnce('');
+            const request = makeFetchRequest({url: ''});
+            request.cancel();
+            await expect(request.response).rejects.toStrictEqual(new Error('aborted'));
+        });
     });
 
+    describe('makeXMLHttpRequest', () => {
+        let fakeXMLHttpRequest: FakeServer;
+
+        beforeEach(() => {
+            fakeXMLHttpRequest = fakeServer.create();
+        });
+
+        afterEach(() => {
+            fakeXMLHttpRequest.restore();
+        });
+
+        test('ok', async () => {
+            fakeXMLHttpRequest.respondWith(request => {
+                request.respond(200, undefined, JSON.stringify({foo: 'bar'}));
+            });
+
+            try {
+                const request = makeXMLHttpRequest({url: ''});
+                fakeXMLHttpRequest.respond();
+
+                const response = await request.response;
+                expect(response.data).toEqual(JSON.stringify({foo: 'bar'}));
+            } catch (err) {
+                // should never execute
+                expect(true).toBe(false);
+            }
+        });
+
+        test('respects request headers', async () => {
+            fakeXMLHttpRequest.respondWith(request => {
+                request.respond(200, undefined, '');
+            });
+
+            try {
+                makeXMLHttpRequest({url: '', headers: {foo: 'bar'}});
+                fakeXMLHttpRequest.respond();
+
+                expect(fakeXMLHttpRequest.requests[0].requestHeaders.foo).toBe('bar');
+            } catch (err) {
+                // should never execute
+                expect(true).toBe(false);
+            }
+        });
+
+        test('sets "arraybuffer" response type when the `requestDataType` is array buffer', async () => {
+            fakeXMLHttpRequest.respondWith(request => {
+                request.respond(200, undefined, '');
+            });
+
+            try {
+                makeXMLHttpRequest({url: ''}, RequestDataType.ArrayBuffer);
+                fakeXMLHttpRequest.respond();
+
+                // the mock doesn't know about that property, safe to ignore
+                // @ts-ignore
+                expect(fakeXMLHttpRequest.requests[0].responseType).toBe('arraybuffer');
+            } catch (err) {
+                // should never execute
+                expect(true).toBe(false);
+            }
+        });
+
+        test('sets "text" response type and {"Accept", "application/json"} header when the `requestDataType` is json', async () => {
+            fakeXMLHttpRequest.respondWith(request => {
+                request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({foo: 'bar'}));
+            });
+
+            try {
+                makeXMLHttpRequest({url: ''}, RequestDataType.JSON);
+                fakeXMLHttpRequest.respond();
+
+                // the mock doesn't know about that property, safe to ignore
+                // @ts-ignore
+                expect(fakeXMLHttpRequest.requests[0].responseType).toBe('text');
+                expect(fakeXMLHttpRequest.requests[0].requestHeaders['Accept']).toBe('application/json');
+            } catch (err) {
+                // should never execute
+                expect(true).toBe(false);
+            }
+        });
+
+        test('throws if loaded json is invalid', async () => {
+            fakeXMLHttpRequest.respondWith(request => {
+                request.respond(200, {'Content-Type': 'application/json'}, 'invalid json');
+            });
+
+            const request = makeXMLHttpRequest({url: ''}, RequestDataType.JSON);
+            fakeXMLHttpRequest.respond();
+
+            await expect(request.response).rejects.toBeInstanceOf(SyntaxError);
+        });
+
+        test('error when response status is not ok', async () => {
+            fakeXMLHttpRequest.respondWith(request => {
+                request.respond(500, undefined, '');
+            });
+
+            const request = makeXMLHttpRequest({url: ''});
+            fakeXMLHttpRequest.respond();
+
+            await expect(request.response).rejects.toBeInstanceOf(Error);
+        });
+
+        test('is cancelable', async () => {
+            fakeXMLHttpRequest.respondWith(request => {
+                request.respond(200, undefined, '');
+            });
+
+            const request = makeXMLHttpRequest({url: ''});
+            request.cancel();
+            fakeXMLHttpRequest.respond();
+
+            await expect(request.response).rejects.toStrictEqual(new Error('aborted'));
+        });
+    });
 });

@@ -31,6 +31,7 @@
     "geojson-vt": "^3.2.1",
     "gl-matrix": "^3.4.3",
     "global-prefix": "^3.0.0",
+    "jest-fetch-mock": "^3.0.3",
     "kdbush": "3.0.0",
     "murmurhash-js": "^1.0.0",
     "pbf": "^3.2.1",

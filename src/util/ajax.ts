@@ -1,4 +1,4 @@
-import {extend, warnOnce, isWorker, arrayBufferToImageBitmap, arrayBufferToImage} from './util';
+import {extend, isWorker, arrayBufferToImageBitmap, arrayBufferToImage} from './util';
 import config from './config';
 import webpSupported from './webp_supported';
 
@@ -51,7 +51,7 @@ export class AJAXError extends Error {
 }
 
 export const getJSON = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    const request = makeRequest<any>(extend(requestParameters, {type: 'json'}));
+    const request = makeRequest<any>(requestParameters, RequestDataType.JSON);
 
     request.response
         .then(response => callback(null, response.data))
@@ -64,7 +64,7 @@ export const getArrayBuffer = function(
     requestParameters: RequestParameters,
     callback: ResponseCallback<ArrayBuffer>
 ): Cancelable {
-    const request = makeRequest<ArrayBuffer>(extend(requestParameters, {type: 'arrayBuffer'}));
+    const request = makeRequest<ArrayBuffer>(requestParameters, RequestDataType.ArrayBuffer);
 
     request.response
         .then(response => callback(null, response.data))
@@ -237,7 +237,7 @@ export type Response<T> = {data: T} & ExpiryData;
  *
  * Returns an object containing 2 fields:
  *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
- *  with the value of type `MapLibreResponse<T>`
+ *  with the value of type `Response<T>`
  *  - `cancel`: a method to cancel the request
  *
  * @function
@@ -320,7 +320,7 @@ export function getReferrer(): string {
  *
  * Returns an object containing 2 fields:
  *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
- *  with the value of type `MapLibreResponse<T>`
+ *  with the value of type `Response<T>`
  *  - `cancel`: a method to cancel the request
  *
  * @function
@@ -371,7 +371,7 @@ export function makeFetchRequest<T>(requestParameters: RequestParameters, reques
  *
  * Returns an object containing 2 fields:
  *  - `response`: a `Promise` that rejects with an `Error` in case the request has failed to load the data and resolves
- *  with the value of type `MapLibreResponse<T>`
+ *  with the value of type `Response<T>`
  *  - `cancel`: a method to cancel the request
  *
  * @function
