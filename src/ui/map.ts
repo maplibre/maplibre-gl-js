@@ -297,7 +297,7 @@ class Map extends Camera {
     _interactive: boolean;
     _cooperativeGestures: boolean | GestureOptions;
     _cooperativeGesturesScreen: HTMLElement;
-    _metaPress: boolean;
+    _metaKey: string;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -2589,28 +2589,21 @@ class Map extends Camera {
 
     _setupCooperativeGestures() {
         const container = this._container;
-        this._metaPress = false;
         this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
-        let modifierKeyName = 'Control';
+        this._metaKey = 'ctrlKey';
         let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
         if (navigator.platform.indexOf('Mac') === 0) {
             desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
-            modifierKeyName = 'Meta';
+            this._metaKey = 'metaKey';
         }
         const mobileMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.mobileHelpText ? this._cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
         this._cooperativeGesturesScreen.innerHTML = `
             <div class="maplibregl-desktop-message">${desktopMessage}</div>
             <div class="maplibregl-mobile-message">${mobileMessage}</div>
         `;
-        document.addEventListener('keydown', (event) => {
-            if (event.key === modifierKeyName) this._metaPress = true;
-        });
-        document.addEventListener('keyup', (event) => {
-            if (event.key === modifierKeyName) this._metaPress = false;
-        });
         // Add event to canvas container since gesture container is pointer-events: none
         this._canvasContainer.addEventListener('wheel', (e) => {
-            this._onCooperativeGesture(e, this._metaPress, 1);
+            this._onCooperativeGesture(e, e[this._metaKey], 1);
         }, false);
         // Remove the traditional pan classes
         this._canvasContainer.classList.remove('maplibregl-touch-drag-pan');

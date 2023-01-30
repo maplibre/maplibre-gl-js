@@ -158,7 +158,7 @@ class ScrollZoomHandler {
     wheel(e: WheelEvent) {
         if (!this.isEnabled()) return;
         if (this._map._cooperativeGestures) {
-            if (this._map._metaPress) {
+            if (e[this._map._metaKey]) {
                 e.preventDefault();
             } else {
                 return;
