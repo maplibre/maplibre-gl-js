@@ -3,7 +3,7 @@ import type {RequestParameters} from './ajax';
 /**
  * A type of MapLibre resource.
  */
-export enum MapLibreResourceType {
+export const enum ResourceType {
     Glyphs = 'Glyphs',
     Image = 'Image',
     Source = 'Source',
@@ -14,7 +14,7 @@ export enum MapLibreResourceType {
     Unknown = 'Unknown',
 }
 
-export type RequestTransformFunction = (url: string, resourceType?: MapLibreResourceType) => RequestParameters;
+export type RequestTransformFunction = (url: string, resourceType?: ResourceType) => RequestParameters;
 
 type UrlObject = {
     protocol: string;
@@ -30,7 +30,7 @@ export class RequestManager {
         this._transformRequestFn = transformRequestFn;
     }
 
-    transformRequest(url: string, type: MapLibreResourceType) {
+    transformRequest(url: string, type: ResourceType) {
         if (this._transformRequestFn) {
             return this._transformRequestFn(url, type) || {url};
         }

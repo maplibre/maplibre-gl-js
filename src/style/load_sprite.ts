@@ -1,5 +1,5 @@
 import {getJSON, getImage} from '../util/ajax';
-import {MapLibreResourceType} from '../util/request_manager';
+import {ResourceType} from '../util/request_manager';
 
 import browser from '../util/browser';
 import {RGBAImage} from '../util/image';
@@ -29,7 +29,7 @@ export default function loadSprite(
 
     for (const {id, url} of sprite) {
         // eslint-disable-next-line no-loop-func
-        const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), MapLibreResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
+        const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
             jsonRequests.splice(newJsonRequestsLength, 1);
             if (!error) {
                 error = err;
@@ -39,7 +39,7 @@ export default function loadSprite(
         }));
 
         // eslint-disable-next-line no-loop-func
-        const newImageRequestsLength = imageRequests.push(getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), MapLibreResourceType.SpriteImage), (err, img) => {
+        const newImageRequestsLength = imageRequests.push(getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage), (err, img) => {
             imageRequests.splice(newImageRequestsLength, 1);
             if (!error) {
                 error = err;

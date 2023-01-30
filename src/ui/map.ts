@@ -3,7 +3,7 @@ import browser from '../util/browser';
 import DOM from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
 import {getImage, GetImageCallback, getJSON} from '../util/ajax';
-import {RequestManager, MapLibreResourceType} from '../util/request_manager';
+import {RequestManager, ResourceType} from '../util/request_manager';
 import Style, {StyleSwapOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
@@ -1519,7 +1519,7 @@ class Map extends Camera {
     _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
-            const request = this._requestManager.transformRequest(url, MapLibreResourceType.Style);
+            const request = this._requestManager.transformRequest(url, ResourceType.Style);
             getJSON(request, (error?: Error | null, json?: any | null) => {
                 if (error) {
                     this.fire(new ErrorEvent(error));
@@ -1949,7 +1949,7 @@ class Map extends Camera {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image/)
      */
     loadImage(url: string, callback: GetImageCallback) {
-        getImage(this._requestManager.transformRequest(url, MapLibreResourceType.Image), callback);
+        getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
     }
 
     /**
