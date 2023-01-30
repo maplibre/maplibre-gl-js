@@ -1517,7 +1517,9 @@ class Style extends Evented {
 
         request.response
             .then(response => callback(null, response.data))
-            .catch(err => callback(err));
+            .catch(err => {
+                if (err.message !== 'aborted') callback(err);
+            });
 
         return request;
     }
