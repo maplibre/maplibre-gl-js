@@ -3,7 +3,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend, pick} from '../util/util';
 import loadTileJSON from './load_tilejson';
 import TileBounds from './tile_bounds';
-import {ResourceType} from '../util/ajax';
+import {ResourceType} from '../util/request_manager';
 
 import type {Source} from './source';
 import type {OverscaledTileID} from './tile_id';

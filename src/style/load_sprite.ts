@@ -1,4 +1,5 @@
-import {getJSON, getImage, ResourceType} from '../util/ajax';
+import {getJSON, getImage} from '../util/ajax';
+import {ResourceType} from '../util/request_manager';
 
 import browser from '../util/browser';
 import {RGBAImage} from '../util/image';
