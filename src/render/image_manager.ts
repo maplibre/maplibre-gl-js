@@ -111,12 +111,12 @@ class ImageManager extends Evented {
 
     _validate(id: string, image: StyleImage) {
         let valid = true;
-        const size = image.data || image.spriteData;
-        if (!this._validateStretch(image.stretchX, size && size.width)) {
+        const data = image.data || image.spriteData;
+        if (!this._validateStretch(image.stretchX, data && data.width)) {
             this.fire(new ErrorEvent(new Error(`Image "${id}" has invalid "stretchX" value`)));
             valid = false;
         }
-        if (!this._validateStretch(image.stretchY, size && size.height)) {
+        if (!this._validateStretch(image.stretchY, data && data.height)) {
             this.fire(new ErrorEvent(new Error(`Image "${id}" has invalid "stretchY" value`)));
             valid = false;
         }
