@@ -50,12 +50,20 @@ describe.each(distjs)('release file %s', (file) => {
 
 describe('main sourcemap', () => {
     test('should match source files', async () => {
-        const sourcemap = await getSourceMapForFile(pathToFileURL(packageJson.main));
-        const sourceFiles = await promisify(glob)('src/**/*.ts');
-        const sourcemapDir = path.relative('.', dirname(packageJson.main));
-        const sourcemapFiles = sourcemap.sources.map(f => path.join(sourcemapDir, f));
+        const sourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.main));
+        const sourceMapEntryRootDir = path.relative('.', dirname(packageJson.main));
 
-        const sourceFilesExpectedInMap = sourceFiles.filter(f => {
+        const sourcemapEntriesNormalized = sourcemapJSON.sources.map(f => {
+            const joinedFilePath = path.join(sourceMapEntryRootDir, f);
+
+            // joined path has back slashes on windows, normalize them to be consistant with
+            // entries returned by glob
+            return  joinedFilePath.replace(/\\/g, '/');
+        });
+
+        // *.js.map file should have these files
+        const srcFiles = await promisify(glob)('src/**/*.ts');
+        const expectedEntriesInSourcemapJSON = srcFiles.filter(f => {
             if (f.endsWith('.test.ts'))
                 return false;
             if (f.startsWith('src/style-spec'))
@@ -63,24 +71,25 @@ describe('main sourcemap', () => {
             if (f.startsWith('build/'))
                 return false;
             return true;
-        });
+        }).sort();
 
-        const mapFilesExpectedInSource = sourcemapFiles.filter(f => {
+        // actual files from *.js.map
+        const actualEntriesInSourcemapJSON = sourcemapEntriesNormalized.filter(f => {
             if (f.startsWith('node_modules'))
                 return false;
             if (f.startsWith('src/style-spec'))
                 return false;
             return true;
-        });
+        }).sort();
 
         function setMinus<T>(a: T[], b: T[]) : T[] {
             const sb = new Set(b);
             return a.filter(x => !sb.has(x));
         }
 
-        const s1 = setMinus(mapFilesExpectedInSource, sourceFilesExpectedInMap);
+        const s1 = setMinus(actualEntriesInSourcemapJSON, expectedEntriesInSourcemapJSON);
         expect(s1.length).toBeLessThan(5);
-        const s2 = setMinus(sourceFilesExpectedInMap, mapFilesExpectedInSource);
+        const s2 = setMinus(expectedEntriesInSourcemapJSON, actualEntriesInSourcemapJSON);
         expect(s2.length).toBeLessThan(15);
     });
 });
