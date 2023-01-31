@@ -254,16 +254,17 @@ export function makeRequest<T>(requestParameters: RequestParameters, requestData
         that's a point to reconsider in the (hopefully near) future
      */
 
-    // if the url uses some custom protocol. E.g. "custom://..."
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
-        // and if the request is made from inside a worker
+        // if the url uses some custom protocol. E.g. "custom://..."
+
         if (isWorker() && (self as any).worker && (self as any).worker.actor) {
+            // and if the request is made from inside a worker
+
             // then ask the main thread to make the request from there
             return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
-        }
+        } else {
+            // if it's not a worker
 
-        // if it's not a worker
-        if (!isWorker()) {
             // then check the protocol, and if there exists a custom handler for the protocol, then execute the custom
             // handler. Otherwise, make the request using the Fetch API
             const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
@@ -271,26 +272,23 @@ export function makeRequest<T>(requestParameters: RequestParameters, requestData
 
             return action(requestParameters, requestDataType);
         }
-    }
+    } else if (!(/^file:/.test(requestParameters.url))) {
+        // if there's no protocol at all or the protocol is not `file://` (in comparison with the `if` block above, it
+        // can now be `http[s]://`). E.g. "https://..." or "/foo/bar.url"
 
-    // if there's no protocol at all or the protocol is not `file://` (in comparison with the `if` block above, it can
-    // now be `http[s]://`). E.g. "https://..." or "foo"
-    if (!requestParameters.url.startsWith('file://')) {
-        // and if Fetch API is supported by the target environment
-        if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
-            // then make a `fetch` request
+        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
+            // and if the request is made from inside a worker
+
+            // then ask the main thread to make the request from there
+            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
+        } else {
+            // otherwise, if it's not a worker, make a `fetch` request
             return helper.makeFetchRequest(requestParameters, requestDataType);
         }
-
-        // if the function is called from a worker
-        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
-            // ask the main thread to make the request
-            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
-        }
+    } else {
+        // fallback to use the XMLHttpRequest API. E.g. for the "file://..." urls
+        return helper.makeXMLHttpRequest(requestParameters, requestDataType);
     }
-
-    // fallback to the XMLHttpRequest API. E.g. "file://..."
-    return helper.makeXMLHttpRequest(requestParameters, requestDataType);
 }
 
 /**
