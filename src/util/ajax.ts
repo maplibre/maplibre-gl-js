@@ -214,7 +214,7 @@ export type RequestDataType = 'string' | 'JSON' | 'ArrayBuffer';
  *
  * @typedef {Request}
  */
-export type Request<T> = {response: Promise<T>} & Cancelable;
+export type Request<T> = {response: Promise<Response<T>>} & Cancelable;
 
 /**
  * A generic type that represents a MapLibre asynchronous cancelable HTTP request's response.
@@ -243,9 +243,9 @@ export type Response<T> = {data: T} & ExpiryData;
  * @function
  * @param {RequestParameters} requestParameters Request parameters
  * @param {RequestDataType} requestDataType Request data type
- * @returns {Request<Response>} Promised response and the `cancel` method
+ * @returns {Request} Promised response and the `cancel` method
  */
-export function makeRequest<T>(requestParameters: RequestParameters, requestDataType?: RequestDataType): Request<Response<T>> {
+export function makeRequest<T>(requestParameters: RequestParameters, requestDataType?: RequestDataType): Request<T> {
     /*
         See https://github.com/maplibre/maplibre-gl-js/discussions/2004
 
@@ -326,9 +326,9 @@ export function getReferrer(): string {
  * @function
  * @param {RequestParameters} requestParameters Request parameters
  * @param {RequestDataType} requestDataType Request data type
- * @returns {Request<Response>} Promised response and the `cancel` method
+ * @returns {Request} Promised response and the `cancel` method
  */
-export function makeFetchRequest<T>(requestParameters: RequestParameters, requestDataType?: RequestDataType): Request<Response<T>> {
+export function makeFetchRequest<T>(requestParameters: RequestParameters, requestDataType?: RequestDataType): Request<T> {
     const abortController = new AbortController();
 
     const request = new Request(requestParameters.url, extend({}, requestParameters, {
@@ -377,9 +377,9 @@ export function makeFetchRequest<T>(requestParameters: RequestParameters, reques
  * @function
  * @param {RequestParameters} requestParameters Request parameters
  * @param {RequestDataType} requestDataType Request data type
- * @returns {Request<Response>} Promised response and the `cancel` method
+ * @returns {Request} Promised response and the `cancel` method
  */
-export function makeXMLHttpRequest<T>(requestParameters: RequestParameters, requestDataType?: RequestDataType): Request<Response<T>> {
+export function makeXMLHttpRequest<T>(requestParameters: RequestParameters, requestDataType?: RequestDataType): Request<T> {
     const xhr: XMLHttpRequest = new XMLHttpRequest();
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
 
