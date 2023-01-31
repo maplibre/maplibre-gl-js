@@ -56,7 +56,7 @@ export const getJSON = function(requestParameters: RequestParameters, callback: 
     request.response
         .then(response => callback(null, response.data))
         .catch(err => {
-            if (err.message !== 'aborted') callback(err);
+            if (err.name !== 'AbortError') callback(err);
         });
 
     return request;
@@ -71,7 +71,7 @@ export const getArrayBuffer = function(
     request.response
         .then(response => callback(null, response.data))
         .catch(err => {
-            if (err.message !== 'aborted') callback(err);
+            if (err.name !== 'AbortError') callback(err);
         });
 
     return request;
@@ -149,7 +149,7 @@ export const getImage = function(
         advanceImageRequestQueue();
 
         if (err) {
-            if (err.message !== 'aborted') callback(err);
+            if (err.name !== 'AbortError') callback(err);
         } else if (data) {
             const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
                 if (imgErr != null) {
@@ -348,7 +348,7 @@ export function makeFetchRequest<T>(requestParameters: RequestParameters, reques
         response: (async (): Promise<Response<T>> => {
             const response = await fetch(request);
 
-            if (abortController.signal.aborted) throw new Error('aborted');
+            if (abortController.signal.aborted) throw new DOMException('aborted', 'AbortError');
 
             if (response.ok) {
                 const data: T = await (requestDataType === RequestDataType.ArrayBuffer ? response.arrayBuffer() : requestDataType === RequestDataType.JSON ? response.json() : response.text());
@@ -424,14 +424,13 @@ export function makeXMLHttpRequest<T>(requestParameters: RequestParameters, requ
                         expires: xhr.getResponseHeader('Expires')
                     });
                 } else {
-                    // const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
-                    rej(new Error('Failed to Fetch URL'/*xhr.status, xhr.statusText, requestParameters.url, body*/));
+                    rej(new Error('Failed to Fetch URL'));
                 }
             };
 
             xhr.onerror = () => rej(new Error('Failed to Fetch URL'));
 
-            xhr.onabort = () => rej(new Error('aborted'));
+            xhr.onabort = () => rej(new DOMException('aborted', 'AbortError'));
         }),
 
         cancel: () => xhr.abort()

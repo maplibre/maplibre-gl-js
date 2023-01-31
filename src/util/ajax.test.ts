@@ -181,7 +181,7 @@ describe('ajax', () => {
             fetchMock.mockResponseOnce('');
             const request = makeFetchRequest({url: ''});
             request.cancel();
-            await expect(request.response).rejects.toStrictEqual(new Error('aborted'));
+            await expect(request.response).rejects.toBeInstanceOf(DOMException);
         });
     });
 
@@ -297,7 +297,7 @@ describe('ajax', () => {
             request.cancel();
             fakeXMLHttpRequest.respond();
 
-            await expect(request.response).rejects.toStrictEqual(new Error('aborted'));
+            await expect(request.response).rejects.toBeInstanceOf(DOMException);
         });
     });
 });
