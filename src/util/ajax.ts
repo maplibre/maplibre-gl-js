@@ -51,7 +51,7 @@ export class AJAXError extends Error {
 }
 
 export const getJSON = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    const request = makeRequest<any>(requestParameters, RequestDataType.JSON);
+    const request = makeRequest<any>(requestParameters, 'JSON');
 
     request.response
         .then(response => callback(null, response.data))
@@ -66,7 +66,7 @@ export const getArrayBuffer = function(
     requestParameters: RequestParameters,
     callback: ResponseCallback<ArrayBuffer>
 ): Cancelable {
-    const request = makeRequest<ArrayBuffer>(requestParameters, RequestDataType.ArrayBuffer);
+    const request = makeRequest<ArrayBuffer>(requestParameters, 'ArrayBuffer');
 
     request.response
         .then(response => callback(null, response.data))
@@ -201,13 +201,9 @@ export type RequestParameters = RequestInit & { url: string; collectResourceTimi
  * A type that tells the `makeRequest` which modifications to apply to the request before making it and how to treat
  * response of the request after it's loaded based on the type of the raw data being loaded.
  *
- * @enum {RequestDataType}
+ * @typedef {RequestDataType}
  */
-export const enum RequestDataType {
-    'string',
-    'JSON',
-    'ArrayBuffer'
-}
+export type RequestDataType = 'string' | 'JSON' | 'ArrayBuffer';
 
 /**
  * A generic type that represents a MapLibre asynchronous cancelable HTTP request.
@@ -340,7 +336,7 @@ export function makeFetchRequest<T>(requestParameters: RequestParameters, reques
         signal: abortController.signal
     }));
 
-    if (requestDataType === RequestDataType.JSON) {
+    if (requestDataType === 'JSON') {
         request.headers.set('Accept', 'application/json');
     }
 
@@ -351,7 +347,7 @@ export function makeFetchRequest<T>(requestParameters: RequestParameters, reques
             if (abortController.signal.aborted) throw new DOMException('aborted', 'AbortError');
 
             if (response.ok) {
-                const data: T = await (requestDataType === RequestDataType.ArrayBuffer ? response.arrayBuffer() : requestDataType === RequestDataType.JSON ? response.json() : response.text());
+                const data: T = await (requestDataType === 'ArrayBuffer' ? response.arrayBuffer() : requestDataType === 'JSON' ? response.json() : response.text());
 
                 return {
                     data,
@@ -387,7 +383,7 @@ export function makeXMLHttpRequest<T>(requestParameters: RequestParameters, requ
     const xhr: XMLHttpRequest = new XMLHttpRequest();
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
 
-    if (requestDataType === RequestDataType.ArrayBuffer) {
+    if (requestDataType === 'ArrayBuffer') {
         xhr.responseType = 'arraybuffer';
     }
 
@@ -395,7 +391,7 @@ export function makeXMLHttpRequest<T>(requestParameters: RequestParameters, requ
         xhr.setRequestHeader(k, requestParameters.headers[k]);
     }
 
-    if (requestDataType === RequestDataType.JSON) {
+    if (requestDataType === 'JSON') {
         xhr.responseType = 'text';
         xhr.setRequestHeader('Accept', 'application/json');
     }
@@ -410,7 +406,7 @@ export function makeXMLHttpRequest<T>(requestParameters: RequestParameters, requ
                 if (((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) && xhr.response !== null) {
                     let data: T = xhr.response;
 
-                    if (requestDataType === RequestDataType.JSON) {
+                    if (requestDataType === 'JSON') {
                         try {
                             data = JSON.parse(xhr.response);
                         } catch (err) {
