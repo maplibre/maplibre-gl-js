@@ -2,8 +2,8 @@ import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
-import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
-import {RequestManager} from '../util/request_manager';
+import {getImage, GetImageCallback, getJSON} from '../util/ajax';
+import {RequestManager, ResourceType} from '../util/request_manager';
 import Style, {StyleSwapOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
@@ -23,7 +23,6 @@ import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapS
 import TaskQueue from '../util/task_queue';
 import webpSupported from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
-import {setCacheLimits} from '../util/tile_request_cache';
 import {Source} from '../source/source';
 import StyleLayer from '../style/style_layer';
 
@@ -3087,11 +3086,6 @@ class Map extends Camera {
     // show vertices
     get vertices(): boolean { return !!this._vertices; }
     set vertices(value: boolean) { this._vertices = value; this._update(); }
-
-    // for cache browser tests
-    _setCacheLimits(limit: number, checkThreshold: number) {
-        setCacheLimits(limit, checkThreshold);
-    }
 
     /**
      * Returns the package version of the library

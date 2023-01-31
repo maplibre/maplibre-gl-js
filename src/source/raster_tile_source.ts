@@ -1,12 +1,11 @@
 import {extend, pick} from '../util/util';
 
-import {getImage, ResourceType} from '../util/ajax';
+import {getImage} from '../util/ajax';
+import {ResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import loadTileJSON from './load_tilejson';
 import TileBounds from './tile_bounds';
 import Texture from '../render/texture';
-
-import {cacheEntryPossiblyAdded} from '../util/tile_request_cache';
 
 import type {Source} from './source';
 import type {OverscaledTileID} from './tile_id';
@@ -132,8 +131,6 @@ class RasterTileSource extends Evented implements Source {
                 }
 
                 tile.state = 'loaded';
-
-                cacheEntryPossiblyAdded(this.dispatcher);
 
                 callback(null);
             }

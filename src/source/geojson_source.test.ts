@@ -193,7 +193,6 @@ describe('GeoJSONSource#update', () => {
             }
         });
 
-        /* eslint-disable no-new */
         new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined).load();
     });
 

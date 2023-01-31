@@ -3,8 +3,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend, pick} from '../util/util';
 import loadTileJSON from './load_tilejson';
 import TileBounds from './tile_bounds';
-import {ResourceType} from '../util/ajax';
-import {cacheEntryPossiblyAdded} from '../util/tile_request_cache';
+import {ResourceType} from '../util/request_manager';
 
 import type {Source} from './source';
 import type {OverscaledTileID} from './tile_id';
@@ -217,8 +216,6 @@ class VectorTileSource extends Evented implements Source {
 
             if (this.map._refreshExpiredTiles && data) tile.setExpiryData(data);
             tile.loadVectorData(data, this.map.painter);
-
-            cacheEntryPossiblyAdded(this.dispatcher);
 
             callback(null);
 
