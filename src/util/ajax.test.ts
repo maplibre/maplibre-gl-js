@@ -162,7 +162,7 @@ describe('ajax', () => {
             );
 
             try {
-                const request = makeFetchRequest({url: ''}, RequestDataType.JSON);
+                const request = makeFetchRequest({url: ''}, 'JSON');
 
                 const response = await request.response;
                 expect(response.data).toEqual({foo: 'bar'});
@@ -235,7 +235,7 @@ describe('ajax', () => {
             });
 
             try {
-                makeXMLHttpRequest({url: ''}, RequestDataType.ArrayBuffer);
+                makeXMLHttpRequest({url: ''}, 'ArrayBuffer');
                 fakeXMLHttpRequest.respond();
 
                 // the mock doesn't know about that property, safe to ignore
@@ -253,7 +253,7 @@ describe('ajax', () => {
             });
 
             try {
-                makeXMLHttpRequest({url: ''}, RequestDataType.JSON);
+                makeXMLHttpRequest({url: ''}, 'JSON');
                 fakeXMLHttpRequest.respond();
 
                 // the mock doesn't know about that property, safe to ignore
@@ -271,7 +271,7 @@ describe('ajax', () => {
                 request.respond(200, {'Content-Type': 'application/json'}, 'invalid json');
             });
 
-            const request = makeXMLHttpRequest({url: ''}, RequestDataType.JSON);
+            const request = makeXMLHttpRequest({url: ''}, 'JSON');
             fakeXMLHttpRequest.respond();
 
             await expect(request.response).rejects.toBeInstanceOf(SyntaxError);
