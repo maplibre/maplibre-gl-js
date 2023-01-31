@@ -209,7 +209,8 @@ export type RequestDataType = 'string' | 'JSON' | 'ArrayBuffer';
  * A generic type that represents a MapLibre asynchronous cancelable HTTP request.
  *
  * Represented by an object containing 2 fields:
- *  - `response`: a `Promise` that (possibly) resolves with the request's result
+ *  - `response`: a `Promise` that resolves with the request's result, or rejects with an error code, or is left pending
+ *  in case the request was aborted
  *  - `cancel`: a function to cancel the request
  *
  * @typedef {Request}
