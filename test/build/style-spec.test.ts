@@ -3,7 +3,7 @@ import * as rollup from 'rollup';
 import rollupConfig from '../../rollup.config.style-spec';
 import styleSpecPackage from '../../src/style-spec/package.json' assert {type: 'json'};
 import spec from '../../dist/style-spec/index.cjs';
-/* eslint-disable import/namespace */
+
 import {RollupOptions} from 'rollup';
 
 describe('@maplibre/maplibre-gl-style-spec npm package', () => {

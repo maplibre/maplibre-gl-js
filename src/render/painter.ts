@@ -380,19 +380,16 @@ class Painter {
         const layerIds = this.style._order;
         const sourceCaches = this.style.sourceCaches;
 
-        for (const id in sourceCaches) {
-            const sourceCache = sourceCaches[id];
-            if (sourceCache.used) {
-                sourceCache.prepare(this.context);
-            }
-        }
-
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
+            if (sourceCache.used) {
+                sourceCache.prepare(this.context);
+            }
+
             coordsAscending[id] = sourceCache.getVisibleCoordinates();
             coordsDescending[id] = coordsAscending[id].slice().reverse();
             coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
