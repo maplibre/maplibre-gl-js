@@ -346,7 +346,15 @@ export function makeFetchRequest<T>(requestParameters: RequestParameters, reques
             if (abortController.signal.aborted) throw new DOMException('aborted', 'AbortError');
 
             if (response.ok) {
-                const data: T = await (requestDataType === 'ArrayBuffer' ? response.arrayBuffer() : requestDataType === 'JSON' ? response.json() : response.text());
+                let data: T;
+
+                if (requestDataType === 'ArrayBuffer') {
+                    data = await  response.arrayBuffer() as T;
+                } else if (requestDataType === 'JSON') {
+                    data = await response.json() as T;
+                } else {
+                    data = await  response.text() as T;
+                }
 
                 return {
                     data,
