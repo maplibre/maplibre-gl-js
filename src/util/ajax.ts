@@ -382,17 +382,15 @@ export function makeXMLHttpRequest<T>(requestParameters: RequestParameters, requ
     const xhr: XMLHttpRequest = new XMLHttpRequest();
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
 
-    if (requestDataType === 'ArrayBuffer') {
+    if (requestDataType === 'JSON') {
+        xhr.responseType = 'text';
+        xhr.setRequestHeader('Accept', 'application/json');
+    } else if (requestDataType === 'ArrayBuffer') {
         xhr.responseType = 'arraybuffer';
     }
 
     for (const k in requestParameters.headers) {
         xhr.setRequestHeader(k, requestParameters.headers[k]);
-    }
-
-    if (requestDataType === 'JSON') {
-        xhr.responseType = 'text';
-        xhr.setRequestHeader('Accept', 'application/json');
     }
 
     xhr.withCredentials = requestParameters.credentials === 'include';
