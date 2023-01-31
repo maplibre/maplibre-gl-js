@@ -355,7 +355,7 @@ export function makeFetchRequest<T>(requestParameters: RequestParameters, reques
                 };
 
             } else {
-                throw new Error('Failed to fetch URL'/*response.status, response.statusText, requestParameters.url, await response.blob()*/);
+                throw new Error('Failed to fetch URL');
             }
         })(),
 
@@ -400,7 +400,7 @@ export function makeXMLHttpRequest<T>(requestParameters: RequestParameters, requ
     xhr.send(requestParameters.body?.toString());
 
     return {
-        response: new Promise<Response<T>>((res, rej) => {
+        response: new Promise<Response<T>>((resolve, reject) => {
             xhr.onload = () => {
                 if (((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) && xhr.response !== null) {
                     let data: T = xhr.response;
@@ -409,23 +409,23 @@ export function makeXMLHttpRequest<T>(requestParameters: RequestParameters, requ
                         try {
                             data = JSON.parse(xhr.response);
                         } catch (err) {
-                            return rej(err);
+                            return reject(err);
                         }
                     }
 
-                    res({
+                    resolve({
                         data,
                         cacheControl: xhr.getResponseHeader('Cache-Control'),
                         expires: xhr.getResponseHeader('Expires')
                     });
                 } else {
-                    rej(new Error('Failed to Fetch URL'));
+                    reject(new Error('Failed to Fetch URL'));
                 }
             };
 
-            xhr.onerror = () => rej(new Error('Failed to Fetch URL'));
+            xhr.onerror = () => reject(new Error('Failed to Fetch URL'));
 
-            xhr.onabort = () => rej(new DOMException('aborted', 'AbortError'));
+            xhr.onabort = () => reject(new DOMException('aborted', 'AbortError'));
         }),
 
         cancel: () => xhr.abort()
