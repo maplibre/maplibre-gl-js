@@ -1,9 +1,6 @@
 name: Build
 run-name: "npm run test-build" on both ubuntu-latest and windows-latest
 
-strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
 on:
   push:
     branches: [main]
@@ -11,6 +8,9 @@ on:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
