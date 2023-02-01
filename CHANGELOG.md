@@ -5,7 +5,8 @@
 - Add types for `workerOptions` and `_options` in `geojson_source.ts`
 - *...Add new stuff here...*
 ### 🐞 Bug fixes
-- *...Add new stuff here...*
+- Fix the worker been terminated on setting new style
+
 ## 3.0.0-pre.3
 
 ### ✨ Features and improvements

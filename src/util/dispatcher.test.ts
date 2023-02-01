@@ -5,7 +5,7 @@ import WorkerPool from './worker_pool';
 describe('Dispatcher', () => {
     test('requests and releases workers from pool', () => {
         const workers = [workerFactory(), workerFactory()];
-
+        const mapId = 1;
         const releaseCalled = [];
         const workerPool = {
             acquire () {
@@ -16,28 +16,51 @@ describe('Dispatcher', () => {
             }
         } as any as WorkerPool;
 
-        const dispatcher = new Dispatcher(workerPool, {});
+        const dispatcher = new Dispatcher(workerPool, {}, mapId);
         expect(dispatcher.actors.map((actor) => { return actor.target; })).toEqual(workers);
-        dispatcher.remove();
+        dispatcher.remove(true);
         expect(dispatcher.actors).toHaveLength(0);
-        expect(releaseCalled).toEqual([dispatcher.id]);
+        expect(releaseCalled).toEqual([mapId]);
 
     });
 
-    test('creates Actors with unique map id', () => {
-        const ids = [];
-        function Actor (target, parent, mapId) { ids.push(mapId); }
-        jest.spyOn(Dispatcher, 'Actor').mockImplementation(Actor as any);
-        WorkerPool.workerCount = 1;
+    test('reuse workers till map is disposed', () => {
+        let workers = null;
+        const mapId = 1;
+        const releaseCalled = [];
+        const workerPool = {
+            acquire () {
+                if (!workers) {
+                    workers = [workerFactory(), workerFactory()];
+                }
+                return workers;
+            },
+            release (id) {
+                releaseCalled.push(id);
+                workers = null;
+            }
+        } as any as WorkerPool;
 
-        const workerPool = new WorkerPool();
-        const dispatchers = [new Dispatcher(workerPool, {}), new Dispatcher(workerPool, {})];
-        expect(ids).toEqual(dispatchers.map((d) => { return d.id; }));
+        let dispatcher = new Dispatcher(workerPool, {}, mapId);
+        expect(dispatcher.actors.map((actor) => { return actor.target; })).toEqual(workers);
+
+        // Remove dispatcher, but map is not disposed (During style change)
+        dispatcher.remove(false);
+        expect(dispatcher.actors).toHaveLength(0);
+        expect(releaseCalled).toHaveLength(0);
+
+        // Create new instance of dispatcher
+        dispatcher = new Dispatcher(workerPool, {}, mapId);
+        expect(dispatcher.actors.map((actor) => { return actor.target; })).toEqual(workers);
+        dispatcher.remove(true); // mapRemoved = true
+        expect(dispatcher.actors).toHaveLength(0);
+        expect(releaseCalled).toEqual([mapId]);
 
     });
 
     test('#remove destroys actors', () => {
         const actorsRemoved = [];
+        const mapId = 1;
         function Actor() {
             this.remove = function() { actorsRemoved.push(this); };
         }
@@ -45,8 +68,8 @@ describe('Dispatcher', () => {
         WorkerPool.workerCount = 4;
 
         const workerPool = new WorkerPool();
-        const dispatcher = new Dispatcher(workerPool, {});
-        dispatcher.remove();
+        const dispatcher = new Dispatcher(workerPool, {}, mapId);
+        dispatcher.remove(true);
         expect(actorsRemoved).toHaveLength(4);
     });
 

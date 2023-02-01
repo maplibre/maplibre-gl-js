@@ -1487,7 +1487,9 @@ class Map extends Camera {
         const previousStyle = this.style && options.transformStyle ? this.style.serialize() : undefined;
         if (this.style) {
             this.style.setEventedParent(null);
-            this.style._remove();
+
+            // Only release workers when map is getting disposed
+            this.style._remove(!style);
         }
 
         if (!style) {

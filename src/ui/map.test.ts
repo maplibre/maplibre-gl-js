@@ -292,6 +292,21 @@ describe('Map', () => {
             expect(style._remove).toHaveBeenCalledTimes(1);
         });
 
+        test('passing null releases the worker', () => {
+            const map = createMap();
+            const spyWorkerPoolAcquire = jest.spyOn(map.style.dispatcher.workerPool, 'acquire');
+            const spyWorkerPoolRelease = jest.spyOn(map.style.dispatcher.workerPool, 'release');
+
+            map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+            expect(spyWorkerPoolAcquire).toHaveBeenCalledTimes(1);
+            expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(0);
+
+            spyWorkerPoolAcquire.mockClear();
+            map.setStyle(null);
+            expect(spyWorkerPoolAcquire).toHaveBeenCalledTimes(0);
+            expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(1);
+        });
+
         test('transformStyle should copy the source and the layer into next style', done => {
             const style = extend(createStyle(), {
                 sources: {
