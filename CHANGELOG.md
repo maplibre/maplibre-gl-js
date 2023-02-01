@@ -5,7 +5,7 @@
 - Add types for `workerOptions` and `_options` in `geojson_source.ts`
 - *...Add new stuff here...*
 ### 🐞 Bug fixes
-- Fix the worker been terminated on setting new style
+- Fix the worker been terminated on setting new style ([#2123](https://github.com/maplibre/maplibre-gl-js/pull/2123))
 
 ## 3.0.0-pre.3
 
