@@ -2,7 +2,6 @@ import {getJSON, getImage} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 
 import browser from '../util/browser';
-import {RGBAImage} from '../util/image';
 import {coerceSpriteToArray} from '../util/style';
 
 import type {SpriteSpecification} from '../style-spec/types.g';
@@ -56,19 +55,18 @@ export default function loadSprite(
         if (error) {
             callback(error);
         } else if (sprite.length === jsonsLength && jsonsLength === imagesLength) {
-            const result = {};
+            const result = {} as {[spriteName: string]: {[id: string]: StyleImage}};
 
             for (const spriteName in jsonsMap) {
                 result[spriteName] = {};
 
-                const imageData = browser.getImageData(imagesMap[spriteName]);
+                const context = browser.getImageCanvasContext(imagesMap[spriteName]);
                 const json = jsonsMap[spriteName];
 
                 for (const id in json) {
                     const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
-                    const data = new RGBAImage({width, height});
-                    RGBAImage.copy(imageData, data, {x, y}, {x: 0, y: 0}, {width, height});
-                    result[spriteName][id] = {data, pixelRatio, sdf, stretchX, stretchY, content};
+                    const spriteData = {width, height, x, y, context};
+                    result[spriteName][id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, spriteData};
                 }
             }
 
