@@ -22,7 +22,6 @@ import {isSafari} from './util/util';
 import {setRTLTextPlugin, getRTLTextPluginStatus} from './source/rtl_text_plugin';
 import WorkerPool from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
-import {clearTileCache} from './util/tile_request_cache';
 import {PerformanceUtils} from './util/performance';
 import {AJAXError} from './util/ajax';
 import type {RequestParameters, ResponseCallback} from './util/ajax';
@@ -160,27 +159,6 @@ const exported = {
 
     set maxParallelImageRequestsPerFrameWhileThrottled(numRequests: number) {
         config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED = numRequests;
-    },
-
-    /**
-     * Clears browser storage used by this library. Using this method flushes the MapLibre tile
-     * cache that is managed by this library. Tiles may still be cached by the browser
-     * in some cases.
-     *
-     * This API is supported on browsers where the [`Cache` API](https://developer.mozilla.org/en-US/docs/Web/API/Cache)
-     * is supported and enabled. This includes all major browsers when pages are served over
-     * `https://`, except Internet Explorer and Edge Mobile.
-     *
-     * When called in unsupported browsers or environments (private or incognito mode), the
-     * callback will be called with an error argument.
-     *
-     * @function clearStorage
-     * @param {Function} callback Called with an error argument if there is an error.
-     * @example
-     * maplibregl.clearStorage();
-     */
-    clearStorage(callback?: (err?: Error | null) => void) {
-        clearTileCache(callback);
     },
 
     workerUrl: '',
