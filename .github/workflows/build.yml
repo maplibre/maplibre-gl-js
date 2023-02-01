@@ -1,5 +1,4 @@
 name: Build
-run-name: "npm run test-build" on both ubuntu-latest and windows-latest
 
 on:
   push:
