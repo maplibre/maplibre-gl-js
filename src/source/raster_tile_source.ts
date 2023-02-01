@@ -1,6 +1,7 @@
 import {extend, pick} from '../util/util';
 
 import ImageRequest from '../util/imageRequest';
+
 import {ResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import loadTileJSON from './load_tilejson';

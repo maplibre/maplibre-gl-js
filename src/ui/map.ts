@@ -7,6 +7,7 @@ import {getJSON} from '../util/ajax';
 import ImageRequest from '../util/imageRequest';
 import type {GetImageCallback} from '../util/imageRequest';
 
+
 import {RequestManager, ResourceType} from '../util/request_manager';
 import Style, {StyleSwapOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
