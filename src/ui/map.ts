@@ -2,8 +2,12 @@ import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
-import {getImage, GetImageCallback, processImageRequestQueue, installImageQueueThrottleControlCallback, removeImageQueueThrottleControlCallback, getJSON, ResourceType} from '../util/ajax';
-import {RequestManager} from '../util/request_manager';
+
+import {getJSON} from '../util/ajax';
+import ImageRequest from '../util/imageRequest';
+import type {GetImageCallback} from '../util/imageRequest';
+
+import {RequestManager, ResourceType} from '../util/request_manager';
 import Style, {StyleSwapOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
 import Painter from '../render/painter';
@@ -335,7 +339,9 @@ class Map extends Camera {
     _clickTolerance: number;
     _pixelRatio: number;
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
-    _imageQueueThrottleControlCallbackHandle: number;
+
+    /** image queue throttling handle. To be used later when clean up */
+    _imgQHandle: number;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -430,7 +436,7 @@ class Map extends Camera {
         this._clickTolerance = options.clickTolerance;
         this._pixelRatio = options.pixelRatio ?? devicePixelRatio;
 
-        this._imageQueueThrottleControlCallbackHandle = installImageQueueThrottleControlCallback(() => this.isMoving());
+        this._imgQHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
         this._requestManager = new RequestManager(options.transformRequest);
 
@@ -1953,7 +1959,7 @@ class Map extends Camera {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image/)
      */
     loadImage(url: string, callback: GetImageCallback) {
-        getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
+        ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
     }
 
     /**
@@ -2815,7 +2821,7 @@ class Map extends Camera {
         if (this.terrain) this.terrain.sourceCache.update(this.transform, this.terrain);
         this.transform.updateElevation(this.terrain);
 
-        this._imageRequestQueueDirty = processImageRequestQueue() > 0;
+        this._imageRequestQueueDirty = ImageRequest.processQueue() > 0;
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 
@@ -2945,7 +2951,7 @@ class Map extends Camera {
             removeEventListener('online', this._onWindowOnline, false);
         }
 
-        removeImageQueueThrottleControlCallback(this._imageQueueThrottleControlCallbackHandle);
+        ImageRequest.removeThrottleControl(this._imgQHandle);
 
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension) extension.loseContext();
