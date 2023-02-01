@@ -305,6 +305,10 @@ describe('Map', () => {
             map.setStyle(null);
             expect(spyWorkerPoolAcquire).toHaveBeenCalledTimes(0);
             expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(1);
+
+            // Cleanup
+            spyWorkerPoolAcquire.mockClear();
+            spyWorkerPoolRelease.mockClear();
         });
 
         test('transformStyle should copy the source and the layer into next style', done => {
@@ -1045,9 +1049,14 @@ describe('Map', () => {
 
     test('#remove', () => {
         const map = createMap();
+        const spyWorkerPoolRelease = jest.spyOn(map.style.dispatcher.workerPool, 'release');
         expect(map.getContainer().childNodes).toHaveLength(2);
         map.remove();
+        expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(1);
         expect(map.getContainer().childNodes).toHaveLength(0);
+
+        // Cleanup
+        spyWorkerPoolRelease.mockClear();
     });
 
     test('#remove calls onRemove on added controls', () => {
