@@ -18,7 +18,7 @@ describe('Dispatcher', () => {
 
         const dispatcher = new Dispatcher(workerPool, {}, mapId);
         expect(dispatcher.actors.map((actor) => { return actor.target; })).toEqual(workers);
-        dispatcher.remove(true);
+        dispatcher.remove();
         expect(dispatcher.actors).toHaveLength(0);
         expect(releaseCalled).toEqual([mapId]);
 
@@ -69,7 +69,7 @@ describe('Dispatcher', () => {
 
         const workerPool = new WorkerPool();
         const dispatcher = new Dispatcher(workerPool, {}, mapId);
-        dispatcher.remove(true);
+        dispatcher.remove();
         expect(actorsRemoved).toHaveLength(4);
     });
 

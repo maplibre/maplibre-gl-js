@@ -31,6 +31,10 @@ class StubMap extends Evented {
         } as any as RequestManager;
     }
 
+    _getMapId() {
+        return 1;
+    }
+
     setTerrain() {}
 }
 
@@ -38,7 +42,6 @@ function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, null);
     source.onAdd({
         transform,
-        _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
         getPixelRatio() { return 1; }
     } as any);

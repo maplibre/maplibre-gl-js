@@ -55,7 +55,7 @@ class Dispatcher {
         return this.actors[this.currentActor];
     }
 
-    remove(mapRemoved: boolean) {
+    remove(mapRemoved: boolean = true) {
         this.actors.forEach((actor) => { actor.remove(); });
         this.actors = [];
         if (mapRemoved) this.workerPool.release(this.id);

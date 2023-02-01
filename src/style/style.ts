@@ -1341,7 +1341,7 @@ class Style extends Evented {
         }, props)));
     }
 
-    _remove(mapRemoved: boolean) {
+    _remove(mapRemoved: boolean = true) {
         if (this._request) {
             this._request.cancel();
             this._request = null;

@@ -175,7 +175,7 @@ describe('Style#loadURL', () => {
     test('cancels pending requests if removed', () => {
         const style = new Style(getStubMap());
         style.loadURL('style.json');
-        style._remove(true);
+        style._remove();
         expect(sinonFakeServer.lastRequest.aborted).toBe(true);
     });
 });
@@ -487,7 +487,7 @@ describe('Style#_remove', () => {
             jest.spyOn(sourceCache, 'onRemove');
             jest.spyOn(sourceCache, 'clearTiles');
 
-            style._remove(true);
+            style._remove();
 
             expect(sourceCache.setEventedParent).toHaveBeenCalledWith(null);
             expect(sourceCache.onRemove).toHaveBeenCalledWith(style.map);
@@ -503,7 +503,7 @@ describe('Style#_remove', () => {
         const mockStyleDispatcherBroadcast = jest.spyOn(style.dispatcher, 'broadcast');
 
         style.on('style.load', () => {
-            style._remove(true);
+            style._remove();
 
             rtlTextPluginEvented.fire(new Event('pluginStateChange'));
             expect(mockStyleDispatcherBroadcast).not.toHaveBeenCalledWith('syncRTLPluginState');
