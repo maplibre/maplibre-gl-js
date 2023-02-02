@@ -1,4 +1,5 @@
-import {getJSON, getImage} from '../util/ajax';
+import {getJSON} from '../util/ajax';
+import ImageRequest from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 
 import browser from '../util/browser';
@@ -38,7 +39,7 @@ export default function loadSprite(
         }));
 
         // eslint-disable-next-line no-loop-func
-        const newImageRequestsLength = imageRequests.push(getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage), (err, img) => {
+        const newImageRequestsLength = imageRequests.push(ImageRequest.getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage), (err, img) => {
             imageRequests.splice(newImageRequestsLength, 1);
             if (!error) {
                 error = err;
