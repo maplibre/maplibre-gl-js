@@ -179,7 +179,7 @@ namespace ImageRequest {
         maxImageRequests: number = 0): number => {
 
         if (maxImageRequests <= 0) {
-            maxImageRequests = isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_FRAME : config.MAX_PARALLEL_IMAGE_REQUESTS;
+            maxImageRequests = isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME : config.MAX_PARALLEL_IMAGE_REQUESTS;
         }
 
         const cancelRequest = (request: ImageRequestQueueItem) => {
