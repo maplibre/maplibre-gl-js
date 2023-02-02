@@ -32,7 +32,7 @@ jobs:
         run: find dist
       - name: find dist on windows-latest
         if: matrix.os == 'windows-latest'
-        run: if not exist dist (exist 1)
+        run: if (!(Test-Path -Path "dist")) { exit 1 }
       - run: mkdir build-info
       - name: Store build info
         run: |
