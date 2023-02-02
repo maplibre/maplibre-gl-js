@@ -283,25 +283,55 @@ function getTestStyles(options: RenderOptions, directory: string): StyleWithTest
     return sequence;
 }
 
-// replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
-// @ts-ignore
-browser.getImageData = (img, padding = 0) => {
+/**
+ * Replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
+ * @param img - CanvasImageSource
+ * @param padding - padding around the image
+ * @returns ImageData
+ */
+browser.getImageData = (img: CanvasImageSource, padding = 0): ImageData => {
+    // HTMLImageElement/HTMLCanvasElement etc interface in lib.dom.d.ts does not expose data property
     // @ts-ignore
-    if (!img.data) {
-        return {width: 1, height: 1, data: new Uint8Array(1)};
+    const data = img.data;
+    if (!data) {
+        return {width: 1, height: 1, data: new Uint8ClampedArray(1), colorSpace: 'srgb'};
     }
     const width = img.width as number;
     const height = img.height as number;
-    // @ts-ignore
-    const data = img.data;
-    const source = new Uint8Array(data);
-    const dest = new Uint8Array((2 * padding + width) * (2 * padding + height) * 4);
+
+    const source = new Uint8ClampedArray(data);
+    const dest = new Uint8ClampedArray((2 * padding + width) * (2 * padding + height) * 4);
 
     const offset = (2 * padding + width) * padding + padding;
     for (let i = 0; i < height; i++) {
         dest.set(source.slice(i * width * 4, (i + 1) * width * 4), 4 * (offset + (width + 2 * padding) * i));
     }
-    return {width: width + 2 * padding, height: height + 2 * padding, data: dest};
+    return {width: width + 2 * padding, height: height + 2 * padding, data: dest, colorSpace: 'srgb'};
+};
+
+/**
+ * Replacing the browser method of getImageCanvasContext in order to avoid usage of context and canvas 2d with Image object...
+ * @param img - CanvasImageSource
+ * @returns Mocked CanvasRenderingContext2D object
+ */
+browser.getImageCanvasContext = (img: CanvasImageSource) : CanvasRenderingContext2D => {
+    // TS ignored as we are just mocking 1 of the 60+ CanvasRenderingContext2D properties/functions.
+    // @ts-ignore
+    return {
+        getImageData: (x, y, width, height) => {
+            const imgData = browser.getImageData(img);
+            const source = new Uint8ClampedArray(imgData.data);
+            const sourceWidth = imgData.width;
+            const dest = new Uint8ClampedArray(width * height * 4);
+
+            for (let i = 0; i < height; i++) {
+                const offset = sourceWidth * (y + i) * 4 + x * 4;
+                dest.set(source.slice(offset, offset + width * 4), 4 * width * i);
+            }
+
+            return {width, height, data: dest, colorSpace: 'srgb'};
+        }
+    };
 };
 
 function createFakeCanvas(document: Document, id: string, imagePath: string): HTMLCanvasElement {

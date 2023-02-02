@@ -1,13 +1,11 @@
 import {
     getJSON,
     getArrayBuffer,
-    getImage,
     makeRequest,
     getReferrer,
     makeFetchRequest,
     makeXMLHttpRequest,
     helper,
-    RequestDataType,
 } from './ajax';
 import * as util from './util';
 import fetchMock from 'jest-fetch-mock';
@@ -41,16 +39,6 @@ describe('ajax', () => {
             setTimeout(() => {
                 expect(callback).toHaveBeenNthCalledWith(1, null, 'response');
             });
-        });
-    });
-
-    describe('getImage', () => {
-        test('is cancelable', async () => {
-            fetchMock.mockResponseOnce('');
-            const callback = jest.fn(() => {});
-            const request = getImage({url: ''}, callback);
-            request.cancel();
-            await expect(callback).not.toHaveBeenCalled();
         });
     });
 
