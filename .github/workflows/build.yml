@@ -30,11 +30,11 @@ jobs:
       - name: find dist on ubuntu-latest
         if: matrix.os == 'ubuntu-latest'
         run: find dist
-      - name: mkdir build-info on ubuntu-latest
-        if: matrix.os == 'ubuntu-latest'
-        run: mkdir build-info
+      - name: find dist on windows-latest
+        if: matrix.os == 'windows-latest'
+        run: if not exist dist (exist 1)
+      - run: mkdir build-info
       - name: Store build info
-        if: matrix.os == 'ubuntu-latest'
         run: |
           echo "${{ github.event.pull_request.base.sha }}" > build-info/base_sha
           echo "${{ github.event.number }}" > build-info/pull_request_number
