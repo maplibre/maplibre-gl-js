@@ -1,6 +1,5 @@
-import {extend, warnOnce, isWorker, arrayBufferToImageBitmap, arrayBufferToImage} from './util';
+import {extend, warnOnce, isWorker} from './util';
 import config from './config';
-import webpSupported from './webp_supported';
 
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
@@ -263,92 +262,6 @@ function sameOrigin(url) {
 }
 
 export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
-
-function arrayBufferToCanvasImageSource(data: ArrayBuffer, callback: Callback<CanvasImageSource>) {
-    const imageBitmapSupported = typeof createImageBitmap === 'function';
-    if (imageBitmapSupported) {
-        arrayBufferToImageBitmap(data, callback);
-    } else {
-        arrayBufferToImage(data, callback);
-    }
-}
-
-let imageQueue, numImageRequests;
-export const resetImageRequestQueue = () => {
-    imageQueue = [];
-    numImageRequests = 0;
-};
-resetImageRequestQueue();
-
-export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
-
-export const getImage = function(
-    requestParameters: RequestParameters,
-    callback: GetImageCallback
-): Cancelable {
-    if (webpSupported.supported) {
-        if (!requestParameters.headers) {
-            requestParameters.headers = {};
-        }
-        requestParameters.headers.accept = 'image/webp,*/*';
-    }
-
-    // limit concurrent image loads to help with raster sources performance on big screens
-    if (numImageRequests >= config.MAX_PARALLEL_IMAGE_REQUESTS) {
-        const queued = {
-            requestParameters,
-            callback,
-            cancelled: false,
-            cancel() { this.cancelled = true; }
-        };
-        imageQueue.push(queued);
-        return queued;
-    }
-    numImageRequests++;
-
-    let advanced = false;
-    const advanceImageRequestQueue = () => {
-        if (advanced) return;
-        advanced = true;
-        numImageRequests--;
-
-        while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) {
-            const request = imageQueue.shift();
-            const {requestParameters, callback, cancelled} = request;
-            if (!cancelled) {
-                request.cancel = getImage(requestParameters, callback).cancel;
-            }
-        }
-    };
-
-    // request the image with XHR to work around caching issues
-    // see https://github.com/mapbox/mapbox-gl-js/issues/1470
-    const request = getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
-
-        advanceImageRequestQueue();
-
-        if (err) {
-            callback(err);
-        } else if (data) {
-            const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
-                if (imgErr != null) {
-                    callback(imgErr);
-                } else if (imgResult != null) {
-                    callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
-                }
-            };
-            arrayBufferToCanvasImageSource(data, decoratedCallback);
-        }
-    });
-
-    return {
-        cancel: () => {
-            request.cancel();
-            advanceImageRequestQueue();
-        }
-    };
-};
-
 export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVideoElement>): Cancelable {
     const video: HTMLVideoElement = window.document.createElement('video');
     video.muted = true;

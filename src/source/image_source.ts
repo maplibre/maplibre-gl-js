@@ -1,6 +1,6 @@
 import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import {getImage} from '../util/ajax';
+import ImageRequest from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 import EXTENT from '../data/extent';
 import {RasterBoundsArray} from '../data/array_types.g';
@@ -112,7 +112,7 @@ class ImageSource extends Evented implements Source {
 
         this.url = this.options.url;
 
-        this._request = getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), (err, image) => {
+        this._request = ImageRequest.getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), (err, image) => {
             this._request = null;
             this._loaded = true;
 
