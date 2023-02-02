@@ -110,26 +110,8 @@ class FullscreenControl extends Evented implements IControl {
         this._updateTitle();
 
         if (this._fullscreen) {
-            /**
-             * Fired when fullscreen mode has started
-             *
-             * @event fullscreenstart
-             * @memberof FullscreenControl
-             * @instance
-             * @type {Object}
-             * @property {FullscreenControl} control that started fullscreen mode
-             */
             this.fire(new Event('fullscreenstart'));
         } else {
-            /**
-             * Fired when fullscreen mode has ended
-             *
-             * @event fullscreenend
-             * @memberof FullscreenControl
-             * @instance
-             * @type {Object}
-             * @property {FullscreenControl} control that ended fullscreen mode
-             */
             this.fire(new Event('fullscreenend'));
         }
     }
@@ -178,3 +160,19 @@ class FullscreenControl extends Evented implements IControl {
 }
 
 export default FullscreenControl;
+
+/**
+ * Fired when fullscreen mode has started
+ *
+ * @event fullscreenstart
+ * @memberof FullscreenControl
+ * @instance
+ */
+
+/**
+ * Fired when fullscreen mode has ended
+ *
+ * @event fullscreenend
+ * @memberof FullscreenControl
+ * @instance
+ */
