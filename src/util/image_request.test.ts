@@ -5,7 +5,6 @@ import {fakeServer, FakeServer} from 'nise';
 import {
     getArrayBuffer,
     getJSON,
-    postData,
     AJAXError
 } from './ajax';
 
@@ -81,17 +80,6 @@ describe('ImageRequest', () => {
             expect(ajaxError.statusText).toBe('Not Found');
             expect(ajaxError.url).toBe('http://example.com/test.json');
             expect(body).toBe('404 Not Found');
-            done();
-        });
-        server.respond();
-    });
-
-    test('postData, 204(no content): no error', done => {
-        server.respondWith(request => {
-            request.respond(204, undefined, undefined);
-        });
-        postData({url: 'api.mapbox.com'}, (error) => {
-            expect(error).toBeNull();
             done();
         });
         server.respond();

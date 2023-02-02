@@ -109,7 +109,7 @@ namespace ImageRequest {
             if (!requestParameters.headers) {
                 requestParameters.headers = {};
             }
-            requestParameters.headers.accept = 'image/webp,*/*';
+            requestParameters.headers['Accept'] = 'image/webp,*/*';
         }
 
         const queued:ImageRequestQueueItem = {
