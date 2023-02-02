@@ -28,8 +28,11 @@ jobs:
       - run: npm run build-style-spec
       - run: npm run test-build
       - run: find dist
+         if: matrix.os == 'ubuntu-latest'
       - run: mkdir build-info
+         if: matrix.os == 'ubuntu-latest'
       - name: Store build info
+         if: matrix.os == 'ubuntu-latest'
         run: |
           echo "${{ github.event.pull_request.base.sha }}" > build-info/base_sha
           echo "${{ github.event.number }}" > build-info/pull_request_number
