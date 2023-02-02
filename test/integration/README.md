@@ -40,7 +40,7 @@ npm run test-build
 For running a subset of tests, you may use jest filters e.g.
 
 ```
-npm run test-integration -- --testPathIgnorePatterns "/test/integration/(query|build)/
+npm run test-integration --testPathIgnorePatterns "/test/integration/(query|build)/
 ```
 
 Additionally, it may be helpful to use a visual jest frontend (e.g. `npx majestic`). Note that since render tests do not use Jest, these will still have to be run from the command line.
