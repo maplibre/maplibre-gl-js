@@ -23,21 +23,27 @@ To run the render tests:
 npm run test-render
 ```
 
-To run the query tests:
-```
-npm run test-query
-```
-
-To run the expression tests:
+To run the integration tests (except the render tests):
 
 ```
-npm run test-expressions
+npm run test-integration
 ```
 
-To run the browser tests (see [`browser/README.md`](./browser/README.md)):
+This includes the browser tests (see [`browser/README.md`](./browser/README.md))
+
+To run the build tests
+
 ```
-npm run test-browser
+npm run test-build
+````
+
+For running a subset of tests, you may use jest filters e.g.
+
 ```
+npm run test-integration -- --testPathIgnorePatterns "/test/integration/(query|build)/
+```
+
+Additionally, it may be helpful to use a visual jest frontend (e.g. `npx majestic`). Note that since render tests do not use Jest, these will still have to be run from the command line.
 
 ### Running specific tests
 
@@ -173,13 +179,9 @@ To add a new render test:
 5. Commit the new `style.json` and `expected.png` :rocket:
 
 ## Updating results of query-tests
-You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled, for exmple on Linux:
+You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled, for example on Linux:
 ```
 UPDATE=true npm run test-query
-```
-You have to regenerate the fixture afterwards
-```
- npm run generate-query-test-fixtures
 ```
 Check carefully if all changes are intended.
 

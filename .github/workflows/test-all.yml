@@ -1,0 +1,83 @@
+name: Automated Testing
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  jest: npx jest --reporters default --reporters github-actions
+permissions:
+  checks: write
+  pull-requests: write
+  contents: write
+
+jobs:
+  code-hygiene:
+    name: Code Hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - run: npm run lint
+        if: success() || failure()
+      - run: npm run lint-css
+        if: success() || failure()
+      - run: npm run lint-docs
+        if: success() || failure()
+      - run: npm run typecheck
+        if: success() || failure()
+  non-gl-tests:
+    name: Tests not using GL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - run: ${{ env.jest }} --selectProjects unit --testPathIgnorePatterns "/src/(gl|render|ui)/" 
+      - run: npm run build-dev
+      - run: ${{ env.jest }} --selectProjects integration --testPathIgnorePatterns "/test/integration/(query|browser|build)/"
+  gl-tests:
+    name: Tests including GL
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - name: Start display server
+        if: runner.os == 'Linux'
+        run:
+          nohup Xvfb &
+          echo "DISPLAY=:0" >> $GITHUB_ENV
+      - run: ${{ env.jest }} --selectProjects unit
+      - run: npm run build-dev
+        if: success() || failure()
+      - run: npm run test-render
+        if: success() || failure()
+      - run: npm run build-dist
+        if: success() || failure()
+      - run: ${{ env.jest }} --selectProjects integration
+        if: success() || failure()
+
+  packaging-tests:
+    name: Packaging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - run: npm run build-dist
+      - run: npm run build-style-spec
+      - run: ${{ env.jest }} --roots test/build
+        if: success() || failure()
