@@ -1,6 +1,6 @@
 import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import ImageRequest from '../util/imageRequest';
+import ImageRequest from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 import EXTENT from '../data/extent';
 import {RasterBoundsArray} from '../data/array_types.g';

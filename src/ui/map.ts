@@ -4,8 +4,8 @@ import DOM from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
 
 import {getJSON} from '../util/ajax';
-import ImageRequest from '../util/imageRequest';
-import type {GetImageCallback} from '../util/imageRequest';
+import ImageRequest from '../util/image_request';
+import type {GetImageCallback} from '../util/image_request';
 
 import {RequestManager, ResourceType} from '../util/request_manager';
 import Style, {StyleSwapOptions} from '../style/style';
@@ -314,7 +314,7 @@ class Map extends Camera {
     _styleDirty: boolean;
     _sourcesDirty: boolean;
     _placementDirty: boolean;
-    _imageRequestQueueDirty: boolean;
+    _imageQueueDirty: boolean;
     _loaded: boolean;
     // accounts for placement finishing as well
     _fullyLoaded: boolean;
@@ -341,7 +341,7 @@ class Map extends Camera {
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /** image queue throttling handle. To be used later when clean up */
-    _imgQHandle: number;
+    _imageQueueHandle: number;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -436,7 +436,7 @@ class Map extends Camera {
         this._clickTolerance = options.clickTolerance;
         this._pixelRatio = options.pixelRatio ?? devicePixelRatio;
 
-        this._imgQHandle = ImageRequest.addThrottleControl(() => this.isMoving());
+        this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
         this._requestManager = new RequestManager(options.transformRequest);
 
@@ -2821,7 +2821,7 @@ class Map extends Camera {
         if (this.terrain) this.terrain.sourceCache.update(this.transform, this.terrain);
         this.transform.updateElevation(this.terrain);
 
-        this._imageRequestQueueDirty = ImageRequest.processQueue() > 0;
+        this._imageQueueDirty = ImageRequest.processQueue() > 0;
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 
@@ -2888,7 +2888,7 @@ class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this._imageRequestQueueDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this._imageQueueDirty;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
@@ -2951,7 +2951,7 @@ class Map extends Camera {
             removeEventListener('online', this._onWindowOnline, false);
         }
 
-        ImageRequest.removeThrottleControl(this._imgQHandle);
+        ImageRequest.removeThrottleControl(this._imageQueueHandle);
 
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension) extension.loseContext();

@@ -9,7 +9,7 @@ import {
     AJAXError
 } from './ajax';
 
-import ImageRequest, {ImageRequestQueueItem} from './imageRequest';
+import ImageRequest, {ImageRequestQueueItem} from './image_request';
 
 function readAsText(blob) {
     return new Promise((resolve, reject) => {
@@ -211,7 +211,7 @@ describe('ImageRequest', () => {
     });
 
     test('throttling: getImage queues requests for later processing', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED;
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_FRAME;
         const callbackHandle = ImageRequest.addThrottleControl(() => true);
 
         let callbackCounter = 0;
@@ -238,7 +238,7 @@ describe('ImageRequest', () => {
     });
 
     test('throttling: do NOT advance to next item when one of them is completed', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED;
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_FRAME;
         const callbackHandle = ImageRequest.addThrottleControl(() => true);
 
         let callbackCounter = 0;
@@ -282,7 +282,7 @@ describe('ImageRequest', () => {
     });
 
     test('throttling: DO advance to next item when one of them is canceled', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED;
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_FRAME;
         const callbackHandle = ImageRequest.addThrottleControl(() => true);
 
         let callbackCounter = 0;
@@ -327,7 +327,7 @@ describe('ImageRequest', () => {
     });
 
     test('throttling: process next item only when processQueue is called again', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED;
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_FRAME;
 
         const isThrottling = true;
         const callbackHandle = ImageRequest.addThrottleControl(() => isThrottling);
@@ -377,7 +377,7 @@ describe('ImageRequest', () => {
     });
 
     test('throttling: one throttling client will result in throttle behavior for all', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED;
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_FRAME;
         const callbackHandles = [];
 
         // add one for each
@@ -410,7 +410,7 @@ describe('ImageRequest', () => {
     });
 
     test('throttling: image queue will process all requests if throttling control returns false', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED;
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_FRAME;
         const controlId = ImageRequest.addThrottleControl(() => false);
 
         let callbackCounter = 0;
@@ -435,7 +435,7 @@ describe('ImageRequest', () => {
     test('throttling: removing throttling client will process all requests', done => {
         const requestParameter = {'Content-Type': 'image/png', url: ''};
         server.respondWith(request => request.respond(200, requestParameter, ''));
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED;
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_FRAME;
 
         // add 10, and one of them is throttling
         const throttlingIndex = 5;

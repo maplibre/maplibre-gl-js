@@ -20,7 +20,7 @@ export type ImageRequestQueueItem  = Cancelable & {
 }
 
 type ImageQueueThrottleCallbackDictionary = {
-    [Key: string]: ImageQueueThrottleControlCallback;
+    [Key: number]: ImageQueueThrottleControlCallback;
 }
 
 /**
@@ -48,12 +48,12 @@ namespace ImageRequest {
     /**
      * Reset the image request queue, removing all pending requests.
      */
-    export function resetRequestQueue(): void {
+    export const resetRequestQueue = (): void => {
         imageRequestQueue = [];
         currentParallelImageRequests = 0;
         throttleControlCallbackHandleCounter = 0;
         throttleControlCallbacks = {};
-    }
+    };
 
     /**
      * Install a callback to control when image queue throttling is desired.
@@ -61,20 +61,20 @@ namespace ImageRequest {
      * @param {ImageQueueThrottleControlCallback} callback The callback function to install
      * @returns {number} handle that identifies the installed callback.
      */
-    export function addThrottleControl(callback: ImageQueueThrottleControlCallback): number /*callbackHandle*/ {
+    export const addThrottleControl = (callback: ImageQueueThrottleControlCallback): number /*callbackHandle*/ => {
         const handle = throttleControlCallbackHandleCounter++;
-        throttleControlCallbacks[handle.toString()] = callback;
+        throttleControlCallbacks[handle] = callback;
         return handle;
-    }
+    };
 
     /**
      * Remove a previously installed callback by passing in the handle returned
      * by {@link addThrottleControl}.
      * @param {number} callbackHandle The handle for the callback to remove.
      */
-    export function removeThrottleControl(callbackHandle: number): void {
-        delete throttleControlCallbacks[callbackHandle.toString()];
-    }
+    export const removeThrottleControl = (callbackHandle: number): void => {
+        delete throttleControlCallbacks[callbackHandle];
+    };
 
     /**
      * Check to see if any of the installed callbacks are requesting the queue
@@ -101,10 +101,10 @@ namespace ImageRequest {
      * @param {GetImageCallback} callback Callback to issue when the request completes.
      * @returns {Cancelable} Cancelable request.
      */
-    export function getImage(
+    export const getImage = (
         requestParameters: RequestParameters,
         callback: GetImageCallback
-    ): ImageRequestQueueItem {
+    ): ImageRequestQueueItem => {
         if (webpSupported.supported) {
             if (!requestParameters.headers) {
                 requestParameters.headers = {};
@@ -128,9 +128,9 @@ namespace ImageRequest {
         }
 
         return queued;
-    }
+    };
 
-    const  arrayBufferToCanvasImageSource = (data: ArrayBuffer, callback: Callback<CanvasImageSource>) => {
+    const arrayBufferToCanvasImageSource = (data: ArrayBuffer, callback: Callback<CanvasImageSource>) => {
         const imageBitmapSupported = typeof createImageBitmap === 'function';
         if (imageBitmapSupported) {
             arrayBufferToImageBitmap(data, callback);
@@ -175,11 +175,11 @@ namespace ImageRequest {
      * @param {number} maxImageRequests The maximum number of request items to process. By default, up to {@link Config.MAX_PARALLEL_IMAGE_REQUESTS} will be procesed.
      * @returns {number} The number of items remaining in the queue.
      */
-    export function processQueue(
-        maxImageRequests: number = 0): number {
+    export const processQueue = (
+        maxImageRequests: number = 0): number => {
 
         if (maxImageRequests <= 0) {
-            maxImageRequests = isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME_WHILE_THROTTLED : config.MAX_PARALLEL_IMAGE_REQUESTS;
+            maxImageRequests = isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_FRAME : config.MAX_PARALLEL_IMAGE_REQUESTS;
         }
 
         const cancelRequest = (request: ImageRequestQueueItem) => {
@@ -213,7 +213,7 @@ namespace ImageRequest {
         }
 
         return imageRequestQueue.length;
-    }
+    };
 }
 
 ImageRequest.resetRequestQueue();

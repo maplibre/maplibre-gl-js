@@ -1,6 +1,6 @@
 import {extend, pick} from '../util/util';
 
-import ImageRequest from '../util/imageRequest';
+import ImageRequest from '../util/image_request';
 
 import {ResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';

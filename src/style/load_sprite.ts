@@ -1,5 +1,5 @@
 import {getJSON} from '../util/ajax';
-import ImageRequest from '../util/imageRequest';
+import ImageRequest from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 
 import browser from '../util/browser';

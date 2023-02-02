@@ -1,4 +1,4 @@
-import ImageRequest from '../util/imageRequest';
+import ImageRequest from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 import {extend, isImageBitmap} from '../util/util';
 import {Evented} from '../util/evented';
