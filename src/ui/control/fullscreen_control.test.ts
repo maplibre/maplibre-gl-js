@@ -54,11 +54,7 @@ describe('FullscreenControl', () => {
         expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
     });
 
-    test('start and end events fire', () => {
-        Object.defineProperty(window.document, 'fullscreenEnabled', {
-            value: true,
-            writable: true,
-        });
+    test('start and end events fire for fullscreen button clicks', () => {
         const map = createMap(undefined, undefined);
         const fullscreen = new FullscreenControl({});
 
@@ -69,15 +65,16 @@ describe('FullscreenControl', () => {
         fullscreen.on('fullscreenend', fullscreenend);
 
         map.addControl(fullscreen);
-        const control = map._controls.find((ctrl) => {
-            return Object.prototype.hasOwnProperty.call(ctrl, '_fullscreen');
-        }) as FullscreenControl;
 
-        control._onClickFullscreen();
+        const click = new window.Event('click');
+
+        // Simulate a click to the fullscreen button
+        fullscreen._fullscreenButton.dispatchEvent(click);
         expect(fullscreenstart).toHaveBeenCalled();
         expect(fullscreenend).not.toHaveBeenCalled();
 
-        control._onClickFullscreen();
+        // Second simulated click would exit fullscreen mode
+        fullscreen._fullscreenButton.dispatchEvent(click);
         expect(fullscreenend).toHaveBeenCalled();
     });
 });
