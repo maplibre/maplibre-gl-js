@@ -12,7 +12,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
-    steps:
+      steps:
       - uses: actions/checkout@v3
       - name: Use Node.js 18 x64
         uses: actions/setup-node@v3.6.0
@@ -27,13 +27,15 @@ jobs:
       - run: npm run build-css
       - run: npm run build-style-spec
       - run: npm run test-build
-      -  if: matrix.os == 'ubuntu-latest'
+      - name: find dist on ubuntu-latest
+        if: matrix.os == 'ubuntu-latest'
         run: find dist
-      -  if: matrix.os == 'ubuntu-latest'
+      - name: mkdir build-info on ubuntu-latest
+        if: matrix.os == 'ubuntu-latest'
         run: mkdir build-info
       - name: Store build info
-          if: matrix.os == 'ubuntu-latest'
-         run: |
+        if: matrix.os == 'ubuntu-latest'
+        run: |
           echo "${{ github.event.pull_request.base.sha }}" > build-info/base_sha
           echo "${{ github.event.number }}" > build-info/pull_request_number
 
