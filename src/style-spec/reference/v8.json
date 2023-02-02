@@ -181,6 +181,15 @@
       "default": 22,
       "doc": "Maximum zoom level for which tiles are available, as in the TileJSON spec. Data from tiles at the maxzoom are used when displaying the map at higher zoom levels."
     },
+    "refreshExpiredTiles":{
+      "type": "boolean",
+      "doc" : "Override default refreshExpiredTiles behaviour for this tile source. See maps options.refreshExpiredTiles https://maplibre.org/maplibre-gl-js-docs/api/map/#map-parameters",
+      "sdk-support": {
+        "basic functionality": {
+          "js": "3.0.0-pre.3"
+        }
+      }
+    },
     "attribution": {
       "type": "string",
       "doc": "Contains an attribution to be displayed when the map is shown to a user."
@@ -266,6 +275,15 @@
       "default": "xyz",
       "doc": "Influences the y direction of the tile coordinates. The global-mercator (aka Spherical Mercator) profile is assumed."
     },
+    "refreshExpiredTiles":{
+      "type": "boolean",
+      "doc" : "Override default refreshExpiredTiles behaviour for this tile source. See maps options.refreshExpiredTiles https://maplibre.org/maplibre-gl-js-docs/api/map/#map-parameters",
+      "sdk-support": {
+        "basic functionality": {
+          "js": "3.0.0-pre.3"
+        }
+      }
+    },
     "attribution": {
       "type": "string",
       "doc": "Contains an attribution to be displayed when the map is shown to a user."
@@ -333,6 +351,15 @@
       "default": 512,
       "units": "pixels",
       "doc": "The minimum visual size to display tiles for this layer. Only configurable for raster layers."
+    },
+    "refreshExpiredTiles":{
+      "type": "boolean",
+      "doc" : "Override default refreshExpiredTiles behaviour for this tile source. See maps options.refreshExpiredTiles https://maplibre.org/maplibre-gl-js-docs/api/map/#map-parameters",
+      "sdk-support": {
+        "basic functionality": {
+          "js": "3.0.0-pre.3"
+        }
+      }
     },
     "attribution": {
       "type": "string",

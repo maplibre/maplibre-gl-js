@@ -211,6 +211,36 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
     return {cancel: () => xhr.abort()};
 }
 
+function makeImageRequest(requestParameters: RequestParameters, callback: GetImageCallback): Cancelable {
+    const image = new Image();
+    const url = requestParameters.url;
+    let requestCancelled = false;
+    const credentials = requestParameters.credentials;
+    if (credentials && credentials === 'include') {
+        image.crossOrigin = 'use-credentials';
+    } else if ((credentials && credentials === 'same-origin') || !sameOrigin(url)) {
+        image.crossOrigin = 'anonymous';
+    }
+
+    image.onload = () => {
+        callback(null, image);
+        image.onerror = image.onload = null;
+    };
+    image.onerror = () => {
+        if (!requestCancelled) {
+            callback(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
+        }
+        image.onerror = image.onload = null;
+    };
+    image.src = url;
+    return {
+        cancel: () => {
+            requestCancelled = true;
+            image.src = '';
+        }
+    };
+}
+
 export const makeRequest = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
     // We're trying to use the Fetch API if possible. However, in some situations we can't use it:
     // - IE11 doesn't support it at all. In this case, we dispatch the request to the main thread so
@@ -284,7 +314,8 @@ export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement |
 
 export const getImage = function(
     requestParameters: RequestParameters,
-    callback: GetImageCallback
+    callback: GetImageCallback,
+    supportImageRefresh: boolean = true
 ): Cancelable {
     if (webpSupported.supported) {
         if (!requestParameters.headers) {
@@ -297,6 +328,7 @@ export const getImage = function(
     if (numImageRequests >= config.MAX_PARALLEL_IMAGE_REQUESTS) {
         const queued = {
             requestParameters,
+            supportImageRefresh,
             callback,
             cancelled: false,
             cancel() { this.cancelled = true; }
@@ -314,32 +346,47 @@ export const getImage = function(
 
         while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) {
             const request = imageQueue.shift();
-            const {requestParameters, callback, cancelled} = request;
+            const {requestParameters, supportImageRefresh, callback, cancelled} = request;
             if (!cancelled) {
-                request.cancel = getImage(requestParameters, callback).cancel;
+                request.cancel = getImage(requestParameters, callback, supportImageRefresh).cancel;
             }
         }
     };
+    let request;
+    // If refreshExpiredTiles is false, then we can use HTMLImageElement to download raster images.
+    // getArrayBuffer will be used to download images for following scenarios:
+    // 1. Style image sprite will had a issue with HTMLImageElement as described
+    //    here: https://github.com/mapbox/mapbox-gl-js/issues/1470
+    // 2. If refreshExpiredTiles is true (default), then in order to read the image cache header,
+    //     fetch/XHR request will be required
+    if (supportImageRefresh === false) {
+        request = makeImageRequest(requestParameters, (err?: Error | null, image?: HTMLImageElement) => {
+            advanceImageRequestQueue();
+            if (err) {
+                callback(err);
+            } else if (image) {
+                callback(null, image);
+            }
+        });
+    } else {
+        request = getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
 
-    // request the image with XHR to work around caching issues
-    // see https://github.com/mapbox/mapbox-gl-js/issues/1470
-    const request = getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
+            advanceImageRequestQueue();
 
-        advanceImageRequestQueue();
-
-        if (err) {
-            callback(err);
-        } else if (data) {
-            const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
-                if (imgErr != null) {
-                    callback(imgErr);
-                } else if (imgResult != null) {
-                    callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
-                }
-            };
-            arrayBufferToCanvasImageSource(data, decoratedCallback);
-        }
-    });
+            if (err) {
+                callback(err);
+            } else if (data) {
+                const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
+                    if (imgErr != null) {
+                        callback(imgErr);
+                    } else if (imgResult != null) {
+                        callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
+                    }
+                };
+                arrayBufferToCanvasImageSource(data, decoratedCallback);
+            }
+        });
+    }
 
     return {
         cancel: () => {

@@ -38,6 +38,7 @@ class RasterTileSource extends Evented implements Source {
     _loaded: boolean;
     _options: RasterSourceSpecification | RasterDEMSourceSpecification;
     _tileJSONRequest: Cancelable;
+    _refreshExpiredTiles: boolean;
 
     constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
@@ -84,6 +85,9 @@ class RasterTileSource extends Evented implements Source {
 
     onAdd(map: Map) {
         this.map = map;
+        const refreshExpiredTiles = this._options.refreshExpiredTiles;
+        this._refreshExpiredTiles =  typeof refreshExpiredTiles === 'boolean' ?
+            refreshExpiredTiles : map._refreshExpiredTiles;
         this.load();
     }
 
@@ -114,7 +118,7 @@ class RasterTileSource extends Evented implements Source {
                 tile.state = 'errored';
                 callback(err);
             } else if (img) {
-                if (this.map._refreshExpiredTiles) tile.setExpiryData(expiry);
+                if (this.map._refreshExpiredTiles && expiry) tile.setExpiryData(expiry);
 
                 const context = this.map.painter.context;
                 const gl = context.gl;
@@ -134,7 +138,7 @@ class RasterTileSource extends Evented implements Source {
 
                 callback(null);
             }
-        });
+        }, this._refreshExpiredTiles);
     }
 
     abortTile(tile: Tile, callback: Callback<void>) {
