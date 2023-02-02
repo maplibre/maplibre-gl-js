@@ -53,4 +53,31 @@ describe('FullscreenControl', () => {
         control._onClickFullscreen();
         expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
     });
+
+    test('start and end events fire', () => {
+        Object.defineProperty(window.document, 'fullscreenEnabled', {
+            value: true,
+            writable: true,
+        });
+        const map = createMap(undefined, undefined);
+        const fullscreen = new FullscreenControl({});
+
+        const fullscreenstart = jest.fn();
+        const fullscreenend   = jest.fn();
+
+        fullscreen.on('fullscreenstart', fullscreenstart);
+        fullscreen.on('fullscreenend', fullscreenend);
+
+        map.addControl(fullscreen);
+        const control = map._controls.find((ctrl) => {
+            return Object.prototype.hasOwnProperty.call(ctrl, '_fullscreen');
+        }) as FullscreenControl;
+
+        control._onClickFullscreen();
+        expect(fullscreenstart).toHaveBeenCalled();
+        expect(fullscreenend).not.toHaveBeenCalled();
+
+        control._onClickFullscreen();
+        expect(fullscreenend).toHaveBeenCalled();
+    });
 });

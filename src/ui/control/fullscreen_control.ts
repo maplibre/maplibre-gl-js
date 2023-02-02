@@ -2,6 +2,7 @@ import DOM from '../../util/dom';
 
 import {warnOnce} from '../../util/util';
 
+import {Event, Evented} from '../../util/evented';
 import type Map from '../map';
 import type {IControl} from './control';
 
@@ -22,7 +23,7 @@ type FullscreenOptions = {
  * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js-docs/example/fullscreen/)
  */
 
-class FullscreenControl implements IControl {
+class FullscreenControl extends Evented implements IControl {
     _map: Map;
     _controlContainer: HTMLElement;
     _fullscreen: boolean;
@@ -31,6 +32,7 @@ class FullscreenControl implements IControl {
     _container: HTMLElement;
 
     constructor(options: FullscreenOptions = {}) {
+        super();
         this._fullscreen = false;
 
         if (options && options.container) {
@@ -106,6 +108,30 @@ class FullscreenControl implements IControl {
         this._fullscreenButton.classList.toggle('maplibregl-ctrl-shrink');
         this._fullscreenButton.classList.toggle('maplibregl-ctrl-fullscreen');
         this._updateTitle();
+
+        if (this._fullscreen) {
+            /**
+             * Fired when fullscreen mode has started
+             *
+             * @event fullscreenstart
+             * @memberof FullscreenControl
+             * @instance
+             * @type {Object}
+             * @property {FullscreenControl} control that started fullscreen mode
+             */
+            this.fire(new Event('fullscreenstart'));
+        } else {
+            /**
+             * Fired when fullscreen mode has ended
+             *
+             * @event fullscreenend
+             * @memberof FullscreenControl
+             * @instance
+             * @type {Object}
+             * @property {FullscreenControl} control that ended fullscreen mode
+             */
+            this.fire(new Event('fullscreenend'));
+        }
     }
 
     _onClickFullscreen = () => {
