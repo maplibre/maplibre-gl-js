@@ -7,7 +7,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
@@ -24,7 +27,12 @@ jobs:
       - run: npm run build-css
       - run: npm run build-style-spec
       - run: npm run test-build
-      - run: find dist
+      - name: find dist on ubuntu-latest
+        if: matrix.os == 'ubuntu-latest'
+        run: find dist
+      - name: find dist on windows-latest
+        if: matrix.os == 'windows-latest'
+        run: if (!(Test-Path -Path "dist")) { exit 1 }
       - run: mkdir build-info
       - name: Store build info
         run: |
