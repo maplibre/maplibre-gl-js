@@ -48,7 +48,7 @@
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-replace": "^5.0.2",
     "@rollup/plugin-strip": "^3.0.2",
-    "@rollup/plugin-terser": "^0.3.0",
+    "@rollup/plugin-terser": "^0.4.0",
     "@rollup/plugin-typescript": "^11.0.0",
     "@types/benchmark": "^2.1.2",
     "@types/cssnano": "^5.0.0",
