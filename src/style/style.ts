@@ -200,7 +200,7 @@ class Style extends Evented {
         super();
 
         this.map = map;
-        this.dispatcher = new Dispatcher(getWorkerPool(), this);
+        this.dispatcher = new Dispatcher(getWorkerPool(), this, map._getMapId());
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
         this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily);
@@ -1344,7 +1344,7 @@ class Style extends Evented {
         }, props)));
     }
 
-    _remove() {
+    _remove(mapRemoved: boolean = true) {
         if (this._request) {
             this._request.cancel();
             this._request = null;
@@ -1365,7 +1365,7 @@ class Style extends Evented {
         }
         this.imageManager.setEventedParent(null);
         this.setEventedParent(null);
-        this.dispatcher.remove();
+        this.dispatcher.remove(mapRemoved);
     }
 
     _clearSource(id: string) {

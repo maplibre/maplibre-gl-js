@@ -53,4 +53,28 @@ describe('FullscreenControl', () => {
         control._onClickFullscreen();
         expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
     });
+
+    test('start and end events fire for fullscreen button clicks', () => {
+        const map = createMap(undefined, undefined);
+        const fullscreen = new FullscreenControl({});
+
+        const fullscreenstart = jest.fn();
+        const fullscreenend   = jest.fn();
+
+        fullscreen.on('fullscreenstart', fullscreenstart);
+        fullscreen.on('fullscreenend', fullscreenend);
+
+        map.addControl(fullscreen);
+
+        const click = new window.Event('click');
+
+        // Simulate a click to the fullscreen button
+        fullscreen._fullscreenButton.dispatchEvent(click);
+        expect(fullscreenstart).toHaveBeenCalled();
+        expect(fullscreenend).not.toHaveBeenCalled();
+
+        // Second simulated click would exit fullscreen mode
+        fullscreen._fullscreenButton.dispatchEvent(click);
+        expect(fullscreenend).toHaveBeenCalled();
+    });
 });
