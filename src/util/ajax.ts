@@ -167,7 +167,7 @@ export function makeRequest<T>(requestParameters: RequestParameters, requestData
         that's a point to reconsider in the (hopefully near) future
      */
 
-    if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
+    if (fetch && /:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
         // if the url uses some custom protocol. E.g. "custom://..."
 
         // then check the protocol, and if there exists a custom handler for the protocol, then execute the custom
@@ -176,7 +176,7 @@ export function makeRequest<T>(requestParameters: RequestParameters, requestData
         const action = config.REGISTERED_PROTOCOLS[protocol] || helper.makeFetchRequest;
 
         return action(requestParameters, requestDataType);
-    } else if (!(/^file:/.test(requestParameters.url))) {
+    } else if (fetch && !(/^file:/.test(requestParameters.url))) {
         // if there's no protocol at all or the protocol is not `file://` (in comparison with the `if` block above, it
         // can now be `http[s]://`). E.g. "https://..." or "/foo/bar.url"
 
