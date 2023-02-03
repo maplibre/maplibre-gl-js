@@ -6,8 +6,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-env:
-  jest: npx jest --reporters default --reporters github-actions
 permissions:
   checks: write
   pull-requests: write
@@ -40,9 +38,9 @@ jobs:
         with:
           node-version: lts/*
       - run: npm ci
-      - run: ${{ env.jest }} --selectProjects unit --testPathIgnorePatterns "/src/(gl|render|ui)/" 
+      - run: npm run jest-ci --selectProjects unit --testPathIgnorePatterns "/src/(gl|render|ui)/" 
       - run: npm run build-dev
-      - run: ${{ env.jest }} --selectProjects integration --testPathIgnorePatterns "/test/integration/(query|browser|build)/"
+      - run: npm run jest-ci --selectProjects integration --testPathIgnorePatterns "/test/integration/(query|browser|build)/"
   gl-tests:
     name: Tests including GL
     timeout-minutes: 20
@@ -58,14 +56,14 @@ jobs:
         run:
           nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
-      - run: ${{ env.jest }} --selectProjects unit
+      - run: npm run jest-ci --selectProjects unit
       - run: npm run build-dev
         if: success() || failure()
       - run: npm run test-render
         if: success() || failure()
       - run: npm run build-dist
         if: success() || failure()
-      - run: ${{ env.jest }} --selectProjects integration
+      - run: npm run jest-ci --selectProjects integration
         if: success() || failure()
 
   packaging-tests:
@@ -82,5 +80,5 @@ jobs:
       - run: npm ci
       - run: npm run build-dist
       - run: npm run build-style-spec
-      - run: ${{ env.jest }} --roots test/build
+      - run: npm run jest-ci --selectProjects build
         if: success() || failure()
