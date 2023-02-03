@@ -170,34 +170,18 @@ export function makeRequest<T>(requestParameters: RequestParameters, requestData
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
         // if the url uses some custom protocol. E.g. "custom://..."
 
-        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
-            // and if the request is made from inside a worker
+        // then check the protocol, and if there exists a custom handler for the protocol, then execute the custom
+        // handler. Otherwise, make the request using the Fetch API
+        const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
+        const action = config.REGISTERED_PROTOCOLS[protocol] || helper.makeFetchRequest;
 
-            // then ask the main thread to make the request from there
-            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
-        } else {
-            // if it's not a worker
-
-            // then check the protocol, and if there exists a custom handler for the protocol, then execute the custom
-            // handler. Otherwise, make the request using the Fetch API
-            const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
-            const action = config.REGISTERED_PROTOCOLS[protocol] || helper.makeFetchRequest;
-
-            return action(requestParameters, requestDataType);
-        }
+        return action(requestParameters, requestDataType);
     } else if (!(/^file:/.test(requestParameters.url))) {
         // if there's no protocol at all or the protocol is not `file://` (in comparison with the `if` block above, it
         // can now be `http[s]://`). E.g. "https://..." or "/foo/bar.url"
 
-        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
-            // and if the request is made from inside a worker
-
-            // then ask the main thread to make the request from there
-            return (self as any).worker.actor.send('getResource', requestParameters, requestDataType);
-        } else {
-            // otherwise, if it's not a worker, make a `fetch` request
-            return helper.makeFetchRequest(requestParameters, requestDataType);
-        }
+        // then make a `fetch` request
+        return helper.makeFetchRequest(requestParameters, requestDataType);
     } else {
         // fallback to use the XMLHttpRequest API. E.g. for the "file://..." urls
         return helper.makeXMLHttpRequest(requestParameters, requestDataType);

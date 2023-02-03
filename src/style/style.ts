@@ -1512,18 +1512,6 @@ class Style extends Evented {
         }
     }
 
-    getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-        const request = makeRequest(params);
-
-        request.response
-            .then(response => callback(null, response.data))
-            .catch(err => {
-                if (err.name !== 'AbortError') callback(err);
-            });
-
-        return request;
-    }
-
     getGlyphsUrl() {
         return this.stylesheet.glyphs || null;
     }
