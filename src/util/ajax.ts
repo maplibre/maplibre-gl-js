@@ -227,10 +227,12 @@ export function getReferrer(): string {
 export function makeFetchRequest<T>(requestParameters: RequestParameters, requestDataType?: RequestDataType): NetworkRequest<T> {
     const abortController = new AbortController();
 
-    const request = new Request(requestParameters.url, extend({}, requestParameters, {
+    const request = extend({}, requestParameters, {
+        url: requestParameters.url,
+        headers: new Headers(),
         referrer: getReferrer(),
         signal: abortController.signal
-    }));
+    });
 
     if (requestDataType === 'JSON') {
         request.headers.set('Accept', 'application/json');
@@ -336,6 +338,7 @@ export function makeXMLHttpRequest<T>(requestParameters: RequestParameters, requ
 }
 
 export const helper = {
+    makeRequest,
     makeFetchRequest,
     makeXMLHttpRequest
 };
