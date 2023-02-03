@@ -7,6 +7,14 @@ Tests should automatically be run on every PR via Github CI, but it's recommende
 
 First you must configure your development environment per [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
 
+Then run:
+
+```
+npm test
+```
+
+Note that some tests rely on the built project and will not pass until you have run `npm run build-dist`.
+
 To run individual tests:
 
  - Unit tests: `npx jest path/to/file.test.js` (e.g. `npx jest src/style/style_layer.test.ts`)
