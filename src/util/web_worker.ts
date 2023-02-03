@@ -28,6 +28,16 @@ export interface WorkerGlobalScopeInterface {
     registerRTLTextPlugin: (_: any) => void;
 }
 
-export default function workerFactory() {
-    return new Worker(maplibregl.workerUrl);
+export default function workerFactory(): Array<WorkerInterface> {
+    const workers = (maplibregl.workers || []) as Array<WorkerInterface>;
+    if (!workers.length) {
+        for (let i = 0; i < maplibregl.workerCount; i++) {
+            workers.push(new Worker(maplibregl.workerUrl));
+        }
+    } else {
+        // Update worker count to match user provided worker counts
+        maplibregl.workerCount = workers.length;
+    }
+
+    return workers;
 }

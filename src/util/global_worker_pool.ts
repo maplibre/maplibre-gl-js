@@ -1,6 +1,6 @@
 import WorkerPool, {PRELOAD_POOL_ID} from './worker_pool';
 
-let globalWorkerPool;
+let globalWorkerPool: WorkerPool;
 
 /**
  * Creates (if necessary) and returns the single, global WorkerPool instance

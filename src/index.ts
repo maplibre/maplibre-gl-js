@@ -33,6 +33,7 @@ import RasterDEMTileSource from './source/raster_dem_tile_source';
 import RasterTileSource from './source/raster_tile_source';
 import VectorTileSource from './source/vector_tile_source';
 import VideoSource from './source/video_source';
+import type {WorkerInterface} from './util/web_worker';
 
 const version = packageJSON.version;
 
@@ -142,7 +143,29 @@ const exported = {
         config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests;
     },
 
+    /**
+     * Provide maplibre-gl worker javascript bundle url. Required for strict CSP (Content Security Policy)
+     * When setting workerUrl, include `dist/maplibre-gl-csp.js` instead of `dist/maplibre-gl.js` js on your HTML page.
+     * @example
+     * maplibre.workerUrl = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-csp-worker.js';
+     */
     workerUrl: '',
+
+    /**
+     * Provide workers that will be used by the control. This will allow downloading of the worker js in
+     * parallel with maplibregl js. This will help lower load times in some situations.
+     *
+     * These workers will be used across maps and will be terminated when last map is removed.
+     * Setting this will override `maplibregl.workerUrl` and `maplibregl.workerCount`.
+     *
+     * When setting workers, include `dist/maplibre-gl-csp.js` instead of `dist/maplibre-gl.js` js on your HTML page.
+     * @example
+     * const workers = [new Worker('https://unpkg.com/maplibre-gl/dist/maplibre-gl-csp-worker.js')];
+     *
+     * ... Once `dist/maplibre-gl-csp.js` is loaded ...
+     * maplibre.workers = workers;
+     */
+    workers: undefined as Array<WorkerInterface>,
 
     /**
      * Sets a custom load tile function that will be called when using a source that starts with a custom url schema.

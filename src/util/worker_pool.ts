@@ -2,7 +2,7 @@ import webWorkerFactory from './web_worker';
 import type {WorkerInterface} from './web_worker';
 import browser from './browser';
 
-export const PRELOAD_POOL_ID = 'mapboxgl_preloaded_worker_pool';
+export const PRELOAD_POOL_ID = 'maplibregl_preloaded_worker_pool';
 
 /**
  * Constructs a worker pool.
@@ -22,12 +22,13 @@ export default class WorkerPool {
 
     acquire(mapId: number | string): Array<WorkerInterface> {
         if (!this.workers) {
-            // Lazily look up the value of mapboxgl.workerCount so that
+            // Lazily look up the value of maplibregl.workerCount so that
             // client code has had a chance to set it.
-            this.workers = [];
-            while (this.workers.length < WorkerPool.workerCount) {
-                this.workers.push(webWorkerFactory());
-            }
+            this.workers = webWorkerFactory();
+
+            // Sync worker count with number of workers in case user provide
+            // there own workers.
+            WorkerPool.workerCount = this.workers.length;
         }
 
         this.active[mapId] = true;

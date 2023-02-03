@@ -4,7 +4,7 @@ import WorkerPool from './worker_pool';
 
 describe('Dispatcher', () => {
     test('requests and releases workers from pool', () => {
-        const workers = [workerFactory(), workerFactory()];
+        const workers = workerFactory();
 
         const releaseCalled = [];
         const workerPool = {

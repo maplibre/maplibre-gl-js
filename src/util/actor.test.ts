@@ -38,7 +38,7 @@ describe('Actor', () => {
             }
         });
 
-        const worker = workerFactory();
+        const worker = workerFactory()[0];
 
         const m1 = new Actor(worker, {}, 1);
         const m2 = new Actor(worker, {}, 2);
@@ -74,7 +74,8 @@ describe('Actor', () => {
             }
         });
 
-        const worker = workerFactory();
+        const workers = workerFactory();
+        const worker = workers[workers.length - 1];
 
         new Actor(worker, {
             test () { done(); }
