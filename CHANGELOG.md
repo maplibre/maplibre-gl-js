@@ -3,10 +3,14 @@
 ### ✨ Features and improvements
 - Add `setiClusterOptions` to update cluster properties of the added sources: fixing these issues ([#429](https://github.com/maplibre/maplibre-gl-js/issues/429)) and ([1384](https://github.com/maplibre/maplibre-gl-js/issues/1384))
 - Add types for `workerOptions` and `_options` in `geojson_source.ts`
+- Add fullscreenstart, fullscreenend events to FullscreenControl
+- Make jest tests easier to run in CI and local development
 - Add support for external workers for CSP version ([#2130](https://github.com/maplibre/maplibre-gl-js/pull/2130))
+- *...Add new stuff here...*
 
 ### 🐞 Bug fixes
-- *...Add new stuff here...*
+- Fix the worker been terminated on setting new style ([#2123](https://github.com/maplibre/maplibre-gl-js/pull/2123))
+
 ## 3.0.0-pre.3
 
 ### ✨ Features and improvements

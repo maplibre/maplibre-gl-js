@@ -130,7 +130,7 @@ describe('Style', () => {
             done();
         });
         sinonFakeServer.respond();
-        new Style(createStyleJSON());
+        new Style(getStubMap());
     });
 });
 
