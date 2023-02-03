@@ -319,9 +319,6 @@ class Style extends Evented {
 
         const layers = deref(this.stylesheet.layers);
 
-        // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
-        // can happen in parallel on both main and worker threads.
-        this.dispatcher.broadcast('setLayers', layers.filter(layer => layer.type !== 'custom'));
         this._order = layers.map((layer) => layer.id);
 
         this._layers = {};
@@ -332,6 +329,7 @@ class Style extends Evented {
             this._layers[layer.id] = layer;
             this._serializedLayers[layer.id] = layer.serialize();
         }
+        this.dispatcher.broadcast('setLayers', this._serializeLayers(this._order));
 
         this.light = new Light(this.stylesheet.light);
 
