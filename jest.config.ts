@@ -18,8 +18,7 @@ const config: JestConfigWithTsJest = {
     transformIgnorePatterns: [],
     setupFiles: [
         'jest-canvas-mock',
-        './test/unit/lib/web_worker_mock.ts',
-        './test/unit/lib/ajax_mock.ts'
+        './test/unit/lib/web_worker_mock.ts'
     ],
 };
 

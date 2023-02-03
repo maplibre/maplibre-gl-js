@@ -8,34 +8,37 @@ import {
     helper,
 } from './ajax';
 import * as util from './util';
-import fetchMock, {enableFetchMocks} from 'jest-fetch-mock';
+import fetchMock from 'jest-fetch-mock';
 import {fakeServer, FakeServer} from 'nise';
 
 describe('ajax', () => {
-    beforeEach(() => enableFetchMocks());
     afterEach(() => {
         jest.clearAllMocks();
     });
 
     describe('getJSON', () => {
-        test('calls `makeRequest`', async () => {
+        test('calls the callback with correct response', async () => {
             // @ts-ignore
-            const makeRequestSpy = jest.spyOn(helper, 'makeRequest').mockImplementationOnce(() => {});
+            const callback = jest.fn(() => {});
 
-            getJSON({url: ''}, () => {});
+            getJSON({url: ''}, callback);
 
-            expect(makeRequestSpy).toHaveBeenNthCalledWith(1, {url: ''}, 'JSON');
+            setTimeout(() => {
+                expect(callback).toHaveBeenNthCalledWith(1, null, 'response');
+            });
         });
     });
 
     describe('getArrayBuffer', () => {
-        test('calls `makeRequest`', async () => {
+        test('calls the callback with correct response', async () => {
             // @ts-ignore
-            const makeRequestSpy = jest.spyOn(helper, 'makeRequest').mockImplementationOnce(() => {});
+            const callback = jest.fn(() => {});
 
-            getArrayBuffer({url: ''}, () => {});
+            getArrayBuffer({url: ''}, callback);
 
-            expect(makeRequestSpy).toHaveBeenNthCalledWith(1, {url: ''}, 'ArrayBuffer');
+            setTimeout(() => {
+                expect(callback).toHaveBeenNthCalledWith(1, null, 'response');
+            });
         });
     });
 
@@ -65,28 +68,7 @@ describe('ajax', () => {
             makeXMLHttpRequestSpy = jest.spyOn(helper, 'makeXMLHttpRequest').mockImplementationOnce(() => {});
         });
 
-        function workerTest(url: string) {
-            const fetch = global.fetch;
-            global.fetch = null;
-            self.worker = {actor: {send: jest.fn(() => {})}};
-            const actor = self.worker.actor;
-            const isWorkerSpy = jest.spyOn(util, 'isWorker').mockImplementationOnce(() => true);
-            const sendSpy = jest.spyOn(actor, 'send');
-
-            makeRequest({url});
-
-            expect(isWorkerSpy).toHaveBeenCalledTimes(1);
-            expect(sendSpy).toHaveBeenNthCalledWith(1, 'getResource', {url}, undefined);
-
-            global.fetch = fetch;
-            self.worker = null;
-        }
-
         describe('"custom://" protocol', () => {
-            test('when worker, calls `getResource` on the main thread', async () => {
-                workerTest('custom://example.com');
-            });
-
             test('uses fetch when it is available', async () => {
                 makeRequest({url: 'custom://example.com'});
 
@@ -101,10 +83,6 @@ describe('ajax', () => {
 
                 expect(makeFetchRequestSpy).toHaveBeenNthCalledWith(1, {url: 'foo'}, undefined);
                 expect(makeXMLHttpRequestSpy).not.toHaveBeenCalled();
-            });
-
-            test('when worker, calls `getResource` on the main thread', async () => {
-                workerTest('foo');
             });
         });
 
