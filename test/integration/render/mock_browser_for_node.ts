@@ -122,6 +122,9 @@ function imitateWebGlGetContext(type, attributes) {
     if (type === 'webgl') {
         if (!this._webGLContext) {
             this._webGLContext = gl(this.width, this.height, attributes);
+            if (!this._webGLContext) {
+                throw new Error('Failed to create a WebGL context');
+            }
         }
         return this._webGLContext;
     }

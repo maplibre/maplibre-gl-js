@@ -1,15 +1,13 @@
 import {Browser, BrowserContext, BrowserType, chromium, Page} from 'playwright';
-import address from 'address';
 import st from 'st';
 import http from 'http';
+import type {Server} from 'http';
 import fs from 'fs';
 import path from 'path';
 import pixelmatch from 'pixelmatch';
 import {PNG} from 'pngjs';
+import type {AddressInfo} from 'net';
 
-const ip = address.ip();
-const port = 9968;
-const basePath = `http://${ip}:${port}`;
 const testWidth = 800;
 const testHeight = 600;
 
@@ -30,9 +28,7 @@ async function getMapCanvas(url, page: Page) {
 }
 
 async function newTest(impl: BrowserType) {
-    browser = await impl.launch({
-        headless: false,
-    });
+    browser = await impl.launch();
 
     context = await browser.newContext({
         viewport: {width: testWidth, height: testHeight},
@@ -40,10 +36,11 @@ async function newTest(impl: BrowserType) {
     });
 
     page = await context.newPage();
-    await getMapCanvas(`${basePath}/test/integration/browser/fixtures/land.html`, page);
+    const port = (server.address() as AddressInfo).port;
+    await getMapCanvas(`http://localhost:${port}/test/integration/browser/fixtures/land.html`, page);
 }
 
-let server = null;
+let server: Server;
 let browser: Browser;
 let context: BrowserContext;
 let page: Page;
@@ -52,12 +49,11 @@ let map: any;
 describe('browser tests', () => {
 
     // start server
-    beforeAll((done) => {
+    beforeAll(async () => {
         server = http.createServer(
             st(process.cwd())
-        ).listen(port, ip, () => {
-            done();
-        });
+        );
+        await new Promise<void>((resolve) => server.listen(resolve));
     });
 
     [chromium].forEach((impl) => {
