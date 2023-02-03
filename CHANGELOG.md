@@ -3,7 +3,7 @@
 ### ✨ Features and improvements
 - Add `setiClusterOptions` to update cluster properties of the added sources: fixing these issues ([#429](https://github.com/maplibre/maplibre-gl-js/issues/429)) and ([1384](https://github.com/maplibre/maplibre-gl-js/issues/1384))
 - Add types for `workerOptions` and `_options` in `geojson_source.ts`
-- Add support for external workers for CSP version.
+- Add support for external workers for CSP version ([#2130](https://github.com/maplibre/maplibre-gl-js/pull/2130))
 
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
