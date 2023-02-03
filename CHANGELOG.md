@@ -3,7 +3,7 @@
 ### ✨ Features and improvements
 - Add `setiClusterOptions` to update cluster properties of the added sources: fixing these issues ([#429](https://github.com/maplibre/maplibre-gl-js/issues/429)) and ([1384](https://github.com/maplibre/maplibre-gl-js/issues/1384))
 - Add types for `workerOptions` and `_options` in `geojson_source.ts`
-- Improve performance by sending style data to worker thread before processing it on main thread to allow parallel processing.
+- Improve performance by sending style data to worker thread before processing it on main thread to allow parallel processing ([#2131](https://github.com/maplibre/maplibre-gl-js/pull/2131))
 ### 🐞 Bug fixes
 - *...Add new stuff here...*
 ## 3.0.0-pre.3
