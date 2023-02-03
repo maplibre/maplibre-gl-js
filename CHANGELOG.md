@@ -6,7 +6,8 @@
 - Add fullscreenstart, fullscreenend events to FullscreenControl
 - *...Add new stuff here...*
 ### 🐞 Bug fixes
-- *...Add new stuff here...*
+- Fix the worker been terminated on setting new style ([#2123](https://github.com/maplibre/maplibre-gl-js/pull/2123))
+
 ## 3.0.0-pre.3
 
 ### ✨ Features and improvements
