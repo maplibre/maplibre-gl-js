@@ -6,14 +6,11 @@ import {fakeServer, FakeServer} from 'nise';
 import Transform from '../geo/transform';
 import {Evented} from '../util/evented';
 import Painter from '../render/painter';
-import Context from '../gl/context';
-import gl from 'gl';
 import RasterDEMTileSource from './raster_dem_tile_source';
 import {OverscaledTileID} from './tile_id';
 import Tile from './tile';
 import DEMData from '../data/dem_data';
 
-const context = new Context(gl(10, 10) as any);
 const transform = new Transform();
 
 class StubMap extends Evented {
@@ -31,6 +28,10 @@ class StubMap extends Evented {
         } as any as RequestManager;
     }
 
+    _getMapId() {
+        return 1;
+    }
+
     setTerrain() {}
 }
 
@@ -38,7 +39,6 @@ function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, null);
     source.onAdd({
         transform,
-        _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
         getPixelRatio() { return 1; }
     } as any);
@@ -67,7 +67,6 @@ describe('TerrainSourceCache', () => {
         }));
         const map = new StubMap();
         style = new Style(map as any);
-        style.map.painter = {style, context} as any;
         style.on('style.load', () => {
             const source = createSource({url: '/source.json'});
             server.respond();
