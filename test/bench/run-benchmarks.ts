@@ -40,7 +40,6 @@ if (argv.compare !== true && argv.compare !== undefined) { // handle --compare w
 console.log(`Starting headless chrome at: ${url.toString()}`);
 
 const browser = await chromium.launch({
-    headless: true,
     args: ['--use-gl=angle', '--no-sandbox', '--disable-setuid-sandbox']
 });
 

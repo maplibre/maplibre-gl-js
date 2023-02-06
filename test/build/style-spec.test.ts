@@ -1,51 +1,20 @@
-import isBuiltin from 'is-builtin-module';
-import * as rollup from 'rollup';
-import rollupConfig from '../../rollup.config.style-spec';
-import styleSpecPackage from '../../src/style-spec/package.json' assert {type: 'json'};
-import spec from '../../dist/style-spec/index.cjs';
-
-import {RollupOptions} from 'rollup';
+import {readdir} from 'fs/promises';
 
 describe('@maplibre/maplibre-gl-style-spec npm package', () => {
-    test('build plain ES5 bundle in prepublish', async () => {
-        jest.spyOn(console, 'warn').mockImplementation(() => {});
-        await rollup.rollup({
-            input: './src/style-spec/style-spec.ts',
-            plugins: [{
-                name: 'test-checker',
-                resolveId: (id, importer) => {
-
-                    // linux (path starts with slash or dot)
-                    const slashOrDot: boolean = /^[\/\.]/.test(id);
-
-                    // Windows (path could start with drive letter: for example c:\)
-                    const windowsFullPath: boolean = /^[c-zC-Z]:\\/.test(id);
-
-                    if (
-                        slashOrDot ||
-                        windowsFullPath ||
-                        isBuiltin(id) ||
-                        /node_modules/.test(importer!)
-                    ) {
-                        return null;
-                    }
-
-                    expect(styleSpecPackage.dependencies[id]).toBeTruthy();
-                    return false;
-                }
-                //@ts-ignore
-            }, ...(rollupConfig as RollupOptions[])[0].plugins]
-        }).then(() => {
-        }).catch(e => {
-            expect(e).toBeFalsy();
-        });
-    }, 40000);
-
-    test('exports components directly, not behind `default` - https://github.com/mapbox/mapbox-gl-js/issues/6601', () => {
-        // @ts-ignore
-        expect(spec.default && spec.default.validate).toBeFalsy();
-        // @ts-ignore
-        expect(spec.validate).toBeTruthy();
+    test('files build', async () => {
+        expect(await readdir('dist/style-spec')).toMatchInlineSnapshot(`
+[
+  "index.cjs",
+  "index.cjs.map",
+  "index.d.ts",
+  "index.mjs",
+  "index.mjs.map",
+]
+`);
     });
 
+    test('exports components directly, not behind `default` - https://github.com/mapbox/mapbox-gl-js/issues/6601', async  () => {
+
+        expect(await import('../../dist/style-spec/index.cjs')).toHaveProperty('validate');
+    });
 });

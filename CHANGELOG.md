@@ -3,15 +3,19 @@
 ### ✨ Features and improvements
 - Add `setiClusterOptions` to update cluster properties of the added sources: fixing these issues ([#429](https://github.com/maplibre/maplibre-gl-js/issues/429)) and ([1384](https://github.com/maplibre/maplibre-gl-js/issues/1384))
 - Add types for `workerOptions` and `_options` in `geojson_source.ts`
+- Add fullscreenstart, fullscreenend events to FullscreenControl
+- Make jest tests easier to run in CI and local development
 - *...Add new stuff here...*
 - Implement `replace-all` expression. ([#2059](https://github.com/maplibre/maplibre-gl-js/pull/2059))
 
 ### 🐞 Bug fixes
-- *...Add new stuff here...*
+- Fix the worker been terminated on setting new style ([#2123](https://github.com/maplibre/maplibre-gl-js/pull/2123))
+
 ## 3.0.0-pre.3
 
 ### ✨ Features and improvements
 - Add support for multiple `sprite` declarations in one style file ([#1805](https://github.com/maplibre/maplibre-gl-js/pull/1805))
+- Extract sprite image on demand to reduce memory usage and improve performance by reducing number of getImageData calls ([#1809](https://github.com/maplibre/maplibre-gl-js/pull/1809))
 
 ### 🐞 Bug fixes
 - Fix issue [#1024](https://github.com/maplibre/maplibre-gl-js/pull/1024) - Zoom center not under cursor when terrain is on 
@@ -29,6 +33,7 @@
 - Speed up the cross tile symbol index in certain circumstances ([#1755](https://github.com/maplibre/maplibre-gl-js/pull/1755))
 - Improve rendering speed in scenes with many colliding symbolic icons and labels ([#1757](https://github.com/maplibre/maplibre-gl-js/pull/1757))
 - Make request for ImageSource cancelable ([#1802](https://github.com/maplibre/maplibre-gl-js/pull/1802))
+- Throttle the image request queue while the map is moving to improve performance ([#2097](https://github.com/maplibre/maplibre-gl-js/pull/2097))
 
 ### 🐞 Bug fixes
 - Remove dependency on `@rollup/plugin-json`, which was in conflict with `rollup-plugin-import-assert`

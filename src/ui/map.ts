@@ -2,7 +2,11 @@ import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
-import {getImage, GetImageCallback, getJSON} from '../util/ajax';
+
+import {getJSON} from '../util/ajax';
+import ImageRequest from '../util/image_request';
+import type {GetImageCallback} from '../util/image_request';
+
 import {RequestManager, ResourceType} from '../util/request_manager';
 import Style, {StyleSwapOptions} from '../style/style';
 import EvaluationParameters from '../style/evaluation_parameters';
@@ -310,6 +314,7 @@ class Map extends Camera {
     _styleDirty: boolean;
     _sourcesDirty: boolean;
     _placementDirty: boolean;
+    _imageQueueDirty: boolean;
     _loaded: boolean;
     // accounts for placement finishing as well
     _fullyLoaded: boolean;
@@ -334,6 +339,9 @@ class Map extends Camera {
     _clickTolerance: number;
     _pixelRatio: number;
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
+
+    /** image queue throttling handle. To be used later when clean up */
+    _imageQueueHandle: number;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -427,6 +435,8 @@ class Map extends Camera {
         this._locale = extend({}, defaultLocale, options.locale);
         this._clickTolerance = options.clickTolerance;
         this._pixelRatio = options.pixelRatio ?? devicePixelRatio;
+
+        this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
         this._requestManager = new RequestManager(options.transformRequest);
 
@@ -941,7 +951,7 @@ class Map extends Camera {
      * var isMoving = map.isMoving();
      */
     isMoving(): boolean {
-        return this._moving || this.handlers.isMoving();
+        return this._moving || this.handlers?.isMoving();
     }
 
     /**
@@ -951,7 +961,7 @@ class Map extends Camera {
      * var isZooming = map.isZooming();
      */
     isZooming(): boolean {
-        return this._zooming || this.handlers.isZooming();
+        return this._zooming || this.handlers?.isZooming();
     }
 
     /**
@@ -961,7 +971,7 @@ class Map extends Camera {
      * map.isRotating();
      */
     isRotating(): boolean {
-        return this._rotating || this.handlers.isRotating();
+        return this._rotating || this.handlers?.isRotating();
     }
 
     _createDelegatedListener(type: MapEvent | string, layerId: string, listener: Listener): {
@@ -1487,7 +1497,9 @@ class Map extends Camera {
         const previousStyle = this.style && options.transformStyle ? this.style.serialize() : undefined;
         if (this.style) {
             this.style.setEventedParent(null);
-            this.style._remove();
+
+            // Only release workers when map is getting disposed
+            this.style._remove(!style);
         }
 
         if (!style) {
@@ -1949,7 +1961,7 @@ class Map extends Camera {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image/)
      */
     loadImage(url: string, callback: GetImageCallback) {
-        getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
+        ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
     }
 
     /**
@@ -2811,6 +2823,8 @@ class Map extends Camera {
         if (this.terrain) this.terrain.sourceCache.update(this.transform, this.terrain);
         this.transform.updateElevation(this.terrain);
 
+        this._imageQueueDirty = ImageRequest.processQueue() > 0;
+
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 
         // Actually draw
@@ -2876,7 +2890,7 @@ class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this._imageQueueDirty;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
@@ -2938,6 +2952,8 @@ class Map extends Camera {
             removeEventListener('orientationchange', this._onWindowResize, false);
             removeEventListener('online', this._onWindowOnline, false);
         }
+
+        ImageRequest.removeThrottleControl(this._imageQueueHandle);
 
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension) extension.loseContext();

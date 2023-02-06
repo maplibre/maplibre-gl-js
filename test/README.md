@@ -1,9 +1,19 @@
 
 # Tests
 
+Tests should automatically be run on every PR via Github CI, but it's recommended to also run them locally.
+
 ## Running Tests
 
 First you must configure your development environment per [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
+
+Then run:
+
+```
+npm test
+```
+
+Note that some tests rely on the built project and will not pass until you have run `npm run build-dist`.
 
 To run individual tests:
 
@@ -12,7 +22,7 @@ To run individual tests:
 
 To run folders in watch mode, meaning they will run continuously as you make changes to relevant code, (i.e. for test driven development): use `npm run test-watch-roots *folder1* [*folder2*...]` (e.g. `npm run test-watch-roots ./src/ui/control`)
 
- ## Debugging Tests on Windows
+## Debugging Tests in VSCode
 
 Steps to use Visual Studio Code:
 
@@ -22,6 +32,10 @@ Steps to use Visual Studio Code:
 <br />
    ![Start debugging](assets/docs/debug_test_in_vscode.png)
    Before debugging, you might want to set break points in sources.
+
+You may also ![run tests and view output](assets/docs/vscode-jest.png) with the plugin [orta.vscode-jest](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-jest)
+If you do so, note that the initial test run may take a while (3 minutes or so), during which time the test results are not yet available.
+
 
 ## Integration Tests
 

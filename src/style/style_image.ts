@@ -2,11 +2,20 @@ import {RGBAImage} from '../util/image';
 
 import type Map from '../ui/map';
 
+export type SpriteOnDemandStyleImage = {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+    context: CanvasRenderingContext2D;
+};
+
 export type StyleImageData = {
     data: RGBAImage;
-    version: number;
+    version?: number;
     hasRenderCallback?: boolean;
     userImage?: StyleImageInterface;
+    spriteData?: SpriteOnDemandStyleImage;
 };
 
 export type StyleImageMetadata = {
