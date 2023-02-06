@@ -43,8 +43,11 @@ jobs:
       - run: npm run jest-ci -- --selectProjects integration --testPathIgnorePatterns "/test/integration/(query|browser|build)/"
   gl-tests:
     name: Tests including GL
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -52,7 +55,7 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - name: Start display server
-        if: runner.os == 'Linux'
+        if: matrix.os == 'ubuntu-latest'
         run:
           nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
