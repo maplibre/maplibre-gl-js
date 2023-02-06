@@ -55,7 +55,7 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - name: Start display server
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         run:
           nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
