@@ -1617,7 +1617,9 @@ class Style extends Evented {
             this._loadSprite(sprite, true, completion);
         } else {
             this._unloadSprite();
+            if (completion) {
                 completion(null);
+            }
         }
     }
 }

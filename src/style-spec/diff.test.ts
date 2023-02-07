@@ -256,8 +256,6 @@ test('diff', () => {
         {command: 'setPitch', args: [1]}
     ]);
 
-
-
     expect(diffStyles({
         light: {
             anchor: 'map',
@@ -415,7 +413,7 @@ test('diff', () => {
     expect(diffStyles({
         sprite: 'a'
     }, {
-        sprite: [{id:'default', url:'a'}]
+        sprite: [{id: 'default', url: 'a'}]
     })).toEqual([]);
 
     expect(diffStyles({
@@ -429,9 +427,9 @@ test('diff', () => {
     expect(diffStyles({
         sprite: 'a'
     }, {
-        sprite: [{'id':'default', 'url':'b'}]
+        sprite: [{'id': 'default', 'url': 'b'}]
     })).toEqual([
-        {command: 'setSprite', args: [{'id':'default','url':'b'}]},
+        {command: 'setSprite', args: [{'id': 'default', 'url': 'b'}]},
     ]);
 
     expect(diffStyles({
