@@ -5,9 +5,11 @@
 - Add types for `workerOptions` and `_options` in `geojson_source.ts`
 - Add fullscreenstart, fullscreenend events to FullscreenControl
 - Make jest tests easier to run in CI and local development
+- Add method to enable/disable cooperative gestures
 - *...Add new stuff here...*
 ### 🐞 Bug fixes
 - Fix the worker been terminated on setting new style ([#2123](https://github.com/maplibre/maplibre-gl-js/pull/2123))
+- Change how meta key is detected for cooperative gestures
 
 ## 3.0.0-pre.3
 
