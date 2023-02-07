@@ -238,7 +238,7 @@ const defaultOptions = {
  * @param {boolean} [options.doubleClickZoom=true] If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
  * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchZoomRotateHandler#enable}.
  * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler#enable}.
- * @param {boolean|GestureOptions} [options.cooperativeGestures=undefined] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
+ * @param {boolean|GestureOptions} [options.cooperativeGestures=undefined] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link #FullscreenControl}.
  * A valid options object includes the following properties to customize the text on the informational screen. The values below are the defaults.
  * {
  *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
@@ -459,6 +459,7 @@ class Map extends Camera {
             '_onWindowOnline',
             '_onWindowResize',
             '_onMapScroll',
+            '_cooperativeGesturesOnWheel',
             '_contextLost',
             '_contextRestored'
         ], this);
@@ -912,6 +913,32 @@ class Map extends Camera {
     setRenderWorldCopies(renderWorldCopies?: boolean | null) {
         this.transform.renderWorldCopies = renderWorldCopies;
         return this._update();
+    }
+
+    /**
+     * Gets the map's cooperativeGestures option
+     *
+     * @returns {GestureOptions} gestureOptions
+     */
+    getCooperativeGestures() {
+        return this._cooperativeGestures;
+    }
+
+    /**
+     * Sets or clears the map's cooperativeGestures option
+     *
+     * @param {GestureOptions | null | undefined} gestureOptions If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
+     * @returns {Map} `this`
+     */
+    setCooperativeGestures(gestureOptions?: GestureOptions | boolean | null) {
+        this._cooperativeGestures = gestureOptions;
+        if (this._cooperativeGestures) {
+            this._setupCooperativeGestures();
+        } else {
+            this._destroyCooperativeGestures();
+        }
+
+        return this;
     }
 
     /**
@@ -2599,6 +2626,10 @@ class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
+    _cooperativeGesturesOnWheel(e) {
+        this._onCooperativeGesture(e, e[this._metaKey], 1);
+    }
+
     _setupCooperativeGestures() {
         const container = this._container;
         this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
@@ -2614,11 +2645,16 @@ class Map extends Camera {
             <div class="maplibregl-mobile-message">${mobileMessage}</div>
         `;
         // Add event to canvas container since gesture container is pointer-events: none
-        this._canvasContainer.addEventListener('wheel', (e) => {
-            this._onCooperativeGesture(e, e[this._metaKey], 1);
-        }, false);
+        this._canvasContainer.addEventListener('wheel', this._cooperativeGesturesOnWheel, false);
         // Remove the traditional pan classes
         this._canvasContainer.classList.remove('maplibregl-touch-drag-pan');
+    }
+
+    _destroyCooperativeGestures() {
+        DOM.remove(this._cooperativeGesturesScreen);
+        this._canvasContainer.removeEventListener('wheel', this._cooperativeGesturesOnWheel, false);
+        // Add the traditional pan classes back
+        this._canvasContainer.classList.add('maplibregl-touch-drag-pan');
     }
 
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
@@ -2955,7 +2991,7 @@ class Map extends Camera {
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
         if (this._cooperativeGestures) {
-            DOM.remove(this._cooperativeGesturesScreen);
+            this._destroyCooperativeGestures();
         }
         this._container.classList.remove('maplibregl-map');
 

@@ -5,6 +5,7 @@ import {warnOnce} from '../../util/util';
 import {Event, Evented} from '../../util/evented';
 import type Map from '../map';
 import type {IControl} from './control';
+import type {GestureOptions} from '../map';
 
 type FullscreenOptions = {
     container?: HTMLElement;
@@ -13,6 +14,8 @@ type FullscreenOptions = {
 /**
  * A `FullscreenControl` control contains a button for toggling the map in and out of fullscreen mode.
  * When [requestFullscreen](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen) is not supported, fullscreen is handled via CSS properties.
+ * The map's `cooperativeGestures` option is temporarily disabled while the map
+ * is in fullscreen mode, and is restored when the map exist fullscreen mode.
  *
  * @implements {IControl}
  * @param {Object} [options]
@@ -46,6 +49,7 @@ class FullscreenControl extends Evented implements IControl {
     _fullscreenchange: string;
     _fullscreenButton: HTMLButtonElement;
     _container: HTMLElement;
+    _prevCooperativeGestures: boolean | GestureOptions;
 
     constructor(options: FullscreenOptions = {}) {
         super();
@@ -127,8 +131,16 @@ class FullscreenControl extends Evented implements IControl {
 
         if (this._fullscreen) {
             this.fire(new Event('fullscreenstart'));
+            if (this._map._cooperativeGestures) {
+                this._prevCooperativeGestures = this._map._cooperativeGestures;
+                this._map.setCooperativeGestures();
+            }
         } else {
             this.fire(new Event('fullscreenend'));
+            if (this._prevCooperativeGestures) {
+                this._map.setCooperativeGestures(this._prevCooperativeGestures);
+                delete this._prevCooperativeGestures;
+            }
         }
     }
 

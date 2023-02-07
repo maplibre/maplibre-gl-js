@@ -30,6 +30,7 @@
     <label><input id='show-symbol-collision-boxes-checkbox' type='checkbox'> collision debug</label><br />
     <label><input id='show-overdraw-checkbox' type='checkbox'> overdraw debug</label><br />
     <label><input id='pitch-checkbox' type='checkbox' checked> pitch with rotate</label><br />
+    <label><input id='cooperative-gestures-checkbox' type='checkbox' checked> cooperative gestures</label><br />
 </div>
 
 <script src='../../dist/maplibre-gl-dev.js'></script>
@@ -145,6 +146,10 @@ document.getElementById('show-overdraw-checkbox').onclick = function() {
 
 document.getElementById('pitch-checkbox').onclick = function() {
     map.dragRotate._pitchWithRotate = !!this.checked;
+};
+
+document.getElementById('cooperative-gestures-checkbox').onclick = function() {
+    map.setCooperativeGestures(!!this.checked);
 };
 
 </script>
