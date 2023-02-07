@@ -1602,9 +1602,9 @@ class Style extends Evented {
      *
      * @param {SpriteSpecification} sprite new sprite value
      * @param {StyleSetterOptions} [options] style setter options
-     * @param completion completion handler
+     * @param [completion] completion handler
      */
-    setSprite(sprite: SpriteSpecification, options: StyleSetterOptions = {}, completion: (err: Error) => void = undefined) {
+    setSprite(sprite: SpriteSpecification, options: StyleSetterOptions = {}, completion?: (err: Error) => void) {
         this._checkLoaded();
 
         if (sprite && this._validate(validateStyle.sprite, 'sprite', sprite, null, options)) {
@@ -1617,9 +1617,7 @@ class Style extends Evented {
             this._loadSprite(sprite, true, completion);
         } else {
             this._unloadSprite();
-            if (completion) {
                 completion(null);
-            }
         }
     }
 }
