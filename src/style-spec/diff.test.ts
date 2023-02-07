@@ -413,7 +413,7 @@ test('diff', () => {
     expect(diffStyles({
         sprite: 'a'
     }, {
-        sprite: [{id: 'default', url: 'a'}]
+        sprite: 'a'
     })).toEqual([]);
 
     expect(diffStyles({
