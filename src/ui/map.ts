@@ -301,7 +301,6 @@ class Map extends Camera {
     _interactive: boolean;
     _cooperativeGestures: boolean | GestureOptions;
     _cooperativeGesturesScreen: HTMLElement;
-    _metaKey: string;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -2626,18 +2625,20 @@ class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
+    _getMetaKey() {
+        return navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
+    }
+
     _cooperativeGesturesOnWheel(event: WheelEvent) {
-        this._onCooperativeGesture(event, event[this._metaKey], 1);
+        this._onCooperativeGesture(event, event[this._getMetaKey()], 1);
     }
 
     _setupCooperativeGestures() {
         const container = this._container;
         this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
-        this._metaKey = 'ctrlKey';
         let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
         if (navigator.platform.indexOf('Mac') === 0) {
             desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
-            this._metaKey = 'metaKey';
         }
         const mobileMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.mobileHelpText ? this._cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
         this._cooperativeGesturesScreen.innerHTML = `
