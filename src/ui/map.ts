@@ -2626,8 +2626,8 @@ class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _cooperativeGesturesOnWheel(e) {
-        this._onCooperativeGesture(e, e[this._metaKey], 1);
+    _cooperativeGesturesOnWheel(event: WheelEvent) {
+        this._onCooperativeGesture(event, event[this._metaKey], 1);
     }
 
     _setupCooperativeGestures() {
