@@ -429,7 +429,7 @@ test('diff', () => {
     }, {
         sprite: [{'id': 'default', 'url': 'b'}]
     })).toEqual([
-        {command: 'setSprite', args: [{'id': 'default', 'url': 'b'}]},
+        {command: 'setSprite', args: [[{'id': 'default', 'url': 'b'}]]},
     ]);
 
     expect(diffStyles({
