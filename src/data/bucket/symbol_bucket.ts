@@ -38,7 +38,7 @@ import Formatted from '../../style-spec/expression/types/formatted';
 import ResolvedImage from '../../style-spec/expression/types/resolved_image';
 import {plugin as globalRTLTextPlugin, getRTLTextPluginStatus} from '../../source/rtl_text_plugin';
 import {mat4} from 'gl-matrix';
-import {getOverlapMode} from '../../style/style_layer/get_overlap_mode';
+import {getOverlapMode} from '../../style/style_layer/overlap_mode';
 import type {CanonicalTileID} from '../../source/tile_id';
 import type {
     Bucket,
