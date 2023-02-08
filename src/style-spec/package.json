@@ -1,5 +1,5 @@
 {
-  "name": "@americana/maplibre-gl-style-spec",
+  "name": "@maplibre/maplibre-gl-style-spec",
   "description": "a specification for maplibre gl styles",
   "version": "17.1.0",
   "author": "MapLibre",
@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:ZeLonewolf/maplibre-gl-js.git"
+    "url": "git@github.com:maplibre/maplibre-gl-js.git"
   },
   "bin": {
     "gl-style-migrate": "bin/gl-style-migrate.js",
