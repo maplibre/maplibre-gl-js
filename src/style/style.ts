@@ -321,7 +321,7 @@ class Style extends Evented {
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
-        this.dispatcher.broadcast('setLayers', layers.filter(layer => layer.type !== 'custom'));
+        this.dispatcher.broadcast('setLayers', layers);
 
         this._order = layers.map((layer) => layer.id);
         this._layers = {};
