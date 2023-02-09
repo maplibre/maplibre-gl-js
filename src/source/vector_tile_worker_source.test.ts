@@ -13,9 +13,6 @@ import {setPerformance} from '../util/test/util';
 describe('vector tile worker source', () => {
     const actor = {send: () => {}} as any as Actor;
     let server: FakeServer;
-    let originalGetEntriesByName;
-    let originalMeasure;
-    let originalMark;
 
     beforeEach(() => {
         global.fetch = null;

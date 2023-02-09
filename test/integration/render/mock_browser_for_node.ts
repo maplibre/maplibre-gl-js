@@ -39,10 +39,10 @@ global.URL = window.URL;
 global.fetch = window.fetch;
 global.document = window.document;
 global.ResizeObserver = function (callback) {
-    return { 
-        observe: () => {callback()},
+    return {
+        observe: () => { callback(); },
         disconnect: () => {}
-    }
+    };
 } as any;
 //@ts-ignore
 global.window = window;
