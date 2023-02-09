@@ -9,7 +9,7 @@ import Interpolate from './definitions/interpolate';
 import Coalesce from './definitions/coalesce';
 import Let from './definitions/let';
 import definitions from './definitions';
-import * as isConstant from './is_constant';
+
 import RuntimeError from './runtime_error';
 import {success, error} from '../util/result';
 import {supportsPropertyExpression, supportsZoomExpression, supportsInterpolation} from '../util/properties';
@@ -135,7 +135,7 @@ export function isExpression(expression: unknown) {
  * @private
  */
 export function createExpression(expression: unknown, propertySpec?: StylePropertySpecification | null): Result<StyleExpression, Array<ExpressionParsingError>> {
-    const parser = new ParsingContext(definitions, [], propertySpec ? getExpectedType(propertySpec) : undefined);
+    const parser = new ParsingContext(definitions, CompoundExpression.isExpressionConstant, [], propertySpec ? getExpectedType(propertySpec) : undefined);
 
     // For string-valued properties, coerce to string at the top level rather than asserting.
     const parsed = parser.parse(expression, undefined, undefined, undefined,
@@ -156,7 +156,7 @@ export class ZoomConstantExpression<Kind extends EvaluationKind> {
     constructor(kind: Kind, expression: StyleExpression) {
         this.kind = kind;
         this._styleExpression = expression;
-        this.isStateDependent = kind !== ('constant' as EvaluationKind) && !isConstant.isStateConstant(expression.expression);
+        this.isStateDependent = kind !== ('constant' as EvaluationKind) && !CompoundExpression.isStateConstant(expression.expression);
     }
 
     evaluateWithoutErrorHandling(
@@ -194,7 +194,7 @@ export class ZoomDependentExpression<Kind extends EvaluationKind> {
         this.kind = kind;
         this.zoomStops = zoomStops;
         this._styleExpression = expression;
-        this.isStateDependent = kind !== ('camera' as EvaluationKind) && !isConstant.isStateConstant(expression.expression);
+        this.isStateDependent = kind !== ('camera' as EvaluationKind) && !CompoundExpression.isStateConstant(expression.expression);
         this.interpolationType = interpolationType;
     }
 
@@ -293,12 +293,12 @@ export function createPropertyExpression(expressionInput: unknown, propertySpec:
 
     const parsed = expression.value.expression;
 
-    const isFeatureConstant = isConstant.isFeatureConstant(parsed);
+    const isFeatureConstant = CompoundExpression.isFeatureConstant(parsed);
     if (!isFeatureConstant && !supportsPropertyExpression(propertySpec)) {
         return error([new ExpressionParsingError('', 'data expressions not supported')]);
     }
 
-    const isZoomConstant = isConstant.isGlobalPropertyConstant(parsed, ['zoom']);
+    const isZoomConstant = CompoundExpression.isGlobalPropertyConstant(parsed, ['zoom']);
     if (!isZoomConstant && !supportsZoomExpression(propertySpec)) {
         return error([new ExpressionParsingError('', 'zoom expressions not supported')]);
     }
