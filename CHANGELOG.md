@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Improve performance by sending style layers to worker thread before processing it on main thread to allow parallel processing ([#2131](https://github.com/maplibre/maplibre-gl-js/pull/2131))
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
