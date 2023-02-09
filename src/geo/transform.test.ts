@@ -459,4 +459,13 @@ describe('transform', () => {
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, top)).toArray());
     });
 
+    test('getElevation with lng less than -180 wraps correctly', () => {
+        const WRAPPED_OVERSCALETILEID_DOES_NOT_THROW = 4;
+        const terrain = {
+            getElevation: () => WRAPPED_OVERSCALETILEID_DOES_NOT_THROW
+        } as any as Terrain;
+        const transform = new Transform(0, 22, 0, 85, true);
+        expect(transform.getElevation(new LngLat(-183, 40), terrain)).toBe(WRAPPED_OVERSCALETILEID_DOES_NOT_THROW);
+    });
+
 });
