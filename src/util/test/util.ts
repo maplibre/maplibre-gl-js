@@ -40,7 +40,7 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
 }
 
 // Add webgl context with the supplied GL
-export function setWebGlContext() {
+function setWebGlContext() {
     const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
 
     function imitateWebGlGetContext(type, attributes) {
@@ -98,6 +98,21 @@ export function setMatchMedia() {
             dispatchEvent: jest.fn(),
         })),
     });
+}
+
+function setResizeObserver() {
+    global.ResizeObserver = jest.fn().mockImplementation(() => ({
+        observe: jest.fn(),
+        unobserve: jest.fn(),
+        disconnect: jest.fn(),
+    }));
+}
+
+export function beforeMapTest() {
+    setPerformance();
+    setWebGlContext();
+    setMatchMedia();
+    setResizeObserver();
 }
 
 export function getWrapDispatcher() {

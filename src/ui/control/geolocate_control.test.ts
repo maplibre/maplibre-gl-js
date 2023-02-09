@@ -1,5 +1,5 @@
 import geolocation from 'mock-geolocation';
-import {createMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
+import {createMap, beforeMapTest} from '../../util/test/util';
 import GeolocateControl from './geolocate_control';
 
 geolocation.use();
@@ -14,9 +14,7 @@ function lngLatAsFixed(lngLat, digits) {
 }
 
 beforeEach(() => {
-    setWebGlContext();
-    setPerformance();
-    setMatchMedia();
+    beforeMapTest();
     map = createMap(undefined, undefined);
 });
 

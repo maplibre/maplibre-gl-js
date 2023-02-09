@@ -21,18 +21,12 @@ describe('vector tile worker source', () => {
         global.fetch = null;
         server = fakeServer.create();
         setPerformance();
-        originalGetEntriesByName = window.performance.getEntriesByName;
-        originalMeasure = window.performance.measure;
-        originalMark = window.performance.mark;
 
     });
 
     afterEach(() => {
         server.restore();
         jest.clearAllMocks();
-        window.performance.getEntriesByName = originalGetEntriesByName;
-        window.performance.measure = originalMeasure;
-        window.performance.mark = originalMark;
     });
     test('VectorTileWorkerSource#abortTile aborts pending request', () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);

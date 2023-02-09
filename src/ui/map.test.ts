@@ -1,5 +1,5 @@
 import Map, {MapOptions} from './map';
-import {createMap, setMatchMedia, setPerformance, setWebGlContext, setErrorWebGlContext} from '../util/test/util';
+import {createMap, setErrorWebGlContext, beforeMapTest} from '../util/test/util';
 import LngLat from '../geo/lng_lat';
 import Tile from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
@@ -31,9 +31,7 @@ function createStyleSource() {
 let server: FakeServer;
 
 beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
-    setMatchMedia();
+    beforeMapTest();
     global.fetch = null;
     server = fakeServer.create();
 });
@@ -722,18 +720,15 @@ describe('Map', () => {
 
         });
 
-        test('listen to window resize event', done => {
-            const original = global.addEventListener;
-            global.addEventListener = function (type) {
-                if (type === 'resize') {
-                    //restore original function not to mess with other tests
-                    global.addEventListener = original;
-
-                    done();
-                }
-            };
+        test('listen to window resize event', () => {
+            const spy = jest.fn();
+            global.ResizeObserver = jest.fn().mockImplementation(() => ({
+                observe: spy
+            }));
 
             createMap();
+
+            expect(spy).toHaveBeenCalled();
         });
 
         test('do not resize if trackResize is false', () => {
