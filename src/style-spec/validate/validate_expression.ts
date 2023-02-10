@@ -2,7 +2,11 @@ import ValidationError from '../error/validation_error';
 
 import {createExpression, createPropertyExpression} from '../expression';
 import {deepUnbundle} from '../util/unbundle_jsonlint';
-import CompoundExpression from '../expression/compound_expression';
+
+import {isFeatureConstant,
+    isGlobalPropertyConstant,
+    isStateConstant} from '../expression/compound_expression';
+
 import {Expression} from '../expression/expression';
 
 export default function validateExpression(options: any): Array<ValidationError> {
@@ -21,19 +25,19 @@ export default function validateExpression(options: any): Array<ValidationError>
     }
 
     if (options.expressionContext === 'property' && options.propertyType === 'layout' &&
-        (!CompoundExpression.isStateConstant(expressionObj))) {
+        (!isStateConstant(expressionObj))) {
         return [new ValidationError(options.key, options.value, '"feature-state" data expressions are not supported with layout properties.')];
     }
 
-    if (options.expressionContext === 'filter' && !CompoundExpression.isStateConstant(expressionObj)) {
+    if (options.expressionContext === 'filter' && !isStateConstant(expressionObj)) {
         return [new ValidationError(options.key, options.value, '"feature-state" data expressions are not supported with filters.')];
     }
 
     if (options.expressionContext && options.expressionContext.indexOf('cluster') === 0) {
-        if (!CompoundExpression.isGlobalPropertyConstant(expressionObj, ['zoom', 'feature-state'])) {
+        if (!isGlobalPropertyConstant(expressionObj, ['zoom', 'feature-state'])) {
             return [new ValidationError(options.key, options.value, '"zoom" and "feature-state" expressions are not supported with cluster properties.')];
         }
-        if (options.expressionContext === 'cluster-initial' && !CompoundExpression.isFeatureConstant(expressionObj)) {
+        if (options.expressionContext === 'cluster-initial' && !isFeatureConstant(expressionObj)) {
             return [new ValidationError(options.key, options.value, 'Feature data expressions are not supported with initial expression part of cluster properties.')];
         }
     }

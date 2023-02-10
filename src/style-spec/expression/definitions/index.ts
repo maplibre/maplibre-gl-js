@@ -14,7 +14,9 @@ import {
 import type {Type} from '../types';
 
 import {typeOf, Color, validateRGBA, toString as valueToString} from '../values';
-import CompoundExpression from '../compound_expression';
+
+import {CompoundExpression} from '../compound_expression';
+
 import RuntimeError from '../runtime_error';
 import Let from './let';
 import Var from './var';

@@ -33,7 +33,7 @@ class ParsingContext {
 
     constructor(
         registry: ExpressionRegistry,
-        isConstantFunct: (expression: Expression)=> boolean,
+        isConstantFunc: (expression: Expression)=> boolean,
         path: Array<number> = [],
         expectedType?: Type | null,
         scope: Scope = new Scope(),
@@ -45,7 +45,7 @@ class ParsingContext {
         this.scope = scope;
         this.errors = errors;
         this.expectedType = expectedType;
-        this._isConstant = isConstantFunct;
+        this._isConstant = isConstantFunc;
     }
 
     /**
