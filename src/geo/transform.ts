@@ -1,4 +1,4 @@
-import LngLat from './lng_lat';
+import LngLat from './/lng_lat_complete';
 import LngLatBounds from './lng_lat_bounds';
 import MercatorCoordinate, {mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';

@@ -19,7 +19,7 @@ import SourceCache from '../source/source_cache';
 import EXTENT from '../data/extent';
 import {number as mix} from '../style-spec/util/interpolate';
 import type {TerrainSpecification} from '../style-spec/types.g';
-import {earthRadius} from '../geo/lng_lat';
+import {earthRadius} from '../geo//lng_lat';
 
 export type TerrainData = {
     'u_depth': number;

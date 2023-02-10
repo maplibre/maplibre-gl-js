@@ -1,4 +1,4 @@
-import LngLat from './lng_lat';
+import LngLat from './/lng_lat_complete';
 import MercatorCoordinate, {mercatorScale} from './mercator_coordinate';
 
 describe('LngLat', () => {

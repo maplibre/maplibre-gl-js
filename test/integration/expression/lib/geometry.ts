@@ -2,7 +2,7 @@
 import MercatorCoordinate from '../../../../src/geo/mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {CanonicalTileID} from '../../../../src/source/tile_id';
-import {LngLatLike} from '../../../../src/geo/lng_lat';
+import {LngLatLike} from '../../../../src/geo//lng_lat_complete';
 
 function getPoint(coord: LngLatLike, canonical: CanonicalTileID): Point {
     const p: Point = canonical.getTilePoint(MercatorCoordinate.fromLngLat({lng: coord[0], lat: coord[1]}, 0));

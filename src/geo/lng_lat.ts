@@ -1,5 +1,4 @@
 import {wrap} from '../util/util';
-import type LngLatBounds from './lng_lat_bounds';
 
 /*
 * Approximate radius of the earth in meters.

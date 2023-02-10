@@ -27,3 +27,4 @@ LngLat.prototype.toBounds = function (radius: number = 0) {
         new LngLat(this.lng + lngAccuracy, this.lat + latAccuracy));
 };
 
+export default LngLat;
