@@ -150,6 +150,12 @@
           0, "#000000"
         ]
       }
+    },
+    {
+      "id": "custom",
+      "type": "custom",
+      "source": "vector",
+      "source-layer": "layer"
     }
   ]
 }

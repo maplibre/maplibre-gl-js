@@ -1,4 +1,4 @@
-import maplibregl from '../index';
+import config from './config';
 
 import type {WorkerSource} from '../source/worker_source';
 
@@ -29,5 +29,5 @@ export interface WorkerGlobalScopeInterface {
 }
 
 export default function workerFactory() {
-    return new Worker(maplibregl.workerUrl);
+    return new Worker(config.WORKER_URL);
 }

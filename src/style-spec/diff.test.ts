@@ -410,4 +410,40 @@ test('diff', () => {
         {command: 'setTransition', args: ['transition']}
     ]);
 
+    expect(diffStyles({
+        sprite: 'a'
+    }, {
+        sprite: 'a'
+    })).toEqual([]);
+
+    expect(diffStyles({
+        sprite: 'a'
+    }, {
+        sprite: 'b'
+    })).toEqual([
+        {command: 'setSprite', args: ['b']},
+    ]);
+
+    expect(diffStyles({
+        sprite: 'a'
+    }, {
+        sprite: [{'id': 'default', 'url': 'b'}]
+    })).toEqual([
+        {command: 'setSprite', args: [[{'id': 'default', 'url': 'b'}]]},
+    ]);
+
+    expect(diffStyles({
+        glyphs: 'a'
+    }, {
+        glyphs: 'a'
+    })).toEqual([]);
+
+    expect(diffStyles({
+        glyphs: 'a'
+    }, {
+        glyphs: 'b'
+    })).toEqual([
+        {command: 'setGlyphs', args: ['b']},
+    ]);
+
 });
