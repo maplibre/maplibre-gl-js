@@ -1,5 +1,5 @@
 import Map, {MapOptions} from './map';
-import {createMap, setMatchMedia, setPerformance, setWebGlContext, setErrorWebGlContext} from '../util/test/util';
+import {createMap, setErrorWebGlContext, beforeMapTest} from '../util/test/util';
 import LngLat from '../geo/lng_lat';
 import Tile from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
@@ -31,9 +31,7 @@ function createStyleSource() {
 let server: FakeServer;
 
 beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
-    setMatchMedia();
+    beforeMapTest();
     global.fetch = null;
     server = fakeServer.create();
 });
@@ -290,6 +288,25 @@ describe('Map', () => {
             jest.spyOn(style, '_remove');
             map.setStyle(null);
             expect(style._remove).toHaveBeenCalledTimes(1);
+        });
+
+        test('passing null releases the worker', () => {
+            const map = createMap();
+            const spyWorkerPoolAcquire = jest.spyOn(map.style.dispatcher.workerPool, 'acquire');
+            const spyWorkerPoolRelease = jest.spyOn(map.style.dispatcher.workerPool, 'release');
+
+            map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+            expect(spyWorkerPoolAcquire).toHaveBeenCalledTimes(1);
+            expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(0);
+
+            spyWorkerPoolAcquire.mockClear();
+            map.setStyle(null);
+            expect(spyWorkerPoolAcquire).toHaveBeenCalledTimes(0);
+            expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(1);
+
+            // Cleanup
+            spyWorkerPoolAcquire.mockClear();
+            spyWorkerPoolRelease.mockClear();
         });
 
         test('transformStyle should copy the source and the layer into next style', done => {
@@ -703,28 +720,30 @@ describe('Map', () => {
 
         });
 
-        test('listen to window resize event', done => {
-            const original = global.addEventListener;
-            global.addEventListener = function (type) {
-                if (type === 'resize') {
-                    //restore original function not to mess with other tests
-                    global.addEventListener = original;
-
-                    done();
-                }
-            };
+        test('listen to window resize event', () => {
+            const spy = jest.fn();
+            global.ResizeObserver = jest.fn().mockImplementation(() => ({
+                observe: spy
+            }));
 
             createMap();
+
+            expect(spy).toHaveBeenCalled();
         });
 
         test('do not resize if trackResize is false', () => {
+            let observerCallback: Function = null;
+            global.ResizeObserver = jest.fn().mockImplementation((c) => ({
+                observe: () => { observerCallback = c; }
+            }));
+
             const map = createMap({trackResize: false});
 
             const spyA = jest.spyOn(map, 'stop');
             const spyB = jest.spyOn(map, '_update');
             const spyC = jest.spyOn(map, 'resize');
 
-            map._onWindowResize(undefined);
+            observerCallback();
 
             expect(spyA).not.toHaveBeenCalled();
             expect(spyB).not.toHaveBeenCalled();
@@ -732,12 +751,17 @@ describe('Map', () => {
         });
 
         test('do resize if trackResize is true (default)', () => {
+            let observerCallback: Function = null;
+            global.ResizeObserver = jest.fn().mockImplementation((c) => ({
+                observe: () => { observerCallback = c; }
+            }));
+
             const map = createMap();
 
             const spyA = jest.spyOn(map, '_update');
             const spyB = jest.spyOn(map, 'resize');
 
-            map._onWindowResize(undefined);
+            observerCallback();
 
             expect(spyA).toHaveBeenCalled();
             expect(spyB).toHaveBeenCalled();
@@ -1030,9 +1054,14 @@ describe('Map', () => {
 
     test('#remove', () => {
         const map = createMap();
+        const spyWorkerPoolRelease = jest.spyOn(map.style.dispatcher.workerPool, 'release');
         expect(map.getContainer().childNodes).toHaveLength(2);
         map.remove();
+        expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(1);
         expect(map.getContainer().childNodes).toHaveLength(0);
+
+        // Cleanup
+        spyWorkerPoolRelease.mockClear();
     });
 
     test('#remove calls onRemove on added controls', () => {

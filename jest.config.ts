@@ -1,25 +1,47 @@
-import type {JestConfigWithTsJest} from 'ts-jest';
+import type {Config} from 'jest';
 
-const config: JestConfigWithTsJest = {
-    roots: [
-        '<rootDir>/src',
-        '<rootDir>/test',
-    ],
-    testMatch: [
-        '**/__tests__/**/*.+(ts|tsx|js)',
-        '**/?(*.)+(spec|test).+(ts|tsx|js)'
-    ],
-    testEnvironment: 'jsdom',
+const sharedConfig = {
     transform: {
-        '[.](js|ts)x?$': ['ts-jest', {
-            isolatedModules: true
+        // use typescript to convert from esm to cjs
+        '[.](m|c)?(ts|js)(x)?$': ['ts-jest', {
+            'isolatedModules': true,
         }],
     },
-    transformIgnorePatterns: [],
-    setupFiles: [
-        'jest-canvas-mock',
-        './test/unit/lib/web_worker_mock.ts'
-    ],
+    // any tests that operate on dist files shouldn't compile them again.
+    transformIgnorePatterns: ['<rootDir>/dist']
+} as Partial<Config>;
+
+const config: Config = {
+    projects: [
+        {
+            displayName: 'unit',
+            testEnvironment: 'jsdom',
+            setupFiles: [
+                'jest-canvas-mock',
+                './test/unit/lib/web_worker_mock.ts'
+            ],
+            testMatch: [
+                '<rootDir>/src/**/*.test.{ts,js}'
+            ],
+            ...sharedConfig
+        },
+        {
+            displayName: 'integration',
+            testEnvironment: 'node',
+            testMatch: [
+                '<rootDir>/test/integration/**/*.test.{ts,js}',
+            ],
+            ...sharedConfig,
+        },
+        {
+            displayName: 'build',
+            testEnvironment: 'node',
+            testMatch: [
+                '<rootDir>/test/build/**/*.test.{ts,js}',
+            ],
+            ...sharedConfig,
+        },
+    ]
 };
 
 export default config;

@@ -130,7 +130,7 @@ describe('Style', () => {
             done();
         });
         sinonFakeServer.respond();
-        new Style(createStyleJSON());
+        new Style(getStubMap());
     });
 });
 
@@ -526,6 +526,58 @@ describe('Style#_load', () => {
         style._load(nextStyleSpec, {}, prevStyleSpec);
 
         expect(_loadSpriteSpyOn).not.toHaveBeenCalled();
+    });
+
+    test('layers are broadcasted to worker', () => {
+        const style = new Style(getStubMap());
+        let dispatchType;
+        let dispatchData;
+        const styleSpec = createStyleJSON({
+            layers: [{
+                id: 'background',
+                type: 'background'
+            }]
+        });
+
+        const _broadcastSpyOn = jest.spyOn(style.dispatcher, 'broadcast')
+            .mockImplementation((type: string, data) => {
+                dispatchType = type;
+                dispatchData = data;
+            });
+
+        style._load(styleSpec, {});
+
+        expect(_broadcastSpyOn).toHaveBeenCalled();
+        expect(dispatchType).toBe('setLayers');
+
+        expect(dispatchData).toHaveLength(1);
+        expect(dispatchData[0].id).toBe('background');
+
+        // cleanup
+        _broadcastSpyOn.mockReset();
+    });
+
+    test('validate style when validate option is true', () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON({
+            layers: [{
+                id: 'background',
+                type: 'background'
+            }, {
+                id: 'custom',
+                type: 'custom'
+            }]
+        });
+        const stub = jest.spyOn(console, 'error');
+
+        style._load(styleSpec, {validate: true});
+
+        // 1. layers[1]: missing required property "source"
+        // 2. layers[1].type: expected one of [fill, line, symbol, circle, heatmap, fill-extrusion, raster, hillshade, background], "custom" found
+        expect(stub).toHaveBeenCalledTimes(2);
+
+        // cleanup
+        stub.mockReset();
     });
 });
 
