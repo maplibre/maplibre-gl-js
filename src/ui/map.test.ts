@@ -732,13 +732,18 @@ describe('Map', () => {
         });
 
         test('do not resize if trackResize is false', () => {
+            let observerCb = null;
+            global.ResizeObserver = jest.fn().mockImplementation((c) => ({
+                observe: () => observerCb = c
+            }));
+            
             const map = createMap({trackResize: false});
 
             const spyA = jest.spyOn(map, 'stop');
             const spyB = jest.spyOn(map, '_update');
             const spyC = jest.spyOn(map, 'resize');
 
-            map._onWindowResize(undefined);
+            observerCb();
 
             expect(spyA).not.toHaveBeenCalled();
             expect(spyB).not.toHaveBeenCalled();
@@ -746,12 +751,17 @@ describe('Map', () => {
         });
 
         test('do resize if trackResize is true (default)', () => {
+            let observerCb = null;
+            global.ResizeObserver = jest.fn().mockImplementation((c) => ({
+                observe: () => observerCb = c
+            }));
+
             const map = createMap();
 
             const spyA = jest.spyOn(map, '_update');
             const spyB = jest.spyOn(map, 'resize');
 
-            map._onWindowResize(undefined);
+            observerCb();
 
             expect(spyA).toHaveBeenCalled();
             expect(spyB).toHaveBeenCalled();

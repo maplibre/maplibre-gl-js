@@ -458,7 +458,6 @@ class Map extends Camera {
 
         bindAll([
             '_onWindowOnline',
-            '_onWindowResize', // need to remove
             '_onMapScroll',
             '_contextLost',
             '_contextRestored'
@@ -477,14 +476,12 @@ class Map extends Camera {
 
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
-            addEventListener('resize', this._onWindowResize, false);
-            addEventListener('orientationchange', this._onWindowResize, false);
-            //this._resizeObserver = new ResizeObserver((entries) => {
-            //    if (this._trackResize) {
-            //        this.resize(entries);
-            //    }
-            //});
-            //this._resizeObserver.observe(this._container);
+            this._resizeObserver = new ResizeObserver((entries) => {
+                if (this._trackResize) {
+                    this.resize(entries)._update();
+                }
+            });
+            this._resizeObserver.observe(this._container);
         }
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
@@ -2956,13 +2953,11 @@ class Map extends Camera {
         this.setStyle(null);
         if (typeof window !== 'undefined') {
             removeEventListener('online', this._onWindowOnline, false);
-            removeEventListener('resize', this._onWindowResize, false);
-            removeEventListener('orientationchange', this._onWindowResize, false);
         }
 
         ImageRequest.removeThrottleControl(this._imageQueueHandle);
 
-        //this._resizeObserver?.disconnect();
+        this._resizeObserver?.disconnect();
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension) extension.loseContext();
         this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
@@ -3001,12 +2996,6 @@ class Map extends Camera {
 
     _onWindowOnline() {
         this._update();
-    }
-
-    _onWindowResize(event: Event) {
-        if (this._trackResize) {
-            this.resize({originalEvent: event})._update();
-        }
     }
 
     /**

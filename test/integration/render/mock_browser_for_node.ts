@@ -38,9 +38,9 @@ global.Blob = window.Blob;
 global.URL = window.URL;
 global.fetch = window.fetch;
 global.document = window.document;
-global.ResizeObserver = function (callback) {
+global.ResizeObserver = function () {
     return {
-        observe: () => { callback(); },
+        observe: () => {},
         disconnect: () => {}
     };
 } as any;
