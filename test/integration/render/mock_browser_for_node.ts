@@ -43,7 +43,7 @@ global.ResizeObserver = function () {
         observe: () => {},
         disconnect: () => {}
     };
-} as any;
+} as any as typeof ResizeObserver;
 //@ts-ignore
 global.window = window;
 // stubbing image load as it is not implemented in jsdom
