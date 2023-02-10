@@ -2,16 +2,14 @@ import Map, {MapOptions} from '../map';
 import Marker from '../marker';
 import DOM from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
+import {beforeMapTest} from '../../util/test/util';
 
 function createMap() {
     return new Map({container: DOM.create('div', '', window.document.body)} as any as MapOptions);
 }
 
 beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
-    setMatchMedia();
+    beforeMapTest();
 });
 
 describe('touch zoom rotate', () => {

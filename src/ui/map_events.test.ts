@@ -1,12 +1,11 @@
 import simulate, {window} from '../../test/unit/lib/simulate_interaction';
 import StyleLayer from '../style/style_layer';
-import {createMap, setPerformance, setWebGlContext} from '../util/test/util';
+import {createMap, beforeMapTest} from '../util/test/util';
 import {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import {MapLayerEventType} from './events';
 
 beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
+    beforeMapTest();
 });
 
 describe('map events', () => {
