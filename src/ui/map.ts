@@ -2651,15 +2651,15 @@ class Map extends Camera {
         `;
         // Add event to canvas container since gesture container is pointer-events: none
         this._canvasContainer.addEventListener('wheel', this._cooperativeGesturesOnWheel, false);
-        // Remove the traditional pan classes
-        this._canvasContainer.classList.remove('maplibregl-touch-drag-pan');
+
+        // Add a cooperative gestures class (enable touch-action: pan-x pan-y;)
+        this._canvasContainer.classList.add('maplibregl-cooperative-gestures');
     }
 
     _destroyCooperativeGestures() {
         DOM.remove(this._cooperativeGesturesScreen);
         this._canvasContainer.removeEventListener('wheel', this._cooperativeGesturesOnWheel, false);
-        // Add the traditional pan classes back
-        this._canvasContainer.classList.add('maplibregl-touch-drag-pan');
+        this._canvasContainer.classList.remove('maplibregl-cooperative-gestures');
     }
 
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
