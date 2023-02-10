@@ -2629,7 +2629,7 @@ class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _getMetaKey() {
+    _getMetaKey() : keyof WheelEvent {
         return navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
     }
 
