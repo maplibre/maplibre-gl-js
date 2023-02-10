@@ -3,6 +3,8 @@
 ### ✨ Features and improvements
 - Improve performance by sending style layers to worker thread before processing it on main thread to allow parallel processing ([#2131](https://github.com/maplibre/maplibre-gl-js/pull/2131))
 - [Breaking] Resize map when container element is resized. the resize related events now has different data associated with it ([#2157](https://github.com/maplibre/maplibre-gl-js/pull/2157))
+- Use HTMLImageElement to download raster source images when refreshExpiredTiles tiles is false
+- Allow overriding maps options.refreshExpiredTiles for individual vector/raster/raster-dom sources.
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
