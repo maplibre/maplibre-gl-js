@@ -12,7 +12,7 @@ import type Transform from '../geo/transform';
 import type StyleLayer from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
-import {getOverlapMode, OverlapMode} from '../style/style_layer/symbol_style_layer';
+import {getOverlapMode, OverlapMode} from '../style/style_layer/overlap_mode';
 
 import type Tile from '../source/tile';
 import SymbolBucket, {CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';

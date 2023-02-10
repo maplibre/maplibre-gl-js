@@ -1,9 +1,7 @@
-import {createMap, setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
+import {createMap, beforeMapTest} from '../../util/test/util';
 
 beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
-    setMatchMedia();
+    beforeMapTest();
 });
 
 describe('requestRenderFrame', () => {

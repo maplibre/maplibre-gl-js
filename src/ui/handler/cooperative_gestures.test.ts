@@ -2,7 +2,7 @@ import browser from '../../util/browser';
 import Map from '../map';
 import DOM from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
+import {beforeMapTest} from '../../util/test/util';
 
 function createMap(cooperativeGestures) {
     return new Map({
@@ -17,9 +17,7 @@ function createMap(cooperativeGestures) {
 }
 
 beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
-    setMatchMedia();
+    beforeMapTest();
 });
 
 describe('CoopGesturesHandler', () => {
