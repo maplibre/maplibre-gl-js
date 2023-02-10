@@ -70,5 +70,9 @@
   {
     "message": "layers[16]: layer \"line-gradient-missing-lineMetrics\" specifies a line-gradient, which requires a GeoJSON source with `lineMetrics` enabled.",
     "line": 126
+  },
+  {
+    "message": "layers[18].type: expected one of [fill, line, symbol, circle, heatmap, fill-extrusion, raster, hillshade, background], \"custom\" found",
+    "line": 156
   }
 ]

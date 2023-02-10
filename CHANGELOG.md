@@ -1,9 +1,11 @@
 ## main
 
 ### ✨ Features and improvements
+- Improve performance by sending style layers to worker thread before processing it on main thread to allow parallel processing ([#2131](https://github.com/maplibre/maplibre-gl-js/pull/2131))
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
+- Fix issue unloading sprite sheet when using `setStyle(style, {diff:true})` ([#2146](https://github.com/maplibre/maplibre-gl-js/pull/2146))
 - *...Add new stuff here...*
 
 ## 3.0.0-pre.4
@@ -17,6 +19,7 @@
 
 ### 🐞 Bug fixes
 - Fix the worker been terminated on setting new style ([#2123](https://github.com/maplibre/maplibre-gl-js/pull/2123))
+
 
 ## 3.0.0-pre.3
 
