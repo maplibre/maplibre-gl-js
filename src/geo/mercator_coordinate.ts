@@ -1,11 +1,6 @@
 import LngLat from './lng_lat';
-import {earthRadius} from './lng_lat_partial';
+import {earthCircumfrence} from './earth_constants';
 import type {LngLatLike} from './lng_lat_partial';
-
-/*
- * The average circumference of the world in meters.
- */
-const earthCircumfrence = 2 * Math.PI * earthRadius; // meters
 
 /*
  * The circumference at a line of latitude in meters.
