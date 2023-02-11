@@ -254,4 +254,5 @@ function isGlobalPropertyConstant(e: Expression, properties: Array<string>) {
     return result;
 }
 
-export {isFeatureConstant, isGlobalPropertyConstant, isStateConstant, isExpressionConstant, CompoundExpression};
+export {isFeatureConstant, isGlobalPropertyConstant, isStateConstant, isExpressionConstant};
+export default CompoundExpression;

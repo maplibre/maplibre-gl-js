@@ -4,11 +4,11 @@ import ExpressionParsingError from './parsing_error';
 import ParsingContext from './parsing_context';
 import EvaluationContext from './evaluation_context';
 
-import {isFeatureConstant,
+import CompoundExpression, {isFeatureConstant,
     isGlobalPropertyConstant,
     isStateConstant,
-    isExpressionConstant,
-    CompoundExpression} from './compound_expression';
+    isExpressionConstant
+} from './compound_expression';
 
 import Step from './definitions/step';
 import Interpolate from './definitions/interpolate';
