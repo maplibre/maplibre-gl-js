@@ -1,4 +1,4 @@
-import LngLat from './lng_lat_complete';
+import LngLat from './lng_lat';
 import LngLatBounds from './lng_lat_bounds';
 
 describe('LngLatBounds', () => {

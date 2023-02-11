@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import Transform from './transform';
-import LngLat from './/lng_lat_complete';
+import LngLat from './lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed';
 import type Terrain from '../render/terrain';

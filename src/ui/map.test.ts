@@ -1,6 +1,6 @@
 import Map, {MapOptions} from './map';
 import {createMap, setErrorWebGlContext, beforeMapTest} from '../util/test/util';
-import LngLat from '../geo//lng_lat_complete';
+import LngLat from '../geo/lng_lat';
 import Tile from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
 import {Event, ErrorEvent} from '../util/evented';

@@ -15,7 +15,7 @@ import Transform from '../geo/transform';
 import Hash from './hash';
 import HandlerManager from './handler_manager';
 import Camera, {CameraOptions} from './camera';
-import LngLat from '../geo//lng_lat_complete';
+import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import AttributionControl from './control/attribution_control';
@@ -31,7 +31,7 @@ import {Source} from '../source/source';
 import StyleLayer from '../style/style_layer';
 
 import type {RequestTransformFunction} from '../util/request_manager';
-import type {LngLatLike} from '../geo//lng_lat';
+import type {LngLatLike} from '../geo/lng_lat_partial';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style';
 import type {MapEvent, MapDataEvent} from './events';

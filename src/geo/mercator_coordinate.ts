@@ -1,6 +1,6 @@
-import LngLat from '../geo//lng_lat_complete';
-import {earthRadius} from '../geo//lng_lat';
-import type {LngLatLike} from '../geo//lng_lat';
+import LngLat from './lng_lat';
+import {earthRadius} from './lng_lat_partial';
+import type {LngLatLike} from './lng_lat_partial';
 
 /*
  * The average circumference of the world in meters.

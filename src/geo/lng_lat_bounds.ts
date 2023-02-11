@@ -1,6 +1,6 @@
-import {LngLat} from './lng_lat';
+import {LngLat} from './lng_lat_partial';
 
-import type {LngLatLike} from './lng_lat';
+import type {LngLatLike} from './lng_lat_partial';
 
 /**
  * A `LngLatBounds` object represents a geographical bounding box,

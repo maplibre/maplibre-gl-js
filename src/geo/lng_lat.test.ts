@@ -1,4 +1,4 @@
-import LngLat from './lng_lat_complete';
+import LngLat from './lng_lat';
 
 describe('LngLat', () => {
     test('#constructor', () => {

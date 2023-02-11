@@ -11,7 +11,7 @@ import TerrainControl from './ui/control/terrain_control';
 import Popup from './ui/popup';
 import Marker from './ui/marker';
 import Style from './style/style';
-import LngLat from './geo//lng_lat_complete';
+import LngLat from './geo/lng_lat';
 import LngLatBounds from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from './geo/mercator_coordinate';

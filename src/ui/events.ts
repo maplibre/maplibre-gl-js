@@ -5,7 +5,7 @@ import Point from '@mapbox/point-geometry';
 import {extend} from '../util/util';
 
 import type Map from './map';
-import type LngLat from '../geo//lng_lat_complete';
+import type LngLat from '../geo/lng_lat';
 import {SourceSpecification} from '../style-spec/types.g';
 
 export type MapLayerMouseEvent = MapMouseEvent & { features?: GeoJSON.Feature[] };
