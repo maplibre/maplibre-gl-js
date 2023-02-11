@@ -17,8 +17,7 @@ import {CameraOptions} from './camera';
 import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
-import { StyleImage, StyleImageInterface, StyleImageMetadata } from '../style/style_image';
-import { RGBAImage } from '../util/image';
+import {StyleImageInterface} from '../style/style_image';
 
 function createStyleSource() {
     return {
@@ -2239,7 +2238,7 @@ describe('Map', () => {
             height: 1,
             data: new Uint8Array(20)
         };
- 
+
         //Add a graphic of each type
         map.addImage(idImageUint, inputImageUint);
         map.addImage(idImageUintClamped, inputImageUintClamped);
