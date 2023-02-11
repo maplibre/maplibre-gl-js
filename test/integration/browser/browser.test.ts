@@ -8,6 +8,9 @@ import pixelmatch from 'pixelmatch';
 import {PNG} from 'pngjs';
 import type {AddressInfo} from 'net';
 
+// maplibre global object
+declare const maplibregl: any;
+
 const testWidth = 800;
 const testHeight = 600;
 
@@ -209,6 +212,20 @@ describe('browser tests', () => {
 
             // At least one platform should be identical
             expect(minDiff).toBe(0);
+
+        }, 20000);
+
+        test(`${impl.name()} - LngLat class toBounds() method`, async () => {
+
+            // UT only test individual TS files
+            // This integration test ensure that the toBounds exists and funtions correctly in global namespace of the generated JS
+            await newTest(impl);
+            const boundsResult = await page.evaluate(() => {
+                const position = new (maplibregl as any).LngLat(1, 1);
+                return position.toBounds(10).toArray();
+            });
+
+            expect(JSON.stringify(boundsResult)).toBe('[[0.9999101547884319,0.9999101684722929],[1.000089845211568,1.0000898315277071]]');
 
         }, 20000);
     });
