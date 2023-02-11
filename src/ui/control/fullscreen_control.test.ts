@@ -1,9 +1,8 @@
-import {createMap, setWebGlContext} from '../../util/test/util';
+import {createMap, beforeMapTest} from '../../util/test/util';
 import FullscreenControl from './fullscreen_control';
 
 beforeEach(() => {
-    setWebGlContext();
-    window.performance.mark = jest.fn();
+    beforeMapTest();
 });
 
 describe('FullscreenControl', () => {

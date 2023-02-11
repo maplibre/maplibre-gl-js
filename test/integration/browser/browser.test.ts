@@ -63,10 +63,10 @@ describe('browser tests', () => {
             await newTest(impl);
 
             const canvas = await page.$('.maplibregl-canvas');
-            const canvasBB = await canvas.boundingBox();
+            const canvasBB = await canvas?.boundingBox();
 
             // Perform drag action, wait a bit the end to avoid the momentum mode.
-            await page.mouse.move(canvasBB.x, canvasBB.y);
+            await page.mouse.move(canvasBB!.x, canvasBB!.y);
             await page.mouse.down();
             await page.mouse.move(100, 0);
             await new Promise(r => setTimeout(r, 200));
@@ -78,6 +78,33 @@ describe('browser tests', () => {
 
             expect(center.lng).toBeCloseTo(-35.15625, 4);
             expect(center.lat).toBeCloseTo(0, 7);
+        }, 20000);
+
+        test(`${impl.name()} - resizeing view port`, async () => {
+            await newTest(impl);
+
+            await page.setViewportSize({width: 400, height: 400});
+
+            await new Promise(r => setTimeout(r, 200));
+
+            const canvas = await page.$('.maplibregl-canvas');
+            const canvasBB = await canvas?.boundingBox();
+            expect(canvasBB?.width).toBeCloseTo(400);
+            expect(canvasBB?.height).toBeCloseTo(400);
+        }, 20000);
+
+        test(`${impl.name()} - resizeing div`, async () => {
+            await newTest(impl);
+
+            await page.evaluate(() => {
+                document.getElementById('map')!.style.width = '200px';
+                document.getElementById('map')!.style.height = '200px';
+            });
+
+            const canvas = await page.$('.maplibregl-canvas');
+            const canvasBB = await canvas?.boundingBox();
+            expect(canvasBB!.width).toBeCloseTo(200);
+            expect(canvasBB!.height).toBeCloseTo(200);
         }, 20000);
 
         test(`${impl.name()} Zoom: Double click at the center`, async () => {

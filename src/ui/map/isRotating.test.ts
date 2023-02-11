@@ -2,7 +2,7 @@ import Map from '../../ui/map';
 import DOM from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import browser from '../../util/browser';
-import {setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
+import {beforeMapTest} from '../../util/test/util';
 
 let map;
 
@@ -11,9 +11,7 @@ function createMap() {
 }
 
 beforeEach(() => {
-    setWebGlContext();
-    setPerformance();
-    setMatchMedia();
+    beforeMapTest();
     map = createMap();
 });
 
