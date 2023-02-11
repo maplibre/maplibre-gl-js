@@ -2189,7 +2189,7 @@ describe('Map', () => {
 
         const id = 'missing-image';
 
-        const sampleImage = {width: 1, height: 1, data: new Uint8Array(4)};
+        const sampleImage = {width: 2, height: 1, data: new Uint8Array(8)};
 
         let called: string;
         map.on('styleimagemissing', e => {
@@ -2200,7 +2200,9 @@ describe('Map', () => {
         expect(map.hasImage(id)).toBeFalsy();
 
         map.style.imageManager.getImages([id], (alwaysNull, generatedImage) => {
-            expect(generatedImage).toEqual(sampleImage);
+            expect(generatedImage[id].data.width).toEqual(sampleImage.width);
+            expect(generatedImage[id].data.height).toEqual(sampleImage.height);
+            expect(generatedImage[id].data.data).toEqual(sampleImage.data);
             expect(called).toBe(id);
             expect(map.hasImage(id)).toBeTruthy();
             done();
