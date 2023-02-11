@@ -2204,6 +2204,23 @@ describe('Map', () => {
         });
     });
 
+    test('map getImage matches addImage', done => {
+        const map = createMap();
+
+        const id = 'add-get-image';
+        const inputImage = {width: 2, height: 1, data: new Uint8Array(8)};
+
+        map.addImage(id, inputImage);
+        expect(map.hasImage(id)).toBeTruthy();
+
+        const retrievedImage = map.getImage(id);
+        expect(retrievedImage.data.width).toEqual(inputImage.width);
+        expect(retrievedImage.data.height).toEqual(inputImage.height);
+        expect(retrievedImage.data.data).toEqual(inputImage.data);
+
+        done();
+    });
+
     test('map does not fire `styleimagemissing` for empty icon values', done => {
         const map = createMap();
 
