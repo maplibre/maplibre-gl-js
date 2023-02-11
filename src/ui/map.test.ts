@@ -17,7 +17,8 @@ import {CameraOptions} from './camera';
 import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
-import { StyleImageInterface } from '../style/style_image';
+import { StyleImage, StyleImageInterface, StyleImageMetadata } from '../style/style_image';
+import { RGBAImage } from '../util/image';
 
 function createStyleSource() {
     return {
@@ -2232,15 +2233,23 @@ describe('Map', () => {
             data: new Uint8ClampedArray(16)
         };
 
+        const idStyleImageSDF = 'add-get-style-image-sdf';
+        const inputStyleImageSDF: StyleImageInterface = {
+            width: 5,
+            height: 1,
+            data: new Uint8Array(20)
+        };
+ 
         //Add a graphic of each type
         map.addImage(idImageUint, inputImageUint);
         map.addImage(idImageUintClamped, inputImageUintClamped);
         map.addImage(idImageData, inputImageData);
         map.addImage(idStyleImage, inputStyleImage);
         map.addImage(idStyleImageClamped, inputStyleImageClamped);
+        map.addImage(idStyleImageSDF, inputStyleImageSDF, {sdf: true});
 
         //Verify all graphics added are reported as present
-        [idImageUint, idImageUintClamped, idImageData, idStyleImage, idStyleImageClamped].forEach((id) =>
+        [idImageUint, idImageUintClamped, idImageData, idStyleImage, idStyleImageClamped, idStyleImageSDF].forEach((id) =>
             expect(map.hasImage(id)).toBeTruthy());
 
         //Retrieve graphic we added
@@ -2249,6 +2258,7 @@ describe('Map', () => {
         const gotImageData = map.getImage(idImageData);
         const gotStyleImage = map.getImage(idStyleImage);
         const gotStyleImageClamped = map.getImage(idStyleImageClamped);
+        const gotStyleImageSDF = map.getImage(idStyleImageSDF);
 
         //Verify retrieved graphic is the same size
         expect(gotImageUint.data.width).toEqual(inputImageUint.width);
@@ -2265,6 +2275,9 @@ describe('Map', () => {
 
         expect(gotStyleImageClamped.data.width).toEqual(inputStyleImageClamped.width);
         expect(gotStyleImageClamped.data.height).toEqual(inputStyleImageClamped.height);
+
+        expect(gotStyleImageSDF.data.width).toEqual(inputStyleImageSDF.width);
+        expect(gotStyleImageSDF.data.height).toEqual(inputStyleImageSDF.height);
 
         //Verify retrieved graphic has same image contents
         for (let i = 0; i < gotImageUint.data.data.length; i++) {
@@ -2286,6 +2299,15 @@ describe('Map', () => {
         for (let i = 0; i < gotStyleImageClamped.data.data.length; i++) {
             expect(gotStyleImageClamped.data.data[i]).toEqual(inputStyleImageClamped.data[i]);
         }
+
+        for (let i = 0; i < gotStyleImageSDF.data.data.length; i++) {
+            expect(gotStyleImageSDF.data.data[i]).toEqual(inputStyleImageSDF.data[i]);
+        }
+
+        //Verify SDF attribute
+        expect(gotStyleImage.sdf).toBe(false);
+        expect(gotStyleImageClamped.sdf).toBe(false);
+        expect(gotStyleImageSDF.sdf).toBe(true);
 
         done();
     });
