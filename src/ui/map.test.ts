@@ -2189,16 +2189,18 @@ describe('Map', () => {
 
         const id = 'missing-image';
 
+        const sampleImage = {width: 1, height: 1, data: new Uint8Array(4)};
+
         let called: string;
         map.on('styleimagemissing', e => {
-            map.addImage(e.id, {width: 1, height: 1, data: new Uint8Array(4)});
+            map.addImage(e.id, sampleImage);
             called = e.id;
         });
 
         expect(map.hasImage(id)).toBeFalsy();
 
         map.style.imageManager.getImages([id], (alwaysNull, generatedImage) => {
-            expect(generatedImage).not.toBeNull();
+            expect(generatedImage).toEqual(sampleImage);
             expect(called).toBe(id);
             expect(map.hasImage(id)).toBeTruthy();
             done();
