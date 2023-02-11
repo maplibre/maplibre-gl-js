@@ -200,7 +200,13 @@ class ImageManager extends Evented {
         const response = {};
 
         for (const id of ids) {
-            const image = this.getImage(id);
+            let image = this.getImage(id);
+
+            if (!image) {
+                this.fire(new Event('styleimagemissing', {id}));
+                //Try to acquire image again in case styleimagemissing has populated it
+                image = this.getImage(id);
+            }
 
             if (image) {
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
@@ -215,7 +221,6 @@ class ImageManager extends Evented {
                     hasRenderCallback: Boolean(image.userImage && image.userImage.render)
                 };
             } else {
-                this.fire(new Event('styleimagemissing', {id}));
                 warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.`);
             }
         }
