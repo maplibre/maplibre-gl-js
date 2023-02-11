@@ -5,11 +5,6 @@ import Literal from './definitions/literal';
 import Assertion from './definitions/assertion';
 import Coercion from './definitions/coercion';
 import EvaluationContext from './evaluation_context';
-import CompoundExpression from './compound_expression';
-import CollatorExpression from './definitions/collator';
-import Within from './definitions/within';
-import {isGlobalPropertyConstant, isFeatureConstant} from './is_constant';
-import Var from './definitions/var';
 
 import type {Expression, ExpressionRegistry} from './expression';
 import type {Type} from './types';
@@ -31,8 +26,14 @@ class ParsingContext {
     // `expectedType`.
     expectedType: Type;
 
+    /**
+     * Internal delegate to inConstant function to avoid circular dependency to CompoundExpression
+     */
+    private _isConstant: (expression: Expression)=> boolean;
+
     constructor(
         registry: ExpressionRegistry,
+        isConstantFunc: (expression: Expression)=> boolean,
         path: Array<number> = [],
         expectedType?: Type | null,
         scope: Scope = new Scope(),
@@ -44,6 +45,7 @@ class ParsingContext {
         this.scope = scope;
         this.errors = errors;
         this.expectedType = expectedType;
+        this._isConstant = isConstantFunc;
     }
 
     /**
@@ -131,7 +133,7 @@ class ParsingContext {
                 // it immediately and replace it with a literal value in the
                 // parsed/compiled result. Expressions that expect an image should
                 // not be resolved here so we can later get the available images.
-                if (!(parsed instanceof Literal) && (parsed.type.kind !== 'resolvedImage') && isConstant(parsed)) {
+                if (!(parsed instanceof Literal) && (parsed.type.kind !== 'resolvedImage') && this._isConstant(parsed)) {
                     const ec = new EvaluationContext();
                     try {
                         parsed = new Literal(parsed.type, parsed.evaluate(ec));
@@ -167,6 +169,7 @@ class ParsingContext {
         const scope = bindings ? this.scope.concat(bindings) : this.scope;
         return new ParsingContext(
             this.registry,
+            this._isConstant,
             path,
             expectedType || null,
             scope,
@@ -198,43 +201,3 @@ class ParsingContext {
 }
 
 export default ParsingContext;
-
-function isConstant(expression: Expression) {
-    if (expression instanceof Var) {
-        return isConstant(expression.boundExpression);
-    } else if (expression instanceof CompoundExpression && expression.name === 'error') {
-        return false;
-    } else if (expression instanceof CollatorExpression) {
-        // Although the results of a Collator expression with fixed arguments
-        // generally shouldn't change between executions, we can't serialize them
-        // as constant expressions because results change based on environment.
-        return false;
-    } else if (expression instanceof Within) {
-        return false;
-    }
-
-    const isTypeAnnotation = expression instanceof Coercion ||
-        expression instanceof Assertion;
-
-    let childrenConstant = true;
-    expression.eachChild(child => {
-        // We can _almost_ assume that if `expressions` children are constant,
-        // they would already have been evaluated to Literal values when they
-        // were parsed.  Type annotations are the exception, because they might
-        // have been inferred and added after a child was parsed.
-
-        // So we recurse into isConstant() for the children of type annotations,
-        // but otherwise simply check whether they are Literals.
-        if (isTypeAnnotation) {
-            childrenConstant = childrenConstant && isConstant(child);
-        } else {
-            childrenConstant = childrenConstant && child instanceof Literal;
-        }
-    });
-    if (!childrenConstant) {
-        return false;
-    }
-
-    return isFeatureConstant(expression) &&
-        isGlobalPropertyConstant(expression, ['zoom', 'heatmap-density', 'line-progress', 'accumulated', 'is-supported-script']);
-}

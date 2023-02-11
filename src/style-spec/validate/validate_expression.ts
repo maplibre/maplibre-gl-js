@@ -2,7 +2,11 @@ import ValidationError from '../error/validation_error';
 
 import {createExpression, createPropertyExpression} from '../expression';
 import {deepUnbundle} from '../util/unbundle_jsonlint';
-import {isStateConstant, isGlobalPropertyConstant, isFeatureConstant} from '../expression/is_constant';
+
+import {isFeatureConstant,
+    isGlobalPropertyConstant,
+    isStateConstant} from '../expression/compound_expression';
+
 import {Expression} from '../expression/expression';
 
 export default function validateExpression(options: any): Array<ValidationError> {

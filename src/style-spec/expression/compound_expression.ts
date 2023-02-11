@@ -3,6 +3,13 @@ import {toString} from './types';
 import ParsingContext from './parsing_context';
 import EvaluationContext from './evaluation_context';
 
+import CollatorExpression from './definitions/collator';
+import Within from './definitions/within';
+import Literal from './definitions/literal';
+import Assertion from './definitions/assertion';
+import Coercion from './definitions/coercion';
+import Var from './definitions/var';
+
 import type {Expression, ExpressionRegistry} from './expression';
 import type {Type} from './types';
 import type {Value} from './values';
@@ -70,7 +77,7 @@ class CompoundExpression implements Expression {
         for (const [params, evaluate] of overloads) {
             // Use a fresh context for each attempted signature so that, if
             // we eventually succeed, we haven't polluted `context.errors`.
-            signatureContext = new ParsingContext(context.registry, context.path, null, context.scope);
+            signatureContext = new ParsingContext(context.registry, isExpressionConstant, context.path, null, context.scope);
 
             // First parse all the args, potentially coercing to the
             // types expected by this overload.
@@ -154,4 +161,98 @@ function stringifySignature(signature: Signature): string {
     }
 }
 
+function isExpressionConstant(expression: Expression) {
+    if (expression instanceof Var) {
+        return isExpressionConstant(expression.boundExpression);
+    } else if (expression instanceof CompoundExpression && expression.name === 'error') {
+        return false;
+    } else if (expression instanceof CollatorExpression) {
+        // Although the results of a Collator expression with fixed arguments
+        // generally shouldn't change between executions, we can't serialize them
+        // as constant expressions because results change based on environment.
+        return false;
+    } else if (expression instanceof Within) {
+        return false;
+    }
+
+    const isTypeAnnotation = expression instanceof Coercion ||
+        expression instanceof Assertion;
+
+    let childrenConstant = true;
+    expression.eachChild(child => {
+        // We can _almost_ assume that if `expressions` children are constant,
+        // they would already have been evaluated to Literal values when they
+        // were parsed.  Type annotations are the exception, because they might
+        // have been inferred and added after a child was parsed.
+
+        // So we recurse into isConstant() for the children of type annotations,
+        // but otherwise simply check whether they are Literals.
+        if (isTypeAnnotation) {
+            childrenConstant = childrenConstant && isExpressionConstant(child);
+        } else {
+            childrenConstant = childrenConstant && child instanceof Literal;
+        }
+    });
+    if (!childrenConstant) {
+        return false;
+    }
+
+    return isFeatureConstant(expression) &&
+           isGlobalPropertyConstant(expression,
+               ['zoom', 'heatmap-density', 'line-progress', 'accumulated', 'is-supported-script']);
+}
+
+function isFeatureConstant(e: Expression) {
+    if (e instanceof CompoundExpression) {
+        if (e.name === 'get' && e.args.length === 1) {
+            return false;
+        } else if (e.name === 'feature-state') {
+            return false;
+        } else if (e.name === 'has' && e.args.length === 1) {
+            return false;
+        } else if (
+            e.name === 'properties' ||
+            e.name === 'geometry-type' ||
+            e.name === 'id'
+        ) {
+            return false;
+        } else if (/^filter-/.test(e.name)) {
+            return false;
+        }
+    }
+
+    if (e instanceof Within) {
+        return false;
+    }
+
+    let result = true;
+    e.eachChild(arg => {
+        if (result && !isFeatureConstant(arg)) { result = false; }
+    });
+    return result;
+}
+
+function isStateConstant(e: Expression) {
+    if (e instanceof CompoundExpression) {
+        if (e.name === 'feature-state') {
+            return false;
+        }
+    }
+    let result = true;
+    e.eachChild(arg => {
+        if (result && !isStateConstant(arg)) { result = false; }
+    });
+    return result;
+}
+
+function isGlobalPropertyConstant(e: Expression, properties: Array<string>) {
+    if (e instanceof CompoundExpression && properties.indexOf(e.name) >= 0) { return false; }
+    let result = true;
+    e.eachChild((arg) => {
+        if (result && !isGlobalPropertyConstant(arg, properties)) { result = false; }
+    });
+    return result;
+}
+
+export {isFeatureConstant, isGlobalPropertyConstant, isStateConstant, isExpressionConstant};
 export default CompoundExpression;
