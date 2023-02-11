@@ -17,6 +17,7 @@ import {CameraOptions} from './camera';
 import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
+import { StyleImageInterface } from '../style/style_image';
 
 function createStyleSource() {
     return {
@@ -2207,16 +2208,84 @@ describe('Map', () => {
     test('map getImage matches addImage', done => {
         const map = createMap();
 
-        const id = 'add-get-image';
-        const inputImage = {width: 2, height: 1, data: new Uint8Array(8)};
+        //Create graphics of various types, each with a different size
+        const idImageUint = 'add-get-uint';
+        const inputImageUint = {width: 2, height: 1, data: new Uint8Array(8)};
 
-        map.addImage(id, inputImage);
-        expect(map.hasImage(id)).toBeTruthy();
+        const idImageUintClamped = 'add-get-uint-clamped';
+        const inputImageUintClamped = {width: 1, height: 2, data: new Uint8ClampedArray(8)};
 
-        const retrievedImage = map.getImage(id);
-        expect(retrievedImage.data.width).toEqual(inputImage.width);
-        expect(retrievedImage.data.height).toEqual(inputImage.height);
-        expect(retrievedImage.data.data).toEqual(inputImage.data);
+        const idImageData = 'add-get-image-data';
+        const inputImageData = new ImageData(1, 3);
+
+        const idStyleImage = 'add-get-style-image';
+        const inputStyleImage: StyleImageInterface = {
+            width: 3,
+            height: 1,
+            data: new Uint8Array(12)
+        };
+
+        const idStyleImageClamped = 'add-get-style-image-clamped';
+        const inputStyleImageClamped: StyleImageInterface = {
+            width: 4,
+            height: 1,
+            data: new Uint8ClampedArray(16)
+        };
+
+        //Add a graphic of each type
+        map.addImage(idImageUint, inputImageUint);
+        map.addImage(idImageUintClamped, inputImageUintClamped);
+        map.addImage(idImageData, inputImageData);
+        map.addImage(idStyleImage, inputStyleImage);
+        map.addImage(idStyleImageClamped, inputStyleImageClamped);
+
+        //Verify all graphics added are reported as present
+        [idImageUint, idImageUintClamped, idImageData, idStyleImage, idStyleImageClamped].forEach((id) =>
+            expect(map.hasImage(id)).toBeTruthy());
+
+        //Retrieve graphic we added
+        const gotImageUint = map.getImage(idImageUint);
+        const gotImageUintClamped = map.getImage(idImageUintClamped);
+        const gotImageData = map.getImage(idImageData);
+        const gotStyleImage = map.getImage(idStyleImage);
+        const gotStyleImageClamped = map.getImage(idStyleImageClamped);
+
+        //Verify retrieved graphic is the same size
+        expect(gotImageUint.data.width).toEqual(inputImageUint.width);
+        expect(gotImageUint.data.height).toEqual(inputImageUint.height);
+
+        expect(gotImageUintClamped.data.width).toEqual(inputImageUintClamped.width);
+        expect(gotImageUintClamped.data.height).toEqual(inputImageUintClamped.height);
+
+        expect(gotImageData.data.width).toEqual(inputImageData.width);
+        expect(gotImageData.data.height).toEqual(inputImageData.height);
+
+        expect(gotStyleImage.data.width).toEqual(inputStyleImage.width);
+        expect(gotStyleImage.data.height).toEqual(inputStyleImage.height);
+
+        expect(gotStyleImageClamped.data.width).toEqual(inputStyleImageClamped.width);
+        expect(gotStyleImageClamped.data.height).toEqual(inputStyleImageClamped.height);
+
+        //Verify retrieved graphic has same image contents
+        for (let i = 0; i < gotImageUint.data.data.length; i++) {
+            expect(gotImageUint.data.data[i]).toEqual(inputImageUint.data[i]);
+        }
+
+        for (let i = 0; i < gotImageUintClamped.data.data.length; i++) {
+            expect(gotImageUintClamped.data.data[i]).toEqual(inputImageUintClamped.data[i]);
+        }
+
+        for (let i = 0; i < gotImageData.data.data.length; i++) {
+            expect(gotImageData.data.data[i]).toEqual(inputImageData.data[i]);
+        }
+
+        for (let i = 0; i < gotStyleImage.data.data.length; i++) {
+            expect(gotStyleImage.data.data[i]).toEqual(inputStyleImage.data[i]);
+        }
+
+        for (let i = 0; i < gotStyleImageClamped.data.data.length; i++) {
+            expect(gotStyleImageClamped.data.data[i]).toEqual(inputStyleImageClamped.data[i]);
+        }
 
         done();
     });
