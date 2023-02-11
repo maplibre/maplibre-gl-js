@@ -6,9 +6,11 @@ import EvaluationParameters from '../style/evaluation_parameters';
 import type {PropertyValue, PossiblyEvaluatedPropertyValue} from '../style/properties';
 import type {InterpolationType} from '../style-spec/expression/definitions/interpolate';
 
+const MAX_GLYPH_ICON_SIZE = 255;
 const SIZE_PACK_FACTOR = 128;
+const MAX_PACKED_SIZE = MAX_GLYPH_ICON_SIZE * SIZE_PACK_FACTOR;
 
-export {getSizeData, evaluateSizeForFeature, evaluateSizeForZoom, SIZE_PACK_FACTOR};
+export {getSizeData, evaluateSizeForFeature, evaluateSizeForZoom, SIZE_PACK_FACTOR, MAX_GLYPH_ICON_SIZE, MAX_PACKED_SIZE};
 
 export type SizeData = {
     kind: 'constant';

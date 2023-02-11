@@ -4,16 +4,14 @@ import DOM from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import browser from '../../util/browser';
 
-import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
+import {beforeMapTest} from '../../util/test/util';
 
 function createMap(options?) {
     return new Map(extend({container: DOM.create('div', '', window.document.body)}, options));
 }
 
 beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
-    setMatchMedia();
+    beforeMapTest();
 });
 
 describe('drag rotate', () => {

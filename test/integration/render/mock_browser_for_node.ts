@@ -38,6 +38,12 @@ global.Blob = window.Blob;
 global.URL = window.URL;
 global.fetch = window.fetch;
 global.document = window.document;
+global.ResizeObserver = function () {
+    return {
+        observe: () => {},
+        disconnect: () => {}
+    };
+} as any as typeof ResizeObserver;
 //@ts-ignore
 global.window = window;
 // stubbing image load as it is not implemented in jsdom

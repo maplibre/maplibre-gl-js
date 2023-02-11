@@ -1,13 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
 import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandler} from './one_finger_touch_drag';
-
-beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
-    setMatchMedia();
-});
 
 const testTouch = {identifier: 0} as Touch;
 
