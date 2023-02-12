@@ -2205,108 +2205,110 @@ describe('Map', () => {
         });
     });
 
-    test('map getImage matches addImage', done => {
+    test('map getImage matches addImage, uintArray', done => {
         const map = createMap();
+        const id = 'add-get-uint';
+        const inputImage = {width: 2, height: 1, data: new Uint8Array(8)};
 
-        //Create graphics of various types, each with a different size
-        const idImageUint = 'add-get-uint';
-        const inputImageUint = {width: 2, height: 1, data: new Uint8Array(8)};
+        map.addImage(id, inputImage);
+        expect(map.hasImage(id)).toBeTruthy();
 
-        const idImageUintClamped = 'add-get-uint-clamped';
-        const inputImageUintClamped = {width: 1, height: 2, data: new Uint8ClampedArray(8)};
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(false);
 
-        const idImageData = 'add-get-image-data';
-        const inputImageData = new ImageData(1, 3);
+        done();
+    });
 
-        const idStyleImage = 'add-get-style-image';
-        const inputStyleImage: StyleImageInterface = {
+    test('map getImage matches addImage, uintClampedArray', done => {
+        const map = createMap();
+        const id = 'add-get-uint-clamped';
+        const inputImage = {width: 1, height: 2, data: new Uint8ClampedArray(8)};
+
+        map.addImage(id, inputImage);
+        expect(map.hasImage(id)).toBeTruthy();
+
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(false);
+
+        done();
+    });
+
+    test('map getImage matches addImage, ImageData', done => {
+        const map = createMap();
+        const id = 'add-get-image-data';
+        const inputImage = new ImageData(1, 3);
+
+        map.addImage(id, inputImage);
+        expect(map.hasImage(id)).toBeTruthy();
+
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(false);
+
+        done();
+    });
+
+    test('map getImage matches addImage, StyleImageInterface uint', done => {
+        const map = createMap();
+        const id = 'add-get-style-image-iface-uint';
+        const inputImage: StyleImageInterface = {
             width: 3,
             height: 1,
             data: new Uint8Array(12)
         };
 
-        const idStyleImageClamped = 'add-get-style-image-clamped';
-        const inputStyleImageClamped: StyleImageInterface = {
+        map.addImage(id, inputImage);
+        expect(map.hasImage(id)).toBeTruthy();
+
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(false);
+
+        done();
+    });
+
+    test('map getImage matches addImage, StyleImageInterface clamped', done => {
+        const map = createMap();
+        const id = 'add-get-style-image-iface-clamped';
+        const inputImage: StyleImageInterface = {
             width: 4,
             height: 1,
             data: new Uint8ClampedArray(16)
         };
 
-        const idStyleImageSDF = 'add-get-style-image-sdf';
-        const inputStyleImageSDF: StyleImageInterface = {
+        map.addImage(id, inputImage);
+        expect(map.hasImage(id)).toBeTruthy();
+
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(false);
+
+        done();
+    });
+
+    test('map getImage matches addImage, StyleImageInterface SDF', done => {
+        const map = createMap();
+        const id = 'add-get-style-image-iface-sdf';
+        const inputImage: StyleImageInterface = {
             width: 5,
             height: 1,
             data: new Uint8Array(20)
         };
 
-        //Add a graphic of each type
-        map.addImage(idImageUint, inputImageUint);
-        map.addImage(idImageUintClamped, inputImageUintClamped);
-        map.addImage(idImageData, inputImageData);
-        map.addImage(idStyleImage, inputStyleImage);
-        map.addImage(idStyleImageClamped, inputStyleImageClamped);
-        map.addImage(idStyleImageSDF, inputStyleImageSDF, {sdf: true});
+        map.addImage(id, inputImage, {sdf: true});
+        expect(map.hasImage(id)).toBeTruthy();
 
-        //Verify all graphics added are reported as present
-        [idImageUint, idImageUintClamped, idImageData, idStyleImage, idStyleImageClamped, idStyleImageSDF].forEach((id) =>
-            expect(map.hasImage(id)).toBeTruthy());
-
-        //Retrieve graphic we added
-        const gotImageUint = map.getImage(idImageUint);
-        const gotImageUintClamped = map.getImage(idImageUintClamped);
-        const gotImageData = map.getImage(idImageData);
-        const gotStyleImage = map.getImage(idStyleImage);
-        const gotStyleImageClamped = map.getImage(idStyleImageClamped);
-        const gotStyleImageSDF = map.getImage(idStyleImageSDF);
-
-        //Verify retrieved graphic is the same size
-        expect(gotImageUint.data.width).toEqual(inputImageUint.width);
-        expect(gotImageUint.data.height).toEqual(inputImageUint.height);
-
-        expect(gotImageUintClamped.data.width).toEqual(inputImageUintClamped.width);
-        expect(gotImageUintClamped.data.height).toEqual(inputImageUintClamped.height);
-
-        expect(gotImageData.data.width).toEqual(inputImageData.width);
-        expect(gotImageData.data.height).toEqual(inputImageData.height);
-
-        expect(gotStyleImage.data.width).toEqual(inputStyleImage.width);
-        expect(gotStyleImage.data.height).toEqual(inputStyleImage.height);
-
-        expect(gotStyleImageClamped.data.width).toEqual(inputStyleImageClamped.width);
-        expect(gotStyleImageClamped.data.height).toEqual(inputStyleImageClamped.height);
-
-        expect(gotStyleImageSDF.data.width).toEqual(inputStyleImageSDF.width);
-        expect(gotStyleImageSDF.data.height).toEqual(inputStyleImageSDF.height);
-
-        //Verify retrieved graphic has same image contents
-        for (let i = 0; i < gotImageUint.data.data.length; i++) {
-            expect(gotImageUint.data.data[i]).toEqual(inputImageUint.data[i]);
-        }
-
-        for (let i = 0; i < gotImageUintClamped.data.data.length; i++) {
-            expect(gotImageUintClamped.data.data[i]).toEqual(inputImageUintClamped.data[i]);
-        }
-
-        for (let i = 0; i < gotImageData.data.data.length; i++) {
-            expect(gotImageData.data.data[i]).toEqual(inputImageData.data[i]);
-        }
-
-        for (let i = 0; i < gotStyleImage.data.data.length; i++) {
-            expect(gotStyleImage.data.data[i]).toEqual(inputStyleImage.data[i]);
-        }
-
-        for (let i = 0; i < gotStyleImageClamped.data.data.length; i++) {
-            expect(gotStyleImageClamped.data.data[i]).toEqual(inputStyleImageClamped.data[i]);
-        }
-
-        for (let i = 0; i < gotStyleImageSDF.data.data.length; i++) {
-            expect(gotStyleImageSDF.data.data[i]).toEqual(inputStyleImageSDF.data[i]);
-        }
-
-        //Verify SDF attribute
-        expect(gotStyleImage.sdf).toBe(false);
-        expect(gotStyleImageClamped.sdf).toBe(false);
-        expect(gotStyleImageSDF.sdf).toBe(true);
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(true);
 
         done();
     });
