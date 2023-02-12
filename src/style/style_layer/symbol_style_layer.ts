@@ -182,25 +182,6 @@ class SymbolStyleLayer extends StyleLayer {
     }
 }
 
-export type OverlapMode = 'never' | 'always' | 'cooperative';
-
-export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'icon-overlap', allowOverlapProp: 'icon-allow-overlap'): OverlapMode;
-export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'text-overlap', allowOverlapProp: 'text-allow-overlap'): OverlapMode;
-export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'icon-overlap' | 'text-overlap', allowOverlapProp: 'icon-allow-overlap' | 'text-allow-overlap'): OverlapMode {
-    let result: OverlapMode = 'never';
-    const overlap = layout.get(overlapProp);
-
-    if (overlap) {
-        // if -overlap is set, use it
-        result = overlap;
-    } else if (layout.get(allowOverlapProp)) {
-        // fall back to -allow-overlap, with false='never', true='always'
-        result = 'always';
-    }
-
-    return result;
-}
-
 export type SymbolPadding = [number, number, number, number];
 
 export function getIconPadding(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, feature: SymbolFeature, canonical: CanonicalTileID, pixelRatio = 1): SymbolPadding {

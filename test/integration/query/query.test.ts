@@ -1,23 +1,17 @@
 
-// fixtures.json is automatically generated before this file gets built
-// refer build/generate-query-test-fixtures.ts
 import {Browser, chromium, Page} from 'playwright';
 
-import fixtures from './dist/fixtures.json' assert {type: 'json'};
 import {deepEqual} from '../lib/json-diff';
 import st from 'st';
-import http from 'http';
-import path from 'path';
-import fs from 'fs';
+import http from 'node:http';
+import type {Server} from 'node:http';
 
-let browser: Browser;
-let page: Page;
-const server = http.createServer(
-    st({
-        path: 'test/integration/assets',
-        cors: true,
-    })
-).listen(7357);
+import path from 'node:path/posix';
+import fs from 'node:fs';
+import type {AddressInfo} from 'node:net';
+
+import localizeURLs from '../lib/localize-urls';
+import {glob} from 'glob';
 
 function performQueryOnFixture(fixture)  {
 
@@ -129,63 +123,135 @@ function performQueryOnFixture(fixture)  {
 }
 
 describe('query tests', () => {
+    let browser: Browser;
+    let server: Server;
 
     beforeAll(async () => {
-
-        browser = await chromium.launch({
-            headless: false,
-        });
-    });
-
-    beforeEach(async () => {
-        page = await browser.newPage();
-    });
-
-    afterEach(async () => {
-        await page.close();
+        server = http.createServer(
+            st({
+                path: 'test/integration/assets',
+                cors: true,
+            })
+        );
+        browser = await chromium.launch();
+        await new Promise<void>((resolve) => server.listen(resolve));
     });
 
     afterAll(async () => {
         await browser.close();
-        server.close();
+        await new Promise(resolve => server.close(resolve));
     });
 
-    Object.keys(fixtures).forEach((testName, testindex) => {
+    let page: Page;
 
-        test(testName, async () => {
-            console.log(`${testindex + 1} / ${Object.keys(fixtures).length}: ${testName}`);
+    beforeEach(async () => {
+        page = await browser.newPage();
+    });
+    afterEach(async() => {
+        await page.close();
+    });
 
-            await page.goto(`file:${path.join(__dirname, 'assets/loadMap.html')}`);
+    const allTestsRoot = 'test/integration/query/tests';
+    const testStyles = glob.sync(path.join(allTestsRoot, '**/style.json'));
 
-            const currentTestName = testName;
-            const fixture = fixtures[currentTestName];
+    for (const [testindex, styleJson] of testStyles.entries()) {
+        const testCaseRoot = path.dirname(styleJson);
+        const caseName = path.relative(allTestsRoot, testCaseRoot);
+        // eslint-disable-next-line no-loop-func
+        test(caseName, async () => {
+            const port = (server.address() as AddressInfo).port;
+            const fixture = await dirToJson(testCaseRoot, port);
+            console.log(`${testindex + 1} / ${testStyles.length}: ${caseName}`);
 
             const style = fixture.style;
             const options = style.metadata.test;
-
-            await page.evaluate((options) => {
-                const container: HTMLDivElement = document.querySelector('#map');
-                container.style.position = 'fixed';
-                container.style.bottom = '10px';
-                container.style.right = '10px';
-                container.style.width = `${options.width}px`;
-                container.style.height = `${options.height}px`;
-            }, options);
-
+            await page.setContent(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Query Test Page</title>
+    <meta charset='utf-8'>
+    <link rel="icon" href="about:blank">
+    <style>#map {
+        box-sizing:content-box;
+        width:${options.width}px;
+        height:${options.height}px;
+    }</style>
+</head>
+<body id='map'></body>
+</html>`);
+            await page.addScriptTag({path: 'dist/maplibre-gl.js'});
+            await page.addStyleTag({path: 'dist/maplibre-gl.css'});
             const actual = await page.evaluate(performQueryOnFixture, fixture);
 
             const isEqual = deepEqual(actual, fixture.expected);
             // update expected.json if UPDATE=true is passed and the test fails
             if (process.env.UPDATE && !isEqual) {
-                const expecedPath = path.join('test/integration/query/', testName, 'expected.json');
-                console.log('updating', expecedPath);
-                fs.writeFileSync(expecedPath, JSON.stringify(actual, null, 2));
+                const expectedPath = path.join(testCaseRoot, 'expected.json');
+                console.log('updating', expectedPath);
+                fs.writeFileSync(expectedPath, JSON.stringify(actual, null, 2));
             }
             expect(isEqual).toBeTruthy();
 
-        }, 10000);
+        }, 20000);
 
-    });
-
+    }
 });
 
+/**
+ * Analyzes the contents of the specified directory, and converts it to a JSON-serializable
+ * object, suitable for sending to the browser
+ * @param basePath - The root directory
+ */
+async function dirToJson(dir: string, port: number) {
+    const files = await fs.promises.readdir(dir);
+
+    // Extract the filedata into a flat dictionary
+    const result = {} as {
+        style?: any;
+        expected?: any;
+        actual?: any;
+        [s:string]:unknown;
+    };
+
+    for (const file of files) {
+        const fullname = path.join(dir, file);
+        const pp = path.parse(file);
+        try {
+            if (pp.ext === '.json') {
+                let json = JSON.parse(await fs.promises.readFile(fullname, {encoding: 'utf8'}));
+
+                // Special case for style json which needs some preprocessing
+                if (file === 'style.json') {
+                    json = processStyle(dir, json, port);
+                }
+
+                result[pp.name] = json;
+            } else {
+                console.warn(`Ignoring file with unexpected extension. ${pp.ext}`);
+            }
+        } catch (e) {
+            console.warn(`Error parsing file: ${file} ${e.message}`);
+            throw e;
+        }
+    }
+    return result;
+}
+
+function processStyle(testName:string, style: unknown, port:number) {
+    const clone = JSON.parse(JSON.stringify(style));
+    localizeURLs(clone, port, 'test/integration');
+
+    clone.metadata = clone.metadata || {};
+
+    clone.metadata.test = Object.assign({
+        testName,
+        width: 512,
+        height: 512,
+        pixelRatio: 1,
+        recycleMap: false,
+        allowed: 0.00015
+    }, clone.metadata.test);
+
+    return clone;
+}

@@ -142,7 +142,13 @@ const exported = {
         config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests;
     },
 
-    workerUrl: '',
+    get workerUrl(): string {
+        return config.WORKER_URL;
+    },
+
+    set workerUrl(value: string) {
+        config.WORKER_URL = value;
+    },
 
     /**
      * Sets a custom load tile function that will be called when using a source that starts with a custom url schema.

@@ -38,6 +38,12 @@ global.Blob = window.Blob;
 global.URL = window.URL;
 global.fetch = window.fetch;
 global.document = window.document;
+global.ResizeObserver = function () {
+    return {
+        observe: () => {},
+        disconnect: () => {}
+    };
+} as any as typeof ResizeObserver;
 //@ts-ignore
 global.window = window;
 // stubbing image load as it is not implemented in jsdom
@@ -122,6 +128,9 @@ function imitateWebGlGetContext(type, attributes) {
     if (type === 'webgl') {
         if (!this._webGLContext) {
             this._webGLContext = gl(this.width, this.height, attributes);
+            if (!this._webGLContext) {
+                throw new Error('Failed to create a WebGL context');
+            }
         }
         return this._webGLContext;
     }
