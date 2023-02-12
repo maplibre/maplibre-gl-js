@@ -24,6 +24,8 @@ const {fakeXhr} = nise;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
 const {registerFont} = canvas;
 
+global.fetch = null;
+
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // @ts-ignore
