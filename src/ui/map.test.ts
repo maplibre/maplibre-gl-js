@@ -2205,7 +2205,7 @@ describe('Map', () => {
         });
     });
 
-    test('map getImage matches addImage, uintArray', done => {
+    test('map getImage matches addImage, uintArray', () => {
         const map = createMap();
         const id = 'add-get-uint';
         const inputImage = {width: 2, height: 1, data: new Uint8Array(8)};
@@ -2217,11 +2217,9 @@ describe('Map', () => {
         expect(gotImage.data.width).toEqual(inputImage.width);
         expect(gotImage.data.height).toEqual(inputImage.height);
         expect(gotImage.sdf).toBe(false);
-
-        done();
     });
 
-    test('map getImage matches addImage, uintClampedArray', done => {
+    test('map getImage matches addImage, uintClampedArray', () => {
         const map = createMap();
         const id = 'add-get-uint-clamped';
         const inputImage = {width: 1, height: 2, data: new Uint8ClampedArray(8)};
@@ -2233,11 +2231,9 @@ describe('Map', () => {
         expect(gotImage.data.width).toEqual(inputImage.width);
         expect(gotImage.data.height).toEqual(inputImage.height);
         expect(gotImage.sdf).toBe(false);
-
-        done();
     });
 
-    test('map getImage matches addImage, ImageData', done => {
+    test('map getImage matches addImage, ImageData', () => {
         const map = createMap();
         const id = 'add-get-image-data';
         const inputImage = new ImageData(1, 3);
@@ -2249,11 +2245,9 @@ describe('Map', () => {
         expect(gotImage.data.width).toEqual(inputImage.width);
         expect(gotImage.data.height).toEqual(inputImage.height);
         expect(gotImage.sdf).toBe(false);
-
-        done();
     });
 
-    test('map getImage matches addImage, StyleImageInterface uint', done => {
+    test('map getImage matches addImage, StyleImageInterface uint', () => {
         const map = createMap();
         const id = 'add-get-style-image-iface-uint';
         const inputImage: StyleImageInterface = {
@@ -2269,11 +2263,9 @@ describe('Map', () => {
         expect(gotImage.data.width).toEqual(inputImage.width);
         expect(gotImage.data.height).toEqual(inputImage.height);
         expect(gotImage.sdf).toBe(false);
-
-        done();
     });
 
-    test('map getImage matches addImage, StyleImageInterface clamped', done => {
+    test('map getImage matches addImage, StyleImageInterface clamped', () => {
         const map = createMap();
         const id = 'add-get-style-image-iface-clamped';
         const inputImage: StyleImageInterface = {
@@ -2289,11 +2281,9 @@ describe('Map', () => {
         expect(gotImage.data.width).toEqual(inputImage.width);
         expect(gotImage.data.height).toEqual(inputImage.height);
         expect(gotImage.sdf).toBe(false);
-
-        done();
     });
 
-    test('map getImage matches addImage, StyleImageInterface SDF', done => {
+    test('map getImage matches addImage, StyleImageInterface SDF', () => {
         const map = createMap();
         const id = 'add-get-style-image-iface-sdf';
         const inputImage: StyleImageInterface = {
@@ -2309,8 +2299,6 @@ describe('Map', () => {
         expect(gotImage.data.width).toEqual(inputImage.width);
         expect(gotImage.data.height).toEqual(inputImage.height);
         expect(gotImage.sdf).toBe(true);
-
-        done();
     });
 
     test('map does not fire `styleimagemissing` for empty icon values', done => {
