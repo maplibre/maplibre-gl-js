@@ -51,7 +51,7 @@ import type {Callback} from '../types/callback';
 import type EvaluationParameters from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
 import type {Cancelable} from '../types/cancelable';
-import type {RequestParameters, ResponseCallback} from '../util/ajax';
+import type {RequestParameters, RequestDataType, ResponseCallback} from '../util/ajax';
 import type {
     LayerSpecification,
     FilterSpecification,
@@ -1512,6 +1512,20 @@ class Style extends Evented {
             // we just need to know which tiles have glyph dependencies
             sourceCache.setDependencies(params.tileID.key, params.type, ['']);
         }
+    }
+
+    getResource(
+        mapId: string,
+        {requestParameters, requestDataType}: { requestParameters: RequestParameters; requestDataType?: RequestDataType },
+        callback: ResponseCallback<any>
+    ) {
+        const request = makeRequest(requestParameters, requestDataType);
+
+        request.response.then((response) => {
+            callback(null, response);
+        }).catch(err => {
+            callback(err);
+        });
     }
 
     getGlyphsUrl() {

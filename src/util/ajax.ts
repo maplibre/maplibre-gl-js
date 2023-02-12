@@ -167,24 +167,49 @@ export function makeRequest<T>(requestParameters: RequestParameters, requestData
         that's a point to reconsider in the (hopefully near) future
      */
 
-    if (fetch && /:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
-        // if the url uses some custom protocol. E.g. "custom://..."
+    if (isWorker()) {
+        // workers shouldn't directly perform any network requests because the `config` is not visible for them and thus
+        // the `addProtocol` API won't work. We ask the main code to perform them instead. All the communication is
+        // callback-based since it's impossible to serialize a `Promise` for it to be passed via `postMessage`
 
-        // then check the protocol, and if there exists a custom handler for the protocol, then execute the custom
-        // handler. Otherwise, make the request using the Fetch API
-        const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
-        const action = config.REGISTERED_PROTOCOLS[protocol] || helper.makeFetchRequest;
+        let resolver;
+        let rejector;
 
-        return action(requestParameters, requestDataType);
-    } else if (fetch && !(/^file:/.test(requestParameters.url))) {
-        // if there's no protocol at all or the protocol is not `file://` (in comparison with the `if` block above, it
-        // can now be `http[s]://`). E.g. "https://..." or "/foo/bar.url"
+        const {cancel} = (self as any).worker.actor.send('getResource', {requestParameters, requestDataType}, (err, response) => {
+            if (err) {
+                rejector(err);
+            } else {
+                resolver(response);
+            }
+        }, undefined);
 
-        // then make a `fetch` request
-        return helper.makeFetchRequest(requestParameters, requestDataType);
+        return {
+            response: new Promise((resolve, reject) => {
+                resolver = resolve;
+                rejector = reject;
+            }),
+            cancel
+        };
     } else {
-        // fallback to use the XMLHttpRequest API. E.g. for the "file://..." urls
-        return helper.makeXMLHttpRequest(requestParameters, requestDataType);
+        if (fetch && /:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
+            // if the url uses some custom protocol. E.g. "custom://..."
+
+            // then check the protocol, and if there exists a custom handler for the protocol, then execute the custom
+            // handler. Otherwise, make the request using the Fetch API
+            const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
+            const action = config.REGISTERED_PROTOCOLS[protocol] || helper.makeFetchRequest;
+
+            return action(requestParameters, requestDataType);
+        } else if (fetch && !(/^file:/.test(requestParameters.url))) {
+            // if there's no protocol at all or the protocol is not `file://` (in comparison with the `if` block above, it
+            // can now be `http[s]://`). E.g. "https://..." or "/foo/bar.url"
+
+            // then make a `fetch` request
+            return helper.makeFetchRequest(requestParameters, requestDataType);
+        } else {
+            // fallback to use the XMLHttpRequest API. E.g. for the "file://..." urls
+            return helper.makeXMLHttpRequest(requestParameters, requestDataType);
+        }
     }
 }
 
