@@ -1,4 +1,4 @@
-import {LngLat} from './lng_lat_partial';
+import LngLat from './lng_lat_partial';
 
 import type {LngLatLike} from './lng_lat_partial';
 
