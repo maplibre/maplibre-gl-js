@@ -271,11 +271,11 @@ export function makeFetchRequest<T>(requestParameters: RequestParameters, reques
                 let data: T;
 
                 if (requestDataType === 'ArrayBuffer') {
-                    data = await  response.arrayBuffer() as T;
+                    data = await response.arrayBuffer() as T;
                 } else if (requestDataType === 'JSON') {
                     data = await response.json() as T;
                 } else {
-                    data = await  response.text() as T;
+                    data = await response.text() as T;
                 }
 
                 return {
