@@ -301,6 +301,7 @@ class Map extends Camera {
     _interactive: boolean;
     _cooperativeGestures: boolean | GestureOptions;
     _cooperativeGesturesScreen: HTMLElement;
+    _metaKey: keyof MouseEvent;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -418,6 +419,7 @@ class Map extends Camera {
 
         this._interactive = options.interactive;
         this._cooperativeGestures = options.cooperativeGestures;
+        this._metaKey = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
         this._maxTileCacheSize = options.maxTileCacheSize;
         this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
         this._preserveDrawingBuffer = options.preserveDrawingBuffer;
@@ -2629,12 +2631,8 @@ class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _getMetaKey() : keyof WheelEvent {
-        return navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
-    }
-
     _cooperativeGesturesOnWheel(event: WheelEvent) {
-        this._onCooperativeGesture(event, event[this._getMetaKey()], 1);
+        this._onCooperativeGesture(event, event[this._metaKey], 1);
     }
 
     _setupCooperativeGestures() {
