@@ -494,7 +494,7 @@ class Transform {
      * @returns {number} elevation in meters
      */
     getElevation(lnglat: LngLat, terrain: Terrain) {
-        const merc = MercatorCoordinate.fromLngLat(lnglat);
+        const merc = MercatorCoordinate.fromLngLat(lnglat.wrap());
         const worldSize = (1 << this.tileZoom) * EXTENT;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
         const tileX = Math.floor(mercX / EXTENT), tileY = Math.floor(mercY / EXTENT);
