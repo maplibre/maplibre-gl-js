@@ -4,6 +4,7 @@
 - Improve performance by sending style layers to worker thread before processing it on main thread to allow parallel processing ([#2131](https://github.com/maplibre/maplibre-gl-js/pull/2131))
 - [Breaking] Resize map when container element is resized. the resize related events now has different data associated with it ([#2157](https://github.com/maplibre/maplibre-gl-js/pull/2157))
 - Add Map.getImage() to retrieve previously-loaded images. ([#2168](https://github.com/maplibre/maplibre-gl-js/pull/2168))
+- Add method to enable/disable cooperative gestures
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
@@ -22,6 +23,7 @@
 
 ### 🐞 Bug fixes
 - Fix the worker been terminated on setting new style ([#2123](https://github.com/maplibre/maplibre-gl-js/pull/2123))
+- Change how meta key is detected for cooperative gestures
 
 
 ## 3.0.0-pre.3
