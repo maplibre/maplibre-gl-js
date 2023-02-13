@@ -5,6 +5,7 @@
 - [Breaking] Resize map when container element is resized. the resize related events now has different data associated with it ([#2157](https://github.com/maplibre/maplibre-gl-js/pull/2157))
 - Add Map.getImage() to retrieve previously-loaded images. ([#2168](https://github.com/maplibre/maplibre-gl-js/pull/2168))
 - Add method to enable/disable cooperative gestures
+- [Breaking] toBounds method of class LngLat is replaced by a static method fromLngLat of class LngLatBounds ([#2188](https://github.com/maplibre/maplibre-gl-js/pull/2188))
 - *...Add new stuff here...*
 
 ### 🐞 Bug fixes
