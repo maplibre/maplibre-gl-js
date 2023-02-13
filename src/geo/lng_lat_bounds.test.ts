@@ -178,9 +178,9 @@ describe('LngLatBounds', () => {
         const center0 = new LngLat(0, 0);
         const center1 = new LngLat(-73.9749, 40.7736);
 
-        const center0Radius10 = LngLatBounds.createBounds(center0, 10);
-        const center1Radius10 = LngLatBounds.createBounds(center1, 10);
-        const center1Radius0 = LngLatBounds.createBounds(center1);
+        const center0Radius10 = LngLatBounds.fromLngLat(center0, 10);
+        const center1Radius10 = LngLatBounds.fromLngLat(center1, 10);
+        const center1Radius0 = LngLatBounds.fromLngLat(center1);
 
         expect(center0Radius10.toArray()).toEqual(
             [[-0.00008983152770714982, -0.00008983152770714982], [0.00008983152770714982, 0.00008983152770714982]]

@@ -273,14 +273,14 @@ class LngLatBounds {
     /**
      * Returns a `LngLatBounds` from the coordinates extended by a given `radius`. The returned `LngLatBounds` completely contains the `radius`.
      *
-     * @param center
+     * @param center center postion of the new bounds.
      * @param {number} [radius=0] Distance in meters from the coordinates to extend the bounds.
      * @returns {LngLatBounds} A new `LngLatBounds` object representing the coordinates extended by the `radius`.
      * @example
      * var center = new maplibregl.LngLat(-73.9749, 40.7736);
-     * maplibregl.LngLatBounds.createBounds(100).toArray(); // = [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]
+     * maplibregl.LngLatBounds.fromLngLat(100).toArray(); // = [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]
      */
-    static createBounds(center: LngLat, radius:number = 0): LngLatBounds {
+    static fromLngLat(center: LngLat, radius:number = 0): LngLatBounds {
         const earthCircumferenceInMetersAtEquator = 40075017;
         const latAccuracy = 360 * radius / earthCircumferenceInMetersAtEquator,
             lngAccuracy = latAccuracy / Math.cos((Math.PI / 180) * center.lat);

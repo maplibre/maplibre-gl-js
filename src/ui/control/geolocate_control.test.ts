@@ -181,7 +181,7 @@ describe('GeolocateControl with no options', () => {
         const mapBounds = map.getBounds();
 
         // map bounds should contain or equal accuracy bounds, that is the ensure accuracy bounds doesn't fall outside the map bounds
-        const accuracyBounds = LngLatBounds.createBounds(mapCenter, 1000);
+        const accuracyBounds = LngLatBounds.fromLngLat(mapCenter, 1000);
 
         expect(accuracyBounds.getNorth().toFixed(4) <= mapBounds.getNorth().toFixed(4)).toBeTruthy();
         expect(accuracyBounds.getSouth().toFixed(4) >= mapBounds.getSouth().toFixed(4)).toBeTruthy();
@@ -190,7 +190,7 @@ describe('GeolocateControl with no options', () => {
 
         // map bounds should not be too much bigger on all edges of the accuracy bounds (this test will only work for an orthogonal bearing),
         // ensures map bounds does not contain buffered accuracy bounds, as if it does there is too much gap around the accuracy bounds
-        const bufferedAccuracyBounds = LngLatBounds.createBounds(mapCenter, 1100);
+        const bufferedAccuracyBounds = LngLatBounds.fromLngLat(mapCenter, 1100);
 
         expect(
             (bufferedAccuracyBounds.getNorth().toFixed(4) < mapBounds.getNorth().toFixed(4)) &&

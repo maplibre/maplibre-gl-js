@@ -278,7 +278,7 @@ class GeolocateControl extends Evented implements IControl {
         const radius = position.coords.accuracy;
         const bearing = this._map.getBearing();
         const options = extend({bearing}, this.options.fitBoundsOptions);
-        const newBounds = LngLatBounds.createBounds(center, radius);
+        const newBounds = LngLatBounds.fromLngLat(center, radius);
 
         this._map.fitBounds(newBounds, options, {
             geolocateSource: true // tag this camera change so it won't cause the control to change to background state
