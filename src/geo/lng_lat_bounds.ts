@@ -25,6 +25,7 @@ class LngLatBounds {
     /**
      * @param {LngLatLike} [sw] The southwest corner of the bounding box.
      * OR array of 4 numbers in the order of  west, south, east, north
+     * OR array of 2 LngLatLike: [sw,ne]
      * @param {LngLatLike} [ne] The northeast corner of the bounding box.
      * @example
      * var sw = new maplibregl.LngLat(-73.9876, 40.7661);
@@ -273,7 +274,7 @@ class LngLatBounds {
     /**
      * Returns a `LngLatBounds` from the coordinates extended by a given `radius`. The returned `LngLatBounds` completely contains the `radius`.
      *
-     * @param center center postion of the new bounds.
+     * @param center center coordinates of the new bounds.
      * @param {number} [radius=0] Distance in meters from the coordinates to extend the bounds.
      * @returns {LngLatBounds} A new `LngLatBounds` object representing the coordinates extended by the `radius`.
      * @example

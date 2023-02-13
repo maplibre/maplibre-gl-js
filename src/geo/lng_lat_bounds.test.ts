@@ -174,7 +174,7 @@ describe('LngLatBounds', () => {
         expect(bounds.isEmpty()).toBe(false);
     });
 
-    test('#createBounds', () => {
+    test('#fromLngLat', () => {
         const center0 = new LngLat(0, 0);
         const center1 = new LngLat(-73.9749, 40.7736);
 
