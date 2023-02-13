@@ -174,6 +174,23 @@ describe('LngLatBounds', () => {
         expect(bounds.isEmpty()).toBe(false);
     });
 
+    test('#createBounds', () => {
+        const center0 = new LngLat(0, 0);
+        const center1 = new LngLat(-73.9749, 40.7736);
+
+        const center0Radius10 = LngLatBounds.createBounds(center0, 10);
+        const center1Radius10 = LngLatBounds.createBounds(center1, 10);
+        const center1Radius0 = LngLatBounds.createBounds(center1);
+
+        expect(center0Radius10.toArray()).toEqual(
+            [[-0.00008983152770714982, -0.00008983152770714982], [0.00008983152770714982, 0.00008983152770714982]]
+        );
+        expect(center1Radius10.toArray()).toEqual(
+            [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]
+        );
+        expect(center1Radius0.toArray()).toEqual([[-73.9749, 40.7736], [-73.9749, 40.7736]]);
+    });
+
     describe('contains', () => {
         describe('point', () => {
             test('point is in bounds', () => {

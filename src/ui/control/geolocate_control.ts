@@ -7,6 +7,7 @@ import Marker from '../marker';
 import type Map from '../map';
 import type {FitBoundsOptions} from '../camera';
 import type {IControl} from './control';
+import LngLatBounds from '../../geo/lng_lat_bounds';
 
 type GeolocateOptions = {
     positionOptions?: PositionOptions;
@@ -277,8 +278,9 @@ class GeolocateControl extends Evented implements IControl {
         const radius = position.coords.accuracy;
         const bearing = this._map.getBearing();
         const options = extend({bearing}, this.options.fitBoundsOptions);
+        const newBounds = LngLatBounds.createBounds(center, radius);
 
-        this._map.fitBounds(center.toBounds(radius), options, {
+        this._map.fitBounds(newBounds, options, {
             geolocateSource: true // tag this camera change so it won't cause the control to change to background state
         });
     }
