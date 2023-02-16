@@ -3,14 +3,19 @@
 ### ✨ Features and improvements
 
 - Improve performance by sending style layers to worker thread before processing it on main thread to allow parallel processing ([#2131](https://github.com/maplibre/maplibre-gl-js/pull/2131))
-- [Breaking] Resize map when container element is resized. the resize related events now has different data associated with it ([#2157](https://github.com/maplibre/maplibre-gl-js/pull/2157))
-- Update changelog when setting up on M1 mac ([#2196](https://github.com/maplibre/maplibre-gl-js/pull/2196))
-- _...Add new stuff here..._
+- [Breaking] Resize map when container element is resized. the resize related events now has different data associated with it ([#2157](https://github.com/maplibre/maplibre-gl-js/pull/2157))<br/>
+Previously the originalEvent field was the reason of this change, for example it could be a <code>resize</code> event from the browser<br/>
+Now it is <code>ResizeObserverEntry</code>, see more https://developer.mozilla.org/en-US/docs/web/api/resizeobserverentry
+- Add Map.getImage() to retrieve previously-loaded images. ([#2168](https://github.com/maplibre/maplibre-gl-js/pull/2168))
+- Add method to enable/disable cooperative gestures
+- [Breaking] toBounds method of class LngLat is replaced by a static method fromLngLat of class LngLatBounds ([#2188](https://github.com/maplibre/maplibre-gl-js/pull/2188))
+- *...Add new stuff here...*
 
 ### 🐞 Bug fixes
 
 - Fix issue unloading sprite sheet when using `setStyle(style, {diff:true})` ([#2146](https://github.com/maplibre/maplibre-gl-js/pull/2146))
-- _...Add new stuff here..._
+- Fix wrap coords in `getTerrain` when `fitBounds` accross the AM ([#2155](https://github.com/maplibre/maplibre-gl-js/pull/2155))
+- *...Add new stuff here...*
 
 ## 3.0.0-pre.4
 
@@ -23,6 +28,8 @@
 - Throttle the image request queue while the map is moving to improve performance ([#2097](https://github.com/maplibre/maplibre-gl-js/issues/2097)
 
 ### 🐞 Bug fixes
+- Fix the worker been terminated on setting new style ([#2123](https://github.com/maplibre/maplibre-gl-js/pull/2123))
+- Change how meta key is detected for cooperative gestures
 
 - Fix the worker been terminated on setting new style ([#2123](https://github.com/maplibre/maplibre-gl-js/pull/2123))
 
