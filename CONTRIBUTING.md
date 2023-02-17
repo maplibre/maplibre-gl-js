@@ -41,6 +41,19 @@ If you have one of the newer arm64 machines, you might find that canvas.node or 
 npm install --build-from-source
 ```
 
+If you have installed from non-M1 machine to an M1 machine using Migration Assistant and you had `brew` installed before, and you get this error when running tests:
+
+```
+dlopen(/Users/[...]/common/temp/node_modules/.pnpm/canvas@2.11.0/node_modules/canvas/build/Release/canvas.node, 0x0001): symbol not found in flat namespace '_cairo_fill'
+
+      at Object.<anonymous> (../../common/temp/node_modules/.pnpm/canvas@2.11.0/node_modules/canvas/lib/bindings.js:3:18)
+```
+
+Try
+- Uninstall then re-install `brew` [brew](https://brew.sh/)
+- Run `arch -arm64 brew install pkg-config cairo pango libpng jpeg giflib librsvg`
+- delete `node_modules` folder and re-run `npm install`
+
 ### Linux
 
 Install [git](https://git-scm.com/), [GNU Make](http://www.gnu.org/software/make/), and libglew-dev
