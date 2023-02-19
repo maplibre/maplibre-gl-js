@@ -1,3 +1,6 @@
+## 17.1.0
+* Add support for multiple sprites in one style (#1805)
+
 ## 17.0.2
 
 * Fix errors when running style-spec bin scripts and added missing help. Removed unnecessary script 'gl-style-composite'. ([#1971](https://github.com/maplibre/maplibre-gl-js/pull/1971))
