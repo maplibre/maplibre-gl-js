@@ -1,5 +1,6 @@
 import LngLat, {earthRadius} from '../geo/lng_lat';
 import type {LngLatLike} from '../geo/lng_lat';
+import {IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec/tsc/src/tiles_and_coordinates';
 
 /*
  * The average circumference of the world in meters.
@@ -74,7 +75,7 @@ export function mercatorScale(lat: number) {
  *
  * @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js-docs/example/custom-style-layer/)
  */
-class MercatorCoordinate {
+class MercatorCoordinate implements IMercatorCoordinate {
     x: number;
     y: number;
     z: number;

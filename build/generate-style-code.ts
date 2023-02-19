@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 
-import spec from '../src/style-spec/reference/v8.json' assert {type: 'json'};
+import spec from '@maplibre/maplibre-gl-style-spec/tsc/src/reference/v8.json' assert {type: 'json'};
 
 function camelCase(str: string): string {
     return str.replace(/-(.)/g, (_, x) => {
@@ -169,7 +169,7 @@ function emitlayerProperties(locals) {
         `// This file is generated. Edit build/generate-style-code.ts, then run 'npm run codegen'.
 /* eslint-disable */
 
-import styleSpec from '../../style-spec/reference/latest';
+import styleSpec from '@maplibre/maplibre-gl-style-spec/tsc/src/reference/latest';
 
 import {
     Properties,
@@ -182,13 +182,13 @@ import {
     CrossFaded
 } from '../properties';
 
-import type Color from '../../style-spec/util/color';
-import type Padding from '../../style-spec/util/padding';
+import type Color from '@maplibre/maplibre-gl-style-spec/tsc/src/util/color';
+import type Padding from '@maplibre/maplibre-gl-style-spec/tsc/src/util/padding';
 
-import type Formatted from '../../style-spec/expression/types/formatted';
+import type Formatted from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types/formatted';
 
-import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
-import {StylePropertySpecification} from '../../style-spec/style-spec';
+import type ResolvedImage from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types/resolved_image';
+import {StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec/tsc/src/style-spec';
 `);
 
     const overridables = paintProperties.filter(p => p.overridable);
@@ -196,7 +196,7 @@ import {StylePropertySpecification} from '../../style-spec/style-spec';
         output.push(
             `import {
     ${overridables.reduce((imports, prop) => { imports.push(runtimeType(prop)); return imports; }, []).join(',\n    ')}
-} from '../../style-spec/expression/types';
+} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types';
 `);
     }
 

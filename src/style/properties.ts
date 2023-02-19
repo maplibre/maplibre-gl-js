@@ -1,15 +1,15 @@
 import {clone, extend, easeCubicInOut} from '../util/util';
-import * as interpolate from '../style-spec/util/interpolate';
-import Color from '../style-spec/util/color';
+import * as interpolate from '@maplibre/maplibre-gl-style-spec/tsc/src/util/interpolate';
+import Color from '@maplibre/maplibre-gl-style-spec/tsc/src/util/color';
 import {register} from '../util/web_worker_transfer';
 import EvaluationParameters from './evaluation_parameters';
 
 import {CanonicalTileID} from '../source/tile_id';
-import {StylePropertySpecification} from '../style-spec/style-spec';
+import {StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec/tsc/src/style-spec';
 import {
     TransitionSpecification,
     PropertyValueSpecification
-} from '../style-spec/types.g';
+} from '@maplibre/maplibre-gl-style-spec/dist';
 
 import {
     normalizePropertyExpression,
@@ -18,7 +18,7 @@ import {
     StylePropertyExpression,
     SourceExpression,
     CompositeExpression
-} from '../style-spec/expression';
+} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression';
 
 type TimePoint = number;
 
@@ -100,6 +100,7 @@ export class PropertyValue<T, R> {
     constructor(property: Property<T, R>, value: PropertyValueSpecification<T> | void) {
         this.property = property;
         this.value = value;
+        // @ts-ignore
         this.expression = normalizePropertyExpression(value === undefined ? property.specification.default : value, property.specification);
     }
 

@@ -7,11 +7,11 @@ import properties, {FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extru
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 import {mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
-import type {FeatureState} from '../../style-spec/expression';
+import type {FeatureState} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression';
 import type {BucketParameters} from '../../data/bucket';
 import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g';
 import type Transform from '../../geo/transform';
-import type {LayerSpecification} from '../../style-spec/types.g';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec/dist';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class Point3D extends Point {

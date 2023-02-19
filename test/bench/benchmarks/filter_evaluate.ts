@@ -2,7 +2,7 @@
 import Benchmark from '../lib/benchmark';
 import {VectorTile} from '@mapbox/vector-tile';
 import Pbf from 'pbf';
-import createFilter from '../../../src/style-spec/feature_filter';
+import createFilter from '@maplibre/maplibre-gl-style-spec/tsc/src/feature_filter';
 import filters from '../data/filters.json' assert {type: 'json'};
 
 export default class FilterEvaluate extends Benchmark {

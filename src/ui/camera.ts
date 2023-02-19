@@ -1,5 +1,5 @@
 import {bindAll, extend, warnOnce, clamp, wrap, ease as defaultEasing, pick} from '../util/util';
-import {number as interpolate} from '../style-spec/util/interpolate';
+import {number as interpolate} from '@maplibre/maplibre-gl-style-spec/tsc/src/util/interpolate';
 import browser from '../util/browser';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';

@@ -7,11 +7,11 @@ import properties, {CircleLayoutPropsPossiblyEvaluated, CirclePaintPropsPossibly
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
 import {mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
-import type {FeatureState} from '../../style-spec/expression';
+import type {FeatureState} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression';
 import type Transform from '../../geo/transform';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
-import type {LayerSpecification} from '../../style-spec/types.g';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec/dist';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 class CircleStyleLayer extends StyleLayer {

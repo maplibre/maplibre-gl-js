@@ -57,7 +57,8 @@ import type {
     LightSpecification,
     SourceSpecification,
     TerrainSpecification
-} from '../style-spec/types.g';
+} from '@maplibre/maplibre-gl-style-spec/dist';
+
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';

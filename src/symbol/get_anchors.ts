@@ -1,4 +1,4 @@
-import {number as interpolate} from '../style-spec/util/interpolate';
+import {number as interpolate} from '@maplibre/maplibre-gl-style-spec/tsc/src/util/interpolate';
 
 import Anchor from '../symbol/anchor';
 import checkMaxAngle from './check_max_angle';

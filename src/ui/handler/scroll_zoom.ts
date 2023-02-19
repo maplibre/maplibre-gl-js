@@ -2,7 +2,7 @@ import DOM from '../../util/dom';
 
 import {ease as _ease, bindAll, bezier} from '../../util/util';
 import browser from '../../util/browser';
-import {number as interpolate} from '../../style-spec/util/interpolate';
+import {number as interpolate} from '@maplibre/maplibre-gl-style-spec/tsc/src/util/interpolate';
 import LngLat from '../../geo/lng_lat';
 
 import type Map from '../map';

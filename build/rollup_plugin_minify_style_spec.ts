@@ -8,7 +8,7 @@ export default function minifyStyleSpec(): Plugin {
     return {
         name: 'minify-style-spec',
         transform: (source, id) => {
-            if (!/style\-spec[\\/]reference[\\/]v[0-9]+\.json$/.test(id)) {
+            if (!/reference[\\/]v[0-9]+\.json$/.test(id)) {
                 return;
             }
 

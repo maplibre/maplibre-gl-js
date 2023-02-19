@@ -1,5 +1,5 @@
 import fs from 'fs';
-import reference from '../../src/style-spec/reference/latest';
+import reference from '@maplibre/maplibre-gl-style-spec/tsc/src/reference/latest';
 import packageJson from '../../package.json' assert {type: 'json'};
 
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
@@ -45,7 +45,7 @@ describe('test min build', () => {
         const decreaseQuota = 4096;
 
         // feel free to update this value after you've checked that it has changed on purpose :-)
-        const expectedBytes = 754120;
+        const expectedBytes = 756547;
 
         expect(actualBytes - expectedBytes).toBeLessThan(increaseQuota);
         expect(expectedBytes - actualBytes).toBeLessThan(decreaseQuota);
