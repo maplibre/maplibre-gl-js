@@ -483,7 +483,7 @@ export class DataConstantProperty<T> implements Property<T, T> {
     }
 
     interpolate(a: T, b: T, t: number): T {
-        const interp: ((a: T, b: T, t: number) => T) = (interpolate as any)[this.specification.type];
+        const interp: any = interpolateFactory(this.specification.type as any);
         if (interp) {
             return interp(a, b, t);
         } else {
@@ -542,7 +542,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, a.parameters);
         }
 
-        const interp: ((a: T, b: T, t: number) => T) = interpolateFactory(this.specification.type);
+        const interp: any = interpolateFactory(this.specification.type as any);
         if (interp) {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: interp(a.value.value, b.value.value, t)}, a.parameters);
         } else {
