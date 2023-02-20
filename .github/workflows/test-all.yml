@@ -45,7 +45,7 @@ jobs:
     name: Tests including GL
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-12-arm]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
