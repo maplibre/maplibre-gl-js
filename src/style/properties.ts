@@ -1,5 +1,5 @@
 import {clone, extend, easeCubicInOut} from '../util/util';
-import {interpolate, Color, StylePropertySpecification, normalizePropertyExpression,
+import {interpolateFactory, Color, StylePropertySpecification, normalizePropertyExpression,
     Feature,
     FeatureState,
     StylePropertyExpression,
@@ -542,7 +542,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, a.parameters);
         }
 
-        const interp: ((a: T, b: T, t: number) => T) = (interpolate as any)[this.specification.type];
+        const interp: ((a: T, b: T, t: number) => T) = interpolateFactory(this.specification.type);
         if (interp) {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: interp(a.value.value, b.value.value, t)}, a.parameters);
         } else {
