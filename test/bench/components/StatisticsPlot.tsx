@@ -88,7 +88,7 @@ export const StatisticsPlot = (props:StatisticsPlotProps) => {
                     const color = versionColor(v.name);
                     const scale = d3.scaleLinear()
                         .domain([0, v.samples.length])
-                        .range([0, bandwidth]);
+                        .interpolates.number([0, bandwidth]);
 
                     const {
                         mean,
