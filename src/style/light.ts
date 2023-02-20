@@ -1,4 +1,4 @@
-import {number as interpolate, Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
+import {range, Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 
 import {extend, sphericalToCartesian} from '../util/util';
 import {Evented} from '../util/evented';
@@ -41,9 +41,9 @@ class LightPositionProperty implements Property<[number, number, number], LightP
 
     interpolate(a: LightPosition, b: LightPosition, t: number): LightPosition {
         return {
-            x: interpolate(a.x, b.x, t),
-            y: interpolate(a.y, b.y, t),
-            z: interpolate(a.z, b.z, t),
+            x: range(a.x, b.x, t),
+            y: range(a.y, b.y, t),
+            z: range(a.z, b.z, t),
         };
     }
 }
