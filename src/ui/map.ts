@@ -76,6 +76,7 @@ export type MapOptions = {
     maplibreLogo?: boolean;
     logoPosition?: ControlPosition;
     failIfMajorPerformanceCaveat?: boolean;
+    powerPreference?: WebGLPowerPreference;
     preserveDrawingBuffer?: boolean;
     antialias?: boolean;
     refreshExpiredTiles?: boolean;
@@ -177,6 +178,7 @@ const defaultOptions = {
     maplibreLogo: false,
 
     failIfMajorPerformanceCaveat: false,
+    powerPreference: 'default',
     preserveDrawingBuffer: false,
     trackResize: true,
     renderWorldCopies: true,
@@ -226,6 +228,7 @@ const defaultOptions = {
  * @param {string} [options.logoPosition='bottom-left'] A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
  * @param {boolean} [options.failIfMajorPerformanceCaveat=false] If `true`, map creation will fail if the performance of MapLibre
  *   GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
+ * @param {WebGLPowerPreference} [options.powerPreference='default'] Provides a hint to the user agent indicating what configuration of GPU is suitable for this WebGL context. This may influence which GPU is used in a system with multiple GPUs. For example, a dual-GPU system might have one GPU that consumes less power at the expense of rendering performance. Note that this property is only a hint and a WebGL implementation may choose to ignore it. [Full official docs, section 5.2.1]( https://registry.khronos.org/webgl/specs/latest/1.0/)
  * @param {boolean} [options.preserveDrawingBuffer=false] If `true`, the map's canvas can be exported to a PNG using `map.getCanvas().toDataURL()`. This is `false` by default as a performance optimization.
  * @param {boolean} [options.antialias] If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. this is `false` by default as a performance optimization.
  * @param {boolean} [options.refreshExpiredTiles=true] If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
@@ -322,6 +325,7 @@ class Map extends Camera {
     _resizeObserver: ResizeObserver;
     _preserveDrawingBuffer: boolean;
     _failIfMajorPerformanceCaveat: boolean;
+    _powerPreference: WebGLPowerPreference;
     _antialias: boolean;
     _refreshExpiredTiles: boolean;
     _hash: Hash;
@@ -422,6 +426,7 @@ class Map extends Camera {
         this._metaKey = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
         this._maxTileCacheSize = options.maxTileCacheSize;
         this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
+        this._powerPreference = options.powerPreference;
         this._preserveDrawingBuffer = options.preserveDrawingBuffer;
         this._antialias = options.antialias;
         this._trackResize = options.trackResize;
@@ -2687,8 +2692,9 @@ class Map extends Camera {
     }
 
     _setupPainter() {
-        const attributes = extend({}, supported.webGLContextAttributes, {
+        const attributes: WebGLContextAttributes = extend({}, supported.webGLContextAttributes, {
             failIfMajorPerformanceCaveat: this._failIfMajorPerformanceCaveat,
+            powerPreference: this._powerPreference,
             preserveDrawingBuffer: this._preserveDrawingBuffer,
             antialias: this._antialias || false
         });
