@@ -256,8 +256,9 @@ export function filterObject(input: any, iterator: Function, context?: any): any
 
 /**
  * Deeply compares two object literals.
- * @param a
- * @param b
+ * @param a first object literal to be compared
+ * @param b second object literal to be compared
+ * @returns true if the two object literals are deeply equal, false otherwise
  */
 export function deepEqual(a?: unknown | null, b?: unknown | null): boolean {
     if (Array.isArray(a)) {
