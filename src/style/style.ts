@@ -18,7 +18,7 @@ import type {SourceClass} from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import SourceCache from '../source/source_cache';
 import GeoJSONSource from '../source/geojson_source';
-import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, diffOperations} from '@maplibre/maplibre-gl-style-spec';
+import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, operations as diffOperations} from '@maplibre/maplibre-gl-style-spec';
 import getWorkerPool from '../util/global_worker_pool';
 import {
     registerForPluginStateChange,
