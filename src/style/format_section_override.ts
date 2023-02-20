@@ -1,8 +1,5 @@
-import type {Expression} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/expression';
-import type EvaluationContext from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/evaluation_context';
-import type {Type} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types';
-import type {ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression';
-import {NullType} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types';
+import type {Expression, EvaluationContext, Type, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
+import {NullType} from '@maplibre/maplibre-gl-style-spec';
 import {PossiblyEvaluatedPropertyValue} from './properties';
 import {register} from '../util/web_worker_transfer';
 

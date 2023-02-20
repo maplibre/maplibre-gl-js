@@ -3,7 +3,7 @@ import {bindAll} from '../../util/util';
 
 import type Map from '../map';
 import type {IControl} from './control';
-import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec/dist';
+import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * An `TerrainControl` control adds a button to turn terrain on and off.

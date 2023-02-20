@@ -1,7 +1,7 @@
 import StyleLayer from '../style_layer';
 import type Map from '../../ui/map';
 import {mat4} from 'gl-matrix';
-import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec/dist';
+import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type CustomRenderMethod = (gl: WebGLRenderingContext, matrix: mat4) => void;
 

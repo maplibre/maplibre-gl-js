@@ -4,7 +4,7 @@ import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../geo/mercator_coordinate';
 import {register} from '../util/web_worker_transfer';
 import {mat4} from 'gl-matrix';
-import {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec/tsc/src/tiles_and_coordinates';
+import {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 
 export class CanonicalTileID implements ICanonicalTileID {
     z: number;

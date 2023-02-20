@@ -19,7 +19,7 @@ import type VertexBuffer from '../gl/vertex_buffer';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
-} from '@maplibre/maplibre-gl-style-spec/dist';
+} from '@maplibre/maplibre-gl-style-spec';
 import {Cancelable} from '../types/cancelable';
 
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];

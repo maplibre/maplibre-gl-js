@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 
-import spec from '@maplibre/maplibre-gl-style-spec/tsc/src/reference/v8.json' assert {type: 'json'};
+import {v8} from '@maplibre/maplibre-gl-style-spec';
 
 function camelCase(str: string): string {
     return str.replace(/-(.)/g, (_, x) => {
@@ -137,20 +137,20 @@ function propertyValue(property, type) {
     }
 }
 
-const layers = Object.keys(spec.layer.type.values).map((type) => {
-    const layoutProperties = Object.keys(spec[`layout_${type}`]).reduce((memo, name) => {
+const layers = Object.keys(v8.layer.type.values).map((type) => {
+    const layoutProperties = Object.keys(v8[`layout_${type}`]).reduce((memo, name) => {
         if (name !== 'visibility') {
-            spec[`layout_${type}`][name].name = name;
-            spec[`layout_${type}`][name].layerType = type;
-            memo.push(spec[`layout_${type}`][name]);
+            v8[`layout_${type}`][name].name = name;
+            v8[`layout_${type}`][name].layerType = type;
+            memo.push(v8[`layout_${type}`][name]);
         }
         return memo;
     }, []);
 
-    const paintProperties = Object.keys(spec[`paint_${type}`]).reduce((memo, name) => {
-        spec[`paint_${type}`][name].name = name;
-        spec[`paint_${type}`][name].layerType = type;
-        memo.push(spec[`paint_${type}`][name]);
+    const paintProperties = Object.keys(v8[`paint_${type}`]).reduce((memo, name) => {
+        v8[`paint_${type}`][name].name = name;
+        v8[`paint_${type}`][name].layerType = type;
+        memo.push(v8[`paint_${type}`][name]);
         return memo;
     }, []);
 
@@ -169,7 +169,7 @@ function emitlayerProperties(locals) {
         `// This file is generated. Edit build/generate-style-code.ts, then run 'npm run codegen'.
 /* eslint-disable */
 
-import styleSpec from '@maplibre/maplibre-gl-style-spec/tsc/src/reference/latest';
+import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 
 import {
     Properties,
@@ -182,13 +182,13 @@ import {
     CrossFaded
 } from '../properties';
 
-import type Color from '@maplibre/maplibre-gl-style-spec/tsc/src/util/color';
-import type Padding from '@maplibre/maplibre-gl-style-spec/tsc/src/util/padding';
+import type {Color} from '@maplibre/maplibre-gl-style-spec';
+import type {Padding} from '@maplibre/maplibre-gl-style-spec';
 
-import type Formatted from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types/formatted';
+import type {Formatted} from '@maplibre/maplibre-gl-style-spec';
 
-import type ResolvedImage from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types/resolved_image';
-import {StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec/tsc/src/style-spec';
+import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
+import {StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
 `);
 
     const overridables = paintProperties.filter(p => p.overridable);

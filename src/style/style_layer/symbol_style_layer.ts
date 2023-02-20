@@ -17,22 +17,19 @@ import {
     isExpression,
     StyleExpression,
     ZoomConstantExpression,
-    ZoomDependentExpression
-} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression';
+    ZoomDependentExpression,
+    FormattedType,
+    typeOf,
+    Formatted,
+    FormatExpression,
+    Literal} from '@maplibre/maplibre-gl-style-spec';
 
 import type {BucketParameters} from '../../data/bucket';
 import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
 import type EvaluationParameters from '../evaluation_parameters';
-import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec/dist';
-import type {Feature, SourceExpression} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression';
-import type {Expression} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/expression';
+import type {Expression, Feature, SourceExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CanonicalTileID} from '../../source/tile_id';
-import {FormattedType} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types';
-import {typeOf} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/values';
-import Formatted from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types/formatted';
 import FormatSectionOverride from '../format_section_override';
-import FormatExpression from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/definitions/format';
-import Literal from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/definitions/literal';
 
 class SymbolStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<SymbolLayoutProps>;

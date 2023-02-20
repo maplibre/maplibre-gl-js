@@ -18,11 +18,8 @@ import type {SourceClass} from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import SourceCache from '../source/source_cache';
 import GeoJSONSource from '../source/geojson_source';
-import styleSpec from '@maplibre/maplibre-gl-style-spec/tsc/src/reference/latest';
+import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, diffOperations} from '@maplibre/maplibre-gl-style-spec';
 import getWorkerPool from '../util/global_worker_pool';
-import deref from '@maplibre/maplibre-gl-style-spec/tsc/src/deref';
-import emptyStyle from '@maplibre/maplibre-gl-style-spec/tsc/src/empty';
-import diffStyles, {operations as diffOperations} from '@maplibre/maplibre-gl-style-spec/tsc/src/diff';
 import {
     registerForPluginStateChange,
     evented as rtlTextPluginEvented,
@@ -59,7 +56,7 @@ import type {
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
-} from '@maplibre/maplibre-gl-style-spec/dist';
+} from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';

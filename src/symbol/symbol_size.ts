@@ -1,10 +1,9 @@
-import {number as interpolate} from '@maplibre/maplibre-gl-style-spec/tsc/src/util/interpolate';
-import Interpolate from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/definitions/interpolate';
+import {Interpolate, number as interpolate} from '@maplibre/maplibre-gl-style-spec';
 import {clamp} from '../util/util';
 import EvaluationParameters from '../style/evaluation_parameters';
 
 import type {PropertyValue, PossiblyEvaluatedPropertyValue} from '../style/properties';
-import type {InterpolationType} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/definitions/interpolate';
+import type {InterpolationType} from '@maplibre/maplibre-gl-style-spec';
 
 const MAX_GLYPH_ICON_SIZE = 255;
 const SIZE_PACK_FACTOR = 128;

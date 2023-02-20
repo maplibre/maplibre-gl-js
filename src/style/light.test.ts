@@ -1,9 +1,7 @@
 import Light from './light';
-import styleSpec from '@maplibre/maplibre-gl-style-spec/tsc/src/reference/latest';
-import Color from '@maplibre/maplibre-gl-style-spec/tsc/src/util/color';
+import {Color, latest as styleSpec, LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {sphericalToCartesian} from '../util/util';
 import EvaluationParameters from './evaluation_parameters';
-import {LightSpecification} from '@maplibre/maplibre-gl-style-spec/dist';
 import {TransitionParameters} from './properties';
 
 const spec = styleSpec.light;

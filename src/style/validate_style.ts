@@ -1,4 +1,4 @@
-import validateStyleMin from '@maplibre/maplibre-gl-style-spec/tsc/src/validate_style.min';
+import {validateStyleMin} from '@maplibre/maplibre-gl-style-spec';
 import {ErrorEvent} from '../util/evented';
 
 import type {Evented} from '../util/evented';

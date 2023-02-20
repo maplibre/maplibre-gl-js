@@ -23,7 +23,7 @@ import type {
     WorkerTileParameters,
     WorkerTileCallback,
 } from '../source/worker_source';
-import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec/dist';
+import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
 
 class WorkerTile {

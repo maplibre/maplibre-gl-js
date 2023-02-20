@@ -1,6 +1,5 @@
 import {packUint8ToFloat} from '../shaders/encode_attribute';
-import Color from '@maplibre/maplibre-gl-style-spec/tsc/src/util/color';
-import {supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec/tsc/src/util/properties';
+import {Color, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {register} from '../util/web_worker_transfer';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties';
 import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types.g';
@@ -24,10 +23,10 @@ import type {
     FeatureState,
     GlobalProperties,
     SourceExpression,
-    CompositeExpression
-} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression';
+    CompositeExpression,
+    FormattedSection
+} from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureStates} from '../source/source_state';
-import type {FormattedSection} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types/formatted';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 export type BinderUniform = {

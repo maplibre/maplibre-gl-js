@@ -1,4 +1,4 @@
-import Color from '@maplibre/maplibre-gl-style-spec/tsc/src/util/color';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 import type Context from './context';
 import type {

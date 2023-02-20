@@ -1,4 +1,4 @@
-import {number} from '@maplibre/maplibre-gl-style-spec/tsc/src/util/interpolate';
+import {number} from '@maplibre/maplibre-gl-style-spec';
 import Point from '@mapbox/point-geometry';
 import {clamp} from '../util/util';
 

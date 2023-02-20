@@ -17,8 +17,8 @@ import MercatorCoordinate from '../geo/mercator_coordinate';
 import TerrainSourceCache from '../source/terrain_source_cache';
 import SourceCache from '../source/source_cache';
 import EXTENT from '../data/extent';
-import {number as mix} from '@maplibre/maplibre-gl-style-spec/tsc/src/util/interpolate';
-import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec/dist';
+import {number as mix} from '@maplibre/maplibre-gl-style-spec';
+import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {earthRadius} from '../geo/lng_lat';
 
 export type TerrainData = {

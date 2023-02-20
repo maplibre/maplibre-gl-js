@@ -1,9 +1,7 @@
 import TransferableGridIndex from './transferable_grid_index';
-import Color from '@maplibre/maplibre-gl-style-spec/tsc/src/util/color';
-import {StylePropertyFunction, StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression';
-import CompoundExpression from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/compound_expression';
-import expressions from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/definitions';
-import ResolvedImage from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types/resolved_image';
+import {Color, CompoundExpression, expressions, ResolvedImage, StylePropertyFunction,
+    StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
+
 import {AJAXError} from './ajax';
 
 import type {Transferable} from '../types/transferable';

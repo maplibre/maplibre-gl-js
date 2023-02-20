@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import {StyleSpecification} from '@maplibre/maplibre-gl-style-spec/dist';
+import {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export default function localizeURLs(style: any, port: number, baseTestsDir: string) {
     localizeStyleURLs(style, port);

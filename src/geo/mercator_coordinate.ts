@@ -1,6 +1,6 @@
 import LngLat, {earthRadius} from '../geo/lng_lat';
 import type {LngLatLike} from '../geo/lng_lat';
-import {IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec/tsc/src/tiles_and_coordinates';
+import {IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 
 /*
  * The average circumference of the world in meters.

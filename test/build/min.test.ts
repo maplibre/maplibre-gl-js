@@ -1,5 +1,5 @@
 import fs from 'fs';
-import reference from '@maplibre/maplibre-gl-style-spec/tsc/src/reference/latest';
+import {latest as reference} from '@maplibre/maplibre-gl-style-spec';
 import packageJson from '../../package.json' assert {type: 'json'};
 
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');

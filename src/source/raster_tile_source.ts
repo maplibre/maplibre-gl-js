@@ -18,7 +18,7 @@ import type {Cancelable} from '../types/cancelable';
 import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
-} from '@maplibre/maplibre-gl-style-spec/dist';
+} from '@maplibre/maplibre-gl-style-spec';
 
 class RasterTileSource extends Evented implements Source {
     type: 'raster' | 'raster-dem';

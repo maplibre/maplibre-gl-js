@@ -1,6 +1,6 @@
 import {filterObject} from '../util/util';
 
-import styleSpec from '@maplibre/maplibre-gl-style-spec/tsc/src/reference/latest';
+import {latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {
     validateStyle,
     validateLayoutProperty,
@@ -9,21 +9,17 @@ import {
 } from './validate_style';
 import {Evented} from '../util/evented';
 import {Layout, Transitionable, Transitioning, Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue} from './properties';
-import {supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec/tsc/src/util/properties';
 
-import type {FeatureState} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression';
 import type {Bucket} from '../data/bucket';
 import type Point from '@mapbox/point-geometry';
-import type {FeatureFilter} from '@maplibre/maplibre-gl-style-spec/tsc/src/feature_filter';
+import type {FeatureFilter, FeatureState,
+    LayerSpecification,
+    FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {TransitionParameters, PropertyValue} from './properties';
 import EvaluationParameters from './evaluation_parameters';
 import type {CrossfadeParameters} from './evaluation_parameters';
 
 import type Transform from '../geo/transform';
-import type {
-    LayerSpecification,
-    FilterSpecification
-} from '@maplibre/maplibre-gl-style-spec/dist';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type Map from '../ui/map';
 import type {StyleSetterOptions} from './style';

@@ -1,10 +1,10 @@
 import path from 'path';
 import fs from 'fs';
 import glob from 'glob';
-import {createPropertyExpression} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression';
-import {isFunction} from '@maplibre/maplibre-gl-style-spec/tsc/src/function';
-import convertFunction from '@maplibre/maplibre-gl-style-spec/tsc/src/function/convert';
-import {toString} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types';
+import {createPropertyExpression,
+    isFunction,
+    convertFunction,
+    toString} from '@maplibre/maplibre-gl-style-spec';
 import {CanonicalTileID} from '../../../src/source/tile_id';
 import {getGeometry} from './lib/geometry';
 import {stringify} from './lib/util';

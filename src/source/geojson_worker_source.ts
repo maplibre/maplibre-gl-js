@@ -7,7 +7,7 @@ import vtpbf from 'vt-pbf';
 import Supercluster from 'supercluster';
 import geojsonvt from 'geojson-vt';
 import VectorTileWorkerSource from './vector_tile_worker_source';
-import {createExpression} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression';
+import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 
 import type {
     WorkerTileParameters,
