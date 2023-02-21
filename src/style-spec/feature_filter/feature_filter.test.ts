@@ -48,8 +48,8 @@ describe('filter', () => {
         compileTimeCheck(['slice', ['literal', [0]], 0]);
         compileTimeCheck(['slice', 'myString', 0, 1]);
         compileTimeCheck(['slice', ['literal', [0, 1, 2]], 0, 1]);
-        compileTimeCheck(['format', ["get", "title"], { "font-scale": 0.8 }]);
-        compileTimeCheck(['format', ["get", "title"], { "font-scale": 0.8, "text-color": '#fff' }]);
+        compileTimeCheck(['format', ['get', 'title'], {'font-scale': 0.8}]);
+        compileTimeCheck(['format', ['get', 'title'], {'font-scale': 0.8, 'text-color': '#fff'}]);
         compileTimeCheck(['step', ['get', 'point_count'], '#df2d43', 50, '#df2d43', 200, '#df2d43']);
         compileTimeCheck(['step', ['get', 'point_count'], 20, 50, 30, 200, 40]);
         compileTimeCheck(['step', ['get', 'point_count'], 0.6, 50, 0.7, 200, 0.8]);
