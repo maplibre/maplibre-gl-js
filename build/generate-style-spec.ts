@@ -151,7 +151,7 @@ export type ExpressionSpecification =
     | ['array', ExpressionInputType | ExpressionSpecification, number | ExpressionSpecification, unknown | ExpressionSpecification] // array
     | ['boolean', ...(unknown | ExpressionSpecification)[], unknown | ExpressionSpecification] // boolean
     | CollatorExpressionSpecification
-    | ['format', ...(string | ['image', ExpressionSpecification] | ExpressionSpecification | {'font-scale'?: number | ExpressionSpecification, 'text-font'?: string[] | ExpressionSpecification, 'text-color': ColorSpecification | ExpressionSpecification})[]] // string
+    | ['format', ...(string | ['image', ExpressionSpecification] | ExpressionSpecification | {'font-scale'?: number | ExpressionSpecification, 'text-font'?: string[] | ExpressionSpecification, 'text-color'?: ColorSpecification | ExpressionSpecification})[]] // string
     | ['image', unknown | ExpressionSpecification] // image
     | ['literal', unknown]
     | ['number', unknown | ExpressionSpecification, ...(unknown | ExpressionSpecification)[]] // number

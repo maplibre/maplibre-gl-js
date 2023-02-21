@@ -14,6 +14,7 @@
 
 ### 🐞 Bug fixes
 
+- Fix `format` expression type to make `text-color` optional.
 - Fix issue unloading sprite sheet when using `setStyle(style, {diff:true})` ([#2146](https://github.com/maplibre/maplibre-gl-js/pull/2146))
 - Fix wrap coords in `getTerrain` when `fitBounds` accross the AM ([#2155](https://github.com/maplibre/maplibre-gl-js/pull/2155))
 - _...Add new stuff here..._
