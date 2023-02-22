@@ -193,11 +193,12 @@ import {StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
 
     const overridables = paintProperties.filter(p => p.overridable);
     if (overridables.length) {
-        output.push(
-            `import {
-    ${overridables.reduce((imports, prop) => { imports.push(runtimeType(prop)); return imports; }, []).join(',\n    ')}
-} from '@maplibre/maplibre-gl-style-spec/tsc/src/expression/types';
-`);
+        const overridesArray = `import {
+            ${overridables.reduce((imports, prop) => { imports.push(runtimeType(prop)); return imports; }, []).join(',\n    ')}
+        } from '@maplibre/maplibre-gl-style-spec';
+        `;
+        console.log(overridesArray);
+        output.push(overridesArray);
     }
 
     if (layoutProperties.length) {
