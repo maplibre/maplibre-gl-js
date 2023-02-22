@@ -2,7 +2,9 @@
 
 import * as fs from 'fs';
 
-import {v8} from '@maplibre/maplibre-gl-style-spec';
+import stylespec from '@maplibre/maplibre-gl-style-spec';
+
+const v8 = stylespec.v8;
 
 function camelCase(str: string): string {
     return str.replace(/-(.)/g, (_, x) => {
