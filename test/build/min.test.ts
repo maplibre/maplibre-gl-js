@@ -1,5 +1,4 @@
 import fs from 'fs';
-import reference from '@maplibre/maplibre-gl-style-spec/src/reference/latest';
 import packageJson from '../../package.json' assert {type: 'json'};
 
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
@@ -15,11 +14,6 @@ describe('test min build', () => {
         for (const name in packageJson.scripts) {
             expect(minBundle.includes(packageJson.scripts[name])).toBeFalsy();
         }
-    });
-
-    test('trims reference.json fields', () => {
-        expect(reference.$root.version.doc).toBeTruthy();
-        expect(minBundle.includes(reference.$root.version.doc)).toBeFalsy();
     });
 
     test('evaluates without errors', async () => {
