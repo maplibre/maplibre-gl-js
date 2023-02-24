@@ -16,7 +16,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {fakeXhr, fakeServer} from 'nise';
 import {WorkerGlobalScopeInterface} from '../util/web_worker';
 import EvaluationParameters from './evaluation_parameters';
-import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '../style-spec/types.g';
+import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {SourceClass} from '../source/source';
 import GeoJSONSource from '../source/geojson_source';
 

@@ -2,7 +2,7 @@ import DepthMode from '../gl/depth_mode';
 import StencilMode from '../gl/stencil_mode';
 import CullFaceMode from '../gl/cull_face_mode';
 import {debugUniformValues} from './program/debug_program';
-import Color from '../style-spec/util/color';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 import ColorMode from '../gl/color_mode';
 
 import type Painter from './painter';

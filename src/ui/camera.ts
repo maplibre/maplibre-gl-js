@@ -1,5 +1,5 @@
 import {bindAll, extend, warnOnce, clamp, wrap, ease as defaultEasing, pick} from '../util/util';
-import {number as interpolate} from '../style-spec/util/interpolate';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import browser from '../util/browser';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
@@ -913,13 +913,13 @@ abstract class Camera extends Evented {
 
         this._ease((k) => {
             if (this._zooming) {
-                tr.zoom = interpolate(startZoom, zoom, k);
+                tr.zoom = interpolates.number(startZoom, zoom, k);
             }
             if (this._rotating) {
-                tr.bearing = interpolate(startBearing, bearing, k);
+                tr.bearing = interpolates.number(startBearing, bearing, k);
             }
             if (this._pitching) {
-                tr.pitch = interpolate(startPitch, pitch, k);
+                tr.pitch = interpolates.number(startPitch, pitch, k);
             }
             if (this._padding) {
                 tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
@@ -984,7 +984,7 @@ abstract class Camera extends Evented {
             this._elevationStart += k * (pitch1 - pitch2);
             this._elevationTarget = elevation;
         }
-        this.transform.elevation = interpolate(this._elevationStart, this._elevationTarget, k);
+        this.transform.elevation = interpolates.number(this._elevationStart, this._elevationTarget, k);
     }
 
     _finalizeElevation() {
@@ -1230,10 +1230,10 @@ abstract class Camera extends Evented {
             tr.zoom = k === 1 ? zoom : startZoom + tr.scaleZoom(scale);
 
             if (this._rotating) {
-                tr.bearing = interpolate(startBearing, bearing, k);
+                tr.bearing = interpolates.number(startBearing, bearing, k);
             }
             if (this._pitching) {
-                tr.pitch = interpolate(startPitch, pitch, k);
+                tr.pitch = interpolates.number(startPitch, pitch, k);
             }
             if (this._padding) {
                 tr.interpolatePadding(startPadding, padding as PaddingOptions, k);

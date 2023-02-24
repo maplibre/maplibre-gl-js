@@ -1,6 +1,6 @@
 import {fakeServer} from 'nise';
 import Worker from './worker';
-import {LayerSpecification} from '../style-spec/types.g';
+import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Cancelable} from '../types/cancelable';
 import {WorkerGlobalScopeInterface} from '../util/web_worker';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';

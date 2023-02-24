@@ -3,7 +3,7 @@ import LngLatBounds from './lng_lat_bounds';
 import MercatorCoordinate, {mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp} from '../util/util';
-import {number as interpolate} from '../style-spec/util/interpolate';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import EXTENT from '../data/extent';
 import {vec3, vec4, mat4, mat2, vec2} from 'gl-matrix';
 import {Aabb, Frustum} from '../util/primitives';
@@ -642,8 +642,8 @@ class Transform {
         const t = z0 === z1 ? 0 : (targetZ - z0) / (z1 - z0);
 
         return new MercatorCoordinate(
-            interpolate(x0, x1, t) / this.worldSize,
-            interpolate(y0, y1, t) / this.worldSize);
+            interpolates.number(x0, x1, t) / this.worldSize,
+            interpolates.number(y0, y1, t) / this.worldSize);
     }
 
     /**

@@ -2,7 +2,7 @@ import DOM from '../../util/dom';
 
 import {ease as _ease, bindAll, bezier} from '../../util/util';
 import browser from '../../util/browser';
-import {number as interpolate} from '../../style-spec/util/interpolate';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import LngLat from '../../geo/lng_lat';
 
 import type Map from '../map';
@@ -294,7 +294,7 @@ class ScrollZoomHandler {
 
             const t = Math.min((browser.now() - this._lastWheelEventTime) / 200, 1);
             const k = easing(t);
-            zoom = interpolate(startZoom, targetZoom, k);
+            zoom = interpolates.number(startZoom, targetZoom, k);
             if (t < 1) {
                 if (!this._frameId) {
                     this._frameId = true;

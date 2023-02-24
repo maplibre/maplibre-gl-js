@@ -17,8 +17,8 @@ import MercatorCoordinate from '../geo/mercator_coordinate';
 import TerrainSourceCache from '../source/terrain_source_cache';
 import SourceCache from '../source/source_cache';
 import EXTENT from '../data/extent';
-import {number as mix} from '../style-spec/util/interpolate';
-import type {TerrainSpecification} from '../style-spec/types.g';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {earthRadius} from '../geo/lng_lat';
 
 export type TerrainData = {
@@ -138,7 +138,7 @@ export default class Terrain {
             const tr = terrain.tile.dem.get(c[0], c[1] + 1);
             const bl = terrain.tile.dem.get(c[0] + 1, c[1]);
             const br = terrain.tile.dem.get(c[0] + 1, c[1] + 1);
-            elevation = mix(mix(tl, tr, coord[0] - c[0]), mix(bl, br, coord[0] - c[0]), coord[1] - c[1]);
+            elevation = interpolates.number(interpolates.number(tl, tr, coord[0] - c[0]), interpolates.number(bl, br, coord[0] - c[0]), coord[1] - c[1]);
         }
         return elevation;
     }

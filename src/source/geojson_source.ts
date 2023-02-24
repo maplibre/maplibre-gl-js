@@ -11,7 +11,7 @@ import type Dispatcher from '../util/dispatcher';
 import type Tile from './tile';
 import type Actor from '../util/actor';
 import type {Callback} from '../types/callback';
-import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types.g';
+import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {

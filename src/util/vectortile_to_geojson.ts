@@ -1,5 +1,5 @@
 import type {VectorTileFeature} from '@mapbox/vector-tile';
-import type {LayerSpecification} from '../style-spec/types.g';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type MapGeoJSONFeature = GeoJSONFeature & {
     layer: Omit<LayerSpecification, 'source'> & {source: string};

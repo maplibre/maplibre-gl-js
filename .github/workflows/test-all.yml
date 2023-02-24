@@ -47,7 +47,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -82,6 +82,5 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - run: npm run build-dist
-      - run: npm run build-style-spec
       - run: npm run jest-ci -- --selectProjects build
         if: success() || failure()

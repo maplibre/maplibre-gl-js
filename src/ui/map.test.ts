@@ -6,7 +6,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {Event, ErrorEvent} from '../util/evented';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {LayerSpecification, SourceSpecification, StyleSpecification} from '../style-spec/types.g';
+import {LayerSpecification, SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {RequestTransformFunction} from '../util/request_manager';
 import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';

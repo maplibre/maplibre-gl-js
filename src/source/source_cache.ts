@@ -19,7 +19,7 @@ import type Dispatcher from '../util/dispatcher';
 import type Transform from '../geo/transform';
 import type {TileState} from './tile';
 import type {Callback} from '../types/callback';
-import type {SourceSpecification} from '../style-spec/types.g';
+import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import Terrain from '../render/terrain';
 

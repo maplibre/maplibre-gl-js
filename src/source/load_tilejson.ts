@@ -8,7 +8,7 @@ import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 import type {TileJSON} from '../types/tilejson';
 import type {Cancelable} from '../types/cancelable';
-import type {RasterDEMSourceSpecification, RasterSourceSpecification, VectorSourceSpecification} from '../style-spec/types.g';
+import type {RasterDEMSourceSpecification, RasterSourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export default function loadTileJson(
     options: RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification,
