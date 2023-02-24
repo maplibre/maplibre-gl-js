@@ -21,7 +21,7 @@
     "@mapbox/unitbezier": "^0.0.1",
     "@mapbox/vector-tile": "^1.3.1",
     "@mapbox/whoots-js": "^3.1.0",
-    "@maplibre/maplibre-gl-style-spec": "^18.0.1-pre.15",
+    "@maplibre/maplibre-gl-style-spec": "^18.0.1",
     "@types/geojson": "^7946.0.10",
     "@types/kdbush": "^3.0.2",
     "@types/mapbox__point-geometry": "^0.1.2",
