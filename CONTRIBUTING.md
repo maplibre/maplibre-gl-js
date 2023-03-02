@@ -20,7 +20,7 @@ For new features, it is usually a good idea to start with an issue ticket. If th
 
 If possible, it is beneficial to demonstrate proposed new features and assess the performance implications of the proposed change. You can use `npm install <location-of-maplibre-source-code>` to test changes in an npm context, or `npm run build-prod` to build a .js package for this purpose. 
 
-For more complex proposed features that require deeper discussion, you may be invited to a [Technical Steering Committee](https://maplibre.org/categories/steering-committee/) meeting for a video discussion with the team about the proposed change. We find that sometimes it's easier to have a focused, face-to-face discussion for more consequential decisions.
+For more complex proposed features that require deeper discussion, you should consider bringing it up in the [Technical Steering Committee](https://maplibre.org/categories/steering-committee/) meeting for a video discussion with the team about the proposed change. We find that sometimes it's easier to have a focused, face-to-face discussion for more consequential decisions.
 
 The Technical Steering Committee meetings are open to anyone who wants to get involved in the technical direction of the project. These meetings offer a chance for discussion and collaboration on various technical topics. We welcome you to join the meetings if you're interested in getting involved.
 
