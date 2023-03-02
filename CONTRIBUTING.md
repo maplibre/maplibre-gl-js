@@ -12,7 +12,7 @@ It is a good idea to discuss proposed changes before proceeding to an issue tick
 * For informal chat discussions, visit the project's [Slack Channel](https://osmus.slack.com/archives/C01G3D28DAB).
 * For discussions whose output and outcomes should not be ephemeral, consider starting a thread on [GitHub Discussions](https://github.com/maplibre/maplibre-gl-js/discussions). This makes it easier to find and reference the discussion in the future. 
 
-Maplibre software relies heavily on automated testing, and the project includes a suite of unit and integration tests. For both new features and bugfixes, contributions should update or add test cases to prevent regressions.
+MapLibre software relies heavily on automated testing, and the project includes a suite of unit and integration tests. For both new features and bugfixes, contributions should update or add test cases to prevent regressions.
 
 ### New Features
 
