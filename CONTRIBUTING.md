@@ -16,7 +16,7 @@ MapLibre software relies heavily on automated testing, and the project includes 
 
 ### New Features
 
-For new features, it is usually a good idea to start with an issue ticket. If the feature requires changes to the style specification, an issue ticket should be created in the [style specification github space](https://github.com/maplibre/maplibre-gl-style-spec). Style specification changes are hard to change later, so there will be particularly close scrutiny on changes to the spec.
+For new features, it is usually a good idea to start with an issue ticket. If the feature requires changes to the style specification, an issue ticket should be created in the [style specification GitHub repository](https://github.com/maplibre/maplibre-gl-style-spec). Style specification changes are hard to change later, so there will be particularly close scrutiny on changes to the specification.
 
 If possible, it is beneficial to demonstrate proposed new features and assess the performance implications of the proposed change. You can use `npm install <location-of-maplibre-source-code>` to test changes in an npm context, or `npm run build-prod` to build a .js package for this purpose. 
 
