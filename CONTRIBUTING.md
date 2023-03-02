@@ -5,7 +5,7 @@ In December 2020 Mapbox decided to publish future versions of mapbox-gl-js under
 
 ## Best Practices for Contributions
 
-Maplibre welcomes contributions from community! This codebase is large and complex, and following these best practices will assist the maintainer team in reviewing your contribution. In general, the project values discussion and communication over process and documentation. However, due to the size and complexity of the code, below are some best practices that have aided contributors.
+MapLibre welcomes contributions from community! This codebase is large and complex, and following these best practices will assist the maintainer team in reviewing your contribution. In general, the project values discussion and communication over process and documentation. However, due to the size and complexity of the code, below are some best practices that have aided contributors.
 
 It is a good idea to discuss proposed changes before proceeding to an issue ticket or PR. The project team is active in the following forums:
 
