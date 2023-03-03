@@ -31,7 +31,7 @@ export type MapLayerEventType = {
     touchcancel: MapLayerTouchEvent;
 };
 
-export interface MapLibreEvent<TOrig = undefined> {
+export interface MapLibreEvent<TOrig = unknown> {
     type: string;
     target: Map;
     originalEvent: TOrig;
