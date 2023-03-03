@@ -3,14 +3,15 @@ import {Event} from '../util/evented';
 import DOM from '../util/dom';
 import Point from '@mapbox/point-geometry';
 import {extend} from '../util/util';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
 import type Map from './map';
 import type LngLat from '../geo/lng_lat';
 import {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-export type MapLayerMouseEvent = MapMouseEvent & { features?: GeoJSON.Feature[] };
+export type MapLayerMouseEvent = MapMouseEvent & { features?: MapGeoJSONFeature[] };
 
-export type MapLayerTouchEvent = MapTouchEvent & { features?: GeoJSON.Feature[] };
+export type MapLayerTouchEvent = MapTouchEvent & { features?: MapGeoJSONFeature[] };
 
 export type MapSourceDataType = 'content' | 'metadata';
 
