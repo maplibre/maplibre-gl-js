@@ -1,5 +1,7 @@
 ## main
 
+- Fix the type of the `features` property on `MapLayerMouseEvent` and `MapLayerTouchEvent` to be `MapGeoJSONFeature[]` in lieu of `GeoJSON.Feature[]` ([#2244]((https://github.com/maplibre/maplibre-gl-js/pull/2244)))
+
 ### ✨ Features and improvements
 
 - Improve performance by sending style layers to worker thread before processing it on main thread to allow parallel processing ([#2131](https://github.com/maplibre/maplibre-gl-js/pull/2131))
