@@ -1386,8 +1386,8 @@ export type MapEvent =
      * var map = new maplibregl.Map({ // map options });
      * // Set an event listener that fires an icon or pattern is missing.
      * map.on('styleimagemissing', function(event: MapStyleImageMissingEvent) {
-     *   const imageId: event.id
-     *   console.log('A styleimagemissing event occurred for image Id', imageId);
+     *   const imageId = event.id
+     *   console.log('A styleimagemissing event occurred for image id', imageId);
      * });
      * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-missing-generated/)
      */
