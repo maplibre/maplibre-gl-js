@@ -1,6 +1,6 @@
 ## main
 
-- Fix the type of the `features` property on `MapLayerMouseEvent` and `MapLayerTouchEvent` to be `MapGeoJSONFeature[]` in lieu of `GeoJSON.Feature[]` ([#2244]((https://github.com/maplibre/maplibre-gl-js/pull/2244)))
+- Fix the type of the `features` property on `MapLayerMouseEvent` and `MapLayerTouchEvent` to be `MapGeoJSONFeature[]` in lieu of `GeoJSON.Feature[]` ([#2244](https://github.com/maplibre/maplibre-gl-js/pull/2244))
 
 ### ✨ Features and improvements
 
@@ -19,6 +19,7 @@
 - Fix issue unloading sprite sheet when using `setStyle(style, {diff:true})` ([#2146](https://github.com/maplibre/maplibre-gl-js/pull/2146))
 - Fix wrap coords in `getTerrain` when `fitBounds` accross the AM ([#2155](https://github.com/maplibre/maplibre-gl-js/pull/2155))
 - Fix LngLat `toArray` method return type to [number,number] ([#2233](https://github.com/maplibre/maplibre-gl-js/issues/2233))
+- Fix handling of text-offset with symbol-placement: line ([#2170](https://github.com/maplibre/maplibre-gl-js/issues/2170) and [#2171](https://github.com/maplibre/maplibre-gl-js/issues/2171))
 - _...Add new stuff here..._
 
 ## 3.0.0-pre.4
