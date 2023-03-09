@@ -223,7 +223,7 @@ function updateLineLabels(bucket: SymbolBucket,
     }
 }
 
-function placeFirstAndLastGlyph(fontScale: number, glyphOffsetArray: GlyphOffsetArray, lineOffsetX: number, lineOffsetY: number, flip: boolean, anchorPoint: Point, tileAnchorPoint: Point, symbol: any, lineVertexArray: SymbolLineVertexArray, labelPlaneMatrix: mat4, projectionCache: any, rotateToLine: boolean, getElevation: (x: number, y: number) => number) {
+function placeFirstAndLastGlyph(fontScale: number, glyphOffsetArray: GlyphOffsetArray, lineOffsetX: number, lineOffsetY: number, flip: boolean, anchorPoint: Point, tileAnchorPoint: Point, symbol: any, lineVertexArray: SymbolLineVertexArray, labelPlaneMatrix: mat4, projectionCache: ProjectionCache, rotateToLine: boolean, getElevation: (x: number, y: number) => number) {
     const glyphEndIndex = symbol.glyphStartIndex + symbol.numGlyphs;
     const lineStartIndex = symbol.lineStartIndex;
     const lineEndIndex = symbol.lineStartIndex + symbol.lineLength;
@@ -369,6 +369,15 @@ function findIntersectionPoint(currentA: Point, currentB: Point, nextA: Point, n
     return new Point(currentA.x + (currentInterpolation * currentDeltaX), currentA.y + (currentInterpolation * currentDeltaY));
 }
 
+// We calculate label-plane projected points for line vertices as we place glyphs along the line
+// Since we will use the same vertices for potentially many glyphs, cache the results for this bucket
+// over the course of the render. Each vertex location also potentially has one offset equivalent
+// for us to hold onto. The vertex indices are per-symbol-bucket.
+type ProjectionCache = {
+    projections: { [lineIndex: number]: Point };
+    offsets: { [lineIndex: number]: Point };
+};
+
 function placeGlyphAlongLine(
     offsetX: number,
     lineOffsetX: number,
@@ -381,10 +390,7 @@ function placeGlyphAlongLine(
     lineEndIndex: number,
     lineVertexArray: SymbolLineVertexArray,
     labelPlaneMatrix: mat4,
-    projectionCache: {
-        projections: { [_: number]: Point };
-        offsets: { [_: number]: Point};
-    },
+    projectionCache: ProjectionCache,
     rotateToLine: boolean,
     getElevation: (x: number, y: number) => number) {
 
