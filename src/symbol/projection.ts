@@ -14,7 +14,7 @@ import type {
 } from '../data/array_types.g';
 import {WritingMode} from '../symbol/shaping';
 
-export {updateLineLabels, hideGlyphs, getLabelPlaneMatrix, getGlCoordMatrix, project, getPerspectiveRatio, placeFirstAndLastGlyph, placeGlyphAlongLine, xyTransformMat4};
+export {updateLineLabels, hideGlyphs, getLabelPlaneMatrix, getGlCoordMatrix, project, getPerspectiveRatio, placeFirstAndLastGlyph, placeGlyphAlongLine, xyTransformMat4, findIntersectionPoint};
 
 /*
  * # Overview of coordinate spaces
