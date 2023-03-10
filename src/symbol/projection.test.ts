@@ -22,7 +22,34 @@ describe('Projection', () => {
         expect(intersection).toEqual(new Point(30, 0));
     });
 
+    test('line intersection backwards', () => {
+        // Direction of line segments should be irrelevant
+        const horizontal = [
+            new Point(10, 0),
+            new Point(0, 0)];
+        const vertical = [
+            new Point(30, -10),
+            new Point(30, -20)
+        ];
+        const intersection = findIntersectionPoint(horizontal[0], horizontal[1], vertical[0], vertical[1]);
+        expect(intersection).toEqual(new Point(30, 0));
+    });
+
+    test('crossing line intersection', () => {
+        // This should not be possible for two adjacent segments of a line string
+        const horizontal = [
+            new Point(-10, 0),
+            new Point(10, 0)];
+        const vertical = [
+            new Point(0, -10),
+            new Point(0, 10)
+        ];
+        const intersection = findIntersectionPoint(horizontal[0], horizontal[1], vertical[0], vertical[1]);
+        expect(intersection).toEqual(new Point(0, 0));
+    });
+
     test('parallel line intersection', () => {
+        // Only works when one segment touches the next, but that's guaranteed in our use case
         const first = [
             new Point(0, 0),
             new Point(10, 0)];
