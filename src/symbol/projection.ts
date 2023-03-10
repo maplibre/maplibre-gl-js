@@ -15,7 +15,7 @@ import type {
 import {WritingMode} from '../symbol/shaping';
 import {findLineIntersection} from '../util/util';
 
-export {updateLineLabels, hideGlyphs, getLabelPlaneMatrix, getGlCoordMatrix, project, getPerspectiveRatio, placeFirstAndLastGlyph, placeGlyphAlongLine, xyTransformMat4};
+export {updateLineLabels, hideGlyphs, getLabelPlaneMatrix, getGlCoordMatrix, project, getPerspectiveRatio, placeFirstAndLastGlyph, placeGlyphAlongLine, xyTransformMat4, projectVertexToViewport, findOffsetIntersectionPoint, transformToOffsetNormal};
 
 /*
  * # Overview of coordinate spaces
@@ -423,6 +423,17 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs):
 }
 
 /**
+ * Calculate the normal vector for a line segment
+ * @param segmentVector will be mutated as a tiny optimization
+ * @param offset magnitude of resulting vector
+ * @param direction direction of line traversal
+ * @returns a normal vector from the segment, with magnitude equal to offset amount
+ */
+function transformToOffsetNormal(segmentVector: Point, offset: number, direction: number): Point {
+    return segmentVector._unit()._perp()._mult(offset * direction);
+}
+
+/**
  * Construct offset line segments for the current segment and the next segment, then extend/shrink
  * the segments until they intersect. If the segments are parallel, then they will touch with no modification.
  *
@@ -451,7 +462,7 @@ function findOffsetIntersectionPoint(index: number, prevToCurrentOffsetNormal: P
     }
     // Offset the vertices for the next segment
     const nextVertex = projectVertexToViewport(index + direction, projectionArgs);
-    const currentToNextOffsetNormal = nextVertex.sub(currentVertex)._unit()._perp()._mult(lineOffsetY * direction);
+    const currentToNextOffsetNormal = transformToOffsetNormal(nextVertex.sub(currentVertex), lineOffsetY, direction);
     const offsetNextSegmentBegin = currentVertex.add(currentToNextOffsetNormal);
     const offsetNextSegmentEnd = nextVertex.add(currentToNextOffsetNormal);
 
@@ -561,9 +572,9 @@ function placeGlyphAlongLine(
                 // We are starting with our anchor point directly on the vertex, so look one vertex ahead
                 // to calculate a normal
                 const nextVertex = projectVertexToViewport(currentIndex + direction, projectionArgs);
-                prevToCurrentOffsetNormal = nextVertex.sub(currentVertex)._unit()._perp()._mult(lineOffsetY * direction);
+                prevToCurrentOffsetNormal = transformToOffsetNormal(nextVertex.sub(currentVertex), lineOffsetY, direction);
             } else {
-                prevToCurrentOffsetNormal = prevToCurrent._unit()._perp()._mult(lineOffsetY * direction);
+                prevToCurrentOffsetNormal = transformToOffsetNormal(prevToCurrent, lineOffsetY, direction);
             }
             // Initialize offsetPrev on our first iteration, after that it will be pre-calculated
             if (!offsetPreviousVertex)
