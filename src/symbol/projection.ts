@@ -370,24 +370,43 @@ function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint:
     return previousProjectedPoint.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));
 }
 
+type IndexToPointCache = { [lineIndex: number]: Point };
+
 /**
  * We calculate label-plane projected points for line vertices as we place glyphs along the line
  * Since we will use the same vertices for potentially many glyphs, cache the results for this bucket
  * over the course of the render. Each vertex location also potentially has one offset equivalent
  * for us to hold onto. The vertex indices are per-symbol-bucket.
+ *
+ * @typedef {Object} ProjectionCache
+ * @property {IndexToPointCache} projections tile-unit vertices projected into label-plane units
+ * @property {IndexToPointCache} offsets label-plane vertices which have been shifted to follow an offset line
  */
 type ProjectionCache = {
-    projections: { [lineIndex: number]: Point };
-    offsets: { [lineIndex: number]: Point };
+    projections: IndexToPointCache;
+    offsets: IndexToPointCache;
 };
 
+/**
+ * Arguments necessary to project a vertex to the label plane
+ * @typedef {Object} ProjectionArgs
+ * @property {ProjectionCache} projectionCache Used to cache results, save cost if projecting the same vertex multiple times
+ * @property {SymbolLineVertexArray} lineVertexArray The array of tile-unit vertices transferred from worker
+ * @property {mat4} labelPlaneMatrix Label plane projection matrix
+ * @property {Function} getElevation Function to get elevation at a point
+ * @property {Point} tileAnchorPoint Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
+ * @property {number} distanceFromAnchor Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
+ * @property {Point} previousVertex Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
+ * @property {number} direction Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
+ * @property {number} absOffsetX Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
+ */
 type ProjectionArgs = {
     projectionCache: ProjectionCache;
     lineVertexArray: SymbolLineVertexArray;
     labelPlaneMatrix: mat4;
+    getElevation: (x: number, y: number) => number;
     tileAnchorPoint: Point;
     distanceFromAnchor: number;
-    getElevation: (x: number, y: number) => number;
     previousVertex: Point;
     direction: number;
     absOffsetX: number;
@@ -473,10 +492,16 @@ function findOffsetIntersectionPoint(index: number, prevToCurrentOffsetNormal: P
     return projectionCache.offsets[index];
 }
 
+/**
+ * @typedef {Object} PlacedGlyph
+ * @property {Point} point The point at which the glyph should be placed, in label plane coordinates
+ * @property {number} angle The angle at which the glyph should be placed
+ * @property {Array<Point>} path The label-plane path used to reach this glyph: used only for collision detection
+ */
 type PlacedGlyph = {
     point: Point;
     angle: number;
-    path: Array<Point>; // Used only for collision detection
+    path: Array<Point>;
 };
 
 /*
