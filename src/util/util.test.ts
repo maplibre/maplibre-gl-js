@@ -1,5 +1,5 @@
-import {easeCubicInOut, keysDifference, extend, pick, uniqueId, bindAll, asyncAll, clamp, wrap, bezier, mapObject, filterObject, deepEqual, clone, arraysIntersect, isCounterClockwise, isClosedPolygon, parseCacheControl, nextPowerOfTwo, isPowerOfTwo} from './util';
 import Point from '@mapbox/point-geometry';
+import {arraysIntersect, asyncAll, bezier, bindAll, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isClosedPolygon, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, uniqueId, wrap} from './util';
 
 describe('util', () => {
     expect(easeCubicInOut(0)).toBe(0);
@@ -306,4 +306,56 @@ describe('util parseCacheControl', () => {
         done();
     });
 
+});
+
+describe('util findLineIntersection', () => {
+    test('line intersection', () => {
+        const horizontal = [
+            new Point(0, 0),
+            new Point(10, 0)];
+        const vertical = [
+            new Point(30, -20),
+            new Point(30, -10)
+        ];
+        const intersection = findLineIntersection(horizontal[0], horizontal[1], vertical[0], vertical[1]);
+        expect(intersection).toEqual(new Point(30, 0));
+    });
+
+    test('line intersection backwards', () => {
+        // Direction of line segments should be irrelevant
+        const horizontal = [
+            new Point(10, 0),
+            new Point(0, 0)];
+        const vertical = [
+            new Point(30, -10),
+            new Point(30, -20)
+        ];
+        const intersection = findLineIntersection(horizontal[0], horizontal[1], vertical[0], vertical[1]);
+        expect(intersection).toEqual(new Point(30, 0));
+    });
+
+    test('crossing line intersection', () => {
+        // This should not be possible for two adjacent segments of a line string
+        const horizontal = [
+            new Point(-10, 0),
+            new Point(10, 0)];
+        const vertical = [
+            new Point(0, -10),
+            new Point(0, 10)
+        ];
+        const intersection = findLineIntersection(horizontal[0], horizontal[1], vertical[0], vertical[1]);
+        expect(intersection).toEqual(new Point(0, 0));
+    });
+
+    test('parallel lines do not intersect', () => {
+        const first = [
+            new Point(0, 0),
+            new Point(10, 0)];
+        const second = [
+            new Point(10, 0),
+            new Point(30, 0)
+        ];
+        const intersection = findLineIntersection(first[0], first[1], second[0], second[1]);
+        expect(intersection).toBeNull();
+    });
 });

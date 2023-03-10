@@ -13,8 +13,9 @@ import type {
     SymbolDynamicLayoutArray
 } from '../data/array_types.g';
 import {WritingMode} from '../symbol/shaping';
+import {findLineIntersection} from '../util/util';
 
-export {updateLineLabels, hideGlyphs, getLabelPlaneMatrix, getGlCoordMatrix, project, getPerspectiveRatio, placeFirstAndLastGlyph, placeGlyphAlongLine, xyTransformMat4, findIntersectionPoint};
+export {updateLineLabels, hideGlyphs, getLabelPlaneMatrix, getGlCoordMatrix, project, getPerspectiveRatio, placeFirstAndLastGlyph, placeGlyphAlongLine, xyTransformMat4};
 
 /*
  * # Overview of coordinate spaces
@@ -347,32 +348,12 @@ function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint:
     return previousProjectedPoint.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));
 }
 
-function findIntersectionPoint(currentA: Point, currentB: Point, nextA: Point, nextB: Point): Point {
-    const currentDeltaY = currentB.y - currentA.y;
-    const currentDeltaX = currentB.x - currentA.x;
-    const nextDeltaY = nextB.y - nextA.y;
-    const nextDeltaX = nextB.x - nextA.x;
-
-    const denominator = (nextDeltaY * currentDeltaX) - (nextDeltaX * currentDeltaY);
-
-    if (denominator === 0) {
-        // Lines are parallel -- in that case since the original lines are connected
-        // the offset lines will also be connected at currentB/nextA
-        return currentB;
-    }
-
-    const originDeltaY = currentA.y - nextA.y;
-    const originDeltaX = currentA.x - nextA.x;
-    const currentInterpolation = (nextDeltaX * originDeltaY - nextDeltaY * originDeltaX) / denominator;
-
-    // Find intersection by projecting out from origin of first segment
-    return new Point(currentA.x + (currentInterpolation * currentDeltaX), currentA.y + (currentInterpolation * currentDeltaY));
-}
-
-// We calculate label-plane projected points for line vertices as we place glyphs along the line
-// Since we will use the same vertices for potentially many glyphs, cache the results for this bucket
-// over the course of the render. Each vertex location also potentially has one offset equivalent
-// for us to hold onto. The vertex indices are per-symbol-bucket.
+/*
+ We calculate label-plane projected points for line vertices as we place glyphs along the line
+ Since we will use the same vertices for potentially many glyphs, cache the results for this bucket
+ over the course of the render. Each vertex location also potentially has one offset equivalent
+ for us to hold onto. The vertex indices are per-symbol-bucket.
+*/
 type ProjectionCache = {
     projections: { [lineIndex: number]: Point };
     offsets: { [lineIndex: number]: Point };
@@ -419,8 +400,8 @@ function placeGlyphAlongLine(
 
     // offsetPrev and intersectionPoint are analagous to prev and current
     // but if there's a line offset they are calculated in parallel as projection happens
-    let intersectionPoint;
-    let offsetPrev;
+    let intersectionPoint: Point;
+    let offsetPrev: Point;
 
     let distanceToPrev = 0;
     let currentSegmentDistance = 0;
@@ -463,7 +444,8 @@ function placeGlyphAlongLine(
                 const offsetNextEnd = next.add(currentToNextOffset);
 
                 // find the intersection of these two lines
-                projectionCache.offsets[index] = findIntersectionPoint(offsetPrev, offsetCurrent, offsetNextBegin, offsetNextEnd);
+                // if the lines are parallel, offsetCurrent/offsetNextBegin will touch
+                projectionCache.offsets[index] = findLineIntersection(offsetPrev, offsetCurrent, offsetNextBegin, offsetNextEnd) || offsetCurrent;
             } else {
                 // This is the end of the line, no intersection to calculate
                 projectionCache.offsets[index] = offsetCurrent;
@@ -517,7 +499,7 @@ function placeGlyphAlongLine(
 
     // The point is on the current segment. Interpolate to find it.
     const segmentInterpolationT = (absOffsetX - distanceToPrev) / currentSegmentDistance;
-    const p = currentLineSegment.mult(segmentInterpolationT).add(offsetPrev || prev);
+    const p = currentLineSegment._mult(segmentInterpolationT)._add(offsetPrev || prev);
 
     const segmentAngle = angle + Math.atan2(current.y - prev.y, current.x - prev.x);
 
