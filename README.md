@@ -110,6 +110,12 @@ If you depend on a free software alternative to `mapbox-gl-js`, please consider 
 
 > **MapLibre GL** is developed following [Semantic Versioning (2.0.0)](https://semver.org/spec/v2.0.0.html).
 
+### Bounties
+
+We offer Bounties for some tasks in the MapLibre GL JS repo. Read more about the Bounties in our step-by-step guide:
+
+https://maplibre.org/roadmap/step-by-step-bounties-guide/
+
 <br />
 
 ## Sponsors
