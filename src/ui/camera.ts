@@ -1343,6 +1343,16 @@ abstract class Camera extends Evented {
             delta > 180 ? -360 :
                 delta < -180 ? 360 : 0;
     }
+
+    /**
+     *
+     * @param lngLat `x` and `y` coordinates of the location
+     * @returns {number} elevation in meters
+     */
+    queryTerrainElevation(lngLat: LngLatLike): number {
+        const elevation = this.transform.getElevation(LngLat.convert(lngLat), this.terrain);
+        return elevation - this.transform.elevation;
+    }
 }
 
 // In debug builds, check that camera change events are fired in the correct order.
