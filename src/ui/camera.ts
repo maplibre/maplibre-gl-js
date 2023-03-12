@@ -610,7 +610,7 @@ abstract class Camera extends Evented {
         const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
         const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / tr.zoomScale(zoom));
 
-        const center =  tr.unproject(p0world.add(p1world).div(2).sub(offsetAtFinalZoom));
+        const center = tr.unproject(p0world.add(p1world).div(2).sub(offsetAtFinalZoom));
 
         return {
             center,
@@ -802,7 +802,7 @@ abstract class Camera extends Evented {
      * @param altitudeTo Optional altitude of the center to look at. If none given the ground height will be used.
      * @returns {CameraOptions} the calculated camera options
      */
-    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo: number = 0) : CameraOptions {
+    calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo: number = 0): CameraOptions {
         const fromMerc = MercatorCoordinate.fromLngLat(from, altitudeFrom);
         const toMerc = MercatorCoordinate.fromLngLat(to, altitudeTo);
         const dx = toMerc.x - fromMerc.x;
@@ -1200,8 +1200,8 @@ abstract class Camera extends Evented {
             const k = w1 < w0 ? -1 : 1;
             S = Math.abs(Math.log(w1 / w0)) / rho;
 
-            u = function() { return 0; };
-            w = function(s) { return Math.exp(k * rho * s); };
+            u = function () { return 0; };
+            w = function (s) { return Math.exp(k * rho * s); };
         }
 
         if ('duration' in options) {
