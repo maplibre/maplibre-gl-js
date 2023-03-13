@@ -1345,12 +1345,25 @@ abstract class Camera extends Evented {
     }
 
     /**
-     *
-     * @param lngLat `x` and `y` coordinates of the location
+     * Query the current elevation of location. It return null if terrain is not enabled. the elevation is in meters relative to mean sea-level
+     * @memberof Map#
+     * @param lngLatLike [x,y] or LngLat coordinates of the location
      * @returns {number} elevation in meters
      */
-    queryTerrainElevation(lngLat: LngLatLike): number {
-        const elevation = this.transform.getElevation(LngLat.convert(lngLat), this.terrain);
+    queryTerrainElevation(lngLatLike: LngLatLike): number | null {
+        console.log('terrain: ', this.terrain);
+        if (!this.terrain) {
+            return null;
+        }
+        const elevation = this.transform.getElevation(LngLat.convert(lngLatLike), this.terrain);
+
+        console.log('elevation: ', this.transform.elevation);
+        /**
+         * Different zoomlevels with different terrain-tiles the elvation-values are not the same.
+         * map.transform.elevation variable with the center-altitude.
+         * In maplibre the proj-matrix is translated by this value in negative z-direction.
+         * So we need to add this value to the elevation to get the correct value.
+         */
         return elevation - this.transform.elevation;
     }
 }
