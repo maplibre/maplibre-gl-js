@@ -1997,3 +1997,47 @@ describe('#fitScreenCoordinates', () => {
         expect(camera.getBearing()).toBeCloseTo(0);
     });
 });
+
+describe('queryTerrainElevation', () => {
+    let transform: any; // replace with the appropriate type
+    let terrain: any; // replace with the appropriate type
+    let elevationSpy: jest.SpyInstance;
+
+    const camera = createCamera();
+
+    beforeEach(() => {
+        transform = {
+            getElevation: jest.fn().mockReturnValue(100),
+            elevation: 50,
+        };
+        terrain = {} as Terrain; // set up terrain object
+        elevationSpy = jest.spyOn(transform, 'getElevation').mockReturnValue(200);
+    });
+
+    test('should return null if terrain is not set', () => {
+        camera.terrain = null;
+        const result = camera.queryTerrainElevation([0, 0]);
+        expect(result).toBeNull();
+        expect(elevationSpy).not.toHaveBeenCalled();
+    });
+
+    test('should call transform.getElevation with the correct arguments', () => {
+        const lngLat = [1, 2];
+        camera.queryTerrainElevation(lngLat);
+        expect(elevationSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                lng: lngLat[0],
+                lat: lngLat[1],
+            }),
+            terrain
+        );
+    });
+
+    test('should return the correct elevation', () => {
+        const lngLat = [1, 2];
+        const expectedElevation = 150; // 200 - 50 = 150
+        const result = camera.queryTerrainElevation(lngLat);
+        expect(result).toEqual(expectedElevation);
+    });
+});
+
