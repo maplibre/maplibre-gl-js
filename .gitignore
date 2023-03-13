@@ -32,3 +32,5 @@ npm-debug.log
 .idea
 *.iml
 /.vs/
+.vscode/launch.json
+test/debug-pages/*.html
