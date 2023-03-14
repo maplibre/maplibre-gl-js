@@ -61,6 +61,7 @@ jobs:
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run jest-ci -- --coverage --coverageReporters text html-spa --selectProjects unit
       - name: Upload unit test coverage
+        if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: unit-test-coverage
