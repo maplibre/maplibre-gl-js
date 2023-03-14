@@ -60,10 +60,10 @@ jobs:
           nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run jest-ci -- --coverage --selectProjects unit
-      - name: Upload a Build Artifact
+      - name: Upload unit test coverage
         uses: actions/upload-artifact@v3
         with:
-          name: coverage
+          name: unit-test-coverage
           path: ${{ github.workspace }}/coverage
       - run: npm run build-dev
         if: success() || failure()
