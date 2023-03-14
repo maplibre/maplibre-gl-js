@@ -2660,10 +2660,8 @@ class Map extends Camera {
             desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
         }
         const mobileMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.mobileHelpText ? this._cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
-        this._cooperativeGesturesScreen.innerHTML = `
-            <div class="maplibregl-desktop-message">${desktopMessage}</div>
-            <div class="maplibregl-mobile-message">${mobileMessage}</div>
-        `;
+        DOM.create('div', 'maplibregl-desktop-message', this._cooperativeGesturesScreen).innerText = desktopMessage;
+        DOM.create('div', 'maplibregl-mobile-message', this._cooperativeGesturesScreen).innerText = mobileMessage;
         // Add event to canvas container since gesture container is pointer-events: none
         this._canvasContainer.addEventListener('wheel', this._cooperativeGesturesOnWheel, false);
 
