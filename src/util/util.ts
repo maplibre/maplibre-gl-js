@@ -2,6 +2,7 @@ import Point from '@mapbox/point-geometry';
 import UnitBezier from '@mapbox/unitbezier';
 import type {Callback} from '../types/callback';
 
+
 /**
  * @module util
  * @private
@@ -38,6 +39,7 @@ export function bezier(p1x: number, p1y: number, p2x: number, p2y: number): (t: 
         return bezier.solve(t);
     };
 }
+
 
 /**
  * A default bezier-curve powered easing function with
@@ -122,6 +124,8 @@ export function keysDifference<S, T>(
     }
     return difference;
 }
+
+export type NullProto = { readonly __proto__: null };
 
 /**
  * Given a destination object and optionally many source objects,
