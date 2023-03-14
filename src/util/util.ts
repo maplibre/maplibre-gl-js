@@ -136,6 +136,9 @@ export function keysDifference<S, T>(
 export function extend(dest: any, ...sources: Array<any>): any {
     for (const src of sources) {
         for (const k in src) {
+            if (k === '__proto__') {
+                throw new TypeError('Unexpected enumerable __proto__ property');
+            }
             dest[k] = src[k];
         }
     }
