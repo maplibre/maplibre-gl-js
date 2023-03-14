@@ -422,23 +422,22 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs):
     const {projectionCache, lineVertexArray, labelPlaneMatrix, tileAnchorPoint, distanceFromAnchor, getElevation, previousVertex, direction, absOffsetX} = projectionArgs;
     if (projectionCache.projections[index]) {
         return projectionCache.projections[index];
-    } else {
-        const currentVertex = new Point(lineVertexArray.getx(index), lineVertexArray.gety(index));
-        const projection = project(currentVertex, labelPlaneMatrix, getElevation);
-        if (projection.signedDistanceFromCamera > 0) {
-            projectionCache.projections[index] = projection.point;
-            return projection.point;
-        } else {
-            // The vertex is behind the plane of the camera, so we can't project it
-            // Instead, we'll create a vertex along the line that's far enough to include the glyph
-            const previousLineVertexIndex = index - direction;
-            const previousTilePoint = distanceFromAnchor === 0 ?
-                tileAnchorPoint :
-                new Point(lineVertexArray.getx(previousLineVertexIndex), lineVertexArray.gety(previousLineVertexIndex));
-            // Don't cache because the new vertex might not be far enough out for future glyphs on the same segment
-            return projectTruncatedLineSegment(previousTilePoint, currentVertex, previousVertex, absOffsetX - distanceFromAnchor + 1, labelPlaneMatrix, getElevation);
-        }
     }
+    const currentVertex = new Point(lineVertexArray.getx(index), lineVertexArray.gety(index));
+    const projection = project(currentVertex, labelPlaneMatrix, getElevation);
+    if (projection.signedDistanceFromCamera > 0) {
+        projectionCache.projections[index] = projection.point;
+        return projection.point;
+    }
+
+    // The vertex is behind the plane of the camera, so we can't project it
+    // Instead, we'll create a vertex along the line that's far enough to include the glyph
+    const previousLineVertexIndex = index - direction;
+    const previousTilePoint = distanceFromAnchor === 0 ?
+        tileAnchorPoint :
+        new Point(lineVertexArray.getx(previousLineVertexIndex), lineVertexArray.gety(previousLineVertexIndex));
+    // Don't cache because the new vertex might not be far enough out for future glyphs on the same segment
+    return projectTruncatedLineSegment(previousTilePoint, currentVertex, previousVertex, absOffsetX - distanceFromAnchor + 1, labelPlaneMatrix, getElevation);
 }
 
 /**
