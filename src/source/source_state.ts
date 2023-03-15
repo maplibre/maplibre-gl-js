@@ -1,9 +1,9 @@
-import {NullProto, extend} from '../util/util';
+import {extend} from '../util/util';
 import Tile from './tile';
 import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
 
-export type FeatureStates = {[featureId: string]: FeatureState} & NullProto;
-export type LayerFeatureStates = {[layer: string]: FeatureStates} & NullProto;
+export type FeatureStates = {[featureId: string]: FeatureState};
+export type LayerFeatureStates = {[layer: string]: FeatureStates};
 
 /**
  * SourceFeatureState manages the state and pending changes
@@ -15,16 +15,11 @@ export type LayerFeatureStates = {[layer: string]: FeatureStates} & NullProto;
  * @private
 */
 class SourceFeatureState {
-    state: LayerFeatureStates;
-    stateChanges: LayerFeatureStates;
+    state: LayerFeatureStates = {__proto__: null};
+    stateChanges: LayerFeatureStates = {__proto__: null};
     deletedStates: {
         [layer: string]: null | { [featureId: string]: null | { [k: keyof FeatureState]: null } };
-    };
-    constructor() {
-        this.state = {__proto__: null};
-        this.stateChanges = {__proto__: null};
-        this.deletedStates = {__proto__: null};
-    }
+    } = {__proto__: null};
 
     updateState(sourceLayer: string, featureId: number | string, newState: any) {
         const feature = String(featureId);
@@ -125,8 +120,8 @@ class SourceFeatureState {
 
             if (this.deletedStates[sourceLayer] === null) {
                 for (const ft in this.state[sourceLayer]) {
-                    layerStates[ft] = {};
-                    this.state[sourceLayer][ft] = {};
+                    layerStates[ft] = {__proto__: null};
+                    this.state[sourceLayer][ft] = {__proto__: null};
                 }
             } else {
                 for (const feature in this.deletedStates[sourceLayer]) {
