@@ -84,12 +84,32 @@ export default class DOM {
         }, 0);
     }
 
-    public static mousePos(el: HTMLElement, e: MouseEvent | Touch) {
-        const rect = el.getBoundingClientRect();
+    public static getScale(element: HTMLElement) {
+        const rect = element.getBoundingClientRect(); // Read-only in old browsers.
+
+        return {
+            x: rect.width / element.offsetWidth || 1,
+            y: rect.height / element.offsetHeight || 1,
+            boundingClientRect: rect,
+        };
+    }
+
+    public static mousePos(el: HTMLElement, ev: MouseEvent | Touch) {
+        // Uses technique from https://github.com/Leaflet/Leaflet/pull/6055
+        if (!el) {
+            return new Point(ev.clientX, ev.clientY);
+        }
+
+        const scale = DOM.getScale(el),
+            offset = scale.boundingClientRect; // left and top  values are in page scale (like the event clientX/Y)
+
         return new Point(
-            e.clientX - rect.left - el.clientLeft,
-            e.clientY - rect.top - el.clientTop
+            // offset.left/top values are in page scale (like clientX/Y),
+            // whereas clientLeft/Top (border width) values are the original values (before CSS scale applies).
+            (ev.clientX - offset.left) / scale.x - el.clientLeft,
+            (ev.clientY - offset.top) / scale.y - el.clientTop
         );
+
     }
 
     public static touchPos(el: HTMLElement, touches: TouchList) {
