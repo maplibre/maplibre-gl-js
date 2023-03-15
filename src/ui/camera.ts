@@ -1351,7 +1351,6 @@ abstract class Camera extends Evented {
      * @returns {number} elevation in meters
      */
     queryTerrainElevation(lngLatLike: LngLatLike): number | null {
-        console.log('terrain: ', this.terrain);
         if (!this.terrain) {
             return null;
         }
