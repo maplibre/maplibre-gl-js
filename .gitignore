@@ -33,4 +33,4 @@ npm-debug.log
 *.iml
 /.vs/
 .vscode/launch.json
-test/debug-pages/*.html
+/test/debug-pages/terrain-3d-object.html
