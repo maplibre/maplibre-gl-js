@@ -4,6 +4,7 @@
 
 ### ✨ Features and improvements
 
+- Add queryTerrainElevation allows getting terrain elevation in meters at specific point ([#2264](https://github.com/maplibre/maplibre-gl-js/pull/2264))
 - Improve performance by sending style layers to worker thread before processing it on main thread to allow parallel processing ([#2131](https://github.com/maplibre/maplibre-gl-js/pull/2131))
 - [Breaking] Resize map when container element is resized. the resize related events now has different data associated with it ([#2157](https://github.com/maplibre/maplibre-gl-js/pull/2157))<br/>
   Previously the originalEvent field was the reason of this change, for example it could be a <code>resize</code> event from the browser<br/>
