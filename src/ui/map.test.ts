@@ -18,6 +18,7 @@ import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
 import {StyleImageInterface} from '../style/style_image';
+import ImageRequest from '../util/image_request';
 
 function createStyleSource() {
     return {
@@ -2595,6 +2596,30 @@ describe('Map', () => {
                 expect(errorMessageObject.statusMessage).toBe('mocked webglcontextcreationerror message');
             }
 
+        });
+
+        test('should call call ImageRequest.processQueue() only when moving', () => {
+            const style = createStyle();
+            const map = createMap({style});
+
+            let imageQueueProcessRequestCallCounter = 0;
+            jest.spyOn(ImageRequest, 'processQueue').mockImplementation(() => {
+                imageQueueProcessRequestCallCounter++;
+                return 0;
+            });
+            let mockIsMoving = true;
+
+            jest.spyOn(map, 'isMoving').mockImplementation(() => {
+                return mockIsMoving;
+            });
+
+            // when moving, expect ImageRequest.processQueue is called on repaint
+            map._render(0);
+            expect(imageQueueProcessRequestCallCounter).toBe(1);
+
+            mockIsMoving = false;
+            map._render(1);
+            expect(imageQueueProcessRequestCallCounter).toBe(1);
         });
     });
 
