@@ -1355,8 +1355,6 @@ abstract class Camera extends Evented {
             return null;
         }
         const elevation = this.transform.getElevation(LngLat.convert(lngLatLike), this.terrain);
-
-        console.log('elevation: ', this.transform.elevation);
         /**
          * Different zoomlevels with different terrain-tiles the elvation-values are not the same.
          * map.transform.elevation variable with the center-altitude.
