@@ -1,4 +1,5 @@
 ## main
+- Add queryTerrainElevation allows getting terrain elevation in meters at specific point ([#2264](https://github.com/maplibre/maplibre-gl-js/pull/2264))
 
 - Fix the type of the `features` property on `MapLayerMouseEvent` and `MapLayerTouchEvent` to be `MapGeoJSONFeature[]` in lieu of `GeoJSON.Feature[]` ([#2244](https://github.com/maplibre/maplibre-gl-js/pull/2244))
 
