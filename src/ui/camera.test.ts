@@ -6,6 +6,7 @@ import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Terrain from '../render/terrain';
+import {LngLatLike} from '../geo/lng_lat';
 
 beforeEach(() => {
     setMatchMedia();
@@ -1999,45 +2000,44 @@ describe('#fitScreenCoordinates', () => {
 });
 
 describe('queryTerrainElevation', () => {
-    let transform: any; // replace with the appropriate type
-    let terrain: any; // replace with the appropriate type
-    let elevationSpy: jest.SpyInstance;
-
-    const camera = createCamera();
+    let camera: Camera;
 
     beforeEach(() => {
-        transform = {
-            getElevation: jest.fn().mockReturnValue(100),
-            elevation: 50,
-        };
-        terrain = {} as Terrain; // set up terrain object
-        elevationSpy = jest.spyOn(transform, 'getElevation').mockReturnValue(200);
+        camera = createCamera();
     });
 
     test('should return null if terrain is not set', () => {
         camera.terrain = null;
         const result = camera.queryTerrainElevation([0, 0]);
         expect(result).toBeNull();
-        expect(elevationSpy).not.toHaveBeenCalled();
-    });
-
-    test('should call transform.getElevation with the correct arguments', () => {
-        const lngLat = [1, 2];
-        camera.queryTerrainElevation(lngLat);
-        expect(elevationSpy).toHaveBeenCalledWith(
-            expect.objectContaining({
-                lng: lngLat[0],
-                lat: lngLat[1],
-            }),
-            terrain
-        );
     });
 
     test('should return the correct elevation', () => {
-        const lngLat = [1, 2];
+        // Set up mock transform and terrain objects
+        const transform = new Transform(0, 22, 0, 60, true);
+        transform.getElevation = jest.fn().mockReturnValue(200);
+        transform.elevation = 50;
+        const terrain = {} as Terrain;
+
+        // Set up camera with mock transform and terrain
+        camera.transform = transform;
+        camera.terrain = terrain;
+
+        // Call queryTerrainElevation with mock lngLat
+        const lngLatLike: LngLatLike = [1, 2];
         const expectedElevation = 150; // 200 - 50 = 150
-        const result = camera.queryTerrainElevation(lngLat);
+        const result = camera.queryTerrainElevation(lngLatLike);
+
+        // Check that transform.getElevation was called with the correct arguments
+        expect(transform.getElevation).toHaveBeenCalledWith(
+            expect.objectContaining({
+                lng: lngLatLike[0],
+                lat: lngLatLike[1],
+            }),
+            terrain
+        );
+
+        // Check that the correct elevation value was returned
         expect(result).toEqual(expectedElevation);
     });
 });
-
