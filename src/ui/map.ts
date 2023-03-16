@@ -315,7 +315,7 @@ class Map extends Camera {
     _styleDirty: boolean;
     _sourcesDirty: boolean;
     _placementDirty: boolean;
-    _imageQueueDirty: boolean;
+
     _loaded: boolean;
     // accounts for placement finishing as well
     _fullyLoaded: boolean;
@@ -2872,7 +2872,14 @@ class Map extends Camera {
         if (this.terrain) this.terrain.sourceCache.update(this.transform, this.terrain);
         this.transform.updateElevation(this.terrain);
 
-        this._imageQueueDirty = ImageRequest.processQueue() > 0;
+        // a bit of counter intuitive:
+        // - when map is moving (throttled) image queue does not auto advance so need manually process it for each render
+        // or it may miss raster tiles.
+        // - when not moving (initial load or changing styles), image queue is self-driven to finish. manual process
+        // is not doing anything but wasting time.
+        if (this.isMoving()) {
+            ImageRequest.processQueue();
+        }
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
 
@@ -2939,7 +2946,7 @@ class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this._imageQueueDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
