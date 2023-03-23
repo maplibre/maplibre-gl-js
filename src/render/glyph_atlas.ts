@@ -27,7 +27,7 @@ export type GlyphPositions = {
 export default class GlyphAtlas {
     image: AlphaImage;
     positions: GlyphPositions;
-    empty = true;
+    readonly empty: Boolean;
 
     constructor(stacks: {
         [_: string]: {
@@ -42,7 +42,6 @@ export default class GlyphAtlas {
             const stackPositions = positions[stack] = {};
 
             for (const id in glyphs) {
-                this.empty = false;
                 const src = glyphs[+id];
                 if (!src || src.bitmap.width === 0 || src.bitmap.height === 0) continue;
 
@@ -58,6 +57,7 @@ export default class GlyphAtlas {
         }
 
         const {w, h} = potpack(bins);
+        this.empty = w === 0 && h === 0;
         const image = new AlphaImage({width: w || 1, height: h || 1});
 
         for (const stack in stacks) {
