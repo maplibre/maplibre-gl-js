@@ -66,6 +66,7 @@ export default class ImageAtlas {
     patternPositions: {[_: string]: ImagePosition};
     haveRenderCallbacks: Array<string>;
     uploaded: boolean;
+    empty: boolean = true;
 
     constructor(icons: {[_: string]: StyleImage}, patterns: {[_: string]: StyleImage}) {
         const iconPositions = {}, patternPositions = {};
@@ -108,6 +109,7 @@ export default class ImageAtlas {
 
     addImages(images: {[_: string]: StyleImage}, positions: {[_: string]: ImagePosition}, bins: Array<Rect>) {
         for (const id in images) {
+            this.empty = false;
             const src = images[id];
             const bin = {
                 x: 0,

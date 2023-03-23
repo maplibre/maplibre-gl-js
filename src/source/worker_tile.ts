@@ -213,8 +213,8 @@ class WorkerTile {
                     buckets: Object.values(buckets).filter(b => !b.isEmpty()),
                     featureIndex,
                     collisionBoxArray: this.collisionBoxArray,
-                    glyphAtlasImage: glyphAtlas.image,
-                    imageAtlas,
+                    glyphAtlasImage: glyphAtlas.empty ? undefined : glyphAtlas.image,
+                    imageAtlas: imageAtlas.empty ? undefined : imageAtlas,
                     // Only used for benchmarking:
                     glyphMap: this.returnDependencies ? glyphMap : null,
                     iconMap: this.returnDependencies ? iconMap : null,

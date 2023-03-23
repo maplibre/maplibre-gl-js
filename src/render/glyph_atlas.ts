@@ -27,6 +27,7 @@ export type GlyphPositions = {
 export default class GlyphAtlas {
     image: AlphaImage;
     positions: GlyphPositions;
+    empty = true;
 
     constructor(stacks: {
         [_: string]: {
@@ -41,6 +42,7 @@ export default class GlyphAtlas {
             const stackPositions = positions[stack] = {};
 
             for (const id in glyphs) {
+                this.empty = false;
                 const src = glyphs[+id];
                 if (!src || src.bitmap.width === 0 || src.bitmap.height === 0) continue;
 
