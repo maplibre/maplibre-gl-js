@@ -60,7 +60,6 @@ import type VertexBuffer from '../gl/vertex_buffer';
 import type IndexBuffer from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {RGBAImage} from '../util/image';
 import RenderToTexture from './render_to_texture';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
