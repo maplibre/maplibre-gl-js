@@ -18,6 +18,7 @@
 - Adding a `warnonce` when terrain and hillshade source are the same ([#2298](https://github.com/maplibre/maplibre-gl-js/pull/2298))
 - Remove a deprecation warning by removing an empty texture that is no longer being used in the codebase ([#2299](https://github.com/maplibre/maplibre-gl-js/pull/2299))
 - Improve initial loading performance by lazy serializing layers only when needed. ([#2306](https://github.com/maplibre/maplibre-gl-js/pull/2306))
+- Slighty improve performance and avoid WebGL warnings by skipping creation of textures for empty image atlases (i.e. when a tile doesn't have icons or text, skip allocation of resources for icons/text) ([#2297](https://github.com/maplibre/maplibre-gl-js/pull/2297))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
