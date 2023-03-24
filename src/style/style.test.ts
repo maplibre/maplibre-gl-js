@@ -80,7 +80,6 @@ function createStyle(map = getStubMap()) {
 
 let sinonFakeXMLServer;
 let sinonFakeServer;
-let _self;
 let mockConsoleError;
 
 beforeEach(() => {
@@ -88,20 +87,12 @@ beforeEach(() => {
     sinonFakeServer = fakeServer.create();
     sinonFakeXMLServer = fakeXhr.useFakeXMLHttpRequest();
 
-    _self = {
-        addEventListener() {}
-    } as any as WorkerGlobalScopeInterface & typeof globalThis;
-    global.self = _self;
-
     mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
 });
 
 afterEach(() => {
     sinonFakeXMLServer.restore();
     sinonFakeServer.restore();
-
-    global.self = undefined;
-
     mockConsoleError.mockRestore();
 });
 
