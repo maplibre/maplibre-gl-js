@@ -1698,11 +1698,11 @@ class Map extends Camera {
             const sourceCache = this.style.sourceCaches[options.source];
             if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
             // Warn once if user is using the same source for hillshade and terrain
-            for(const index in this.style._layers) {
-              const thisLayer = this.style._layers[index]
-              if(thisLayer.type === 'hillshade' && thisLayer.source === options.source) {
-                warnOnce("You are using the same source for a hillshade layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.");
-              }
+            for (const index in this.style._layers) {
+                const thisLayer = this.style._layers[index];
+                if (thisLayer.type === 'hillshade' && thisLayer.source === options.source) {
+                    warnOnce("You are using the same source for a hillshade layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.");
+                }
             }
             this.terrain = new Terrain(this.painter, sourceCache, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
