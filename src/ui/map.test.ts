@@ -473,35 +473,6 @@ describe('Map', () => {
         });
     });
 
-    describe("#setTerrain", () => {
-      test('warn when terrain and hillshade source identical', done => {
-          server.respondWith('/source.json', JSON.stringify({
-              minzoom: 5,
-              maxzoom: 12,
-              attribution: 'Terrain',
-              tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
-              bounds: [-47, -7, -45, -5]
-          }));
-
-          const style = createStyle();
-          const map = createMap({style})
-
-          map.on('load', () => {
-            map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});
-            server.respond();
-            map.addLayer({id: 'hillshade', type: 'hillshade', source: 'terrainrgb'});
-            jest.spyOn(console, 'warn').mockImplementation(() => { });
-            map.setTerrain({
-                source: 'terrainrgb'
-            });
-            expect(console.warn).toHaveBeenCalledWith(
-              'You are using the same source for a hillshade layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.'
-            );
-            done();
-          });
-      });
-    })
-
     describe('#is_Loaded', () => {
 
         test('Map#isSourceLoaded', done => {
@@ -2651,6 +2622,35 @@ describe('Map', () => {
             expect(imageQueueProcessRequestCallCounter).toBe(1);
         });
     });
+    
+    describe("#setTerrain", () => {
+      test('warn when terrain and hillshade source identical', done => {
+          server.respondWith('/source.json', JSON.stringify({
+              minzoom: 5,
+              maxzoom: 12,
+              attribution: 'Terrain',
+              tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
+              bounds: [-47, -7, -45, -5]
+          }));
+
+          const style = createStyle();
+          const map = createMap({style})
+
+          map.on('load', () => {
+            map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});
+            server.respond();
+            map.addLayer({id: 'hillshade', type: 'hillshade', source: 'terrainrgb'});
+            jest.spyOn(console, 'warn').mockImplementation(() => { });
+            map.setTerrain({
+                source: 'terrainrgb'
+            });
+            expect(console.warn).toHaveBeenCalledWith(
+              'You are using the same source for a hillshade layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.'
+            );
+            done();
+          });
+      });
+    })
 
 });
 
