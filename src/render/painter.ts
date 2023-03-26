@@ -60,7 +60,6 @@ import type VertexBuffer from '../gl/vertex_buffer';
 import type IndexBuffer from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {RGBAImage} from '../util/image';
 import RenderToTexture from './render_to_texture';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
@@ -124,7 +123,6 @@ class Painter {
     crossTileSymbolIndex: CrossTileSymbolIndex;
     symbolFadeChange: number;
     gpuTimers: {[_: string]: any};
-    emptyTexture: Texture;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
     // this object stores the current camera-matrix and the last render time
@@ -214,12 +212,6 @@ class Painter {
         quadTriangleIndices.emplaceBack(0, 1, 2);
         quadTriangleIndices.emplaceBack(2, 1, 3);
         this.quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
-
-        this.emptyTexture = new Texture(context, {
-            width: 1,
-            height: 1,
-            data: new Uint8Array([0, 0, 0, 0])
-        } as RGBAImage, context.gl.RGBA);
 
         const gl = this.context.gl;
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
@@ -670,7 +662,6 @@ class Painter {
     }
 
     destroy() {
-        this.emptyTexture.destroy();
         if (this.debugOverlayTexture) {
             this.debugOverlayTexture.destroy();
         }

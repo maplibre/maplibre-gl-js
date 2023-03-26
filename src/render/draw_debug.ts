@@ -81,8 +81,6 @@ function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: Oversc
     const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
     context.activeTexture.set(gl.TEXTURE0);
-    // Bind the empty texture for drawing outlines
-    painter.emptyTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
     const tileRawData = sourceCache.getTileByID(coord.key).latestRawTileData;
     const tileByteLength = (tileRawData && tileRawData.byteLength) || 0;
