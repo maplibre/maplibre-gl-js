@@ -1701,7 +1701,7 @@ class Map extends Camera {
             for (const index in this.style._layers) {
                 const thisLayer = this.style._layers[index];
                 if (thisLayer.type === 'hillshade' && thisLayer.source === options.source) {
-                    warnOnce("You are using the same source for a hillshade layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.");
+                    warnOnce('You are using the same source for a hillshade layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
             this.terrain = new Terrain(this.painter, sourceCache, options);

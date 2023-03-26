@@ -2402,8 +2402,7 @@ describe('Map', () => {
         await sourcePromise;
     });
 
-
-    describe("#setTerrain", () => {
+    describe('#setTerrain', () => {
         test('warn when terrain and hillshade source identical', done => {
             server.respondWith('/source.json', JSON.stringify({
                 minzoom: 5,
@@ -2413,7 +2412,7 @@ describe('Map', () => {
                 bounds: [-47, -7, -45, -5]
             }));
 
-            const map = createMap()
+            const map = createMap();
 
             map.on('load', () => {
                 map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});
