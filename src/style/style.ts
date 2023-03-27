@@ -470,8 +470,8 @@ class Style extends Evented {
     }
 
     /**
-     * lazy initialization of this._serializedLayers dictionary and return it
-     * @returns {{[_: string]: LayerSpecification}} this._serializedLayers object
+     * Lazy initialization of this._serializedLayers dictionary and return it
+     * @returns this._serializedLayers dictionary
      */
     private _getSerializedLayers(): {[_: string]: LayerSpecification} {
         let serializedLayers = this._serializedLayers;

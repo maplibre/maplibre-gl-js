@@ -570,6 +570,22 @@ describe('Style#_load', () => {
         // cleanup
         stub.mockReset();
     });
+
+    test('layers are NOT serialized immediately after creation', () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON({
+            layers: [{
+                id: 'background',
+                type: 'background'
+            }, {
+                id: 'custom',
+                type: 'custom'
+            }]
+        });
+
+        style._load(styleSpec, {validate: true});
+        expect(style._serializedLayers).toBeUndefined();
+    });
 });
 
 describe('Style#_remove', () => {
