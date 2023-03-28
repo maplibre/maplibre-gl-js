@@ -450,22 +450,21 @@ class Style extends Evented {
      * @param ids an array of string IDs, for which serilized layers will be generated. If ommited, all serialized layers will be returned
      * @returns {Array<LayerSpecification>} generated result
      */
-    private _serializeById(ids?: Array<string>): Array<LayerSpecification> {
+    private _serializeByIds(ids?: Array<string>): Array<LayerSpecification> {
 
-        const serializedLayersDictionary = this._getSerializedLayers();
-        let serializedLayers: LayerSpecification[];
-        if (ids && ids.length > 0) {
-            serializedLayers = [];
-            for (const id of ids) {
-
-                // this check will skip all custom layers
-                if (serializedLayersDictionary[id]) {
-                    serializedLayers.push(serializedLayersDictionary[id]);
-                }
-            }
-        } else {
-            serializedLayers  = Object.values(serializedLayersDictionary);
+        const serializedLayersDictionary = this._serializedAllLayers();
+        if (!ids || ids.length === 0) {
+            return Object.values(serializedLayersDictionary);
         }
+
+        const serializedLayers = [];
+        for (const id of ids) {
+            // this check will skip all custom layers
+            if (serializedLayersDictionary[id]) {
+                serializedLayers.push(serializedLayersDictionary[id]);
+            }
+        }
+
         return serializedLayers;
     }
 
@@ -473,18 +472,21 @@ class Style extends Evented {
      * Lazy initialization of this._serializedLayers dictionary and return it
      * @returns this._serializedLayers dictionary
      */
-    private _getSerializedLayers(): {[_: string]: LayerSpecification} {
+    private _serializedAllLayers(): {[_: string]: LayerSpecification} {
         let serializedLayers = this._serializedLayers;
-        if (!serializedLayers) {
-            serializedLayers = this._serializedLayers = {};
-            const allLayerIds: string [] = Object.keys(this._layers);
-            for (const layerId of allLayerIds) {
-                const layer = this._layers[layerId];
-                if (layer.type !== 'custom') {
-                    serializedLayers[layerId] = layer.serialize();
-                }
+        if (serializedLayers) {
+            return serializedLayers;
+        }
+
+        serializedLayers = this._serializedLayers = {};
+        const allLayerIds: string [] = Object.keys(this._layers);
+        for (const layerId of allLayerIds) {
+            const layer = this._layers[layerId];
+            if (layer.type !== 'custom') {
+                serializedLayers[layerId] = layer.serialize();
             }
         }
+
         return serializedLayers;
     }
 
@@ -612,7 +614,7 @@ class Style extends Evented {
 
     _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
         this.dispatcher.broadcast('updateLayers', {
-            layers: this._serializeById(updatedIds),
+            layers: this._serializeByIds(updatedIds),
             removedIds
         });
     }
@@ -931,9 +933,8 @@ class Style extends Evented {
         this._removedLayers[id] = layer;
         delete this._layers[id];
 
-        const serializedLayers = this._serializedLayers;
-        if (serializedLayers) {
-            delete serializedLayers[id];
+        if (this._serializedLayers) {
+            delete this._serializedLayers[id];
         }
         delete this._updatedLayers[id];
         delete this._updatedPaintProps[id];
@@ -1155,22 +1156,24 @@ class Style extends Evented {
     serialize(): StyleSpecification {
 
         const sources = mapObject(this.sourceCaches, (source) => source.serialize());
-        const layers = this._serializeById(this._order);
+        const layers = this._serializeByIds(this._order);
+        const myStyleSheet = this.stylesheet;
 
         return filterObject({
-            version: this.stylesheet.version,
-            name: this.stylesheet.name,
-            metadata: this.stylesheet.metadata,
-            light: this.stylesheet.light,
-            center: this.stylesheet.center,
-            zoom: this.stylesheet.zoom,
-            bearing: this.stylesheet.bearing,
-            pitch: this.stylesheet.pitch,
-            sprite: this.stylesheet.sprite,
-            glyphs: this.stylesheet.glyphs,
-            transition: this.stylesheet.transition,
+            version: myStyleSheet.version,
+            name: myStyleSheet.name,
+            metadata: myStyleSheet.metadata,
+            light: myStyleSheet.light,
+            center: myStyleSheet.center,
+            zoom: myStyleSheet.zoom,
+            bearing: myStyleSheet.bearing,
+            pitch: myStyleSheet.pitch,
+            sprite: myStyleSheet.sprite,
+            glyphs: myStyleSheet.glyphs,
+            transition: myStyleSheet.transition,
             sources,
-            layers},
+            layers
+        },
         (value) => { return value !== undefined; });
     }
 
@@ -1284,7 +1287,7 @@ class Style extends Evented {
         params.availableImages = this._availableImages;
 
         // LayerSpecification is serialized StyleLayer, and this casting is safe.
-        const serializedLayers = this._getSerializedLayers() as {[_: string]: StyleLayer};
+        const serializedLayers = this._serializedAllLayers() as {[_: string]: StyleLayer};
 
         for (const id in this.sourceCaches) {
             if (params.layers && !includedSources[id]) continue;

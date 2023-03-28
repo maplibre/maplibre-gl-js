@@ -16,9 +16,14 @@ import {OverscaledTileID} from '../source/tile_id';
 import {fakeXhr, fakeServer} from 'nise';
 
 import EvaluationParameters from './evaluation_parameters';
-import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {LayerSpecification,
+    GeoJSONSourceSpecification,
+    FilterSpecification,
+    SourceSpecification,
+    StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {SourceClass} from '../source/source';
 import GeoJSONSource from '../source/geojson_source';
+import {createMap, beforeMapTest} from '../util/test/util';
 
 function createStyleJSON(properties?) {
     return extend({
@@ -585,6 +590,67 @@ describe('Style#_load', () => {
 
         style._load(styleSpec, {validate: true});
         expect(style._serializedLayers).toBeUndefined();
+    });
+
+    test('serialized layers should be corrected updated after adding/removing layers', done => {
+        beforeMapTest();
+        const map = createMap({deleteStyle: true});
+        const testStyle: StyleSpecification =   {
+            version: 8,
+            center: [-73.9749, 40.7736],
+            zoom: 12.5,
+            bearing: 29,
+            pitch: 50,
+            sources: {},
+            layers: []
+        };
+        map.setStyle(testStyle, {
+            diff: true,
+            transformStyle: (prevStyle, nextStyle) => {
+                expect(prevStyle).toBeUndefined();
+
+                return {
+                    ...nextStyle,
+                    sources: {
+                        maplibre: {
+                            type: 'vector',
+                            minzoom: 1,
+                            maxzoom: 10,
+                            tiles: ['http://example.com/{z}/{x}/{y}.png']
+                        }
+                    },
+                    layers: [{
+                        id: 'layerId0',
+                        type: 'circle',
+                        source: 'maplibre',
+                        'source-layer': 'sourceLayer'
+                    }]
+                };
+            }
+        });
+
+        map.on('style.load', () => {
+            let serializedStyle = map.style.serialize();
+
+            expect(serializedStyle.layers[0].id).toBe('layerId0');
+
+            const layer = {
+                id: 'background',
+                type: 'background'
+            } as LayerSpecification;
+            map.addLayer(layer);
+
+            // serialize again
+            serializedStyle = map.style.serialize();
+            expect(serializedStyle.layers[1].id).toBe('background');
+
+            // remove and serialize
+            map.removeLayer('background');
+            serializedStyle = map.style.serialize();
+            expect(serializedStyle.layers.length).toBe(1);
+
+            done();
+        });
     });
 });
 
