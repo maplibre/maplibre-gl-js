@@ -588,8 +588,8 @@ describe('Style#_load', () => {
             }]
         });
 
-        style._load(styleSpec, {validate: true});
-        expect(style._serializedLayers).toBeUndefined();
+        style._load(styleSpec, {validate: false});
+        expect(style._serializedLayers).toBeNull();
     });
 
     test('serialized layers should be corrected updated after adding/removing layers', done => {
@@ -631,7 +631,7 @@ describe('Style#_load', () => {
 
         map.on('style.load', () => {
             let serializedStyle = map.style.serialize();
-
+            expect(serializedStyle.layers).toHaveLength(1);
             expect(serializedStyle.layers[0].id).toBe('layerId0');
 
             const layer = {
@@ -642,6 +642,7 @@ describe('Style#_load', () => {
 
             // serialize again
             serializedStyle = map.style.serialize();
+            expect(serializedStyle.layers).toHaveLength(2);
             expect(serializedStyle.layers[1].id).toBe('background');
 
             // remove and serialize
