@@ -111,7 +111,8 @@ class RasterTileSource extends Evented implements Source {
             if (tile.aborted) {
                 tile.state = 'unloaded';
                 callback(null);
-            } else if (err) {
+            } else if (err || !img) {
+                // When an HTTP 204 response is received, there's no error message and no image data
                 tile.state = 'errored';
                 callback(err);
             } else if (img) {

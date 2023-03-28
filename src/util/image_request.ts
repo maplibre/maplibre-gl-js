@@ -148,7 +148,7 @@ namespace ImageRequest {
         return getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
             if (err) {
                 callback(err);
-            } else if (data) {
+            } else if (data && data.byteLength !== 0) {
                 const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
                     if (imgErr != null) {
                         callback(imgErr);
@@ -157,6 +157,11 @@ namespace ImageRequest {
                     }
                 };
                 arrayBufferToCanvasImageSource(data, decoratedCallback);
+            } else {
+                // HTTP 204 responses don't error and do not contain any data
+                // Calling the callback without any of them will
+                // update the tile status and avoid triggering an error
+                callback(null, null);
             }
 
             if (!itemInQueue.cancelled) {
