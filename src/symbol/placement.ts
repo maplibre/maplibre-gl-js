@@ -496,16 +496,6 @@ export class Placement {
                 verticalTextFeatureIndex = collisionArrays.verticalTextFeatureIndex;
             }
 
-            // update elevation of collisionArrays
-            if (getElevation) {
-                for (const boxType of ['textBox', 'verticalTextBox', 'iconBox', 'verticalIconBox']) {
-                    const box = collisionArrays[boxType];
-                    if (box) {
-                        box.elevation = getElevation(box.anchorPointX, box.anchorPointY);
-                    }
-                }
-            }
-
             const textBox = collisionArrays.textBox;
             if (textBox) {
 
