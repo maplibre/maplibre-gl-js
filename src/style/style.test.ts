@@ -647,7 +647,7 @@ describe('Style#_load', () => {
             // remove and serialize
             map.removeLayer('background');
             serializedStyle = map.style.serialize();
-            expect(serializedStyle.layers.length).toBe(1);
+            expect(serializedStyle.layers).toHaveLength(1);
 
             done();
         });
