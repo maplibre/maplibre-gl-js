@@ -570,6 +570,22 @@ describe('Style#_load', () => {
         // cleanup
         stub.mockReset();
     });
+
+    test('layers are NOT serialized immediately after creation', () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON({
+            layers: [{
+                id: 'background',
+                type: 'background'
+            }, {
+                id: 'custom',
+                type: 'custom'
+            }]
+        });
+
+        style._load(styleSpec, {validate: false});
+        expect(style._serializedLayers).toBeNull();
+    });
 });
 
 describe('Style#_remove', () => {
@@ -2401,6 +2417,30 @@ describe('Style#query*Features', () => {
         });
         style.querySourceFeatures([{x: 0, y: 0}], {filter: 'invalidFilter', validate: false}, transform);
         expect(errors).toBe(0);
+    });
+
+    test('serialized layers should be correctly updated after adding/removing layers', () => {
+
+        let serializedStyle = style.serialize();
+        expect(serializedStyle.layers).toHaveLength(1);
+        expect(serializedStyle.layers[0].id).toBe('symbol');
+
+        const layer = {
+            id: 'background',
+            type: 'background'
+        } as LayerSpecification;
+        style.addLayer(layer);
+
+        // serialize again
+        serializedStyle = style.serialize();
+        expect(serializedStyle.layers).toHaveLength(2);
+        expect(serializedStyle.layers[1].id).toBe('background');
+
+        // remove and serialize
+        style.removeLayer('background');
+        serializedStyle = style.serialize();
+        expect(serializedStyle.layers).toHaveLength(1);
+
     });
 });
 
