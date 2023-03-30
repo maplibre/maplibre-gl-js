@@ -210,6 +210,54 @@ describe('ImageRequest', () => {
         server.respond();
     });
 
+    test('doArrayRequest handles request errors', done => {
+        server.respondWith(request => {
+            request.respond(404, undefined, '404 Not Found');
+        });
+
+        ImageRequest.doArrayRequest(
+            {
+                requestParameters: {url: 'http://example.com/test.json'},
+                cancelled: false,
+                completed: true,
+                cancel: () => {},
+                callback: async (error) => {
+                    const ajaxError = error as AJAXError;
+                    const body = await readAsText(ajaxError.body);
+                    expect(ajaxError.status).toBe(404);
+                    expect(ajaxError.statusText).toBe('Not Found');
+                    expect(ajaxError.url).toBe('http://example.com/test.json');
+                    expect(body).toBe('404 Not Found');
+                    done();
+                }
+            }
+        );
+
+        server.respond();
+    });
+
+    test('doArrayRequest does not error when response has no data', done => {
+        server.respondWith(request => {
+            request.respond(204, undefined, undefined);
+        });
+
+        ImageRequest.doArrayRequest(
+            {
+                requestParameters: {url: ''},
+                cancelled: false,
+                completed: true,
+                cancel: () => {},
+                callback: (error, image) => {
+                    expect(error).toBeNull();
+                    expect(image).toBeNull();
+                    done();
+                }
+            }
+        );
+
+        server.respond();
+    });
+
     test('throttling: getImage queues requests for later processing', done => {
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
         const callbackHandle = ImageRequest.addThrottleControl(() => true);
