@@ -139,7 +139,7 @@ namespace ImageRequest {
         }
     };
 
-    export const doArrayRequest = (itemInQueue: ImageRequestQueueItem): Cancelable => {
+    const doArrayRequest = (itemInQueue: ImageRequestQueueItem): Cancelable => {
 
         const {requestParameters, callback} = itemInQueue;
 
