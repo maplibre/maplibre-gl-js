@@ -10,8 +10,6 @@ import type {StyleImage} from './style_image';
 import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
-import type {GetImageCallback} from '../util/image_request';
-import type {ResponseCallback} from '../util/ajax';
 
 export default function loadSprite(
     originalSprite: SpriteSpecification,
@@ -29,30 +27,27 @@ export default function loadSprite(
     const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
 
     for (const {id, url} of spriteArray) {
-
-        const jsonRequestCallback:ResponseCallback<any> = (err?, data?) => {
-            jsonRequests.pop();
+        const jsonRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
+        const newJsonRequestsLength = jsonRequests.push(getJSON(jsonRequestParameters, (err?: Error | null, data?: any | null) => {
+            jsonRequests.splice(newJsonRequestsLength, 1);
             if (err) {
                 callback(err);
             } else {
                 jsonsMap[id] = data;
                 maybeComplete();
             }
-        };
-        const jsonRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
-        jsonRequests.push(getJSON(jsonRequestParameters, jsonRequestCallback));
+        }));
 
-        const imageRequestCallback: GetImageCallback = (err?, img?) => {
-            imageRequests.pop();
+        const imageRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
+        const newImageRequestsLength = imageRequests.push(ImageRequest.getImage(imageRequestParameters, (err, img) => {
+            imageRequests.splice(newImageRequestsLength, 1);
             if (err) {
                 callback(err);
             } else {
                 imagesMap[id] = img;
                 maybeComplete();
             }
-        };
-        const imageRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
-        imageRequests.push(ImageRequest.getImage(imageRequestParameters, imageRequestCallback));
+        }));
     }
 
     function maybeComplete() {
