@@ -27,26 +27,30 @@ export default function loadSprite(
     for (const {id, url} of spriteArray) {
         const jsonRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
         combinedRequestsMap[jsonRequestParameters.url] = getJSON(jsonRequestParameters, (err?: Error | null, data?: any | null) => {
-            sharedCallbackProcessing(id, jsonRequestParameters.url, jsonsMap, err, data);
+            maybeComplete(id, jsonRequestParameters.url, jsonsMap, err, data);
         });
 
         const imageRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
         combinedRequestsMap[imageRequestParameters.url] = ImageRequest.getImage(imageRequestParameters, (err, img) => {
-            sharedCallbackProcessing(id, imageRequestParameters.url, imagesMap, err, img);
+            maybeComplete(id, imageRequestParameters.url, imagesMap, err, img);
         });
     }
 
-    function sharedCallbackProcessing(id: string, url: string, dataMap:{[id: string]: any}, err?: Error, data?: any) {
+    /**
+     * @param id - if of the sprite being loaded
+     * @param url - url (JSON or image) of the request
+     * @param dataMap - dataMap object (either jsonsMap or imagesMap dictionary)
+     * @param err - error object
+     * @param data - data object returned by JSON or image request
+     */
+    function maybeComplete(id: string, url: string, dataMap:{[id: string]: any}, err: Error, data: any): void {
         delete combinedRequestsMap[url];
         if (err) {
             callback(err);
-        } else {
-            dataMap[id] = data;
-            maybeComplete();
+            return;
         }
-    }
+        dataMap[id] = data;
 
-    function maybeComplete() {
         const jsonsLength = Object.values(jsonsMap).length;
         const imagesLength = Object.values(imagesMap).length;
 
