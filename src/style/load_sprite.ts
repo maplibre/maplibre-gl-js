@@ -27,25 +27,23 @@ export default function loadSprite(
     for (const {id, url} of spriteArray) {
         const jsonRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
         combinedRequestsMap[jsonRequestParameters.url] = getJSON(jsonRequestParameters, (err?: Error | null, data?: any | null) => {
-            delete combinedRequestsMap[jsonRequestParameters.url];
-            if (err) {
-                callback(err);
-            } else {
-                jsonsMap[id] = data;
-                maybeComplete();
-            }
+            sharedCallbackProcessing(id, jsonRequestParameters.url, jsonsMap, err, data);
         });
 
         const imageRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
         combinedRequestsMap[imageRequestParameters.url] = ImageRequest.getImage(imageRequestParameters, (err, img) => {
-            delete combinedRequestsMap[imageRequestParameters.url];
-            if (err) {
-                callback(err);
-            } else {
-                imagesMap[id] = img;
-                maybeComplete();
-            }
+            sharedCallbackProcessing(id, imageRequestParameters.url, imagesMap, err, img);
         });
+    }
+
+    function sharedCallbackProcessing(id: string, url: string, dataMap:{[id: string]: any}, err?: Error, data?: any) {
+        delete combinedRequestsMap[url];
+        if (err) {
+            callback(err);
+        } else {
+            dataMap[id] = data;
+            maybeComplete();
+        }
     }
 
     function maybeComplete() {
