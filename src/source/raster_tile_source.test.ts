@@ -133,6 +133,36 @@ describe('RasterTileSource', () => {
         server.respond();
     });
 
+    test('handles no image data', done => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+
+        const source = createSource({url: '/source.json'});
+        source.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                const tile = {
+                    tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+                    state: 'loading',
+                    loadVectorData () {},
+                    setExpiryData() {}
+                } as any as Tile;
+                source.loadTile(tile, (err) => {
+                    expect(err).toBeNull();
+                    expect(tile.state).toBe('errored');
+                    done();
+                });
+                server.respond();
+            }
+        });
+        server.respond();
+    });
+
     test('cancels TileJSON request if removed', () => {
         const source = createSource({url: '/source.json'});
         source.onRemove();
