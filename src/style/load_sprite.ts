@@ -20,34 +20,32 @@ export default function loadSprite(
     const spriteArray = coerceSpriteToArray(originalSprite);
     const format = pixelRatio > 1 ? '@2x' : '';
 
-    const jsonRequests: Cancelable[] = [];
-    const imageRequests: Cancelable[] = [];
-
+    const combinedRequestsMap: {[baseURL: string]: Cancelable} = {};
     const jsonsMap: {[baseURL: string]: any} = {};
     const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
 
     for (const {id, url} of spriteArray) {
         const jsonRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
-        const newJsonRequestsLength = jsonRequests.push(getJSON(jsonRequestParameters, (err?: Error | null, data?: any | null) => {
-            jsonRequests.splice(newJsonRequestsLength, 1);
+        combinedRequestsMap[jsonRequestParameters.url] = getJSON(jsonRequestParameters, (err?: Error | null, data?: any | null) => {
+            delete combinedRequestsMap[jsonRequestParameters.url];
             if (err) {
                 callback(err);
             } else {
                 jsonsMap[id] = data;
                 maybeComplete();
             }
-        }));
+        });
 
         const imageRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
-        const newImageRequestsLength = imageRequests.push(ImageRequest.getImage(imageRequestParameters, (err, img) => {
-            imageRequests.splice(newImageRequestsLength, 1);
+        combinedRequestsMap[imageRequestParameters.url] = ImageRequest.getImage(imageRequestParameters, (err, img) => {
+            delete combinedRequestsMap[imageRequestParameters.url];
             if (err) {
                 callback(err);
             } else {
                 imagesMap[id] = img;
                 maybeComplete();
             }
-        }));
+        });
     }
 
     function maybeComplete() {
@@ -76,18 +74,8 @@ export default function loadSprite(
 
     return {
         cancel() {
-            if (jsonRequests.length) {
-                for (const jsonRequest of jsonRequests) {
-                    jsonRequest.cancel();
-                    jsonRequests.splice(jsonRequests.indexOf(jsonRequest), 1);
-                }
-            }
-
-            if (imageRequests.length) {
-                for (const imageRequest of imageRequests) {
-                    imageRequest.cancel();
-                    imageRequests.splice(imageRequests.indexOf(imageRequest), 1);
-                }
+            for (const requst of Object.values(combinedRequestsMap)) {
+                requst.cancel();
             }
         }
     };
