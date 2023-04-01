@@ -20,9 +20,9 @@ export default function loadSprite(
     const spriteArray = coerceSpriteToArray(originalSprite);
     const format = pixelRatio > 1 ? '@2x' : '';
 
-    const combinedRequestsMap: {[baseURL: string]: Cancelable} = {};
-    const jsonsMap: {[baseURL: string]: any} = {};
-    const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
+    const combinedRequestsMap: {[requestUrl: string]: Cancelable} = {};
+    const jsonsMap: {[id: string]: any} = {};
+    const imagesMap: {[id: string]: (HTMLImageElement | ImageBitmap)} = {};
 
     for (const {id, url} of spriteArray) {
         const jsonRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
