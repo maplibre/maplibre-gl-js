@@ -10,6 +10,8 @@ import type {StyleImage} from './style_image';
 import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
+import type {GetImageCallback} from '../util/image_request';
+import type {ResponseCallback} from '../util/ajax';
 
 export default function loadSprite(
     originalSprite: SpriteSpecification,
@@ -17,45 +19,47 @@ export default function loadSprite(
     pixelRatio: number,
     callback: Callback<{[spriteName: string]: {[id: string]: StyleImage}}>
 ): Cancelable {
-    const sprite = coerceSpriteToArray(originalSprite);
+    const spriteArray = coerceSpriteToArray(originalSprite);
     const format = pixelRatio > 1 ? '@2x' : '';
 
-    let error;
     const jsonRequests: Cancelable[] = [];
     const imageRequests: Cancelable[] = [];
 
     const jsonsMap: {[baseURL: string]: any} = {};
     const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
 
-    for (const {id, url} of sprite) {
-        // eslint-disable-next-line no-loop-func
-        const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
-            jsonRequests.splice(newJsonRequestsLength, 1);
-            if (!error) {
-                error = err;
+    for (const {id, url} of spriteArray) {
+
+        const jsonRequestCallback:ResponseCallback<any> = (err?, data?) => {
+            jsonRequests.pop();
+            if (err) {
+                callback(err);
+            } else {
                 jsonsMap[id] = data;
                 maybeComplete();
             }
-        }));
+        };
+        const jsonRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
+        jsonRequests.push(getJSON(jsonRequestParameters, jsonRequestCallback));
 
-        // eslint-disable-next-line no-loop-func
-        const newImageRequestsLength = imageRequests.push(ImageRequest.getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage), (err, img) => {
-            imageRequests.splice(newImageRequestsLength, 1);
-            if (!error) {
-                error = err;
+        const imageRequestCallback: GetImageCallback = (err?, img?) => {
+            imageRequests.pop();
+            if (err) {
+                callback(err);
+            } else {
                 imagesMap[id] = img;
                 maybeComplete();
             }
-        }));
+        };
+        const imageRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
+        imageRequests.push(ImageRequest.getImage(imageRequestParameters, imageRequestCallback));
     }
 
     function maybeComplete() {
         const jsonsLength = Object.values(jsonsMap).length;
         const imagesLength = Object.values(imagesMap).length;
 
-        if (error) {
-            callback(error);
-        } else if (sprite.length === jsonsLength && jsonsLength === imagesLength) {
+        if (spriteArray.length === jsonsLength && jsonsLength === imagesLength) {
             const result = {} as {[spriteName: string]: {[id: string]: StyleImage}};
 
             for (const spriteName in jsonsMap) {
