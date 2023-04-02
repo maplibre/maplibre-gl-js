@@ -115,7 +115,7 @@ class RasterTileSource extends Evented implements Source {
                 // When an HTTP 204 response is received, there's no error message and no image data
                 tile.state = 'errored';
                 callback(err);
-            } else if (img) {
+            } else {
                 if (this.map._refreshExpiredTiles) tile.setExpiryData(expiry);
 
                 const context = this.map.painter.context;
