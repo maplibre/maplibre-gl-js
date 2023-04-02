@@ -37,8 +37,8 @@ export default function loadSprite(
     }
 
     /**
-     * @param id - if of the sprite being loaded
-     * @param url - url (JSON or image) of the request
+     * @param id - id of the sprite whose callback has just been received
+     * @param url - url (JSON or image) of the network request
      * @param dataMap - dataMap object (either jsonsMap or imagesMap dictionary)
      * @param err - error object
      * @param data - data object returned by JSON or image request
