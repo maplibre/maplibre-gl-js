@@ -20,31 +20,33 @@ export default function loadSprite(
     const spriteArray = coerceSpriteToArray(originalSprite);
     const format = pixelRatio > 1 ? '@2x' : '';
 
-    const combinedRequestsMap: {[requestUrl: string]: Cancelable} = {};
+    const combinedRequestsMap: {[requestKey: string]: Cancelable} = {};
     const jsonsMap: {[id: string]: any} = {};
     const imagesMap: {[id: string]: (HTMLImageElement | ImageBitmap)} = {};
 
     for (const {id, url} of spriteArray) {
         const jsonRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
-        combinedRequestsMap[jsonRequestParameters.url] = getJSON(jsonRequestParameters, (err?: Error | null, data?: any | null) => {
-            maybeComplete(id, jsonRequestParameters.url, jsonsMap, err, data);
+        const jsonRequestKey = `${id}_${jsonRequestParameters.url}`; // use id_url as requestMap key to make sure it is unique
+        combinedRequestsMap[jsonRequestKey] = getJSON(jsonRequestParameters, (err?: Error | null, data?: any | null) => {
+            maybeComplete(id, jsonRequestKey, jsonsMap, err, data);
         });
 
         const imageRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
-        combinedRequestsMap[imageRequestParameters.url] = ImageRequest.getImage(imageRequestParameters, (err, img) => {
-            maybeComplete(id, imageRequestParameters.url, imagesMap, err, img);
+        const imageRequestKey = `${id}_${imageRequestParameters.url}`; // use id_url as requestMap key to make sure it is unique
+        combinedRequestsMap[imageRequestKey] = ImageRequest.getImage(imageRequestParameters, (err, img) => {
+            maybeComplete(id, imageRequestKey, imagesMap, err, img);
         });
     }
 
     /**
      * @param id - id of the sprite whose callback has just been received
-     * @param url - url (JSON or image) of the network request
+     * @param requestKey - id_url (JSON or image) as the key of the network request
      * @param dataMap - dataMap object (either jsonsMap or imagesMap dictionary)
      * @param err - error object
      * @param data - data object returned by JSON or image request
      */
-    function maybeComplete(id: string, url: string, dataMap:{[id: string]: any}, err: Error, data: any): void {
-        delete combinedRequestsMap[url];
+    function maybeComplete(id: string, requestKey: string, dataMap:{[id: string]: any}, err: Error, data: any): void {
+        delete combinedRequestsMap[requestKey];
         if (err) {
             callback(err);
             return;
