@@ -159,9 +159,10 @@ namespace ImageRequest {
                 arrayBufferToCanvasImageSource(data, decoratedCallback);
             } else {
                 // HTTP 204 responses don't error and do not contain any data
-                // Calling the callback without any of them will
-                // update the tile status and avoid triggering an error
-                callback(null, null);
+                // We create a new error to handle that case
+                const error = new Error('Empty image data');
+                (error as any).status = 204;
+                callback(error, null);
             }
 
             if (!itemInQueue.cancelled) {

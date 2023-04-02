@@ -113,8 +113,7 @@ describe('ImageRequest', () => {
             ImageRequest.getImage({url: ''}, callback);
         }
         expect(server.requests).toHaveLength(maxRequests);
-
-        server.requests[0].respond(undefined, undefined, undefined);
+        server.requests[0].respond(200, {'Content-Type': 'image/png'}, 'test');
     });
 
     test('getImage cancelling frees up request for maxParallelImageRequests', done => {
@@ -177,7 +176,7 @@ describe('ImageRequest', () => {
     test('getImage uses ImageBitmap when supported', done => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, 'test'));
 
         stubAjaxGetImage(() => Promise.resolve(new ImageBitmap()));
 
@@ -195,7 +194,7 @@ describe('ImageRequest', () => {
     test('getImage uses HTMLImageElement when ImageBitmap is not supported', done => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, 'test'));
 
         stubAjaxGetImage(undefined);
 
