@@ -18,6 +18,7 @@ export default function loadSprite(
     callback: Callback<{[spriteName: string]: {[id: string]: StyleImage}}>
 ): Cancelable {
     const spriteArray = coerceSpriteToArray(originalSprite);
+    const spriteArrayLength = spriteArray.length;
     const format = pixelRatio > 1 ? '@2x' : '';
 
     const combinedRequestsMap: {[requestKey: string]: Cancelable} = {};
@@ -28,52 +29,16 @@ export default function loadSprite(
         const jsonRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
         const jsonRequestKey = `${id}_${jsonRequestParameters.url}`; // use id_url as requestMap key to make sure it is unique
         combinedRequestsMap[jsonRequestKey] = getJSON(jsonRequestParameters, (err?: Error | null, data?: any | null) => {
-            maybeComplete(id, jsonRequestKey, jsonsMap, err, data);
+            delete combinedRequestsMap[jsonRequestKey];
+            maybeComplete(callback, id, ResourceType.SpriteJSON, jsonsMap, imagesMap, err, data, spriteArrayLength);
         });
 
         const imageRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
         const imageRequestKey = `${id}_${imageRequestParameters.url}`; // use id_url as requestMap key to make sure it is unique
         combinedRequestsMap[imageRequestKey] = ImageRequest.getImage(imageRequestParameters, (err, img) => {
-            maybeComplete(id, imageRequestKey, imagesMap, err, img);
+            delete combinedRequestsMap[imageRequestKey];
+            maybeComplete(callback, id, ResourceType.SpriteImage, jsonsMap, imagesMap, err, img, spriteArrayLength);
         });
-    }
-
-    /**
-     * @param id - id of the sprite whose callback has just been received
-     * @param requestKey - id_url (JSON or image) as the key of the network request
-     * @param dataMap - dataMap object (either jsonsMap or imagesMap dictionary)
-     * @param err - error object
-     * @param data - data object returned by JSON or image request
-     */
-    function maybeComplete(id: string, requestKey: string, dataMap:{[id: string]: any}, err: Error, data: any): void {
-        delete combinedRequestsMap[requestKey];
-        if (err) {
-            callback(err);
-            return;
-        }
-        dataMap[id] = data;
-
-        const jsonsLength = Object.values(jsonsMap).length;
-        const imagesLength = Object.values(imagesMap).length;
-
-        if (spriteArray.length === jsonsLength && jsonsLength === imagesLength) {
-            const result = {} as {[spriteName: string]: {[id: string]: StyleImage}};
-
-            for (const spriteName in jsonsMap) {
-                result[spriteName] = {};
-
-                const context = browser.getImageCanvasContext(imagesMap[spriteName]);
-                const json = jsonsMap[spriteName];
-
-                for (const id in json) {
-                    const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
-                    const spriteData = {width, height, x, y, context};
-                    result[spriteName][id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, spriteData};
-                }
-            }
-
-            callback(null, result);
-        }
     }
 
     return {
@@ -83,4 +48,57 @@ export default function loadSprite(
             }
         }
     };
+}
+
+/**
+ * @param callbackFunc - the callback function (both erro and success)
+ * @param id - id of the sprite whose callback has just been received
+ * @param resourceType - ResourceType enum to indicate which result has just been received
+ * @param jsonsMap - JSON data map
+ * @param imagesMap - image data map
+ * @param err - error object
+ * @param data - data object returned by JSON or image request
+ * @param expectedResultCounter - number of expected JSON or Image results when everything is finished, respectively.
+ */
+function maybeComplete(
+    callbackFunc:Callback<{[spriteName: string]: {[id: string]: StyleImage}}>,
+    id: string,
+    resourceType: ResourceType,
+    jsonsMap:{[id: string]: any},
+    imagesMap:{[id: string]: (HTMLImageElement | ImageBitmap)},
+    err: Error,
+    data: any,
+    expectedResultCounter: number): void {
+
+    if (err) {
+        callbackFunc(err);
+        return;
+    }
+    if (resourceType === ResourceType.SpriteJSON) {
+        jsonsMap[id] = data;
+    } else if (resourceType === ResourceType.SpriteImage) {
+        imagesMap[id] = data;
+    }
+
+    const jsonsLength = Object.values(jsonsMap).length;
+    const imagesLength = Object.values(imagesMap).length;
+
+    if (expectedResultCounter === jsonsLength && jsonsLength === imagesLength) {
+        const result = {} as {[spriteName: string]: {[id: string]: StyleImage}};
+
+        for (const spriteName in jsonsMap) {
+            result[spriteName] = {};
+
+            const context = browser.getImageCanvasContext(imagesMap[spriteName]);
+            const json = jsonsMap[spriteName];
+
+            for (const id in json) {
+                const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
+                const spriteData = {width, height, x, y, context};
+                result[spriteName][id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, spriteData};
+            }
+        }
+
+        callbackFunc(null, result);
+    }
 }
