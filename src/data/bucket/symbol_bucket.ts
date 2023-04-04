@@ -34,8 +34,7 @@ import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size';
 
 import {register} from '../../util/web_worker_transfer';
 import EvaluationParameters from '../../style/evaluation_parameters';
-import Formatted from '../../style-spec/expression/types/formatted';
-import ResolvedImage from '../../style-spec/expression/types/resolved_image';
+import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {plugin as globalRTLTextPlugin, getRTLTextPluginStatus} from '../../source/rtl_text_plugin';
 import {mat4} from 'gl-matrix';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode';

@@ -14,9 +14,9 @@ import {
 import browser from '../util/browser';
 import {OverscaledTileID} from '../source/tile_id';
 import {fakeXhr, fakeServer} from 'nise';
-import {WorkerGlobalScopeInterface} from '../util/web_worker';
+
 import EvaluationParameters from './evaluation_parameters';
-import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '../style-spec/types.g';
+import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {SourceClass} from '../source/source';
 import GeoJSONSource from '../source/geojson_source';
 
@@ -80,7 +80,6 @@ function createStyle(map = getStubMap()) {
 
 let sinonFakeXMLServer;
 let sinonFakeServer;
-let _self;
 let mockConsoleError;
 
 beforeEach(() => {
@@ -88,20 +87,12 @@ beforeEach(() => {
     sinonFakeServer = fakeServer.create();
     sinonFakeXMLServer = fakeXhr.useFakeXMLHttpRequest();
 
-    _self = {
-        addEventListener() {}
-    } as any as WorkerGlobalScopeInterface & typeof globalThis;
-    global.self = _self;
-
     mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
 });
 
 afterEach(() => {
     sinonFakeXMLServer.restore();
     sinonFakeServer.restore();
-
-    global.self = undefined;
-
     mockConsoleError.mockRestore();
 });
 
@@ -578,6 +569,22 @@ describe('Style#_load', () => {
 
         // cleanup
         stub.mockReset();
+    });
+
+    test('layers are NOT serialized immediately after creation', () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON({
+            layers: [{
+                id: 'background',
+                type: 'background'
+            }, {
+                id: 'custom',
+                type: 'custom'
+            }]
+        });
+
+        style._load(styleSpec, {validate: false});
+        expect(style._serializedLayers).toBeNull();
     });
 });
 
@@ -2316,7 +2323,7 @@ describe('Style defers  ...', () => {
         style.on('style.load', () => {
             style.update({} as EvaluationParameters);
 
-            // spies to track defered methods
+            // spies to track deferred methods
             const mockStyleFire = jest.spyOn(style, 'fire');
             jest.spyOn(style, '_reloadSource');
             jest.spyOn(style, '_updateWorkerLayers');
@@ -2410,6 +2417,30 @@ describe('Style#query*Features', () => {
         });
         style.querySourceFeatures([{x: 0, y: 0}], {filter: 'invalidFilter', validate: false}, transform);
         expect(errors).toBe(0);
+    });
+
+    test('serialized layers should be correctly updated after adding/removing layers', () => {
+
+        let serializedStyle = style.serialize();
+        expect(serializedStyle.layers).toHaveLength(1);
+        expect(serializedStyle.layers[0].id).toBe('symbol');
+
+        const layer = {
+            id: 'background',
+            type: 'background'
+        } as LayerSpecification;
+        style.addLayer(layer);
+
+        // serialize again
+        serializedStyle = style.serialize();
+        expect(serializedStyle.layers).toHaveLength(2);
+        expect(serializedStyle.layers[1].id).toBe('background');
+
+        // remove and serialize
+        style.removeLayer('background');
+        serializedStyle = style.serialize();
+        expect(serializedStyle.layers).toHaveLength(1);
+
     });
 });
 

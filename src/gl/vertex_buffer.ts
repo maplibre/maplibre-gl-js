@@ -24,7 +24,7 @@ const AttributeType = {
 
 /**
  * The `VertexBuffer` class turns a `StructArray` into a WebGL buffer. Each member of the StructArray's
- * Struct type is converted to a WebGL atribute.
+ * Struct type is converted to a WebGL attribute.
  * @private
  */
 class VertexBuffer {

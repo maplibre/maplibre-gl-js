@@ -6,7 +6,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {Event, ErrorEvent} from '../util/evented';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {LayerSpecification, SourceSpecification, StyleSpecification} from '../style-spec/types.g';
+import {LayerSpecification, SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {RequestTransformFunction} from '../util/request_manager';
 import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
@@ -17,6 +17,8 @@ import {CameraOptions} from './camera';
 import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
+import {StyleImageInterface} from '../style/style_image';
+import ImageRequest from '../util/image_request';
 
 function createStyleSource() {
     return {
@@ -2189,19 +2191,120 @@ describe('Map', () => {
 
         const id = 'missing-image';
 
-        let called;
+        const sampleImage = {width: 2, height: 1, data: new Uint8Array(8)};
+
+        let called: string;
         map.on('styleimagemissing', e => {
-            map.addImage(e.id, {width: 1, height: 1, data: new Uint8Array(4)});
+            map.addImage(e.id, sampleImage);
             called = e.id;
         });
 
         expect(map.hasImage(id)).toBeFalsy();
 
-        map.style.imageManager.getImages([id], () => {
+        map.style.imageManager.getImages([id], (alwaysNull, generatedImage) => {
+            expect(generatedImage[id].data.width).toEqual(sampleImage.width);
+            expect(generatedImage[id].data.height).toEqual(sampleImage.height);
+            expect(generatedImage[id].data.data).toEqual(sampleImage.data);
             expect(called).toBe(id);
             expect(map.hasImage(id)).toBeTruthy();
             done();
         });
+    });
+
+    test('map getImage matches addImage, uintArray', () => {
+        const map = createMap();
+        const id = 'add-get-uint';
+        const inputImage = {width: 2, height: 1, data: new Uint8Array(8)};
+
+        map.addImage(id, inputImage);
+        expect(map.hasImage(id)).toBeTruthy();
+
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(false);
+    });
+
+    test('map getImage matches addImage, uintClampedArray', () => {
+        const map = createMap();
+        const id = 'add-get-uint-clamped';
+        const inputImage = {width: 1, height: 2, data: new Uint8ClampedArray(8)};
+
+        map.addImage(id, inputImage);
+        expect(map.hasImage(id)).toBeTruthy();
+
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(false);
+    });
+
+    test('map getImage matches addImage, ImageData', () => {
+        const map = createMap();
+        const id = 'add-get-image-data';
+        const inputImage = new ImageData(1, 3);
+
+        map.addImage(id, inputImage);
+        expect(map.hasImage(id)).toBeTruthy();
+
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(false);
+    });
+
+    test('map getImage matches addImage, StyleImageInterface uint', () => {
+        const map = createMap();
+        const id = 'add-get-style-image-iface-uint';
+        const inputImage: StyleImageInterface = {
+            width: 3,
+            height: 1,
+            data: new Uint8Array(12)
+        };
+
+        map.addImage(id, inputImage);
+        expect(map.hasImage(id)).toBeTruthy();
+
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(false);
+    });
+
+    test('map getImage matches addImage, StyleImageInterface clamped', () => {
+        const map = createMap();
+        const id = 'add-get-style-image-iface-clamped';
+        const inputImage: StyleImageInterface = {
+            width: 4,
+            height: 1,
+            data: new Uint8ClampedArray(16)
+        };
+
+        map.addImage(id, inputImage);
+        expect(map.hasImage(id)).toBeTruthy();
+
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(false);
+    });
+
+    test('map getImage matches addImage, StyleImageInterface SDF', () => {
+        const map = createMap();
+        const id = 'add-get-style-image-iface-sdf';
+        const inputImage: StyleImageInterface = {
+            width: 5,
+            height: 1,
+            data: new Uint8Array(20)
+        };
+
+        map.addImage(id, inputImage, {sdf: true});
+        expect(map.hasImage(id)).toBeTruthy();
+
+        const gotImage = map.getImage(id);
+        expect(gotImage.data.width).toEqual(inputImage.width);
+        expect(gotImage.data.height).toEqual(inputImage.height);
+        expect(gotImage.sdf).toBe(true);
     });
 
     test('map does not fire `styleimagemissing` for empty icon values', done => {
@@ -2297,6 +2400,89 @@ describe('Map', () => {
         const sourcePromise = map.once('sourcedataabort');
         map.fire(new Event('dataabort'));
         await sourcePromise;
+    });
+
+    describe('#setTerrain', () => {
+        test('warn when terrain and hillshade source identical', done => {
+            server.respondWith('/source.json', JSON.stringify({
+                minzoom: 5,
+                maxzoom: 12,
+                attribution: 'Terrain',
+                tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
+                bounds: [-47, -7, -45, -5]
+            }));
+
+            const map = createMap();
+
+            map.on('load', () => {
+                map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});
+                server.respond();
+                map.addLayer({id: 'hillshade', type: 'hillshade', source: 'terrainrgb'});
+                const stub = jest.spyOn(console, 'warn').mockImplementation(() => { });
+                stub.mockReset();
+                map.setTerrain({
+                    source: 'terrainrgb'
+                });
+                expect(console.warn).toHaveBeenCalledTimes(1);
+                done();
+            });
+        });
+    });
+
+    describe('#setCooperativeGestures', () => {
+        test('returns self', () => {
+            const map = createMap();
+            expect(map.setCooperativeGestures(true)).toBe(map);
+        });
+
+        test('can be called more than once', () => {
+            const map = createMap();
+            map.setCooperativeGestures(true);
+            map.setCooperativeGestures(true);
+        });
+
+        test('calling set with no arguments turns cooperative gestures off', done => {
+            const map = createMap({cooperativeGestures: true});
+            map.on('load', () => {
+                map.setCooperativeGestures();
+                expect(map.getCooperativeGestures()).toBeFalsy();
+                done();
+            });
+        });
+    });
+
+    describe('#getCooperativeGestures', () => {
+        test('returns the cooperative gestures option', done => {
+            const map = createMap({cooperativeGestures: true});
+
+            map.on('load', () => {
+                expect(map.getCooperativeGestures()).toBe(true);
+                done();
+            });
+        });
+
+        test('returns falsy if cooperative gestures option is not specified', done => {
+            const map = createMap();
+
+            map.on('load', () => {
+                expect(map.getCooperativeGestures()).toBeFalsy();
+                done();
+            });
+        });
+
+        test('returns the cooperative gestures option with custom messages', done => {
+            const option = {
+                'windowsHelpText': 'Custom message',
+                'macHelpText': 'Custom message',
+                'mobileHelpText': 'Custom message',
+            };
+            const map = createMap({cooperativeGestures: option});
+
+            map.on('load', () => {
+                expect(map.getCooperativeGestures()).toEqual(option);
+                done();
+            });
+        });
     });
 
     describe('getCameraTargetElevation', () => {
@@ -2437,6 +2623,30 @@ describe('Map', () => {
                 expect(errorMessageObject.statusMessage).toBe('mocked webglcontextcreationerror message');
             }
 
+        });
+
+        test('should call call ImageRequest.processQueue() only when moving', () => {
+            const style = createStyle();
+            const map = createMap({style});
+
+            let imageQueueProcessRequestCallCounter = 0;
+            jest.spyOn(ImageRequest, 'processQueue').mockImplementation(() => {
+                imageQueueProcessRequestCallCounter++;
+                return 0;
+            });
+            let mockIsMoving = true;
+
+            jest.spyOn(map, 'isMoving').mockImplementation(() => {
+                return mockIsMoving;
+            });
+
+            // when moving, expect ImageRequest.processQueue is called on repaint
+            map._render(0);
+            expect(imageQueueProcessRequestCallCounter).toBe(1);
+
+            mockIsMoving = false;
+            map._render(1);
+            expect(imageQueueProcessRequestCallCounter).toBe(1);
         });
     });
 

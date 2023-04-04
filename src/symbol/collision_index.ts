@@ -140,7 +140,7 @@ class CollisionIndex {
 
         const labelPlaneAnchorPoint = projection.project(tileUnitAnchorPoint, labelPlaneMatrix, getElevation).point;
 
-        const projectionCache = {};
+        const projectionCache = {projections: {}, offsets: {}};
         const lineOffsetX = symbol.lineOffsetX * labelPlaneFontScale;
         const lineOffsetY = symbol.lineOffsetY * labelPlaneFontScale;
 

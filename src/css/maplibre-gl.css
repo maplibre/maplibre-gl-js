@@ -53,6 +53,11 @@
     touch-action: none;
 }
 
+.maplibregl-canvas-container.maplibregl-touch-drag-pan.maplibregl-cooperative-gestures,
+.maplibregl-canvas-container.maplibregl-touch-drag-pan.maplibregl-cooperative-gestures .maplibregl-canvas {
+    touch-action: pan-x pan-y;
+}
+
 .maplibregl-ctrl-top-left,
 .maplibregl-ctrl-top-right,
 .maplibregl-ctrl-bottom-left,

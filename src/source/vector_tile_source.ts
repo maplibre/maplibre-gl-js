@@ -12,7 +12,7 @@ import type Dispatcher from '../util/dispatcher';
 import type Tile from './tile';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
-import type {VectorSourceSpecification, PromoteIdSpecification} from '../style-spec/types.g';
+import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * A source containing vector tiles in [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).

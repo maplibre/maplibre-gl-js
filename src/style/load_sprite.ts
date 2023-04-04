@@ -5,7 +5,7 @@ import {ResourceType} from '../util/request_manager';
 import browser from '../util/browser';
 import {coerceSpriteToArray} from '../util/style';
 
-import type {SpriteSpecification} from '../style-spec/types.g';
+import type {SpriteSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleImage} from './style_image';
 import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';

@@ -2,7 +2,7 @@ import {UniformColor, UniformMatrix4f, Uniform1i, Uniform1f} from '../uniform_bi
 
 import type Context from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type Color from '../../style-spec/util/color';
+import type {Color} from '@maplibre/maplibre-gl-style-spec';
 import {mat4} from 'gl-matrix';
 
 export type DebugUniformsType = {

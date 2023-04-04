@@ -19,7 +19,7 @@ import type VertexBuffer from '../gl/vertex_buffer';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
-} from '../style-spec/types.g';
+} from '@maplibre/maplibre-gl-style-spec';
 import {Cancelable} from '../types/cancelable';
 
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
@@ -262,7 +262,7 @@ class ImageSource extends Evented implements Source {
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
-        // We have a single tile -- whoose coordinates are this.tileID -- that
+        // We have a single tile -- whose coordinates are this.tileID -- that
         // covers the image we want to render.  If that's the one being
         // requested, set it up with the image; otherwise, mark the tile as
         // `errored` to indicate that we have no data for it.

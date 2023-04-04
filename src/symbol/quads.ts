@@ -7,7 +7,7 @@ import type {PositionedIcon, Shaping} from './shaping';
 import {SHAPING_DEFAULT_OFFSET} from './shaping';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
-import type {Feature} from '../style-spec/expression';
+import type {Feature} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleImage} from '../style/style_image';
 import ONE_EM from './one_em';
 import {Rect} from '../render/glyph_atlas';

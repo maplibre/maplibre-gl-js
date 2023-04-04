@@ -9,12 +9,11 @@ import {extend} from '../../util/util';
 import EvaluationParameters from '../evaluation_parameters';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProperty} from '../properties';
 
-import Step from '../../style-spec/expression/definitions/step';
-import type {FeatureState, ZoomConstantExpression} from '../../style-spec/expression';
+import {Step} from '@maplibre/maplibre-gl-style-spec';
+import type {FeatureState, ZoomConstantExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
 import type Transform from '../../geo/transform';
-import type {LayerSpecification} from '../../style-spec/types.g';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 class LineFloorwidthProperty extends DataDrivenProperty<number> {

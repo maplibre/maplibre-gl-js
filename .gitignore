@@ -23,7 +23,6 @@ test/integration/dist/**/*.json
 test/integration/query/dist/fixtures.json
 */**/*.g.ts
 .eslintcache
-src/style-spec/dist/index.cjs
 _batfish_site
 _batfish_tmp
 _site

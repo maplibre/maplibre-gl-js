@@ -250,7 +250,7 @@ export default class Marker extends Evented {
         this._update();
 
         // If we attached the `click` listener to the marker element, the popup
-        // would close once the event propogated to `map` due to the
+        // would close once the event propagated to `map` due to the
         // `Popup#_onClickClose` listener.
         this._map.on('click', this._onMapClick);
 
