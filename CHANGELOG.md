@@ -23,7 +23,7 @@
 ### 🐞 Bug fixes
 
 - Fix issue unloading sprite sheet when using `setStyle(style, {diff:true})` ([#2146](https://github.com/maplibre/maplibre-gl-js/pull/2146))
-- Fix wrap coords in `getTerrain` when `fitBounds` accross the AM ([#2155](https://github.com/maplibre/maplibre-gl-js/pull/2155))
+- Fix wrap coords in `getTerrain` when `fitBounds` across the AM ([#2155](https://github.com/maplibre/maplibre-gl-js/pull/2155))
 - Fix LngLat `toArray` method return type to [number,number] ([#2233](https://github.com/maplibre/maplibre-gl-js/issues/2233))
 - Fix handling of text-offset with symbol-placement: line ([#2170](https://github.com/maplibre/maplibre-gl-js/issues/2170) and [#2171](https://github.com/maplibre/maplibre-gl-js/issues/2171))
 - _...Add new stuff here..._
@@ -361,7 +361,7 @@ Everything from the four previous pre-releases:
 
 - Remove node package chalk from devDependencies ([#789](https://github.com/maplibre/maplibre-gl-js/pull/789)).
 - Remove vector-tile module declaration and revert to using point from [@mapbox/point-geometry](https://github.com/mapbox/point-geometry] ([#788](https://github.com/maplibre/maplibre-gl-js/issues/788), [#800](https://github.com/maplibre/maplibre-gl-js/pull/800))
-- Moved development environemnt to use NodeJs 16 ([#781](https://github.com/maplibre/maplibre-gl-js/pull/781), [#806](https://github.com/maplibre/maplibre-gl-js/pull/806))
+- Moved development environment to use NodeJs 16 ([#781](https://github.com/maplibre/maplibre-gl-js/pull/781), [#806](https://github.com/maplibre/maplibre-gl-js/pull/806))
 
 ### 🐞 Bug fixes
 
@@ -450,7 +450,7 @@ Everything from the four previous pre-releases:
 
 ### 🐞 Bug fixes
 
-- Prevented attribution button from submiting form ([#178](https://github.com/maplibre/maplibre-gl-js/issues/178))
+- Prevented attribution button from submitting form ([#178](https://github.com/maplibre/maplibre-gl-js/issues/178))
 
 ## 1.14.0
 
@@ -760,7 +760,7 @@ This patch introduces two workarounds that address longstanding issues related t
 - Fix `icon-text-fit` not properly respecting vertical labels. ([#8835](https://github.com/mapbox/mapbox-gl-js/pull/8835))
 - Fix opacity interpolation for composition expressions. ([#8818](https://github.com/mapbox/mapbox-gl-js/pull/8818))
 - Fix rotate and pitch events being fired at the same time. ([#8872](https://github.com/mapbox/mapbox-gl-js/pull/8872))
-- Fix memory leaks that occured during tile loading and map removal.([#8813](https://github.com/mapbox/mapbox-gl-js/pull/8813) and [#8850](https://github.com/mapbox/mapbox-gl-js/pull/8850))
+- Fix memory leaks that occurred during tile loading and map removal.([#8813](https://github.com/mapbox/mapbox-gl-js/pull/8813) and [#8850](https://github.com/mapbox/mapbox-gl-js/pull/8850))
 - Fix web-worker transfer of `ArrayBuffers` in environments where `instanceof ArrayBuffer` fails.(e.g `cypress`) ([#8868](https://github.com/mapbox/mapbox-gl-js/pull/8868))
 
 ## 1.4.1
@@ -793,7 +793,7 @@ This patch introduces two workarounds that address longstanding issues related t
 - Don't cancel follow mode in the GeolocateControl when resizing the map or rotating the screen ([#8736](https://github.com/mapbox/mapbox-gl-js/pull/8736))
 - Fix error when calling `Popup#trackPointer` before setting its content or location ([#8757](https://github.com/mapbox/mapbox-gl-js/pull/8757)) (h/t [zxwandrew](https://github.com/zxwandrew))
 - Respect newline characters when text-max-width is set to zero ([#8706](https://github.com/mapbox/mapbox-gl-js/pull/8706))
-- Update earcut to v2.2.0 to fix polygon tesselation errors ([#8772](https://github.com/mapbox/mapbox-gl-js/pull/8772))
+- Update earcut to v2.2.0 to fix polygon tessellation errors ([#8772](https://github.com/mapbox/mapbox-gl-js/pull/8772))
 - Fix icon-fit with variable label placement ([#8755](https://github.com/mapbox/mapbox-gl-js/pull/8755))
 - Icons stretched with `icon-text-fit` are now sized correctly ([#8741](https://github.com/mapbox/mapbox-gl-js/pull/8741))
 - Collision detection for icons with `icon-text-fit` now works correctly ([#8741](https://github.com/mapbox/mapbox-gl-js/pull/8741))
@@ -2148,7 +2148,7 @@ August 16, 2018
 
 #### New Features & Improvements
 
-- Increase max glyph atlas size to accomodate alphabets with large numbers of characters [#2930](https://github.com/mapbox/mapbox-gl-js/pull/2930)
+- Increase max glyph atlas size to accommodate alphabets with large numbers of characters [#2930](https://github.com/mapbox/mapbox-gl-js/pull/2930)
 - Add support for filtering features on GeoJSON / vector tile `$id` [#2888](https://github.com/mapbox/mapbox-gl-js/pull/2888)
 - Update geolocate icon [#2973](https://github.com/mapbox/mapbox-gl-js/pull/2973)
 - Add a `close` event to `Popup`s [#2953](https://github.com/mapbox/mapbox-gl-js/pull/2953)
@@ -2358,7 +2358,7 @@ August 16, 2018
 
 - Fix incorrectly sized line dashes ([#2099](https://github.com/mapbox/mapbox-gl-js/issues/2099))
 - Fix bug in which `in` feature filter drops features ([#2166](https://github.com/mapbox/mapbox-gl-js/pull/2166))
-- Fix bug preventing `Map#load` from firing when tile "Not Found" errors occured ([#2176](https://github.com/mapbox/mapbox-gl-js/pull/2176))
+- Fix bug preventing `Map#load` from firing when tile "Not Found" errors occurred ([#2176](https://github.com/mapbox/mapbox-gl-js/pull/2176))
 - Fix rendering artifacts on mobile GPUs ([#2117](https://github.com/mapbox/mapbox-gl-js/pull/2117))
 
 ## 0.14.2 (Feb 19 2016)
@@ -2383,7 +2383,7 @@ August 16, 2018
 
 #### Bugfixes
 
-- Fix incorrectly rotated symbols along lines near tile boundries ([#2062](https://github.com/mapbox/mapbox-gl-js/issues/2062))
+- Fix incorrectly rotated symbols along lines near tile boundaries ([#2062](https://github.com/mapbox/mapbox-gl-js/issues/2062))
 - Fix broken rendering when a fill layer follows certain symbol layers ([#2092](https://github.com/mapbox/mapbox-gl-js/issues/2092))
 
 ## 0.14.0 (Feb 8 2016)

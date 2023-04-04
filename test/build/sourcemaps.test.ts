@@ -56,7 +56,7 @@ describe('main sourcemap', () => {
         const sourcemapEntriesNormalized = sourcemapJSON.sources.map(f => {
             const joinedFilePath = path.join(sourceMapEntryRootDir, f);
 
-            // joined path has back slashes on windows, normalize them to be consistant with
+            // joined path has back slashes on windows, normalize them to be consistent with
             // entries returned by glob
             return  joinedFilePath.replace(/\\/g, '/');
         });

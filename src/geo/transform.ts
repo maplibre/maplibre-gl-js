@@ -255,7 +255,7 @@ class Transform {
     }
 
     /**
-     * Helper method to upadte edge-insets inplace
+     * Helper method to update edge-insets in place
      *
      * @param {PaddingOptions} start the starting padding
      * @param {PaddingOptions} target the target padding
@@ -618,7 +618,7 @@ class Transform {
             }
         }
 
-        // calcuate point-coordinate on flat earth
+        // calculate point-coordinate on flat earth
         const targetZ = 0;
         // since we don't know the correct projected z value for the point,
         // unproject two points to get a line and then find the point on that

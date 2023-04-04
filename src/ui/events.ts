@@ -270,7 +270,7 @@ export class MapWheelEvent extends Event {
  * @typedef {Object} MapLibreZoomEvent
  * @property {MouseEvent} originalEvent The DOM event that triggered the boxzoom event. Can be a `MouseEvent` or `KeyboardEvent`
  * @property {string} type The type of boxzoom event. One of `boxzoomstart`, `boxzoomend` or `boxzoomcancel`
- * @property {Map} target The `Map` instance that triggerred the event
+ * @property {Map} target The `Map` instance that triggered the event
  */
 export type MapLibreZoomEvent = {
     type: 'boxzoomstart' | 'boxzoomend' | 'boxzoomcancel';
@@ -401,7 +401,7 @@ export type MapEvent =
      *
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
-     * the cursor is pressed while inside a visible portion of the specifed layer.
+     * the cursor is pressed while inside a visible portion of the specified layer.
      *
      * @event mousedown
      * @memberof Map
@@ -430,7 +430,7 @@ export type MapEvent =
      *
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
-     * the cursor is released while inside a visible portion of the specifed layer.
+     * the cursor is released while inside a visible portion of the specified layer.
      *
      * @event mouseup
      * @memberof Map
@@ -461,7 +461,7 @@ export type MapEvent =
      *
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
-     * the cursor is moved inside a visible portion of the specifed layer.
+     * the cursor is moved inside a visible portion of the specified layer.
      *
      * @event mouseover
      * @memberof Map
@@ -524,7 +524,7 @@ export type MapEvent =
      *
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
-     * point that is pressed and released contains a visible portion of the specifed layer.
+     * point that is pressed and released contains a visible portion of the specified layer.
      *
      * @event click
      * @memberof Map
@@ -555,7 +555,7 @@ export type MapEvent =
      *
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only
-     * when the point that is clicked twice contains a visible portion of the specifed layer.
+     * when the point that is clicked twice contains a visible portion of the specified layer.
      *
      * @event dblclick
      * @memberof Map
@@ -605,7 +605,7 @@ export type MapEvent =
      * Fired when a pointing device (usually a mouse) leaves a visible portion of a specified layer, or leaves
      * the map canvas.
      *
-     * **Important:** This event can only be listened for when {@link Map#on} includes three arguements,
+     * **Important:** This event can only be listened for when {@link Map#on} includes three arguments,
      * where the second argument specifies the desired layer.
      *
      * @event mouseleave
@@ -1233,7 +1233,7 @@ export type MapEvent =
     /**
      * Fired when an error occurs. This is GL JS's primary error reporting
      * mechanism. We use an event instead of `throw` to better accommodate
-     * asyncronous operations. If no listeners are bound to the `error` event, the
+     * asynchronous operations. If no listeners are bound to the `error` event, the
      * error will be printed to the console.
      *
      * @event error
@@ -1311,7 +1311,7 @@ export type MapEvent =
 
     /**
      * Fired when any map data (style, source, tile, etc) begins loading or
-     * changing asyncronously. All `dataloading` events are followed by a `data`,
+     * changing asynchronously. All `dataloading` events are followed by a `data`,
      * `dataabort` or `error` event. See {@link MapDataEvent} for more information.
      *
      * @event dataloading
@@ -1331,7 +1331,7 @@ export type MapEvent =
     | 'dataloading'
 
     /**
-     * Fired when the map's style begins loading or changing asyncronously.
+     * Fired when the map's style begins loading or changing asynchronously.
      * All `styledataloading` events are followed by a `styledata`
      * or `error` event. See {@link MapDataEvent} for more information.
      *
@@ -1344,7 +1344,7 @@ export type MapEvent =
      * var map = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // map's style begins loading or
-     * // changing asyncronously.
+     * // changing asynchronously.
      * map.on('styledataloading', function() {
      *   console.log('A styledataloading event occurred.');
      * });
@@ -1352,7 +1352,7 @@ export type MapEvent =
     | 'styledataloading'
 
     /**
-     * Fired when one of the map's sources begins loading or changing asyncronously.
+     * Fired when one of the map's sources begins loading or changing asynchronously.
      * All `sourcedataloading` events are followed by a `sourcedata`, `sourcedataabort` or `error` event.
      * See {@link MapDataEvent} for more information.
      *
@@ -1365,7 +1365,7 @@ export type MapEvent =
      * var map = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // map's sources begin loading or
-     * // changing asyncronously.
+     * // changing asynchronously.
      * map.on('sourcedataloading', function() {
      *   console.log('A sourcedataloading event occurred.');
      * });

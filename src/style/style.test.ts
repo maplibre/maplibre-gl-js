@@ -2323,7 +2323,7 @@ describe('Style defers  ...', () => {
         style.on('style.load', () => {
             style.update({} as EvaluationParameters);
 
-            // spies to track defered methods
+            // spies to track deferred methods
             const mockStyleFire = jest.spyOn(style, 'fire');
             jest.spyOn(style, '_reloadSource');
             jest.spyOn(style, '_updateWorkerLayers');

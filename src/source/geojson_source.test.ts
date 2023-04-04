@@ -248,7 +248,7 @@ describe('GeoJSONSource#update', () => {
     });
 
     test('modifying cluster properties after adding a source', done => {
-        // test setCluster fonction on GeoJSONSource
+        // test setCluster function on GeoJSONSource
         const mockDispatcher = wrapDispatcher({
             send(message, params) {
                 expect(message).toBe('geojson.loadData');

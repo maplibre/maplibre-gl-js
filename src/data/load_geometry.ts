@@ -7,7 +7,7 @@ import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 // These bounds define the minimum and maximum supported coordinate values.
 // While visible coordinates are within [0, EXTENT], tiles may theoretically
-// contain cordinates within [-Infinity, Infinity]. Our range is limited by the
+// contain coordinates within [-Infinity, Infinity]. Our range is limited by the
 // number of bits used to represent the coordinate.
 const BITS = 15;
 const MAX = Math.pow(2, BITS - 1) - 1;

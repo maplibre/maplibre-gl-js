@@ -64,7 +64,7 @@ function performQueryOnFixture(fixture)  {
             // Start recursive chain
             const scheduleNextOperation = (lastOpIndex) => {
                 if (lastOpIndex === operations.length - 1) {
-                    // Stop recusive chain when at the end of the operations
+                    // Stop recursive chain when at the end of the operations
                     done();
                     return;
                 }
