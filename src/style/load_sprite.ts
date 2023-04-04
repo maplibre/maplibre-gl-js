@@ -30,14 +30,16 @@ export default function loadSprite(
         const jsonRequestKey = `${id}_${jsonRequestParameters.url}`; // use id_url as requestMap key to make sure it is unique
         combinedRequestsMap[jsonRequestKey] = getJSON(jsonRequestParameters, (err?: Error | null, data?: any | null) => {
             delete combinedRequestsMap[jsonRequestKey];
-            maybeComplete(callback, id, ResourceType.SpriteJSON, jsonsMap, imagesMap, err, data, spriteArrayLength);
+            jsonsMap[id] = data;
+            doOnceCompleted(callback, jsonsMap, imagesMap, err, spriteArrayLength);
         });
 
         const imageRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
         const imageRequestKey = `${id}_${imageRequestParameters.url}`; // use id_url as requestMap key to make sure it is unique
         combinedRequestsMap[imageRequestKey] = ImageRequest.getImage(imageRequestParameters, (err, img) => {
             delete combinedRequestsMap[imageRequestKey];
-            maybeComplete(callback, id, ResourceType.SpriteImage, jsonsMap, imagesMap, err, img, spriteArrayLength);
+            imagesMap[id] = img;
+            doOnceCompleted(callback, jsonsMap, imagesMap, err, spriteArrayLength);
         });
     }
 
@@ -52,53 +54,41 @@ export default function loadSprite(
 
 /**
  * @param callbackFunc - the callback function (both erro and success)
- * @param id - id of the sprite whose callback has just been received
- * @param resourceType - ResourceType enum to indicate which result has just been received
  * @param jsonsMap - JSON data map
  * @param imagesMap - image data map
  * @param err - error object
- * @param data - data object returned by JSON or image request
  * @param expectedResultCounter - number of expected JSON or Image results when everything is finished, respectively.
  */
-function maybeComplete(
+function doOnceCompleted(
     callbackFunc:Callback<{[spriteName: string]: {[id: string]: StyleImage}}>,
-    id: string,
-    resourceType: ResourceType,
     jsonsMap:{[id: string]: any},
     imagesMap:{[id: string]: (HTMLImageElement | ImageBitmap)},
     err: Error,
-    data: any,
     expectedResultCounter: number): void {
 
     if (err) {
         callbackFunc(err);
         return;
     }
-    if (resourceType === ResourceType.SpriteJSON) {
-        jsonsMap[id] = data;
-    } else if (resourceType === ResourceType.SpriteImage) {
-        imagesMap[id] = data;
+
+    if (expectedResultCounter !== Object.values(jsonsMap).length || expectedResultCounter !==  Object.values(imagesMap).length) {
+        // not done yet, nothing to do
+        return;
     }
 
-    const jsonsLength = Object.values(jsonsMap).length;
-    const imagesLength = Object.values(imagesMap).length;
+    const result = {} as {[spriteName: string]: {[id: string]: StyleImage}};
+    for (const spriteName in jsonsMap) {
+        result[spriteName] = {};
 
-    if (expectedResultCounter === jsonsLength && jsonsLength === imagesLength) {
-        const result = {} as {[spriteName: string]: {[id: string]: StyleImage}};
+        const context = browser.getImageCanvasContext(imagesMap[spriteName]);
+        const json = jsonsMap[spriteName];
 
-        for (const spriteName in jsonsMap) {
-            result[spriteName] = {};
-
-            const context = browser.getImageCanvasContext(imagesMap[spriteName]);
-            const json = jsonsMap[spriteName];
-
-            for (const id in json) {
-                const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
-                const spriteData = {width, height, x, y, context};
-                result[spriteName][id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, spriteData};
-            }
+        for (const id in json) {
+            const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
+            const spriteData = {width, height, x, y, context};
+            result[spriteName][id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, spriteData};
         }
-
-        callbackFunc(null, result);
     }
+
+    callbackFunc(null, result);
 }
