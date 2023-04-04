@@ -2,23 +2,7 @@ import config from './config';
 import webpSupported from './webp_supported';
 import {stubAjaxGetImage} from './test/util';
 import {fakeServer, FakeServer} from 'nise';
-import {
-    getArrayBuffer,
-    getJSON,
-    postData,
-    AJAXError
-} from './ajax';
-
 import ImageRequest, {ImageRequestQueueItem} from './image_request';
-
-function readAsText(blob) {
-    return new Promise((resolve, reject) => {
-        const fileReader = new FileReader();
-        fileReader.onload = () => resolve(fileReader.result);
-        fileReader.onerror = () => reject(fileReader.error);
-        fileReader.readAsText(blob);
-    });
-}
 
 describe('ImageRequest', () => {
     let server: FakeServer;
@@ -29,72 +13,6 @@ describe('ImageRequest', () => {
     });
     afterEach(() => {
         server.restore();
-    });
-
-    test('getArrayBuffer, 404', done => {
-        server.respondWith(request => {
-            request.respond(404, undefined, '404 Not Found');
-        });
-        getArrayBuffer({url: 'http://example.com/test.bin'}, async (error) => {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.bin');
-            expect(body).toBe('404 Not Found');
-            done();
-        });
-        server.respond();
-    });
-
-    test('getJSON', done => {
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
-        });
-        getJSON({url: ''}, (error, body) => {
-            expect(error).toBeFalsy();
-            expect(body).toEqual({foo: 'bar'});
-            done();
-        });
-        server.respond();
-    });
-
-    test('getJSON, invalid syntax', done => {
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
-        });
-        getJSON({url: ''}, (error) => {
-            expect(error).toBeTruthy();
-            done();
-        });
-        server.respond();
-    });
-
-    test('getJSON, 404', done => {
-        server.respondWith(request => {
-            request.respond(404, undefined, '404 Not Found');
-        });
-        getJSON({url: 'http://example.com/test.json'}, async (error) => {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.json');
-            expect(body).toBe('404 Not Found');
-            done();
-        });
-        server.respond();
-    });
-
-    test('postData, 204(no content): no error', done => {
-        server.respondWith(request => {
-            request.respond(204, undefined, undefined);
-        });
-        postData({url: 'api.mapbox.com'}, (error) => {
-            expect(error).toBeNull();
-            done();
-        });
-        server.respond();
     });
 
     test('getImage respects maxParallelImageRequests', done => {
@@ -206,6 +124,39 @@ describe('ImageRequest', () => {
             expect(expiry.expires).toBe('expires');
             done();
         });
+
+        server.respond();
+    });
+
+    test('getImage using HTMLImageElement when image refresh is not required', done => {
+        stubAjaxGetImage(undefined);
+        ImageRequest.getImage({url: ''}, (err, img) => {
+            if (err) done(err);
+            expect(img).toBeInstanceOf(HTMLImageElement);
+            done();
+        }, false);
+
+        server.respond();
+    });
+
+    test('getImage request returned 404 response for fetch request', done => {
+        server.respondWith(request => request.respond(404));
+
+        ImageRequest.getImage({url: ''}, (err) => {
+            if (err) done();
+            else done('Image download should have failed');
+        });
+
+        server.respond();
+    });
+
+    test('getImage request failed for HTTPImageRequest', done => {
+        stubAjaxGetImage(undefined);
+
+        ImageRequest.getImage({url: 'error'}, (err) => {
+            if (err) done();
+            else done('Image download should have failed');
+        }, false);
 
         server.respond();
     });

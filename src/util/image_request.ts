@@ -143,6 +143,66 @@ namespace ImageRequest {
         }
     };
 
+    const doImageRequest = (itemInQueue: ImageRequestQueueItem): Cancelable => {
+
+        const {requestParameters, supportImageRefresh, callback} = itemInQueue;
+        // If refreshExpiredTiles is false, then we can use HTMLImageElement to download raster images.
+        // getArrayBuffer will be used to download images for following scenarios:
+        // 1. Style image sprite will had a issue with HTMLImageElement as described
+        //    here: https://github.com/mapbox/mapbox-gl-js/issues/1470
+        // 2. If refreshExpiredTiles is true (default), then in order to read the image cache header,
+        //     fetch/XHR request will be required
+        if (supportImageRefresh === false) {
+            return makeImageRequest(requestParameters, (err?: Error | null, image?: HTMLImageElement) => {
+                onImageResponse(itemInQueue, callback, err, image);
+            });
+        } else {
+            return getArrayBuffer(
+                requestParameters,
+                (err?: Error | null,
+                    data?: ArrayBuffer | null,
+                    cacheControl?: string | null,
+                    expires?: string | null) => {
+                    onImageResponse(itemInQueue, callback, err, data, cacheControl, expires);
+                });
+        }
+    };
+
+    const onImageResponse = (
+        itemInQueue: ImageRequestQueueItem,
+        callback:GetImageCallback,
+        err?: Error | null,
+        data?: HTMLImageElement | ArrayBuffer | null,
+        cacheControl?: string | null,
+        expires?: string | null): void => {
+        if (err) {
+            callback(err);
+        } else if (data instanceof HTMLImageElement) {
+            callback(null, data);
+        } else if (data) {
+            const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
+                if (imgErr != null) {
+                    callback(imgErr);
+                } else if (imgResult != null) {
+                    callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
+                }
+            };
+            arrayBufferToCanvasImageSource(data, decoratedCallback);
+        }
+        onImageRequestComplete(itemInQueue);
+    };
+
+    const onImageRequestComplete = (itemInQueue: ImageRequestQueueItem): void => {
+        if (!itemInQueue.cancelled) {
+            itemInQueue.completed = true;
+            currentParallelImageRequests--;
+
+            if (!isThrottled()) {
+                processQueue();
+            }
+        }
+    };
+
     /**
      * Process some number of items in the image request queue.
      * @param {number} maxImageRequests The maximum number of request items to process. By default, up to {@link Config.MAX_PARALLEL_IMAGE_REQUESTS} will be processed.
@@ -188,56 +248,6 @@ namespace ImageRequest {
         return imageRequestQueue.length;
     };
 
-    const doImageRequest = (itemInQueue: ImageRequestQueueItem): Cancelable => {
-
-        const {requestParameters, supportImageRefresh, callback} = itemInQueue;
-        // If refreshExpiredTiles is false, then we can use HTMLImageElement to download raster images.
-        // getArrayBuffer will be used to download images for following scenarios:
-        // 1. Style image sprite will had a issue with HTMLImageElement as described
-        //    here: https://github.com/mapbox/mapbox-gl-js/issues/1470
-        // 2. If refreshExpiredTiles is true (default), then in order to read the image cache header,
-        //     fetch/XHR request will be required
-        if (supportImageRefresh === false) {
-            return makeImageRequest(requestParameters, (err?: Error | null, image?: HTMLImageElement) => {
-                if (err) {
-                    callback(err);
-                } else if (image) {
-                    callback(null, image);
-                }
-
-                onImageRequestComplete(itemInQueue);
-            });
-        } else {
-            return getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
-                if (err) {
-                    callback(err);
-                } else if (data) {
-                    const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
-                        if (imgErr != null) {
-                            callback(imgErr);
-                        } else if (imgResult != null) {
-                            callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
-                        }
-                    };
-                    arrayBufferToCanvasImageSource(data, decoratedCallback);
-                }
-
-                onImageRequestComplete(itemInQueue);
-            });
-        }
-    };
-
-    const onImageRequestComplete = (itemInQueue: ImageRequestQueueItem): void => {
-        if (!itemInQueue.cancelled) {
-            itemInQueue.completed = true;
-            currentParallelImageRequests--;
-
-            if (!isThrottled()) {
-                processQueue();
-            }
-        }
-    };
-
     const makeImageRequest = (requestParameters: RequestParameters, callback: GetImageCallback): Cancelable  => {
         const image = new Image();
         const url = requestParameters.url;
@@ -263,6 +273,7 @@ namespace ImageRequest {
         return {
             cancel: () => {
                 requestCancelled = true;
+                // Set src to '' to actually cancel the request
                 image.src = '';
             }
         };
