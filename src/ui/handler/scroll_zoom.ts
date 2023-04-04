@@ -22,7 +22,7 @@ const wheelZoomRate = 1 / 450;
 const maxScalePerFrame = 2;
 
 /**
- * The scroll zoom hanlder options object
+ * The scroll zoom handler options object
  */
 export type ScrollZoomHandlerOptions = {
     /**

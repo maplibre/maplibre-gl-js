@@ -1584,7 +1584,7 @@ describe('SourceCache#findLoadedParent', () => {
         expect(tiles[4].key in sourceCache._loadedParentTiles).toBe(true);
         expect(tiles[5].key in sourceCache._loadedParentTiles).toBe(true);
 
-        // Arbitray tiles should not in the cache
+        // Arbitrary tiles should not in the cache
         const notLoadedTiles = [
             new OverscaledTileID(2, 1, 2, 0, 0),
             new OverscaledTileID(2, 0, 2, 3, 0),
