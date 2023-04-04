@@ -61,7 +61,6 @@ class VectorTileSource extends Evented implements Source {
     isTileClipped: boolean;
     _tileJSONRequest: Cancelable;
     _loaded: boolean;
-    _refreshExpiredTiles: boolean;
 
     constructor(id: string, options: VectorSourceSpecification & {
         collectResourceTiming: boolean;
@@ -123,9 +122,6 @@ class VectorTileSource extends Evented implements Source {
 
     onAdd(map: Map) {
         this.map = map;
-        const refreshExpiredTiles = this._options.refreshExpiredTiles;
-        this._refreshExpiredTiles =  typeof refreshExpiredTiles === 'boolean' ?
-            refreshExpiredTiles : map._refreshExpiredTiles;
         this.load();
     }
 
@@ -218,7 +214,7 @@ class VectorTileSource extends Evented implements Source {
             if (data && data.resourceTiming)
                 tile.resourceTiming = data.resourceTiming;
 
-            if (this._refreshExpiredTiles && data) tile.setExpiryData(data);
+            if (this.map._refreshExpiredTiles && data) tile.setExpiryData(data);
             tile.loadVectorData(data, this.map.painter);
 
             callback(null);

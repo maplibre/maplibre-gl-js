@@ -100,7 +100,7 @@ namespace ImageRequest {
      * Request to load an image.
      * @param {RequestParameters} requestParameters Request parameters.
      * @param {GetImageCallback} callback Callback to issue when the request completes.
-     * @param {supportImageRefresh} supportImageRefresh true, if the image request need to get the cache headers.
+     * @param {supportImageRefresh} supportImageRefresh true, if the image request need to support refresh based on cache headers.
      * @returns {Cancelable} Cancelable request.
      */
     export const getImage = (
