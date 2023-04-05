@@ -175,7 +175,9 @@
     "typecheck": "tsc --noEmit",
     "timerStart": "ts-node ./timerStart.ts",
     "timerStop": "ts-node ./timerStop.ts",
-    "testbuiid": "npm run beforeBuild && npm run build-dev && npm run afterBuild"
+    "time-runp": "npm run timerStart && npm run build-distp && npm run timerStop",
+    "time-runs": "npm run timerStart && npm run build-dist && npm run timerStop",
+    "build-distp": "npm run generate-typings && npm run build-dev && npm run build-prod && npm run build-csp && npm run build-csp-dev && npm run build-css"
   },
   "files": [
     "build/",
