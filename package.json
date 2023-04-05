@@ -172,7 +172,10 @@
     "benchmark": "ts-node test/bench/run-benchmarks.ts",
     "gl-stats": "ts-node test/bench/gl-stats.ts",
     "prepare": "npm run generate-dist-package && npm run codegen",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "timerStart": "ts-node ./timerStart.ts",
+    "timerStop": "ts-node ./timerStop.ts",
+    "testbuiid": "npm run beforeBuild && npm run build-dev && npm run afterBuild"
   },
   "files": [
     "build/",
