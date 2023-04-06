@@ -12,7 +12,7 @@ import type FillStyleLayer from '../style/style_layer/fill_style_layer';
  * The mismatch was causing setConstantPatternPositions method not being called and pixelRatio was always the
  * default of 1, instead of actual values set by original map.addImage.
  *
- * @param programConfiguration - to be used to set patttern poistion and device pixel ratio.
+ * @param programConfiguration - to be used to set pattern position and device pixel ratio.
  * @param propertyName - 'fill-pattern' or 'fill-extrusion-pattern' property key
  * @param constantPattern - either 'fill-pattern' or 'fill-extrusion-pattern' property value
  * @param tile - current tile being drawn

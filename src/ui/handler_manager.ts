@@ -459,7 +459,7 @@ class HandlerManager {
             tr.setLocationAtPoint(loc, around);
         } else {
             // when 3d-terrain is enabled act a little different:
-            //    - draging do not drag the picked point itself, instead it drags the map by pixel-delta.
+            //    - dragging do not drag the picked point itself, instead it drags the map by pixel-delta.
             //      With this approach it is no longer possible to pick a point from somewhere near
             //      the horizon to the center in one move.
             //      So this logic avoids the problem, that in such cases you easily loose orientation.

@@ -40,12 +40,12 @@ export type TerrainMesh = {
 }
 
 /**
- * This is the main class which handles most of the 3D Terrain logic. It has the follwing topics:
+ * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
  *    1) loads raster-dem tiles via the internal sourceCache this.sourceCache
  *    2) creates a depth-framebuffer, which is used to calculate the visibility of coordinates
  *    3) creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
  *    4) stores all render-to-texture tiles in the this.sourceCache._tiles
- *    5) calculates the elevation for a spezific tile-coordinate
+ *    5) calculates the elevation for a specific tile-coordinate
  *    6) creates a terrain-mesh
  *
  *    A note about the GPU resource-usage:
@@ -76,7 +76,7 @@ export default class Terrain {
     options: TerrainSpecification;
     // define the meshSize per tile.
     meshSize: number;
-    // multiplicator for the elevation. Used to make terrain more "extrem".
+    // multiplicator for the elevation. Used to make terrain more "extreme".
     exaggeration: number;
     // to not see pixels in the render-to-texture tiles it is good to render them bigger
     // this number is the multiplicator (must be a power of 2) for the current tileSize.
@@ -161,8 +161,8 @@ export default class Terrain {
      * @returns {TerrainData} the terrain data to use in the program
      */
     getTerrainData(tileID: OverscaledTileID): TerrainData {
-        // create empty DEM Obejcts, which will used while raster-dem tiles are loading.
-        // creates an empty depth-buffer texture which is needed, during the initialisation process of the 3d mesh..
+        // create empty DEM Objects, which will used while raster-dem tiles are loading.
+        // creates an empty depth-buffer texture which is needed, during the initialization process of the 3d mesh..
         if (!this._emptyDemTexture) {
             const context = this.painter.context;
             const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4));

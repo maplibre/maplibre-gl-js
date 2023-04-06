@@ -64,11 +64,11 @@ The overall migration happens by uninstalling `mapbox-gl` and installing `maplib
 
 #### Compatibility branch
 
-Maplibre v1 is completely backward compatible with Mapbox v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current verison is 1.15.3. 
+Maplibre v1 is completely backward compatible with Mapbox v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current version is 1.15.3. 
 
 #### CDN Links
 
-> MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more informations please see [MapLibre GL is on unpkg.com](./docs/README-unpkg.md#maplibre-gl-on-unpkgcom).
+> MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more information, please see [MapLibre GL is on unpkg.com](./docs/README-unpkg.md#maplibre-gl-on-unpkgcom).
 
 ```diff
 -    <script src="https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.js"></script>
@@ -128,16 +128,16 @@ Read more about the MapLibre Sponsorship Program at [https://maplibre.org/sponso
 
 Platinum:
 
-<img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/>
-
+<a href="https://aws.com"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
 
 Silver:
 
-<img src="https://maplibre.org/img/meta-logo.svg" alt="Logo Meta" width="50%"/>
+<a href="https://meta.com"><img src="https://maplibre.org/img/meta-logo.svg" alt="Logo Meta" width="25%"/></a>
 
-Stone:
+<a href="https://www.mierune.co.jp/?lang=en"><img src="https://maplibre.org/img/mierune-logo.svg" alt="Logo MIERUNE" width="25%"/></a>
 
-[MIERUNE Inc.](https://www.mierune.co.jp/?lang=en)
+<a href="https://komoot.com/"><img src="https://maplibre.org/img/komoot-logo.svg" alt="Logo komoot" width="25%"/></a>
+
 
 Backers and Supporters:
 

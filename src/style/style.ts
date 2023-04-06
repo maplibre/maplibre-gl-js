@@ -333,7 +333,7 @@ class Style extends Evented {
         this._order = dereferencedLayers.map((layer) => layer.id);
         this._layers = {};
 
-        // reset serialization field, to be polulated only when needed
+        // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
         for (const layer of dereferencedLayers) {
             const styledLayer = createStyleLayer(layer);
@@ -447,7 +447,7 @@ class Style extends Evented {
 
     /**
      * take an array of string IDs, and based on this._layers, generate an array of LayerSpecification
-     * @param ids an array of string IDs, for which serilized layers will be generated. If ommited, all serialized layers will be returned
+     * @param ids an array of string IDs, for which serialized layers will be generated. If omitted, all serialized layers will be returned
      * @returns {Array<LayerSpecification>} generated result
      */
     private _serializeByIds(ids?: Array<string>): Array<LayerSpecification> {
@@ -852,7 +852,7 @@ class Style extends Evented {
         if (this._removedLayers[id] && layer.source && layer.type !== 'custom') {
             // If, in the current batch, we have already removed this layer
             // and we are now re-adding it with a different `type`, then we
-            // need to clear (rather than just reload) the underyling source's
+            // need to clear (rather than just reload) the underlying source's
             // tiles.  Otherwise, tiles marked 'reloading' will have buckets /
             // buffers that are set up for the _previous_ version of this
             // layer, causing, e.g.:
@@ -1531,7 +1531,7 @@ class Style extends Evented {
         this.imageManager.getImages(params.icons, callback);
 
         // Apply queued image changes before setting the tile's dependencies so that the tile
-        // is not reloaded unecessarily. Without this forced update the reload could happen in cases
+        // is not reloaded unnecessarily. Without this forced update the reload could happen in cases
         // like this one:
         // - icons contains "my-image"
         // - imageManager.getImages(...) triggers `onstyleimagemissing`

@@ -172,7 +172,7 @@ namespace ImageRequest {
 
     /**
      * Process some number of items in the image request queue.
-     * @param {number} maxImageRequests The maximum number of request items to process. By default, up to {@link Config.MAX_PARALLEL_IMAGE_REQUESTS} will be procesed.
+     * @param {number} maxImageRequests The maximum number of request items to process. By default, up to {@link Config.MAX_PARALLEL_IMAGE_REQUESTS} will be processed.
      * @returns {number} The number of items remaining in the queue.
      */
     export const processQueue = (
