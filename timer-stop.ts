@@ -1,6 +1,5 @@
 import fs from 'fs';
-
-const timingFile = './staging/.timing';
+import {timingFile} from './timer-start';
 
 if (!fs.existsSync(timingFile)) {
     throw new Error(`expecting ${timingFile} before running this script`);
