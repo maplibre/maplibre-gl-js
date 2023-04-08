@@ -143,7 +143,7 @@
     "generate-struct-arrays": "ts-node build/generate-struct-arrays.ts",
     "generate-style-code": "ts-node build/generate-style-code.ts",
     "generate-typings": "ts-node build/generate-typings.ts",
-    "build-dist": "npm run generate-typings && npm run build-dev && npm run build-prod && npm run build-csp && npm run build-csp-dev && npm run build-css",
+    "build-dist": "run-p --print-label generate-typings build-dev build-prod build-csp build-csp-dev build-css",
     "build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
     "watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",
     "build-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production",
