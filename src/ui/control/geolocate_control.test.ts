@@ -148,7 +148,7 @@ describe('GeolocateControl with no options', () => {
 
         geolocate.trigger();
         geolocation.sendError({code: 2, message: 'error message'});
-        expect(geolocate._watchState).toBe("ACTIVE_ERROR");
+        expect(geolocate._watchState).toBe('ACTIVE_ERROR');
         expect(geolocate._geolocateButton.classList.contains('maplibregl-ctrl-geolocate-active-error')).toBeTruthy();
     });
 
