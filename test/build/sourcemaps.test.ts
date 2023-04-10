@@ -1,7 +1,6 @@
 import packageJson from '../../package.json' assert {type: 'json'};
-import {globSync} from 'glob';
+import {globSync, glob} from 'glob';
 import path, {dirname} from 'path';
-import {promisify} from 'node:util';
 import fs from 'node:fs/promises';
 import {pathToFileURL} from 'url';
 
@@ -62,7 +61,7 @@ describe('main sourcemap', () => {
         });
 
         // *.js.map file should have these files
-        const srcFiles = await promisify(glob)('src/**/*.ts');
+        const srcFiles = await glob('src/**/*.ts');
         const expectedEntriesInSourcemapJSON = srcFiles.filter(f => {
             if (f.endsWith('.test.ts'))
                 return false;
