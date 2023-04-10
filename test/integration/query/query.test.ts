@@ -151,7 +151,7 @@ describe('query tests', () => {
         await page.close();
     });
 
-    const allTestsRoot = 'test/integration/query/tests';
+    const allTestsRoot = path.join('test', 'integration', 'query', 'tests');
     const testStyles = globSync(path.join(allTestsRoot, '**/style.json'));
 
     for (const [testindex, styleJson] of testStyles.entries()) {
