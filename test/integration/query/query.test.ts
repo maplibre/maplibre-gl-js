@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import type {AddressInfo} from 'node:net';
 
 import localizeURLs from '../lib/localize-urls';
-import {glob} from 'glob';
+import {globSync} from 'glob';
 
 function performQueryOnFixture(fixture)  {
 
@@ -152,7 +152,7 @@ describe('query tests', () => {
     });
 
     const allTestsRoot = 'test/integration/query/tests';
-    const testStyles = glob.sync(path.join(allTestsRoot, '**/style.json'));
+    const testStyles = globSync(path.join(allTestsRoot, '**/style.json'));
 
     for (const [testindex, styleJson] of testStyles.entries()) {
         const testCaseRoot = path.dirname(styleJson);

@@ -1,11 +1,11 @@
 import packageJson from '../../package.json' assert {type: 'json'};
-import {glob} from 'glob';
+import {globSync} from 'glob';
 import path, {dirname} from 'path';
 import {promisify} from 'node:util';
 import fs from 'node:fs/promises';
 import {pathToFileURL} from 'url';
 
-const distjs = glob.sync('dist/**/*.js');
+const distjs = globSync('dist/**/*.js');
 
 async function getSourceMapForFile(url: string|URL) {
     const content = await fs.readFile(url, {encoding: 'utf-8'});

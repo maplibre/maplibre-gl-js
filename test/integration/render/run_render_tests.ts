@@ -6,7 +6,7 @@ import fs from 'fs';
 import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
-import glob from 'glob';
+import {globSync} from 'glob';
 import nise, {FakeXMLHttpRequest} from 'nise';
 import {createRequire} from 'module';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
@@ -157,7 +157,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     // there may be multiple expected images, covering different platforms
     let globPattern = path.join(dir, 'expected*.png');
     globPattern = globPattern.replace(/\\/g, '/'); // ensure a Windows path is converted to a glob compatible pattern.
-    const expectedPaths = glob.sync(globPattern);
+    const expectedPaths = globSync(globPattern);
 
     if (!process.env.UPDATE && expectedPaths.length === 0) {
         throw new Error('No expected*.png files found; did you mean to run tests with UPDATE=true?');
@@ -249,7 +249,7 @@ function getTestStyles(options: RenderOptions, directory: string): StyleWithTest
     const tests = options.tests || [];
 
     const globCwd = directory.replace(/\\/g, '/'); // ensure a Windows path is converted to a glob compatible pattern.
-    const sequence = glob.sync('**/style.json', {cwd: globCwd})
+    const sequence = globSync('**/style.json', {cwd: globCwd})
         .map(fixture => {
             const id = path.dirname(fixture);
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;

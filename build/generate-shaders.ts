@@ -1,5 +1,5 @@
 import fs from 'fs';
-import glob from 'glob';
+import {globSync} from 'glob';
 
 console.log('Generating shaders');
 
@@ -11,15 +11,14 @@ console.log('Generating shaders');
  * It will also create a simple package.json file to allow importing this package in webpack
  */
 
-glob('./src/shaders/*.glsl', null, (_err, files) => {
-    for (const file of files) {
-        const code = fs.readFileSync(file, 'utf8');
-        const content = glslToTs(code);
-        const fileName = `./src/shaders/${file.split('/').splice(-1)}.g.ts`;
-        fs.writeFileSync(fileName, content);
-    }
-    console.log(`Finished converting ${files.length} glsl files`);
-});
+let files = globSync('./src/shaders/*.glsl');
+for (const file of files) {
+    const code = fs.readFileSync(file, 'utf8');
+    const content = glslToTs(code);
+    const fileName = `./src/shaders/${file.split('/').splice(-1)}.g.ts`;
+    fs.writeFileSync(fileName, content);
+}
+console.log(`Finished converting ${files.length} glsl files`);
 
 function glslToTs(code: string): string {
     code = code
