@@ -59,7 +59,7 @@ describe('main sourcemap', () => {
         const expectedEntriesInSourcemapJSON = srcFiles.filter(f => {
             if (f.endsWith('.test.ts'))
                 return false;
-            if (f.startsWith(path.join('src','style-spec')))
+            if (f.startsWith(path.join('src', 'style-spec')))
                 return false;
             if (f.startsWith(`build${path.sep}`))
                 return false;
@@ -70,7 +70,7 @@ describe('main sourcemap', () => {
         const actualEntriesInSourcemapJSON = sourcemapEntriesNormalized.filter(f => {
             if (f.startsWith('node_modules'))
                 return false;
-            if (f.startsWith(path.join('src','style-spec')))
+            if (f.startsWith(path.join('src', 'style-spec')))
                 return false;
             return true;
         }).sort();
