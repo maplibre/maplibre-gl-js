@@ -689,6 +689,7 @@ export type MapEvent =
      * @memberof Map
      * @instance
      * @property {MapTouchEvent} data
+     * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
      * // Set an event listener that fires

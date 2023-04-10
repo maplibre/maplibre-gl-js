@@ -11,7 +11,7 @@ console.log('Generating shaders');
  * It will also create a simple package.json file to allow importing this package in webpack
  */
 
-let files = globSync('./src/shaders/*.glsl');
+const files = globSync('./src/shaders/*.glsl');
 for (const file of files) {
     const code = fs.readFileSync(file, 'utf8');
     const content = glslToTs(code);
