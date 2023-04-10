@@ -408,10 +408,12 @@ function drawLayerSymbols(
         const state = segmentState.state;
 
         context.activeTexture.set(gl.TEXTURE0);
+        // @ts-ignore
         state.atlasTexture.bind(state.atlasInterpolation, gl.CLAMP_TO_EDGE);
         if (state.atlasTextureIcon) {
             context.activeTexture.set(gl.TEXTURE1);
             if (state.atlasTextureIcon) {
+                // @ts-ignore
                 state.atlasTextureIcon.bind(state.atlasInterpolationIcon, gl.CLAMP_TO_EDGE);
             }
         }

@@ -27,6 +27,7 @@
 - Fix wrap coords in `getTerrain` when `fitBounds` across the AM ([#2155](https://github.com/maplibre/maplibre-gl-js/pull/2155))
 - Fix LngLat `toArray` method return type to [number,number] ([#2233](https://github.com/maplibre/maplibre-gl-js/issues/2233))
 - Fix handling of text-offset with symbol-placement: line ([#2170](https://github.com/maplibre/maplibre-gl-js/issues/2170) and [#2171](https://github.com/maplibre/maplibre-gl-js/issues/2171))
+- Fix geolocate control permissions failure on IOS16 web view with fallback to `window.navigator.geolocation`
 - _...Add new stuff here..._
 
 ## 3.0.0-pre.4

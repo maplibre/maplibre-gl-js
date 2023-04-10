@@ -17,79 +17,78 @@ export default function loadSprite(
     pixelRatio: number,
     callback: Callback<{[spriteName: string]: {[id: string]: StyleImage}}>
 ): Cancelable {
-    const sprite = coerceSpriteToArray(originalSprite);
+    const spriteArray = coerceSpriteToArray(originalSprite);
+    const spriteArrayLength = spriteArray.length;
     const format = pixelRatio > 1 ? '@2x' : '';
 
-    let error;
-    const jsonRequests: Cancelable[] = [];
-    const imageRequests: Cancelable[] = [];
+    const combinedRequestsMap: {[requestKey: string]: Cancelable} = {};
+    const jsonsMap: {[id: string]: any} = {};
+    const imagesMap: {[id: string]: (HTMLImageElement | ImageBitmap)} = {};
 
-    const jsonsMap: {[baseURL: string]: any} = {};
-    const imagesMap: {[baseURL:string]: (HTMLImageElement | ImageBitmap)} = {};
+    for (const {id, url} of spriteArray) {
+        const jsonRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
+        const jsonRequestKey = `${id}_${jsonRequestParameters.url}`; // use id_url as requestMap key to make sure it is unique
+        combinedRequestsMap[jsonRequestKey] = getJSON(jsonRequestParameters, (err?: Error | null, data?: any | null) => {
+            delete combinedRequestsMap[jsonRequestKey];
+            jsonsMap[id] = data;
+            doOnceCompleted(callback, jsonsMap, imagesMap, err, spriteArrayLength);
+        });
 
-    for (const {id, url} of sprite) {
-        // eslint-disable-next-line no-loop-func
-        const newJsonRequestsLength = jsonRequests.push(getJSON(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON), (err?: Error | null, data?: any | null) => {
-            jsonRequests.splice(newJsonRequestsLength, 1);
-            if (!error) {
-                error = err;
-                jsonsMap[id] = data;
-                maybeComplete();
-            }
-        }));
-
-        // eslint-disable-next-line no-loop-func
-        const newImageRequestsLength = imageRequests.push(ImageRequest.getImage(requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage), (err, img) => {
-            imageRequests.splice(newImageRequestsLength, 1);
-            if (!error) {
-                error = err;
-                imagesMap[id] = img;
-                maybeComplete();
-            }
-        }));
-    }
-
-    function maybeComplete() {
-        const jsonsLength = Object.values(jsonsMap).length;
-        const imagesLength = Object.values(imagesMap).length;
-
-        if (error) {
-            callback(error);
-        } else if (sprite.length === jsonsLength && jsonsLength === imagesLength) {
-            const result = {} as {[spriteName: string]: {[id: string]: StyleImage}};
-
-            for (const spriteName in jsonsMap) {
-                result[spriteName] = {};
-
-                const context = browser.getImageCanvasContext(imagesMap[spriteName]);
-                const json = jsonsMap[spriteName];
-
-                for (const id in json) {
-                    const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
-                    const spriteData = {width, height, x, y, context};
-                    result[spriteName][id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, spriteData};
-                }
-            }
-
-            callback(null, result);
-        }
+        const imageRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
+        const imageRequestKey = `${id}_${imageRequestParameters.url}`; // use id_url as requestMap key to make sure it is unique
+        combinedRequestsMap[imageRequestKey] = ImageRequest.getImage(imageRequestParameters, (err, img) => {
+            delete combinedRequestsMap[imageRequestKey];
+            imagesMap[id] = img;
+            doOnceCompleted(callback, jsonsMap, imagesMap, err, spriteArrayLength);
+        });
     }
 
     return {
         cancel() {
-            if (jsonRequests.length) {
-                for (const jsonRequest of jsonRequests) {
-                    jsonRequest.cancel();
-                    jsonRequests.splice(jsonRequests.indexOf(jsonRequest), 1);
-                }
-            }
-
-            if (imageRequests.length) {
-                for (const imageRequest of imageRequests) {
-                    imageRequest.cancel();
-                    imageRequests.splice(imageRequests.indexOf(imageRequest), 1);
-                }
+            for (const requst of Object.values(combinedRequestsMap)) {
+                requst.cancel();
             }
         }
     };
+}
+
+/**
+ * @param callbackFunc - the callback function (both erro and success)
+ * @param jsonsMap - JSON data map
+ * @param imagesMap - image data map
+ * @param err - error object
+ * @param expectedResultCounter - number of expected JSON or Image results when everything is finished, respectively.
+ */
+function doOnceCompleted(
+    callbackFunc:Callback<{[spriteName: string]: {[id: string]: StyleImage}}>,
+    jsonsMap:{[id: string]: any},
+    imagesMap:{[id: string]: (HTMLImageElement | ImageBitmap)},
+    err: Error,
+    expectedResultCounter: number): void {
+
+    if (err) {
+        callbackFunc(err);
+        return;
+    }
+
+    if (expectedResultCounter !== Object.values(jsonsMap).length || expectedResultCounter !==  Object.values(imagesMap).length) {
+        // not done yet, nothing to do
+        return;
+    }
+
+    const result = {} as {[spriteName: string]: {[id: string]: StyleImage}};
+    for (const spriteName in jsonsMap) {
+        result[spriteName] = {};
+
+        const context = browser.getImageCanvasContext(imagesMap[spriteName]);
+        const json = jsonsMap[spriteName];
+
+        for (const id in json) {
+            const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
+            const spriteData = {width, height, x, y, context};
+            result[spriteName][id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, spriteData};
+        }
+    }
+
+    callbackFunc(null, result);
 }
