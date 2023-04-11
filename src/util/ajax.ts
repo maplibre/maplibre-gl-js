@@ -255,10 +255,12 @@ export const postData = function(requestParameters: RequestParameters, callback:
     return makeRequest(extend(requestParameters, {method: 'POST'}), callback);
 };
 
-function sameOrigin(url) {
-    const a: HTMLAnchorElement = window.document.createElement('a');
-    a.href = url;
-    return a.protocol === window.document.location.protocol && a.host === window.document.location.host;
+function sameOrigin(url): boolean {
+    // URL class should be available everywhere
+    // https://developer.mozilla.org/en-US/docs/Web/API/URL
+    const urlObj = new URL(url);
+    const locationObj = window.document.location;
+    return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
 }
 
 export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
