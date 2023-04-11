@@ -9,7 +9,7 @@ property: `background-color`, `line-width`, etc., with a second level of directo
 Within a leaf directory is a `style.json` file (e.g. [`circle-radius/literal/style.json`](./render/tests/circle-radius/literal/style.json)), which contains the minimal style needed for the given test case. The style can specify the map size, center, bearing, and pitch, and additional test metadata (e.g. output image dimensions).
 
 The expected output for a given test case is in `expected.png`, e.g. [`circle-radius/literal/expected.png`](./render/tests/circle-radius/literal/expected.png).
-There can be multiple file with and `expected` prefix since it can vary slightly with each platfrom.
+There can be multiple file with `expected` prefix since it can vary slightly with each platfrom.
 
 Supporting files -- glyphs, sprites, and tiles -- live in their own respective subdirectories at the top level. The test
 harness sets up the environment such that requests for these resources are directed to the correct location.
