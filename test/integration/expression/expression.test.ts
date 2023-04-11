@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import glob from 'glob';
+import {printDiffOrStringify} from 'jest-matcher-utils';
 import {createPropertyExpression,
     isFunction,
     convertFunction,
@@ -18,46 +19,33 @@ describe('expression', () => {
 
     expressionTestFileNames.forEach((expressionTestFileName) => {
         test(expressionTestFileName, (done) => {
-
             const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, expressionTestFileName), 'utf8'));
+            const result = evaluateFixture(fixture);
 
-            try {
-                const result = evaluateFixture(fixture);
+            if (process.env.UPDATE) {
+                fixture.expected = {
+                    compiled: result.compiled,
+                    outputs: stripPrecision(result.outputs, decimalSigFigs),
+                };
 
-                if (process.env.UPDATE) {
-                    fixture.expected = {
-                        compiled: result.compiled,
-                        outputs: stripPrecision(result.outputs, decimalSigFigs),
-                    };
+                delete fixture.metadata;
 
-                    delete fixture.metadata;
-
-                    const fname = path.join(__dirname, expressionTestFileName);
-                    fs.writeFile(fname, `${stringify(fixture)}\n`, done);
-                    return;
-                }
-
-                const expected = fixture.expected;
-                const compileOk = deepEqual(result.compiled, expected.compiled, decimalSigFigs);
-                if (!compileOk) {
-                    console.log(`Expected ${JSON.stringify(expected.compiled)}`);
-                    console.log(`Result   ${JSON.stringify(result.compiled)}`);
-                }
-
-                const evalOk = compileOk && deepEqual(result.outputs, expected.outputs, decimalSigFigs);
-                if (!evalOk) {
-                    console.log(`Expected ${JSON.stringify(expected.outputs)}`);
-                    console.log(`Result   ${JSON.stringify(result.outputs)}`);
-                }
-
-                expect(compileOk).toBeTruthy();
-                expect(evalOk).toBeTruthy();
-
-                done();
-            } catch (e) {
-                done(e);
+                const fname = path.join(__dirname, expressionTestFileName);
+                fs.writeFile(fname, `${stringify(fixture)}\n`, done);
+                return;
             }
 
+            const expected = fixture.expected;
+
+            if (!deepEqual(result.compiled, expected.compiled, decimalSigFigs)) {
+                throw new Error(`Does not compile as expected\n${printDiffOrStringify(expected.compiled, result.compiled, 'Expected', 'Received', true)}`);
+            }
+
+            if (!deepEqual(result.outputs, expected.outputs, decimalSigFigs)) {
+                throw new Error(`Does not evaluate as expected\n${printDiffOrStringify(expected.outputs, result.outputs, 'Expected', 'Received', true)}`);
+            }
+
+            done();
         });
     });
 
