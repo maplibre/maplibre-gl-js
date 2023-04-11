@@ -155,11 +155,11 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     actualImg.data = data as any;
 
     // there may be multiple expected images, covering different platforms
-    let globPattern = path.join(dir, 'expected*.png');
+    const globPattern = path.join(dir, 'expected*.png');
     const expectedPaths = globSync(globPattern);
 
     if (!process.env.UPDATE && expectedPaths.length === 0) {
-        throw new Error('No expected*.png files found; did you mean to run tests with UPDATE=true?');
+        throw new Error(`No expected*.png files found as ${dir}; did you mean to run tests with UPDATE=true?`);
     }
 
     if (process.env.UPDATE) {
@@ -247,8 +247,7 @@ function mockXhr() {
 function getTestStyles(options: RenderOptions, directory: string): StyleWithTestData[] {
     const tests = options.tests || [];
 
-    const globCwd = directory.replace(/\\/g, '/'); // ensure a Windows path is converted to a glob compatible pattern.
-    const sequence = globSync('**/style.json', {cwd: globCwd})
+    const sequence = globSync('**/style.json', {cwd: directory})
         .map(fixture => {
             const id = path.dirname(fixture);
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;
