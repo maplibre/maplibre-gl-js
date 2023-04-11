@@ -547,7 +547,7 @@ function placeGlyphAlongLine(
     let currentVertex = anchorPoint;
     let previousVertex = anchorPoint;
 
-    // offsetPrev and intersectionPoint are analagous to previousVertex and currentVertex
+    // offsetPrev and intersectionPoint are analogous to previousVertex and currentVertex
     // but if there's a line offset they are calculated in parallel as projection happens
     let offsetIntersectionPoint: Point;
     let offsetPreviousVertex: Point;

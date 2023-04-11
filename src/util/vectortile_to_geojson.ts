@@ -1,8 +1,13 @@
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
+type DistributiveKeys<T> = T extends T ? keyof T : never;
+type DistributiveOmit<T, K extends DistributiveKeys<T>> = T extends unknown
+    ? Omit<T, K>
+    : never;
+
 export type MapGeoJSONFeature = GeoJSONFeature & {
-    layer: Omit<LayerSpecification, 'source'> & {source: string};
+    layer: DistributiveOmit<LayerSpecification, 'source'> & {source: string};
     source: string;
     sourceLayer?: string;
     state: { [key: string]: any };

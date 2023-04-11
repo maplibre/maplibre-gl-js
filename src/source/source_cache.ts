@@ -541,7 +541,7 @@ class SourceCache extends Evented {
                 if (tileID.canonical.z > this._source.minzoom) {
                     const parent = tileID.scaledTo(tileID.canonical.z - 1);
                     parents[parent.key] = parent;
-                    // load very low zoom to calculate tile visability in transform.coveringTiles and high zoomlevels correct
+                    // load very low zoom to calculate tile visibility in transform.coveringTiles and high zoomlevels correct
                     const parent2 = tileID.scaledTo(Math.max(this._source.minzoom, Math.min(tileID.canonical.z, 5)));
                     parents[parent2.key] = parent2;
                 }

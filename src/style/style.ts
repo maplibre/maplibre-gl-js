@@ -164,7 +164,7 @@ class Style extends Evented {
     _request: Cancelable;
     _spriteRequest: Cancelable;
     _layers: {[_: string]: StyleLayer};
-    _serializedLayers: {[_: string]: any};
+    _serializedLayers: {[_: string]: LayerSpecification};
     _order: Array<string>;
     sourceCaches: {[_: string]: SourceCache};
     zoomHistory: ZoomHistory;
@@ -206,8 +206,8 @@ class Style extends Evented {
 
         this._spritesImagesIds = {};
         this._layers = {};
-        this._serializedLayers = {};
-        this._order  = [];
+
+        this._order = [];
         this.sourceCaches = {};
         this.zoomHistory = new ZoomHistory();
         this._loaded = false;
@@ -313,22 +313,7 @@ class Style extends Evented {
         }
 
         this.glyphManager.setURL(nextState.glyphs);
-
-        const layers = deref(this.stylesheet.layers);
-
-        // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
-        // can happen in parallel on both main and worker threads.
-        this.dispatcher.broadcast('setLayers', layers);
-
-        this._order = layers.map((layer) => layer.id);
-        this._layers = {};
-        this._serializedLayers = {};
-        for (let layer of layers) {
-            layer = createStyleLayer(layer);
-            layer.setEventedParent(this, {layer: {id: layer.id}});
-            this._layers[layer.id] = layer;
-            this._serializedLayers[layer.id] = layer.serialize();
-        }
+        this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
 
@@ -336,6 +321,25 @@ class Style extends Evented {
 
         this.fire(new Event('data', {dataType: 'style'}));
         this.fire(new Event('style.load'));
+    }
+
+    private _createLayers() {
+        const dereferencedLayers = deref(this.stylesheet.layers);
+
+        // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
+        // can happen in parallel on both main and worker threads.
+        this.dispatcher.broadcast('setLayers', dereferencedLayers);
+
+        this._order = dereferencedLayers.map((layer) => layer.id);
+        this._layers = {};
+
+        // reset serialization field, to be populated only when needed
+        this._serializedLayers = null;
+        for (const layer of dereferencedLayers) {
+            const styledLayer = createStyleLayer(layer);
+            styledLayer.setEventedParent(this, {layer: {id: layer.id}});
+            this._layers[layer.id] = styledLayer;
+        }
     }
 
     _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined) {
@@ -441,14 +445,48 @@ class Style extends Evented {
         return true;
     }
 
-    _serializeLayers(ids: Array<string>): Array<LayerSpecification> {
+    /**
+     * take an array of string IDs, and based on this._layers, generate an array of LayerSpecification
+     * @param ids an array of string IDs, for which serialized layers will be generated. If omitted, all serialized layers will be returned
+     * @returns {Array<LayerSpecification>} generated result
+     */
+    private _serializeByIds(ids?: Array<string>): Array<LayerSpecification> {
+
+        const serializedLayersDictionary = this._serializedAllLayers();
+        if (!ids || ids.length === 0) {
+            return Object.values(serializedLayersDictionary);
+        }
+
         const serializedLayers = [];
         for (const id of ids) {
-            const layer = this._layers[id];
-            if (layer.type !== 'custom') {
-                serializedLayers.push(layer.serialize());
+            // this check will skip all custom layers
+            if (serializedLayersDictionary[id]) {
+                serializedLayers.push(serializedLayersDictionary[id]);
             }
         }
+
+        return serializedLayers;
+    }
+
+    /**
+     * Lazy initialization of this._serializedLayers dictionary and return it
+     * @returns this._serializedLayers dictionary
+     */
+    private _serializedAllLayers(): {[_: string]: LayerSpecification} {
+        let serializedLayers = this._serializedLayers;
+        if (serializedLayers) {
+            return serializedLayers;
+        }
+
+        serializedLayers = this._serializedLayers = {};
+        const allLayerIds: string [] = Object.keys(this._layers);
+        for (const layerId of allLayerIds) {
+            const layer = this._layers[layerId];
+            if (layer.type !== 'custom') {
+                serializedLayers[layerId] = layer.serialize();
+            }
+        }
+
         return serializedLayers;
     }
 
@@ -576,7 +614,7 @@ class Style extends Evented {
 
     _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
         this.dispatcher.broadcast('updateLayers', {
-            layers: this._serializeLayers(updatedIds),
+            layers: this._serializeByIds(updatedIds),
             removedIds
         });
     }
@@ -607,13 +645,14 @@ class Style extends Evented {
     setState(nextState: StyleSpecification, options: StyleSwapOptions = {}) {
         this._checkLoaded();
 
-        nextState = options.transformStyle ? options.transformStyle(this.serialize(), nextState) : nextState;
+        const serializedStyle =  this.serialize();
+        nextState = options.transformStyle ? options.transformStyle(serializedStyle, nextState) : nextState;
         if (emitValidationErrors(this, validateStyle(nextState))) return false;
 
         nextState = clone(nextState);
         nextState.layers = deref(nextState.layers);
 
-        const changes = diffStyles(this.serialize(), nextState)
+        const changes = diffStyles(serializedStyle, nextState)
             .filter(op => !(op.command in ignoredDiffOperations));
 
         if (changes.length === 0) {
@@ -625,14 +664,14 @@ class Style extends Evented {
             throw new Error(`Unimplemented: ${unimplementedOps.map(op => op.command).join(', ')}.`);
         }
 
-        changes.forEach((op) => {
+        for (const op of changes) {
             if (op.command === 'setTransition') {
                 // `transition` is always read directly off of
                 // `this.stylesheet`, which we update below
-                return;
+                continue;
             }
             (this as any)[op.command].apply(this, op.args);
-        });
+        }
 
         this.stylesheet = nextState;
 
@@ -797,7 +836,6 @@ class Style extends Evented {
             this._validateLayer(layer);
 
             layer.setEventedParent(this, {layer: {id}});
-            this._serializedLayers[layer.id] = layer.serialize();
         }
 
         const index = before ? this._order.indexOf(before) : this._order.length;
@@ -814,7 +852,7 @@ class Style extends Evented {
         if (this._removedLayers[id] && layer.source && layer.type !== 'custom') {
             // If, in the current batch, we have already removed this layer
             // and we are now re-adding it with a different `type`, then we
-            // need to clear (rather than just reload) the underyling source's
+            // need to clear (rather than just reload) the underlying source's
             // tiles.  Otherwise, tiles marked 'reloading' will have buckets /
             // buffers that are set up for the _previous_ version of this
             // layer, causing, e.g.:
@@ -894,7 +932,10 @@ class Style extends Evented {
         this._changed = true;
         this._removedLayers[id] = layer;
         delete this._layers[id];
-        delete this._serializedLayers[id];
+
+        if (this._serializedLayers) {
+            delete this._serializedLayers[id];
+        }
         delete this._updatedLayers[id];
         delete this._updatedPaintProps[id];
 
@@ -1113,21 +1154,27 @@ class Style extends Evented {
     }
 
     serialize(): StyleSpecification {
+
+        const sources = mapObject(this.sourceCaches, (source) => source.serialize());
+        const layers = this._serializeByIds(this._order);
+        const myStyleSheet = this.stylesheet;
+
         return filterObject({
-            version: this.stylesheet.version,
-            name: this.stylesheet.name,
-            metadata: this.stylesheet.metadata,
-            light: this.stylesheet.light,
-            center: this.stylesheet.center,
-            zoom: this.stylesheet.zoom,
-            bearing: this.stylesheet.bearing,
-            pitch: this.stylesheet.pitch,
-            sprite: this.stylesheet.sprite,
-            glyphs: this.stylesheet.glyphs,
-            transition: this.stylesheet.transition,
-            sources: mapObject(this.sourceCaches, (source) => source.serialize()),
-            layers: this._serializeLayers(this._order)
-        }, (value) => { return value !== undefined; });
+            version: myStyleSheet.version,
+            name: myStyleSheet.name,
+            metadata: myStyleSheet.metadata,
+            light: myStyleSheet.light,
+            center: myStyleSheet.center,
+            zoom: myStyleSheet.zoom,
+            bearing: myStyleSheet.bearing,
+            pitch: myStyleSheet.pitch,
+            sprite: myStyleSheet.sprite,
+            glyphs: myStyleSheet.glyphs,
+            transition: myStyleSheet.transition,
+            sources,
+            layers
+        },
+        (value) => { return value !== undefined; });
     }
 
     _updateLayer(layer: StyleLayer) {
@@ -1138,6 +1185,10 @@ class Style extends Evented {
             this._updatedSources[layer.source] = 'reload';
             this.sourceCaches[layer.source].pause();
         }
+
+        // upon updating, serilized layer dictionary should be reset.
+        // When needed, it will be populated with the correct copy again.
+        this._serializedLayers = null;
         this._changed = true;
     }
 
@@ -1235,13 +1286,16 @@ class Style extends Evented {
 
         params.availableImages = this._availableImages;
 
+        // LayerSpecification is serialized StyleLayer, and this casting is safe.
+        const serializedLayers = this._serializedAllLayers() as {[_: string]: StyleLayer};
+
         for (const id in this.sourceCaches) {
             if (params.layers && !includedSources[id]) continue;
             sourceResults.push(
                 queryRenderedFeatures(
                     this.sourceCaches[id],
                     this._layers,
-                    this._serializedLayers,
+                    serializedLayers,
                     queryGeometry,
                     params,
                     transform)
@@ -1254,7 +1308,7 @@ class Style extends Evented {
             sourceResults.push(
                 queryRenderedSymbols(
                     this._layers,
-                    this._serializedLayers,
+                    serializedLayers,
                     this.sourceCaches,
                     queryGeometry,
                     params,
@@ -1477,7 +1531,7 @@ class Style extends Evented {
         this.imageManager.getImages(params.icons, callback);
 
         // Apply queued image changes before setting the tile's dependencies so that the tile
-        // is not reloaded unecessarily. Without this forced update the reload could happen in cases
+        // is not reloaded unnecessarily. Without this forced update the reload could happen in cases
         // like this one:
         // - icons contains "my-image"
         // - imageManager.getImages(...) triggers `onstyleimagemissing`

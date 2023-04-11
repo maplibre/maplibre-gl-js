@@ -1697,6 +1697,13 @@ class Map extends Camera {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
             if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
+            // Warn once if user is using the same source for hillshade and terrain
+            for (const index in this.style._layers) {
+                const thisLayer = this.style._layers[index];
+                if (thisLayer.type === 'hillshade' && thisLayer.source === options.source) {
+                    warnOnce('You are using the same source for a hillshade layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
+                }
+            }
             this.terrain = new Terrain(this.painter, sourceCache, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this.transform.updateElevation(this.terrain);
@@ -2041,7 +2048,7 @@ class Map extends Camera {
      * less commonly, the {@link CustomLayerInterface} specification.
      * The MapLibre Style Specification's layer definition is appropriate for most layers.
      *
-     * @param {string} layer.id A unique identifer that you define.
+     * @param {string} layer.id A unique identifier that you define.
      * @param {string} layer.type The type of layer (for example `fill` or `symbol`).
      * A list of layer types is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#type).
      *

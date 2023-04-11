@@ -33,7 +33,7 @@ export default class RenderToTexture {
     _coordsDescendingInvStr: {[_: string]: {[_:string]: string}};
     // store for render-stacks
     // a render stack is a set of layers which should be rendered into one texture
-    // every stylesheet can have multipe stacks. A new stack is created if layers which should
+    // every stylesheet can have multiple stacks. A new stack is created if layers which should
     // not rendered to texture sit inbetween layers which should rendered to texture. e.g. hillshading or symbols
     _stacks: Array<Array<string>>;
     // remember the previous processed layer to check if a new stack is needed
