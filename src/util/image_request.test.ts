@@ -136,7 +136,6 @@ describe('ImageRequest', () => {
             done();
         }, false);
 
-        server.respond();
     });
 
     test('getImage request returned 404 response for fetch request', done => {
@@ -157,8 +156,46 @@ describe('ImageRequest', () => {
             if (err) done();
             else done('Image download should have failed');
         }, false);
+    });
+
+    test('getImage request cancelled for HTTPImageRequest', done => {
+        let imageUrl;
+        const requestUrl = 'test';
+        // eslint-disable-next-line accessor-pairs
+        Object.defineProperty(global.Image.prototype, 'src', {
+            set(url: string) {
+                imageUrl = url;
+            }
+        });
+
+        const request = ImageRequest.getImage({url: requestUrl}, () => {
+            done('Callback should not be called in case image request is cancelled');
+        }, false);
+
+        expect(imageUrl).toBe(requestUrl);
+        expect(request.cancelled).toBeFalsy();
+        request.cancel();
+        expect(request.cancelled).toBeTruthy();
+        expect(imageUrl).toBe('');
+        done();
+    });
+
+    test('getImage request cancelled', done => {
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+            'Cache-Control': 'cache',
+            'Expires': 'expires'}, ''));
+
+        stubAjaxGetImage(undefined);
+        const request = ImageRequest.getImage({url: ''}, () => {
+            done('Callback should not be called in case image request is cancelled');
+        });
+
+        expect(request.cancelled).toBeFalsy();
+        request.cancel();
+        expect(request.cancelled).toBeTruthy();
 
         server.respond();
+        done();
     });
 
     test('throttling: getImage queues requests for later processing', done => {
@@ -203,7 +240,7 @@ describe('ImageRequest', () => {
             imageResults.push(ImageRequest.getImage({url: ''}, callback));
         }
 
-        // with throttling enabled, no requests should have been proessed yet
+        // with throttling enabled, no requests should have been processed yet
         expect(server.requests).toHaveLength(0);
 
         // process all of the pending requests
