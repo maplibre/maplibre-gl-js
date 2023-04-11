@@ -9,6 +9,7 @@ property: `background-color`, `line-width`, etc., with a second level of directo
 Within a leaf directory is a `style.json` file (e.g. [`circle-radius/literal/style.json`](./render/tests/circle-radius/literal/style.json)), which contains the minimal style needed for the given test case. The style can specify the map size, center, bearing, and pitch, and additional test metadata (e.g. output image dimensions).
 
 The expected output for a given test case is in `expected.png`, e.g. [`circle-radius/literal/expected.png`](./render/tests/circle-radius/literal/expected.png).
+There can be multiple file with and `expected` prefix since it can vary slightly with each platfrom.
 
 Supporting files -- glyphs, sprites, and tiles -- live in their own respective subdirectories at the top level. The test
 harness sets up the environment such that requests for these resources are directed to the correct location.
@@ -95,16 +96,26 @@ $ npm run test-render circle-radius/literal -- --report
 ```
 
 ### Updating results of render test results
+
+Note that the CI is running the render tests, if they fails the report.html is uploaded as an artifact, this file can be download, opened in the browser and with right click - save the image and add it to the relevant folder or replace the existing.
+
+To run this manually you can use the following commands
 On Linux:
+```
+xvfb-run -a UPDATE=true npm run test-render
+```
+On Mac:
 ```
 UPDATE=true npm run test-render
 ```
-Or on Windows PowerShell:
+Or on Windows with PowerShell:
 ```
 $env:UPDATE=$true; npm run test-render
 ```
 
-## Notes on the query integration tests
+
+
+#### Notes on the query integration tests
 
 In test/integration/lib/query-browser-jest.test.ts a web server is automatically started to expose static assets from the integration folder. In order to start a similar server manually, run:
 

@@ -156,7 +156,6 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 
     // there may be multiple expected images, covering different platforms
     let globPattern = path.join(dir, 'expected*.png');
-    globPattern = globPattern.replace(/\\/g, '/'); // ensure a Windows path is converted to a glob compatible pattern.
     const expectedPaths = globSync(globPattern);
 
     if (!process.env.UPDATE && expectedPaths.length === 0) {
@@ -650,7 +649,7 @@ if (options.report) {
         resultData = resultItemTemplate
             .replace('${failedItemsLength}', failedItems.length.toString())
             .replace('${failedItems}', failedItems.join('\n'))
-            .replace('${erroredItemsLength}', failedItems.length.toString())
+            .replace('${erroredItemsLength}', erroredItems.length.toString())
             .replace('${erroredItems}', erroredItems.join('\n'));
     } else {
         resultData = '<h1 style="color: green">All tests passed!</h1>';
