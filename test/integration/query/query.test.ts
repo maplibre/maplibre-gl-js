@@ -152,7 +152,9 @@ describe('query tests', () => {
     });
 
     const allTestsRoot = path.join('test', 'integration', 'query', 'tests');
-    const testStyles = globSync(path.join(allTestsRoot, '**/style.json'));
+    let globPattern = path.join(allTestsRoot, '**/style.json');
+    globPattern = globPattern.replace(/\\/g, '/');
+    const testStyles = globSync(globPattern);
 
     for (const [testindex, styleJson] of testStyles.entries()) {
         const testCaseRoot = path.dirname(styleJson);

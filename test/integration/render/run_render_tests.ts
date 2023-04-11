@@ -155,7 +155,8 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     actualImg.data = data as any;
 
     // there may be multiple expected images, covering different platforms
-    const globPattern = path.join(dir, 'expected*.png');
+    let globPattern = path.join(dir, 'expected*.png');
+    globPattern = globPattern.replace(/\\/g, '/');
     const expectedPaths = globSync(globPattern);
 
     if (!process.env.UPDATE && expectedPaths.length === 0) {
