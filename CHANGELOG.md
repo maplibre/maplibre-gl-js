@@ -30,6 +30,9 @@
 - Fix geolocate control permissions failure on IOS16 web view with fallback to `window.navigator.geolocation`
 - _...Add new stuff here..._
 
+### ⚠️ Note on missing images
+- Prior to the optimizations of ([#2297](https://github.com/maplibre/maplibre-gl-js/pull/2297)), extrusion fills using missing images (i.e. mispelled or badly referenced from the stylesheet) were rendered as transparent; now these will render as black (due to using no texture at all instead of using an empty texture).
+
 ## 3.0.0-pre.4
 
 ### ✨ Features and improvements
