@@ -74,7 +74,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: render-test-report
+          name: render-test-report-${{ matrix.os }}
           path: ${{ github.workspace }}/test/integration/render/results.html
       - run: npm run build-dist
         if: success() || failure()
