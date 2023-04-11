@@ -153,7 +153,7 @@ namespace ImageRequest {
         // 2. If refreshExpiredTiles is true (default), then in order to read the image cache header,
         //     fetch/XHR request will be required
         if (supportImageRefresh === false) {
-            return makeImageRequest(requestParameters, (err?: Error | null, image?: HTMLImageElement) => {
+            return getImageUsingHtmlImage(requestParameters, (err?: Error | null, image?: HTMLImageElement) => {
                 onImageResponse(itemInQueue, callback, err, image);
             });
         } else {
@@ -248,7 +248,7 @@ namespace ImageRequest {
         return imageRequestQueue.length;
     };
 
-    const makeImageRequest = (requestParameters: RequestParameters, callback: GetImageCallback): Cancelable  => {
+    const getImageUsingHtmlImage = (requestParameters: RequestParameters, callback: GetImageCallback): Cancelable  => {
         const image = new Image();
         const url = requestParameters.url;
         let requestCancelled = false;
