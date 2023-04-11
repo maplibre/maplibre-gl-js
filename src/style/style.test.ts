@@ -123,6 +123,54 @@ describe('Style', () => {
         sinonFakeServer.respond();
         new Style(getStubMap());
     });
+
+    test('RTL plugin load reloads vector source but not raster source', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON({
+            'version': 8,
+            'sources': {
+                'raster': {
+                    type: 'raster',
+                    tiles: ['http://tiles.server']
+                },
+                'vector': {
+                    type: 'vector',
+                    tiles: ['http://tiles.server']
+                }
+            },
+            'layers': [{
+                'id': 'raster',
+                'type': 'raster',
+                'source': 'raster'
+            }]
+        });
+
+        style.on('style.load', () => {
+            jest.spyOn(style.sourceCaches['raster'], 'reload');
+            jest.spyOn(style.sourceCaches['vector'], 'reload');
+
+            clearRTLTextPlugin();
+            sinonFakeServer.respondWith('/plugin.js', 'doesn\'t matter');
+            const _broadcast = style.dispatcher.broadcast;
+            style.dispatcher.broadcast = function (type, state, callback) {
+                if (type === 'syncRTLPluginState') {
+                    // Mock a response from four workers saying they've loaded the plugin
+                    callback(undefined, [true, true, true, true]);
+                } else {
+                    _broadcast(type, state, callback);
+                }
+            };
+            setRTLTextPlugin('/plugin.js', (error) => {
+                expect(error).toBeUndefined();
+                setTimeout(() => {
+                    expect(style.sourceCaches['raster'].reload).not.toHaveBeenCalled();
+                    expect(style.sourceCaches['vector'].reload).toHaveBeenCalled();
+                    done();
+                }, 0);
+            });
+            sinonFakeServer.respond();
+        });
+    });
 });
 
 describe('Style#loadURL', () => {
