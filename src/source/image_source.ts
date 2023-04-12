@@ -26,7 +26,7 @@ export type Coordinates = [[number, number], [number, number], [number, number],
 
 /**
  * A data source containing an image.
- * (See the [Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources-image) for detailed documentation of options.)
+ * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-image) for detailed documentation of options.)
  *
  * @example
  * // add to map
