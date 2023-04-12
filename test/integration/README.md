@@ -3,7 +3,7 @@ These integration tests verify the correctness and consistency of [maplibre-gl-j
 
 ## Organization
 
-Tests are contained in a directory tree, generally organized by [style specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/)
+Tests are contained in a directory tree, generally organized by [style specification](https://maplibre.org/maplibre-style-spec/)
 property: `background-color`, `line-width`, etc., with a second level of directories below that for individual tests. For example, the test for specifying a literal `circle-radius` value lives in [`test/integration/render/tests/circle-radius/literal/`](./render/tests/circle-radius/literal).
 
 Within a leaf directory is a `style.json` file (e.g. [`circle-radius/literal/style.json`](./render/tests/circle-radius/literal/style.json)), which contains the minimal style needed for the given test case. The style can specify the map size, center, bearing, and pitch, and additional test metadata (e.g. output image dimensions).

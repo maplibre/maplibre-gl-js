@@ -30,11 +30,14 @@ Steps to use Visual Studio Code:
  - Install VS Code.
  - Open MapLibre root folder with VS Code UI.
  - Start debugging:
-<br />
+ 
    ![Start debugging](assets/docs/debug_test_in_vscode.png)
    Before debugging, you might want to set break points in sources.
 
-You may also ![run tests and view output](assets/docs/vscode-jest.png) with the plugin [orta.vscode-jest](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-jest)
+You may also run tests and view output with the plugin [orta.vscode-jest](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-jest):
+
+![VScode screenshots](assets/docs/vscode-jest.png)
+
 If you do so, note that the initial test run may take a while (3 minutes or so), during which time the test results are not yet available.
 
 
