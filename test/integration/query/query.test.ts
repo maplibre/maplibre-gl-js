@@ -157,7 +157,7 @@ describe('query tests', () => {
     const testStyles = globSync(globPattern);
 
     for (const [testindex, styleJson] of testStyles.entries()) {
-        const testCaseRoot = path.dirname(styleJson);
+        const testCaseRoot = path.dirname(styleJson.replace(/\\/g, '/')); // glob is returning paths that dirname can't handle...
         const caseName = path.relative(allTestsRoot, testCaseRoot);
         // eslint-disable-next-line no-loop-func
         test(caseName, async () => {
