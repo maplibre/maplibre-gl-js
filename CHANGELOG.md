@@ -18,6 +18,7 @@
 - Adding a `warnonce` when terrain and hillshade source are the same ([#2298](https://github.com/maplibre/maplibre-gl-js/pull/2298))
 - Remove a deprecation warning by removing an empty texture that is no longer being used in the codebase ([#2299](https://github.com/maplibre/maplibre-gl-js/pull/2299))
 - Improve initial loading performance by lazy serializing layers only when needed. ([#2306](https://github.com/maplibre/maplibre-gl-js/pull/2306))
+- [Breaking] Style Validation is now disabled by default, can be overridden using Map options.
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

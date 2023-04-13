@@ -113,6 +113,7 @@ export type MapOptions = {
     style: StyleSpecification | string;
     pitchWithRotate?: boolean;
     pixelRatio?: number;
+    validateStyle?: boolean;
 };
 
 export type GestureOptions = {
@@ -186,7 +187,8 @@ const defaultOptions = {
     localIdeographFontFamily: 'sans-serif',
     transformRequest: null,
     fadeDuration: 300,
-    crossSourceCollisions: true
+    crossSourceCollisions: true,
+    validateStyle: false
 } as CompleteMapOptions;
 
 /**
@@ -259,6 +261,7 @@ const defaultOptions = {
  * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
  * map and the other on the left edge of the map) at every zoom level.
  * @param {number} [options.maxTileCacheSize=null] The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport.
+ * @param {string} [options.validateStyle=false] If true, style validation will be performed. Useful in non-production environment.
  * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
  *   font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
  *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
@@ -335,6 +338,7 @@ class Map extends Camera {
     _controls: Array<IControl>;
     _mapId: number;
     _localIdeographFontFamily: string;
+    _validateStyle: boolean;
     _requestManager: RequestManager;
     _locale: any;
     _removed: boolean;
@@ -513,6 +517,8 @@ class Map extends Camera {
         this.resize();
 
         this._localIdeographFontFamily = options.localIdeographFontFamily;
+        this._validateStyle = options.validateStyle;
+
         if (options.style) this.setStyle(options.style, {localIdeographFontFamily: options.localIdeographFontFamily});
 
         if (options.attributionControl)
@@ -1443,6 +1449,7 @@ class Map extends Camera {
      * @param {Object} [options] Options object.
      * @param {boolean} [options.diff=true] If false, force a 'full' update, removing the current style
      *   and building the given one instead of attempting a diff-based update.
+     * @param {boolean} [options.validate=false] If true, style validation will be performed. Useful in non-production environment.
      * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
      *   font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
      *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
@@ -1484,7 +1491,11 @@ class Map extends Camera {
      * });
      */
     setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
-        options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
+        options = extend({},
+            {
+                localIdeographFontFamily: this._localIdeographFontFamily,
+                validateStyle: this._validateStyle
+            }, options);
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {
             this._diffStyle(style, options);
