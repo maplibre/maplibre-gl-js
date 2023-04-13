@@ -583,6 +583,10 @@ function getAnchorAlignment(anchor: SymbolAnchor) {
     return {horizontalAlign, verticalAlign};
 }
 
+function isCombiningCharacter(codePoint: number): boolean {
+    return codePoint >= 0x0300 && codePoint <= 0x036F;
+}
+
 function shapeLines(shaping: Shaping,
     glyphMap: {
         [_: string]: {
@@ -630,6 +634,9 @@ function shapeLines(shaping: Shaping,
             ++lineIndex;
             continue;
         }
+
+        //Keep track of previous character size for combiners
+        let prevMetrics = null;
 
         for (let i = 0; i < line.length(); i++) {
             const section = line.getSection(i);
@@ -698,13 +705,23 @@ function shapeLines(shaping: Shaping,
             }
 
             if (!vertical) {
-                positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
+                let yPos = y + baselineOffset;
+                let retreat = 0;
+
+                if (isCombiningCharacter(codePoint)) {
+                    retreat = (prevMetrics?.width ?? 0) * metrics.left / metrics.width;
+                    yPos += section.scale * (metrics.height - prevMetrics.height);
+                }
+
+                const xPos = x + retreat * section.scale;
+                positionedGlyphs.push({glyph: codePoint, imageName, x: xPos, y: yPos, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
                 x += metrics.advance * section.scale + spacing;
             } else {
                 shaping.verticalizable = true;
                 positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
                 x += verticalAdvance * section.scale + spacing;
             }
+            prevMetrics = metrics;
         }
 
         // Only justify if we placed at least one glyph
