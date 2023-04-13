@@ -160,8 +160,8 @@ const exported = {
      * @param {string} customProtocol - the protocol to hook, for example 'custom'
      * @param {Function} loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
-     * // this will fetch a file using the fetch API (this is obviously a non iteresting example...)
-     * maplibre.addProtocol('custom', (params, callback) => {
+     * // this will fetch a file using the fetch API (this is obviously a non interesting example...)
+     * maplibregl.addProtocol('custom', (params, callback) => {
             fetch(`https://${params.url.split("://")[1]}`)
                 .then(t => {
                     if (t.status == 200) {
@@ -178,7 +178,7 @@ const exported = {
             return { cancel: () => { } };
         });
      * // the following is an example of a way to return an error when trying to load a tile
-     * maplibre.addProtocol('custom2', (params, callback) => {
+     * maplibregl.addProtocol('custom2', (params, callback) => {
      *      callback(new Error('someErrorMessage'));
      *      return { cancel: () => { } };
      * });
@@ -188,7 +188,7 @@ const exported = {
     },
 
     /**
-     * Removes a previusly added protocol
+     * Removes a previously added protocol
      *
      * @function removeProtocol
      * @param {string} customProtocol - the custom protocol to remove registration for

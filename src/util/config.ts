@@ -1,7 +1,9 @@
+import type {Cancelable} from './types/cancelable';
+
 type Config = {
     MAX_PARALLEL_IMAGE_REQUESTS: number;
     MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME: number;
-    REGISTERED_PROTOCOLS: {[x: string]: any};
+    REGISTERED_PROTOCOLS: {[x: string]: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable};
     WORKER_URL: string;
 };
 
