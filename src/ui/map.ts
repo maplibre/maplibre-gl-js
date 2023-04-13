@@ -208,7 +208,7 @@ const defaultOptions = {
  * @param {number} [options.minPitch=0] The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
  * @param {number} [options.maxPitch=60] The maximum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
  * @param {Object|string} [options.style] The map's MapLibre style. This must be an a JSON object conforming to
- * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/), or a URL to
+ * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to
  * such JSON.
  *
  *
@@ -1140,7 +1140,7 @@ class Map extends Camera {
      *     id: 'points-of-interest',
      *     source: {
      *       type: 'vector',
-     *       url: 'https://maplibre.org/maplibre-gl-js-docs/style-spec/'
+     *       url: 'https://maplibre.org/maplibre-style-spec/'
      *     },
      *     'source-layer': 'poi_label',
      *     type: 'circle',
@@ -1306,9 +1306,9 @@ class Map extends Camera {
      * map viewport.
      * The geometryOrOptions can receive a QueryRenderedFeaturesOptions only to support a situation where the function receives only one parameter which is the options parameter.
      * @param {QueryRenderedFeaturesOptions} [options] (optional) Options object.
-     * @param {Array<string>} [options.layers] (optional) An array of [style layer IDs](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-id) for the query to inspect.
+     * @param {Array<string>} [options.layers] (optional) An array of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
      *   Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
-     * @param {FilterSpecification} [options.filter] (optional) A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
+     * @param {FilterSpecification} [options.filter] (optional) A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter)
      *   to limit query results.
      * @param {Array<string>} [options.availableImages] (optional) An array of string representing the available images
      * @param {boolean} [options.validate=true] (optional) Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
@@ -1400,7 +1400,7 @@ class Map extends Camera {
      * @param {Object} [parameters] Options object.
      * @param {string} [parameters.sourceLayer] The name of the source layer
      *   to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
-     * @param {Array} [parameters.filter] A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
+     * @param {Array} [parameters.filter] A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter)
      *   to limit query results.
      * @param {boolean} [parameters.validate=true] Whether to check if the [parameters.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
@@ -1445,7 +1445,7 @@ class Map extends Camera {
      *
      *
      * @param style A JSON object conforming to the schema described in the
-     *   [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/), or a URL to such JSON.
+     *   [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to such JSON.
      * @param {Object} [options] Options object.
      * @param {boolean} [options.diff=true] If false, force a 'full' update, removing the current style
      *   and building the given one instead of attempting a diff-based update.
@@ -1634,7 +1634,7 @@ class Map extends Camera {
      *
      * @param {string} id The ID of the source to add. Must not conflict with existing sources.
      * @param {Object} source The source object, conforming to the
-     * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources) or
+     * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
      * {@link CanvasSourceOptions}.
      * @fires source.add
      * @returns {Map} `this`
@@ -1803,7 +1803,7 @@ class Map extends Camera {
      * corresponds to no existing sources.
      * The shape of the object varies by source type.
      * A list of options for each source type is available on the MapLibre Style Specification's
-     * [Sources](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/) page.
+     * [Sources](https://maplibre.org/maplibre-style-spec/sources/) page.
      * @example
      * var sourceObject = map.getSource('points');
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
@@ -1818,10 +1818,10 @@ class Map extends Camera {
     /**
      * Add an image to the style. This image can be displayed on the map like any other icon in the style's
      * sprite using the image's ID with
-     * [`icon-image`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layout-symbol-icon-image),
-     * [`background-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-background-background-pattern),
-     * [`fill-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-fill-fill-pattern),
-     * or [`line-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-line-line-pattern).
+     * [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
+     * [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
+     * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
+     * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
      * A {@link Map.event:error} event will be fired if there is not enough space in the sprite to add this image.
      *
      * @param id The ID of the image.
@@ -1908,10 +1908,10 @@ class Map extends Camera {
     /**
      * Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
      * sprite using the image's ID with
-     * [`icon-image`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layout-symbol-icon-image),
-     * [`background-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-background-background-pattern),
-     * [`fill-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-fill-fill-pattern),
-     * or [`line-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-line-line-pattern).
+     * [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
+     * [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
+     * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
+     * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
      *
      * @param id The ID of the image.
      * @param image The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
@@ -2047,41 +2047,41 @@ class Map extends Camera {
     }
 
     /**
-     * Adds a [MapLibre style layer](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layers)
+     * Adds a [MapLibre style layer](https://maplibre.org/maplibre-style-spec/#layers)
      * to the map's style.
      *
      * A layer defines how data from a specified source will be styled. Read more about layer types
-     * and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layers).
+     * and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#layers).
      *
      * TODO: JSDoc can't pass @param {(LayerSpecification & {source?: string | SourceSpecification}) | CustomLayerInterface} layer The layer to add,
      * @param {Object} layer
-     * conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layers) or,
+     * conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-style-spec/#layers) or,
      * less commonly, the {@link CustomLayerInterface} specification.
      * The MapLibre Style Specification's layer definition is appropriate for most layers.
      *
      * @param {string} layer.id A unique identifier that you define.
      * @param {string} layer.type The type of layer (for example `fill` or `symbol`).
-     * A list of layer types is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#type).
+     * A list of layer types is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/layers/#type).
      *
      * (This can also be `custom`. For more information, see {@link CustomLayerInterface}.)
      * @param {string | SourceSpecification} [layer.source] The data source for the layer.
      * Reference a source that has _already been defined_ using the source's unique id.
-     * Reference a _new source_ using a source object (as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/)) directly.
+     * Reference a _new source_ using a source object (as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sources/)) directly.
      * This is **required** for all `layer.type` options _except_ for `custom` and `background`.
      * @param {string} [layer.sourceLayer] (optional) The name of the source layer within the specified `layer.source` to use for this style layer.
      * This is only applicable for vector tile sources and is **required** when `layer.source` is of the type `vector`.
      * @param {array} [layer.filter] (optional) An expression specifying conditions on source features.
      * Only features that match the filter are displayed.
-     * The MapLibre Style Specification includes more information on the limitations of the [`filter`](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter) parameter
-     * and a complete list of available [expressions](https://maplibre.org/maplibre-gl-js-docs/style-spec/expressions/).
+     * The MapLibre Style Specification includes more information on the limitations of the [`filter`](https://maplibre.org/maplibre-style-spec/layers/#filter) parameter
+     * and a complete list of available [expressions](https://maplibre.org/maplibre-style-spec/expressions/).
      * If no filter is provided, all features in the source (or source layer for vector tilesets) will be displayed.
      * @param {Object} [layer.paint] (optional) Paint properties for the layer.
      * Available paint properties vary by `layer.type`.
-     * A full list of paint properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/).
+     * A full list of paint properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/layers/).
      * If no paint properties are specified, default values will be used.
      * @param {Object} [layer.layout] (optional) Layout properties for the layer.
      * Available layout properties vary by `layer.type`.
-     * A full list of layout properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/).
+     * A full list of layout properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/layers/).
      * If no layout properties are specified, default values will be used.
      * @param {number} [layer.maxzoom] (optional) The maximum zoom level for the layer.
      * At zoom levels equal to or greater than the maxzoom, the layer will be hidden.
@@ -2217,8 +2217,8 @@ class Map extends Camera {
 
     /**
      * Sets the zoom extent for the specified style layer. The zoom extent includes the
-     * [minimum zoom level](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-minzoom)
-     * and [maximum zoom level](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-maxzoom))
+     * [minimum zoom level](https://maplibre.org/maplibre-style-spec/#layer-minzoom)
+     * and [maximum zoom level](https://maplibre.org/maplibre-style-spec/#layer-maxzoom))
      * at which the layer will be rendered.
      *
      * Note: For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
@@ -2253,7 +2253,7 @@ class Map extends Camera {
      *
      * @param {string} layerId The ID of the layer to which the filter will be applied.
      * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
-     *   [filter definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
+     *   [filter definition](https://maplibre.org/maplibre-style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
      * @param {Object} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
@@ -2291,7 +2291,7 @@ class Map extends Camera {
      * @param {string} layerId The ID of the layer to set the paint property in.
      * @param {string} name The name of the paint property to set.
      * @param {*} value The value of the paint property to set.
-     *   Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/).
+     *   Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
      * @param {Object} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
@@ -2321,7 +2321,7 @@ class Map extends Camera {
      *
      * @param {string} layerId The ID of the layer to set the layout property in.
      * @param {string} name The name of the layout property to set.
-     * @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/).
+     * @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
      * @param {Object} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
@@ -2347,7 +2347,7 @@ class Map extends Camera {
     /**
      * Sets the value of the style's glyphs property.
      *
-     * @param glyphsUrl Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/glyphs/).
+     * @param glyphsUrl Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/glyphs/).
      * @param {StyleSetterOptions} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
@@ -2439,7 +2439,7 @@ class Map extends Camera {
     /**
      * Sets the any combination of light values.
      *
-     * @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#light).
+     * @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
      * @param {Object} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
@@ -2470,10 +2470,10 @@ class Map extends Camera {
      *
      * This method can only be used with sources that have a `feature.id` attribute. The `feature.id` attribute can be defined in three ways:
      * - For vector or GeoJSON sources, including an `id` attribute in the original data file.
-     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/#vector-promoteId) option at the time the source is defined.
-     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
+     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#vector-promoteId) option at the time the source is defined.
+     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
      *
-     * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-gl-js-docs/style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
+     * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
      *
      * @param {Object} feature Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
@@ -2561,7 +2561,7 @@ class Map extends Camera {
      * A feature's `state` is a set of user-defined key-value pairs that are assigned to a feature at runtime.
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
-     * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-gl-js-docs/style-spec/expressions/#feature-state)._
+     * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state)._
      *
      * @param {Object} feature Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.

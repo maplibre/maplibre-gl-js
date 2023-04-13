@@ -284,13 +284,13 @@ export type MapLibreZoomEvent = {
  * `dataType`s are:
  *
  * - `'source'`: The non-tile data associated with any source
- * - `'style'`: The [style](https://maplibre.org/maplibre-gl-js-docs/style-spec/) used by the map
+ * - `'style'`: The [style](https://maplibre.org/maplibre-style-spec/) used by the map
  *
  * @typedef {Object} MapDataEvent
  * @property {string} type The event type.
  * @property {string} dataType The type of data that has changed. One of `'source'`, `'style'`.
  * @property {boolean} [isSourceLoaded] True if the event has a `dataType` of `source` and the source has no outstanding network requests.
- * @property {Object} [source] The [style spec representation of the source](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources) if the event has a `dataType` of `source`.
+ * @property {Object} [source] The [style spec representation of the source](https://maplibre.org/maplibre-style-spec/#sources) if the event has a `dataType` of `source`.
  * @property {string} [sourceDataType] Included if the event has a `dataType` of `source` and the event signals
  * that internal data has been received or changed. Possible values are `metadata`, `content` and `visibility`.
  * @property {Object} [tile] The tile being loaded or changed, if the event has a `dataType` of `source` and
