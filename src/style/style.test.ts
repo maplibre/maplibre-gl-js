@@ -125,7 +125,9 @@ describe('Style', () => {
     });
 
     test('RTL plugin load reloads vector source but not raster source', done => {
-        const style = new Style(getStubMap());
+        const map = getStubMap();
+        const style = new Style(map);
+        map.style = style;
         style.loadJSON({
             'version': 8,
             'sources': {
@@ -163,6 +165,7 @@ describe('Style', () => {
             setRTLTextPlugin('/plugin.js', (error) => {
                 expect(error).toBeUndefined();
                 setTimeout(() => {
+                    clearRTLTextPlugin();
                     expect(style.sourceCaches['raster'].reload).not.toHaveBeenCalled();
                     expect(style.sourceCaches['vector'].reload).toHaveBeenCalled();
                     done();
