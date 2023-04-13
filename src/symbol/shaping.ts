@@ -710,7 +710,7 @@ function shapeLines(shaping: Shaping,
 
                 if (isCombiningCharacter(codePoint)) {
                     retreat = (prevMetrics?.width ?? 0) * metrics.left / metrics.width;
-                    yPos += section.scale * (metrics.height - prevMetrics.height);
+                    yPos += section.scale * (metrics.height - prevMetrics?.height ?? metrics.height);
                 }
 
                 const xPos = x + retreat * section.scale;
