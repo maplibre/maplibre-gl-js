@@ -11,7 +11,7 @@ import type Dispatcher from '../util/dispatcher';
 import type Tile from './tile';
 import type Actor from '../util/actor';
 import type {Callback} from '../types/callback';
-import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types.g';
+import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
@@ -60,7 +60,7 @@ export type SetClusterOptions = {
 
 /**
  * A source containing GeoJSON.
- * (See the [Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources-geojson) for detailed documentation of options.)
+ * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-geojson) for detailed documentation of options.)
  *
  * @example
  * map.addSource('some id', {

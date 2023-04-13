@@ -2,7 +2,7 @@ import GeoJSONWorkerSource, {LoadGeoJSONParameters} from './geojson_worker_sourc
 import StyleLayerIndex from '../style/style_layer_index';
 import {OverscaledTileID} from './tile_id';
 import perf from '../util/performance';
-import {LayerSpecification} from '../style-spec/types.g';
+import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import Actor from '../util/actor';
 import {WorkerTileParameters} from './worker_source';
 import {setPerformance} from '../util/test/util';

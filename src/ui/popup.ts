@@ -67,7 +67,7 @@ const focusQuerySelector = [
  *  A pixel offset applied to the popup's location specified as:
  *   - a single number specifying a distance from the popup's location
  *   - a {@link PointLike} specifying a constant offset
- *   - an object of {@link Point}s specifing an offset for each anchor position
+ *   - an object of {@link Point}s specifying an offset for each anchor position
  *  Negative offsets indicate left and up.
  * @param {string} [options.className] Space-separated CSS class names to add to popup container
  * @param {string} [options.maxWidth='240px'] -
@@ -156,7 +156,7 @@ export default class Popup extends Evented {
         }
 
         /**
-         * Fired when the popup is opened manually or programatically.
+         * Fired when the popup is opened manually or programmatically.
          *
          * @event open
          * @memberof Popup
@@ -216,7 +216,7 @@ export default class Popup extends Evented {
         }
 
         /**
-         * Fired when the popup is closed manually or programatically.
+         * Fired when the popup is closed manually or programmatically.
          *
          * @event close
          * @memberof Popup

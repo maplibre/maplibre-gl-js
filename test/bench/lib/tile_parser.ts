@@ -1,7 +1,7 @@
 import Protobuf from 'pbf';
 import VT from '@mapbox/vector-tile';
 
-import deref from '../../../src/style-spec/deref';
+import {derefLayers as deref} from '@maplibre/maplibre-gl-style-spec';
 import Style from '../../../src/style/style';
 import Transform from '../../../src/geo/transform';
 import {Evented} from '../../../src/util/evented';
@@ -9,7 +9,7 @@ import {RequestManager} from '../../../src/util/request_manager';
 import WorkerTile from '../../../src/source/worker_tile';
 import StyleLayerIndex from '../../../src/style/style_layer_index';
 
-import type {StyleSpecification} from '../../../src/style-spec/types.g';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileResult} from '../../../src/source/worker_source';
 import type {OverscaledTileID} from '../../../src/source/tile_id';
 import type {TileJSON} from '../../../src/types/tilejson';

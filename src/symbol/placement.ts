@@ -460,6 +460,9 @@ export class Placement {
             bucket.deserializeCollisionBoxes(collisionBoxArray);
         }
 
+        const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
+        const getElevation = this.terrain ? (x: number, y: number) => this.terrain.getElevation(tileID, x, y) : null;
+
         const placeSymbol = (symbolInstance: SymbolInstance, collisionArrays: CollisionArrays) => {
             if (seenCrossTileIDs[symbolInstance.crossTileID]) return;
             if (holdingForFade) {
@@ -491,14 +494,6 @@ export class Placement {
             }
             if (collisionArrays.verticalTextFeatureIndex) {
                 verticalTextFeatureIndex = collisionArrays.verticalTextFeatureIndex;
-            }
-
-            // update elevation of collisionArrays
-            const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
-            const getElevation = this.terrain ? (x: number, y: number) => this.terrain.getElevation(tileID, x, y) : null;
-            for (const boxType of ['textBox', 'verticalTextBox', 'iconBox', 'verticalIconBox']) {
-                const box = collisionArrays[boxType];
-                if (box) box.elevation = getElevation ? getElevation(box.anchorPointX, box.anchorPointY) : 0;
             }
 
             const textBox = collisionArrays.textBox;

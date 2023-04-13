@@ -4,7 +4,7 @@ import properties, {HillshadePaintPropsPossiblyEvaluated} from './hillshade_styl
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 
 import type {HillshadePaintProps} from './hillshade_style_layer_properties.g';
-import type {LayerSpecification} from '../../style-spec/types.g';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 class HillshadeStyleLayer extends StyleLayer {
     _transitionablePaint: Transitionable<HillshadePaintProps>;

@@ -2,7 +2,7 @@ import DepthMode from '../gl/depth_mode';
 import StencilMode from '../gl/stencil_mode';
 import CullFaceMode from '../gl/cull_face_mode';
 import {debugUniformValues} from './program/debug_program';
-import Color from '../style-spec/util/color';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 import ColorMode from '../gl/color_mode';
 
 import type Painter from './painter';
@@ -81,8 +81,6 @@ function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: Oversc
     const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
     context.activeTexture.set(gl.TEXTURE0);
-    // Bind the empty texture for drawing outlines
-    painter.emptyTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
     const tileRawData = sourceCache.getTileByID(coord.key).latestRawTileData;
     const tileByteLength = (tileRawData && tileRawData.byteLength) || 0;

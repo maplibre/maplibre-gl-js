@@ -13,7 +13,7 @@ import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
 import type {ImagePosition} from '../render/image_atlas';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
-import Formatted, {FormattedSection} from '../style-spec/expression/types/formatted';
+import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
 
 enum WritingMode {
     none = 0,

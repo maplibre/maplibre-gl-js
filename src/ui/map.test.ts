@@ -6,7 +6,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {Event, ErrorEvent} from '../util/evented';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {LayerSpecification, SourceSpecification, StyleSpecification} from '../style-spec/types.g';
+import {LayerSpecification, SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {RequestTransformFunction} from '../util/request_manager';
 import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
@@ -18,6 +18,7 @@ import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
 import {StyleImageInterface} from '../style/style_image';
+import ImageRequest from '../util/image_request';
 
 function createStyleSource() {
     return {
@@ -2401,6 +2402,33 @@ describe('Map', () => {
         await sourcePromise;
     });
 
+    describe('#setTerrain', () => {
+        test('warn when terrain and hillshade source identical', done => {
+            server.respondWith('/source.json', JSON.stringify({
+                minzoom: 5,
+                maxzoom: 12,
+                attribution: 'Terrain',
+                tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
+                bounds: [-47, -7, -45, -5]
+            }));
+
+            const map = createMap();
+
+            map.on('load', () => {
+                map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});
+                server.respond();
+                map.addLayer({id: 'hillshade', type: 'hillshade', source: 'terrainrgb'});
+                const stub = jest.spyOn(console, 'warn').mockImplementation(() => { });
+                stub.mockReset();
+                map.setTerrain({
+                    source: 'terrainrgb'
+                });
+                expect(console.warn).toHaveBeenCalledTimes(1);
+                done();
+            });
+        });
+    });
+
     describe('#setCooperativeGestures', () => {
         test('returns self', () => {
             const map = createMap();
@@ -2595,6 +2623,30 @@ describe('Map', () => {
                 expect(errorMessageObject.statusMessage).toBe('mocked webglcontextcreationerror message');
             }
 
+        });
+
+        test('should call call ImageRequest.processQueue() only when moving', () => {
+            const style = createStyle();
+            const map = createMap({style});
+
+            let imageQueueProcessRequestCallCounter = 0;
+            jest.spyOn(ImageRequest, 'processQueue').mockImplementation(() => {
+                imageQueueProcessRequestCallCounter++;
+                return 0;
+            });
+            let mockIsMoving = true;
+
+            jest.spyOn(map, 'isMoving').mockImplementation(() => {
+                return mockIsMoving;
+            });
+
+            // when moving, expect ImageRequest.processQueue is called on repaint
+            map._render(0);
+            expect(imageQueueProcessRequestCallCounter).toBe(1);
+
+            mockIsMoving = false;
+            map._render(1);
+            expect(imageQueueProcessRequestCallCounter).toBe(1);
         });
     });
 

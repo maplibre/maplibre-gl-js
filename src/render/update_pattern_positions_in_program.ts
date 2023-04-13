@@ -1,5 +1,5 @@
 import type {CrossFaded} from '../style/properties';
-import type ResolvedImage from '../style-spec/expression/types/resolved_image';
+import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type Tile from '../source/tile';
 import type ProgramConfiguration from '../data/program_configuration';
 import type FillExtrusionStyleLayer from '../style/style_layer/fill_extrusion_style_layer';
@@ -12,7 +12,7 @@ import type FillStyleLayer from '../style/style_layer/fill_style_layer';
  * The mismatch was causing setConstantPatternPositions method not being called and pixelRatio was always the
  * default of 1, instead of actual values set by original map.addImage.
  *
- * @param programConfiguration - to be used to set patttern poistion and device pixel ratio.
+ * @param programConfiguration - to be used to set pattern position and device pixel ratio.
  * @param propertyName - 'fill-pattern' or 'fill-extrusion-pattern' property key
  * @param constantPattern - either 'fill-pattern' or 'fill-extrusion-pattern' property value
  * @param tile - current tile being drawn

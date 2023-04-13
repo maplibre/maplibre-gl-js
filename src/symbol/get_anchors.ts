@@ -1,4 +1,4 @@
-import {number as interpolate} from '../style-spec/util/interpolate';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import Anchor from '../symbol/anchor';
 import checkMaxAngle from './check_max_angle';
@@ -54,8 +54,8 @@ function getCenterAnchor(line: Array<Point>,
         if (prevDistance + segmentDistance > centerDistance) {
             // The center is on this segment
             const t = (centerDistance - prevDistance) / segmentDistance,
-                x = interpolate(a.x, b.x, t),
-                y = interpolate(a.y, b.y, t);
+                x = interpolates.number(a.x, b.x, t),
+                y = interpolates.number(a.y, b.y, t);
 
             const anchor = new Anchor(x, y, b.angleTo(a), i);
             anchor._round();
@@ -133,8 +133,8 @@ function resample(line, offset, spacing, angleWindowSize, maxAngle, labelLength,
             markedDistance += spacing;
 
             const t = (markedDistance - distance) / segmentDist,
-                x = interpolate(a.x, b.x, t),
-                y = interpolate(a.y, b.y, t);
+                x = interpolates.number(a.x, b.x, t),
+                y = interpolates.number(a.y, b.y, t);
 
             // Check that the point is within the tile boundaries and that
             // the label would fit before the beginning and end of the line

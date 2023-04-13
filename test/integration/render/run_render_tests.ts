@@ -17,7 +17,7 @@ import * as rtlTextPluginModule from '../../../src/source/rtl_text_plugin';
 import CanvasSource from '../../../src/source/canvas_source';
 import customLayerImplementations from './custom_layer_implementations';
 import type Map from '../../../src/ui/map';
-import type {StyleSpecification} from '../../../src/style-spec/types.g';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PointLike} from '../../../src/ui/camera';
 
 const {fakeXhr} = nise;

@@ -1,4 +1,4 @@
-import Color from '../style-spec/util/color';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 import DepthMode from '../gl/depth_mode';
 import CullFaceMode from '../gl/cull_face_mode';
 import ColorMode from '../gl/color_mode';

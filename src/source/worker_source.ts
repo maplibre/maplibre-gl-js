@@ -9,7 +9,7 @@ import type {CollisionBoxArray} from '../data/array_types.g';
 import type DEMData from '../data/dem_data';
 import type {StyleGlyph} from '../style/style_glyph';
 import type {StyleImage} from '../style/style_image';
-import type {PromoteIdSpecification} from '../style-spec/types.g';
+import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type TileParameters = {
     source: string;

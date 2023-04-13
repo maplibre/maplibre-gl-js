@@ -14,7 +14,7 @@ import type {
     StructArray,
     StructArrayMember
 } from '../util/struct_array';
-import type Color from '../style-spec/util/color';
+import type {Color} from '@maplibre/maplibre-gl-style-spec';
 
 type ClearArgs = {
     color?: Color;
@@ -227,7 +227,7 @@ class Context {
             mask |= gl.DEPTH_BUFFER_BIT;
 
             // Workaround for platforms where clearDepth doesn't seem to work
-            // without reseting the depthRange. See https://github.com/mapbox/mapbox-gl-js/issues/3437
+            // without resetting the depthRange. See https://github.com/mapbox/mapbox-gl-js/issues/3437
             this.depthRange.set([0, 1]);
 
             this.clearDepth.set(depth);

@@ -3,7 +3,7 @@ import type StyleLayer from '../style/style_layer';
 import type CollisionIndex from '../symbol/collision_index';
 import type Transform from '../geo/transform';
 import type {RetainedQueryData} from '../symbol/placement';
-import type {FilterSpecification} from '../style-spec/types.g';
+import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';

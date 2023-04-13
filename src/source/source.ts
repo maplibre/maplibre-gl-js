@@ -83,7 +83,7 @@ import video from '../source/video_source';
 import image from '../source/image_source';
 import canvas from '../source/canvas_source';
 
-import type {SourceSpecification} from '../style-spec/types.g';
+import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const sourceTypes = {
     vector,
@@ -100,7 +100,7 @@ const sourceTypes = {
  *
  * @param id
  * @param {Object} source A source definition object compliant with
- * [`maplibre-gl-style-spec`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources) or, for a third-party source type,
+ * [`maplibre-gl-style-spec`](https://maplibre.org/maplibre-style-spec/#sources) or, for a third-party source type,
   * with that type's requirements.
  * @param {Dispatcher} dispatcher
  * @returns {Source}

@@ -47,7 +47,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -59,7 +59,13 @@ jobs:
         run:
           nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
-      - run: npm run jest-ci -- --selectProjects unit
+      - run: npm run jest-ci -- --coverage --coverageReporters text html-spa --selectProjects unit
+      - name: Upload unit test coverage
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: unit-test-coverage
+          path: ${{ github.workspace }}/coverage
       - run: npm run build-dev
         if: success() || failure()
       - run: npm run test-render
@@ -82,6 +88,5 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - run: npm run build-dist
-      - run: npm run build-style-spec
       - run: npm run jest-ci -- --selectProjects build
         if: success() || failure()

@@ -1,5 +1,5 @@
 import {bindAll, extend, warnOnce, clamp, wrap, ease as defaultEasing, pick} from '../util/util';
-import {number as interpolate} from '../style-spec/util/interpolate';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import browser from '../util/browser';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
@@ -697,7 +697,7 @@ abstract class Camera extends Evented {
         if (!calculatedOptions) return this;
 
         options = extend(calculatedOptions, options);
-        // Explictly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
+        // Explicitly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
         delete options.padding;
 
         return options.linear ?
@@ -833,7 +833,7 @@ abstract class Camera extends Evented {
      * details not specified in `options`.
      *
      * Note: The transition will happen instantly if the user has enabled
-     * the `reduced motion` accesibility feature enabled in their operating system,
+     * the `reduced motion` accessibility feature enabled in their operating system,
      * unless `options` includes `essential: true`.
      *
      * @memberof Map#
@@ -913,17 +913,17 @@ abstract class Camera extends Evented {
 
         this._ease((k) => {
             if (this._zooming) {
-                tr.zoom = interpolate(startZoom, zoom, k);
+                tr.zoom = interpolates.number(startZoom, zoom, k);
             }
             if (this._rotating) {
-                tr.bearing = interpolate(startBearing, bearing, k);
+                tr.bearing = interpolates.number(startBearing, bearing, k);
             }
             if (this._pitching) {
-                tr.pitch = interpolate(startPitch, pitch, k);
+                tr.pitch = interpolates.number(startPitch, pitch, k);
             }
             if (this._padding) {
                 tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
-                // When padding is being applied, Transform#centerPoint is changing continously,
+                // When padding is being applied, Transform#centerPoint is changing continuously,
                 // thus we need to recalculate offsetPoint every frame
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
@@ -984,7 +984,7 @@ abstract class Camera extends Evented {
             this._elevationStart += k * (pitch1 - pitch2);
             this._elevationTarget = elevation;
         }
-        this.transform.elevation = interpolate(this._elevationStart, this._elevationTarget, k);
+        this.transform.elevation = interpolates.number(this._elevationStart, this._elevationTarget, k);
     }
 
     _finalizeElevation() {
@@ -1040,7 +1040,7 @@ abstract class Camera extends Evented {
      * the user maintain her bearings even after traversing a great distance.
      *
      * Note: The animation will be skipped, and this will behave equivalently to `jumpTo`
-     * if the user has the `reduced motion` accesibility feature enabled in their operating system,
+     * if the user has the `reduced motion` accessibility feature enabled in their operating system,
      * unless 'options' includes `essential: true`.
      *
      * @memberof Map#
@@ -1230,14 +1230,14 @@ abstract class Camera extends Evented {
             tr.zoom = k === 1 ? zoom : startZoom + tr.scaleZoom(scale);
 
             if (this._rotating) {
-                tr.bearing = interpolate(startBearing, bearing, k);
+                tr.bearing = interpolates.number(startBearing, bearing, k);
             }
             if (this._pitching) {
-                tr.pitch = interpolate(startPitch, pitch, k);
+                tr.pitch = interpolates.number(startPitch, pitch, k);
             }
             if (this._padding) {
                 tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
-                // When padding is being applied, Transform#centerPoint is changing continously,
+                // When padding is being applied, Transform#centerPoint is changing continuously,
                 // thus we need to recalculate offsetPoint every frame
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
@@ -1342,6 +1342,26 @@ abstract class Camera extends Evented {
         center.lng +=
             delta > 180 ? -360 :
                 delta < -180 ? 360 : 0;
+    }
+
+    /**
+     * Query the current elevation of location. It return null if terrain is not enabled. the elevation is in meters relative to mean sea-level
+     * @memberof Map#
+     * @param lngLatLike [x,y] or LngLat coordinates of the location
+     * @returns {number} elevation in meters
+     */
+    queryTerrainElevation(lngLatLike: LngLatLike): number | null {
+        if (!this.terrain) {
+            return null;
+        }
+        const elevation = this.transform.getElevation(LngLat.convert(lngLatLike), this.terrain);
+        /**
+         * Different zoomlevels with different terrain-tiles the elvation-values are not the same.
+         * map.transform.elevation variable with the center-altitude.
+         * In maplibre the proj-matrix is translated by this value in negative z-direction.
+         * So we need to add this value to the elevation to get the correct value.
+         */
+        return elevation - this.transform.elevation;
     }
 }
 

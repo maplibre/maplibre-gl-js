@@ -70,7 +70,7 @@ export type SerializedStructArray = {
  * associated struct type. Each particular struct type, together with an
  * alignment size, determines the memory layout of a StructArray whose elements
  * are of that type.  Thus, for each such layout that we need, we have
- * a corrseponding StructArrayLayout class, inheriting from StructArray and
+ * a corresponding StructArrayLayout class, inheriting from StructArray and
  * implementing `emplaceBack()` and `_refreshViews()`.
  *
  * In some cases, where we need to access particular elements of a StructArray,

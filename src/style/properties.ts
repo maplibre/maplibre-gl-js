@@ -1,24 +1,15 @@
 import {clone, extend, easeCubicInOut} from '../util/util';
-import * as interpolate from '../style-spec/util/interpolate';
-import Color from '../style-spec/util/color';
-import {register} from '../util/web_worker_transfer';
-import EvaluationParameters from './evaluation_parameters';
-
-import {CanonicalTileID} from '../source/tile_id';
-import {StylePropertySpecification} from '../style-spec/style-spec';
-import {
-    TransitionSpecification,
-    PropertyValueSpecification
-} from '../style-spec/types.g';
-
-import {
-    normalizePropertyExpression,
+import {interpolateFactory, Color, StylePropertySpecification, normalizePropertyExpression,
     Feature,
     FeatureState,
     StylePropertyExpression,
     SourceExpression,
-    CompositeExpression
-} from '../style-spec/expression';
+    CompositeExpression, TransitionSpecification,
+    PropertyValueSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {register} from '../util/web_worker_transfer';
+import EvaluationParameters from './evaluation_parameters';
+
+import {CanonicalTileID} from '../source/tile_id';
 
 type TimePoint = number;
 
@@ -492,7 +483,7 @@ export class DataConstantProperty<T> implements Property<T, T> {
     }
 
     interpolate(a: T, b: T, t: number): T {
-        const interp: ((a: T, b: T, t: number) => T) = (interpolate as any)[this.specification.type];
+        const interp: any = interpolateFactory(this.specification.type as any);
         if (interp) {
             return interp(a, b, t);
         } else {
@@ -551,7 +542,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, a.parameters);
         }
 
-        const interp: ((a: T, b: T, t: number) => T) = (interpolate as any)[this.specification.type];
+        const interp: any = interpolateFactory(this.specification.type as any);
         if (interp) {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: interp(a.value.value, b.value.value, t)}, a.parameters);
         } else {
