@@ -709,13 +709,16 @@ function shapeLines(shaping: Shaping,
                 let retreat = 0;
 
                 if (isCombiningCharacter(codePoint)) {
-                    retreat = (prevMetrics?.width ?? 0) * metrics.left / metrics.width;
+                    retreat = (prevMetrics?.width ?? 0) * metrics.left / metrics.width - spacing;
                     yPos += section.scale * (metrics.height - prevMetrics?.height ?? metrics.height);
                 }
 
                 const xPos = x + retreat * section.scale;
                 positionedGlyphs.push({glyph: codePoint, imageName, x: xPos, y: yPos, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
-                x += metrics.advance * section.scale + spacing;
+                x += metrics.advance * section.scale;
+                if (!isCombiningCharacter(codePoint)) {
+                    x += spacing;
+                }
             } else {
                 shaping.verticalizable = true;
                 positionedGlyphs.push({glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect});
