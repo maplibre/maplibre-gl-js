@@ -139,7 +139,7 @@ namespace ImageRequest {
         }
     };
 
-    const doArrayRequest = (itemInQueue: ImageRequestQueueItem): Cancelable => {
+    const doImageRequest = (itemInQueue: ImageRequestQueueItem): Cancelable => {
 
         const {requestParameters, callback} = itemInQueue;
 
@@ -148,6 +148,8 @@ namespace ImageRequest {
         return getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
             if (err) {
                 callback(err);
+            } else if (data instanceof HTMLImageElement) {
+                callback(null, data);
             } else if (data) {
                 const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
                     if (imgErr != null) {
@@ -204,7 +206,7 @@ namespace ImageRequest {
                 continue;
             }
 
-            const innerRequest = doArrayRequest(topItemInQueue);
+            const innerRequest = doImageRequest(topItemInQueue);
 
             currentParallelImageRequests++;
 
