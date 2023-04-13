@@ -133,7 +133,7 @@ describe('RasterTileSource', () => {
         server.respond();
     });
 
-    test('handles no image data', done => {
+    test('creates error when image has no data', done => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -153,7 +153,7 @@ describe('RasterTileSource', () => {
                     setExpiryData() {}
                 } as any as Tile;
                 source.loadTile(tile, (err) => {
-                    expect(err).toBeNull();
+                    expect(err).not.toBeNull();
                     expect(tile.state).toBe('errored');
                     done();
                 });

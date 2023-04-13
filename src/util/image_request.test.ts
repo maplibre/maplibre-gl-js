@@ -228,13 +228,13 @@ describe('ImageRequest', () => {
         server.respond();
     });
 
-    test('getImage does not error when response has no data', done => {
+    test('getImage does error when response has no data', done => {
         server.respondWith(request => {
             request.respond(204, undefined, undefined);
         });
 
         const callback = (error, image) => {
-            expect(error).toBeNull();
+            expect(error).not.toBeNull();
             expect(image).toBeNull();
             done();
         };
