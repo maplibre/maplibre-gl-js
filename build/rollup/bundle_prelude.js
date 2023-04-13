@@ -14,7 +14,7 @@ function define(_, chunk) {
         var sharedChunk = {};
         shared(sharedChunk);
         maplibregl = chunk(sharedChunk);
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && typeof window.URL.createObjectURL !== 'undefined') {
             maplibregl.workerUrl = window.URL.createObjectURL(new Blob([workerBundleString], { type: 'text/javascript' }));
         }
     }
