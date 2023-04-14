@@ -1,8 +1,35 @@
+import config from './util/config';
 import maplibre from './index';
 
 describe('maplibre', () => {
+    beforeEach(() => {
+        config.REGISTERED_PROTOCOLS = {};
+    });
+    afterAll(() => {
+        config.REGISTERED_PROTOCOLS = {};
+    });
+
     test('workerCount', () => {
         expect(typeof maplibre.workerCount === 'number').toBeTruthy();
+    });
+
+    test('addProtocol', () => {
+        const protocolName = 'custom';
+        expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
+
+        maplibre.addProtocol(protocolName, (reqParam, callback) => { return {cancel: () => { }}; });
+        expect(Object.keys(config.REGISTERED_PROTOCOLS)[0]).toBe(protocolName);
+    });
+
+    test('removeProtocol', () => {
+        const protocolName = 'custom';
+        expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
+
+        maplibre.addProtocol(protocolName, (reqParam, callback) => { return {cancel: () => { }}; });
+        expect(Object.keys(config.REGISTERED_PROTOCOLS)[0]).toBe(protocolName);
+
+        maplibre.removeProtocol(protocolName);
+        expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
     });
 
     test('version', () => {

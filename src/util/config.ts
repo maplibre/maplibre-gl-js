@@ -1,4 +1,5 @@
-import type {Cancelable} from './types/cancelable';
+import type {Cancelable} from '../types/cancelable';
+import type {RequestParameters, ResponseCallback} from './ajax';
 
 type Config = {
     MAX_PARALLEL_IMAGE_REQUESTS: number;
