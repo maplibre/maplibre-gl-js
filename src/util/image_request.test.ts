@@ -227,6 +227,19 @@ describe('ImageRequest', () => {
         });
     });
 
+    test('#addProtocol - returning ImageBitmap for getImage', done => {
+        maplibre.addProtocol('custom', (reqParam, callback) => {
+            callback(null, new ImageBitmap());
+            return {cancel: () => {}};
+        });
+
+        ImageRequest.getImage({url: 'custom://test/url/getImage'}, async (error, img) => {
+            expect(error).toBeFalsy();
+            expect(img).toBeInstanceOf(ImageBitmap);
+            done();
+        });
+    });
+
     test('#addProtocol - returning HTMLImageElement for getImage', done => {
         stubAjaxGetImage(() => Promise.resolve(new ImageBitmap()));
         maplibre.addProtocol('custom', (reqParam, callback) => {

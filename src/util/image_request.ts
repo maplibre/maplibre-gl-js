@@ -148,7 +148,8 @@ namespace ImageRequest {
         return getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
             if (err) {
                 callback(err);
-            } else if (data instanceof HTMLImageElement) {
+            } else if (data instanceof HTMLImageElement || data instanceof ImageBitmap) {
+                // User consuming maplibregl.addProtocol API can directly return HTMLImageElement/ImageBitmap.
                 callback(null, data, {cacheControl, expires});
             } else if (data) {
                 const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
