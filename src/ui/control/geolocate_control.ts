@@ -350,6 +350,12 @@ class GeolocateControl extends Evented implements IControl {
     }
 
     _setupUI(supported: boolean) {
+        // this method is called asynchronously during onAdd
+        // the control could have been removed before reaching here
+        if (!this._map) {
+            return;
+        }
+
         this._container.addEventListener('contextmenu', (e: MouseEvent) => e.preventDefault());
         this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate', this._container);
         DOM.create('span', 'maplibregl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');

@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import glob from 'glob';
+import {globSync} from 'glob';
 import {printDiffOrStringify} from 'jest-matcher-utils';
 import {createPropertyExpression,
     isFunction,
@@ -14,7 +14,7 @@ import {ExpressionFixture} from './fixture-types';
 
 const decimalSigFigs =  6;
 
-const expressionTestFileNames = glob.sync('**/test.json', {cwd: __dirname});
+const expressionTestFileNames = globSync('**/test.json', {cwd: __dirname});
 describe('expression', () => {
 
     expressionTestFileNames.forEach((expressionTestFileName) => {
