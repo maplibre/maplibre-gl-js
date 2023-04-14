@@ -116,6 +116,15 @@ export type MapOptions = {
     validateStyle?: boolean;
 };
 
+/**
+ * An options object for the gesture settings
+ * @example
+ * let options = {
+ *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
+ *   macHelpText: "Use ⌘ + scroll to zoom the map",
+ *   mobileHelpText: "Use two fingers to move the map",
+ * }
+ */
 export type GestureOptions = {
     windowsHelpText?: string;
     macHelpText?: string;
@@ -213,14 +222,14 @@ const defaultOptions = {
  *
  *
  * @param {(boolean|string)} [options.hash=false] If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
- *   For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
- *   An additional string may optionally be provided to indicate a parameter-styled hash,
- *   e.g. http://path/to/my/page.html#map=2.59/39.26/53.07/-24.1/60&foo=bar, where foo
- *   is a custom parameter and bar is an arbitrary hash distinct from the map hash.
+ * For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
+ * An additional string may optionally be provided to indicate a parameter-styled hash,
+ * e.g. http://path/to/my/page.html#map=2.59/39.26/53.07/-24.1/60&foo=bar, where foo
+ * is a custom parameter and bar is an arbitrary hash distinct from the map hash.
  * @param {boolean} [options.interactive=true] If `false`, no mouse, touch, or keyboard listeners will be attached to the map, so it will not respond to interaction.
  * @param {number} [options.bearingSnap=7] The threshold, measured in degrees, that determines when the map's
- *   bearing will snap to north. For example, with a `bearingSnap` of 7, if the user rotates
- *   the map within 7 degrees of north, the map will automatically snap to exact north.
+ * bearing will snap to north. For example, with a `bearingSnap` of 7, if the user rotates
+ * the map within 7 degrees of north, the map will automatically snap to exact north.
  * @param {boolean} [options.pitchWithRotate=true] If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled.
  * @param {number} [options.clickTolerance=3] The max number of pixels a user can shift the mouse pointer during a click for it to be considered a valid click (as opposed to a mouse drag).
  * @param {boolean} [options.attributionControl=true] If `true`, an {@link AttributionControl} will be added to the map.
@@ -228,7 +237,7 @@ const defaultOptions = {
  * @param {boolean} [options.maplibreLogo=false] If `true`, the MapLibre logo will be shown.
  * @param {string} [options.logoPosition='bottom-left'] A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
  * @param {boolean} [options.failIfMajorPerformanceCaveat=false] If `true`, map creation will fail if the performance of MapLibre
- *   GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
+ * GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
  * @param {boolean} [options.preserveDrawingBuffer=false] If `true`, the map's canvas can be exported to a PNG using `map.getCanvas().toDataURL()`. This is `false` by default as a performance optimization.
  * @param {boolean} [options.antialias] If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. this is `false` by default as a performance optimization.
  * @param {boolean} [options.refreshExpiredTiles=true] If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
@@ -242,12 +251,6 @@ const defaultOptions = {
  * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchZoomRotateHandler#enable}.
  * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler#enable}.
  * @param {boolean|GestureOptions} [options.cooperativeGestures=undefined] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link #FullscreenControl}.
- * A valid options object includes the following properties to customize the text on the informational screen. The values below are the defaults.
- * {
- *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
- *   macHelpText: "Use ⌘ + scroll to zoom the map",
- *   mobileHelpText: "Use two fingers to move the map",
- * }
  * @param {boolean} [options.trackResize=true] If `true`, the map will automatically resize when the browser window resizes.
  * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
  * @param {number} [options.zoom=0] The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
@@ -263,12 +266,12 @@ const defaultOptions = {
  * @param {number} [options.maxTileCacheSize=null] The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport.
  * @param {string} [options.validateStyle=false] If true, style validation will be performed. Useful in non-production environment.
  * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
- *   font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
- *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
- *   Set to `false`, to enable font settings from the map's style for these glyph ranges.
- *   The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js-docs/example/local-ideographs).)
+ * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
+ * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
+ * Set to `false`, to enable font settings from the map's style for these glyph ranges.
+ * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js-docs/example/local-ideographs).)
  * @param {RequestTransformFunction} [options.transformRequest=null] A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
- *   Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
+ * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
  * @param {boolean} [options.collectResourceTiming=false] If `true`, Resource Timing API information will be collected for requests made by GeoJSON and Vector Tile web workers (this information is normally inaccessible from the main Javascript thread). Information will be returned in a `resourceTiming` property of relevant `data` events.
  * @param {number} [options.fadeDuration=300] Controls the duration of the fade-in/fade-out animation for label collisions, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
  * @param {boolean} [options.crossSourceCollisions=true] If `true`, symbols from multiple sources can collide with each other during collision detection. If `false`, collision detection is run separately for the symbols in each source.
@@ -647,8 +650,8 @@ class Map extends Camera {
      * or when the map is shown after being initially hidden with CSS.
      *
      * @param eventData Additional properties to be passed to `movestart`, `move`, `resize`, and `moveend`
-     *   events that get triggered as a result of resize. This can be useful for differentiating the
-     *   source of an event (for example, user-initiated or programmatically-triggered events).
+     * events that get triggered as a result of resize. This can be useful for differentiating the
+     * source of an event (for example, user-initiated or programmatically-triggered events).
      * @returns {Map} `this`
      * @example
      * // Resize the map when the map container is shown
@@ -760,7 +763,7 @@ class Map extends Camera {
      * no matter what the `minZoom` is set to.
      *
      * @param {number | null | undefined} minZoom The minimum zoom level to set (-2 - 24).
-     *   If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
+     * If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
      * @returns {Map} `this`
      * @example
      * map.setMinZoom(12.25);
@@ -795,7 +798,7 @@ class Map extends Camera {
      * the map will zoom to the new maximum.
      *
      * @param {number | null | undefined} maxZoom The maximum zoom level to set.
-     *   If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
+     * If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
      * @returns {Map} `this`
      * @example
      * map.setMaxZoom(18.75);
@@ -830,7 +833,7 @@ class Map extends Camera {
      * the map will pitch to the new minimum.
      *
      * @param {number | null | undefined} minPitch The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
-     *   If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
+     * If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
      * @returns {Map} `this`
      */
     setMinPitch(minPitch?: number | null) {
@@ -865,7 +868,7 @@ class Map extends Camera {
      * the map will pitch to the new maximum.
      *
      * @param {number | null | undefined} maxPitch The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
-     *   If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
+     * If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
      * @returns {Map} `this`
      */
     setMaxPitch(maxPitch?: number | null) {
@@ -1200,8 +1203,8 @@ class Map extends Camera {
      * @instance
      * @param {string} type The event type to add a listener for.
      * @param {Function} listener The function to be called when the event is fired.
-     *   The listener function is called with the data object passed to `fire`,
-     *   extended with `target` and `type` properties.
+     * The listener function is called with the data object passed to `fire`,
+     * extended with `target` and `type` properties.
      * @returns {Map} `this`
      */
 
@@ -1307,9 +1310,9 @@ class Map extends Camera {
      * The geometryOrOptions can receive a QueryRenderedFeaturesOptions only to support a situation where the function receives only one parameter which is the options parameter.
      * @param {QueryRenderedFeaturesOptions} [options] (optional) Options object.
      * @param {Array<string>} [options.layers] (optional) An array of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
-     *   Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
+     * Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
      * @param {FilterSpecification} [options.filter] (optional) A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter)
-     *   to limit query results.
+     * to limit query results.
      * @param {Array<string>} [options.availableImages] (optional) An array of string representing the available images
      * @param {boolean} [options.validate=true] (optional) Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
@@ -1399,9 +1402,9 @@ class Map extends Camera {
      * @param {string} sourceId The ID of the vector tile or GeoJSON source to query.
      * @param {Object} [parameters] Options object.
      * @param {string} [parameters.sourceLayer] The name of the source layer
-     *   to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
+     * to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
      * @param {Array} [parameters.filter] A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter)
-     *   to limit query results.
+     * to limit query results.
      * @param {boolean} [parameters.validate=true] Whether to check if the [parameters.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
      * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
@@ -1445,18 +1448,18 @@ class Map extends Camera {
      *
      *
      * @param style A JSON object conforming to the schema described in the
-     *   [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to such JSON.
+     * [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to such JSON.
      * @param {Object} [options] Options object.
      * @param {boolean} [options.diff=true] If false, force a 'full' update, removing the current style
-     *   and building the given one instead of attempting a diff-based update.
+     * and building the given one instead of attempting a diff-based update.
      * @param {boolean} [options.validate=false] If true, style validation will be performed. Useful in non-production environment.
      * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
-     *   font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
-     *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
-     *   Set to `false`, to enable font settings from the map's style for these glyph ranges.
-     *   Forces a full update.
+     * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
+     * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
+     * Set to `false`, to enable font settings from the map's style for these glyph ranges.
+     * Forces a full update.
      * @param {TransformStyleFunction} [options.transformStyle=undefined] transformStyle is a convenience function
-     *   that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
+     * that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
      * @returns {Map} `this`
      *
      * @example
@@ -1510,7 +1513,7 @@ class Map extends Camera {
      *  Updates the requestManager's transform request with a new function
      *
      * @param transformRequest A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
-     *    Expected to return an object with a `url` property and optionally `headers` and `credentials` properties
+     * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties
      *
      * @returns {Map} `this`
      *
@@ -2203,7 +2206,7 @@ class Map extends Camera {
      *
      * @param {string} id The ID of the layer to get.
      * @returns {StyleLayer} The layer with the specified ID, or `undefined`
-     *   if the ID corresponds to no existing layers.
+     * if the ID corresponds to no existing layers.
      *
      * @example
      * var stateDataLayer = map.getLayer('state-data');
@@ -2253,7 +2256,7 @@ class Map extends Camera {
      *
      * @param {string} layerId The ID of the layer to which the filter will be applied.
      * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
-     *   [filter definition](https://maplibre.org/maplibre-style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
+     * [filter definition](https://maplibre.org/maplibre-style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
      * @param {Object} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
@@ -2291,7 +2294,7 @@ class Map extends Camera {
      * @param {string} layerId The ID of the layer to set the paint property in.
      * @param {string} name The name of the paint property to set.
      * @param {*} value The value of the paint property to set.
-     *   Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
+     * Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
      * @param {Object} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`

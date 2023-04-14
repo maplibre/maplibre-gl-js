@@ -68,8 +68,14 @@ jobs:
           path: ${{ github.workspace }}/coverage
       - run: npm run build-dev
         if: success() || failure()
-      - run: npm run test-render
+      - run: npm run test-render -- --report
         if: success() || failure()
+      - name: Upload render test failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: render-test-report-${{ matrix.os }}
+          path: ${{ github.workspace }}/test/integration/render/results.html
       - run: npm run build-dist
         if: success() || failure()
       - run: npm run jest-ci -- --selectProjects integration
