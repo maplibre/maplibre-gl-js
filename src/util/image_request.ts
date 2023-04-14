@@ -149,7 +149,7 @@ namespace ImageRequest {
             if (err) {
                 callback(err);
             } else if (data instanceof HTMLImageElement) {
-                callback(null, data);
+                callback(null, data, {cacheControl, expires});
             } else if (data) {
                 const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
                     if (imgErr != null) {
