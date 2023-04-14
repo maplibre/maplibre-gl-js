@@ -27,7 +27,7 @@
 - Fix LngLat `toArray` method return type to [number,number] ([#2233](https://github.com/maplibre/maplibre-gl-js/issues/2233))
 - Fix handling of text-offset with symbol-placement: line ([#2170](https://github.com/maplibre/maplibre-gl-js/issues/2170) and [#2171](https://github.com/maplibre/maplibre-gl-js/issues/2171))
 - Fix geolocate control permissions failure on IOS16 web view with fallback to `window.navigator.geolocation`
-- Fix Handle AddProtocol callback function returning a HTMLImageElement
+- Fix Handle AddProtocol callback function returning a HTMLImageElement ([#2393](https://github.com/maplibre/maplibre-gl-js/pull/2393))
 - _...Add new stuff here..._
 
 ## 3.0.0-pre.4
