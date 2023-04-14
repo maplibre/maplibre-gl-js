@@ -4,8 +4,11 @@ import {
     postData,
     AJAXError
 } from './ajax';
+import maplibre from '../index';
+import config from '../util/config';
 
 import {fakeServer, FakeServer} from 'nise';
+import { error } from 'console';
 
 function readAsText(blob) {
     return new Promise((resolve, reject) => {
@@ -20,10 +23,12 @@ describe('ajax', () => {
     let server: FakeServer;
     beforeEach(() => {
         global.fetch = null;
+        config.REGISTERED_PROTOCOLS = {};
         server = fakeServer.create();
     });
     afterEach(() => {
         server.restore();
+        config.REGISTERED_PROTOCOLS = {};
     });
 
     test('getArrayBuffer, 404', done => {
@@ -90,5 +95,52 @@ describe('ajax', () => {
             done();
         });
         server.respond();
+    });
+
+    test('#addProtocol - getJSON', done => {
+        maplibre.addProtocol('custom', (reqParam, callback) => {
+            callback(null, {'foo': 'bar'});
+            return {cancel: () => {}};
+        });
+        getJSON({url: 'custom://test/url/json'}, (error, data) => {
+            expect(error).toBeFalsy();
+            expect(data).toEqual({foo: 'bar'});
+            done();
+        });
+    });
+
+    test('#addProtocol - getArrayBuffer', done => {
+        maplibre.addProtocol('custom', (reqParam, callback) => {
+            callback(null, new ArrayBuffer(1));
+            return {cancel: () => {}};
+        });
+        getArrayBuffer({url: 'custom://test/url/getArrayBuffer'}, async (error, data) => {
+            expect(error).toBeFalsy();
+            expect(data).toBeInstanceOf(ArrayBuffer);
+            done();
+        });
+    });
+
+    test('#addProtocol - error', () => {
+        maplibre.addProtocol('custom', (reqParam, callback) => {
+            callback(new Error('error'));
+            return {cancel: () => { }};
+        });
+
+        getJSON({url: 'custom://test/url/json'}, (error) => {
+            expect(error).toBeTruthy();
+        });
+    });
+
+    test('#addProtocol - Cancel request', () => {
+        let cancelCalled = false;
+        maplibre.addProtocol('custom', () => {
+            return {cancel: () => {
+                cancelCalled = true;
+            }};
+        });
+        const request = getJSON({url: 'custom://test/url/json'}, () => { });
+        request.cancel();
+        expect(cancelCalled).toBeTruthy();
     });
 });
