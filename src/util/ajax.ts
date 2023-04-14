@@ -175,7 +175,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
     const xhr: XMLHttpRequest = new XMLHttpRequest();
 
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
-    if (requestParameters.type === 'arrayBuffer') {
+    if (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') {
         xhr.responseType = 'arraybuffer';
     }
     for (const k in requestParameters.headers) {
