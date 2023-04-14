@@ -1,11 +1,10 @@
 import type {Cancelable} from '../types/cancelable';
 import type {RequestParameters, ExpiryData} from './ajax';
-import type {Callback} from '../types/callback';
 
-import {arrayBufferToImageBitmap, arrayBufferToImage} from './util';
-import {getArrayBuffer} from './ajax';
+import {makeRequest} from './ajax';
 import webpSupported from './webp_supported';
 import config from './config';
+import {extend} from './util';
 
 export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
 
@@ -130,47 +129,28 @@ namespace ImageRequest {
         return queued;
     };
 
-    const arrayBufferToCanvasImageSource = (data: ArrayBuffer, callback: Callback<CanvasImageSource>) => {
-        const imageBitmapSupported = typeof createImageBitmap === 'function';
-        if (imageBitmapSupported) {
-            arrayBufferToImageBitmap(data, callback);
-        } else {
-            arrayBufferToImage(data, callback);
-        }
-    };
-
     const doImageRequest = (itemInQueue: ImageRequestQueueItem): Cancelable => {
-
         const {requestParameters, callback} = itemInQueue;
-
         // request the image with XHR to work around caching issues
         // see https://github.com/mapbox/mapbox-gl-js/issues/1470
-        return getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
-            if (err) {
-                callback(err);
-            } else if (data instanceof HTMLImageElement || data instanceof ImageBitmap) {
-                // User consuming maplibregl.addProtocol API can directly return HTMLImageElement/ImageBitmap.
-                callback(null, data, {cacheControl, expires});
-            } else if (data) {
-                const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
-                    if (imgErr != null) {
-                        callback(imgErr);
-                    } else if (imgResult != null) {
-                        callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
-                    }
-                };
-                arrayBufferToCanvasImageSource(data, decoratedCallback);
-            }
-
-            if (!itemInQueue.cancelled) {
-                itemInQueue.completed = true;
-                currentParallelImageRequests--;
-
-                if (!isThrottled()) {
-                    processQueue();
+        return makeRequest(
+            extend(requestParameters, {type: 'image'}),
+            (err?: Error | null, imgResult?: HTMLImageElement | ImageBitmap | null, cacheControl?: string | null, expires?: string | null) => {
+                if (err) {
+                    callback(err);
+                } else if (imgResult != null) {
+                    callback(null, imgResult, {cacheControl, expires});
                 }
-            }
-        });
+
+                if (!itemInQueue.cancelled) {
+                    itemInQueue.completed = true;
+                    currentParallelImageRequests--;
+
+                    if (!isThrottled()) {
+                        processQueue();
+                    }
+                }
+            });
     };
 
     /**

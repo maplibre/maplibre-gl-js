@@ -1,4 +1,4 @@
-import {extend, warnOnce, isWorker} from './util';
+import {extend, warnOnce, isWorker, arrayBufferToImageBitmap, arrayBufferToImage} from './util';
 import config from './config';
 
 import type {Callback} from '../types/callback';
@@ -32,7 +32,7 @@ export type RequestParameters = {
     headers?: any;
     method?: 'GET' | 'POST' | 'PUT';
     body?: string;
-    type?: 'string' | 'json' | 'arrayBuffer';
+    type?: 'string' | 'json' | 'arrayBuffer' | 'image';
     credentials?: 'same-origin' | 'include';
     collectResourceTiming?: boolean;
 };
@@ -151,13 +151,13 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
 
     const finishRequest = (response) => {
         (
-            requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
+            (requestParameters.type === 'arrayBuffer'  || requestParameters.type === 'image') ? response.arrayBuffer() :
                 requestParameters.type === 'json' ? response.json() :
                     response.text()
         ).then(result => {
             if (aborted) return;
             complete = true;
-            callback(null, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
+            onResponse(callback, requestParameters, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
         }).catch(err => {
             if (!aborted) callback(new Error(err.message));
         });
@@ -200,7 +200,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
                     return callback(err);
                 }
             }
-            callback(null, data, xhr.getResponseHeader('Cache-Control'), xhr.getResponseHeader('Expires'));
+            onResponse(callback, requestParameters, data, xhr.getResponseHeader('Cache-Control'), xhr.getResponseHeader('Expires'));
         } else {
             const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
             callback(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
@@ -208,6 +208,27 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
     };
     xhr.send(requestParameters.body);
     return {cancel: () => xhr.abort()};
+}
+
+function onResponse(
+    callback: ResponseCallback<any>,
+    requestParameters: RequestParameters,
+    data?: any | null,
+    cacheControl?: string | null,
+    expires?: string | null) {
+    if (requestParameters.type === 'image') {
+        const decoratedCallback = (error: Error | null, result?: ImageBitmap | HTMLImageElement | null) => {
+            callback(error, result, cacheControl, expires);
+        };
+        const imageBitmapSupported = typeof createImageBitmap === 'function';
+        if (imageBitmapSupported) {
+            arrayBufferToImageBitmap(data, decoratedCallback);
+        } else {
+            arrayBufferToImage(data, decoratedCallback);
+        }
+    } else {
+        callback(null, data, cacheControl, expires);
+    }
 }
 
 export const makeRequest = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {

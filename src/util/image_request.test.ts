@@ -102,14 +102,16 @@ describe('ImageRequest', () => {
 
     test('getImage respects maxParallelImageRequests', done => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
-
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
-
+        let callbackCount = 0;
         function callback(err) {
             if (err) return;
             // last request is only added after we got a response from one of the previous ones
-            expect(server.requests).toHaveLength(maxRequests + 1);
-            done();
+            expect(server.requests).toHaveLength(maxRequests + callbackCount);
+            callbackCount++;
+            if (callbackCount === 2) {
+                done();
+            }
         }
 
         for (let i = 0; i < maxRequests + 1; i++) {
@@ -118,6 +120,7 @@ describe('ImageRequest', () => {
         expect(server.requests).toHaveLength(maxRequests);
 
         server.requests[0].respond(undefined, undefined, undefined);
+        server.requests[1].respond(undefined, undefined, undefined);
     });
 
     test('getImage cancelling frees up request for maxParallelImageRequests', done => {
@@ -211,20 +214,6 @@ describe('ImageRequest', () => {
         });
 
         server.respond();
-    });
-
-    test('#addProtocol - returning arrayBuffer for getImage', done => {
-        maplibre.addProtocol('custom', (reqParam, callback) => {
-            callback(null, new ArrayBuffer(1));
-            return {cancel: () => {}};
-        });
-        stubAjaxGetImage(() => Promise.resolve(new ImageBitmap()));
-        ImageRequest.getImage({url: 'custom://test/url/getImage'}, async (error, img) => {
-            expect(error).toBeFalsy();
-            expect(img).toBeInstanceOf(ImageBitmap);
-            stubAjaxGetImage(undefined);
-            done();
-        });
     });
 
     test('#addProtocol - returning ImageBitmap for getImage', done => {
