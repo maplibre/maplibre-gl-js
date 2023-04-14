@@ -17,7 +17,7 @@ describe('maplibre', () => {
         const protocolName = 'custom';
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
 
-        maplibre.addProtocol(protocolName, (reqParam, callback) => { return {cancel: () => { }}; });
+        maplibre.addProtocol(protocolName, () => { return {cancel: () => { }}; });
         expect(Object.keys(config.REGISTERED_PROTOCOLS)[0]).toBe(protocolName);
     });
 
@@ -25,7 +25,7 @@ describe('maplibre', () => {
         const protocolName = 'custom';
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
 
-        maplibre.addProtocol(protocolName, (reqParam, callback) => { return {cancel: () => { }}; });
+        maplibre.addProtocol(protocolName, () => { return {cancel: () => { }}; });
         expect(Object.keys(config.REGISTERED_PROTOCOLS)[0]).toBe(protocolName);
 
         maplibre.removeProtocol(protocolName);

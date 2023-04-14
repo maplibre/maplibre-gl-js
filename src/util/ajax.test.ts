@@ -8,7 +8,6 @@ import maplibre from '../index';
 import config from '../util/config';
 
 import {fakeServer, FakeServer} from 'nise';
-import { error } from 'console';
 
 function readAsText(blob) {
     return new Promise((resolve, reject) => {
