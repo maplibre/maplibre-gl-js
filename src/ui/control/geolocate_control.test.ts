@@ -78,6 +78,21 @@ describe('GeolocateControl with no options', () => {
         geolocation.sendError({code: 2, message: 'error message'});
     });
 
+    test('does not throw if removed quickly', done => {
+        (checkGeolocationSupport as any as jest.SpyInstance).mockReset()
+            .mockImplementationOnce((cb) => {
+                return Promise.resolve(true)
+                    .then(result => {
+                        expect(() => cb(result)).not.toThrow();
+                    })
+                    .finally(done);
+            });
+
+        const geolocate = new GeolocateControl(undefined);
+        map.addControl(geolocate);
+        map.removeControl(geolocate);
+    });
+
     test('outofmaxbounds event in active lock state', done => {
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
