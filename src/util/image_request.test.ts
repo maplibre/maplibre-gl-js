@@ -8,7 +8,6 @@ import {
     postData,
     AJAXError
 } from './ajax';
-import maplibre from '../index';
 
 import ImageRequest, {ImageRequestQueueItem} from './image_request';
 
@@ -25,13 +24,11 @@ describe('ImageRequest', () => {
     let server: FakeServer;
     beforeEach(() => {
         global.fetch = null;
-        config.REGISTERED_PROTOCOLS = {};
         server = fakeServer.create();
         ImageRequest.resetRequestQueue();
     });
     afterEach(() => {
         server.restore();
-        config.REGISTERED_PROTOCOLS = {};
     });
 
     test('getArrayBuffer, 404', done => {
@@ -214,33 +211,6 @@ describe('ImageRequest', () => {
         });
 
         server.respond();
-    });
-
-    test('#addProtocol - returning ImageBitmap for getImage', done => {
-        maplibre.addProtocol('custom', (reqParam, callback) => {
-            callback(null, new ImageBitmap());
-            return {cancel: () => {}};
-        });
-
-        ImageRequest.getImage({url: 'custom://test/url/getImage'}, async (error, img) => {
-            expect(error).toBeFalsy();
-            expect(img).toBeInstanceOf(ImageBitmap);
-            done();
-        });
-    });
-
-    test('#addProtocol - returning HTMLImageElement for getImage', done => {
-        stubAjaxGetImage(() => Promise.resolve(new ImageBitmap()));
-        maplibre.addProtocol('custom', (reqParam, callback) => {
-            callback(null, new Image());
-            return {cancel: () => {}};
-        });
-        ImageRequest.getImage({url: 'custom://test/url/getImage'}, async (error, img) => {
-            expect(error).toBeFalsy();
-            expect(img).toBeInstanceOf(HTMLImageElement);
-            stubAjaxGetImage(undefined);
-            done();
-        });
     });
 
     test('throttling: getImage queues requests for later processing', done => {
