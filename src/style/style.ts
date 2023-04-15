@@ -229,7 +229,13 @@ class Style extends Evented {
                     const allComplete = results.every((elem) => elem);
                     if (allComplete) {
                         for (const id in self.sourceCaches) {
-                            self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
+                            const sourceType = self.sourceCaches[id].getSource().type;
+                            if (sourceType === 'vector' || sourceType === 'geojson') {
+                                // Non-vector sources don't have any symbols buckets to reload when the RTL text plugin loads
+                                // They also load more quickly, so they're more likely to have already displaying tiles
+                                // that would be unnecessarily booted by the plugin load event
+                                self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
+                            }
                         }
                     }
                 }
