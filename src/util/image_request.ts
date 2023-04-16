@@ -1,8 +1,8 @@
 import type {Cancelable} from '../types/cancelable';
-import {RequestParameters, ExpiryData, makeRequest} from './ajax';
+import {RequestParameters, ExpiryData, makeRequest, sameOrigin} from './ajax';
 import type {Callback} from '../types/callback';
 
-import {arrayBufferToImageBitmap, arrayBufferToImage, extend} from './util';
+import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker} from './util';
 import webpSupported from './webp_supported';
 import config from './config';
 
@@ -12,6 +12,7 @@ type ImageQueueThrottleControlCallback = () => boolean;
 
 export type ImageRequestQueueItem  = Cancelable & {
     requestParameters: RequestParameters;
+    supportImageRefresh: boolean;
     callback: GetImageCallback;
     cancelled: boolean;
     completed: boolean;
@@ -98,11 +99,13 @@ namespace ImageRequest {
      * Request to load an image.
      * @param {RequestParameters} requestParameters Request parameters.
      * @param {GetImageCallback} callback Callback to issue when the request completes.
+     * @param {supportImageRefresh} supportImageRefresh true, if the image request need to support refresh based on cache headers.
      * @returns {Cancelable} Cancelable request.
      */
     export const getImage = (
         requestParameters: RequestParameters,
-        callback: GetImageCallback
+        callback: GetImageCallback,
+        supportImageRefresh: boolean = true
     ): ImageRequestQueueItem => {
         if (webpSupported.supported) {
             if (!requestParameters.headers) {
@@ -113,6 +116,7 @@ namespace ImageRequest {
 
         const queued:ImageRequestQueueItem = {
             requestParameters,
+            supportImageRefresh,
             callback,
             cancelled: false,
             completed: false,
@@ -140,38 +144,54 @@ namespace ImageRequest {
 
     const doImageRequest = (itemInQueue: ImageRequestQueueItem): Cancelable => {
 
-        const {requestParameters, callback} = itemInQueue;
+        const {requestParameters, supportImageRefresh, callback} = itemInQueue;
 
         // request the image with XHR to work around caching issues
         // see https://github.com/mapbox/mapbox-gl-js/issues/1470
-        return makeRequest(
-            extend(requestParameters, {type: 'image'}),
-            (err?: Error | null, data?: HTMLImageElement | ImageBitmap | ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
-                if (err) {
-                    callback(err);
-                } else if (data instanceof HTMLImageElement || data instanceof ImageBitmap) {
-                    // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
-                    callback(null, data);
-                } else if (data) {
-                    const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
-                        if (imgErr != null) {
-                            callback(imgErr);
-                        } else if (imgResult != null) {
-                            callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
-                        }
-                    };
-                    arrayBufferToCanvasImageSource(data, decoratedCallback);
-                }
-
-                if (!itemInQueue.cancelled) {
-                    itemInQueue.completed = true;
-                    currentParallelImageRequests--;
-
-                    if (!isThrottled()) {
-                        processQueue();
-                    }
-                }
+        const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
+        if (!isWorker() && !config.REGISTERED_PROTOCOLS[protocol] && supportImageRefresh === false) {
+            return getImageUsingHtmlImage(requestParameters, (err?: Error | null, image?: HTMLImageElement) => {
+                onImageResponse(itemInQueue, callback, err, image);
             });
+        } else {
+            return makeRequest(
+                extend(requestParameters, {type: 'image'}),
+                (err?: Error | null, data?: HTMLImageElement | ImageBitmap | ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
+                    onImageResponse(itemInQueue, callback, err, data, cacheControl, expires);
+                });
+        }
+    };
+
+    const onImageResponse = (
+        itemInQueue: ImageRequestQueueItem,
+        callback:GetImageCallback,
+        err?: Error | null,
+        data?: HTMLImageElement | ImageBitmap | ArrayBuffer | null,
+        cacheControl?: string | null,
+        expires?: string | null): void => {
+        if (err) {
+            callback(err);
+        } else if (data instanceof HTMLImageElement || data instanceof ImageBitmap) {
+            // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
+            callback(null, data);
+        } else if (data) {
+            const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
+                if (imgErr != null) {
+                    callback(imgErr);
+                } else if (imgResult != null) {
+                    callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
+                }
+            };
+            arrayBufferToCanvasImageSource(data, decoratedCallback);
+        }
+        if (!itemInQueue.cancelled) {
+            itemInQueue.completed = true;
+            currentParallelImageRequests--;
+
+            if (!isThrottled()) {
+                processQueue();
+            }
+        }
     };
 
     /**
@@ -217,6 +237,37 @@ namespace ImageRequest {
         }
 
         return imageRequestQueue.length;
+    };
+
+    const getImageUsingHtmlImage = (requestParameters: RequestParameters, callback: GetImageCallback): Cancelable  => {
+        const image = new Image();
+        const url = requestParameters.url;
+        let requestCancelled = false;
+        const credentials = requestParameters.credentials;
+        if (credentials && credentials === 'include') {
+            image.crossOrigin = 'use-credentials';
+        } else if ((credentials && credentials === 'same-origin') || !sameOrigin(url)) {
+            image.crossOrigin = 'anonymous';
+        }
+
+        image.onload = () => {
+            callback(null, image);
+            image.onerror = image.onload = null;
+        };
+        image.onerror = () => {
+            if (!requestCancelled) {
+                callback(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
+            }
+            image.onerror = image.onload = null;
+        };
+        image.src = url;
+        return {
+            cancel: () => {
+                requestCancelled = true;
+                // Set src to '' to actually cancel the request
+                image.src = '';
+            }
+        };
     };
 }
 
