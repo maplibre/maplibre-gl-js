@@ -43,6 +43,11 @@ type TestData = {
     pixelRatio: number;
     recycleMap: boolean;
     allowed: number;
+    /**
+     * Perceptual color difference threshold, number between 0 and 1, smaller is more sensitive
+     * @default 0.1285
+     */
+    threshold: number;
     ok: boolean;
     difference: number;
     timeout: number;
@@ -182,7 +187,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 
         const diff = pixelmatch(
             actualImg.data, expectedImg.data, diffImg.data,
-            width, height, {threshold: 0.1285}) / (width * height);
+            width, height, {threshold: testData.threshold}) / (width * height);
 
         if (diff < minDiff) {
             minDiff = diff;
@@ -260,7 +265,8 @@ function getTestStyles(options: RenderOptions, directory: string): StyleWithTest
                 height: 512,
                 pixelRatio: 1,
                 recycleMap: options.recycleMap || false,
-                allowed: 0.00025
+                allowed: 0.00025,
+                threshold: 0.1285,
             }, style.metadata.test);
 
             return style;
