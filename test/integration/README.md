@@ -3,12 +3,13 @@ These integration tests verify the correctness and consistency of [maplibre-gl-j
 
 ## Organization
 
-Tests are contained in a directory tree, generally organized by [style specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/)
+Tests are contained in a directory tree, generally organized by [style specification](https://maplibre.org/maplibre-style-spec/)
 property: `background-color`, `line-width`, etc., with a second level of directories below that for individual tests. For example, the test for specifying a literal `circle-radius` value lives in [`test/integration/render/tests/circle-radius/literal/`](./render/tests/circle-radius/literal).
 
 Within a leaf directory is a `style.json` file (e.g. [`circle-radius/literal/style.json`](./render/tests/circle-radius/literal/style.json)), which contains the minimal style needed for the given test case. The style can specify the map size, center, bearing, and pitch, and additional test metadata (e.g. output image dimensions).
 
 The expected output for a given test case is in `expected.png`, e.g. [`circle-radius/literal/expected.png`](./render/tests/circle-radius/literal/expected.png).
+There can be multiple files with the `expected` prefix since the output can vary slightly with each platform.
 
 Supporting files -- glyphs, sprites, and tiles -- live in their own respective subdirectories at the top level. The test
 harness sets up the environment such that requests for these resources are directed to the correct location.
@@ -95,16 +96,26 @@ $ npm run test-render circle-radius/literal -- --report
 ```
 
 ### Updating results of render test results
+
+Note that the CI is running the render tests. If they fail, the `report.html` is uploaded as an artifact. This file can be download, opened in the browser and with right click - save the image the actual CI render test result can be stored as the expected image.
+
+To run this manually you can use the following commands
 On Linux:
+```
+xvfb-run -a UPDATE=true npm run test-render
+```
+On Mac:
 ```
 UPDATE=true npm run test-render
 ```
-Or on Windows PowerShell:
+Or on Windows with PowerShell:
 ```
 $env:UPDATE=$true; npm run test-render
 ```
 
-## Notes on the query integration tests
+
+
+#### Notes on the query integration tests
 
 In test/integration/lib/query-browser-jest.test.ts a web server is automatically started to expose static assets from the integration folder. In order to start a similar server manually, run:
 

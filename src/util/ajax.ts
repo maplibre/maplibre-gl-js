@@ -32,7 +32,7 @@ export type RequestParameters = {
     headers?: any;
     method?: 'GET' | 'POST' | 'PUT';
     body?: string;
-    type?: 'string' | 'json' | 'arrayBuffer';
+    type?: 'string' | 'json' | 'arrayBuffer' | 'image';
     credentials?: 'same-origin' | 'include';
     collectResourceTiming?: boolean;
 };
@@ -151,7 +151,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
 
     const finishRequest = (response) => {
         (
-            requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
+            (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
                 requestParameters.type === 'json' ? response.json() :
                     response.text()
         ).then(result => {
@@ -175,7 +175,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
     const xhr: XMLHttpRequest = new XMLHttpRequest();
 
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
-    if (requestParameters.type === 'arrayBuffer') {
+    if (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') {
         xhr.responseType = 'arraybuffer';
     }
     for (const k in requestParameters.headers) {
