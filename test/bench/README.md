@@ -6,11 +6,11 @@ Benchmarks help us catch performance regressions and improve performance.
 
 Start the benchmark server with `npm run start-bench`.
 
-To run all benchmarks, open [the benchmark page, `http://localhost:9966/test/bench/versions`](http://localhost:9966/test/bench/versions).
+To run all benchmarks, open [the benchmark page, `http://localhost:9966/test/bench/versions/index.html`](http://localhost:9966/test/bench/versions/index.html).
 
-To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/versions#Layout`](http://localhost:9966/test/bench/versions#Layout).
+To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/versions/index.html#Layout`](http://localhost:9966/test/bench/versions/index.html#Layout).
 
-By default, the benchmark page will compare the local branch against `main` and the latest release. To change this, include one or more `compare` query parameters in the URL: E.g., [localhost:9966/test/bench/versions?compare=main](http://localhost:9966/test/bench/versions?compare=main) or [localhost:9966/test/bench/versions?compare=main#Layout](http://localhost:9966/test/bench/versions?compare=main#Layout) to compare only to main, or [localhost:9966/test/bench/versions?compare=v1.13.1](http://localhost:9966/test/bench/versions?compare=v1.13.1) to compare to `v1.13.1` (but not `main`).  Versions available for comparison are the ones stored in the `gh-pages` branch, see [here](https://github.com/maplibre/maplibre-gl-js/tree/gh-pages/benchmarks).
+By default, the benchmark page will compare the local branch against `main` and the latest release. To change this, include one or more `compare` query parameters in the URL: E.g., [localhost:9966/test/bench/versions/index.html?compare=main](http://localhost:9966/test/bench/versions/index.html?compare=main) or [localhost:9966/test/bench/versions/index.html?compare=main#Layout](http://localhost:9966/test/bench/versions/index.html?compare=main#Layout) to compare only to main, or [localhost:9966/test/bench/versions/index.html?compare=v1.13.1](http://localhost:9966/test/bench/versions/index.html?compare=v1.13.1) to compare to `v1.13.1` (but not `main`).  Versions available for comparison are the ones stored in the `gh-pages` branch, see [here](https://github.com/maplibre/maplibre-gl-js/tree/gh-pages/benchmarks).
 
 To run all benchmarks in headless chromium use `npm run benchmark`. As with the browser you can include one or more `--compare` arguments to change the default comparison, e.g. `npm run benchmark -- --compare main`. You can also run only specific benchmarks by passing their names as positional arguments, e.g. `npm run benchmark -- Layout Paint`.
 
