@@ -1,5 +1,6 @@
 import fs from 'fs';
-import glob from 'glob';
+import {globSync} from 'glob';
+import path from 'path';
 
 console.log('Generating shaders');
 
@@ -11,22 +12,21 @@ console.log('Generating shaders');
  * It will also create a simple package.json file to allow importing this package in webpack
  */
 
-glob('./src/shaders/*.glsl', null, (_err, files) => {
-    for (const file of files) {
-        const code = fs.readFileSync(file, 'utf8');
-        const content = glslToTs(code);
-        const fileName = `./src/shaders/${file.split('/').splice(-1)}.g.ts`;
-        fs.writeFileSync(fileName, content);
-    }
-    console.log(`Finished converting ${files.length} glsl files`);
-});
+const files = globSync('./src/shaders/*.glsl');
+for (const file of files) {
+    const code = fs.readFileSync(file, 'utf8');
+    const content = glslToTs(code);
+    const fileName = path.join('.', 'src', 'shaders', `${file.split(path.sep).splice(-1)}.g.ts`);
+    fs.writeFileSync(fileName, content);
+}
+console.log(`Finished converting ${files.length} glsl files`);
 
 function glslToTs(code: string): string {
     code = code
         .trim() // strip whitespace at the start/end
         .replace(/\s*\/\/[^\n]*\n/g, '\n') // strip double-slash comments
         .replace(/\n+/g, '\n') // collapse multi line breaks
-        .replace(/\n\s+/g, '\n') // strip identation
+        .replace(/\n\s+/g, '\n') // strip indentation
         .replace(/\s?([+-\/*=,])\s?/g, '$1') // strip whitespace around operators
         .replace(/([;\(\),\{\}])\n(?=[^#])/g, '$1'); // strip more line breaks
 

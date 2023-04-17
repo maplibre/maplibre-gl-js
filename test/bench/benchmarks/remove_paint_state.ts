@@ -1,5 +1,5 @@
 
-import emptystyle from '../data/empty.json';
+import emptystyle from '../data/empty.json' assert {type: 'json'};
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 
@@ -28,7 +28,7 @@ class RemovePaintState extends Benchmark {
     }
 
     async setup() {
-        const response = await fetch('/bench/data/naturalearth-land.json');
+        const response = await fetch('/test/bench/data/naturalearth-land.json');
         const data = await response.json();
         this.numFeatures = data.features.length;
         const style = Object.assign({}, emptystyle, {

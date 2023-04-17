@@ -1,4 +1,4 @@
-import Color from '../style-spec/util/color';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 import type Context from '../gl/context';
 import {mat4, vec2, vec3, vec4} from 'gl-matrix';

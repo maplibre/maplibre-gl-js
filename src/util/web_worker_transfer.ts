@@ -1,17 +1,15 @@
 import TransferableGridIndex from './transferable_grid_index';
-import Color from '../style-spec/util/color';
-import {StylePropertyFunction, StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '../style-spec/expression';
-import CompoundExpression from '../style-spec/expression/compound_expression';
-import expressions from '../style-spec/expression/definitions';
-import ResolvedImage from '../style-spec/expression/types/resolved_image';
+import {Color, CompoundExpression, expressions, ResolvedImage, StylePropertyFunction,
+    StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
+
 import {AJAXError} from './ajax';
 
 import type {Transferable} from '../types/transferable';
 import {isImageBitmap} from './util';
 
-type SerializedObject = {
-    [_: string]: Serialized;
-}; // eslint-disable-line
+type SerializedObject<S extends Serialized = any> = {
+    [_: string]: S;
+};
 
 export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Blob | Array<Serialized> | SerializedObject;
 

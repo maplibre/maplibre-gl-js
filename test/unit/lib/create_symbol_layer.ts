@@ -1,7 +1,6 @@
 import SymbolBucket from '../../../src/data/bucket/symbol_bucket';
 import SymbolStyleLayer from '../../../src/style/style_layer/symbol_style_layer';
-import featureFilter from '../../../src/style-spec/feature_filter';
-import {LayerSpecification} from '../../../src/style-spec/types.g';
+import {featureFilter, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import EvaluationParameters from '../../../src/style/evaluation_parameters';
 import {BucketParameters} from '../../../src/data/bucket';
 

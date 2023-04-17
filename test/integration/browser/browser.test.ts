@@ -1,13 +1,15 @@
 import {Browser, BrowserContext, BrowserType, chromium, Page} from 'playwright';
-import address from 'address';
 import st from 'st';
 import http from 'http';
+import type {Server} from 'http';
 import fs from 'fs';
 import path from 'path';
+import pixelmatch from 'pixelmatch';
+import {PNG} from 'pngjs';
+import type {AddressInfo} from 'net';
 
-const ip = address.ip();
-const port = 9968;
-const basePath = `http://${ip}:${port}`;
+const testWidth = 800;
+const testHeight = 600;
 
 async function getMapCanvas(url, page: Page) {
 
@@ -26,20 +28,19 @@ async function getMapCanvas(url, page: Page) {
 }
 
 async function newTest(impl: BrowserType) {
-    browser = await impl.launch({
-        headless: false,
-    });
+    browser = await impl.launch();
 
     context = await browser.newContext({
-        viewport: {width: 800, height: 600},
+        viewport: {width: testWidth, height: testHeight},
         deviceScaleFactor: 2,
     });
 
     page = await context.newPage();
-    await getMapCanvas(`${basePath}/test/integration/browser/fixtures/land.html`, page);
+    const port = (server.address() as AddressInfo).port;
+    await getMapCanvas(`http://localhost:${port}/test/integration/browser/fixtures/land.html`, page);
 }
 
-let server = null;
+let server: Server;
 let browser: Browser;
 let context: BrowserContext;
 let page: Page;
@@ -48,12 +49,11 @@ let map: any;
 describe('browser tests', () => {
 
     // start server
-    beforeAll((done) => {
+    beforeAll(async () => {
         server = http.createServer(
             st(process.cwd())
-        ).listen(port, ip, () => {
-            done();
-        });
+        );
+        await new Promise<void>((resolve) => server.listen(resolve));
     });
 
     [chromium].forEach((impl) => {
@@ -63,10 +63,10 @@ describe('browser tests', () => {
             await newTest(impl);
 
             const canvas = await page.$('.maplibregl-canvas');
-            const canvasBB = await canvas.boundingBox();
+            const canvasBB = await canvas?.boundingBox();
 
             // Perform drag action, wait a bit the end to avoid the momentum mode.
-            await page.mouse.move(canvasBB.x, canvasBB.y);
+            await page.mouse.move(canvasBB!.x, canvasBB!.y);
             await page.mouse.down();
             await page.mouse.move(100, 0);
             await new Promise(r => setTimeout(r, 200));
@@ -78,6 +78,33 @@ describe('browser tests', () => {
 
             expect(center.lng).toBeCloseTo(-35.15625, 4);
             expect(center.lat).toBeCloseTo(0, 7);
+        }, 20000);
+
+        test(`${impl.name()} - resizeing view port`, async () => {
+            await newTest(impl);
+
+            await page.setViewportSize({width: 400, height: 400});
+
+            await new Promise(r => setTimeout(r, 200));
+
+            const canvas = await page.$('.maplibregl-canvas');
+            const canvasBB = await canvas?.boundingBox();
+            expect(canvasBB?.width).toBeCloseTo(400);
+            expect(canvasBB?.height).toBeCloseTo(400);
+        }, 20000);
+
+        test(`${impl.name()} - resizeing div`, async () => {
+            await newTest(impl);
+
+            await page.evaluate(() => {
+                document.getElementById('map')!.style.width = '200px';
+                document.getElementById('map')!.style.height = '200px';
+            });
+
+            const canvas = await page.$('.maplibregl-canvas');
+            const canvasBB = await canvas?.boundingBox();
+            expect(canvasBB!.width).toBeCloseTo(200);
+            expect(canvasBB!.height).toBeCloseTo(200);
         }, 20000);
 
         test(`${impl.name()} Zoom: Double click at the center`, async () => {
@@ -167,17 +194,21 @@ describe('browser tests', () => {
                 });
             });
 
-            const pageWithImage = `<html><head></head><body><img src="${image}" width="800" height="600" /></body></html>`.replace(/\s/g, '');
+            const actualBuff = Buffer.from((image as string).replace(/data:.*;base64,/, ''), 'base64');
+            const actualPng = new PNG({width: testWidth, height: testHeight});
+            actualPng.parse(actualBuff);
 
-            function getFixture(platform: string): string {
-                return fs.readFileSync(path.join(__dirname, `fixtures/cjk-expected-base64-image/${platform}.html`), 'utf8').replace(/\s/g, '');
+            const expectedPlatforms = ['ubuntu-runner', 'macos-runner', 'macos-local'];
+            let minDiff = Infinity;
+            for (const expected of expectedPlatforms) {
+                const diff = compareByPixelmatch(actualPng, expected, testWidth, testHeight);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                }
             }
 
-            expect(
-                pageWithImage === getFixture('ubuntu-runner') ||
-                pageWithImage === getFixture('macos-runner') ||
-                pageWithImage === getFixture('macos-local')
-            ).toBeTruthy();
+            // At least one platform should be identical
+            expect(minDiff).toBe(0);
 
         }, 20000);
     });
@@ -191,4 +222,24 @@ describe('browser tests', () => {
             server.close();
         }
     });
+
+    function compareByPixelmatch(actualPng:PNG, platform: string, width:number, height:number): number {
+        const platformFixtureBase64 = fs.readFileSync(
+            path.join(__dirname, `fixtures/cjk-expected-base64-image/${platform}-base64.txt`), 'utf8')
+            .replace(/\s/g, '')
+            .replace(/data:.*;base64,/, '');
+
+        const expectedBuff = Buffer.from(platformFixtureBase64, 'base64');
+
+        const expectedPng = new PNG({width: testWidth, height: testHeight});
+        expectedPng.parse(expectedBuff);
+
+        const diffImg = new PNG({width, height});
+
+        const diff = pixelmatch(
+            actualPng.data, expectedPng.data, diffImg.data,
+            width, height, {threshold: 0}) / (width * height);
+
+        return diff;
+    }
 });

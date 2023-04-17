@@ -11,11 +11,10 @@ import {extend} from '../../util/util';
 import type Painter from '../painter';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type Context from '../../gl/context';
-import type Color from '../../style-spec/util/color';
+import type {Color, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {CrossFaded} from '../../style/properties';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type {OverscaledTileID} from '../../source/tile_id';
-import type ResolvedImage from '../../style-spec/expression/types/resolved_image';
 import {mat4} from 'gl-matrix';
 
 export type BackgroundUniformsType = {

@@ -5,6 +5,7 @@ export type PerformanceMetrics = {
     fullLoadTime: number;
     fps: number;
     percentDroppedFrames: number;
+    totalFrames: number;
 };
 
 export enum PerformanceMarkers {
@@ -16,8 +17,11 @@ export enum PerformanceMarkers {
 let lastFrameTime = null;
 let frameTimes = [];
 
-const minFramerateTarget = 30;
+const minFramerateTarget = 60;
 const frameTimeTarget = 1000 / minFramerateTarget;
+
+const loadTimeKey = 'loadTime';
+const fullLoadTimeKey = 'fullLoadTime';
 
 export const PerformanceUtils = {
     mark(marker: PerformanceMarkers) {
@@ -34,18 +38,19 @@ export const PerformanceUtils = {
     clearMetrics() {
         lastFrameTime = null;
         frameTimes = [];
-        performance.clearMeasures('loadTime');
-        performance.clearMeasures('fullLoadTime');
+        performance.clearMeasures(loadTimeKey);
+        performance.clearMeasures(fullLoadTimeKey);
 
         for (const marker in PerformanceMarkers) {
             performance.clearMarks(PerformanceMarkers[marker]);
         }
     },
+
     getPerformanceMetrics(): PerformanceMetrics {
-        performance.measure('loadTime', PerformanceMarkers.create, PerformanceMarkers.load);
-        performance.measure('fullLoadTime', PerformanceMarkers.create, PerformanceMarkers.fullLoad);
-        const loadTime = performance.getEntriesByName('loadTime')[0].duration;
-        const fullLoadTime = performance.getEntriesByName('fullLoadTime')[0].duration;
+        performance.measure(loadTimeKey, PerformanceMarkers.create, PerformanceMarkers.load);
+        performance.measure(fullLoadTimeKey, PerformanceMarkers.create, PerformanceMarkers.fullLoad);
+        const loadTime = performance.getEntriesByName(loadTimeKey)[0].duration;
+        const fullLoadTime = performance.getEntriesByName(fullLoadTimeKey)[0].duration;
         const totalFrames = frameTimes.length;
 
         const avgFrameTime = frameTimes.reduce((prev, curr) => prev + curr, 0) / totalFrames / 1000;
@@ -63,7 +68,8 @@ export const PerformanceUtils = {
             loadTime,
             fullLoadTime,
             fps,
-            percentDroppedFrames
+            percentDroppedFrames,
+            totalFrames
         };
     }
 };

@@ -1,7 +1,5 @@
-import UnitBezier from '@mapbox/unitbezier';
-
 import Point from '@mapbox/point-geometry';
-
+import UnitBezier from '@mapbox/unitbezier';
 import type {Callback} from '../types/callback';
 
 /**
@@ -256,8 +254,31 @@ export function filterObject(input: any, iterator: Function, context?: any): any
     return output;
 }
 
-import deepEqual from '../style-spec/util/deep_equal';
-export {deepEqual};
+/**
+ * Deeply compares two object literals.
+ * @param a first object literal to be compared
+ * @param b second object literal to be compared
+ * @returns true if the two object literals are deeply equal, false otherwise
+ */
+export function deepEqual(a?: unknown | null, b?: unknown | null): boolean {
+    if (Array.isArray(a)) {
+        if (!Array.isArray(b) || a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+            if (!deepEqual(a[i], b[i])) return false;
+        }
+        return true;
+    }
+    if (typeof a === 'object' && a !== null && b !== null) {
+        if (!(typeof b === 'object')) return false;
+        const keys = Object.keys(a);
+        if (keys.length !== Object.keys(b).length) return false;
+        for (const key in a) {
+            if (!deepEqual(a[key], b[key])) return false;
+        }
+        return true;
+    }
+    return a === b;
+}
 
 /**
  * Deeply clones two objects.
@@ -311,6 +332,38 @@ export function warnOnce(message: string): void {
 // http://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
 export function isCounterClockwise(a: Point, b: Point, c: Point): boolean {
     return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
+}
+
+/**
+ * For two lines a and b in 2d space, defined by any two points along the lines,
+ * find the intersection point, or return null if the lines are parallel
+ *
+ * @param a1 First point on line a
+ * @param a2 Second point on line a
+ * @param b1 First point on line b
+ * @param b2 Second point on line b
+ *
+ * @returns the intersection point of the two lines or null if they are parallel
+ */
+export function findLineIntersection(a1: Point, a2: Point, b1: Point, b2: Point): Point | null {
+    const aDeltaY = a2.y - a1.y;
+    const aDeltaX = a2.x - a1.x;
+    const bDeltaY = b2.y - b1.y;
+    const bDeltaX = b2.x - b1.x;
+
+    const denominator = (bDeltaY * aDeltaX) - (bDeltaX * aDeltaY);
+
+    if (denominator === 0) {
+        // Lines are parallel
+        return null;
+    }
+
+    const originDeltaY = a1.y - b1.y;
+    const originDeltaX = a1.x - b1.x;
+    const aInterpolation = (bDeltaX * originDeltaY - bDeltaY * originDeltaX) / denominator;
+
+    // Find intersection by projecting out from origin of first segment
+    return new Point(a1.x + (aInterpolation * aDeltaX), a1.y + (aInterpolation * aDeltaY));
 }
 
 /**
@@ -479,4 +532,51 @@ export function b64DecodeUnicode(str: string) {
 
 export function isImageBitmap(image: any): image is ImageBitmap {
     return typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap;
+}
+
+/**
+ * Converts an ArrayBuffer to an ImageBitmap.
+ *
+ * Used mostly for testing purposes only, because mocking libs don't know how to work with ArrayBuffers, but work
+ * perfectly fine with ImageBitmaps. Might also be used for environments (other than testing) not supporting
+ * ArrayBuffers.
+ *
+ * @param data {ArrayBuffer} Data to convert
+ * @param callback A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image bitmap (when no error) as the second
+ */
+export function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) {
+    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
+    createImageBitmap(blob).then((imgBitmap) => {
+        callback(null, imgBitmap);
+    }).catch((e) => {
+        callback(new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`));
+    });
+}
+
+const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=';
+
+/**
+ * Converts an ArrayBuffer to an HTMLImageElement.
+ *
+ * Used mostly for testing purposes only, because mocking libs don't know how to work with ArrayBuffers, but work
+ * perfectly fine with ImageBitmaps. Might also be used for environments (other than testing) not supporting
+ * ArrayBuffers.
+ *
+ * @param data {ArrayBuffer} Data to convert
+ * @param callback A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image element (when no error) as the second
+ */
+export function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | null, image?: HTMLImageElement | null) => void) {
+    const img: HTMLImageElement = new Image();
+    img.onload = () => {
+        callback(null, img);
+        URL.revokeObjectURL(img.src);
+        // prevent image dataURI memory leak in Safari;
+        // but don't free the image immediately because it might be uploaded in the next frame
+        // https://github.com/mapbox/mapbox-gl-js/issues/10226
+        img.onload = null;
+        window.requestAnimationFrame(() => { img.src = transparentPngUrl; });
+    };
+    img.onerror = () => callback(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
+    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
+    img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
 }

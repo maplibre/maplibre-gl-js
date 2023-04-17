@@ -1,6 +1,5 @@
 import {packUint8ToFloat} from '../shaders/encode_attribute';
-import Color from '../style-spec/util/color';
-import {supportsPropertyExpression} from '../style-spec/util/properties';
+import {Color, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {register} from '../util/web_worker_transfer';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties';
 import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types.g';
@@ -24,10 +23,10 @@ import type {
     FeatureState,
     GlobalProperties,
     SourceExpression,
-    CompositeExpression
-} from '../style-spec/expression';
+    CompositeExpression,
+    FormattedSection
+} from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureStates} from '../source/source_state';
-import type {FormattedSection} from '../style-spec/expression/types/formatted';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 export type BinderUniform = {
@@ -47,7 +46,7 @@ function packColor(color: Color): [number, number] {
  *  `Binder` is the interface definition for the strategies for constructing,
  *  uploading, and binding paint property data as GLSL attributes. Most style-
  *  spec properties have a 1:1 relationship to shader attribute/uniforms, but
- *  some require multliple values per feature to be passed to the GPU, and in
+ *  some require multiple values per feature to be passed to the GPU, and in
  *  those cases we bind multiple attributes/uniforms.
  *
  *  It has three implementations, one for each of the three strategies we use:
@@ -66,7 +65,7 @@ function packColor(color: Color): [number, number] {
  *    uniform allows us to cheaply update the value on every frame.
  *
  *  Note that the shader source varies depending on whether we're using a uniform or
- *  attribute. We dynamically compile shaders at runtime to accomodate this.
+ *  attribute. We dynamically compile shaders at runtime to accommodate this.
  *
  * @private
  */

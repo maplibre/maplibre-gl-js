@@ -9,7 +9,7 @@ import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 import type Texture from '../../render/texture';
 import type Framebuffer from '../../gl/framebuffer';
 import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g';
-import type {LayerSpecification} from '../../style-spec/types.g';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 class HeatmapStyleLayer extends StyleLayer {
 

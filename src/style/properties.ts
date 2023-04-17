@@ -1,24 +1,15 @@
 import {clone, extend, easeCubicInOut} from '../util/util';
-import * as interpolate from '../style-spec/util/interpolate';
-import Color from '../style-spec/util/color';
-import {register} from '../util/web_worker_transfer';
-import EvaluationParameters from './evaluation_parameters';
-
-import {CanonicalTileID} from '../source/tile_id';
-import {StylePropertySpecification} from '../style-spec/style-spec';
-import {
-    TransitionSpecification,
-    PropertyValueSpecification
-} from '../style-spec/types.g';
-
-import {
-    normalizePropertyExpression,
+import {interpolateFactory, Color, StylePropertySpecification, normalizePropertyExpression,
     Feature,
     FeatureState,
     StylePropertyExpression,
     SourceExpression,
-    CompositeExpression
-} from '../style-spec/expression';
+    CompositeExpression, TransitionSpecification,
+    PropertyValueSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {register} from '../util/web_worker_transfer';
+import EvaluationParameters from './evaluation_parameters';
+
+import {CanonicalTileID} from '../source/tile_id';
 
 type TimePoint = number;
 
@@ -146,12 +137,12 @@ class TransitionablePropertyValue<T, R> {
     }
 
     transitioned(parameters: TransitionParameters, prior: TransitioningPropertyValue<T, R>): TransitioningPropertyValue<T, R> {
-        return new TransitioningPropertyValue(this.property, this.value, prior, // eslint-disable-line no-use-before-define
+        return new TransitioningPropertyValue(this.property, this.value, prior,
             extend({}, parameters.transition, this.transition), parameters.now);
     }
 
     untransitioned(): TransitioningPropertyValue<T, R> {
-        return new TransitioningPropertyValue(this.property, this.value, null, {}, 0); // eslint-disable-line no-use-before-define
+        return new TransitioningPropertyValue(this.property, this.value, null, {}, 0);
     }
 }
 
@@ -212,7 +203,7 @@ export class Transitionable<Props> {
     }
 
     transitioned(parameters: TransitionParameters, prior: Transitioning<Props>): Transitioning<Props> {
-        const result = new Transitioning(this._properties); // eslint-disable-line no-use-before-define
+        const result = new Transitioning(this._properties);
         for (const property of Object.keys(this._values)) {
             result._values[property] = this._values[property].transitioned(parameters, prior._values[property]);
         }
@@ -220,7 +211,7 @@ export class Transitionable<Props> {
     }
 
     untransitioned(): Transitioning<Props> {
-        const result = new Transitioning(this._properties); // eslint-disable-line no-use-before-define
+        const result = new Transitioning(this._properties);
         for (const property of Object.keys(this._values)) {
             result._values[property] = this._values[property].untransitioned();
         }
@@ -313,7 +304,7 @@ export class Transitioning<Props> {
         canonical?: CanonicalTileID,
         availableImages?: Array<string>
     ): PossiblyEvaluated<Props, any> {
-        const result = new PossiblyEvaluated(this._properties); // eslint-disable-line no-use-before-define
+        const result = new PossiblyEvaluated(this._properties);
         for (const property of Object.keys(this._values)) {
             result._values[property] = this._values[property].possiblyEvaluate(parameters, canonical, availableImages);
         }
@@ -376,7 +367,7 @@ export class Layout<Props> {
         canonical?: CanonicalTileID,
         availableImages?: Array<string>
     ): PossiblyEvaluated<Props, any> {
-        const result = new PossiblyEvaluated(this._properties); // eslint-disable-line no-use-before-define
+        const result = new PossiblyEvaluated(this._properties);
         for (const property of Object.keys(this._values)) {
             result._values[property] = this._values[property].possiblyEvaluate(parameters, canonical, availableImages);
         }
@@ -492,7 +483,7 @@ export class DataConstantProperty<T> implements Property<T, T> {
     }
 
     interpolate(a: T, b: T, t: number): T {
-        const interp: ((a: T, b: T, t: number) => T) = (interpolate as any)[this.specification.type];
+        const interp: any = interpolateFactory(this.specification.type as any);
         if (interp) {
             return interp(a, b, t);
         } else {
@@ -551,7 +542,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, a.parameters);
         }
 
-        const interp: ((a: T, b: T, t: number) => T) = (interpolate as any)[this.specification.type];
+        const interp: any = interpolateFactory(this.specification.type as any);
         if (interp) {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: interp(a.value.value, b.value.value, t)}, a.parameters);
         } else {

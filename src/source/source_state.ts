@@ -1,6 +1,6 @@
 import {extend} from '../util/util';
 import Tile from './tile';
-import type {FeatureState} from '../style-spec/expression';
+import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
 
 export type FeatureStates = {[featureId: string]: FeatureState};
 export type LayerFeatureStates = {[layer: string]: FeatureStates};

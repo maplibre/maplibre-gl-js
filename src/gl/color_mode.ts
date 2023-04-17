@@ -1,4 +1,4 @@
-import Color from '../style-spec/util/color';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 import type {BlendFuncType, ColorMaskType} from './types';
 

@@ -6,7 +6,7 @@ describe('render pool', () => {
     const POOL_SIZE = 3;
 
     function createAndFillPool(): RenderPool {
-        const pool = new RenderPool(new Context(gl(1, 1)), POOL_SIZE, 512);
+        const pool = new RenderPool(new Context(gl(1, 1) as any), POOL_SIZE, 512);
         for (let i = 0; i < POOL_SIZE; i++) {
             pool.useObject(pool.getOrCreateFreeObject());
         }
@@ -14,7 +14,7 @@ describe('render pool', () => {
     }
 
     test('create pool should not be full', () =>  {
-        const pool = new RenderPool(new Context(gl(1, 1)), POOL_SIZE, 512);
+        const pool = new RenderPool(new Context(gl(1, 1) as any), POOL_SIZE, 512);
         expect(pool.isFull()).toBeFalsy();
     });
 

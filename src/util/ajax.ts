@@ -1,43 +1,8 @@
 import {extend, warnOnce, isWorker} from './util';
 import config from './config';
-import {cacheGet, cachePut} from './tile_request_cache';
-import webpSupported from './webp_supported';
 
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
-
-export interface IResourceType {
-    Unknown: keyof this;
-    Style: keyof this;
-    Source: keyof this;
-    Tile: keyof this;
-    Glyphs: keyof this;
-    SpriteImage: keyof this;
-    SpriteJSON: keyof this;
-    Image: keyof this;
-}
-
-/**
- * The type of a resource.
- * @private
- * @readonly
- * @enum {string}
- */
-const ResourceType = {
-    Unknown: 'Unknown',
-    Style: 'Style',
-    Source: 'Source',
-    Tile: 'Tile',
-    Glyphs: 'Glyphs',
-    SpriteImage: 'SpriteImage',
-    SpriteJSON: 'SpriteJSON',
-    Image: 'Image'
-} as IResourceType;
-export {ResourceType};
-
-if (typeof Object.freeze == 'function') {
-    Object.freeze(ResourceType);
-}
 
 /**
  * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
@@ -67,7 +32,7 @@ export type RequestParameters = {
     headers?: any;
     method?: 'GET' | 'POST' | 'PUT';
     body?: string;
-    type?: 'string' | 'json' | 'arrayBuffer';
+    type?: 'string' | 'json' | 'arrayBuffer' | 'image';
     credentials?: 'same-origin' | 'include';
     collectResourceTiming?: boolean;
 };
@@ -144,8 +109,6 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
     let complete = false;
     let aborted = false;
 
-    const cacheIgnoringSearch = false;
-
     if (requestParameters.type === 'json') {
         request.headers.set('Accept', 'application/json');
     }
@@ -170,12 +133,9 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
             // request doesn't have simple cors headers.
         }
 
-        const requestTime = Date.now();
-
         fetch(request).then(response => {
             if (response.ok) {
-                const cacheableResponse = cacheIgnoringSearch ? response.clone() : null;
-                return finishRequest(response, cacheableResponse, requestTime);
+                return finishRequest(response);
 
             } else {
                 return response.blob().then(body => callback(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
@@ -189,21 +149,13 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         });
     };
 
-    const finishRequest = (response, cacheableResponse?, requestTime?) => {
+    const finishRequest = (response) => {
         (
-            requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
+            (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
                 requestParameters.type === 'json' ? response.json() :
                     response.text()
         ).then(result => {
             if (aborted) return;
-            if (cacheableResponse && requestTime) {
-                // The response needs to be inserted into the cache after it has completely loaded.
-                // Until it is fully loaded there is a chance it will be aborted. Aborting while
-                // reading the body can cause the cache insertion to error. We could catch this error
-                // in most browsers but in Firefox it seems to sometimes crash the tab. Adding
-                // it to the cache here avoids that error.
-                cachePut(request, cacheableResponse, requestTime);
-            }
             complete = true;
             callback(null, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
         }).catch(err => {
@@ -211,11 +163,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         });
     };
 
-    if (cacheIgnoringSearch) {
-        cacheGet(request, validateOrFetch);
-    } else {
-        validateOrFetch(null, null);
-    }
+    validateOrFetch(null, null);
 
     return {cancel: () => {
         aborted = true;
@@ -227,7 +175,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
     const xhr: XMLHttpRequest = new XMLHttpRequest();
 
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
-    if (requestParameters.type === 'arrayBuffer') {
+    if (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') {
         xhr.responseType = 'arraybuffer';
     }
     for (const k in requestParameters.headers) {
@@ -313,120 +261,7 @@ function sameOrigin(url) {
     return a.protocol === window.document.location.protocol && a.host === window.document.location.host;
 }
 
-const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=';
-
-function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | null, image?: HTMLImageElement | null) => void) {
-    const img: HTMLImageElement = new Image();
-    img.onload = () => {
-        callback(null, img);
-        URL.revokeObjectURL(img.src);
-        // prevent image dataURI memory leak in Safari;
-        // but don't free the image immediately because it might be uploaded in the next frame
-        // https://github.com/mapbox/mapbox-gl-js/issues/10226
-        img.onload = null;
-        window.requestAnimationFrame(() => { img.src = transparentPngUrl; });
-    };
-    img.onerror = () => callback(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
-    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
-    img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
-}
-
-function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) {
-    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
-    createImageBitmap(blob).then((imgBitmap) => {
-        callback(null, imgBitmap);
-    }).catch((e) => {
-        callback(new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`));
-    });
-}
-
 export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
-
-function arrayBufferToCanvasImageSource(data: ArrayBuffer, callback: Callback<CanvasImageSource>) {
-    const imageBitmapSupported = typeof createImageBitmap === 'function';
-    if (imageBitmapSupported) {
-        arrayBufferToImageBitmap(data, callback);
-    } else {
-        arrayBufferToImage(data, callback);
-    }
-}
-
-let imageQueue, numImageRequests;
-export const resetImageRequestQueue = () => {
-    imageQueue = [];
-    numImageRequests = 0;
-};
-resetImageRequestQueue();
-
-export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
-
-export const getImage = function(
-    requestParameters: RequestParameters,
-    callback: GetImageCallback
-): Cancelable {
-    if (webpSupported.supported) {
-        if (!requestParameters.headers) {
-            requestParameters.headers = {};
-        }
-        requestParameters.headers.accept = 'image/webp,*/*';
-    }
-
-    // limit concurrent image loads to help with raster sources performance on big screens
-    if (numImageRequests >= config.MAX_PARALLEL_IMAGE_REQUESTS) {
-        const queued = {
-            requestParameters,
-            callback,
-            cancelled: false,
-            cancel() { this.cancelled = true; }
-        };
-        imageQueue.push(queued);
-        return queued;
-    }
-    numImageRequests++;
-
-    let advanced = false;
-    const advanceImageRequestQueue = () => {
-        if (advanced) return;
-        advanced = true;
-        numImageRequests--;
-
-        while (imageQueue.length && numImageRequests < config.MAX_PARALLEL_IMAGE_REQUESTS) { // eslint-disable-line
-            const request = imageQueue.shift();
-            const {requestParameters, callback, cancelled} = request;
-            if (!cancelled) {
-                request.cancel = getImage(requestParameters, callback).cancel;
-            }
-        }
-    };
-
-    // request the image with XHR to work around caching issues
-    // see https://github.com/mapbox/mapbox-gl-js/issues/1470
-    const request = getArrayBuffer(requestParameters, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
-
-        advanceImageRequestQueue();
-
-        if (err) {
-            callback(err);
-        } else if (data) {
-            const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
-                if (imgErr != null) {
-                    callback(imgErr);
-                } else if (imgResult != null) {
-                    callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
-                }
-            };
-            arrayBufferToCanvasImageSource(data, decoratedCallback);
-        }
-    });
-
-    return {
-        cancel: () => {
-            request.cancel();
-            advanceImageRequestQueue();
-        }
-    };
-};
-
 export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVideoElement>): Cancelable {
     const video: HTMLVideoElement = window.document.createElement('video');
     video.muted = true;

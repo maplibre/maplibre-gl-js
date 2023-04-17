@@ -16,6 +16,10 @@
     height: 100%;
 }
 
+.maplibregl-ctrl-group button.maplibregl-ctrl-compass {
+    touch-action: none;
+}
+
 .maplibregl-canvas-container.maplibregl-interactive,
 .maplibregl-ctrl-group button.maplibregl-ctrl-compass {
     cursor: grab;
@@ -47,6 +51,11 @@
 .maplibregl-canvas-container.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan,
 .maplibregl-canvas-container.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan .maplibregl-canvas {
     touch-action: none;
+}
+
+.maplibregl-canvas-container.maplibregl-touch-drag-pan.maplibregl-cooperative-gestures,
+.maplibregl-canvas-container.maplibregl-touch-drag-pan.maplibregl-cooperative-gestures .maplibregl-canvas {
+    touch-action: pan-x pan-y;
 }
 
 .maplibregl-ctrl-top-left,
@@ -775,10 +784,7 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
 .maplibregl-cooperative-gesture-screen {
     background: rgba(0 0 0 / 40%);
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -789,6 +795,7 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
     opacity: 0;
     pointer-events: none;
     transition: opacity 1s ease 1s;
+    z-index: 99999;
 }
 
 .maplibregl-cooperative-gesture-screen.maplibregl-show {
@@ -800,7 +807,7 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
     display: none;
 }
 
-@media (hover: none), (max-width: 480px) {
+@media (hover: none), (width <= 480px) {
     .maplibregl-cooperative-gesture-screen .maplibregl-desktop-message {
         display: none;
     }
