@@ -1,5 +1,5 @@
 import type {Cancelable} from '../types/cancelable';
-import {RequestParameters, ExpiryData, makeRequest, sameOrigin} from './ajax';
+import {RequestParameters, ExpiryData, makeRequest, sameOrigin, getProtocolAction} from './ajax';
 import type {Callback} from '../types/callback';
 
 import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker} from './util';
@@ -143,23 +143,29 @@ namespace ImageRequest {
     };
 
     const doImageRequest = (itemInQueue: ImageRequestQueueItem): Cancelable => {
-
         const {requestParameters, supportImageRefresh, callback} = itemInQueue;
+        extend(requestParameters, {type: 'image'});
 
-        // request the image with XHR to work around caching issues
-        // see https://github.com/mapbox/mapbox-gl-js/issues/1470
-        const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
-        if (!isWorker() && !config.REGISTERED_PROTOCOLS[protocol] && supportImageRefresh === false) {
-            return getImageUsingHtmlImage(requestParameters, (err?: Error | null, image?: HTMLImageElement) => {
-                onImageResponse(itemInQueue, callback, err, image);
+        // If refreshExpiredTiles is false, then we can use HTMLImageElement to download raster images.
+        // Fetch/XHR (via MakeRequest API) will be used to download images for following scenarios:
+        // 1. Style image sprite will had a issue with HTMLImageElement as described
+        //    here: https://github.com/mapbox/mapbox-gl-js/issues/1470
+        // 2. If refreshExpiredTiles is true (default), then in order to read the image cache header,
+        //     fetch/XHR request will be required
+        // For any special case handling like use of AddProtocol, worker initiated request, let makeRequest handle it.
+        const canUseHTMLImageElement = supportImageRefresh === false &&
+            !isWorker() &&
+            !getProtocolAction(requestParameters.url);
+
+        const action = canUseHTMLImageElement ? getImageUsingHtmlImage : makeRequest;
+        return action(
+            requestParameters,
+            (err?: Error | null,
+                data?: HTMLImageElement | ImageBitmap | ArrayBuffer | null,
+                cacheControl?: string | null,
+                expires?: string | null) => {
+                onImageResponse(itemInQueue, callback, err, data, cacheControl, expires);
             });
-        } else {
-            return makeRequest(
-                extend(requestParameters, {type: 'image'}),
-                (err?: Error | null, data?: HTMLImageElement | ImageBitmap | ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
-                    onImageResponse(itemInQueue, callback, err, data, cacheControl, expires);
-                });
-        }
     };
 
     const onImageResponse = (
@@ -173,6 +179,7 @@ namespace ImageRequest {
             callback(err);
         } else if (data instanceof HTMLImageElement || data instanceof ImageBitmap) {
             // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
+            // If HtmlImageElement is used to get image then response type will be HTMLImageElement
             callback(null, data);
         } else if (data) {
             const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
