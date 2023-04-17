@@ -176,6 +176,20 @@ describe('ImageRequest', () => {
         makeRequestSky.mockClear();
     });
 
+    test('getImage using HTMLImageElement with accept header', done => {
+        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+        ImageRequest.getImage({url: '', credentials: 'include', headers: {accept: 'accept'}},
+            (err, img: HTMLImageElement) => {
+                if (err) done(err);
+                expect(img).toBeInstanceOf(HTMLImageElement);
+                expect(img.crossOrigin).toBe('use-credentials');
+                done();
+            }, false);
+
+        expect(makeRequestSky).toHaveBeenCalledTimes(0);
+        makeRequestSky.mockClear();
+    });
+
     test('getImage uses makeRequest when custom Headers are added', () => {
         const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
 
