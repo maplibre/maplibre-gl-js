@@ -197,7 +197,7 @@ const defaultOptions = {
     transformRequest: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
-    validateStyle: false
+    validateStyle: true
 } as CompleteMapOptions;
 
 /**
@@ -264,7 +264,7 @@ const defaultOptions = {
  * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
  * map and the other on the left edge of the map) at every zoom level.
  * @param {number} [options.maxTileCacheSize=null] The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport.
- * @param {string} [options.validateStyle=false] If true, style validation will be performed. Useful in non-production environment.
+ * @param {string} [options.validateStyle=true] If false, style validation will be skipped. Useful in production environment.
  * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
  * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
  * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
@@ -1452,7 +1452,7 @@ class Map extends Camera {
      * @param {Object} [options] Options object.
      * @param {boolean} [options.diff=true] If false, force a 'full' update, removing the current style
      * and building the given one instead of attempting a diff-based update.
-     * @param {boolean} [options.validate=false] If true, style validation will be performed. Useful in non-production environment.
+     * @param {boolean} [options.validate=true] If false, style validation will be skipped. Useful in production environment.
      * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
      * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
      * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
