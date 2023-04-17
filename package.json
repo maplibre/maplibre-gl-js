@@ -123,8 +123,8 @@
     "shuffle-seed": "^1.1.6",
     "source-map-explorer": "^2.5.3",
     "st": "^3.0.0",
-    "stylelint": "^15.2.0",
-    "stylelint-config-standard": "^30.0.1",
+    "stylelint": "^15.5.0",
+    "stylelint-config-standard": "^33.0.0",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
