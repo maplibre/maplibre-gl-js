@@ -1,6 +1,6 @@
-import {Event, Evented} from '../util/evented';
 import {getArrayBuffer} from '../util/ajax';
 import browser from '../util/browser';
+import {Event, Evented} from '../util/evented';
 import {isWorker} from '../util/util';
 
 const status = {
@@ -56,6 +56,7 @@ export const registerForPluginStateChange = function(callback: PluginStateSyncCa
 export const clearRTLTextPlugin = function() {
     pluginStatus = status.unavailable;
     pluginURL = null;
+    _completionCallback = null;
 };
 
 export const setRTLTextPlugin = function(url: string, callback: ErrorCallback, deferred: boolean = false) {

@@ -9,7 +9,7 @@ property: `background-color`, `line-width`, etc., with a second level of directo
 Within a leaf directory is a `style.json` file (e.g. [`circle-radius/literal/style.json`](./render/tests/circle-radius/literal/style.json)), which contains the minimal style needed for the given test case. The style can specify the map size, center, bearing, and pitch, and additional test metadata (e.g. output image dimensions).
 
 The expected output for a given test case is in `expected.png`, e.g. [`circle-radius/literal/expected.png`](./render/tests/circle-radius/literal/expected.png).
-There can be multiple file with `expected` prefix since it can vary slightly with each platfrom.
+There can be multiple files with the `expected` prefix since the output can vary slightly with each platform.
 
 Supporting files -- glyphs, sprites, and tiles -- live in their own respective subdirectories at the top level. The test
 harness sets up the environment such that requests for these resources are directed to the correct location.
@@ -97,7 +97,7 @@ $ npm run test-render circle-radius/literal -- --report
 
 ### Updating results of render test results
 
-Note that the CI is running the render tests, if they fails the report.html is uploaded as an artifact, this file can be download, opened in the browser and with right click - save the image and add it to the relevant folder or replace the existing.
+Note that the CI is running the render tests. If they fail, the `report.html` is uploaded as an artifact. This file can be download, opened in the browser and with right click - save the image the actual CI render test result can be stored as the expected image.
 
 To run this manually you can use the following commands
 On Linux:
