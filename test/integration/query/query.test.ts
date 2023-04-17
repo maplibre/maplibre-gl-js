@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import type {AddressInfo} from 'node:net';
 
 import localizeURLs from '../lib/localize-urls';
-import {glob} from 'glob';
+import {globSync} from 'glob';
 
 function performQueryOnFixture(fixture)  {
 
@@ -151,11 +151,13 @@ describe('query tests', () => {
         await page.close();
     });
 
-    const allTestsRoot = 'test/integration/query/tests';
-    const testStyles = glob.sync(path.join(allTestsRoot, '**/style.json'));
+    const allTestsRoot = path.join('test', 'integration', 'query', 'tests');
+    let globPattern = path.join(allTestsRoot, '**/style.json');
+    globPattern = globPattern.replace(/\\/g, '/');
+    const testStyles = globSync(globPattern);
 
     for (const [testindex, styleJson] of testStyles.entries()) {
-        const testCaseRoot = path.dirname(styleJson);
+        const testCaseRoot = path.dirname(styleJson.replace(/\\/g, '/')); // glob is returning paths that dirname can't handle...
         const caseName = path.relative(allTestsRoot, testCaseRoot);
         // eslint-disable-next-line no-loop-func
         test(caseName, async () => {

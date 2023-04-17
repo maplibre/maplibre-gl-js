@@ -1,17 +1,18 @@
 ## main
 
 - Fix the type of the `features` property on `MapLayerMouseEvent` and `MapLayerTouchEvent` to be `MapGeoJSONFeature[]` in lieu of `GeoJSON.Feature[]` ([#2244](https://github.com/maplibre/maplibre-gl-js/pull/2244))
+- Fix GeolocateControl error if removed quickly ([#2391](https://github.com/maplibre/maplibre-gl-js/pull/2391))
 
 ### ✨ Features and improvements
 
 - Add queryTerrainElevation allows getting terrain elevation in meters at specific point ([#2264](https://github.com/maplibre/maplibre-gl-js/pull/2264))
 - Improve performance by sending style layers to worker thread before processing it on main thread to allow parallel processing ([#2131](https://github.com/maplibre/maplibre-gl-js/pull/2131))
-- [Breaking] Resize map when container element is resized. the resize related events now has different data associated with it ([#2157](https://github.com/maplibre/maplibre-gl-js/pull/2157))<br/>
+- ⚠ [Breaking] Resize map when container element is resized. the resize related events now has different data associated with it ([#2157](https://github.com/maplibre/maplibre-gl-js/pull/2157))<br/>
   Previously the originalEvent field was the reason of this change, for example it could be a <code>resize</code> event from the browser<br/>
   Now it is <code>ResizeObserverEntry</code>, see more https://developer.mozilla.org/en-US/docs/web/api/resizeobserverentry
 - Add Map.getImage() to retrieve previously-loaded images. ([#2168](https://github.com/maplibre/maplibre-gl-js/pull/2168))
 - Add method to enable/disable cooperative gestures
-- [Breaking] toBounds method of class LngLat is replaced by a static method fromLngLat of class LngLatBounds ([#2188](https://github.com/maplibre/maplibre-gl-js/pull/2188))
+- ⚠ [Breaking] toBounds method of class LngLat is replaced by a static method fromLngLat of class LngLatBounds ([#2188](https://github.com/maplibre/maplibre-gl-js/pull/2188))
 - Update CONTRIBUTING.md with details on setting up on M1 mac ([#2196](https://github.com/maplibre/maplibre-gl-js/pull/2196))
 - Update default type of originalEvent in MapLibreEvent to be `unknown` ([#2243](https://github.com/maplibre/maplibre-gl-js/pull/2243))
 - Improve performance when forcing full symbol placement by short circuiting pause checks ([#2241](https://github.com/maplibre/maplibre-gl-js/pull/2241))
@@ -19,6 +20,8 @@
 - Remove a deprecation warning by removing an empty texture that is no longer being used in the codebase ([#2299](https://github.com/maplibre/maplibre-gl-js/pull/2299))
 - Improve initial loading performance by lazy serializing layers only when needed. ([#2306](https://github.com/maplibre/maplibre-gl-js/pull/2306))
 - Slighty improve performance and avoid WebGL warnings by skipping creation of textures for empty image atlases (i.e. when a tile doesn't have icons or text, skip allocation of resources for icons/text) ([#2297](https://github.com/maplibre/maplibre-gl-js/pull/2297))
+- ⚠ [Breaking] Extrusion fills using a missing image (i.e. mispelled or badly referenced from the stylesheet) are now rendered black, instead of transparent. This is due an optimization on texture allocation: tiles which need no bitmap images (i.e. tiles without icons) now allocate no texture at all, instead of allocating a 1x1 transparent texture ([#2297](https://github.com/maplibre/maplibre-gl-js/pull/2297))
+- ⚠ [Breaking] Cancel unloaded tile request on zooming in across multiple zoom. Previously these requests were not cancelled. ([#2377](https://github.com/maplibre/maplibre-gl-js/pull/2377))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
@@ -28,10 +31,12 @@
 - Fix LngLat `toArray` method return type to [number,number] ([#2233](https://github.com/maplibre/maplibre-gl-js/issues/2233))
 - Fix handling of text-offset with symbol-placement: line ([#2170](https://github.com/maplibre/maplibre-gl-js/issues/2170) and [#2171](https://github.com/maplibre/maplibre-gl-js/issues/2171))
 - Fix geolocate control permissions failure on IOS16 web view with fallback to `window.navigator.geolocation`
+- Prevent unnecessary reload of raster sources when RTL Text Plugin loads ([#2380](https://github.com/maplibre/maplibre-gl-js/issues/2380))
+- Fix Handle AddProtocol callback function returning a HTMLImageElement ([#2393](https://github.com/maplibre/maplibre-gl-js/pull/2393))
 - _...Add new stuff here..._
 
 ### ⚠️ Note on missing images
-- Prior to the optimizations of ([#2297](https://github.com/maplibre/maplibre-gl-js/pull/2297)), extrusion fills using missing images (i.e. mispelled or badly referenced from the stylesheet) were rendered as transparent; now these will render as black (due to using no texture at all instead of using an empty texture).
+
 
 ## 3.0.0-pre.4
 
