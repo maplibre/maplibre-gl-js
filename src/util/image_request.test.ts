@@ -124,11 +124,7 @@ describe('ImageRequest', () => {
 
         ImageRequest.getImage({url: ''}, (err, img) => {
             expect(img).toBeFalsy();
-            if (err) {
-                done();
-            } else {
-                done('Error expected but go a response');
-            }
+            if (err) done();
         });
 
         server.respond();
