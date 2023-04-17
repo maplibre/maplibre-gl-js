@@ -10,7 +10,7 @@ import raster from './style_layer/raster_style_layer';
 import CustomStyleLayer from './style_layer/custom_style_layer';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 
-import type {LayerSpecification} from '../style-spec/types.g';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const subclasses = {
     circle,

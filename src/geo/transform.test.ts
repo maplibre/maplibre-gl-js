@@ -75,6 +75,18 @@ describe('transform', () => {
         expect(transform.tileZoom).toBe(transform.zoom);
     });
 
+    test('set zoom inits tileZoom with zoom value', () => {
+        const transform = new Transform(0, 22, 0, 60);
+        transform.zoom = 5;
+        expect(transform.tileZoom).toBe(5);
+    });
+
+    test('set zoom clamps tileZoom to non negative value ', () => {
+        const transform = new Transform(-2, 22, 0, 60);
+        transform.zoom = -2;
+        expect(transform.tileZoom).toBe(0);
+    });
+
     test('set fov', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.fov = 10;
@@ -445,6 +457,15 @@ describe('transform', () => {
         const top = Math.max(0, transform.height / 2 - transform.getHorizon());
         expect(top).toBeCloseTo(79.1823898251593, 10);
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, top)).toArray());
+    });
+
+    test('getElevation with lng less than -180 wraps correctly', () => {
+        const OVERSCALETILEID_DOES_NOT_THROW = 4;
+        const terrain = {
+            getElevation: () => OVERSCALETILEID_DOES_NOT_THROW
+        } as any as Terrain;
+        const transform = new Transform(0, 22, 0, 85, true);
+        expect(transform.getElevation(new LngLat(-183, 40), terrain)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
     });
 
 });

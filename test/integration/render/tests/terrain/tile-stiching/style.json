@@ -1,0 +1,40 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+          "height": 1024,
+          "width": 1024
+        }
+    },
+    "center": [-113.2233, 35.97287],
+    "zoom": 12.77,
+    "pitch": 60,
+    "sources": {
+        "repeat": {
+            "type": "raster",
+            "tiles": ["local://tiles/white-with-x.png"],
+            "tileSize": 256
+        },
+        "terrain": {
+          "type": "raster-dem",
+          "tiles": ["local://tiles/terrain/{z}-{x}-{y}.terrain.png"],
+          "encoding": "terrarium",
+          "maxzoom": 15,
+          "tileSize": 256
+        }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "orange"
+            }
+        },
+        {"id": "osm", "type": "raster", "source": "repeat"}
+    ],
+    "terrain": {
+        "source": "terrain",
+        "exaggeration": 1
+    }
+}

@@ -3,12 +3,13 @@ These integration tests verify the correctness and consistency of [maplibre-gl-j
 
 ## Organization
 
-Tests are contained in a directory tree, generally organized by [style specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/)
+Tests are contained in a directory tree, generally organized by [style specification](https://maplibre.org/maplibre-style-spec/)
 property: `background-color`, `line-width`, etc., with a second level of directories below that for individual tests. For example, the test for specifying a literal `circle-radius` value lives in [`test/integration/render/tests/circle-radius/literal/`](./render/tests/circle-radius/literal).
 
 Within a leaf directory is a `style.json` file (e.g. [`circle-radius/literal/style.json`](./render/tests/circle-radius/literal/style.json)), which contains the minimal style needed for the given test case. The style can specify the map size, center, bearing, and pitch, and additional test metadata (e.g. output image dimensions).
 
 The expected output for a given test case is in `expected.png`, e.g. [`circle-radius/literal/expected.png`](./render/tests/circle-radius/literal/expected.png).
+There can be multiple files with the `expected` prefix since the output can vary slightly with each platform.
 
 Supporting files -- glyphs, sprites, and tiles -- live in their own respective subdirectories at the top level. The test
 harness sets up the environment such that requests for these resources are directed to the correct location.
@@ -23,21 +24,27 @@ To run the render tests:
 npm run test-render
 ```
 
-To run the query tests:
-```
-npm run test-query
-```
-
-To run the expression tests:
+To run the integration tests (except the render tests):
 
 ```
-npm run test-expressions
+npm run test-integration
 ```
 
-To run the browser tests (see [`browser/README.md`](./browser/README.md)):
+This includes the browser tests (see [`browser/README.md`](./browser/README.md))
+
+To run the build tests
+
 ```
-npm run test-browser
+npm run test-build
+````
+
+For running a subset of tests, you may use jest filters e.g.
+
 ```
+npm run test-integration --testPathIgnorePatterns "/test/integration/(query|build)/
+```
+
+Additionally, it may be helpful to use a visual jest frontend (e.g. `npx majestic`). Note that since render tests do not use Jest, these will still have to be run from the command line.
 
 ### Running specific tests
 
@@ -88,7 +95,27 @@ Same parameter can be used to view results for a single test...
 $ npm run test-render circle-radius/literal -- --report
 ```
 
-## Notes on the query integration tests
+### Updating results of render test results
+
+Note that the CI is running the render tests. If they fail, the `report.html` is uploaded as an artifact. This file can be download, opened in the browser and with right click - save the image the actual CI render test result can be stored as the expected image.
+
+To run this manually you can use the following commands
+On Linux:
+```
+xvfb-run -a UPDATE=true npm run test-render
+```
+On Mac:
+```
+UPDATE=true npm run test-render
+```
+Or on Windows with PowerShell:
+```
+$env:UPDATE=$true; npm run test-render
+```
+
+
+
+#### Notes on the query integration tests
 
 In test/integration/lib/query-browser-jest.test.ts a web server is automatically started to expose static assets from the integration folder. In order to start a similar server manually, run:
 
@@ -113,10 +140,6 @@ generateDiffLog(fixture.expected, actual);
 Query tests can be run in the browser, the server for serving up the test page and test fixtures starts when you run
 ```
 npm run start
-```
-OR
-```
-npm run start-debug
 ```
 
 If you want to run only the test server run:
@@ -167,13 +190,9 @@ To add a new render test:
 5. Commit the new `style.json` and `expected.png` :rocket:
 
 ## Updating results of query-tests
-You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled:
+You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled, for example on Linux:
 ```
 UPDATE=true npm run test-query
-```
-You have to regenerate the fixture afterwards
-```
- npm run generate-query-test-fixtures
 ```
 Check carefully if all changes are intended.
 

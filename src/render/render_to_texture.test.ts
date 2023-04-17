@@ -11,7 +11,7 @@ import Tile from '../source/tile';
 import Map from '../ui/map';
 import {OverscaledTileID} from '../source/tile_id';
 import SourceCache from '../source/source_cache';
-import {TerrainSpecification} from '../style-spec/types.g';
+import {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import FillStyleLayer from '../style/style_layer/fill_style_layer';
 import RasterStyleLayer from '../style/style_layer/raster_style_layer';
 import HillshadeStyleLayer from '../style/style_layer/hillshade_style_layer';
@@ -62,7 +62,7 @@ describe('render to texture', () => {
     let layersDrawn = 0;
     const painter = {
         layersDrawn: 0,
-        context: new Context(gl(1, 1)),
+        context: new Context(gl(1, 1) as any),
         transform: {zoom: 10, calculatePosMatrix: () => {}},
         colorModeForRenderPass: () => ColorMode.alphaBlended,
         useProgram: () => { return {draw: () => { layersDrawn++; }}; },

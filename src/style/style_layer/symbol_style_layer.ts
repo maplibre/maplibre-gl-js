@@ -17,22 +17,19 @@ import {
     isExpression,
     StyleExpression,
     ZoomConstantExpression,
-    ZoomDependentExpression
-} from '../../style-spec/expression';
+    ZoomDependentExpression,
+    FormattedType,
+    typeOf,
+    Formatted,
+    FormatExpression,
+    Literal} from '@maplibre/maplibre-gl-style-spec';
 
 import type {BucketParameters} from '../../data/bucket';
 import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
 import type EvaluationParameters from '../evaluation_parameters';
-import type {LayerSpecification} from '../../style-spec/types.g';
-import type {Feature, SourceExpression} from '../../style-spec/expression';
-import type {Expression} from '../../style-spec/expression/expression';
+import type {Expression, Feature, SourceExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CanonicalTileID} from '../../source/tile_id';
-import {FormattedType} from '../../style-spec/expression/types';
-import {typeOf} from '../../style-spec/expression/values';
-import Formatted from '../../style-spec/expression/types/formatted';
 import FormatSectionOverride from '../format_section_override';
-import FormatExpression from '../../style-spec/expression/definitions/format';
-import Literal from '../../style-spec/expression/definitions/literal';
 
 class SymbolStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<SymbolLayoutProps>;
@@ -180,25 +177,6 @@ class SymbolStyleLayer extends StyleLayer {
 
         return hasOverrides;
     }
-}
-
-export type OverlapMode = 'never' | 'always' | 'cooperative';
-
-export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'icon-overlap', allowOverlapProp: 'icon-allow-overlap'): OverlapMode;
-export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'text-overlap', allowOverlapProp: 'text-allow-overlap'): OverlapMode;
-export function getOverlapMode(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, overlapProp: 'icon-overlap' | 'text-overlap', allowOverlapProp: 'icon-allow-overlap' | 'text-allow-overlap'): OverlapMode {
-    let result: OverlapMode = 'never';
-    const overlap = layout.get(overlapProp);
-
-    if (overlap) {
-        // if -overlap is set, use it
-        result = overlap;
-    } else if (layout.get(allowOverlapProp)) {
-        // fall back to -allow-overlap, with false='never', true='always'
-        result = 'always';
-    }
-
-    return result;
 }
 
 export type SymbolPadding = [number, number, number, number];

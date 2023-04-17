@@ -2,7 +2,7 @@ import DOM from '../../util/dom';
 
 import {ease as _ease, bindAll, bezier} from '../../util/util';
 import browser from '../../util/browser';
-import {number as interpolate} from '../../style-spec/util/interpolate';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import LngLat from '../../geo/lng_lat';
 
 import type Map from '../map';
@@ -20,6 +20,16 @@ const wheelZoomRate = 1 / 450;
 // upper bound on how much we scale the map in any single render frame; this
 // is used to limit zoom rate in the case of very fast scrolling
 const maxScalePerFrame = 2;
+
+/**
+ * The scroll zoom handler options object
+ */
+export type ScrollZoomHandlerOptions = {
+    /**
+     * If "center" is passed, map will zoom around the center of map
+     */
+    around?: 'center';
+};
 
 /**
  * The `ScrollZoomHandler` allows the user to zoom the map by scrolling.
@@ -120,15 +130,15 @@ class ScrollZoomHandler {
     /**
      * Enables the "scroll to zoom" interaction.
      *
-     * @param {Object} [options] Options object.
-     * @param {string} [options.around] If "center" is passed, map will zoom around center of map
+     * @param {ScrollZoomHandlerOptions} [options] Options object.
+     * @param {string} [options.around] If "center" is passed, map will zoom around the center of map
      *
      * @example
      *   map.scrollZoom.enable();
      * @example
      *  map.scrollZoom.enable({ around: 'center' })
      */
-    enable(options?: any) {
+    enable(options?: ScrollZoomHandlerOptions) {
         if (this.isEnabled()) return;
         this._enabled = true;
         this._aroundCenter = options && options.around === 'center';
@@ -148,7 +158,7 @@ class ScrollZoomHandler {
     wheel(e: WheelEvent) {
         if (!this.isEnabled()) return;
         if (this._map._cooperativeGestures) {
-            if (this._map._metaPress) {
+            if (e[this._map._metaKey]) {
                 e.preventDefault();
             } else {
                 return;
@@ -205,7 +215,7 @@ class ScrollZoomHandler {
         e.preventDefault();
     }
 
-    _onTimeout(initialEvent: any) {
+    _onTimeout(initialEvent: MouseEvent) {
         this._type = 'wheel';
         this._delta -= this._lastValue;
         if (!this._active) {
@@ -213,7 +223,7 @@ class ScrollZoomHandler {
         }
     }
 
-    _start(e: any) {
+    _start(e: MouseEvent) {
         if (!this._delta) return;
 
         if (this._frameId) {
@@ -284,7 +294,7 @@ class ScrollZoomHandler {
 
             const t = Math.min((browser.now() - this._lastWheelEventTime) / 200, 1);
             const k = easing(t);
-            zoom = interpolate(startZoom, targetZoom, k);
+            zoom = interpolates.number(startZoom, targetZoom, k);
             if (t < 1) {
                 if (!this._frameId) {
                     this._frameId = true;

@@ -4,8 +4,8 @@ import {mat4, vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
-import {PosArray, TriangleIndexArray} from '../data/array_types.g';
-import posAttributes from '../data/pos_attributes';
+import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
+import pos3dAttributes from '../data/pos3d_attributes';
 import SegmentVector from '../data/segment';
 import VertexBuffer from '../gl/vertex_buffer';
 import IndexBuffer from '../gl/index_buffer';
@@ -17,8 +17,9 @@ import MercatorCoordinate from '../geo/mercator_coordinate';
 import TerrainSourceCache from '../source/terrain_source_cache';
 import SourceCache from '../source/source_cache';
 import EXTENT from '../data/extent';
-import {number as mix} from '../style-spec/util/interpolate';
-import type {TerrainSpecification} from '../style-spec/types.g';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {earthRadius} from '../geo/lng_lat';
 
 export type TerrainData = {
     'u_depth': number;
@@ -39,12 +40,12 @@ export type TerrainMesh = {
 }
 
 /**
- * This is the main class which handles most of the 3D Terrain logic. It has the follwing topics:
+ * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
  *    1) loads raster-dem tiles via the internal sourceCache this.sourceCache
  *    2) creates a depth-framebuffer, which is used to calculate the visibility of coordinates
  *    3) creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
  *    4) stores all render-to-texture tiles in the this.sourceCache._tiles
- *    5) calculates the elevation for a spezific tile-coordinate
+ *    5) calculates the elevation for a specific tile-coordinate
  *    6) creates a terrain-mesh
  *
  *    A note about the GPU resource-usage:
@@ -75,7 +76,7 @@ export default class Terrain {
     options: TerrainSpecification;
     // define the meshSize per tile.
     meshSize: number;
-    // multiplicator for the elevation. Used to make terrain more "extrem".
+    // multiplicator for the elevation. Used to make terrain more "extreme".
     exaggeration: number;
     // to not see pixels in the render-to-texture tiles it is good to render them bigger
     // this number is the multiplicator (must be a power of 2) for the current tileSize.
@@ -137,7 +138,7 @@ export default class Terrain {
             const tr = terrain.tile.dem.get(c[0], c[1] + 1);
             const bl = terrain.tile.dem.get(c[0] + 1, c[1]);
             const br = terrain.tile.dem.get(c[0] + 1, c[1] + 1);
-            elevation = mix(mix(tl, tr, coord[0] - c[0]), mix(bl, br, coord[0] - c[0]), coord[1] - c[1]);
+            elevation = interpolates.number(interpolates.number(tl, tr, coord[0] - c[0]), interpolates.number(bl, br, coord[0] - c[0]), coord[1] - c[1]);
         }
         return elevation;
     }
@@ -160,8 +161,8 @@ export default class Terrain {
      * @returns {TerrainData} the terrain data to use in the program
      */
     getTerrainData(tileID: OverscaledTileID): TerrainData {
-        // create empty DEM Obejcts, which will used while raster-dem tiles are loading.
-        // creates an empty depth-buffer texture which is needed, during the initialisation process of the 3d mesh..
+        // create empty DEM Objects, which will used while raster-dem tiles are loading.
+        // creates an empty depth-buffer texture which is needed, during the initialization process of the 3d mesh..
         if (!this._emptyDemTexture) {
             const context = this.painter.context;
             const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4));
@@ -304,20 +305,54 @@ export default class Terrain {
     getTerrainMesh(): TerrainMesh {
         if (this._mesh) return this._mesh;
         const context = this.painter.context;
-        const vertexArray = new PosArray(), indexArray = new TriangleIndexArray();
-        const meshSize = this.meshSize, delta = EXTENT / meshSize, meshSize2 = meshSize * meshSize;
+        const vertexArray = new Pos3dArray();
+        const indexArray = new TriangleIndexArray();
+        const meshSize = this.meshSize;
+        const delta = EXTENT / meshSize;
+        const meshSize2 = meshSize * meshSize;
         for (let y = 0; y <= meshSize; y++) for (let x = 0; x <= meshSize; x++)
-            vertexArray.emplaceBack(x * delta, y * delta);
+            vertexArray.emplaceBack(x * delta, y * delta, 0);
         for (let y = 0; y < meshSize2; y += meshSize + 1) for (let x = 0; x < meshSize; x++) {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
+        // add an extra frame around the mesh to avoid stiching on tile boundaries with different zoomlevels
+        // first code-block is for top-bottom frame and second for left-right frame
+        const offsetTop = vertexArray.length, offsetBottom = offsetTop + (meshSize + 1) * 2;
+        for (const y of [0, 1]) for (let x = 0; x <= meshSize; x++) for (const z of [0, 1])
+            vertexArray.emplaceBack(x * delta, y * EXTENT, z);
+        for (let x = 0; x < meshSize * 2; x += 2) {
+            indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 1, offsetBottom + x + 3);
+            indexArray.emplaceBack(offsetBottom + x, offsetBottom + x + 3, offsetBottom + x + 2);
+            indexArray.emplaceBack(offsetTop + x, offsetTop + x + 3, offsetTop + x + 1);
+            indexArray.emplaceBack(offsetTop + x, offsetTop + x + 2, offsetTop + x + 3);
+        }
+        const offsetLeft = vertexArray.length, offsetRight = offsetLeft + (meshSize + 1) * 2;
+        for (const x of [0, 1]) for (let y = 0; y <= meshSize; y++) for (const z of [0, 1])
+            vertexArray.emplaceBack(x * EXTENT, y * delta, z);
+        for (let y = 0; y < meshSize * 2; y += 2) {
+            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 1, offsetLeft + y + 3);
+            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 3, offsetLeft + y + 2);
+            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
+            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
+        }
         this._mesh = {
             indexBuffer: context.createIndexBuffer(indexArray),
-            vertexBuffer: context.createVertexBuffer(vertexArray, posAttributes.members),
+            vertexBuffer: context.createVertexBuffer(vertexArray, pos3dAttributes.members),
             segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
         };
         return this._mesh;
+    }
+
+    /**
+     * Calculates a height of the frame around the terrain-mesh to avoid stiching between
+     * tile boundaries in different zoomlevels.
+     * @param zoom current zoomlevel
+     * @returns the elevation delta in meters
+     */
+    getMeshFrameDelta(zoom: number) {
+        // divide by 5 is evaluated by trial & error to get a frame in the right height
+        return 2 * Math.PI * earthRadius / Math.pow(2, zoom) / 5;
     }
 
     /**

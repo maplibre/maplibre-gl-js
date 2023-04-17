@@ -2,7 +2,7 @@ import {mat4, vec3, vec4} from 'gl-matrix';
 
 class Frustum {
 
-    constructor(public points: vec4[], public planes: vec4[]) { } // eslint-disable-line
+    constructor(public points: vec4[], public planes: vec4[]) { }
 
     public static fromInvProjectionMatrix(invProj: mat4, worldSize: number, zoom: number): Frustum {
         const clipSpaceCorners = [

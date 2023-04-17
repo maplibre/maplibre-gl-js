@@ -1,10 +1,10 @@
 import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArrayOES, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha} from './value';
 import Context from './context';
-import Color from '../style-spec/util/color';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {deepEqual} from '../util/util';
 import gl from 'gl';
 
-const context = new Context(gl(10, 10));
+const context = new Context(gl(10, 10) as any);
 
 const valueTest = (Constructor: new (...args:any[]) => any, options) => {
     test('#constructor', () => {

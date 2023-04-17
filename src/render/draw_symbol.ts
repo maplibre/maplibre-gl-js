@@ -34,7 +34,7 @@ import type {CrossTileID, VariableOffset} from '../symbol/placement';
 import type SymbolBucket from '../data/bucket/symbol_bucket';
 import type {SymbolBuffers} from '../data/bucket/symbol_bucket';
 import type {TerrainData} from '../render/terrain';
-import type {SymbolLayerSpecification} from '../style-spec/types.g';
+import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type Transform from '../geo/transform';
 import type ColorMode from '../gl/color_mode';
 import type Program from './program';
@@ -291,7 +291,8 @@ function drawLayerSymbols(
         const bucket = tile.getBucket(layer) as SymbolBucket;
         if (!bucket) continue;
         const buffers = isText ? bucket.text : bucket.icon;
-        if (!buffers || !buffers.segments.get().length) continue;
+
+        if (!buffers || !buffers.segments.get().length || !buffers.hasVisibleVertices) continue;
         const programConfiguration = buffers.programConfigurations.get(layer.id);
 
         const isSDF = isText || bucket.sdfIcons;
@@ -407,10 +408,12 @@ function drawLayerSymbols(
         const state = segmentState.state;
 
         context.activeTexture.set(gl.TEXTURE0);
+        // @ts-ignore
         state.atlasTexture.bind(state.atlasInterpolation, gl.CLAMP_TO_EDGE);
         if (state.atlasTextureIcon) {
             context.activeTexture.set(gl.TEXTURE1);
             if (state.atlasTextureIcon) {
+                // @ts-ignore
                 state.atlasTextureIcon.bind(state.atlasInterpolationIcon, gl.CLAMP_TO_EDGE);
             }
         }

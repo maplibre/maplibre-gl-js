@@ -1,4 +1,4 @@
-import {number} from '../style-spec/util/interpolate';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import Point from '@mapbox/point-geometry';
 import {clamp} from '../util/util';
 
@@ -43,10 +43,10 @@ class EdgeInsets {
      * @memberof EdgeInsets
      */
     interpolate(start: PaddingOptions | EdgeInsets, target: PaddingOptions, t: number): EdgeInsets {
-        if (target.top != null && start.top != null) this.top = number(start.top, target.top, t);
-        if (target.bottom != null && start.bottom != null) this.bottom = number(start.bottom, target.bottom, t);
-        if (target.left != null && start.left != null) this.left = number(start.left, target.left, t);
-        if (target.right != null && start.right != null) this.right = number(start.right, target.right, t);
+        if (target.top != null && start.top != null) this.top = interpolates.number(start.top, target.top, t);
+        if (target.bottom != null && start.bottom != null) this.bottom = interpolates.number(start.bottom, target.bottom, t);
+        if (target.left != null && start.left != null) this.left = interpolates.number(start.left, target.left, t);
+        if (target.right != null && start.right != null) this.right = interpolates.number(start.right, target.right, t);
 
         return this;
     }

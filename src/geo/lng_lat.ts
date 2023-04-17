@@ -1,5 +1,4 @@
 import {wrap} from '../util/util';
-import LngLatBounds from './lng_lat_bounds';
 
 /*
 * Approximate radius of the earth in meters.
@@ -59,12 +58,12 @@ class LngLat {
     /**
      * Returns the coordinates represented as an array of two numbers.
      *
-     * @returns {Array<number>} The coordinates represeted as an array of longitude and latitude.
+     * @returns {[number,number]} The coordinates represented as an array of longitude and latitude.
      * @example
      * var ll = new maplibregl.LngLat(-73.9749, 40.7736);
      * ll.toArray(); // = [-73.9749, 40.7736]
      */
-    toArray() {
+    toArray(): [number, number] {
         return [this.lng, this.lat];
     }
 
@@ -99,24 +98,6 @@ class LngLat {
 
         const maxMeters = earthRadius * Math.acos(Math.min(a, 1));
         return maxMeters;
-    }
-
-    /**
-     * Returns a `LngLatBounds` from the coordinates extended by a given `radius`. The returned `LngLatBounds` completely contains the `radius`.
-     *
-     * @param {number} [radius=0] Distance in meters from the coordinates to extend the bounds.
-     * @returns {LngLatBounds} A new `LngLatBounds` object representing the coordinates extended by the `radius`.
-     * @example
-     * var ll = new maplibregl.LngLat(-73.9749, 40.7736);
-     * ll.toBounds(100).toArray(); // = [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]
-     */
-    toBounds(radius: number = 0) {
-        const earthCircumferenceInMetersAtEquator = 40075017;
-        const latAccuracy = 360 * radius / earthCircumferenceInMetersAtEquator,
-            lngAccuracy = latAccuracy / Math.cos((Math.PI / 180) * this.lat);
-
-        return new LngLatBounds(new LngLat(this.lng - lngAccuracy, this.lat - latAccuracy),
-            new LngLat(this.lng + lngAccuracy, this.lat + latAccuracy));
     }
 
     /**

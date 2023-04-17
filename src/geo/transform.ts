@@ -3,7 +3,7 @@ import LngLatBounds from './lng_lat_bounds';
 import MercatorCoordinate, {mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp} from '../util/util';
-import {number as interpolate} from '../style-spec/util/interpolate';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import EXTENT from '../data/extent';
 import {vec3, vec4, mat4, mat2, vec2} from 'gl-matrix';
 import {Aabb, Frustum} from '../util/primitives';
@@ -29,7 +29,6 @@ class Transform {
     height: number;
     angle: number;
     rotationMatrix: mat2;
-    zoomFraction: number;
     pixelsToGLUnits: [number, number];
     cameraToCenterDistance: number;
     cameraToSeaLevelDistance: number;
@@ -196,13 +195,12 @@ class Transform {
 
     get zoom(): number { return this._zoom; }
     set zoom(zoom: number) {
-        const z = Math.min(Math.max(zoom, this.minZoom), this.maxZoom);
-        if (this._zoom === z) return;
+        const constrainedZoom = Math.min(Math.max(zoom, this.minZoom), this.maxZoom);
+        if (this._zoom === constrainedZoom) return;
         this._unmodified = false;
-        this._zoom = z;
-        this.scale = this.zoomScale(z);
-        this.tileZoom = Math.floor(z);
-        this.zoomFraction = z - this.tileZoom;
+        this._zoom = constrainedZoom;
+        this.tileZoom = Math.max(0, Math.floor(constrainedZoom));
+        this.scale = this.zoomScale(constrainedZoom);
         this._constrain();
         this._calcMatrices();
     }
@@ -257,7 +255,7 @@ class Transform {
     }
 
     /**
-     * Helper method to upadte edge-insets inplace
+     * Helper method to update edge-insets in place
      *
      * @param {PaddingOptions} start the starting padding
      * @param {PaddingOptions} target the target padding
@@ -496,7 +494,7 @@ class Transform {
      * @returns {number} elevation in meters
      */
     getElevation(lnglat: LngLat, terrain: Terrain) {
-        const merc = MercatorCoordinate.fromLngLat(lnglat);
+        const merc = MercatorCoordinate.fromLngLat(lnglat.wrap());
         const worldSize = (1 << this.tileZoom) * EXTENT;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
         const tileX = Math.floor(mercX / EXTENT), tileY = Math.floor(mercY / EXTENT);
@@ -620,7 +618,7 @@ class Transform {
             }
         }
 
-        // calcuate point-coordinate on flat earth
+        // calculate point-coordinate on flat earth
         const targetZ = 0;
         // since we don't know the correct projected z value for the point,
         // unproject two points to get a line and then find the point on that
@@ -644,8 +642,8 @@ class Transform {
         const t = z0 === z1 ? 0 : (targetZ - z0) / (z1 - z0);
 
         return new MercatorCoordinate(
-            interpolate(x0, x1, t) / this.worldSize,
-            interpolate(y0, y1, t) / this.worldSize);
+            interpolates.number(x0, x1, t) / this.worldSize,
+            interpolates.number(y0, y1, t) / this.worldSize);
     }
 
     /**

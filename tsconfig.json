@@ -2,13 +2,13 @@
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
-    "checkJs": false,
+    "checkJs": true,
+    "isolatedModules": true,
+    "noEmit": true,
     "esModuleInterop": true,
     "importHelpers": false,
-    "isolatedModules": true,
-    //"importsNotUsedAsValues": "preserve",
     "jsx": "react",
-    "module": "esnext",
+    "module": "ESNext",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "skipLibCheck": false,
@@ -20,20 +20,26 @@
       "DOM",
       "DOM.Iterable"
     ],
-    "types": ["node", "jest", "geojson", "offscreencanvas"]
+    "types": [
+      "node",
+      "jest",
+      "geojson",
+      "offscreencanvas"
+    ]
+  },
+  "ts-node": {
+    "experimentalSpecifierResolution": "node",
+    "esm": true
   },
   "include": [
-    "rollup.config.**",
-    "src/**/*.ts",
-    "test/bench/**/*.ts",
-    "test/bench/**/*.tsx",
-    "build/**/*.ts"
+    "rollup.config.*",
+    "src/**/*",
+    "test/bench/**/*",
+    "build/**/*"
   ],
   "exclude": [
     "node_modules",
-    "lib",
     "dist",
     "test/bench/**/*generated*",
-    "src/**/*.test.ts"
   ]
 }

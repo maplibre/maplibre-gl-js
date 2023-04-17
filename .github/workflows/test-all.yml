@@ -1,0 +1,98 @@
+name: Automated Testing
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  checks: write
+  pull-requests: write
+  contents: write
+
+jobs:
+  code-hygiene:
+    name: Code Hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - run: npm run lint
+        if: success() || failure()
+      - run: npm run lint-css
+        if: success() || failure()
+      - run: npm run lint-docs
+        if: success() || failure()
+      - run: npm run typecheck
+        if: success() || failure()
+  non-gl-tests:
+    name: Tests not using GL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - run: npm run jest-ci -- --selectProjects unit --testPathIgnorePatterns "/src/(gl|render|ui)/" 
+      - run: npm run build-dev
+      - run: npm run jest-ci -- --selectProjects integration --testPathIgnorePatterns "/test/integration/(query|browser|build)/"
+  gl-tests:
+    name: Tests including GL
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - name: Start display server
+        if: runner.os == 'Linux'
+        run:
+          nohup Xvfb &
+          echo "DISPLAY=:0" >> $GITHUB_ENV
+      - run: npm run jest-ci -- --coverage --coverageReporters text html-spa --selectProjects unit
+      - name: Upload unit test coverage
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: unit-test-coverage
+          path: ${{ github.workspace }}/coverage
+      - run: npm run build-dev
+        if: success() || failure()
+      - run: npm run test-render -- --report
+        if: success() || failure()
+      - name: Upload render test failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: render-test-report-${{ matrix.os }}
+          path: ${{ github.workspace }}/test/integration/render/results.html
+      - run: npm run build-dist
+        if: success() || failure()
+      - run: npm run jest-ci -- --selectProjects integration
+        if: success() || failure()
+
+  packaging-tests:
+    name: Packaging
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - run: npm run build-dist
+      - run: npm run jest-ci -- --selectProjects build
+        if: success() || failure()

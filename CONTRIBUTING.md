@@ -3,6 +3,39 @@ Hi, and thanks in advance for contributing to MapLibre GL. Here's how we work. P
 ## Do not violate Mapbox copyright!
 In December 2020 Mapbox decided to publish future versions of mapbox-gl-js under a proprietary license. **You are not allowed to backport code from Mapbox projects which has been contributed under this new license**. Unauthorized backports are the biggest threat to the MapLibre project. If you are unsure about this issue, [please ask](https://github.com/maplibre/maplibre-gl-js/discussions)!
 
+## Best Practices for Contributions
+
+MapLibre welcomes contributions from community! This codebase is large and complex, and following these best practices will assist the maintainer team in reviewing your contribution. In general, the project values discussion and communication over process and documentation. However, due to the size and complexity of the code, below are some best practices that have aided contributors.
+
+It is a good idea to discuss proposed changes before proceeding to an issue ticket or PR. The project team is active in the following forums:
+
+* For informal chat discussions, visit the project's [Slack Channel](https://osmus.slack.com/archives/C01G3D28DAB).
+* For discussions whose output and outcomes should not be ephemeral, consider starting a thread on [GitHub Discussions](https://github.com/maplibre/maplibre-gl-js/discussions). This makes it easier to find and reference the discussion in the future. 
+
+MapLibre software relies heavily on automated testing, and the project includes a suite of unit and integration tests. For both new features and bugfixes, contributions should update or add test cases to prevent regressions.
+
+### New Features
+
+For new features, it is usually a good idea to start with an issue ticket. If the feature requires changes to the style specification, an issue ticket should be created in the [style specification GitHub repository](https://github.com/maplibre/maplibre-gl-style-spec). Style specification changes are hard to change later, so there will be particularly close scrutiny on changes to the specification.
+
+If possible, it is beneficial to demonstrate proposed new features and assess the performance implications of the proposed change. You can use `npm install <location-of-maplibre-source-code>` to test changes in an npm context, or `npm run build-prod` to build a .js package for this purpose. 
+
+For more complex proposed features that require deeper discussion, you should consider bringing it up in the [Technical Steering Committee](https://maplibre.org/categories/steering-committee/) meeting for a video discussion with the team about the proposed change. We find that sometimes it's easier to have a focused, face-to-face discussion for more consequential decisions.
+
+The Technical Steering Committee meetings are open to anyone who wants to get involved in the technical direction of the project. These meetings offer a chance for discussion and collaboration on various technical topics. We welcome you to join the meetings if you're interested in getting involved.
+
+### Bug Fixes
+
+If you've identified a significant bug, or one that you don't intend to fix yourself, please write up an issue ticket describing the problem. For minor or straightforward bug fixes, feel free to proceed directly to a PR.
+
+Some best practices for PRs for bugfixes are as follows:
+
+1. Begin by writing a failing test which demonstrates how the current software fails to operate as expected. Commit and push the branch.
+2. Create a draft PR which documents the incorrect behavior. This will show the failing test you've just written in the project's continuous integration and demonstrates the existence of the bug.
+3. Fix the bug, and update the PR with any other notes needed to describe the change in the PR's description.
+4. Don't forget to mark the PR as ready for review when you're satisfied with the code changes.
+
+This is not intended to be a strict process but rather a guideline that will build confidence that your PR is addressing the problem.
 
 ## Preparing your Development Environment
 
@@ -13,7 +46,7 @@ Install the Xcode Command Line Tools Package
 xcode-select --install
 ```
 
-Install [node.js](https://nodejs.org/) version ^16
+Install [node.js](https://nodejs.org/) version ^18
 ```bash
 brew install node
 ```
@@ -41,12 +74,25 @@ If you have one of the newer arm64 machines, you might find that canvas.node or 
 npm install --build-from-source
 ```
 
-### Linux
+If you have installed from non-M1 machine to an M1 machine using Migration Assistant and you had `brew` installed before, and you get this error when running tests:
+
+```
+dlopen(/Users/[...]/common/temp/node_modules/.pnpm/canvas@2.11.0/node_modules/canvas/build/Release/canvas.node, 0x0001): symbol not found in flat namespace '_cairo_fill'
+
+      at Object.<anonymous> (../../common/temp/node_modules/.pnpm/canvas@2.11.0/node_modules/canvas/lib/bindings.js:3:18)
+```
+
+Try
+- Uninstall then re-install `brew` [brew](https://brew.sh/)
+- Run `arch -arm64 brew install pkg-config cairo pango libpng jpeg giflib librsvg`
+- delete `node_modules` folder and re-run `npm install`
+
+### Linux (and by extension Github codespaces)
 
 Install [git](https://git-scm.com/), [GNU Make](http://www.gnu.org/software/make/), and libglew-dev
 ```bash
 sudo apt-get update &&
-sudo apt-get install build-essential git libglew-dev libxi-dev default-jre default-jdk
+sudo apt-get install build-essential git libglew-dev libxi-dev default-jre default-jdk xvfb
 ```
 
 If prebuilt binaries for canvas and gl aren’t available, you will also need:
@@ -60,9 +106,9 @@ Install [nvm](https://github.com/nvm-sh/nvm)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
 ```
 
-Install [Node.js](https://nodejs.org/) ^16
+Install [Node.js](https://nodejs.org/) from .nvmrc
 ```
-nvm install 16
+nvm install
 ```
 
 Clone the repository
@@ -78,7 +124,9 @@ npm install
 
 ### Windows
 
-Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^16), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
+Consider using WSL and follow the above Linux guide or follow the next steps
+
+Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^18), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
 
 Clone the repository
 ```bash
@@ -96,16 +144,6 @@ Install headless-gl dependencies https://github.com/stackgl/headless-gl#windows
 ```
 copy node_modules/headless-gl/deps/windows/dll/x64/*.dll c:\windows\system32
 ```
-
-## Serving the Debug Page
-
-Start the debug server
-
-```bash
-npm run start-debug
-```
-
-Open the debug page at [http://localhost:9966/test/debug-pages](http://localhost:9966/test/debug-pages)
 
 ## Creating a Standalone Build
 
@@ -130,8 +168,7 @@ See [`test/bench/README.md`](./test/bench/README.md).
 ## Code Conventions
 
 * We use [`error` events](https://www.mapbox.com/mapbox-gl-js/api/#Map.event:error) to report user errors.
-* We use [`assert`](https://nodejs.org/api/assert.html) to check invariants that are not likely to be caused by user error. These `assert` statements are stripped out of production builds.
-* We use the following ES6 features:
+* We use the latest feature that the TypeScript language has to offer including, but not limited to:
   * `let`/`const`
   * `for...of` loops (for arraylike iteration only, i.e. what is supported by [Bublé's `dangerousForOf` transform](https://buble.surge.sh/guide/#dangerous-transforms))
   * Arrow functions
@@ -142,10 +179,6 @@ See [`test/bench/README.md`](./test/bench/README.md).
   * Rest parameters
   * Destructuring
   * Modules
-* The following ES6 features are not to be used, in order to maintain support for IE 11 and older mobile browsers. This may change in the future.
-  * Spread (`...`) operator (because it requires Object.assign)
-  * Iterators and generators
-  * "Library" features such as `Map`, `Set`, `array.find`, etc.
 
 The conventions for module exports are:
 
@@ -153,9 +186,16 @@ The conventions for module exports are:
 * If a module exports something with the same name as the file name (modulo case), it should be the default export.
 * Anything else should be a named export.
 
-### Version Control Conventions
+To keep code uniformly styled and avoid common mistakes, you can check some files with the following scripts:
 
-* We use [rebase merging](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) (as opposed to [basic merging](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging#Basic-Merging)) to merge branches
+```bash
+npm run lint
+npm run lint-css
+```
+
+Additionally, if you're using VSCode, the "Format Document" action or "Editor: Format on Save" should enforce the js, ts, and css formatting for this project by default.
+
+### Version Control Conventions
 
 Here is a recommended way to get setup:
 1. Fork this project
@@ -179,25 +219,8 @@ What warrants a changelog entry?
 
 How to add your changelog?
 
+- Edit the [`CHANGELOG.md`](CHANGELOG.md) file directly, inserting a new entry at the top of the appropriate list
 - Any changelog entry should be descriptive and concise; it should explain the change to a reader without context
-- Any changelog entry should be added to the pull request in the following format: `<changelog>Changelog description</changelog>`
-- Any change that does not require a changelog should be labelled `skip changelog`
-
-### Github Issue Labels
-
-Our labeling system is
-
- - **minimalistic:** Labels' usefulness are inversely proportional to how many we have.
- - **objective:** Labels should be objective enough that any two people would agree on a labeling decision.
- - **useful:** Labels should track state or capture semantic meaning that would otherwise be hard to search.
-
-We have divided our labels into categories to make them easier to use.
-
- - type (blue)
- - actionable status (red)
- - non-actionable status (grey)
- - importance / urgency (green)
- - topic / project / misc (yellow)
 
 ## Recommended Reading
 

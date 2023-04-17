@@ -1,4 +1,4 @@
-import {createMap as globalCreateMap, setPerformance, setWebGlContext} from '../util/test/util';
+import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
 import Popup, {Offset} from './popup';
 import LngLat from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
@@ -18,8 +18,7 @@ function createMap(options?) {
 }
 
 beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
+    beforeMapTest();
 });
 
 describe('popup', () => {
