@@ -10,6 +10,7 @@ describe('ImageRequest', () => {
         global.fetch = null;
         server = fakeServer.create();
         ImageRequest.resetRequestQueue();
+        stubAjaxGetImage(undefined);
     });
     afterEach(() => {
         server.restore();
@@ -19,12 +20,15 @@ describe('ImageRequest', () => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
-
+        let callbackCount = 0;
         function callback(err) {
             if (err) return;
             // last request is only added after we got a response from one of the previous ones
-            expect(server.requests).toHaveLength(maxRequests + 1);
-            done();
+            expect(server.requests).toHaveLength(maxRequests + callbackCount);
+            callbackCount++;
+            if (callbackCount === 2) {
+                done();
+            }
         }
 
         for (let i = 0; i < maxRequests + 1; i++) {
@@ -33,6 +37,7 @@ describe('ImageRequest', () => {
         expect(server.requests).toHaveLength(maxRequests);
 
         server.requests[0].respond(undefined, undefined, undefined);
+        server.requests[1].respond(undefined, undefined, undefined);
     });
 
     test('getImage cancelling frees up request for maxParallelImageRequests', done => {
@@ -92,7 +97,7 @@ describe('ImageRequest', () => {
         server.respond();
     });
 
-    test('getImage uses ImageBitmap when supported', done => {
+    test('getImage uses createImageBitmap when supported', done => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
             'Expires': 'expires'}, ''));
@@ -110,12 +115,29 @@ describe('ImageRequest', () => {
         server.respond();
     });
 
-    test('getImage uses HTMLImageElement when ImageBitmap is not supported', done => {
+    test('getImage using createImageBitmap throws exception', done => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
             'Expires': 'expires'}, ''));
 
-        stubAjaxGetImage(undefined);
+        stubAjaxGetImage(() => Promise.reject(new Error('error')));
+
+        ImageRequest.getImage({url: ''}, (err, img) => {
+            expect(img).toBeFalsy();
+            if (err) {
+                done();
+            } else {
+                done('Error expected but go a response');
+            }
+        });
+
+        server.respond();
+    });
+
+    test('getImage uses HTMLImageElement when ImageBitmap is not supported', done => {
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+            'Cache-Control': 'cache',
+            'Expires': 'expires'}, ''));
 
         ImageRequest.getImage({url: ''}, (err, img, expiry) => {
             if (err) done(`get image failed with error ${err.message}`);
@@ -128,14 +150,22 @@ describe('ImageRequest', () => {
         server.respond();
     });
 
-    test('getImage using HTMLImageElement when image refresh is not required', done => {
-        stubAjaxGetImage(undefined);
-        ImageRequest.getImage({url: ''}, (err, img) => {
+    test('getImage using HTMLImageElement with same-origin credentials', done => {
+        ImageRequest.getImage({url: '', credentials: 'same-origin'}, (err, img: HTMLImageElement) => {
             if (err) done(err);
             expect(img).toBeInstanceOf(HTMLImageElement);
+            expect(img.crossOrigin).toBe('anonymous');
             done();
         }, false);
+    });
 
+    test('getImage using HTMLImageElement with include credentials', done => {
+        ImageRequest.getImage({url: '', credentials: 'include'}, (err, img: HTMLImageElement) => {
+            if (err) done(err);
+            expect(img).toBeInstanceOf(HTMLImageElement);
+            expect(img.crossOrigin).toBe('use-credentials');
+            done();
+        }, false);
     });
 
     test('getImage request returned 404 response for fetch request', done => {
@@ -150,8 +180,6 @@ describe('ImageRequest', () => {
     });
 
     test('getImage request failed for HTTPImageRequest', done => {
-        stubAjaxGetImage(undefined);
-
         ImageRequest.getImage({url: 'error'}, (err) => {
             if (err) done();
             else done('Image download should have failed');
@@ -185,7 +213,6 @@ describe('ImageRequest', () => {
             'Cache-Control': 'cache',
             'Expires': 'expires'}, ''));
 
-        stubAjaxGetImage(undefined);
         const request = ImageRequest.getImage({url: ''}, () => {
             done('Callback should not be called in case image request is cancelled');
         });
