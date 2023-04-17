@@ -146,16 +146,20 @@ namespace ImageRequest {
         const {requestParameters, supportImageRefresh, callback} = itemInQueue;
         extend(requestParameters, {type: 'image'});
 
-        // If refreshExpiredTiles is false, then we can use HTMLImageElement to download raster images.
-        // Fetch/XHR (via MakeRequest API) will be used to download images for following scenarios:
-        // 1. Style image sprite will had a issue with HTMLImageElement as described
-        //    here: https://github.com/mapbox/mapbox-gl-js/issues/1470
-        // 2. If refreshExpiredTiles is true (default), then in order to read the image cache header,
-        //     fetch/XHR request will be required
-        // For any special case handling like use of AddProtocol, worker initiated request, let makeRequest handle it.
+        // - If refreshExpiredTiles is false, then we can use HTMLImageElement to download raster images.
+        // - Fetch/XHR (via MakeRequest API) will be used to download images for following scenarios:
+        //      1. Style image sprite will had a issue with HTMLImageElement as described
+        //          here: https://github.com/mapbox/mapbox-gl-js/issues/1470
+        //      2. If refreshExpiredTiles is true (default), then in order to read the image cache header,
+        //          fetch/XHR request will be required
+        // - For any special case handling like use of AddProtocol, worker initiated request or additional headers
+        //      let makeRequest handle it.
+        // - HtmlImageElement request automatically adds accept header for all the browser supported images
         const canUseHTMLImageElement = supportImageRefresh === false &&
             !isWorker() &&
-            !getProtocolAction(requestParameters.url);
+            !getProtocolAction(requestParameters.url) &&
+            (!requestParameters.headers ||
+                Object.keys(requestParameters.headers).reduce((acc, item) => acc && item === 'accept', true));
 
         const action = canUseHTMLImageElement ? getImageUsingHtmlImage : makeRequest;
         return action(

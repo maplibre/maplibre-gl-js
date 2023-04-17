@@ -3,6 +3,7 @@ import webpSupported from './webp_supported';
 import {stubAjaxGetImage} from './test/util';
 import {fakeServer, FakeServer} from 'nise';
 import ImageRequest, {ImageRequestQueueItem} from './image_request';
+import * as ajax from './ajax';
 
 describe('ImageRequest', () => {
     let server: FakeServer;
@@ -130,7 +131,8 @@ describe('ImageRequest', () => {
         server.respond();
     });
 
-    test('getImage uses HTMLImageElement when ImageBitmap is not supported', done => {
+    test('getImage uses HTMLImageElement when createImageBitmap is not supported', done => {
+        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
             'Expires': 'expires'}, ''));
@@ -144,24 +146,45 @@ describe('ImageRequest', () => {
         });
 
         server.respond();
+        expect(makeRequestSky).toHaveBeenCalledTimes(1);
+        makeRequestSky.mockClear();
     });
 
     test('getImage using HTMLImageElement with same-origin credentials', done => {
+        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
         ImageRequest.getImage({url: '', credentials: 'same-origin'}, (err, img: HTMLImageElement) => {
             if (err) done(err);
             expect(img).toBeInstanceOf(HTMLImageElement);
             expect(img.crossOrigin).toBe('anonymous');
             done();
         }, false);
+
+        expect(makeRequestSky).toHaveBeenCalledTimes(0);
+        makeRequestSky.mockClear();
     });
 
     test('getImage using HTMLImageElement with include credentials', done => {
+        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
         ImageRequest.getImage({url: '', credentials: 'include'}, (err, img: HTMLImageElement) => {
             if (err) done(err);
             expect(img).toBeInstanceOf(HTMLImageElement);
             expect(img.crossOrigin).toBe('use-credentials');
             done();
         }, false);
+
+        expect(makeRequestSky).toHaveBeenCalledTimes(0);
+        makeRequestSky.mockClear();
+    });
+
+    test('getImage uses makeRequest when custom Headers are added', () => {
+        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+
+        ImageRequest.getImage({url: '', credentials: 'include', headers: {custom: 'test', accept: 'image'}},
+            () => {},
+            false);
+
+        expect(makeRequestSky).toHaveBeenCalledTimes(1);
+        makeRequestSky.mockClear();
     });
 
     test('getImage request returned 404 response for fetch request', done => {
