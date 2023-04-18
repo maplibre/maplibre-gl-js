@@ -31,6 +31,10 @@ class StubMap extends Evented {
     }
 
     setTerrain() {}
+
+    _getMapId() {
+        return 1;
+    }
 }
 
 function createStyle(styleJSON: StyleSpecification): Promise<Style> {
