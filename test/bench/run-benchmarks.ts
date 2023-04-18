@@ -30,7 +30,7 @@ if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
 }
 
-const url = new URL('http://localhost:9966/test/bench/versions');
+const url = new URL('http://localhost:9966/test/bench/versions/index.html');
 
 if (argv.compare !== true && argv.compare !== undefined) { // handle --compare without argument as the default
     for (const compare of [].concat(argv.compare))
