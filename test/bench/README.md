@@ -23,9 +23,9 @@ MAPLIBRE_STYLES={YOUR STYLES HERE} npm run start-bench
 ```
 Note: `MAPLIBRE_STYLES` takes a comma-separated list of up to 3 MapLibre styles provided as a style URL or file system path (e.g. `path/to/style-a.json,path/to/style-b.json`)
 
-To run all benchmarks, open [the benchmark page, `http://localhost:9966/test/bench/styles`](http://localhost:9966/test/bench/styles).
+To run all benchmarks, open [the benchmark page, `http://localhost:9966/test/bench/styles/index.html`](http://localhost:9966/test/bench/styles/index.html).
 
-To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/styles#Layout`](http://localhost:9966/test/bench/styles#Layout).
+To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/styles/index.html#Layout`](http://localhost:9966/test/bench/styles/index.html#Layout).
 
 By default, the style benchmark page will run its benchmarks against `https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL`. `Layout` and `Paint` styles will run one instance of the test for each tile/location in an internal list of tiles. This behavior helps visualize the ways in which a style performs given various conditions present in each tile (CJK text, dense urban areas, rural areas, etc). `QueryBox` and `QueryPoint` use the internal list of tiles but otherwise run the same as their non-style benchmark equivalents. `StyleLayerCreate` and `StyleValidate` are not tile/location dependent and run the same way as their non-style benchmark equivalents. All other benchmark tests from the non-style suite are not used when benchmarking styles.
 
