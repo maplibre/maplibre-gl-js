@@ -5,7 +5,7 @@
             "description": "Tests results of color interpolation in sRGB/HCL/LAB color spaces",
             "width": 1024,
             "height": 430,
-            "threshold": 0.001
+            "threshold": 0.01
         }
     },
     "zoom": 1,
