@@ -53,7 +53,7 @@ function patternUniformValues(crossfade: CrossfadeParameters, painter: Painter, 
 
     return {
         'u_image': 0,
-        'u_texsize': tile.imageAtlasTexture.size,
+        'u_texsize': tile.imageAtlasTexture ? tile.imageAtlasTexture.size : [0, 0],
         'u_scale': [tileRatio, crossfade.fromScale, crossfade.toScale],
         'u_fade': crossfade.t,
         // split the pixel coord into two pairs of 16 bit numbers. The glsl spec only guarantees 16 bits of precision.

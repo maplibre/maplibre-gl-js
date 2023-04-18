@@ -72,7 +72,10 @@ function drawExtrusionTiles(
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration);
 
-        if (image) {
+        // Extrusion will use a texture if there's a pattern image and an
+        // atlas. It's possible to have an image but no atlas, in the case of
+        // missing (mis-named) pattern images
+        if (image && tile.imageAtlasTexture) {
             painter.context.activeTexture.set(gl.TEXTURE0);
             tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             programConfiguration.updatePaintBuffers(crossfade);
