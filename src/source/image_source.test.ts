@@ -55,14 +55,13 @@ describe('ImageSource', () => {
         expect(source.tileSize).toBe(512);
     });
 
-    test('load should convert image to image data', done => {
+    test('load should convert image to image data', () => {
         const source = createSource({url: '/image.png'});
         jest.spyOn(browser, 'getImageData').mockImplementation(() => new ImageData(1, 1));
 
-        source.load([[0, 0], [1, 0], [1, 1], [0, 1]], () => {
-            expect(source.image instanceof ImageData).toBeTruthy();
-            done();
-        });
+        source.onAdd(new StubMap() as any);
+        respond();
+        expect(source.image instanceof ImageData).toBeTruthy();
 
     });
 
