@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 
+- Fixes Image source content is not loaded properly on iOS ([#2419](https://github.com/maplibre/maplibre-gl-js/pull/2419))
 - _...Add new stuff here..._
 
 ## 3.0.0-pre.5
