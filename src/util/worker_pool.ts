@@ -1,7 +1,7 @@
 import webWorkerFactory from './web_worker';
 import type {WorkerInterface} from './web_worker';
 import browser from './browser';
-import { isSafari } from './util';
+import {isSafari} from './util';
 
 export const PRELOAD_POOL_ID = 'mapboxgl_preloaded_worker_pool';
 
