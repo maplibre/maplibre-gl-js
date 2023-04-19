@@ -57,13 +57,13 @@ describe('ImageSource', () => {
 
     test('load should convert image to image data', done => {
         const source = createSource({url: '/image.png'});
-        jest.spyOn(browser, "getImageData").mockImplementation(() => new ImageData(1,1));
-        
+        jest.spyOn(browser, 'getImageData').mockImplementation(() => new ImageData(1, 1));
+
         source.load([[0, 0], [1, 0], [1, 1], [0, 1]], () => {
             expect(source.image instanceof ImageData).toBeTruthy();
             done();
-        })
-        
+        });
+
     });
 
     test('fires dataloading event', () => {
