@@ -1,0 +1,188 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "description": "Tests results of color interpolation in sRGB/HCL/LAB color spaces",
+            "width": 1024,
+            "height": 430,
+            "threshold": 0.01
+        }
+    },
+    "zoom": 1,
+    "sources": {
+        "geojson": {
+            "type": "geojson",
+            "lineMetrics": true,
+            "data": {
+                "type": "FeatureCollection",
+                "features": [{
+                    "type": "Feature",
+                    "properties": {"id": "1_rgb"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, 52], [180, 52] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "1_hcl"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, 42], [180, 42] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "1_lab"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, 30], [180, 30] ]}
+                },{
+                    "type": "Feature",
+                    "properties": {"id": "2_rgb"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, 14.5], [180, 14.5] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "2_hcl"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, 0], [180, 0] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "2_lab"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, -14.5], [180, -14.5] ]}
+                },{
+                    "type": "Feature",
+                    "properties": {"id": "3_rgb"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, -30], [180, -30] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "3_hcl"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, -42], [180, -42] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "3_lab"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, -52], [180, -52] ]}
+                }]
+            }
+        }
+    },
+    "layers": [{
+        "id": "test_1_rgb",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "1_rgb"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "blue",
+                0.1, "royalblue",
+                0.3, "cyan",
+                0.5, "lime",
+                0.7, "yellow",
+                1, "red"
+            ]
+        }
+    }, {
+        "id": "test_1_hcl",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "1_hcl"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate-hcl", ["linear"], ["line-progress"],
+                0, "blue",
+                0.1, "royalblue",
+                0.3, "cyan",
+                0.5, "lime",
+                0.7, "yellow",
+                1, "red"
+            ]
+        }
+    }, {
+        "id": "test_1_lab",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "1_lab"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate-lab", ["linear"], ["line-progress"],
+                0, "blue",
+                0.1, "royalblue",
+                0.3, "cyan",
+                0.5, "lime",
+                0.7, "yellow",
+                1, "red"
+            ]
+        }
+    }, {
+        "id": "test_2_rgb",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "2_rgb"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "#1518e4",
+                1, "#a96011"
+            ]
+        }
+    }, {
+        "id": "test_2_hcl",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "2_hcl"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate-hcl", ["linear"], ["line-progress"],
+                0, "#1518e4",
+                1, "#a96011"
+            ]
+        }
+    }, {
+        "id": "test_2_lab",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "2_lab"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate-lab", ["linear"], ["line-progress"],
+                0, "#1518e4",
+                1, "#a96011"
+            ]
+        }
+    }, {
+        "id": "test_3_rgb",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "3_rgb"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "rgb(0% 50% 0%)",
+                1, "rgb(100% 65% 0%)"
+            ]
+        }
+    }, {
+        "id": "test_3_hcl",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "3_hcl"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate-hcl", ["linear"], ["line-progress"],
+                0, "rgb(0% 50% 0%)",
+                1, "rgb(100% 65% 0%)"
+            ]
+        }
+    }, {
+        "id": "test_3_lab",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "3_lab"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate-lab", ["linear"], ["line-progress"],
+                0, "rgb(0% 50% 0%)",
+                1, "rgb(100% 65% 0%)"
+            ]
+        }
+    }]
+}
