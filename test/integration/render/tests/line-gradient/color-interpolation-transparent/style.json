@@ -1,0 +1,176 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "description": "Tests results of color interpolation where one of the colors is fully transparent",
+            "width": 1024,
+            "height": 430,
+            "threshold": 0.01
+        }
+    },
+    "zoom": 1,
+    "sources": {
+        "geojson": {
+            "type": "geojson",
+            "lineMetrics": true,
+            "data": {
+                "type": "FeatureCollection",
+                "features": [{
+                    "type": "Feature",
+                    "properties": {"id": "1_from_transparent_black_to_dark_color"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, 52], [180, 52] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "1_from_transparent_white_to_dark_color"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, 42], [180, 42] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "1_from_transparent_dark_color_to_color"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, 30], [180, 30] ]}
+                },{
+                    "type": "Feature",
+                    "properties": {"id": "2_from_transparent_black_to_light_color"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, 14.5], [180, 14.5] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "2_from_transparent_white_to_light_color"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, 0], [180, 0] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "2_from_transparent_light_color_to_color"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, -14.5], [180, -14.5] ]}
+                },{
+                    "type": "Feature",
+                    "properties": {"id": "3_from_transparent_black_to_white"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, -30], [180, -30] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "3_from_transparent_white_to_black"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, -42], [180, -42] ]}
+                }, {
+                    "type": "Feature",
+                    "properties": {"id": "3_from_transparent_black_to_black"},
+                    "geometry": {"type": "LineString", "coordinates": [ [-180, -52], [180, -52] ]}
+                }]
+            }
+        }
+    },
+    "layers": [{
+        "id": "test_1_from_transparent_black_to_dark_color",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "1_from_transparent_black_to_dark_color"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "rgb(0 0 0 / 0)",
+                1, "rgb(22 73 22 / 1)"
+            ]
+        }
+    }, {
+        "id": "test_1_from_transparent_white_to_dark_color",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "1_from_transparent_white_to_dark_color"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "rgb(255 255 255 / 0)",
+                1, "rgb(22 73 22 / 1)"
+            ]
+        }
+    }, {
+        "id": "test_1_from_transparent_dark_color_to_color",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "1_from_transparent_dark_color_to_color"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "rgb(22 73 22 / 0)",
+                1, "rgb(22 73 22 / 1)"
+            ]
+        }
+    }, {
+        "id": "test_2_from_transparent_black_to_light_color",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "2_from_transparent_black_to_light_color"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "rgb(0 0 0 / 0)",
+                1, "rgb(255 215 0 / 1)"
+            ]
+        }
+    }, {
+        "id": "test_2_from_transparent_white_to_light_color",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "2_from_transparent_white_to_light_color"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "rgb(255 255 255 / 0)",
+                1, "rgb(255 215 0 / 1)"
+            ]
+        }
+    }, {
+        "id": "test_2_from_transparent_light_color_to_color",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "2_from_transparent_light_color_to_color"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "rgb(255 215 0 / 0)",
+                1, "rgb(255 215 0 / 1)"
+            ]
+        }
+    }, {
+        "id": "test_3_from_transparent_black_to_white",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "3_from_transparent_black_to_white"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "rgb(0 0 0 / 0)",
+                1, "rgb(255 255 255 / 1)"
+            ]
+        }
+    }, {
+        "id": "test_3_from_transparent_white_to_black",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "3_from_transparent_white_to_black"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "rgb(255 255 255 / 0)",
+                1, "rgb(0 0 0 / 1)"
+            ]
+        }
+    }, {
+        "id": "test_3_from_transparent_black_to_black",
+        "type": "line",
+        "source": "geojson",
+        "filter": ["==", ["get", "id"], "3_from_transparent_black_to_black"],
+        "paint": {
+            "line-width": 40,
+            "line-gradient": [
+                "interpolate", ["linear"], ["line-progress"],
+                0, "rgb(0 0 0 / 0)",
+                1, "rgb(0 0 0 / 1)"
+            ]
+        }
+    }]
+}
