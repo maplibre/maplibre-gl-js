@@ -6,6 +6,7 @@ import {fakeXhr} from 'nise';
 import {RequestManager} from '../util/request_manager';
 import Dispatcher from '../util/dispatcher';
 import {stubAjaxGetImage} from '../util/test/util';
+import browser from '../util/browser';
 
 function createSource(options) {
     options = extend({
@@ -52,6 +53,17 @@ describe('ImageSource', () => {
         expect(source.minzoom).toBe(0);
         expect(source.maxzoom).toBe(22);
         expect(source.tileSize).toBe(512);
+    });
+
+    test('load should convert image to image data', done => {
+        const source = createSource({url: '/image.png'});
+        jest.spyOn(browser, "getImageData").mockImplementation(() => new ImageData(1,1));
+        
+        source.load([[0, 0], [1, 0], [1, 1], [0, 1]], () => {
+            expect(source.image instanceof ImageData).toBeTruthy();
+            done();
+        })
+        
     });
 
     test('fires dataloading event', () => {

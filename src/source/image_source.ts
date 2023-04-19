@@ -21,6 +21,7 @@ import type {
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import {Cancelable} from '../types/cancelable';
+import browser from '../util/browser';
 
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 
@@ -77,7 +78,7 @@ class ImageSource extends Evented implements Source {
     dispatcher: Dispatcher;
     map: Map;
     texture: Texture | null;
-    image: HTMLImageElement | ImageBitmap;
+    image: ImageData;
     tileID: CanonicalTileID;
     _boundsArray: RasterBoundsArray;
     boundsBuffer: VertexBuffer;
@@ -119,7 +120,7 @@ class ImageSource extends Evented implements Source {
             if (err) {
                 this.fire(new ErrorEvent(err));
             } else if (image) {
-                this.image = image;
+                this.image = browser.getImageData(image);
                 if (newCoordinates) {
                     this.coordinates = newCoordinates;
                 }
