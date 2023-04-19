@@ -16,7 +16,7 @@ import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/
 
 /**
  * A source containing vector tiles in [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
- * (See the [Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/) for detailed documentation of options.)
+ * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
  *
  * @example
  * map.addSource('some id', {

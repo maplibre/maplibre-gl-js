@@ -13,11 +13,12 @@ Then run:
 npm test
 ```
 
+Note that for Linux you'll need to prefix test commands with `xvfb-run -a` for example `xvfb-run -a npm run test`
 Note that some tests rely on the built project and will not pass until you have run `npm run build-dist`.
 
 To run individual tests:
 
- - Unit tests: `npx jest path/to/file.test.js` (e.g. `npx jest src/style/style_layer.test.ts`)
+ - Unit tests: `npx jest path/to/file.test.ts` (e.g. `npx jest src/style/style_layer.test.ts`)
  - Render tests: `npm run test-render -- render-test-name` (e.g. `npm run test-render -- text-rotation-alignment`)
 
 To run folders in watch mode, meaning they will run continuously as you make changes to relevant code, (i.e. for test driven development): use `npm run test-watch-roots *folder1* [*folder2*...]` (e.g. `npm run test-watch-roots ./src/ui/control`)
@@ -29,11 +30,14 @@ Steps to use Visual Studio Code:
  - Install VS Code.
  - Open MapLibre root folder with VS Code UI.
  - Start debugging:
-<br />
+ 
    ![Start debugging](assets/docs/debug_test_in_vscode.png)
    Before debugging, you might want to set break points in sources.
 
-You may also ![run tests and view output](assets/docs/vscode-jest.png) with the plugin [orta.vscode-jest](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-jest)
+You may also run tests and view output with the plugin [orta.vscode-jest](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-jest):
+
+![VScode screenshots](assets/docs/vscode-jest.png)
+
 If you do so, note that the initial test run may take a while (3 minutes or so), during which time the test results are not yet available.
 
 

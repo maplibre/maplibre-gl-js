@@ -18,7 +18,7 @@
             try {
                 const params = new URL(location).searchParams;
                 let versions = params.getAll('compare').filter(Boolean);
-                if (!versions.length) {
+                if (!params.has('compare')) {
                     const response = await fetch('https://api.github.com/repos/maplibre/maplibre-gl-js/releases/latest');
                     const responseJson = await response.json();
                     versions = [responseJson['tag_name'], 'main'];

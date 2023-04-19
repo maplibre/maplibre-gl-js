@@ -87,12 +87,12 @@ Try
 - Run `arch -arm64 brew install pkg-config cairo pango libpng jpeg giflib librsvg`
 - delete `node_modules` folder and re-run `npm install`
 
-### Linux
+### Linux (and by extension Github codespaces)
 
 Install [git](https://git-scm.com/), [GNU Make](http://www.gnu.org/software/make/), and libglew-dev
 ```bash
 sudo apt-get update &&
-sudo apt-get install build-essential git libglew-dev libxi-dev default-jre default-jdk
+sudo apt-get install build-essential git libglew-dev libxi-dev default-jre default-jdk xvfb
 ```
 
 If prebuilt binaries for canvas and gl aren’t available, you will also need:
@@ -106,9 +106,9 @@ Install [nvm](https://github.com/nvm-sh/nvm)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
 ```
 
-Install [Node.js](https://nodejs.org/) ^18
+Install [Node.js](https://nodejs.org/) from .nvmrc
 ```
-nvm install 18
+nvm install
 ```
 
 Clone the repository
