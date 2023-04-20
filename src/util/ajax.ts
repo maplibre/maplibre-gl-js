@@ -256,11 +256,9 @@ export const postData = function(requestParameters: RequestParameters, callback:
 };
 
 function sameOrigin(url): boolean {
-    // URL class should be available everywhere
-    // https://developer.mozilla.org/en-US/docs/Web/API/URL
-    const urlObj = new URL(url);
     const locationObj = window.document.location;
-    return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
+    const expected = `${locationObj.protocol}//${locationObj.host}`;
+    return url.toLowerCase().indexOf(expected) === 0;
 }
 
 export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
