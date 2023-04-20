@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-
+- [Breaking] Improve control performance by restricting worker count to a max of 1 except safari browser. ([#2354](https://github.com/maplibre/maplibre-gl-js/pull/2354))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
