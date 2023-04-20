@@ -1237,7 +1237,85 @@ describe('SourceCache#_updateRetainedTiles', () => {
 
     });
 
-    test('adds correct leaded parent tiles for overzoomed tiles', () => {
+    test('Only retain loaded parent tile when zooming in', () => {
+        const sourceCache = createSourceCache({
+            loadTile(tile, callback) {
+                tile.state = 'loading';
+                callback();
+            }
+        });
+
+        let idealTiles = [new OverscaledTileID(9, 0, 9, 0, 0), new OverscaledTileID(9, 0, 9, 1, 0)];
+        let retained = sourceCache._updateRetainedTiles(idealTiles, 9);
+        // Parent loading tiles from z=8 not retained
+        expect(Object.keys(retained).sort()).toEqual(
+            idealTiles.map((tile) => tile.key).sort()
+        );
+
+        idealTiles = [new OverscaledTileID(10, 0, 10, 0, 0), new OverscaledTileID(10, 0, 10, 1, 0)];
+        retained = sourceCache._updateRetainedTiles(idealTiles, 10);
+        // Parent loading tiles from z=9 not retained
+        expect(Object.keys(retained).sort()).toEqual(
+            idealTiles.map((tile) => tile.key).sort()
+        );
+
+        const loadedTiles = idealTiles;
+        loadedTiles.forEach(t => {
+            sourceCache._tiles[t.key] = new Tile(t, undefined);
+            sourceCache._tiles[t.key].state = 'loaded';
+        });
+
+        idealTiles = [new OverscaledTileID(11, 0, 11, 0, 0), new OverscaledTileID(11, 0, 11, 1, 0)];
+        retained = sourceCache._updateRetainedTiles(idealTiles, 11);
+        // Parent loaded tile in the view port from z=10 was retained
+        expect(Object.keys(retained).sort()).toEqual([
+            new OverscaledTileID(10, 0, 10, 0, 0).key, // Parent loaded tile
+            new OverscaledTileID(11, 0, 11, 0, 0).key,
+            new OverscaledTileID(11, 0, 11, 1, 0).key
+        ].sort());
+
+    });
+
+    test('Only retain loaded child tile when zooming out', () => {
+        const sourceCache = createSourceCache({
+            loadTile(tile, callback) {
+                tile.state = 'loading';
+                callback();
+            }
+        });
+
+        let idealTiles = [new OverscaledTileID(7, 0, 7, 0, 0), new OverscaledTileID(7, 0, 7, 1, 0)];
+        let retained = sourceCache._updateRetainedTiles(idealTiles, 7);
+        // Client tiles from z=6 not retained
+        expect(Object.keys(retained).sort()).toEqual(
+            idealTiles.map((tile) => tile.key).sort()
+        );
+
+        idealTiles = [new OverscaledTileID(6, 0, 6, 0, 0), new OverscaledTileID(6, 0, 6, 1, 0)];
+        retained = sourceCache._updateRetainedTiles(idealTiles, 6);
+        // Client tiles from z=6 not retained
+        expect(Object.keys(retained).sort()).toEqual(
+            idealTiles.map((tile) => tile.key).sort()
+        );
+
+        const loadedTiles = idealTiles;
+        loadedTiles.forEach(t => {
+            sourceCache._tiles[t.key] = new Tile(t, undefined);
+            sourceCache._tiles[t.key].state = 'loaded';
+        });
+
+        idealTiles = [new OverscaledTileID(5, 0, 5, 0, 0), new OverscaledTileID(5, 0, 5, 1, 0)];
+        retained = sourceCache._updateRetainedTiles(idealTiles, 5);
+        // Child loaded tile in the view port from z=6 was retained
+        expect(Object.keys(retained).sort()).toEqual([
+            new OverscaledTileID(6, 0, 6, 0, 0).key,
+            new OverscaledTileID(6, 0, 6, 1, 0).key,
+            new OverscaledTileID(5, 0, 5, 0, 0).key,
+            new OverscaledTileID(5, 0, 5, 1, 0).key
+        ].sort());
+    });
+
+    test('adds correct loaded parent tiles for overzoomed tiles', () => {
         const sourceCache = createSourceCache({
             loadTile(tile, callback) {
                 tile.state = 'loading';

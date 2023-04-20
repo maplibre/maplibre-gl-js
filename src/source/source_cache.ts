@@ -717,11 +717,14 @@ class SourceCache extends Evented {
                     tile = this._addTile(parentId);
                 }
                 if (tile) {
-                    retain[parentId.key] = parentId;
+                    const hasData = tile.hasData();
+                    if (parentWasRequested || hasData) {
+                        retain[parentId.key] = parentId;
+                    }
                     // Save the current values, since they're the parent of the next iteration
                     // of the parent tile ascent loop.
                     parentWasRequested = tile.wasRequested();
-                    if (tile.hasData()) break;
+                    if (hasData) break;
                 }
             }
         }

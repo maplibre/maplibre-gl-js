@@ -1,11 +1,10 @@
 import packageJson from '../../package.json' assert {type: 'json'};
-import {glob} from 'glob';
+import {globSync, glob} from 'glob';
 import path, {dirname} from 'path';
-import {promisify} from 'node:util';
 import fs from 'node:fs/promises';
 import {pathToFileURL} from 'url';
 
-const distjs = glob.sync('dist/**/*.js');
+const distjs = globSync('dist/**/*.js');
 
 async function getSourceMapForFile(url: string|URL) {
     const content = await fs.readFile(url, {encoding: 'utf-8'});
@@ -53,22 +52,16 @@ describe('main sourcemap', () => {
         const sourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.main));
         const sourceMapEntryRootDir = path.relative('.', dirname(packageJson.main));
 
-        const sourcemapEntriesNormalized = sourcemapJSON.sources.map(f => {
-            const joinedFilePath = path.join(sourceMapEntryRootDir, f);
-
-            // joined path has back slashes on windows, normalize them to be consistent with
-            // entries returned by glob
-            return  joinedFilePath.replace(/\\/g, '/');
-        });
+        const sourcemapEntriesNormalized = sourcemapJSON.sources.map(f => path.join(sourceMapEntryRootDir, f));
 
         // *.js.map file should have these files
-        const srcFiles = await promisify(glob)('src/**/*.ts');
+        const srcFiles = await glob('src/**/*.ts');
         const expectedEntriesInSourcemapJSON = srcFiles.filter(f => {
             if (f.endsWith('.test.ts'))
                 return false;
-            if (f.startsWith('src/style-spec'))
+            if (f.startsWith(path.join('src', 'style-spec')))
                 return false;
-            if (f.startsWith('build/'))
+            if (f.startsWith(`build${path.sep}`))
                 return false;
             return true;
         }).sort();
@@ -77,7 +70,7 @@ describe('main sourcemap', () => {
         const actualEntriesInSourcemapJSON = sourcemapEntriesNormalized.filter(f => {
             if (f.startsWith('node_modules'))
                 return false;
-            if (f.startsWith('src/style-spec'))
+            if (f.startsWith(path.join('src', 'style-spec')))
                 return false;
             return true;
         }).sort();

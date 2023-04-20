@@ -1,5 +1,5 @@
 import {clone, extend, easeCubicInOut} from '../util/util';
-import {interpolateFactory, Color, StylePropertySpecification, normalizePropertyExpression,
+import {interpolates, Color, StylePropertySpecification, normalizePropertyExpression,
     Feature,
     FeatureState,
     StylePropertyExpression,
@@ -483,9 +483,10 @@ export class DataConstantProperty<T> implements Property<T, T> {
     }
 
     interpolate(a: T, b: T, t: number): T {
-        const interp: any = interpolateFactory(this.specification.type as any);
-        if (interp) {
-            return interp(a, b, t);
+        const interpolationType = this.specification.type as keyof typeof interpolates;
+        const interpolationFn = interpolates[interpolationType] as ((from: T, to: T, t: number) => T) | undefined;
+        if (interpolationFn) {
+            return interpolationFn(a, b, t);
         } else {
             return a;
         }
@@ -542,9 +543,11 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, a.parameters);
         }
 
-        const interp: any = interpolateFactory(this.specification.type as any);
-        if (interp) {
-            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: interp(a.value.value, b.value.value, t)}, a.parameters);
+        const interpolationType = this.specification.type as keyof typeof interpolates;
+        const interpolationFn = interpolates[interpolationType] as ((from: T, to: T, t: number) => T) | undefined;
+        if (interpolationFn) {
+            const interpolatedValue = interpolationFn(a.value.value, b.value.value, t);
+            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: interpolatedValue}, a.parameters);
         } else {
             return a;
         }
