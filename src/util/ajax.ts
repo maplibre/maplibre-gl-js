@@ -256,6 +256,8 @@ export const postData = function(requestParameters: RequestParameters, callback:
 };
 
 function sameOrigin(url): boolean {
+
+    // string comparison seems a bit of old fashion and awkward, but it is the fastest compared to URL class and regex
     const locationObj = window.document.location;
     const expected = `${locationObj.protocol}//${locationObj.host}`;
     return url.toLowerCase().indexOf(expected) === 0;
