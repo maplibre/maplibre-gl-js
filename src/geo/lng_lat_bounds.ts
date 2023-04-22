@@ -103,7 +103,11 @@ class LngLatBounds {
                     const lngLatObj = (obj as any as LngLatLike);
                     return this.extend(LngLat.convert(lngLatObj));
                 }
+
+            } else if (typeof obj === 'object' && obj !== null) {
+                return this.extend(LngLat.convert(obj));
             }
+
             return this;
         }
 
