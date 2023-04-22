@@ -104,7 +104,7 @@ class LngLatBounds {
                     return this.extend(LngLat.convert(lngLatObj));
                 }
 
-            } else if (typeof obj === 'object' && obj !== null) {
+            } else if (obj && ('lng' in obj || 'lon' in obj) && 'lat' in obj) {
                 return this.extend(LngLat.convert(obj));
             }
 
