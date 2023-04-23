@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 
+- Fix `LngLatBounds.extend()` to correctly handle `{ lng: number, lat: number }` coordinates. ([#2425](https://github.com/maplibre/maplibre-gl-js/pull/2425))
 - _...Add new stuff here..._
 
 ## 3.0.0-pre.5
