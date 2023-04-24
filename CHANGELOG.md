@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - [Breaking] Improve control performance by restricting worker count to a max of 1 except safari browser. ([#2354](https://github.com/maplibre/maplibre-gl-js/pull/2354))
+- Improve performance by using HTMLImageElement to download raster source images when refreshExpiredTiles tiles is false ([#2126](https://github.com/maplibre/maplibre-gl-js/pull/2126))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
