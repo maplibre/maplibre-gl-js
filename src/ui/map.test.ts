@@ -189,16 +189,16 @@ describe('Map', () => {
             const spy = jest.spyOn(Style.prototype, 'update').mockImplementation((parameters: EvaluationParameters) => {
                 if (!idleTriggered) {
                     expect(parameters.fadeDuration).toBe(0);
-                } else{
+                } else {
                     expect(parameters.fadeDuration).toBe(fadeDuration);
                 }
             });
             const style = createStyle();
-            const map = createMap({style, fadeDuration: fadeDuration});
+            const map = createMap({style, fadeDuration});
             await map.once('idle');
             idleTriggered = true;
-            map.zoomTo(0.5, {duration : 100}); 
-            spy.mockReset();               
+            map.zoomTo(0.5, {duration: 100});
+            spy.mockReset();
         });
     });
 

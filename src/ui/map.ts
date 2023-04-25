@@ -484,7 +484,7 @@ class Map extends Camera {
             this.painter.terrainFacilitator.dirty = true;
             this._update(true);
         });
-        this.once('idle', () => this._idleTriggered = true);
+        this.once('idle', () => { this._idleTriggered = true; });
 
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
@@ -2841,7 +2841,7 @@ class Map extends Camera {
     _render(paintStartTimeStamp: number) {
         let gpuTimer, frameStartTime = 0;
         const extTimerQuery = this.painter.context.extTimerQuery;
-        const fadeDuration = this._idleTriggered? this._fadeDuration : 0;
+        const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
         if (this.listens('gpu-timing-frame')) {
             gpuTimer = extTimerQuery.createQueryEXT();
             extTimerQuery.beginQueryEXT(extTimerQuery.TIME_ELAPSED_EXT, gpuTimer);
@@ -2870,7 +2870,7 @@ class Map extends Camera {
 
             const parameters = new EvaluationParameters(zoom, {
                 now,
-                fadeDuration: fadeDuration,
+                fadeDuration,
                 zoomHistory: this.style.zoomHistory,
                 transition: this.style.getTransition()
             });
@@ -2914,7 +2914,7 @@ class Map extends Camera {
             rotating: this.isRotating(),
             zooming: this.isZooming(),
             moving: this.isMoving(),
-            fadeDuration: fadeDuration,
+            fadeDuration,
             showPadding: this.showPadding,
             gpuTiming: !!this.listens('gpu-timing-layer'),
         });
