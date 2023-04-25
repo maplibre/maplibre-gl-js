@@ -182,6 +182,24 @@ describe('Map', () => {
 
             expect(validationOption).toBeFalsy();
         });
+
+        test('fadeDuration is set after first idle event', async () => {
+            let idleTriggered = false;
+            const fadeDuration = 100;
+            const spy = jest.spyOn(Style.prototype, 'update').mockImplementation((parameters: EvaluationParameters) => {
+                if (!idleTriggered) {
+                    expect(parameters.fadeDuration).toBe(0);
+                } else{
+                    expect(parameters.fadeDuration).toBe(fadeDuration);
+                }
+            });
+            const style = createStyle();
+            const map = createMap({style, fadeDuration: fadeDuration});
+            await map.once('idle');
+            idleTriggered = true;
+            map.zoomTo(0.5, {duration : 100}); 
+            spy.mockReset();               
+        });
     });
 
     describe('#setStyle', () => {
