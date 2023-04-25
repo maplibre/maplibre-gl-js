@@ -3,7 +3,7 @@
 ### ✨ Features and improvements
 - [Breaking] Improve control performance by restricting worker count to a max of 1 except safari browser. ([#2354](https://github.com/maplibre/maplibre-gl-js/pull/2354))
 - Improve performance by using HTMLImageElement to download raster source images when refreshExpiredTiles tiles is false ([#2126](https://github.com/maplibre/maplibre-gl-js/pull/2126))
-- [Breaking] Improve control initial loading performance by forcing fadeDuration to 0 till first idle event.
+- [Breaking] Improve control initial loading performance by forcing fadeDuration to 0 till first idle event ([#2447](https://github.com/maplibre/maplibre-gl-js/pull/2447))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
