@@ -8,6 +8,7 @@
 ### 🐞 Bug fixes
 
 - Fix `LngLatBounds.extend()` to correctly handle `{ lng: number, lat: number }` coordinates. ([#2425](https://github.com/maplibre/maplibre-gl-js/pull/2425))
+- Fix the accuracy-circle in the geolocate control from randomly resizing. ([#2450](https://github.com/maplibre/maplibre-gl-js/pull/2450))
 - _...Add new stuff here..._
 
 ## 3.0.0-pre.5
