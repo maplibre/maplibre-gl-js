@@ -286,11 +286,12 @@ class GeolocateControl extends Evented implements IControl {
     }
 
     _updateCircleRadius() {
-        const y = this._map._container.clientHeight / 2;
-        const a = this._map.unproject([0, y]);
-        const b = this._map.unproject([1, y]);
-        const metersPerPixel = a.distanceTo(b);
-        const circleDiameter = Math.ceil(2.0 * this._accuracy / metersPerPixel);
+        const bounds = this._map.getBounds();
+        const southEastPoint = bounds.getSouthEast();
+        const northEastPoint = bounds.getNorthEast();
+        const mapHeightInMeters = southEastPoint.distanceTo(northEastPoint);
+        const mapHeightInPixels = this._map._container.clientHeight;
+        const circleDiameter = 2 * (this._accuracy / (mapHeightInMeters / mapHeightInPixels));
         this._circleElement.style.width = `${circleDiameter}px`;
         this._circleElement.style.height = `${circleDiameter}px`;
     }
