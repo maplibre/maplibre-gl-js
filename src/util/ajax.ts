@@ -256,12 +256,12 @@ export const postData = function(requestParameters: RequestParameters, callback:
     return makeRequest(extend(requestParameters, {method: 'POST'}), callback);
 };
 
-export function sameOrigin(url) {
- // string comparison seems a bit of old fashion and awkward, but it is the fastest compared to URL class and regex
-    const locationObj = window.document.location;
-    const expected = `${locationObj.protocol}//${locationObj.host}`;
-    return url.toLowerCase().indexOf(expected) === 0;
-
+export function sameOrigin(url: string) {
+    // URL class should be available everywhere
+    // https://developer.mozilla.org/en-US/docs/Web/API/URL
+    const urlObj = new URL(url);
+    const locationObj = window.location;
+    return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
 }
 
 export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};

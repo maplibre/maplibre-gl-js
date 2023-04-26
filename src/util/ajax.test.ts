@@ -2,7 +2,8 @@ import {
     getArrayBuffer,
     getJSON,
     postData,
-    AJAXError
+    AJAXError,
+    sameOrigin
 } from './ajax';
 
 import {fakeServer, FakeServer} from 'nise';
@@ -90,5 +91,28 @@ describe('ajax', () => {
             done();
         });
         server.respond();
+    });
+
+    test('sameOrigin method', () => {
+        jest.spyOn(window, 'location', 'get').mockReturnValue({
+            protocol: 'https:',
+            host: 'somewhere.com'
+        } as any);
+
+        expect(sameOrigin('https://somewhere.com')).toBe(true);
+        expect(sameOrigin('https://somewhere.com/path')).toBe(true);
+        expect(sameOrigin('https://somewhere.com/path/?q=abc')).toBe(true);
+
+        expect(sameOrigin('HTTPS://somewhere.com')).toBe(true);
+        expect(sameOrigin('HTTP://somewhere.com')).toBe(false);
+        expect(sameOrigin('file:///c:/temp/foo.html')).toBe(false);
+
+        // file url
+        jest.spyOn(window, 'location', 'get').mockReturnValue({
+            protocol: 'file:',
+            host: ''
+        } as any);
+        expect(sameOrigin('file:///C:/Temp/abc.html')).toBe(true);
+        expect(sameOrigin('HTTP://somewhere.com')).toBe(false);
     });
 });
