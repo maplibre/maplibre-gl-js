@@ -1,4 +1,3 @@
-import {supported} from '@mapbox/mapbox-gl-supported';
 import packageJSON from '../package.json' assert {type: 'json'};
 import Map from './ui/map';
 import NavigationControl from './ui/control/navigation_control';
@@ -37,7 +36,6 @@ import VideoSource from './source/video_source';
 const version = packageJSON.version;
 
 const exported = {
-    supported,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     Map,
