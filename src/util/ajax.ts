@@ -257,10 +257,9 @@ export const postData = function(requestParameters: RequestParameters, callback:
 };
 
 export function sameOrigin(url: string) {
-
-    try {
     // URL class should be available everywhere
     // https://developer.mozilla.org/en-US/docs/Web/API/URL
+    try {
         const urlObj = new URL(url);
         const locationObj = window.location;
         return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
