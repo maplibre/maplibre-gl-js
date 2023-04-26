@@ -115,7 +115,7 @@ class RasterTileSource extends Evented implements Source {
                 tile.state = 'errored';
                 callback(err);
             } else if (img) {
-                if (this.map._refreshExpiredTiles) tile.setExpiryData(expiry);
+                if (this.map._refreshExpiredTiles && expiry) tile.setExpiryData(expiry);
 
                 const context = this.map.painter.context;
                 const gl = context.gl;
@@ -135,7 +135,7 @@ class RasterTileSource extends Evented implements Source {
 
                 callback(null);
             }
-        });
+        }, this.map._refreshExpiredTiles);
     }
 
     abortTile(tile: Tile, callback: Callback<void>) {

@@ -4,6 +4,7 @@ import {RequestManager} from '../util/request_manager';
 import Dispatcher from '../util/dispatcher';
 import {fakeServer, FakeServer} from 'nise';
 import Tile from './tile';
+import {stubAjaxGetImage} from '../util/test/util';
 
 function createSource(options, transformCallback?) {
     const source = new RasterTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);
@@ -128,6 +129,36 @@ describe('RasterTileSource', () => {
                 expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/10/5/5.png');
                 expect(transformSpy.mock.calls[0][1]).toBe('Tile');
                 done();
+            }
+        });
+        server.respond();
+    });
+
+    test('HttpImageElement used to get image when refreshExpiredTiles is false', done => {
+        stubAjaxGetImage(undefined);
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        }));
+        const source = createSource({url: '/source.json'});
+        source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
+        source.map._refreshExpiredTiles = false;
+
+        const imageConstructorSpy = jest.spyOn(global, 'Image');
+        source.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                const tile = {
+                    tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+                    state: 'loading'
+                } as any as Tile;
+                source.loadTile(tile, () => {
+                    expect(imageConstructorSpy).toHaveBeenCalledTimes(1);
+                    expect(tile.state).toBe('loaded');
+                    done();
+                });
             }
         });
         server.respond();

@@ -2,23 +2,8 @@ import config from './config';
 import webpSupported from './webp_supported';
 import {stubAjaxGetImage} from './test/util';
 import {fakeServer, FakeServer} from 'nise';
-import {
-    getArrayBuffer,
-    getJSON,
-    postData,
-    AJAXError
-} from './ajax';
-
 import ImageRequest, {ImageRequestQueueItem} from './image_request';
-
-function readAsText(blob) {
-    return new Promise((resolve, reject) => {
-        const fileReader = new FileReader();
-        fileReader.onload = () => resolve(fileReader.result);
-        fileReader.onerror = () => reject(fileReader.error);
-        fileReader.readAsText(blob);
-    });
-}
+import * as ajax from './ajax';
 
 describe('ImageRequest', () => {
     let server: FakeServer;
@@ -26,87 +11,25 @@ describe('ImageRequest', () => {
         global.fetch = null;
         server = fakeServer.create();
         ImageRequest.resetRequestQueue();
+        stubAjaxGetImage(undefined);
     });
     afterEach(() => {
         server.restore();
-    });
-
-    test('getArrayBuffer, 404', done => {
-        server.respondWith(request => {
-            request.respond(404, undefined, '404 Not Found');
-        });
-        getArrayBuffer({url: 'http://example.com/test.bin'}, async (error) => {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.bin');
-            expect(body).toBe('404 Not Found');
-            done();
-        });
-        server.respond();
-    });
-
-    test('getJSON', done => {
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
-        });
-        getJSON({url: ''}, (error, body) => {
-            expect(error).toBeFalsy();
-            expect(body).toEqual({foo: 'bar'});
-            done();
-        });
-        server.respond();
-    });
-
-    test('getJSON, invalid syntax', done => {
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
-        });
-        getJSON({url: ''}, (error) => {
-            expect(error).toBeTruthy();
-            done();
-        });
-        server.respond();
-    });
-
-    test('getJSON, 404', done => {
-        server.respondWith(request => {
-            request.respond(404, undefined, '404 Not Found');
-        });
-        getJSON({url: 'http://example.com/test.json'}, async (error) => {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.json');
-            expect(body).toBe('404 Not Found');
-            done();
-        });
-        server.respond();
-    });
-
-    test('postData, 204(no content): no error', done => {
-        server.respondWith(request => {
-            request.respond(204, undefined, undefined);
-        });
-        postData({url: 'api.mapbox.com'}, (error) => {
-            expect(error).toBeNull();
-            done();
-        });
-        server.respond();
     });
 
     test('getImage respects maxParallelImageRequests', done => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
-
+        let callbackCount = 0;
         function callback(err) {
             if (err) return;
             // last request is only added after we got a response from one of the previous ones
-            expect(server.requests).toHaveLength(maxRequests + 1);
-            done();
+            expect(server.requests).toHaveLength(maxRequests + callbackCount);
+            callbackCount++;
+            if (callbackCount === 2) {
+                done();
+            }
         }
 
         for (let i = 0; i < maxRequests + 1; i++) {
@@ -115,6 +38,7 @@ describe('ImageRequest', () => {
         expect(server.requests).toHaveLength(maxRequests);
 
         server.requests[0].respond(undefined, undefined, undefined);
+        server.requests[1].respond(undefined, undefined, undefined);
     });
 
     test('getImage cancelling frees up request for maxParallelImageRequests', done => {
@@ -174,7 +98,7 @@ describe('ImageRequest', () => {
         server.respond();
     });
 
-    test('getImage uses ImageBitmap when supported', done => {
+    test('getImage uses createImageBitmap when supported', done => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
             'Expires': 'expires'}, ''));
@@ -192,12 +116,26 @@ describe('ImageRequest', () => {
         server.respond();
     });
 
-    test('getImage uses HTMLImageElement when ImageBitmap is not supported', done => {
+    test('getImage using createImageBitmap throws exception', done => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
             'Expires': 'expires'}, ''));
 
-        stubAjaxGetImage(undefined);
+        stubAjaxGetImage(() => Promise.reject(new Error('error')));
+
+        ImageRequest.getImage({url: ''}, (err, img) => {
+            expect(img).toBeFalsy();
+            if (err) done();
+        });
+
+        server.respond();
+    });
+
+    test('getImage uses HTMLImageElement when createImageBitmap is not supported', done => {
+        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+            'Cache-Control': 'cache',
+            'Expires': 'expires'}, ''));
 
         ImageRequest.getImage({url: ''}, (err, img, expiry) => {
             if (err) done(`get image failed with error ${err.message}`);
@@ -208,6 +146,116 @@ describe('ImageRequest', () => {
         });
 
         server.respond();
+        expect(makeRequestSky).toHaveBeenCalledTimes(1);
+        makeRequestSky.mockClear();
+    });
+
+    test('getImage using HTMLImageElement with same-origin credentials', done => {
+        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+        ImageRequest.getImage({url: '', credentials: 'same-origin'}, (err, img: HTMLImageElement) => {
+            if (err) done(err);
+            expect(img).toBeInstanceOf(HTMLImageElement);
+            expect(img.crossOrigin).toBe('anonymous');
+            done();
+        }, false);
+
+        expect(makeRequestSky).toHaveBeenCalledTimes(0);
+        makeRequestSky.mockClear();
+    });
+
+    test('getImage using HTMLImageElement with include credentials', done => {
+        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+        ImageRequest.getImage({url: '', credentials: 'include'}, (err, img: HTMLImageElement) => {
+            if (err) done(err);
+            expect(img).toBeInstanceOf(HTMLImageElement);
+            expect(img.crossOrigin).toBe('use-credentials');
+            done();
+        }, false);
+
+        expect(makeRequestSky).toHaveBeenCalledTimes(0);
+        makeRequestSky.mockClear();
+    });
+
+    test('getImage using HTMLImageElement with accept header', done => {
+        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+        ImageRequest.getImage({url: '', credentials: 'include', headers: {accept: 'accept'}},
+            (err, img: HTMLImageElement) => {
+                if (err) done(err);
+                expect(img).toBeInstanceOf(HTMLImageElement);
+                expect(img.crossOrigin).toBe('use-credentials');
+                done();
+            }, false);
+
+        expect(makeRequestSky).toHaveBeenCalledTimes(0);
+        makeRequestSky.mockClear();
+    });
+
+    test('getImage uses makeRequest when custom Headers are added', () => {
+        const makeRequestSky = jest.spyOn(ajax, 'makeRequest');
+
+        ImageRequest.getImage({url: '', credentials: 'include', headers: {custom: 'test', accept: 'image'}},
+            () => {},
+            false);
+
+        expect(makeRequestSky).toHaveBeenCalledTimes(1);
+        makeRequestSky.mockClear();
+    });
+
+    test('getImage request returned 404 response for fetch request', done => {
+        server.respondWith(request => request.respond(404));
+
+        ImageRequest.getImage({url: ''}, (err) => {
+            if (err) done();
+            else done('Image download should have failed');
+        });
+
+        server.respond();
+    });
+
+    test('getImage request failed for HTTPImageRequest', done => {
+        ImageRequest.getImage({url: 'error'}, (err) => {
+            if (err) done();
+            else done('Image download should have failed');
+        }, false);
+    });
+
+    test('getImage request cancelled for HTTPImageRequest', done => {
+        let imageUrl;
+        const requestUrl = 'test';
+        // eslint-disable-next-line accessor-pairs
+        Object.defineProperty(global.Image.prototype, 'src', {
+            set(url: string) {
+                imageUrl = url;
+            }
+        });
+
+        const request = ImageRequest.getImage({url: requestUrl}, () => {
+            done('Callback should not be called in case image request is cancelled');
+        }, false);
+
+        expect(imageUrl).toBe(requestUrl);
+        expect(request.cancelled).toBeFalsy();
+        request.cancel();
+        expect(request.cancelled).toBeTruthy();
+        expect(imageUrl).toBe('');
+        done();
+    });
+
+    test('getImage request cancelled', done => {
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+            'Cache-Control': 'cache',
+            'Expires': 'expires'}, ''));
+
+        const request = ImageRequest.getImage({url: ''}, () => {
+            done('Callback should not be called in case image request is cancelled');
+        });
+
+        expect(request.cancelled).toBeFalsy();
+        request.cancel();
+        expect(request.cancelled).toBeTruthy();
+
+        server.respond();
+        done();
     });
 
     test('throttling: getImage queues requests for later processing', done => {
@@ -252,7 +300,7 @@ describe('ImageRequest', () => {
             imageResults.push(ImageRequest.getImage({url: ''}, callback));
         }
 
-        // with throttling enabled, no requests should have been proessed yet
+        // with throttling enabled, no requests should have been processed yet
         expect(server.requests).toHaveLength(0);
 
         // process all of the pending requests
