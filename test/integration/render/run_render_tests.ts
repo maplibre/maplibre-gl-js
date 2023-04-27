@@ -69,6 +69,7 @@ type TestData = {
     queryOptions: any;
     error: Error;
     maxPitch: number;
+    continuesRepaint: boolean;
 
     // base64-encoded content of the PNG results
     actual: string;
@@ -370,10 +371,16 @@ function applyOperations(testData: TestData, map: Map & { _render: () => void}, 
 
     } else if (operation[0] === 'wait') {
         if (operation.length > 1) {
-            now += operation[1];
-            map._render();
-            applyOperations(testData, map, operations.slice(1), callback);
-
+            if (typeof operation[1] === 'number') {
+                now += operation[1];
+                map._render();
+                applyOperations(testData, map, operations.slice(1), callback);
+            } else {
+                // Wait for the event to fire
+                map.once(operation[1], () => {
+                    applyOperations(testData, map, operations.slice(1), callback);
+                });
+            }
         } else {
             const wait = function() {
                 if (map.loaded()) {
@@ -384,7 +391,6 @@ function applyOperations(testData: TestData, map: Map & { _render: () => void}, 
             };
             wait();
         }
-
     } else if (operation[0] === 'sleep') {
         // Prefer "wait", which renders until the map is loaded
         // Use "sleep" when you need to test something that sidesteps the "loaded" logic
@@ -467,7 +473,7 @@ function getImageFromStyle(style: StyleWithTestData): Promise<Uint8Array> {
         });
 
         // Configure the map to never stop the render loop
-        map.repaint = true;
+        map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
         now = 0;
         browser.now = () => {
             return now;
