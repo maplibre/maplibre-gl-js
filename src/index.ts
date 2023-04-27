@@ -36,7 +36,7 @@ import VideoSource from './source/video_source';
 
 const version = packageJSON.version;
 
-export type * from "@maplibre/maplibre-gl-style-spec";
+export type * from '@maplibre/maplibre-gl-style-spec';
 
 const exported = {
     supported,
