@@ -15,7 +15,6 @@
   "dependencies": {
     "@mapbox/geojson-rewind": "^0.5.2",
     "@mapbox/jsonlint-lines-primitives": "^2.0.2",
-    "@mapbox/mapbox-gl-supported": "^2.0.1",
     "@mapbox/point-geometry": "^0.1.0",
     "@mapbox/tiny-sdf": "^2.0.6",
     "@mapbox/unitbezier": "^0.0.1",

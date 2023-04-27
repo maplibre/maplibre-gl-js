@@ -20,7 +20,7 @@ import LngLatBounds from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import AttributionControl from './control/attribution_control';
 import LogoControl from './control/logo_control';
-import {supported} from '@mapbox/mapbox-gl-supported';
+
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
 import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent} from './events';
@@ -2711,11 +2711,15 @@ class Map extends Camera {
     }
 
     _setupPainter() {
-        const attributes = extend({}, supported.webGLContextAttributes, {
+
+        const attributes = {
+            alpha: true,
+            stencil: true,
+            depth: true,
             failIfMajorPerformanceCaveat: this._failIfMajorPerformanceCaveat,
             preserveDrawingBuffer: this._preserveDrawingBuffer,
             antialias: this._antialias || false
-        });
+        };
 
         let webglcontextcreationerrorDetailObject: any = null;
         this._canvas.addEventListener('webglcontextcreationerror', (args: WebGLContextEvent) => {
