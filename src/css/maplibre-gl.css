@@ -784,10 +784,7 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
 .maplibregl-cooperative-gesture-screen {
     background: rgba(0 0 0 / 40%);
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -810,7 +807,7 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
     display: none;
 }
 
-@media (hover: none), (max-width: 480px) {
+@media (hover: none), (width <= 480px) {
     .maplibregl-cooperative-gesture-screen .maplibregl-desktop-message {
         display: none;
     }

@@ -14,6 +14,9 @@
   "inputs": [
     [{}, {"properties": {"x": 0, "color": "blue"}}],
     [{}, {"properties": {"x": 5, "color": "blue"}}],
+    [{}, {"properties": {"x": 5, "color": "#0000ff00"}}],
+    [{}, {"properties": {"x": 5, "color": "rgb(0% 0% 100% / 0)"}}],
+    [{}, {"properties": {"x": 5, "color": "hsl(240 100% 50% / 0)"}}],
     [{}, {"properties": {"x": 11, "color": "blue"}}],
     [{}, {"properties": {"x": 11, "color": "oops blue"}}]
   ],
@@ -27,6 +30,9 @@
     "outputs": [
       [255, 0, 0, 1],
       [153, 0, 102, 1],
+      [153, 0, 102, 0.6],
+      [153, 0, 102, 0.6],
+      [153, 0, 102, 0.6],
       [0, 0, 255, 1],
       {"error": "Could not parse color from value 'oops blue'"}
     ]

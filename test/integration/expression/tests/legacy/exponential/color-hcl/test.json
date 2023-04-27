@@ -30,7 +30,7 @@
       {"error": "Expected value to be of type number, but found null instead."},
       [0, 0, 0, 1],
       [0, 0, 0, 1],
-      [0.5, 0.5, 0.499999, 1],
+      [0.466326, 0.466326, 0.466326, 1],
       [1, 1, 1, 1],
       [1, 1, 1, 1],
       {

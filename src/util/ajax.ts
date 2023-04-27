@@ -32,7 +32,7 @@ export type RequestParameters = {
     headers?: any;
     method?: 'GET' | 'POST' | 'PUT';
     body?: string;
-    type?: 'string' | 'json' | 'arrayBuffer';
+    type?: 'string' | 'json' | 'arrayBuffer' | 'image';
     credentials?: 'same-origin' | 'include';
     collectResourceTiming?: boolean;
 };
@@ -90,6 +90,8 @@ export class AJAXError extends Error {
 export const getReferrer = isWorker() ?
     () => (self as any).worker && (self as any).worker.referrer :
     () => (window.location.protocol === 'blob:' ? window.parent : window).location.href;
+
+export const getProtocolAction = url => config.REGISTERED_PROTOCOLS[url.substring(0, url.indexOf('://'))];
 
 // Determines whether a URL is a file:// URL. This is obviously the case if it begins
 // with file://. Relative URLs are also file:// URLs iff the original document was loaded
@@ -151,7 +153,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
 
     const finishRequest = (response) => {
         (
-            requestParameters.type === 'arrayBuffer' ? response.arrayBuffer() :
+            (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
                 requestParameters.type === 'json' ? response.json() :
                     response.text()
         ).then(result => {
@@ -175,7 +177,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
     const xhr: XMLHttpRequest = new XMLHttpRequest();
 
     xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
-    if (requestParameters.type === 'arrayBuffer') {
+    if (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') {
         xhr.responseType = 'arraybuffer';
     }
     for (const k in requestParameters.headers) {
@@ -223,8 +225,7 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
             return (self as any).worker.actor.send('getResource', requestParameters, callback);
         }
         if (!isWorker()) {
-            const protocol = requestParameters.url.substring(0, requestParameters.url.indexOf('://'));
-            const action = config.REGISTERED_PROTOCOLS[protocol] || makeFetchRequest;
+            const action = getProtocolAction(requestParameters.url) || makeFetchRequest;
             return action(requestParameters, callback);
         }
     }
@@ -255,7 +256,7 @@ export const postData = function(requestParameters: RequestParameters, callback:
     return makeRequest(extend(requestParameters, {method: 'POST'}), callback);
 };
 
-function sameOrigin(url) {
+export function sameOrigin(url) {
     const a: HTMLAnchorElement = window.document.createElement('a');
     a.href = url;
     return a.protocol === window.document.location.protocol && a.host === window.document.location.host;

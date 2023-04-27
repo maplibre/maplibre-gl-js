@@ -19,6 +19,7 @@ import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
 import {StyleImageInterface} from '../style/style_image';
 import ImageRequest from '../util/image_request';
+import Style from '../style/style';
 
 function createStyleSource() {
     return {
@@ -160,6 +161,45 @@ describe('Map', () => {
             map.setStyle(createStyle());
         }, 1);
 
+    });
+
+    describe('#mapOptions', () => {
+        test('Style validation is enabled by default', () => {
+            let validationOption = false;
+            jest.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
+                validationOption = options.validate;
+            });
+            createMap();
+            expect(validationOption).toBeTruthy();
+        });
+
+        test('Style validation disabled using mapOptions', () => {
+            let validationOption = true;
+            jest.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
+                validationOption = options.validate;
+            });
+            createMap({validateStyle: false});
+
+            expect(validationOption).toBeFalsy();
+        });
+
+        test('fadeDuration is set after first idle event', async () => {
+            let idleTriggered = false;
+            const fadeDuration = 100;
+            const spy = jest.spyOn(Style.prototype, 'update').mockImplementation((parameters: EvaluationParameters) => {
+                if (!idleTriggered) {
+                    expect(parameters.fadeDuration).toBe(0);
+                } else {
+                    expect(parameters.fadeDuration).toBe(fadeDuration);
+                }
+            });
+            const style = createStyle();
+            const map = createMap({style, fadeDuration});
+            await map.once('idle');
+            idleTriggered = true;
+            map.zoomTo(0.5, {duration: 100});
+            spy.mockReset();
+        });
     });
 
     describe('#setStyle', () => {
@@ -453,6 +493,17 @@ describe('Map', () => {
                 }
             });
             map.on('load', () => done());
+        });
+
+        test('Override default style validation', () => {
+            let validationOption = true;
+            jest.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
+                validationOption = options.validate;
+            });
+            const map = createMap({style: null});
+            map.setStyle({version: 8, sources: {}, layers: []}, {validate: false});
+
+            expect(validationOption).toBeFalsy();
         });
     });
 

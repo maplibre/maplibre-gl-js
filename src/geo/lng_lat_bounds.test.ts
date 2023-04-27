@@ -56,7 +56,21 @@ describe('LngLatBounds', () => {
         expect(bounds.getNorth()).toBe(10);
         expect(bounds.getEast()).toBe(10);
 
-        bounds.extend([-90, -90, 90, 90]);
+        bounds.extend([-80, -80, 80, 80]);
+
+        expect(bounds.getSouth()).toBe(-80);
+        expect(bounds.getWest()).toBe(-80);
+        expect(bounds.getNorth()).toBe(80);
+        expect(bounds.getEast()).toBe(80);
+
+        bounds.extend({lng: -90, lat: -90});
+
+        expect(bounds.getSouth()).toBe(-90);
+        expect(bounds.getWest()).toBe(-90);
+        expect(bounds.getNorth()).toBe(80);
+        expect(bounds.getEast()).toBe(80);
+
+        bounds.extend({lon: 90, lat: 90});
 
         expect(bounds.getSouth()).toBe(-90);
         expect(bounds.getWest()).toBe(-90);

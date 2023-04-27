@@ -6,7 +6,7 @@ import fs from 'fs';
 import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
-import glob from 'glob';
+import {globSync} from 'glob';
 import nise, {FakeXMLHttpRequest} from 'nise';
 import {createRequire} from 'module';
 import rtlText from '@mapbox/mapbox-gl-rtl-text';
@@ -43,6 +43,11 @@ type TestData = {
     pixelRatio: number;
     recycleMap: boolean;
     allowed: number;
+    /**
+     * Perceptual color difference threshold, number between 0 and 1, smaller is more sensitive
+     * @default 0.1285
+     */
+    threshold: number;
     ok: boolean;
     difference: number;
     timeout: number;
@@ -64,6 +69,7 @@ type TestData = {
     queryOptions: any;
     error: Error;
     maxPitch: number;
+    continuesRepaint: boolean;
 
     // base64-encoded content of the PNG results
     actual: string;
@@ -156,11 +162,11 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 
     // there may be multiple expected images, covering different platforms
     let globPattern = path.join(dir, 'expected*.png');
-    globPattern = globPattern.replace(/\\/g, '/'); // ensure a Windows path is converted to a glob compatible pattern.
-    const expectedPaths = glob.sync(globPattern);
+    globPattern = globPattern.replace(/\\/g, '/');
+    const expectedPaths = globSync(globPattern);
 
     if (!process.env.UPDATE && expectedPaths.length === 0) {
-        throw new Error('No expected*.png files found; did you mean to run tests with UPDATE=true?');
+        throw new Error(`No expected*.png files found as ${dir}; did you mean to run tests with UPDATE=true?`);
     }
 
     if (process.env.UPDATE) {
@@ -182,7 +188,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 
         const diff = pixelmatch(
             actualImg.data, expectedImg.data, diffImg.data,
-            width, height, {threshold: 0.1285}) / (width * height);
+            width, height, {threshold: testData.threshold}) / (width * height);
 
         if (diff < minDiff) {
             minDiff = diff;
@@ -248,8 +254,7 @@ function mockXhr() {
 function getTestStyles(options: RenderOptions, directory: string): StyleWithTestData[] {
     const tests = options.tests || [];
 
-    const globCwd = directory.replace(/\\/g, '/'); // ensure a Windows path is converted to a glob compatible pattern.
-    const sequence = glob.sync('**/style.json', {cwd: globCwd})
+    const sequence = globSync('**/style.json', {cwd: directory})
         .map(fixture => {
             const id = path.dirname(fixture);
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;
@@ -261,7 +266,8 @@ function getTestStyles(options: RenderOptions, directory: string): StyleWithTest
                 height: 512,
                 pixelRatio: 1,
                 recycleMap: options.recycleMap || false,
-                allowed: 0.00025
+                allowed: 0.00025,
+                threshold: 0.1285,
             }, style.metadata.test);
 
             return style;
@@ -365,10 +371,16 @@ function applyOperations(testData: TestData, map: Map & { _render: () => void}, 
 
     } else if (operation[0] === 'wait') {
         if (operation.length > 1) {
-            now += operation[1];
-            map._render();
-            applyOperations(testData, map, operations.slice(1), callback);
-
+            if (typeof operation[1] === 'number') {
+                now += operation[1];
+                map._render();
+                applyOperations(testData, map, operations.slice(1), callback);
+            } else {
+                // Wait for the event to fire
+                map.once(operation[1], () => {
+                    applyOperations(testData, map, operations.slice(1), callback);
+                });
+            }
         } else {
             const wait = function() {
                 if (map.loaded()) {
@@ -379,7 +391,6 @@ function applyOperations(testData: TestData, map: Map & { _render: () => void}, 
             };
             wait();
         }
-
     } else if (operation[0] === 'sleep') {
         // Prefer "wait", which renders until the map is loaded
         // Use "sleep" when you need to test something that sidesteps the "loaded" logic
@@ -462,7 +473,7 @@ function getImageFromStyle(style: StyleWithTestData): Promise<Uint8Array> {
         });
 
         // Configure the map to never stop the render loop
-        map.repaint = true;
+        map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
         now = 0;
         browser.now = () => {
             return now;
@@ -650,7 +661,7 @@ if (options.report) {
         resultData = resultItemTemplate
             .replace('${failedItemsLength}', failedItems.length.toString())
             .replace('${failedItems}', failedItems.join('\n'))
-            .replace('${erroredItemsLength}', failedItems.length.toString())
+            .replace('${erroredItemsLength}', erroredItems.length.toString())
             .replace('${erroredItems}', erroredItems.join('\n'));
     } else {
         resultData = '<h1 style="color: green">All tests passed!</h1>';
