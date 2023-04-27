@@ -106,6 +106,7 @@
     "node-plantuml": "^0.9.0",
     "npm-font-open-sans": "^1.1.0",
     "npm-run-all": "^4.1.5",
+    "p-limit": "^4.0.0",
     "pdf-merger-js": "^4.3.0",
     "pixelmatch": "^5.3.0",
     "pngjs": "^7.0.0",

@@ -21,8 +21,8 @@ import customLayerImplementations from './custom_layer_implementations';
 import type Map from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PointLike} from '../../../src/ui/camera';
-import puppeteer, {Page} from 'puppeteer';
-
+import {Browser, BrowserContext, BrowserType, chromium, Page} from 'playwright';
+import pLimit from 'p-limit';
 const {fakeXhr} = nise;
 const {plugin: rtlTextPlugin} = rtlTextPluginModule;
 const {registerFont} = canvas;
@@ -358,7 +358,7 @@ function updateFakeCanvas(document: Document, id: string, imagePath: string) {
     (fakeCanvas as any).data = image.data;
 }
 
-const browser = await puppeteer.launch({headless: true});
+const browser = await chromium.launch();
 
 /**
  * It creates the map and applies the operations to create an image
@@ -367,13 +367,12 @@ const browser = await puppeteer.launch({headless: true});
  * @param style The style to use
  * @returns an image byte array promise
  */
-async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): Promise<Uint8Array> {
+async function getImageFromStyle(styleForTest: StyleWithTestData, context: BrowserContext): Promise<Uint8Array> {
 
     const width = styleForTest.metadata.test.width;
     const height = styleForTest.metadata.test.height;
 
-    page.setViewport({width, height, deviceScaleFactor: 2});
-
+    const page = await context.newPage();
     await page.setContent(`
 <!DOCTYPE html>
 <html lang="en">
@@ -644,22 +643,45 @@ const directory = path.join(__dirname);
 const testStyles = getTestStyles(options, directory, (server.address() as any).port);
 let index = 0;
 
-const page = await browser.newPage();
 
-for (const style of testStyles) {
-    try {
-        //@ts-ignore
 
-        const data = await getImageFromStyle(style, page);
-        compareRenderResults(directory, style.metadata.test, data);
 
-    } catch (ex) {
-        style.metadata.test.error = ex;
-    }
-    printProgress(style.metadata.test, testStyles.length, ++index);
-}
+const limit = pLimit(1);
 
-page.close();
+const promises = testStyles.map(style => {
+    return limit(() => {
+
+        return new Promise(async (resolve, reject) => {
+
+            const width = style.metadata.test.width;
+                const height = style.metadata.test.height;
+
+                const context = await browser.newContext({
+                    viewport: {width, height},
+                    deviceScaleFactor: 2,
+                });
+            try {
+            //@ts-ignore
+
+                
+
+                const data = await getImageFromStyle(style, context);
+                compareRenderResults(directory, style.metadata.test, data);
+                
+
+            } catch (ex) {
+                style.metadata.test.error = ex;
+            }
+            await context.close();
+            printProgress(style.metadata.test, testStyles.length, ++index);
+            resolve(true);
+        });
+
+    });
+});
+
+await Promise.all(promises);
+
 
 const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
 const testStats: TestStats = {
