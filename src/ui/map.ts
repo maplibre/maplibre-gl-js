@@ -2709,17 +2709,15 @@ class Map extends Camera {
     }
 
     _setupPainter() {
-        const webGLContextAttributes = {
-            antialias: false,
+
+        const attributes = {
             alpha: true,
             stencil: true,
-            depth: true
-        };
-        const attributes = extend({}, webGLContextAttributes, {
+            depth: true,
             failIfMajorPerformanceCaveat: this._failIfMajorPerformanceCaveat,
             preserveDrawingBuffer: this._preserveDrawingBuffer,
             antialias: this._antialias || false
-        });
+        };
 
         let webglcontextcreationerrorDetailObject: any = null;
         this._canvas.addEventListener('webglcontextcreationerror', (args: WebGLContextEvent) => {
