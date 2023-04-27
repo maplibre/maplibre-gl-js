@@ -264,7 +264,8 @@ export function sameOrigin(url: string) {
         const locationObj = window.location;
         return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
     } catch {
-        return false;
+        // all relative url or empty string will throw exception and it is considered as same origin
+        return true;
     }
 }
 
