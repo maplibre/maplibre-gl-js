@@ -358,7 +358,7 @@ function updateFakeCanvas(document: Document, id: string, imagePath: string) {
     (fakeCanvas as any).data = image.data;
 }
 
-const browser = await puppeteer.launch({headless: 'new'});
+const browser = await puppeteer.launch({headless: true, args: ['--enable-webgl']});
 
 /**
  * It creates the map and applies the operations to create an image
