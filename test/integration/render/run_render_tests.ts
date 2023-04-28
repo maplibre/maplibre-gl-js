@@ -358,7 +358,7 @@ function updateFakeCanvas(document: Document, id: string, imagePath: string) {
     (fakeCanvas as any).data = image.data;
 }
 
-const browser = await puppeteer.launch({headless: true});
+const browser = await puppeteer.launch({headless: 'new'});
 
 /**
  * It creates the map and applies the operations to create an image
@@ -392,9 +392,8 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 </body>
 </html>`);
 
-    await page.addScriptTag({path: 'dist/maplibre-gl.js'});
-    await page.addStyleTag({path: 'dist/maplibre-gl.css'});
     const evaluatedArray = await page.evaluate(async (style: StyleWithTestData) => {
+
         const options = style.metadata.test;
 
         /**
@@ -645,6 +644,9 @@ const testStyles = getTestStyles(options, directory, (server.address() as any).p
 let index = 0;
 
 const page = await browser.newPage();
+
+await page.addScriptTag({path: 'dist/maplibre-gl.js'});
+await page.addStyleTag({path: 'dist/maplibre-gl.css'});
 
 for (const style of testStyles) {
     try {
