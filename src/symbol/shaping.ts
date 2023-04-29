@@ -141,6 +141,7 @@ class TaggedString {
     }
 
     getCharCode(index: number): number {
+        // OLIVER
         return this.text.charCodeAt(index);
     }
 
@@ -151,12 +152,14 @@ class TaggedString {
     trim() {
         let beginningWhitespace = 0;
         for (let i = 0;
+            // OLIVER
             i < this.text.length && whitespace[this.text.charCodeAt(i)];
             i++) {
             beginningWhitespace++;
         }
         let trailingWhitespace = this.text.length;
         for (let i = this.text.length - 1;
+            // OLIVER
             i >= 0 && i >= beginningWhitespace && whitespace[this.text.charCodeAt(i)];
             i--) {
             trailingWhitespace--;
@@ -203,6 +206,7 @@ class TaggedString {
             return;
         }
 
+        // OLIVER
         this.text += String.fromCharCode(nextImageSectionCharCode);
         this.sections.push(SectionOptions.forImage(imageName));
         this.sectionIndex.push(this.sections.length - 1);
@@ -382,6 +386,7 @@ function getGlyphAdvance(
     }
 }
 
+// safe to ignore this fucntion
 function determineAverageLineWidth(logicalInput: TaggedString,
     spacing: number,
     maxWidth: number,
@@ -505,50 +510,52 @@ function determineLineBreaks(
     symbolPlacement: string,
     layoutTextSize: number
 ): Array<number> {
-    if (symbolPlacement !== 'point')
-        return [];
+    return [];
 
-    if (!logicalInput)
-        return [];
+    // if (symbolPlacement !== 'point')
+    //     return [];
 
-    const potentialLineBreaks = [];
-    const targetWidth = determineAverageLineWidth(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
+    // if (!logicalInput)
+    //     return [];
 
-    const hasServerSuggestedBreakpoints = logicalInput.text.indexOf('\u200b') >= 0;
+    // const potentialLineBreaks = [];
+    // const targetWidth = determineAverageLineWidth(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
 
-    let currentX = 0;
+    // const hasServerSuggestedBreakpoints = logicalInput.text.indexOf('\u200b') >= 0;
 
-    for (let i = 0; i < logicalInput.length(); i++) {
-        const section = logicalInput.getSection(i);
-        const codePoint = logicalInput.getCharCode(i);
-        if (!whitespace[codePoint]) currentX += getGlyphAdvance(codePoint, section, glyphMap, imagePositions, spacing, layoutTextSize);
+    // let currentX = 0;
 
-        // Ideographic characters, spaces, and word-breaking punctuation that often appear without
-        // surrounding spaces.
-        if ((i < logicalInput.length() - 1)) {
-            const ideographicBreak = charAllowsIdeographicBreaking(codePoint);
-            if (breakable[codePoint] || ideographicBreak || section.imageName) {
+    // for (let i = 0; i < logicalInput.length(); i++) {
+    //     const section = logicalInput.getSection(i);
+    //     const codePoint = logicalInput.getCharCode(i);
+    //     if (!whitespace[codePoint]) currentX += getGlyphAdvance(codePoint, section, glyphMap, imagePositions, spacing, layoutTextSize);
 
-                potentialLineBreaks.push(
-                    evaluateBreak(
-                        i + 1,
-                        currentX,
-                        targetWidth,
-                        potentialLineBreaks,
-                        calculatePenalty(codePoint, logicalInput.getCharCode(i + 1), ideographicBreak && hasServerSuggestedBreakpoints),
-                        false));
-            }
-        }
-    }
+    //     // Ideographic characters, spaces, and word-breaking punctuation that often appear without
+    //     // surrounding spaces.
+    //     if ((i < logicalInput.length() - 1)) {
+    //         const ideographicBreak = charAllowsIdeographicBreaking(codePoint);
+    //         if (breakable[codePoint] || ideographicBreak || section.imageName) {
 
-    return leastBadBreaks(
-        evaluateBreak(
-            logicalInput.length(),
-            currentX,
-            targetWidth,
-            potentialLineBreaks,
-            0,
-            true));
+    //             potentialLineBreaks.push(
+    //                 evaluateBreak(
+    //                     i + 1,
+    //                     currentX,
+    //                     targetWidth,
+    //                     potentialLineBreaks,
+    //                     calculatePenalty(codePoint, logicalInput.getCharCode(i + 1), ideographicBreak && hasServerSuggestedBreakpoints),
+    //                     false));
+    //         }
+    //     }
+    // }
+
+    // return leastBadBreaks(
+    //     evaluateBreak(
+    //         logicalInput.length(),
+    //         currentX,
+    //         targetWidth,
+    //         potentialLineBreaks,
+    //         0,
+    //         true));
 }
 
 function getAnchorAlignment(anchor: SymbolAnchor) {
@@ -640,12 +647,13 @@ function shapeLines(shaping: Shaping,
             let rect = null;
             let imageName = null;
             let verticalAdvance = ONE_EM;
-            const vertical = !(writingMode === WritingMode.horizontal ||
-                // Don't verticalize glyphs that have no upright orientation if vertical placement is disabled.
-                (!allowVerticalPlacement && !charHasUprightVerticalOrientation(codePoint)) ||
-                // If vertical placement is enabled, don't verticalize glyphs that
-                // are from complex text layout script, or whitespaces.
-                (allowVerticalPlacement && (whitespace[codePoint] || charInComplexShapingScript(codePoint))));
+            // const vertical = !(writingMode === WritingMode.horizontal ||
+            //     // Don't verticalize glyphs that have no upright orientation if vertical placement is disabled.
+            //     (!allowVerticalPlacement && !charHasUprightVerticalOrientation(codePoint)) ||
+            //     // If vertical placement is enabled, don't verticalize glyphs that
+            //     // are from complex text layout script, or whitespaces.
+            //     (allowVerticalPlacement && (whitespace[codePoint] || charInComplexShapingScript(codePoint))));
+            const vertical = false;
 
             if (!section.imageName) {
                 const positions = glyphPositions[section.fontStack];

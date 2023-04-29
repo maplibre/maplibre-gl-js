@@ -4,6 +4,7 @@ import isChar from './is_char_in_unicode_block';
 
 export function allowsIdeographicBreaking(chars: string) {
     for (const char of chars) {
+        // OLIVER
         if (!charAllowsIdeographicBreaking(char.charCodeAt(0))) return false;
     }
     return true;
@@ -11,6 +12,7 @@ export function allowsIdeographicBreaking(chars: string) {
 
 export function allowsVerticalWritingMode(chars: string) {
     for (const char of chars) {
+        // OLIVER
         if (charHasUprightVerticalOrientation(char.charCodeAt(0))) return true;
     }
     return false;
@@ -18,6 +20,7 @@ export function allowsVerticalWritingMode(chars: string) {
 
 export function allowsLetterSpacing(chars: string) {
     for (const char of chars) {
+        // OLIVER
         if (!charAllowsLetterSpacing(char.charCodeAt(0))) return false;
     }
     return true;
@@ -309,6 +312,7 @@ export function charInSupportedScript(char: number, canRenderRTL: boolean) {
 
 export function stringContainsRTLText(chars: string): boolean {
     for (const char of chars) {
+        // OLIVER
         if (charInRTLScript(char.charCodeAt(0))) {
             return true;
         }
@@ -318,6 +322,7 @@ export function stringContainsRTLText(chars: string): boolean {
 
 export function isStringInSupportedScript(chars: string, canRenderRTL: boolean) {
     for (const char of chars) {
+        // OLIVER
         if (!charInSupportedScript(char.charCodeAt(0), canRenderRTL)) {
             return false;
         }

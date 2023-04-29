@@ -415,12 +415,15 @@ class SymbolBucket implements Bucket {
         this.symbolInstances = new SymbolInstanceArray();
     }
 
-    calculateGlyphDependencies(text: string, stack: {[_: number]: boolean}, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
+    calculateGlyphDependencies(text: string, stack: {[_: string]: boolean}, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
         for (let i = 0; i < text.length; i++) {
+            // OLIVER
             stack[text.charCodeAt(i).toString()] = true;
             if ((textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode) {
+                // OLIVER
                 const verticalChar = verticalizedCharacterMap[text.charAt(i)];
                 if (verticalChar) {
+                    // OLIVER
                     stack[verticalChar.charCodeAt(0).toString()] = true;
                 }
             }

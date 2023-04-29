@@ -84,7 +84,7 @@ export default class GlyphManager {
 
             glyph = this._tinySDF(entry, stack, id);
 
-            console.log('glyph_manager', glyph);
+            // console.log('glyph_manager', glyph);
 
             if (glyph) {
                 entry.glyphs[id] = glyph;
@@ -204,6 +204,8 @@ export default class GlyphManager {
             });
         }
 
+        //console.log('tinysdf', id, typeof id);
+        // OLIVER
         const char = tinySDF.draw(String.fromCharCode(id));
 
         /**

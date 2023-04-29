@@ -517,6 +517,7 @@ export function b64EncodeUnicode(str: string) {
     return btoa(
         encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
             (match, p1) => {
+                // OLIVER
                 return String.fromCharCode(Number('0x' + p1)); //eslint-disable-line
             }
         )
@@ -526,6 +527,7 @@ export function b64EncodeUnicode(str: string) {
 // Unicode compliant decoder for base64-encoded strings
 export function b64DecodeUnicode(str: string) {
     return decodeURIComponent(atob(str).split('').map((c) => {
+        // OLIVER
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); //eslint-disable-line
     }).join(''));
 }

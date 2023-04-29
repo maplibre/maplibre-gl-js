@@ -90,7 +90,9 @@ export default function verticalizePunctuation(input: string) {
     let output = '';
 
     for (let i = 0; i < input.length; i++) {
+        // OLIVER
         const nextCharCode = input.charCodeAt(i + 1) || null;
+        // OLIVER
         const prevCharCode = input.charCodeAt(i - 1) || null;
 
         const canReplacePunctuation = (
