@@ -36,7 +36,7 @@ export default class GlyphAtlas {
         const positions = {};
         const bins = [];
 
-        console.log('glyph_atlas', stacks);
+        // console.log('glyph_atlas', stacks);
         for (const stack in stacks) {
             const glyphs = stacks[stack];
             const stackPositions = positions[stack] = {};

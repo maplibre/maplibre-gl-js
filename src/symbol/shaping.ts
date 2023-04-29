@@ -343,8 +343,9 @@ const whitespace: {
 };
 
 const breakable: {
-    [_: number]: boolean;
+    [_: number | string]: boolean;
 } = {
+    ['\n']: true,
     [0x0a]: true, // newline
     [0x20]: true, // space
     [0x26]: true, // ampersand
@@ -389,26 +390,26 @@ function getGlyphAdvance(
 }
 
 // safe to ignore this fucntion
-// function determineAverageLineWidth(logicalInput: TaggedString,
-//     spacing: number,
-//     maxWidth: number,
-//     glyphMap: {
-//         [_: string]: {
-//             [_: number]: StyleGlyph;
-//         };
-//     },
-//     imagePositions: {[_: string]: ImagePosition},
-//     layoutTextSize: number) {
-//     let totalWidth = 0;
+function determineAverageLineWidth(logicalInput: TaggedString,
+    spacing: number,
+    maxWidth: number,
+    glyphMap: {
+        [_: string]: {
+            [_: number]: StyleGlyph;
+        };
+    },
+    imagePositions: {[_: string]: ImagePosition},
+    layoutTextSize: number) {
+    let totalWidth = 0;
 
-//     for (let index = 0; index < logicalInput.length(); index++) {
-//         const section = logicalInput.getSection(index);
-//         totalWidth += getGlyphAdvance(logicalInput.getCharCode(index), section, glyphMap, imagePositions, spacing, layoutTextSize);
-//     }
+    for (let index = 0; index < logicalInput.length(); index++) {
+        const section = logicalInput.getSection(index);
+        totalWidth += getGlyphAdvance(logicalInput.getCharCode(index) as any, section, glyphMap, imagePositions, spacing, layoutTextSize);
+    }
 
-//     const lineCount = Math.max(1, Math.ceil(totalWidth / maxWidth));
-//     return totalWidth / lineCount;
-// }
+    const lineCount = Math.max(1, Math.ceil(totalWidth / maxWidth));
+    return totalWidth / lineCount;
+}
 
 function calculateBadness(lineWidth: number,
     targetWidth: number,
@@ -512,52 +513,51 @@ function determineLineBreaks(
     symbolPlacement: string,
     layoutTextSize: number
 ): Array<number> {
-    return [];
 
-    // if (symbolPlacement !== 'point')
-    //     return [];
+    if (symbolPlacement !== 'point')
+        return [];
 
-    // if (!logicalInput)
-    //     return [];
+    if (!logicalInput)
+        return [];
 
-    // const potentialLineBreaks = [];
-    // const targetWidth = determineAverageLineWidth(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
+    const potentialLineBreaks = [];
+    const targetWidth = determineAverageLineWidth(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
 
-    // const hasServerSuggestedBreakpoints = logicalInput.text.indexOf('\u200b') >= 0;
+    const hasServerSuggestedBreakpoints = logicalInput.text.indexOf('\u200b') >= 0;
 
-    // let currentX = 0;
+    let currentX = 0;
 
-    // for (let i = 0; i < logicalInput.length(); i++) {
-    //     const section = logicalInput.getSection(i);
-    //     const codePoint = logicalInput.getCharCode(i);
-    //     if (!whitespace[codePoint]) currentX += getGlyphAdvance(codePoint, section, glyphMap, imagePositions, spacing, layoutTextSize);
+    for (let i = 0; i < logicalInput.length(); i++) {
+        const section = logicalInput.getSection(i);
+        const codePoint = logicalInput.getCharCode(i);
+        if (!whitespace[codePoint]) currentX += getGlyphAdvance(codePoint as any, section, glyphMap, imagePositions, spacing, layoutTextSize);
 
-    //     // Ideographic characters, spaces, and word-breaking punctuation that often appear without
-    //     // surrounding spaces.
-    //     if ((i < logicalInput.length() - 1)) {
-    //         const ideographicBreak = charAllowsIdeographicBreaking(codePoint);
-    //         if (breakable[codePoint] || ideographicBreak || section.imageName) {
+        // Ideographic characters, spaces, and word-breaking punctuation that often appear without
+        // surrounding spaces.
+        if ((i < logicalInput.length() - 1)) {
+            const ideographicBreak = charAllowsIdeographicBreaking(codePoint as any);
+            if (breakable[codePoint] || ideographicBreak || section.imageName) {
 
-    //             potentialLineBreaks.push(
-    //                 evaluateBreak(
-    //                     i + 1,
-    //                     currentX,
-    //                     targetWidth,
-    //                     potentialLineBreaks,
-    //                     calculatePenalty(codePoint, logicalInput.getCharCode(i + 1), ideographicBreak && hasServerSuggestedBreakpoints),
-    //                     false));
-    //         }
-    //     }
-    // }
+                potentialLineBreaks.push(
+                    evaluateBreak(
+                        i + 1,
+                        currentX,
+                        targetWidth,
+                        potentialLineBreaks,
+                        calculatePenalty(codePoint as any, logicalInput.getCharCode(i + 1) as any, ideographicBreak && hasServerSuggestedBreakpoints),
+                        false));
+            }
+        }
+    }
 
-    // return leastBadBreaks(
-    //     evaluateBreak(
-    //         logicalInput.length(),
-    //         currentX,
-    //         targetWidth,
-    //         potentialLineBreaks,
-    //         0,
-    //         true));
+    return leastBadBreaks(
+        evaluateBreak(
+            logicalInput.length(),
+            currentX,
+            targetWidth,
+            potentialLineBreaks,
+            0,
+            true));
 }
 
 function getAnchorAlignment(anchor: SymbolAnchor) {
@@ -640,10 +640,18 @@ function shapeLines(shaping: Shaping,
             continue;
         }
 
-        for (let i = 0; i < line.length(); i++) {
-            const section = line.getSection(i);
-            const sectionIndex = line.getSectionIndex(i);
-            const codePoint = line.getCharCode(i) as any;
+        const segmenter = new Intl.Segmenter(
+            'en', {granularity: 'grapheme'}
+        );
+        const graphemes = Array.from(segmenter.segment(line.text), s => s.segment);
+
+        for (let i = 0; i < graphemes.length; i++) {
+            // const section = line.getSection(i);
+            const section = line.getSection(0);
+            // const sectionIndex = line.getSectionIndex(i);
+            const sectionIndex = line.getSectionIndex(0);
+            // const codePoint = line.getCharCode(i) as any;
+            const codePoint = graphemes[i] as any;
             let baselineOffset = 0.0;
             let metrics = null;
             let rect = null;

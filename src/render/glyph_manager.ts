@@ -204,7 +204,7 @@ export default class GlyphManager {
             });
         }
 
-        console.log('tinysdf', id, typeof id);
+        // console.log('tinysdf', id, typeof id);
         // OLIVER
         // const char = tinySDF.draw(String.fromCharCode(id));
         const char = tinySDF.draw(id as any);

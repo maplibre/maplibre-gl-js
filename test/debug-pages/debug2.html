@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>MapLibre GL JS debug page</title>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+
+        #checkboxes {
+            position: absolute;
+            background: #fff;
+            top: 0;
+            left: 0;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='map'></div>
+
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <script>
+
+        var map = window.map = new maplibregl.Map({
+            container: 'map',
+            zoom: 12.5,
+            center: [-77.01866, 38.888],
+            style: 'style2.json',
+            hash: 'map'
+        });
+
+        map.addControl(new maplibregl.NavigationControl());
+        map.addControl(new maplibregl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: true
+            },
+            trackUserLocation: true,
+            showUserLocation: true,
+            fitBoundsOptions: {
+                maxZoom: 20
+            }
+        }));
+        map.addControl(new maplibregl.ScaleControl());
+        map.addControl(new maplibregl.FullscreenControl());
+
+        map.on('load', function () {
+            var hash = window.location.hash.substr(1);
+
+            var result = hash.split('&').reduce(function (res, item) {
+                var parts = item.split('=');
+                res[parts[0]] = parts[1];
+                return res;
+            }, {});
+
+            map.addLayer({
+                'id': 'points',
+                'type': 'symbol',
+                'source': 'qrank',
+                'source-layer': 'qrank',
+                'layout': {
+                    'text-max-width': 4,
+                    'text-field': ['concat', ['get', 'name:en'], '\n', ['get', `name${result.language ? (':' + result.language) : ''}`]],
+                },
+                'paint': {
+                    'text-halo-color': 'white',
+                    'text-halo-width': 1.5
+                }
+            });
+        });
+
+    </script>
+</body>
+
+</html>
