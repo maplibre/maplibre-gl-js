@@ -140,9 +140,10 @@ class TaggedString {
         return this.sectionIndex[index];
     }
 
-    getCharCode(index: number): number {
+    getCharCode(index: number): string {
         // OLIVER
-        return this.text.charCodeAt(index);
+        // return this.text.charCodeAt(index);
+        return this.text[index];
     }
 
     verticalizePunctuation() {
@@ -320,6 +321,7 @@ function shapeText(
         verticalizable: false
     };
 
+    // console.log('shaping', 'glyphMap', glyphMap);
     shapeLines(shaping, glyphMap, glyphPositions, imagePositions, lines, lineHeight, textAnchor, textJustify, writingMode, spacing, allowVerticalPlacement, layoutTextSizeThisZoom);
     if (isEmpty(positionedLines)) return false;
 
@@ -387,26 +389,26 @@ function getGlyphAdvance(
 }
 
 // safe to ignore this fucntion
-function determineAverageLineWidth(logicalInput: TaggedString,
-    spacing: number,
-    maxWidth: number,
-    glyphMap: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    },
-    imagePositions: {[_: string]: ImagePosition},
-    layoutTextSize: number) {
-    let totalWidth = 0;
+// function determineAverageLineWidth(logicalInput: TaggedString,
+//     spacing: number,
+//     maxWidth: number,
+//     glyphMap: {
+//         [_: string]: {
+//             [_: number]: StyleGlyph;
+//         };
+//     },
+//     imagePositions: {[_: string]: ImagePosition},
+//     layoutTextSize: number) {
+//     let totalWidth = 0;
 
-    for (let index = 0; index < logicalInput.length(); index++) {
-        const section = logicalInput.getSection(index);
-        totalWidth += getGlyphAdvance(logicalInput.getCharCode(index), section, glyphMap, imagePositions, spacing, layoutTextSize);
-    }
+//     for (let index = 0; index < logicalInput.length(); index++) {
+//         const section = logicalInput.getSection(index);
+//         totalWidth += getGlyphAdvance(logicalInput.getCharCode(index), section, glyphMap, imagePositions, spacing, layoutTextSize);
+//     }
 
-    const lineCount = Math.max(1, Math.ceil(totalWidth / maxWidth));
-    return totalWidth / lineCount;
-}
+//     const lineCount = Math.max(1, Math.ceil(totalWidth / maxWidth));
+//     return totalWidth / lineCount;
+// }
 
 function calculateBadness(lineWidth: number,
     targetWidth: number,
@@ -641,7 +643,7 @@ function shapeLines(shaping: Shaping,
         for (let i = 0; i < line.length(); i++) {
             const section = line.getSection(i);
             const sectionIndex = line.getSectionIndex(i);
-            const codePoint = line.getCharCode(i);
+            const codePoint = line.getCharCode(i) as any;
             let baselineOffset = 0.0;
             let metrics = null;
             let rect = null;
@@ -721,6 +723,8 @@ function shapeLines(shaping: Shaping,
             maxLineLength = Math.max(lineLength, maxLineLength);
             justifyLine(positionedGlyphs, 0, positionedGlyphs.length - 1, justify, lineOffset);
         }
+
+        // console.log('shaping', positionedGlyphs);
 
         x = 0;
         const currentLineHeight = lineHeight * lineMaxScale + lineOffset;

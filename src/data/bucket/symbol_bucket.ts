@@ -418,13 +418,15 @@ class SymbolBucket implements Bucket {
     calculateGlyphDependencies(text: string, stack: {[_: string]: boolean}, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
         for (let i = 0; i < text.length; i++) {
             // OLIVER
-            stack[text.charCodeAt(i).toString()] = true;
+            // stack[text.charCodeAt(i).toString()] = true;
+            stack[text[i]] = true;
             if ((textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode) {
                 // OLIVER
                 const verticalChar = verticalizedCharacterMap[text.charAt(i)];
                 if (verticalChar) {
                     // OLIVER
-                    stack[verticalChar.charCodeAt(0).toString()] = true;
+                    // stack[verticalChar.charCodeAt(0).toString()] = true;
+                    stack[verticalChar[i]] = true;
                 }
             }
         }

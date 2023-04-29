@@ -204,9 +204,10 @@ export default class GlyphManager {
             });
         }
 
-        //console.log('tinysdf', id, typeof id);
+        console.log('tinysdf', id, typeof id);
         // OLIVER
-        const char = tinySDF.draw(String.fromCharCode(id));
+        // const char = tinySDF.draw(String.fromCharCode(id));
+        const char = tinySDF.draw(id as any);
 
         /**
          * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
