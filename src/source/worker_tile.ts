@@ -138,7 +138,7 @@ class WorkerTile {
         let iconMap: {[_: string]: StyleImage};
         let patternMap: {[_: string]: StyleImage};
 
-        const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
+        const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(String));
         if (Object.keys(stacks).length) {
             actor.send('getGlyphs', {uid: this.uid, stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}, (err, result) => {
                 if (!error) {

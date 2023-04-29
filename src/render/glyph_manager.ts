@@ -83,6 +83,9 @@ export default class GlyphManager {
             }
 
             glyph = this._tinySDF(entry, stack, id);
+
+            console.log('glyph_manager', glyph);
+
             if (glyph) {
                 entry.glyphs[id] = glyph;
                 callback(null, {stack, id, glyph});
@@ -161,6 +164,7 @@ export default class GlyphManager {
     }
 
     _doesCharSupportLocalGlyph(id: number): boolean {
+        return true;
         /* eslint-disable new-cap */
         return !!this.localIdeographFontFamily &&
             (isChar['CJK Unified Ideographs'](id) ||
