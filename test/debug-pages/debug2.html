@@ -83,7 +83,7 @@
                 'source-layer': 'qrank',
                 'layout': {
                     'text-max-width': 0,
-                    'text-field': ['concat', ['get', 'name:en'], '\n', ['get', `name${result.language ? (':' + result.language) : ''}`]],
+                    'text-field': ['format', ['get', 'name:en'], {}, '\n', {}, ['get', `name${result.language ? (':' + result.language) : ''}`], {}],
                     "text-size": [
                         "interpolate",
                         ["linear"],
