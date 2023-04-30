@@ -425,6 +425,7 @@ class SymbolBucket implements Bucket {
         const canvasComparer = new CanvasComparer();
 
         // const graphemes = [...text];
+        
         canvasComparer.mergeStrings(graphemes);
 
         for (let i = 0; i < graphemes.length; i++) {

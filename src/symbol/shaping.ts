@@ -650,6 +650,7 @@ function shapeLines(shaping: Shaping,
         const graphemes = Array.from(segmenter.segment(line.text), s => s.segment);
 
         // const graphemes = [...line.text];
+        
         canvasComparer.mergeStrings(graphemes);
 
         for (let i = 0; i < graphemes.length; i++) {
