@@ -17,7 +17,7 @@
 
         function handleClick(e) {
             const el = e.target;
-            if (el.tagName !== 'IMG' || el.dataset.altSrc) {
+            if (el.tagName !== 'IMG' || !el.dataset.altSrc) {
                 return;
             }
             // swap between alt-src and src - both are defined in the render test report generation
