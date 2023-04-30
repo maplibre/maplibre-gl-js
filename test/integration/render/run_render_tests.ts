@@ -1,6 +1,6 @@
 /* eslint-disable no-process-exit */
 //import './mock_browser_for_node';
-import canvas from 'canvas';
+// import canvas from 'canvas';
 import path, {dirname} from 'path';
 import fs from 'fs';
 import st from 'st';
@@ -8,8 +8,8 @@ import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
-import nise, {FakeXMLHttpRequest} from 'nise';
-import {createRequire} from 'module';
+// import nise, {FakeXMLHttpRequest} from 'nise';
+// import {createRequire} from 'module';
 import http from 'http';
 // import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import localizeURLs from '../lib/localize-urls';
@@ -24,15 +24,15 @@ import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PointLike} from '../../../src/ui/camera';
 import puppeteer, {Page} from 'puppeteer';
 
-const {fakeXhr} = nise;
+// const {fakeXhr} = nise;
 // const {plugin: rtlTextPlugin} = rtlTextPluginModule;
-const {registerFont} = canvas;
+// const {registerFont} = canvas;
 
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // @ts-ignore
-const require = createRequire(import.meta.url);
-registerFont('./node_modules/npm-font-open-sans/fonts/Bold/OpenSans-Bold.ttf', {family: 'Open Sans', weight: 'bold'});
+// const require = createRequire(import.meta.url);
+// registerFont('./node_modules/npm-font-open-sans/fonts/Bold/OpenSans-Bold.ttf', {family: 'Open Sans', weight: 'bold'});
 
 // rtlTextPlugin['applyArabicShaping'] = rtlText.applyArabicShaping;
 // rtlTextPlugin['processBidirectionalText'] = rtlText.processBidirectionalText;
@@ -216,35 +216,35 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 /**
  * Mocks XHR request and simply pulls file from the file system.
  */
-function mockXhr() {
-    global.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest() as any;
-    // @ts-ignore
-    XMLHttpRequest.onCreate = (req: FakeXMLHttpRequest & XMLHttpRequest & { response: any }) => {
-        setTimeout(() => {
-            if (req.readyState === 0) return; // aborted...
-            const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
+// function mockXhr() {
+//     global.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest() as any;
+//     // @ts-ignore
+//     XMLHttpRequest.onCreate = (req: FakeXMLHttpRequest & XMLHttpRequest & { response: any }) => {
+//         setTimeout(() => {
+//             if (req.readyState === 0) return; // aborted...
+//             const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
 
-            let body: Buffer | null = null;
-            try {
-                if (relativePath.startsWith('mvt-fixtures')) {
-                    body = fs.readFileSync(path.join(path.dirname(require.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
-                } else {
-                    body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
-                }
-                if (req.responseType !== 'arraybuffer') {
-                    req.response = body.toString('utf8');
-                } else {
-                    req.response = body;
-                }
-                req.setStatus(req.response.length > 0 ? 200 : 204);
-                req.onload(undefined as any);
-            } catch (ex) {
-                req.status = 404; // file not found
-                req.onload(undefined as any);
-            }
-        }, 0);
-    };
-}
+//             let body: Buffer | null = null;
+//             try {
+//                 if (relativePath.startsWith('mvt-fixtures')) {
+//                     body = fs.readFileSync(path.join(path.dirname(require.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
+//                 } else {
+//                     body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
+//                 }
+//                 if (req.responseType !== 'arraybuffer') {
+//                     req.response = body.toString('utf8');
+//                 } else {
+//                     req.response = body;
+//                 }
+//                 req.setStatus(req.response.length > 0 ? 200 : 204);
+//                 req.onload(undefined as any);
+//             } catch (ex) {
+//                 req.status = 404; // file not found
+//                 req.onload(undefined as any);
+//             }
+//         }, 0);
+//     };
+// }
 
 /**
  * Gets all the tests from the file system looking for style.json files.
@@ -344,7 +344,8 @@ browser.getImageCanvasContext = (img: CanvasImageSource) : CanvasRenderingContex
 };
 */
 
-const browser = await puppeteer.launch({headless: false, args: ['--enable-webgl']});
+const browser = await puppeteer.launch({headless: false, args: ['--enable-webgl', '--no-sandbox',
+    '--disable-web-security']});
 
 /**
  * It creates the map and applies the operations to create an image
@@ -358,7 +359,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
     const width = styleForTest.metadata.test.width;
     const height = styleForTest.metadata.test.height;
 
-    page.setViewport({width, height, deviceScaleFactor: 2});
+    await page.setViewport({width, height, deviceScaleFactor: 2});
 
     await page.setContent(`
 <!DOCTYPE html>
