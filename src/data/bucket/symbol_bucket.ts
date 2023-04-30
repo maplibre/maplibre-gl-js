@@ -426,7 +426,7 @@ class SymbolBucket implements Bucket {
 
         // const graphemes = [...text];
 
-        console.log('isLatin', text, canvasComparer.isLatin(text));
+        // console.log('isLatin', text, canvasComparer.isLatin(text));
 
         if (!canvasComparer.isLatin(text) && !canvasComparer.compareCanvases(text, graphemes)) {
             canvasComparer.mergeStrings(graphemes);
