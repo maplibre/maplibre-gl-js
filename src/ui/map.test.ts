@@ -2142,6 +2142,19 @@ describe('Map', () => {
         });
     });
 
+    test('no render before style loaded', done => {
+        server.respondWith('/styleUrl', JSON.stringify(createStyle()));
+        const map = createMap({style:'/styleUrl'});        
+        map.on('render', () => {
+            if (map.style._loaded) {
+                done();
+            } else {
+                done('test failed');
+            }
+        });
+        server.respond();
+    });
+
     test('no idle event during move', async () => {
         const style = createStyle();
         const map = createMap({style, fadeDuration: 0});
