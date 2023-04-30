@@ -2144,7 +2144,13 @@ describe('Map', () => {
 
     test('no render before style loaded', done => {
         server.respondWith('/styleUrl', JSON.stringify(createStyle()));
-        const map = createMap({style:'/styleUrl'});        
+        const map = createMap({style: '/styleUrl'});
+
+        jest.spyOn(map, 'triggerRepaint').mockImplementationOnce(() => {
+            if (!map.style._loaded) {
+                done('test failed');
+            }
+        });
         map.on('render', () => {
             if (map.style._loaded) {
                 done();
@@ -2152,6 +2158,9 @@ describe('Map', () => {
                 done('test failed');
             }
         });
+
+        // Invoke a map function which can trigger a map update.
+        map.setMinZoom(1);
         server.respond();
     });
 
