@@ -592,8 +592,17 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     applyOperations(testData, map, operations.slice(1), callback);
                 }, operation[1]);
             } else if (operation[0] === 'addImage') {
-                const {data, width, height} = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', operation[2])));
-                map.addImage(operation[1], {width, height, data: new Uint8Array(data)}, operation[3] || {});
+
+                const getImage = async (url) => {
+                    const img = new Image();
+                    img.src = url;
+                    img.crossOrigin = 'anonymous';
+                    await img.decode();
+                    return img;
+                };
+                const image = await getImage(`http://0.0.0.0:59160/${operation[2]}`);
+
+                map.addImage(operation[1], image, operation[3] || {});
                 applyOperations(testData, map, operations.slice(1), callback);
             } else if (operation[0] === 'addCustomLayer') {
                 map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
