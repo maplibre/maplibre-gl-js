@@ -60,7 +60,7 @@
     "@types/jest": "^29.5.1",
     "@types/jsdom": "^21.1.1",
     "@types/minimist": "^1.2.2",
-    "@types/murmurhash-js": "^1.0.3",
+    "@types/murmurhash-js": "^1.0.4",
     "@types/nise": "^1.4.1",
     "@types/node": "^18.16.0",
     "@types/offscreencanvas": "^2019.7.0",
