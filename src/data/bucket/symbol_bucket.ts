@@ -417,7 +417,7 @@ class SymbolBucket implements Bucket {
 
     calculateGlyphDependencies(text: string, stack: {[_: string]: boolean}, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
         const segmenter = new Intl.Segmenter(
-            'my', {granularity: 'grapheme'}
+            'en', {granularity: 'word'}
         );
         const graphemes = Array.from(segmenter.segment(text), s => s.segment);
         for (let i = 0; i < graphemes.length; i++) {

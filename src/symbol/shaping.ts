@@ -641,7 +641,7 @@ function shapeLines(shaping: Shaping,
         }
 
         const segmenter = new Intl.Segmenter(
-            'en', {granularity: 'grapheme'}
+            'en', {granularity: 'word'}
         );
         const graphemes = Array.from(segmenter.segment(line.text), s => s.segment);
 
