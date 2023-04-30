@@ -192,7 +192,6 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     testData.diff = diffBuf.toString('base64');
 }
 
-
 /**
  * Gets all the tests from the file system looking for style.json files.
  *
@@ -236,7 +235,6 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
         });
     return sequence;
 }
-
 
 const browser = await puppeteer.launch({headless: false, args: ['--enable-webgl', '--no-sandbox',
     '--disable-web-security']});
@@ -460,8 +458,14 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
             } else if (operation[0] === 'wait') {
                 if (operation.length > 1) {
-                    if (typeof operation[1] === 'number') {
-                        //now += operation[1];
+                    if (typeof operation[1] === 'number'
+                    ) {
+                        await new Promise((resolve) => {
+                            setTimeout(() => {
+                                resolve(10);
+                            }, operation[1]);
+                        });
+
                         map._render();
                         applyOperations(testData, map, operations.slice(1), callback);
                     } else {
@@ -522,7 +526,9 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 map.style.sourceCaches[operation[1]].pause();
                 applyOperations(testData, map, operations.slice(1), callback);
             } else {
+                console.log('IS A FUNCTION', typeof map[operation[0]] === 'function', operation[0]);
                 if (typeof map[operation[0]] === 'function') {
+                    console.log('perform easeto', ...operation.slice(1));
                     map[operation[0]](...operation.slice(1));
                 }
                 applyOperations(testData, map, operations.slice(1), callback);
