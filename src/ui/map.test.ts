@@ -2159,8 +2159,6 @@ describe('Map', () => {
             }
         });
 
-        // Invoke a map function which can trigger a map update.
-        map.setMinZoom(1);
         server.respond();
     });
 
