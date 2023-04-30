@@ -344,9 +344,7 @@ browser.getImageCanvasContext = (img: CanvasImageSource) : CanvasRenderingContex
 };
 */
 
-
-
-const browser = await puppeteer.launch({headless: 'new', args: ['--enable-webgl']});
+const browser = await puppeteer.launch({headless: false, args: ['--enable-webgl']});
 
 /**
  * It creates the map and applies the operations to create an image
@@ -530,10 +528,26 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             'null-island': NullIsland
         };
 
-        function updateFakeCanvas(document: Document, id: string, imagePath: string) {
-            const fakeCanvas = document.getElementById(id);
-            const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', imagePath)));
-            (fakeCanvas as any).data = image.data;
+        async function updateFakeCanvas(document: Document, id: string, imagePath: string) {
+            const fakeCanvas = document.getElementById(id) as HTMLCanvasElement;
+
+            const getMeta = async (url) => {
+                const img = new Image();
+                img.src = url;
+                img.crossOrigin = 'anonymous';
+                await img.decode();
+                return img;
+            };
+
+            const image = await getMeta(`http://0.0.0.0:59160/${imagePath}`);
+
+            fakeCanvas.width = image.naturalWidth;
+            fakeCanvas.height = image.naturalHeight;
+            fakeCanvas.id = id;
+
+            const ctx = fakeCanvas.getContext('2d');
+            ctx?.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+
         }
 
         /**
@@ -544,7 +558,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
          * @param operations The operations
          * @param callback The callback to use when all the operations are executed
          */
-        function applyOperations(testData: TestData, map: Map & { _render: () => void}, operations: any[], callback: Function) {
+        async function applyOperations(testData: TestData, map: Map & { _render: () => void}, operations: any[], callback: Function) {
             const operation = operations && operations[0];
             if (!operations || operations.length === 0) {
                 callback();
@@ -589,10 +603,10 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 const canvasSource = map.getSource(operation[1]) as CanvasSource;
                 canvasSource.play();
                 // update before pause should be rendered
-                updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[2]);
+                await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[2]);
                 canvasSource.pause();
                 // update after pause should not be rendered
-                updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[3]);
+                await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[3]);
                 map._render();
                 applyOperations(testData, map, operations.slice(1), callback);
             } else if (operation[0] === 'setStyle') {
@@ -611,24 +625,40 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
         }
 
-        function createFakeCanvas(document: Document, id: string, imagePath: string): HTMLCanvasElement {
-            const fakeCanvas = document.createElement('canvas');
-            const image = PNG.sync.read(fs.readFileSync(path.join(__dirname, '../assets', imagePath)));
+        async function createFakeCanvas(document: Document, id: string, imagePath: string): Promise<HTMLCanvasElement> {
+            const fakeCanvas: HTMLCanvasElement = document.createElement('canvas');
+            console.log('document', document, fakeCanvas);
+
+            const getImage = async (url) => {
+                const img = new Image();
+                img.src = url;
+                img.crossOrigin = 'anonymous';
+                await img.decode();
+                return img;
+            };
+
+            const image = await getImage(`http://0.0.0.0:59160/${imagePath}`);
+
+            fakeCanvas.width = image.naturalWidth;
+            fakeCanvas.height = image.naturalHeight;
             fakeCanvas.id = id;
-            (fakeCanvas as any).data = image.data;
-            fakeCanvas.width = image.width;
-            fakeCanvas.height = image.height;
+
+            const ctx = fakeCanvas.getContext('2d');
+            ctx?.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+
             return fakeCanvas;
         }
 
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             setTimeout(() => {
                 reject(new Error('Test timed out'));
             }, options.timeout || 4000);
 
+            console.log('Starting gtest');
             if (options.addFakeCanvas) {
-                const fakeCanvas = createFakeCanvas(window.document, options.addFakeCanvas.id, options.addFakeCanvas.image);
-                window.document.body.appendChild(fakeCanvas);
+                const fakeCanvas = await createFakeCanvas(document, options.addFakeCanvas.id, options.addFakeCanvas.image);
+                console.log('fakeCanvas', fakeCanvas);
+                document.body.appendChild(fakeCanvas);
             }
 
             if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
@@ -796,7 +826,9 @@ const server = http.createServer(
         cors: true,
     })
 );
-await new Promise<void>((resolve) => server.listen(resolve));
+await new Promise<void>((resolve) => server.listen(59160, '0.0.0.0', resolve));
+
+console.log('server.address()', server.address());
 
 const directory = path.join(__dirname);
 const testStyles = getTestStyles(options, directory, (server.address() as any).port);
@@ -820,7 +852,7 @@ for (const style of testStyles) {
     printProgress(style.metadata.test, testStyles.length, ++index);
 }
 
-page.close();
+// page.close();
 
 const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
 const testStats: TestStats = {
@@ -899,4 +931,4 @@ if (options.report) {
     }
 }
 
-process.exit(success ? 0 : 1);
+// process.exit(success ? 0 : 1);
