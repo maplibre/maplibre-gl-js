@@ -1,6 +1,4 @@
 /* eslint-disable no-process-exit */
-//import './mock_browser_for_node';
-// import canvas from 'canvas';
 import path, {dirname} from 'path';
 import fs from 'fs';
 import st from 'st';
@@ -8,35 +6,16 @@ import {PNG} from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
-// import nise, {FakeXMLHttpRequest} from 'nise';
-// import {createRequire} from 'module';
 import http from 'http';
-// import rtlText from '@mapbox/mapbox-gl-rtl-text';
 import localizeURLs from '../lib/localize-urls';
 import maplibregl from '../../../src/index';
-
-//browser from '../../../src/util/browser';
-// import * as rtlTextPluginModule from '../../../src/source/rtl_text_plugin';
 import type CanvasSource from '../../../src/source/canvas_source';
-// import customLayerImplementations from './custom_layer_implementations';
 import type Map from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PointLike} from '../../../src/ui/camera';
 import puppeteer, {Page} from 'puppeteer';
 
-// const {fakeXhr} = nise;
-// const {plugin: rtlTextPlugin} = rtlTextPluginModule;
-// const {registerFont} = canvas;
-
-// @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// @ts-ignore
-// const require = createRequire(import.meta.url);
-// registerFont('./node_modules/npm-font-open-sans/fonts/Bold/OpenSans-Bold.ttf', {family: 'Open Sans', weight: 'bold'});
-
-// rtlTextPlugin['applyArabicShaping'] = rtlText.applyArabicShaping;
-// rtlTextPlugin['processBidirectionalText'] = rtlText.processBidirectionalText;
-// rtlTextPlugin['processStyledBidirectionalText'] = rtlText.processStyledBidirectionalText;
 
 type TestData = {
     id: string;
@@ -213,38 +192,6 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     testData.diff = diffBuf.toString('base64');
 }
 
-/**
- * Mocks XHR request and simply pulls file from the file system.
- */
-// function mockXhr() {
-//     global.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest() as any;
-//     // @ts-ignore
-//     XMLHttpRequest.onCreate = (req: FakeXMLHttpRequest & XMLHttpRequest & { response: any }) => {
-//         setTimeout(() => {
-//             if (req.readyState === 0) return; // aborted...
-//             const relativePath = req.url.replace(/^http:\/\/localhost:(\d+)\//, '').replace(/\?.*/, '');
-
-//             let body: Buffer | null = null;
-//             try {
-//                 if (relativePath.startsWith('mvt-fixtures')) {
-//                     body = fs.readFileSync(path.join(path.dirname(require.resolve('@mapbox/mvt-fixtures')), '..', relativePath));
-//                 } else {
-//                     body = fs.readFileSync(path.join(__dirname, '../assets', relativePath));
-//                 }
-//                 if (req.responseType !== 'arraybuffer') {
-//                     req.response = body.toString('utf8');
-//                 } else {
-//                     req.response = body;
-//                 }
-//                 req.setStatus(req.response.length > 0 ? 200 : 204);
-//                 req.onload(undefined as any);
-//             } catch (ex) {
-//                 req.status = 404; // file not found
-//                 req.onload(undefined as any);
-//             }
-//         }, 0);
-//     };
-// }
 
 /**
  * Gets all the tests from the file system looking for style.json files.
@@ -290,59 +237,6 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
     return sequence;
 }
 
-/**
- * Replacing the browser method of get image in order to avoid usage of context and canvas 2d with Image object...
- * @param img - CanvasImageSource
- * @param padding - padding around the image
- * @returns ImageData
- */
-/*
-browser.getImageData = (img: CanvasImageSource, padding = 0): ImageData => {
-    // HTMLImageElement/HTMLCanvasElement etc interface in lib.dom.d.ts does not expose data property
-    // @ts-ignore
-    const data = img.data;
-    if (!data) {
-        return {width: 1, height: 1, data: new Uint8ClampedArray(1), colorSpace: 'srgb'};
-    }
-    const width = img.width as number;
-    const height = img.height as number;
-
-    const source = new Uint8ClampedArray(data);
-    const dest = new Uint8ClampedArray((2 * padding + width) * (2 * padding + height) * 4);
-
-    const offset = (2 * padding + width) * padding + padding;
-    for (let i = 0; i < height; i++) {
-        dest.set(source.slice(i * width * 4, (i + 1) * width * 4), 4 * (offset + (width + 2 * padding) * i));
-    }
-    return {width: width + 2 * padding, height: height + 2 * padding, data: dest, colorSpace: 'srgb'};
-};
-
-/**
- * Replacing the browser method of getImageCanvasContext in order to avoid usage of context and canvas 2d with Image object...
- * @param img - CanvasImageSource
- * @returns Mocked CanvasRenderingContext2D object
- */
-/*
-browser.getImageCanvasContext = (img: CanvasImageSource) : CanvasRenderingContext2D => {
-    // TS ignored as we are just mocking 1 of the 60+ CanvasRenderingContext2D properties/functions.
-    // @ts-ignore
-    return {
-        getImageData: (x, y, width, height) => {
-            const imgData = browser.getImageData(img);
-            const source = new Uint8ClampedArray(imgData.data);
-            const sourceWidth = imgData.width;
-            const dest = new Uint8ClampedArray(width * height * 4);
-
-            for (let i = 0; i < height; i++) {
-                const offset = sourceWidth * (y + i) * 4 + x * 4;
-                dest.set(source.slice(offset, offset + width * 4), 4 * width * i);
-            }
-
-            return {width, height, data: dest, colorSpace: 'srgb'};
-        }
-    };
-};
-*/
 
 const browser = await puppeteer.launch({headless: false, args: ['--enable-webgl', '--no-sandbox',
     '--disable-web-security']});
