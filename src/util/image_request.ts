@@ -260,11 +260,11 @@ namespace ImageRequest {
         } else if ((credentials && credentials === 'same-origin') || !sameOrigin(url)) {
             image.crossOrigin = 'anonymous';
         }
-        
+
         // fetchPriority is experimental property supported on Chromium browsers from Version 102
         // By default images are downloaded with priority low, whereas fetch request downloads with priority high
         // https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/fetchPriority
-        (image as any).fetchPriority = "high";
+        (image as any).fetchPriority = 'high';
         image.onload = () => {
             callback(null, image);
             image.onerror = image.onload = null;
