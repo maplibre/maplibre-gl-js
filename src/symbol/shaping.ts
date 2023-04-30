@@ -14,6 +14,7 @@ import type {ImagePosition} from '../render/image_atlas';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
 import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
+import CanvasComparer from '../util/canvas_comparer';
 
 enum WritingMode {
     none = 0,
@@ -624,6 +625,9 @@ function shapeLines(shaping: Shaping,
             textJustify === 'left' ? 0 : 0.5;
 
     let lineIndex = 0;
+
+    const canvasComparer = new CanvasComparer();
+
     for (const line of lines) {
         line.trim();
 
@@ -641,9 +645,12 @@ function shapeLines(shaping: Shaping,
         }
 
         const segmenter = new Intl.Segmenter(
-            'en', {granularity: 'word'}
+            'en', {granularity: 'grapheme'}
         );
         const graphemes = Array.from(segmenter.segment(line.text), s => s.segment);
+
+        // const graphemes = [...line.text];
+        canvasComparer.mergeStrings(graphemes);
 
         for (let i = 0; i < graphemes.length; i++) {
             // const section = line.getSection(i);

@@ -56,6 +56,7 @@ import type {SizeData} from '../../symbol/symbol_size';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import CanvasComparer from '../../util/canvas_comparer';
 
 export type SingleCollisionBox = {
     x1: number;
@@ -417,9 +418,15 @@ class SymbolBucket implements Bucket {
 
     calculateGlyphDependencies(text: string, stack: {[_: string]: boolean}, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
         const segmenter = new Intl.Segmenter(
-            'en', {granularity: 'word'}
+            'en', {granularity: 'grapheme'}
         );
         const graphemes = Array.from(segmenter.segment(text), s => s.segment);
+
+        const canvasComparer = new CanvasComparer();
+
+        // const graphemes = [...text];
+        canvasComparer.mergeStrings(graphemes);
+
         for (let i = 0; i < graphemes.length; i++) {
             // OLIVER
             // stack[text.charCodeAt(i).toString()] = true;
