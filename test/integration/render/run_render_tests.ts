@@ -539,7 +539,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 return img;
             };
 
-            const image = await getMeta(`http://0.0.0.0:59160/${imagePath}`);
+            const image = await getMeta(`http://0.0.0.0:2900/${imagePath}`);
 
             fakeCanvas.width = image.naturalWidth;
             fakeCanvas.height = image.naturalHeight;
@@ -600,7 +600,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     await img.decode();
                     return img;
                 };
-                const image = await getImage(`http://0.0.0.0:59160/${operation[2]}`);
+                const image = await getImage(`http://0.0.0.0:2900/${operation[2]}`);
 
                 map.addImage(operation[1], image, operation[3] || {});
                 applyOperations(testData, map, operations.slice(1), callback);
@@ -646,7 +646,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 return img;
             };
 
-            const image = await getImage(`http://0.0.0.0:59160/${imagePath}`);
+            const image = await getImage(`http://0.0.0.0:2900/${imagePath}`);
 
             fakeCanvas.width = image.naturalWidth;
             fakeCanvas.height = image.naturalHeight;
@@ -835,7 +835,7 @@ const server = http.createServer(
         cors: true,
     })
 );
-await new Promise<void>((resolve) => server.listen(59160, '0.0.0.0', resolve));
+await new Promise<void>((resolve) => server.listen(2900, '0.0.0.0', resolve));
 
 console.log('server.address()', server.address());
 
