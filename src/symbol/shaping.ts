@@ -593,6 +593,8 @@ function getAnchorAlignment(anchor: SymbolAnchor) {
     return {horizontalAlign, verticalAlign};
 }
 
+const textCache: {[key: string]: string[]} = {};
+
 function shapeLines(shaping: Shaping,
     glyphMap: {
         [_: string]: {
@@ -644,15 +646,29 @@ function shapeLines(shaping: Shaping,
             continue;
         }
 
-        const segmenter = new Intl.Segmenter(
-            'en', {granularity: 'grapheme'}
-        );
-        const graphemes = Array.from(segmenter.segment(line.text), s => s.segment);
+        let graphemes = [];
 
-        // const graphemes = [...line.text];
+        if (line.text in textCache) {
+            // console.log('cache hit', line.text);
+            graphemes = textCache[line.text];
 
-        if (!canvasComparer.isLatin(line.text) && !canvasComparer.compareCanvases(line.text, graphemes)) {
-            canvasComparer.mergeStrings(graphemes);
+        } else {
+            // console.log('cache miss', line.text);
+
+            const segmenter = new Intl.Segmenter(
+                'en', {granularity: 'grapheme'}
+            );
+            graphemes = Array.from(segmenter.segment(line.text), s => s.segment);
+
+            // const graphemes = [...line.text];
+
+            // console.log('shaping', line.text);
+
+            if (!canvasComparer.isLatin(line.text) && !canvasComparer.compareCanvases(line.text, graphemes)) {
+                canvasComparer.mergeStrings(graphemes);
+            }
+
+            textCache[line.text] = [...graphemes];
         }
 
         for (let i = 0; i < graphemes.length; i++) {

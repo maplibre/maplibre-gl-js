@@ -363,6 +363,8 @@ class SymbolBucket implements Bucket {
     allowVerticalPlacement: boolean;
     hasRTLText: boolean;
 
+    textCache: {[key: string]: string[]};
+
     constructor(options: BucketParameters<SymbolStyleLayer>) {
         this.collisionBoxArray = options.collisionBoxArray;
         this.zoom = options.zoom;
@@ -405,6 +407,8 @@ class SymbolBucket implements Bucket {
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
 
         this.sourceID = options.sourceID;
+
+        this.textCache = {};
     }
 
     createArrays() {
@@ -417,19 +421,31 @@ class SymbolBucket implements Bucket {
     }
 
     calculateGlyphDependencies(text: string, stack: {[_: string]: boolean}, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
-        const segmenter = new Intl.Segmenter(
-            'en', {granularity: 'grapheme'}
-        );
-        const graphemes = Array.from(segmenter.segment(text), s => s.segment);
+        let graphemes = [];
 
-        const canvasComparer = new CanvasComparer();
+        if (text in this.textCache) {
+            // console.log('symbol_bucket cache hit', text);
+            graphemes = this.textCache[text];
 
-        // const graphemes = [...text];
+        } else {
+            // console.log('symbol bucket cache miss', text);
 
-        // console.log('isLatin', text, canvasComparer.isLatin(text));
+            const segmenter = new Intl.Segmenter(
+                'en', {granularity: 'grapheme'}
+            );
+            graphemes = Array.from(segmenter.segment(text), s => s.segment);
 
-        if (!canvasComparer.isLatin(text) && !canvasComparer.compareCanvases(text, graphemes)) {
-            canvasComparer.mergeStrings(graphemes);
+            // const graphemes = [...line.text];
+
+            // console.log('shaping', line.text);
+
+            const canvasComparer = new CanvasComparer();
+
+            if (!canvasComparer.isLatin(text) && !canvasComparer.compareCanvases(text, graphemes)) {
+                canvasComparer.mergeStrings(graphemes);
+            }
+
+            this.textCache[text] = [...graphemes];
         }
 
         for (let i = 0; i < graphemes.length; i++) {
