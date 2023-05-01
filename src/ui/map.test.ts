@@ -2159,6 +2159,9 @@ describe('Map', () => {
             }
         });
 
+        // Force a update should not call triggerRepaint till style is loaded.
+        // Once style is loaded, it will trigger the update.
+        map._update();
         server.respond();
     });
 
