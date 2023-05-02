@@ -35,11 +35,9 @@ class LineFloorwidthProperty extends DataDrivenProperty<number> {
     }
 }
 
-const lineFloorwidthProperty = new LineFloorwidthProperty(properties.paint.properties['line-width'].specification);
-lineFloorwidthProperty.useIntegerZoom = true;
-
 class LineStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<LineLayoutProps>;
+    _lineFloorwidthProperty: LineFloorwidthProperty;
     layout: PossiblyEvaluated<LineLayoutProps, LineLayoutPropsPossiblyEvaluated>;
 
     gradientVersion: number;
@@ -68,9 +66,11 @@ class LineStyleLayer extends StyleLayer {
 
     recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
         super.recalculate(parameters, availableImages);
-
+        this._lineFloorwidthProperty = this._lineFloorwidthProperty ||
+            new LineFloorwidthProperty(properties.getPaint().properties['line-width'].specification);
+        this._lineFloorwidthProperty.useIntegerZoom = true;
         (this.paint._values as any)['line-floorwidth'] =
-            lineFloorwidthProperty.possiblyEvaluate(this._transitioningPaint._values['line-width'].value, parameters);
+            this._lineFloorwidthProperty.possiblyEvaluate(this._transitioningPaint._values['line-width'].value, parameters);
     }
 
     createBucket(parameters: BucketParameters<any>) {
