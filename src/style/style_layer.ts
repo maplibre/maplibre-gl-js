@@ -69,10 +69,8 @@ abstract class StyleLayer extends Evented {
         getPaint?: () => Properties<any>;
     }>) {
         super();
-        const paintProperties = typeof properties.getPaint === 'function' ?
-            properties.getPaint() : undefined;
-        const layoutProperties = typeof properties.getLayout === 'function' ?
-            properties.getLayout() : undefined;
+        const paintProperties = properties.getPaint ? properties.getPaint() : undefined;
+        const layoutProperties = properties.getLayout ? properties.getLayout() : undefined;
         this.id = layer.id;
         this.type = layer.type;
         this._featureFilter = {filter: () => true, needGeometry: false};
