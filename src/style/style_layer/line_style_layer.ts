@@ -36,6 +36,7 @@ class LineFloorwidthProperty extends DataDrivenProperty<number> {
 }
 
 let lineFloorwidthProperty: LineFloorwidthProperty;
+
 class LineStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<LineLayoutProps>;
     layout: PossiblyEvaluated<LineLayoutProps, LineLayoutPropsPossiblyEvaluated>;
@@ -50,6 +51,11 @@ class LineStyleLayer extends StyleLayer {
     constructor(layer: LayerSpecification) {
         super(layer, properties);
         this.gradientVersion = 0;
+        if (!lineFloorwidthProperty) {
+            lineFloorwidthProperty =
+                new LineFloorwidthProperty(properties.getPaint().properties['line-width'].specification);
+            lineFloorwidthProperty.useIntegerZoom = true;
+        }
     }
 
     _handleSpecialPaintPropertyUpdate(name: string) {
@@ -66,9 +72,6 @@ class LineStyleLayer extends StyleLayer {
 
     recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
         super.recalculate(parameters, availableImages);
-        lineFloorwidthProperty = lineFloorwidthProperty ||
-            new LineFloorwidthProperty(properties.getPaint().properties['line-width'].specification);
-        lineFloorwidthProperty.useIntegerZoom = true;
         (this.paint._values as any)['line-floorwidth'] =
             lineFloorwidthProperty.possiblyEvaluate(this._transitioningPaint._values['line-width'].value, parameters);
     }
