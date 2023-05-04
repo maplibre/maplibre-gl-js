@@ -69,6 +69,7 @@ abstract class StyleLayer extends Evented {
         paint?: Properties<any>;
     }>) {
         super();
+
         this.id = layer.id;
         this.type = layer.type;
         this._featureFilter = {filter: () => true, needGeometry: false};
