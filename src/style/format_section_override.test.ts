@@ -10,7 +10,7 @@ describe('evaluate', () => {
         const defaultColor = {'r': 0, 'g': 1, 'b': 0, 'a': 1};
         const overridenColor = {'r': 1, 'g': 0, 'b': 0, 'a': 1};
         const overriden = new PossiblyEvaluatedPropertyValue(
-            properties.getPaint().properties['text-color'],
+            properties.paint.properties['text-color'],
             {kind: 'constant', value: defaultColor},
             {zoom: 0, zoomHistory: {}} as EvaluationParameters
         );
@@ -34,11 +34,11 @@ describe('evaluate', () => {
         const overridenColor = {'r': 0, 'g': 0, 'b': 1, 'a': 1};
         const styleExpr = createExpression(
             ['get', 'color'],
-            properties.getPaint().properties['text-color'].specification);
+            properties.paint.properties['text-color'].specification);
 
         const sourceExpr = new ZoomConstantExpression('source', styleExpr.value as StyleExpression);
         const overriden = new PossiblyEvaluatedPropertyValue(
-            properties.getPaint().properties['text-color'],
+            properties.paint.properties['text-color'],
             sourceExpr,
             {zoom: 0, zoomHistory: {}} as EvaluationParameters
         );

@@ -110,8 +110,7 @@ class SymbolStyleLayer extends StyleLayer {
     }
 
     _setPaintOverrides() {
-        const paintProperties = properties.getPaint();
-        for (const overridable of paintProperties.overridableProperties) {
+        for (const overridable of properties.paint.overridableProperties) {
             if (!SymbolStyleLayer.hasPaintOverride(this.layout, overridable)) {
                 continue;
             }
@@ -141,7 +140,7 @@ class SymbolStyleLayer extends StyleLayer {
 
     static hasPaintOverride(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, propertyName: string): boolean {
         const textField = layout.get('text-field');
-        const property = properties.getPaint().properties[propertyName];
+        const property = properties.paint.properties[propertyName];
         let hasOverrides = false;
 
         const checkSections = (sections) => {

@@ -275,9 +275,7 @@ const getPaint = () => paint = paint || new Properties({`);
     output.push(
         `});
 
-export default ({ getPaint${layoutProperties.length ? ', getLayout' : ''} } as {
-    getPaint: () => Properties<${layerType}PaintProps>${layoutProperties.length ? `,\n    getLayout: () => Properties<${layerType}LayoutProps>` : ''}
-});`);
+export default ({ get paint() { return getPaint() }${layoutProperties.length ? ', get layout() { return getLayout() }' : ''} });`);
 
     return output.join('\n');
 }

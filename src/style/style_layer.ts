@@ -65,12 +65,10 @@ abstract class StyleLayer extends Evented {
     ): boolean | number;
 
     constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
-        getLayout?: () => Properties<any>;
-        getPaint?: () => Properties<any>;
+        layout?: Properties<any>;
+        paint?: Properties<any>;
     }>) {
         super();
-        const paintProperties = properties.getPaint ? properties.getPaint() : undefined;
-        const layoutProperties = properties.getLayout ? properties.getLayout() : undefined;
         this.id = layer.id;
         this.type = layer.type;
         this._featureFilter = {filter: () => true, needGeometry: false};
@@ -89,12 +87,12 @@ abstract class StyleLayer extends Evented {
             this.filter = layer.filter;
         }
 
-        if (layoutProperties) {
-            this._unevaluatedLayout = new Layout(layoutProperties);
+        if (properties.layout) {
+            this._unevaluatedLayout = new Layout(properties.layout);
         }
 
-        if (paintProperties) {
-            this._transitionablePaint = new Transitionable(paintProperties);
+        if (properties.paint) {
+            this._transitionablePaint = new Transitionable(properties.paint);
 
             for (const property in layer.paint) {
                 this.setPaintProperty(property, layer.paint[property], {validate: false});
@@ -105,7 +103,7 @@ abstract class StyleLayer extends Evented {
 
             this._transitioningPaint = this._transitionablePaint.untransitioned();
             //$FlowFixMe
-            this.paint = new PossiblyEvaluated(paintProperties);
+            this.paint = new PossiblyEvaluated(properties.paint);
         }
     }
 

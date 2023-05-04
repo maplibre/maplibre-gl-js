@@ -21,8 +21,7 @@ describe('setPaintOverrides', () => {
     test('setPaintOverrides, no overrides', () => {
         const layer = createSymbolLayer({});
         layer._setPaintOverrides();
-        const paintProperties = properties.getPaint();
-        for (const overridable of paintProperties.overridableProperties) {
+        for (const overridable of properties.paint.overridableProperties) {
             expect(isOverriden(layer.paint.get(overridable as keyof SymbolPaintPropsPossiblyEvaluated))).toBe(false);
         }
 
