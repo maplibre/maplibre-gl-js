@@ -1,5 +1,4 @@
 import {LineLayoutArray, LineExtLayoutArray} from '../array_types.g';
-
 import {members as layoutAttributes} from './line_attributes';
 import {members as layoutAttributesExt} from './line_attributes_ext';
 import SegmentVector from '../segment';
@@ -372,7 +371,6 @@ class LineBucket implements Bucket {
                 const prevSegmentLength = currentVertex.dist(prevVertex);
                 if (prevSegmentLength > 2 * sharpCornerOffset) {
                     const newPrevVertex = currentVertex.sub(currentVertex.sub(prevVertex)._mult(sharpCornerOffset / prevSegmentLength)._round());
-                    // console.log('update in 1 place');
                     this.updateDistance(prevVertex, newPrevVertex);
                     this.addCurrentVertex(newPrevVertex, prevNormal, 0, 0, segment);
                     prevVertex = newPrevVertex;
@@ -407,7 +405,6 @@ class LineBucket implements Bucket {
 
             // Calculate how far along the line the currentVertex is
             if (prevVertex) {
-                // console.log('update in 2 place');
                 this.updateDistance(prevVertex, currentVertex);
             }
 
@@ -497,7 +494,6 @@ class LineBucket implements Bucket {
                 const nextSegmentLength = currentVertex.dist(nextVertex);
                 if (nextSegmentLength > 2 * sharpCornerOffset) {
                     const newCurrentVertex = currentVertex.add(nextVertex.sub(currentVertex)._mult(sharpCornerOffset / nextSegmentLength)._round());
-                    // console.log('update in 3 place');
                     this.updateDistance(currentVertex, newCurrentVertex);
                     this.addCurrentVertex(newCurrentVertex, nextNormal, 0, 0, segment);
                     currentVertex = newCurrentVertex;
@@ -517,7 +513,7 @@ class LineBucket implements Bucket {
      * @param round whether this is a round cap
      * @private
      */
-    addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round: boolean = false, depth: number = 0) {
+    addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round: boolean = false) {
         // left and right extrude vectors, perpendicularly shifted by endLeft/endRight
         const leftX = normal.x + normal.y * endLeft;
         const leftY = normal.y - normal.x * endLeft;
@@ -531,17 +527,10 @@ class LineBucket implements Bucket {
         // When we get close to the distance, reset it to zero and add the vertex again with
         // a distance of zero. The max distance is determined by the number of bits we allocate
         // to `linesofar`.
-        if (depth) {
-            console.log('****DEPTH:***');
-            console.log(depth);
-        }
-        console.log(`DISTANCE is: ${this.distance}`);
-        console.log(`half of max line distance is: ${MAX_LINE_DISTANCE / 2}`);
         if (this.distance > MAX_LINE_DISTANCE / 2  && this.totalDistance === 0) {
-            console.log('[ CLEARED ]');
             this.distance = 0;
             this.updateScaledDistance();
-            this.addCurrentVertex(p, normal, endLeft, endRight, segment, round, depth + 1);
+            this.addCurrentVertex(p, normal, endLeft, endRight, segment, round);
         }
     }
 
@@ -597,7 +586,6 @@ class LineBucket implements Bucket {
     }
 
     updateDistance(prev: Point, next: Point) {
-        console.log(`[UPDATE DIST]: prev: ${prev.x} ${prev.y} | next: ${next.x} ${next.y} | old dist: ${this.distance}`);
         this.distance += prev.dist(next);
         this.updateScaledDistance();
     }
