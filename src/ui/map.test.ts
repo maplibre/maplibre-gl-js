@@ -2142,6 +2142,29 @@ describe('Map', () => {
         });
     });
 
+    test('no render before style loaded', done => {
+        server.respondWith('/styleUrl', JSON.stringify(createStyle()));
+        const map = createMap({style: '/styleUrl'});
+
+        jest.spyOn(map, 'triggerRepaint').mockImplementationOnce(() => {
+            if (!map.style._loaded) {
+                done('test failed');
+            }
+        });
+        map.on('render', () => {
+            if (map.style._loaded) {
+                done();
+            } else {
+                done('test failed');
+            }
+        });
+
+        // Force a update should not call triggerRepaint till style is loaded.
+        // Once style is loaded, it will trigger the update.
+        map._update();
+        server.respond();
+    });
+
     test('no idle event during move', async () => {
         const style = createStyle();
         const map = createMap({style, fadeDuration: 0});

@@ -23,6 +23,14 @@ type ImageQueueThrottleCallbackDictionary = {
     [Key: number]: ImageQueueThrottleControlCallback;
 }
 
+type HTMLImageElementWithPriority = HTMLImageElement &
+{
+    // fetchPriority is experimental property supported on Chromium browsers from Version 102
+    // By default images are downloaded with priority low, whereas fetch request downloads with priority high
+    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/fetchPriority
+    fetchPriority?: 'auto' | 'high' | 'low';
+};
+
 /**
  * By default, the image queue is self driven, meaning as soon as one requested item is processed,
  * it will move on to next one as quickly as it can while limiting
@@ -251,7 +259,7 @@ namespace ImageRequest {
     };
 
     const getImageUsingHtmlImage = (requestParameters: RequestParameters, callback: GetImageCallback): Cancelable  => {
-        const image = new Image();
+        const image = new Image() as HTMLImageElementWithPriority;
         const url = requestParameters.url;
         let requestCancelled = false;
         const credentials = requestParameters.credentials;
@@ -261,6 +269,7 @@ namespace ImageRequest {
             image.crossOrigin = 'anonymous';
         }
 
+        image.fetchPriority = 'high';
         image.onload = () => {
             callback(null, image);
             image.onerror = image.onload = null;

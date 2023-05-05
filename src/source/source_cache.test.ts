@@ -788,6 +788,36 @@ describe('SourceCache#update', () => {
         sourceCache.onAdd(undefined);
     });
 
+    test('does not retain children for fading when tile.fadeEndTime is 0', done => {
+        const transform = new Transform();
+        transform.resize(511, 511);
+        transform.zoom = 1;
+
+        const sourceCache = createSourceCache({
+            loadTile(tile, callback) {
+                tile.timeAdded = Date.now();
+                tile.state = 'loaded';
+                tile.fadeEndTime = 0;
+                callback();
+            }
+        });
+
+        (sourceCache._source as any).type = 'raster';
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                sourceCache.update(transform);
+
+                transform.zoom = 0;
+                sourceCache.update(transform);
+
+                expect(sourceCache.getRenderableIds()).toHaveLength(1);
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+
     test('retains children when tile.fadeEndTime is in the future', done => {
         const transform = new Transform();
         transform.resize(511, 511);
