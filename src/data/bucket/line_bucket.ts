@@ -7,6 +7,7 @@ import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
 import EXTENT from '../extent';
 import mvt from '@mapbox/vector-tile';
+
 const vectorTileFeatureTypes = mvt.VectorTileFeature.types;
 import {register} from '../../util/web_worker_transfer';
 import {hasPattern, addPatternDependencies} from './pattern_bucket_features';
@@ -99,7 +100,7 @@ class LineBucket implements Bucket {
     overscaling: number;
     layers: Array<LineStyleLayer>;
     layerIds: Array<string>;
-    gradients: {[x: string]: GradientTexture};
+    gradients: { [x: string]: GradientTexture };
     stateDependentLayers: Array<any>;
     stateDependentLayerIds: Array<string>;
     patternFeatures: Array<BucketFeature>;
@@ -195,12 +196,12 @@ class LineBucket implements Bucket {
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
+    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: { [_: string]: ImagePosition }) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
+    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: { [_: string]: ImagePosition }) {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions);
         }
@@ -242,7 +243,7 @@ class LineBucket implements Bucket {
         }
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: { [_: string]: ImagePosition }) {
         const layout = this.layers[0].layout;
         const join = layout.get('line-join').evaluate(feature, {});
         const cap = layout.get('line-cap');
@@ -371,6 +372,7 @@ class LineBucket implements Bucket {
                 const prevSegmentLength = currentVertex.dist(prevVertex);
                 if (prevSegmentLength > 2 * sharpCornerOffset) {
                     const newPrevVertex = currentVertex.sub(currentVertex.sub(prevVertex)._mult(sharpCornerOffset / prevSegmentLength)._round());
+                    // console.log('update in 1 place');
                     this.updateDistance(prevVertex, newPrevVertex);
                     this.addCurrentVertex(newPrevVertex, prevNormal, 0, 0, segment);
                     prevVertex = newPrevVertex;
@@ -404,7 +406,10 @@ class LineBucket implements Bucket {
             }
 
             // Calculate how far along the line the currentVertex is
-            if (prevVertex) this.updateDistance(prevVertex, currentVertex);
+            if (prevVertex) {
+                // console.log('update in 2 place');
+                this.updateDistance(prevVertex, currentVertex);
+            }
 
             if (currentJoin === 'miter') {
 
@@ -492,6 +497,7 @@ class LineBucket implements Bucket {
                 const nextSegmentLength = currentVertex.dist(nextVertex);
                 if (nextSegmentLength > 2 * sharpCornerOffset) {
                     const newCurrentVertex = currentVertex.add(nextVertex.sub(currentVertex)._mult(sharpCornerOffset / nextSegmentLength)._round());
+                    // console.log('update in 3 place');
                     this.updateDistance(currentVertex, newCurrentVertex);
                     this.addCurrentVertex(newCurrentVertex, nextNormal, 0, 0, segment);
                     currentVertex = newCurrentVertex;
@@ -511,7 +517,7 @@ class LineBucket implements Bucket {
      * @param round whether this is a round cap
      * @private
      */
-    addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round: boolean = false) {
+    addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round: boolean = false, depth: number = 0) {
         // left and right extrude vectors, perpendicularly shifted by endLeft/endRight
         const leftX = normal.x + normal.y * endLeft;
         const leftY = normal.y - normal.x * endLeft;
@@ -525,9 +531,17 @@ class LineBucket implements Bucket {
         // When we get close to the distance, reset it to zero and add the vertex again with
         // a distance of zero. The max distance is determined by the number of bits we allocate
         // to `linesofar`.
-        if (this.distance > MAX_LINE_DISTANCE / 2 && this.totalDistance === 0) {
+        if (depth) {
+            console.log('****DEPTH:***');
+            console.log(depth);
+        }
+        console.log(`DISTANCE is: ${this.distance}`);
+        console.log(`half of max line distance is: ${MAX_LINE_DISTANCE / 2}`);
+        if (this.distance > MAX_LINE_DISTANCE / 2  && this.totalDistance === 0) {
+            console.log('[ CLEARED ]');
             this.distance = 0;
-            this.addCurrentVertex(p, normal, endLeft, endRight, segment, round);
+            this.updateScaledDistance();
+            this.addCurrentVertex(p, normal, endLeft, endRight, segment, round, depth + 1);
         }
     }
 
@@ -583,6 +597,7 @@ class LineBucket implements Bucket {
     }
 
     updateDistance(prev: Point, next: Point) {
+        console.log(`[UPDATE DIST]: prev: ${prev.x} ${prev.y} | next: ${next.x} ${next.y} | old dist: ${this.distance}`);
         this.distance += prev.dist(next);
         this.updateScaledDistance();
     }
