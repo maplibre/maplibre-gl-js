@@ -1,4 +1,5 @@
 import {LineLayoutArray, LineExtLayoutArray} from '../array_types.g';
+
 import {members as layoutAttributes} from './line_attributes';
 import {members as layoutAttributesExt} from './line_attributes_ext';
 import SegmentVector from '../segment';
@@ -199,7 +200,7 @@ class LineBucket implements Bucket {
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: { [_: string]: ImagePosition }) {
+    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions);
         }
