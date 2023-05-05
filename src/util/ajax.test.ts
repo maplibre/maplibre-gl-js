@@ -105,8 +105,19 @@ describe('ajax', () => {
 
         // relative URL is same origin for sure
         expect(sameOrigin('/foo')).toBe(true);
+        expect(sameOrigin('foo')).toBe(true);
+
+        // empty string is considered as relative, and should be true
+        expect(sameOrigin('')).toBe(true);
+        expect(sameOrigin(null)).toBe(true);
+        expect(sameOrigin(undefined)).toBe(true);
 
         expect(sameOrigin('HTTPS://somewhere.com')).toBe(true);
+
+        // different domain
+        expect(sameOrigin('httpS://www.somewhere.com')).toBe(false);
+
+        // different protocol
         expect(sameOrigin('HTTP://somewhere.com')).toBe(false);
         expect(sameOrigin('file:///c:/temp/foo.html')).toBe(false);
 
@@ -120,5 +131,9 @@ describe('ajax', () => {
 
         // relative URL (for file URL) is same origin as well
         expect(sameOrigin('/foo')).toBe(true);
+        expect(sameOrigin('foo')).toBe(true);
+
+        // edge case
+        expect(sameOrigin('://foo')).toBe(true);
     });
 });

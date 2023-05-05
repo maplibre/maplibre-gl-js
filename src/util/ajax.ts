@@ -256,17 +256,17 @@ export const postData = function(requestParameters: RequestParameters, callback:
     return makeRequest(extend(requestParameters, {method: 'POST'}), callback);
 };
 
-export function sameOrigin(url: string) {
+export function sameOrigin(inComingUrl: string) {
     // URL class should be available everywhere
     // https://developer.mozilla.org/en-US/docs/Web/API/URL
-    try {
-        const urlObj = new URL(url);
-        const locationObj = window.location;
-        return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
-    } catch {
-        // all relative url or empty string will throw exception and it is considered as same origin
+    // In addtion, a relative URL "/foo" or "./foo" will throw exception in its ctor,
+    // try-catch is expansive so just use a heuristic check to avoid it
+    if (!inComingUrl || inComingUrl.indexOf('://') <= 0) {
         return true;
     }
+    const urlObj = new URL(inComingUrl);
+    const locationObj = window.location;
+    return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
 }
 
 export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
