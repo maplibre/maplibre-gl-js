@@ -200,13 +200,14 @@ class Context {
         return rbo;
     }
 
-    createFramebuffer(width: number, height: number, hasDepth: boolean) {
-        return new Framebuffer(this, width, height, hasDepth);
+    createFramebuffer(width: number, height: number, hasDepth: boolean, hasStencil: boolean) {
+        return new Framebuffer(this, width, height, hasDepth, hasStencil);
     }
 
     clear({
         color,
-        depth
+        depth,
+        stencil
     }: ClearArgs) {
         const gl = this.gl;
         let mask = 0;
@@ -228,12 +229,11 @@ class Context {
             this.depthMask.set(true);
         }
 
-        // See note in Painter#clearStencil: implement this the easy way once GPU bug/workaround is fixed upstream
-        // if (typeof stencil !== 'undefined') {
-        //     mask |= gl.STENCIL_BUFFER_BIT;
-        //     this.clearStencil.set(stencil);
-        //     this.stencilMask.set(0xFF);
-        // }
+        if (typeof stencil !== 'undefined') {
+            mask |= gl.STENCIL_BUFFER_BIT;
+            this.clearStencil.set(stencil);
+            this.stencilMask.set(0xFF);
+        }
 
         gl.clear(mask);
     }

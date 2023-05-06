@@ -557,7 +557,7 @@ class SourceCache extends Evented {
                 const tileID = retain[id];
 
                 const tile = this._tiles[id];
-                if (!tile || tile.fadeEndTime && tile.fadeEndTime <= browser.now()) continue;
+                if (!tile || tile.fadeEndTime !== undefined && tile.fadeEndTime <= browser.now()) continue;
 
                 // if the tile is loaded but still fading in, find parents to cross-fade with it
                 const parentTile = this.findLoadedParent(tileID, minCoveringZoom);
@@ -717,11 +717,14 @@ class SourceCache extends Evented {
                     tile = this._addTile(parentId);
                 }
                 if (tile) {
-                    retain[parentId.key] = parentId;
+                    const hasData = tile.hasData();
+                    if (parentWasRequested || hasData) {
+                        retain[parentId.key] = parentId;
+                    }
                     // Save the current values, since they're the parent of the next iteration
                     // of the parent tile ascent loop.
                     parentWasRequested = tile.wasRequested();
-                    if (tile.hasData()) break;
+                    if (hasData) break;
                 }
             }
         }
