@@ -223,7 +223,8 @@ export type ${layerType}LayoutPropsPossiblyEvaluated = {`);
         output.push(
             `};
 
-const layout: Properties<${layerType}LayoutProps> = new Properties({`);
+let layout: Properties<${layerType}LayoutProps>;
+const getLayout = () => layout = layout || new Properties({`);
 
         for (const property of layoutProperties) {
             output.push(
@@ -263,7 +264,8 @@ export type ${layerType}PaintPropsPossiblyEvaluated = {`);
 
     output.push(
         `
-const paint: Properties<${layerType}PaintProps> = new Properties({`);
+let paint: Properties<${layerType}PaintProps>;
+const getPaint = () => paint = paint || new Properties({`);
 
     for (const property of paintProperties) {
         output.push(
@@ -273,9 +275,7 @@ const paint: Properties<${layerType}PaintProps> = new Properties({`);
     output.push(
         `});
 
-export default ({ paint${layoutProperties.length ? ', layout' : ''} } as {
-    paint: Properties<${layerType}PaintProps>${layoutProperties.length ? `,\n    layout: Properties<${layerType}LayoutProps>` : ''}
-});`);
+export default ({ get paint() { return getPaint() }${layoutProperties.length ? ', get layout() { return getLayout() }' : ''} });`);
 
     return output.join('\n');
 }
