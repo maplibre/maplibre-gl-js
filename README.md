@@ -68,7 +68,7 @@ Maplibre v1 is completely backward compatible with Mapbox v1. This compatibility
 
 #### CDN Links
 
-> MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more information, please see [MapLibre GL is on unpkg.com](./docs/README-unpkg.md#maplibre-gl-on-unpkgcom).
+> MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more information, please see [MapLibre GL is on unpkg.com](./documents_and_diagrams/README-unpkg.md#maplibre-gl-on-unpkgcom).
 
 ```diff
 -    <script src="https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.js"></script>
