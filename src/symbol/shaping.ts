@@ -6,7 +6,7 @@ import {
 import verticalizePunctuation from '../util/verticalize_punctuation';
 import {plugin as rtlTextPlugin} from '../source/rtl_text_plugin';
 import ONE_EM from './one_em';
-import {warnOnce} from '../util/util';
+import {markedStringToParts, warnOnce} from '../util/util';
 
 import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
@@ -628,7 +628,7 @@ function shapeLines(shaping: Shaping,
 
     let lineIndex = 0;
 
-    const canvasComparer = new CanvasComparer();
+    //const canvasComparer = new CanvasComparer();
 
     for (const line of lines) {
         line.trim();
@@ -646,30 +646,34 @@ function shapeLines(shaping: Shaping,
             continue;
         }
 
-        let graphemes = [];
+        // let graphemes = [];
 
-        if (line.text in textCache) {
-            // console.log('cache hit', line.text);
-            graphemes = textCache[line.text];
+        // if (line.text in textCache) {
+        //     // console.log('cache hit', line.text);
+        //     graphemes = textCache[line.text];
 
-        } else {
-            // console.log('cache miss', line.text);
+        // } else {
+        //     // console.log('cache miss', line.text);
 
-            const segmenter = new Intl.Segmenter(
-                'en', {granularity: 'grapheme'}
-            );
-            graphemes = Array.from(segmenter.segment(line.text), s => s.segment);
+        //     // const segmenter = new Intl.Segmenter(
+        //     //     'en', {granularity: 'grapheme'}
+        //     // );
+        //     // graphemes = Array.from(segmenter.segment(line.text), s => s.segment);
 
-            // const graphemes = [...line.text];
+        //     const graphemes = [...line.text];
 
-            // console.log('shaping', line.text);
+        //     // console.log('shaping', line.text);
 
-            if (!canvasComparer.isLatin(line.text) && !canvasComparer.compareCanvases(line.text, graphemes)) {
-                canvasComparer.mergeStrings(graphemes);
-            }
+        //     // if (!canvasComparer.isLatin(line.text) && !canvasComparer.compareCanvases(line.text, graphemes)) {
+        //     //     canvasComparer.mergeStrings(graphemes);
+        //     // }
 
-            textCache[line.text] = [...graphemes];
-        }
+        //     textCache[line.text] = [...graphemes];
+        // }
+
+        // const graphemes = [...line.text];
+
+        const graphemes = markedStringToParts(line.text);
 
         for (let i = 0; i < graphemes.length; i++) {
             // const section = line.getSection(i);

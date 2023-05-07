@@ -207,7 +207,24 @@ export default class GlyphManager {
         console.log('tinysdf', id, typeof id);
         // OLIVER
         // const char = tinySDF.draw(String.fromCharCode(id));
+
+        // let char;
+
+        // const cachedChar = localStorage.getItem(id as any);
+
+        // if (cachedChar) {
+        //     console.log('cached');
+        //     char = JSON.parse(cachedChar);
+        //     char.data = Object.values(char.data);
+        // } else {
+        //     console.log('not cached');
+        //     char = tinySDF.draw(id as any);
+        //     localStorage.setItem(id as any, JSON.stringify(char));
+        // }
+
         const char = tinySDF.draw(id as any);
+
+        // console.log('char', char, JSON.stringify(char));
 
         /**
          * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.

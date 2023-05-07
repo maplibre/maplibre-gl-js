@@ -582,3 +582,25 @@ export function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | n
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
 }
+
+export function markedStringToParts(markedString) {
+    const result = [];
+    const customJoiningCharacter = '@';
+    if (markedString.length === 0 || markedString[0] === customJoiningCharacter) {
+        return result;
+    }
+    let currentPart = markedString[0];
+    for (let i = 1; i < markedString.length; ++i) {
+        if (markedString[i] === customJoiningCharacter) {
+            continue;
+        }
+        if (markedString[i - 1] === customJoiningCharacter) {
+            currentPart += markedString[i];
+        } else {
+            result.push(currentPart);
+            currentPart = markedString[i];
+        }
+    }
+    result.push(currentPart);
+    return result;
+}

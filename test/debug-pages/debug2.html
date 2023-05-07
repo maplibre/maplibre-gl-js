@@ -59,10 +59,7 @@
                 "source": "swissmap",
                 "source-layer": "highway",
                 "layout": {
-                    "text-field": [
-                        "get",
-                        "name"
-                    ],
+                    "text-field": ['get', `name${result.language ? (':' + result.language) : ''}`],
                     "text-font": [
                         "Fira Sans Regular"
                     ],
@@ -76,6 +73,23 @@
                 }
             });
 
+            const pointLabelFirstLine = [
+                'coalesce',
+                ['get', '@name:en'],
+                ['get', 'name']
+            ];
+
+            let pointLabelSecondLine = [
+                'case',
+                ['has', '@language'],
+                ['get', ['concat', '@name:', ['get', '@language']]],
+                ['get', `@name${result.language ? (':' + result.language) : ''}`]
+            ];
+
+            if (result.language) {
+                pointLabelSecondLine = ['get', `@name:${result.language}`];
+            }
+
             map.addLayer({
                 'id': 'points',
                 'type': 'symbol',
@@ -83,7 +97,7 @@
                 'source-layer': 'qrank',
                 'layout': {
                     'text-max-width': 0,
-                    'text-field': ['format', ['get', 'name:en'], {}, '\n', {}, ['get', `name${result.language ? (':' + result.language) : ''}`], {}],
+                    'text-field': ['format', pointLabelFirstLine, {}, '\n', {}, pointLabelSecondLine, {}],
                     "text-size": [
                         "interpolate",
                         ["linear"],

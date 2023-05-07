@@ -57,6 +57,7 @@ import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import CanvasComparer from '../../util/canvas_comparer';
+import { markedStringToParts } from '../../util/util';
 
 export type SingleCollisionBox = {
     x1: number;
@@ -421,32 +422,37 @@ class SymbolBucket implements Bucket {
     }
 
     calculateGlyphDependencies(text: string, stack: {[_: string]: boolean}, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
-        let graphemes = [];
+        // let graphemes = [];
 
-        if (text in this.textCache) {
-            // console.log('symbol_bucket cache hit', text);
-            graphemes = this.textCache[text];
+        // if (text in this.textCache) {
+        //     // console.log('symbol_bucket cache hit', text);
+        //     graphemes = this.textCache[text];
 
-        } else {
-            // console.log('symbol bucket cache miss', text);
+        // } else {
+        //     // console.log('symbol bucket cache miss', text);
 
-            const segmenter = new Intl.Segmenter(
-                'en', {granularity: 'grapheme'}
-            );
-            graphemes = Array.from(segmenter.segment(text), s => s.segment);
+        //     // const segmenter = new Intl.Segmenter(
+        //     //     'en', {granularity: 'grapheme'}
+        //     // );
+        //     // graphemes = Array.from(segmenter.segment(text), s => s.segment);
 
-            // const graphemes = [...line.text];
+        //     const graphemes = [...text];
 
-            // console.log('shaping', line.text);
+        //     // console.log('shaping', line.text);
 
-            const canvasComparer = new CanvasComparer();
+        //     // const canvasComparer = new CanvasComparer();
 
-            if (!canvasComparer.isLatin(text) && !canvasComparer.compareCanvases(text, graphemes)) {
-                canvasComparer.mergeStrings(graphemes);
-            }
+        //     // if (!canvasComparer.isLatin(text) && !canvasComparer.compareCanvases(text, graphemes)) {
+        //     //     canvasComparer.mergeStrings(graphemes);
+        //     // }
 
-            this.textCache[text] = [...graphemes];
-        }
+        //     this.textCache[text] = [...graphemes];
+        // }
+
+
+        // const graphemes = [...text];
+
+        const graphemes = markedStringToParts(text);
 
         for (let i = 0; i < graphemes.length; i++) {
             // OLIVER
