@@ -776,7 +776,7 @@ for (const style of testStyles) {
     printProgress(style.metadata.test, testStyles.length, ++index);
 }
 
-// page.close();
+page.close();
 
 const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
 const testStats: TestStats = {
@@ -855,4 +855,4 @@ if (options.report) {
     }
 }
 
-// process.exit(success ? 0 : 1);
+process.exit(success ? 0 : 1);
