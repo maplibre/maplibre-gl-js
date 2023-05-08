@@ -14,8 +14,21 @@ import type Map from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PointLike} from '../../../src/ui/camera';
 import puppeteer, {Page} from 'puppeteer';
-
+import fse from 'fs-extra';
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Move real-world fixtures
+
+const srcDir = path.join(__dirname, '../../../node_modules/@mapbox/mvt-fixtures/real-world');
+const destDir = path.join(__dirname, '../assets/mvt-fixtures/real-world');
+
+// To copy a folder or file, select overwrite accordingly
+try {
+    fse.copySync(srcDir, destDir, {overwrite: false});
+    console.log('success!');
+} catch (err) {
+    console.error(err);
+}
 
 type TestData = {
     id: string;
