@@ -1,5 +1,5 @@
 
-import {Browser, chromium, Page} from 'playwright';
+import puppeteer, {Page, Browser} from 'puppeteer';
 
 import {deepEqual} from '../lib/json-diff';
 import st from 'st';
@@ -133,7 +133,7 @@ describe('query tests', () => {
                 cors: true,
             })
         );
-        browser = await chromium.launch();
+        browser = await puppeteer.launch({headless: 'new'});
         await new Promise<void>((resolve) => server.listen(resolve));
     });
 
@@ -146,6 +146,7 @@ describe('query tests', () => {
 
     beforeEach(async () => {
         page = await browser.newPage();
+        await page.setViewport({width: 512, height: 512, deviceScaleFactor: 2});
     });
     afterEach(async() => {
         await page.close();
