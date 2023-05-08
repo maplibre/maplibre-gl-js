@@ -86,6 +86,7 @@ describe('Browser tests', () => {
             document.getElementById('map')!.style.width = '200px';
             document.getElementById('map')!.style.height = '200px';
         });
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
