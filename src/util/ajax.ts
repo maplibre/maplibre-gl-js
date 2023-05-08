@@ -261,7 +261,10 @@ export function sameOrigin(inComingUrl: string) {
     // https://developer.mozilla.org/en-US/docs/Web/API/URL
     // In addtion, a relative URL "/foo" or "./foo" will throw exception in its ctor,
     // try-catch is expansive so just use a heuristic check to avoid it
-    if (!inComingUrl || inComingUrl.indexOf('://') <= 0) {
+    // also check data URL
+    if (!inComingUrl ||
+        inComingUrl.indexOf('://') <= 0 || // relative URL
+        inComingUrl.indexOf('data:image/') === 0) { // data image URL
         return true;
     }
     const urlObj = new URL(inComingUrl);

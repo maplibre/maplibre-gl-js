@@ -103,6 +103,10 @@ describe('ajax', () => {
         expect(sameOrigin('https://somewhere.com/path')).toBe(true);
         expect(sameOrigin('https://somewhere.com/path/?q=abc')).toBe(true);
 
+        expect(sameOrigin('https://somewhere.com:443/path')).toBe(true);
+
+        expect(sameOrigin('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=')).toBe(true);
+
         // relative URL is same origin for sure
         expect(sameOrigin('/foo')).toBe(true);
         expect(sameOrigin('foo')).toBe(true);
