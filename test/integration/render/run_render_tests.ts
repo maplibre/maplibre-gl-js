@@ -559,6 +559,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             return fakeCanvas;
         }
 
+        // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
             setTimeout(() => {
                 reject(new Error('Test timed out'));
@@ -647,7 +648,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                         const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
                         fakeCanvas.parentNode.removeChild(fakeCanvas);
                     }
-                    debugger;
+
                     resolve(data);
                 });
             });
