@@ -91,6 +91,7 @@ jobs:
         run:
           nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV  
+      - run: npm run build-dist
       - run: npm run test-render -- --report
         if: success() || failure()
       - name: Upload render test failure
