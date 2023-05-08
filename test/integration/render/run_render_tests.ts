@@ -249,7 +249,7 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
     return sequence;
 }
 
-const browser = await puppeteer.launch({headless: 'new', args: ['--no-sandbox',
+const browser = await puppeteer.launch({headless: 'new', args: ['--enable-webgl', '--no-sandbox',
     '--disable-web-security']});
 
 /**
