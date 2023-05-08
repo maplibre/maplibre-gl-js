@@ -56,7 +56,7 @@
             map.addLayer({
                 "id": "line-labels-swissmap",
                 "type": "symbol",
-                "source": "swissmap",
+                "source": "roadnames",
                 "source-layer": "highway",
                 "layout": {
                     "text-field": ['get', `name${result.language ? (':' + result.language) : ''}`],

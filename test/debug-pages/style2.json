@@ -1,0 +1,573 @@
+{
+    "version": 8,
+    "name": "SwissMap style",
+    "sources": {
+        "swissmap": {
+            "type": "vector",
+            "url": "https://wipfli.github.io/swiss-map/tilejson-swissmap.json"
+        },
+        "qrank": {
+            "type": "vector",
+            "url": "https://wipfli.github.io/swiss-map/tilejson-qrank.json"
+        },
+        "roadnames": {
+            "type": "vector",
+            "url": "https://wipfli.github.io/swiss-map/tilejson-roadnames.json"
+        },
+        "landcover": {
+            "type": "vector",
+            "url": "https://wipfli.github.io/swiss-map/tilejson-h3-landcover.json"
+        }
+    },
+    "light": {
+        "intensity": 0.1
+    },
+    "glyphs": "https://wipfli.github.io/swiss-map/font/{fontstack}/{range}.pbf",
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "background-color": [
+                    "interpolate",
+                    [
+                        "linear"
+                    ],
+                    [
+                        "zoom"
+                    ],
+                    10,
+                    "#a8dab5",
+                    11,
+                    "#f8f9fa"
+                ]
+            }
+        },
+        {
+            "id": "Grass-Bare-Snow",
+            "type": "fill",
+            "source": "landcover",
+            "source-layer": "landcover",
+            "filter": [
+                "==",
+                [
+                    "get",
+                    "kind"
+                ],
+                "Grass-Bare-Snow"
+            ],
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "fill-color": "#b6dcc1",
+                "fill-opacity": [
+                    "interpolate",
+                    [
+                        "linear"
+                    ],
+                    [
+                        "zoom"
+                    ],
+                    10,
+                    1,
+                    11,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "Bare-Snow",
+            "type": "fill",
+            "source": "landcover",
+            "source-layer": "landcover",
+            "filter": [
+                "==",
+                [
+                    "get",
+                    "kind"
+                ],
+                "Bare-Snow"
+            ],
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "fill-color": "#f3ede0",
+                "fill-opacity": [
+                    "interpolate",
+                    [
+                        "linear"
+                    ],
+                    [
+                        "zoom"
+                    ],
+                    10,
+                    1,
+                    11,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "Snow",
+            "type": "fill",
+            "source": "landcover",
+            "source-layer": "landcover",
+            "filter": [
+                "==",
+                [
+                    "get",
+                    "kind"
+                ],
+                "Snow"
+            ],
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "fill-color": "white",
+                "fill-opacity": [
+                    "interpolate",
+                    [
+                        "linear"
+                    ],
+                    [
+                        "zoom"
+                    ],
+                    10,
+                    1,
+                    11,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "Crops",
+            "type": "fill",
+            "source": "landcover",
+            "source-layer": "landcover",
+            "filter": [
+                "==",
+                [
+                    "get",
+                    "kind"
+                ],
+                "Crops"
+            ],
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "fill-color": "#bbe2c6",
+                "fill-opacity": [
+                    "interpolate",
+                    [
+                        "linear"
+                    ],
+                    [
+                        "zoom"
+                    ],
+                    10,
+                    1,
+                    11,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "Tree",
+            "type": "fill",
+            "source": "landcover",
+            "source-layer": "landcover",
+            "filter": [
+                "==",
+                [
+                    "get",
+                    "kind"
+                ],
+                "Tree"
+            ],
+            "paint": {
+                "fill-color": "#94d2a5",
+                "fill-opacity": [
+                    "interpolate",
+                    [
+                        "linear"
+                    ],
+                    [
+                        "zoom"
+                    ],
+                    10,
+                    1,
+                    11,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "wood",
+            "type": "fill",
+            "source": "swissmap",
+            "source-layer": "wood",
+            "paint": {
+                "fill-color": "#ceead6",
+                "fill-opacity": [
+                    "interpolate",
+                    [
+                        "linear"
+                    ],
+                    [
+                        "zoom"
+                    ],
+                    10,
+                    0,
+                    11,
+                    1
+                ]
+            }
+        },
+        {
+            "id": "BuiltUp",
+            "type": "fill",
+            "source": "landcover",
+            "source-layer": "landcover",
+            "filter": [
+                "==",
+                [
+                    "get",
+                    "kind"
+                ],
+                "BuiltUp"
+            ],
+            "paint": {
+                "fill-color": "#e8eaed",
+                "fill-opacity": [
+                    "interpolate",
+                    [
+                        "linear"
+                    ],
+                    [
+                        "zoom"
+                    ],
+                    10,
+                    1,
+                    11,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "residential",
+            "type": "fill",
+            "source": "swissmap",
+            "source-layer": "residential",
+            "minzoom": 10,
+            "maxzoom": 15,
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "fill-color": {
+                    "stops": [
+                        [
+                            12,
+                            "#e8eaed"
+                        ],
+                        [
+                            14,
+                            "#F1F2F4"
+                        ]
+                    ]
+                }
+            }
+        },
+        {
+            "id": "waterway",
+            "type": "line",
+            "source": "swissmap",
+            "source-layer": "waterway",
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "line-color": "#ABCDFB",
+                "line-width": {
+                    "stops": [
+                        [
+                            9,
+                            1
+                        ],
+                        [
+                            11,
+                            2
+                        ]
+                    ]
+                }
+            }
+        },
+        {
+            "id": "water",
+            "type": "fill",
+            "source": "swissmap",
+            "source-layer": "water",
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "fill-color": [
+                    "interpolate",
+                    [
+                        "linear"
+                    ],
+                    [
+                        "zoom"
+                    ],
+                    10,
+                    "#8ab4f8",
+                    11,
+                    "#ABCDFB"
+                ]
+            }
+        },
+        {
+            "id": "highway-path",
+            "type": "line",
+            "source": "swissmap",
+            "source-layer": "highway-path",
+            "layout": {
+                "line-cap": "butt",
+                "line-join": "round",
+                "visibility": "visible"
+            },
+            "paint": {
+                "line-color": "#bdc3c7",
+                "line-dasharray": [
+                    0.0,
+                    2.0
+                ],
+                "line-width": {
+                    "stops": [
+                        [
+                            12,
+                            0
+                        ],
+                        [
+                            14,
+                            2
+                        ],
+                        [
+                            20,
+                            3
+                        ]
+                    ]
+                }
+            }
+        },
+        {
+            "id": "highway-footway",
+            "type": "line",
+            "source": "swissmap",
+            "source-layer": "highway-footway",
+            "minzoom": 15,
+            "layout": {
+                "line-cap": "butt",
+                "line-join": "round",
+                "visibility": "visible"
+            },
+            "paint": {
+                "line-color": "#bdc3c7",
+                "line-dasharray": [
+                    0.0,
+                    2.0
+                ],
+                "line-width": {
+                    "stops": [
+                        [
+                            14,
+                            2
+                        ],
+                        [
+                            20,
+                            3
+                        ]
+                    ]
+                }
+            }
+        },
+        {
+            "id": "highway-tracktype-2",
+            "type": "line",
+            "source": "swissmap",
+            "source-layer": "highway-tracktype-2",
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "line-color": "#bdc3c7",
+                "line-width": {
+                    "stops": [
+                        [
+                            12,
+                            0
+                        ],
+                        [
+                            14,
+                            1.5
+                        ]
+                    ]
+                }
+            }
+        },
+        {
+            "id": "highway-tracktype-3-4-5",
+            "type": "line",
+            "source": "swissmap",
+            "source-layer": "highway-tracktype-3-4-5",
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "line-color": "#bdc3c7",
+                "line-dasharray": [
+                    10.0,
+                    2.0
+                ],
+                "line-width": {
+                    "stops": [
+                        [
+                            12,
+                            0
+                        ],
+                        [
+                            14,
+                            1.5
+                        ],
+                        [
+                            20,
+                            3
+                        ]
+                    ]
+                }
+            }
+        },
+        {
+            "id": "highway",
+            "type": "line",
+            "source": "swissmap",
+            "source-layer": "highway",
+            "layout": {
+                "line-cap": "butt",
+                "line-join": "round",
+                "visibility": "visible",
+                "line-sort-key": [
+                    "to-number",
+                    [
+                        "get",
+                        "line-sort-key"
+                    ]
+                ]
+            },
+            "paint": {
+                "line-color": [
+                    "get",
+                    "line-color"
+                ],
+                "line-width": [
+                    "interpolate",
+                    [
+                        "linear"
+                    ],
+                    [
+                        "zoom"
+                    ],
+                    14,
+                    [
+                        "to-number",
+                        [
+                            "get",
+                            "line-width"
+                        ]
+                    ],
+                    20,
+                    [
+                        "to-number",
+                        [
+                            "get",
+                            "line-width-z20"
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "id": "boundary",
+            "type": "line",
+            "source": "swissmap",
+            "source-layer": "boundary",
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "line-width": 2,
+                "line-color": "#7f8c8d"
+            }
+        },
+        {
+            "id": "building",
+            "type": "fill",
+            "source": "swissmap",
+            "minzoom": 15,
+            "source-layer": "building",
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "fill-color": "#f1f3f4"
+            }
+        },
+        {
+            "id": "building_outline",
+            "type": "line",
+            "source": "swissmap",
+            "source-layer": "building",
+            "minzoom": 15,
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "line-color": "#dee0e4",
+                "line-width": 1
+            }
+        },
+        {
+            "id": "building-extrusion",
+            "type": "fill-extrusion",
+            "source": "swissmap",
+            "minzoom": 15,
+            "source-layer": "building",
+            "filter": [
+                "has",
+                "est_height"
+            ],
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "fill-extrusion-color": "#e6e7e9",
+                "fill-extrusion-height": [
+                    "to-number",
+                    [
+                        "get",
+                        "est_height"
+                    ]
+                ],
+                "fill-extrusion-opacity": 1.0
+            }
+        }
+    ],
+    "id": "swissmap-style"
+}
