@@ -264,7 +264,8 @@ export function sameOrigin(inComingUrl: string) {
     // also check data URL
     if (!inComingUrl ||
         inComingUrl.indexOf('://') <= 0 || // relative URL
-        inComingUrl.indexOf('data:image/') === 0) { // data image URL
+        inComingUrl.indexOf('data:image/') === 0 || // data image URL
+        inComingUrl.indexOf('blob:') === 0) { // blob
         return true;
     }
     const urlObj = new URL(inComingUrl);

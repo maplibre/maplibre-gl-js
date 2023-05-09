@@ -106,6 +106,7 @@ describe('ajax', () => {
         expect(sameOrigin('https://somewhere.com:443/path')).toBe(true);
 
         expect(sameOrigin('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=')).toBe(true);
+        expect(sameOrigin('blob:https://www.bing.com/09f36686-e57a-420f-9004-918548219b75')).toBe(true);
 
         // relative URL is same origin for sure
         expect(sameOrigin('/foo')).toBe(true);
