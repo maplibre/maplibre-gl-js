@@ -16,7 +16,6 @@ import type {PointLike} from '../../../src/ui/camera';
 import puppeteer, {Page} from 'puppeteer';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-
 type TestData = {
     id: string;
     width: number;
