@@ -29,12 +29,12 @@ jobs:
         if: success() || failure()
       - run: npm run typecheck
         if: success() || failure()
-  
+
   unit-tests:
     name: Unit tests and Coverage
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     steps:
@@ -44,8 +44,7 @@ jobs:
           node-version: lts/*
       - name: Start display server
         if: runner.os == 'Linux'
-        run:
-          nohup Xvfb &
+        run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm ci
       - run: npm run jest-ci -- --coverage --coverageReporters text html-spa --selectProjects unit
@@ -55,7 +54,7 @@ jobs:
         with:
           name: unit-test-coverage
           path: ${{ github.workspace }}/coverage
-      
+
   integration-tests:
     name: Integration tests
     strategy:
@@ -72,13 +71,13 @@ jobs:
       - run: npm run build-dist
       - run: npm run test-integration
         if: success() || failure()
-        
-  render-tests:
+
+  render-tests-ubuntu:
     name: Render tests
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     steps:
@@ -89,9 +88,8 @@ jobs:
       - run: npm ci
       - name: Start display server
         if: runner.os == 'Linux'
-        run:
-          nohup Xvfb &
-          echo "DISPLAY=:0" >> $GITHUB_ENV  
+        run: nohup Xvfb &
+          echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run build-dist
       - run: npm run test-render -- --report
         if: success() || failure()
@@ -100,6 +98,37 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: render-test-report-${{ matrix.os }}
+          path: ${{ github.workspace }}/test/integration/render/results.html
+
+  render-tests-windows:
+    name: Render tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        part: [0, 1, 2]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - name: Start display server
+        if: runner.os == 'Linux'
+        run: nohup Xvfb &
+          echo "DISPLAY=:0" >> $GITHUB_ENV
+      - run: npm run build-dist
+      - run: npm run test-render -- --report
+        env:
+          PART_OF_THREE: ${{ matrix.part }}
+        if: success() || failure()
+      - name: Upload render test failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: render-test-report-${{ matrix.os }}-${{ matrix.part }}
           path: ${{ github.workspace }}/test/integration/render/results.html
 
   build-tests:

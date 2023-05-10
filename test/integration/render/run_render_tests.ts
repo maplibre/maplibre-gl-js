@@ -739,7 +739,15 @@ await new Promise<void>((resolve) => server.listen(2900, '0.0.0.0', resolve));
 await new Promise<void>((resolve) => mvtServer.listen(2901, '0.0.0.0', resolve));
 
 const directory = path.join(__dirname);
-const testStyles = getTestStyles(options, directory, (server.address() as any).port);
+let testStyles = getTestStyles(options, directory, (server.address() as any).port);
+
+if (process.env.PART_OF_THREE) {
+    const m = Math.ceil(testStyles.length / 3);
+    const n = Math.ceil(2 * testStyles.length / 3);
+
+    testStyles = [testStyles.slice(0, m), testStyles.slice(m, n), testStyles.slice(n, testStyles.length)][parseInt(process.env.PART_OF_THREE)];
+}
+
 let index = 0;
 
 const page = await browser.newPage();
