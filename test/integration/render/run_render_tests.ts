@@ -736,8 +736,6 @@ if (process.argv.length > 2) {
     options.seed = checkValueParameter(options, options.seed, '--seed');
 }
 
-//mockXhr();
-
 const server = http.createServer(
     st({
         path: 'test/integration/assets',
