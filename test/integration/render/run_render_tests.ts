@@ -580,7 +580,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
             if (options.addFakeCanvas) {
                 const fakeCanvas = await createFakeCanvas(document, options.addFakeCanvas.id, options.addFakeCanvas.image);
-                console.log('fakeCanvas', fakeCanvas);
                 document.body.appendChild(fakeCanvas);
             }
 
@@ -750,8 +749,6 @@ const server = http.createServer(
     })
 );
 await new Promise<void>((resolve) => server.listen(2900, '0.0.0.0', resolve));
-
-console.log('server.address()', server.address());
 
 const directory = path.join(__dirname);
 const testStyles = getTestStyles(options, directory, (server.address() as any).port);
