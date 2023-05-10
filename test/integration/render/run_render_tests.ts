@@ -475,7 +475,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     ) {
                         await new Promise((resolve) => {
                             setTimeout(() => {
-                                resolve(10);
+                                resolve(true); // Has to return something
                             }, operation[1]);
                         });
 
@@ -578,7 +578,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 reject(new Error('Test timed out'));
             }, options.timeout || 20000);
 
-            console.log('Starting gtest');
             if (options.addFakeCanvas) {
                 const fakeCanvas = await createFakeCanvas(document, options.addFakeCanvas.id, options.addFakeCanvas.image);
                 console.log('fakeCanvas', fakeCanvas);
