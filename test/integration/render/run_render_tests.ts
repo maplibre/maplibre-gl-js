@@ -751,6 +751,14 @@ if (process.env.PART_OF_THREE) {
 let index = 0;
 
 const page = await browser.newPage();
+page
+    .on('console', message =>
+        console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`))
+    .on('pageerror', ({message}) => console.log(message))
+    .on('response', response =>
+        console.log(`${response.status()} ${response.url()}`))
+    .on('requestfailed', request =>
+        console.log(`${request.failure().errorText} ${request.url()}`));
 
 await page.addScriptTag({path: 'dist/maplibre-gl.js'});
 await page.addStyleTag({path: 'dist/maplibre-gl.css'});
