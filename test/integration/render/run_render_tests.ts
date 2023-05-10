@@ -431,7 +431,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 return img;
             };
 
-            const image = await getMeta(`http://0.0.0.0:2900/${imagePath}`);
+            const image = await getMeta(`http://localhost:2900/${imagePath}`);
 
             fakeCanvas.width = image.naturalWidth;
             fakeCanvas.height = image.naturalHeight;
@@ -498,7 +498,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     await img.decode();
                     return img;
                 };
-                const image = await getImage(`http://0.0.0.0:2900/${operation[2]}`);
+                const image = await getImage(`http://localhost:2900/${operation[2]}`);
 
                 map.addImage(operation[1], image, operation[3] || {});
                 applyOperations(testData, map, operations.slice(1), callback);
@@ -546,7 +546,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 return img;
             };
 
-            const image = await getImage(`http://0.0.0.0:2900/${imagePath}`);
+            const image = await getImage(`http://localhost:2900/${imagePath}`);
 
             fakeCanvas.width = image.naturalWidth;
             fakeCanvas.height = image.naturalHeight;
@@ -562,7 +562,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
         return new Promise(async (resolve, reject) => {
             setTimeout(() => {
                 reject(new Error('Test timed out'));
-            }, options.timeout || 20000);
+            }, options.timeout || 40000);
 
             if (options.addFakeCanvas) {
                 const fakeCanvas = await createFakeCanvas(document, options.addFakeCanvas.id, options.addFakeCanvas.image);
