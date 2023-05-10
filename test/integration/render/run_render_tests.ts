@@ -805,8 +805,20 @@ function getReportItem(test: TestData) {
     return `<div class="test">
     <h2>${test.id}</h2>
     ${status !== 'errored' ? `
-        <img width="${test.width}" height="${test.height}" src="data:image/png;base64,${test.actual}" data-alt-src="data:image/png;base64,${test.expected}">
-        <img style="width: ${test.width}; height: ${test.height}" src="data:image/png;base64,${test.diff}">` : ''
+    <div class="imagewrap">
+    <div>
+    <p>Actual</p>
+    <img src="data:image/png;base64,${test.actual}" >
+    </div>
+    <div>
+    <p>Diff</p>
+    <img src="data:image/png;base64,${test.diff}">
+    </div>
+    <div>
+    <p>Closest expected</p>
+    <img src="data:image/png;base64,${test.expected}" >
+    </div>
+        </div>` : ''
 }
     ${test.error ? `<p style="color: red"><strong>Error:</strong> ${test.error.message}</p>` : ''}
     ${test.difference ? `<p class="diff"><strong>Diff:</strong> ${test.difference}</p>` : ''}
