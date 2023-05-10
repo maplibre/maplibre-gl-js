@@ -611,10 +611,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
             // Configure the map to never stop the render loop
             map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
-            //now = 0;
-            //browser.now = () => {
-            //    return now;
-            //};
 
             if (options.debug) map.showTileBoundaries = true;
             if (options.showOverdrawInspector) map.showOverdrawInspector = true;
