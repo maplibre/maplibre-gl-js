@@ -22,7 +22,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const srcDir = path.join(__dirname, '../../../node_modules/@mapbox/mvt-fixtures/real-world');
 const destDir = path.join(__dirname, '../assets/mvt-fixtures/real-world');
 
-// To copy a folder or file, select overwrite accordingly
 try {
     fse.copySync(srcDir, destDir, {overwrite: false});
     console.log('success!');
@@ -648,7 +647,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     }
 
                     map.remove();
-                    //gl.getExtension('STACKGL_destroy_context').destroy();
                     delete map.painter.context.gl;
 
                     if (options.addFakeCanvas) {
