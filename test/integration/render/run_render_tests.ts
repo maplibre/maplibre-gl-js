@@ -796,15 +796,15 @@ function getReportItem(test: TestData) {
     <div class="imagewrap">
     <div>
     <p>Actual</p>
-    <img src="data:image/png;base64,${test.actual}" >
+    <img src="data:image/png;base64,${test.actual}" data-alt-src="data:image/png;base64,${test.expected}">
     </div>
     <div>
     <p>Diff</p>
-    <img src="data:image/png;base64,${test.diff}">
+    <img src="data:image/png;base64,${test.diff}" data-alt-src="data:image/png;base64,${test.expected}">
     </div>
     <div>
     <p>Closest expected</p>
-    <img src="data:image/png;base64,${test.expected}" >
+    <img src="data:image/png;base64,${test.expected}"  >
     </div>
         </div>` : ''
 }
