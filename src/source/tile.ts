@@ -64,8 +64,8 @@ class Tile {
     expirationTime: any;
     expiredRequestCount: number;
     state: TileState;
-    timeAdded: any;
-    fadeEndTime: any;
+    timeAdded: number = 0;
+    fadeEndTime: number = 0;
     collisionBoxArray: CollisionBoxArray;
     redoWhenDone: boolean;
     showCollisionBoxes: boolean;
@@ -125,8 +125,10 @@ class Tile {
 
     registerFadeDuration(duration: number) {
         const fadeEndTime = duration + this.timeAdded;
-        if (fadeEndTime < browser.now()) return;
-        if (this.fadeEndTime && fadeEndTime < this.fadeEndTime) return;
+
+        if (fadeEndTime <= this.fadeEndTime) {
+            return;
+        }
 
         this.fadeEndTime = fadeEndTime;
     }
