@@ -14,20 +14,8 @@ import type Map from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PointLike} from '../../../src/ui/camera';
 import puppeteer, {Page} from 'puppeteer';
-import fse from 'fs-extra';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Move real-world fixtures
-
-const srcDir = path.join(__dirname, '../../../node_modules/@mapbox/mvt-fixtures/real-world');
-const destDir = path.join(__dirname, '../assets/mvt-fixtures/real-world');
-
-try {
-    fse.copySync(srcDir, destDir, {overwrite: false});
-    console.log('success!');
-} catch (err) {
-    console.error(err);
-}
 
 type TestData = {
     id: string;
@@ -740,7 +728,16 @@ const server = http.createServer(
         cors: true,
     })
 );
+
+const mvtServer = http.createServer(
+    st({
+        path: 'node_modules/@mapbox/mvt-fixtures/real-world',
+        cors: true,
+    })
+);
+
 await new Promise<void>((resolve) => server.listen(2900, '0.0.0.0', resolve));
+await new Promise<void>((resolve) => mvtServer.listen(2901, '0.0.0.0', resolve));
 
 const directory = path.join(__dirname);
 const testStyles = getTestStyles(options, directory, (server.address() as any).port);
