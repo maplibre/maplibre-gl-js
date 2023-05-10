@@ -1,4 +1,4 @@
-name: Automated Testing
+name: Tests
 
 on:
   push:
@@ -29,20 +29,52 @@ jobs:
         if: success() || failure()
       - run: npm run typecheck
         if: success() || failure()
-  non-gl-tests:
-    name: Tests not using GL
-    runs-on: ubuntu-latest
+  
+  unit-tests:
+    name: Unit tests and Coverage
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Start display server
+        if: runner.os == 'Linux'
+        run:
+          nohup Xvfb &
+          echo "DISPLAY=:0" >> $GITHUB_ENV
+      - run: npm ci
+      - run: npm run jest-ci -- --coverage --coverageReporters text html-spa --selectProjects unit
+      - name: Upload unit test coverage
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: unit-test-coverage
+          path: ${{ github.workspace }}/coverage
+      
+  integration-tests:
+    name: Integration tests
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
       - run: npm ci
-      - run: npm run jest-ci -- --selectProjects unit --testPathIgnorePatterns "/src/(gl|render|ui)/" 
-      - run: npm run build-dev
-      - run: npm run jest-ci -- --selectProjects integration --testPathIgnorePatterns "/test/integration/(query|browser|build)/"
-  gl-tests:
-    name: Tests including GL
+      - run: npm run build-dist
+      - run: npm run test-integration
+        if: success() || failure()
+        
+  render-tests:
+    name: Render tests
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -58,16 +90,7 @@ jobs:
         if: runner.os == 'Linux'
         run:
           nohup Xvfb &
-          echo "DISPLAY=:0" >> $GITHUB_ENV
-      - run: npm run jest-ci -- --coverage --coverageReporters text html-spa --selectProjects unit
-      - name: Upload unit test coverage
-        if: success() || failure()
-        uses: actions/upload-artifact@v3
-        with:
-          name: unit-test-coverage
-          path: ${{ github.workspace }}/coverage
-      - run: npm run build-dev
-        if: success() || failure()
+          echo "DISPLAY=:0" >> $GITHUB_ENV  
       - run: npm run test-render -- --report
         if: success() || failure()
       - name: Upload render test failure
@@ -76,13 +99,9 @@ jobs:
         with:
           name: render-test-report-${{ matrix.os }}
           path: ${{ github.workspace }}/test/integration/render/results.html
-      - run: npm run build-dist
-        if: success() || failure()
-      - run: npm run jest-ci -- --selectProjects integration
-        if: success() || failure()
 
-  packaging-tests:
-    name: Packaging
+  build-tests:
+    name: Build tests
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -94,5 +113,5 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - run: npm run build-dist
-      - run: npm run jest-ci -- --selectProjects build
+      - run: npm run test-build
         if: success() || failure()
