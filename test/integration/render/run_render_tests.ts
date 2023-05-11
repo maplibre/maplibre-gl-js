@@ -611,16 +611,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     }
                 }
 
-                applyOperations(options, map as any, options.operations, async () => {
-
-                    while (!map.areTilesLoaded()) {
-                        await new Promise((resolve) => {
-                            setTimeout(() => {
-                                resolve(true); // Has to return something
-                            }, 1000);
-                        });
-                    }
-
+                applyOperations(options, map as any, options.operations, () => {
                     const viewport = gl.getParameter(gl.VIEWPORT);
                     const w = viewport[2];
                     const h = viewport[3];
