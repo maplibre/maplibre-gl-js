@@ -4,9 +4,6 @@
     "test": {
       "collisionDebug": true,
       "height": 256,
-      "operations": [
-        ["wait", 2000]
-      ]
     }
   },
   "center": [
