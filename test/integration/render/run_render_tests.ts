@@ -667,28 +667,6 @@ function printProgress(test: TestData, total: number, index: number) {
     }
 }
 
-function getResultsFilename () {
-
-    switch (process.env.WIN_PART_OF_THREE) {
-        case '0':
-            return 'windows-0.html';
-        case '1':
-            return 'windows-1.html';
-        case '2':
-            return 'windows-2.html';
-    }
-
-    switch (process.env.UBUNTU_PART_OF_TWO) {
-        case '0':
-            return 'ubuntu-0.html';
-        case '1':
-            return 'ubuntu-1.html';
-    }
-
-    return 'results.html';
-
-}
-
 type TestStats = {
     total: number;
     errored: TestData[];
@@ -763,16 +741,16 @@ await new Promise<void>((resolve) => mvtServer.listen(2901, '0.0.0.0', resolve))
 const directory = path.join(__dirname);
 let testStyles = getTestStyles(options, directory, (server.address() as any).port);
 
-if (process.env.UBUNTU_PART_OF_TWO) {
+if (process.env.PART_OF_TWO) {
 
     const half = Math.ceil(testStyles.length / 2);
     const firstHalf = testStyles.slice(0, half);
     const secondHalf = testStyles.slice(half);
 
-    testStyles = [firstHalf, secondHalf][parseInt(process.env.UBUNTU_PART_OF_TWO)];
+    testStyles = [firstHalf, secondHalf][parseInt(process.env.PART_OF_TWO)];
 }
 
-if (process.env.WIN_PART_OF_THREE) {
+if (process.env.PART_OF_THREE) {
 
     const m = Math.ceil(testStyles.length / 3);
     const n = Math.ceil(2 * testStyles.length / 3);
@@ -781,7 +759,7 @@ if (process.env.WIN_PART_OF_THREE) {
     const second = testStyles.slice(m, n);
     const third = testStyles.slice(n, testStyles.length);
 
-    testStyles = [first, second, third][parseInt(process.env.WIN_PART_OF_THREE)];
+    testStyles = [first, second, third][parseInt(process.env.PART_OF_THREE)];
 }
 
 let index = 0;
@@ -880,7 +858,7 @@ if (options.report) {
     const reportTemplate = fs.readFileSync(path.join(__dirname, 'report_template.html')).toString();
     const resultsContent = reportTemplate.replace('${resultData}', resultData);
 
-    const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : getResultsFilename());
+    const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : 'results.html');
     fs.writeFileSync(p, resultsContent, 'utf8');
     console.log(`\nFull html report is logged to '${p}'`);
 

@@ -94,7 +94,7 @@ jobs:
       - run: npm run build-prod
       - run: npm run test-render -- --report
         env:
-          UBUNTU_PART_OF_TWO: ${{ matrix.part }}
+          PART_OF_TWO: ${{ matrix.part }}
         if: success() || failure()
       - name: Upload render test failure
         if: failure()
@@ -125,7 +125,7 @@ jobs:
       - run: npm run build-prod
       - run: npm run test-render -- --report
         env:
-          WIN_PART_OF_THREE: ${{ matrix.part }}
+          PART_OF_THREE: ${{ matrix.part }}
         if: success() || failure()
       - name: Upload render test failure
         if: failure()
