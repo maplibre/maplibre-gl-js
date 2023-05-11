@@ -741,16 +741,16 @@ await new Promise<void>((resolve) => mvtServer.listen(2901, '0.0.0.0', resolve))
 const directory = path.join(__dirname);
 let testStyles = getTestStyles(options, directory, (server.address() as any).port);
 
-if (process.env.PART_OF_TWO) {
+if (process.env.SPLIT_COUNT === '2') {
 
     const half = Math.ceil(testStyles.length / 2);
     const firstHalf = testStyles.slice(0, half);
     const secondHalf = testStyles.slice(half);
 
-    testStyles = [firstHalf, secondHalf][parseInt(process.env.PART_OF_TWO)];
+    testStyles = [firstHalf, secondHalf][parseInt(process.env.CURRENT_SPLIT_INDEX!)];
 }
 
-if (process.env.PART_OF_THREE) {
+if (process.env.SPLIT_COUNT === '3') {
 
     const m = Math.ceil(testStyles.length / 3);
     const n = Math.ceil(2 * testStyles.length / 3);
@@ -759,7 +759,7 @@ if (process.env.PART_OF_THREE) {
     const second = testStyles.slice(m, n);
     const third = testStyles.slice(n, testStyles.length);
 
-    testStyles = [first, second, third][parseInt(process.env.PART_OF_THREE)];
+    testStyles = [first, second, third][parseInt(process.env.CURRENT_SPLIT_INDEX!)];
 }
 
 let index = 0;

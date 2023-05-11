@@ -74,11 +74,13 @@ jobs:
 
   render-tests-ubuntu:
     name: Render tests
+    env:
+      SPLIT_COUNT: 2
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        part: [0, 1]
+        split: [0, 1]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     steps:
@@ -94,22 +96,24 @@ jobs:
       - run: npm run build-prod
       - run: npm run test-render -- --report
         env:
-          PART_OF_TWO: ${{ matrix.part }}
+          CURRENT_SPLIT_INDEX: ${{ matrix.split }}
         if: success() || failure()
       - name: Upload render test failure
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: render-test-report-${{ matrix.os }}-${{ matrix.part }}
+          name: render-test-report-${{ matrix.os }}-${{ matrix.split }}
           path: ${{ github.workspace }}/test/integration/render/results.html
 
   render-tests-windows:
     name: Render tests
+    env:
+      SPLIT_COUNT: 3
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        part: [0, 1, 2]
+        split: [0, 1, 2]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     steps:
@@ -125,13 +129,13 @@ jobs:
       - run: npm run build-prod
       - run: npm run test-render -- --report
         env:
-          PART_OF_THREE: ${{ matrix.part }}
+          CURRENT_SPLIT_INDEX: ${{ matrix.split }}
         if: success() || failure()
       - name: Upload render test failure
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: render-test-report-${{ matrix.os }}-${{ matrix.part }}
+          name: render-test-report-${{ matrix.os }}-${{ matrix.split }}
           path: ${{ github.workspace }}/test/integration/render/results.html
 
   build-tests:
