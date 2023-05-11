@@ -94,7 +94,7 @@ jobs:
       - run: npm run build-dist
       - run: npm run test-render -- --report
         env:
-          PART_OF_THREE: ${{ matrix.part }}
+          PART_OF_TWO: ${{ matrix.part }}
         if: success() || failure()
       - name: Upload render test failure
         if: failure()
