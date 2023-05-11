@@ -73,7 +73,7 @@ jobs:
         if: success() || failure()
 
   render-tests-ubuntu:
-    name: Render tests, Ubunu
+    name: Render tests
     strategy:
       fail-fast: false
       matrix:
@@ -104,7 +104,7 @@ jobs:
           path: ${{ github.workspace }}/test/integration/render/results.html
 
   render-tests-windows:
-    name: Render tests, Windows
+    name: Render tests
     strategy:
       fail-fast: false
       matrix:
