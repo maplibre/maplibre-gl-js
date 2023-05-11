@@ -73,7 +73,7 @@ jobs:
         if: success() || failure()
 
   render-tests-ubuntu:
-    name: Render tests
+    name: Render tests, Ubunu
     strategy:
       fail-fast: false
       matrix:
@@ -91,7 +91,7 @@ jobs:
         if: runner.os == 'Linux'
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
-      - run: npm run build-dist
+      - run: npm run build-prod
       - run: npm run test-render -- --report
         env:
           PART_OF_TWO: ${{ matrix.part }}
@@ -104,7 +104,7 @@ jobs:
           path: ${{ github.workspace }}/test/integration/render/results.html
 
   render-tests-windows:
-    name: Render tests
+    name: Render tests, Windows
     strategy:
       fail-fast: false
       matrix:
@@ -122,7 +122,7 @@ jobs:
         if: runner.os == 'Linux'
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
-      - run: npm run build-dist
+      - run: npm run build-prod
       - run: npm run test-render -- --report
         env:
           PART_OF_THREE: ${{ matrix.part }}

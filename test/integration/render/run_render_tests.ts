@@ -775,7 +775,6 @@ page
         console.log(`${request.failure().errorText} ${request.url()}`));
 
 await page.addScriptTag({path: 'dist/maplibre-gl.js'});
-await page.addStyleTag({path: 'dist/maplibre-gl.css'});
 
 for (const style of testStyles) {
     try {
