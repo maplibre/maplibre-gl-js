@@ -751,10 +751,15 @@ if (process.env.PART_OF_TWO) {
 }
 
 if (process.env.PART_OF_THREE) {
-    const m = Math.ceil(testStyles.length / 3);
-    const n = Math.ceil(2 * testStyles.length / 3);
 
-    testStyles = [testStyles.slice(0, m), testStyles.slice(m, n), testStyles.slice(n, testStyles.length)][parseInt(process.env.PART_OF_THREE)];
+    // The number of tests in each part isn't equal, because it's
+    // balanced for runtime duration.
+
+    const first = testStyles.slice(0, 435);
+    const second = testStyles.slice(435, 780);
+    const third = testStyles.slice(780, testStyles.length);
+
+    testStyles = [first, second, third][parseInt(process.env.PART_OF_THREE)];
 }
 
 let index = 0;
