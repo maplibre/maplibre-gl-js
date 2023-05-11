@@ -27,7 +27,7 @@ describe('Browser tests', () => {
 
         browser = await puppeteer.launch({headless: 'new'});
 
-    });
+    }, 40000);
 
     beforeEach(async () => {
         page = await browser.newPage();
@@ -46,7 +46,7 @@ describe('Browser tests', () => {
                 }
             });
         });
-    }, 20000);
+    }, 40000);
 
     test('Drag to the left', async () => {
 
@@ -200,14 +200,14 @@ describe('Browser tests', () => {
 
     afterEach(async() => {
         page.close();
-    });
+    }, 40000);
 
     afterAll(async () => {
         await browser.close();
         if (server) {
             server.close();
         }
-    });
+    }, 40000);
 
     function compareByPixelmatch(actualPng:PNG, platform: string, width:number, height:number): number {
         const platformFixtureBase64 = fs.readFileSync(
