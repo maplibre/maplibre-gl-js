@@ -741,6 +741,15 @@ await new Promise<void>((resolve) => mvtServer.listen(2901, '0.0.0.0', resolve))
 const directory = path.join(__dirname);
 let testStyles = getTestStyles(options, directory, (server.address() as any).port);
 
+if (process.env.PART_OF_TWO) {
+
+    const half = Math.ceil(testStyles.length / 2);
+    const firstHalf = testStyles.slice(0, half);
+    const secondHalf = testStyles.slice(half);
+
+    testStyles = [firstHalf, secondHalf][parseInt(process.env.PART_OF_TWO)];
+}
+
 if (process.env.PART_OF_THREE) {
     const m = Math.ceil(testStyles.length / 3);
     const n = Math.ceil(2 * testStyles.length / 3);

@@ -78,6 +78,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        part: [0, 1]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     steps:
@@ -92,12 +93,14 @@ jobs:
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run build-dist
       - run: npm run test-render -- --report
+        env:
+          PART_OF_THREE: ${{ matrix.part }}
         if: success() || failure()
       - name: Upload render test failure
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: render-test-report-${{ matrix.os }}
+          name: render-test-report-${{ matrix.os }}-${{ matrix.part }}
           path: ${{ github.workspace }}/test/integration/render/results.html
 
   render-tests-windows:
