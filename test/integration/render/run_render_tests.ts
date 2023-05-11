@@ -756,8 +756,8 @@ if (process.env.PART_OF_THREE) {
     // balanced for runtime duration.
 
     const first = testStyles.slice(0, 435);
-    const second = testStyles.slice(435, 780);
-    const third = testStyles.slice(780, testStyles.length);
+    const second = testStyles.slice(435, 740);
+    const third = testStyles.slice(740, testStyles.length);
 
     testStyles = [first, second, third][parseInt(process.env.PART_OF_THREE)];
 }
