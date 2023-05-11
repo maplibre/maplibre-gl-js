@@ -525,9 +525,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 map.style.sourceCaches[operation[1]].pause();
                 applyOperations(testData, map, operations.slice(1), callback);
             } else {
-                console.log('IS A FUNCTION', typeof map[operation[0]] === 'function', operation[0]);
                 if (typeof map[operation[0]] === 'function') {
-                    console.log('perform easeto', ...operation.slice(1));
                     map[operation[0]](...operation.slice(1));
                 }
                 applyOperations(testData, map, operations.slice(1), callback);
@@ -536,7 +534,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
         async function createFakeCanvas(document: Document, id: string, imagePath: string): Promise<HTMLCanvasElement> {
             const fakeCanvas: HTMLCanvasElement = document.createElement('canvas');
-            console.log('document', document, fakeCanvas);
 
             const getImage = async (url) => {
                 const img = new Image();
