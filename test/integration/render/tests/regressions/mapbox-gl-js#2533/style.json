@@ -4,7 +4,8 @@
     "test": {
       "operations": [
         ["setPaintProperty", "land", "fill-pattern", "zoo_icon"],
-        ["wait"]
+        ["wait"],
+        ["wait", 100]
       ]
     }
   },
