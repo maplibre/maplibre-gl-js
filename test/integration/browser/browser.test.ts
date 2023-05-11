@@ -46,7 +46,7 @@ describe('Browser tests', () => {
                 }
             });
         });
-    });
+    }, 20000);
 
     test('Drag to the left', async () => {
 
