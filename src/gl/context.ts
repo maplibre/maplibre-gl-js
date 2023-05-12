@@ -68,7 +68,7 @@ class Context {
     RGBA16F?: GLenum;
     RGB16F?: GLenum;
 
-    constructor(gl: WebGL2RenderingContext | WebGL2RenderingContext) {
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext) {
         this.gl = gl;
         this.clearColor = new ClearColor(this);
         this.clearDepth = new ClearDepth(this);
