@@ -1,4 +1,4 @@
-import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArrayOES, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha} from './value';
+import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArray, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha} from './value';
 import Context from './context';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {deepEqual} from '../util/util';
@@ -171,10 +171,10 @@ describe('BindElementBuffer', () => {
     });
 });
 
-describe('BindVertexArrayOES', () => {
-    valueTest(BindVertexArrayOES, {
+describe('BindVertexArray', () => {
+    valueTest(BindVertexArray, {
         equality: (a, b) => a === b,
-        setValue: context.extVertexArrayObject
+        setValue: context.createVertexArray()
     });
 });
 

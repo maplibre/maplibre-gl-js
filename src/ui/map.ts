@@ -2730,8 +2730,9 @@ class Map extends Camera {
             }
         }, {once: true});
 
-        const gl = this._canvas.getContext('webgl', attributes) ||
-            this._canvas.getContext('experimental-webgl', attributes);
+        const gl =
+            this._canvas.getContext('webgl2', attributes) ||
+            this._canvas.getContext('webgl', attributes);
 
         if (!gl) {
             const msg = 'Failed to initialize WebGL';
@@ -2843,14 +2844,7 @@ class Map extends Camera {
      * @private
      */
     _render(paintStartTimeStamp: number) {
-        let gpuTimer, frameStartTime = 0;
-        const extTimerQuery = this.painter.context.extTimerQuery;
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
-        if (this.listens('gpu-timing-frame')) {
-            gpuTimer = extTimerQuery.createQueryEXT();
-            extTimerQuery.beginQueryEXT(extTimerQuery.TIME_ELAPSED_EXT, gpuTimer);
-            frameStartTime = browser.now();
-        }
 
         // A custom layer may have used the context asynchronously. Mark the state as dirty.
         this.painter.context.setDirty();
@@ -2920,7 +2914,6 @@ class Map extends Camera {
             moving: this.isMoving(),
             fadeDuration,
             showPadding: this.showPadding,
-            gpuTiming: !!this.listens('gpu-timing-layer'),
         });
 
         this.fire(new Event('render'));
@@ -2940,33 +2933,6 @@ class Map extends Camera {
             // all tiles held for fading. If we didn't do this, the tiles
             // would just sit in the SourceCaches until the next render
             this.style._releaseSymbolFadeTiles();
-        }
-
-        if (this.listens('gpu-timing-frame')) {
-            const renderCPUTime = browser.now() - frameStartTime;
-            extTimerQuery.endQueryEXT(extTimerQuery.TIME_ELAPSED_EXT, gpuTimer);
-            setTimeout(() => {
-                const renderGPUTime = extTimerQuery.getQueryObjectEXT(gpuTimer, extTimerQuery.QUERY_RESULT_EXT) / (1000 * 1000);
-                extTimerQuery.deleteQueryEXT(gpuTimer);
-                this.fire(new Event('gpu-timing-frame', {
-                    cpuTime: renderCPUTime,
-                    gpuTime: renderGPUTime
-                }));
-            }, 50); // Wait 50ms to give time for all GPU calls to finish before querying
-        }
-
-        if (this.listens('gpu-timing-layer')) {
-            // Resetting the Painter's per-layer timing queries here allows us to isolate
-            // the queries to individual frames.
-            const frameLayerQueries = this.painter.collectGpuTimers();
-
-            setTimeout(() => {
-                const renderedLayerTimes = this.painter.queryGpuTimers(frameLayerQueries);
-
-                this.fire(new Event('gpu-timing-layer', {
-                    layerTimes: renderedLayerTimes
-                }));
-            }, 50); // Wait 50ms to give time for all GPU calls to finish before querying
         }
 
         // Schedule another render frame if it's needed.
