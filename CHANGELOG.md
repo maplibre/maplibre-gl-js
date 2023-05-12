@@ -1,6 +1,14 @@
 ## main
 
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 3.0.0-pre.6
+
+### ✨ Features and improvements
 
 - [Breaking] Improve control performance by restricting worker count to a max of 1 except safari browser. ([#2354](https://github.com/maplibre/maplibre-gl-js/pull/2354))
 - Improve performance by using HTMLImageElement to download raster source images when refreshExpiredTiles tiles is false ([#2126](https://github.com/maplibre/maplibre-gl-js/pull/2126))
@@ -12,13 +20,13 @@
 - Replace playwright with puppeteer ([#2494](https://github.com/maplibre/maplibre-gl-js/pull/2494))
 - Remove mocks from render tests ([#2497](https://github.com/maplibre/maplibre-gl-js/pull/2497))
 - Use WebGL2 context when available ([#1891](https://github.com/maplibre/maplibre-gl-js/pull/1891)
-- _...Add new stuff here..._
+
 
 ### 🐞 Bug fixes
 
 - Fix `LngLatBounds.extend()` to correctly handle `{ lng: number, lat: number }` coordinates. ([#2425](https://github.com/maplibre/maplibre-gl-js/pull/2425))
 - Fix the accuracy-circle in the geolocate control from randomly resizing. ([#2450](https://github.com/maplibre/maplibre-gl-js/pull/2450))
-- _...Add new stuff here..._
+
 
 ## 3.0.0-pre.5
 
