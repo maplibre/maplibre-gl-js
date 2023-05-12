@@ -1,6 +1,6 @@
 const cache = new WeakMap();
 export function isWebGL2(
-    gl: WebGLRenderingContext
+    gl: WebGLRenderingContext | WebGL2RenderingContext
 ): gl is WebGL2RenderingContext {
     if (cache.has(gl)) {
         return cache.get(gl);

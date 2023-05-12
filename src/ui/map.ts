@@ -2731,8 +2731,8 @@ class Map extends Camera {
         }, {once: true});
 
         const gl =
-            this._canvas.getContext('webgl2', attributes) ||
-            this._canvas.getContext('webgl', attributes);
+            this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
+            this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
 
         if (!gl) {
             const msg = 'Failed to initialize WebGL';
@@ -2744,9 +2744,9 @@ class Map extends Camera {
             }
         }
 
-        this.painter = new Painter(gl as WebGLRenderingContext, this.transform);
+        this.painter = new Painter(gl, this.transform);
 
-        webpSupported.testSupport(gl as WebGLRenderingContext);
+        webpSupported.testSupport(gl);
     }
 
     _contextLost(event: any) {

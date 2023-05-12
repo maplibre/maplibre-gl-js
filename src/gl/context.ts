@@ -24,7 +24,7 @@ type ClearArgs = {
 };
 
 class Context {
-    gl: WebGLRenderingContext;
+    gl: WebGLRenderingContext | WebGL2RenderingContext;
 
     currentNumAttributes: number;
     maxTextureSize: number;
@@ -68,7 +68,7 @@ class Context {
     RGBA16F?: GLenum;
     RGB16F?: GLenum;
 
-    constructor(gl: WebGLRenderingContext) {
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext) {
         this.gl = gl;
         this.clearColor = new ClearColor(this);
         this.clearDepth = new ClearDepth(this);
