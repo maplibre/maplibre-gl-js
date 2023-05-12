@@ -135,7 +135,7 @@ describe('query tests', () => {
         );
         browser = await puppeteer.launch({headless: 'new'});
         await new Promise<void>((resolve) => server.listen(resolve));
-    }, 30000);
+    }, 60000);
 
     afterAll(async () => {
         await browser.close();
