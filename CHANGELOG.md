@@ -4,7 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix for blurry raster tiles due to raster tiles requests stuck in image queue.
+- Fix for blurry raster tiles due to raster tiles requests stuck in image queue. ([#2511](https://github.com/maplibre/maplibre-gl-js/pull/2511))
 - _...Add new stuff here..._
 
 ## 3.0.0-pre.6
