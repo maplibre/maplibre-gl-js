@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - _...Add new stuff here..._
+- [Breaking] Remove WebGL1 support ([#2512](https://github.com/maplibre/maplibre-gl-js/pull/2512))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
