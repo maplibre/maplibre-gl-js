@@ -1,7 +1,7 @@
 import Map from '../../ui/map';
 import {extend} from '../../util/util';
 import Dispatcher from '../../util/dispatcher';
-import gl from 'gl';
+import {setWebGlContext} from './mock_webgl';
 
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
@@ -37,26 +37,6 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
     const actualRounded = Math.round(actual / multiplier) * multiplier;
 
     return test.equal(expectedRounded, actualRounded, message, extra);
-}
-
-// Add webgl context with the supplied GL
-function setWebGlContext() {
-    const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
-
-    function imitateWebGlGetContext(type, attributes) {
-        if (type === 'webgl2' || type === 'webgl') {
-            if (!this._webGLContext) {
-                this._webGLContext = gl(this.width, this.height, attributes);
-                if (!this._webGLContext) {
-                    throw new Error('Failed to create a WebGL context');
-                }
-            }
-            return this._webGLContext;
-        }
-        // Fallback to existing HTMLCanvasElement getContext behaviour
-        return originalGetContext.call(this, type, attributes);
-    }
-    global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 }
 
 // mock failed webgl context by dispatching "webglcontextcreationerror" event
