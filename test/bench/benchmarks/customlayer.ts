@@ -18,7 +18,7 @@ class Tent3D implements CustomLayerInterface {
         this.id = 'tent-3d';
     }
 
-    onAdd(map, gl: WebGL2RenderingContext) {
+    onAdd(map: Map, gl: WebGL2RenderingContext) {
         const vertexSource = `
 
         attribute vec3 aPos;

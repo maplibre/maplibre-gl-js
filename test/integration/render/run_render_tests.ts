@@ -285,7 +285,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 this.renderingMode = '2d';
             }
 
-            onAdd(map, gl: WebGL2RenderingContext) {
+            onAdd(map: Map, gl: WebGL2RenderingContext) {
                 const vertexSource = `
                 attribute vec3 aPos;
                 uniform mat4 u_matrix;
@@ -343,7 +343,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 this.renderingMode = '3d';
             }
 
-            onAdd(map, gl: WebGL2RenderingContext) {
+            onAdd(map: Map, gl: WebGL2RenderingContext) {
 
                 const vertexSource = `
         
