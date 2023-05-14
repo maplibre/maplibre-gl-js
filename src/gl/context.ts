@@ -287,7 +287,7 @@ class Context {
     }
 
     deleteVertexArray(x: WebGLVertexArrayObject | undefined) {
-        this.gl.deleteVertexArray(x);
+        return this.gl.deleteVertexArray(x);
     }
 
     unbindVAO() {

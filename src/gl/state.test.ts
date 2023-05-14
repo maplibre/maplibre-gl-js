@@ -3,8 +3,11 @@ import Context from './context';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {deepEqual} from '../util/util';
 import gl from 'gl';
+import {setupMockWebGLContext} from '../util/test/util';
 
 const context = new Context(gl(10, 10) as any);
+
+setupMockWebGLContext(context.gl);
 
 const valueTest = (Constructor: new (...args:any[]) => any, options) => {
     test('#constructor', () => {

@@ -39,6 +39,74 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
     return test.equal(expectedRounded, actualRounded, message, extra);
 }
 
+export function setupMockWebGLContext(webglContext: any) {
+
+    const mockVaoExtension = {
+        bindVertexArrayOES: jest.fn(),
+        deleteVertexArrayOES: jest.fn(),
+        createVertexArrayOES: jest.fn(),
+    };
+
+    const mockColorBufferExtension = {
+        RGB16F_EXT: jest.fn(),
+    };
+
+    const mockTextureHalfFloatExtension = {
+        HALF_FLOAT_OES: jest.fn(),
+    };
+
+    // Setup getExtension to return the correct mock extension
+    webglContext.getExtension = jest.fn((extensionName) => {
+        switch (extensionName) {
+            case 'OES_vertex_array_object':
+                return mockVaoExtension;
+            case 'EXT_color_buffer_half_float':
+                return mockColorBufferExtension;
+            case 'OES_texture_half_float':
+                return mockTextureHalfFloatExtension;
+            default:
+                return null;
+        }
+    });
+
+    // Define the properties on the WebGL context
+    Object.defineProperty(webglContext, 'bindVertexArray', {
+        get() {
+            const extension = this.getExtension('OES_vertex_array_object');
+            return extension ? extension.bindVertexArrayOES : undefined;
+        },
+    });
+
+    Object.defineProperty(webglContext, 'RGB16F', {
+        get() {
+            const extension = this.getExtension('EXT_color_buffer_half_float');
+            return extension ? extension.RGB16F_EXT : undefined;
+        },
+    });
+
+    Object.defineProperty(webglContext, 'HALF_FLOAT', {
+        get() {
+            const extension = this.getExtension('OES_texture_half_float');
+            return extension ? extension.HALF_FLOAT_OES : undefined;
+        },
+    });
+
+    Object.defineProperty(webglContext, 'deleteVertexArray', {
+        get() {
+            const extension = this.getExtension('OES_vertex_array_object');
+            return extension ? extension.deleteVertexArrayOES : undefined;
+        },
+    });
+
+    Object.defineProperty(webglContext, 'createVertexArray', {
+        get() {
+            const extension = this.getExtension('OES_vertex_array_object');
+            return extension ? extension.createVertexArrayOES : undefined;
+        },
+    });
+
+}
+
 // Add webgl context with the supplied GL
 function setWebGlContext() {
 
@@ -53,11 +121,7 @@ function setWebGlContext() {
                 }
             }
 
-            this._webGLContext.bindVertexArray = this._webGLContext.getExtension('OES_vertex_array_object')?.bindVertexArrayOES;
-            this._webGLContext.RGB16F = this._webGLContext.getExtension('EXT_color_buffer_half_float')?.RGB16F_EXT;
-            this._webGLContext.HALF_FLOAT = this._webGLContext.getExtension('OES_texture_half_float')?.HALF_FLOAT_OES;
-            this._webGLContext.deleteVertexArray = this._webGLContext.getExtension('OES_vertex_array_object')?.deleteVertexArrayOES;
-            this._webGLContext.createVertexArray = this._webGLContext.getExtension('OES_vertex_array_object')?.createVertexArrayOES;
+            setupMockWebGLContext(this._webGLContext);
 
             return this._webGLContext;
         }
