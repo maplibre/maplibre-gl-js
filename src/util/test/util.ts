@@ -1,7 +1,7 @@
 import Map from '../../ui/map';
 import {extend} from '../../util/util';
 import Dispatcher from '../../util/dispatcher';
-import gl from 'gl';
+import {setWebGlContext} from './mock_webgl';
 
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
@@ -37,97 +37,6 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
     const actualRounded = Math.round(actual / multiplier) * multiplier;
 
     return test.equal(expectedRounded, actualRounded, message, extra);
-}
-
-export function setupMockWebGLContext(webglContext: any) {
-
-    const mockVaoExtension = {
-        bindVertexArrayOES: jest.fn(),
-        deleteVertexArrayOES: jest.fn(),
-        createVertexArrayOES: jest.fn(),
-    };
-
-    const mockColorBufferExtension = {
-        RGB16F_EXT: jest.fn(),
-    };
-
-    const mockTextureHalfFloatExtension = {
-        HALF_FLOAT_OES: jest.fn(),
-    };
-
-    // Setup getExtension to return the correct mock extension
-    webglContext.getExtension = jest.fn((extensionName) => {
-        switch (extensionName) {
-            case 'OES_vertex_array_object':
-                return mockVaoExtension;
-            case 'EXT_color_buffer_half_float':
-                return mockColorBufferExtension;
-            case 'OES_texture_half_float':
-                return mockTextureHalfFloatExtension;
-            default:
-                return null;
-        }
-    });
-
-    // Define the properties on the WebGL context
-    Object.defineProperty(webglContext, 'bindVertexArray', {
-        get() {
-            const extension = this.getExtension('OES_vertex_array_object');
-            return extension ? extension.bindVertexArrayOES : undefined;
-        },
-    });
-
-    Object.defineProperty(webglContext, 'RGB16F', {
-        get() {
-            const extension = this.getExtension('EXT_color_buffer_half_float');
-            return extension ? extension.RGB16F_EXT : undefined;
-        },
-    });
-
-    Object.defineProperty(webglContext, 'HALF_FLOAT', {
-        get() {
-            const extension = this.getExtension('OES_texture_half_float');
-            return extension ? extension.HALF_FLOAT_OES : undefined;
-        },
-    });
-
-    Object.defineProperty(webglContext, 'deleteVertexArray', {
-        get() {
-            const extension = this.getExtension('OES_vertex_array_object');
-            return extension ? extension.deleteVertexArrayOES : undefined;
-        },
-    });
-
-    Object.defineProperty(webglContext, 'createVertexArray', {
-        get() {
-            const extension = this.getExtension('OES_vertex_array_object');
-            return extension ? extension.createVertexArrayOES : undefined;
-        },
-    });
-
-}
-
-// Add webgl context with the supplied GL
-function setWebGlContext() {
-    const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
-
-    function imitateWebGlGetContext(type, attributes) {
-        if (type === 'webgl2' || type === 'webgl') {
-            if (!this._webGLContext) {
-                this._webGLContext = gl(this.width, this.height, attributes);
-                if (!this._webGLContext) {
-                    throw new Error('Failed to create a WebGL context');
-                }
-            }
-
-            setupMockWebGLContext(this._webGLContext);
-
-            return this._webGLContext;
-        }
-        // Fallback to existing HTMLCanvasElement getContext behaviour
-        return originalGetContext.call(this, type, attributes);
-    }
-    global.HTMLCanvasElement.prototype.getContext = imitateWebGlGetContext;
 }
 
 // mock failed webgl context by dispatching "webglcontextcreationerror" event

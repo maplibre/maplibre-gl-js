@@ -3,7 +3,7 @@ import Context from './context';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {deepEqual} from '../util/util';
 import gl from 'gl';
-import {setupMockWebGLContext} from '../util/test/util';
+import {setupMockWebGLContext} from '../util/test/mock_webgl';
 
 const context = new Context(gl(10, 10) as any);
 
