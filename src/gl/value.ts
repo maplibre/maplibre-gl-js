@@ -15,7 +15,6 @@ import type {
     CullFaceModeType,
     FrontFaceType,
 } from './types';
-import {isWebGL2} from './webgl2';
 
 export interface IValue<T> {
     current: T;
