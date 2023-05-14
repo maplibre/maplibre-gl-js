@@ -109,6 +109,7 @@ class Context {
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
         this.HALF_FLOAT = gl.HALF_FLOAT;
 
+        gl.getExtension('EXT_color_buffer_half_float');
         this.RGBA16F = gl.RGBA16F;
         this.RGB16F = gl.RGB16F;
     }
