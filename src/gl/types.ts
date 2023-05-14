@@ -1,12 +1,12 @@
-type BlendFuncConstant = WebGLRenderingContext['ZERO'] | WebGLRenderingContext['ONE'] | WebGLRenderingContext['SRC_COLOR'] | WebGLRenderingContext['ONE_MINUS_SRC_COLOR'] | WebGLRenderingContext['DST_COLOR'] | WebGLRenderingContext['ONE_MINUS_DST_COLOR'] | WebGLRenderingContext['SRC_ALPHA'] | WebGLRenderingContext['ONE_MINUS_SRC_ALPHA'] | WebGLRenderingContext['DST_ALPHA'] | WebGLRenderingContext['ONE_MINUS_DST_ALPHA'] | WebGLRenderingContext['CONSTANT_COLOR'] | WebGLRenderingContext['ONE_MINUS_CONSTANT_COLOR'] | WebGLRenderingContext['CONSTANT_ALPHA'] | WebGLRenderingContext['ONE_MINUS_CONSTANT_ALPHA'] | WebGLRenderingContext['BLEND_COLOR'];
+type BlendFuncConstant = WebGL2RenderingContext['ZERO'] | WebGL2RenderingContext['ONE'] | WebGL2RenderingContext['SRC_COLOR'] | WebGL2RenderingContext['ONE_MINUS_SRC_COLOR'] | WebGL2RenderingContext['DST_COLOR'] | WebGL2RenderingContext['ONE_MINUS_DST_COLOR'] | WebGL2RenderingContext['SRC_ALPHA'] | WebGL2RenderingContext['ONE_MINUS_SRC_ALPHA'] | WebGL2RenderingContext['DST_ALPHA'] | WebGL2RenderingContext['ONE_MINUS_DST_ALPHA'] | WebGL2RenderingContext['CONSTANT_COLOR'] | WebGL2RenderingContext['ONE_MINUS_CONSTANT_COLOR'] | WebGL2RenderingContext['CONSTANT_ALPHA'] | WebGL2RenderingContext['ONE_MINUS_CONSTANT_ALPHA'] | WebGL2RenderingContext['BLEND_COLOR'];
 
 export type BlendFuncType = [BlendFuncConstant, BlendFuncConstant];
 
-export type BlendEquationType = WebGLRenderingContext['FUNC_ADD'] | WebGLRenderingContext['FUNC_SUBTRACT'] | WebGLRenderingContext['FUNC_REVERSE_SUBTRACT'];
+export type BlendEquationType = WebGL2RenderingContext['FUNC_ADD'] | WebGL2RenderingContext['FUNC_SUBTRACT'] | WebGL2RenderingContext['FUNC_REVERSE_SUBTRACT'];
 
 export type ColorMaskType = [boolean, boolean, boolean, boolean];
 
-export type CompareFuncType = WebGLRenderingContext['NEVER'] | WebGLRenderingContext['LESS'] | WebGLRenderingContext['EQUAL'] | WebGLRenderingContext['LEQUAL'] | WebGLRenderingContext['GREATER'] | WebGLRenderingContext['NOTEQUAL'] | WebGLRenderingContext['GEQUAL'] | WebGLRenderingContext['ALWAYS'];
+export type CompareFuncType = WebGL2RenderingContext['NEVER'] | WebGL2RenderingContext['LESS'] | WebGL2RenderingContext['EQUAL'] | WebGL2RenderingContext['LEQUAL'] | WebGL2RenderingContext['GREATER'] | WebGL2RenderingContext['NOTEQUAL'] | WebGL2RenderingContext['GEQUAL'] | WebGL2RenderingContext['ALWAYS'];
 
 export type DepthMaskType = boolean;
 
@@ -20,7 +20,7 @@ export type StencilFuncType = {
     mask: number;
 };
 
-export type StencilOpConstant = WebGLRenderingContext['KEEP'] | WebGLRenderingContext['ZERO'] | WebGLRenderingContext['REPLACE'] | WebGLRenderingContext['INCR'] | WebGLRenderingContext['INCR_WRAP'] | WebGLRenderingContext['DECR'] | WebGLRenderingContext['DECR_WRAP'] | WebGLRenderingContext['INVERT'];
+export type StencilOpConstant = WebGL2RenderingContext['KEEP'] | WebGL2RenderingContext['ZERO'] | WebGL2RenderingContext['REPLACE'] | WebGL2RenderingContext['INCR'] | WebGL2RenderingContext['INCR_WRAP'] | WebGL2RenderingContext['DECR'] | WebGL2RenderingContext['DECR_WRAP'] | WebGL2RenderingContext['INVERT'];
 
 export type StencilOpType = [StencilOpConstant, StencilOpConstant, StencilOpConstant];
 
@@ -29,31 +29,31 @@ export type TextureUnitType = number;
 export type ViewportType = [number, number, number, number];
 
 export type StencilTestGL = {
-    func: WebGLRenderingContext['NEVER'];
+    func: WebGL2RenderingContext['NEVER'];
     mask: 0;
 } | {
-    func: WebGLRenderingContext['LESS'];
+    func: WebGL2RenderingContext['LESS'];
     mask: number;
 } | {
-    func: WebGLRenderingContext['EQUAL'];
+    func: WebGL2RenderingContext['EQUAL'];
     mask: number;
 } | {
-    func: WebGLRenderingContext['LEQUAL'];
+    func: WebGL2RenderingContext['LEQUAL'];
     mask: number;
 } | {
-    func: WebGLRenderingContext['GREATER'];
+    func: WebGL2RenderingContext['GREATER'];
     mask: number;
 } | {
-    func: WebGLRenderingContext['NOTEQUAL'];
+    func: WebGL2RenderingContext['NOTEQUAL'];
     mask: number;
 } | {
-    func: WebGLRenderingContext['GEQUAL'];
+    func: WebGL2RenderingContext['GEQUAL'];
     mask: number;
 } | {
-    func: WebGLRenderingContext['ALWAYS'];
+    func: WebGL2RenderingContext['ALWAYS'];
     mask: 0;
 };
 
-export type CullFaceModeType = WebGLRenderingContext['FRONT'] | WebGLRenderingContext['BACK'] | WebGLRenderingContext['FRONT_AND_BACK'];
+export type CullFaceModeType = WebGL2RenderingContext['FRONT'] | WebGL2RenderingContext['BACK'] | WebGL2RenderingContext['FRONT_AND_BACK'];
 
-export type FrontFaceType = WebGLRenderingContext['CW'] | WebGLRenderingContext['CCW'];
+export type FrontFaceType = WebGL2RenderingContext['CW'] | WebGL2RenderingContext['CCW'];

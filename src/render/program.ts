@@ -16,7 +16,7 @@ import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terr
 import type {TerrainData} from '../render/terrain';
 import Terrain from '../render/terrain';
 
-export type DrawMode = WebGLRenderingContext['LINES'] | WebGLRenderingContext['TRIANGLES'] | WebGLRenderingContext['LINE_STRIP'];
+export type DrawMode = WebGL2RenderingContext['LINES'] | WebGL2RenderingContext['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 
 function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> {
     const result = [];

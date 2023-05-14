@@ -2,9 +2,9 @@ import type Context from '../gl/context';
 import type {RGBAImage, AlphaImage} from '../util/image';
 import {isImageBitmap} from '../util/util';
 
-export type TextureFormat = WebGLRenderingContext['RGBA'] | WebGLRenderingContext['ALPHA'];
-export type TextureFilter = WebGLRenderingContext['LINEAR'] | WebGLRenderingContext['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContext['NEAREST'];
-export type TextureWrap = WebGLRenderingContext['REPEAT'] | WebGLRenderingContext['CLAMP_TO_EDGE'] | WebGLRenderingContext['MIRRORED_REPEAT'];
+export type TextureFormat = WebGL2RenderingContext['RGBA'] | WebGL2RenderingContext['ALPHA'];
+export type TextureFilter = WebGL2RenderingContext['LINEAR'] | WebGL2RenderingContext['LINEAR_MIPMAP_NEAREST'] | WebGL2RenderingContext['NEAREST'];
+export type TextureWrap = WebGL2RenderingContext['REPEAT'] | WebGL2RenderingContext['CLAMP_TO_EDGE'] | WebGL2RenderingContext['MIRRORED_REPEAT'];
 
 type EmptyImage = {
     width: number;

@@ -27,7 +27,7 @@ export interface IValue<T> {
 }
 
 class BaseValue<T> implements IValue<T> {
-    gl: WebGLRenderingContext;
+    gl: WebGL2RenderingContext;
     current: T;
     default: T;
     dirty: boolean;
@@ -425,11 +425,8 @@ export class BindVertexArray extends BaseValue<WebGLVertexArrayObject> {
     set(v: WebGLVertexArrayObject | null) {
         if (v === this.current && !this.dirty) return;
         const gl = this.gl;
-        if (isWebGL2(gl)) {
-            gl.bindVertexArray(v);
-        } else {
-            gl.getExtension('OES_vertex_array_object')?.bindVertexArrayOES(v);
-        }
+        gl.bindVertexArray(v);
+
         this.current = v;
         this.dirty = false;
     }

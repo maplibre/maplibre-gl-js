@@ -41,6 +41,7 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
 
 // Add webgl context with the supplied GL
 function setWebGlContext() {
+
     const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
 
     function imitateWebGlGetContext(type, attributes) {
@@ -51,6 +52,13 @@ function setWebGlContext() {
                     throw new Error('Failed to create a WebGL context');
                 }
             }
+
+            this._webGLContext.bindVertexArray = this._webGLContext.getExtension('OES_vertex_array_object')?.bindVertexArrayOES;
+            this._webGLContext.RGB16F = this._webGLContext.getExtension('EXT_color_buffer_half_float')?.RGB16F_EXT;
+            this._webGLContext.HALF_FLOAT = this._webGLContext.getExtension('OES_texture_half_float')?.HALF_FLOAT_OES;
+            this._webGLContext.deleteVertexArray = this._webGLContext.getExtension('OES_vertex_array_object')?.deleteVertexArrayOES;
+            this._webGLContext.createVertexArray = this._webGLContext.getExtension('OES_vertex_array_object')?.createVertexArrayOES;
+
             return this._webGLContext;
         }
         // Fallback to existing HTMLCanvasElement getContext behaviour
