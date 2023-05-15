@@ -169,9 +169,6 @@
 - Improve performance for primitive size selection ([#1508](https://github.com/maplibre/maplibre-gl-js/pull/1508))
 - Upgrade target from ES2017 to ES2019 ([#1499](https://github.com/maplibre/maplibre-gl-js/pull/1499))
 
-### 🔧 DX Improvements
-- Fix query tests on windows ([#1506](https://github.com/maplibre/maplibre-gl-js/pull/1506))
-
 ## 2.3.1-pre.1
 
 ### ✨ Features and improvements
