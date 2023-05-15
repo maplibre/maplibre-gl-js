@@ -1,12 +1,17 @@
 ## main
 
 ### ✨ Features and improvements
-- [Breaking] Remove WebGL1 support ([#2512](https://github.com/maplibre/maplibre-gl-js/pull/2512))
-- Bump KDBush and supercluster ([#2522](https://github.com/maplibre/maplibre-gl-js/pull/2522))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+
+## 3.0.0-pre.7
+
+### ✨ Features and improvements
+- [Breaking] Remove WebGL1 support ([#2512](https://github.com/maplibre/maplibre-gl-js/pull/2512))
+- Bump KDBush and supercluster ([#2522](https://github.com/maplibre/maplibre-gl-js/pull/2522))
+
 
 ## 3.0.0-pre.6
 
