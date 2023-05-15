@@ -8,10 +8,6 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-### 🔧 DX Improvements
-- Refactor WebGL1 mocking for unit tests ([#2515](https://github.com/maplibre/maplibre-gl-js/issues/2515))
-- _...Add new stuff here..._
-
 ## 3.0.0-pre.6
 
 ### ✨ Features and improvements
@@ -30,10 +26,6 @@
 
 - Fix `LngLatBounds.extend()` to correctly handle `{ lng: number, lat: number }` coordinates. ([#2425](https://github.com/maplibre/maplibre-gl-js/pull/2425))
 - Fix the accuracy-circle in the geolocate control from randomly resizing. ([#2450](https://github.com/maplibre/maplibre-gl-js/pull/2450))
-
-### 🔧 DX Improvements
-- Replace playwright with puppeteer ([#2494](https://github.com/maplibre/maplibre-gl-js/pull/2494))
-- Remove mocks from render tests ([#2497](https://github.com/maplibre/maplibre-gl-js/pull/2497))
 
 ## 3.0.0-pre.5
 
@@ -85,9 +77,6 @@
 - Change how meta key is detected for cooperative gestures
 - Fix the worker been terminated on setting new style ([#2123](https://github.com/maplibre/maplibre-gl-js/pull/2123))
 
-### 🔧 DX Improvements
-- Make jest tests easier to run in CI and local development ([#2044](https://github.com/maplibre/maplibre-gl-js/issues/2044)
-
 ## 3.0.0-pre.3
 
 ### ✨ Features and improvements
@@ -124,11 +113,6 @@
 - fix issue [#860](https://github.com/maplibre/maplibre-gl-js/issues/860) fill-pattern with pixelRatio > 1 is now switched correctly at runtime. ([#1765](https://github.com/maplibre/maplibre-gl-js/pull/1765))
 - Fix the exception that would be thrown on `map.setStyle` when it is passed with transformStyle option and map is initialized without an initial style. ([#1824](https://github.com/maplibre/maplibre-gl-js/pull/1824))
 - Fix the behavior of the compass button on touch devices.
-
-### 🔧 DX Improvements
-- Move to rollup 3 ([#1949](https://github.com/maplibre/maplibre-gl-js/pull/1949))
-- Generated source maps properly  ([#1582](https://github.com/maplibre/maplibre-gl-js/issues/1582))
-- Add dev version for csp build ([#1730](https://github.com/maplibre/maplibre-gl-js/pull/1730))
 
 ## 3.0.0-pre.1
 
@@ -176,9 +160,6 @@
 
 - Fix attribution not being displayed for terrain ([#1516](https://github.com/maplibre/maplibre-gl-js/pull/1516))
 - No triggering of contextmenu after rotate, pitch, etc. also on Windows ([#1537](https://github.com/maplibre/maplibre-gl-js/pull/1537))
-
-### 🔧 DX Improvements
-- Fix query tests on windows ([#1506](https://github.com/maplibre/maplibre-gl-js/pull/1506))
 
 ## 2.3.1-pre.2
 
@@ -229,9 +210,6 @@ Everything from the four previous pre-releases:
 - Fix memory usage in terrain 3D ([#1291](https://github.com/maplibre/maplibre-gl-js/issues/1291), [#1302](https://github.com/maplibre/maplibre-gl-js/pull/1302))
 - Fix disappearence of closest tiles when 3D terrain is enabled ([#1241](https://github.com/maplibre/maplibre-gl-js/issues/1241), [#1300](https://github.com/maplibre/maplibre-gl-js/pull/1300))
 
-### 🔧 DX Improvements
-- Add internal support for Node 18 ([#1431](https://github.com/maplibre/maplibre-gl-js/pull/1431))
-
 ## 2.2.0-pre.4
 
 ### ✨ Features and improvements
@@ -243,9 +221,6 @@ Everything from the four previous pre-releases:
 ### 🐞 Bug fixes
 
 - Fix compact attribution style when using global CSS that sets `box-sizing: border-box;` ([#1250](https://github.com/maplibre/maplibre-gl-js/pull/1250))
-
-### 🔧 DX Improvements
-- Add internal support for Node 18 ([#1431](https://github.com/maplibre/maplibre-gl-js/pull/1431))
 
 ## 2.2.0-pre.3
 
