@@ -107,11 +107,9 @@ class Context {
         }
 
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-        const extTextureHalfFloat = gl.getExtension('OES_texture_half_float');
         this.HALF_FLOAT = gl.HALF_FLOAT;
 
-        gl.getExtension('OES_texture_half_float_linear');
-        const extColorBufferHalfFloat = gl.getExtension('EXT_color_buffer_half_float');
+        gl.getExtension('EXT_color_buffer_half_float');
         this.RGBA16F = gl.RGBA16F;
         this.RGB16F = gl.RGB16F;
     }
