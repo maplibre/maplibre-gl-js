@@ -30,14 +30,14 @@ void main() {
     #ifdef TERRAIN3D
         // To avoid floating buildings in 3d-terrain, especially in heavy terrain,
         // render the buildings a little below terrain. The unit is meter.
-        float baseDelta = 10.0;
+        float baseDelta = base > 0.0 ? 0.0 : 10.0;
         float ele = get_elevation(a_centroid);
     #else
         float baseDelta = 0.0;
         float ele = 0.0;
     #endif
-    base = max(0.0, ele + base - baseDelta);
-    height = max(0.0, ele + height);
+    base = max(0.0, base) + ele - baseDelta;
+    height = max(0.0, height) + ele;
 
     float t = mod(normal.x, 2.0);
 
