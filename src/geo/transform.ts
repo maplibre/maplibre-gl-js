@@ -89,20 +89,24 @@ class Transform {
 
     clone(): Transform {
         const clone = new Transform(this._minZoom, this._maxZoom, this._minPitch, this.maxPitch, this._renderWorldCopies);
-        clone.tileSize = this.tileSize;
-        clone.latRange = this.latRange;
-        clone.width = this.width;
-        clone.height = this.height;
-        clone._center = this._center;
-        clone._elevation = this._elevation;
-        clone.zoom = this.zoom;
-        clone.angle = this.angle;
-        clone._fov = this._fov;
-        clone._pitch = this._pitch;
-        clone._unmodified = this._unmodified;
-        clone._edgeInsets = this._edgeInsets.clone();
-        clone._calcMatrices();
+        clone.copy(this);
         return clone;
+    }
+
+    copy(that: Transform) {
+        this.tileSize = that.tileSize;
+        this.latRange = that.latRange;
+        this.width = that.width;
+        this.height = that.height;
+        this._center = that._center;
+        this._elevation = that._elevation;
+        this.zoom = that.zoom;
+        this.angle = that.angle;
+        this._fov = that._fov;
+        this._pitch = that._pitch;
+        this._unmodified = that._unmodified;
+        this._edgeInsets = that._edgeInsets.clone();
+        this._calcMatrices();
     }
 
     get minZoom(): number { return this._minZoom; }

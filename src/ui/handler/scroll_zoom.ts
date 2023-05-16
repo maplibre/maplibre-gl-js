@@ -4,6 +4,7 @@ import {ease as _ease, bindAll, bezier} from '../../util/util';
 import browser from '../../util/browser';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import LngLat from '../../geo/lng_lat';
+import HandlerBase from './handler-base';
 
 import type Map from '../map';
 import type HandlerManager from '../handler_manager';
@@ -34,8 +35,7 @@ export type ScrollZoomHandlerOptions = {
 /**
  * The `ScrollZoomHandler` allows the user to zoom the map by scrolling.
  */
-class ScrollZoomHandler {
-    _map: Map;
+class ScrollZoomHandler extends HandlerBase {
     _el: HTMLElement;
     _enabled: boolean;
     _active: boolean;
@@ -71,7 +71,7 @@ class ScrollZoomHandler {
      * @private
      */
     constructor(map: Map, handler: HandlerManager) {
-        this._map = map;
+        super(map);
         this._el = map.getCanvasContainer();
         this._handler = handler;
 
@@ -242,8 +242,8 @@ class ScrollZoomHandler {
 
         const pos = DOM.mousePos(this._el, e);
 
-        this._around = LngLat.convert(this._aroundCenter ? this._map.getCenter() : this._map.unproject(pos));
-        this._aroundPoint = this._map.transform.locationPoint(this._around);
+        this._around = LngLat.convert(this._aroundCenter ? this.getCenter() : this.unproject(pos));
+        this._aroundPoint = this.transform.locationPoint(this._around);
         if (!this._frameId) {
             this._frameId = true;
             this._handler._triggerRenderFrame();
@@ -255,7 +255,7 @@ class ScrollZoomHandler {
         this._frameId = null;
 
         if (!this.isActive()) return;
-        const tr = this._map.transform;
+        const tr = this.transform;
 
         // if we've had scroll events since the last render frame, consume the
         // accumulated delta, and update the target zoom level accordingly

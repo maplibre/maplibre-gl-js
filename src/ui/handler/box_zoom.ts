@@ -1,6 +1,7 @@
 import DOM from '../../util/dom';
 
 import {Event} from '../../util/evented';
+import HandlerBase from './handler-base';
 
 import type Map from '../map';
 import type Point from '@mapbox/point-geometry';
@@ -9,8 +10,7 @@ import type Point from '@mapbox/point-geometry';
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.
  * The bounding box is defined by clicking and holding `shift` while dragging the cursor.
  */
-class BoxZoomHandler {
-    _map: Map;
+class BoxZoomHandler extends HandlerBase {
     _el: HTMLElement;
     _container: HTMLElement;
     _enabled: boolean;
@@ -26,7 +26,7 @@ class BoxZoomHandler {
     constructor(map: Map, options: {
         clickTolerance: number;
     }) {
-        this._map = map;
+        super(map);
         this._el = map.getCanvasContainer();
         this._container = map.getContainer();
         this._clickTolerance = options.clickTolerance || 1;
@@ -127,7 +127,7 @@ class BoxZoomHandler {
         } else {
             this._map.fire(new Event('boxzoomend', {originalEvent: e}));
             return {
-                cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this._map.getBearing(), {linear: true})
+                cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this.getBearing(), {linear: true})
             };
         }
     }

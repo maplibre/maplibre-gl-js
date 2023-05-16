@@ -102,6 +102,7 @@ export type MapOptions = {
     renderWorldCopies?: boolean;
     maxTileCacheSize?: number;
     transformRequest?: RequestTransformFunction;
+    transformCameraUpdate?: (nextTransform: Transform, currentTransform: Transform) => Transform;
     locale?: any;
     fadeDuration?: number;
     crossSourceCollisions?: boolean;
@@ -195,6 +196,7 @@ const defaultOptions = {
     maxTileCacheSize: null,
     localIdeographFontFamily: 'sans-serif',
     transformRequest: null,
+    transformCameraUpdate: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
     validateStyle: true
@@ -446,6 +448,7 @@ class Map extends Camera {
         this._locale = extend({}, defaultLocale, options.locale);
         this._clickTolerance = options.clickTolerance;
         this._pixelRatio = options.pixelRatio ?? devicePixelRatio;
+        this._transformCameraUpdate = options.transformCameraUpdate;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 

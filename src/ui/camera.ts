@@ -159,6 +159,10 @@ abstract class Camera extends Evented {
     // so the linear interpolation between start and target keeps smooth and without jumps.
     _elevationStart: number;
 
+    _transformSource?: Transform;
+    _transformInProgress?: Transform;
+    _transformCameraUpdate: ((nextTransform: Transform, currentTransform: Transform) => Transform) | null;
+
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
 
@@ -174,6 +178,9 @@ abstract class Camera extends Evented {
         bindAll(['_renderFrameCallback'], this);
 
         //addAssertions(this);
+        this.on('moveend', () => {
+            delete this._transformInProgress;
+        });
     }
 
     /**
@@ -867,6 +874,8 @@ abstract class Camera extends Evented {
 
         if (options.animate === false || (!options.essential && browser.prefersReducedMotion)) options.duration = 0;
 
+        this._startCameraUpdate();
+
         const tr = this.transform,
             startZoom = this.getZoom(),
             startBearing = this.getBearing(),
@@ -910,8 +919,11 @@ abstract class Camera extends Evented {
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
         if (this.terrain) this._prepareElevation(center);
+        this._endCameraUpdate();
 
         this._ease((k) => {
+            this._startCameraUpdate();
+
             if (this._zooming) {
                 tr.zoom = interpolates.number(startZoom, zoom, k);
             }
@@ -941,6 +953,8 @@ abstract class Camera extends Evented {
                 const newCenter = tr.unproject(from.add(delta.mult(k * speedup)).mult(scale));
                 tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
             }
+
+            this._endCameraUpdate();
 
             this._fireMoveEvents(eventData);
 
@@ -990,6 +1004,25 @@ abstract class Camera extends Evented {
     _finalizeElevation() {
         this.transform.freezeElevation = false;
         this.transform.recalculateZoom(this.terrain);
+    }
+
+    _startCameraUpdate() {
+        if (!this._transformCameraUpdate) return;
+
+        const tr = this.transform;
+        if (!this._transformInProgress) {
+            this._transformSource = tr;
+            this._transformInProgress = tr.clone();
+        }
+        this.transform = this._transformInProgress;
+    }
+
+    _endCameraUpdate() {
+        if (!this._transformCameraUpdate) return;
+
+        this.transform = this._transformSource;
+        const tr = this._transformCameraUpdate(this._transformInProgress.clone(), this._transformSource);
+        this._transformSource.copy(tr);
     }
 
     _fireMoveEvents(eventData?: any) {
@@ -1117,6 +1150,7 @@ abstract class Camera extends Evented {
             easing: defaultEasing
         }, options);
 
+        this._startCameraUpdate();
         const tr = this.transform,
             startZoom = this.getZoom(),
             startBearing = this.getBearing(),
@@ -1222,8 +1256,10 @@ abstract class Camera extends Evented {
 
         this._prepareEase(eventData, false);
         if (this.terrain) this._prepareElevation(center);
+        this._endCameraUpdate();
 
         this._ease((k) => {
+            this._startCameraUpdate();
             // s: The distance traveled along the flight path, measured in ρ-screenfuls.
             const s = k * S;
             const scale = 1 / w(s);
@@ -1246,6 +1282,8 @@ abstract class Camera extends Evented {
 
             const newCenter = k === 1 ? center : tr.unproject(from.add(delta.mult(u(s))).mult(scale));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
+
+            this._endCameraUpdate();
 
             this._fireMoveEvents(eventData);
 
