@@ -558,7 +558,11 @@ class SourceCache extends Evented {
                 const tileID = retain[id];
 
                 const tile = this._tiles[id];
-                if (!tile || tile.fadeEndTime < now) {
+
+                // when fadeEndTime is 0, the tile is created but not registerFadeDuration
+                // has not been called, therefore must be kept in fadingTiles dictionary
+                // for next round of rendering
+                if (!tile || (tile.fadeEndTime !== 0 && tile.fadeEndTime <= now)) {
                     continue;
                 }
 
