@@ -171,8 +171,11 @@ abstract class Camera extends Evented {
     // so the linear interpolation between start and target keeps smooth and without jumps.
     _elevationStart: number;
 
-    _transformSource?: Transform;
+    /** Used to track accumulated changes during continuous interaction */
     _transformInProgress?: Transform;
+    /** A callback used to defer camera updates or apply arbitrary constraints.
+     * If specified, this Camera instance can be used as a stateless component in React etc.
+     */
     _transformCameraUpdate: CameraUpdateTransformFunction | null;
 
     abstract _requestRenderFrame(a: () => void): TaskID;
@@ -759,8 +762,7 @@ abstract class Camera extends Evented {
     jumpTo(options: JumpToOptions, eventData?: any) {
         this.stop();
 
-        this._startCameraUpdate();
-        const tr = this.transform;
+        const tr = this._startCameraUpdate();
         let zoomChanged = false,
             bearingChanged = false,
             pitchChanged = false;
@@ -787,7 +789,7 @@ abstract class Camera extends Evented {
         if (options.padding != null && !tr.isPaddingEqual(options.padding)) {
             tr.padding = options.padding;
         }
-        this._endCameraUpdate();
+        this._endCameraUpdate(tr);
 
         this.fire(new Event('movestart', eventData))
             .fire(new Event('move', eventData));
@@ -888,9 +890,7 @@ abstract class Camera extends Evented {
 
         if (options.animate === false || (!options.essential && browser.prefersReducedMotion)) options.duration = 0;
 
-        this._startCameraUpdate();
-
-        const tr = this.transform,
+        const tr = this._startCameraUpdate(),
             startZoom = this.getZoom(),
             startBearing = this.getBearing(),
             startPitch = this.getPitch(),
@@ -933,11 +933,8 @@ abstract class Camera extends Evented {
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
         if (this.terrain) this._prepareElevation(center);
-        this._endCameraUpdate();
 
         this._ease((k) => {
-            this._startCameraUpdate();
-
             if (this._zooming) {
                 tr.zoom = interpolates.number(startZoom, zoom, k);
             }
@@ -968,7 +965,7 @@ abstract class Camera extends Evented {
                 tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
             }
 
-            this._endCameraUpdate();
+            this._endCameraUpdate(tr);
 
             this._fireMoveEvents(eventData);
 
@@ -1020,22 +1017,31 @@ abstract class Camera extends Evented {
         this.transform.recalculateZoom(this.terrain);
     }
 
-    _startCameraUpdate() {
-        if (!this._transformCameraUpdate) return;
+    /**
+     * Called before the camera is manipulated.
+     * If `_transformCameraUpdate` is specified, a copy of the current transform is created to track the accumulated changes.
+     * This underlying transform represents the "desired state" proposed by input handlers / animations / UI controls.
+     * It may differ from the state used for rendering.
+     * @returns Transform to apply changes to
+     */
+    _startCameraUpdate(): Transform {
+        if (!this._transformCameraUpdate) return this.transform;
 
-        const tr = this.transform;
         if (!this._transformInProgress) {
-            this._transformSource = tr;
-            this._transformInProgress = tr.clone();
+            this._transformInProgress = this.transform.clone();
         }
-        this.transform = this._transformInProgress;
+        return this._transformInProgress;
     }
 
-    _endCameraUpdate() {
+    /**
+     * Called after the camera is done being manipulated.
+     * @param {Transform} tr - the proposed camera state
+     * Call `_transformCameraUpdate` is present, and apply the "approved" changes.
+     */
+    _endCameraUpdate(tr: Transform) {
         if (!this._transformCameraUpdate) return;
 
-        this.transform = this._transformSource;
-        const nextTransform = this._transformInProgress.clone();
+        const nextTransform = tr.clone();
         const {
             center,
             zoom,
@@ -1046,7 +1052,7 @@ abstract class Camera extends Evented {
         if (zoom !== undefined) nextTransform.zoom = zoom;
         if (pitch !== undefined) nextTransform.pitch = pitch;
         if (bearing !== undefined) nextTransform.bearing = bearing;
-        this._transformSource.copy(nextTransform);
+        this.transform.copy(nextTransform);
     }
 
     _fireMoveEvents(eventData?: any) {
@@ -1174,8 +1180,7 @@ abstract class Camera extends Evented {
             easing: defaultEasing
         }, options);
 
-        this._startCameraUpdate();
-        const tr = this.transform,
+        const tr = this._startCameraUpdate(),
             startZoom = this.getZoom(),
             startBearing = this.getBearing(),
             startPitch = this.getPitch(),
@@ -1280,10 +1285,8 @@ abstract class Camera extends Evented {
 
         this._prepareEase(eventData, false);
         if (this.terrain) this._prepareElevation(center);
-        this._endCameraUpdate();
 
         this._ease((k) => {
-            this._startCameraUpdate();
             // s: The distance traveled along the flight path, measured in ρ-screenfuls.
             const s = k * S;
             const scale = 1 / w(s);
@@ -1307,7 +1310,7 @@ abstract class Camera extends Evented {
             const newCenter = k === 1 ? center : tr.unproject(from.add(delta.mult(u(s))).mult(scale));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
 
-            this._endCameraUpdate();
+            this._endCameraUpdate(tr);
 
             this._fireMoveEvents(eventData);
 

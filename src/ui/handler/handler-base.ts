@@ -3,6 +3,9 @@ import type {PointLike} from '../camera';
 import type Transform from '../../geo/transform';
 import Point from '@mapbox/point-geometry';
 
+/**
+ * Shared utilities for the Handler classes to access the correct camera state
+ */
 export default class HandlerBase {
     _map: Map;
 

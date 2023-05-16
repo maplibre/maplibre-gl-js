@@ -433,8 +433,7 @@ class HandlerManager {
         combinedEventsInProgress: EventsInProgress,
         deactivatedHandlers: {[handlerName: string]: Event}) {
         const map = this._map;
-        map._startCameraUpdate();
-        const tr = map.transform;
+        const tr = map._startCameraUpdate();
         const terrain = map.terrain;
 
         if (!hasChange(combinedResult) && !(terrain && this._terrainMovement)) {
@@ -483,7 +482,7 @@ class HandlerManager {
             }
         }
 
-        map._endCameraUpdate();
+        map._endCameraUpdate(tr);
 
         this._map._update();
         if (!combinedResult.noInertia) this._inertia.record(combinedResult);
