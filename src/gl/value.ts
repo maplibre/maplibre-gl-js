@@ -26,7 +26,7 @@ export interface IValue<T> {
 }
 
 class BaseValue<T> implements IValue<T> {
-    gl: WebGLRenderingContext;
+    gl: WebGL2RenderingContext;
     current: T;
     default: T;
     dirty: boolean;
@@ -417,19 +417,14 @@ export class BindElementBuffer extends BaseValue<WebGLBuffer> {
     }
 }
 
-export class BindVertexArrayOES extends BaseValue<any> {
-    vao: any;
-
-    constructor(context: Context) {
-        super(context);
-        this.vao = context.extVertexArrayObject;
-    }
-    getDefault(): any {
+export class BindVertexArray extends BaseValue<WebGLVertexArrayObject> {
+    getDefault(): WebGLVertexArrayObject | null {
         return null;
     }
-    set(v: any) {
-        if (!this.vao || v === this.current && !this.dirty) return;
-        this.vao.bindVertexArrayOES(v);
+    set(v: WebGLVertexArrayObject | null) {
+        if (v === this.current && !this.dirty) return;
+        const gl = this.gl;
+        gl.bindVertexArray(v);
         this.current = v;
         this.dirty = false;
     }

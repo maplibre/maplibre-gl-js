@@ -18,7 +18,7 @@ class Tent3D implements CustomLayerInterface {
         this.id = 'tent-3d';
     }
 
-    onAdd(map, gl: WebGLRenderingContext) {
+    onAdd(map: Map, gl: WebGL2RenderingContext) {
         const vertexSource = `
 
         attribute vec3 aPos;
@@ -88,7 +88,7 @@ class Tent3D implements CustomLayerInterface {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
     }
 
-    render(gl: WebGLRenderingContext, matrix) {
+    render(gl: WebGL2RenderingContext, matrix) {
         gl.useProgram(this.program);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
