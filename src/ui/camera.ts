@@ -127,6 +127,18 @@ export type AnimationOptions = {
     freezeElevation?: boolean;
 };
 
+export type CameraUpdateTransformFunction =  (next: {
+    center: LngLat;
+    zoom: number;
+    pitch: number;
+    bearing: number;
+}) => {
+    center?: LngLat;
+    zoom?: number;
+    pitch?: number;
+    bearing?: number;
+};
+
 abstract class Camera extends Evented {
     transform: Transform;
     terrain: Terrain;
@@ -161,7 +173,7 @@ abstract class Camera extends Evented {
 
     _transformSource?: Transform;
     _transformInProgress?: Transform;
-    _transformCameraUpdate: ((nextTransform: Transform, currentTransform: Transform) => Transform) | null;
+    _transformCameraUpdate: CameraUpdateTransformFunction | null;
 
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
@@ -747,6 +759,7 @@ abstract class Camera extends Evented {
     jumpTo(options: JumpToOptions, eventData?: any) {
         this.stop();
 
+        this._startCameraUpdate();
         const tr = this.transform;
         let zoomChanged = false,
             bearingChanged = false,
@@ -774,6 +787,7 @@ abstract class Camera extends Evented {
         if (options.padding != null && !tr.isPaddingEqual(options.padding)) {
             tr.padding = options.padding;
         }
+        this._endCameraUpdate();
 
         this.fire(new Event('movestart', eventData))
             .fire(new Event('move', eventData));
@@ -1021,8 +1035,18 @@ abstract class Camera extends Evented {
         if (!this._transformCameraUpdate) return;
 
         this.transform = this._transformSource;
-        const tr = this._transformCameraUpdate(this._transformInProgress.clone(), this._transformSource);
-        this._transformSource.copy(tr);
+        const nextTransform = this._transformInProgress.clone();
+        const {
+            center,
+            zoom,
+            pitch,
+            bearing
+        } = this._transformCameraUpdate(nextTransform);
+        if (center) nextTransform.center = center;
+        if (zoom !== undefined) nextTransform.zoom = zoom;
+        if (pitch !== undefined) nextTransform.pitch = pitch;
+        if (bearing !== undefined) nextTransform.bearing = bearing;
+        this._transformSource.copy(nextTransform);
     }
 
     _fireMoveEvents(eventData?: any) {
