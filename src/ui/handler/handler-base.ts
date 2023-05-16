@@ -2,11 +2,12 @@ import type Map from '../map';
 import type {PointLike} from '../camera';
 import type Transform from '../../geo/transform';
 import Point from '@mapbox/point-geometry';
+import LngLat from '../../geo/lng_lat';
 
 /**
  * Shared utilities for the Handler classes to access the correct camera state
  */
-export default class HandlerBase {
+class HandlerBase {
     _map: Map;
 
     constructor(map: Map) {
@@ -33,7 +34,9 @@ export default class HandlerBase {
         return this.transform.bearing;
     }
 
-    unproject(point: PointLike) {
+    unproject(point: PointLike): LngLat {
         return this.transform.pointLocation(Point.convert(point), this._map.terrain);
     }
 }
+
+export default HandlerBase;
