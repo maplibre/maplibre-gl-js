@@ -450,7 +450,7 @@ class Map extends Camera {
         this._locale = extend({}, defaultLocale, options.locale);
         this._clickTolerance = options.clickTolerance;
         this._pixelRatio = options.pixelRatio ?? devicePixelRatio;
-        this._transformCameraUpdate = options.transformCameraUpdate;
+        this.transformCameraUpdate = options.transformCameraUpdate;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
@@ -673,7 +673,7 @@ class Map extends Camera {
 
         this._resizeCanvas(width, height, this.getPixelRatio());
         this.transform.resize(width, height);
-        this._transformInProgress?.resize(width, height);
+        this._requestedCameraState?.resize(width, height);
         this.painter.resize(width, height, this.getPixelRatio());
 
         const fireMoving = !this._moving;
@@ -1530,20 +1530,6 @@ class Map extends Camera {
      */
     setTransformRequest(transformRequest: RequestTransformFunction) {
         this._requestManager.setTransformRequest(transformRequest);
-        return this;
-    }
-
-    /**
-     *  Updates the map's transform camera update with a new function
-     *
-     * @param transformCameraUpdate A callback run before the Map's camera is moved due to user input or animation. The callback can be used to modify the new center, zoom, pitch and bearing.
-     * Expected to return an object containing center, zoom, pitch or bearing values to overwrite.
-     *
-     * @returns {Map} `this`
-     *
-     */
-    setTransformCameraUpdate(transformCameraUpdate: CameraUpdateTransformFunction | null) {
-        this._transformCameraUpdate = transformCameraUpdate;
         return this;
     }
 

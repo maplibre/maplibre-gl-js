@@ -13,7 +13,7 @@ import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import {IControl} from './control/control';
 import EvaluationParameters from '../style/evaluation_parameters';
 import {fakeServer, FakeServer} from 'nise';
-import {CameraOptions, CameraUpdateTransformFunction} from './camera';
+import {CameraOptions} from './camera';
 import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
@@ -521,20 +521,6 @@ describe('Map', () => {
             const transformRequest = (() => {}) as any as RequestTransformFunction;
             map.setTransformRequest(transformRequest);
             map.setTransformRequest(transformRequest);
-        });
-    });
-
-    describe('#setTransformCameraUpdate', () => {
-        test('returns self', () => {
-            const transformCameraUpdate = (() => {
-                return {};
-            }) as CameraUpdateTransformFunction;
-            const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
-            expect(map.setTransformCameraUpdate(transformCameraUpdate)).toBe(map);
-            expect(map._transformCameraUpdate).toBe(transformCameraUpdate);
-
-            expect(map.setTransformCameraUpdate(null)).toBe(map);
-            expect(map._transformCameraUpdate).toBeNull();
         });
     });
 

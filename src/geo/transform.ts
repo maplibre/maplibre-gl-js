@@ -89,11 +89,11 @@ class Transform {
 
     clone(): Transform {
         const clone = new Transform(this._minZoom, this._maxZoom, this._minPitch, this.maxPitch, this._renderWorldCopies);
-        clone.copy(this);
+        clone.apply(this);
         return clone;
     }
 
-    copy(that: Transform) {
+    apply(that: Transform) {
         this.tileSize = that.tileSize;
         this.latRange = that.latRange;
         this.width = that.width;

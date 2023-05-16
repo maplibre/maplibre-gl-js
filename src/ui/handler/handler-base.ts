@@ -15,7 +15,7 @@ class HandlerBase {
     }
 
     get transform(): Transform {
-        return this._map._transformInProgress || this._map.transform;
+        return this._map._requestedCameraState || this._map.transform;
     }
 
     getCenter() {
