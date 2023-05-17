@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Add `transformCameraUpdate` callback to `Map` options
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
