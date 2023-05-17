@@ -73,7 +73,7 @@ jobs:
         if: success()
         with:
           name: build-dist
-          path: /dist/maplibre-gl.js
+          path: dist/maplibre-gl.js
       - run: npm run test-integration
         if: success() || failure()
 
