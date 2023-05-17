@@ -126,7 +126,7 @@ class Tile {
     registerFadeDuration(duration: number) {
         const fadeEndTime = duration + this.timeAdded;
 
-        if (fadeEndTime <= this.fadeEndTime) {
+        if (fadeEndTime < this.fadeEndTime) {
             return;
         }
 
