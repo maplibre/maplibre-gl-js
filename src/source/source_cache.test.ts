@@ -765,6 +765,8 @@ describe('SourceCache#update', () => {
         transform.zoom = 1;
 
         const sourceCache = createSourceCache({
+
+            // not setting fadeEndTime because class Tile default is 0, and need to be tested
             loadTile(tile, callback) {
                 tile.timeAdded = Date.now();
                 tile.state = 'loaded';
