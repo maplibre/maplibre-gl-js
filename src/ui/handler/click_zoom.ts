@@ -1,14 +1,15 @@
 import type Point from '@mapbox/point-geometry';
 import type Map from '../map';
-import HandlerBase from './handler-base';
+import TransformProvider from './transform-provider';
 
-export default class ClickZoomHandler extends HandlerBase {
+export default class ClickZoomHandler {
 
+    _tr: TransformProvider;
     _enabled: boolean;
     _active: boolean;
 
     constructor(map: Map) {
-        super(map);
+        this._tr = new TransformProvider(map);
         this.reset();
     }
 
@@ -22,8 +23,8 @@ export default class ClickZoomHandler extends HandlerBase {
             cameraAnimation: (map: Map) => {
                 map.easeTo({
                     duration: 300,
-                    zoom: this.getZoom() + (e.shiftKey ? -1 : 1),
-                    around: this.unproject(point)
+                    zoom: this._tr.zoom + (e.shiftKey ? -1 : 1),
+                    around: this._tr.unproject(point)
                 }, {originalEvent: e});
             }
         };

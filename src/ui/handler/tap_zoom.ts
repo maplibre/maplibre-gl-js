@@ -1,17 +1,17 @@
 import {TapRecognizer} from './tap_recognizer';
 import type Point from '@mapbox/point-geometry';
 import type Map from '../map';
-import HandlerBase from './handler-base';
+import TransformProvider from './transform-provider';
 
-export default class TapZoomHandler extends HandlerBase {
-
+export default class TapZoomHandler {
+    _tr: TransformProvider;
     _enabled: boolean;
     _active: boolean;
     _zoomIn: TapRecognizer;
     _zoomOut: TapRecognizer;
 
     constructor(map: Map) {
-        super(map);
+        this._tr = new TransformProvider(map);
         this._zoomIn = new TapRecognizer({
             numTouches: 1,
             numTaps: 2
@@ -44,6 +44,7 @@ export default class TapZoomHandler extends HandlerBase {
     touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
         const zoomInPoint = this._zoomIn.touchend(e, points, mapTouches);
         const zoomOutPoint = this._zoomOut.touchend(e, points, mapTouches);
+        const tr = this._tr;
 
         if (zoomInPoint) {
             this._active = true;
@@ -52,8 +53,8 @@ export default class TapZoomHandler extends HandlerBase {
             return {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
-                    zoom: this.getZoom() + 1,
-                    around: this.unproject(zoomInPoint)
+                    zoom: tr.zoom + 1,
+                    around: tr.unproject(zoomInPoint)
                 }, {originalEvent: e})
             };
         } else if (zoomOutPoint) {
@@ -63,8 +64,8 @@ export default class TapZoomHandler extends HandlerBase {
             return {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
-                    zoom: this.getZoom() - 1,
-                    around: this.unproject(zoomOutPoint)
+                    zoom: tr.zoom - 1,
+                    around: tr.unproject(zoomOutPoint)
                 }, {originalEvent: e})
             };
         }

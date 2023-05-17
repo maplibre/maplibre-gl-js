@@ -5,9 +5,11 @@ import Point from '@mapbox/point-geometry';
 import LngLat from '../../geo/lng_lat';
 
 /**
- * Shared utilities for the Handler classes to access the correct camera state
+ * Shared utilities for the Handler classes to access the correct camera state.
+ * If Camera.transformCameraUpdate is specified, the "desired state" of camera may differ from the state used for rendering.
+ * The handlers need the "desired state" to track accumulated changes.
  */
-class HandlerBase {
+class TransformProvider {
     _map: Map;
 
     constructor(map: Map) {
@@ -18,19 +20,19 @@ class HandlerBase {
         return this._map._requestedCameraState || this._map.transform;
     }
 
-    getCenter() {
+    get center() {
         return {lng: this.transform.center.lng, lat: this.transform.center.lat};
     }
 
-    getZoom() {
+    get zoom() {
         return this.transform.zoom;
     }
 
-    getPitch() {
+    get pitch() {
         return this.transform.pitch;
     }
 
-    getBearing() {
+    get bearing() {
         return this.transform.bearing;
     }
 
@@ -39,4 +41,4 @@ class HandlerBase {
     }
 }
 
-export default HandlerBase;
+export default TransformProvider;

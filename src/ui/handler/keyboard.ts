@@ -1,5 +1,5 @@
 import type Map from '../map';
-import HandlerBase from './handler-base';
+import TransformProvider from './transform-provider';
 
 const defaultOptions = {
     panStep: 100,
@@ -21,7 +21,8 @@ const defaultOptions = {
  * - `Shift+⇡`: Increase the pitch by 10 degrees.
  * - `Shift+⇣`: Decrease the pitch by 10 degrees.
  */
-class KeyboardHandler extends HandlerBase {
+class KeyboardHandler {
+    _tr: TransformProvider;
     _enabled: boolean;
     _active: boolean;
     _panStep: number;
@@ -33,7 +34,7 @@ class KeyboardHandler extends HandlerBase {
     * @private
     */
     constructor(map: Map) {
-        super(map);
+        this._tr = new TransformProvider(map);
         const stepOptions = defaultOptions;
         this._panStep = stepOptions.panStep;
         this._bearingStep = stepOptions.bearingStep;
@@ -115,17 +116,17 @@ class KeyboardHandler extends HandlerBase {
 
         return {
             cameraAnimation: (map: Map) => {
-                const zoom = this.getZoom();
+                const tr = this._tr;
                 map.easeTo({
                     duration: 300,
                     easeId: 'keyboardHandler',
                     easing: easeOut,
 
-                    zoom: zoomDir ? Math.round(zoom) + zoomDir * (e.shiftKey ? 2 : 1) : zoom,
-                    bearing: this.getBearing() + bearingDir * this._bearingStep,
-                    pitch: this.getPitch() + pitchDir * this._pitchStep,
+                    zoom: zoomDir ? Math.round(tr.zoom) + zoomDir * (e.shiftKey ? 2 : 1) : tr.zoom,
+                    bearing: tr.bearing + bearingDir * this._bearingStep,
+                    pitch: tr.pitch + pitchDir * this._pitchStep,
                     offset: [-xDir * this._panStep, -yDir * this._panStep],
-                    center: this.getCenter()
+                    center: tr.center
                 }, {originalEvent: e});
             }
         };
