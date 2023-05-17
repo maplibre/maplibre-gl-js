@@ -728,6 +728,26 @@ function getReportItem(test: TestData) {
 </div>`;
 }
 
+function applyDebugParameter(options: RenderOptions, page: Page) {
+    if (options.debug) {
+        page.on('console', message =>
+            console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`));
+
+        page.on('pageerror', ({message}) => console.error(message));
+
+        page.on('response', response =>
+            console.log(`${response.status()} ${response.url()}`));
+
+        page.on('requestfailed', request => {
+            if (request) {
+                console.error(`requestfailed, error text: ${request.failure()?.errorText}, url: ${request.url()}`);
+            } else {
+                console.error('Request failed and request object is ', request);
+            }
+        });
+    }
+}
+
 /**
  * Entry point to run the render test suite, compute differences to expected values (making exceptions based on
  * implementation vagaries), print results to standard output, write test artifacts to the
@@ -799,26 +819,7 @@ async function executeRenderTests() {
     let index = 0;
 
     const page = await browser.newPage();
-
-    if (options.debug) {
-        page
-            .on('console', message =>
-                console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`));
-
-        page.on('pageerror', ({message}) => console.error(message));
-
-        page.on('response', response =>
-            console.log(`${response.status()} ${response.url()}`));
-
-        page.on('requestfailed', request => {
-            if (request) {
-                console.error(`requestfailed, error text: ${request.failure()?.errorText}, url: ${request.url()}`);
-            } else {
-                console.error('Request failed and request object is ', request);
-            }
-        });
-    }
-
+    applyDebugParameter(options, page);
     await page.addScriptTag({path: 'dist/maplibre-gl.js'});
 
     for (const style of testStyles) {
