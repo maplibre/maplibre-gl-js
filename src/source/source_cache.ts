@@ -63,6 +63,7 @@ class SourceCache extends Evented {
     tileSize: number;
     _state: SourceFeatureState;
     _loadedParentTiles: {[_: string]: Tile};
+    _updated: boolean;
 
     static maxUnderzooming: number;
     static maxOverzooming: number;
@@ -108,6 +109,7 @@ class SourceCache extends Evented {
 
         this._coveredTiles = {};
         this._state = new SourceFeatureState();
+        this._updated = false;
     }
 
     onAdd(map: Map) {
@@ -134,6 +136,10 @@ class SourceCache extends Evented {
         if (this._sourceErrored) { return true; }
         if (!this._sourceLoaded) { return false; }
         if (!this._source.loaded()) { return false; }
+        if ((this.used !== undefined || this.usedForTerrain !== undefined) && !this.used && !this.usedForTerrain) { return true; }
+        // do not consider as loaded if the update hasn't been called yet (we do not know if we will have any tiles to fetch)
+        if (!this._updated) { return false; }
+
         for (const t in this._tiles) {
             const tile = this._tiles[t];
             if (tile.state !== 'loaded' && tile.state !== 'errored')
@@ -496,6 +502,7 @@ class SourceCache extends Evented {
         this.terrain = terrain;
         if (!this._sourceLoaded || this._paused) { return; }
 
+        this._updated = true;
         this.updateCacheSize(transform);
         this.handleWrapJump(this.transform.center.lng);
 

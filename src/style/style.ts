@@ -741,7 +741,7 @@ class Style extends Evented {
         const sourceCache = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
         sourceCache.style = this;
         sourceCache.setEventedParent(this, () => ({
-            isSourceLoaded: this.loaded(),
+            isSourceLoaded: sourceCache.loaded(),
             source: sourceCache.serialize(),
             sourceId: id
         }));
