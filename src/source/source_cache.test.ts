@@ -759,7 +759,7 @@ describe('SourceCache#update', () => {
         sourceCache.onAdd(undefined);
     });
 
-    test('does not retain children for fading when tile.fadeEndTime is 0', done => {
+    test('retain children for fading fadeEndTime is 0 (added but registerFadeDuration() is not called yet)', done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 1;
@@ -768,7 +768,6 @@ describe('SourceCache#update', () => {
             loadTile(tile, callback) {
                 tile.timeAdded = Date.now();
                 tile.state = 'loaded';
-                tile.fadeEndTime = 0;
                 callback();
             }
         });
@@ -782,7 +781,7 @@ describe('SourceCache#update', () => {
                 transform.zoom = 0;
                 sourceCache.update(transform);
 
-                expect(sourceCache.getRenderableIds()).toHaveLength(1);
+                expect(sourceCache.getRenderableIds()).toHaveLength(5);
                 done();
             }
         });
