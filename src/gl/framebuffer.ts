@@ -1,4 +1,4 @@
-import {ColorAttachment, DepthAttachment} from './value';
+import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value';
 
 import type Context from './context';
 
@@ -10,7 +10,7 @@ class Framebuffer {
     colorAttachment: ColorAttachment;
     depthAttachment: DepthAttachment;
 
-    constructor(context: Context, width: number, height: number, hasDepth: boolean) {
+    constructor(context: Context, width: number, height: number, hasDepth: boolean, hasStencil: boolean) {
         this.context = context;
         this.width = width;
         this.height = height;
@@ -19,7 +19,9 @@ class Framebuffer {
 
         this.colorAttachment = new ColorAttachment(context, fbo);
         if (hasDepth) {
-            this.depthAttachment = new DepthAttachment(context, fbo);
+            this.depthAttachment = hasStencil ? new DepthStencilAttachment(context, fbo) : new DepthAttachment(context, fbo);
+        } else if (hasStencil) {
+            throw new Error('Stencil cannot be setted without depth');
         }
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
             throw new Error('Framebuffer is not complete');

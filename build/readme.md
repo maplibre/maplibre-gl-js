@@ -35,7 +35,7 @@ This file is used by CI to make sure the bundle size is kept constant
 <hr>
 
 ### `npm run codegen`
-The `codegen` command runs the following three scripts, to update the corresponding code files based on the `v8.json` style source, and other data files. Contributers should run this command manually when the underlying style data is modified. The generated code files are then commited to the repo.
+The `codegen` command runs the following three scripts, to update the corresponding code files based on the `v8.json` style source, and other data files. Contributors should run this command manually when the underlying style data is modified. The generated code files are then committed to the repo.
 #### generate-struct-arrays.ts		
 Generates `data/array_types.ts`, which consists of:
  - `StructArrayLayout_*` subclasses, one for each underlying memory layout

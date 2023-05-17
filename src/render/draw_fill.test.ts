@@ -8,7 +8,7 @@ import type ZoomHistory from '../style/zoom_history';
 import type Map from '../ui/map';
 import Transform from '../geo/transform';
 import type EvaluationParameters from '../style/evaluation_parameters';
-import type {FillLayerSpecification} from '../style-spec/types.g';
+import type {FillLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import Style from '../style/style';
 import FillStyleLayer from '../style/style_layer/fill_style_layer';
 import drawFill from './draw_fill';

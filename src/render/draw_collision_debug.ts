@@ -49,7 +49,7 @@ function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: S
         const circleArray: Array<number> = bucket.collisionCircleArray;
         if (circleArray.length > 0) {
             // We need to know the projection matrix that was used for projecting collision circles to the screen.
-            // This might vary between buckets as the symbol placement is a continous process. This matrix is
+            // This might vary between buckets as the symbol placement is a continuous process. This matrix is
             // required for transforming points from previous screen space to the current one
             const invTransform = mat4.create();
             const transform = posMatrix;

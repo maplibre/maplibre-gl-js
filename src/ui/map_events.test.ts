@@ -1,12 +1,11 @@
 import simulate, {window} from '../../test/unit/lib/simulate_interaction';
 import StyleLayer from '../style/style_layer';
-import {createMap, setPerformance, setWebGlContext} from '../util/test/util';
+import {createMap, beforeMapTest} from '../util/test/util';
 import {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import {MapLayerEventType} from './events';
+import {MapLayerEventType, MapLibreEvent} from './events';
 
 beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
+    beforeMapTest();
 });
 
 describe('map events', () => {
@@ -154,6 +153,21 @@ describe('map events', () => {
 
         expect(spyA).toHaveBeenCalledTimes(1);
         expect(spyB).toHaveBeenCalledTimes(1);
+    });
+
+    test('Map#on calls an event listener with no type arguments, defaulting to \'unknown\' originalEvent type', () => {
+        const map = createMap();
+
+        const handler = {
+            onMove: function onMove(_event: MapLibreEvent) {}
+        };
+
+        jest.spyOn(handler, 'onMove');
+
+        map.on('move', (event) => handler.onMove(event));
+        map.jumpTo({center: {lng: 10, lat: 10}});
+
+        expect(handler.onMove).toHaveBeenCalledTimes(1);
     });
 
     test('Map#off removes a delegated event listener', () => {

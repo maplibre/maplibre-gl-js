@@ -1,12 +1,14 @@
 import {Event, Evented} from '../../util/evented';
 import DOM from '../../util/dom';
 import {extend, bindAll, warnOnce} from '../../util/util';
+import {checkGeolocationSupport} from '../../util/geolocation_support';
 import LngLat from '../../geo/lng_lat';
 import Marker from '../marker';
 
 import type Map from '../map';
 import type {FitBoundsOptions} from '../camera';
 import type {IControl} from './control';
+import LngLatBounds from '../../geo/lng_lat_bounds';
 
 type GeolocateOptions = {
     positionOptions?: PositionOptions;
@@ -29,28 +31,6 @@ const defaultOptions: GeolocateOptions = {
     showAccuracyCircle: true,
     showUserLocation: true
 };
-
-let supportsGeolocation;
-
-function checkGeolocationSupport(callback) {
-    if (supportsGeolocation !== undefined) {
-        callback(supportsGeolocation);
-
-    } else if (window.navigator.permissions !== undefined) {
-        // navigator.permissions has incomplete browser support
-        // http://caniuse.com/#feat=permissions-api
-        // Test for the case where a browser disables Geolocation because of an
-        // insecure origin
-        window.navigator.permissions.query({name: 'geolocation'}).then((p) => {
-            supportsGeolocation = p.state !== 'denied';
-            callback(supportsGeolocation);
-        });
-
-    } else {
-        supportsGeolocation = !!window.navigator.geolocation;
-        callback(supportsGeolocation);
-    }
-}
 
 let numberOfWatches = 0;
 let noTimeout = false;
@@ -277,8 +257,9 @@ class GeolocateControl extends Evented implements IControl {
         const radius = position.coords.accuracy;
         const bearing = this._map.getBearing();
         const options = extend({bearing}, this.options.fitBoundsOptions);
+        const newBounds = LngLatBounds.fromLngLat(center, radius);
 
-        this._map.fitBounds(center.toBounds(radius), options, {
+        this._map.fitBounds(newBounds, options, {
             geolocateSource: true // tag this camera change so it won't cause the control to change to background state
         });
     }
@@ -305,11 +286,12 @@ class GeolocateControl extends Evented implements IControl {
     }
 
     _updateCircleRadius() {
-        const y = this._map._container.clientHeight / 2;
-        const a = this._map.unproject([0, y]);
-        const b = this._map.unproject([1, y]);
-        const metersPerPixel = a.distanceTo(b);
-        const circleDiameter = Math.ceil(2.0 * this._accuracy / metersPerPixel);
+        const bounds = this._map.getBounds();
+        const southEastPoint = bounds.getSouthEast();
+        const northEastPoint = bounds.getNorthEast();
+        const mapHeightInMeters = southEastPoint.distanceTo(northEastPoint);
+        const mapHeightInPixels = this._map._container.clientHeight;
+        const circleDiameter = Math.ceil(2 * (this._accuracy / (mapHeightInMeters / mapHeightInPixels)));
         this._circleElement.style.width = `${circleDiameter}px`;
         this._circleElement.style.height = `${circleDiameter}px`;
     }
@@ -369,6 +351,12 @@ class GeolocateControl extends Evented implements IControl {
     }
 
     _setupUI(supported: boolean) {
+        // this method is called asynchronously during onAdd
+        // the control could have been removed before reaching here
+        if (!this._map) {
+            return;
+        }
+
         this._container.addEventListener('contextmenu', (e: MouseEvent) => e.preventDefault());
         this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate', this._container);
         DOM.create('span', 'maplibregl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');

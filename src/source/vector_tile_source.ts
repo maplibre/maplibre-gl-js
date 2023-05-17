@@ -3,8 +3,7 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend, pick} from '../util/util';
 import loadTileJSON from './load_tilejson';
 import TileBounds from './tile_bounds';
-import {ResourceType} from '../util/ajax';
-import {cacheEntryPossiblyAdded} from '../util/tile_request_cache';
+import {ResourceType} from '../util/request_manager';
 
 import type {Source} from './source';
 import type {OverscaledTileID} from './tile_id';
@@ -13,11 +12,11 @@ import type Dispatcher from '../util/dispatcher';
 import type Tile from './tile';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
-import type {VectorSourceSpecification, PromoteIdSpecification} from '../style-spec/types.g';
+import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * A source containing vector tiles in [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
- * (See the [Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/) for detailed documentation of options.)
+ * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
  *
  * @example
  * map.addSource('some id', {
@@ -217,8 +216,6 @@ class VectorTileSource extends Evented implements Source {
 
             if (this.map._refreshExpiredTiles && data) tile.setExpiryData(data);
             tile.loadVectorData(data, this.map.painter);
-
-            cacheEntryPossiblyAdded(this.dispatcher);
 
             callback(null);
 

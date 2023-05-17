@@ -1,6 +1,7 @@
 import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import {getImage, ResourceType} from '../util/ajax';
+import ImageRequest from '../util/image_request';
+import {ResourceType} from '../util/request_manager';
 import EXTENT from '../data/extent';
 import {RasterBoundsArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
@@ -18,14 +19,14 @@ import type VertexBuffer from '../gl/vertex_buffer';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
-} from '../style-spec/types.g';
+} from '@maplibre/maplibre-gl-style-spec';
 import {Cancelable} from '../types/cancelable';
 
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 
 /**
  * A data source containing an image.
- * (See the [Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources-image) for detailed documentation of options.)
+ * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-image) for detailed documentation of options.)
  *
  * @example
  * // add to map
@@ -111,7 +112,7 @@ class ImageSource extends Evented implements Source {
 
         this.url = this.options.url;
 
-        this._request = getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), (err, image) => {
+        this._request = ImageRequest.getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), (err, image) => {
             this._request = null;
             this._loaded = true;
 
@@ -141,9 +142,9 @@ class ImageSource extends Evented implements Source {
      * @param {Object} options Options object.
      * @param {string} [options.url] Required image URL.
      * @param {Array<Array<number>>} [options.coordinates] Four geographical coordinates,
-     *   represented as arrays of longitude and latitude numbers, which define the corners of the image.
-     *   The coordinates start at the top left corner of the image and proceed in clockwise order.
-     *   They do not have to represent a rectangle.
+     * represented as arrays of longitude and latitude numbers, which define the corners of the image.
+     * The coordinates start at the top left corner of the image and proceed in clockwise order.
+     * They do not have to represent a rectangle.
      * @returns {ImageSource} this
      */
     updateImage(options: {
@@ -187,9 +188,9 @@ class ImageSource extends Evented implements Source {
      * Sets the image's coordinates and re-renders the map.
      *
      * @param {Array<Array<number>>} coordinates Four geographical coordinates,
-     *   represented as arrays of longitude and latitude numbers, which define the corners of the image.
-     *   The coordinates start at the top left corner of the image and proceed in clockwise order.
-     *   They do not have to represent a rectangle.
+     * represented as arrays of longitude and latitude numbers, which define the corners of the image.
+     * The coordinates start at the top left corner of the image and proceed in clockwise order.
+     * They do not have to represent a rectangle.
      * @returns {ImageSource} this
      */
     setCoordinates(coordinates: Coordinates) {
@@ -261,7 +262,7 @@ class ImageSource extends Evented implements Source {
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
-        // We have a single tile -- whoose coordinates are this.tileID -- that
+        // We have a single tile -- whose coordinates are this.tileID -- that
         // covers the image we want to render.  If that's the one being
         // requested, set it up with the image; otherwise, mark the tile as
         // `errored` to indicate that we have no data for it.

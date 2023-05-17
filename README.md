@@ -8,9 +8,6 @@ It originated as an open-source fork of [mapbox-gl-js](https://github.com/mapbox
 
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg?style=flat)](LICENSE.txt)[![Version](https://img.shields.io/npm/v/maplibre-gl?style=flat)](https://www.npmjs.com/package/maplibre-gl)[![CI](https://github.com/maplibre/maplibre-gl-js/actions/workflows/ci.yml/badge.svg)](https://github.com/maplibre/maplibre-gl-js/actions/workflows/ci.yml)[![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://opensource.org/licenses/BSD-3-Clause)
 
-**Call for Bounties💰** If you have ideas for new features in MapLibre, you can now nominate them for the MapLibre Bounty Program at https://maplibre.org/news/2022-10-16-call-for-bounties/
-<br />
-
 ## Getting Started
 
 Include the JavaScript and CSS files in the `<head>` of your HTML file.
@@ -46,9 +43,9 @@ Check out the features through [examples](https://maplibre.org/maplibre-gl-js-do
 
 | Showcases |      |
 | ---- | ---- |
-|![Display a map](https://maplibre.org/maplibre-gl-js-docs/assets/simple-map-800-22a3f5b6410f543ab214e14f68fb42ec.png)	|![Third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/assets/third-party-800-e047007bba338f6ec7d6cd47abfed279.png)	|
-|![Animate a series of images](https://maplibre.org/maplibre-gl-js-docs/assets/animate-images-800-497358611dbe047f300faeb9465aad5f.png)	|![Create a heatmap layer](https://maplibre.org/maplibre-gl-js-docs/assets/heatmap-layer-800-05c0f97ddb6b1a10e84b5064564e86ff.png)	|
-|![3D buildings](https://maplibre.org/maplibre-gl-js-docs/assets/3d-buildings-800-bd7885f07050dbbfee7a9bb800ff5ce8.png)	|![Visualize population density](https://maplibre.org/maplibre-gl-js-docs/assets/visualize-population-density-800-6c65712d9ea94eb6d2bd3348a82b9bdf.png)	|
+|![Display a map](https://maplibre.org/maplibre-gl-js-docs/assets/simple-map-800-1427cd84c8c693ead996f81b06e467bb.png)	|![Third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/assets/third-party-800-72a3092888152ba26920ec0ba5aeacd0.png)	|
+|![Animate a series of images](https://maplibre.org/maplibre-gl-js-docs/assets/animate-images-800-522ec4f83d7988b2d6f23a0c1d5eb924.png)	|![Create a heatmap layer](https://maplibre.org/maplibre-gl-js-docs/assets/heatmap-layer-800-a23e44d9c1238315f191187c5c628719.png)	|
+|![3D buildings](https://maplibre.org/maplibre-gl-js-docs/assets/3d-buildings-800-18cda57800c107d1dee5f269bf7a12f2.png)	|![Visualize population density](https://maplibre.org/maplibre-gl-js-docs/assets/visualize-population-density-800-dc0290780f7b2842031bdf1b9347981a.png)	|
 
 <br />
 
@@ -67,11 +64,11 @@ The overall migration happens by uninstalling `mapbox-gl` and installing `maplib
 
 #### Compatibility branch
 
-Maplibre v1 is completely backward compatible with Mapbox v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current verison is 1.15.3. 
+Maplibre v1 is completely backward compatible with Mapbox v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current version is 1.15.3. 
 
 #### CDN Links
 
-> MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more informations please see [MapLibre GL is on unpkg.com](./docs/README-unpkg.md#maplibre-gl-on-unpkgcom).
+> MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more information, please see [MapLibre GL is on unpkg.com](./documents_and_diagrams/README-unpkg.md#maplibre-gl-on-unpkgcom).
 
 ```diff
 -    <script src="https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.js"></script>
@@ -113,6 +110,14 @@ If you depend on a free software alternative to `mapbox-gl-js`, please consider 
 
 > **MapLibre GL** is developed following [Semantic Versioning (2.0.0)](https://semver.org/spec/v2.0.0.html).
 
+### Bounties
+
+We offer Bounties for some tasks in the MapLibre GL JS repo. Read more about the Bounties in our step-by-step guide:
+
+https://maplibre.org/roadmap/step-by-step-bounties-guide/
+
+And find all currently published Bounties in MapLibre GL JS [here](https://github.com/maplibre/maplibre-gl-js/issues?q=is%3Aissue+is%3Aopen+label%3A%22%F0%9F%92%B0+bounty+L%22%2C%22%F0%9F%92%B0+bounty+S%22%2C%22%F0%9F%92%B0+bounty+M%22%2C%22%F0%9F%92%B0+bounty+XL%22%2C%22%F0%9F%92%B0+bounty+XXL%22+).
+
 <br />
 
 ## Sponsors
@@ -123,16 +128,16 @@ Read more about the MapLibre Sponsorship Program at [https://maplibre.org/sponso
 
 Platinum:
 
-<img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/>
-
+<a href="https://aws.com"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
 
 Silver:
 
-<img src="https://maplibre.org/img/meta-logo.svg" alt="Logo Meta" width="50%"/>
+<a href="https://meta.com"><img src="https://maplibre.org/img/meta-logo.svg" alt="Logo Meta" width="25%"/></a>
 
-Stone:
+<a href="https://www.mierune.co.jp/?lang=en"><img src="https://maplibre.org/img/mierune-logo.svg" alt="Logo MIERUNE" width="25%"/></a>
 
-[MIERUNE Inc.](https://www.mierune.co.jp/?lang=en)
+<a href="https://komoot.com/"><img src="https://maplibre.org/img/komoot-logo.svg" alt="Logo komoot" width="25%"/></a>
+
 
 Backers and Supporters:
 

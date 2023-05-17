@@ -18,7 +18,7 @@ jobs:
           ref: main
 
       - name: Use Node.js 18 x64
-        uses: actions/setup-node@v3.5.1
+        uses: actions/setup-node@v3.6.0
         with:
           node-version: 18
           architecture: x64
@@ -26,7 +26,7 @@ jobs:
 
       - name: Get version
         id: package-version
-        uses: martinbeentjes/npm-get-version-action@v1.2.3
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
 
       - name: Check tag does not exist yet
         run: if git rev-list v${{ steps.package-version.outputs.current-version }}; then echo "Tag already exists. Aborting the release process."; exit 1; fi
@@ -55,14 +55,6 @@ jobs:
           npm run build-css
           npm run build-benchmarks
           npm run generate-typings
-
-      - name: Empty postinstall.js
-        run: |
-          echo "// empty in published package" > postinstall.js
-
-      - name: Write dist/package.json
-        run: |
-          echo "{ \"type\": \"commonjs\", \"name\": \"maplibre-gl\" }" > dist/package.json
 
       - name: Create Archive
         run: |
@@ -95,7 +87,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: dist.zip
+          files: ${{ steps.pack.outputs.filename }}
           repository: ${{ steps.create_regular_release.outputs.upload_url }}
 
       - name: Create GitHub Release (prerelease)

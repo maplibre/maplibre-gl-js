@@ -1,5 +1,5 @@
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {createMap as globalCreateMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
+import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
 import NavigationControl from './navigation_control';
 
 function createMap() {
@@ -9,9 +9,7 @@ function createMap() {
 let map;
 
 beforeEach(() => {
-    setWebGlContext();
-    setPerformance();
-    setMatchMedia();
+    beforeMapTest();
     map = createMap();
 });
 

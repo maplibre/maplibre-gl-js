@@ -1,5 +1,4 @@
 import LngLat from './lng_lat';
-
 import type {LngLatLike} from './lng_lat';
 
 /**
@@ -23,16 +22,32 @@ class LngLatBounds {
     _ne: LngLat;
     _sw: LngLat;
 
-    // This constructor is too flexible to type. It should not be so flexible.
-    constructor(sw?: any, ne?: any) {
+    /**
+     * @param {LngLatLike} [sw] The southwest corner of the bounding box.
+     * OR array of 4 numbers in the order of  west, south, east, north
+     * OR array of 2 LngLatLike: [sw,ne]
+     * @param {LngLatLike} [ne] The northeast corner of the bounding box.
+     * @example
+     * var sw = new maplibregl.LngLat(-73.9876, 40.7661);
+     * var ne = new maplibregl.LngLat(-73.9397, 40.8002);
+     * var llb = new maplibregl.LngLatBounds(sw, ne);
+     * OR
+     * var llb = new maplibregl.LngLatBounds([-73.9876, 40.7661, -73.9397, 40.8002]);
+     * OR
+     * var llb = new maplibregl.LngLatBounds([sw, ne]);
+     */
+    constructor(sw?: LngLatLike | [number, number, number, number] | [LngLatLike, LngLatLike], ne?: LngLatLike) {
         if (!sw) {
             // noop
         } else if (ne) {
-            this.setSouthWest(sw).setNorthEast(ne);
-        } else if (sw.length === 4) {
-            this.setSouthWest([sw[0], sw[1]]).setNorthEast([sw[2], sw[3]]);
-        } else {
-            this.setSouthWest(sw[0]).setNorthEast(sw[1]);
+            this.setSouthWest(<LngLatLike>sw).setNorthEast(ne);
+        } else if (Array.isArray(sw)) {
+            if (sw.length === 4) {
+            // 4 element array: west, south, east, north
+                this.setSouthWest([sw[0], sw[1]]).setNorthEast([sw[2], sw[3]]);
+            } else {
+                this.setSouthWest(sw[0] as LngLatLike).setNorthEast(sw[1] as LngLatLike);
+            }
         }
     }
 
@@ -88,7 +103,11 @@ class LngLatBounds {
                     const lngLatObj = (obj as any as LngLatLike);
                     return this.extend(LngLat.convert(lngLatObj));
                 }
+
+            } else if (obj && ('lng' in obj || 'lon' in obj) && 'lat' in obj) {
+                return this.extend(LngLat.convert(obj));
             }
+
             return this;
         }
 
@@ -178,7 +197,7 @@ class LngLatBounds {
      * Returns the bounding box represented as an array.
      *
      * @returns {Array<Array<number>>} The bounding box represented as an array, consisting of the
-     *   southwest and northeast coordinates of the bounding represented as arrays of numbers.
+     * southwest and northeast coordinates of the bounding represented as arrays of numbers.
      * @example
      * var llb = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
      * llb.toArray(); // = [[-73.9876, 40.7661], [-73.9397, 40.8002]]
@@ -191,7 +210,7 @@ class LngLatBounds {
      * Return the bounding box represented as a string.
      *
      * @returns {string} The bounding box represents as a string of the format
-     *   `'LngLatBounds(LngLat(lng, lat), LngLat(lng, lat))'`.
+     * `'LngLatBounds(LngLat(lng, lat), LngLat(lng, lat))'`.
      * @example
      * var llb = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
      * llb.toString(); // = "LngLatBounds(LngLat(-73.9876, 40.7661), LngLat(-73.9397, 40.8002))"
@@ -254,6 +273,25 @@ class LngLatBounds {
         if (input instanceof LngLatBounds) return input;
         if (!input) return input as null;
         return new LngLatBounds(input);
+    }
+
+    /**
+     * Returns a `LngLatBounds` from the coordinates extended by a given `radius`. The returned `LngLatBounds` completely contains the `radius`.
+     *
+     * @param center center coordinates of the new bounds.
+     * @param {number} [radius=0] Distance in meters from the coordinates to extend the bounds.
+     * @returns {LngLatBounds} A new `LngLatBounds` object representing the coordinates extended by the `radius`.
+     * @example
+     * var center = new maplibregl.LngLat(-73.9749, 40.7736);
+     * maplibregl.LngLatBounds.fromLngLat(100).toArray(); // = [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]
+     */
+    static fromLngLat(center: LngLat, radius:number = 0): LngLatBounds {
+        const earthCircumferenceInMetersAtEquator = 40075017;
+        const latAccuracy = 360 * radius / earthCircumferenceInMetersAtEquator,
+            lngAccuracy = latAccuracy / Math.cos((Math.PI / 180) * center.lat);
+
+        return new LngLatBounds(new LngLat(center.lng - lngAccuracy, center.lat - latAccuracy),
+            new LngLat(center.lng + lngAccuracy, center.lat + latAccuracy));
     }
 }
 

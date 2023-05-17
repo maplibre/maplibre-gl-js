@@ -1,4 +1,3 @@
-import {supported} from '@mapbox/mapbox-gl-supported';
 import packageJSON from '../package.json' assert {type: 'json'};
 import Map from './ui/map';
 import NavigationControl from './ui/control/navigation_control';
@@ -22,7 +21,6 @@ import {isSafari} from './util/util';
 import {setRTLTextPlugin, getRTLTextPluginStatus} from './source/rtl_text_plugin';
 import WorkerPool from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
-import {clearTileCache} from './util/tile_request_cache';
 import {PerformanceUtils} from './util/performance';
 import {AJAXError} from './util/ajax';
 import type {RequestParameters, ResponseCallback} from './util/ajax';
@@ -37,8 +35,9 @@ import VideoSource from './source/video_source';
 
 const version = packageJSON.version;
 
+export type * from '@maplibre/maplibre-gl-style-spec';
+
 const exported = {
-    supported,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     Map,
@@ -110,7 +109,7 @@ const exported = {
 
     /**
      * Gets and sets the number of web workers instantiated on a page with GL JS maps.
-     * By default, it is set to half the number of CPU cores (capped at 6).
+     * By default, workerCount is 1 except for Safari browser where it is set to half the number of CPU cores (capped at 3).
      * Make sure to set this property before creating any map instances for it to have effect.
      *
      * @var {string} workerCount
@@ -143,28 +142,13 @@ const exported = {
         config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests;
     },
 
-    /**
-     * Clears browser storage used by this library. Using this method flushes the MapLibre tile
-     * cache that is managed by this library. Tiles may still be cached by the browser
-     * in some cases.
-     *
-     * This API is supported on browsers where the [`Cache` API](https://developer.mozilla.org/en-US/docs/Web/API/Cache)
-     * is supported and enabled. This includes all major browsers when pages are served over
-     * `https://`, except Internet Explorer and Edge Mobile.
-     *
-     * When called in unsupported browsers or environments (private or incognito mode), the
-     * callback will be called with an error argument.
-     *
-     * @function clearStorage
-     * @param {Function} callback Called with an error argument if there is an error.
-     * @example
-     * maplibregl.clearStorage();
-     */
-    clearStorage(callback?: (err?: Error | null) => void) {
-        clearTileCache(callback);
+    get workerUrl(): string {
+        return config.WORKER_URL;
     },
 
-    workerUrl: '',
+    set workerUrl(value: string) {
+        config.WORKER_URL = value;
+    },
 
     /**
      * Sets a custom load tile function that will be called when using a source that starts with a custom url schema.
@@ -176,8 +160,8 @@ const exported = {
      * @param {string} customProtocol - the protocol to hook, for example 'custom'
      * @param {Function} loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
-     * // this will fetch a file using the fetch API (this is obviously a non iteresting example...)
-     * maplibre.addProtocol('custom', (params, callback) => {
+     * // this will fetch a file using the fetch API (this is obviously a non interesting example...)
+     * maplibregl.addProtocol('custom', (params, callback) => {
             fetch(`https://${params.url.split("://")[1]}`)
                 .then(t => {
                     if (t.status == 200) {
@@ -194,7 +178,7 @@ const exported = {
             return { cancel: () => { } };
         });
      * // the following is an example of a way to return an error when trying to load a tile
-     * maplibre.addProtocol('custom2', (params, callback) => {
+     * maplibregl.addProtocol('custom2', (params, callback) => {
      *      callback(new Error('someErrorMessage'));
      *      return { cancel: () => { } };
      * });
@@ -204,7 +188,7 @@ const exported = {
     },
 
     /**
-     * Removes a previusly added protocol
+     * Removes a previously added protocol
      *
      * @function removeProtocol
      * @param {string} customProtocol - the custom protocol to remove registration for
@@ -225,8 +209,8 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
  * @function supported
  * @param {Object} [options]
  * @param {boolean} [options.failIfMajorPerformanceCaveat=false] If `true`,
- *   the function will return `false` if the performance of MapLibre GL JS would
- *   be dramatically worse than expected (e.g. a software WebGL renderer would be used).
+ * the function will return `false` if the performance of MapLibre GL JS would
+ * be dramatically worse than expected (e.g. a software WebGL renderer would be used).
  * @return {boolean}
  * @example
  * // Show an alert if the browser does not support MapLibre GL
@@ -244,7 +228,7 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
  * @param {string} pluginURL URL pointing to the Mapbox RTL text plugin source.
  * @param {Function} callback Called with an error argument if there is an error.
  * @param {boolean} lazy If set to `true`, mapboxgl will defer loading the plugin until rtl text is encountered,
- *    rtl text will then be rendered only after the plugin finishes loading.
+ * rtl text will then be rendered only after the plugin finishes loading.
  * @example
  * maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js');
  * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js-docs/example/mapbox-gl-rtl-text/)

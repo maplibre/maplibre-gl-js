@@ -1,4 +1,5 @@
-import {getImage, ResourceType} from '../util/ajax';
+import ImageRequest from '../util/image_request';
+import {ResourceType} from '../util/request_manager';
 import {extend, isImageBitmap} from '../util/util';
 import {Evented} from '../util/evented';
 import browser from '../util/browser';
@@ -12,7 +13,7 @@ import type {Source} from './source';
 import type Dispatcher from '../util/dispatcher';
 import type Tile from './tile';
 import type {Callback} from '../types/callback';
-import type {RasterDEMSourceSpecification} from '../style-spec/types.g';
+import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 class RasterDEMTileSource extends RasterTileSource implements Source {
     encoding: 'mapbox' | 'terrarium';
@@ -38,7 +39,7 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        tile.request = getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), imageLoaded.bind(this));
+        tile.request = ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), imageLoaded.bind(this), this.map._refreshExpiredTiles);
 
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
         function imageLoaded(err, img) {

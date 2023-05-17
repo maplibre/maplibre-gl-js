@@ -1,4 +1,4 @@
-import Color from '../style-spec/util/color';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 import type Context from './context';
 import type {
@@ -26,7 +26,7 @@ export interface IValue<T> {
 }
 
 class BaseValue<T> implements IValue<T> {
-    gl: WebGLRenderingContext;
+    gl: WebGL2RenderingContext;
     current: T;
     default: T;
     dirty: boolean;
@@ -417,19 +417,14 @@ export class BindElementBuffer extends BaseValue<WebGLBuffer> {
     }
 }
 
-export class BindVertexArrayOES extends BaseValue<any> {
-    vao: any;
-
-    constructor(context: Context) {
-        super(context);
-        this.vao = context.extVertexArrayObject;
-    }
-    getDefault(): any {
+export class BindVertexArray extends BaseValue<WebGLVertexArrayObject> {
+    getDefault(): WebGLVertexArrayObject | null {
         return null;
     }
-    set(v: any) {
-        if (!this.vao || v === this.current && !this.dirty) return;
-        this.vao.bindVertexArrayOES(v);
+    set(v: WebGLVertexArrayObject | null) {
+        if (v === this.current && !this.dirty) return;
+        const gl = this.gl;
+        gl.bindVertexArray(v);
         this.current = v;
         this.dirty = false;
     }
@@ -512,6 +507,19 @@ export class DepthAttachment extends FramebufferAttachment<WebGLRenderbuffer> {
         // point, but thus far MBGL only uses renderbuffers for depth
         const gl = this.gl;
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, v);
+        this.current = v;
+        this.dirty = false;
+    }
+}
+
+export class DepthStencilAttachment extends FramebufferAttachment<WebGLRenderbuffer> {
+    set(v?: WebGLRenderbuffer | null): void {
+        if (v === this.current && !this.dirty) return;
+        this.context.bindFramebuffer.set(this.parent);
+        // note: it's possible to attach a texture to the depth attachment
+        // point, but thus far MBGL only uses renderbuffers for depth
+        const gl = this.gl;
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, v);
         this.current = v;
         this.dirty = false;
     }

@@ -1,4 +1,4 @@
-import Color from '../style-spec/util/color';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 import type Context from '../gl/context';
 import {mat4, vec2, vec3, vec4} from 'gl-matrix';
@@ -11,7 +11,7 @@ export type UniformValues<Us extends {}> = $ObjMap<Us, <V>(u: Uniform<V>) => V>;
 export type UniformLocations = {[_: string]: WebGLUniformLocation};
 
 abstract class Uniform<T> {
-    gl: WebGLRenderingContext;
+    gl: WebGL2RenderingContext;
     location: WebGLUniformLocation;
     current: T;
 

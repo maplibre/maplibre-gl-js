@@ -1,0 +1,54 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 500,
+      "width": 500,
+      "timeout": 60000,
+      "operations" : [
+        ["sleep", 5000]
+      ]
+    }
+  },
+  "center": [11.037826538085028, 47.49076091764255],
+  "zoom": 11.55649951496926,
+  "pitch" : 60,
+  "sources": {
+    "terrainSource": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
+      "minzoom": 0,
+      "maxzoom": 12
+    },
+    "hillshadeSource": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
+      "minzoom": 0,
+      "maxzoom": 12
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "hills",
+      "type": "hillshade",
+      "source": "hillshadeSource",
+      "layout": { "visibility": "visible" },
+      "paint": {
+        "hillshade-shadow-color": "#473B24",
+        "hillshade-illumination-anchor": "map",
+        "hillshade-illumination-direction": 150
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrainSource",
+    "exaggeration": 1
+  }
+}

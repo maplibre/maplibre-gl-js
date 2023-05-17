@@ -6,7 +6,7 @@ import Point from '@mapbox/point-geometry';
 import segment from '../segment';
 import LineBucket from './line_bucket';
 import LineStyleLayer from '../../style/style_layer/line_style_layer';
-import {LayerSpecification} from '../../style-spec/types.g';
+import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import EvaluationParameters from '../../style/evaluation_parameters';
 import {BucketFeature, BucketParameters} from '../bucket';
 

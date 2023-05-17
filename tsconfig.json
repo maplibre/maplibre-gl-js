@@ -2,13 +2,13 @@
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
-    "checkJs": false,
+    "checkJs": true,
+    "isolatedModules": true,
+    "noEmit": true,
     "esModuleInterop": true,
     "importHelpers": false,
-    "isolatedModules": true,
-    //"importsNotUsedAsValues": "preserve",
     "jsx": "react",
-    "module": "esnext",
+    "module": "ESNext",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "skipLibCheck": false,
@@ -32,17 +32,14 @@
     "esm": true
   },
   "include": [
-    "rollup.config.**",
-    "src/**/*.ts",
-    "test/bench/**/*.ts",
-    "test/bench/**/*.tsx",
-    "build/**/*.ts"
+    "rollup.config.*",
+    "src/**/*",
+    "test/bench/**/*",
+    "build/**/*"
   ],
   "exclude": [
     "node_modules",
-    "lib",
     "dist",
     "test/bench/**/*generated*",
-    "src/**/*.test.ts"
   ]
 }

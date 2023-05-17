@@ -1,12 +1,12 @@
 import {extend, pick} from '../util/util';
 
-import {getImage, ResourceType} from '../util/ajax';
+import ImageRequest from '../util/image_request';
+
+import {ResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import loadTileJSON from './load_tilejson';
 import TileBounds from './tile_bounds';
 import Texture from '../render/texture';
-
-import {cacheEntryPossiblyAdded} from '../util/tile_request_cache';
 
 import type {Source} from './source';
 import type {OverscaledTileID} from './tile_id';
@@ -18,7 +18,7 @@ import type {Cancelable} from '../types/cancelable';
 import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
-} from '../style-spec/types.g';
+} from '@maplibre/maplibre-gl-style-spec';
 
 class RasterTileSource extends Evented implements Source {
     type: 'raster' | 'raster-dem';
@@ -105,7 +105,7 @@ class RasterTileSource extends Evented implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        tile.request = getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), (err, img, expiry) => {
+        tile.request = ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), (err, img, expiry) => {
             delete tile.request;
 
             if (tile.aborted) {
@@ -115,7 +115,7 @@ class RasterTileSource extends Evented implements Source {
                 tile.state = 'errored';
                 callback(err);
             } else if (img) {
-                if (this.map._refreshExpiredTiles) tile.setExpiryData(expiry);
+                if (this.map._refreshExpiredTiles && expiry) tile.setExpiryData(expiry);
 
                 const context = this.map.painter.context;
                 const gl = context.gl;
@@ -133,11 +133,9 @@ class RasterTileSource extends Evented implements Source {
 
                 tile.state = 'loaded';
 
-                cacheEntryPossiblyAdded(this.dispatcher);
-
                 callback(null);
             }
-        });
+        }, this.map._refreshExpiredTiles);
     }
 
     abortTile(tile: Tile, callback: Callback<void>) {

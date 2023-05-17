@@ -5,7 +5,6 @@ import VectorTileWorkerSource from './vector_tile_worker_source';
 import RasterDEMTileWorkerSource from './raster_dem_tile_worker_source';
 import GeoJSONWorkerSource from './geojson_worker_source';
 import {plugin as globalRTLTextPlugin} from './rtl_text_plugin';
-import {enforceCacheSizeLimit} from '../util/tile_request_cache';
 import {isWorker} from '../util/util';
 
 import type {
@@ -19,7 +18,7 @@ import type {
 
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
 import type {Callback} from '../types/callback';
-import type {LayerSpecification} from '../style-spec/types.g';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PluginState} from './rtl_text_plugin';
 
 /**
@@ -254,10 +253,6 @@ export default class Worker {
         }
 
         return this.demWorkerSources[mapId][source];
-    }
-
-    enforceCacheSizeLimit(mapId: string, limit: number) {
-        enforceCacheSizeLimit(limit);
     }
 }
 
