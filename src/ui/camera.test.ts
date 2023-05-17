@@ -2050,7 +2050,7 @@ describe('#transformCameraUpdate', () => {
         let callbackCount = 0;
         let eventCount = 0;
 
-        camera._transformCameraUpdate = () => {
+        camera.transformCameraUpdate = () => {
             callbackCount++;
             return {};
         };
@@ -2076,7 +2076,7 @@ describe('#transformCameraUpdate', () => {
         let callbackCount = 0;
         let eventCount = 0;
 
-        camera._transformCameraUpdate = () => {
+        camera.transformCameraUpdate = () => {
             callbackCount++;
             return {};
         };
@@ -2112,7 +2112,7 @@ describe('#transformCameraUpdate', () => {
         let callbackCount = 0;
         let eventCount = 0;
 
-        camera._transformCameraUpdate = () => {
+        camera.transformCameraUpdate = () => {
             callbackCount++;
             return {};
         };
@@ -2142,7 +2142,7 @@ describe('#transformCameraUpdate', () => {
     test('transformCameraUpdate overrides proposed camera settings', () => {
         const camera = createCamera();
 
-        camera._transformCameraUpdate = ({center, zoom}) => {
+        camera.transformCameraUpdate = ({center, zoom}) => {
             return {
                 center: LngLat.convert([center.lng, center.lat + 10]),
                 zoom: Math.round(zoom)
