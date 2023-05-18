@@ -94,7 +94,7 @@ jobs:
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run build-prod
-      - run: npm run test-render -- --report
+      - run: npm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
         if: success() || failure()
@@ -127,7 +127,7 @@ jobs:
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run build-prod
-      - run: npm run test-render -- --report
+      - run: npm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
         if: success() || failure()
