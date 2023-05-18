@@ -1,10 +1,14 @@
 ## main
 
 ### ✨ Features and improvements
+- Add `transformCameraUpdate` callback to `Map` options
 - Add `maplibre-gl.js` as an artifact of the GitHub Actions tests, and enable manual testing of PRs using the updated library ([#2541](https://github.com/maplibre/maplibre-gl-js/pull/2541))
+- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Revise previous fix ([#2445](https://github.com/maplibre/maplibre-gl-js/issues/2445)) for raster tiles being retained when raster-fade-duration is 0 ([#2501](https://github.com/maplibre/maplibre-gl-js/issues/2501))
 - Fix overlapping of 3D building parts when 3D Terrain is activated ([#2541](https://github.com/maplibre/maplibre-gl-js/pull/2541))
+- _...Add new stuff here..._
 
 ## 3.0.0-pre.7
 

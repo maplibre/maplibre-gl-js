@@ -71,14 +71,19 @@ $ npm run test-render circle-radius/literal
 Results at: ./test/integration/render-tests/index.html
 Done in 2.32s.
 ```
+### Detailed debug messages for render tests
+Render tests are executed in browser, and by default console messages are hidden. If need to see them, please pass <code>--debug</code> parameter:
+```
+$ npm run test-render raster-masking/overlapping-zoom -- --debug
+```
 
 ### Viewing render test results
 
-During a render test run, the test harness will use GL-JS to create an `actual.png` image from the given `style.json`, and will then use [pixelmatch](https://github.com/mapbox/pixelmatch) to compare that image to `expected.png`, generating a `diff.png` highlighting the mismatching pixels (if any) in red.
+During a render test run, the test harness will use puppeteer to drive real browser and create an `actual.png` image from the given `style.json`, and will then use [pixelmatch](https://github.com/mapbox/pixelmatch) to compare that image to `expected.png`, generating a `diff.png` highlighting the mismatching pixels (if any) in red.
 
-If you invoke the tests with the `--report` param...
+By default render tests generate reports in <code>./test/integration/render/</code> directory:
 ```
-$ npm run test-render -- --report
+$ npm run test-render
 ...
 1211 passed (99.8%)
 2 failed (0.2%)
@@ -90,9 +95,9 @@ Results logged to './test/integration/render/results.html'
 open ./test/integration/render/results.html
 ```
 
-Same parameter can be used to view results for a single test...
+If want to skip the report, please pass <code>--skip-report</code> parameter
 ```
-$ npm run test-render circle-radius/literal -- --report
+$ npm run test-render circle-radius/literal -- --skip-report
 ```
 
 ### Updating results of render test results

@@ -14,7 +14,7 @@ import Painter from '../render/painter';
 import Transform from '../geo/transform';
 import Hash from './hash';
 import HandlerManager from './handler_manager';
-import Camera, {CameraOptions} from './camera';
+import Camera, {CameraOptions, CameraUpdateTransformFunction} from './camera';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
@@ -102,6 +102,7 @@ export type MapOptions = {
     renderWorldCopies?: boolean;
     maxTileCacheSize?: number;
     transformRequest?: RequestTransformFunction;
+    transformCameraUpdate?: CameraUpdateTransformFunction;
     locale?: any;
     fadeDuration?: number;
     crossSourceCollisions?: boolean;
@@ -195,6 +196,7 @@ const defaultOptions = {
     maxTileCacheSize: null,
     localIdeographFontFamily: 'sans-serif',
     transformRequest: null,
+    transformCameraUpdate: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
     validateStyle: true
@@ -272,6 +274,8 @@ const defaultOptions = {
  * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js-docs/example/local-ideographs).)
  * @param {RequestTransformFunction} [options.transformRequest=null] A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
  * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
+ * @param {CameraUpdateTransformFunction} [options.transformCameraUpdate=null] A callback run before the Map's camera is moved due to user input or animation. The callback can be used to modify the new center, zoom, pitch and bearing.
+ * Expected to return an object containing center, zoom, pitch or bearing values to overwrite.
  * @param {boolean} [options.collectResourceTiming=false] If `true`, Resource Timing API information will be collected for requests made by GeoJSON and Vector Tile web workers (this information is normally inaccessible from the main Javascript thread). Information will be returned in a `resourceTiming` property of relevant `data` events.
  * @param {number} [options.fadeDuration=300] Controls the duration of the fade-in/fade-out animation for label collisions after initial map load, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
  * @param {boolean} [options.crossSourceCollisions=true] If `true`, symbols from multiple sources can collide with each other during collision detection. If `false`, collision detection is run separately for the symbols in each source.
@@ -446,6 +450,7 @@ class Map extends Camera {
         this._locale = extend({}, defaultLocale, options.locale);
         this._clickTolerance = options.clickTolerance;
         this._pixelRatio = options.pixelRatio ?? devicePixelRatio;
+        this.transformCameraUpdate = options.transformCameraUpdate;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
@@ -668,6 +673,7 @@ class Map extends Camera {
 
         this._resizeCanvas(width, height, this.getPixelRatio());
         this.transform.resize(width, height);
+        this._requestedCameraState?.resize(width, height);
         this.painter.resize(width, height, this.getPixelRatio());
 
         const fireMoving = !this._moving;

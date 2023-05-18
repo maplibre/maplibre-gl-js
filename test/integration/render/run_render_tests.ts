@@ -60,8 +60,9 @@ type TestData = {
 type RenderOptions = {
     tests: any[];
     recycleMap: boolean;
-    report: boolean;
+    skipreport: boolean;
     seed: string;
+    debug: boolean;
 }
 
 type StyleWithTestData = StyleSpecification & {
@@ -69,6 +70,13 @@ type StyleWithTestData = StyleSpecification & {
         test: TestData;
     };
 }
+
+type TestStats = {
+    total: number;
+    errored: TestData[];
+    failed: TestData[];
+    passed: TestData[];
+};
 
 // https://stackoverflow.com/a/1349426/229714
 function makeHash(): string {
@@ -664,13 +672,6 @@ function printProgress(test: TestData, total: number, index: number) {
     }
 }
 
-type TestStats = {
-    total: number;
-    errored: TestData[];
-    failed: TestData[];
-    passed: TestData[];
-};
-
 /**
  * Prints the summary at the end of the run
  *
@@ -694,114 +695,6 @@ function printStatistics(stats: TestStats): boolean {
 
     return (failedCount + erroredCount) === 0;
 }
-
-/**
- * Run the render test suite, compute differences to expected values (making exceptions based on
- * implementation vagaries), print results to standard output, write test artifacts to the
- * filesystem (optionally updating expected results), and exit the process with a success or
- * failure code.
- *
- * If all the tests are successful, this function exits the process with exit code 0. Otherwise
- * it exits with 1.
- */
-const options: RenderOptions = {
-    tests: [],
-    recycleMap: false,
-    report: false,
-    seed: makeHash()
-};
-
-if (process.argv.length > 2) {
-    options.tests = process.argv.slice(2).filter((value, index, self) => { return self.indexOf(value) === index; }) || [];
-    options.recycleMap = checkParameter(options, '--recycle-map');
-    options.report = checkParameter(options, '--report');
-    options.seed = checkValueParameter(options, options.seed, '--seed');
-}
-
-const server = http.createServer(
-    st({
-        path: 'test/integration/assets',
-        cors: true,
-    })
-);
-
-const mvtServer = http.createServer(
-    st({
-        path: 'node_modules/@mapbox/mvt-fixtures/real-world',
-        cors: true,
-    })
-);
-
-await new Promise<void>((resolve) => server.listen(2900, '0.0.0.0', resolve));
-await new Promise<void>((resolve) => mvtServer.listen(2901, '0.0.0.0', resolve));
-
-const directory = path.join(__dirname);
-let testStyles = getTestStyles(options, directory, (server.address() as any).port);
-
-if (process.env.SPLIT_COUNT === '2') {
-
-    const half = Math.ceil(testStyles.length / 2);
-    const firstHalf = testStyles.slice(0, half);
-    const secondHalf = testStyles.slice(half);
-
-    testStyles = [firstHalf, secondHalf][parseInt(process.env.CURRENT_SPLIT_INDEX!)];
-}
-
-if (process.env.SPLIT_COUNT === '3') {
-
-    const m = Math.ceil(testStyles.length / 3);
-    const n = Math.ceil(2 * testStyles.length / 3);
-
-    const first = testStyles.slice(0, m);
-    const second = testStyles.slice(m, n);
-    const third = testStyles.slice(n, testStyles.length);
-
-    testStyles = [first, second, third][parseInt(process.env.CURRENT_SPLIT_INDEX!)];
-}
-
-let index = 0;
-
-const page = await browser.newPage();
-page
-    .on('console', message =>
-        console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`))
-    .on('pageerror', ({message}) => console.log(message))
-    .on('response', response =>
-        console.log(`${response.status()} ${response.url()}`))
-    .on('requestfailed', request =>
-        console.log(`${request.failure().errorText} ${request.url()}`));
-
-await page.addScriptTag({path: 'dist/maplibre-gl.js'});
-
-for (const style of testStyles) {
-    try {
-        //@ts-ignore
-
-        const data = await getImageFromStyle(style, page);
-        compareRenderResults(directory, style.metadata.test, data);
-
-    } catch (ex) {
-        style.metadata.test.error = ex;
-    }
-    printProgress(style.metadata.test, testStyles.length, ++index);
-}
-
-page.close();
-
-const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
-const testStats: TestStats = {
-    total: tests.length,
-    errored: tests.filter(t => t.error),
-    failed: tests.filter(t => !t.error && !t.ok),
-    passed: tests.filter(t => !t.error && t.ok)
-};
-
-if (process.env.UPDATE) {
-    console.log(`Updated ${testStyles.length} tests.`);
-    process.exit(0);
-}
-
-const success = printStatistics(testStats);
 
 function getReportItem(test: TestData) {
     let status: 'errored' | 'failed';
@@ -835,46 +728,175 @@ function getReportItem(test: TestData) {
 </div>`;
 }
 
-if (options.report) {
-    const erroredItems = testStats.errored.map(t => getReportItem(t));
-    const failedItems = testStats.failed.map(t => getReportItem(t));
+function applyDebugParameter(options: RenderOptions, page: Page) {
+    if (options.debug) {
+        page.on('console', message =>
+            console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`));
 
-    // write HTML reports
-    let resultData: string;
-    if (erroredItems.length || failedItems.length) {
-        const resultItemTemplate = fs.readFileSync(path.join(__dirname, 'result_item_template.html')).toString();
-        resultData = resultItemTemplate
-            .replace('${failedItemsLength}', failedItems.length.toString())
-            .replace('${failedItems}', failedItems.join('\n'))
-            .replace('${erroredItemsLength}', erroredItems.length.toString())
-            .replace('${erroredItems}', erroredItems.join('\n'));
-    } else {
-        resultData = '<h1 style="color: green">All tests passed!</h1>';
-    }
+        page.on('pageerror', ({message}) => console.error(message));
 
-    const reportTemplate = fs.readFileSync(path.join(__dirname, 'report_template.html')).toString();
-    const resultsContent = reportTemplate.replace('${resultData}', resultData);
+        page.on('response', response =>
+            console.log(`${response.status()} ${response.url()}`));
 
-    const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : 'results.html');
-    fs.writeFileSync(p, resultsContent, 'utf8');
-    console.log(`\nFull html report is logged to '${p}'`);
-
-    // write text report of just the error/failed id
-    if (testStats.errored?.length > 0) {
-        const erroredItemIds = testStats.errored.map(t => t.id);
-        const caseIdFileName = path.join(__dirname, 'results-errored-caseIds.txt');
-        fs.writeFileSync(caseIdFileName, erroredItemIds.join('\n'), 'utf8');
-
-        console.log(`\n${testStats.errored?.length} errored test case IDs are logged to '${caseIdFileName}'`);
-    }
-
-    if (testStats.failed?.length > 0) {
-        const failedItemIds = testStats.failed.map(t => t.id);
-        const caseIdFileName = path.join(__dirname, 'results-failed-caseIds.txt');
-        fs.writeFileSync(caseIdFileName, failedItemIds.join('\n'), 'utf8');
-
-        console.log(`\n${testStats.failed?.length} failed test case IDs are logged to '${caseIdFileName}'`);
+        page.on('requestfailed', request => {
+            if (request) {
+                console.error(`requestfailed, error text: ${request.failure()?.errorText}, url: ${request.url()}`);
+            } else {
+                console.error('Request failed and request object is ', request);
+            }
+        });
     }
 }
 
-process.exit(success ? 0 : 1);
+/**
+ * Entry point to run the render test suite, compute differences to expected values (making exceptions based on
+ * implementation vagaries), print results to standard output, write test artifacts to the
+ * filesystem (optionally updating expected results), and exit the process with a success or
+ * failure code.
+ *
+ * If all the tests are successful, this function exits the process with exit code 0. Otherwise
+ * it exits with 1.
+ */
+async function executeRenderTests() {
+
+    const options: RenderOptions = {
+        tests: [],
+        recycleMap: false,
+        skipreport: false,
+        seed: makeHash(),
+        debug: false
+    };
+
+    if (process.argv.length > 2) {
+        options.tests = process.argv.slice(2).filter((value, index, self) => { return self.indexOf(value) === index; }) || [];
+        options.recycleMap = checkParameter(options, '--recycle-map');
+        options.skipreport = checkParameter(options, '--skip-report');
+        options.seed = checkValueParameter(options, options.seed, '--seed');
+        options.debug = checkParameter(options, '--debug');
+    }
+
+    const server = http.createServer(
+        st({
+            path: 'test/integration/assets',
+            cors: true,
+        })
+    );
+
+    const mvtServer = http.createServer(
+        st({
+            path: 'node_modules/@mapbox/mvt-fixtures/real-world',
+            cors: true,
+        })
+    );
+
+    await new Promise<void>((resolve) => server.listen(2900, '0.0.0.0', resolve));
+    await new Promise<void>((resolve) => mvtServer.listen(2901, '0.0.0.0', resolve));
+
+    const directory = path.join(__dirname);
+    let testStyles = getTestStyles(options, directory, (server.address() as any).port);
+
+    if (process.env.SPLIT_COUNT === '2') {
+
+        const half = Math.ceil(testStyles.length / 2);
+        const firstHalf = testStyles.slice(0, half);
+        const secondHalf = testStyles.slice(half);
+
+        testStyles = [firstHalf, secondHalf][parseInt(process.env.CURRENT_SPLIT_INDEX!)];
+    }
+
+    if (process.env.SPLIT_COUNT === '3') {
+
+        const m = Math.ceil(testStyles.length / 3);
+        const n = Math.ceil(2 * testStyles.length / 3);
+
+        const first = testStyles.slice(0, m);
+        const second = testStyles.slice(m, n);
+        const third = testStyles.slice(n, testStyles.length);
+
+        testStyles = [first, second, third][parseInt(process.env.CURRENT_SPLIT_INDEX!)];
+    }
+
+    let index = 0;
+
+    const page = await browser.newPage();
+    applyDebugParameter(options, page);
+    await page.addScriptTag({path: 'dist/maplibre-gl.js'});
+
+    for (const style of testStyles) {
+        try {
+            //@ts-ignore
+
+            const data = await getImageFromStyle(style, page);
+            compareRenderResults(directory, style.metadata.test, data);
+
+        } catch (ex) {
+            style.metadata.test.error = ex;
+        }
+        printProgress(style.metadata.test, testStyles.length, ++index);
+    }
+
+    page.close();
+
+    const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
+    const testStats: TestStats = {
+        total: tests.length,
+        errored: tests.filter(t => t.error),
+        failed: tests.filter(t => !t.error && !t.ok),
+        passed: tests.filter(t => !t.error && t.ok)
+    };
+
+    if (process.env.UPDATE) {
+        console.log(`Updated ${testStyles.length} tests.`);
+        process.exit(0);
+    }
+
+    const success = printStatistics(testStats);
+
+    if (!options.skipreport) {
+        const erroredItems = testStats.errored.map(t => getReportItem(t));
+        const failedItems = testStats.failed.map(t => getReportItem(t));
+
+        // write HTML reports
+        let resultData: string;
+        if (erroredItems.length || failedItems.length) {
+            const resultItemTemplate = fs.readFileSync(path.join(__dirname, 'result_item_template.html')).toString();
+            resultData = resultItemTemplate
+                .replace('${failedItemsLength}', failedItems.length.toString())
+                .replace('${failedItems}', failedItems.join('\n'))
+                .replace('${erroredItemsLength}', erroredItems.length.toString())
+                .replace('${erroredItems}', erroredItems.join('\n'));
+        } else {
+            resultData = '<h1 style="color: green">All tests passed!</h1>';
+        }
+
+        const reportTemplate = fs.readFileSync(path.join(__dirname, 'report_template.html')).toString();
+        const resultsContent = reportTemplate.replace('${resultData}', resultData);
+
+        const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : 'results.html');
+        fs.writeFileSync(p, resultsContent, 'utf8');
+        console.log(`\nFull html report is logged to '${p}'`);
+
+        // write text report of just the error/failed id
+        if (testStats.errored?.length > 0) {
+            const erroredItemIds = testStats.errored.map(t => t.id);
+            const caseIdFileName = path.join(__dirname, 'results-errored-caseIds.txt');
+            fs.writeFileSync(caseIdFileName, erroredItemIds.join('\n'), 'utf8');
+
+            console.log(`\n${testStats.errored?.length} errored test case IDs are logged to '${caseIdFileName}'`);
+        }
+
+        if (testStats.failed?.length > 0) {
+            const failedItemIds = testStats.failed.map(t => t.id);
+            const caseIdFileName = path.join(__dirname, 'results-failed-caseIds.txt');
+            fs.writeFileSync(caseIdFileName, failedItemIds.join('\n'), 'utf8');
+
+            console.log(`\n${testStats.failed?.length} failed test case IDs are logged to '${caseIdFileName}'`);
+        }
+    }
+
+    process.exit(success ? 0 : 1);
+}
+
+// start testing here
+executeRenderTests();
+
