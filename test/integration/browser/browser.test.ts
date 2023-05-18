@@ -48,6 +48,22 @@ describe('Browser tests', () => {
         });
     }, 40000);
 
+    test('No moveend before load', async () => {
+        const loadWasFirst = await page.evaluate(() => {
+            const map2 = new maplibregl.Map({
+                container: 'map', // container id
+                style: 'https://demotiles.maplibre.org/style.json', // style URL
+                center: [10, 10], // starting position [lng, lat]
+                zoom: 10 // starting zoom
+            });
+            return new Promise<boolean>((resolve, _reject) => {
+                map2.once('moveend', () => resolve(false));
+                map2.once('load', () => resolve(true));
+            });
+        });
+        expect(loadWasFirst).toBeTruthy();
+    }, 20000);
+
     test('Drag to the left', async () => {
 
         const canvas = await page.$('.maplibregl-canvas');
