@@ -1,10 +1,10 @@
 ## main
 
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Add `maplibre-gl.js` as an artifact of the GitHub Actions tests, and enable manual testing of PRs using the updated library ([#2541](https://github.com/maplibre/maplibre-gl-js/pull/2541))
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Fix overlapping of 3D building parts when 3D Terrain is activated ([#2541](https://github.com/maplibre/maplibre-gl-js/pull/2541))
 
 ## 3.0.0-pre.7
 
