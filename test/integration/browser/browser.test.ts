@@ -48,7 +48,7 @@ describe('Browser tests', () => {
         });
     }, 40000);
 
-    test('No moveend before load', async () => {
+    test('Load should fire before resize and moveend', async () => {
         const loadWasFirst = await page.evaluate(() => {
             const map2 = new maplibregl.Map({
                 container: 'map', // container id
@@ -56,12 +56,13 @@ describe('Browser tests', () => {
                 center: [10, 10], // starting position [lng, lat]
                 zoom: 10 // starting zoom
             });
-            return new Promise<boolean>((resolve, _reject) => {
-                map2.once('moveend', () => resolve(false));
-                map2.once('load', () => resolve(true));
+            return new Promise<string>((resolve, _reject) => {
+                map2.once('resize', () => resolve('resize'));
+                map2.once('moveend', () => resolve('moveend'));
+                map2.once('load', () => resolve('load'));
             });
         });
-        expect(loadWasFirst).toBeTruthy();
+        expect(loadWasFirst).toBe('load');
     }, 20000);
 
     test('Drag to the left', async () => {
