@@ -49,7 +49,7 @@ describe('Browser tests', () => {
     }, 40000);
 
     test('Load should fire before resize and moveend', async () => {
-        const loadWasFirst = await page.evaluate(() => {
+        const firstFiredEvent = await page.evaluate(() => {
             const map2 = new maplibregl.Map({
                 container: 'map', // container id
                 style: 'https://demotiles.maplibre.org/style.json', // style URL
@@ -62,7 +62,7 @@ describe('Browser tests', () => {
                 map2.once('load', () => resolve('load'));
             });
         });
-        expect(loadWasFirst).toBe('load');
+        expect(firstFiredEvent).toBe('load');
     }, 20000);
 
     test('Drag to the left', async () => {
