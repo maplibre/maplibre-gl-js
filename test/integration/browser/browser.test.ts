@@ -51,10 +51,10 @@ describe('Browser tests', () => {
     test('Load should fire before resize and moveend', async () => {
         const firstFiredEvent = await page.evaluate(() => {
             const map2 = new maplibregl.Map({
-                container: 'map', // container id
-                style: 'https://demotiles.maplibre.org/style.json', // style URL
-                center: [10, 10], // starting position [lng, lat]
-                zoom: 10 // starting zoom
+                container: 'map',
+                style: 'https://demotiles.maplibre.org/style.json',
+                center: [10, 10],
+                zoom: 10
             });
             return new Promise<string>((resolve, _reject) => {
                 map2.once('resize', () => resolve('resize'));
