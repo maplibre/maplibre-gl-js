@@ -252,12 +252,18 @@ class ImageSource extends Evented implements Source {
             this.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
 
+        let willLoad = false;
         for (const w in this.tiles) {
             const tile = this.tiles[w];
             if (tile.state !== 'loaded') {
                 tile.state = 'loaded';
                 tile.texture = this.texture;
+                willLoad = true;
             }
+        }
+
+        if (willLoad) {
+            this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
         }
     }
 
