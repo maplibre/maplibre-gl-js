@@ -493,7 +493,13 @@ class Map extends Camera {
 
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
+            let initialResizeEventCaptured = false;
             this._resizeObserver = new ResizeObserver((entries) => {
+                if (!initialResizeEventCaptured) {
+                    initialResizeEventCaptured = true;
+                    return;
+                }
+
                 if (this._trackResize) {
                     this.resize(entries)._update();
                 }

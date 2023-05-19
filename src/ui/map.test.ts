@@ -803,7 +803,7 @@ describe('Map', () => {
             expect(spyC).not.toHaveBeenCalled();
         });
 
-        test('do resize if trackResize is true (default)', () => {
+        test('do resize if trackResize is true (default)', async () => {
             let observerCallback: Function = null;
             global.ResizeObserver = jest.fn().mockImplementation((c) => ({
                 observe: () => { observerCallback = c; }
@@ -814,8 +814,16 @@ describe('Map', () => {
             const spyA = jest.spyOn(map, '_update');
             const spyB = jest.spyOn(map, 'resize');
 
-            observerCallback();
+            // The initial "observe" event fired by ResizeObserver should be captured/muted
+            // in the map constructor
 
+            observerCallback();
+            expect(spyA).not.toHaveBeenCalled();
+            expect(spyB).not.toHaveBeenCalled();
+
+            // Following "observe" events should fire a resize / _update
+
+            observerCallback();
             expect(spyA).toHaveBeenCalled();
             expect(spyB).toHaveBeenCalled();
         });

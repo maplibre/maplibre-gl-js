@@ -48,6 +48,23 @@ describe('Browser tests', () => {
         });
     }, 40000);
 
+    test('Load should fire before resize and moveend', async () => {
+        const firstFiredEvent = await page.evaluate(() => {
+            const map2 = new maplibregl.Map({
+                container: 'map',
+                style: 'https://demotiles.maplibre.org/style.json',
+                center: [10, 10],
+                zoom: 10
+            });
+            return new Promise<string>((resolve, _reject) => {
+                map2.once('resize', () => resolve('resize'));
+                map2.once('moveend', () => resolve('moveend'));
+                map2.once('load', () => resolve('load'));
+            });
+        });
+        expect(firstFiredEvent).toBe('load');
+    }, 20000);
+
     test('Drag to the left', async () => {
 
         const canvas = await page.$('.maplibregl-canvas');
