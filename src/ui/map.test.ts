@@ -814,12 +814,16 @@ describe('Map', () => {
             const spyA = jest.spyOn(map, '_update');
             const spyB = jest.spyOn(map, 'resize');
 
-            // Call twice, because the initial "observe" event fired by ResizeObserver
-            // is muted in the map constructor
+            // The initial "observe" event fired by ResizeObserver should be captured/muted
+            // in the map constructor
 
             observerCallback();
-            observerCallback();
+            expect(spyA).not.toHaveBeenCalled();
+            expect(spyB).not.toHaveBeenCalled();
 
+            // Following "observe" events should fire a resize / _update
+
+            observerCallback();
             expect(spyA).toHaveBeenCalled();
             expect(spyB).toHaveBeenCalled();
         });
