@@ -1529,6 +1529,10 @@ describe('source cache loaded', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
+                const tr = new Transform();
+                tr.resize(512, 512);
+                sourceCache.update(tr);
+
                 const coord = new OverscaledTileID(0, 0, 0, 0, 0);
                 sourceCache._addTile(coord);
 
@@ -1548,6 +1552,10 @@ describe('source cache loaded', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
+                const tr = new Transform();
+                tr.resize(512, 512);
+                sourceCache.update(tr);
+
                 const coord = new OverscaledTileID(0, 0, 0, 0, 0);
                 sourceCache._addTile(coord);
 

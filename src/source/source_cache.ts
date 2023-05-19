@@ -559,7 +559,7 @@ class SourceCache extends Evented {
         // if we won't have any tiles to fetch and content is already emitted
         // there will be no more data emissions, so we need to emit the event with isSourceLoaded = true
         if (noPendingDataEmissions) {
-            this.fire(new Event('data', {sourceDataType: 'visibility', dataType: 'source', sourceId: this.id}));
+            this.fire(new Event('data', {sourceDataType: 'idle', dataType: 'source', sourceId: this.id}));
         }
 
         // Retain is a list of tiles that we shouldn't delete, even if they are not

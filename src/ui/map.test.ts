@@ -532,7 +532,7 @@ describe('Map', () => {
 
             map.on('load', () => {
                 map.on('data', (e) => {
-                    if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                    if (e.dataType === 'source' && e.sourceDataType === 'idle') {
                         expect(map.isSourceLoaded('geojson')).toBe(true);
                         done();
                     }

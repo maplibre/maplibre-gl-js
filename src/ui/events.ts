@@ -13,7 +13,7 @@ export type MapLayerMouseEvent = MapMouseEvent & { features?: MapGeoJSONFeature[
 
 export type MapLayerTouchEvent = MapTouchEvent & { features?: MapGeoJSONFeature[] };
 
-export type MapSourceDataType = 'content' | 'metadata' | 'visibility';
+export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
 
 export type MapLayerEventType = {
     click: MapLayerMouseEvent;
