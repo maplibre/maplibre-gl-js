@@ -8,17 +8,15 @@
       "operations": [["sleep", 15000]]
     }
   },
-  "center": [35.27, 30.92],
+  "center": [35.2705, 30.9205],
   "zoom": 17,
-  "bearing": 0,
-  "pitch": 65,
+  "bearing": 330,
+  "pitch": 45,
   "terrain": {"source": "TerrainRGB", "exaggeration": 2},
   "sources": {
     "TerrainRGB": {
       "type": "raster-dem",
-      "tiles": [
-        "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
-      ],
+      "tiles": ["local://tiles/terrain/{z}-{x}-{y}.terrain.png"],
       "minzoom": 11,
       "maxzoom": 11
     },
