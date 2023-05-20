@@ -11,12 +11,21 @@ Within a leaf directory is a `style.json` file (e.g. [`circle-radius/literal/sty
 The expected output for a given test case is in `expected.png`, e.g. [`circle-radius/literal/expected.png`](./render/tests/circle-radius/literal/expected.png).
 There can be multiple files with the `expected` prefix since the output can vary slightly with each platform.
 
-Supporting files -- glyphs, sprites, and tiles -- live in their own respective subdirectories at the top level. The test
-harness sets up the environment such that requests for these resources are directed to the correct location.
+Supporting files -- glyphs, sprites, and tiles -- live in their own respective subdirectories of the [`test/integration/assets`](./assets) directory. The test
+harness sets up the environment such that requests for these resources are directed to the correct location. For example, images in the `assets/tiles` subdirectory can be referenced using `"local://tiles/{z}-{x}-{y}.satellite.png"` in the `style.json` file.
 
 The contents of vector tile fixtures can be read using the [`vt2geojson`](https://github.com/mapbox/vt2geojson) tool (see below).
 
-## Running tests
+## Running tests in GitHub
+All tests are run for every PR. If you're not sure yet if the tests are good, you may use a Draft PR to indicate that the work is still in progress.
+Each jos, or a group of tests, will create an atrifact of any of its tests fail. The artifacts are found at the bottom of the jobs summary
+
+<image width="80%" src="https://github.com/maplibre/maplibre-gl-js/assets/1304610/bc313a30-cdec-4de5-b6c9-90637ffbf79a"/>
+
+Download the appropriate artifact as a zip file, open it and view the `resutls.html` file it contains.
+The "Actual" image of a failed test can be saved and used as the new "Expected" image.
+
+## Running tests in the development environment
 
 To run the render tests:
 
@@ -172,7 +181,6 @@ So the server uses platform notifications to inform when the build has finished.
 ```
 DISABLE_BUILD_NOTIFICATIONS=true
 ```
-
 
 ## Writing new tests
 
