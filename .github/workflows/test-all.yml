@@ -79,13 +79,13 @@ jobs:
 
   render-tests-ubuntu:
     name: Render tests
-    env:
-      SPLIT_COUNT: 2
+# DEBUG #    env:
+# DEBUG #      SPLIT_COUNT: 2
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        split: [0, 1]
+# DEBUG #        split: [0, 1]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     steps:
