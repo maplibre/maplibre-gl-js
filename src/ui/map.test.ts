@@ -542,7 +542,7 @@ describe('Map', () => {
             });
         });
 
-        test('Map#isSourceLoaded (equilavent to event.isSourceLoaded)', done => {
+        test('Map#isSourceLoaded (equivalent to event.isSourceLoaded)', done => {
             const style = createStyle();
             const map = createMap({style});
 
