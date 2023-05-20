@@ -99,7 +99,7 @@ jobs:
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run build-prod
-      - run: npm run test-render terrain/fill-extrusion-multiple # DEBUG #
+      - run: npm run test-render --debug terrain/fill-extrusion-multiple # DEBUG #
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
         if: success() || failure()

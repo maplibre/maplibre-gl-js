@@ -2,7 +2,6 @@
   "version": 8,
   "metadata": {
     "test": {
-      "debug": true,
       "height": 500,
       "width": 500,
       "timeout": 60000,
