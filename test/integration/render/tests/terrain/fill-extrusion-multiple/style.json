@@ -2,11 +2,10 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "3D building on 3D terrain below sea level",
       "height": 500,
       "width": 500,
       "timeout": 60000,
-      "operations": [["sleep", 5000]]
+      "operations": [["sleep", 15000]]
     }
   },
   "center": [35.27, 30.92],
