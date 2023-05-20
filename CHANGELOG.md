@@ -39,7 +39,7 @@
 - Set fetchPriority for HTMLImageElement to help improve raster heavy scenarios ([#2459](https://github.com/maplibre/maplibre-gl-js/pull/2459))
 - Reduce rendering calls on initial load. No reason to try rendering before style is loaded. ([#2464](https://github.com/maplibre/maplibre-gl-js/pull/2464))
 - Lazy load default style properties on demand to improve loading performance and reduce memory usage. ([#2476](https://github.com/maplibre/maplibre-gl-js/pull/2476))
-- Use WebGL2 context when available ([#1891](https://github.com/maplibre/maplibre-gl-js/pull/1891)
+- WebGL2 support ([#1891](https://github.com/maplibre/maplibre-gl-js/pull/1891)
 
 
 ### 🐞 Bug fixes
