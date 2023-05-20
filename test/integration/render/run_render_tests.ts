@@ -680,11 +680,11 @@ function printProgress(test: TestData, total: number, index: number) {
  */
 function printStatistics(stats: TestStats): boolean {
 
-    function printStat(status: string, subsetStats: Stats[]) {
+    function printStat(status: string, subsetStats: TestData[]) {
         const statsCount = subsetStats.length
         if (statsCount > 0) {
             console.log(`${statusCount} ${status} (${(100 * statusCount / stats.total).toFixed(1)}%)`);
-            if(status != 'passed') {
+            if (status != 'passed') {
                 for(let i=0; i<subsetStats.length; i++){
                     printProgress(subsetStats[i], statsCount, i+1);
                 }
