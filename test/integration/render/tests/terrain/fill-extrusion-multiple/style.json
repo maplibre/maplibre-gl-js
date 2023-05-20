@@ -2,25 +2,26 @@
   "version": 8,
   "metadata": {
     "test": {
+      "description": "3D building on 3D terrain below sea level",
       "height": 500,
       "width": 500,
       "timeout": 60000,
       "operations": [["sleep", 5000]]
     }
   },
-  "center": [11.02, 47.49],
+  "center": [35.27, 30.92],
   "zoom": 17,
-  "bearing": -65,
+  "bearing": 0,
   "pitch": 65,
-  "terrain": {"source": "TerrainRGB", "exaggeration": 0.5},
+  "terrain": {"source": "TerrainRGB", "exaggeration": 2},
   "sources": {
     "TerrainRGB": {
       "type": "raster-dem",
       "tiles": [
-        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+        "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
       ],
-      "minzoom": 0,
-      "maxzoom": 12
+      "minzoom": 11,
+      "maxzoom": 11
     },
     "geojson": {
       "type": "geojson",
@@ -34,11 +35,11 @@
               "type": "Polygon",
               "coordinates": [
                 [
-                  [11.0197, 47.4897],
-                  [11.0197, 47.4903],
-                  [11.0203, 47.4903],
-                  [11.0203, 47.4897],
-                  [11.0197, 47.4897]
+                  [35.2702, 30.9202],
+                  [35.2702, 30.9208],
+                  [35.2708, 30.9208],
+                  [35.2708, 30.9202],
+                  [35.2702, 30.9202]
                 ]
               ]
             }
@@ -50,11 +51,11 @@
               "type": "Polygon",
               "coordinates": [
                 [
-                  [11.0196, 47.49],
-                  [11.02, 47.4904],
-                  [11.0204, 47.49],
-                  [11.02, 47.4896],
-                  [11.0196, 47.49]
+                  [35.2701, 30.9205],
+                  [35.2705, 30.9209],
+                  [35.2709, 30.9205],
+                  [35.2705, 30.9201],
+                  [35.2701, 30.9205]
                 ]
               ]
             }
@@ -77,7 +78,7 @@
       "paint": {
         "fill-extrusion-color": "red",
         "fill-extrusion-base": 0,
-        "fill-extrusion-height": 10
+        "fill-extrusion-height": 15
       }
     },
     {
@@ -87,8 +88,9 @@
       "filter": ["==", "which", "b"],
       "paint": {
         "fill-extrusion-color": "blue",
-        "fill-extrusion-base": 10,
-        "fill-extrusion-height": 20
+        "fill-extrusion-opacity": 1,
+        "fill-extrusion-base": 15,
+        "fill-extrusion-height": 40
       }
     }
   ]
