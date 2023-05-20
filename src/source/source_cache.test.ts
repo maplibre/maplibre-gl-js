@@ -10,6 +10,7 @@ import {extend} from '../util/util';
 import browser from '../util/browser';
 import Dispatcher from '../util/dispatcher';
 import {Callback} from '../types/callback';
+import TileBounds from './tile_bounds';
 
 class SourceMock extends Evented {
     id: string;
@@ -1564,6 +1565,132 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
+    });
+
+    test('SourceCache#loaded (unused)', done => {
+        const sourceCache = createSourceCache({
+            loadTile(tile) {
+                tile.state = 'errored';
+            }
+        }, false);
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                expect(sourceCache.loaded()).toBeTruthy();
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+
+    test('SourceCache#loaded (unusedForTerrain)', done => {
+        const sourceCache = createSourceCache({
+            loadTile(tile) {
+                tile.state = 'errored';
+            }
+        }, false);
+        sourceCache.usedForTerrain = false;
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                expect(sourceCache.loaded()).toBeTruthy();
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+
+    test('SourceCache#loaded (not loaded when no update)', done => {
+        const sourceCache = createSourceCache({
+            loadTile(tile) {
+                tile.state = 'errored';
+            }
+        });
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                expect(sourceCache.loaded()).toBeFalsy();
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+
+    test('SourceCache#loaded (on last tile load)', done => {
+        const sourceCache = createSourceCache({
+            hasTile(tileID: OverscaledTileID) {
+                return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
+            },
+            loadTile(tile, callback) {
+                tile.state = 'loading';
+                setTimeout(() => {
+                    tile.state = 'loaded';
+                    callback();
+                });
+            }
+        });
+
+        const tr = new Transform();
+        tr.zoom = 10;
+        tr.resize(512, 512);
+        const expectedTilesLoaded = 4;
+        let loaded = 0;
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                expect(sourceCache.loaded()).toBeFalsy();
+            } else if (e.tile !== undefined) {
+                loaded += 1;
+                if (sourceCache.loaded()) {
+                    expect(loaded).toBe(expectedTilesLoaded);
+                    done();
+                }
+            }
+        });
+
+        sourceCache.onAdd(undefined);
+        sourceCache.update(tr);
+    });
+
+    test('SourceCache#loaded (tiles outside bounds, idle)', done => {
+        const japan = new TileBounds([122.74, 19.33, 149.0, 45.67]);
+        const sourceCache = createSourceCache({
+            onAdd() {
+                if (this.sourceOptions.noLoad) return;
+                if (this.sourceOptions.error) {
+                    this.fire(new ErrorEvent(this.sourceOptions.error));
+                } else {
+                    this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
+                    this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
+                }
+            },
+            hasTile(tileID: OverscaledTileID) {
+                return japan.contains(tileID.canonical);
+            },
+            loadTile(tile, callback) {
+                tile.state = 'loading';
+                setTimeout(() => {
+                    tile.state = 'loaded';
+                    callback();
+                });
+            }
+        });
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType !== 'idle') {
+                expect(sourceCache.loaded()).toBeFalsy();
+            // 'idle' emission when source bounds are outside of viewport bounds
+            } else {
+                expect(sourceCache.loaded()).toBeTruthy();
+                done();
+            }
+        });
+
+        sourceCache.onAdd(undefined);
+        const tr = new Transform();
+        tr.zoom = 10;
+        tr.resize(512, 512);
+        sourceCache.update(tr);
     });
 });
 

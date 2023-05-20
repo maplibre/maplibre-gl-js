@@ -292,7 +292,7 @@ export type MapLibreZoomEvent = {
  * @property {boolean} [isSourceLoaded] True if the event has a `dataType` of `source` and the source has no outstanding network requests.
  * @property {Object} [source] The [style spec representation of the source](https://maplibre.org/maplibre-style-spec/#sources) if the event has a `dataType` of `source`.
  * @property {string} [sourceDataType] Included if the event has a `dataType` of `source` and the event signals
- * that internal data has been received or changed. Possible values are `metadata`, `content` and `visibility`.
+ * that internal data has been received or changed. Possible values are `metadata`, `content`, `visibility` and `idle`.
  * @property {Object} [tile] The tile being loaded or changed, if the event has a `dataType` of `source` and
  * the event is related to loading of a tile.
  * @property {Coordinates} [coord] The coordinate of the tile if the event has a `dataType` of `source` and

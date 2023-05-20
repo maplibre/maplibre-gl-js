@@ -542,6 +542,24 @@ describe('Map', () => {
             });
         });
 
+        test('Map#isSourceLoaded (equilavent to event.isSourceLoaded)', done => {
+            const style = createStyle();
+            const map = createMap({style});
+
+            map.on('load', () => {
+                map.on('data', (e) => {
+                    if (e.dataType === 'source') {
+                        expect(map.isSourceLoaded('geojson')).toBe(e['isSourceLoaded']);
+                        if (e.sourceDataType === 'idle') {
+                            done();
+                        }
+                    }
+                });
+                map.addSource('geojson', createStyleSource());
+                expect(map.isSourceLoaded('geojson')).toBe(false);
+            });
+        });
+
         test('Map#isStyleLoaded', done => {
             const style = createStyle();
             const map = createMap({style});
