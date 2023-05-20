@@ -681,11 +681,11 @@ function printProgress(test: TestData, total: number, index: number) {
 function printStatistics(stats: TestStats): boolean {
 
     function printStat(status: string, subsetStats: TestData[]) {
-        const statsCount = subsetStats.length
+        const statusCount = subsetStats.length;
         if (statsCount > 0) {
             console.log(`${statusCount} ${status} (${(100 * statusCount / stats.total).toFixed(1)}%)`);
-            if (status != 'passed') {
-                for(let i=0; i<subsetStats.length; i++){
+            if (status !== 'passed') {
+                for (let i = 0; i < subsetStats.length; i++) {
                     printProgress(subsetStats[i], statsCount, i+1);
                 }
             }
@@ -696,7 +696,7 @@ function printStatistics(stats: TestStats): boolean {
     printStat('failed', stats.failed);
     printStat('errored', stats.errored);
 
-    return (failedCount + erroredCount) === 0;
+    return (stats.failed.length + stats.errored.length) === 0;
 }
 
 function getReportItem(test: TestData) {
