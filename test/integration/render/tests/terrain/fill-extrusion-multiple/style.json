@@ -2,15 +2,16 @@
   "version": 8,
   "metadata": {
     "test": {
+      "debug": true,
       "height": 500,
       "width": 500,
       "timeout": 60000,
-      "operations": [["sleep", 30000]]
+      "operations": [["sleep", 5000]]
     }
   },
   "center": [35.2705, 30.9205],
   "zoom": 17,
-  "bearing": 330,
+  "bearing": 0,
   "pitch": 45,
   "terrain": {"source": "TerrainRGB", "exaggeration": 2},
   "sources": {
