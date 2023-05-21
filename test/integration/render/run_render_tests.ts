@@ -679,21 +679,24 @@ function printProgress(test: TestData, total: number, index: number) {
  * @returns
  */
 function printStatistics(stats: TestStats): boolean {
-    const erroredCount = stats.errored.length;
-    const failedCount = stats.failed.length;
-    const passedCount = stats.passed.length;
 
-    function printStat(status: string, statusCount: number) {
+    function printStat(status: string, subsetStats: TestData[]) {
+        const statusCount = subsetStats.length;
         if (statusCount > 0) {
             console.log(`${statusCount} ${status} (${(100 * statusCount / stats.total).toFixed(1)}%)`);
+            if (status !== 'passed') {
+                for (let i = 0; i < subsetStats.length; i++) {
+                    printProgress(subsetStats[i], statusCount, i + 1);
+                }
+            }
         }
     }
 
-    printStat('passed', passedCount);
-    printStat('failed', failedCount);
-    printStat('errored', erroredCount);
+    printStat('passed', stats.passed);
+    printStat('failed', stats.failed);
+    printStat('errored', stats.errored);
 
-    return (failedCount + erroredCount) === 0;
+    return (stats.failed.length + stats.errored.length) === 0;
 }
 
 function getReportItem(test: TestData) {
