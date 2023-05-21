@@ -168,9 +168,9 @@
     "test-render": "ts-node test/integration/render/run_render_tests.ts",
     "test-unit": "jest --selectProjects=unit",
     "test-watch-roots": "jest --watch",
+    "codegen": "run-p generate-dist-package generate-style-code generate-struct-arrays generate-shaders",
     "benchmark": "ts-node test/bench/run-benchmarks.ts",
     "gl-stats": "ts-node test/bench/gl-stats.ts",
-    "codegen": "run-p generate-dist-package generate-style-code generate-struct-arrays generate-shaders",
     "prepare": "npm run codegen",
     "typecheck": "tsc --noEmit"
   },
