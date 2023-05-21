@@ -4,6 +4,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix overlapping of 3D building parts when 3D Terrain is activated ([#2541](https://github.com/maplibre/maplibre-gl-js/pull/2541))
+- Show 3D buildings located below sea level when 3D Terrain is activated ([#2541](https://github.com/maplibre/maplibre-gl-js/pull/2541))
 - _...Add new stuff here..._
 
 

@@ -52,16 +52,20 @@ void main() {
     vec2 display_size_b = (pattern_br_b - pattern_tl_b) / pixel_ratio_to;
 
     #ifdef TERRAIN3D
-        // To avoid floating buildings in 3d-terrain, especially in heavy terrain,
-        // render the buildings a little below terrain. The unit is meter.
-        float baseDelta = 10.0;
-        float ele = get_elevation(a_centroid);
+	// Raise the "ceiling" of elements by the elevation of the centroid, in meters.
+        float height_terrain3d_offset = get_elevation(a_centroid);
+	// To avoid having buildings "hang above a slope", create a "basement"
+	// by lowering the "floor" of ground-level (and below) elements.
+	// This is in addition to the elevation of the centroid, in meters.
+        float base_terrain3d_offset = height_terrain3d_offset - (base > 0.0 ? 0.0 : 10.0);
     #else
-        float baseDelta = 0.0;
-        float ele = 0.0;
+        float height_terrain3d_offset = 0.0;
+        float base_terrain3d_offset = 0.0;
     #endif
-    base = max(0.0, ele + base - baseDelta);
-    height = max(0.0, ele + height);
+    // Sub-terranian "floors and ceilings" are clamped to ground-level.
+    // 3D Terrain offsets, if applicable, are applied on the result.
+    base = max(0.0, base) + base_terrain3d_offset;
+    height = max(0.0, height) + height_terrain3d_offset;
 
     float t = mod(normal.x, 2.0);
     float z = t > 0.0 ? height : base;
