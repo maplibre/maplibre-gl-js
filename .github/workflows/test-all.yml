@@ -100,8 +100,8 @@ jobs:
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run build-prod
       - run: npm run --debug test-render terrain/fill-extrusion-multiple # DEBUG #
-        env:
-          CURRENT_SPLIT_INDEX: ${{ matrix.split }}
+# DEBUG #        env:
+# DEBUG #          CURRENT_SPLIT_INDEX: ${{ matrix.split }}
         if: success() || failure()
       - name: Upload render test failure
         if: failure()
