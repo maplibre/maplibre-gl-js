@@ -1,7 +1,6 @@
 ## main
 
 ### ✨ Features and improvements
-- Add `maplibre-gl.js` as an artifact of the GitHub Actions tests, and enable manual testing of PRs using the updated library ([#2541](https://github.com/maplibre/maplibre-gl-js/pull/2541))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
