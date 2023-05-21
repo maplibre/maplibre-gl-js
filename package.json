@@ -143,7 +143,7 @@
     "generate-struct-arrays": "ts-node build/generate-struct-arrays.ts",
     "generate-style-code": "ts-node build/generate-style-code.ts",
     "generate-typings": "ts-node build/generate-typings.ts",
-    "build-dist": "npm run prepare && run-p --print-label generate-typings build-dev build-prod build-csp build-csp-dev build-css",
+    "build-dist": "npm run codegen && run-p --print-label generate-typings build-dev build-prod build-csp build-csp-dev build-css",
     "build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
     "watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",
     "build-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production",
@@ -170,7 +170,7 @@
     "test-watch-roots": "jest --watch",
     "benchmark": "ts-node test/bench/run-benchmarks.ts",
     "gl-stats": "ts-node test/bench/gl-stats.ts",
-    "prepare": "run-p generate-dist-package generate-style-code generate-struct-arrays generate-shaders",
+    "codegen": "run-p generate-dist-package generate-style-code generate-struct-arrays generate-shaders",
     "typecheck": "tsc --noEmit"
   },
   "files": [
