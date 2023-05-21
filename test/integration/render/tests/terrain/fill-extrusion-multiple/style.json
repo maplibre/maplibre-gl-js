@@ -16,9 +16,7 @@
   "sources": {
     "TerrainRGB": {
       "type": "raster-dem",
-      "tiles": [
-"https://israelhiking.osm.org.il/vector/data/TerrainRGB/{z}/{x}/{y}.png"
-      ],
+      "tiles": ["local://tiles/terrain/{z}-{x}-{y}.terrain.png"],
       "minzoom": 7,
       "maxzoom": 12
     },
