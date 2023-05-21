@@ -170,7 +170,8 @@
     "test-watch-roots": "jest --watch",
     "benchmark": "ts-node test/bench/run-benchmarks.ts",
     "gl-stats": "ts-node test/bench/gl-stats.ts",
-    "prepare": "run-p generate-dist-package generate-style-code generate-struct-arrays generate-shaders",
+    "codegen": "run-p generate-dist-package generate-style-code generate-struct-arrays generate-shaders",
+    "prepare": "npm run codegen",
     "typecheck": "tsc --noEmit"
   },
   "files": [
