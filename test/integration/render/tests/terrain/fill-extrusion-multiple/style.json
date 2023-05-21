@@ -5,7 +5,7 @@
       "height": 500,
       "width": 500,
       "timeout": 60000,
-      "operations": [["wait", 15000]]
+      "operations": [["wait"]]
     }
   },
   "center": [35.2705, 30.9205],
@@ -85,7 +85,6 @@
       "filter": ["==", "which", "b"],
       "paint": {
         "fill-extrusion-color": "blue",
-        "fill-extrusion-opacity": 1,
         "fill-extrusion-base": 15,
         "fill-extrusion-height": 40
       }
