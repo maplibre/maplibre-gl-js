@@ -147,6 +147,8 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         }
     }
     actualImg.data = data as any;
+    const actualBuf = PNG.sync.write(actualImg, {filterType: 4});
+    testData.actual = actualBuf.toString('base64');
 
     // there may be multiple expected images, covering different platforms
     let globPattern = path.join(dir, 'expected*.png');
@@ -173,6 +175,9 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         const expectedBuf = fs.readFileSync(path);
         const expectedImg = PNG.sync.read(expectedBuf);
         const diffImg = new PNG({width, height});
+        if (!testData.expected) {
+            testData.expected = expectedBuf.toString('base64'); // default expected image
+        }
 
         const diff = pixelmatch(
             actualImg.data, expectedImg.data, diffImg.data,
@@ -186,7 +191,6 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     }
 
     const diffBuf = PNG.sync.write(minDiffImg, {filterType: 4});
-    const actualBuf = PNG.sync.write(actualImg, {filterType: 4});
 
     fs.writeFileSync(diffPath, diffBuf);
     fs.writeFileSync(actualPath, actualBuf);
@@ -194,7 +198,6 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     testData.difference = minDiff;
     testData.ok = minDiff <= testData.allowed;
 
-    testData.actual = actualBuf.toString('base64');
     testData.expected = minExpectedBuf.toString('base64');
     testData.diff = diffBuf.toString('base64');
 }
@@ -700,32 +703,25 @@ function printStatistics(stats: TestStats): boolean {
 }
 
 function getReportItem(test: TestData) {
-    let status: 'errored' | 'failed';
-
-    if (test.error) {
-        status = 'errored';
-    } else {
-        status = 'failed';
-    }
-
     return `<div class="test">
     <h2>${test.id}</h2>
-    ${status !== 'errored' ? `
+    ${test.actual ? `
     <div class="imagewrap">
-    <div>
-    <p>Actual</p>
-    <img src="data:image/png;base64,${test.actual}" data-alt-src="data:image/png;base64,${test.expected}">
-    </div>
-    <div>
-    <p>Diff</p>
-    <img src="data:image/png;base64,${test.diff}" data-alt-src="data:image/png;base64,${test.expected}">
-    </div>
-    <div>
-    <p>Closest expected</p>
-    <img src="data:image/png;base64,${test.expected}"  >
-    </div>
-        </div>` : ''
-}
+        <div>
+        <p>Actual</p>
+        <img src="data:image/png;base64,${test.actual}" data-alt-src="data:image/png;base64,${test.expected}">
+        </div>
+        ${test.diff ? `
+        <div>
+        <p>Diff</p>
+        <img src="data:image/png;base64,${test.diff}" data-alt-src="data:image/png;base64,${test.expected}">
+        </div>` : ''}
+        ${test.expected ? `
+        <div>
+        <p>Closest expected</p>
+        <img src="data:image/png;base64,${test.expected}"  >
+        </div>` : ''}
+    </div>` : ''}
     ${test.error ? `<p style="color: red"><strong>Error:</strong> ${test.error.message}</p>` : ''}
     ${test.difference ? `<p class="diff"><strong>Diff:</strong> ${test.difference}</p>` : ''}
 </div>`;
