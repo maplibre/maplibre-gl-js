@@ -297,50 +297,6 @@ describe('ImageRequest', () => {
         expect(server.requests[server.requests.length - 1].url).toBe((parseInt(cancelledImageUrl) + 1).toString());
     });
 
-    test('throttling: image queue will process MAX_PARALLEL_IMAGE_REQUESTS if throttling control returns false', () => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
-        const controlId = ImageRequest.addThrottleControl(() => false);
-
-        let callbackCounter = 0;
-        function callback() {
-            callbackCounter++;
-        }
-
-        for (let i = 0; i < maxRequests + 100; i++) {
-            ImageRequest.getImage({url: ''}, callback);
-        }
-
-        // all should be processed because throttle control is returning false
-        expect(server.requests).toHaveLength(maxRequests);
-
-        // all pending
-        expect(callbackCounter).toBe(0);
-
-        ImageRequest.removeThrottleControl(controlId);
-    });
-
-    test('throttling: image queue will process MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME if throttling control returns true', () => {
-        const maxRequestsPerFrame = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
-        const controlId = ImageRequest.addThrottleControl(() => true);
-
-        let callbackCounter = 0;
-        function callback() {
-            callbackCounter++;
-        }
-
-        for (let i = 0; i < maxRequests; i++) {
-            ImageRequest.getImage({url: ''}, callback);
-        }
-
-        // Should only fire request to a max allowed per frame
-        expect(server.requests).toHaveLength(maxRequestsPerFrame);
-
-        // all pending
-        expect(callbackCounter).toBe(0);
-
-        ImageRequest.removeThrottleControl(controlId);
-    });
 
     test('throttling: one throttling client will result in throttle behavior for all', () => {
         const maxRequestsPerFrame = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
@@ -367,6 +323,51 @@ describe('ImageRequest', () => {
         for (const handle of callbackHandles) {
             ImageRequest.removeThrottleControl(handle);
         }
+    });
+
+    test('throttling: image queue will process MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME if throttling control returns true', () => {
+        const maxRequestsPerFrame = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
+        const controlId = ImageRequest.addThrottleControl(() => true);
+
+        let callbackCounter = 0;
+        function callback() {
+            callbackCounter++;
+        }
+
+        for (let i = 0; i < maxRequests; i++) {
+            ImageRequest.getImage({url: ''}, callback);
+        }
+
+        // Should only fire request to a max allowed per frame
+        expect(server.requests).toHaveLength(maxRequestsPerFrame);
+
+        // all pending
+        expect(callbackCounter).toBe(0);
+
+        ImageRequest.removeThrottleControl(controlId);
+    });
+
+    test('throttling: image queue will process MAX_PARALLEL_IMAGE_REQUESTS if throttling control returns false', () => {
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
+        const controlId = ImageRequest.addThrottleControl(() => false);
+
+        let callbackCounter = 0;
+        function callback() {
+            callbackCounter++;
+        }
+
+        for (let i = 0; i < maxRequests + 100; i++) {
+            ImageRequest.getImage({url: ''}, callback);
+        }
+
+        // all should be processed because throttle control is returning false
+        expect(server.requests).toHaveLength(maxRequests);
+
+        // all pending
+        expect(callbackCounter).toBe(0);
+
+        ImageRequest.removeThrottleControl(controlId);
     });
 
     test('throttling: removing throttling client will process all requests', () => {
