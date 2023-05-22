@@ -288,7 +288,7 @@ export type MapLibreZoomEvent = {
  *
  * Possible values for `sourceDataType`s are:
  *
- * - `'metadata'`: indicate that any necessary source metadata has been loaded (such as TileJSON) and it is ok to start loading tiles
+ * - `'metadata'`: indicates that any necessary source metadata has been loaded (such as TileJSON) and it is ok to start loading tiles
  * - `'content'`: indicates the source data has changed (such as when source.setData() has been called on GeoJSONSource)
  * - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
  * - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
