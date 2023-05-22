@@ -69,6 +69,11 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - run: npm run build-dist
+      - uses: actions/upload-artifact@v3
+        if: success()
+        with:
+          name: build-dist
+          path: dist/maplibre-gl.js
       - run: npm run test-integration
         if: success() || failure()
 
