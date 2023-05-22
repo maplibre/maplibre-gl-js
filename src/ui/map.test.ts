@@ -20,6 +20,7 @@ import Transform from '../geo/transform';
 import {StyleImageInterface} from '../style/style_image';
 import ImageRequest from '../util/image_request';
 import Style from '../style/style';
+import {MapSourceDataEvent} from './events';
 
 function createStyleSource() {
     return {
@@ -548,9 +549,10 @@ describe('Map', () => {
 
             map.on('load', () => {
                 map.on('data', (e) => {
-                    if (e.dataType === 'source') {
-                        expect(map.isSourceLoaded('geojson')).toBe(e['isSourceLoaded']);
-                        if (e.sourceDataType === 'idle') {
+                    if (e.dataType === 'source' && 'source' in e) {
+                        const sourceDataEvent = e as MapSourceDataEvent;
+                        expect(map.isSourceLoaded('geojson')).toBe(sourceDataEvent.isSourceLoaded);
+                        if (sourceDataEvent.sourceDataType === 'idle') {
                             done();
                         }
                     }

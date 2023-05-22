@@ -206,17 +206,17 @@ class CanvasSource extends ImageSource {
             this.texture.update(this.canvas, {premultiply: true});
         }
 
-        let willLoad = false;
+        let newTilesLoaded = false;
         for (const w in this.tiles) {
             const tile = this.tiles[w];
             if (tile.state !== 'loaded') {
                 tile.state = 'loaded';
                 tile.texture = this.texture;
-                willLoad = true;
+                newTilesLoaded = true;
             }
         }
 
-        if (willLoad) {
+        if (newTilesLoaded) {
             this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
         }
     }
