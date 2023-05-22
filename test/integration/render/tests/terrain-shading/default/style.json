@@ -4,6 +4,7 @@
     "test": {
       "height": 500,
       "width": 500,
+      "timeout": 60000,
       "operations" : [
         ["sleep", 5000]
       ]

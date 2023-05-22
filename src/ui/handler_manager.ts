@@ -200,8 +200,8 @@ class HandlerManager {
         const boxZoom = map.boxZoom = new BoxZoomHandler(map, options);
         this._add('boxZoom', boxZoom);
 
-        const tapZoom = new TapZoomHandler();
-        const clickZoom = new ClickZoomHandler();
+        const tapZoom = new TapZoomHandler(map);
+        const clickZoom = new ClickZoomHandler(map);
         map.doubleClickZoom = new DoubleClickZoomHandler(clickZoom, tapZoom);
         this._add('tapZoom', tapZoom);
         this._add('clickZoom', clickZoom);
@@ -233,7 +233,7 @@ class HandlerManager {
         const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, this);
         this._add('scrollZoom', scrollZoom, ['mousePan']);
 
-        const keyboard = map.keyboard = new KeyboardHandler();
+        const keyboard = map.keyboard = new KeyboardHandler(map);
         this._add('keyboard', keyboard);
 
         this._add('blockableMapEvent', new BlockableMapEventHandler(map));
@@ -433,7 +433,7 @@ class HandlerManager {
         combinedEventsInProgress: EventsInProgress,
         deactivatedHandlers: {[handlerName: string]: Event}) {
         const map = this._map;
-        const tr = map.transform;
+        const tr = map._getTransformForUpdate();
         const terrain = map.terrain;
 
         if (!hasChange(combinedResult) && !(terrain && this._terrainMovement)) {
@@ -481,6 +481,8 @@ class HandlerManager {
                 tr.setLocationAtPoint(loc, around);
             }
         }
+
+        map._applyUpdatedTransform(tr);
 
         this._map._update();
         if (!combinedResult.noInertia) this._inertia.record(combinedResult);

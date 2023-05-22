@@ -1,50 +1,59 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-<title>Render Test Results</title>
-<style>
-    body {
-        font: 18px/1.2 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  <head>
+    <title>Render Test Results</title>
+    <style>
+      body {
+        font: 18px/1.2 -apple-system, BlinkMacSystemFont, 'Helvetica Neue',
+          Helvetica, Arial, sans-serif;
         padding: 10px;
-    }
-    h1 {
+      }
+      h1 {
         font-size: 32px;
         margin-bottom: 0;
-    }
-    button {
+      }
+      button {
         vertical-align: middle;
-    }
-    h2 {
+      }
+      h2 {
         font-size: 24px;
         font-weight: normal;
         margin: 10px 0 10px;
         line-height: 1;
-    }
-    img {
+      }
+      img {
         margin: 0 10px 10px 0;
         border: 1px dotted #ccc;
-    }
-    .stats {
+        max-width: 100%;
+      }
+
+      .imagewrap {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+      }
+      .stats {
         margin-top: 10px;
-    }
-    .test {
+      }
+      .test {
         border-bottom: 1px dotted #bbb;
         padding-bottom: 5px;
-    }
-    .tests {
+      }
+      .tests {
         border-top: 1px dotted #bbb;
         margin-top: 10px;
-    }
-    .diff {
+      }
+      .diff {
         color: #777;
-    }
-    .test p, .test pre {
+      }
+      .test p,
+      .test pre {
         margin: 0 0 10px;
-    }
-    .test pre {
+      }
+      .test pre {
         font-size: 14px;
-    }
-    .label {
+      }
+      .label {
         color: white;
         font-size: 18px;
         padding: 2px 6px 3px;
@@ -52,14 +61,14 @@
         margin-right: 3px;
         vertical-align: bottom;
         display: inline-block;
-    }
-    .hide {
+      }
+      .hide {
         display: none;
-    }
-</style>
-</head>
+      }
+    </style>
+  </head>
 
-<body>
-${resultData}
-</body>
+  <body>
+    ${resultData}
+  </body>
 </html>
