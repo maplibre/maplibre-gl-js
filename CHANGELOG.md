@@ -69,6 +69,7 @@ Most of these changes will not affect your code but read carefully through the l
 - ⚠️ Improve control performance by restricting worker count to a max of 1 except for Safari browser. ([#2354](https://github.com/maplibre/maplibre-gl-js/pull/2354))
 
 ## Bug fixes
+- Fix of incorrect dash in diagonal lines with a vector source at some zoom levels. ([#2479](https://github.com/maplibre/maplibre-gl-js/pull/2479))
 - Fix event.isSourceLoaded to reflect the state of source loading for sourcedata event ([#2543](https://github.com/maplibre/maplibre-gl-js/pull/2543))
 - Fix overlapping of 3D building parts when 3D Terrain is activated ([#2513](https://github.com/maplibre/maplibre-gl-js/issues/2513))
 - Show 3D buildings located below sea level when 3D Terrain is activated ([#2544](https://github.com/maplibre/maplibre-gl-js/issues/2544))
