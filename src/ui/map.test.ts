@@ -19,6 +19,7 @@ import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
 import {StyleImageInterface} from '../style/style_image';
 import Style from '../style/style';
+import {MapSourceDataEvent} from './events';
 
 function createStyleSource() {
     return {
@@ -531,9 +532,28 @@ describe('Map', () => {
 
             map.on('load', () => {
                 map.on('data', (e) => {
-                    if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                    if (e.dataType === 'source' && e.sourceDataType === 'idle') {
                         expect(map.isSourceLoaded('geojson')).toBe(true);
                         done();
+                    }
+                });
+                map.addSource('geojson', createStyleSource());
+                expect(map.isSourceLoaded('geojson')).toBe(false);
+            });
+        });
+
+        test('Map#isSourceLoaded (equivalent to event.isSourceLoaded)', done => {
+            const style = createStyle();
+            const map = createMap({style});
+
+            map.on('load', () => {
+                map.on('data', (e) => {
+                    if (e.dataType === 'source' && 'source' in e) {
+                        const sourceDataEvent = e as MapSourceDataEvent;
+                        expect(map.isSourceLoaded('geojson')).toBe(sourceDataEvent.isSourceLoaded);
+                        if (sourceDataEvent.sourceDataType === 'idle') {
+                            done();
+                        }
                     }
                 });
                 map.addSource('geojson', createStyleSource());

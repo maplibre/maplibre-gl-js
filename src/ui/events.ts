@@ -13,7 +13,7 @@ export type MapLayerMouseEvent = MapMouseEvent & { features?: MapGeoJSONFeature[
 
 export type MapLayerTouchEvent = MapTouchEvent & { features?: MapGeoJSONFeature[] };
 
-export type MapSourceDataType = 'content' | 'metadata';
+export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
 
 export type MapLayerEventType = {
     click: MapLayerMouseEvent;
@@ -286,13 +286,20 @@ export type MapLibreZoomEvent = {
  * - `'source'`: The non-tile data associated with any source
  * - `'style'`: The [style](https://maplibre.org/maplibre-style-spec/) used by the map
  *
+ * Possible values for `sourceDataType`s are:
+ *
+ * - `'metadata'`: indicates that any necessary source metadata has been loaded (such as TileJSON) and it is ok to start loading tiles
+ * - `'content'`: indicates the source data has changed (such as when source.setData() has been called on GeoJSONSource)
+ * - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
+ * - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
+ *
  * @typedef {Object} MapDataEvent
  * @property {string} type The event type.
  * @property {string} dataType The type of data that has changed. One of `'source'`, `'style'`.
  * @property {boolean} [isSourceLoaded] True if the event has a `dataType` of `source` and the source has no outstanding network requests.
  * @property {Object} [source] The [style spec representation of the source](https://maplibre.org/maplibre-style-spec/#sources) if the event has a `dataType` of `source`.
  * @property {string} [sourceDataType] Included if the event has a `dataType` of `source` and the event signals
- * that internal data has been received or changed. Possible values are `metadata`, `content` and `visibility`.
+ * that internal data has been received or changed. Possible values are `metadata`, `content`, `visibility` and `idle`.
  * @property {Object} [tile] The tile being loaded or changed, if the event has a `dataType` of `source` and
  * the event is related to loading of a tile.
  * @property {Coordinates} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
