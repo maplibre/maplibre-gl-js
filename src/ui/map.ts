@@ -2905,15 +2905,6 @@ class Map extends Camera {
         if (this.terrain) this.terrain.sourceCache.update(this.transform, this.terrain);
         this.transform.updateElevation(this.terrain);
 
-        // a bit of counter intuitive:
-        // - when map is moving (throttled) image queue does not auto advance so need manually process it for each render
-        // or it may miss raster tiles.
-        // - when not moving (initial load or changing styles), image queue is self-driven to finish. manual process
-        // is not doing anything but wasting time.
-        if (this.isMoving()) {
-            ImageRequest.processQueue();
-        }
-
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
         // Actually draw
