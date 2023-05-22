@@ -32,3 +32,4 @@ npm-debug.log
 .idea
 *.iml
 /.vs/
+.*.swp
