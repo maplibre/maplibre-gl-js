@@ -18,8 +18,8 @@ import Terrain, {} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import Transform from '../geo/transform';
 import {StyleImageInterface} from '../style/style_image';
-import ImageRequest from '../util/image_request';
 import Style from '../style/style';
+import {MapSourceDataEvent} from './events';
 
 function createStyleSource() {
     return {
@@ -532,9 +532,28 @@ describe('Map', () => {
 
             map.on('load', () => {
                 map.on('data', (e) => {
-                    if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                    if (e.dataType === 'source' && e.sourceDataType === 'idle') {
                         expect(map.isSourceLoaded('geojson')).toBe(true);
                         done();
+                    }
+                });
+                map.addSource('geojson', createStyleSource());
+                expect(map.isSourceLoaded('geojson')).toBe(false);
+            });
+        });
+
+        test('Map#isSourceLoaded (equivalent to event.isSourceLoaded)', done => {
+            const style = createStyle();
+            const map = createMap({style});
+
+            map.on('load', () => {
+                map.on('data', (e) => {
+                    if (e.dataType === 'source' && 'source' in e) {
+                        const sourceDataEvent = e as MapSourceDataEvent;
+                        expect(map.isSourceLoaded('geojson')).toBe(sourceDataEvent.isSourceLoaded);
+                        if (sourceDataEvent.sourceDataType === 'idle') {
+                            done();
+                        }
                     }
                 });
                 map.addSource('geojson', createStyleSource());
@@ -2705,30 +2724,6 @@ describe('Map', () => {
                 expect(errorMessageObject.statusMessage).toBe('mocked webglcontextcreationerror message');
             }
 
-        });
-
-        test('should call call ImageRequest.processQueue() only when moving', () => {
-            const style = createStyle();
-            const map = createMap({style});
-
-            let imageQueueProcessRequestCallCounter = 0;
-            jest.spyOn(ImageRequest, 'processQueue').mockImplementation(() => {
-                imageQueueProcessRequestCallCounter++;
-                return 0;
-            });
-            let mockIsMoving = true;
-
-            jest.spyOn(map, 'isMoving').mockImplementation(() => {
-                return mockIsMoving;
-            });
-
-            // when moving, expect ImageRequest.processQueue is called on repaint
-            map._render(0);
-            expect(imageQueueProcessRequestCallCounter).toBe(1);
-
-            mockIsMoving = false;
-            map._render(1);
-            expect(imageQueueProcessRequestCallCounter).toBe(1);
         });
     });
 

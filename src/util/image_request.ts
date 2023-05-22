@@ -82,6 +82,8 @@ namespace ImageRequest {
      */
     export const removeThrottleControl = (callbackHandle: number): void => {
         delete throttleControlCallbacks[callbackHandle];
+        // Try updating the queue
+        processQueue();
     };
 
     /**
@@ -122,23 +124,31 @@ namespace ImageRequest {
             requestParameters.headers.accept = 'image/webp,*/*';
         }
 
-        const queued:ImageRequestQueueItem = {
+        const request:ImageRequestQueueItem = {
             requestParameters,
             supportImageRefresh,
             callback,
             cancelled: false,
             completed: false,
+            cancel: () => {
+                if (!request.completed && !request.cancelled) {
+                    request.cancelled = true;
 
-            // Just a place holder. The real one will be assigned during processQueue()
-            cancel: () => {}
+                    // Only reduce currentParallelImageRequests, if the image request was issued.
+                    if (request.innerRequest) {
+                        request.innerRequest.cancel();
+                        currentParallelImageRequests--;
+                    }
+
+                    // in the case of cancelling, it WILL move on
+                    processQueue();
+                }
+            }
         };
-        imageRequestQueue.push(queued);
 
-        if (!isThrottled()) {
-            processQueue();
-        }
-
-        return queued;
+        imageRequestQueue.push(request);
+        processQueue();
+        return request;
     };
 
     const arrayBufferToCanvasImageSource = (data: ArrayBuffer, callback: Callback<CanvasImageSource>) => {
@@ -207,43 +217,27 @@ namespace ImageRequest {
             itemInQueue.completed = true;
             currentParallelImageRequests--;
 
-            if (!isThrottled()) {
-                processQueue();
-            }
+            processQueue();
         }
     };
 
     /**
      * Process some number of items in the image request queue.
-     * @param {number} maxImageRequests The maximum number of request items to process. By default, up to {@link Config.MAX_PARALLEL_IMAGE_REQUESTS} will be processed.
-     * @returns {number} The number of items remaining in the queue.
      */
-    export const processQueue = (
-        maxImageRequests: number = 0): number => {
+    const processQueue = (): void => {
 
-        if (maxImageRequests <= 0) {
-            maxImageRequests = isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME : config.MAX_PARALLEL_IMAGE_REQUESTS;
-        }
-
-        const cancelRequest = (request: ImageRequestQueueItem) => {
-            if (!request.completed && !request.cancelled) {
-                currentParallelImageRequests--;
-                request.cancelled = true;
-                request.innerRequest.cancel();
-
-                // in the case of cancelling, it WILL move on
-                processQueue();
-            }
-        };
+        const maxImageRequests = isThrottled() ?
+            config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME :
+            config.MAX_PARALLEL_IMAGE_REQUESTS;
 
         // limit concurrent image loads to help with raster sources performance on big screens
-
         for (let numImageRequests = currentParallelImageRequests;
             numImageRequests < maxImageRequests && imageRequestQueue.length > 0;
             numImageRequests++) {
 
             const topItemInQueue: ImageRequestQueueItem = imageRequestQueue.shift();
             if (topItemInQueue.cancelled) {
+                numImageRequests--;
                 continue;
             }
 
@@ -252,10 +246,7 @@ namespace ImageRequest {
             currentParallelImageRequests++;
 
             topItemInQueue.innerRequest = innerRequest;
-            topItemInQueue.cancel = () => cancelRequest(topItemInQueue);
         }
-
-        return imageRequestQueue.length;
     };
 
     const getImageUsingHtmlImage = (requestParameters: RequestParameters, callback: GetImageCallback): Cancelable  => {

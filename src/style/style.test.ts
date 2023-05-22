@@ -1726,7 +1726,7 @@ describe('Style#setPaintProperty', () => {
             let styleUpdateCalled = false;
 
             (source as any).on('data', (e) => setTimeout(() => {
-                if (!begun && sourceCache.loaded()) {
+                if (!begun) {
                     begun = true;
                     jest.spyOn(sourceCache, 'reload').mockImplementation(() => {
                         expect(styleUpdateCalled).toBeTruthy();

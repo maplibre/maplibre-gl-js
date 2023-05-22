@@ -63,6 +63,8 @@ class SourceCache extends Evented {
     tileSize: number;
     _state: SourceFeatureState;
     _loadedParentTiles: {[_: string]: Tile};
+    _didEmitContent: boolean;
+    _updated: boolean;
 
     static maxUnderzooming: number;
     static maxOverzooming: number;
@@ -85,6 +87,8 @@ class SourceCache extends Evented {
                 if (this.transform) {
                     this.update(this.transform, this.terrain);
                 }
+
+                this._didEmitContent = true;
             }
         });
 
@@ -108,6 +112,8 @@ class SourceCache extends Evented {
 
         this._coveredTiles = {};
         this._state = new SourceFeatureState();
+        this._didEmitContent = false;
+        this._updated = false;
     }
 
     onAdd(map: Map) {
@@ -134,6 +140,10 @@ class SourceCache extends Evented {
         if (this._sourceErrored) { return true; }
         if (!this._sourceLoaded) { return false; }
         if (!this._source.loaded()) { return false; }
+        if ((this.used !== undefined || this.usedForTerrain !== undefined) && !this.used && !this.usedForTerrain) { return true; }
+        // do not consider as loaded if the update hasn't been called yet (we do not know if we will have any tiles to fetch)
+        if (!this._updated) { return false; }
+
         for (const t in this._tiles) {
             const tile = this._tiles[t];
             if (tile.state !== 'loaded' && tile.state !== 'errored')
@@ -542,6 +552,14 @@ class SourceCache extends Evented {
                 }
             }
             idealTileIDs = idealTileIDs.concat(Object.values(parents));
+        }
+
+        const noPendingDataEmissions = idealTileIDs.length === 0 && !this._updated && this._didEmitContent;
+        this._updated = true;
+        // if we won't have any tiles to fetch and content is already emitted
+        // there will be no more data emissions, so we need to emit the event with isSourceLoaded = true
+        if (noPendingDataEmissions) {
+            this.fire(new Event('data', {sourceDataType: 'idle', dataType: 'source', sourceId: this.id}));
         }
 
         // Retain is a list of tiles that we shouldn't delete, even if they are not

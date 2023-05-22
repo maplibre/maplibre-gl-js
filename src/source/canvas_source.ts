@@ -3,7 +3,7 @@ import ImageSource from './image_source';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import SegmentVector from '../data/segment';
 import Texture from '../render/texture';
-import {ErrorEvent} from '../util/evented';
+import {Event, ErrorEvent} from '../util/evented';
 import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 
 import type Map from '../ui/map';
@@ -206,12 +206,18 @@ class CanvasSource extends ImageSource {
             this.texture.update(this.canvas, {premultiply: true});
         }
 
+        let newTilesLoaded = false;
         for (const w in this.tiles) {
             const tile = this.tiles[w];
             if (tile.state !== 'loaded') {
                 tile.state = 'loaded';
                 tile.texture = this.texture;
+                newTilesLoaded = true;
             }
+        }
+
+        if (newTilesLoaded) {
+            this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
         }
     }
 
