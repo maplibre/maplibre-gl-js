@@ -527,6 +527,7 @@ class LineBucket implements Bucket {
         // to `linesofar`.
         if (this.distance > MAX_LINE_DISTANCE / 2 && this.totalDistance === 0) {
             this.distance = 0;
+            this.updateScaledDistance();
             this.addCurrentVertex(p, normal, endLeft, endRight, segment, round);
         }
     }
