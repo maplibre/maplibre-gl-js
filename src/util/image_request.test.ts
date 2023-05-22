@@ -297,7 +297,6 @@ describe('ImageRequest', () => {
         expect(server.requests[server.requests.length - 1].url).toBe((parseInt(cancelledImageUrl) + 1).toString());
     });
 
-
     test('throttling: one throttling client will result in throttle behavior for all', () => {
         const maxRequestsPerFrame = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
         const callbackHandles = [];
