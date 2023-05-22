@@ -4,10 +4,10 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix event.isSourceLoaded to reflect the state of source loading for sourcedata event ([#2543](https://github.com/maplibre/maplibre-gl-js/pull/2543))
 - Fix overlapping of 3D building parts when 3D Terrain is activated ([#2541](https://github.com/maplibre/maplibre-gl-js/pull/2541))
 - Show 3D buildings located below sea level when 3D Terrain is activated ([#2541](https://github.com/maplibre/maplibre-gl-js/pull/2541))
 - _...Add new stuff here..._
-
 
 ## 3.0.0-pre.9
 
