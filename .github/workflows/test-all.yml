@@ -69,6 +69,11 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - run: npm run build-dist
+      - uses: actions/upload-artifact@v3
+        if: success()
+        with:
+          name: build-dist
+          path: dist/maplibre-gl.js
       - run: npm run test-integration
         if: success() || failure()
 
@@ -94,7 +99,7 @@ jobs:
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run build-prod
-      - run: npm run test-render -- --report
+      - run: npm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
         if: success() || failure()
@@ -127,7 +132,7 @@ jobs:
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run build-prod
-      - run: npm run test-render -- --report
+      - run: npm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
         if: success() || failure()

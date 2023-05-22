@@ -256,10 +256,21 @@ export const postData = function(requestParameters: RequestParameters, callback:
     return makeRequest(extend(requestParameters, {method: 'POST'}), callback);
 };
 
-export function sameOrigin(url) {
-    const a: HTMLAnchorElement = window.document.createElement('a');
-    a.href = url;
-    return a.protocol === window.document.location.protocol && a.host === window.document.location.host;
+export function sameOrigin(inComingUrl: string) {
+    // URL class should be available everywhere
+    // https://developer.mozilla.org/en-US/docs/Web/API/URL
+    // In addtion, a relative URL "/foo" or "./foo" will throw exception in its ctor,
+    // try-catch is expansive so just use a heuristic check to avoid it
+    // also check data URL
+    if (!inComingUrl ||
+        inComingUrl.indexOf('://') <= 0 || // relative URL
+        inComingUrl.indexOf('data:image/') === 0 || // data image URL
+        inComingUrl.indexOf('blob:') === 0) { // blob
+        return true;
+    }
+    const urlObj = new URL(inComingUrl);
+    const locationObj = window.location;
+    return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
 }
 
 export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
