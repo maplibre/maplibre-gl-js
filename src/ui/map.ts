@@ -101,6 +101,7 @@ export type MapOptions = {
     pitch?: number;
     renderWorldCopies?: boolean;
     maxTileCacheSize?: number;
+    maxTileCacheZoom?: number;
     transformRequest?: RequestTransformFunction;
     transformCameraUpdate?: CameraUpdateTransformFunction;
     locale?: any;
@@ -194,6 +195,7 @@ const defaultOptions = {
     renderWorldCopies: true,
     refreshExpiredTiles: true,
     maxTileCacheSize: null,
+    maxTileCacheZoom: 5,
     localIdeographFontFamily: 'sans-serif',
     transformRequest: null,
     transformCameraUpdate: null,
@@ -265,7 +267,8 @@ const defaultOptions = {
  * container, there will be blank space beyond 180 and -180 degrees longitude.
  * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
  * map and the other on the left edge of the map) at every zoom level.
- * @param {number} [options.maxTileCacheSize=null] The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport.
+ * @param {number} [options.maxTileCacheSize=null] The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using `maxTileCacheZoom` constructor options.
+ * @param {number} [options.maxTileCacheZoom=5] The maximum number of zoom for which to store tiles for a given source. Tile cache dynamic size is calculated by multiplying `maxTileCacheZoom` with approx number of tiles in the viewport for a given source.
  * @param {string} [options.validateStyle=true] If false, style validation will be skipped. Useful in production environment.
  * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
  * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
@@ -321,6 +324,7 @@ class Map extends Camera {
     _vertices: boolean;
     _canvas: HTMLCanvasElement;
     _maxTileCacheSize: number;
+    _maxTileCacheZoom: number;
     _frame: Cancelable;
     _styleDirty: boolean;
     _sourcesDirty: boolean;
@@ -434,6 +438,7 @@ class Map extends Camera {
         this._cooperativeGestures = options.cooperativeGestures;
         this._metaKey = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
         this._maxTileCacheSize = options.maxTileCacheSize;
+        this._maxTileCacheZoom = options.maxTileCacheZoom;
         this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
         this._preserveDrawingBuffer = options.preserveDrawingBuffer;
         this._antialias = options.antialias;

@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Expose map options.maxTileCacheZoom to allow better control of tile cache
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
