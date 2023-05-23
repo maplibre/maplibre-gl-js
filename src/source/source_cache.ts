@@ -448,9 +448,8 @@ class SourceCache extends Evented {
         const widthInTiles = Math.ceil(transform.width / this._source.tileSize) + 1;
         const heightInTiles = Math.ceil(transform.height / this._source.tileSize) + 1;
         const approxTilesInView = widthInTiles * heightInTiles;
-        const commonZoomRange = typeof this._maxTileCacheZoomLevels === 'number' ? this._maxTileCacheZoomLevels : 5;
 
-        const viewDependentMaxSize = Math.floor(approxTilesInView * commonZoomRange);
+        const viewDependentMaxSize = Math.floor(approxTilesInView * this._maxTileCacheZoomLevels);
         const maxSize = typeof this._maxTileCacheSize === 'number' ? Math.min(this._maxTileCacheSize, viewDependentMaxSize) : viewDependentMaxSize;
 
         this._cache.setMaxSize(maxSize);
