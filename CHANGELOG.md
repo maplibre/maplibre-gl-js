@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- Expose map options.maxTileCacheZoom to allow better control of tile cache ([#2581](https://github.com/maplibre/maplibre-gl-js/pull/2581))
+- Expose map options.maxTileCacheZoomLevels to allow better control of tile cache ([#2581](https://github.com/maplibre/maplibre-gl-js/pull/2581))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

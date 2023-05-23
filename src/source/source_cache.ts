@@ -53,7 +53,7 @@ class SourceCache extends Evented {
         [_ in any]: ReturnType<typeof setTimeout>;
     };
     _maxTileCacheSize: number;
-    _maxTileCacheZoom: number;
+    _maxTileCacheZoomLevels: number;
     _paused: boolean;
     _shouldReloadOnResume: boolean;
     _coveredTiles: {[_: string]: boolean};
@@ -109,7 +109,7 @@ class SourceCache extends Evented {
         this._timers = {};
         this._cacheTimers = {};
         this._maxTileCacheSize = null;
-        this._maxTileCacheZoom = null;
+        this._maxTileCacheZoomLevels = null;
         this._loadedParentTiles = {};
 
         this._coveredTiles = {};
@@ -121,7 +121,7 @@ class SourceCache extends Evented {
     onAdd(map: Map) {
         this.map = map;
         this._maxTileCacheSize = map ? map._maxTileCacheSize : null;
-        this._maxTileCacheZoom = map ? map._maxTileCacheZoom : null;
+        this._maxTileCacheZoomLevels = map ? map._maxTileCacheZoomLevels : null;
         if (this._source && this._source.onAdd) {
             this._source.onAdd(map);
         }
@@ -448,7 +448,7 @@ class SourceCache extends Evented {
         const widthInTiles = Math.ceil(transform.width / this._source.tileSize) + 1;
         const heightInTiles = Math.ceil(transform.height / this._source.tileSize) + 1;
         const approxTilesInView = widthInTiles * heightInTiles;
-        const commonZoomRange = typeof this._maxTileCacheZoom === 'number' ? this._maxTileCacheZoom : 5;
+        const commonZoomRange = typeof this._maxTileCacheZoomLevels === 'number' ? this._maxTileCacheZoomLevels : 5;
 
         const viewDependentMaxSize = Math.floor(approxTilesInView * commonZoomRange);
         const maxSize = typeof this._maxTileCacheSize === 'number' ? Math.min(this._maxTileCacheSize, viewDependentMaxSize) : viewDependentMaxSize;
