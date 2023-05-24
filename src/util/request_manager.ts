@@ -14,7 +14,7 @@ export const enum ResourceType {
     Unknown = 'Unknown',
 }
 
-export type RequestTransformFunction = (url: string, resourceType?: ResourceType) => RequestParameters;
+export type RequestTransformFunction = (url: string, resourceType?: ResourceType) => RequestParameters | undefined;
 
 type UrlObject = {
     protocol: string;
