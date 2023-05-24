@@ -4,7 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Fix `RequestTransformFunction` type to return RequestParameters or undefined ([#2586](https://github.com/maplibre/maplibre-gl-js/pull/2586))
 
 
 ## 3.0.0
