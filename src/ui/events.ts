@@ -564,6 +564,8 @@ export type MapEvent =
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only
      * when the point that is clicked twice contains a visible portion of the specified layer.
      *
+     * **Note:** Two {@link Map.event:click} events will precede this event.
+     *
      * @event dblclick
      * @memberof Map
      * @instance
