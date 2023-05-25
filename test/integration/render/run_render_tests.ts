@@ -747,14 +747,13 @@ function applyDebugParameter(options: RenderOptions, page: Page) {
     }
 }
 
-function runTests(testStyles: StyleWithTestData[], directory: string) {
+async function runTests(page: Page, testStyles: StyleWithTestData[], directory: string) {
     let index = 0;
     for (const style of testStyles) {
         try {
             //@ts-ignore
             const data = await getImageFromStyle(style, page);
             compareRenderResults(directory, style.metadata.test, data);
-
         } catch (ex) {
             style.metadata.test.error = ex;
         }
@@ -818,12 +817,12 @@ async function executeRenderTests() {
     applyDebugParameter(options, page);
     await page.addScriptTag({path: 'dist/maplibre-gl.js'});
 
-    runTests(testStyles, directory)
+    await runTests(page, testStyles, directory);
 
-    let failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
+    const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
     if (failedTests.length > 0 && failedTests.length < testStyles.length) {
-        console.log("Rerunning failed tests: " + failedTests.length);
-        runTests(failedTests, directory);
+        console.log(`Rerunning failed tests: ${failedTests.length}`);
+        await runTests(page, failedTests, directory);
     }
 
     page.close();
