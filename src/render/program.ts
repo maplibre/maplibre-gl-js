@@ -74,6 +74,11 @@ class Program<Us extends UniformBindings> {
         if (terrain) {
             defines.push('#define TERRAIN3D;');
         }
+
+        if (source.fragmentSource.split('\n')[0] === '// #version 300 es') {
+            defines.unshift('#version 300 es');
+        }
+
         const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');
         const vertexSource = defines.concat(shaders.prelude.vertexSource, source.vertexSource).join('\n');
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);

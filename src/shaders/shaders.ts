@@ -97,7 +97,7 @@ export default shaders;
 function compile(fragmentSource, vertexSource) {
     const re = /#pragma mapbox: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
 
-    const staticAttributes = vertexSource.match(/attribute ([\w]+) ([\w]+)/g);
+    const staticAttributes = vertexSource.match(/(attribute|in) ([\w]+) ([\w]+)/g);
     const fragmentUniforms = fragmentSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);
     const vertexUniforms = vertexSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);
     const staticUniforms = vertexUniforms ? vertexUniforms.concat(fragmentUniforms) : fragmentUniforms;
