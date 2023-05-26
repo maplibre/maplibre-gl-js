@@ -418,7 +418,7 @@ export class BindElementBuffer extends BaseValue<WebGLBuffer> {
 }
 
 export class BindVertexArray extends BaseValue<WebGLVertexArrayObject> {
-    getDefault(): WebGLVertexArrayObject | null {
+    getDefault(): WebGLVertexArrayObject {
         return null;
     }
     set(v: WebGLVertexArrayObject | null) {
