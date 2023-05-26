@@ -1,4 +1,4 @@
-// #version 300 es
+#version 300 es
 
 uniform vec2 u_pattern_tl_a;
 uniform vec2 u_pattern_br_a;

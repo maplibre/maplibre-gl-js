@@ -1,4 +1,4 @@
-// #version 300 es
+#version 300 es
 
 uniform mat4 u_matrix;
 uniform vec2 u_pattern_size_a;
@@ -9,7 +9,7 @@ uniform float u_scale_a;
 uniform float u_scale_b;
 uniform float u_tile_units_to_pixels;
 
-in vec2 a_pos;
+layout (location = 0) in vec2 a_pos;
 out vec2 v_pos_a;
 out vec2 v_pos_b;
 

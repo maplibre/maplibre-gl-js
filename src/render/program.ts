@@ -18,6 +18,14 @@ import Terrain from '../render/terrain';
 
 export type DrawMode = typeof WebGL2RenderingContext.LINES | typeof WebGL2RenderingContext.TRIANGLES | typeof WebGL2RenderingContext.LINE_STRIP;
 
+function isGLSL3Shader(input: string):boolean {
+    return input.split('\n')[0] === '#version 300 es';
+}
+
+function removeFirstLine(input: string):string {
+    return input.substring(input.indexOf('\n') + 1);
+}
+
 function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> {
     const result = [];
 
@@ -75,12 +83,14 @@ class Program<Us extends UniformBindings> {
             defines.push('#define TERRAIN3D;');
         }
 
-        if (source.fragmentSource.split('\n')[0] === '// #version 300 es') {
+        const isGLJS3 = isGLSL3Shader(source.fragmentSource);
+        if (isGLJS3) {
             defines.unshift('#version 300 es');
         }
 
-        const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');
-        const vertexSource = defines.concat(shaders.prelude.vertexSource, source.vertexSource).join('\n');
+        const fragmentSource = defines.concat(shaders.prelude.fragmentSource, isGLJS3 ? removeFirstLine(source.fragmentSource) : source.fragmentSource).join('\n');
+        const vertexSource = defines.concat(shaders.prelude.vertexSource, isGLJS3 ? removeFirstLine(source.vertexSource) : source.vertexSource).join('\n');
+
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         if (gl.isContextLost()) {
             this.failedToCreate = true;
