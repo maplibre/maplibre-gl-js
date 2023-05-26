@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- Update shaders to GLSL ES 3.0
+- Update shaders to GLSL ES 3.0 ([#2599](https://github.com/maplibre/maplibre-gl-js/pull/2599))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
