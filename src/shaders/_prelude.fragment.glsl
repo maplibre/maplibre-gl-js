@@ -15,3 +15,5 @@ precision mediump float;
 #endif
 
 #endif
+
+out highp vec4 fragColor;

@@ -1,5 +1,3 @@
-#version 300 es
-
 uniform mat4 u_matrix;
 uniform vec2 u_pattern_size_a;
 uniform vec2 u_pattern_size_b;

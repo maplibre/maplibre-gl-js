@@ -109,7 +109,7 @@ function compile(fragmentSource, vertexSource) {
         if (operation === 'define') {
             return `
 #ifndef HAS_UNIFORM_u_${name}
-varying ${precision} ${type} ${name};
+in ${precision} ${type} ${name};
 #else
 uniform ${precision} ${type} u_${name};
 #endif
@@ -132,8 +132,8 @@ uniform ${precision} ${type} u_${name};
                 return `
 #ifndef HAS_UNIFORM_u_${name}
 uniform lowp float u_${name}_t;
-attribute ${precision} ${attrType} a_${name};
-varying ${precision} ${type} ${name};
+in ${precision} ${attrType} a_${name};
+out ${precision} ${type} ${name};
 #else
 uniform ${precision} ${type} u_${name};
 #endif
@@ -163,7 +163,7 @@ uniform ${precision} ${type} u_${name};
                 return `
 #ifndef HAS_UNIFORM_u_${name}
 uniform lowp float u_${name}_t;
-attribute ${precision} ${attrType} a_${name};
+in ${precision} ${attrType} a_${name};
 #else
 uniform ${precision} ${type} u_${name};
 #endif

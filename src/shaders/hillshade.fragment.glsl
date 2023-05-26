@@ -1,5 +1,5 @@
 uniform sampler2D u_image;
-varying vec2 v_pos;
+in vec2 v_pos;
 
 uniform vec2 u_latrange;
 uniform vec2 u_light;
@@ -10,7 +10,7 @@ uniform vec4 u_accent;
 #define PI 3.141592653589793
 
 void main() {
-    vec4 pixel = texture2D(u_image, v_pos);
+    vec4 pixel = texture(u_image, v_pos);
 
     vec2 deriv = ((pixel.rg * 2.0) - 1.0);
 
@@ -44,9 +44,9 @@ void main() {
     vec4 accent_color = (1.0 - accent) * u_accent * clamp(intensity * 2.0, 0.0, 1.0);
     float shade = abs(mod((aspect + azimuth) / PI + 0.5, 2.0) - 1.0);
     vec4 shade_color = mix(u_shadow, u_highlight, shade) * sin(scaledSlope) * clamp(intensity * 2.0, 0.0, 1.0);
-    gl_FragColor = accent_color * (1.0 - shade_color.a) + shade_color;
+    fragColor = accent_color * (1.0 - shade_color.a) + shade_color;
 
 #ifdef OVERDRAW_INSPECTOR
-    gl_FragColor = vec4(1.0);
+    fragColor = vec4(1.0);
 #endif
 }

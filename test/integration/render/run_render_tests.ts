@@ -297,17 +297,19 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
 
             onAdd(map: Map, gl: WebGL2RenderingContext) {
-                const vertexSource = `
-                attribute vec3 aPos;
+                const vertexSource = `#version 300 es
+                in vec3 aPos;
                 uniform mat4 u_matrix;
                 void main() {
                     gl_Position = u_matrix * vec4(aPos, 1.0);
                     gl_PointSize = 20.0;
                 }`;
 
-                const fragmentSource = `
+                const fragmentSource = `#version 300 es
+                
+                out highp vec4 fragColor;
                 void main() {
-                    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
                 }`;
 
                 const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -356,21 +358,21 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
             onAdd(map: Map, gl: WebGL2RenderingContext) {
 
-                const vertexSource = `
-        
-                attribute vec3 aPos;
+                const vertexSource = `#version 300 es
+
+                in vec3 aPos;
                 uniform mat4 uMatrix;
-        
+
                 void main() {
                     gl_Position = uMatrix * vec4(aPos, 1.0);
-                }
-                `;
+                }`;
 
-                const fragmentSource = `
+                const fragmentSource = `#version 300 es
+
+                out highp vec4 fragColor;
                 void main() {
-                    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-                }
-                `;
+                    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                }`;
 
                 const vertexShader = gl.createShader(gl.VERTEX_SHADER);
                 gl.shaderSource(vertexShader, vertexSource);
