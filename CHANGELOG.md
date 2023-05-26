@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Update shaders to GLSL ES 3.0
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

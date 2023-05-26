@@ -3,10 +3,10 @@ uniform vec2 u_pixel_coord_upper;
 uniform vec2 u_pixel_coord_lower;
 uniform vec3 u_scale;
 
-attribute vec2 a_pos;
+in vec2 a_pos;
 
-varying vec2 v_pos_a;
-varying vec2 v_pos_b;
+out vec2 v_pos_a;
+out vec2 v_pos_b;
 
 #pragma mapbox: define lowp float opacity
 #pragma mapbox: define lowp vec4 pattern_from

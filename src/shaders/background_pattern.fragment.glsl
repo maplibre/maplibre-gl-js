@@ -1,5 +1,3 @@
-#version 300 es
-
 uniform vec2 u_pattern_tl_a;
 uniform vec2 u_pattern_br_a;
 uniform vec2 u_pattern_tl_b;
@@ -12,8 +10,6 @@ uniform sampler2D u_image;
 
 in vec2 v_pos_a;
 in vec2 v_pos_b;
-
-out vec4 fragColor;
 
 void main() {
     vec2 imagecoord = mod(v_pos_a, 1.0);
