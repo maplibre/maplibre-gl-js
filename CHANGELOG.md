@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Add support for multiple layer IDs in the `.on`, `.once` and `.off` methods of the `Map`.
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

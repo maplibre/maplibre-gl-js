@@ -1030,15 +1030,17 @@ class Map extends Camera {
         return this._rotating || this.handlers?.isRotating();
     }
 
-    _createDelegatedListener(type: MapEvent | string, layerId: string, listener: Listener): {
-        layer: string;
+    _createDelegatedListener(type: MapEvent | string, layers: string[], listener: Listener): {
+        layers: string[];
         listener: Listener;
         delegates: {[type in keyof MapEventType]?: (e: any) => void};
     } {
+        const filteredLayers = layers.filter(layerId => this.getLayer(layerId));
+        const deduplicatedLayers = [...new Set(layers)]
         if (type === 'mouseenter' || type === 'mouseover') {
             let mousein = false;
             const mousemove = (e) => {
-                const features = this.getLayer(layerId) ? this.queryRenderedFeatures(e.point, {layers: [layerId]}) : [];
+                const features = filteredLayers.length ? this.queryRenderedFeatures(e.point, {layers: filteredLayers}) : [];
                 if (!features.length) {
                     mousein = false;
                 } else if (!mousein) {
@@ -1049,11 +1051,11 @@ class Map extends Camera {
             const mouseout = () => {
                 mousein = false;
             };
-            return {layer: layerId, listener, delegates: {mousemove, mouseout}};
+            return {layers: deduplicatedLayers, listener, delegates: {mousemove, mouseout}};
         } else if (type === 'mouseleave' || type === 'mouseout') {
             let mousein = false;
             const mousemove = (e) => {
-                const features = this.getLayer(layerId) ? this.queryRenderedFeatures(e.point, {layers: [layerId]}) : [];
+                const features = filteredLayers.length ? this.queryRenderedFeatures(e.point, {layers: filteredLayers}) : [];
                 if (features.length) {
                     mousein = true;
                 } else if (mousein) {
@@ -1067,10 +1069,10 @@ class Map extends Camera {
                     listener.call(this, new MapMouseEvent(type, this, e.originalEvent));
                 }
             };
-            return {layer: layerId, listener, delegates: {mousemove, mouseout}};
+            return {layers: deduplicatedLayers, listener, delegates: {mousemove, mouseout}};
         } else {
             const delegate = (e) => {
-                const features = this.getLayer(layerId) ? this.queryRenderedFeatures(e.point, {layers: [layerId]}) : [];
+                const features = filteredLayers.length ? this.queryRenderedFeatures(e.point, {layers: filteredLayers}) : [];
                 if (features.length) {
                     // Here we need to mutate the original event, so that preventDefault works as expected.
                     e.features = features;
@@ -1078,7 +1080,7 @@ class Map extends Camera {
                     delete e.features;
                 }
             };
-            return {layer: layerId, listener, delegates: {[type]: delegate}};
+            return {layers: deduplicatedLayers, listener, delegates: {[type]: delegate}};
         }
     }
 
@@ -1141,7 +1143,7 @@ class Map extends Camera {
      * | [`dataabort`](#map.event:dataabort)                       |                           |
      * | [`sourcedataabort`](#map.event:sourcedataabort)           |                           |
      *
-     * @param {string | Listener} layer The ID of a style layer or a listener if no ID is provided. Event will only be triggered if its location
+     * @param {string | Array<string> | Listener} layerIds The ID(s) of a style layer(s) or a listener if no ID(s) is provided. Event will only be triggered if its location
      * is within a visible feature in this layer. The event will have a `features` property containing
      * an array of the matching features. If `layerIdOrListener` is not supplied, the event will not have a `features` property.
      * Please note that many event types are not compatible with the optional `layerIdOrListener` parameter.
@@ -1185,17 +1187,21 @@ class Map extends Camera {
      */
     on<T extends keyof MapLayerEventType>(
         type: T,
-        layer: string,
+        layerIds: string | string[],
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): this;
     on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     on(type: MapEvent | string, listener: Listener): this;
-    on(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this {
+    on(type: MapEvent | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this {
         if (listener === undefined) {
-            return super.on(type, layerIdOrListener as Listener);
+            return super.on(type, layerIdsOrListener as Listener);
         }
 
-        const delegatedListener = this._createDelegatedListener(type, layerIdOrListener as string, listener);
+        if (!Array.isArray(layerIdsOrListener) && typeof layerIdsOrListener === 'string') {
+            layerIdsOrListener = [layerIdsOrListener];
+        }
+
+        const delegatedListener = this._createDelegatedListener(type, layerIdsOrListener as string[], listener);
 
         this._delegatedListeners = this._delegatedListeners || {};
         this._delegatedListeners[type] = this._delegatedListeners[type] || [];
@@ -1231,7 +1237,7 @@ class Map extends Camera {
      * a visible portion of the specified layer from outside that layer or outside the map canvas. `mouseleave`
      * and `mouseout` events are triggered when the cursor leaves a visible portion of the specified layer, or leaves
      * the map canvas.
-     * @param {string} layer The ID of a style layer or a listener if no ID is provided. Only events whose location is within a visible
+     * @param {string| Array<string>} layers The ID(s) of a style layer(s) or a listener if no ID(s) is provided. Only events whose location is within a visible
      * feature in this layer will trigger the listener. The event will have a `features` property containing
      * an array of the matching features.
      * @param {Function} listener The function to be called when the event is fired.
@@ -1239,18 +1245,22 @@ class Map extends Camera {
      */
     once<T extends keyof MapLayerEventType>(
         type: T,
-        layer: string,
+        layers: string | string[],
         listener?: (ev: MapLayerEventType[T] & Object) => void,
     ): this | Promise<MapLayerEventType[T] & Object>;
     once<T extends keyof MapEventType>(type: T, listener?: (ev: MapEventType[T] & Object) => void): this | Promise<any>;
     once(type: MapEvent | string, listener?: Listener): this | Promise<any>;
-    once(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
+    once(type: MapEvent | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this | Promise<any> {
 
         if (listener === undefined) {
-            return super.once(type, layerIdOrListener as Listener);
+            return super.once(type, layerIdsOrListener as Listener);
         }
 
-        const delegatedListener = this._createDelegatedListener(type, layerIdOrListener as string, listener);
+        if (!Array.isArray(layerIdsOrListener) && typeof layerIdsOrListener === 'string') {
+            layerIdsOrListener = [layerIdsOrListener];
+        }
+
+        const delegatedListener = this._createDelegatedListener(type, layerIdsOrListener as string[], listener);
 
         for (const event in delegatedListener.delegates) {
             this.once(event as MapEvent, delegatedListener.delegates[event]);
@@ -1275,27 +1285,40 @@ class Map extends Camera {
      * Removes an event listener for layer-specific events previously added with `Map#on`.
      *
      * @param {string} type The event type previously used to install the listener.
-     * @param {string} layer The layer ID or listener previously used to install the listener.
+     * @param {string | Array<string>} layers The layer ID(s) or listener previously used to install the listener.
      * @param {Function} listener The function previously installed as a listener.
      * @returns {Map} `this`
      */
     off<T extends keyof MapLayerEventType>(
         type: T,
-        layer: string,
+        layers: string | string[],
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): this;
     off<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     off(type: MapEvent | string, listener: Listener): this;
-    off(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this {
+    off(type: MapEvent | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this {
         if (listener === undefined) {
-            return super.off(type, layerIdOrListener as Listener);
+            return super.off(type, layerIdsOrListener as Listener);
         }
+
+        const deduplicatedLayerIdSet:Set<string> = new Set(Array.isArray(layerIdsOrListener) ? layerIdsOrListener as string[] : [layerIdsOrListener as string]);
+        const areLayerArraysEqual = (hash1: Set<string>, hash2: Set<string>) => {
+            if (hash1.size !== hash2.size) {
+                return false; // at-least 1 arr has duplicate value(s)
+            }
+
+            // comparing values
+            for (const value of hash1) {
+                if (!hash2.has(value)) return false;
+            }
+            return true;
+        };
 
         const removeDelegatedListener = (delegatedListeners) => {
             const listeners = delegatedListeners[type];
             for (let i = 0; i < listeners.length; i++) {
                 const delegatedListener = listeners[i];
-                if (delegatedListener.layer === layerIdOrListener && delegatedListener.listener === listener) {
+                if (delegatedListener.layer === listener && areLayerArraysEqual(delegatedListener.layers, deduplicatedLayerIdSet)) {
                     for (const event in delegatedListener.delegates) {
                         this.off(((event as any)), delegatedListener.delegates[event]);
                     }
