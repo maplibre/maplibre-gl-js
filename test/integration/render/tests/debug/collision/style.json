@@ -5,7 +5,7 @@
       "collisionDebug": true,
       "height": 256,
       "operations": [
-        ["wait", "500"]
+        ["sleep", "1000"]
       ]
     }
   },
