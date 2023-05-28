@@ -3,7 +3,10 @@
   "metadata": {
     "test": {
       "collisionDebug": true,
-      "height": 256
+      "height": 256,
+      "operations": [
+        ["wait", "idle"]
+      ]
     }
   },
   "center": [
