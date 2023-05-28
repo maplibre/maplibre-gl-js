@@ -815,7 +815,7 @@ async function executeRenderTests() {
         testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
     }
 
-    const page = await browser.newPage();
+    let page = await browser.newPage();
     applyDebugParameter(options, page);
     await page.addScriptTag({path: 'dist/maplibre-gl.js'});
 
@@ -823,7 +823,11 @@ async function executeRenderTests() {
 
     const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
     if (failedTests.length > 0 && failedTests.length < testStyles.length) {
-        console.log(`Rerunning failed tests: ${failedTests.length}`);
+        console.log(`Re-running failed tests: ${failedTests.length}`);
+        page.close();
+        page = await browser.newPage();
+        applyDebugParameter(options, page);
+        await page.addScriptTag({path: 'dist/maplibre-gl.js'});
         await runTests(page, failedTests, directory);
     }
 
