@@ -156,16 +156,6 @@ Query tests can be run in the browser, the server for serving up the test page a
 npm run start
 ```
 
-If you want to run only the test server run:
-```
-npm run watch-query
-```
-
-Then open the following url in the browser of your choice to start running the tests.
-```
-http://localhost:7357/
-```
-
 ### Running specific tests
 
 A filter can be specified by using the `filter` query param in the url. E.g, adding

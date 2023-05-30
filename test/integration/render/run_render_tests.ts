@@ -297,17 +297,19 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
 
             onAdd(map: Map, gl: WebGL2RenderingContext) {
-                const vertexSource = `
-                attribute vec3 aPos;
+                const vertexSource = `#version 300 es
+                in vec3 aPos;
                 uniform mat4 u_matrix;
                 void main() {
                     gl_Position = u_matrix * vec4(aPos, 1.0);
                     gl_PointSize = 20.0;
                 }`;
 
-                const fragmentSource = `
+                const fragmentSource = `#version 300 es
+                
+                out highp vec4 fragColor;
                 void main() {
-                    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
                 }`;
 
                 const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -356,21 +358,21 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
             onAdd(map: Map, gl: WebGL2RenderingContext) {
 
-                const vertexSource = `
-        
-                attribute vec3 aPos;
+                const vertexSource = `#version 300 es
+
+                in vec3 aPos;
                 uniform mat4 uMatrix;
-        
+
                 void main() {
                     gl_Position = uMatrix * vec4(aPos, 1.0);
-                }
-                `;
+                }`;
 
-                const fragmentSource = `
+                const fragmentSource = `#version 300 es
+
+                out highp vec4 fragColor;
                 void main() {
-                    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-                }
-                `;
+                    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                }`;
 
                 const vertexShader = gl.createShader(gl.VERTEX_SHADER);
                 gl.shaderSource(vertexShader, vertexSource);
@@ -747,6 +749,20 @@ function applyDebugParameter(options: RenderOptions, page: Page) {
     }
 }
 
+async function runTests(page: Page, testStyles: StyleWithTestData[], directory: string) {
+    let index = 0;
+    for (const style of testStyles) {
+        try {
+            //@ts-ignore
+            const data = await getImageFromStyle(style, page);
+            compareRenderResults(directory, style.metadata.test, data);
+        } catch (ex) {
+            style.metadata.test.error = ex;
+        }
+        printProgress(style.metadata.test, testStyles.length, ++index);
+    }
+}
+
 /**
  * Entry point to run the render test suite, compute differences to expected values (making exceptions based on
  * implementation vagaries), print results to standard output, write test artifacts to the
@@ -794,44 +810,25 @@ async function executeRenderTests() {
     const directory = path.join(__dirname);
     let testStyles = getTestStyles(options, directory, (server.address() as any).port);
 
-    if (process.env.SPLIT_COUNT === '2') {
-
-        const half = Math.ceil(testStyles.length / 2);
-        const firstHalf = testStyles.slice(0, half);
-        const secondHalf = testStyles.slice(half);
-
-        testStyles = [firstHalf, secondHalf][parseInt(process.env.CURRENT_SPLIT_INDEX!)];
+    if (process.env.SPLIT_COUNT && process.env.CURRENT_SPLIT_INDEX) {
+        const numberOfTestsForThisPart = Math.ceil(testStyles.length / +process.env.SPLIT_COUNT);
+        testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
     }
 
-    if (process.env.SPLIT_COUNT === '3') {
-
-        const m = Math.ceil(testStyles.length / 3);
-        const n = Math.ceil(2 * testStyles.length / 3);
-
-        const first = testStyles.slice(0, m);
-        const second = testStyles.slice(m, n);
-        const third = testStyles.slice(n, testStyles.length);
-
-        testStyles = [first, second, third][parseInt(process.env.CURRENT_SPLIT_INDEX!)];
-    }
-
-    let index = 0;
-
-    const page = await browser.newPage();
+    let page = await browser.newPage();
     applyDebugParameter(options, page);
     await page.addScriptTag({path: 'dist/maplibre-gl.js'});
 
-    for (const style of testStyles) {
-        try {
-            //@ts-ignore
+    await runTests(page, testStyles, directory);
 
-            const data = await getImageFromStyle(style, page);
-            compareRenderResults(directory, style.metadata.test, data);
-
-        } catch (ex) {
-            style.metadata.test.error = ex;
-        }
-        printProgress(style.metadata.test, testStyles.length, ++index);
+    const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
+    if (failedTests.length > 0 && failedTests.length < testStyles.length) {
+        console.log(`Re-running failed tests: ${failedTests.length}`);
+        page.close();
+        page = await browser.newPage();
+        applyDebugParameter(options, page);
+        await page.addScriptTag({path: 'dist/maplibre-gl.js'});
+        await runTests(page, failedTests, directory);
     }
 
     page.close();

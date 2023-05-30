@@ -43,7 +43,7 @@ type CustomRenderMethod = (gl: WebGL2RenderingContext, matrix: mat4) => void;
  *
  *         const fragmentSource = `
  *         void main() {
- *             gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+ *             fragColor = vec4(1.0, 0.0, 0.0, 1.0);
  *         }`;
  *
  *         const vertexShader = gl.createShader(gl.VERTEX_SHADER);

@@ -204,23 +204,6 @@ const exported = {
 Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
 
 /**
- * Test whether the browser supports MapLibre GL JS.
- *
- * @function supported
- * @param {Object} [options]
- * @param {boolean} [options.failIfMajorPerformanceCaveat=false] If `true`,
- * the function will return `false` if the performance of MapLibre GL JS would
- * be dramatically worse than expected (e.g. a software WebGL renderer would be used).
- * @return {boolean}
- * @example
- * // Show an alert if the browser does not support MapLibre GL
- * if (!maplibregl.supported()) {
- *   alert('Your browser does not support MapLibre GL');
- * }
- * @see [Check for browser support](https://maplibre.org/maplibre-gl-js-docs/example/check-for-support/)
- */
-
-/**
  * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
  * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
  *
