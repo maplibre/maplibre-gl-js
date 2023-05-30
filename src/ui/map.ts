@@ -64,6 +64,7 @@ import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import Terrain from '../render/terrain';
 import RenderToTexture from '../render/render_to_texture';
+import config from '../util/config';
 
 const version = packageJSON.version;
 /* eslint-enable no-use-before-define */
@@ -195,7 +196,7 @@ const defaultOptions = {
     renderWorldCopies: true,
     refreshExpiredTiles: true,
     maxTileCacheSize: null,
-    maxTileCacheZoomLevels: 5,
+    maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     localIdeographFontFamily: 'sans-serif',
     transformRequest: null,
     transformCameraUpdate: null,
