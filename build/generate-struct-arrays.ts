@@ -11,7 +11,7 @@
 import * as fs from 'fs';
 import * as util from '../src/util/util';
 import {createLayout, viewTypes} from '../src/util/struct_array';
-import type {ViewType, StructArrayLayout} from '../src/util/struct_array';
+import type {ViewType, StructArrayLayout, StructArrayMember} from '../src/util/struct_array';
 
 import posAttributes from '../src/data/pos_attributes';
 import pos3dAttributes from '../src/data/pos3d_attributes';
@@ -48,11 +48,30 @@ const typeAbbreviations = {
     'Float32': 'f'
 };
 
-const arraysWithStructAccessors = [];
-const arrayTypeEntries = new Set();
-const layoutCache = {};
+type StructArrayMemberExtended = StructArrayMember & { size: number; view: string };
 
-function normalizeMembers(members, usedTypes) {
+type LayoutCacheKeyItem = {
+    className: string;
+    members: StructArrayMemberExtended[];
+    size: number;
+    usedTypes: Set<string>;
+}
+
+type ArraysWithStructAccessors = {
+    arrayClass: string;
+    members: StructArrayMemberExtended[];
+    size: number;
+    usedTypes: Set<string>;
+    hasAnchorPoint: boolean;
+    layoutClass: string;
+    includeStructAccessors: boolean;
+}
+
+const arraysWithStructAccessors: ArraysWithStructAccessors[] = [];
+const arrayTypeEntries = new Set();
+const layoutCache: {[key: string]: LayoutCacheKeyItem} = {};
+
+function normalizeMembers(members: StructArrayMember[], usedTypes: Set<string>): StructArrayMemberExtended[] {
     return members.map((member) => {
         if (usedTypes && !usedTypes.has(member.type)) {
             usedTypes.add(member.type);
@@ -92,13 +111,13 @@ function createStructArrayType(name: string, layout: StructArrayLayout, includeS
     }
 }
 
-function createStructArrayLayoutType({members, size, alignment}) {
+function createStructArrayLayoutType({members, size, alignment}: StructArrayLayout) {
     const usedTypes = new Set(['Uint8']);
-    members = normalizeMembers(members, usedTypes);
+    const membersExtended = normalizeMembers(members, usedTypes);
 
     // combine consecutive 'members' with same underlying type, summing their
     // component counts
-    if (!alignment || alignment === 1) members = members.reduce((memo, member) => {
+    if (!alignment || alignment === 1) members = members.reduce((memo: StructArrayMember[], member: StructArrayMember) => {
         if (memo.length > 0 && memo[memo.length - 1].type === member.type) {
             const last = memo[memo.length - 1];
             return memo.slice(0, -1).concat(util.extend({}, last, {
@@ -108,14 +127,14 @@ function createStructArrayLayoutType({members, size, alignment}) {
         return memo.concat(member);
     }, []);
 
-    const key = `${members.map(m => `${m.components}${typeAbbreviations[m.type]}`).join('')}${size}`;
+    const key = `${membersExtended.map(m => `${m.components}${typeAbbreviations[m.type]}`).join('')}${size}`;
     const className = `StructArrayLayout${key}`;
     // Layout alignment to 4 bytes boundaries can be an issue on some set of graphics cards. Particularly AMD.
     if (size % 4 !== 0) { console.warn(`Warning: The layout ${className} is not aligned to 4-bytes boundaries.`); }
     if (!layoutCache[key]) {
         layoutCache[key] = {
             className,
-            members,
+            members: membersExtended,
             size,
             usedTypes
         };
@@ -215,8 +234,8 @@ createStructArrayLayoutType(createLayout([{
 
 const layouts = Object.keys(layoutCache).map(k => layoutCache[k]);
 
-function emitStructArrayLayout(locals) {
-    const output = [];
+function emitStructArrayLayout(locals: LayoutCacheKeyItem) {
+    const output: string[] = [];
     const {
         className,
         members,
@@ -259,9 +278,9 @@ class ${structArrayLayoutClass} extends StructArray {`);
     // prep for emplaceBack: collect type sizes and count the number of arguments
     // we'll need
     const bytesPerElement = size;
-    const usedTypeSizes = [];
-    const argNames = [];
-    const argNamesTyped = [];
+    const usedTypeSizes: number[] = [];
+    const argNames: string[] = [];
+    const argNamesTyped: string[] = [];
 
     for (const member of members) {
         if (usedTypeSizes.indexOf(member.size) < 0) {
@@ -317,8 +336,8 @@ register('${structArrayLayoutClass}', ${structArrayLayoutClass});
     return output.join('\n');
 }
 
-function emitStructArray(locals) {
-    const output = [];
+function emitStructArray(locals: ArraysWithStructAccessors) {
+    const output: string[] = [];
     const {
         arrayClass,
         members,
@@ -333,7 +352,7 @@ function emitStructArray(locals) {
     const structArrayLayoutClass = layoutClass;
 
     // collect components
-    const components = [];
+    const components: { name: string; member: StructArrayMemberExtended; component: number}[] = [];
     for (const member of members) {
         for (let c = 0; c < member.components; c++) {
             let name = member.name;

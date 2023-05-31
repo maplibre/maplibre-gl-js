@@ -6,15 +6,15 @@ import type Context from '../gl/context';
 
 class VertexArrayObject {
     context: Context;
-    boundProgram: Program<any>;
-    boundLayoutVertexBuffer: VertexBuffer;
+    boundProgram: Program<any> | null;
+    boundLayoutVertexBuffer: VertexBuffer | null;
     boundPaintVertexBuffers: Array<VertexBuffer>;
-    boundIndexBuffer: IndexBuffer;
-    boundVertexOffset: number;
-    boundDynamicVertexBuffer: VertexBuffer;
+    boundIndexBuffer: IndexBuffer | null;
+    boundVertexOffset: number | null;
+    boundDynamicVertexBuffer: VertexBuffer | null;
     boundDynamicVertexBuffer2: VertexBuffer;
     boundDynamicVertexBuffer3: VertexBuffer;
-    vao: any;
+    vao: WebGLVertexArrayObject | null;
 
     constructor() {
         this.boundProgram = null;
@@ -60,7 +60,7 @@ class VertexArrayObject {
         if (isFreshBindRequired) {
             this.freshBind(program, layoutVertexBuffer, paintVertexBuffers, indexBuffer, vertexOffset, dynamicVertexBuffer, dynamicVertexBuffer2, dynamicVertexBuffer3);
         } else {
-            context.bindVertexArray.set(this.vao);
+            context.bindVertexArray.set(this.vao!);
 
             if (dynamicVertexBuffer) {
                 // The buffer may have been updated. Rebind to upload data.
@@ -96,18 +96,18 @@ class VertexArrayObject {
         const gl = context.gl;
 
         if (this.vao) this.destroy();
-        this.vao = context.createVertexArray();
-        context.bindVertexArray.set(this.vao);
+        this.vao = context.createVertexArray()!;
+        context.bindVertexArray.set(this.vao!);
 
         // store the arguments so that we can verify them when the vao is bound again
         this.boundProgram = program;
         this.boundLayoutVertexBuffer = layoutVertexBuffer;
         this.boundPaintVertexBuffers = paintVertexBuffers;
-        this.boundIndexBuffer = indexBuffer;
-        this.boundVertexOffset = vertexOffset;
-        this.boundDynamicVertexBuffer = dynamicVertexBuffer;
-        this.boundDynamicVertexBuffer2 = dynamicVertexBuffer2;
-        this.boundDynamicVertexBuffer3 = dynamicVertexBuffer3;
+        this.boundIndexBuffer = indexBuffer!;
+        this.boundVertexOffset = vertexOffset!;
+        this.boundDynamicVertexBuffer = dynamicVertexBuffer!;
+        this.boundDynamicVertexBuffer2 = dynamicVertexBuffer2!;
+        this.boundDynamicVertexBuffer3 = dynamicVertexBuffer3!;
 
         layoutVertexBuffer.enableAttributes(gl, program);
         for (const vertexBuffer of paintVertexBuffers) {

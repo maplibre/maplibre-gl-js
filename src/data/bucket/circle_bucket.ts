@@ -27,6 +27,7 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import type {PossiblyEvaluatedPropertyValue} from '../../style/properties';
 
 function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {
     layoutVertexArray.emplaceBack(
@@ -79,7 +80,7 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
         const styleLayer = this.layers[0];
         const bucketFeatures: BucketFeature[] = [];
-        let circleSortKey = null;
+        let circleSortKey: PossiblyEvaluatedPropertyValue<number> | null = null;
         let sortFeaturesByKey = false;
 
         // Heatmap layers are handled in this bucket and have no evaluated properties, so we check our access
@@ -95,7 +96,7 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
             if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
 
             const sortKey = sortFeaturesByKey ?
-                circleSortKey.evaluate(evaluationFeature, {}, canonical) :
+                circleSortKey!.evaluate(evaluationFeature, {}, canonical) :
                 undefined;
 
             const bucketFeature: BucketFeature = {
@@ -114,7 +115,7 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
         }
 
         if (sortFeaturesByKey) {
-            bucketFeatures.sort((a, b) => a.sortKey - b.sortKey);
+            bucketFeatures.sort((a, b) => a.sortKey! - b.sortKey!);
         }
 
         for (const bucketFeature of bucketFeatures) {

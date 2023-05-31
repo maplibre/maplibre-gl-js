@@ -4,6 +4,21 @@ import * as fs from 'fs';
 
 import {v8} from '@maplibre/maplibre-gl-style-spec';
 
+type Property = {
+    name?: string;
+    type: string;
+    values?: [];
+    value?: string;
+    length?: number;
+    overridable?: boolean;
+}
+
+type LayoutAndPaintProperties = {
+    type: string;
+    layoutProperties: Property[];
+    paintProperties: Property[];
+}
+
 function camelCase(str: string): string {
     return str.replace(/-(.)/g, (_, x) => {
         return x.toUpperCase();
@@ -15,7 +30,7 @@ function pascalCase(str: string): string {
     return almostCamelized[0].toUpperCase() + almostCamelized.slice(1);
 }
 
-function nativeType(property) {
+function nativeType(property: Property): string {
     switch (property.type) {
         case 'boolean':
             return 'boolean';
@@ -24,7 +39,7 @@ function nativeType(property) {
         case 'string':
             return 'string';
         case 'enum':
-            return Object.keys(property.values).map(v => JSON.stringify(v)).join(' | ');
+            return Object.keys(property.values!).map(v => JSON.stringify(v)).join(' | ');
         case 'color':
             return 'Color';
         case 'padding':
@@ -37,9 +52,9 @@ function nativeType(property) {
             return 'ResolvedImage';
         case 'array':
             if (property.length) {
-                return `[${new Array(property.length).fill(nativeType({type: property.value})).join(', ')}]`;
+                return `[${new Array(property.length).fill(nativeType({type: property.value!})).join(', ')}]`;
             } else {
-                return `Array<${nativeType({type: property.value, values: property.values})}>`;
+                return `Array<${nativeType({type: property.value!, values: property.values})}>`;
             }
         default: throw new Error(`unknown type for ${property.name}`);
     }
@@ -80,7 +95,7 @@ function propertyType(property) {
     }
 }
 
-function runtimeType(property) {
+function runtimeType(property: Property): string {
     switch (property.type) {
         case 'boolean':
             return 'BooleanType';
@@ -101,9 +116,9 @@ function runtimeType(property) {
             return 'ImageType';
         case 'array':
             if (property.length) {
-                return `array(${runtimeType({type: property.value})}, ${property.length})`;
+                return `array(${runtimeType({type: property.value!})}, ${property.length})`;
             } else {
-                return `array(${runtimeType({type: property.value})})`;
+                return `array(${runtimeType({type: property.value!})})`;
             }
         default: throw new Error(`unknown type for ${property.name}`);
     }
@@ -137,28 +152,30 @@ function propertyValue(property, type) {
     }
 }
 
-const layers = Object.keys(v8.layer.type.values).map((type) => {
-    const layoutProperties = Object.keys(v8[`layout_${type}`]).reduce((memo, name) => {
-        if (name !== 'visibility') {
-            v8[`layout_${type}`][name].name = name;
-            v8[`layout_${type}`][name].layerType = type;
-            memo.push(v8[`layout_${type}`][name]);
-        }
-        return memo;
-    }, []);
+function createLayers(): LayoutAndPaintProperties[] {
+    return Object.keys(v8.layer.type.values).map((type) => {
+        const layoutProperties = Object.keys(v8[`layout_${type}`]).reduce((memo: Property[], name) => {
+            if (name !== 'visibility') {
+                v8[`layout_${type}`][name].name = name;
+                v8[`layout_${type}`][name].layerType = type;
+                memo.push(v8[`layout_${type}`][name]);
+            }
+            return memo;
+        }, []);
 
-    const paintProperties = Object.keys(v8[`paint_${type}`]).reduce((memo, name) => {
-        v8[`paint_${type}`][name].name = name;
-        v8[`paint_${type}`][name].layerType = type;
-        memo.push(v8[`paint_${type}`][name]);
-        return memo;
-    }, []);
+        const paintProperties = Object.keys(v8[`paint_${type}`]).reduce((memo: Property[], name) => {
+            v8[`paint_${type}`][name].name = name;
+            v8[`paint_${type}`][name].layerType = type;
+            memo.push(v8[`paint_${type}`][name]);
+            return memo;
+        }, []);
 
-    return {type, layoutProperties, paintProperties};
-});
+        return {type, layoutProperties, paintProperties};
+    });
+}
 
-function emitlayerProperties(locals) {
-    const output = [];
+function emitlayerProperties(locals: LayoutAndPaintProperties) {
+    const output: string[] = [];
     const layerType = pascalCase(locals.type);
     const {
         layoutProperties,
@@ -194,7 +211,7 @@ import {StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
     const overridables = paintProperties.filter(p => p.overridable);
     if (overridables.length) {
         const overridesArray = `import {
-            ${overridables.reduce((imports, prop) => { imports.push(runtimeType(prop)); return imports; }, []).join(',\n    ')}
+            ${overridables.reduce((imports: string[], prop) => { imports.push(runtimeType(prop)); return imports; }, []).join(',\n    ')}
         } from '@maplibre/maplibre-gl-style-spec';
         `;
         console.log(overridesArray);
@@ -280,6 +297,6 @@ export default ({ get paint() { return getPaint() }${layoutProperties.length ? '
     return output.join('\n');
 }
 
-for (const layer of layers) {
+for (const layer of createLayers()) {
     fs.writeFileSync(`src/style/style_layer/${layer.type.replace('-', '_')}_style_layer_properties.g.ts`, emitlayerProperties(layer));
 }

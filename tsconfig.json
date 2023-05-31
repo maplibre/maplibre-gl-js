@@ -14,6 +14,7 @@
     "skipLibCheck": false,
     "sourceMap": true,
     "strict": false,
+    "strictNullChecks": true,
     "target": "ES2019",
     "lib": [
       "ESNext",

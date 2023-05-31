@@ -2,13 +2,13 @@ import Point from '@mapbox/point-geometry';
 import DOM from '../../util/dom';
 import type Map from '../map';
 
-class TwoFingersTouchHandler {
+abstract class TwoFingersTouchHandler {
 
     _enabled: boolean;
     _active: boolean;
-    _firstTwoTouches: [number, number];
-    _vector: Point;
-    _startVector: Point;
+    _firstTwoTouches?: [number, number];
+    _vector?: Point;
+    _startVector?: Point;
     _aroundCenter: boolean;
 
     constructor() {
@@ -20,8 +20,8 @@ class TwoFingersTouchHandler {
         delete this._firstTwoTouches;
     }
 
-    _start(points: [Point, Point]) {} //eslint-disable-line
-    _move(points: [Point, Point], pinchAround: Point, e: TouchEvent) { return {}; } //eslint-disable-line
+    abstract _start(points: [Point, Point]);
+    abstract _move(points: [Point, Point], pinchAround: Point | null, e?: TouchEvent);
 
     touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
         //log('touchstart', points, e.target.innerHTML, e.targetTouches.length ? e.targetTouches[0].target.innerHTML: undefined);
@@ -106,8 +106,8 @@ function getZoomDelta(distance, lastDistance) {
 
 export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
 
-    _distance: number;
-    _startDistance: number;
+    _distance?: number;
+    _startDistance?: number;
 
     reset() {
         super.reset();
@@ -119,7 +119,7 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
         this._startDistance = this._distance = points[0].dist(points[1]);
     }
 
-    _move(points: [Point, Point], pinchAround: Point) {
+    _move(points: [Point, Point], pinchAround: Point | null) {
         const lastDistance = this._distance;
         this._distance = points[0].dist(points[1]);
         if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance)) < ZOOM_THRESHOLD) return;
@@ -140,7 +140,7 @@ function getBearingDelta(a, b) {
 }
 
 export class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
-    _minDiameter: number;
+    _minDiameter?: number;
 
     reset() {
         super.reset();
@@ -178,7 +178,7 @@ export class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
          * when pinching in and out.
          */
 
-        this._minDiameter = Math.min(this._minDiameter, vector.mag());
+        this._minDiameter = Math.min(this._minDiameter!, vector.mag());
         const circumference = Math.PI * this._minDiameter;
         const threshold = ROTATION_THRESHOLD / circumference * 360;
 
@@ -201,8 +201,8 @@ const ALLOWED_SINGLE_TOUCH_TIME = 100;
 export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
 
     _valid: boolean | void;
-    _firstMove: number;
-    _lastPoints: [Point, Point];
+    _firstMove?: number;
+    _lastPoints?: [Point, Point];
     _map: Map;
     _currentTouchCount: number;
 
@@ -238,8 +238,8 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
             return;
         }
 
-        const vectorA = points[0].sub(this._lastPoints[0]);
-        const vectorB = points[1].sub(this._lastPoints[1]);
+        const vectorA = points[0].sub(this._lastPoints![0]);
+        const vectorB = points[1].sub(this._lastPoints![1]);
 
         this._valid = this.gestureBeginsVertically(vectorA, vectorB, e.timeStamp);
         if (!this._valid) return;

@@ -284,11 +284,11 @@ class Context {
         this.colorMask.set(colorMode.mask);
     }
 
-    createVertexArray(): WebGLVertexArrayObject | undefined {
+    createVertexArray(): WebGLVertexArrayObject | null | undefined {
         return this.gl.createVertexArray();
     }
 
-    deleteVertexArray(x: WebGLVertexArrayObject | undefined) {
+    deleteVertexArray(x: WebGLVertexArrayObject) {
         return this.gl.deleteVertexArray(x);
     }
 
