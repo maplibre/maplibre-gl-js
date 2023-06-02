@@ -97,7 +97,7 @@
     "jest": "^29.5.0",
     "jest-canvas-mock": "^2.5.0",
     "jest-environment-jsdom": "^29.5.0",
-    "jsdom": "^22.0.0",
+    "jsdom": "^22.1.0",
     "json-stringify-pretty-compact": "^4.0.0",
     "minimist": "^1.2.8",
     "mock-geolocation": "^1.0.11",
