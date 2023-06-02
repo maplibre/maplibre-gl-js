@@ -81,7 +81,7 @@
     "d3-queue": "^3.0.7",
     "devtools-protocol": "^0.0.1149535",
     "diff": "^5.1.0",
-    "documentation": "14.0.1",
+    "documentation": "14.0.2",
     "dts-bundle-generator": "^8.0.1",
     "eslint": "^8.40.0",
     "eslint-config-mourner": "^3.0.0",
