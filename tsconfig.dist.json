@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strictNullChecks": true,
+  },
+  "include": [
+    "dist/maplibre-gl.d.ts"
+  ],
+  "exclude": []
+}
