@@ -29,9 +29,6 @@ Rollup is generating 3 files throughout the process of bundling:
 
 These 3 files are then referenced and used by the `bundle_prelude.js` file. It allows loading the web wroker code automatically in web workers without any extra effort from someone who would like to use the library, i.e. it simply works.
 
-### check-bundle-size.js
-This file is used by CI to make sure the bundle size is kept constant
-
 <hr>
 
 ### `npm run codegen`
@@ -43,8 +40,6 @@ Generates `data/array_types.ts`, which consists of:
  - Specific named `StructArray` subclasses, when type-specific struct accessors are needed (e.g., `CollisionBoxArray`)
 #### generate-style-code.ts			
 Generates the various `style/style_layer/[layer type]_style_layer_properties.ts` code files based on the content of `v8.json`. These files provide the type signatures for the paint and layout properties for each type of style layer.
-#### generate-style-spec.ts			
-Generates `style-spec/types.ts` based on the content of `v8.json`. This provides the type signatures for a style specification (sources, layers, etc.).
 <hr>
 
 ### Generate Release Nodes
