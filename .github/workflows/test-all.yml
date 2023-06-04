@@ -27,6 +27,8 @@ jobs:
         if: success() || failure()
       - run: npm run lint-docs
         if: success() || failure()
+      - run: npm run generate-typings
+        if: success() || failure()
       - run: npm run typecheck
         if: success() || failure()
 
