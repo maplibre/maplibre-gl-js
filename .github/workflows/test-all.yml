@@ -49,13 +49,18 @@ jobs:
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm ci
-      - run: npm run jest-ci -- --coverage --coverageReporters text html-spa --selectProjects unit
+      - run: npm run jest-ci -- --coverage --coverageReporters json text html-spa --selectProjects unit
       - name: Upload unit test coverage
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: unit-test-coverage
           path: ${{ github.workspace }}/coverage
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ github.workspace }}/coverage/coverage-final.json
+          verbose: true
 
   integration-tests:
     name: Integration tests
