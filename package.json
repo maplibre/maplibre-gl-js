@@ -173,7 +173,7 @@
     "gl-stats": "npm run tsnode test/bench/gl-stats.ts",
     "prepare": "npm run codegen",
     "typecheck": "tsc --noEmit && tsc --project tsconfig.dist.json",
-    "tsnode": "node --experimental-loader=ts-node/esm --no-warnings=ExperimentalWarning"
+    "tsnode": "node --experimental-loader=ts-node/esm --no-warnings"
   },
   "files": [
     "build/",
