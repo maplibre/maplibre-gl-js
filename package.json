@@ -138,11 +138,11 @@
     }
   },
   "scripts": {
-    "generate-dist-package": "ts-node build/generate-dist-package",
-    "generate-shaders": "ts-node build/generate-shaders.ts",
-    "generate-struct-arrays": "ts-node build/generate-struct-arrays.ts",
-    "generate-style-code": "ts-node build/generate-style-code.ts",
-    "generate-typings": "ts-node build/generate-typings.ts",
+    "generate-dist-package": "npm run tsnode build/generate-dist-package.js",
+    "generate-shaders": "npm run tsnode build/generate-shaders.ts",
+    "generate-struct-arrays": "npm run tsnode build/generate-struct-arrays.ts",
+    "generate-style-code": "npm run tsnode build/generate-style-code.ts",
+    "generate-typings": "npm run tsnode build/generate-typings.ts",
     "build-dist": "run-p --print-label generate-typings build-dev build-prod build-csp build-csp-dev build-css",
     "build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
     "watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",
@@ -165,14 +165,15 @@
     "jest-ci": "jest --reporters=github-actions --reporters=summary",
     "test-build": "jest --selectProjects=build",
     "test-integration": "jest --selectProjects=integration",
-    "test-render": "ts-node test/integration/render/run_render_tests.ts",
+    "test-render": "npm run tsnode test/integration/render/run_render_tests.ts",
     "test-unit": "jest --selectProjects=unit",
     "test-watch-roots": "jest --watch",
     "codegen": "run-p generate-dist-package generate-style-code generate-struct-arrays generate-shaders",
-    "benchmark": "ts-node test/bench/run-benchmarks.ts",
-    "gl-stats": "ts-node test/bench/gl-stats.ts",
+    "benchmark": "npm run tsnode test/bench/run-benchmarks.ts",
+    "gl-stats": "npm run tsnode test/bench/gl-stats.ts",
     "prepare": "npm run codegen",
-    "typecheck": "tsc --noEmit && tsc --project tsconfig.dist.json"
+    "typecheck": "tsc --noEmit && tsc --project tsconfig.dist.json",
+    "tsnode": "node --experimental-loader=ts-node/esm --no-warnings"
   },
   "files": [
     "build/",
