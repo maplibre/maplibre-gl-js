@@ -375,7 +375,7 @@ Everything from the four previous pre-releases:
 
 ### ✨ Features and improvements
 
-- Changed logic for showing the Maplibre logo. The Maplibre logo is now shown by setting the map option 'maplibreLogo' to true or by adding it to a map with addControl. TileJSON no longer controls if the logo is shown. ([#786](https://github.com/maplibre/maplibre-gl-js/pull/786))
+- Changed logic for showing the MapLibre logo. The MapLibre logo is now shown by setting the map option 'maplibreLogo' to true or by adding it to a map with addControl. TileJSON no longer controls if the logo is shown. ([#786](https://github.com/maplibre/maplibre-gl-js/pull/786))
 
 ### 🐞 Bug fixes
 

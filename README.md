@@ -64,7 +64,7 @@ The overall migration happens by uninstalling `mapbox-gl` and installing `maplib
 
 #### Compatibility branch
 
-Maplibre v1 is completely backward compatible with Mapbox v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current version is 1.15.3. 
+MapLibre v1 is completely backward compatible with Mapbox v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current version is 1.15.3. 
 
 #### CDN Links
 
