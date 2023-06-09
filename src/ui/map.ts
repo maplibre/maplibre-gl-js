@@ -1036,7 +1036,7 @@ class Map extends Camera {
         delegates: {[type in keyof MapEventType]?: (e: any) => void};
     } {
         const filteredLayers = layers.filter(layerId => this.getLayer(layerId));
-        const deduplicatedLayers = [...new Set(layers)]
+        const deduplicatedLayers = [...new Set(layers)];
         if (type === 'mouseenter' || type === 'mouseover') {
             let mousein = false;
             const mousemove = (e) => {
