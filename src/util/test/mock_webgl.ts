@@ -30,6 +30,12 @@ export function setupMockWebGLContext(webglContext: any) {
         }
     });
 
+    // Update drawingBufferWidth and drawingBufferHeigth when viewport changes
+    webglContext.viewport = jest.fn((x, y, width, height) => {
+        webglContext.drawingBufferWidth = width;
+        webglContext.drawingBufferHeight = height;
+    });
+
     // Define the properties on the WebGL context
     Object.defineProperty(webglContext, 'bindVertexArray', {
         get() {
