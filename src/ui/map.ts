@@ -687,6 +687,7 @@ class Map extends Camera {
         this.transform.resize(width, height);
         this._requestedCameraState?.resize(width, height);
         this.painter.resize(width, height, this.getPixelRatio());
+        this._reducePixelRatioIfNeeded();
 
         const fireMoving = !this._moving;
         if (fireMoving) {
@@ -723,6 +724,19 @@ class Map extends Camera {
 
         this._resizeCanvas(width, height, pixelRatio);
         this.painter.resize(width, height, pixelRatio);
+    }
+
+    /**
+     * Check if we have hit client limit for drawing buffer width or height.
+     * In those case they get clamped causing distortions. To avoid that, reduce pixel ratio.
+     */
+    _reducePixelRatioIfNeeded() {
+        const {width, height} = this._canvas;
+        const {drawingBufferWidth, drawingBufferHeight} = this.painter.context.gl;
+        if (drawingBufferWidth !== width || drawingBufferHeight !== height) {
+            const reduceFactor = Math.min(drawingBufferWidth / width, drawingBufferHeight / height);
+            this.setPixelRatio(this.getPixelRatio() * reduceFactor);
+        }
     }
 
     /**
