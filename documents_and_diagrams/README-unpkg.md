@@ -1,4 +1,4 @@
-# MapLibre GL on unpkg.com
+# MapLibre GL JS on unpkg.com
 
 MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com).
 
