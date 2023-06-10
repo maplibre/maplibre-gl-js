@@ -10,8 +10,8 @@
 // long distances for long segments. Use this value to unscale the distance.
 #define LINE_DISTANCE_SCALE 2.0
 
-in vec2 a_pos_normal;
-in vec4 a_data;
+attribute vec2 a_pos_normal;
+attribute vec4 a_data;
 
 uniform mat4 u_matrix;
 uniform mediump float u_ratio;
@@ -22,11 +22,11 @@ uniform vec2 u_patternscale_b;
 uniform float u_tex_y_b;
 uniform vec2 u_units_to_pixels;
 
-out vec2 v_normal;
-out vec2 v_width2;
-out vec2 v_tex_a;
-out vec2 v_tex_b;
-out float v_gamma_scale;
+varying vec2 v_normal;
+varying vec2 v_width2;
+varying vec2 v_tex_a;
+varying vec2 v_tex_b;
+varying float v_gamma_scale;
 
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define lowp float blur

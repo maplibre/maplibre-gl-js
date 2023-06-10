@@ -1,9 +1,9 @@
-in vec2 a_pos;
+attribute vec2 a_pos;
 
 uniform mat4 u_matrix;
 uniform vec2 u_world;
 
-out vec2 v_pos;
+varying vec2 v_pos;
 
 #pragma mapbox: define highp vec4 outline_color
 #pragma mapbox: define lowp float opacity

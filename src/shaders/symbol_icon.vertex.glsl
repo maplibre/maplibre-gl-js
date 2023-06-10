@@ -1,10 +1,10 @@
 const float PI = 3.141592653589793;
 
-in vec4 a_pos_offset;
-in vec4 a_data;
-in vec4 a_pixeloffset;
-in vec3 a_projected_pos;
-in float a_fade_opacity;
+attribute vec4 a_pos_offset;
+attribute vec4 a_data;
+attribute vec4 a_pixeloffset;
+attribute vec3 a_projected_pos;
+attribute float a_fade_opacity;
 
 uniform bool u_is_size_zoom_constant;
 uniform bool u_is_size_feature_constant;
@@ -22,8 +22,8 @@ uniform bool u_is_text;
 uniform bool u_pitch_with_map;
 uniform vec2 u_texsize;
 
-out vec2 v_tex;
-out float v_fade_opacity;
+varying vec2 v_tex;
+varying float v_fade_opacity;
 
 #pragma mapbox: define lowp float opacity
 

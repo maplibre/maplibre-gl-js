@@ -8,11 +8,11 @@ uniform mediump vec3 u_scale;
 
 uniform sampler2D u_image;
 
-in vec2 v_normal;
-in vec2 v_width2;
-in float v_linesofar;
-in float v_gamma_scale;
-in float v_width;
+varying vec2 v_normal;
+varying vec2 v_width2;
+varying float v_linesofar;
+varying float v_gamma_scale;
+varying float v_width;
 
 #pragma mapbox: define lowp vec4 pattern_from
 #pragma mapbox: define lowp vec4 pattern_to
@@ -67,11 +67,11 @@ void main() {
     vec2 pos_a = mix(pattern_tl_a * texel_size - texel_size, pattern_br_a * texel_size + texel_size, vec2(x_a, y));
     vec2 pos_b = mix(pattern_tl_b * texel_size - texel_size, pattern_br_b * texel_size + texel_size, vec2(x_b, y));
 
-    vec4 color = mix(texture(u_image, pos_a), texture(u_image, pos_b), u_fade);
+    vec4 color = mix(texture2D(u_image, pos_a), texture2D(u_image, pos_b), u_fade);
 
-    fragColor = color * alpha * opacity;
+    gl_FragColor = color * alpha * opacity;
 
 #ifdef OVERDRAW_INSPECTOR
-    fragColor = vec4(1.0);
+    gl_FragColor = vec4(1.0);
 #endif
 }

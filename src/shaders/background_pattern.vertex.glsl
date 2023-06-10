@@ -7,9 +7,10 @@ uniform float u_scale_a;
 uniform float u_scale_b;
 uniform float u_tile_units_to_pixels;
 
-in vec2 a_pos;
-out vec2 v_pos_a;
-out vec2 v_pos_b;
+attribute vec2 a_pos;
+
+varying vec2 v_pos_a;
+varying vec2 v_pos_b;
 
 void main() {
     gl_Position = u_matrix * vec4(a_pos, 0, 1);

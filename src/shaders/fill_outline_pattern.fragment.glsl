@@ -3,9 +3,9 @@ uniform vec2 u_texsize;
 uniform sampler2D u_image;
 uniform float u_fade;
 
-in vec2 v_pos_a;
-in vec2 v_pos_b;
-in vec2 v_pos;
+varying vec2 v_pos_a;
+varying vec2 v_pos_b;
+varying vec2 v_pos;
 
 #pragma mapbox: define lowp float opacity
 #pragma mapbox: define lowp vec4 pattern_from
@@ -23,11 +23,11 @@ void main() {
 
     vec2 imagecoord = mod(v_pos_a, 1.0);
     vec2 pos = mix(pattern_tl_a / u_texsize, pattern_br_a / u_texsize, imagecoord);
-    vec4 color1 = texture(u_image, pos);
+    vec4 color1 = texture2D(u_image, pos);
 
     vec2 imagecoord_b = mod(v_pos_b, 1.0);
     vec2 pos2 = mix(pattern_tl_b / u_texsize, pattern_br_b / u_texsize, imagecoord_b);
-    vec4 color2 = texture(u_image, pos2);
+    vec4 color2 = texture2D(u_image, pos2);
 
     // find distance to outline for alpha interpolation
 
@@ -35,9 +35,9 @@ void main() {
     float alpha = 1.0 - smoothstep(0.0, 1.0, dist);
 
 
-    fragColor = mix(color1, color2, u_fade) * alpha * opacity;
+    gl_FragColor = mix(color1, color2, u_fade) * alpha * opacity;
 
 #ifdef OVERDRAW_INSPECTOR
-    fragColor = vec4(1.0);
+    gl_FragColor = vec4(1.0);
 #endif
 }

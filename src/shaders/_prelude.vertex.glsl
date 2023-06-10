@@ -31,7 +31,7 @@ vec2 unpack_opacity(const float packedOpacity) {
     return vec2(float(intOpacity) / 127.0, mod(packedOpacity, 2.0));
 }
 
-// To minimize the number of ins needed, we encode a 4-component
+// To minimize the number of attributes needed, we encode a 4-component
 // color into a pair of floats (i.e. a vec2) as follows:
 // [ floor(color.r * 255) * 256 + color.g * 255,
 //   floor(color.b * 255) * 256 + color.g * 255 ]
@@ -96,7 +96,7 @@ highp float unpack(highp vec4 color) {
 highp float depthOpacity(vec3 frag) {
     #ifdef TERRAIN3D
         // create the delta between frag.z + terrain.z.
-        highp float d = unpack(texture(u_depth, frag.xy * 0.5 + 0.5)) + 0.0001 - frag.z;
+        highp float d = unpack(texture2D(u_depth, frag.xy * 0.5 + 0.5)) + 0.0001 - frag.z;
         // visibility range is between 0 and 0.002. 0 is visible, 0.002 is fully invisible.
         return 1.0 - max(0.0, min(1.0, -d * 500.0));
     #else
@@ -122,7 +122,7 @@ float calculate_visibility(vec4 pos) {
 // grab an elevation value from a raster-dem texture
 float ele(vec2 pos) {
     #ifdef TERRAIN3D
-        vec4 rgb = (texture(u_terrain, pos) * 255.0) * u_terrain_unpack;
+        vec4 rgb = (texture2D(u_terrain, pos) * 255.0) * u_terrain_unpack;
         return rgb.r + rgb.g + rgb.b - u_terrain_unpack.a;
     #else
         return 0.0;

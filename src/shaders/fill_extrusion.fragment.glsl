@@ -1,9 +1,9 @@
-in vec4 v_color;
+varying vec4 v_color;
 
 void main() {
-    fragColor = v_color;
+    gl_FragColor = v_color;
 
 #ifdef OVERDRAW_INSPECTOR
-    fragColor = vec4(1.0);
+    gl_FragColor = vec4(1.0);
 #endif
 }

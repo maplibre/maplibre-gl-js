@@ -1,4 +1,4 @@
-in float v_depth;
+varying float v_depth;
 
 // methods for pack/unpack depth value to texture rgba
 // https://stackoverflow.com/questions/34963366/encode-floating-point-data-in-a-rgba-texture
@@ -11,5 +11,5 @@ highp vec4 pack(highp float value) {
 }
 
 void main() {
-    fragColor = pack(v_depth);
+    gl_FragColor = pack(v_depth);
 }

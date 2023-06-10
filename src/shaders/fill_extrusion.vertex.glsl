@@ -5,15 +5,15 @@ uniform lowp float u_lightintensity;
 uniform float u_vertical_gradient;
 uniform lowp float u_opacity;
 
-in vec2 a_pos;
-in vec4 a_normal_ed;
+attribute vec2 a_pos;
+attribute vec4 a_normal_ed;
 
 #ifdef TERRAIN3D
-    in vec2 a_centroid;
+    attribute vec2 a_centroid;
 #endif
 
 
-out vec4 v_color;
+varying vec4 v_color;
 
 #pragma mapbox: define highp float base
 #pragma mapbox: define highp float height

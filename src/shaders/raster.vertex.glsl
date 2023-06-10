@@ -3,11 +3,11 @@ uniform vec2 u_tl_parent;
 uniform float u_scale_parent;
 uniform float u_buffer_scale;
 
-in vec2 a_pos;
-in vec2 a_texture_pos;
+attribute vec2 a_pos;
+attribute vec2 a_texture_pos;
 
-out vec2 v_pos0;
-out vec2 v_pos1;
+varying vec2 v_pos0;
+varying vec2 v_pos1;
 
 void main() {
     gl_Position = u_matrix * vec4(a_pos, 0, 1);

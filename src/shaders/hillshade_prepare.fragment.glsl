@@ -3,16 +3,14 @@ precision highp float;
 #endif
 
 uniform sampler2D u_image;
-in vec2 v_pos;
-
-
+varying vec2 v_pos;
 uniform vec2 u_dimension;
 uniform float u_zoom;
 uniform vec4 u_unpack;
 
 float getElevation(vec2 coord, float bias) {
     // Convert encoded elevation value to meters
-    vec4 data = texture(u_image, coord) * 255.0;
+    vec4 data = texture2D(u_image, coord) * 255.0;
     data.a = -1.0;
     return dot(data, u_unpack) / 4.0;
 }
@@ -65,13 +63,13 @@ void main() {
         (g + h + h + i) - (a + b + b + c)
     ) / pow(2.0, exaggeration + (19.2562 - u_zoom));
 
-    fragColor = clamp(vec4(
+    gl_FragColor = clamp(vec4(
         deriv.x / 2.0 + 0.5,
         deriv.y / 2.0 + 0.5,
         1.0,
         1.0), 0.0, 1.0);
 
 #ifdef OVERDRAW_INSPECTOR
-    fragColor = vec4(1.0);
+    gl_FragColor = vec4(1.0);
 #endif
 }

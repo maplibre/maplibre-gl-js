@@ -6,10 +6,10 @@
 // #define scale 63.0
 #define scale 0.015873016
 
-in vec2 a_pos_normal;
-in vec4 a_data;
-in float a_uv_x;
-in float a_split_index;
+attribute vec2 a_pos_normal;
+attribute vec4 a_data;
+attribute float a_uv_x;
+attribute float a_split_index;
 
 uniform mat4 u_matrix;
 uniform mediump float u_ratio;
@@ -17,10 +17,10 @@ uniform lowp float u_device_pixel_ratio;
 uniform vec2 u_units_to_pixels;
 uniform float u_image_height;
 
-out vec2 v_normal;
-out vec2 v_width2;
-out float v_gamma_scale;
-out highp vec2 v_uv;
+varying vec2 v_normal;
+varying vec2 v_width2;
+varying float v_gamma_scale;
+varying highp vec2 v_uv;
 
 #pragma mapbox: define lowp float blur
 #pragma mapbox: define lowp float opacity

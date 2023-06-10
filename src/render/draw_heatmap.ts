@@ -16,6 +16,7 @@ import type SourceCache from '../source/source_cache';
 import type HeatmapStyleLayer from '../style/style_layer/heatmap_style_layer';
 import type HeatmapBucket from '../data/bucket/heatmap_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
+import {isWebGL2} from '../gl/webgl2';
 
 export default drawHeatmap;
 
@@ -100,6 +101,7 @@ function bindTextureToFramebuffer(context: Context, painter: Painter, texture: W
     const gl = context.gl;
     // Use the higher precision half-float texture where available (producing much smoother looking heatmaps);
     // Otherwise, fall back to a low precision texture
+
     const numType = context.HALF_FLOAT ?? gl.UNSIGNED_BYTE;
     const internalFormat = context.RGBA16F ?? gl.RGBA;
 

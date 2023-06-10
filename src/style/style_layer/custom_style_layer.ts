@@ -3,7 +3,7 @@ import type Map from '../../ui/map';
 import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-type CustomRenderMethod = (gl: WebGL2RenderingContext, matrix: mat4) => void;
+type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, matrix: mat4) => void;
 
 /**
  * Interface for custom style layers. This is a specification for
@@ -103,7 +103,7 @@ export interface CustomLayerInterface {
      * @memberof CustomLayerInterface
      * @instance
      * @name render
-     * @param {WebGL2RenderingContext} gl The map's gl context.
+     * @param {WebGLRenderingContext | WebGL2RenderingContext} gl The map's gl context.
      * @param {Array<number>} matrix The map's camera matrix. It projects spherical mercator
      * coordinates to gl coordinates. The spherical mercator coordinate `[0, 0]` represents the
      * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
@@ -139,9 +139,9 @@ export interface CustomLayerInterface {
      * @instance
      * @name onAdd
      * @param {Map} map The Map this custom layer was just added to.
-     * @param {WebGL2RenderingContext} gl The gl context for the map.
+     * @param {WebGLRenderingContext | WebGL2RenderingContext} gl The gl context for the map.
      */
-    onAdd?(map: Map, gl: WebGL2RenderingContext): void;
+    onAdd?(map: Map, gl: WebGLRenderingContext | WebGL2RenderingContext): void;
     /**
      * Optional method called when the layer has been removed from the Map with {@link Map#removeLayer}. This
      * gives the layer a chance to clean up gl resources and event listeners.
@@ -151,9 +151,9 @@ export interface CustomLayerInterface {
      * @instance
      * @name onRemove
      * @param {Map} map The Map this custom layer was just added to.
-     * @param {WebGL2RenderingContext} gl The gl context for the map.
+     * @param {WebGLRenderingContext | WebGL2RenderingContext} gl The gl context for the map.
      */
-    onRemove?(map: Map, gl: WebGL2RenderingContext): void;
+    onRemove?(map: Map, gl: WebGLRenderingContext | WebGL2RenderingContext): void;
 }
 
 export function validateCustomStyleLayer(layerObject: CustomLayerInterface) {

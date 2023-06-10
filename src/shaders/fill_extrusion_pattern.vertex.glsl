@@ -10,16 +10,16 @@ uniform vec3 u_lightcolor;
 uniform lowp vec3 u_lightpos;
 uniform lowp float u_lightintensity;
 
-in vec2 a_pos;
-in vec4 a_normal_ed;
+attribute vec2 a_pos;
+attribute vec4 a_normal_ed;
 
 #ifdef TERRAIN3D
-    in vec2 a_centroid;
+    attribute vec2 a_centroid;
 #endif
 
-out vec2 v_pos_a;
-out vec2 v_pos_b;
-out vec4 v_lighting;
+varying vec2 v_pos_a;
+varying vec2 v_pos_b;
+varying vec4 v_lighting;
 
 #pragma mapbox: define lowp float base
 #pragma mapbox: define lowp float height

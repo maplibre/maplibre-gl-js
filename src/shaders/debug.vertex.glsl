@@ -1,5 +1,5 @@
-in vec2 a_pos;
-out vec2 v_uv;
+attribute vec2 a_pos;
+varying vec2 v_uv;
 
 uniform mat4 u_matrix;
 uniform float u_overlay_scale;

@@ -73,7 +73,10 @@ export function setWebGlContext() {
     const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
 
     function imitateWebGlGetContext(type, attributes) {
-        if (type === 'webgl2' || type === 'webgl') {
+        if (type === 'webgl2') {
+            return null;
+        }
+        if (type === 'webgl') {
             if (!this._webGLContext) {
                 this._webGLContext = gl(this.width, this.height, attributes);
                 if (!this._webGLContext) {

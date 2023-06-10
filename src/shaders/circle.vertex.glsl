@@ -5,10 +5,10 @@ uniform vec2 u_extrude_scale;
 uniform lowp float u_device_pixel_ratio;
 uniform highp float u_camera_to_center_distance;
 
-in vec2 a_pos;
+attribute vec2 a_pos;
 
-out vec3 v_data;
-out float v_visibility;
+varying vec3 v_data;
+varying float v_visibility;
 
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define mediump float radius

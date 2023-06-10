@@ -1,10 +1,10 @@
 const float PI = 3.141592653589793;
 
-in vec4 a_pos_offset;
-in vec4 a_data;
-in vec4 a_pixeloffset;
-in vec3 a_projected_pos;
-in float a_fade_opacity;
+attribute vec4 a_pos_offset;
+attribute vec4 a_data;
+attribute vec4 a_pixeloffset;
+attribute vec3 a_projected_pos;
+attribute float a_fade_opacity;
 
 // contents of a_size vary based on the type of property value
 // used for {text,icon}-size.
@@ -29,8 +29,8 @@ uniform highp float u_camera_to_center_distance;
 uniform float u_fade_change;
 uniform vec2 u_texsize;
 
-out vec2 v_data0;
-out vec3 v_data1;
+varying vec2 v_data0;
+varying vec3 v_data1;
 
 #pragma mapbox: define highp vec4 fill_color
 #pragma mapbox: define highp vec4 halo_color
