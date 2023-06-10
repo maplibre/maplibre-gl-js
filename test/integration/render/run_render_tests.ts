@@ -50,6 +50,9 @@ type TestData = {
     error: Error;
     maxPitch: number;
     continuesRepaint: boolean;
+    // Crop PNG results if they're too large
+    reportWidth: number;
+    reportHeight: number;
 
     // base64-encoded content of the PNG results
     actual: string;
@@ -133,8 +136,8 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     const actualPath = path.join(dir, 'actual.png');
     const diffPath = path.join(dir, 'diff.png');
 
-    const width = Math.floor(testData.width * testData.pixelRatio);
-    const height = Math.floor(testData.height * testData.pixelRatio);
+    const width = Math.floor(testData.reportWidth ?? testData.width * testData.pixelRatio);
+    const height = Math.floor(testData.reportHeight ?? testData.height * testData.pixelRatio);
     const actualImg = new PNG({width, height});
 
     // PNG data must be unassociated (not premultiplied)
@@ -626,8 +629,8 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
                 applyOperations(options, map as any, options.operations, () => {
                     const viewport = gl.getParameter(gl.VIEWPORT);
-                    const w = viewport[2];
-                    const h = viewport[3];
+                    const w = options.reportWidth ?? viewport[2];
+                    const h = options.reportHeight ?? viewport[3];
 
                     const data = new Uint8Array(w * h * 4);
                     gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
