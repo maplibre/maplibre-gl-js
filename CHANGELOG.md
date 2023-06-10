@@ -6,7 +6,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Regression - Add webgl1 fallback to accomondate users without webgl2 support
+- Fix regression - Add webgl1 fallback to accomondate users without webgl2 support
 - _...Add new stuff here..._
 
 ## 3.0.1
