@@ -671,6 +671,8 @@ class Map extends Camera {
      * @param eventData Additional properties to be passed to `movestart`, `move`, `resize`, and `moveend`
      * events that get triggered as a result of resize. This can be useful for differentiating the
      * source of an event (for example, user-initiated or programmatically-triggered events).
+     * @param disablePixelRatioReduce Pixel Ratio will automatically be reduced if we have hit drawing buffer limit,
+     * setting this to true will disable this behaviour.
      * @returns {Map} `this`
      * @example
      * // Resize the map when the map container is shown
@@ -678,7 +680,7 @@ class Map extends Camera {
      * var mapDiv = document.getElementById('map');
      * if (mapDiv.style.visibility === true) map.resize();
      */
-    resize(eventData?: any) {
+    resize(eventData?: any, disablePixelRatioReduce?: Boolean) {
         const dimensions = this._containerDimensions();
         const width = dimensions[0];
         const height = dimensions[1];
@@ -687,7 +689,10 @@ class Map extends Camera {
         this.transform.resize(width, height);
         this._requestedCameraState?.resize(width, height);
         this.painter.resize(width, height, this.getPixelRatio());
-        this._reducePixelRatioIfNeeded();
+
+        if (disablePixelRatioReduce !== true) {
+            this._reducePixelRatioIfNeeded();
+        }
 
         const fireMoving = !this._moving;
         if (fireMoving) {
@@ -731,7 +736,9 @@ class Map extends Camera {
         const {drawingBufferWidth, drawingBufferHeight} = this.painter.context.gl;
         if (drawingBufferWidth !== width || drawingBufferHeight !== height) {
             const reduceFactor = Math.min(drawingBufferWidth / width, drawingBufferHeight / height);
-            this.setPixelRatio(this.getPixelRatio() * reduceFactor);
+            this._pixelRatio = this.getPixelRatio() * reduceFactor;
+            // disable further pixel ratio reduce to avoid loops
+            this.resize(null, true);
         }
     }
 
